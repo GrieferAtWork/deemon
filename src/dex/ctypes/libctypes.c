@@ -396,9 +396,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 /*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
 	DeeObject *fields:?S?X2?T2?Dstring?DType?GStructType = !T0;
-""", methodFlags: "METHOD_FCONSTCALL", returnType: "DeeStructTypeObject", docStringPrefix: none);]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields);
-PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "CStructType", docStringPrefix: none);]]]*/
+FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields);
+PRIVATE WUNUSED DREF CStructType *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *fields;
 	} args;
@@ -409,7 +409,7 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD(libctypes_union, &libctypes_union_f, METHOD_FCONSTCALL);
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields)
+FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields)
 /*[[[end]]]*/
 {
 	return CStructType_Of(fields, CSTRUCTTYPE_F_UNION);

@@ -1,0 +1,4160 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEX_CTYPES_CTYPES_CORE_C
+#define GUARD_DEX_CTYPES_CTYPES_CORE_C 1
+#define DEE_SOURCE
+
+#include "libctypes.h"
+/**/
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#include <deemon/api.h>
+#include <deemon/none.h>
+#include <deemon/bool.h>
+#include <deemon/seq.h>
+#include <deemon/error-rt.h>
+#include <deemon/method-hints.h>
+#include <deemon/int.h>
+#include <deemon/float.h>
+#include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/alloc.h>
+#include <deemon/gc.h>
+#include <deemon/arg.h>
+#include <hybrid/overflow.h>
+#include <hybrid/align.h>
+#include <hybrid/debug-alignment.h>
+#include <deemon/callable.h>
+#include <deemon/bytes.h>
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
+DECL_BEGIN
+
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("ind");
+print define_Dee_HashStr("ptr");
+]]]*/
+#define Dee_HashStr__ind _Dee_HashSelectC(0x36f5c430, 0x18549bb43b297a6f)
+#define Dee_HashStr__ptr _Dee_HashSelectC(0x4170660c, 0x9d2f54779ea875bf)
+/*[[[end]]]*/
+
+#define isind(attr)                                                                            \
+	((DeeString_HASH(attr) == Dee_HashStr__ind || DeeString_HASH(attr) == (Dee_hash_t) - 1) && \
+	 DeeString_EQUALS_ASCII(attr, "ind"))
+#define isind_string_hash(attr, hash) \
+	((hash) == Dee_HashStr__ind && strcmp(attr, "ind") == 0)
+#define isind_string_len_hash(attr, attrlen, hash) \
+	((hash) == Dee_HashStr__ind && attrlen == 3 && strcmp(attr, "ind") == 0)
+
+#define isptr(attr)                                                                            \
+	((DeeString_HASH(attr) == Dee_HashStr__ptr || DeeString_HASH(attr) == (Dee_hash_t) - 1) && \
+	 DeeString_EQUALS_ASCII(attr, "ptr"))
+#define isptr_string_hash(attr, hash) \
+	((hash) == Dee_HashStr__ptr && strcmp(attr, "ptr") == 0)
+#define isptr_string_len_hash(attr, attrlen, hash) \
+	((hash) == Dee_HashStr__ptr && attrlen == 3 && strcmp(attr, "ptr") == 0)
+
+
+
+/* Optimize "tp_instance_size" into slab allocators (if possible) */
+PRIVATE NONNULL((1)) void DCALL
+DeeType_OptimizeAlloc(DeeTypeObject *__restrict self) {
+	(void)self;
+	/* TODO */
+}
+
+
+
+/************************************************************************/
+/* C TYPE                                                               */
+/************************************************************************/
+
+DOC_DEF(ispointer_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GCType is a ?GPointerType");
+DOC_DEF(islvalue_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GCType is an ?GLValueType");
+DOC_DEF(isarray_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GCType is an ?GArrayType");
+DOC_DEF(isfunction_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GCType is a ?GFunctionType");
+DOC_DEF(isstruct_doc,
+        "->?Dbool\n"
+        "Returns ?t if @this ?GCType is a ?GStructType");
+
+PRIVATE NONNULL((1)) void DCALL
+ctype_fini(CType *__restrict self) {
+	ASSERTF(self->ct_pointer == NULL, "Should have kept us alive");
+	ASSERTF(self->ct_lvalue == NULL, "Should have kept us alive");
+	ASSERTF(self->ct_arrays.sa_size == 0, "Should have kept us alive");
+#ifndef CONFIG_NO_CFUNCTION
+	ASSERTF(self->ct_functions.sf_size == 0, "Should have kept us alive");
+#endif /* !CONFIG_NO_CFUNCTION */
+
+	/* Free array/function type caches. */
+	Dee_Free(self->ct_arrays.sa_list);
+#ifndef CONFIG_NO_CFUNCTION
+	if (self->ct_ffitype != &ffi_type_pointer)
+		Dee_Free(self->ct_ffitype);
+	Dee_Free(self->ct_functions.sf_list);
+#endif /* !CONFIG_NO_CFUNCTION */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+ctype_dofunc(CType *return_type, size_t argc,
+             DeeObject *const *argv, ctypes_cc_t cc_flags) {
+	size_t i;
+	ctypes_cc_t cc;
+	CType **argv_types;
+	DREF CFunctionType *result;
+	cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
+	                   (unsigned int)cc_flags);
+	if (argc && DeeString_Check(argv[0])) {
+		--argc;
+		++argv;
+		cc = cc_lookup(DeeString_STR(argv[-1]));
+		if unlikely(cc == CC_INVALID)
+			goto err;
+		cc = (ctypes_cc_t)((unsigned int)cc |
+		                   (unsigned int)cc_flags);
+	}
+	argv_types = (CType **)Dee_Mallocac(argc, sizeof(CType *));
+	if unlikely(!argv_types)
+		goto err;
+
+	/* Translate argument types. */
+	for (i = 0; i < argc; ++i) {
+		argv_types[i] = CType_Of(argv[i]);
+		if unlikely(!argv_types[i])
+			goto err_argv_types;
+	}
+
+	/* Lookup the associated C-function type while inheriting the argument vector. */
+	result = CFunctionType_Of(return_type, cc, argc, argv_types);
+	Dee_Freea(argv_types);
+	return result;
+err_argv_types:
+	Dee_Freea(argv_types);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+ctype_func(CType *self, size_t argc, DeeObject *const *argv) {
+	return ctype_dofunc(self, argc, argv, (ctypes_cc_t)0);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+ctype_vfunc(CType *self, size_t argc, DeeObject *const *argv) {
+	return ctype_dofunc(self, argc, argv, CC_FVARARGS);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL
+ctype_frombytes(CType *self, size_t argc, DeeObject *const *argv) {
+	DREF CObject *result;
+	size_t type_size, data_size;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("frombytes", params: "
+	DeeBytesObject *data;
+	size_t offset = 0;
+", docStringPrefix: "ctype");]]]*/
+#define ctype_frombytes_params "data:?DBytes,offset=!0"
+	struct {
+		DeeBytesObject *data;
+		size_t offset;
+	} args;
+	args.offset = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "frombytes", &args, &args.data, "o", _DeeArg_AsObject, &args.offset, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.data, &DeeBytes_Type))
+		goto err;
+	type_size = CType_Sizeof(self);
+	data_size = DeeBytes_SIZE(args.data);
+	if unlikely(OVERFLOW_UADD(data_size, args.offset, &data_size))
+		goto err_bad_size;
+	if unlikely(type_size > data_size)
+		goto err_bad_size;
+	result = CType_AllocInstance(self);
+	if unlikely(!result)
+		goto err;
+	memcpy(CObject_Data(result), DeeBytes_DATA(args.data) + args.offset, type_size);
+	CObject_Init(result, self);
+	return result;
+err_bad_size:
+	data_size = DeeBytes_SIZE(args.data);
+	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: structued type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(args.data),
+	                args.offset, data_size);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+CType_PrintCRepr_impl(CType *__restrict self,
+                      Dee_formatprinter_t printer, void *arg) {
+	return CType_PrintCRepr(self, printer, arg, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ctype_crepr(CType *self, size_t argc, DeeObject *const *argv) {
+	struct Dee_unicode_printer printer;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("crepr", params: "
+	char const *varname = \"\";
+", docStringPrefix: "ctype");]]]*/
+#define ctype_crepr_params "varname=!P{}"
+	struct {
+		char const *varname;
+	} args;
+	args.varname = "";
+	if (DeeArg_UnpackStruct(argc, argv, "|s:crepr", &args))
+		goto err;
+/*[[[end]]]*/
+	Dee_unicode_printer_init(&printer);
+	if (CType_PrintCRepr(self, &Dee_unicode_printer_print, &printer, args.varname) < 0)
+		goto err_printer;
+	return Dee_unicode_printer_pack(&printer);
+err_printer:
+	Dee_unicode_printer_fini(&printer);
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_method tpconst ctype_methods[] = {
+	TYPE_METHOD("func", &ctype_func,
+	            "(types!:?DType)->?GFunctionType\n"
+	            "(cc:?Dstring,types!:?DType)->?GFunctionType\n"
+	            "#tValueError{The given @cc is unknown, or not supported by the host}"
+	            "#pcc{The name of the calling convention}"
+	            "Construct a new function prototype, using @types as argument, @this "
+	            /**/ "as return type, and @cc as calling convention\n"
+	            "Note that unlike ?#{op:call}, certain types from the ?Mdeemon core "
+	            /**/ "are also accepted as argument types, such as ?Dbool inplace of ?Gbool"),
+	TYPE_METHOD("vfunc", &ctype_vfunc,
+	            "(types!:?DType)->?GFunctionType\n"
+	            "(cc:?Dstring,types!:?DType)->?GFunctionType\n"
+	            "#tValueError{The given @cc is unknown, or not supported by the host}"
+	            "#pcc{The name of the calling convention}"
+	            "Same as ?#func, but enable support for varargs"),
+	TYPE_METHOD("frombytes", &ctype_frombytes,
+	            "(" ctype_frombytes_params ")->?.\n"
+	            "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
+	            "Construct an instance of @this structured type from @data"),
+	TYPE_METHOD("crepr", &ctype_crepr,
+	            "(" ctype_crepr_params ")->?Dstring\n"
+	            "Same as ?#{op:str}, but allows you to specify the name of a "
+	            /**/ "variable that should appear to be typed according to @this"),
+
+	//TYPE_METHOD("is_pointer", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	//TYPE_METHOD("is_lvalue", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	//TYPE_METHOD("is_structured", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	//TYPE_METHOD("is_struct", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	//TYPE_METHOD("is_array", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	//TYPE_METHOD("is_foreign_function", &type_is_return_false, "->?Dbool\nDeprecated (always returns ?f)"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst ctype_getsets[] = {
+	TYPE_GETTER_AB("ptr", &CPointerType_Of,
+	               "->?GPointerType\n"
+	               "Returns the pointer type associated with @this ?GCType"),
+	TYPE_GETTER_AB("lvalue", &CLValueType_Of,
+	               "->?GLValueType\n"
+	               "Returns the l-value type associated with @this ?GCType"),
+
+	TYPE_GETTER_AB("pointer", &CPointerType_Of,
+	               "->?GPointerType\n"
+	               "Deprecated alias for ?#ptr"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst ctype_members[] = {
+	TYPE_MEMBER_FIELD_DOC("sizeof", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CType, ct_sizeof),
+	                      "Returns the size of @this ?GCType in bytes"),
+	TYPE_MEMBER_FIELD_DOC("alignof", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CType, ct_alignof),
+	                      "Returns the alignment of @this ?GCType in bytes"),
+	TYPE_MEMBER_CONST_DOC("ispointer", Dee_False, DOC_GET(ispointer_doc)),
+	TYPE_MEMBER_CONST_DOC("islvalue", Dee_False, DOC_GET(islvalue_doc)),
+	TYPE_MEMBER_CONST_DOC("isarray", Dee_False, DOC_GET(isarray_doc)),
+	TYPE_MEMBER_CONST_DOC("isfunction", Dee_False, DOC_GET(isfunction_doc)),
+	TYPE_MEMBER_CONST_DOC("isstruct", Dee_False, DOC_GET(isstruct_doc)),
+	TYPE_MEMBER_END
+};
+
+
+
+PRIVATE struct type_seq ctype_seq = {
+	/* .tp_iter          = */ NULL,
+	/* .tp_sizeob        = */ NULL,
+	/* .tp_contains      = */ NULL,
+	/* .tp_getitem       = */ NULL,
+	/* .tp_delitem       = */ NULL,
+	/* .tp_setitem       = */ NULL,
+	/* .tp_getrange      = */ NULL,
+	/* .tp_delrange      = */ NULL,
+	/* .tp_setrange      = */ NULL,
+	/* .tp_foreach       = */ NULL,
+	/* .tp_foreach_pair  = */ NULL,
+	/* .tp_bounditem     = */ NULL,
+	/* .tp_hasitem       = */ NULL,
+	/* .tp_size          = */ NULL,
+	/* .tp_size_fast     = */ NULL,
+	/* .tp_getitem_index = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&CArrayType_Of,
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ctype_call(CType *self, size_t argc, DeeObject *const *argv) {
+	size_t i;
+
+	/* Create a new instance, or create a new function-type. */
+	if (!argc)
+		goto create_inst;
+	for (i = 0; i < argc; ++i) {
+		if (!Object_IsCType(argv[i]))
+			goto create_inst;
+	}
+
+	/* Special case: `xxx(void)' constructs a function prototype with no arguments. */
+	if (argc == 1 && argv[0] == CType_AsObject(&CVoid_Type))
+		argc = 0;
+
+	/* Use the default calling convention for constructing this function type. */
+	return CFunctionType_AsObject(CFunctionType_Of(self, CC_DEFAULT, argc, (CType *const *)argv));
+create_inst:
+	/* Construct a new instance. */
+	return DeeObject_New(CType_AsType(self), argc, argv);
+}
+
+PRIVATE DeeTypeObject *tpconst ctype_mro[] = {
+	&DeeType_Type,
+	&DeeObject_Type,
+	/* Types can be called to invoke their constructor,
+	 * so have them implement deemon.Callable. */
+	&DeeCallable_Type,
+	NULL,
+};
+
+INTERN DeeTypeObject CType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CType",
+	/* .tp_doc      = */ DOC("[]->\n"
+	                         "Construct new array types using @this type as item type\n"
+	                         "\n"
+
+	                         "str->\n"
+	                         "Returns the C-representation of this type\n"
+	                         "\n"
+
+	                         "repr->\n"
+	                         "Returns the deemon-representation of this type\n"
+	                         "\n"
+
+	                         "call()->?GStructured\n"
+	                         "call(args!)->?GStructured\n"
+	                         "call(types!:?GCType)->?GFunction\n"
+	                         "Construct a new function type using this type as return type, "
+	                         /**/ "or construct a new instance of @this ?GCType"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CType,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL /* XXX: Support me (probably impossible since lazily allocated
+			                            *      singletons (which is what CType objects are) can't be
+			                            *      serialized, since their address isn't fixed) */
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ctype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&CType_PrintCRepr_impl,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&CType_PrintDRepr,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &ctype_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ ctype_methods,
+	/* .tp_getsets       = */ ctype_getsets,
+	/* .tp_members       = */ ctype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ctype_call,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ ctype_mro
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cobject_ctor(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	bzero(CObject_Data(self), CType_Sizeof(tp_self));
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_copy(CObject *__restrict self, CObject *__restrict other) {
+	CType *tp_self = Dee_TYPE(self);
+	memcpy(CObject_Data(self), CObject_Data(other), CType_Sizeof(tp_self));
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cobject_init_kw(CObject *__restrict self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_initwith)(tp_self, CObject_Data(self), argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cobject_bool(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_bool)(tp_self, CObject_Data(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cobject_print(CObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_printcrepr)(tp_self, CObject_Data(self), printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cobject_printrepr(CObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_printdrepr)(tp_self, CObject_Data(self), printer, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+cobject_hash(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	return Dee_HashPtr(CObject_Data(self), CType_Sizeof(tp_self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_compare(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_compare)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE struct type_cmp cobject_cmp = {
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&cobject_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_compare,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_compare,
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_int32(CObject *__restrict self, int32_t *__restrict p_result) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_int32)(tp_self, CObject_Data(self), p_result);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_int64(CObject *__restrict self, int64_t *__restrict p_result) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_int64)(tp_self, CObject_Data(self), p_result);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_double(CObject *__restrict self, double *__restrict p_result) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_double)(tp_self, CObject_Data(self), p_result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cobject_int(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_int)(tp_self, CObject_Data(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cobject_inv(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_inv)(tp_self, CObject_Data(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cobject_pos(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_pos)(tp_self, CObject_Data(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cobject_neg(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_neg)(tp_self, CObject_Data(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_add(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_add)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_sub(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_sub)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_mul(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_mul)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_div(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_div)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_mod(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_mod)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_shl(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_shl)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_shr(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_shr)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_and(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_and)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_or(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_or)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_xor(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_xor)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cobject_pow(CObject *lhs, DeeObject *rhs) {
+	CType *tp_self = Dee_TYPE(lhs);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_pow)(tp_self, CObject_Data(lhs), rhs);
+}
+
+PRIVATE struct type_math cobject_math = {
+	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&cobject_int32,
+	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&cobject_int64,
+	/* .tp_double = */ (int(DCALL *)(DeeObject *__restrict, double *__restrict))&cobject_double,
+	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_int,
+	/* .tp_inv    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_inv,
+	/* .tp_pos    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_pos,
+	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_neg,
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_add,
+	/* .tp_sub    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_sub,
+	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mul,
+	/* .tp_div    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_div,
+	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mod,
+	/* .tp_shl    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shl,
+	/* .tp_shr    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shr,
+	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_and,
+	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_or,
+	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_xor,
+	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_pow,
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cobject_native_sizeof(CObject *__restrict self) {
+	CType *tp_self = Dee_TYPE(self);
+	return DeeInt_NewSize(offsetof(CObject, co_data) +
+	                      CType_Sizeof(tp_self));
+}
+
+PRIVATE struct type_getset tpconst cobject_getsets[] = {
+	TYPE_GETTER_AB("__sizeof__", &cobject_native_sizeof,
+	               "->?Dint\nReturns the heap-size of "
+	               "a raw R-Value instance such as this"),
+	TYPE_GETSET_END
+};
+
+typedef struct {
+	OBJECT_HEAD
+} VoidObject;
+
+INTERN CType AbstractCObject_Type = {
+	/* .ct_base = */ {
+		OBJECT_HEAD_INIT(&CType_Type),
+		/* .tp_name     = */ "CObject",
+		/* .tp_doc      = */ NULL,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ &DeeObject_Type,
+		/* .tp_init = */ {
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ VoidObject,
+				/* tp_ctor:        */ &cobject_ctor,
+				/* tp_copy_ctor:   */ &cobject_copy,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ &cobject_init_kw,
+				/* tp_serialize:   */ NULL /* XXX */
+			),
+			/* .tp_dtor        = */ NULL,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+		},
+		/* .tp_visit         = */ NULL,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ &cobject_math,
+		/* .tp_cmp           = */ &cobject_cmp,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_iterator      = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ cobject_getsets,
+		/* .tp_members       = */ NULL,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ NULL,
+		/* .tp_callable      = */ NULL,
+		/* .tp_mro           = */ NULL
+	},
+	CTYPE_INIT_COMMON_EX(
+		/* ct_sizeof:    */ 0,
+		/* ct_alignof:   */ 0,
+		/* ct_operators: */ &cvoid_operators,
+		/* ct_ffitype:   */ &ffi_type_void,
+		/* ct_pointer:   */ &AbstractCPointer_Type,
+		/* ct_lvalue:    */ &AbstractCLValue_Type
+	)
+};
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* ARRAY TYPE                                                           */
+/************************************************************************/
+
+/* Return a pointer to the `index' element (also asserts that "index" is in-bounds) */
+INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
+CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index) {
+	DREF CPointerType *item_pointer_type;
+	CArrayType *tp_self = Dee_TYPE(self);
+	union pointer res_cvalue;
+	index *= CArrayType_SizeofPointedToType(tp_self);
+	res_cvalue.ptr = CArray_Items(self);
+	res_cvalue.sint += index;
+	item_pointer_type = CPointerType_Of(CArrayType_PointedToType(tp_self));
+	if unlikely(!item_pointer_type)
+		goto err;
+	Dee_Incref(self);
+	return CPointer_NewExInherited(item_pointer_type,
+	                               res_cvalue.ptr,
+	                               Dee_AsObject(self));
+err:
+	return NULL;
+}
+
+/* Return an LValue to the `index' element (also asserts that "index" is in-bounds) */
+INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
+CArray_GetItem(CArray *__restrict self, ptrdiff_t index) {
+	DREF CLValue *result;
+	DREF CLValueType *item_lvalue_type;
+	CArrayType *tp_self = Dee_TYPE(self);
+	union pointer res_cvalue;
+	index *= CArrayType_SizeofPointedToType(tp_self);
+	res_cvalue.ptr = CArray_Items(self);
+	res_cvalue.sint += index;
+	item_lvalue_type = CLValueType_Of(CArrayType_PointedToType(tp_self));
+	if unlikely(!item_lvalue_type)
+		goto err;
+	result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err_item_lvalue_type;
+	result->cl_value = res_cvalue;
+	Dee_Incref(self);
+	result->cl_owner = Dee_AsObject(self);
+	CLValue_InitInherited(result, item_lvalue_type);
+	return result;
+err_item_lvalue_type:
+	Dee_Decref_unlikely(CLValueType_AsType(item_lvalue_type));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
+carray_add(CArray *lhs, DeeObject *rhs) {
+	ptrdiff_t rhs_cvalue;
+	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue))
+		goto err;
+	return CArray_PlusOffset(lhs, rhs_cvalue);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+carray_sub(CArray *lhs, DeeObject *rhs) {
+	CArrayType *tp_self = Dee_TYPE(lhs);
+	ptrdiff_t rhs_cvalue_int;
+	union pointer rhs_cvalue;
+	CType *rhs_pointer_base;
+	int status = DeeObject_TryAsGenericPointer(rhs, &rhs_pointer_base, &rhs_cvalue);
+	if (status <= 0) {
+		ptrdiff_t result;
+		union pointer lhs_cvalue;
+		lhs_cvalue.ptr = CArray_Items(lhs);
+		if unlikely(status < 0)
+			goto err;
+		if (CArrayType_PointedToType(tp_self) != rhs_pointer_base) {
+			DREF CPointerType *lhs_pointer_type;
+			DREF CPointerType *rhs_pointer_type;
+			lhs_pointer_type = CPointerType_Of(CArrayType_PointedToType(tp_self));
+			if unlikely(!lhs_pointer_type)
+				goto err;
+			rhs_pointer_type = CPointerType_Of(rhs_pointer_base);
+			if unlikely(!rhs_pointer_type) {
+				Dee_Decref_unlikely(CPointerType_AsType(lhs_pointer_type));
+				goto err;
+			}
+			DeeError_Throwf(&DeeError_TypeError,
+			                "Cannot subtract incompatible pointer types: %k - %k",
+			                lhs_pointer_type, rhs_pointer_type);
+			Dee_Decref_unlikely(CPointerType_AsType(rhs_pointer_type));
+			Dee_Decref_unlikely(CPointerType_AsType(lhs_pointer_type));
+			goto err;
+		}
+		result = lhs_cvalue.uint - rhs_cvalue.uint;
+		if (CArrayType_SizeofPointedToType(tp_self))
+			result /= CArrayType_SizeofPointedToType(tp_self);
+		return DeeInt_NewPtrdiff(result);
+	}
+	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue_int))
+		goto err;
+	return Dee_AsObject(CArray_PlusOffset(lhs, -rhs_cvalue_int));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+carray_size(CArray *__restrict self) {
+	CArrayType *tp_self = Dee_TYPE(self);
+	return CArrayType_Count(tp_self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
+carray_getitem_index(CArray *__restrict self, size_t index) {
+	CArrayType *tp_self = Dee_TYPE(self);
+	if unlikely(index >= CArrayType_Count(tp_self))
+		goto err_index_oob;
+	return CArray_GetItem(self, (ptrdiff_t)index);
+err_index_oob:
+	DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(tp_self));
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+carray_delitem_index(CArray *__restrict self, size_t index) {
+	CArrayType *tp_self = Dee_TYPE(self);
+	if unlikely(index >= CArrayType_Count(tp_self))
+		goto err_index_oob;
+	index *= CArrayType_SizeofPointedToType(tp_self);
+	bzero((byte_t *)CArray_Items(self) + index,
+	      CArrayType_SizeofPointedToType(tp_self));
+	return 0;
+err_index_oob:
+	return DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(tp_self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+carray_setitem_index(CArray *__restrict self, size_t index, DeeObject *value) {
+	CArrayType *tp_self = Dee_TYPE(self);
+	CType *item_type = CArrayType_PointedToType(tp_self);
+	struct ctype_operators const *item_ops = CType_Operators(item_type);
+	if unlikely(index >= CArrayType_Count(tp_self))
+		goto err_index_oob;
+	index *= CArrayType_SizeofPointedToType(tp_self);
+	return (*item_ops->co_initfrom)(item_type,
+	                                (byte_t *)CArray_Items(self) + index,
+	                                value);
+err_index_oob:
+	return DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(tp_self));
+}
+
+PRIVATE struct type_math carray_math = {
+	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&cobject_int32,
+	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&cobject_int64,
+	/* .tp_double = */ (int(DCALL *)(DeeObject *__restrict, double *__restrict))&cobject_double,
+	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_int,
+	/* .tp_inv    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_inv, /* Unsupported */
+	/* .tp_pos    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_pos, /* Unsupported */
+	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_neg, /* Unsupported */
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&carray_add,
+	/* .tp_sub    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&carray_sub,
+	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mul, /* Unsupported */
+	/* .tp_div    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_div, /* Unsupported */
+	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mod, /* Unsupported */
+	/* .tp_shl    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shl, /* Unsupported */
+	/* .tp_shr    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shr, /* Unsupported */
+	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_and, /* Unsupported */
+	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_or,  /* Unsupported */
+	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_xor, /* Unsupported */
+	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_pow, /* Unsupported */
+};
+
+PRIVATE struct type_seq carray_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&carray_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&carray_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&carray_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&CArray_GetItem,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&carray_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&carray_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))NULL, /* TODO: &carray_hasitem_index */
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))NULL, /* TODO: &carray_hasitem_index */
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,  /* TODO: &carray_getrange_index */
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,              /* TODO: &carray_delrange_index */
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL, /* TODO: &carray_setrange_index */
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,               /* TODO: &carray_getrange_index_n */
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,                           /* TODO: &carray_delrange_index_n */
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &carray_setrange_index_n */
+};
+
+
+PRIVATE DeeTypeObject *tpconst carray_subclass_mro[] = {
+	CArrayType_AsType(&AbstractCArray_Type),
+#define carray_mro (carray_subclass_mro + 1)
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeSeq_Type,
+	NULL,
+};
+
+PRIVATE NONNULL((1)) void DCALL
+carraytype_fini(CArrayType *__restrict self) {
+	DREF CType *item_type = self->cat_item;
+
+	/* Delete the weak-link to the original type. */
+	CType_CacheLockWrite(item_type);
+	ASSERT(LIST_ISBOUND(self, cat_chain));
+	LIST_REMOVE(self, cat_chain);
+	CType_CacheLockEndWrite(item_type);
+	Dee_Decref(CType_AsType(item_type));
+
+	/* Prevent "type_fini" from trying to free this */
+	ASSERT(self->cat_base.ct_base.tp_mro == carray_subclass_mro);
+	self->cat_base.ct_base.tp_mro = NULL;
+}
+
+PRIVATE struct type_member tpconst carraytype_members[] = {
+	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CArrayType, cat_item), "->?GCType"),
+	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CArrayType, cat_count)),
+	TYPE_MEMBER_END
+};
+
+PRIVATE DeeTypeObject *tpconst carraytype_mro[] = {
+#define cstructtype_mro   carraytype_mro
+#define cfunctiontype_mro carraytype_mro
+#define cpointertype_mro  carraytype_mro
+#define clvaluetype_mro   carraytype_mro
+	&CType_Type,
+	&DeeType_Type,
+	&DeeObject_Type,
+	&DeeCallable_Type,
+	NULL,
+};
+
+INTERN DeeTypeObject CArrayType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CArrayType",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &CType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CArrayType,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&carraytype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ carraytype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ carraytype_mro
+};
+
+INTERN CArrayType AbstractCArray_Type = {
+	/* .cat_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CArrayType_Type),
+			/* .tp_name     = */ "Array",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ VoidObject,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ NULL,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ NULL,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &carray_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ &carray_seq,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ NULL,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ carray_mro
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ 0,
+			/* ct_alignof:   */ 0,
+			/* ct_operators: */ &carray_operators,
+			/* ct_ffitype:   */ &ffi_type_void
+		)
+	},
+	/* .cat_item  = */ &AbstractCObject_Type,
+	/* .cat_chain = */ LIST_ENTRY_UNBOUND_INITIALIZER,
+	/* .cat_count = */ 0,
+	/* .cat_isize = */ 0,
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF CArrayType *DCALL
+CArrayType_New(CType *__restrict item_type, size_t item_count) {
+	DREF CArrayType *result;
+	result = DeeGCObject_CALLOC(CArrayType);
+	if unlikely(!result)
+		goto err;
+
+	/* Allowing "(size_t)-1" as size would lead to problems with error reporting */
+	if unlikely(item_count == (size_t)-1)
+		goto too_large;
+
+	/* Calculate C sizeof */
+	if (OVERFLOW_UMUL(item_count, CType_Sizeof(item_type),
+	                  &result->cat_base.ct_sizeof)) {
+		/* Overflow: Array is too large. */
+too_large:
+		DeeError_Throwf(&DeeError_IntegerOverflow,
+		                "Array type `%r[%" PRFuSIZ "]` is too large",
+		                item_type, item_count);
+		goto err_r;
+	}
+
+	/* Initialize fields. */
+
+	result->cat_base.ct_base.tp_init.tp_alloc.tp_instance_size = result->cat_base.ct_sizeof;
+	result->cat_base.ct_base.tp_init.tp_alloc.tp_instance_size += offsetof(CObject, co_data);
+	DeeType_OptimizeAlloc(&result->cat_base.ct_base);
+	result->cat_base.ct_base.tp_name  = "Array";
+	result->cat_base.ct_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+	Dee_Incref(CArrayType_AsType(&AbstractCArray_Type));
+	result->cat_base.ct_base.tp_base  = CArrayType_AsType(&AbstractCArray_Type);
+	result->cat_base.ct_base.tp_cmp   = &cobject_cmp;
+	result->cat_base.ct_base.tp_math  = &carray_math;
+	result->cat_base.ct_base.tp_seq   = &carray_seq;
+	result->cat_base.ct_base.tp_mro   = carray_subclass_mro;
+	Dee_atomic_rwlock_cinit(&result->cat_base.ct_cachelock);
+	result->cat_base.ct_alignof   = item_type->ct_alignof; /* Re-use item alignment. */
+	result->cat_base.ct_operators = &carray_operators;
+
+	Dee_Incref(CType_AsType(item_type));
+	result->cat_item  = item_type; /* Inherit reference. */
+	result->cat_count = item_count;
+	result->cat_isize = CType_Sizeof(item_type);
+
+	/* Finalize the array type. */
+	DeeObject_InitStatic(CArrayType_AsType(result), &CArrayType_Type);
+	return Type_AsCArrayType(DeeGC_TRACK(DeeTypeObject, CArrayType_AsType(result)));
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+
+PRIVATE NONNULL((1)) bool DCALL
+ctype_array_rehash(CType *__restrict self, Dee_hash_t new_mask) {
+	struct carray_type_list *new_map;
+again:
+	new_map = (struct carray_type_list *)Dee_TryCallocc(new_mask + 1,
+	                                                    sizeof(struct carray_type_list));
+	if unlikely(!new_map) {
+		/* Try again with a 1-element mask. */
+		if (!self->ct_arrays.sa_list && new_mask != 0) {
+			new_mask = 1;
+			goto again;
+		}
+		return false;
+	}
+
+	/* Do the re-hash. */
+	if (self->ct_arrays.sa_size) {
+		struct carray_type_list *biter, *bend;
+		ASSERT(self->ct_arrays.sa_list);
+		bend = (biter = self->ct_arrays.sa_list) + (self->ct_arrays.sa_mask + 1);
+		for (; biter < bend; ++biter) {
+			CArrayType *iter, *next;
+			iter = LIST_FIRST(biter);
+			while (iter) {
+				struct carray_type_list *dst;
+				next = LIST_NEXT(iter, cat_chain);
+				dst  = &new_map[iter->cat_count & new_mask];
+				/* Insert the entry into the new hash-map. */
+				LIST_INSERT_HEAD(dst, iter, cat_chain);
+				iter = next;
+			}
+		}
+	}
+
+	/* Delete the old map and install the new. */
+	Dee_Free(self->ct_arrays.sa_list);
+	self->ct_arrays.sa_mask = new_mask;
+	self->ct_arrays.sa_list = new_map;
+	return true;
+}
+
+/* Construct a new array-type `item_type[item_count]' */
+INTERN WUNUSED NONNULL((1)) DREF CArrayType *DCALL
+CArrayType_Of(CType *__restrict item_type, size_t item_count) {
+	DREF CArrayType *result;
+	DREF struct carray_type_list *bucket;
+	ASSERT_OBJECT_TYPE(CType_AsType(item_type), &CType_Type);
+	CType_CacheLockRead(item_type);
+	ASSERT(!item_type->ct_arrays.sa_size ||
+	       item_type->ct_arrays.sa_mask);
+	if (item_type->ct_arrays.sa_size) {
+		result = LIST_FIRST(&item_type->ct_arrays.sa_list[item_count & item_type->ct_arrays.sa_mask]);
+		while (result && result->cat_count != item_count)
+			result = LIST_NEXT(result, cat_chain);
+
+		/* Check if we can re-use an existing type. */
+		if (result && Dee_IncrefIfNotZero(CArrayType_AsType(result))) {
+			CType_CacheLockEndRead(item_type);
+			return result;
+		}
+	}
+	CType_CacheLockEndRead(item_type);
+
+	/* Construct a new array type. */
+	result = CArrayType_New(item_type, item_count);
+	if unlikely(!result)
+		goto done;
+
+	/* Add the new type to the cache. */
+register_type:
+	CType_CacheLockWrite(item_type);
+	ASSERT(!item_type->ct_arrays.sa_size ||
+	       item_type->ct_arrays.sa_mask);
+	if (item_type->ct_arrays.sa_size) {
+		DREF CArrayType *new_result;
+		new_result = LIST_FIRST(&item_type->ct_arrays.sa_list[item_count & item_type->ct_arrays.sa_mask]);
+		while (new_result && new_result->cat_count != item_count)
+			new_result = LIST_NEXT(new_result, cat_chain);
+
+		/* Check if we can re-use an existing type. */
+		if (new_result && Dee_IncrefIfNotZero(CArrayType_AsType(new_result))) {
+			CType_CacheLockEndRead(item_type);
+			Dee_Decref(CArrayType_AsType(result));
+			return new_result;
+		}
+	}
+
+	/* Rehash when there are a lot of items. */
+	if (item_type->ct_arrays.sa_size >= item_type->ct_arrays.sa_mask &&
+	    (!ctype_array_rehash(item_type, item_type->ct_arrays.sa_mask
+	                               ? (item_type->ct_arrays.sa_mask << 1) | 1
+	                               : 16 - 1) &&
+	     !item_type->ct_arrays.sa_mask)) {
+
+		/* No space at all! */
+		CType_CacheLockEndWrite(item_type);
+
+		/* Collect enough memory for a 1-item hash map. */
+		if (Dee_CollectMemory(sizeof(CArrayType *)))
+			goto register_type;
+
+		/* Failed to allocate the initial hash-map. */
+		Dee_Decref(CArrayType_AsType(result));
+		result = NULL;
+		goto done;
+	}
+
+	/* Insert the new array type into the hash-map. */
+	bucket = &item_type->ct_arrays.sa_list[item_count & item_type->ct_arrays.sa_mask];
+	LIST_INSERT_HEAD(bucket, result, cat_chain); /* Weak reference. */
+	CType_CacheLockEndWrite(item_type);
+done:
+	return result;
+}
+
+
+
+
+
+/************************************************************************/
+/* STRUCT TYPE                                                          */
+/************************************************************************/
+
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+err_no_such_struct_field(CStructType *__restrict type,
+                         char const *field_name,
+                         size_t field_name_length) {
+	(void)type;
+	return DeeError_Throwf(&DeeError_AttributeError,
+	                       "No such struct field: %$s",
+	                       field_name_length, field_name);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+cstructtype_fini(CStructType *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->cst_size; ++i) {
+		struct cstruct_field *field = &self->cst_fvec[i];
+		if (field->csf_name) {
+			Dee_Decref(field->csf_name);
+			Dee_Decref(CLValueType_AsType(field->csf_lvtype));
+		}
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cstructtype_offsetof(CStructType *self, size_t argc, DeeObject *const *argv) {
+	struct cstruct_field *field;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetof", params: "
+	DeeStringObject *field
+", docStringPrefix: "cstructtype");]]]*/
+#define cstructtype_offsetof_params "field:?Dstring"
+	struct {
+		DeeStringObject *field;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "offsetof", &args.field);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.field, &DeeString_Type))
+		goto err;
+	field = CStructType_FieldByName(self, Dee_AsObject(args.field));
+	if unlikely(!field)
+		goto err_no_such_field;
+	return DeeInt_NewPtrdiff(cstruct_field_getoffset(field));
+err_no_such_field:
+	err_no_such_struct_field(self, DeeString_STR(args.field), DeeString_SIZE(args.field));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cstructtype_offsetafter(CStructType *self, size_t argc, DeeObject *const *argv) {
+	struct cstruct_field *field;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetafter", params: "
+	DeeStringObject *field
+", docStringPrefix: "cstructtype");]]]*/
+#define cstructtype_offsetafter_params "field:?Dstring"
+	struct {
+		DeeStringObject *field;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "offsetafter", &args.field);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.field, &DeeString_Type))
+		goto err;
+	field = CStructType_FieldByName(self, Dee_AsObject(args.field));
+	if unlikely(!field)
+		goto err_no_such_field;
+	return DeeInt_NewPtrdiff(cstruct_field_getoffset(field) +
+	                         CType_Sizeof(cstruct_field_gettype(field)));
+err_no_such_field:
+	err_no_such_struct_field(self, DeeString_STR(args.field), DeeString_SIZE(args.field));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CType *DCALL
+cstructtype_typeof_field(CStructType *self, size_t argc, DeeObject *const *argv) {
+	DREF CType *result;
+	struct cstruct_field *field;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof_field", params: "
+	DeeStringObject *field
+", docStringPrefix: "cstructtype");]]]*/
+#define cstructtype_typeof_field_params "field:?Dstring"
+	struct {
+		DeeStringObject *field;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "typeof_field", &args.field);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.field, &DeeString_Type))
+		goto err;
+	field = CStructType_FieldByName(self, Dee_AsObject(args.field));
+	if unlikely(!field)
+		goto err_no_such_field;
+	result = cstruct_field_gettype(field);
+	Dee_Incref(CType_AsType(result));
+	return result;
+err_no_such_field:
+	err_no_such_struct_field(self, DeeString_STR(args.field), DeeString_SIZE(args.field));
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst cstructtype_methods[] = {
+	TYPE_METHOD_F("offsetof", &cstructtype_offsetof, METHOD_FNOREFESCAPE,
+	              "(" cstructtype_offsetof_params ")->?Dint\n"
+	              "#tAttributeError{No field with the name @field exists}"
+	              "Returns the offset of a given @field"),
+	TYPE_METHOD_F("offsetafter", &cstructtype_offsetafter, METHOD_FNOREFESCAPE,
+	              "(" cstructtype_offsetafter_params ")->?Dint\n"
+	              "#tAttributeError{No field with the name @field exists}"
+	              "Returns the offset after a given @field"),
+	/* TODO: containerof(pointer p, string field) -> lvalue
+	 *       Where type(p) === this.typeof(field).pointer,
+	 *       and type(return) == this.lvalue */
+	TYPE_METHOD_F("typeof_field", &cstructtype_typeof_field, METHOD_FNOREFESCAPE,
+	              "(field:?Dstring)->?GCType\n"
+	              "#tAttributeError{No field with the name @field exists}"
+	              "Returns the typing of given @field"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst cstructtype_getsets[] = {
+	/* TODO: "fields->?M?Dstring?GStructField", where "StructField" is
+	 *       a custom proxy type to inspect attributes of struct fields */
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst cstructtype_members[] = {
+	TYPE_MEMBER_CONST_DOC("isstruct", Dee_True, DOC_GET(isstruct_doc)),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject CStructType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CStructType",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &CType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cstructtype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ cstructtype_methods,
+	/* .tp_getsets       = */ cstructtype_getsets,
+	/* .tp_members       = */ cstructtype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ cstructtype_mro
+};
+
+INTERN WUNUSED NONNULL((2)) DREF CLValue *DCALL
+CStruct_GetAttrField_p(void *self, struct cstruct_field const *field, DeeObject *owner) {
+	DREF CLValue *result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err;
+	result->cl_value.ptr = self;
+	result->cl_value.sint += field->csf_offset;
+	Dee_XIncref(owner);
+	result->cl_owner = owner;
+	CLValue_Init(result, field->csf_lvtype);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((2)) int DCALL
+CStruct_DelAttrField_p(void *self, struct cstruct_field const *field) {
+	union pointer cvalue;
+	cvalue.ptr = self;
+	cvalue.sint += field->csf_offset;
+	CTYPES_FAULTPROTECT({
+		bzero(cvalue.ptr, CType_Sizeof(cstruct_field_gettype(field)));
+	}, return -1);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((2, 3)) int DCALL
+CStruct_SetAttrField_p(void *self, struct cstruct_field const *field, DeeObject *value) {
+	union pointer cvalue;
+	CType *field_type = cstruct_field_gettype(field);
+	struct ctype_operators const *ops = CType_Operators(field_type);
+	cvalue.ptr = self;
+	cvalue.sint += field->csf_offset;
+	return (*ops->co_initfrom)(field_type, cvalue.ptr, value);
+}
+
+
+INTERN WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL
+CStruct_GetAttr_p(CStructType *__restrict tp_self, void *self,
+                  /*String*/ DeeObject *attr, DeeObject *owner) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByName(tp_self, attr);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_GetAttrField_p(self, field, owner);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, DeeString_STR(attr), DeeString_SIZE(attr));
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL
+CStruct_GetAttrStringHash_p(CStructType *__restrict tp_self, void *self,
+                            char const *attr, Dee_hash_t hash, DeeObject *owner) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringHash(tp_self, attr, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_GetAttrField_p(self, field, owner);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, strlen(attr));
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL
+CStruct_GetAttrStringLenHash_p(CStructType *__restrict tp_self, void *self,
+                               char const *attr, size_t attrlen,
+                               Dee_hash_t hash, DeeObject *owner) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringLenHash(tp_self, attr, attrlen, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_GetAttrField_p(self, field, owner);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, attrlen);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+CStruct_DelAttr_p(CStructType *__restrict tp_self, void *self, /*String*/ DeeObject *attr) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByName(tp_self, attr);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_DelAttrField_p(self, field);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, DeeString_STR(attr), DeeString_SIZE(attr));
+/*err:*/
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+CStruct_DelAttrStringHash_p(CStructType *__restrict tp_self, void *self,
+                            char const *attr, Dee_hash_t hash) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringHash(tp_self, attr, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_DelAttrField_p(self, field);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, strlen(attr));
+/*err:*/
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+CStruct_DelAttrStringLenHash_p(CStructType *__restrict tp_self, void *self,
+                               char const *attr, size_t attrlen, Dee_hash_t hash) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringLenHash(tp_self, attr, attrlen, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_DelAttrField_p(self, field);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, attrlen);
+/*err:*/
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+CStruct_SetAttr_p(CStructType *__restrict tp_self, void *self,
+                  /*String*/ DeeObject *attr, DeeObject *value) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByName(tp_self, attr);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_SetAttrField_p(self, field, value);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, DeeString_STR(attr), DeeString_SIZE(attr));
+/*err:*/
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+CStruct_SetAttrStringHash_p(CStructType *__restrict tp_self, void *self,
+                            char const *attr, Dee_hash_t hash, DeeObject *value) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringHash(tp_self, attr, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_SetAttrField_p(self, field, value);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, strlen(attr));
+/*err:*/
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 6)) int DCALL
+CStruct_SetAttrStringLenHash_p(CStructType *__restrict tp_self, void *self,
+                               char const *attr, size_t attrlen,
+                               Dee_hash_t hash, DeeObject *value) {
+	struct cstruct_field *field;
+	field = CStructType_FieldByNameStringLenHash(tp_self, attr, attrlen, hash);
+	if unlikely(!field)
+		goto err_no_such_field;
+	return CStruct_SetAttrField_p(self, field, value);
+err_no_such_field:
+	err_no_such_struct_field(tp_self, attr, attrlen);
+/*err:*/
+	return -1;
+}
+
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+CStruct_GetAttr(CStruct *self, /*String*/ DeeObject *attr) {
+	return CStruct_GetAttr_p(Dee_TYPE(self), CStruct_Data(self), attr, Dee_AsObject(self));
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+CStruct_GetAttrStringHash(CStruct *self, char const *attr, Dee_hash_t hash) {
+	return CStruct_GetAttrStringHash_p(Dee_TYPE(self), CStruct_Data(self), attr, hash, Dee_AsObject(self));
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+CStruct_GetAttrStringLenHash(CStruct *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return CStruct_GetAttrStringLenHash_p(Dee_TYPE(self), CStruct_Data(self), attr, attrlen, hash, Dee_AsObject(self));
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+CStruct_DelAttr(CStruct *self, /*String*/ DeeObject *attr) {
+	return CStruct_DelAttr_p(Dee_TYPE(self), CStruct_Data(self), attr);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+CStruct_DelAttrStringHash(CStruct *self, char const *attr, Dee_hash_t hash) {
+	return CStruct_DelAttrStringHash_p(Dee_TYPE(self), CStruct_Data(self), attr, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+CStruct_DelAttrStringLenHash(CStruct *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return CStruct_DelAttrStringLenHash_p(Dee_TYPE(self), CStruct_Data(self), attr, attrlen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+CStruct_SetAttr(CStruct *self, /*String*/ DeeObject *attr, DeeObject *value) {
+	return CStruct_SetAttr_p(Dee_TYPE(self), CStruct_Data(self), attr, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+CStruct_SetAttrStringHash(CStruct *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
+	return CStruct_SetAttrStringHash_p(Dee_TYPE(self), CStruct_Data(self), attr, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+CStruct_SetAttrStringLenHash(CStruct *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value) {
+	return CStruct_SetAttrStringLenHash_p(Dee_TYPE(self), CStruct_Data(self), attr, attrlen, hash, value);
+}
+
+
+PRIVATE struct type_attr cstruct_attr = {
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&CStruct_GetAttr,
+	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&CStruct_DelAttr,
+	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&CStruct_SetAttr,
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /*TODO: &cstruct_iterattr,*/
+	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))NULL, /*TODO: &cstruct_findattr,*/
+	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstruct_hasattr,*/
+	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstruct_boundattr,*/
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&CStruct_GetAttrStringHash,
+	/* .tp_delattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&CStruct_DelAttrStringHash,
+	/* .tp_setattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&CStruct_SetAttrStringHash,
+	/* .tp_hasattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstruct_hasattr_string_hash, */
+	/* .tp_boundattr_string_hash     = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstruct_boundattr_string_hash, */
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&CStruct_GetAttrStringLenHash,
+	/* .tp_delattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&CStruct_DelAttrStringLenHash,
+	/* .tp_setattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&CStruct_SetAttrStringLenHash,
+	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstruct_hasattr_string_len_hash, */
+	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstruct_boundattr_string_len_hash, */
+};
+
+INTERN struct empty_cstruct_type_object AbstractCStruct_Type = {
+	/* .cst_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CStructType_Type),
+			/* .tp_name     = */ "Struct",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ VoidObject,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ NULL,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ NULL,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cobject_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ NULL,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ &cstruct_attr,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ NULL,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ NULL
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ 0,
+			/* ct_alignof:   */ 0,
+			/* ct_operators: */ &cstruct_operators,
+			/* ct_ffitype:   */ &ffi_type_void
+		)
+	},
+	/* .cst_first = */ NULL,
+	/* .cst_fmsk  = */ 0,
+	/* .cst_size  = */ 1,
+	/* .cst_fvec  = */ {
+		/* [0] = */ {
+			/* .csf_name   = */ NULL,
+			/* .csf_hash   = */ 0,
+			/* .csf_offset = */ 0,
+			/* .csf_next   = */ NULL,
+			/* .csf_lvtype = */ NULL
+		}
+	}
+};
+
+
+INTERN WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByName(CStructType const *self, /*string*/DeeObject *name) {
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	return CStructType_FieldByNameStringLenHash(self,
+	                                            DeeString_STR(name),
+	                                            DeeString_SIZE(name),
+	                                            DeeString_Hash(name));
+}
+
+INTERN WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByNameStringHash(CStructType const *self,
+                                  char const *name, Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
+	i = perturb = STRUCT_TYPE_HASHST(self, hash);
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
+		struct cstruct_field *field;
+		DeeStringObject *field_name;
+		field      = STRUCT_TYPE_HASHIT(self, i);
+		field_name = field->csf_name;
+		if unlikely(!field_name)
+			break;
+		if (field->csf_hash != hash)
+			continue;
+		if (strcmp(DeeString_STR(field_name), name) == 0)
+			return field;
+	}
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByNameStringLenHash(CStructType const *self, char const *name,
+                                     size_t namelen, Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
+	i = perturb = STRUCT_TYPE_HASHST(self, hash);
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
+		struct cstruct_field *field;
+		DeeStringObject *field_name;
+		field      = STRUCT_TYPE_HASHIT(self, i);
+		field_name = field->csf_name;
+		if unlikely(!field_name)
+			break;
+		if (field->csf_hash != hash)
+			continue;
+		if (DeeString_SIZE(field_name) != namelen)
+			continue;
+		if (bcmp(DeeString_STR(field_name), name, namelen * sizeof(char)) == 0)
+			return field;
+	}
+	return NULL;
+}
+
+
+struct cstruct_builder {
+	CStructType           *csb_result;    /* [0..1] Struct built thus far ("cst_size" is the allocated size) */
+	size_t                 csb__cst_size; /* Used size (after packing, this becomes `csb_result->cst_size') */
+	size_t                 csb_msk_used;  /* # of named fields used */
+	struct cstruct_field **csb_p_last;    /* [0..0][0..1][valid_if(csb_result)] Pointer to next-field of last-added field */
+};
+
+#define cstruct_builder_init(self) \
+	(void)((self)->csb_result = NULL, (self)->csb__cst_size = 0, (self)->csb_msk_used = 0)
+PRIVATE NONNULL((1)) void DCALL
+cstruct_builder_fini(struct cstruct_builder *__restrict self) {
+	size_t i;
+	CStructType *result = self->csb_result;
+	if (!result)
+		return;
+	for (i = 0; i < self->csb__cst_size; ++i) {
+		struct cstruct_field *field = &result->cst_fvec[i];
+		if (field->csf_name) {
+			Dee_Decref(CLValueType_AsType(field->csf_lvtype));
+			Dee_Decref(field->csf_name);
+		}
+	}
+	DeeGCObject_Free(result);
+}
+
+PRIVATE NONNULL((1, 2, 3)) struct cstruct_field *DCALL
+CStructType_AddField(CStructType *self,
+                     /*inherit(on_success)*/ DREF struct Dee_string_object *name,
+                     /*inherit(on_success)*/ DREF CLValueType *lvtype,
+                     ptrdiff_t offset) {
+	struct cstruct_field *field;
+	Dee_hash_t i, perturb, hash = DeeString_Hash(name);
+	ASSERT(!DeeString_IsEmpty(name));
+	i = perturb = STRUCT_TYPE_HASHST(self, hash);
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
+		DeeStringObject *field_name;
+		field      = STRUCT_TYPE_HASHIT(self, i);
+		field_name = field->csf_name;
+		if unlikely(!field_name)
+			break;
+		if (field->csf_hash != hash)
+			continue;
+		if (DeeString_EqualsSTR(field_name, name))
+			return NULL; /* Field with this name already exists */
+	}
+	field->csf_name   = name;
+	field->csf_hash   = hash;
+	field->csf_offset = offset;
+	field->csf_next   = NULL;
+	field->csf_lvtype = lvtype;
+	return field;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cstruct_builder_rehash(struct cstruct_builder *__restrict self,
+                       Dee_hash_t mask, size_t size) {
+	CStructType *old_result = self->csb_result;
+	CStructType *new_result;
+	ASSERT(IS_POWER_OF_TWO(mask + 1));
+	ASSERT(mask < size);
+	new_result = (CStructType *)DeeGCObject_Callocc(offsetof(CStructType, cst_fvec),
+	                                                size, sizeof(struct cstruct_field));
+	if unlikely(!new_result)
+		goto err;
+	new_result->cst_fmsk = mask;
+	new_result->cst_size = size;
+	if (old_result) {
+		size_t i;
+		struct cstruct_field *src_iter;
+		struct cstruct_field **p_dst_iter;
+
+		/* Transfer base fields. */
+		new_result->cst_base.ct_sizeof  = old_result->cst_base.ct_sizeof;
+		new_result->cst_base.ct_alignof = old_result->cst_base.ct_alignof;
+
+		/* Transfer struct fields... */
+		for (i = 0; i <= old_result->cst_fmsk; ++i) {
+			struct cstruct_field *old_field = &old_result->cst_fvec[i];
+			if (old_field->csf_name) {
+				struct cstruct_field *new_field;
+				new_field = CStructType_AddField(new_result,
+				                                 old_field->csf_name,
+				                                 old_field->csf_lvtype,
+				                                 old_field->csf_offset);
+				ASSERTF(new_field,
+				        "If field %r is duplicate, then how was it "
+				        /**/ "ever added to the original CStructType?",
+				        old_field->csf_name);
+				ASSERT(new_field->csf_next == NULL);
+			}
+		}
+
+		/* Migrate anonymous fields... */
+		for (; i < self->csb__cst_size; ++i) {
+			struct cstruct_field *old_field = &old_result->cst_fvec[i];
+			struct cstruct_field *new_field = &new_result->cst_fvec[i - old_result->cst_fmsk + mask];
+			ASSERT(old_field->csf_name);
+			ASSERT(DeeString_IsEmpty(old_field->csf_name));
+			*new_field = *old_field;
+			new_field->csf_next = NULL;
+		}
+
+		/* Rebuild ordered field chain */
+		p_dst_iter = &new_result->cst_first;
+		for (src_iter = old_result->cst_first; src_iter; src_iter = src_iter->csf_next) {
+			struct cstruct_field *new_field;
+			ASSERT(src_iter->csf_name);
+			if (DeeString_IsEmpty(src_iter->csf_name)) {
+				/* Anonymous field */
+				size_t old_field_index = src_iter - old_result->cst_fvec;
+				size_t new_field_index = old_field_index - old_result->cst_fmsk + mask;
+				new_field = &new_result->cst_fvec[new_field_index];
+			} else {
+				new_field = CStructType_FieldByName(new_result, Dee_AsObject(src_iter->csf_name));
+			}
+			ASSERT(new_field);
+			ASSERT(new_field->csf_name == src_iter->csf_name);
+			ASSERT(new_field->csf_hash == src_iter->csf_hash);
+			ASSERT(new_field->csf_offset == src_iter->csf_offset);
+			ASSERT(new_field->csf_lvtype == src_iter->csf_lvtype);
+			ASSERT(new_field->csf_next == NULL);
+			*p_dst_iter = (struct cstruct_field *)new_field;
+			p_dst_iter = &new_field->csf_next;
+		}
+		self->csb_p_last = p_dst_iter;
+		self->csb__cst_size -= old_result->cst_fmsk;
+		self->csb__cst_size += mask;
+
+		/* Free the old struct type buffer. */
+		DeeGCObject_Free(old_result);
+	} else {
+		ASSERT(self->csb__cst_size == 0);
+		ASSERT(self->csb_msk_used == 0);
+		self->csb_p_last = &new_result->cst_first;
+		self->csb__cst_size = mask + 1;
+	}
+	self->csb_result = new_result;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CStructType *DCALL
+cstruct_builder_pack(struct cstruct_builder *__restrict self) {
+	DREF CStructType *result = self->csb_result;
+	if unlikely(!result) {
+		/* Special case: empty struct */
+		Dee_Incref(CStructType_AsType(&AbstractCStruct_Type));
+		return (DREF CStructType *)&AbstractCStruct_Type;
+	}
+	ASSERT(self->csb__cst_size <= result->cst_size);
+	if (self->csb__cst_size < result->cst_size) {
+		result = (CStructType *)DeeGCObject_TryReallocc(result,
+		                                                offsetof(CStructType, cst_fvec),
+		                                                self->csb__cst_size,
+		                                                sizeof(struct cstruct_field));
+		if unlikely(!result)
+			result = self->csb_result;
+		result->cst_size = self->csb__cst_size;
+	}
+
+	result->cst_base.ct_base.tp_init.tp_alloc.tp_instance_size = result->cst_base.ct_sizeof;
+	result->cst_base.ct_base.tp_init.tp_alloc.tp_instance_size += offsetof(CObject, co_data);
+	DeeType_OptimizeAlloc(&result->cst_base.ct_base);
+	result->cst_base.ct_base.tp_name  = "Struct";
+	result->cst_base.ct_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+	Dee_Incref(CStructType_AsType(&AbstractCStruct_Type));
+	result->cst_base.ct_base.tp_base  = CStructType_AsType(&AbstractCStruct_Type);
+	result->cst_base.ct_base.tp_cmp   = &cobject_cmp;
+	result->cst_base.ct_base.tp_math  = &cobject_math;
+	result->cst_base.ct_base.tp_attr  = &cstruct_attr;
+	Dee_atomic_rwlock_cinit(&result->cst_base.ct_cachelock);
+	result->cst_base.ct_operators = &cstruct_operators;
+	DeeObject_InitStatic(CStructType_AsType(result), &CStructType_Type);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
+cstruct_builder_addfield(struct cstruct_builder *__restrict self,
+                         /*inherit(always)*/ DREF struct Dee_string_object *name,
+                         /*inherit(always)*/ DREF CLValueType *lvtype,
+                         ptrdiff_t offset, ptrdiff_t *p_end_offset,
+                         bool part_of_chain) {
+	struct cstruct_field *new_field;
+	CStructType *result;
+	ptrdiff_t end_offset;
+	size_t min_align;
+	if (!self->csb_result) {
+		if unlikely(cstruct_builder_rehash(self, 7, 8))
+			goto err;
+	} else if (self->csb_msk_used >= self->csb_result->cst_fmsk) {
+		size_t new_mask = (self->csb_result->cst_fmsk << 1) | 1;
+		size_t new_size = new_mask + (self->csb__cst_size - self->csb_result->cst_fmsk);
+		if unlikely(cstruct_builder_rehash(self, new_mask, new_size))
+			goto err;
+	}
+	result = self->csb_result;
+	new_field = CStructType_AddField(result, name, lvtype, offset);
+	if unlikely(!new_field)
+		goto err_duplicate_field;
+	if (part_of_chain) {
+		*self->csb_p_last = new_field;
+		self->csb_p_last = &new_field;
+	}
+	++self->csb_msk_used;
+
+	/* Update struct end-offset if necessary */
+	end_offset = offset + CType_Sizeof(CLValueType_PointedToType(lvtype));
+	if (end_offset > (ptrdiff_t)result->cst_base.ct_sizeof)
+		result->cst_base.ct_sizeof = (size_t)end_offset;
+	*p_end_offset = end_offset;
+	min_align = CType_Alignof(CLValueType_PointedToType(lvtype));
+	if (result->cst_base.ct_alignof < min_align)
+		result->cst_base.ct_alignof = min_align;
+	return 0;
+err_duplicate_field:
+	DeeError_Throwf(&DeeError_TypeError, "Duplicate field %r in struct", name);
+err:
+	Dee_Decref_unlikely(name);
+	Dee_Decref_unlikely(CLValueType_AsType(lvtype));
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+cstruct_builder_addfield_anon(struct cstruct_builder *__restrict self,
+                              /*inherit(always)*/ DREF CLValueType *lvtype,
+                              ptrdiff_t offset, ptrdiff_t *p_end_offset) {
+	struct cstruct_field *new_field;
+	CStructType *result;
+	ptrdiff_t end_offset;
+	size_t min_align;
+	if (!self->csb_result) {
+		if unlikely(cstruct_builder_rehash(self, 7, 9))
+			goto err;
+	} else if (self->csb__cst_size >= self->csb_result->cst_size) {
+		size_t new_mask = self->csb_result->cst_fmsk;
+		size_t new_size = self->csb__cst_size + 3;
+		if unlikely(cstruct_builder_rehash(self, new_mask, new_size))
+			goto err;
+	}
+	result = self->csb_result;
+	ASSERT(self->csb__cst_size < result->cst_size);
+	new_field = &result->cst_fvec[self->csb__cst_size];
+
+	/* Fill in field. */
+	new_field->csf_name   = (DREF DeeStringObject *)DeeString_NewEmpty();
+//	new_field->csf_hash   = 0; /* Doesn't matter */
+	new_field->csf_offset = offset;
+	ASSERT(new_field->csf_next == NULL);
+	new_field->csf_lvtype = lvtype; /* Inherit reference */
+
+	/* Append field to chain */
+	*self->csb_p_last = new_field;
+	self->csb_p_last = &new_field;
+	++self->csb__cst_size;
+
+	/* Update struct end-offset if necessary */
+	end_offset = offset + CType_Sizeof(CLValueType_PointedToType(lvtype));
+	if (end_offset > (ptrdiff_t)result->cst_base.ct_sizeof)
+		result->cst_base.ct_sizeof = (size_t)end_offset;
+	*p_end_offset = end_offset;
+	min_align = CType_Alignof(CLValueType_PointedToType(lvtype));
+	if (result->cst_base.ct_alignof < min_align)
+		result->cst_base.ct_alignof = min_align;
+	return 0;
+err:
+	Dee_Decref_unlikely(CLValueType_AsType(lvtype));
+	return -1;
+}
+
+
+
+struct cstruct_of_data {
+	struct cstruct_builder csod_builder; /* Struct builder */
+	unsigned int           csod_flags;   /* Set of `CSTRUCTTYPE_F_*' */
+	ptrdiff_t              csod_offset;  /* Offset of next field to add */
+};
+
+PRIVATE NONNULL((1, 2)) void DCALL
+cstruct_of_data_maybe_align(struct cstruct_of_data *__restrict self, CType *align_for) {
+	if (!(self->csod_flags & CSTRUCTTYPE_F_PACKED)) {
+		size_t alignment = CType_Alignof(align_for);
+		self->csod_offset = CEIL_ALIGN(self->csod_offset, alignment);
+	}
+}
+
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+cstruct_of_cb(void *arg, DeeObject *elem) {
+	struct cstruct_of_data *data = (struct cstruct_of_data *)arg;
+	ptrdiff_t end_offset;
+	DREF DeeObject *name_and_type[2];
+	/* Given "elem" must be one of:
+	 * - CStructType
+	 * - (string, CType) */
+	if (Object_IsCStructType(elem)) {
+		/* Add struct as an anonymous field, and inline all fields */
+		Dee_hash_t i;
+		CStructType *in = Object_AsCStructType(elem);
+		DREF CLValueType *in_lvalue = CLValueType_Of(CStructType_AsCType(in));
+		if unlikely(!in_lvalue)
+			goto err;
+		cstruct_of_data_maybe_align(data, CStructType_AsCType(in));
+		if (cstruct_builder_addfield_anon(&data->csod_builder, in_lvalue /* inherited */,
+		                                  data->csod_offset, &end_offset))
+			goto err;
+
+		/* Inline all struct fields */
+		for (i = 0; i <= in->cst_fmsk; ++i) {
+			struct cstruct_field *field = &in->cst_fvec[i];
+			if (field->csf_name) {
+				ptrdiff_t field_offset = data->csod_offset + field->csf_offset;
+				ptrdiff_t ignored_offset_after;
+				if (cstruct_builder_addfield(&data->csod_builder, field->csf_name,
+				                             field->csf_lvtype, field_offset,
+				                             &ignored_offset_after, false))
+					goto err;
+			}
+		}
+	} else {
+		CType *field_type;
+		DREF CLValueType *field_type_lvalue;
+
+		/* Given "elem" must be a pair `{ fieldName: string, fieldType: CType }' */
+		if (DeeObject_InvokeMethodHint(seq_unpack, elem, 2, name_and_type))
+			goto err;
+		if (DeeObject_AssertType(name_and_type[0], &DeeString_Type))
+			goto err_name_and_type;
+		field_type = CType_Of(name_and_type[1]);
+		if unlikely(!field_type)
+			goto err_name_and_type;
+
+		/* Use "field_type" */
+		field_type_lvalue = CLValueType_Of(field_type);
+		if unlikely(!field_type_lvalue)
+			goto err_name_and_type;
+		Dee_Decref(name_and_type[1]);
+		name_and_type[1] = CLValueType_AsObject(field_type_lvalue);
+
+		/* Add field. */
+		if (cstruct_builder_addfield(&data->csod_builder,
+		                             (DREF DeeStringObject *)name_and_type[0], /* Inherited */
+		                             Object_AsCLValueType(name_and_type[1]),   /* Inherited */
+		                             data->csod_offset, &end_offset, true))
+			goto err;
+	}
+
+	/* If not a union, use end-offset of field as offset for next field. */
+	if (!(data->csod_flags & CSTRUCTTYPE_F_UNION))
+		data->csod_offset = end_offset;
+	return 0;
+err_name_and_type:
+	Dee_Decref(name_and_type[1]);
+	Dee_Decref(name_and_type[0]);
+err:
+	return -1;
+}
+
+
+/* Construct a new struct-type from `initializer', which
+ * should be `{((string, CType) | CStructType)...}'
+ * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+INTERN WUNUSED NONNULL((1)) DREF CStructType *DCALL
+CStructType_Of(DeeObject *__restrict initializer, unsigned int flags) {
+	struct cstruct_of_data data;
+	cstruct_builder_init(&data.csod_builder);
+	data.csod_flags  = flags;
+	data.csod_offset = 0;
+	if unlikely(DeeObject_Foreach(initializer, &cstruct_of_cb, &data) < 0)
+		goto err_builder;
+	return cstruct_builder_pack(&data.csod_builder);
+err_builder:
+	cstruct_builder_fini(&data.csod_builder);
+/*err:*/
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* FUNCTION TYPE                                                        */
+/************************************************************************/
+
+#ifdef CONFIG_NO_CFUNCTION
+/* Throw a NotImplemented error explaining that cfunctions have been disabled. */
+PRIVATE ATTR_COLD int DCALL err_no_cfunction(void) {
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "ctypes was built without C-functions being enabled");
+}
+
+#define PTR_cfunctiontype_fini NULL
+#else /* CONFIG_NO_CFUNCTION */
+#define PTR_cfunctiontype_fini &cfunctiontype_fini
+PRIVATE NONNULL((1)) void DCALL
+cfunctiontype_fini(CFunctionType *__restrict self) {
+	CType *return_type = self->cft_return;
+
+	/* Delete the weak-link to the original type. */
+	CType_CacheLockWrite(return_type);
+	ASSERT(LIST_ISBOUND(self, cft_chain));
+	LIST_REMOVE(self, cft_chain);
+	CType_CacheLockEndWrite(return_type);
+
+	Dee_Decref(CType_AsType(return_type));
+	Dee_Decrefv((DeeObject **)self->cft_argv, self->cft_argc);
+	Dee_Free((void *)self->cft_ffi_arg_type_v);
+}
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cfunctiontype_args(CFunctionType *__restrict self) {
+#ifdef CONFIG_NO_CFUNCTION
+	(void)self;
+	err_no_cfunction();
+	return NULL;
+#else /* CONFIG_NO_CFUNCTION */
+	return DeeRefVector_NewReadonly(CFunctionType_AsObject(self),
+	                                self->cft_argc,
+	                                (DeeObject **)self->cft_argv);
+#endif /* !CONFIG_NO_CFUNCTION */
+}
+
+PRIVATE struct type_getset tpconst cfunctiontype_getsets[] = {
+	TYPE_GETTER_AB("args", &cfunctiontype_args,
+	               "->?S?GCType\n"
+	               "Returns an immutable sequence describing "
+	               /**/ "the argument types used by this function"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst cfunctiontype_members[] = {
+	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
+#ifndef CONFIG_NO_CFUNCTION
+	TYPE_MEMBER_FIELD_DOC("returntype", STRUCT_OBJECT_AB, offsetof(CFunctionType, cft_return),
+	                      "->?GCType"),
+#else /* !CONFIG_NO_CFUNCTION */
+	TYPE_MEMBER_CONST("returntype", &CVoid_Type),
+#endif /* CONFIG_NO_CFUNCTION */
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject CFunctionType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CFunctionType",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &CType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))PTR_cfunctiontype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ cfunctiontype_getsets,
+	/* .tp_members       = */ cfunctiontype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ cfunctiontype_mro
+};
+
+PRIVATE DeeTypeObject *tpconst cfunction_subclass_mro[] = {
+	CFunctionType_AsType(&AbstractCFunction_Type),
+#define cfunction_mro (cfunction_subclass_mro + 1)
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeCallable_Type,
+	NULL,
+};
+
+#ifndef CONFIG_NO_CFUNCTION
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dummy_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+           size_t argc, DeeObject *const *argv) {
+	(void)tp_self;
+	(void)self;
+	(void)argc;
+	(void)argv;
+	return_none;
+}
+#endif /* !CONFIG_NO_CFUNCTION */
+
+INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
+	/* .cst_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CFunctionType_Type),
+			/* .tp_name     = */ "Function",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+					/* tp_ctor:        */ NULL,
+					/* tp_copy_ctor:   */ NULL,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ NULL,
+					/* tp_serialize:   */ NULL,
+					/* tp_free:        */ NULL
+				),
+				/* .tp_dtor        = */ NULL,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ NULL,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cobject_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ NULL,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ NULL,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL, /* Technically, this'd need to be present, but that wouldn't make sense (only pointers/lvalues for function types are callable!) */
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ cfunction_mro
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ 0,
+			/* ct_alignof:   */ 0,
+			/* ct_operators: */ &cvoid_operators,
+			/* ct_ffitype:   */ &ffi_type_void
+		)
+	},
+#ifndef CONFIG_NO_CFUNCTION
+	/* .cft_call            = */ &dummy_call,
+	/* .cft_return          = */ &CVoid_Type,
+	/* .cft_chain           = */ LIST_ENTRY_UNBOUND_INITIALIZER,
+	/* .cft_hash            = */ 0,
+	/* .cft_argc            = */ 0,
+	/* .cft_cc              = */ CC_DEFAULT,
+	/* .cft_ffi_return_type = */ &ffi_type_void,
+	/* .cft_ffi_arg_type_v  = */ NULL,
+	/* .cft_ffi_cif         = */ {},
+	/* .cft_wsize           = */ 0,
+	/* .cft_woff_argmem     = */ 0,
+	/* .cft_woff_argptr     = */ 0,
+#endif /* !CONFIG_NO_CFUNCTION */
+};
+
+
+
+#ifndef CONFIG_NO_CFUNCTION
+union argument {
+	int i;
+	float f;
+	double d;
+	long double ld;
+	unsigned int u;
+	int8_t s8;
+	uint8_t u8;
+	int16_t s16;
+	uint16_t u16;
+	int32_t s32;
+	uint32_t u32;
+	int64_t s64;
+	uint64_t u64;
+	void *p;
+};
+
+
+INTDEF WUNUSED DREF DeeObject *DCALL
+cfunction_call_v(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+                 size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED DREF DeeObject *DCALL
+cfunction_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+               size_t argc, DeeObject *const *argv);
+
+
+#ifndef __INTELLISENSE__
+#include "cfunction-invoke.c.inl"
+#define VARARGS
+#include "cfunction-invoke.c.inl"
+#endif /* !__INTELLISENSE__ */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+CFunctionType_New(CType *__restrict return_type,
+                  ctypes_cc_t calling_convention,
+                  size_t argc, CType *const *__restrict argv,
+                  Dee_hash_t function_hash) {
+	size_t i;
+	DREF CFunctionType *result;
+	ffi_status error;
+	result = (DREF CFunctionType *)DeeGCObject_Callocc(offsetof(CFunctionType, cft_argv),
+	                                                   argc, sizeof(DREF CType *));
+	if unlikely(!result)
+		goto err;
+
+	/* Collect all the type descriptors used by libffi. */
+	result->cft_ffi_return_type = CType_GetFFIType(return_type);
+	if unlikely(!result->cft_ffi_return_type)
+		goto err_r;
+	result->cft_ffi_arg_type_v = (ffi_type **)Dee_Mallocc(argc, sizeof(ffi_type *));
+	if unlikely(!result->cft_ffi_arg_type_v)
+		goto err_r;
+	for (i = 0; i < argc; ++i) {
+		ffi_type *tp = CType_GetFFIType(argv[i]);
+		if unlikely(!tp)
+			goto err_r_ffi_typev;
+		((ffi_type **)result->cft_ffi_arg_type_v)[i] = tp;
+	}
+
+	/* Initialize the FFI closure controller. */
+	DBG_ALIGNMENT_DISABLE();
+	error = ffi_prep_cif(&result->cft_ffi_cif,
+	                     (ffi_abi)((unsigned int)calling_convention &
+	                               (unsigned int)CC_MTYPE),
+	                     (unsigned int)argc,
+	                     result->cft_ffi_return_type,
+	                     (ffi_type **)result->cft_ffi_arg_type_v);
+	DBG_ALIGNMENT_ENABLE();
+	if (error != FFI_OK) {
+		DeeError_Throwf(&DeeError_RuntimeError,
+		                "Failed to create function closure (%d)",
+		                (int)error);
+		goto err_r_ffi_typev;
+	}
+
+	/* Calculate the wbuffer cache sizes */
+	result->cft_wsize = result->cft_ffi_return_type->size;
+	if (result->cft_wsize < sizeof(ffi_arg))
+		result->cft_wsize = sizeof(ffi_arg);
+	result->cft_woff_argmem = result->cft_wsize;
+	if (ctypes_cc_isvarargs(calling_convention)) {
+		result->cft_woff_variadic_argmem = result->cft_wsize + (sizeof(union argument) * argc);
+	} else {
+		result->cft_wsize += (sizeof(union argument) * argc);
+		result->cft_woff_argptr = result->cft_wsize;
+		result->cft_wsize += (sizeof(void *) * argc);
+	}
+	if (result->cft_wsize == 0)
+		result->cft_wsize = 1;
+	if (argc == 0) {
+		result->cft_woff_argmem = 0;
+		result->cft_woff_argptr = 0;
+	}
+
+	/* Initialize fields. */
+	Dee_Incref(CType_AsType(return_type));
+	result->cft_return = return_type; /* Inherit reference. */
+	result->cft_base.ct_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject);
+	result->cft_base.ct_base.tp_name  = "Function";
+	result->cft_base.ct_base.tp_flags = /*TP_FINHERITCTOR | */ TP_FHEAP;
+	Dee_Incref(CFunctionType_AsType(&AbstractCFunction_Type));
+	result->cft_base.ct_base.tp_base  = CFunctionType_AsType(&AbstractCFunction_Type); /* Inherit reference. */
+	result->cft_base.ct_base.tp_mro   = cfunction_subclass_mro;
+	result->cft_hash                  = function_hash;
+	result->cft_argc                  = argc;
+	Dee_Movrefv((DeeObject **)result->cft_argv, (DeeObject **)argv, argc);
+	Dee_atomic_rwlock_cinit(&result->cft_base.ct_cachelock);
+	result->cft_base.ct_operators = &cvoid_operators;
+
+	/* Assign the appropriate call operator. */
+	result->cft_call = ctypes_cc_isvarargs(calling_convention)
+	                   ? &cfunction_call_v
+	                   : &cfunction_call;
+
+	/* Finalize the cfunction type. */
+	DeeObject_InitStatic(CFunctionType_AsType(result), &CFunctionType_Type);
+	return Type_AsCFunctionType(DeeGC_TRACK(DeeTypeObject, CFunctionType_AsType(result)));
+err_r_ffi_typev:
+	Dee_Free((void *)result->cft_ffi_arg_type_v);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+stype_cfunction_rehash(CType *__restrict self,
+                       Dee_hash_t new_mask) {
+	struct cfunction_type_list *new_map, *dst;
+	struct cfunction_type_list *biter, *bend;
+	CFunctionType *iter, *next;
+again:
+	new_map = (struct cfunction_type_list *)Dee_TryCallocc(new_mask + 1,
+	                                                       sizeof(struct cfunction_type_list));
+	if unlikely(!new_map) {
+		/* Try again with a 1-element mask. */
+		if (!self->ct_functions.sf_list && new_mask != 0) {
+			new_mask = 1;
+			goto again;
+		}
+		return false;
+	}
+
+	/* Do the re-hash. */
+	if (self->ct_functions.sf_size) {
+		ASSERT(self->ct_functions.sf_list);
+		bend = (biter = self->ct_functions.sf_list) + (self->ct_functions.sf_mask + 1);
+		for (; biter < bend; ++biter) {
+			iter = LIST_FIRST(biter);
+			while (iter) {
+				next = LIST_NEXT(iter, cft_chain);
+				dst  = &new_map[iter->cft_hash & new_mask];
+				/* Insert the entry into the new hash-map. */
+				LIST_INSERT_HEAD(dst, iter, cft_chain);
+				iter = next;
+			}
+		}
+	}
+
+	/* Delete the old map and install the new. */
+	Dee_Free(self->ct_functions.sf_list);
+	self->ct_functions.sf_mask = new_mask;
+	self->ct_functions.sf_list = new_map;
+	return true;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+cfunction_hashof(CType const *return_type, ctypes_cc_t calling_convention,
+                 size_t argc, CType /*const*/ *const *argv) {
+	size_t i;
+	Dee_hash_t result;
+	result = Dee_HashPointer(return_type) ^ (Dee_hash_t)calling_convention ^ (Dee_hash_t)argc;
+	for (i = 0; i < argc; ++i)
+		result ^= Dee_HashPointer(argv[i]);
+	return result;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+cfunction_equals(CFunctionType const *self, CType const *return_type,
+                 ctypes_cc_t calling_convention, size_t argc,
+                 CType /*const*/ *const *argv) {
+	size_t i;
+	if (self->cft_return != return_type)
+		goto nope;
+	if (self->cft_argc != argc)
+		goto nope;
+	if (self->cft_cc != calling_convention)
+		goto nope;
+	for (i = 0; i < argc; ++i) {
+		if (self->cft_argv[i] != argv[i])
+			goto nope;
+	}
+	return true;
+nope:
+	return false;
+}
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+/* Construct a C-Function type for the given arguments */
+INTERN WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+CFunctionType_Of(CType *__restrict return_type,
+                 ctypes_cc_t calling_convention,
+                 size_t argc, CType *const *argv) {
+#ifdef CONFIG_NO_CFUNCTION
+	(void)return_type;
+	(void)calling_convention;
+	(void)argc;
+	(void)argv;
+	err_no_cfunction();
+	return NULL;
+#else /* CONFIG_NO_CFUNCTION */
+	Dee_hash_t hash;
+	DREF CFunctionType *result, *new_result;
+	DREF struct cfunction_type_list *bucket;
+	ASSERT_OBJECT_TYPE(CType_AsType(return_type), &CType_Type);
+	CType_CacheLockRead(return_type);
+	ASSERT(!return_type->ct_functions.sf_size ||
+	       return_type->ct_functions.sf_mask);
+	hash = cfunction_hashof(return_type, calling_convention, argc, argv);
+	if (return_type->ct_functions.sf_size) {
+		result = LIST_FIRST(&return_type->ct_functions.sf_list[hash & return_type->ct_functions.sf_mask]);
+		while (result &&
+		       (result->cft_hash != hash ||
+		        !cfunction_equals(result, return_type, calling_convention, argc, argv)))
+			result = LIST_NEXT(result, cft_chain);
+		/* Check if we can re-use an existing type. */
+		if (result && Dee_IncrefIfNotZero(CFunctionType_AsType(result))) {
+			CType_CacheLockEndRead(return_type);
+			return result;
+		}
+	}
+	CType_CacheLockEndRead(return_type);
+
+	/* Construct a new cfunction type. */
+	result = CFunctionType_New(return_type, calling_convention, argc, argv, hash);
+	if unlikely(!result)
+		goto done;
+
+	/* Add the new type to the cache. */
+register_type:
+	CType_CacheLockWrite(return_type);
+	ASSERT(!return_type->ct_functions.sf_size ||
+	       return_type->ct_functions.sf_mask);
+	if (return_type->ct_functions.sf_size) {
+		new_result = LIST_FIRST(&return_type->ct_functions.sf_list[hash & return_type->ct_functions.sf_mask]);
+		while (new_result &&
+		       (new_result->cft_hash != hash ||
+		        !cfunction_equals(new_result, return_type, calling_convention, argc, argv)))
+			new_result = LIST_NEXT(new_result, cft_chain);
+
+		/* Check if we can re-use an existing type. */
+		if (new_result && Dee_IncrefIfNotZero(CFunctionType_AsType(new_result))) {
+			CType_CacheLockEndRead(return_type);
+			Dee_Decref(CFunctionType_AsType(result));
+			return new_result;
+		}
+	}
+
+	/* Rehash when there are a lot of items. */
+	if (return_type->ct_functions.sf_size >= return_type->ct_functions.sf_mask &&
+	    (!stype_cfunction_rehash(return_type, return_type->ct_functions.sf_mask ? (return_type->ct_functions.sf_mask << 1) | 1 : 16 - 1) &&
+	     !return_type->ct_functions.sf_mask)) {
+
+		/* No space at all! */
+		CType_CacheLockEndWrite(return_type);
+
+		/* Collect enough memory for a 1-item hash map. */
+		if (Dee_CollectMemory(sizeof(CFunctionType *)))
+			goto register_type;
+
+		/* Failed to allocate the initial hash-map. */
+		Dee_Decref(CFunctionType_AsType(result));
+		result = NULL;
+		goto done;
+	}
+
+	/* Insert the new cfunction type into the hash-map. */
+	bucket = &return_type->ct_functions.sf_list[hash & return_type->ct_functions.sf_mask];
+	LIST_INSERT_HEAD(bucket, result, cft_chain); /* Weak reference. */
+	CType_CacheLockEndWrite(return_type);
+done:
+	return result;
+#endif /* !CONFIG_NO_CFUNCTION */
+}
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* POINTER TYPE                                                         */
+/************************************************************************/
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define PTR_pointer_tp_alloc DeeSlab_GetMalloc(sizeof(CPointer), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CPointer))
+#define PTR_pointer_tp_free  DeeSlab_GetFree(sizeof(CPointer), NULL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#define PTR_pointer_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CPointer)
+#define PTR_pointer_tp_free  NULL
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
+PRIVATE NONNULL((1)) void DCALL
+cpointertype_fini(CPointerType *__restrict self) {
+	CType *orig = self->cpt_orig;
+
+	/* Delete the weak-link to the original type. */
+	CType_CacheLockWrite(orig);
+	if (orig->ct_pointer == self)
+		orig->ct_pointer = NULL;
+	CType_CacheLockEndWrite(orig);
+	Dee_Decref(CType_AsType(orig));
+}
+
+PRIVATE struct type_member tpconst cpointertype_members[] = {
+	TYPE_MEMBER_CONST_DOC("ispointer", Dee_True, DOC_GET(ispointer_doc)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CPointerType, cpt_orig), "->?GCType"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject CPointerType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CPointerType",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &CType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cpointertype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ cpointertype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ cpointertype_mro
+};
+
+
+INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
+CPointer_Ind(CPointer *__restrict self) {
+	CType *base_type;
+	DREF CLValueType *lvalue_type;
+	CPointerType *tp_self;
+	DREF CLValue *result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err;
+	tp_self     = Dee_TYPE(self);
+	base_type   = CPointerType_PointedToType(tp_self);
+	lvalue_type = CLValueType_Of(base_type);
+	if unlikely(!lvalue_type)
+		goto err_r;
+	result->cl_value = self->cp_value;
+	Dee_XIncref(self->cp_owner);
+	result->cl_owner = self->cp_owner;
+	CLValue_InitInherited(result, lvalue_type);
+	return result;
+err_r:
+	CLValue_Free(result);
+err:
+	return NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+cpointer_fini(CPointer *__restrict self) {
+	Dee_XDecref(self->cp_owner);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+cpointer_visit(CPointer *__restrict self, Dee_visit_t proc, void *arg) {
+	Dee_XVisit(self->cp_owner);
+}
+
+
+
+/* Return a new pointer offset by `index' */
+INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
+CPointer_PlusOffset(CPointer *__restrict self, ptrdiff_t index) {
+	CPointerType *tp_self = Dee_TYPE(self);
+	union pointer res_cvalue;
+	index *= CPointerType_SizeofPointedToType(tp_self);
+	res_cvalue = self->cp_value;
+	res_cvalue.sint += index;
+	Dee_Incref(CPointerType_AsType(tp_self));
+	return CPointer_NewExInherited(tp_self, res_cvalue.ptr, self->cp_owner);
+}
+
+/* Return an L-Value after `index' as an offset to "self"  */
+INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
+CPointer_GetItem(CPointer *__restrict self, ptrdiff_t index) {
+	DREF CLValue *result;
+	DREF CLValueType *lvalue_type;
+	CPointerType *tp_self = Dee_TYPE(self);
+	union pointer res_cvalue;
+	index *= CPointerType_SizeofPointedToType(tp_self);
+	res_cvalue = self->cp_value;
+	res_cvalue.sint += index;
+	lvalue_type = CLValueType_Of(CPointerType_PointedToType(tp_self));
+	if unlikely(!lvalue_type)
+		goto err;
+	result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err_lvalue_type;
+	result->cl_value = res_cvalue;
+	Dee_XIncref(self->cp_owner);
+	result->cl_owner = self->cp_owner;
+	CLValue_InitInherited(result, lvalue_type);
+	return result;
+err_lvalue_type:
+	Dee_Decref_unlikely(CLValueType_AsType(lvalue_type));
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
+cpointer_add(CPointer *lhs, DeeObject *rhs) {
+	ptrdiff_t offset;
+	if (DeeObject_AsPtrdiff(rhs, &offset))
+		goto err;
+	return CPointer_PlusOffset(lhs, offset);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cpointer_sub(CPointer *lhs, DeeObject *rhs) {
+	CPointerType *tp_self = Dee_TYPE(lhs);
+	ptrdiff_t rhs_cvalue_int;
+	union pointer rhs_cvalue;
+	CType *rhs_pointer_base;
+	int status = DeeObject_TryAsGenericPointer(rhs, &rhs_pointer_base, &rhs_cvalue);
+	if (status <= 0) {
+		ptrdiff_t result;
+		if unlikely(status < 0)
+			goto err;
+		if (CPointerType_PointedToType(tp_self) != rhs_pointer_base) {
+			DREF CPointerType *rhs_pointer_type;
+			rhs_pointer_type = CPointerType_Of(rhs_pointer_base);
+			if unlikely(!rhs_pointer_type)
+				goto err;
+			DeeError_Throwf(&DeeError_TypeError,
+			                "Cannot subtract incompatible pointer types: %k - %k",
+			                tp_self, rhs_pointer_type);
+			Dee_Decref_unlikely(CPointerType_AsType(rhs_pointer_type));
+			goto err;
+		}
+		result = lhs->cp_value.uint - rhs_cvalue.uint;
+		if (CPointerType_SizeofPointedToType(tp_self))
+			result /= CPointerType_SizeofPointedToType(tp_self);
+		return DeeInt_NewPtrdiff(result);
+	}
+	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue_int))
+		goto err;
+	return Dee_AsObject(CPointer_PlusOffset(lhs, -rhs_cvalue_int));
+err:
+	return NULL;
+}
+
+PRIVATE struct type_math cpointer_math = {
+	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&cobject_int32,
+	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&cobject_int64,
+	/* .tp_double = */ (int(DCALL *)(DeeObject *__restrict, double *__restrict))&cobject_double,
+	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_int,
+	/* .tp_inv    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_inv, /* Unsupported */
+	/* .tp_pos    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_pos, /* Unsupported */
+	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_neg, /* Unsupported */
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cpointer_add,
+	/* .tp_sub    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cpointer_sub,
+	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mul, /* Unsupported */
+	/* .tp_div    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_div, /* Unsupported */
+	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_mod, /* Unsupported */
+	/* .tp_shl    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shl, /* Unsupported */
+	/* .tp_shr    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_shr, /* Unsupported */
+	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_and, /* Unsupported */
+	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_or,  /* Unsupported */
+	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_xor, /* Unsupported */
+	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cobject_pow, /* Unsupported */
+};
+
+#define cpointer_getitem_index CPointer_GetItem
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cpointer_delitem_index(CPointer *__restrict self, size_t index) {
+	union pointer cvalue = self->cp_value;
+	size_t item_size = CPointerType_SizeofPointedToType(Dee_TYPE(self));
+	index *= item_size;
+	cvalue.sint += index;
+	CTYPES_FAULTPROTECT({
+		bzero(cvalue.ptr, item_size);
+	}, return -1);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+cpointer_setitem_index(CPointer *self, size_t index, DeeObject *value) {
+	union pointer cvalue = self->cp_value;
+	CPointerType *tp_self = Dee_TYPE(self);
+	CType *base_type = CPointerType_PointedToType(tp_self);
+	struct ctype_operators const *ops = CType_Operators(base_type);
+	index *= CPointerType_SizeofPointedToType(tp_self);
+	cvalue.sint += index;
+	return (*ops->co_initfrom)(base_type, cvalue.ptr, value);
+}
+
+
+PRIVATE struct type_seq cpointer_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ NULL,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cpointer_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&cpointer_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cpointer_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,  /* TODO: &cpointer_getrange_index (return lvalue-to-array) */
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,              /* TODO: &cpointer_delrange_index */
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL, /* TODO: &cpointer_setrange_index */
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,               /* TODO: &cpointer_getrange_index_n (return lvalue-to-array) */
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,                           /* TODO: &cpointer_delrange_index_n */
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &cpointer_setrange_index_n */
+};
+
+#define cpointer_getind CPointer_Ind
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cpointer_delind(CPointer *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	return cpointer_delitem_index(self, 0);
+#else /* __OPTIMIZE_SIZE__ */
+	union pointer cvalue = self->cp_value;
+	size_t item_size = CPointerType_SizeofPointedToType(Dee_TYPE(self));
+	CTYPES_FAULTPROTECT({
+		bzero(cvalue.ptr, item_size);
+	}, return -1);
+	return 0;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cpointer_setind(CPointer *self, DeeObject *value) {
+#ifdef __OPTIMIZE_SIZE__
+	return cpointer_setitem_index(self, 0, value);
+#else /* __OPTIMIZE_SIZE__ */
+	CPointerType *tp_self = Dee_TYPE(self);
+	CType *base_type = CPointerType_PointedToType(tp_self);
+	struct ctype_operators const *ops = CType_Operators(base_type);
+	return (*ops->co_initfrom)(base_type, self->cp_value.ptr, value);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+PRIVATE struct type_getset tpconst cpointer_getsets[] = {
+	TYPE_GETSET_AB_F("ind",
+	                 &cpointer_getind,
+	                 &cpointer_delind,
+	                 &cpointer_setind,
+	                 METHOD_FNOREFESCAPE,
+	                 "->?GLValue\n"
+	                 "Accesses the indirection of @this pointer as an L-Value"),
+	TYPE_GETSET_END
+};
+
+INTERN CPointerType AbstractCPointer_Type = {
+	/* .cpt_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CPointerType_Type),
+			/* .tp_name     = */ "Pointer",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ CPointer,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cpointer_fini,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))&cpointer_visit,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cpointer_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ &cpointer_seq,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ cpointer_getsets,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ NULL
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ 0,
+			/* ct_alignof:   */ 0,
+			/* ct_operators: */ &cpointer_operators,
+			/* ct_ffitype:   */ &ffi_type_pointer
+		)
+	},
+	/* .cpt_orig = */ &AbstractCObject_Type,
+	/* .cpt_size = */ 0,
+};
+
+
+/* Type-specific operators */
+
+#ifndef CONFIG_NO_CFUNCTION
+/************************************************************************/
+/* POINTER TO FUNCTION                                                  */
+/************************************************************************/
+
+PRIVATE DeeTypeObject *tpconst cfuncpointer_subclass_mro[] = {
+	CPointerType_AsType(&AbstractCPointer_Type),
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeCallable_Type,
+	NULL,
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cfuncpointer_call(CPointer *__restrict self, size_t argc, DeeObject *const *argv) {
+	CPointerType *tp_self = Dee_TYPE(self);
+	CType *base_type = CPointerType_PointedToType(tp_self);
+	CFunctionType *function_type;
+	ASSERT(CType_IsCFunctionType(base_type));
+	function_type = CType_AsCFunctionType(base_type);
+	return (*function_type->cft_call)(function_type, self->cp_value.pfunc, argc, argv);
+}
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+/************************************************************************/
+/* POINTER TO STRUCT                                                    */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+cstructpointer_getattr(CPointer *self, DeeObject *attr) {
+	CStructType *struct_type;
+	if (isind(attr))
+		return cpointer_getind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_GetAttr_p(struct_type, self->cp_value.ptr, attr, self->cp_owner);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+cstructpointer_getattr_string_hash(CPointer *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isind_string_hash(attr, hash))
+		return cpointer_getind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_GetAttrStringHash_p(struct_type, self->cp_value.ptr, attr, hash, self->cp_owner);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CLValue *DCALL
+cstructpointer_getattr_string_len_hash(CPointer *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isind_string_len_hash(attr, attrlen, hash))
+		return cpointer_getind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_GetAttrStringLenHash_p(struct_type, self->cp_value.ptr, attr, attrlen, hash, self->cp_owner);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointer_delattr(CPointer *self, DeeObject *attr) {
+	CStructType *struct_type;
+	if (isind(attr))
+		return cpointer_delind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttr_p(struct_type, self->cp_value.ptr, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointer_delattr_string_hash(CPointer *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isind_string_hash(attr, hash))
+		return cpointer_delind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttrStringHash_p(struct_type, self->cp_value.ptr, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointer_delattr_string_len_hash(CPointer *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isind_string_len_hash(attr, attrlen, hash))
+		return cpointer_delind(self);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttrStringLenHash_p(struct_type, self->cp_value.ptr, attr, attrlen, hash);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+cstructpointer_setattr(CPointer *self, DeeObject *attr, DeeObject *value) {
+	CStructType *struct_type;
+	if (isind(attr))
+		return cpointer_setind(self, value);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttr_p(struct_type, self->cp_value.ptr, attr, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+cstructpointer_setattr_string_hash(CPointer *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	if (isind_string_hash(attr, hash))
+		return cpointer_setind(self, value);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttrStringHash_p(struct_type, self->cp_value.ptr, attr, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+cstructpointer_setattr_string_len_hash(CPointer *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	if (isind_string_len_hash(attr, attrlen, hash))
+		return cpointer_setind(self, value);
+	ASSERT(CType_IsCStructType(CPointerType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CPointerType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttrStringLenHash_p(struct_type, self->cp_value.ptr, attr, attrlen, hash, value);
+}
+
+PRIVATE struct type_attr cstructpointer_attr = {
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cstructpointer_getattr,
+	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&cstructpointer_delattr,
+	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&cstructpointer_setattr,
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /*TODO: &cstruct_iterattr,*/
+	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))NULL, /*TODO: &cstruct_findattr,*/
+	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructpointer_hasattr,*/
+	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructpointer_boundattr,*/
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructpointer_getattr_string_hash,
+	/* .tp_delattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructpointer_delattr_string_hash,
+	/* .tp_setattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&cstructpointer_setattr_string_hash,
+	/* .tp_hasattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructpointer_hasattr_string_hash, */
+	/* .tp_boundattr_string_hash     = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructpointer_boundattr_string_hash, */
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructpointer_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructpointer_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&cstructpointer_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructpointer_hasattr_string_len_hash, */
+	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructpointer_boundattr_string_len_hash, */
+};
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF CPointerType *DCALL
+CPointerType_New(CType *__restrict self) {
+	DREF CPointerType *result;
+	result = DeeGCObject_CALLOC(CPointerType);
+	if unlikely(!result)
+		goto err;
+
+	/* Initialize fields. */
+	result->cpt_base.ct_sizeof       = sizeof(void *);
+	result->cpt_base.ct_alignof      = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->cpt_base.ct_base.tp_name = "Pointer";
+	result->cpt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_pointer_tp_alloc;
+	result->cpt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_pointer_tp_free;
+	result->cpt_base.ct_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+	Dee_Incref(CPointerType_AsType(&AbstractCPointer_Type));
+	result->cpt_base.ct_base.tp_base = CPointerType_AsType(&AbstractCPointer_Type);
+	result->cpt_base.ct_base.tp_cmp  = &cobject_cmp;
+	result->cpt_base.ct_base.tp_math = &cpointer_math;
+	result->cpt_base.ct_base.tp_seq  = &cpointer_seq;
+	Dee_Incref(CType_AsType(self));
+	result->cpt_orig = self; /* Inherit reference. */
+	result->cpt_size = CType_Sizeof(self);
+#ifndef CONFIG_NO_CFUNCTION
+	result->cpt_base.ct_ffitype = &ffi_type_pointer;
+#endif /* !CONFIG_NO_CFUNCTION */
+	result->cpt_base.ct_operators = &cpointer_operators;
+
+	/* Special type traits based on pointer base-class */
+#ifndef CONFIG_NO_CFUNCTION
+	if (CType_IsCFunctionType(self)) {
+		/* Pointer-to-function is callable */
+		result->cpt_base.ct_base.tp_call = (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfuncpointer_call;
+		result->cpt_base.ct_base.tp_mro  = cfuncpointer_subclass_mro;
+	} else
+#endif /* !CONFIG_NO_CFUNCTION */
+	{
+		if (CType_IsCStructType(self)) {
+			/* Pointer-to-struct allows for access to struct members */
+			result->cpt_base.ct_base.tp_attr = &cstructpointer_attr;
+		}
+	}
+
+	/* Finish the pointer type. */
+	DeeObject_InitStatic(CPointerType_AsType(result), &CPointerType_Type);
+	return Type_AsCPointerType(DeeGC_TRACK(DeeTypeObject, CPointerType_AsType(result)));
+/*
+err_r:
+	DeeGCObject_FREE(result);
+*/
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF CPointerType *DCALL
+CPointerType_Of(CType *__restrict self) {
+	DREF CPointerType *result;
+	ASSERT_OBJECT_TYPE(CType_AsType(self), &CType_Type);
+	CType_CacheLockRead(self);
+	result = self->ct_pointer;
+	if (result && !Dee_IncrefIfNotZero(CPointerType_AsType(result)))
+		result = NULL;
+	CType_CacheLockEndRead(self);
+	if (!result) {
+		/* Lazily construct missing types. */
+		result = CPointerType_New(self);
+		if likely(result) {
+			CType_CacheLockWrite(self);
+			/* Check if the type was created due to race conditions. */
+			if unlikely(self->ct_pointer &&
+			            Dee_IncrefIfNotZero(CPointerType_AsType(self->ct_pointer))) {
+				DREF CPointerType *new_result;
+				new_result = self->ct_pointer;
+				CType_CacheLockEndWrite(self);
+				Dee_DecrefDokill(CPointerType_AsType(result));
+				return new_result;
+			}
+			self->ct_pointer = result; /* Weakly referenced. */
+			CType_CacheLockEndWrite(self);
+		}
+	}
+	return result;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* LVALUE TYPE                                                          */
+/************************************************************************/
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define PTR_lvalue_tp_alloc DeeSlab_GetMalloc(sizeof(CLValue), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CLValue))
+#define PTR_lvalue_tp_free  DeeSlab_GetFree(sizeof(CLValue), NULL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#define PTR_lvalue_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CLValue)
+#define PTR_lvalue_tp_free  NULL
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
+PRIVATE NONNULL((1)) void DCALL
+clvaluetype_fini(CLValueType *__restrict self) {
+	CType *orig = self->clt_orig;
+
+	/* Delete the weak-link to the original type. */
+	CType_CacheLockWrite(orig);
+	if (orig->ct_lvalue == self)
+		orig->ct_lvalue = NULL;
+	CType_CacheLockEndWrite(orig);
+	Dee_Decref(CType_AsType(orig));
+}
+
+PRIVATE struct type_member tpconst clvaluetype_members[] = {
+	TYPE_MEMBER_CONST_DOC("islvalue", Dee_True, DOC_GET(islvalue_doc)),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CLValueType, clt_orig), "->?GCType"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject CLValueType_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "CLValueType",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &CType_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clvaluetype_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ clvaluetype_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+	/* .tp_mro           = */ clvaluetype_mro
+};
+
+STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+#define clvalue_fini  cpointer_fini
+#define clvalue_visit cpointer_visit
+
+INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
+CLValue_Ptr(CLValue *__restrict self) {
+	DREF CPointer *result;
+	CLValueType *tp_self;
+	CType *base_type;
+	DREF CPointerType *pointer_type;
+	result = CPointer_Alloc();
+	if unlikely(!result)
+		goto err;
+	tp_self      = Dee_TYPE(self);
+	base_type    = CLValueType_PointedToType(tp_self);
+	pointer_type = CPointerType_Of(base_type);
+	if unlikely(!pointer_type)
+		goto err_r;
+	result->cp_value = self->cl_value;
+	Dee_XIncref(self->cl_owner);
+	result->cp_owner = self->cl_owner;
+	CPointer_InitInherited(result, pointer_type);
+	return result;
+err_r:
+	CPointer_Free(result);
+err:
+	return NULL;
+}
+
+/* Special hook to override behavior of "tp_new_copy" for LValue types:
+ * This causes the "copy" operator (when applied to L-Values) to return
+ * a copy of the referenced value in the form of an R-Value, rather than
+ * return a copy of the L-Value itself. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF CObject *DCALL
+clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	DREF CObject *result = CObject_Alloc(base_type);
+	if unlikely(!result)
+		goto err;
+	CTYPES_FAULTPROTECT({
+		memcpy(CObject_Data(result),
+		       self->cl_value.ptr,
+		       CType_Sizeof(base_type));
+	}, {
+		CObject_Free(base_type, result);
+		goto err;
+	});
+
+	CObject_Init(result, base_type);
+	return result;
+err:
+	return NULL;
+}
+
+#define clvalue_getptr CLValue_Ptr
+PRIVATE struct type_getset tpconst lvalue_getsets[] = {
+	TYPE_GETTER_AB_F("ptr", &clvalue_getptr, METHOD_FNOREFESCAPE,
+	                 "->?GPointer\n"
+	                 "Returns a pointer to the value represented by @this L-Value"),
+	TYPE_GETSET_END
+};
+
+INTERN CLValueType AbstractCLValue_Type = {
+	/* .clt_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CLValueType_Type),
+			/* .tp_name     = */ "LValue",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ CLValue,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clvalue_fini,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL,
+				/* .tp_new         = */ NULL,
+				/* .tp_new_kw      = */ NULL,
+				/* .tp_new_copy    = */ (DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))&clvalue_new_copy,
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))&clvalue_visit,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cobject_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ NULL,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ lvalue_getsets,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ NULL
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ 0,
+			/* ct_alignof:   */ 0,
+			/* ct_operators: */ &clvalue_operators,
+			/* ct_ffitype:   */ &ffi_type_pointer
+		)
+	},
+	/* .clt_orig = */ &AbstractCObject_Type
+};
+
+
+
+/* Type-specific operators */
+
+#ifndef CONFIG_NO_CFUNCTION
+/************************************************************************/
+/* LVALUE OF FUNCTION                                                   */
+/************************************************************************/
+PRIVATE DeeTypeObject *tpconst cfunclvalue_subclass_mro[] = {
+	CLValueType_AsType(&AbstractCLValue_Type),
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeCallable_Type,
+	NULL,
+};
+
+STATIC_ASSERT(offsetof(CLValue, cl_value) == offsetof(CPointer, cp_value));
+STATIC_ASSERT(offsetof(CLValueType, clt_orig) == offsetof(CPointerType, cpt_orig));
+#define cfunclvalue_call cfuncpointer_call
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+/************************************************************************/
+/* LVALUE OF STRUCT                                                     */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructlvalue_getattr(CLValue *self, DeeObject *attr) {
+	CStructType *struct_type;
+	if (isptr(attr))
+		return Dee_AsObject(clvalue_getptr(self));
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return Dee_AsObject(CStruct_GetAttr_p(struct_type, self->cl_value.ptr, attr, self->cl_owner));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructlvalue_getattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isptr_string_hash(attr, hash))
+		return Dee_AsObject(clvalue_getptr(self));
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return Dee_AsObject(CStruct_GetAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash, self->cl_owner));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructlvalue_getattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return Dee_AsObject(clvalue_getptr(self));
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return Dee_AsObject(CStruct_GetAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash, self->cl_owner));
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructlvalue_delattr(CLValue *self, DeeObject *attr) {
+	CStructType *struct_type;
+	if (isptr(attr))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttr_p(struct_type, self->cl_value.ptr, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructlvalue_delattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isptr_string_hash(attr, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructlvalue_delattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_DelAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+cstructlvalue_setattr(CLValue *self, DeeObject *attr, DeeObject *value) {
+	CStructType *struct_type;
+	if (isptr(attr))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttr_p(struct_type, self->cl_value.ptr, attr, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+cstructlvalue_setattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	if (isptr_string_hash(attr, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+cstructlvalue_setattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
+	return CStruct_SetAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash, value);
+}
+
+PRIVATE struct type_attr cstructlvalue_attr = {
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cstructlvalue_getattr,
+	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&cstructlvalue_delattr,
+	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&cstructlvalue_setattr,
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /*TODO: &cstruct_iterattr,*/
+	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))NULL, /*TODO: &cstruct_findattr,*/
+	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructlvalue_hasattr,*/
+	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructlvalue_boundattr,*/
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructlvalue_getattr_string_hash,
+	/* .tp_delattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructlvalue_delattr_string_hash,
+	/* .tp_setattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&cstructlvalue_setattr_string_hash,
+	/* .tp_hasattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructlvalue_hasattr_string_hash, */
+	/* .tp_boundattr_string_hash     = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructlvalue_boundattr_string_hash, */
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructlvalue_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructlvalue_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&cstructlvalue_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructlvalue_hasattr_string_len_hash, */
+	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructlvalue_boundattr_string_len_hash, */
+};
+
+
+/************************************************************************/
+/* LVALUE OF POINTER TO STRUCT                                          */
+/************************************************************************/
+
+#define cstructpointerlvalue_getstruct(self)                                                                                   \
+	(ASSERT(CType_IsCPointerType(CLValueType_PointedToType(Dee_TYPE(self)))),                                                  \
+	 ASSERT(CType_IsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_PointedToType(Dee_TYPE(self)))))), \
+	 CType_AsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_PointedToType(Dee_TYPE(self))))))
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructpointerlvalue_getattr(CLValue *self, DeeObject *attr) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr(attr))
+		return Dee_AsObject(clvalue_getptr(self));
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	return Dee_AsObject(CStruct_GetAttr_p(struct_type, cvalue.ptr, attr, NULL));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructpointerlvalue_getattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_hash(attr, hash))
+		return Dee_AsObject(clvalue_getptr(self));
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	return Dee_AsObject(CStruct_GetAttrStringHash_p(struct_type, cvalue.ptr, attr, hash, NULL));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cstructpointerlvalue_getattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return Dee_AsObject(clvalue_getptr(self));
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	return Dee_AsObject(CStruct_GetAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash, NULL));
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointerlvalue_delattr(CLValue *self, DeeObject *attr) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr(attr))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_DelAttr_p(struct_type, cvalue.ptr, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointerlvalue_delattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_hash(attr, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_DelAttrStringHash_p(struct_type, cvalue.ptr, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstructpointerlvalue_delattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_DelAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+cstructpointerlvalue_setattr(CLValue *self, DeeObject *attr, DeeObject *value) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr(attr))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_SetAttr_p(struct_type, cvalue.ptr, attr, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+cstructpointerlvalue_setattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_hash(attr, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_SetAttrStringHash_p(struct_type, cvalue.ptr, attr, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+cstructpointerlvalue_setattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value) {
+	CStructType *struct_type;
+	union pointer cvalue;
+	if (isptr_string_len_hash(attr, attrlen, hash))
+		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
+	struct_type = cstructpointerlvalue_getstruct(self);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	return CStruct_SetAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash, value);
+}
+
+PRIVATE struct type_attr cstructpointerlvalue_attr = {
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cstructpointerlvalue_getattr,
+	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&cstructpointerlvalue_delattr,
+	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&cstructpointerlvalue_setattr,
+	/* .tp_iterattr                  = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /*TODO: &cstruct_iterattr,*/
+	/* .tp_findattr                  = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attrspec const *__restrict, struct Dee_attrdesc *__restrict))NULL, /*TODO: &cstruct_findattr,*/
+	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructpointerlvalue_hasattr,*/
+	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL, /*TODO: &cstructpointerlvalue_boundattr,*/
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructpointerlvalue_getattr_string_hash,
+	/* .tp_delattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&cstructpointerlvalue_delattr_string_hash,
+	/* .tp_setattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&cstructpointerlvalue_setattr_string_hash,
+	/* .tp_hasattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructpointerlvalue_hasattr_string_hash, */
+	/* .tp_boundattr_string_hash     = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL, /*TODO: &cstructpointerlvalue_boundattr_string_hash, */
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructpointerlvalue_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cstructpointerlvalue_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&cstructpointerlvalue_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructpointerlvalue_hasattr_string_len_hash, */
+	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL, /*TODO: &cstructpointerlvalue_boundattr_string_len_hash, */
+};
+
+
+
+
+/************************************************************************/
+/* LVALUE OF ARRAY                                                      */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+carraylvalue_size(CLValue *__restrict self) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	CArrayType *array_type = CType_AsCArrayType(base_type);
+	ASSERT(CType_IsCArrayType(base_type));
+	return CArrayType_Count(array_type);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
+carraylvalue_getitem_index_fast(CLValue *__restrict self, size_t index) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	CArrayType *array_type = CType_AsCArrayType(base_type);
+	CType *array_item_type;
+	DREF CLValue *result;
+	DREF CLValueType *item_lvalue_type;
+	union pointer res_cvalue;
+	ASSERT(CType_IsCArrayType(base_type));
+	array_item_type = CArrayType_PointedToType(array_type);
+	index *= CType_Sizeof(array_item_type);
+	res_cvalue = self->cl_value;
+	res_cvalue.sint += index;
+	item_lvalue_type = CLValueType_Of(array_item_type);
+	if unlikely(!item_lvalue_type)
+		goto err;
+	result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err_item_lvalue_type;
+	result->cl_value = res_cvalue;
+	Dee_Incref(self->cl_owner);
+	result->cl_owner = self->cl_owner;
+	CLValue_InitInherited(result, item_lvalue_type);
+	return result;
+err_item_lvalue_type:
+	Dee_Decref_unlikely(CLValueType_AsType(item_lvalue_type));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
+carraylvalue_getitem_index(CLValue *__restrict self, size_t index) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	CArrayType *array_type = CType_AsCArrayType(base_type);
+	if unlikely(index >= CArrayType_Count(array_type))
+		goto err_index_oob;
+	return carraylvalue_getitem_index_fast(self, index);
+err_index_oob:
+	DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(array_type));
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+carraylvalue_delitem_index(CLValue *__restrict self, size_t index) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	CArrayType *array_type = CType_AsCArrayType(base_type);
+	CType *array_item_type;
+	union pointer res_cvalue;
+	ASSERT(CType_IsCArrayType(base_type));
+	array_item_type = CArrayType_PointedToType(array_type);
+	index *= CType_Sizeof(array_item_type);
+	res_cvalue = self->cl_value;
+	res_cvalue.sint += index;
+	CTYPES_FAULTPROTECT({
+		bzero(res_cvalue.ptr, CType_Sizeof(array_item_type));
+	}, return -1);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+carraylvalue_setitem_index(CLValue *self, size_t index, DeeObject *value) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_PointedToType(tp_self);
+	CArrayType *array_type = CType_AsCArrayType(base_type);
+	CType *array_item_type;
+	struct ctype_operators const *array_item_type_operators;
+	union pointer res_cvalue;
+	ASSERT(CType_IsCArrayType(base_type));
+	array_item_type = CArrayType_PointedToType(array_type);
+	array_item_type_operators = CType_Operators(array_item_type);
+	index *= CType_Sizeof(array_item_type);
+	res_cvalue = self->cl_value;
+	res_cvalue.sint += index;
+	return (*array_item_type_operators->co_initfrom)(array_item_type, res_cvalue.ptr, value);
+}
+
+PRIVATE DeeTypeObject *tpconst carraylvalue_subclass_mro[] = {
+	CLValueType_AsType(&AbstractCLValue_Type),
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeSeq_Type,
+	NULL,
+};
+
+PRIVATE struct type_seq carraylvalue_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&carraylvalue_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&carraylvalue_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&carraylvalue_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&carraylvalue_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&carraylvalue_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&carraylvalue_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))NULL, /* TODO: &carraylvalue_hasitem_index */
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))NULL, /* TODO: &carraylvalue_hasitem_index */
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,  /* TODO: &carraylvalue_getrange_index */
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,              /* TODO: &carraylvalue_delrange_index */
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL, /* TODO: &carraylvalue_setrange_index */
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,               /* TODO: &carraylvalue_getrange_index_n */
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,                           /* TODO: &carraylvalue_delrange_index_n */
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &carraylvalue_setrange_index_n */
+};
+
+
+#ifndef CONFIG_NO_CFUNCTION
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cfuncpointerlvalue_call(CLValue *__restrict self, size_t argc, DeeObject *const *argv) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *lvalue_base_type = CLValueType_PointedToType(tp_self);
+	CPointerType *pointer_type;
+	CType *pointer_base_type;
+	CFunctionType *function_type;
+	union pointer cvalue;
+	ASSERT(CType_IsCPointerType(lvalue_base_type));
+	pointer_type = CType_AsCPointerType(lvalue_base_type);
+	pointer_base_type = CPointerType_PointedToType(pointer_type);
+	ASSERT(CType_IsCFunctionType(pointer_base_type));
+	function_type = CType_AsCFunctionType(pointer_base_type);
+	CTYPES_FAULTPROTECT(cvalue.pfunc = *self->cl_value.ppfunc, return NULL);
+	return (*function_type->cft_call)(function_type, cvalue.pfunc, argc, argv);
+}
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+/* Return an l-value to an offset to the indirection of the pointer referenced by "self" */
+INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
+cpointerlvalue_getitem_index(CLValue *__restrict self, ptrdiff_t index) {
+	union pointer cvalue;
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
+	CType *pointer_base = CPointerType_PointedToType(pointer_type);
+	DREF CLValue *result;
+	DREF CLValueType *pointer_base_lvalue;
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, goto err);
+	result = CLValue_Alloc();
+	if unlikely(!result)
+		goto err;
+	index *= CType_Sizeof(pointer_base);
+	pointer_base_lvalue = CLValueType_Of(pointer_base);
+	if unlikely(!pointer_base_lvalue)
+		goto err_r;
+	cvalue.sint += index;
+	result->cl_value = cvalue;
+
+	/* No owner -- this is an l-value of a free-standing pointer (which
+	 * we just happened to have an L-value to), however the owner of this
+	 * data would be whatever structure that pointer points into, which
+	 * is something we don't know. */
+	result->cl_owner = NULL;
+	CLValue_InitInherited(result, pointer_base_lvalue);
+	return result;
+err_r:
+	CLValue_Free(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+cpointerlvalue_delitem_index(CLValue *__restrict self, ptrdiff_t index) {
+	union pointer cvalue;
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
+	CType *pointer_base = CPointerType_PointedToType(pointer_type);
+	size_t base_size = CType_Sizeof(pointer_base);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	index *= base_size;
+	cvalue.sint += index;
+	CTYPES_FAULTPROTECT(bzero(cvalue.ptr, base_size), return -1);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+cpointerlvalue_setitem_index(CLValue *self, ptrdiff_t index, DeeObject *value) {
+	union pointer cvalue;
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
+	CType *pointer_base = CPointerType_PointedToType(pointer_type);
+	struct ctype_operators const *pointer_base_operators = CType_Operators(pointer_base);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	index *= CType_Sizeof(pointer_base);
+	cvalue.sint += index;
+	return (*pointer_base_operators->co_initfrom)(pointer_base, cvalue.ptr, value);
+}
+
+
+PRIVATE struct type_seq cpointerlvalue_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ NULL,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cpointerlvalue_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&cpointerlvalue_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cpointerlvalue_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,  /* TODO: &cpointerlvalue_getrange_index (return lvalue-to-array) */
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,              /* TODO: &cpointerlvalue_delrange_index */
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL, /* TODO: &cpointerlvalue_setrange_index */
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,               /* TODO: &cpointerlvalue_getrange_index_n (return lvalue-to-array) */
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,                           /* TODO: &cpointerlvalue_delrange_index_n */
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &cpointerlvalue_setrange_index_n */
+};
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF CLValueType *DCALL
+CLValuetype_New(CType *__restrict self) {
+	DREF CLValueType *result;
+	result = DeeGCObject_CALLOC(CLValueType);
+	if unlikely(!result)
+		goto err;
+
+	/* Initialize fields. */
+	result->clt_base.ct_sizeof       = sizeof(void *);
+	result->clt_base.ct_alignof      = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->clt_base.ct_base.tp_name = "LValue";
+	result->clt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_lvalue_tp_alloc;
+	result->clt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_lvalue_tp_free;
+	result->clt_base.ct_base.tp_init.tp_new_copy = (DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))&clvalue_new_copy;
+	result->clt_base.ct_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+	Dee_Incref(CLValueType_AsType(&AbstractCLValue_Type));
+	result->clt_base.ct_base.tp_base = CLValueType_AsType(&AbstractCLValue_Type);
+	result->clt_base.ct_base.tp_math = &cobject_math;
+	result->clt_base.ct_base.tp_cmp  = &cobject_cmp;
+	Dee_Incref(CType_AsType(self));
+	result->clt_orig = self; /* Inherit reference. */
+#ifndef CONFIG_NO_CFUNCTION
+	result->clt_base.ct_ffitype = &ffi_type_pointer;
+#endif /* !CONFIG_NO_CFUNCTION */
+	result->clt_base.ct_operators = &clvalue_operators;
+
+	/* Special type traits based on lvalue base-class */
+#ifndef CONFIG_NO_CFUNCTION
+	if (CType_IsCFunctionType(self)) {
+		/* LValue-to-function is callable */
+		result->clt_base.ct_base.tp_call = (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfunclvalue_call;
+		result->clt_base.ct_base.tp_mro  = cfunclvalue_subclass_mro;
+	} else
+#endif /* !CONFIG_NO_CFUNCTION */
+	{
+		if (CType_IsCStructType(self)) {
+			/* LValue-to-struct allows for access to struct members */
+			result->clt_base.ct_base.tp_attr = &cstructlvalue_attr;
+		} else if (CType_IsCArrayType(self)) {
+			/* LValue-to-array allows for access to array elements */
+			result->clt_base.ct_base.tp_seq = &carraylvalue_seq;
+			result->clt_base.ct_base.tp_mro = carraylvalue_subclass_mro;
+		} else if (CType_IsCPointerType(self)) {
+#ifndef CONFIG_NO_CFUNCTION
+			CPointerType *ptr = CType_AsCPointerType(self);
+			CType *ptr_base   = CPointerType_PointedToType(ptr);
+			if (CType_IsCFunctionType(ptr_base)) {
+				/* LValue-to-pointer-to-function allows that function to be called, too
+				 * This is especially important when the function is part of a struct,
+				 * in which case accessing a struct member would always return an l-value
+				 * to a pointer, to a function (which has to be callable by itself) */
+				result->clt_base.ct_base.tp_call = (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfuncpointerlvalue_call;
+				result->clt_base.ct_base.tp_mro  = cfunclvalue_subclass_mro;
+			} else
+#endif /* !CONFIG_NO_CFUNCTION */
+			{
+				if (CType_IsCStructType(ptr_base)) {
+					/* LValue-to-pointer-to-struct can also directly access struct fields */
+					result->clt_base.ct_base.tp_attr = &cstructpointerlvalue_attr;
+				}
+			}
+			/* LValue-to-pointer allows for array-style indexing */
+			result->clt_base.ct_base.tp_seq = &cpointerlvalue_seq;
+		}
+	}
+
+	/* Finish the lvalue type. */
+	DeeObject_InitStatic(CLValueType_AsType(result), &CLValueType_Type);
+	return Type_AsCLValueType(DeeGC_TRACK(DeeTypeObject, CLValueType_AsType(result)));
+/*
+err_r:
+	DeeGCObject_FREE(result);*/
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF CLValueType *DCALL
+CLValueType_Of(CType *__restrict self) {
+	DREF CLValueType *result;
+	ASSERT_OBJECT_TYPE(CType_AsType(self), &CType_Type);
+	CType_CacheLockRead(self);
+	result = self->ct_lvalue;
+	if (result && !Dee_IncrefIfNotZero(CLValueType_AsType(result)))
+		result = NULL;
+	CType_CacheLockEndRead(self);
+	if (!result) {
+		/* Lazily construct missing types. */
+		result = CLValuetype_New(self);
+		if likely(result) {
+			CType_CacheLockWrite(self);
+			/* Check if the type was created due to race conditions. */
+			if unlikely(self->ct_lvalue &&
+			            Dee_IncrefIfNotZero(CLValueType_AsType(self->ct_lvalue))) {
+				DREF CLValueType *new_result;
+				new_result = self->ct_lvalue;
+				CType_CacheLockEndWrite(self);
+				Dee_DecrefDokill(CLValueType_AsType(result));
+				return new_result;
+			}
+			self->ct_lvalue = result; /* Weakly referenced. */
+			CType_CacheLockEndWrite(self);
+		}
+	}
+	return result;
+}
+
+DECL_END
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+
+#endif /* !GUARD_DEX_CTYPES_CTYPES_CORE_C */

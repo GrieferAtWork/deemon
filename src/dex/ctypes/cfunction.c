@@ -441,8 +441,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	/* Calculate the wbuffer cache sizes */
 	result->ft_wsize       = MAX(result->ft_ffi_return_type->size, sizeof(ffi_arg));
 	result->ft_woff_argmem = result->ft_wsize;
-	if ((unsigned int)calling_convention &
-	    (unsigned int)CC_FVARARGS) {
+	if (ctypes_cc_isvarargs(calling_convention)) {
 		result->ft_woff_variadic_argmem = result->ft_wsize + (sizeof(union argument) * argc);
 	} else {
 		result->ft_wsize += (sizeof(union argument) * argc);

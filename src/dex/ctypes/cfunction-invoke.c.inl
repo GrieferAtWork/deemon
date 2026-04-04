@@ -18,16 +18,21 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#define DEE_SOURCE
+#include "libctypes.h"
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#include "ctypes-types.c"
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #include "cfunction.c"
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #define VARARGS
 #endif /* __INTELLISENSE__ */
-
-#include "libctypes.h"
 /**/
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
+#include <deemon/gc.h>           /* Dee_Freea, Dee_Malloca */
 #include <deemon/bool.h>            /* DeeBool_IsTrue, DeeBool_Type */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
@@ -49,13 +54,11 @@
 
 #ifdef VARARGS
 INTERN WUNUSED DREF DeeObject *DCALL
-cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,
-                 void (*self)(void),
+cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
                  size_t argc, DeeObject *const *argv)
 #else /* VARARGS */
 INTERN WUNUSED DREF DeeObject *DCALL
-cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
-               void (*self)(void),
+cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
                size_t argc, DeeObject *const *argv)
 #endif /* !VARARGS */
 {
@@ -68,7 +71,7 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 	void *wbuf, **argp_iter;
 	union argument *iter, *end;
 	DREF DeeObject *result, *const *arg_iter;
-	ffi_type **ffi_argtyv;
+	ffi_type *const *ffi_argtyv;
 #define ret_mem wbuf /* Return memory is located at the start of the wbuffer */
 #ifdef VARARGS
 	if (argc < tp_self->ft_argc) {
@@ -204,15 +207,27 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 
 			case FFI_TYPE_POINTER: {
 				DeeSTypeObject *arg_type = argt;
-				if (DeeLValueType_Check(arg_type)) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+				if (CType_IsCLValueType(arg_type))
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+				if (DeeLValueType_Check(arg_type))
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+				{
 					if (DeeObject_AssertTypeExact(arg, DeeSType_AsType(arg_type)))
 						goto err_wbuf;
 					iter->p = ((struct lvalue_object *)arg)->l_ptr.ptr;
 				} else {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+					ASSERT(CType_IsCPointerType(arg_type));
+					if (DeeObject_AsPointer(arg, CPointerType_PointedToType(CType_AsCPointerType(arg_type)),
+					                        (union pointer *)&iter->p))
+						goto err_wbuf;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 					ASSERT(DeePointerType_Check(arg_type));
 					if (DeeObject_AsPointer(arg, DeeSType_AsPointerType(arg_type)->pt_orig,
 					                        (union pointer *)&iter->p))
 						goto err_wbuf;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 				}
 			}	break;
 
@@ -394,6 +409,23 @@ def_var_data:
 	if (tp_self->ft_orig == &DeeCVoid_Type) {
 		result = DeeNone_NewRef();
 	} else {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+		CType *return_type = tp_self->cft_return;
+		CObject *result_cobject;
+
+		/* TODO: This allocation should happen *before* the call! Once the native function
+		 *       returns normally, **all** code-paths should cause us to return normally
+		 *       as well (otherwise, we might throw an exception even after the call was
+		 *       made and returned normally) */
+		result_cobject = CObject_Alloc(return_type);
+		if unlikely(!result_cobject)
+			goto err_wbuf;
+
+		/* Construct a new C-object that is returned as result. */
+		CObject_Init(result_cobject, return_type);
+		memcpy(CObject_Data(result_cobject), ret_mem, CType_Sizeof(return_type));
+		result = Dee_AsObject(result_cobject);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 		DeeSTypeObject *orig_type = tp_self->ft_orig;
 		result = DeeType_AllocInstance(&orig_type->st_base);
 		if unlikely(!result)
@@ -402,6 +434,7 @@ def_var_data:
 		/* Construct a new structured type that is returned as result. */
 		DeeObject_Init((DeeStructObject *)result, DeeSType_AsType(orig_type));
 		memcpy(DeeStruct_Data(result), ret_mem, DeeSType_Sizeof(orig_type));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	}
 #undef ret_mem
 done_wbuf:

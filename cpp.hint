@@ -1581,3 +1581,7 @@
 #define dlmalloc_set_footprint_limit DeeHeap_SetFootprintLimit
 #define dlmallinfo DeeHeap_MallInfo
 #define dlmalloc_trim DeeHeap_Trim
+
+#define DEFINE_LVALUE_BINARY_OP(lvalue_foo,...)DeeObject*lvalue_foo(CLValueType*tp_self,union pointer const*lhs,DeeObject*rhs){}
+#define DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_foo,...)int lvalue_inplace_foo(CLValueType*tp_self,union pointer*lhs,DeeObject*rhs){}
+#define CStructType_ForeachField(...) for(;;)

@@ -2179,8 +2179,8 @@ ftype_repr(DeeCFunctionTypeObject *__restrict self) {
 	bool is_first_arg = true;
 	if unlikely(Dee_unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_orig)) < 0)
 		goto err;
-	if unlikely((self->ft_cc & CC_FVARARGS ? Dee_UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
-	                                       : Dee_UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
+	if unlikely((ctypes_cc_isvarargs(self->ft_cc) ? Dee_UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
+	                                              : Dee_UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
 		goto err;
 	cc = (ctypes_cc_t)((unsigned int)self->ft_cc & ~CC_FVARARGS);
 	if (cc != CC_DEFAULT) {

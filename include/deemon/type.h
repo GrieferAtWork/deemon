@@ -440,9 +440,9 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 typedef NONNULL_T((1)) void (DCALL *Dee_tp_destroy_t)(DeeObject *__restrict self);
 
 /* Prototypes for create-instance-of-type operators */
-typedef NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv);
-typedef NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_kw_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-typedef NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tp_new_copy_t)(DeeTypeObject *tp_self, DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv);
+typedef WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_kw_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tp_new_copy_t)(DeeTypeObject *tp_self, DeeObject *self);
 
 #undef tp_alloc
 struct Dee_type_constructor {
