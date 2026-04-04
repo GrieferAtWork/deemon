@@ -836,7 +836,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	/* Initialize fields. */
 	result->pt_orig                 = self; /* Inherit reference. */
 	result->pt_base.st_sizeof       = sizeof(void *);
-	result->pt_base.st_align        = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->pt_base.st_align        = CTYPES_alignof_pointer;
 	result->pt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	result->pt_base.st_base.tp_init.tp_alloc.tp_alloc = PTR_pointer_tp_alloc;
@@ -889,7 +889,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	/* Initialize fields. */
 	result->lt_orig                 = self; /* Inherit reference. */
 	result->lt_base.st_sizeof       = sizeof(void *);
-	result->lt_base.st_align        = CONFIG_CTYPES_ALIGNOF_LVALUE;
+	result->lt_base.st_align        = CTYPES_alignof_lvalue;
 	result->lt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	result->lt_base.st_base.tp_init.tp_alloc.tp_free = PTR_lvalue_tp_free;

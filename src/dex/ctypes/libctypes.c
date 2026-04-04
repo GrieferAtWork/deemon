@@ -337,7 +337,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 		break;
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
-	case CONFIG_CTYPES_SIZEOF_CHAR:
+	case CTYPES_sizeof_char:
 		result = signed_
 		         ? &DeeCSChar_Type
 		         : &DeeCUChar_Type;
@@ -345,7 +345,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
-	case CONFIG_CTYPES_SIZEOF_SHORT:
+	case CTYPES_sizeof_short:
 		result = signed_
 		         ? &DeeCShort_Type
 		         : &DeeCUShort_Type;
@@ -353,7 +353,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
-	case CONFIG_CTYPES_SIZEOF_INT:
+	case CTYPES_sizeof_int:
 		result = signed_
 		         ? &DeeCInt_Type
 		         : &DeeCUInt_Type;
@@ -361,17 +361,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
-#if CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT
-	case CONFIG_CTYPES_SIZEOF_LONG:
+#if CTYPES_sizeof_long != CTYPES_sizeof_int
+	case CTYPES_sizeof_long:
 		result = signed_
 		         ? &DeeCLong_Type
 		         : &DeeCULong_Type;
 		break;
-#endif /* CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT */
+#endif /* CTYPES_sizeof_long != CTYPES_sizeof_int */
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
-	case CONFIG_CTYPES_SIZEOF_LLONG:
+	case CTYPES_sizeof_llong:
 		result = signed_
 		         ? &DeeCLLong_Type
 		         : &DeeCULLong_Type;

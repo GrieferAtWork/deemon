@@ -455,10 +455,10 @@ typedef struct {
 #define INT_NEWINT_DEFINED 1
 typedef struct {
 	OBJECT_HEAD
-	CTYPES_INT i_value; /* The integer value. */
+	CTYPES_int i_value; /* The integer value. */
 } Integer_int_object;
 
-INTERN WUNUSED DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
+INTERN WUNUSED DREF DeeObject *DCALL int_newint(CTYPES_int val) {
 	Integer_int_object *result;
 	result = DeeObject_MALLOC(Integer_int_object);
 	if unlikely(!result)
@@ -470,7 +470,7 @@ done:
 }
 #endif /* !INT_NEWINT_DEFINED */
 
-#if !defined(DEFINE_SIGNED) || DEFINE_SIZEOF != CONFIG_CTYPES_SIZEOF_INT
+#if !defined(DEFINE_SIGNED) || DEFINE_SIZEOF != CTYPES_sizeof_int
 INTERN WUNUSED DREF DeeObject *DCALL DEFINE_F(int_new)(DEFINE_T val) {
 	LOCAL_Integer * result;
 	result = DeeObject_MALLOC(LOCAL_Integer);
@@ -481,7 +481,7 @@ INTERN WUNUSED DREF DeeObject *DCALL DEFINE_F(int_new)(DEFINE_T val) {
 done:
 	return Dee_AsObject(result);
 }
-#endif /* !DEFINE_SIGNED || DEFINE_SIZEOF != CONFIG_CTYPES_SIZEOF_INT */
+#endif /* !DEFINE_SIGNED || DEFINE_SIZEOF != CTYPES_sizeof_int */
 
 #ifdef CONFIG_DONT_PROMOTE_TO_INTEGER
 #define LOCAL_newint_promoted(val) DEFINE_F(int_new_)(val)
@@ -495,10 +495,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL DEFINE_F(int_new_)(DEFINE_T val) {
 done:
 	return Dee_AsObject(result);
 }
-#elif ((DEFINE_SIZEOF < CONFIG_CTYPES_SIZEOF_INT) || \
-       (defined(DEFINE_SIGNED) && DEFINE_SIZEOF == CONFIG_CTYPES_SIZEOF_INT))
+#elif ((DEFINE_SIZEOF < CTYPES_sizeof_int) || \
+       (defined(DEFINE_SIGNED) && DEFINE_SIZEOF == CTYPES_sizeof_int))
 /* Integer promotion. */
-#define LOCAL_newint_promoted(val) int_newint((CTYPES_INT)(val))
+#define LOCAL_newint_promoted(val) int_newint((CTYPES_int)(val))
 #else /* ... */
 #define LOCAL_newint_promoted(val) DEFINE_F(int_new)(val)
 #endif /* !... */

@@ -355,13 +355,13 @@ cuint128_unaligned_get_bswap(void const *p) {
 #endif /* LOCAL_UNSIGNED */
 
 #define LOCAL_CInt_New_t LOCAL_intN_t
-#if LOCAL_sizeof_intN_t < CONFIG_CTYPES_SIZEOF_INT
+#if LOCAL_sizeof_intN_t < CTYPES_sizeof_int
 /* Integer promotion */
 #undef LOCAL_CInt_New
 #undef LOCAL_CInt_New_t
-#define LOCAL_CInt_New   CIntN_New(CONFIG_CTYPES_SIZEOF_INT)
-#define LOCAL_CInt_New_t HOST_INTFOR(CONFIG_CTYPES_SIZEOF_INT)
-#endif /* LOCAL_sizeof_intN_t < CONFIG_CTYPES_SIZEOF_INT */
+#define LOCAL_CInt_New   CIntN_New(CTYPES_sizeof_int)
+#define LOCAL_CInt_New_t HOST_INTFOR(CTYPES_sizeof_int)
+#endif /* LOCAL_sizeof_intN_t < CTYPES_sizeof_int */
 #endif /* !LOCAL_intN_t */
 
 #ifndef LOCAL_UNALIGNED_GET

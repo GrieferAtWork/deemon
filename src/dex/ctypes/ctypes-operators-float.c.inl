@@ -47,27 +47,27 @@ DECL_BEGIN
 
 #ifdef DEFINE_cfloat_operators
 #define LOCAL_operators         cfloat_operators
-#define LOCAL_float_t           CONFIG_CTYPES_FLOAT_TYPE
+#define LOCAL_float_t           CTYPES_float
 #define LOCAL_STR_float_t       "float"
 #define LOCAL_DeeObject_AsFloat DeeObject_AsCFloat
 #define LOCAL_CFloat_New        CDouble_New               /* Float-to-double promotion */
-#define LOCAL_CFloat_New_t      CONFIG_CTYPES_DOUBLE_TYPE /* Float-to-double promotion */
+#define LOCAL_CFloat_New_t      CTYPES_double /* Float-to-double promotion */
 #define LOCAL_float_IS_float
 #elif defined(DEFINE_cdouble_operators)
 #define LOCAL_operators         cdouble_operators
-#define LOCAL_float_t           CONFIG_CTYPES_DOUBLE_TYPE
+#define LOCAL_float_t           CTYPES_double
 #define LOCAL_STR_float_t       "double"
 #define LOCAL_DeeObject_AsFloat DeeObject_AsCDouble
 #define LOCAL_CFloat_New        CDouble_New
-#define LOCAL_CFloat_New_t      CONFIG_CTYPES_DOUBLE_TYPE
+#define LOCAL_CFloat_New_t      CTYPES_double
 #define LOCAL_float_IS_double
 #elif defined(DEFINE_cldouble_operators)
 #define LOCAL_operators         cldouble_operators
-#define LOCAL_float_t           CONFIG_CTYPES_LDOUBLE_TYPE
+#define LOCAL_float_t           CTYPES_ldouble
 #define LOCAL_STR_float_t       "long double"
 #define LOCAL_DeeObject_AsFloat DeeObject_AsCLDouble
 #define LOCAL_CFloat_New        CLDouble_New
-#define LOCAL_CFloat_New_t      CONFIG_CTYPES_LDOUBLE_TYPE
+#define LOCAL_CFloat_New_t      CTYPES_ldouble
 #define LOCAL_float_IS_ldouble
 #else /* ... */
 #error "Invalid configuration"

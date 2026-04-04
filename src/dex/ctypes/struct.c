@@ -718,7 +718,7 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_sizeof   = */ 0,
-		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
+		/* .st_align    = */ CTYPES_alignof_pointer,
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&struct_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_assign,
 		/* .st_cast     = */ {

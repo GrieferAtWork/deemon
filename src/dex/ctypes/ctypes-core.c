@@ -663,10 +663,6 @@ PRIVATE struct type_getset tpconst cobject_getsets[] = {
 	TYPE_GETSET_END
 };
 
-typedef struct {
-	OBJECT_HEAD
-} VoidObject;
-
 INTERN CType AbstractCObject_Type = {
 	/* .ct_base = */ {
 		OBJECT_HEAD_INIT(&CType_Type),
@@ -678,7 +674,7 @@ INTERN CType AbstractCObject_Type = {
 		/* .tp_base     = */ &DeeObject_Type,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-				/* T:              */ VoidObject,
+				/* T:              */ CVoid,
 				/* tp_ctor:        */ &cobject_ctor,
 				/* tp_copy_ctor:   */ &cobject_copy,
 				/* tp_any_ctor:    */ NULL,
@@ -719,7 +715,7 @@ INTERN CType AbstractCObject_Type = {
 	},
 	CTYPE_INIT_COMMON_EX(
 		/* ct_sizeof:    */ 0,
-		/* ct_alignof:   */ 0,
+		/* ct_alignof:   */ 1,
 		/* ct_operators: */ &cvoid_operators,
 		/* ct_ffitype:   */ &ffi_type_void,
 		/* ct_pointer:   */ &AbstractCPointer_Type,
@@ -1040,7 +1036,7 @@ INTERN CArrayType AbstractCArray_Type = {
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-					/* T:              */ VoidObject,
+					/* T:              */ CVoid,
 					/* tp_ctor:        */ &cobject_ctor,
 					/* tp_copy_ctor:   */ &cobject_copy,
 					/* tp_any_ctor:    */ NULL,
@@ -1081,7 +1077,7 @@ INTERN CArrayType AbstractCArray_Type = {
 		},
 		CTYPE_INIT_COMMON(
 			/* ct_sizeof:    */ 0,
-			/* ct_alignof:   */ 0,
+			/* ct_alignof:   */ 1,
 			/* ct_operators: */ &carray_operators,
 			/* ct_ffitype:   */ &ffi_type_void
 		)
@@ -1696,7 +1692,7 @@ INTERN struct empty_cstruct_type_object AbstractCStruct_Type = {
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-					/* T:              */ VoidObject,
+					/* T:              */ CVoid,
 					/* tp_ctor:        */ &cobject_ctor,
 					/* tp_copy_ctor:   */ &cobject_copy,
 					/* tp_any_ctor:    */ NULL,
@@ -1737,7 +1733,7 @@ INTERN struct empty_cstruct_type_object AbstractCStruct_Type = {
 		},
 		CTYPE_INIT_COMMON(
 			/* ct_sizeof:    */ 0,
-			/* ct_alignof:   */ 0,
+			/* ct_alignof:   */ 1,
 			/* ct_operators: */ &cstruct_operators,
 			/* ct_ffitype:   */ &ffi_type_void
 		)
@@ -2377,7 +2373,7 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 		},
 		CTYPE_INIT_COMMON(
 			/* ct_sizeof:    */ 0,
-			/* ct_alignof:   */ 0,
+			/* ct_alignof:   */ 1,
 			/* ct_operators: */ &cvoid_operators,
 			/* ct_ffitype:   */ &ffi_type_void
 		)
@@ -3062,8 +3058,8 @@ INTERN CPointerType AbstractCPointer_Type = {
 			/* .tp_mro           = */ NULL
 		},
 		CTYPE_INIT_COMMON(
-			/* ct_sizeof:    */ 0,
-			/* ct_alignof:   */ 0,
+			/* ct_sizeof:    */ CTYPES_sizeof_pointer,
+			/* ct_alignof:   */ CTYPES_alignof_pointer,
 			/* ct_operators: */ &cpointer_operators,
 			/* ct_ffitype:   */ &ffi_type_pointer
 		)
@@ -3232,8 +3228,8 @@ CPointerType_New(CType *__restrict self) {
 		goto err;
 
 	/* Initialize fields. */
-	result->cpt_base.ct_sizeof       = sizeof(void *);
-	result->cpt_base.ct_alignof      = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->cpt_base.ct_sizeof       = CTYPES_sizeof_pointer;
+	result->cpt_base.ct_alignof      = CTYPES_alignof_pointer;
 	result->cpt_base.ct_base.tp_name = "Pointer";
 	result->cpt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_pointer_tp_alloc;
 	result->cpt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_pointer_tp_free;
@@ -3508,8 +3504,8 @@ INTERN CLValueType AbstractCLValue_Type = {
 			/* .tp_mro           = */ NULL
 		},
 		CTYPE_INIT_COMMON(
-			/* ct_sizeof:    */ 0,
-			/* ct_alignof:   */ 0,
+			/* ct_sizeof:    */ CTYPES_sizeof_lvalue,
+			/* ct_alignof:   */ CTYPES_alignof_lvalue,
 			/* ct_operators: */ &clvalue_operators,
 			/* ct_ffitype:   */ &ffi_type_pointer
 		)
@@ -4056,8 +4052,8 @@ CLValuetype_New(CType *__restrict self) {
 		goto err;
 
 	/* Initialize fields. */
-	result->clt_base.ct_sizeof       = sizeof(void *);
-	result->clt_base.ct_alignof      = CONFIG_CTYPES_ALIGNOF_POINTER;
+	result->clt_base.ct_sizeof       = CTYPES_sizeof_lvalue;
+	result->clt_base.ct_alignof      = CTYPES_alignof_lvalue;
 	result->clt_base.ct_base.tp_name = "LValue";
 	result->clt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_lvalue_tp_alloc;
 	result->clt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_lvalue_tp_free;

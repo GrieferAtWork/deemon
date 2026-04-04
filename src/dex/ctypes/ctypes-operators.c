@@ -38,36 +38,36 @@ DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsCFloat)(DeeObject *__restrict self,
-                           CONFIG_CTYPES_FLOAT_TYPE *__restrict p_result) {
+                           CTYPES_float *__restrict p_result) {
 	double double_value;
 	int result = DeeObject_AsDouble(self, &double_value);
 	if likely(result == 0)
-		*p_result = (CONFIG_CTYPES_FLOAT_TYPE)double_value;
+		*p_result = (CTYPES_float)double_value;
 	return result;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsCLDouble)(DeeObject *__restrict self,
-                             CONFIG_CTYPES_LDOUBLE_TYPE *__restrict p_result) {
+                             CTYPES_ldouble *__restrict p_result) {
 	double double_value;
 	DeeTypeObject *tp = Dee_TYPE(self);
 	if (tp == CType_AsType(&CLDouble_Type)) {
 		byte_t *data = CObject_Data(self);
-		memcpy(p_result, data, sizeof(CONFIG_CTYPES_LDOUBLE_TYPE));
+		memcpy(p_result, data, sizeof(CTYPES_ldouble));
 		return 0;
 	} else if (Type_IsCLValueType(tp)) {
 		CType *base = CLValueType_PointedToType(Type_AsCLValueType(tp));
 		if (base == &CLDouble_Type) {
 			byte_t *data = Object_AsCLValue(self)->cl_value.pbyte;
 			CTYPES_FAULTPROTECT({
-				memcpy(p_result, data, sizeof(CONFIG_CTYPES_LDOUBLE_TYPE));
+				memcpy(p_result, data, sizeof(CTYPES_ldouble));
 			}, goto err);
 			return 0;
 		}
 	}
 	if (DeeObject_AsDouble(self, &double_value))
 		goto err;
-	*p_result = (CONFIG_CTYPES_FLOAT_TYPE)double_value;
+	*p_result = (CTYPES_float)double_value;
 	return 0;
 err:
 	return -1;

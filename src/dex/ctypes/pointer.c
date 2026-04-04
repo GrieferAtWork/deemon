@@ -359,7 +359,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 		/* .st_ffitype  = */ &ffi_type_pointer,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_sizeof   = */ sizeof(void *),
-		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
+		/* .st_align    = */ CTYPES_alignof_pointer,
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&pointer_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&pointer_assign,
 		/* .st_cast     = */ {
@@ -790,7 +790,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 		/* .st_ffitype  = */ &ffi_type_pointer,
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_sizeof   = */ sizeof(void *),
-		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_LVALUE,
+		/* .st_align    = */ CTYPES_alignof_lvalue,
 		/* .st_init     = */ NULL,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_assign,
 		/* .st_cast     = */ {

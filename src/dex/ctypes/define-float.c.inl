@@ -65,11 +65,11 @@ DECL_BEGIN
 #endif /* !FLOATID_float */
 
 #if LOCAL_TYPE_ID == 0
-#define LOCAL_ALIGNOF CONFIG_ALIGNOF_FLOAT
+#define LOCAL_ALIGNOF CTYPES_alignof_float
 #elif LOCAL_TYPE_ID == 1
-#define LOCAL_ALIGNOF CONFIG_ALIGNOF_DOUBLE
+#define LOCAL_ALIGNOF CTYPES_alignof_double
 #elif LOCAL_TYPE_ID == 2
-#define LOCAL_ALIGNOF CONFIG_ALIGNOF_LDOUBLE
+#define LOCAL_ALIGNOF CTYPES_alignof_ldouble
 #else /* LOCAL_TYPE_ID == ... */
 #define LOCAL_ALIGNOF COMPILER_ALIGNOF(DEFINE_T)
 #endif /* LOCAL_TYPE_ID != ... */
@@ -154,16 +154,16 @@ typedef struct {
 
 #if LOCAL_TYPE_ID <= 1
 /* Promotion to double. */
-#define LOCAL_fltnew(val) float_newdouble((CONFIG_CTYPES_DOUBLE_TYPE)(val))
+#define LOCAL_fltnew(val) float_newdouble((CTYPES_double)(val))
 #ifndef FLOAT_NEWDOUBLE_DEFINED
 #define FLOAT_NEWDOUBLE_DEFINED
 typedef struct {
 	OBJECT_HEAD
-	CONFIG_CTYPES_DOUBLE_TYPE f_value; /* The floating point value. */
+	CTYPES_double f_value; /* The floating point value. */
 } Float_double_object;
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
+float_newdouble(CTYPES_double val) {
 	Float_double_object *result;
 	result = DeeObject_MALLOC(Float_double_object);
 	if unlikely(!result)

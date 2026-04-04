@@ -133,121 +133,184 @@ INTDEF void ctypes_kos_guard(void);
 
 
 #ifdef __SIZEOF_BOOL__
-#define CONFIG_CTYPES_SIZEOF_BOOL __SIZEOF_BOOL__
+#define CTYPES_sizeof_bool __SIZEOF_BOOL__
 #else /* __SIZEOF_BOOL__ */
-#define CONFIG_CTYPES_SIZEOF_BOOL 1
+#define CTYPES_sizeof_bool 1
 #endif /* !__SIZEOF_BOOL__ */
 
 #ifdef __SIZEOF_WCHAR_T__
-#define CONFIG_CTYPES_SIZEOF_WCHAR __SIZEOF_WCHAR_T__
+#define CTYPES_sizeof_wchar_t __SIZEOF_WCHAR_T__
 #elif defined(CONFIG_HOST_WINDOWS)
-#define CONFIG_CTYPES_SIZEOF_WCHAR 2
+#define CTYPES_sizeof_wchar_t 2
 #else /* ... */
-#define CONFIG_CTYPES_SIZEOF_WCHAR 4
+#define CTYPES_sizeof_wchar_t 4
 #endif /* !... */
 
-#define CONFIG_CTYPES_SIZEOF_CHAR16 2
-#define CONFIG_CTYPES_SIZEOF_CHAR32 4
+#define CTYPES_sizeof_char16_t 2
+#define CTYPES_sizeof_char32_t 4
 
 #ifdef __SIZEOF_CHAR__
-#define CONFIG_CTYPES_SIZEOF_CHAR __SIZEOF_CHAR__
+#define CTYPES_sizeof_char __SIZEOF_CHAR__
 #else /* __SIZEOF_CHAR__ */
-#define CONFIG_CTYPES_SIZEOF_CHAR 1
+#define CTYPES_sizeof_char 1
 #endif /* !__SIZEOF_CHAR__ */
 
 #ifdef __SIZEOF_SHORT__
-#define CONFIG_CTYPES_SIZEOF_SHORT __SIZEOF_SHORT__
+#define CTYPES_sizeof_short __SIZEOF_SHORT__
 #else /* __SIZEOF_SHORT__ */
-#define CONFIG_CTYPES_SIZEOF_SHORT 2
+#define CTYPES_sizeof_short 2
 #endif /* !__SIZEOF_SHORT__ */
 
 #ifdef __SIZEOF_INT__
-#define CONFIG_CTYPES_SIZEOF_INT __SIZEOF_INT__
+#define CTYPES_sizeof_int __SIZEOF_INT__
 #else /* __SIZEOF_INT__ */
-#define CONFIG_CTYPES_SIZEOF_INT 4
+#define CTYPES_sizeof_int 4
 #endif /* !__SIZEOF_INT__ */
 
 #ifdef __SIZEOF_LONG__
-#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_LONG__
+#define CTYPES_sizeof_long __SIZEOF_LONG__
 #elif defined(CONFIG_HOST_WINDOWS)
-#define CONFIG_CTYPES_SIZEOF_LONG 4
+#define CTYPES_sizeof_long 4
 #else /* ... */
-#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_POINTER__
+#define CTYPES_sizeof_long __SIZEOF_POINTER__
 #endif /* !... */
 
 #ifdef __SIZEOF_LONG_LONG__
-#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LONG_LONG__
+#define CTYPES_sizeof_llong __SIZEOF_LONG_LONG__
 #elif defined(__SIZEOF_LLONG__)
-#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LLONG__
+#define CTYPES_sizeof_llong __SIZEOF_LLONG__
 #else /* ... */
-#define CONFIG_CTYPES_SIZEOF_LLONG 8
+#define CTYPES_sizeof_llong 8
 #endif /* !... */
 
+#undef CTYPES_char_UNSIGNED
 #ifdef __CHAR_UNSIGNED__
-#define CONFIG_CTYPES_CHAR_UNSIGNED
+#define CTYPES_char_UNSIGNED
 #endif /* __CHAR_UNSIGNED__ */
 
+#undef CTYPES_wchar_t_UNSIGNED
 #ifdef __WCHAR_UNSIGNED__
-#define CONFIG_CTYPES_WCHAR_UNSIGNED
+#define CTYPES_wchar_t_UNSIGNED
 #endif /* __WCHAR_UNSIGNED__ */
 
-#define CONFIG_CTYPES_CHAR16_UNSIGNED
-#define CONFIG_CTYPES_CHAR32_UNSIGNED
+#define CTYPES_char16_t_UNSIGNED
+#define CTYPES_char32_t_UNSIGNED
 
-#define CONFIG_CTYPES_ALIGNOF_POINTER __ALIGNOF_POINTER__
-#define CONFIG_CTYPES_ALIGNOF_LVALUE  CONFIG_CTYPES_ALIGNOF_POINTER
-#define CONFIG_CTYPES_ALIGNOF_BOOL    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_BOOL)
-#define CONFIG_CTYPES_ALIGNOF_WCHAR   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_WCHAR)
-#define CONFIG_CTYPES_ALIGNOF_CHAR16  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR16)
-#define CONFIG_CTYPES_ALIGNOF_CHAR32  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR32)
-#define CONFIG_CTYPES_ALIGNOF_CHAR    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR)
-#define CONFIG_CTYPES_ALIGNOF_SHORT   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_SHORT)
-#define CONFIG_CTYPES_ALIGNOF_INT     __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_INT)
-#define CONFIG_CTYPES_ALIGNOF_LONG    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LONG)
-#define CONFIG_CTYPES_ALIGNOF_LLONG   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LLONG)
+#define CTYPES_sizeof_pointer  __SIZEOF_POINTER__
+#define CTYPES_alignof_pointer __ALIGNOF_POINTER__
+#define CTYPES_sizeof_lvalue   CTYPES_sizeof_pointer
+#define CTYPES_alignof_lvalue  CTYPES_alignof_pointer
 
-#ifdef __LONGDOUBLE
-#define long_double __LONGDOUBLE
-#else /* __LONGDOUBLE */
-#define long_double long double
-#endif /* !__LONGDOUBLE */
-#define CONFIG_CTYPES_FLOAT_TYPE   float
-#define CONFIG_CTYPES_DOUBLE_TYPE  double
+#define CTYPES_alignof_bool     __HYBRID_ALIGNOF(CTYPES_sizeof_bool)
+#define CTYPES_alignof_wchar_t  __HYBRID_ALIGNOF(CTYPES_sizeof_wchar_t)
+#define CTYPES_alignof_char16_t __HYBRID_ALIGNOF(CTYPES_sizeof_char16_t)
+#define CTYPES_alignof_char32_t __HYBRID_ALIGNOF(CTYPES_sizeof_char32_t)
+#define CTYPES_alignof_char     __HYBRID_ALIGNOF(CTYPES_sizeof_char)
+#define CTYPES_alignof_short    __HYBRID_ALIGNOF(CTYPES_sizeof_short)
+#define CTYPES_alignof_int      __HYBRID_ALIGNOF(CTYPES_sizeof_int)
+#define CTYPES_alignof_long     __HYBRID_ALIGNOF(CTYPES_sizeof_long)
+#define CTYPES_alignof_llong    __HYBRID_ALIGNOF(CTYPES_sizeof_llong)
+
+
+#define CTYPES_float float
+#ifdef __SIZEOF_FLOAT__
+#define CTYPES_sizeof_float __SIZEOF_FLOAT__
+#else /* __SIZEOF_FLOAT__ */
+#define CTYPES_sizeof_float sizeof(CTYPES_float)
+#endif /* !__SIZEOF_FLOAT__ */
+#ifdef __ALIGNOF_FLOAT__
+#define CTYPES_alignof_float __ALIGNOF_FLOAT__
+#else /* __ALIGNOF_FLOAT__ */
+#define CTYPES_alignof_float COMPILER_ALIGNOF(CTYPES_float)
+#endif /* !__ALIGNOF_FLOAT__ */
+
+#define CTYPES_double double
+#ifdef __SIZEOF_DOUBLE__
+#define CTYPES_sizeof_double __SIZEOF_DOUBLE__
+#else /* __SIZEOF_DOUBLE__ */
+#define CTYPES_sizeof_double sizeof(CTYPES_double)
+#endif /* !__SIZEOF_DOUBLE__ */
+#ifdef __ALIGNOF_DOUBLE__
+#define CTYPES_alignof_double __ALIGNOF_DOUBLE__
+#else /* __ALIGNOF_DOUBLE__ */
+#define CTYPES_alignof_double COMPILER_ALIGNOF(CTYPES_double)
+#endif /* !__ALIGNOF_DOUBLE__ */
+
 #if (defined(FFI_TYPE_LONGDOUBLE) && \
      defined(FFI_TYPE_DOUBLE) &&     \
      FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE)
-#define CONFIG_CTYPES_LDOUBLE_TYPE double
+#define CTYPES_ldouble         double
+#define CTYPES_sizeof_ldouble  CTYPES_sizeof_double
+#define CTYPES_alignof_ldouble CTYPES_alignof_double
 #else /* FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE */
-#define CONFIG_CTYPES_LDOUBLE_TYPE long_double
+#ifdef __LONGDOUBLE
+#define CTYPES_ldouble __LONGDOUBLE
+#else /* __LONGDOUBLE */
+#define CTYPES_ldouble long double
+#endif /* !__LONGDOUBLE */
+#ifdef __SIZEOF_LONG_DOUBLE__
+#define CTYPES_sizeof_ldouble __SIZEOF_LONG_DOUBLE__
+#else /* __SIZEOF_LONG_DOUBLE__ */
+#define CTYPES_sizeof_ldouble sizeof(CTYPES_ldouble)
+#endif /* !__SIZEOF_LONG_DOUBLE__ */
+#ifdef __ALIGNOF_LONG_DOUBLE__
+#define CTYPES_alignof_ldouble __ALIGNOF_LONG_DOUBLE__
+#else /* __ALIGNOF_LONG_DOUBLE__ */
+#define CTYPES_alignof_ldouble COMPILER_ALIGNOF(CTYPES_ldouble)
+#endif /* !__ALIGNOF_LONG_DOUBLE__ */
 #endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
 
-/* Alignment requirements of the host's C floating point types. */
-#ifndef CONFIG_ALIGNOF_FLOAT
-#define CONFIG_ALIGNOF_FLOAT COMPILER_ALIGNOF(float)
-#endif /* !CONFIG_ALIGNOF_FLOAT */
-#ifndef CONFIG_ALIGNOF_DOUBLE
-#define CONFIG_ALIGNOF_DOUBLE COMPILER_ALIGNOF(double)
-#endif /* !CONFIG_ALIGNOF_DOUBLE */
-#ifndef CONFIG_ALIGNOF_LDOUBLE
-#define CONFIG_ALIGNOF_LDOUBLE COMPILER_ALIGNOF(long_double)
-#endif /* !CONFIG_ALIGNOF_LDOUBLE */
 
-#if CONFIG_CTYPES_SIZEOF_INT == 1
-#define CTYPES_INT  int8_t
-#define CTYPES_UINT uint8_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 2
-#define CTYPES_INT  int16_t
-#define CTYPES_UINT uint16_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 4
-#define CTYPES_INT  int32_t
-#define CTYPES_UINT uint32_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 8
-#define CTYPES_INT  int64_t
-#define CTYPES_UINT uint64_t
-#else /* CONFIG_CTYPES_SIZEOF_INT == ... */
-#define CTYPES_INT  int
-#define CTYPES_UINT unsigned int
-#endif /* CONFIG_CTYPES_SIZEOF_INT != ... */
+
+#define PRIVATE_HOST_INTFOR_1   __INT8_TYPE__
+#define PRIVATE_HOST_INTFOR_2   __INT16_TYPE__
+#define PRIVATE_HOST_INTFOR_4   __INT32_TYPE__
+#define PRIVATE_HOST_INTFOR_8   __INT64_TYPE__
+#define PRIVATE_HOST_INTFOR_16  Dee_int128_t
+#define PRIVATE_HOST_UINTFOR_1  __UINT8_TYPE__
+#define PRIVATE_HOST_UINTFOR_2  __UINT16_TYPE__
+#define PRIVATE_HOST_UINTFOR_4  __UINT32_TYPE__
+#define PRIVATE_HOST_UINTFOR_8  __UINT64_TYPE__
+#define PRIVATE_HOST_UINTFOR_16 Dee_uint128_t
+#define HOST_INTFOR(sizeof)  PP_PRIVATE_CAT2(PRIVATE_HOST_INTFOR_, sizeof)
+#define HOST_UINTFOR(sizeof) PP_PRIVATE_CAT2(PRIVATE_HOST_UINTFOR_, sizeof)
+
+#define CTYPES_int      HOST_INTFOR(CTYPES_sizeof_int)
+#define CTYPES_uint     HOST_UINTFOR(CTYPES_sizeof_int)
+#define CTYPES_bool     HOST_UINTFOR(CTYPES_sizeof_bool)
+#ifdef CTYPES_wchar_t_UNSIGNED
+#define CTYPES_wchar_t  HOST_UINTFOR(CTYPES_sizeof_wchar_t)
+#else /* CTYPES_wchar_t_UNSIGNED */
+#define CTYPES_wchar_t  HOST_INTFOR(CTYPES_sizeof_wchar_t)
+#endif /* !CTYPES_wchar_t_UNSIGNED */
+#ifdef CTYPES_char16_t_UNSIGNED
+#define CTYPES_char16_t HOST_UINTFOR(CTYPES_sizeof_char16_t)
+#else /* CTYPES_char16_t_UNSIGNED */
+#define CTYPES_char16_t HOST_INTFOR(CTYPES_sizeof_char16_t)
+#endif /* !CTYPES_char16_t_UNSIGNED */
+#ifdef CTYPES_char32_t_UNSIGNED
+#define CTYPES_char32_t HOST_UINTFOR(CTYPES_sizeof_char32_t)
+#else /* CTYPES_char32_t_UNSIGNED */
+#define CTYPES_char32_t HOST_INTFOR(CTYPES_sizeof_char32_t)
+#endif /* !CTYPES_char32_t_UNSIGNED */
+#ifdef CTYPES_char_UNSIGNED
+#define CTYPES_char     HOST_UINTFOR(CTYPES_sizeof_char)
+#else /* CTYPES_char_UNSIGNED */
+#define CTYPES_char     HOST_INTFOR(CTYPES_sizeof_char)
+#endif /* !CTYPES_char_UNSIGNED */
+#define CTYPES_schar    HOST_INTFOR(CTYPES_sizeof_char)
+#define CTYPES_uchar    HOST_UINTFOR(CTYPES_sizeof_char)
+#define CTYPES_short    HOST_INTFOR(CTYPES_sizeof_short)
+#define CTYPES_ushort   HOST_UINTFOR(CTYPES_sizeof_short)
+#define CTYPES_int      HOST_INTFOR(CTYPES_sizeof_int)
+#define CTYPES_uint     HOST_UINTFOR(CTYPES_sizeof_int)
+#define CTYPES_long     HOST_INTFOR(CTYPES_sizeof_long)
+#define CTYPES_ulong    HOST_UINTFOR(CTYPES_sizeof_long)
+#define CTYPES_llong    HOST_INTFOR(CTYPES_sizeof_llong)
+#define CTYPES_ullong   HOST_UINTFOR(CTYPES_sizeof_llong)
+
+
+
 
 
 
@@ -490,8 +553,8 @@ INTDEF struct ctype_operators Dee_tpconst cstruct_operators;
 INTDEF struct ctype_operators Dee_tpconst carray_operators;
 
 
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsCFloat)(DeeObject *__restrict self, CONFIG_CTYPES_FLOAT_TYPE *__restrict p_result);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsCLDouble)(DeeObject *__restrict self, CONFIG_CTYPES_LDOUBLE_TYPE *__restrict p_result);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsCFloat)(DeeObject *__restrict self, CTYPES_float *__restrict p_result);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsCLDouble)(DeeObject *__restrict self, CTYPES_ldouble *__restrict p_result);
 #undef DeeObject_AsCDouble
 #define DeeObject_AsCDouble DeeObject_AsDouble
 
@@ -1131,6 +1194,13 @@ INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CLValue_Ptr(CLValue *__restrict
 
 
 /* Builtin C types */
+/* clang-format off */
+typedef struct { OBJECT_HEAD_EX(CType) } CVoid;
+typedef struct { OBJECT_HEAD_EX(CType)  c_value; } CChar;
+typedef struct { OBJECT_HEAD_EX(CType) Dee_wchar_t c_value; } CWChar;
+typedef struct { OBJECT_HEAD_EX(CType)  c_value; } CWChar;
+/* clang-format on */
+
 INTDEF CType CVoid_Type;
 
 INTDEF CType CChar_Type;
@@ -1181,9 +1251,9 @@ INTDEF WUNUSED DREF CObject *DCALL CInt64_New(int64_t val);
 INTDEF WUNUSED DREF CObject *DCALL CUInt64_New(uint64_t val);
 INTDEF WUNUSED DREF CObject *DCALL CInt128_New(Dee_int128_t val);
 INTDEF WUNUSED DREF CObject *DCALL CUInt128_New(Dee_uint128_t val);
-INTDEF WUNUSED DREF CObject *DCALL CFloat_New(CONFIG_CTYPES_FLOAT_TYPE val);
-INTDEF WUNUSED DREF CObject *DCALL CDouble_New(CONFIG_CTYPES_DOUBLE_TYPE val);
-INTDEF WUNUSED DREF CObject *DCALL CLDouble_New(CONFIG_CTYPES_LDOUBLE_TYPE val);
+INTDEF WUNUSED DREF CObject *DCALL CFloat_New(CTYPES_float val);
+INTDEF WUNUSED DREF CObject *DCALL CDouble_New(CTYPES_double val);
+INTDEF WUNUSED DREF CObject *DCALL CLDouble_New(CTYPES_ldouble val);
 
 
 /* Statically allocated pointer types (since these are needed very often) */
@@ -1245,36 +1315,22 @@ INTDEF CPointerType CCharPtr_Type;
 #define CUIntN_New(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_NEW_, sizeof)
 
 
-#define PRIVATE_HOST_INTFOR_1   __INT8_TYPE__
-#define PRIVATE_HOST_INTFOR_2   __INT16_TYPE__
-#define PRIVATE_HOST_INTFOR_4   __INT32_TYPE__
-#define PRIVATE_HOST_INTFOR_8   __INT64_TYPE__
-#define PRIVATE_HOST_INTFOR_16  Dee_int128_t
-#define PRIVATE_HOST_UINTFOR_1  __UINT8_TYPE__
-#define PRIVATE_HOST_UINTFOR_2  __UINT16_TYPE__
-#define PRIVATE_HOST_UINTFOR_4  __UINT32_TYPE__
-#define PRIVATE_HOST_UINTFOR_8  __UINT64_TYPE__
-#define PRIVATE_HOST_UINTFOR_16 Dee_uint128_t
-#define HOST_INTFOR(sizeof)  PP_PRIVATE_CAT2(PRIVATE_HOST_INTFOR_, sizeof)
-#define HOST_UINTFOR(sizeof) PP_PRIVATE_CAT2(PRIVATE_HOST_UINTFOR_, sizeof)
-
-
-#if CONFIG_CTYPES_SIZEOF_CHAR == 1 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT8__
+#if CTYPES_sizeof_char == 1 && CTYPES_alignof_char == __ALIGNOF_INT8__
 #define CSChar_Type CInt8_Type
 #define CSChar_New  CInt8_New
 #define CUChar_Type CUInt8_Type
 #define CUChar_New  CUInt8_New
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 2 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_char == 2 && CTYPES_alignof_char == __ALIGNOF_INT16__
 #define CSChar_Type CInt16_Type
 #define CSChar_New  CInt16_New
 #define CUChar_Type CUInt16_Type
 #define CUChar_New  CUInt16_New
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 4 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_char == 4 && CTYPES_alignof_char == __ALIGNOF_INT32__
 #define CSChar_Type CInt32_Type
 #define CSChar_New  CInt32_New
 #define CUChar_Type CUInt32_Type
 #define CUChar_New  CUInt32_New
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 8 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_char == 8 && CTYPES_alignof_char == __ALIGNOF_INT64__
 #define CSChar_Type CInt64_Type
 #define CSChar_New  CInt64_New
 #define CUChar_Type CUInt64_Type
@@ -1283,26 +1339,26 @@ INTDEF CPointerType CCharPtr_Type;
 #define CONFIG_SUCHAR_NEEDS_OWN_TYPE
 INTDEF CType CSChar_Type;
 INTDEF CType CUChar_Type;
-INTDEF WUNUSED DREF CObject *DCALL CSChar_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_CHAR) val);
-INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_CHAR) val);
+INTDEF WUNUSED DREF CObject *DCALL CSChar_New(HOST_INTFOR(CTYPES_sizeof_char) val);
+INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CTYPES_sizeof_char) val);
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_SHORT == 1 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT8__
+#if CTYPES_sizeof_short == 1 && CTYPES_alignof_short == __ALIGNOF_INT8__
 #define CShort_Type  CInt8_Type
 #define CShort_New   CInt8_New
 #define CUShort_Type CUInt8_Type
 #define CUShort_New  CUInt8_New
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 2 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_short == 2 && CTYPES_alignof_short == __ALIGNOF_INT16__
 #define CShort_Type  CInt16_Type
 #define CShort_New   CInt16_New
 #define CUShort_Type CUInt16_Type
 #define CUShort_New  CUInt16_New
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 4 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_short == 4 && CTYPES_alignof_short == __ALIGNOF_INT32__
 #define CShort_Type  CInt32_Type
 #define CShort_New   CInt32_New
 #define CUShort_Type CUInt32_Type
 #define CUShort_New  CUInt32_New
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 8 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_short == 8 && CTYPES_alignof_short == __ALIGNOF_INT64__
 #define CShort_Type  CInt64_Type
 #define CShort_New   CInt64_New
 #define CUShort_Type CUInt64_Type
@@ -1311,26 +1367,26 @@ INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_
 #define CONFIG_SHORT_NEEDS_OWN_TYPE
 INTDEF CType CShort_Type;
 INTDEF CType CUShort_Type;
-INTDEF WUNUSED DREF CObject *DCALL CShort_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_SHORT) val);
-INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_SHORT) val);
+INTDEF WUNUSED DREF CObject *DCALL CShort_New(HOST_INTFOR(CTYPES_sizeof_short) val);
+INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CTYPES_sizeof_short) val);
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_INT == 1 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT8__
+#if CTYPES_sizeof_int == 1 && CTYPES_alignof_int == __ALIGNOF_INT8__
 #define CInt_Type  CInt8_Type
 #define CInt_New   CInt8_New
 #define CUInt_Type CUInt8_Type
 #define CUInt_New  CUInt8_New
-#elif CONFIG_CTYPES_SIZEOF_INT == 2 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_int == 2 && CTYPES_alignof_int == __ALIGNOF_INT16__
 #define CInt_Type  CInt16_Type
 #define CInt_New   CInt16_New
 #define CUInt_Type CUInt16_Type
 #define CUInt_New  CUInt16_New
-#elif CONFIG_CTYPES_SIZEOF_INT == 4 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_int == 4 && CTYPES_alignof_int == __ALIGNOF_INT32__
 #define CInt_Type  CInt32_Type
 #define CInt_New   CInt32_New
 #define CUInt_Type CUInt32_Type
 #define CUInt_New  CUInt32_New
-#elif CONFIG_CTYPES_SIZEOF_INT == 8 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_int == 8 && CTYPES_alignof_int == __ALIGNOF_INT64__
 #define CInt_Type  CInt64_Type
 #define CInt_New   CInt64_New
 #define CUInt_Type CUInt64_Type
@@ -1339,26 +1395,26 @@ INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF
 #define CONFIG_INT_NEEDS_OWN_TYPE
 INTDEF CType CInt_Type;
 INTDEF CType CUInt_Type;
-INTDEF WUNUSED DREF CObject *DCALL CInt_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_INT) val);
-INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_INT) val);
+INTDEF WUNUSED DREF CObject *DCALL CInt_New(HOST_INTFOR(CTYPES_sizeof_int) val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CTYPES_sizeof_int) val);
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_LONG == 1 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT8__
+#if CTYPES_sizeof_long == 1 && CTYPES_alignof_long == __ALIGNOF_INT8__
 #define CLong_Type  CInt8_Type
 #define CLong_New   CInt8_New
 #define CULong_Type CUInt8_Type
 #define CULong_New  CUInt8_New
-#elif CONFIG_CTYPES_SIZEOF_LONG == 2 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_long == 2 && CTYPES_alignof_long == __ALIGNOF_INT16__
 #define CLong_Type  CInt16_Type
 #define CLong_New   CInt16_New
 #define CULong_Type CUInt16_Type
 #define CULong_New  CUInt16_New
-#elif CONFIG_CTYPES_SIZEOF_LONG == 4 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_long == 4 && CTYPES_alignof_long == __ALIGNOF_INT32__
 #define CLong_Type  CInt32_Type
 #define CLong_New   CInt32_New
 #define CULong_Type CUInt32_Type
 #define CULong_New  CUInt32_New
-#elif CONFIG_CTYPES_SIZEOF_LONG == 8 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_long == 8 && CTYPES_alignof_long == __ALIGNOF_INT64__
 #define CLong_Type  CInt64_Type
 #define CLong_New   CInt64_New
 #define CULong_Type CUInt64_Type
@@ -1367,26 +1423,26 @@ INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_I
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 INTDEF CType CLong_Type;
 INTDEF CType CULong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
-INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CTYPES_sizeof_long) val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CTYPES_sizeof_long) val);
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_LLONG == 1 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT8__
+#if CTYPES_sizeof_llong == 1 && CTYPES_alignof_llong == __ALIGNOF_INT8__
 #define CLLong_Type  CInt8_Type
 #define CLLong_New   CInt8_New
 #define CULLong_Type CUInt8_Type
 #define CULLong_New  CUInt8_New
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 2 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_llong == 2 && CTYPES_alignof_llong == __ALIGNOF_INT16__
 #define CLLong_Type  CInt16_Type
 #define CLLong_New   CInt16_New
 #define CULLong_Type CUInt16_Type
 #define CULLong_New  CUInt16_New
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 4 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_llong == 4 && CTYPES_alignof_llong == __ALIGNOF_INT32__
 #define CLLong_Type  CInt32_Type
 #define CLLong_New   CInt32_New
 #define CULLong_Type CUInt32_Type
 #define CULLong_New  CUInt32_New
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 8 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_llong == 8 && CTYPES_alignof_llong == __ALIGNOF_INT64__
 #define CLLong_Type  CInt64_Type
 #define CLLong_New   CInt64_New
 #define CULLong_Type CUInt64_Type
@@ -1395,13 +1451,13 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_
 #define CONFIG_LLONG_NEEDS_OWN_TYPE
 INTDEF CType CLLong_Type;
 INTDEF CType CULLong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LLONG) val);
-INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LLONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CLLong_New(HOST_INTFOR(CTYPES_sizeof_llong) val);
+INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CTYPES_sizeof_llong) val);
 #endif /* !... */
 
 #if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&                   \
-     (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
-      CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT))
+     (CTYPES_sizeof_long == CTYPES_sizeof_int && \
+      CTYPES_alignof_long == CTYPES_alignof_int))
 /* Make `long' its own distinct type. */
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 #undef CLong_Type
@@ -1410,8 +1466,8 @@ INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF
 #undef CULong_New
 INTDEF CType CLong_Type;
 INTDEF CType CULong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
-INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CTYPES_sizeof_long) val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CTYPES_sizeof_long) val);
 #endif /* ... */
 
 
@@ -1466,7 +1522,7 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_
 #define DeeCBool_Type                CBool_Type
 #define DeeStructTypeObject          CStructType
 #define DeeStructType_Type           CStructType_Type
-#define int_newint(v)                Dee_AsObject(CIntN_New(CONFIG_CTYPES_SIZEOF_INT)(v))
+#define int_newint(v)                Dee_AsObject(CIntN_New(CTYPES_sizeof_int)(v))
 #define int_news8(v)                 Dee_AsObject(CInt8_New(v))
 #define int_news16(v)                Dee_AsObject(CInt16_New(v))
 #define int_news32(v)                Dee_AsObject(CInt32_New(v))
@@ -2167,16 +2223,16 @@ INTDEF DeeSTypeObject  DeeCLDouble_Type;
 
 
 
-#if CONFIG_CTYPES_SIZEOF_CHAR == 1 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT8__
+#if CTYPES_sizeof_char == 1 && CTYPES_alignof_char == __ALIGNOF_INT8__
 #define DeeCSChar_Type  DeeCInt8_Type
 #define DeeCUChar_Type  DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 2 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_char == 2 && CTYPES_alignof_char == __ALIGNOF_INT16__
 #define DeeCSChar_Type  DeeCInt16_Type
 #define DeeCUChar_Type  DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 4 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_char == 4 && CTYPES_alignof_char == __ALIGNOF_INT32__
 #define DeeCSChar_Type  DeeCInt32_Type
 #define DeeCUChar_Type  DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 8 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_char == 8 && CTYPES_alignof_char == __ALIGNOF_INT64__
 #define DeeCSChar_Type  DeeCInt64_Type
 #define DeeCUChar_Type  DeeCUInt64_Type
 #else /* ... */
@@ -2185,16 +2241,16 @@ INTDEF DeeSTypeObject   DeeCSChar_Type;
 INTDEF DeeSTypeObject   DeeCUChar_Type;
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_SHORT == 1 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT8__
+#if CTYPES_sizeof_short == 1 && CTYPES_alignof_short == __ALIGNOF_INT8__
 #define DeeCShort_Type  DeeCInt8_Type
 #define DeeCUShort_Type DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 2 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_short == 2 && CTYPES_alignof_short == __ALIGNOF_INT16__
 #define DeeCShort_Type  DeeCInt16_Type
 #define DeeCUShort_Type DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 4 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_short == 4 && CTYPES_alignof_short == __ALIGNOF_INT32__
 #define DeeCShort_Type  DeeCInt32_Type
 #define DeeCUShort_Type DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 8 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_short == 8 && CTYPES_alignof_short == __ALIGNOF_INT64__
 #define DeeCShort_Type  DeeCInt64_Type
 #define DeeCUShort_Type DeeCUInt64_Type
 #else /* ... */
@@ -2203,16 +2259,16 @@ INTDEF DeeSTypeObject   DeeCShort_Type;
 INTDEF DeeSTypeObject   DeeCUShort_Type;
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_INT == 1 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT8__
+#if CTYPES_sizeof_int == 1 && CTYPES_alignof_int == __ALIGNOF_INT8__
 #define DeeCInt_Type    DeeCInt8_Type
 #define DeeCUInt_Type   DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 2 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_int == 2 && CTYPES_alignof_int == __ALIGNOF_INT16__
 #define DeeCInt_Type    DeeCInt16_Type
 #define DeeCUInt_Type   DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 4 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_int == 4 && CTYPES_alignof_int == __ALIGNOF_INT32__
 #define DeeCInt_Type    DeeCInt32_Type
 #define DeeCUInt_Type   DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 8 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_int == 8 && CTYPES_alignof_int == __ALIGNOF_INT64__
 #define DeeCInt_Type    DeeCInt64_Type
 #define DeeCUInt_Type   DeeCUInt64_Type
 #else /* ... */
@@ -2221,16 +2277,16 @@ INTDEF DeeSTypeObject   DeeCInt_Type;
 INTDEF DeeSTypeObject   DeeCUInt_Type;
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_LONG == 1 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT8__
+#if CTYPES_sizeof_long == 1 && CTYPES_alignof_long == __ALIGNOF_INT8__
 #define DeeCLong_Type   DeeCInt8_Type
 #define DeeCULong_Type  DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 2 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_long == 2 && CTYPES_alignof_long == __ALIGNOF_INT16__
 #define DeeCLong_Type   DeeCInt16_Type
 #define DeeCULong_Type  DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 4 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_long == 4 && CTYPES_alignof_long == __ALIGNOF_INT32__
 #define DeeCLong_Type   DeeCInt32_Type
 #define DeeCULong_Type  DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 8 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_long == 8 && CTYPES_alignof_long == __ALIGNOF_INT64__
 #define DeeCLong_Type   DeeCInt64_Type
 #define DeeCULong_Type  DeeCUInt64_Type
 #else /* ... */
@@ -2239,16 +2295,16 @@ INTDEF DeeSTypeObject   DeeCLong_Type;
 INTDEF DeeSTypeObject   DeeCULong_Type;
 #endif /* !... */
 
-#if CONFIG_CTYPES_SIZEOF_LLONG == 1 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT8__
+#if CTYPES_sizeof_llong == 1 && CTYPES_alignof_llong == __ALIGNOF_INT8__
 #define DeeCLLong_Type  DeeCInt8_Type
 #define DeeCULLong_Type DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 2 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT16__
+#elif CTYPES_sizeof_llong == 2 && CTYPES_alignof_llong == __ALIGNOF_INT16__
 #define DeeCLLong_Type  DeeCInt16_Type
 #define DeeCULLong_Type DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 4 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT32__
+#elif CTYPES_sizeof_llong == 4 && CTYPES_alignof_llong == __ALIGNOF_INT32__
 #define DeeCLLong_Type  DeeCInt32_Type
 #define DeeCULLong_Type DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 8 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT64__
+#elif CTYPES_sizeof_llong == 8 && CTYPES_alignof_llong == __ALIGNOF_INT64__
 #define DeeCLLong_Type  DeeCInt64_Type
 #define DeeCULLong_Type DeeCUInt64_Type
 #else /* ... */
@@ -2258,8 +2314,8 @@ INTDEF DeeSTypeObject   DeeCULLong_Type;
 #endif /* !... */
 
 #if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&                   \
-     (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
-      CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT))
+     (CTYPES_sizeof_long == CTYPES_sizeof_int && \
+      CTYPES_alignof_long == CTYPES_alignof_int))
 /* Make `long' its own distinct type. */
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 #undef DeeCLong_Type
@@ -2420,15 +2476,15 @@ DeeStructType_FromSequence(DeeObject *name,
 #define STRUCT_TYPE_FUNION   0x0002 /* Create a union. */
 
 /* Helper functions for constructing new integer objects. */
-#if CONFIG_CTYPES_SIZEOF_INT == 1
+#if CTYPES_sizeof_int == 1
 #define int_news8 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 2
+#elif CTYPES_sizeof_int == 2
 #define int_news16 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 4
+#elif CTYPES_sizeof_int == 4
 #define int_news32 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 8
+#elif CTYPES_sizeof_int == 8
 #define int_news64 int_newint
-#endif /* CONFIG_CTYPES_SIZEOF_INT == ... */
+#endif /* CTYPES_sizeof_int == ... */
 INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);
