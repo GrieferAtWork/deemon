@@ -118,8 +118,13 @@ struct Dee_variant {
 	} var_data; /* [lock(var_type == Dee_VARIANT_LOCKED)] Variant data */
 };
 
+#if __ALIGNOF_POINTER__ > __SIZEOF_INT__
+#define Dee_VARIANT_INIT_UNBOUND     { Dee_VARIANT_UNBOUND, {0,}, { NULL } }
+#define Dee_VARIANT_INIT_OBJECT(obj) { Dee_VARIANT_OBJECT, {0,}, { obj } }
+#else /* __ALIGNOF_POINTER__ > __SIZEOF_INT__ */
 #define Dee_VARIANT_INIT_UNBOUND     { Dee_VARIANT_UNBOUND, { NULL } }
 #define Dee_VARIANT_INIT_OBJECT(obj) { Dee_VARIANT_OBJECT, { obj } }
+#endif /* __ALIGNOF_POINTER__ <= __SIZEOF_INT__ */
 
 #if __ALIGNOF_INT32__ <= __ALIGNOF_POINTER__
 #define _Dee_variant_set_int32(self, v)  (void)((self)->var_data.d_int32 = (v))

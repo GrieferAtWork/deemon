@@ -243,12 +243,23 @@ INTDEF void ctypes_kos_guard(void);
 #define CTYPES_sizeof_ldouble  CTYPES_sizeof_double
 #define CTYPES_alignof_ldouble CTYPES_alignof_double
 #else /* FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#ifdef __LONGDOUBLE
+#define CTYPES_ldouble __LONGDOUBLE
+#else /* __LONGDOUBLE */
+#define CTYPES_ldouble long double
+#endif /* !__LONGDOUBLE */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+/* Stupid hack needed by old ctypes: there can't be whitespace
+ * in expansion of "CTYPES_ldouble" because that identifier is
+ * used in preprocessor concat operations to form keywords... */
 #ifdef __LONGDOUBLE
 typedef __LONGDOUBLE long_double;
 #else /* __LONGDOUBLE */
 typedef long double long_double;
 #endif /* !__LONGDOUBLE */
 #define CTYPES_ldouble long_double
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #ifdef __SIZEOF_LONG_DOUBLE__
 #define CTYPES_sizeof_ldouble __SIZEOF_LONG_DOUBLE__
 #else /* __SIZEOF_LONG_DOUBLE__ */
