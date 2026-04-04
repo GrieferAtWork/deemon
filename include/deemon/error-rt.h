@@ -66,7 +66,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotWeakReference)(DeeObjec
 
 
 /* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
-DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptyWeakReference)(void);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrEmptyWeakReference)(void);
 
 
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer

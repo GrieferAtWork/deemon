@@ -2158,7 +2158,7 @@ PRIVATE ValueError EmptyWeakReference_instance = {
 };
 
 /* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
-PUBLIC ATTR_COLD NONNULL((1)) int
+PUBLIC ATTR_COLD int
 (DCALL DeeRT_ErrEmptyWeakReference)(void) {
 	return DeeError_Throw(&EmptyWeakReference_instance);
 }
