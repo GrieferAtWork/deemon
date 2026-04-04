@@ -24,18 +24,18 @@
 
 #include <deemon/alloc.h>     /* DeeObject_*, DeeSlab_GetFree, DeeSlab_GetMalloc */
 #include <deemon/mro.h>       /* Dee_attrhint, Dee_attriter */
-#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_TYPE, Dee_hash_t, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD */
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, OBJECT_HEAD, OBJECT_HEAD_EX */
 #include <deemon/string.h>    /* Dee_wchar_t */
-#include <deemon/type.h>      /* DeeType_Base, OPERATOR_EXTENDED */
-#include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
+#include <deemon/type.h>      /* DeeObject_*, DeeType_*, OPERATOR_EXTENDED */
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
+#include <hybrid/byteorder.h>     /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/sequence/list.h> /* LIST_ENTRY */
-#include <hybrid/typecore.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
-#include <hybrid/byteorder.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
-#include <hybrid/unaligned.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
+#include <hybrid/typecore.h>      /* __*_TYPE__, __ALIGNOF_*__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
+#include <hybrid/unaligned.h>     /* UNALIGNED_GET*, UNALIGNED_SET* */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
 #include <stdint.h>  /* intN_t, intptr_t, uintN_t, uintptr_t */
 
 #ifndef CONFIG_NO_CFUNCTION
@@ -659,9 +659,16 @@ struct ctype_object {
 /* Query properties of a given C-Type */
 #define CType_Sizeof(self)          (self)->ct_sizeof
 #define CType_Alignof(self)         (self)->ct_alignof
-#define CType_AllocInstance(self)   ((CObject *)DeeType_AllocInstance(CType_AsType(self)))
-#define CType_FreeInstance(self, p) DeeType_FreeInstance(CType_AsType(self), p)
-#define CType_Operators(self)       (self)->ct_operators
+
+#define CType_AllocInstance(self)                                     \
+	(((self)->ct_base.tp_init.tp_alloc.tp_free)                       \
+	 ? (DREF CObject *)(*(self)->ct_base.tp_init.tp_alloc.tp_alloc)() \
+	 : (DREF CObject *)DeeObject_Malloc((self)->ct_base.tp_init.tp_alloc.tp_instance_size))
+#define CType_FreeInstance(self, p)                   \
+	(((self)->ct_base.tp_init.tp_alloc.tp_free)       \
+	 ? (*(self)->ct_base.tp_init.tp_alloc.tp_free)(p) \
+	 : DeeObject_Free(p))
+#define CType_Operators(self) (self)->ct_operators
 
 INTDEF DeeTypeObject CType_Type;   /* == type(ctypes.int) */
 INTDEF CType AbstractCObject_Type; /* == Type.__base__(ctypes.int) */

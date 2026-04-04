@@ -26,15 +26,21 @@
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
-#include <deemon/bytes.h>
-#include <deemon/none.h>
-#include <deemon/bool.h>
-#include <deemon/int.h>
-#include <deemon/error.h>
-#include <deemon/system-features.h>
-#include <deemon/float.h>
-#include <deemon/format.h>
-#include <deemon/callable.h>
+
+#include <deemon/bool.h>            /* DeeBool_Type */
+#include <deemon/bytes.h>           /* DeeBytes_Check, DeeBytes_DATA */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/float.h>           /* DeeFloat_Type */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_TypeAssertFailed, DeeTypeObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, strlen */
+#include <deemon/type.h>            /* DeeType_GetName */
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

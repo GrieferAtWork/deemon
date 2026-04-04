@@ -28,7 +28,6 @@
 
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* return_bool */
-#include <deemon/gc.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_Check */

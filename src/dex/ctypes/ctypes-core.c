@@ -26,23 +26,38 @@
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
-#include <deemon/none.h>
-#include <deemon/bool.h>
-#include <deemon/seq.h>
-#include <deemon/error-rt.h>
-#include <deemon/method-hints.h>
-#include <deemon/int.h>
-#include <deemon/float.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/alloc.h>
-#include <deemon/gc.h>
-#include <deemon/arg.h>
-#include <hybrid/overflow.h>
-#include <hybrid/align.h>
-#include <hybrid/debug-alignment.h>
-#include <deemon/callable.h>
-#include <deemon/bytes.h>
+
+#include <deemon/alloc.h>           /* DeeSlab_GetFree, DeeSlab_GetMalloc, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>            /* Dee_False, Dee_True */
+#include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrIndexOutOfBounds, DeeRT_ErrRestrictedAttrCStr */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_Callocc, DeeGCObject_FREE, DeeGCObject_Free, DeeGCObject_TryReallocc, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/int.h>             /* DeeInt_NewPtrdiff, DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
+#include <deemon/mro.h>             /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
+#include <deemon/none.h>            /* return_none */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DeeObject_*, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_Movrefv, Dee_XDecref, Dee_XIncref */
+#include <deemon/seq.h>             /* DeeRefVector_NewReadonly, DeeSeq_Type */
+#include <deemon/string.h>          /* DeeString*, Dee_string_object, Dee_unicode_printer* */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, bcmp, bzero, memcpy, strlen */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/util/hash.h>       /* Dee_HashPointer, Dee_HashPtr */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit */
+
+#include <hybrid/align.h>           /* CEIL_ALIGN, IS_POWER_OF_TWO */
+#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
+#include <hybrid/overflow.h>        /* OVERFLOW_* */
+#include <hybrid/sequence/list.h>   /* LIST_* */
+#include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* intN_t, uintN_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

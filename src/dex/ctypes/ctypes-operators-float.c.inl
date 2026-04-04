@@ -28,14 +28,15 @@
 /**/
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/variant.h>
-#include <deemon/float.h>
-#include <deemon/system-features.h>
-#include <deemon/error-rt.h>
-#include <hybrid/unaligned.h>
-#include <hybrid/typecore.h>
-#include <hybrid/limitcore.h>
+
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
+#include <deemon/float.h>           /* DeeFloat_LPrint, DeeFloat_Print, Dee_FLOAT_PRINT_FNORMAL */
+#include <deemon/int.h>             /* DeeInt_NewDouble, Dee_INT_SIGNED */
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_COMPARE_*, Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/system-features.h> /* memcpy */
+
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* int32_t, int64_t */
 
 #if (defined(DEFINE_cfloat_operators) +         \
      defined(DEFINE_cdouble_operators) +        \

@@ -21,7 +21,7 @@
 #define DEE_SOURCE
 #include "libctypes.h"
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-#include "ctypes-types.c"
+#include "ctypes-core.c"
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #include "cfunction.c"
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
@@ -32,14 +32,13 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Malloca */
-#include <deemon/gc.h>           /* Dee_Freea, Dee_Malloca */
 #include <deemon/bool.h>            /* DeeBool_IsTrue, DeeBool_Type */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* DeeNone_NewRef, DeeNone_Type */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_TYPE */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_funptr_t */
 #include <deemon/string.h>          /* DeeString_STR, DeeString_Type */
 #include <deemon/system-features.h> /* memcpy, mempcpyc */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_AllocInstance */

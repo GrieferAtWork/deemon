@@ -26,10 +26,22 @@
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
-#include <deemon/error.h>
-#include <deemon/format.h>
-#include <deemon/arg.h>
-#include <deemon/int.h>
+
+#include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_UnpackStructKw */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
+#include <deemon/int.h>             /* DeeInt_NewPtrdiff, DeeInt_NewUIntptr, Dee_INT_UNSIGNED */
+#include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_Decref_unlikely */
+#include <deemon/string.h>          /* DeeString_IsEmpty */
+#include <deemon/system-features.h> /* bzero, memcpy */
+#include <deemon/type.h>            /* DeeType_GetName, Dee_INT_ERROR, Dee_INT_UNSIGNED */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t */
+
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

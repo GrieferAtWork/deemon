@@ -43,13 +43,23 @@
 /**/
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
-#include <deemon/variant.h>
-#include <deemon/system-features.h>
-#include <deemon/error-rt.h>
-#include <hybrid/unaligned.h>
-#include <hybrid/typecore.h>
-#include <hybrid/limitcore.h>
+
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw, UNP* */
+#include <deemon/error-rt.h>        /* DeeRT_Err* */
+#include <deemon/format.h>          /* DeeFormat_Printf, PRF* */
+#include <deemon/int.h>             /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_COMPARE_*, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/system-features.h> /* memcpy */
+#include <deemon/type.h>            /* Dee_INT_* */
+#include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
+
+#include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
+#include <hybrid/typecore.h>  /* __SHIFT_TYPE__ */
+#include <hybrid/unaligned.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
+
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 #if (defined(DEFINE_cint8_operators) +         \
      defined(DEFINE_cint16_operators) +        \
