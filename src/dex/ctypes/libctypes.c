@@ -237,8 +237,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeOb
 	type = DeeSType_GetTypeOf(ob);
 	if unlikely(!type)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	if (CType_IsCLValueType(type))
+		type = CLValueType_PointedToType(CType_AsCLValueType(type));
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	result = DeeSType_Sizeof(type);
 	return DeeInt_NewSize(result);
 err:
@@ -256,8 +261,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeO
 	DeeSTypeObject *type = DeeSType_GetTypeOf(ob);
 	if unlikely(!type)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	if (CType_IsCLValueType(type))
+		type = CLValueType_PointedToType(CType_AsCLValueType(type));
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	result = DeeSType_Alignof(type);
 	return DeeInt_NewSize(result);
 err:
@@ -274,8 +284,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeOb
 	DeeSTypeObject *result = DeeSType_GetTypeOf(ob);
 	if unlikely(!result)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	if (CType_IsCLValueType(result))
+		result = CLValueType_PointedToType(CType_AsCLValueType(result));
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(result))
 		result = DeeSType_AsLValueType(result)->lt_orig;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	Dee_Incref(DeeSType_AsType(result));
 	return DeeSType_AsObject(result);
 err:
@@ -631,6 +646,10 @@ PRIVATE void DCALL libctypes_fini(void) {
 #define PTR_libctypes_fini NULL
 #endif /* !PTR_libctypes_fini */
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#define PTR_libctypes_clear NULL
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+#define PTR_libctypes_clear libctypes_clear
 INTDEF bool DCALL clear_void_pointer(void);
 #if 1
 #define libctypes_clear clear_void_pointer
@@ -639,6 +658,7 @@ PRIVATE bool DCALL libctypes_clear(void) {
 	return clear_void_pointer();
 }
 #endif
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
 
@@ -1384,7 +1404,7 @@ DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, Dee_DEXSYM_READONLY,
 DEX_END(
 	/* init:  */ NULL,
 	/* fini:  */ PTR_libctypes_fini,
-	/* clear: */ &libctypes_clear
+	/* clear: */ PTR_libctypes_clear
 );
 /* clang-format on */
 

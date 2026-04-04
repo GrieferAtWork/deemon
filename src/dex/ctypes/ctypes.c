@@ -157,6 +157,26 @@ CType_GetFFIType(CType *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
+INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
+cc_lookup(char const *__restrict name) {
+#ifdef CONFIG_NO_CFUNCTION
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Unrecognized calling convention %q",
+	                name);
+	return CC_INVALID;
+#else /* CONFIG_NO_CFUNCTION */
+	ctypes_cc_t result = cc_trylookup(name);
+	if (result == CC_INVALID) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Unrecognized calling convention %q",
+		                name);
+	}
+	return result;
+#endif /* !CONFIG_NO_CFUNCTION */
+}
+
+
+
 PRIVATE WUNUSED NONNULL((1)) CType *DCALL
 CType_FromDeemonType(DeeTypeObject *__restrict self) {
 	/* Map some builtin types to their structured counterparts. */
@@ -547,9 +567,8 @@ DeeObject_AsPointer(DeeObject *self, CType *pointer_base,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeObject_AsPPointer(DeeObject *self,
-                     CType *pointer_base_base,
-                     void ***p_result) {
+DeeObject_AsPPointer(DeeObject *self, CType *pointer_base_base,
+                     void ***__restrict p_result) {
 	int error;
 	DREF CPointerType *pointer_base;
 	pointer_base = CPointerType_Of(pointer_base_base);

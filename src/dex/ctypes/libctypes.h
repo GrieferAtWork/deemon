@@ -1111,7 +1111,7 @@ DeeObject_AsPointer(DeeObject *self, CType *pointer_base,
                     union pointer *__restrict result);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPPointer(DeeObject *self, CType *pointer_base_base,
-                     union pointer **__restrict p_result);
+                     void ***__restrict p_result);
 
 /* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
  * @return:  1: The conversion failed.
@@ -1195,12 +1195,28 @@ INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CLValue_Ptr(CLValue *__restrict
 
 /* Builtin C types */
 /* clang-format off */
-typedef struct { OBJECT_HEAD_EX(CType) } CVoid;
-typedef struct { OBJECT_HEAD_EX(CType)  c_value; } CChar;
-typedef struct { OBJECT_HEAD_EX(CType) Dee_wchar_t c_value; } CWChar;
-typedef struct { OBJECT_HEAD_EX(CType)  c_value; } CWChar;
+typedef struct { OBJECT_HEAD_EX(CType)                          } CVoid;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char     c_value; } CChar;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_wchar_t  c_value; } CWChar;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char16_t c_value; } CChar16;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char32_t c_value; } CChar32;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_bool     c_value; } CBool;
+typedef struct { OBJECT_HEAD_EX(CType) int8_t          c_value; } CInt8;
+typedef struct { OBJECT_HEAD_EX(CType) int16_t         c_value; } CInt16;
+typedef struct { OBJECT_HEAD_EX(CType) int32_t         c_value; } CInt32;
+typedef struct { OBJECT_HEAD_EX(CType) int64_t         c_value; } CInt64;
+typedef struct { OBJECT_HEAD_EX(CType) Dee_int128_t    c_value; } CInt128;
+typedef struct { OBJECT_HEAD_EX(CType) uint8_t         c_value; } CUInt8;
+typedef struct { OBJECT_HEAD_EX(CType) uint16_t        c_value; } CUInt16;
+typedef struct { OBJECT_HEAD_EX(CType) uint32_t        c_value; } CUInt32;
+typedef struct { OBJECT_HEAD_EX(CType) uint64_t        c_value; } CUInt64;
+typedef struct { OBJECT_HEAD_EX(CType) Dee_uint128_t   c_value; } CUInt128;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_float    c_value; } CFloat;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_double   c_value; } CDouble;
+typedef struct { OBJECT_HEAD_EX(CType) CTYPES_ldouble  c_value; } CLDouble;
 /* clang-format on */
 
+/* Builtin C Types */
 INTDEF CType CVoid_Type;
 
 INTDEF CType CChar_Type;
@@ -1236,11 +1252,11 @@ INTDEF CType CDouble_Type;
 INTDEF CType CLDouble_Type;
 
 
-INTDEF WUNUSED DREF CObject *DCALL CChar_New(char val);
-INTDEF WUNUSED DREF CObject *DCALL CWChar_New(Dee_wchar_t val);
-INTDEF WUNUSED DREF CObject *DCALL CChar16_New(__CHAR16_TYPE__ val);
-INTDEF WUNUSED DREF CObject *DCALL CChar32_New(__CHAR16_TYPE__ val);
-INTDEF WUNUSED DREF CObject *DCALL CBool_New(bool value);
+INTDEF WUNUSED DREF CObject *DCALL CChar_New(CTYPES_char val);
+INTDEF WUNUSED DREF CObject *DCALL CWChar_New(CTYPES_wchar_t val);
+INTDEF WUNUSED DREF CObject *DCALL CChar16_New(CTYPES_char16_t val);
+INTDEF WUNUSED DREF CObject *DCALL CChar32_New(CTYPES_char32_t val);
+INTDEF WUNUSED DREF CObject *DCALL CBool_New(CTYPES_bool value);
 INTDEF WUNUSED DREF CObject *DCALL CInt8_New(int8_t val);
 INTDEF WUNUSED DREF CObject *DCALL CUInt8_New(uint8_t val);
 INTDEF WUNUSED DREF CObject *DCALL CInt16_New(int16_t val);
@@ -1335,12 +1351,17 @@ INTDEF CPointerType CCharPtr_Type;
 #define CSChar_New  CInt64_New
 #define CUChar_Type CUInt64_Type
 #define CUChar_New  CUInt64_New
+#elif CTYPES_sizeof_char == 16 && CTYPES_alignof_char == __ALIGNOF_INT128__
+#define CSChar_Type CInt128_Type
+#define CSChar_New  CInt128_New
+#define CUChar_Type CUInt128_Type
+#define CUChar_New  CUInt128_New
 #else /* ... */
 #define CONFIG_SUCHAR_NEEDS_OWN_TYPE
 INTDEF CType CSChar_Type;
 INTDEF CType CUChar_Type;
-INTDEF WUNUSED DREF CObject *DCALL CSChar_New(HOST_INTFOR(CTYPES_sizeof_char) val);
-INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CTYPES_sizeof_char) val);
+INTDEF WUNUSED DREF CObject *DCALL CSChar_New(CTYPES_schar val);
+INTDEF WUNUSED DREF CObject *DCALL CUChar_New(CTYPES_uchar val);
 #endif /* !... */
 
 #if CTYPES_sizeof_short == 1 && CTYPES_alignof_short == __ALIGNOF_INT8__
@@ -1363,12 +1384,17 @@ INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CTYPES_sizeof_char) v
 #define CShort_New   CInt64_New
 #define CUShort_Type CUInt64_Type
 #define CUShort_New  CUInt64_New
+#elif CTYPES_sizeof_short == 16 && CTYPES_alignof_short == __ALIGNOF_INT128__
+#define CShort_Type  CInt128_Type
+#define CShort_New   CInt128_New
+#define CUShort_Type CUInt128_Type
+#define CUShort_New  CUInt128_New
 #else /* ... */
 #define CONFIG_SHORT_NEEDS_OWN_TYPE
 INTDEF CType CShort_Type;
 INTDEF CType CUShort_Type;
-INTDEF WUNUSED DREF CObject *DCALL CShort_New(HOST_INTFOR(CTYPES_sizeof_short) val);
-INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CTYPES_sizeof_short) val);
+INTDEF WUNUSED DREF CObject *DCALL CShort_New(CTYPES_short val);
+INTDEF WUNUSED DREF CObject *DCALL CUShort_New(CTYPES_ushort val);
 #endif /* !... */
 
 #if CTYPES_sizeof_int == 1 && CTYPES_alignof_int == __ALIGNOF_INT8__
@@ -1391,12 +1417,17 @@ INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CTYPES_sizeof_short)
 #define CInt_New   CInt64_New
 #define CUInt_Type CUInt64_Type
 #define CUInt_New  CUInt64_New
+#elif CTYPES_sizeof_int == 16 && CTYPES_alignof_int == __ALIGNOF_INT128__
+#define CInt_Type  CInt128_Type
+#define CInt_New   CInt128_New
+#define CUInt_Type CUInt128_Type
+#define CUInt_New  CUInt128_New
 #else /* ... */
 #define CONFIG_INT_NEEDS_OWN_TYPE
 INTDEF CType CInt_Type;
 INTDEF CType CUInt_Type;
-INTDEF WUNUSED DREF CObject *DCALL CInt_New(HOST_INTFOR(CTYPES_sizeof_int) val);
-INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CTYPES_sizeof_int) val);
+INTDEF WUNUSED DREF CObject *DCALL CInt_New(CTYPES_int val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt_New(CTYPES_uint val);
 #endif /* !... */
 
 #if CTYPES_sizeof_long == 1 && CTYPES_alignof_long == __ALIGNOF_INT8__
@@ -1419,12 +1450,17 @@ INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CTYPES_sizeof_int) val
 #define CLong_New   CInt64_New
 #define CULong_Type CUInt64_Type
 #define CULong_New  CUInt64_New
+#elif CTYPES_sizeof_long == 16 && CTYPES_alignof_long == __ALIGNOF_INT128__
+#define CLong_Type  CInt128_Type
+#define CLong_New   CInt128_New
+#define CULong_Type CUInt128_Type
+#define CULong_New  CUInt128_New
 #else /* ... */
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 INTDEF CType CLong_Type;
 INTDEF CType CULong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CTYPES_sizeof_long) val);
-INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CTYPES_sizeof_long) val);
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(CTYPES_long val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
 #endif /* !... */
 
 #if CTYPES_sizeof_llong == 1 && CTYPES_alignof_llong == __ALIGNOF_INT8__
@@ -1447,15 +1483,20 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CTYPES_sizeof_long) v
 #define CLLong_New   CInt64_New
 #define CULLong_Type CUInt64_Type
 #define CULLong_New  CUInt64_New
+#elif CTYPES_sizeof_llong == 16 && CTYPES_alignof_llong == __ALIGNOF_INT128__
+#define CLLong_Type  CInt128_Type
+#define CLLong_New   CInt128_New
+#define CULLong_Type CUInt128_Type
+#define CULLong_New  CUInt128_New
 #else /* ... */
 #define CONFIG_LLONG_NEEDS_OWN_TYPE
 INTDEF CType CLLong_Type;
 INTDEF CType CULLong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLLong_New(HOST_INTFOR(CTYPES_sizeof_llong) val);
-INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CTYPES_sizeof_llong) val);
+INTDEF WUNUSED DREF CObject *DCALL CLLong_New(CTYPES_llong val);
+INTDEF WUNUSED DREF CObject *DCALL CULLong_New(CTYPES_ullong val);
 #endif /* !... */
 
-#if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&                   \
+#if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&     \
      (CTYPES_sizeof_long == CTYPES_sizeof_int && \
       CTYPES_alignof_long == CTYPES_alignof_int))
 /* Make `long' its own distinct type. */
@@ -1466,8 +1507,8 @@ INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CTYPES_sizeof_llong)
 #undef CULong_New
 INTDEF CType CLong_Type;
 INTDEF CType CULong_Type;
-INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CTYPES_sizeof_long) val);
-INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CTYPES_sizeof_long) val);
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(CTYPES_long val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
 #endif /* ... */
 
 

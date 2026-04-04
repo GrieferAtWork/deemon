@@ -1141,7 +1141,7 @@ strlen(string:ctypes:char_const*) {
 strend(string:ctypes:char_const*) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strend(string), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
@@ -1155,63 +1155,63 @@ strnlen(string:ctypes:char_const*, size_t maxlen) {
 strnend(string:ctypes:char_const*, size_t maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnend(string, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strchr(haystack:ctypes:char_const*, int needle) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strchr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strrchr(haystack:ctypes:char_const*, int needle) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strrchr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strnchr(haystack:ctypes:char_const*, int needle, size_t maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnchr(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strnrchr(haystack:ctypes:char_const*, int needle, size_t maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnrchr(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strchrnul(haystack:ctypes:char_const*, int needle) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strchrnul(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strrchrnul(haystack:ctypes:char_const*, int needle) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strrchrnul(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strnchrnul(haystack:ctypes:char_const*, int needle, size_t maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnchrnul(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strnrchrnul(haystack:ctypes:char_const*, int needle, size_t maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnrchrnul(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
@@ -1299,60 +1299,60 @@ strverscmp(lhs:ctypes:char_const*, rhs:ctypes:char_const*) {
 
 strcpy(dst:ctypes:char*, src:ctypes:char_const*) {
 	CTYPES_FAULTPROTECT(dst = strcpy(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 strcat(dst:ctypes:char*, src:ctypes:char_const*) {
 	CTYPES_FAULTPROTECT(dst = strcat(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 stpcpy(dst:ctypes:char*, src:ctypes:char_const*) {
 	CTYPES_FAULTPROTECT(dst = stpcpy(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 strncpy(dst:ctypes:char*, src:ctypes:char_const*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(dst = strncpy(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 strncat(dst:ctypes:char*, src:ctypes:char_const*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(dst = strncat(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 stpncpy(dst:ctypes:char*, src:ctypes:char_const*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(dst = stpncpy(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 @ispure
 strstr(haystack:ctypes:char_const*, needle:ctypes:char_const*) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strstr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strnstr(haystack:ctypes:char_const*, needle:ctypes:char_const*, size_t haystack_maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnstr(haystack, needle, haystack_maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strcasestr(haystack:ctypes:char_const*, needle:ctypes:char_const*) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strcasestr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
 strncasestr(haystack:ctypes:char_const*, needle:ctypes:char_const*, size_t haystack_maxlen) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strncasestr(haystack, needle, haystack_maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 @ispure
@@ -1373,54 +1373,54 @@ strcspn(haystack:ctypes:char_const*, accept:ctypes:char_const*) {
 strpbrk(haystack:ctypes:char_const*, accept:ctypes:char_const*) {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strpbrk(haystack, accept), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 
 @ispure
 basename(str:ctypes:char_const*) {
 	CTYPES_FAULTPROTECT(str = basename(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strrev(str:ctypes:char*) {
 	CTYPES_FAULTPROTECT(str = strrev(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strnrev(str:ctypes:char*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(str = strnrev(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strlwr(str:ctypes:char*) {
 	CTYPES_FAULTPROTECT(str = strlwr(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strnlwr(str:ctypes:char*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(str = strnlwr(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strupr(str:ctypes:char*) {
 	CTYPES_FAULTPROTECT(str = strupr(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strnupr(str:ctypes:char*, size_t maxlen) {
 	CTYPES_FAULTPROTECT(str = strnupr(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strset(str:ctypes:char*, int ch) {
 	CTYPES_FAULTPROTECT(str = strset(str, ch), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 strnset(str:ctypes:char*, int ch, size_t maxlen) {
 	CTYPES_FAULTPROTECT(str = strnset(str, ch, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 memfrob(buf:ctypes:void*, size_t num_bytes) {
@@ -1431,25 +1431,25 @@ memfrob(buf:ctypes:void*, size_t num_bytes) {
 strsep(stringp:ctypes:char**, delim:ctypes:char_const*) {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strsep(stringp, delim), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 stresep(stringp:ctypes:char**, delim:ctypes:char_const*, int escape) {
 	char *result;
 	CTYPES_FAULTPROTECT(result = stresep(stringp, delim, escape), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 strtok(str:ctypes:char*, delim:ctypes:char_const*) {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strtok(str, delim), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 strtok_r(str:ctypes:char*, delim:ctypes:char_const*, save_ptr:ctypes:char**) {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strtok_r(str, delim, save_ptr), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 """);
@@ -2476,7 +2476,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strend_f_impl(char const *stri
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strend(string), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnlen */
@@ -2524,7 +2524,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnend_f_impl(char const *str
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnend(string, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strchr */
@@ -2548,7 +2548,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchr_f_impl(char const *hays
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strchr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strrchr */
@@ -2572,7 +2572,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchr_f_impl(char const *hay
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strrchr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnchr */
@@ -2597,7 +2597,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchr_f_impl(char const *hay
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnchr(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnrchr */
@@ -2622,7 +2622,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchr_f_impl(char const *ha
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnrchr(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strchrnul */
@@ -2646,7 +2646,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strchrnul_f_impl(char const *h
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strchrnul(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strrchrnul */
@@ -2670,7 +2670,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrchrnul_f_impl(char const *
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strrchrnul(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnchrnul */
@@ -2695,7 +2695,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnchrnul_f_impl(char const *
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnchrnul(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnrchrnul */
@@ -2720,7 +2720,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrchrnul_f_impl(char const 
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnrchrnul(haystack, needle, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* stroff */
@@ -3001,7 +3001,7 @@ INTERN DEFINE_CMETHOD(c_string_strcpy, &c_string_strcpy_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcpy_f_impl(char *dst, char const *src)
 {
 	CTYPES_FAULTPROTECT(dst = strcpy(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* strcat */
@@ -3027,7 +3027,7 @@ INTERN DEFINE_CMETHOD(c_string_strcat, &c_string_strcat_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcat_f_impl(char *dst, char const *src)
 {
 	CTYPES_FAULTPROTECT(dst = strcat(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* stpcpy */
@@ -3053,7 +3053,7 @@ INTERN DEFINE_CMETHOD(c_string_stpcpy, &c_string_stpcpy_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpcpy_f_impl(char *dst, char const *src)
 {
 	CTYPES_FAULTPROTECT(dst = stpcpy(dst, src), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* strncpy */
@@ -3080,7 +3080,7 @@ INTERN DEFINE_CMETHOD(c_string_strncpy, &c_string_strncpy_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncpy_f_impl(char *dst, char const *src, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(dst = strncpy(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* strncat */
@@ -3107,7 +3107,7 @@ INTERN DEFINE_CMETHOD(c_string_strncat, &c_string_strncat_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncat_f_impl(char *dst, char const *src, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(dst = strncat(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* stpncpy */
@@ -3134,7 +3134,7 @@ INTERN DEFINE_CMETHOD(c_string_stpncpy, &c_string_stpncpy_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_stpncpy_f_impl(char *dst, char const *src, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(dst = stpncpy(dst, src, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)dst);
+	return DeePointer_NewChar((void *)dst);
 }
 
 /* strstr */
@@ -3161,7 +3161,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strstr_f_impl(char const *hays
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strstr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strnstr */
@@ -3189,7 +3189,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnstr_f_impl(char const *hay
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strnstr(haystack, needle, haystack_maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strcasestr */
@@ -3216,7 +3216,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strcasestr_f_impl(char const *
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strcasestr(haystack, needle), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strncasestr */
@@ -3244,7 +3244,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strncasestr_f_impl(char const 
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strncasestr(haystack, needle, haystack_maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strspn */
@@ -3325,7 +3325,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f_impl(char const *hay
 {
 	char const *result;
 	CTYPES_FAULTPROTECT(result = strpbrk(haystack, accept), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* basename */
@@ -3343,7 +3343,7 @@ INTERN DEFINE_CMETHOD1(c_string_basename, &c_string_basename_f, METHOD_FPURECALL
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_basename_f_impl(char const *str)
 {
 	CTYPES_FAULTPROTECT(str = basename(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strrev */
@@ -3361,7 +3361,7 @@ INTERN DEFINE_CMETHOD1(c_string_strrev, &c_string_strrev_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrev_f_impl(char *str)
 {
 	CTYPES_FAULTPROTECT(str = strrev(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strnrev */
@@ -3384,7 +3384,7 @@ INTERN DEFINE_CMETHOD(c_string_strnrev, &c_string_strnrev_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrev_f_impl(char *str, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(str = strnrev(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strlwr */
@@ -3402,7 +3402,7 @@ INTERN DEFINE_CMETHOD1(c_string_strlwr, &c_string_strlwr_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlwr_f_impl(char *str)
 {
 	CTYPES_FAULTPROTECT(str = strlwr(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strnlwr */
@@ -3425,7 +3425,7 @@ INTERN DEFINE_CMETHOD(c_string_strnlwr, &c_string_strnlwr_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f_impl(char *str, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(str = strnlwr(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strupr */
@@ -3443,7 +3443,7 @@ INTERN DEFINE_CMETHOD1(c_string_strupr, &c_string_strupr_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strupr_f_impl(char *str)
 {
 	CTYPES_FAULTPROTECT(str = strupr(str), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strnupr */
@@ -3466,7 +3466,7 @@ INTERN DEFINE_CMETHOD(c_string_strnupr, &c_string_strnupr_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnupr_f_impl(char *str, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(str = strnupr(str, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strset */
@@ -3489,7 +3489,7 @@ INTERN DEFINE_CMETHOD(c_string_strset, &c_string_strset_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strset_f_impl(char *str, int ch)
 {
 	CTYPES_FAULTPROTECT(str = strset(str, ch), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* strnset */
@@ -3513,7 +3513,7 @@ INTERN DEFINE_CMETHOD(c_string_strnset, &c_string_strnset_f, METHOD_FNORMAL);
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnset_f_impl(char *str, int ch, size_t maxlen)
 {
 	CTYPES_FAULTPROTECT(str = strnset(str, ch, maxlen), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)str);
+	return DeePointer_NewChar((void *)str);
 }
 
 /* memfrob */
@@ -3563,7 +3563,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strsep_f_impl(cha
 {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strsep(stringp, delim), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* stresep */
@@ -3591,7 +3591,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_stresep_f_impl(ch
 {
 	char *result;
 	CTYPES_FAULTPROTECT(result = stresep(stringp, delim, escape), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strtok */
@@ -3618,7 +3618,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strtok_f_impl(char *str, char 
 {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strtok(str, delim), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 
 /* strtok_r */
@@ -3649,7 +3649,7 @@ FORCELOCAL WUNUSED NONNULL((3)) DREF DeeObject *DCALL c_string_strtok_r_f_impl(c
 {
 	char *result;
 	CTYPES_FAULTPROTECT(result = strtok_r(str, delim, save_ptr), return NULL);
-	return DeePointer_NewFor(&DeeCChar_Type, (void *)result);
+	return DeePointer_NewChar((void *)result);
 }
 /*[[[end]]]*/
 

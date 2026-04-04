@@ -28,6 +28,7 @@
 
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* return_bool */
+#include <deemon/gc.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_Check */
@@ -218,7 +219,11 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 	if unlikely(get_atomic_operand(newval, basetype, &op_newval))
 		goto err;
 	/* Allocate a buffer for the result (which is the *real* old value) */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	result_obj = CObject_Alloc(basetype);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	result_obj = DeeStructObject_Malloc(basetype->st_sizeof);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if unlikely(!result_obj)
 		goto err;
 	CTYPES_FAULTPROTECT({
@@ -230,11 +235,19 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 		default: __builtin_unreachable();
 		}
 	}, goto err_result_obj);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	CObject_Init(result_obj, basetype);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	DeeObject_Init(result_obj, DeeSType_AsType(basetype));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	return Dee_AsObject(result_obj);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_result_obj:
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	CObject_Free(basetype, result_obj);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	DeeStructObject_Free(result_obj);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #endif /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
 err:
 	return NULL;
@@ -246,6 +259,42 @@ err:
 #define IF_HAVE_FAULTPROTECT(x) /* nothing */
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#define CYTYPES_DEFINE_ATOMIC_BINOP(c_atomic_atomic_name, atomic_name, atomic_func)                       \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                                 \
+	c_atomic_atomic_name##_f(size_t argc, DeeObject *const *argv) {                                       \
+		DeeObject *ob_ptr, *ob_addend;                                                                    \
+		union atomic_operand addend;                                                                      \
+		union pointer ptr;                                                                                \
+		CType *basetype;                                                                                  \
+		DREF CObject *result_obj;                                                                         \
+		DeeArg_Unpack2(err, argc, argv, atomic_name, &ob_ptr, &ob_addend);                                \
+		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                                  \
+			goto err;                                                                                     \
+		if unlikely(get_atomic_operand(ob_addend, basetype, &addend))                                     \
+			goto err;                                                                                     \
+		/* Allocate a buffer for the result (which is the *real* old value) */                            \
+		result_obj = CObject_Alloc(basetype);                                                             \
+		if unlikely(!result_obj)                                                                          \
+			goto err;                                                                                     \
+		CTYPES_FAULTPROTECT({                                                                             \
+			switch (CType_Sizeof(basetype)) {                                                             \
+			case 1: *(uint8_t *)CObject_Data(result_obj) = atomic_func(ptr.p8, addend.ao_u8); break;      \
+			case 2: *(uint16_t *)CObject_Data(result_obj) = atomic_func(ptr.p16, addend.ao_u16); break;   \
+			case 4: *(uint32_t *)CObject_Data(result_obj) = atomic_func(ptr.p32, addend.ao_u32); break;   \
+			case 8: *(uint64_t *)CObject_Data(result_obj) = atomic_func(ptr.p64, addend.ao_u64); break;   \
+			default: __builtin_unreachable();                                                             \
+			}                                                                                             \
+		}, goto err_result_obj);                                                                          \
+		CObject_Init(result_obj, basetype);                                                               \
+		return Dee_AsObject(result_obj);                                                                  \
+	IF_HAVE_FAULTPROTECT(err_result_obj:                                                                  \
+		CObject_Free(basetype, result_obj);)                                                              \
+	err:                                                                                                  \
+		return NULL;                                                                                      \
+	}                                                                                                     \
+	INTERN DEFINE_CMETHOD(c_atomic_atomic_name, &c_atomic_atomic_name##_f, METHOD_FNORMAL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #define CYTYPES_DEFINE_ATOMIC_BINOP(c_atomic_atomic_name, atomic_name, atomic_func)                       \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                                 \
 	c_atomic_atomic_name##_f(size_t argc, DeeObject *const *argv) {                                       \
@@ -280,6 +329,7 @@ err:
 		return NULL;                                                                                      \
 	}                                                                                                     \
 	INTERN DEFINE_CMETHOD(c_atomic_atomic_name, &c_atomic_atomic_name##_f, METHOD_FNORMAL)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 CYTYPES_DEFINE_ATOMIC_BINOP(c_atomic_atomic_fetchadd, "atomic_fetchadd", atomic_fetchadd);
 CYTYPES_DEFINE_ATOMIC_BINOP(c_atomic_atomic_fetchsub, "atomic_fetchsub", atomic_fetchsub);
 CYTYPES_DEFINE_ATOMIC_BINOP(c_atomic_atomic_fetchand, "atomic_fetchand", atomic_fetchand);
@@ -329,6 +379,39 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_nand, "atomic_nand", atomic_nand
 CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_write);
 #undef CTYPES_DEFINE_ATOMIC_BINOP_VOID
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#define CTYPES_DEFINE_ATOMIC_UNOP(c_atomic_atomic_name, atomic_name, atomic_func)        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
+	c_atomic_atomic_name##_f(size_t argc, DeeObject *const *argv) {                      \
+		DeeObject *ob_ptr;                                                               \
+		union pointer ptr;                                                               \
+		CType *basetype;                                                                 \
+		DREF CObject *result_obj;                                                        \
+		DeeArg_Unpack1(err, argc, argv, atomic_name, &ob_ptr);                           \
+		if unlikely(DeeObject_AsGenericPointer(ob_ptr, &basetype, &ptr))                 \
+			goto err;                                                                    \
+		/* Allocate a buffer for the result (which is the *real* old value) */           \
+		result_obj = CObject_Alloc(basetype);                                            \
+		if unlikely(!result_obj)                                                         \
+			goto err;                                                                    \
+		CTYPES_FAULTPROTECT({                                                            \
+			switch (CType_Sizeof(basetype)) {                                            \
+			case 1: *(uint8_t *)CObject_Data(result_obj) = atomic_func(ptr.p8); break;   \
+			case 2: *(uint16_t *)CObject_Data(result_obj) = atomic_func(ptr.p16); break; \
+			case 4: *(uint32_t *)CObject_Data(result_obj) = atomic_func(ptr.p32); break; \
+			case 8: *(uint64_t *)CObject_Data(result_obj) = atomic_func(ptr.p64); break; \
+			default: __builtin_unreachable();                                            \
+			}                                                                            \
+		}, goto err_result_obj);                                                         \
+		CObject_Init(result_obj, basetype);                                              \
+		return Dee_AsObject(result_obj);                                                 \
+	IF_HAVE_FAULTPROTECT(err_result_obj:                                                 \
+		CObject_Free(basetype, result_obj);)                                             \
+	err:                                                                                 \
+		return NULL;                                                                     \
+	}                                                                                    \
+	INTERN DEFINE_CMETHOD(c_atomic_atomic_name, &c_atomic_atomic_name##_f, METHOD_FNORMAL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #define CTYPES_DEFINE_ATOMIC_UNOP(c_atomic_atomic_name, atomic_name, atomic_func)          \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                  \
 	c_atomic_atomic_name##_f(size_t argc, DeeObject *const *argv) {                        \
@@ -360,6 +443,7 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 		return NULL;                                                                       \
 	}                                                                                      \
 	INTERN DEFINE_CMETHOD(c_atomic_atomic_name, &c_atomic_atomic_name##_f, METHOD_FNORMAL)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 CTYPES_DEFINE_ATOMIC_UNOP(c_atomic_atomic_fetchinc, "atomic_fetchinc", atomic_fetchinc);
 CTYPES_DEFINE_ATOMIC_UNOP(c_atomic_atomic_fetchdec, "atomic_fetchdec", atomic_fetchdec);
 CTYPES_DEFINE_ATOMIC_UNOP(c_atomic_atomic_incfetch, "atomic_incfetch", atomic_incfetch);
