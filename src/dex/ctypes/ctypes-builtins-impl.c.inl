@@ -69,7 +69,8 @@
 #include <deemon/object.h>  /* DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, OBJECT_HEAD_INIT */
 #include <deemon/type.h>    /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_F*, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 
-#include <hybrid/int128.h> /* __HYBRID_INT128_INIT8N, __HYBRID_UINT128_INIT8N */
+#include <hybrid/int128.h>    /* __HYBRID_INT128_INIT8N, __HYBRID_UINT128_INIT8N */
+#include <hybrid/limitcore.h> /* __PRIVATE_MAX_S, __PRIVATE_MAX_U, __PRIVATE_MIN_S */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* intN_t, uintN_t */

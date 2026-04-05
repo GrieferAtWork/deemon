@@ -50,11 +50,11 @@
 #define __PRIVATE_MAX2_S(s)  __PRIVATE_MAX_S##s
 #define __PRIVATE_MIN2_U(s)  __PRIVATE_MIN_U##s
 #define __PRIVATE_MAX2_U(s)  __PRIVATE_MAX_U##s
-#define __PRIVATE_MINMAX(s)  __PRIVATE_MINMAXQ(s)
-#define __PRIVATE_MIN_S(s)   __PRIVATE_MIN2_S(s)
-#define __PRIVATE_MAX_S(s)   __PRIVATE_MAX2_S(s)
-#define __PRIVATE_MIN_U(s)   __PRIVATE_MIN2_U(s)
-#define __PRIVATE_MAX_U(s)   __PRIVATE_MAX2_U(s)
+#define __PRIVATE_MINMAX(s)  __PRIVATE_MINMAXQ(s) /*!export*/
+#define __PRIVATE_MIN_S(s)   __PRIVATE_MIN2_S(s)  /*!export*/
+#define __PRIVATE_MAX_S(s)   __PRIVATE_MAX2_S(s)  /*!export*/
+#define __PRIVATE_MIN_U(s)   __PRIVATE_MIN2_U(s)  /*!export*/
+#define __PRIVATE_MAX_U(s)   __PRIVATE_MAX2_U(s)  /*!export*/
 
 #ifndef __SCHAR_MIN__
 #define __SCHAR_MIN__ __PRIVATE_MIN_S(__SIZEOF_CHAR__)
