@@ -2749,10 +2749,10 @@ decwriter_slab_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 #endif /* CONFIG_TRACE_REFCHANGES */
 #ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
-		if unlikely(decwriter_putobject(self,
-		                                result +
-		                                offsetof(DeeObject, ob_type),
-		                                Dee_AsObject(Dee_TYPE(ref))))
+		if unlikely(decwriter_putpointer(self,
+		                                 result +
+		                                 offsetof(DeeObject, ob_type),
+		                                 Dee_AsObject(Dee_TYPE(ref))))
 			goto err_r;
 	} else
 #endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
