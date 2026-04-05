@@ -143,6 +143,16 @@ ctype_fini(CType *__restrict self) {
 		Dee_Free(self->ct_ffitype);
 	Dee_Free(self->ct_functions.sf_list);
 #endif /* !CONFIG_NO_CFUNCTION */
+
+	/* Prevent "type_fini" from freeing these... */
+	self->ct_base.tp_callable = NULL;
+	self->ct_base.tp_iterator = NULL;
+	self->ct_base.tp_math     = NULL;
+	self->ct_base.tp_cmp      = NULL;
+	self->ct_base.tp_seq      = NULL;
+	self->ct_base.tp_with     = NULL;
+	self->ct_base.tp_attr     = NULL;
+	self->ct_base.tp_mro      = NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
@@ -1409,11 +1419,20 @@ PRIVATE struct type_member tpconst cstructtype_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED DREF CStructType *DCALL
+cstructtype_init(size_t argc, DeeObject *const *argv) {
+	DeeObject *fields;
+	DeeArg_Unpack1(err, argc, argv, "StructType", &fields);
+	return CStructType_Of(fields, CSTRUCTTYPE_F_NORMAL);
+err:
+	return NULL;
+}
+
 INTERN DeeTypeObject CStructType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "CStructType",
+	/* .tp_name     = */ "StructType",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &CType_Type,
@@ -1421,7 +1440,7 @@ INTERN DeeTypeObject CStructType_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor:    */ &cstructtype_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL,
 			/* tp_free:        */ NULL
@@ -1994,7 +2013,7 @@ cstruct_builder_pack(struct cstruct_builder *__restrict self) {
 	Dee_atomic_rwlock_cinit(&result->cst_base.ct_cachelock);
 	result->cst_base.ct_operators = &cstruct_operators;
 	DeeObject_InitStatic(CStructType_AsType(result), &CStructType_Type);
-	return result;
+	return Type_AsCStructType(DeeGC_TRACK(DeeTypeObject, CStructType_AsType(result)));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
@@ -2022,7 +2041,7 @@ cstruct_builder_addfield(struct cstruct_builder *__restrict self,
 		goto err_duplicate_field;
 	if (part_of_chain) {
 		*self->csb_p_last = new_field;
-		self->csb_p_last = &new_field;
+		self->csb_p_last = &new_field->csf_next;
 	}
 	++self->csb_msk_used;
 
@@ -2073,7 +2092,7 @@ cstruct_builder_addfield_anon(struct cstruct_builder *__restrict self,
 
 	/* Append field to chain */
 	*self->csb_p_last = new_field;
-	self->csb_p_last = &new_field;
+	self->csb_p_last = &new_field->csf_next;
 	++self->csb__cst_size;
 
 	/* Update struct end-offset if necessary */
@@ -2133,6 +2152,8 @@ cstruct_of_cb(void *arg, DeeObject *elem) {
 			if (field->csf_name) {
 				ptrdiff_t field_offset = data->csod_offset + field->csf_offset;
 				ptrdiff_t ignored_offset_after;
+				Dee_Incref(field->csf_name);
+				Dee_Incref(CLValueType_AsType(field->csf_lvtype));
 				if (cstruct_builder_addfield(&data->csod_builder, field->csf_name,
 				                             field->csf_lvtype, field_offset,
 				                             &ignored_offset_after, false))
@@ -2270,7 +2291,7 @@ INTERN DeeTypeObject CFunctionType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "CFunctionType",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &CType_Type,
@@ -2341,7 +2362,7 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 			OBJECT_HEAD_INIT(&CFunctionType_Type),
 			/* .tp_name     = */ "Function",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY | TP_FVARIABLE,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
@@ -2510,14 +2531,14 @@ CFunctionType_New(CType *__restrict return_type,
 	/* Initialize fields. */
 	Dee_Incref(CType_AsType(return_type));
 	result->cft_return = return_type; /* Inherit reference. */
-	result->cft_base.ct_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject);
 	result->cft_base.ct_base.tp_name  = "Function";
-	result->cft_base.ct_base.tp_flags = /*TP_FINHERITCTOR | */ TP_FHEAP;
+	result->cft_base.ct_base.tp_flags = /*TP_FINHERITCTOR | */ TP_FHEAP | TP_FVARIABLE;
 	Dee_Incref(CFunctionType_AsType(&AbstractCFunction_Type));
 	result->cft_base.ct_base.tp_base  = CFunctionType_AsType(&AbstractCFunction_Type); /* Inherit reference. */
 	result->cft_base.ct_base.tp_mro   = cfunction_subclass_mro;
 	result->cft_hash                  = function_hash;
 	result->cft_argc                  = argc;
+	result->cft_cc                    = calling_convention;
 	Dee_Movrefv((DeeObject **)result->cft_argv, (DeeObject **)argv, argc);
 	Dee_atomic_rwlock_cinit(&result->cft_base.ct_cachelock);
 	result->cft_base.ct_operators = &cvoid_operators;
@@ -2746,13 +2767,13 @@ INTERN DeeTypeObject CPointerType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &CType_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CPointerType,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
-			/* tp_free:        */ NULL
+			/* tp_serialize:   */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cpointertype_fini,
 		/* .tp_assign      = */ NULL,
@@ -3363,13 +3384,13 @@ INTERN DeeTypeObject CLValueType_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &CType_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
+			/* T:              */ CLValueType,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
-			/* tp_free:        */ NULL
+			/* tp_serialize:   */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clvaluetype_fini,
 		/* .tp_assign      = */ NULL,
@@ -3405,6 +3426,13 @@ INTERN DeeTypeObject CLValueType_Type = {
 STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
 #define clvalue_fini  cpointer_fini
 #define clvalue_visit cpointer_visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+clvalue_assign(CLValue *self, DeeObject *value) {
+	CType *base_type = CLValueType_PointedToType(Dee_TYPE(self));
+	struct ctype_operators const *ops = CType_Operators(base_type);
+	return (*ops->co_initfrom)(base_type, self->cl_value.ptr, value);
+}
 
 INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CLValue_Ptr(CLValue *__restrict self) {
@@ -3484,8 +3512,8 @@ INTERN CLValueType AbstractCLValue_Type = {
 					/* tp_serialize:   */ NULL /* XXX */
 				),
 				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clvalue_fini,
-				/* .tp_assign      = */ NULL,
-				/* .tp_move_assign = */ NULL,
+				/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&clvalue_assign,
+				/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&clvalue_assign,
 				/* .tp_new         = */ NULL,
 				/* .tp_new_kw      = */ NULL,
 				/* .tp_new_copy    = */ (DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))&clvalue_new_copy,
@@ -4166,6 +4194,236 @@ CLValueType_Of(CType *__restrict self) {
 }
 
 DECL_END
+
+/* Define built-in types */
+#ifndef __INTELLISENSE__
+#define DEFINE_CVoid_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#define DEFINE_CChar_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CWChar_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CChar16_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CChar32_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBool_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#define DEFINE_CInt8_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CInt16_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CInt32_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CInt64_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CInt128_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#define DEFINE_CUInt8_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUInt16_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUInt32_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUInt64_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUInt128_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#define DEFINE_CBSwapInt16_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapInt32_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapInt64_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapInt128_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapUInt16_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapUInt32_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapUInt64_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CBSwapUInt128_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#define DEFINE_CFloat_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CDouble_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CLDouble_Type
+#include "ctypes-builtins-impl.c.inl"
+
+#ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
+#define DEFINE_CSChar_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUChar_Type
+#include "ctypes-builtins-impl.c.inl"
+#endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
+#define DEFINE_CShort_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUShort_Type
+#include "ctypes-builtins-impl.c.inl"
+#endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_INT_NEEDS_OWN_TYPE
+#define DEFINE_CInt_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CUInt_Type
+#include "ctypes-builtins-impl.c.inl"
+#endif /* CONFIG_INT_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_LONG_NEEDS_OWN_TYPE
+#define DEFINE_CLong_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CULong_Type
+#include "ctypes-builtins-impl.c.inl"
+#endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
+#define DEFINE_CLLong_Type
+#include "ctypes-builtins-impl.c.inl"
+#define DEFINE_CULLong_Type
+#include "ctypes-builtins-impl.c.inl"
+#endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
+#endif /* !__INTELLISENSE__ */
+
+DECL_BEGIN
+
+#ifdef CTYPES_DEFINE_STATIC_POINTER_TYPES
+INTDEF CPointerType CVoidPtr_Type = {
+	/* .cpt_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CPointerType_Type),
+			/* .tp_name     = */ "Pointer",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CPointerType_AsType(&AbstractCPointer_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ CPointer,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ NULL,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))&cpointer_visit,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cpointer_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ &cpointer_seq,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ cpointer_getsets,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ NULL
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ CTYPES_sizeof_pointer,
+			/* ct_alignof:   */ CTYPES_alignof_pointer,
+			/* ct_operators: */ &cpointer_operators,
+			/* ct_ffitype:   */ &ffi_type_pointer
+		)
+	},
+	/* .cpt_orig = */ &CVoid_Type,
+	/* .cpt_size = */ 0,
+};
+
+INTDEF CPointerType CCharPtr_Type = {
+	/* .cpt_base = */ {
+		/* .ct_base = */ {
+			OBJECT_HEAD_INIT(&CPointerType_Type),
+			/* .tp_name     = */ "Pointer",
+			/* .tp_doc      = */ NULL,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_weakrefs = */ 0,
+			/* .tp_features = */ TF_NONE,
+			/* .tp_base     = */ CPointerType_AsType(&AbstractCPointer_Type),
+			/* .tp_init = */ {
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ CPointer,
+					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_serialize:   */ NULL /* XXX */
+				),
+				/* .tp_dtor        = */ NULL,
+				/* .tp_assign      = */ NULL,
+				/* .tp_move_assign = */ NULL
+			},
+			/* .tp_cast = */ {
+				/* .tp_str       = */ NULL,
+				/* .tp_repr      = */ NULL,
+				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+			},
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))&cpointer_visit,
+			/* .tp_gc            = */ NULL,
+			/* .tp_math          = */ &cpointer_math,
+			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_seq           = */ &cpointer_seq,
+			/* .tp_iter_next     = */ NULL,
+			/* .tp_iterator      = */ NULL,
+			/* .tp_attr          = */ NULL,
+			/* .tp_with          = */ NULL,
+			/* .tp_buffer        = */ NULL,
+			/* .tp_methods       = */ NULL,
+			/* .tp_getsets       = */ cpointer_getsets,
+			/* .tp_members       = */ NULL,
+			/* .tp_class_methods = */ NULL,
+			/* .tp_class_getsets = */ NULL,
+			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
+			/* .tp_call          = */ NULL,
+			/* .tp_callable      = */ NULL,
+			/* .tp_mro           = */ NULL
+		},
+		CTYPE_INIT_COMMON(
+			/* ct_sizeof:    */ CTYPES_sizeof_pointer,
+			/* ct_alignof:   */ CTYPES_alignof_pointer,
+			/* ct_operators: */ &cpointer_operators,
+			/* ct_ffitype:   */ &ffi_type_pointer
+		)
+	},
+	/* .cpt_orig = */ &CChar_Type,
+	/* .cpt_size = */ CTYPES_sizeof_char,
+};
+#endif /* CTYPES_DEFINE_STATIC_POINTER_TYPES */
+
+
+DECL_END
+
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CTYPES_CORE_C */

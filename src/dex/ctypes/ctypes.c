@@ -351,6 +351,7 @@ CType_PrintCRepr_Head(CType *__restrict self,
 	} else {
 		char const *name = DeeType_GetName(CType_AsType(self));
 		result = (*printer)(arg, name, strlen(name));
+		*p_need_space_before_name = true;
 	}
 done:
 	return result;
@@ -436,7 +437,7 @@ CType_PrintCRepr(CType *__restrict self, Dee_formatprinter_t printer,
 	result = CType_PrintCRepr_Head(self, printer, arg, &need_space_before_name);
 	if unlikely(result < 0)
 		goto done;
-	if (varname) {
+	if (varname && *varname) {
 		if (need_space_before_name)
 			EDO(err_temp, DeeFormat_PRINT(printer, arg, " "));
 		EDO(err_temp, (*printer)(arg, varname, strlen(varname)));

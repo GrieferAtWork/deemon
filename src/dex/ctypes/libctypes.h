@@ -67,7 +67,7 @@
  */
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_CTYPES) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES))
-#if 0 /* TODO: Incomplete */
+#if 0 /* TODO: Complete, but untested, probably broken, and maybe even incomplete */
 #define CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES
@@ -210,6 +210,15 @@ INTDEF void ctypes_kos_guard(void);
 #define CTYPES_alignof_int      __HYBRID_ALIGNOF(CTYPES_sizeof_int)
 #define CTYPES_alignof_long     __HYBRID_ALIGNOF(CTYPES_sizeof_long)
 #define CTYPES_alignof_llong    __HYBRID_ALIGNOF(CTYPES_sizeof_llong)
+#define CTYPES_alignof_int8_t   __ALIGNOF_INT8__
+#define CTYPES_alignof_int16_t  __ALIGNOF_INT16__
+#define CTYPES_alignof_int32_t  __ALIGNOF_INT32__
+#define CTYPES_alignof_int64_t  __ALIGNOF_INT64__
+#ifdef __ALIGNOF_INT128__
+#define CTYPES_alignof_int128_t __ALIGNOF_INT128__
+#else /* __ALIGNOF_INT128__ */
+#define CTYPES_alignof_int128_t __ALIGNOF_INT64__
+#endif /* !__ALIGNOF_INT128__ */
 
 
 #define CTYPES_float float
@@ -1214,26 +1223,45 @@ INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CLValue_Ptr(CLValue *__restrict
 
 /* Builtin C types */
 /* clang-format off */
-typedef struct { OBJECT_HEAD_EX(CType)                          } CVoid;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char     c_value; } CChar;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_wchar_t  c_value; } CWChar;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char16_t c_value; } CChar16;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_char32_t c_value; } CChar32;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_bool     c_value; } CBool;
-typedef struct { OBJECT_HEAD_EX(CType) int8_t          c_value; } CInt8;
-typedef struct { OBJECT_HEAD_EX(CType) int16_t         c_value; } CInt16;
-typedef struct { OBJECT_HEAD_EX(CType) int32_t         c_value; } CInt32;
-typedef struct { OBJECT_HEAD_EX(CType) int64_t         c_value; } CInt64;
-typedef struct { OBJECT_HEAD_EX(CType) Dee_int128_t    c_value; } CInt128;
-typedef struct { OBJECT_HEAD_EX(CType) uint8_t         c_value; } CUInt8;
-typedef struct { OBJECT_HEAD_EX(CType) uint16_t        c_value; } CUInt16;
-typedef struct { OBJECT_HEAD_EX(CType) uint32_t        c_value; } CUInt32;
-typedef struct { OBJECT_HEAD_EX(CType) uint64_t        c_value; } CUInt64;
-typedef struct { OBJECT_HEAD_EX(CType) Dee_uint128_t   c_value; } CUInt128;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_float    c_value; } CFloat;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_double   c_value; } CDouble;
-typedef struct { OBJECT_HEAD_EX(CType) CTYPES_ldouble  c_value; } CLDouble;
+typedef struct { Dee_OBJECT_HEAD_EX(CType)                          } CVoid;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_char     c_value; } CChar;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_wchar_t  c_value; } CWChar;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_char16_t c_value; } CChar16;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_char32_t c_value; } CChar32;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_bool     c_value; } CBool;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) int8_t          c_value; } CInt8;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) int16_t         c_value; } CInt16;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) int32_t         c_value; } CInt32;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) int64_t         c_value; } CInt64;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) Dee_int128_t    c_value; } CInt128;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) uint8_t         c_value; } CUInt8;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) uint16_t        c_value; } CUInt16;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) uint32_t        c_value; } CUInt32;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) uint64_t        c_value; } CUInt64;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) Dee_uint128_t   c_value; } CUInt128;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_float    c_value; } CFloat;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_double   c_value; } CDouble;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_ldouble  c_value; } CLDouble;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_schar    c_value; } CSChar;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_uchar    c_value; } CUChar;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_short    c_value; } CShort;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_ushort   c_value; } CUShort;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_int      c_value; } CInt;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_uint     c_value; } CUInt;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_long     c_value; } CLong;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_ulong    c_value; } CULong;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_llong    c_value; } CLLong;
+typedef struct { Dee_OBJECT_HEAD_EX(CType) CTYPES_ullong   c_value; } CULLong;
+typedef CInt16 CBSwapInt16;
+typedef CInt32 CBSwapInt32;
+typedef CInt64 CBSwapInt64;
+typedef CInt128 CBSwapInt128;
+typedef CUInt16 CBSwapUInt16;
+typedef CUInt32 CBSwapUInt32;
+typedef CUInt64 CBSwapUInt64;
+typedef CUInt128 CBSwapUInt128;
 /* clang-format on */
+
 
 /* Builtin C Types */
 INTDEF CType CVoid_Type;

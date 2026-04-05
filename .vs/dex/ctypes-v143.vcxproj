@@ -38,6 +38,7 @@
 		<ClInclude Include="..\..\src\dex\ctypes\_res.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\ctypes-builtins-impl.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-float.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-integral.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\define-float.c.inl" />
