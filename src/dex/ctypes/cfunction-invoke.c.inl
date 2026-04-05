@@ -421,6 +421,11 @@ def_var_data:
 			goto err_wbuf;
 
 		/* Construct a new C-object that is returned as result. */
+		if (CType_IsCPointerType(return_type) || CType_IsCLValueType(return_type)) {
+			/* Must initialize the extra "owner" field (as "NULL") */
+			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+			((CPointer *)result_cobject)->cp_owner = NULL;
+		}
 		CObject_Init(result_cobject, return_type);
 		memcpy(CObject_Data(result_cobject), ret_mem, CType_Sizeof(return_type));
 		result = Dee_AsObject(result_cobject);

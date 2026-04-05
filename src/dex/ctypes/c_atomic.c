@@ -235,6 +235,11 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 		}
 	}, goto err_result_obj);
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {
+		/* Must initialize the extra "owner" field (as "NULL") */
+		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+		((CPointer *)result_obj)->cp_owner = NULL;
+	}
 	CObject_Init(result_obj, basetype);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	DeeObject_Init(result_obj, DeeSType_AsType(basetype));
@@ -285,6 +290,11 @@ err:
 			default: __builtin_unreachable();                                                             \
 			}                                                                                             \
 		}, goto err_result_obj);                                                                          \
+		if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {                            \
+			/* Must initialize the extra "owner" field (as "NULL") */                                     \
+			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));                   \
+			((CPointer *)result_obj)->cp_owner = NULL;                                                    \
+		}                                                                                                 \
 		CObject_Init(result_obj, basetype);                                                               \
 		return Dee_AsObject(result_obj);                                                                  \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                                  \
@@ -402,6 +412,11 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 			default: __builtin_unreachable();                                            \
 			}                                                                            \
 		}, goto err_result_obj);                                                         \
+		if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {           \
+			/* Must initialize the extra "owner" field (as "NULL") */                    \
+			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));  \
+			((CPointer *)result_obj)->cp_owner = NULL;                                   \
+		}                                                                                \
 		CObject_Init(result_obj, basetype);                                              \
 		return Dee_AsObject(result_obj);                                                 \
 	IF_HAVE_FAULTPROTECT(err_result_obj:                                                 \

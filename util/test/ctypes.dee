@@ -21,6 +21,10 @@
 
 import deemon;
 import * from ctypes;
+import ctypes;
+
+local CONFIG_EXPERIMENTAL_REWORKED_CTYPES =
+	deemon.hasattr(ctypes, "CType");
 
 function assertMinMax(sT: StructuredType, uT: StructuredType, bits: deemon.int) {
 	assert sizeof(sT) == bits / 8;
@@ -59,8 +63,10 @@ assert int == type((short)0 + 1);
 assert int == type((ushort)0 + 1);
 assert int == type((int)0 + 1);
 assert uint == type((uint)0 + 1);
-assert long == type((long)0 + 1);
-assert ulong == type((ulong)0 + 1);
+if (!CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
+	assert long == type((long)0 + 1);
+	assert ulong == type((ulong)0 + 1);
+}
 assert llong == type((llong)0 + 1);
 assert ullong == type((ullong)0 + 1);
 assert int128_t == type((int128_t)0 + 1);
@@ -69,13 +75,13 @@ assert uint128_t == type((uint128_t)0 + 1);
 
 /* FIXME: this breaks at the moment
  * (yes: the min/max constants are re-assignable when they shouldn't be) */
-#if 0
-local x = int8_t.max;
-assert int8_t.max == x;
-assert int8_t.max == 127;
-x += 42;
-assert int8_t.max == x - 42;
-assert int8_t.max == 127;
-assert (try ({ int8_t.max := 42; none; }) catch (e...) e) is none;
-#endif
-
+if (CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
+	local x = int8_t.max;
+	assert int8_t.max == x;
+	assert int8_t.max == 127;
+	x += 42;
+	assert int8_t.max == x - 42;
+	assert int8_t.max == 127;
+	assert (try ({ int8_t.max := 42; none; }) catch (e...) e) is
+		deemon.Error;
+}

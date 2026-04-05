@@ -369,8 +369,8 @@ cuint128_unaligned_get_bswap(void const *p) {
 /* Integer promotion */
 #undef LOCAL_CInt_New
 #undef LOCAL_CInt_New_t
-#define LOCAL_CInt_New   CIntN_New(CTYPES_sizeof_int)
-#define LOCAL_CInt_New_t HOST_INTFOR(CTYPES_sizeof_int)
+#define LOCAL_CInt_New   CInt_New
+#define LOCAL_CInt_New_t CTYPES_int
 #endif /* LOCAL_sizeof_intN_t < CTYPES_sizeof_int */
 #endif /* !LOCAL_intN_t */
 
@@ -543,7 +543,7 @@ LOCAL_printcrepr(CType *tp_self, void const *self,
 	CTYPES_FAULTPROTECT({
 		cvalue = LOCAL_UNALIGNED_GET(self);
 	}, return -1);
-	return DeeFormat_Printf(printer, arg, LOCAL_PRFduN, cvalue);
+	return DeeFormat_Printf(printer, arg, "%" LOCAL_PRFduN, cvalue);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL

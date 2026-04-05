@@ -126,6 +126,22 @@ DOC_DEF(isfunction_doc,
 DOC_DEF(isstruct_doc,
         "->?Dbool\n"
         "Returns ?t if @this ?GCType is a ?GStructType");
+DOC_DEF(tobytes_doc,
+        "->?DBytes\n"
+        "(data:?DBytes,offset=!0)->?DBytes\n"
+        "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
+        "#tBufferError{The given @data is not writable}"
+        "Retrieve the underlying bytes of @this struct object instance");
+
+PRIVATE ATTR_COLD NONNULL((1)) int
+(DCALL err_bytes_not_writable)(DeeBytesObject *__restrict bytes_ob) {
+	(void)bytes_ob;
+	return DeeError_Throwf(&DeeError_BufferError,
+	                       "The Bytes object is not writable");
+}
+
+
+
 
 PRIVATE NONNULL((1)) void DCALL
 ctype_fini(CType *__restrict self) {
@@ -231,6 +247,11 @@ ctype_frombytes(CType *self, size_t argc, DeeObject *const *argv) {
 	result = CType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
+	if (CType_IsCPointerType(self) || CType_IsCLValueType(self)) {
+		/* Must initialize the extra "owner" field (as "NULL") */
+		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+		((CPointer *)result)->cp_owner = NULL;
+	}
 	memcpy(CObject_Data(result), DeeBytes_DATA(args.data) + args.offset, type_size);
 	CObject_Init(result, self);
 	return result;
@@ -688,12 +709,75 @@ PRIVATE struct type_getset tpconst cobject_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+cobject_tobytes(CObject *self, size_t argc, DeeObject *const *argv) {
+	CType *tp_self = Dee_TYPE(self);
+	size_t type_size = CType_Sizeof(tp_self);
+	size_t data_size;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tobytes", params: "
+	DeeBytesObject *data = NULL;
+	size_t offset = 0;
+", docStringPrefix: "struct");]]]*/
+#define struct_tobytes_params "data?:?DBytes,offset=!0"
+	struct {
+		DeeBytesObject *data;
+		size_t offset;
+	} args;
+	args.data = NULL;
+	args.offset = 0;
+	if (DeeArg_UnpackStruct(argc, argv, "|o" UNPuSIZ ":tobytes", &args))
+		goto err;
+/*[[[end]]]*/
+
+	/* When no explicit buffer was given, return a writable view for the data of `self' */
+	if (args.data == NULL) {
+		return (DREF DeeBytesObject *)DeeBytes_NewView(Dee_AsObject(self), CObject_Data(self),
+		                                               type_size, Dee_BUFFER_FREADONLY);
+	}
+
+	/* Otherwise, copy bytes of `self' into the provided bytes-buffer at the specified offset. */
+	if (DeeObject_AssertTypeExact(args.data, &DeeBytes_Type))
+		goto err;
+	if unlikely(!DeeBytes_IsWritable(args.data))
+		goto err_not_writable;
+	data_size = DeeBytes_SIZE(args.data);
+	if unlikely(OVERFLOW_USUB(data_size, args.offset, &data_size))
+		goto err_bad_size;
+	if unlikely(data_size < type_size)
+		goto err_bad_size;
+	memcpy(DeeBytes_DATA(args.data) + args.offset,
+	       CObject_Data(self), type_size);
+
+	return_reference_(args.data);
+err_bad_size:
+	data_size = DeeBytes_SIZE(args.data);
+	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
+		data_size = 0;
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Invalid bytes size: structured type `%r' has an "
+	                "instance size of `%" PRFuSIZ "', but the given "
+	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
+	                "provides at most `%" PRFuSIZ " bytes'",
+	                self, type_size, DeeBytes_SIZE(args.data),
+	                args.offset, data_size);
+err:
+	return NULL;
+err_not_writable:
+	err_bytes_not_writable(args.data);
+	goto err;
+}
+
+PRIVATE struct type_method tpconst cobject_methods[] = {
+	TYPE_METHOD("tobytes", &cobject_tobytes, DOC_GET(tobytes_doc)),
+	TYPE_METHOD_END
+};
+
 INTERN CType AbstractCObject_Type = {
 	/* .ct_base = */ {
 		OBJECT_HEAD_INIT(&CType_Type),
 		/* .tp_name     = */ "CObject",
 		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ &DeeObject_Type,
@@ -727,7 +811,7 @@ INTERN CType AbstractCObject_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ NULL,
+		/* .tp_methods       = */ cobject_methods,
 		/* .tp_getsets       = */ cobject_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
@@ -1003,7 +1087,7 @@ PRIVATE DeeTypeObject *tpconst carraytype_mro[] = {
 
 INTERN DeeTypeObject CArrayType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "CArrayType",
+	/* .tp_name     = */ "ArrayType",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
@@ -1055,7 +1139,7 @@ INTERN CArrayType AbstractCArray_Type = {
 			OBJECT_HEAD_INIT(&CArrayType_Type),
 			/* .tp_name     = */ "Array",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
@@ -1720,7 +1804,7 @@ INTERN struct empty_cstruct_type_object AbstractCStruct_Type = {
 			OBJECT_HEAD_INIT(&CStructType_Type),
 			/* .tp_name     = */ "Struct",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
@@ -2289,7 +2373,7 @@ PRIVATE struct type_member tpconst cfunctiontype_members[] = {
 
 INTERN DeeTypeObject CFunctionType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "CFunctionType",
+	/* .tp_name     = */ "FunctionType",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
@@ -2362,7 +2446,7 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 			OBJECT_HEAD_INIT(&CFunctionType_Type),
 			/* .tp_name     = */ "Function",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY | TP_FVARIABLE,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY | TP_FVARIABLE,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
@@ -2760,7 +2844,7 @@ PRIVATE struct type_member tpconst cpointertype_members[] = {
 
 INTERN DeeTypeObject CPointerType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "CPointerType",
+	/* .tp_name     = */ "PointerType",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
@@ -3003,6 +3087,52 @@ PRIVATE struct type_seq cpointer_seq = {
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &cpointer_setrange_index_n */
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cpointer_ctor(CPointer *__restrict self) {
+	self->cp_value.ptr = NULL;
+	self->cp_owner     = NULL;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cpointer_copy(CPointer *__restrict self, CPointer *__restrict other) {
+	self->cp_value.ptr = other->cp_value.ptr;
+	self->cp_owner     = other->cp_owner;
+	Dee_XIncref(self->cp_owner);
+	return 0;
+}
+
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "value" });]]]*/
+#ifndef DEFINED_kwlist__value
+#define DEFINED_kwlist__value
+PRIVATE DEFINE_KWLIST(kwlist__value, { KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
+#endif /* !DEFINED_kwlist__value */
+/*[[[end]]]*/
+
+DOC_DEF(cpointer_doc, "(value:?X6?GPointer?Dint?N?Dstring?DBytes?GLValue)\n"
+                      "Re-interpret @value as a pointer of @this typing. "
+                      /**/ "When @value is an L-Value, it must be an L-Value-to-pointer, "
+                      /**/ "and the referenced pointer is cast.");
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cpointer_init_kw(CPointer *__restrict self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	int error;
+	DeeObject *value;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__value,
+	                          "o:Pointer", &value))
+		goto err;
+	self->cp_owner = NULL;
+	error = DeeObject_TryAsPointer(value, &CVoid_Type, &self->cp_value);
+	if (error <= 0)
+		return error;
+	return DeeObject_AsUIntptr(value, &self->cp_value.uint);
+err:
+	return -1;
+}
+
+
+
 #define cpointer_getind CPointer_Ind
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3042,23 +3172,29 @@ PRIVATE struct type_getset tpconst cpointer_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_member tpconst cpointer_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(CPointer, cp_owner),
+	                      "The owner of the piece of memory being pointed-to (if known)"),
+	TYPE_MEMBER_END
+};
+
 INTERN CPointerType AbstractCPointer_Type = {
 	/* .cpt_base = */ {
 		/* .ct_base = */ {
 			OBJECT_HEAD_INIT(&CPointerType_Type),
 			/* .tp_name     = */ "Pointer",
-			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_doc      = */ DOC_GET(cpointer_doc),
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 					/* T:              */ CPointer,
-					/* tp_ctor:        */ &cobject_ctor,
-					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_ctor:        */ &cpointer_ctor,
+					/* tp_copy_ctor:   */ &cpointer_copy,
 					/* tp_any_ctor:    */ NULL,
-					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_any_ctor_kw: */ &cpointer_init_kw,
 					/* tp_serialize:   */ NULL /* XXX */
 				),
 				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cpointer_fini,
@@ -3084,7 +3220,7 @@ INTERN CPointerType AbstractCPointer_Type = {
 			/* .tp_buffer        = */ NULL,
 			/* .tp_methods       = */ NULL,
 			/* .tp_getsets       = */ cpointer_getsets,
-			/* .tp_members       = */ NULL,
+			/* .tp_members       = */ cpointer_members,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL,
@@ -3267,6 +3403,7 @@ CPointerType_New(CType *__restrict self) {
 	result->cpt_base.ct_sizeof       = CTYPES_sizeof_pointer;
 	result->cpt_base.ct_alignof      = CTYPES_alignof_pointer;
 	result->cpt_base.ct_base.tp_name = "Pointer";
+	result->cpt_base.ct_base.tp_doc  = DOC_GET(cpointer_doc);
 	result->cpt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_pointer_tp_alloc;
 	result->cpt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_pointer_tp_free;
 	result->cpt_base.ct_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
@@ -3377,7 +3514,7 @@ PRIVATE struct type_member tpconst clvaluetype_members[] = {
 
 INTERN DeeTypeObject CLValueType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "CLValueType",
+	/* .tp_name     = */ "LValueType",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
@@ -3426,6 +3563,45 @@ INTERN DeeTypeObject CLValueType_Type = {
 STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
 #define clvalue_fini  cpointer_fini
 #define clvalue_visit cpointer_visit
+
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "value" });]]]*/
+#ifndef DEFINED_kwlist__value
+#define DEFINED_kwlist__value
+PRIVATE DEFINE_KWLIST(kwlist__value, { KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
+#endif /* !DEFINED_kwlist__value */
+/*[[[end]]]*/
+
+DOC_DEF(clvalue_doc,
+        "(value:?X2?GLValue?GStruct)\n"
+        "Force-cast another l-value or struct into @this lvalue's type");
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clvalue_init_kw(CLValue *__restrict self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *value;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__value,
+	                          "o:LValue", &value))
+		goto err;
+	if (Object_IsCLValue(value)) {
+		CLValue *val = Object_AsCLValue(value);
+		/* Force-cast lvalue */
+		self->cl_owner = val->cl_owner;
+		self->cl_value = val->cl_value;
+		Dee_XIncref(self->cl_owner);
+	} else if (Object_IsCStruct(value)) {
+		Dee_Incref(value);
+		self->cl_owner     = value;
+		self->cl_value.ptr = CStruct_Data(Object_AsCStruct(value));
+	} else {
+		DeeObject_TypeAssertFailed2(value,
+		                            CLValueType_AsType(&AbstractCLValue_Type),
+		                            CStructType_AsType(&AbstractCStruct_Type));
+		goto err;
+	}
+err:
+	return -1;
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 clvalue_assign(CLValue *self, DeeObject *value) {
@@ -3478,6 +3654,11 @@ clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 		goto err;
 	});
 
+	if (CType_IsCPointerType(base_type) || CType_IsCLValueType(base_type)) {
+		/* Must initialize the extra "owner" field (as "NULL") */
+		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+		((CPointer *)result)->cp_owner = NULL;
+	}
 	CObject_Init(result, base_type);
 	return result;
 err:
@@ -3485,30 +3666,38 @@ err:
 }
 
 #define clvalue_getptr CLValue_Ptr
-PRIVATE struct type_getset tpconst lvalue_getsets[] = {
+PRIVATE struct type_getset tpconst clvalue_getsets[] = {
 	TYPE_GETTER_AB_F("ptr", &clvalue_getptr, METHOD_FNOREFESCAPE,
 	                 "->?GPointer\n"
 	                 "Returns a pointer to the value represented by @this L-Value"),
+	TYPE_GETTER_AB_F("ref", &clvalue_getptr, METHOD_FNOREFESCAPE,
+	                 "->?GPointer\n"
+	                 "Deprecated alias for ?#ptr"),
 	TYPE_GETSET_END
 };
+
+
+STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+#define clvalue_members cpointer_members
+
 
 INTERN CLValueType AbstractCLValue_Type = {
 	/* .clt_base = */ {
 		/* .ct_base = */ {
 			OBJECT_HEAD_INIT(&CLValueType_Type),
 			/* .tp_name     = */ "LValue",
-			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_doc      = */ DOC_GET(clvalue_doc),
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 					/* T:              */ CLValue,
-					/* tp_ctor:        */ &cobject_ctor,
+					/* tp_ctor:        */ NULL, /* Not raw-constructible */
 					/* tp_copy_ctor:   */ &cobject_copy,
 					/* tp_any_ctor:    */ NULL,
-					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_any_ctor_kw: */ &clvalue_init_kw, /* For casting... */
 					/* tp_serialize:   */ NULL /* XXX */
 				),
 				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&clvalue_fini,
@@ -3536,8 +3725,8 @@ INTERN CLValueType AbstractCLValue_Type = {
 			/* .tp_with          = */ NULL,
 			/* .tp_buffer        = */ NULL,
 			/* .tp_methods       = */ NULL,
-			/* .tp_getsets       = */ lvalue_getsets,
-			/* .tp_members       = */ NULL,
+			/* .tp_getsets       = */ clvalue_getsets,
+			/* .tp_members       = */ clvalue_members,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL,
@@ -4098,6 +4287,7 @@ CLValuetype_New(CType *__restrict self) {
 	result->clt_base.ct_sizeof       = CTYPES_sizeof_lvalue;
 	result->clt_base.ct_alignof      = CTYPES_alignof_lvalue;
 	result->clt_base.ct_base.tp_name = "LValue";
+	result->clt_base.ct_base.tp_doc  = DOC_GET(clvalue_doc);
 	result->clt_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_lvalue_tp_alloc;
 	result->clt_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_lvalue_tp_free;
 	result->clt_base.ct_base.tp_init.tp_new_copy = (DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))&clvalue_new_copy;
@@ -4302,17 +4492,17 @@ INTDEF CPointerType CVoidPtr_Type = {
 			OBJECT_HEAD_INIT(&CPointerType_Type),
 			/* .tp_name     = */ "Pointer",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CPointerType_AsType(&AbstractCPointer_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 					/* T:              */ CPointer,
-					/* tp_ctor:        */ &cobject_ctor,
-					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_ctor:        */ &cpointer_ctor,
+					/* tp_copy_ctor:   */ &cpointer_copy,
 					/* tp_any_ctor:    */ NULL,
-					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_any_ctor_kw: */ &cpointer_init_kw,
 					/* tp_serialize:   */ NULL /* XXX */
 				),
 				/* .tp_dtor        = */ NULL,
@@ -4364,17 +4554,17 @@ INTDEF CPointerType CCharPtr_Type = {
 			OBJECT_HEAD_INIT(&CPointerType_Type),
 			/* .tp_name     = */ "Pointer",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR | TP_FMOVEANY,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CPointerType_AsType(&AbstractCPointer_Type),
 			/* .tp_init = */ {
 				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 					/* T:              */ CPointer,
-					/* tp_ctor:        */ &cobject_ctor,
-					/* tp_copy_ctor:   */ &cobject_copy,
+					/* tp_ctor:        */ &cpointer_ctor,
+					/* tp_copy_ctor:   */ &cpointer_copy,
 					/* tp_any_ctor:    */ NULL,
-					/* tp_any_ctor_kw: */ &cobject_init_kw,
+					/* tp_any_ctor_kw: */ &cpointer_init_kw,
 					/* tp_serialize:   */ NULL /* XXX */
 				),
 				/* .tp_dtor        = */ NULL,

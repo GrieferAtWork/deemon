@@ -62,6 +62,7 @@
 /**/
 
 #include <deemon/api.h>
+#include <deemon/numeric.h>
 #include <hybrid/limitcore.h>
 
 #if (defined(DEFINE_CVoid_Type) +         \
@@ -670,9 +671,6 @@ PRIVATE LOCAL_CObject LOCAL_MEMBER_maxval = {
 };
 #endif /* !LOCAL_IS_FLOAT && LOCAL_CTYPES_sizeof_T != 0 */
 
-#if (defined(LOCAL_MEMBER_minval) || defined(LOCAL_MEMBER_maxval) ||   \
-     defined(LOCAL_MEMBER_signed) || defined(LOCAL_MEMBER_unsigned) || \
-     defined(LOCAL_MEMBER_bswap))
 PRIVATE struct type_member tpconst LOCAL_cobject_class_members[] = {
 #ifdef LOCAL_MEMBER_minval
 	TYPE_MEMBER_CONST("MIN", &LOCAL_MEMBER_minval),
@@ -689,22 +687,44 @@ PRIVATE struct type_member tpconst LOCAL_cobject_class_members[] = {
 #ifdef LOCAL_MEMBER_bswap
 	TYPE_MEMBER_CONST("bswap", CType_AsType(&LOCAL_MEMBER_bswap)),
 #endif /* LOCAL_MEMBER_bswap */
+#ifdef LOCAL_IS_FLOAT
+	TYPE_MEMBER_CONST("isfloat", Dee_True),
+#else /* LOCAL_IS_FLOAT */
+	TYPE_MEMBER_CONST("isfloat", Dee_False),
+#endif /* !LOCAL_IS_FLOAT */
+
+#ifdef LOCAL_MEMBER_minval
+	TYPE_MEMBER_CONST("min", &LOCAL_MEMBER_minval), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
+#endif /* LOCAL_MEMBER_minval */
+#ifdef LOCAL_MEMBER_maxval
+	TYPE_MEMBER_CONST("max", &LOCAL_MEMBER_maxval), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
+#endif /* LOCAL_MEMBER_maxval */
 	TYPE_MEMBER_END
 };
-
-#else /* ... */
-#undef LOCAL_cobject_class_members
-#endif /* !... */
-
-#ifndef LOCAL_cobject_class_members
-#define LOCAL_cobject_class_members NULL
-#endif /* !LOCAL_cobject_class_members */
 
 #undef LOCAL_MEMBER_minval
 #undef LOCAL_MEMBER_maxval
 #undef LOCAL_MEMBER_signed
 #undef LOCAL_MEMBER_unsigned
 #undef LOCAL_MEMBER_bswap
+
+#undef LOCAL_cobject_mro
+#ifndef DEFINE_CVoid_Type
+#define LOCAL_cobject_mro generic_numeric_ctype_mro
+#ifndef generic_numeric_ctype_mro_DEFINED
+#define generic_numeric_ctype_mro_DEFINED
+PRIVATE DeeTypeObject *tpconst generic_numeric_ctype_mro[] = {
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeNumeric_Type,
+	NULL,
+};
+#endif /* !generic_numeric_ctype_mro_DEFINED */
+#endif /* !DEFINE_CVoid_Type */
+
+#ifndef LOCAL_cobject_mro
+#define LOCAL_cobject_mro NULL
+#endif /* !LOCAL_cobject_mro */
 
 INTERN CType LOCAL_CObject_Type = {
 	/* .ct_base = */ {
@@ -754,7 +774,7 @@ INTERN CType LOCAL_CObject_Type = {
 		/* .tp_method_hints  = */ NULL,
 		/* .tp_call          = */ NULL,
 		/* .tp_callable      = */ NULL,
-		/* .tp_mro           = */ NULL /* TODO: MRO to extend "deemon.Numeric" */
+		/* .tp_mro           = */ LOCAL_cobject_mro
 	},
 	CTYPE_INIT_COMMON_EX(
 		/* ct_sizeof:    */ LOCAL_CTYPES_sizeof_T,
@@ -765,6 +785,8 @@ INTERN CType LOCAL_CObject_Type = {
 		/* ct_lvalue:    */ LOCAL_CLValue_Type_PTR
 	)
 };
+
+#undef LOCAL_cobject_mro
 
 
 #ifndef DEFINE_CVoid_Type
