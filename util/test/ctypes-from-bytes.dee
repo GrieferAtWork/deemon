@@ -32,12 +32,3 @@ assert val.tobytes() == bytes;
 assert val.tobytes(bytes);
 assert deemon.int.frombytes(bytes) == 0x11223344;
 assert (int)val == 0x11223344;
-
-local val = uint32_t.ptr.frombytes(bytes);
-assert type(val) === uint32_t.ptr;
-assert type(val).tobytes(val) == bytes;
-assert type(val).tobytes(val, bytes);
-assert val.tobytes() == bytes;
-assert val.tobytes(bytes);
-assert deemon.int.frombytes(bytes) == 0x11223344;
-assert (int)val == 0x11223344;

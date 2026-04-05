@@ -2507,10 +2507,6 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    DeeSTypeObject **argv, bool inherit_argv);
 
 
-#ifdef CONFIG_NO_CFUNCTION
-/* Throw a NotImplemented error explaining that cfunctions have been disabled. */
-INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
-#endif /* CONFIG_NO_CFUNCTION */
 
 
 
@@ -2614,6 +2610,15 @@ INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
  * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
  */
 INTDEF DeeTypeObject DeeShLib_Type;
+
+#ifdef CONFIG_NO_CFUNCTION
+/* Throw a NotImplemented error explaining that cfunctions have been disabled. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+INTDEF ATTR_COLD int DCALL err_no_cfunction(void);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+#endif /* CONFIG_NO_CFUNCTION */
 
 DECL_END
 

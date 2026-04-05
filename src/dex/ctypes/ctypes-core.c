@@ -2314,7 +2314,7 @@ err_builder:
 
 #ifdef CONFIG_NO_CFUNCTION
 /* Throw a NotImplemented error explaining that cfunctions have been disabled. */
-PRIVATE ATTR_COLD int DCALL err_no_cfunction(void) {
+INTERN ATTR_COLD int DCALL err_no_cfunction(void) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "ctypes was built without C-functions being enabled");
 }
@@ -4320,9 +4320,9 @@ CLValuetype_New(CType *__restrict self) {
 			result->clt_base.ct_base.tp_seq = &carraylvalue_seq;
 			result->clt_base.ct_base.tp_mro = carraylvalue_subclass_mro;
 		} else if (CType_IsCPointerType(self)) {
-#ifndef CONFIG_NO_CFUNCTION
 			CPointerType *ptr = CType_AsCPointerType(self);
 			CType *ptr_base   = CPointerType_PointedToType(ptr);
+#ifndef CONFIG_NO_CFUNCTION
 			if (CType_IsCFunctionType(ptr_base)) {
 				/* LValue-to-pointer-to-function allows that function to be called, too
 				 * This is especially important when the function is part of a struct,
