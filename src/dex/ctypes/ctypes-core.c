@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeSlab_GetFree, DeeSlab_GetMalloc, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStruct*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* Dee_False, Dee_True */
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/callable.h>        /* DeeCallable_Type */
@@ -40,7 +40,7 @@
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/mro.h>             /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DeeObject_*, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_Movrefv, Dee_XDecref, Dee_XIncref */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DeeObject_*, Dee_BUFFER_FREADONLY, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_Movrefv, Dee_XDecref, Dee_XIncref, return_reference_ */
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_string_object, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, bcmp, bzero, memcpy, strlen */

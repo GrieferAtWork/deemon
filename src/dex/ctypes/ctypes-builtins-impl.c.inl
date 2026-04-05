@@ -62,8 +62,17 @@
 /**/
 
 #include <deemon/api.h>
-#include <deemon/numeric.h>
-#include <hybrid/limitcore.h>
+
+#include <deemon/alloc.h>   /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/bool.h>    /* Dee_False, Dee_True */
+#include <deemon/numeric.h> /* DeeNumeric_Type */
+#include <deemon/object.h>  /* DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, OBJECT_HEAD_INIT */
+#include <deemon/type.h>    /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_F*, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
+
+#include <hybrid/int128.h> /* __HYBRID_INT128_INIT8N, __HYBRID_UINT128_INIT8N */
+
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* intN_t, uintN_t */
 
 #if (defined(DEFINE_CVoid_Type) +         \
      defined(DEFINE_CChar_Type) +         \

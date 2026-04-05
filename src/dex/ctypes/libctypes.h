@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>     /* DeeObject_*, DeeSlab_GetFree, DeeSlab_GetMalloc */
 #include <deemon/mro.h>       /* Dee_attrhint, Dee_attriter */
-#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, OBJECT_HEAD, OBJECT_HEAD_EX */
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_EX, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, OBJECT_HEAD, OBJECT_HEAD_EX */
 #include <deemon/string.h>    /* Dee_wchar_t */
 #include <deemon/type.h>      /* DeeObject_*, DeeType_*, OPERATOR_EXTENDED */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */

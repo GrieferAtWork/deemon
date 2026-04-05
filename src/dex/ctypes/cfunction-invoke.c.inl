@@ -45,7 +45,7 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__ */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int32_t, uintN_t */
 
 #undef byte_t
