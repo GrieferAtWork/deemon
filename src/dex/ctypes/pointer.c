@@ -665,7 +665,12 @@ PRIVATE struct type_method tpconst lvalue_methods[] = {
 PRIVATE struct type_getset tpconst lvalue_getsets[] = {
 	TYPE_GETTER_AB("ref", &lvalue_ref,
 	               "->?Gpointer\n"
-	               "Returns a pointer for the object referred to by @this ?GLValue"),
+	               "Returns a pointer for the object referred to by @this ?GLValue\n"
+	               "WARNING: Use ?#ptr instead; this property becomes deprecated "
+	               /**/ "after #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
+	TYPE_GETTER_AB("ptr", &lvalue_ref,
+	               "->?GPointer\n"
+	               "Forward-compatibility with #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
 	TYPE_GETTER_AB_F("sizeof", &lvalue_sizeof, METHOD_FNOREFESCAPE,
 	                 "->?Dint\n"
 	                 "Returns the size of the structured objected pointed to by @this ?GLValue"),

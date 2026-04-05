@@ -92,7 +92,7 @@ from "deemon" import __hasattr__ = "hasattr";
 
 function __type__(__x) -> type __x;
 function __not__(__x) -> !__x; /* The not-operator has been removed. */
-function __ref__(__x) -> __x.operator . ("ref");
+function __ref__(__x) -> __x.operator . ("ptr");
 function __deref__(__x) -> __x.operator . ("ind");
 function __incpost__(__x) -> __x++;
 function __decpost__(__x) -> __x--;

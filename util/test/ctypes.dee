@@ -21,10 +21,6 @@
 
 import deemon;
 import * from ctypes;
-import ctypes;
-
-local CONFIG_EXPERIMENTAL_REWORKED_CTYPES =
-	deemon.hasattr(ctypes, "CType");
 
 function assertMinMax(sT: StructuredType, uT: StructuredType, bits: deemon.int) {
 	assert sizeof(sT) == bits / 8;

@@ -29,6 +29,6 @@ assert type(val) === uint32_t;
 assert type(val).tobytes(val) == bytes;
 assert type(val).tobytes(val, bytes);
 assert val.tobytes() == bytes;
-assert val.tobytes(bytes);
+assert val.tobytes(bytes) === bytes;
 assert deemon.int.frombytes(bytes) == 0x11223344;
 assert (int)val == 0x11223344;

@@ -1375,7 +1375,12 @@ PRIVATE struct type_getset tpconst struct_getsets[] = {
 	                 "Returns the alignment of @this ?GStructured object"),
 	TYPE_GETTER_AB("ref", &struct_ref,
 	               "->?GPointer\n"
-	               "Returns a pointer to @this ?GStructured object"),
+	               "Returns a pointer to @this ?GStructured object\n"
+	               "WARNING: Use ?#ptr instead; this property becomes deprecated "
+	               /**/ "after #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
+	TYPE_GETTER_AB("ptr", &struct_ref,
+	               "->?GPointer\n"
+	               "Forward-compatibility with #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
 	TYPE_GETSET_END
 };
 

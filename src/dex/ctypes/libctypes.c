@@ -30,6 +30,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Free */
+#include <deemon/bool.h>     /* Dee_Free */
 #include <deemon/arg.h>       /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bytes.h>     /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
@@ -670,6 +671,7 @@ DEX_BEGIN
 DEX_MEMBER_F_NODOC("CType", &CType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("StructuredType", &CType_Type, Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+DEX_MEMBER_F_NODOC("CType", &DeeSType_Type, Dee_DEXSYM_READONLY), /* Forward compatibility */
 DEX_MEMBER_F_NODOC("StructuredType", &DeeSType_Type, Dee_DEXSYM_READONLY),
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("PointerType", &DeePointerType_Type, Dee_DEXSYM_READONLY),
@@ -681,6 +683,7 @@ DEX_MEMBER_F_NODOC("FunctionType", &DeeCFunctionType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("CObject", CType_AsObject(&AbstractCObject_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Structured", CType_AsObject(&AbstractCObject_Type), Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+DEX_MEMBER_F_NODOC("CObject", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY), /* Forward compatibility */
 DEX_MEMBER_F_NODOC("Structured", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY),
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("Pointer", DeePointerType_AsObject(&DeePointer_Type), Dee_DEXSYM_READONLY),
@@ -1402,6 +1405,12 @@ DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, Dee_DEXSYM_READONLY,
              /**/ "(by which I mean that this function might also return sporadically)\n"
              "This function can be used to form the basis of any other synchronization "
              /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_True, "Will be removed once this becomes mandatory"),
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_False, "For transitioning phase"),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 /* clang-format off */
 DEX_END(

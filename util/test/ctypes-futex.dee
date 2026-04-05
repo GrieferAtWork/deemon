@@ -38,12 +38,12 @@ global state = "init";
 
 local t = Thread(() -> {
 	while (ftx.word == 0)
-		futex_wait(ftx.word.ref, 0);
+		futex_wait(ftx.word.ptr, 0);
 	assert state == "main->thread";
 	assert ftx.word == 1;
 	state = "thread->main";
 	ftx.word = 2;
-	futex_wakeall(ftx.word.ref);
+	futex_wakeall(ftx.word.ptr);
 	return "OK";
 });
 t.start();
@@ -55,11 +55,11 @@ assert state == "main->thread";
 
 /* Signal the thread via the futex */
 ftx.word = 1;
-futex_wakeall(ftx.word.ref);
+futex_wakeall(ftx.word.ptr);
 
 /* Wait for the thread to signal us back. */
 while (ftx.word == 1)
-	futex_wait(ftx.word.ref, 1);
+	futex_wait(ftx.word.ptr, 1);
 assert ftx.word == 2;
 assert state == "thread->main";
 
