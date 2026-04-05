@@ -4388,98 +4388,98 @@ DECL_END
 /* Define built-in types */
 #ifndef __INTELLISENSE__
 #define DEFINE_CVoid_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #define DEFINE_CChar_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CWChar_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CChar16_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CChar32_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBool_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #define DEFINE_CInt8_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CInt16_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CInt32_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CInt64_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CInt128_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #define DEFINE_CUInt8_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUInt16_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUInt32_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUInt64_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUInt128_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #define DEFINE_CBSwapInt16_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapInt32_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapInt64_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapInt128_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapUInt16_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapUInt32_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapUInt64_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CBSwapUInt128_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #define DEFINE_CFloat_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CDouble_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CLDouble_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
 #define DEFINE_CSChar_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUChar_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
 #define DEFINE_CShort_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUShort_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
 #define DEFINE_CInt_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CUInt_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 #define DEFINE_CLong_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CULong_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
 #define DEFINE_CLLong_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #define DEFINE_CULLong_Type
-#include "ctypes-builtins-impl.c.inl"
+#include "ctypes-builtin.c.inl"
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 #endif /* !__INTELLISENSE__ */
 
