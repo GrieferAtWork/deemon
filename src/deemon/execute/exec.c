@@ -850,7 +850,7 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 #endif /* CONFIG_HOST_WINDOWS */
 			/* Log all GC objects still alive */
 			gc_dump_all_except_dex();
-				
+
 #ifdef CONFIG_TRACE_REFCHANGES
 			Dee_DPRINT("\n\n\nReference Leaks:\n");
 			Dee_DumpReferenceLeaks();

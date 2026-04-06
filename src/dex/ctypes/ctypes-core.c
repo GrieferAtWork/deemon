@@ -257,6 +257,9 @@ ctype_frombytes(CType *self, size_t argc, DeeObject *const *argv) {
 		goto err_bad_size;
 	if unlikely(type_size > data_size)
 		goto err_bad_size;
+	ASSERTF(!CType_IsCFunctionType(self),
+	        "Function types should have sizeof=SIZE_MAX, which "
+	        "should have been caught by 'type_size > data_size'");
 	result = CType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
@@ -2706,42 +2709,261 @@ dummy_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
 	(void)argv;
 	return_none;
 }
+
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+
+PRIVATE void
+cfunction_closure_proc(ffi_cif *cif,
+                       void *return_storage,
+                       union argument **argv,
+                       CFunction *self) {
+	(void)cif;
+	(void)return_storage;
+	(void)argv;
+	(void)self;
+	Dee_DPRINTF("TODO: cfunction_closure_proc\n");
+}
+
+/* Construct a new C-function that invokes "cb" when called. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cfunction_init_impl(CFunction *__restrict self, DeeObject *cb) {
+	CFunctionType *prototype = Dee_TYPE(self);
+	ffi_status error;
+	if ((unsigned int)prototype->cft_cc & CC_FVARARGS) {
+		DeeError_Throwf(&DeeError_TypeError,
+		                "Cannot construct closure for varargs function type: %k",
+		                prototype);
+		goto err;
+	}
+
+again_alloc__cf_write:
+	self->cf_write = (ffi_closure *)ffi_closure_alloc(sizeof(ffi_closure),
+	                                                  &self->cf_func.cff_vptr);
+	if unlikely(!self->cf_write) {
+		if (Dee_ReleaseSystemMemory())
+			goto again_alloc__cf_write;
+		goto err;
+	}
+
+	/* Prep another CIF object */
+#ifndef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
+	error = ffi_prep_cif(&self->cf_cif,
+	                     (ffi_abi)((unsigned int)prototype->cft_cc &
+	                               (unsigned int)CC_MTYPE),
+	                     (unsigned int)prototype->cft_argc,
+	                     prototype->cft_ffi_return_type,
+	                     (ffi_type **)prototype->cft_ffi_arg_type_v);
+	if (error != FFI_OK) {
+		DeeError_Throwf(&DeeError_RuntimeError,
+		                "Failed to create function closure (ffi_prep_cif: %d)",
+		                (int)error);
+		goto err_write;
+	}
+#define LOCAL_used_cif (&self->cf_cif)
+#else /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI */
+#define LOCAL_used_cif (&prototype->cft_ffi_cif)
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI */
+
+#if 1
+	error = ffi_prep_closure_loc(self->cf_write, LOCAL_used_cif,
+	                             (void (*)(ffi_cif *, void *, void **, void *))&cfunction_closure_proc,
+	                             self, self->cf_func.cff_vptr);
+#else
+	error = ffi_prep_closure(self->cf_write, LOCAL_used_cif,
+	                         (void (*)(ffi_cif *, void *, void **, void *))&cfunction_closure_proc,
+	                         self);
+#endif
+	if (error != FFI_OK) {
+		DeeError_Throwf(&DeeError_RuntimeError,
+		                "Failed to create function closure (ffi_prep_closure: %d)",
+		                (int)error);
+		goto err_write;
+	}
+	Dee_Incref(cb);
+	self->cf_cb = cb;
+	return 0;
+#undef LOCAL_used_cif
+err_write:
+	ffi_closure_free(self->cf_write);
+err:
+	return -1;
+}
+
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "callback" });]]]*/
+#ifndef DEFINED_kwlist__callback
+#define DEFINED_kwlist__callback
+PRIVATE DEFINE_KWLIST(kwlist__callback, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEND });
+#endif /* !DEFINED_kwlist__callback */
+/*[[[end]]]*/
+
+
+#define cfunction_init_kw_PTR &cfunction_init_kw
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cfunction_init_kw(CFunction *__restrict self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *callback;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__callback,
+	                          "o:Function", &callback))
+		goto err;
+	return cfunction_init_impl(self, callback);
+err:
+	return -1;
+}
+
+#define cfunction_fini_PTR &cfunction_fini
+PRIVATE NONNULL((1)) void DCALL
+cfunction_fini(CFunction *__restrict self) {
+	ffi_closure_free(self->cf_write);
+	Dee_Decref(self->cf_cb);
+}
+
+#define cfunction_visit_PTR &cfunction_visit
+PRIVATE NONNULL((1, 2)) void DCALL
+cfunction_visit(CFunction *__restrict self, Dee_visit_t proc, void *arg) {
+	Dee_Visit(self->cf_cb);
+}
+
+#define cfunction_print_PTR &cfunction_print
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cfunction_print(CFunction *__restrict self,
+                Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<closure %k: %k>" PRFxPTR,
+	                        Dee_TYPE(self), self->cf_cb);
+}
+
+#define cfunction_printrepr_PTR &cfunction_printrepr
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cfunction_printrepr(CFunction *__restrict self,
+                    Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%r(callback: %r)",
+	                        Dee_TYPE(self), self->cf_cb);
+}
+
+#define cfunction_call_PTR &cfunction_call_op
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cfunction_call_op(CFunction *__restrict self, size_t argc, DeeObject *const *argv) {
+	CFunctionType *tp_self = Dee_TYPE(self);
+	return (*tp_self->cft_call)(tp_self, CFunction_Func(self), argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
+cfunction_getptr(CFunction *__restrict self) {
+	DREF CPointerType *result_type;
+	DREF CPointer *result = CPointer_Alloc();
+	if unlikely(!result)
+		goto err;
+	result_type = CPointerType_Of(CFunctionType_AsCType(Dee_TYPE(self)));
+	if unlikely(!result_type)
+		goto err_r;
+	Dee_Incref(self);
+	result->cp_owner = Dee_AsObject(self);
+	result->cp_value.pfunc = CFunction_Func(self);
+	CPointer_InitInherited(result, result_type);
+	return result;
+err_r:
+	CPointer_Free(result);
+err:
+	return NULL;
+}
+
+#define cfunction_getsets cfunction_getsets
+PRIVATE struct type_getset tpconst cfunction_getsets[] = {
+	TYPE_GETTER_AB_F("ptr", &cfunction_getptr, METHOD_FNOREFESCAPE,
+	                 "->?GPointer\n"
+	                 "Returns a function pointer for this c-function"),
+	TYPE_GETSET_END
+};
+
+#define cfunction_doc_PTR cfunction_doc
+DOC_DEF(cfunction_doc,
+        "(callback:?DCallable)\n"
+        "Construct a new C closure that calls forward to @callback");
+
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 #endif /* !CONFIG_NO_CFUNCTION */
+
+#ifndef cfunction_fini_PTR
+#define cfunction_fini_PTR NULL
+#endif /* !cfunction_fini_PTR */
+#ifndef cfunction_visit_PTR
+#define cfunction_visit_PTR NULL
+#endif /* !cfunction_visit_PTR */
+#ifndef cfunction_getsets
+#define cfunction_getsets NULL
+#endif /* !cfunction_getsets */
+#ifndef cfunction_init_kw_PTR
+#define cfunction_init_kw_PTR NULL
+#endif /* !cfunction_init_kw_PTR */
+#ifndef cfunction_print_PTR
+#define cfunction_print_PTR NULL
+#endif /* !cfunction_print_PTR */
+#ifndef cfunction_printrepr_PTR
+#define cfunction_printrepr_PTR NULL
+#endif /* !cfunction_printrepr_PTR */
+#ifndef cfunction_call_PTR
+#define cfunction_call_PTR NULL
+#endif /* !cfunction_call_PTR */
+#ifndef cfunction_doc_PTR
+#define cfunction_doc_PTR NULL
+#endif /* !cfunction_doc_PTR */
+
 
 INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 	/* .cst_base = */ {
 		/* .ct_base = */ {
 			OBJECT_HEAD_INIT(&CFunctionType_Type),
 			/* .tp_name     = */ "Function",
-			/* .tp_doc      = */ NULL,
+			/* .tp_doc      = */ cfunction_doc_PTR,
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY,
+#else /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 			/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FMOVEANY | TP_FVARIABLE,
+#endif /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ CType_AsType(&AbstractCObject_Type),
 			/* .tp_init = */ {
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+				Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+					/* T:              */ CFunction,
+					/* tp_ctor:        */ NULL,
+					/* tp_copy_ctor:   */ NULL,
+					/* tp_any_ctor:    */ NULL,
+					/* tp_any_ctor_kw: */ cfunction_init_kw_PTR,
+					/* tp_serialize:   */ NULL
+				),
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define PTR_cfunction_tp_alloc DeeSlab_GetMalloc(sizeof(CFunction), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CFunction))
+#define PTR_cfunction_tp_free  DeeSlab_GetFree(sizeof(CFunction), NULL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#define PTR_cfunction_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CFunction)
+#define PTR_cfunction_tp_free  NULL
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#else /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 				Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 					/* tp_ctor:        */ NULL,
 					/* tp_copy_ctor:   */ NULL,
 					/* tp_any_ctor:    */ NULL,
-					/* tp_any_ctor_kw: */ NULL,
+					/* tp_any_ctor_kw: */ cfunction_init_kw_PTR,
 					/* tp_serialize:   */ NULL,
 					/* tp_free:        */ NULL
 				),
-				/* .tp_dtor        = */ NULL,
+#endif /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
+				/* .tp_dtor        = */ (void (DCALL *)(DeeObject *))cfunction_fini_PTR,
 				/* .tp_assign      = */ NULL,
 				/* .tp_move_assign = */ NULL
 			},
 			/* .tp_cast = */ {
 				/* .tp_str       = */ NULL,
 				/* .tp_repr      = */ NULL,
-				/* .tp_bool      = */ (int (DCALL *)(DeeObject *))&cobject_bool,
-				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_print,
-				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&cobject_printrepr,
+				/* .tp_bool      = */ NULL,
+				/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))cfunction_print_PTR,
+				/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))cfunction_printrepr_PTR,
 			},
-			/* .tp_visit         = */ NULL,
+			/* .tp_visit         = */ (void (DCALL *)(DeeObject *, Dee_visit_t, void *))cfunction_visit_PTR,
 			/* .tp_gc            = */ NULL,
-			/* .tp_math          = */ &cobject_math,
-			/* .tp_cmp           = */ &cobject_cmp,
+			/* .tp_math          = */ NULL,
+			/* .tp_cmp           = */ NULL,
 			/* .tp_seq           = */ NULL,
 			/* .tp_iter_next     = */ NULL,
 			/* .tp_iterator      = */ NULL,
@@ -2749,13 +2971,13 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 			/* .tp_with          = */ NULL,
 			/* .tp_buffer        = */ NULL,
 			/* .tp_methods       = */ NULL,
-			/* .tp_getsets       = */ NULL,
+			/* .tp_getsets       = */ cfunction_getsets,
 			/* .tp_members       = */ NULL,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL,
 			/* .tp_method_hints  = */ NULL,
-			/* .tp_call          = */ NULL, /* Technically, this'd need to be present, but that wouldn't make sense (only pointers/lvalues for function types are callable!) */
+			/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))cfunction_call_PTR,
 			/* .tp_callable      = */ NULL,
 			/* .tp_mro           = */ cfunction_mro
 		},
@@ -2763,7 +2985,7 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 			/* ct_sizeof:    */ (size_t)-1,
 			/* ct_alignof:   */ 1,
 			/* ct_operators: */ &cvoid_operators,
-			/* ct_ffitype:   */ &ffi_type_void
+			/* ct_ffitype:   */ &ffi_type_pointer
 		)
 	},
 #ifndef CONFIG_NO_CFUNCTION
@@ -2826,6 +3048,14 @@ CFunctionType_New(CType *__restrict return_type,
 	size_t i;
 	DREF CFunctionType *result;
 	ffi_status error;
+	if (CType_IsCFunctionType(return_type)) {
+		DeeError_Throwf(&DeeError_TypeError,
+		                "Cannot construct function type returning another "
+		                "function %k (did you mean to return a function pointer?)",
+		                return_type);
+		goto err;
+	}
+
 	result = (DREF CFunctionType *)DeeGCObject_Callocc(offsetof(CFunctionType, cft_argv),
 	                                                   argc, sizeof(DREF CType *));
 	if unlikely(!result)
@@ -2839,7 +3069,15 @@ CFunctionType_New(CType *__restrict return_type,
 	if unlikely(!result->cft_ffi_arg_type_v)
 		goto err_r;
 	for (i = 0; i < argc; ++i) {
-		ffi_type *tp = CType_GetFFIType(argv[i]);
+		ffi_type *tp;
+		if (CType_IsCFunctionType(argv[i])) {
+			DeeError_Throwf(&DeeError_TypeError,
+			                "Cannot construct function type with argument %" PRFuSIZ " being "
+			                "another function %k (did you mean to take a function pointer instead?)",
+			                i, argv[i]);
+			goto err;
+		}
+		tp = CType_GetFFIType(argv[i]);
 		if unlikely(!tp)
 			goto err_r_ffi_typev;
 		((ffi_type **)result->cft_ffi_arg_type_v)[i] = tp;
@@ -2856,7 +3094,7 @@ CFunctionType_New(CType *__restrict return_type,
 	DBG_ALIGNMENT_ENABLE();
 	if (error != FFI_OK) {
 		DeeError_Throwf(&DeeError_RuntimeError,
-		                "Failed to create function closure (%d)",
+		                "Failed to create function CIF (%d)",
 		                (int)error);
 		goto err_r_ffi_typev;
 	}
@@ -2884,7 +3122,13 @@ CFunctionType_New(CType *__restrict return_type,
 	Dee_Incref(CType_AsType(return_type));
 	result->cft_return = return_type; /* Inherit reference. */
 	result->cft_base.ct_base.tp_name  = "Function";
-	result->cft_base.ct_base.tp_flags = /*TP_FINHERITCTOR | */ TP_FHEAP | TP_FVARIABLE;
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+	result->cft_base.ct_base.tp_flags = TP_FINHERITCTOR | TP_FHEAP;
+	result->cft_base.ct_base.tp_init.tp_alloc.tp_alloc = PTR_cfunction_tp_alloc;
+	result->cft_base.ct_base.tp_init.tp_alloc.tp_free  = PTR_cfunction_tp_free;
+#else /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
+	result->cft_base.ct_base.tp_flags = TP_FHEAP | TP_FVARIABLE;
+#endif /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 	Dee_Incref(CFunctionType_AsType(&AbstractCFunction_Type));
 	result->cft_base.ct_base.tp_base  = CFunctionType_AsType(&AbstractCFunction_Type); /* Inherit reference. */
 	result->cft_base.ct_base.tp_mro   = cfunction_subclass_mro;
@@ -3417,8 +3661,13 @@ PRIVATE DEFINE_KWLIST(kwlist__value, { KEX("value", 0xd9093f6e, 0x69e7413ae0c884
 #endif /* !DEFINED_kwlist__value */
 /*[[[end]]]*/
 
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+#define cpointer_doc_params "value:?X8?N?GPointer?GFunction?Dstring?DBytes?GLValue?GArray?Dint"
+#else /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
+#define cpointer_doc_params "value:?X7?N?GPointer?Dstring?DBytes?GLValue?GArray?Dint"
+#endif /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 DOC_DEF(cpointer_doc,
-        "(value:?X7?N?GPointer?Dstring?DBytes?GLValue?GArray?Dint)\n"
+        "(" cpointer_doc_params ")\n"
         "Re-interpret @value as a pointer of @this typing.\n"
         "#L-"
         "{When @value is an L-Value, it must be an L-Value-to-pointer, and the referenced pointer is cast"
@@ -3446,6 +3695,13 @@ cpointer_init_kw(CPointer *__restrict self, size_t argc,
 		self->cp_owner = value_ob->cp_owner;
 		self->cp_value = value_ob->cp_value;
 		Dee_XIncref(self->cp_owner);
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+	} else if (Object_IsCFunction(value)) {
+		CFunction *value_ob = Object_AsCFunction(value);
+		self->cp_value.pfunc = CFunction_Func(value_ob);
+		Dee_Incref(value_ob);
+		self->cp_owner = Dee_AsObject(value_ob);
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 	} else if (DeeString_Check(value)) {
 		CType *pointer_base = CPointerType_PointedToType(Dee_TYPE(self));
 		if (pointer_base == &CChar_Type) {

@@ -594,6 +594,20 @@ null_pointer:
 		goto nope;
 	}
 
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+	if (Object_IsCFunction(self)) {
+		CFunction *me = Object_AsCFunction(self);
+		CFunctionType *base = Dee_TYPE(me);
+		/* A pointer of the same type, or a void-pointer. */
+		if (CFunctionType_AsCType(base) == pointer_base ||
+		    pointer_base == &CVoid_Type) {
+			result->pfunc = CFunction_Func(me);
+			return 0;
+		}
+		goto nope;
+	}
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
+
 	/* int(0) also counts as a NULL-pointer. */
 	if (DeeInt_Check(self)) {
 		if (DeeInt_IsZero(self))

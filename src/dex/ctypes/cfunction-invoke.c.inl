@@ -265,6 +265,12 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 				*dee_va_ffi_types = &ffi_type_pointer;
 				iter->p           = (void *)DeeString_STR(dee_va_arg);
 				*argp_iter        = (void *)iter;
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+			} else if (Object_IsCFunction(dee_va_type)) {
+				*dee_va_ffi_types = &ffi_type_pointer;
+				iter->p           = Object_AsCFunction(dee_va_arg)->cf_func.cff_vptr;
+				*argp_iter        = (void *)iter;
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 			} else if (DeePointerType_Check(dee_va_type)) {
 				/* Pointer argument --> cast to 'void *' */
 				*dee_va_ffi_types = &ffi_type_pointer;
@@ -421,6 +427,8 @@ def_var_data:
 			goto err_wbuf;
 
 		/* Construct a new C-object that is returned as result. */
+		ASSERTF(!CType_IsCFunctionType(return_type),
+		        "This should have been prevented by the check in 'CFunctionType_New()'");
 		if (CType_IsCPointerType(return_type) || CType_IsCLValueType(return_type)) {
 			/* Must initialize the extra "owner" field (as "NULL") */
 			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));

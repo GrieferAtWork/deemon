@@ -443,6 +443,16 @@ INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
 
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+#undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
+#ifndef CONFIG_NO_CFUNCTION
+#if 0 /* TODO: Finish implementation */
+#define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+#define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
+#endif
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
 typedef struct ctype_object CType; /* Also doubles as the RValue type */
 typedef struct carray_type_object CArrayType;
 typedef struct cstruct_type_object CStructType;
@@ -453,7 +463,9 @@ typedef struct clvalue_type_object CLValueType;
 typedef struct cobject_object CObject;
 typedef struct carray_object CArray;
 typedef struct cstruct_object CStruct;
-/*typedef struct cfunction_object CFunction;*/
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+typedef struct cfunction_object CFunction;
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 typedef struct cpointer_object CPointer;
 typedef struct clvalue_object CLValue;
 
@@ -1070,15 +1082,34 @@ CFunctionType_Of(CType *__restrict return_type,
                  ctypes_cc_t calling_convention,
                  size_t argc, CType *const *argv);
 
-#if 0 /* Wouldn't make sense... TODO: Why not have this to implement user-code closures? */
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 struct cfunction_object {
 	OBJECT_HEAD_EX(CFunctionType)
-	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, cf_instruction); /* Host instruction... */
+	union {
+		Dee_funptr_t cff_func; /* [1..1][const] Function pointer (the prototype of this matches "CFunctionType") */
+		void        *cff_vptr; /* [1..1][const] Used internally */
+	} cf_func;
+	DREF DeeObject  *cf_cb;    /* [1..1][const] Object that gets invoked by `cff_func' */
+	ffi_closure     *cf_write; /* [1..1][owned] The writable callback function pointer. */
+#ifndef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
+	ffi_cif          cf_cif;   /* cif object to call the function. */
+#endif /* !CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI */
 };
+
+#define CFunction_Func(self) (self)->cf_func.cff_func
 
 #define Object_AsCFunction(self) Dee_REQUIRES_OBJECT(CFunction, self)
 #define Object_IsCFunction(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CFunctionType_Type)
-#endif
+
+#define CFunction_Alloc()                 DeeObject_MALLOC(CFunction)
+#define CFunction_Free(p)                 DeeObject_FREE(Dee_REQUIRES_TYPE(CFunction *, p))
+#define CFunction_Init(self, tp)          DeeObject_InitHeapEx(self, tp, CFunctionType_AsType)          /* All function types are heap-types */
+#define CFunction_InitInherited(self, tp) DeeObject_InitHeapInheritedEx(self, tp, CFunctionType_AsType) /* All function types are heap-types */
+
+/* Construct a new C-function that invokes "cb" when called. */
+INTDEF WUNUSED NONNULL((1, 2)) DREF CFunction *DCALL
+CFunction_New(CFunctionType *prototype, DeeObject *cb);
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 
 /* Interact with Function objects */
 #ifndef CONFIG_NO_CFUNCTION

@@ -242,6 +242,9 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL c_atomic_atomic_cmpx
 		}
 	}, goto err_result_obj);
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+	ASSERTF(!CType_IsCFunctionType(basetype),
+	        "Should have been prevented because function have sizeof=SIZE_MAX, and sizes "
+	        "other than 1/2/4/8 should have been filtered by 'get_atomic_operand'");
 	if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {
 		/* Must initialize the extra "owner" field (as "NULL") */
 		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
@@ -297,6 +300,9 @@ err:
 			default: __builtin_unreachable();                                                             \
 			}                                                                                             \
 		}, goto err_result_obj);                                                                          \
+		ASSERTF(!CType_IsCFunctionType(basetype),                                                         \
+		        "Should have been prevented because function have sizeof=SIZE_MAX, and sizes "            \
+		        "other than 1/2/4/8 should have been filtered by 'get_atomic_operand'");                  \
 		if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {                            \
 			/* Must initialize the extra "owner" field (as "NULL") */                                     \
 			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));                   \
@@ -419,6 +425,10 @@ CTYPES_DEFINE_ATOMIC_BINOP_VOID(c_atomic_atomic_write, "atomic_write", atomic_wr
 			default: __builtin_unreachable();                                            \
 			}                                                                            \
 		}, goto err_result_obj);                                                         \
+		ASSERTF(!CType_IsCFunctionType(basetype),                                        \
+		        "Should have been prevented because function have sizeof=SIZE_MAX, "     \
+		        "and sizes other than 1/2/4/8 should have been filtered by "             \
+		        "'get_atomic_operand'");                                                 \
 		if (CType_IsCPointerType(basetype) || CType_IsCLValueType(basetype)) {           \
 			/* Must initialize the extra "owner" field (as "NULL") */                    \
 			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));  \
