@@ -793,6 +793,7 @@ INTERN CType AbstractCObject_Type = {
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
 			/* .tp_move_assign = */ NULL
+			/* TODO: Custom "tp_new" to satisfy extended type alignments */
 		},
 		/* .tp_cast = */ {
 			/* .tp_str       = */ NULL,
@@ -1503,11 +1504,80 @@ PRIVATE struct type_member tpconst cstructtype_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF CStructType *DCALL
+cstructtype_class_of(DeeTypeObject *__restrict UNUSED(tp_self),
+                     size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	unsigned int flags;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("of", params: """
+	fields:?S?X2?T3?Dint?Dstring?DType?T2?Dint?GStructType,
+	size_t alignment = 1,
+", docStringPrefix: "cstructtype_class", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(of_kwlist, { KEX("fields", 0x4de26e52, 0x85564d5853cce154), KEX("alignment", 0xe24a3d8d, 0x3923d5964b5f4177), KEND });
+#define cstructtype_class_of_params "fields:?S?X2?T3?Dint?Dstring?DType?T2?Dint?GStructType,alignment=!1"
+	struct {
+		DeeObject *fields;
+		size_t alignment;
+	} args;
+	args.alignment = 1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, of_kwlist, "o|" UNPuSIZ ":of", &args))
+		goto err;
+/*[[[end]]]*/
+	/* Extended constructor to allow custom struct types:
+	 * - allowing you to manually specify offsets of fields
+	 * - allowing you to set a custom alignment
+	 * Can just use `struct cstruct_builder' to implement this! */
+	return CStructType_OfExtended(args.fields, args.alignment);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst cstructtype_class_methods[] = {
+	TYPE_KWMETHOD_F("of", &cstructtype_class_of, METHOD_FNOREFESCAPE,
+	                "(" cstructtype_class_of_params ")->?.\n"
+	                "Construct a custom struct type containing the "
+	                /**/ "specified fields at the specified offsets:\n"
+	                "${"
+	                /**/ "local WeirdStruct = struct.of({\n"
+	                /**/ "	{ 0, \"x\", le32 },\n"
+	                /**/ "	{ 1, \"y\", le32 },\n"
+	                /**/ "});\n"
+	                /**/ "local instance = WeirdStruct();\n"
+	                /**/ "instance.x = 0x11223344;\n"
+	                /**/ "/* HINT: With `be32', this'd be `0x22334400' */\n"
+	                /**/ "assert instance.y == 0x112233;"
+	                "}"),
+	TYPE_METHOD_END
+};
+
 PRIVATE WUNUSED DREF CStructType *DCALL
-cstructtype_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *fields;
-	DeeArg_Unpack1(err, argc, argv, "StructType", &fields);
-	return CStructType_Of(fields, CSTRUCTTYPE_F_NORMAL);
+cstructtype_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	unsigned int flags;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("StructType", params: """
+	fields:?S?X2?T2?Dstring?DType?GStructType,
+	bool union = false,
+	bool packed = false,
+	size_t alignment = 1,
+", docStringPrefix: "cstructtype", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(StructType_kwlist, { KEX("fields", 0x4de26e52, 0x85564d5853cce154), KEX("union", 0x23b88b9b, 0x3b416e7d690babb2), KEX("packed", 0xfb4a9ef3, 0x3cfc3e48b37361b5), KEX("alignment", 0xe24a3d8d, 0x3923d5964b5f4177), KEND });
+#define cstructtype_StructType_params "fields:?S?X2?T2?Dstring?DType?GStructType,union=!f,packed=!f,alignment=!1"
+	struct {
+		DeeObject *fields;
+		bool union_;
+		bool packed_;
+		size_t alignment;
+	} args;
+	args.union_ = false;
+	args.packed_ = false;
+	args.alignment = 1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, StructType_kwlist, "o|bb" UNPuSIZ ":StructType", &args))
+		goto err;
+/*[[[end]]]*/
+	flags = CSTRUCTTYPE_F_NORMAL;
+	if (args.union_)
+		flags |= CSTRUCTTYPE_F_UNION;
+	if (args.packed_)
+		flags |= CSTRUCTTYPE_F_PACKED;
+	return CStructType_Of(args.fields, flags, args.alignment);
 err:
 	return NULL;
 }
@@ -1515,7 +1585,12 @@ err:
 INTERN DeeTypeObject CStructType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "StructType",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" cstructtype_StructType_params ")\n"
+	                         "#palignment{Minimum alignment of returned struct (if non-empty)}"
+	                         "Construct a new struct type with the given fields. The given sequence "
+	                         /**/ "may also contain instances of other ?. types, which will then be "
+	                         /**/ "inlined into the returned struct in a way that mirrors anonymous "
+	                         /**/ "struct/union types in regular C"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FDEEPIMMUTABLE | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1524,8 +1599,8 @@ INTERN DeeTypeObject CStructType_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_any_ctor:    */ &cstructtype_init,
-			/* tp_any_ctor_kw: */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ &cstructtype_init_kw,
 			/* tp_serialize:   */ NULL,
 			/* tp_free:        */ NULL
 		),
@@ -1551,7 +1626,7 @@ INTERN DeeTypeObject CStructType_Type = {
 	/* .tp_methods       = */ cstructtype_methods,
 	/* .tp_getsets       = */ cstructtype_getsets,
 	/* .tp_members       = */ cstructtype_members,
-	/* .tp_class_methods = */ NULL,
+	/* .tp_class_methods = */ cstructtype_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
@@ -2209,6 +2284,31 @@ cstruct_of_data_maybe_align(struct cstruct_of_data *__restrict self, CType *alig
 	}
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cstruct_builder_addfield_from_struct(struct cstruct_builder *__restrict self,
+                                     CStructType *__restrict in,
+                                     ptrdiff_t base_offset) {
+	Dee_hash_t i;
+
+	/* Inline all struct fields */
+	for (i = 0; i <= in->cst_fmsk; ++i) {
+		struct cstruct_field *field = &in->cst_fvec[i];
+		if (field->csf_name) {
+			ptrdiff_t field_offset = base_offset + field->csf_offset;
+			ptrdiff_t ignored_offset_after;
+			Dee_Incref(field->csf_name);
+			Dee_Incref(CLValueType_AsType(field->csf_lvtype));
+			if (cstruct_builder_addfield(self, field->csf_name,
+			                             field->csf_lvtype, field_offset,
+			                             &ignored_offset_after, false))
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 cstruct_of_cb(void *arg, DeeObject *elem) {
@@ -2220,7 +2320,6 @@ cstruct_of_cb(void *arg, DeeObject *elem) {
 	 * - (string, CType) */
 	if (Object_IsCStructType(elem)) {
 		/* Add struct as an anonymous field, and inline all fields */
-		Dee_hash_t i;
 		CStructType *in = Object_AsCStructType(elem);
 		DREF CLValueType *in_lvalue = CLValueType_Of(CStructType_AsCType(in));
 		if unlikely(!in_lvalue)
@@ -2231,19 +2330,8 @@ cstruct_of_cb(void *arg, DeeObject *elem) {
 			goto err;
 
 		/* Inline all struct fields */
-		for (i = 0; i <= in->cst_fmsk; ++i) {
-			struct cstruct_field *field = &in->cst_fvec[i];
-			if (field->csf_name) {
-				ptrdiff_t field_offset = data->csod_offset + field->csf_offset;
-				ptrdiff_t ignored_offset_after;
-				Dee_Incref(field->csf_name);
-				Dee_Incref(CLValueType_AsType(field->csf_lvtype));
-				if (cstruct_builder_addfield(&data->csod_builder, field->csf_name,
-				                             field->csf_lvtype, field_offset,
-				                             &ignored_offset_after, false))
-					goto err;
-			}
-		}
+		if (cstruct_builder_addfield_from_struct(&data->csod_builder, in, data->csod_offset))
+			goto err;
 	} else {
 		CType *field_type;
 		DREF CLValueType *field_type_lvalue;
@@ -2288,19 +2376,122 @@ err:
  * should be `{((string, CType) | CStructType)...}'
  * @param: flags: Set of `CSTRUCTTYPE_F_*' */
 INTERN WUNUSED NONNULL((1)) DREF CStructType *DCALL
-CStructType_Of(DeeObject *__restrict initializer, unsigned int flags) {
+CStructType_Of(DeeObject *__restrict initializer,
+               unsigned int flags, size_t min_alignment) {
 	struct cstruct_of_data data;
 	cstruct_builder_init(&data.csod_builder);
 	data.csod_flags  = flags;
 	data.csod_offset = 0;
 	if unlikely(DeeObject_Foreach(initializer, &cstruct_of_cb, &data) < 0)
 		goto err_builder;
+	/* Force 1-byte alignment when building in packed-mode */
+	if (data.csod_builder.csb_result) {
+		if (data.csod_flags & CSTRUCTTYPE_F_PACKED)
+			data.csod_builder.csb_result->cst_base.ct_alignof = 1;
+		if (data.csod_builder.csb_result->cst_base.ct_alignof < min_alignment)
+			data.csod_builder.csb_result->cst_base.ct_alignof = min_alignment;
+	}
 	return cstruct_builder_pack(&data.csod_builder);
 err_builder:
 	cstruct_builder_fini(&data.csod_builder);
 /*err:*/
 	return NULL;
 }
+
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+cstruct_ofex_cb(void *arg, DeeObject *elem) {
+	struct cstruct_builder *builder = (struct cstruct_builder *)arg;
+	ptrdiff_t field_offset, end_offset;
+	DREF DeeObject *args[3];
+	size_t arg_count;
+	/* Given "elem" must be one of:
+	 * - (int, CStructType)
+	 * - (int, string, CType) */
+	arg_count = DeeObject_InvokeMethodHint(seq_unpack_ex, elem, 2, 3, args);
+	if unlikely(arg_count == (size_t)-1)
+		goto err;
+	ASSERT(arg_count == 2 || arg_count == 3);
+	if (DeeObject_AsPtrdiff(args[0], &field_offset)) {
+		if (arg_count == 3)
+			goto err_args_3;
+		goto err_args_2;
+	}
+	if (arg_count == 2) {
+		/* Add struct as an anonymous field, and inline all fields */
+		CStructType *in;
+		DREF CLValueType *in_lvalue;
+		if (!Object_IsCStructType(args[1])) {
+			DeeObject_TypeAssertFailed(args[1], &CStructType_Type);
+			goto err_args_2;
+		}
+		in = Object_AsCStructType(args[1]);
+		in_lvalue = CLValueType_Of(CStructType_AsCType(in));
+		if unlikely(!in_lvalue)
+			goto err_args_2;
+		if (cstruct_builder_addfield_anon(builder, in_lvalue /* inherited */,
+		                                  field_offset, &end_offset))
+			goto err_args_2;
+		/* Inline all struct fields */
+		if (cstruct_builder_addfield_from_struct(builder, in, field_offset))
+			goto err_args_2;
+		Dee_Decref(args[1]);
+	} else {
+		CType *field_type;
+		DREF CLValueType *field_type_lvalue;
+		if (DeeObject_AssertType(args[1], &DeeString_Type))
+			goto err_args_3;
+		field_type = CType_Of(args[2]);
+		if unlikely(!field_type)
+			goto err_args_3;
+
+		/* Use "field_type" */
+		field_type_lvalue = CLValueType_Of(field_type);
+		if unlikely(!field_type_lvalue)
+			goto err_args_3;
+		Dee_Decref(args[2]);
+		args[2] = CLValueType_AsObject(field_type_lvalue);
+
+		/* Add field. */
+		if (cstruct_builder_addfield(builder,
+		                             (DREF DeeStringObject *)args[1], /* Inherited */
+		                             Object_AsCLValueType(args[2]),   /* Inherited */
+		                             field_offset, &end_offset, true))
+			goto err_args_1;
+	}
+	Dee_Decref(args[0]);
+	return 0;
+err_args_3:
+	Dee_Decref(args[2]);
+err_args_2:
+	Dee_Decref(args[1]);
+err_args_1:
+	Dee_Decref(args[0]);
+err:
+	return -1;
+}
+
+/* Construct a new struct-type from `initializer', which
+ * should be `{((int, string, CType) | (int, CStructType))...}'
+ * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+INTERN WUNUSED NONNULL((1)) DREF CStructType *DCALL
+CStructType_OfExtended(DeeObject *__restrict initializer,
+                       size_t min_alignment) {
+	struct cstruct_builder builder;
+	cstruct_builder_init(&builder);
+	if unlikely(DeeObject_Foreach(initializer, &cstruct_ofex_cb, &builder) < 0)
+		goto err_builder;
+	/* Force 1-byte alignment when building in packed-mode */
+	if (builder.csb_result &&
+	    builder.csb_result->cst_base.ct_alignof < min_alignment)
+		builder.csb_result->cst_base.ct_alignof = min_alignment;
+	return cstruct_builder_pack(&builder);
+err_builder:
+	cstruct_builder_fini(&builder);
+/*err:*/
+	return NULL;
+}
+
 
 
 

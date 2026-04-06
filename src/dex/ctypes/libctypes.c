@@ -412,24 +412,34 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 /*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
-	DeeObject *fields:?S?X2?T2?Dstring?DType?GStructType = !T0;
-""", methodFlags: "METHOD_FCONSTCALL", returnType: "CStructType", docStringPrefix: none);]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields);
+	fields:?S?X2?T2?Dstring?DType?GStructType,
+	bool packed = false,
+	size_t alignment = 1,
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "CStructType");]]]*/
+#define libctypes_union_params "fields:?S?X2?T2?Dstring?DType?GStructType,packed=!f,alignment=!1"
+FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields, bool packed_, size_t alignment);
 PRIVATE WUNUSED DREF CStructType *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *fields;
+		bool packed_;
+		size_t alignment;
 	} args;
-	args.fields = Dee_EmptyTuple;
-	DeeArg_Unpack0Or1(err, argc, argv, "union", &args.fields);
-	return libctypes_union_f_impl(args.fields);
+	args.packed_ = false;
+	args.alignment = 1;
+	if (DeeArg_UnpackStruct(argc, argv, "o|b" UNPuSIZ ":union", &args))
+		goto err;
+	return libctypes_union_f_impl(args.fields, args.packed_, args.alignment);
 err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD(libctypes_union, &libctypes_union_f, METHOD_FCONSTCALL);
-FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields)
+FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(DeeObject *fields, bool packed_, size_t alignment)
 /*[[[end]]]*/
 {
-	return CStructType_Of(fields, CSTRUCTTYPE_F_UNION);
+	unsigned int flags = CSTRUCTTYPE_F_UNION;
+	if (packed_)
+		flags |= CSTRUCTTYPE_F_PACKED;
+	return CStructType_Of(fields, flags, alignment);
 }
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 /*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
@@ -692,9 +702,16 @@ DEX_MEMBER_F_NODOC("Array", DeeArrayType_AsObject(&DeeArray_Type), Dee_DEXSYM_RE
 DEX_MEMBER_F_NODOC("Struct", DeeStructType_AsObject(&DeeStruct_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("struct", &libctypes_struct, Dee_DEXSYM_READONLY),
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
+             "(" libctypes_union_params ")->?GStructType\n"
+             "#palignment{Minimum alignment of returned struct (if non-empty)}"
+             "Convenience alias for ?GStructType's constructor with ${union: true}"),
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
              "(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
              "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType"),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 /* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
  *       These sub-classes behave the same as the original Pointer/LValue-type, except

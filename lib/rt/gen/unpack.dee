@@ -336,6 +336,7 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"do",
 	"class",
 	"struct",
+	"union",
 	"template",
 	"typename",
 	"override",
@@ -352,6 +353,8 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"errno",
 	"FILETIME",
 	"time_t",
+	"packed",
+	"aligned",
 });
 
 function makeIdentifier(name: string): string {

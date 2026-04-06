@@ -22,7 +22,7 @@
 //#define DEFINE_cint16_operators
 //#define DEFINE_cint32_operators
 //#define DEFINE_cint64_operators
-//#define DEFINE_cint128_operators
+#define DEFINE_cint128_operators
 //#define DEFINE_cuint8_operators
 //#define DEFINE_cuint16_operators
 //#define DEFINE_cuint32_operators
@@ -31,7 +31,7 @@
 //#define DEFINE_cint16_bswap_operators
 //#define DEFINE_cint32_bswap_operators
 //#define DEFINE_cint64_bswap_operators
-#define DEFINE_cint128_bswap_operators
+//#define DEFINE_cint128_bswap_operators
 //#define DEFINE_cuint16_bswap_operators
 //#define DEFINE_cuint32_bswap_operators
 //#define DEFINE_cuint64_bswap_operators

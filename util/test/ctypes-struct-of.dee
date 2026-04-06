@@ -1,0 +1,41 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import deemon;
+import ctypes;
+
+if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
+	return;
+
+local WeirdStruct = ctypes.struct.of({
+	{ 0, "x", ctypes.le32 },
+	{ 1, "y", ctypes.le32 },
+});
+
+assert WeirdStruct is ctypes.StructType;
+assert WeirdStruct.offsetof("x") == 0;
+assert WeirdStruct.offsetof("y") == 1;
+assert WeirdStruct.typeof_field("x") == ctypes.le32;
+assert WeirdStruct.typeof_field("y") == ctypes.le32;
+
+local instance = WeirdStruct();
+instance.x = 0x11223344;
+assert instance.y == 0x112233;

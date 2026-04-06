@@ -44,7 +44,7 @@
 #endif /* !CONFIG_NO_CFUNCTION */
 
 /*
- * Experimental feature that fully re-written ctypes to fix
+ * Experimental feature that fully re-writtes ctypes to fix
  * various design-flaws of the original implementation:
  *
  * - Rename "StructuredType" to "CType"
@@ -58,7 +58,7 @@
  *   have an optional, hidden reference to the object into which they point (this
  *   reference is "NULL" when the object is unknown).
  *   This then makes lots of things much safer:
- *   >> local p = (struct { .x = int })(x: 42).x.ptr;
+ *   >> local p = struct({ .x = int })(x: 42).x.ptr;
  *   >> print repr p.ind;       // 42  -- (because the pointer still knowns+references
  *   >>                         //         the underlying struct; in the old ctypes impl,
  *   >>                         //         this dereference used to be undefined and could
@@ -890,10 +890,17 @@ CStructType_FieldByNameStringLenHash(CStructType const *self, char const *name,
  * should be `{((string, CType) | CStructType)...}'
  * @param: flags: Set of `CSTRUCTTYPE_F_*' */
 INTDEF WUNUSED NONNULL((1)) DREF CStructType *DCALL
-CStructType_Of(DeeObject *__restrict initializer, unsigned int flags);
+CStructType_Of(DeeObject *__restrict initializer,
+               unsigned int flags, size_t min_alignment);
 #define CSTRUCTTYPE_F_NORMAL  0x0000 /* No special flags. */
 #define CSTRUCTTYPE_F_PACKED  0x0001 /* Create a packed structure. */
 #define CSTRUCTTYPE_F_UNION   0x0002 /* Create a union. */
+
+/* Construct a new struct-type from `initializer', which
+ * should be `{((int, string, CType) | (int, CStructType))...}'
+ * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+INTDEF WUNUSED NONNULL((1)) DREF CStructType *DCALL
+CStructType_OfExtended(DeeObject *__restrict initializer, size_t min_alignment);
 
 
 INTDEF DeeTypeObject CStructType_Type;   /* == type(ctypes.struct { .x = ctypes.int }) */
@@ -1567,10 +1574,10 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
 #define DeeSTypeObject               CType
 #define DeeSType_AsType              CType_AsType
 #define DeeStruct_Data               CObject_Data
-#define st_sizeof                    ct_sizeof
+#define st_sizeof                    ct_sizeof /* TODO: CType_Sizeof */
 #define DeeLValue_Check              Object_IsCLValue
 #define DeeType_AsLValueType         Type_AsCLValueType
-#define lt_orig                      clt_orig
+#define lt_orig                      clt_orig /* TODO: CLValueType_PointedToType */
 #define lvalue_object                clvalue_object
 #define l_ptr                        cl_value
 #define DeeStructObject              CObject
@@ -1610,7 +1617,7 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
 #define DeeCBool_Type                CBool_Type
 #define DeeStructTypeObject          CStructType
 #define DeeStructType_Type           CStructType_Type
-#define int_newint(v)                Dee_AsObject(CIntN_New(CTYPES_sizeof_int)(v))
+#define int_newint(v)                Dee_AsObject(CInt_New(v))
 #define int_news8(v)                 Dee_AsObject(CInt8_New(v))
 #define int_news16(v)                Dee_AsObject(CInt16_New(v))
 #define int_news32(v)                Dee_AsObject(CInt32_New(v))
