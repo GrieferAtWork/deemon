@@ -2700,6 +2700,23 @@ PRIVATE DeeTypeObject *tpconst cfunction_subclass_mro[] = {
 };
 
 #ifndef CONFIG_NO_CFUNCTION
+union argument {
+	int i;
+	float f;
+	double d;
+	long double ld;
+	unsigned int u;
+	int8_t s8;
+	uint8_t u8;
+	int16_t s16;
+	uint16_t u16;
+	int32_t s32;
+	uint32_t u32;
+	int64_t s64;
+	uint64_t u64;
+	void *p;
+};
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dummy_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
            size_t argc, DeeObject *const *argv) {
@@ -2712,16 +2729,114 @@ dummy_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
 
 #ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 
+/*POC:
+import * from ctypes;
+import rt;
+
+local dCore = ShLib.ofmodule(import("deemon"));
+
+local DeeObject = void;
+local Dee_foreach_t = ssize_t.func("stdcall", void.ptr, DeeObject.ptr);
+local DeeObject_Foreach = (ssize_t(DeeObject.ptr, Dee_foreach_t.ptr, void.ptr).ptr)
+	dCore["DeeObject_Foreach@12"];
+
+
+local cb = Dee_foreach_t(callback: (cookie, object_addr) -> {
+	print "HERE:", repr cookie, repr object_addr;
+	return 0;
+});
+
+local items = { 10, 20, 30 };
+local result = DeeObject_Foreach(rt.ctypes_addrof(items), cb, void.ptr(42));
+print "result:", result;
+*/
 PRIVATE void
 cfunction_closure_proc(ffi_cif *cif,
-                       void *return_storage,
+                       union argument *return_storage,
                        union argument **argv,
                        CFunction *self) {
+	int status;
+	DREF DeeObject *result;
+	CFunctionType *tp_self = Dee_TYPE(self);
+	size_t i, argc = CFunction_ArgumentCount(tp_self);
+	DREF DeeObject **deemon_argv;
 	(void)cif;
-	(void)return_storage;
-	(void)argv;
-	(void)self;
-	Dee_DPRINTF("TODO: cfunction_closure_proc\n");
+	deemon_argv = (DREF DeeObject **)Dee_Mallocac(argc, sizeof(DREF DeeObject *));
+	if unlikely(!deemon_argv)
+		goto err;
+
+	/* Wrap arguments as appropriate instances of C-objects. */
+	for (i = 0; i < argc; ++i) {
+		union argument *arg = argv[i];
+		CType *arg_type = CFunction_ArgumentType(tp_self, i);
+		DREF CObject *deemon_arg = CType_AllocInstance(arg_type);
+		if unlikely(!deemon_arg)
+			goto err_deemon_argv_i;
+		ASSERTF(!CType_IsCFunctionType(arg_type),
+		        "Should have been prevented by the check in CFunctionType_New");
+		if (CType_IsCPointerType(arg_type) || CType_IsCLValueType(arg_type)) {
+			/* Must initialize the extra "owner" field (as "NULL") */
+			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
+			((CPointer *)deemon_arg)->cp_owner = NULL;
+		}
+		memcpy(CObject_Data(deemon_arg), arg, CType_Sizeof(arg_type));
+		CObject_Init(deemon_arg, arg_type);
+		deemon_argv[i] = Dee_AsObject(deemon_arg); /* Inherit reference */
+	}
+
+	/* Invoke callback */
+	result = DeeObject_Call(self->cf_cb, argc, deemon_argv);
+
+	/* Cleanup arguments... */
+	Dee_Decrefv(deemon_argv, argc);
+	Dee_Freea(deemon_argv);
+
+	/* Check for error */
+	if unlikely(!result)
+		goto err;
+
+	/* Transform "result" into the appropriate return value */
+	switch (tp_self->cft_ffi_return_type->type) {
+	case FFI_TYPE_INT: status = DeeObject_AsInt(result, &return_storage->i); break;
+	case FFI_TYPE_FLOAT: status = DeeObject_AsCFloat(result, (CTYPES_float *)&return_storage->f); break;
+	case FFI_TYPE_DOUBLE: status = DeeObject_AsCDouble(result, (CTYPES_double *)&return_storage->d); break;
+#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
+	case FFI_TYPE_LONGDOUBLE: status = DeeObject_AsCLDouble(result, (CTYPES_ldouble *)&return_storage->ld); break;
+#endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
+	case FFI_TYPE_UINT8: status = DeeObject_AsUInt8(result, &return_storage->u8); break;
+	case FFI_TYPE_SINT8: status = DeeObject_AsInt8(result, &return_storage->s8); break;
+	case FFI_TYPE_UINT16: status = DeeObject_AsUInt16(result, &return_storage->u16); break;
+	case FFI_TYPE_SINT16: status = DeeObject_AsInt16(result, &return_storage->s16); break;
+	case FFI_TYPE_UINT32: status = DeeObject_AsUInt32(result, &return_storage->u32); break;
+	case FFI_TYPE_SINT32: status = DeeObject_AsInt32(result, &return_storage->s32); break;
+	case FFI_TYPE_UINT64: status = DeeObject_AsUInt64(result, &return_storage->u64); break;
+	case FFI_TYPE_SINT64: status = DeeObject_AsInt64(result, &return_storage->s64); break;
+#if 0 /* TODO */
+	case FFI_TYPE_STRUCT:
+		status = 0;
+		break;
+#endif
+	case FFI_TYPE_POINTER:
+		/* TODO */
+		status = 0;
+		break;
+	default:
+		bzero(return_storage, tp_self->cft_ffi_return_type->size);
+		status = 0;
+		break;
+	}
+	Dee_Decref(result);
+	if unlikely(status)
+		goto err;
+	return;
+err_deemon_argv_i:
+	Dee_Decrefv(deemon_argv, i);
+/*err_deemon_argv:*/
+	Dee_Freea(deemon_argv);
+err:
+	DeeError_Print("Unhandled error in FFI closure",
+	               Dee_ERROR_PRINT_DOHANDLE);
+	bzero(return_storage, tp_self->cft_ffi_return_type->size);
 }
 
 /* Construct a new C-function that invokes "cb" when called. */
@@ -3007,24 +3122,6 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 
 
 #ifndef CONFIG_NO_CFUNCTION
-union argument {
-	int i;
-	float f;
-	double d;
-	long double ld;
-	unsigned int u;
-	int8_t s8;
-	uint8_t u8;
-	int16_t s16;
-	uint16_t u16;
-	int32_t s32;
-	uint32_t u32;
-	int64_t s64;
-	uint64_t u64;
-	void *p;
-};
-
-
 INTDEF WUNUSED DREF DeeObject *DCALL
 cfunction_call_v(CFunctionType *__restrict tp_self, Dee_funptr_t self,
                  size_t argc, DeeObject *const *argv);
