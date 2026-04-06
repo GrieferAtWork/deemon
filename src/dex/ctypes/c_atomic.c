@@ -88,6 +88,9 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 #endif /* !__OPTIMIZE_SIZE__ */
 	{
 		if (DeeObject_InstanceOf(value, DeeSType_AsType(ob_ptr_orig))) {
+			if (ob_ptr_orig->st_sizeof != 1 && ob_ptr_orig->st_sizeof != 2 &&
+			    ob_ptr_orig->st_sizeof != 4 && ob_ptr_orig->st_sizeof != 8)
+				goto err_bad_size;
 			/* structured-type-derived-from-<ob_ptr_orig> */
 			memcpy(result, DeeStruct_Data(value), ob_ptr_orig->st_sizeof);
 			return 0;
@@ -97,6 +100,9 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 			lv_base = DeeType_AsLValueType(Dee_TYPE(value))->lt_orig;
 			if (DeeType_Extends(DeeSType_AsType(lv_base),
 			                    DeeSType_AsType(ob_ptr_orig))) {
+				if (ob_ptr_orig->st_sizeof != 1 && ob_ptr_orig->st_sizeof != 2 &&
+				    ob_ptr_orig->st_sizeof != 4 && ob_ptr_orig->st_sizeof != 8)
+					goto err_bad_size;
 				/* Lvalue -> structured-type-derived-from-<ob_ptr_orig> */
 				CTYPES_FAULTPROTECT({
 					union pointer result_ptr;
@@ -114,14 +120,15 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 	case 2: error = DeeObject_Get16Bit(value, &result->ao_s16); break;
 	case 4: error = DeeObject_Get32Bit(value, &result->ao_s32); break;
 	case 8: error = DeeObject_Get64Bit(value, &result->ao_s64); break;
-	default:
-		err_bad_atomic_size(ob_ptr_orig->st_sizeof);
-		goto err;
+	default: goto err_bad_size;
 	}
 	if likely(!Dee_INT_ISERR(error))
 		return 0;
 err:
 	return -1;
+err_bad_size:
+	err_bad_atomic_size(ob_ptr_orig->st_sizeof);
+	goto err;
 }
 
 

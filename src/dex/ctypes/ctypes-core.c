@@ -890,7 +890,7 @@ CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index) {
 	DREF CPointerType *item_pointer_type;
 	CArrayType *tp_self = Dee_TYPE(self);
 	union pointer res_cvalue;
-	index *= CArrayType_SizeofPointedToType(tp_self);
+	index *= CArrayType_Stride(tp_self);
 	res_cvalue.ptr = CArray_Items(self);
 	res_cvalue.sint += index;
 	item_pointer_type = CPointerType_Of(CArrayType_PointedToType(tp_self));
@@ -911,7 +911,7 @@ CArray_GetItem(CArray *__restrict self, ptrdiff_t index) {
 	DREF CLValueType *item_lvalue_type;
 	CArrayType *tp_self = Dee_TYPE(self);
 	union pointer res_cvalue;
-	index *= CArrayType_SizeofPointedToType(tp_self);
+	index *= CArrayType_Stride(tp_self);
 	res_cvalue.ptr = CArray_Items(self);
 	res_cvalue.sint += index;
 	item_lvalue_type = CLValueType_Of(CArrayType_PointedToType(tp_self));
@@ -973,8 +973,8 @@ carray_sub(CArray *lhs, DeeObject *rhs) {
 			goto err;
 		}
 		result = lhs_cvalue.uint - rhs_cvalue.uint;
-		if (CArrayType_SizeofPointedToType(tp_self))
-			result /= CArrayType_SizeofPointedToType(tp_self);
+		if (CArrayType_Stride(tp_self))
+			result /= CArrayType_Stride(tp_self);
 		return DeeInt_NewPtrdiff(result);
 	}
 	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue_int))
@@ -1006,9 +1006,8 @@ carray_delitem_index(CArray *__restrict self, size_t index) {
 	CArrayType *tp_self = Dee_TYPE(self);
 	if unlikely(index >= CArrayType_Count(tp_self))
 		goto err_index_oob;
-	index *= CArrayType_SizeofPointedToType(tp_self);
-	bzero((byte_t *)CArray_Items(self) + index,
-	      CArrayType_SizeofPointedToType(tp_self));
+	index *= CArrayType_Stride(tp_self);
+	bzero((byte_t *)CArray_Items(self) + index, CArrayType_SizeofPointedToType(tp_self));
 	return 0;
 err_index_oob:
 	return DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(tp_self));
@@ -1021,7 +1020,7 @@ carray_setitem_index(CArray *__restrict self, size_t index, DeeObject *value) {
 	struct ctype_operators const *item_ops = CType_Operators(item_type);
 	if unlikely(index >= CArrayType_Count(tp_self))
 		goto err_index_oob;
-	index *= CArrayType_SizeofPointedToType(tp_self);
+	index *= CArrayType_Stride(tp_self);
 	return (*item_ops->co_initfrom)(item_type,
 	                                (byte_t *)CArray_Items(self) + index,
 	                                value);
@@ -1222,10 +1221,10 @@ INTERN CArrayType AbstractCArray_Type = {
 			/* ct_ffitype:   */ &ffi_type_void
 		)
 	},
-	/* .cat_item  = */ &AbstractCObject_Type,
-	/* .cat_chain = */ LIST_ENTRY_UNBOUND_INITIALIZER,
-	/* .cat_count = */ 0,
-	/* .cat_isize = */ 0,
+	/* .cat_item   = */ &AbstractCObject_Type,
+	/* .cat_chain  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
+	/* .cat_count  = */ 0,
+	/* .cat_stride = */ 0,
 };
 
 
@@ -1281,9 +1280,9 @@ too_large:
 	 * don't implement array-to-pointer decay! */
 
 	Dee_Incref(CType_AsType(item_type));
-	result->cat_item  = item_type; /* Inherit reference. */
-	result->cat_count = item_count;
-	result->cat_isize = CType_Sizeof(item_type);
+	result->cat_item   = item_type; /* Inherit reference. */
+	result->cat_count  = item_count;
+	result->cat_stride = CType_Sizeof(item_type); /* XXX: Shouldn't this be aligned? */
 
 	/* Finalize the array type. */
 	DeeObject_InitStatic(CArrayType_AsType(result), &CArrayType_Type);
@@ -2283,8 +2282,10 @@ cstruct_builder_addfield(struct cstruct_builder *__restrict self,
 		result->cst_base.ct_sizeof = (size_t)end_offset;
 	*p_end_offset = end_offset;
 	min_align = CType_Alignof(CLValueType_PointedToType(lvtype));
-	if (result->cst_base.ct_alignof < min_align)
-		result->cst_base.ct_alignof = min_align;
+	if (IS_ALIGNED(offset, min_align)) {
+		if (result->cst_base.ct_alignof < min_align)
+			result->cst_base.ct_alignof = min_align;
+	}
 	return 0;
 err_duplicate_field:
 	DeeError_Throwf(&DeeError_TypeError, "Duplicate field %r in struct", name);
@@ -2333,8 +2334,10 @@ cstruct_builder_addfield_anon(struct cstruct_builder *__restrict self,
 		result->cst_base.ct_sizeof = (size_t)end_offset;
 	*p_end_offset = end_offset;
 	min_align = CType_Alignof(CLValueType_PointedToType(lvtype));
-	if (result->cst_base.ct_alignof < min_align)
-		result->cst_base.ct_alignof = min_align;
+	if (IS_ALIGNED(offset, min_align)) {
+		if (result->cst_base.ct_alignof < min_align)
+			result->cst_base.ct_alignof = min_align;
+	}
 	return 0;
 err:
 	Dee_Decref_unlikely(CLValueType_AsType(lvtype));
@@ -2458,10 +2461,11 @@ CStructType_Of(DeeObject *__restrict initializer,
 	data.csod_offset = 0;
 	if unlikely(DeeObject_Foreach(initializer, &cstruct_of_cb, &data) < 0)
 		goto err_builder;
-	/* Force 1-byte alignment when building in packed-mode */
 	if (data.csod_builder.csb_result) {
+		/* Force 1-byte alignment when building in packed-mode */
 		if (data.csod_flags & CSTRUCTTYPE_F_PACKED)
 			data.csod_builder.csb_result->cst_base.ct_alignof = 1;
+		/* Apply caller-given minimum alignment constraint */
 		if (data.csod_builder.csb_result->cst_base.ct_alignof < min_alignment)
 			data.csod_builder.csb_result->cst_base.ct_alignof = min_alignment;
 	}
@@ -2756,7 +2760,7 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 			/* .tp_mro           = */ cfunction_mro
 		},
 		CTYPE_INIT_COMMON(
-			/* ct_sizeof:    */ 0,
+			/* ct_sizeof:    */ (size_t)-1,
 			/* ct_alignof:   */ 1,
 			/* ct_operators: */ &cvoid_operators,
 			/* ct_ffitype:   */ &ffi_type_void
@@ -2884,6 +2888,7 @@ CFunctionType_New(CType *__restrict return_type,
 	Dee_Incref(CFunctionType_AsType(&AbstractCFunction_Type));
 	result->cft_base.ct_base.tp_base  = CFunctionType_AsType(&AbstractCFunction_Type); /* Inherit reference. */
 	result->cft_base.ct_base.tp_mro   = cfunction_subclass_mro;
+	result->cft_base.ct_sizeof        = (size_t)-1; /* Really high value to cause error in `ctype_frombytes()' */
 	result->cft_hash                  = function_hash;
 	result->cft_argc                  = argc;
 	result->cft_cc                    = calling_convention;
@@ -3275,7 +3280,7 @@ PRIVATE struct type_math cpointer_math = {
 	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&cobject_int32,
 	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&cobject_int64,
 	/* .tp_double = */ (int(DCALL *)(DeeObject *__restrict, double *__restrict))&cobject_double,
-	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_int,
+	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_int, /* TODO: Pointers shouldn't be directly convertible to integers (there should have to be an explicit cast to "ctypes.uintptr_t" or similar first) */
 	/* .tp_inv    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_inv, /* Unsupported */
 	/* .tp_pos    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_pos, /* Unsupported */
 	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cobject_neg, /* Unsupported */
@@ -4128,7 +4133,10 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CObject *DCALL
 clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 	CType *base_type = CLValueType_PointedToType(tp_self);
-	DREF CObject *result = CObject_Alloc(base_type);
+	DREF CObject *result;
+	if unlikely(CType_IsCFunctionType(base_type))
+		goto err_cannot_copy_function;
+	result = CObject_Alloc(base_type);
 	if unlikely(!result)
 		goto err;
 	CTYPES_FAULTPROTECT({
@@ -4147,6 +4155,10 @@ clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 	}
 	CObject_Init(result, base_type);
 	return result;
+err_cannot_copy_function:
+	DeeError_Throwf(&DeeError_TypeError,
+	                "Cannot copy lvalue-to-function at %p: %k",
+	                self->cl_value.ptr, tp_self);
 err:
 	return NULL;
 }

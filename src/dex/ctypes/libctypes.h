@@ -689,8 +689,8 @@ struct ctype_object {
 #define CType_CacheLockEnd(self)        Dee_atomic_rwlock_end(&(self)->ct_cachelock)
 
 /* Query properties of a given C-Type */
-#define CType_Sizeof(self)          (self)->ct_sizeof
-#define CType_Alignof(self)         (self)->ct_alignof
+#define CType_Sizeof(self)  (self)->ct_sizeof
+#define CType_Alignof(self) (self)->ct_alignof
 
 #define CType_AllocInstance(self)                                     \
 	(((self)->ct_base.tp_init.tp_alloc.tp_free)                       \
@@ -771,11 +771,11 @@ struct cobject_object {
 /* ARRAY TYPE                                                           */
 /************************************************************************/
 struct carray_type_object {
-	CType                          cat_base;  /* The underlying C-type descriptor. */
-	DREF CType                    *cat_item;  /* [1..1][const] The array's element type. */
-	LIST_ENTRY(carray_type_object) cat_chain; /* [lock(cat_item->st_cachelock)] Hash-map entry of this array. */
-	size_t                         cat_count; /* [const] The total number of items. */
-	size_t                         cat_isize; /* [const][== CType_Sizeof(cat_item)] TODO: Shouldn't this be aligned, too? -- Also: why isn't this called "cat_stride"? */
+	CType                          cat_base;   /* The underlying C-type descriptor. */
+	DREF CType                    *cat_item;   /* [1..1][const] The array's element type. */
+	LIST_ENTRY(carray_type_object) cat_chain;  /* [lock(cat_item->st_cachelock)] Hash-map entry of this array. */
+	size_t                         cat_count;  /* [const] The total number of items. */
+	size_t                         cat_stride; /* [const] Offset from start of one element, to start of next */
 };
 
 /* Query properties of a given Array-Type */
@@ -783,7 +783,8 @@ struct carray_type_object {
 #define CArrayType_FreeInstance(self, p)     DeeType_FreeInstance(CArrayType_AsType(self), p)
 #define CArrayType_Count(self)               (self)->cat_count
 #define CArrayType_PointedToType(self)       (self)->cat_item
-#define CArrayType_SizeofPointedToType(self) (self)->cat_isize
+#define CArrayType_Stride(self)              (self)->cat_stride
+#define CArrayType_SizeofPointedToType(self) (self)->cat_stride
 
 /* Construct a new array-type `item_type[item_count]' */
 INTDEF WUNUSED NONNULL((1)) DREF CArrayType *DCALL
@@ -811,10 +812,10 @@ struct carray_object {
 #define Object_IsCArray(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CArrayType_Type)
 
 /* Interact with Array objects */
-#define CArray_Alloc(tp)      CArrayType_AllocInstance(tp)
-#define CArray_Free(tp, p)    CArrayType_FreeInstance(tp, p)
-#define CArray_Init(self, tp) DeeObject_InitHeapEx(self, tp, CArrayType_AsType) /* All array-types are heap-allocated */
-#define CArray_ItemAddr(self, i) ((self)->ca_data + ((i) * CArrayType_SizeofPointedToType(Dee_TYPE(self))))
+#define CArray_Alloc(tp)         CArrayType_AllocInstance(tp)
+#define CArray_Free(tp, p)       CArrayType_FreeInstance(tp, p)
+#define CArray_Init(self, tp)    DeeObject_InitHeapEx(self, tp, CArrayType_AsType) /* All array-types are heap-allocated */
+#define CArray_ItemAddr(self, i) ((self)->ca_data + ((i) * CArrayType_Stride(Dee_TYPE(self))))
 #define CArray_Items(self)       (self)->ca_data
 
 /* Return a pointer to the `index' element (also asserts that "index" is in-bounds) */
@@ -1069,7 +1070,7 @@ CFunctionType_Of(CType *__restrict return_type,
                  ctypes_cc_t calling_convention,
                  size_t argc, CType *const *argv);
 
-#if 0 /* Wouldn't make sense... */
+#if 0 /* Wouldn't make sense... TODO: Why not have this to implement user-code closures? */
 struct cfunction_object {
 	OBJECT_HEAD_EX(CFunctionType)
 	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, cf_instruction); /* Host instruction... */

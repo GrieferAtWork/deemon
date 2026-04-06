@@ -1402,7 +1402,7 @@ do_init_positional:
 		DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
 		if unlikely(DeeKwds_SIZE(kwds) != argc) {
 			if unlikely(!DeeKwds_SIZE(kwds))
-				goto do_init_positional;
+				goto do_init_positional; /* Oh wait... We actually don't have keyword arguments... */
 			err_cannot_mix_positional_keyword_in_struct_init(tp_self,
 			                                                 argc - DeeKwds_SIZE(kwds),
 			                                                 DeeKwds_SIZE(kwds));
@@ -1428,7 +1428,7 @@ do_init_positional:
 			if unlikely(num_keyword == (size_t)-1)
 				goto err;
 			if (num_keyword == 0)
-				goto do_init_positional;
+				goto do_init_positional; /* Oh wait... We actually don't have keyword arguments... */
 			err_cannot_mix_positional_keyword_in_struct_init(tp_self, argc, num_keyword);
 			goto err;
 		}
@@ -1752,7 +1752,7 @@ array_initfrom_string(CArrayType *tp_self, void *self,
 	string_length = WSTR_LENGTH(string_value);
 	if unlikely(string_length > CArrayType_Count(tp_self))
 		goto err_too_long;
-	char_size = CArrayType_SizeofPointedToType(tp_self);
+	char_size = CArrayType_Stride(tp_self);
 	remaining = CArrayType_Count(tp_self) - string_length;
 	CTYPES_FAULTPROTECT({
 		self = mempcpyc(self, string_value, string_length, char_size);
@@ -1813,7 +1813,7 @@ array_initfrom(CArrayType *tp_self, void *self, DeeObject *value) {
 	data.aifed_tp_self   = tp_self;
 	data.aifed_item_type = CArrayType_PointedToType(tp_self);
 	data.aifed_item_ops  = CType_Operators(data.aifed_item_type);
-	data.aifed_stride    = CArrayType_SizeofPointedToType(tp_self);
+	data.aifed_stride    = CArrayType_Stride(tp_self);
 	data.aifed_count     = CArrayType_Count(tp_self);
 	data.aifed_self      = self;
 	status = DeeObject_InvokeMethodHint(seq_enumerate_index, value,
@@ -1914,7 +1914,7 @@ array_compare(CArrayType *tp_self, void const *lhs, DeeObject *rhs) {
 	data.acsd_to_item_compare = CType_Operators(data.acsd_to_item)->co_compare;
 	data.acsd_lhs             = (byte_t const *)lhs;
 	data.acsd_rem             = CArrayType_Count(tp_self);
-	data.acsd_stride          = CArrayType_SizeofPointedToType(tp_self);
+	data.acsd_stride          = CArrayType_Stride(tp_self);
 	fe_status = DeeObject_Foreach(rhs, &array_compare_seq_cb, &data);
 	ASSERT(fe_status == ARRAY_COMPARE_EQ ||
 	       fe_status == ARRAY_COMPARE_ERR ||
@@ -1986,7 +1986,7 @@ array_printcrepr(CArrayType *tp_self, void const *self,
 				goto err_temp;
 			result += temp;
 		}
-		item_addr = (byte_t const *)self + (i * CArrayType_SizeofPointedToType(tp_self));
+		item_addr = (byte_t const *)self + (i * CArrayType_Stride(tp_self));
 		temp = (*item_type_operators->co_printcrepr)(item_type, item_addr, printer, arg);
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -2026,7 +2026,7 @@ array_printdrepr(CArrayType *tp_self, void const *self,
 				goto err_temp;
 			result += temp;
 		}
-		item_addr = (byte_t const *)self + (i * CArrayType_SizeofPointedToType(tp_self));
+		item_addr = (byte_t const *)self + (i * CArrayType_Stride(tp_self));
 		temp = (*item_type_operators->co_printdrepr)(item_type, item_addr, printer, arg);
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -2045,13 +2045,13 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF CPointer *DCALL
 array_add(CArrayType *tp_self, void const *lhs, DeeObject *rhs) {
-	ptrdiff_t rhs_cvalue;
+	ptrdiff_t offset;
 	union pointer lhs_cvalue;
-	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue))
+	if (DeeObject_AsPtrdiff(rhs, &offset))
 		goto err;
-	rhs_cvalue *= CArrayType_SizeofPointedToType(tp_self);
+	offset *= CArrayType_Stride(tp_self);
 	lhs_cvalue.ptr = (void *)lhs;
-	lhs_cvalue.sint += rhs_cvalue;
+	lhs_cvalue.sint += offset;
 	/* NOTE: CArray R-values need a custom "operator +"
 	 *       that passes along the array as the owner reference! */
 	return CPointer_For(CArrayType_PointedToType(tp_self), lhs_cvalue.ptr);
@@ -2091,13 +2091,13 @@ array_sub(CArrayType *tp_self, void const *lhs, DeeObject *rhs) {
 			goto err;
 		}
 		result = lhs_cvalue.uint - rhs_cvalue.uint;
-		if (CArrayType_SizeofPointedToType(tp_self))
-			result /= CArrayType_SizeofPointedToType(tp_self);
+		if (CArrayType_Stride(tp_self))
+			result /= CArrayType_Stride(tp_self);
 		return DeeInt_NewPtrdiff(result);
 	}
 	if (DeeObject_AsPtrdiff(rhs, &rhs_cvalue_int))
 		goto err;
-	rhs_cvalue_int *= CArrayType_SizeofPointedToType(tp_self);
+	rhs_cvalue_int *= CArrayType_Stride(tp_self);
 	lhs_cvalue.sint -= rhs_cvalue_int;
 	/* NOTE: CPointer R-values need a custom "operator -"
 	 *       that passes along the pointer's owner reference! */
