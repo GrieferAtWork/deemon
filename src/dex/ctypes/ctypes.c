@@ -61,28 +61,6 @@ struct cc_entry {
 	ctypes_cc_t cc;
 };
 
-#ifndef CONFIG_HAVE_SYSTEM_FFI
-#ifdef X86_WIN32
-#define CONFIG_HAVE_FFI_SYSV
-#define CONFIG_HAVE_FFI_STDCALL
-#define CONFIG_HAVE_FFI_THISCALL
-#define CONFIG_HAVE_FFI_FASTCALL
-#define CONFIG_HAVE_FFI_MS_CDECL
-#define CONFIG_HAVE_FFI_PASCAL
-#define CONFIG_HAVE_FFI_REGISTER
-#elif defined(X86_WIN64)
-#define CONFIG_HAVE_FFI_WIN64
-#else /* ... */
-#define CONFIG_HAVE_FFI_SYSV
-#define CONFIG_HAVE_FFI_UNIX64
-#define CONFIG_HAVE_FFI_THISCALL
-#define CONFIG_HAVE_FFI_FASTCALL
-#define CONFIG_HAVE_FFI_STDCALL
-#define CONFIG_HAVE_FFI_PASCAL
-#define CONFIG_HAVE_FFI_REGISTER
-#endif /* !... */
-#endif /* !CONFIG_HAVE_SYSTEM_FFI */
-
 PRIVATE struct cc_entry const cc_db[] = {
 #ifdef CONFIG_HAVE_FFI_SYSV
 	{ "sysv", FFI_SYSV },
@@ -127,7 +105,6 @@ PRIVATE struct cc_entry const cc_db[] = {
 #define strcmp dee_strcmp
 DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
-
 
 INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
 cc_trylookup(char const *__restrict name) {
@@ -590,10 +567,12 @@ err:
 }
 
 
-/* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it. */
+/* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
+ * @return:  1: The conversion failed.
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeObject_TryAsPointer(DeeObject *self,
-                       CType *pointer_base,
+DeeObject_TryAsPointer(DeeObject *self, CType *pointer_base,
                        union pointer *__restrict result) {
 	if (DeeNone_Check(self)) {
 		/* none is the NULL pointer. */
@@ -624,31 +603,35 @@ null_pointer:
 
 	/* Special handling for strings (which can be cast to `char *') */
 	if (DeeString_Check(self)) {
-		if (pointer_base == &CVoid_Type) {
-			result->pcvoid = DeeString_STR(self);
-			return 0;
-		}
 		if (pointer_base == &CChar_Type) {
 			result->pcvoid = DeeString_AsUtf8(self);
-			if unlikely(!result->ptr)
+			if unlikely(!result->pcvoid)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &CWChar_Type) {
 			result->pcvoid = DeeString_AsWide(self);
-			if unlikely(!result->ptr)
+			if unlikely(!result->pcvoid)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &CChar16_Type) {
 			result->pcvoid = DeeString_AsUtf16(self, STRING_ERROR_FREPLAC);
-			if unlikely(!result->ptr)
+			if unlikely(!result->pcvoid)
 				goto err;
 			return 0;
 		}
 		if (pointer_base == &CChar32_Type) {
 			result->pcvoid = DeeString_AsUtf32(self);
-			if unlikely(!result->ptr)
+			if unlikely(!result->pcvoid)
+				goto err;
+			return 0;
+		}
+		if (pointer_base == &CVoid_Type ||
+		    pointer_base == &CInt8_Type ||
+		    pointer_base == &CUInt8_Type) {
+			result->pcvoid = DeeString_AsBytes(self, false);
+			if unlikely(!result->pcvoid)
 				goto err;
 			return 0;
 		}
@@ -657,10 +640,8 @@ null_pointer:
 
 	/* Taking the pointer of a Bytes object yield the buffer's base */
 	if (DeeBytes_Check(self)) {
-		if (pointer_base == &CVoid_Type ||
-		    pointer_base == &CChar_Type ||
-		    pointer_base == &CInt8_Type ||
-		    pointer_base == &CUInt8_Type) {
+		if (pointer_base == &CVoid_Type || pointer_base == &CChar_Type ||
+		    pointer_base == &CInt8_Type || pointer_base == &CUInt8_Type) {
 			result->ptr = DeeBytes_DATA(self);
 			return 0;
 		}

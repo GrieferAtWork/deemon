@@ -21,6 +21,7 @@
 
 import deemon;
 import ctypes;
+import .common.test;
 
 if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
 	return;
@@ -45,3 +46,34 @@ assert instance.y is ctypes.LValue;
 assert instance.y is ctypes.CObject;
 assert instance.y is deemon.Numeric; /* Special handling, triggered because "le32.implements(Numeric)" */
 assert instance.y.hex() == "0x112233"; /* .hex() is inherited from "Numeric" */
+
+/* Assert that structs can be compared, and that struct constructors work as expected. */
+test.assertEqualsTyped(instance, instance);
+test.assertEqualsTyped(instance, copy instance);
+test.assertEqualsTyped(instance, deepcopy instance);
+test.assertEqualsTyped(instance, WeirdStruct(x: 0x11223344));
+test.assertEqualsTyped(instance, WeirdStruct({0x11223344}));
+test.assertEqualsTyped(instance, WeirdStruct({.x = 0x11223344}));
+
+/* Structs can be cast to l-values, in which case they must still behavior the same.
+ * Note that this kind of casting is **only** supported for structs and arrays --
+ * all other types of C-types cannot be cast to l-values (except that you can cast
+ * the pointed-to value of another value type into others, but that's a value-cast,
+ * rather than an rvalue-to-lvalue cast) */
+test.assertEquals(instance, (WeirdStruct.lvalue)WeirdStruct({.x = 0x11223344}));
+
+test.assertEquals(WeirdStruct(y: 0x99112233).x, 0x11223300);
+
+/* Assert the pointer/lvalue-owner system too while we're here... */
+assert instance.x.__owner__ === instance;
+assert !deemon.hasattr(instance.x, "ind");
+assert  deemon.hasattr(instance.x, "ptr");
+assert instance.x.ptr is ctypes.Pointer;
+assert type(instance.x.ptr) === ctypes.le32.ptr;
+assert instance.x.ptr.__owner__ === instance;
+
+assert  deemon.hasattr(instance.x.ptr, "ind");
+assert !deemon.hasattr(instance.x.ptr, "ptr");
+assert instance.x.ptr.ind is ctypes.LValue;
+assert type(instance.x.ptr.ind) === ctypes.le32.lvalue;
+assert instance.x.ptr.ind.__owner__ === instance;

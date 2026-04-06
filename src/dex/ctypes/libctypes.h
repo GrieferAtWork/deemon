@@ -401,6 +401,29 @@ typedef ffi_abi ctypes_cc_t;
 #define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
 #define CC_INVALID   ((ctypes_cc_t)-1)
 #define ctypes_cc_isvarargs(x) ((x) & CC_FVARARGS)
+
+#ifndef CONFIG_HAVE_SYSTEM_FFI
+#ifdef X86_WIN32
+#define CONFIG_HAVE_FFI_SYSV
+#define CONFIG_HAVE_FFI_STDCALL
+#define CONFIG_HAVE_FFI_THISCALL
+#define CONFIG_HAVE_FFI_FASTCALL
+#define CONFIG_HAVE_FFI_MS_CDECL
+#define CONFIG_HAVE_FFI_PASCAL
+#define CONFIG_HAVE_FFI_REGISTER
+#elif defined(X86_WIN64)
+#define CONFIG_HAVE_FFI_WIN64
+#else /* ... */
+#define CONFIG_HAVE_FFI_SYSV
+#define CONFIG_HAVE_FFI_UNIX64
+#define CONFIG_HAVE_FFI_THISCALL
+#define CONFIG_HAVE_FFI_FASTCALL
+#define CONFIG_HAVE_FFI_STDCALL
+#define CONFIG_HAVE_FFI_PASCAL
+#define CONFIG_HAVE_FFI_REGISTER
+#endif /* !... */
+#endif /* !CONFIG_HAVE_SYSTEM_FFI */
+
 #else /* !CONFIG_NO_CFUNCTION */
 typedef int ctypes_cc_t;
 #define CC_DEFAULT   0
@@ -752,7 +775,7 @@ struct carray_type_object {
 	DREF CType                    *cat_item;  /* [1..1][const] The array's element type. */
 	LIST_ENTRY(carray_type_object) cat_chain; /* [lock(cat_item->st_cachelock)] Hash-map entry of this array. */
 	size_t                         cat_count; /* [const] The total number of items. */
-	size_t                         cat_isize; /* [const][== CType_Sizeof(cat_item)]. */
+	size_t                         cat_isize; /* [const][== CType_Sizeof(cat_item)] TODO: Shouldn't this be aligned, too? -- Also: why isn't this called "cat_stride"? */
 };
 
 /* Query properties of a given Array-Type */
@@ -885,6 +908,11 @@ CStructType_FieldByNameStringHash(CStructType const *self, char const *name, Dee
 INTDEF WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
 CStructType_FieldByNameStringLenHash(CStructType const *self, char const *name,
                                      size_t namelen, Dee_hash_t hash);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL
+err_no_such_struct_field(CStructType *__restrict type,
+                         char const *field_name,
+                         size_t field_name_length);
+
 
 /* Construct a new struct-type from `initializer', which
  * should be `{((string, CType) | CStructType)...}'
@@ -2616,7 +2644,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
  *
  * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
  */
-INTDEF DeeTypeObject DeeShLib_Type;
+INTDEF DeeTypeObject ShLib_Type;
 
 #ifdef CONFIG_NO_CFUNCTION
 /* Throw a NotImplemented error explaining that cfunctions have been disabled. */

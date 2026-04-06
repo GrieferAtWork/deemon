@@ -26,24 +26,28 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
 #include <deemon/bool.h>            /* return_bool */
+#include <deemon/dex.h>             /* Dee_module_dexdata */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/int.h>             /* DeeInt_NewUInt64 */
 #include <deemon/map.h>             /* DeeMap_Type */
+#include <deemon/module.h>          /* DeeModule* */
 #include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_STUB */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_InitHeapInherited, DeeType_IsHeapType, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_METHOD_END, TYPE_METHOD_F, type_* */
+#include <deemon/type.h>            /* DeeObject_*, DeeType_IsHeapType, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FDEEPIMMUTABLE, TP_FNORMAL, TYPE_METHOD_END, TYPE_METHOD_F, type_* */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_SHARED_LOCK_INIT, Dee_shared_lock_* */
 #include <deemon/util/once.h>       /* Dee_ONCE */
+
+#include <hybrid/host.h> /* __i386__, __x86_64__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */
@@ -57,26 +61,28 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	void                *sh_lib;     /* [1..1] Shared library handle. */
+	DREF DeeObject      *sh_lib_owner; /* [0..1][const] Owner of "sh_lib" (in case library was loaded from dex module) */
+	void                *sh_lib;       /* [1..1][owned_if(sh_lib_owner == NULL)][const] Shared library handle. */
 #ifndef CONFIG_NO_CFUNCTION
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-	DREF CPointerType   *sh_vfunptr; /* [0..1][lock(WRITE_ONCE)] void-function pointer type: "int(<sh_defcc> *)(...)" */
+	DREF CPointerType   *sh_vfunptr;   /* [0..1][lock(WRITE_ONCE)] void-function pointer type: "int(<sh_defcc> *)(...)" */
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	DREF DeeSTypeObject *sh_vfunptr; /* [0..1][lock(WRITE_ONCE)] void-function pointer type. */
+	DREF DeeSTypeObject *sh_vfunptr;   /* [0..1][lock(WRITE_ONCE)] void-function pointer type. */
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	ctypes_cc_t          sh_defcc;   /* [const] Default calling convention. */
+	ctypes_cc_t          sh_defcc;     /* [const] Default calling convention. */
 #endif /* !CONFIG_NO_CFUNCTION */
-} Shlib;
+} ShLib;
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-shlib_init(Shlib *__restrict self, size_t argc,
-           DREF DeeObject *const *argv) {
+shlib_init(ShLib *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeStringObject *name, *cc_name = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "shlib", &name, &cc_name);
+	DeeArg_Unpack1Or2(err, argc, argv, "ShLib", &name, &cc_name);
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-		/* Parse the given default calling convention. */
+	self->sh_lib_owner = NULL;
+
+	/* Parse the given default calling convention. */
 #ifndef CONFIG_NO_CFUNCTION
 	self->sh_vfunptr = NULL;
 	self->sh_defcc   = CC_DEFAULT;
@@ -125,7 +131,7 @@ err:
 }
 
 PRIVATE NONNULL((1)) void DCALL
-shlib_fini(Shlib *__restrict self) {
+shlib_fini(ShLib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	Dee_XDecref(CPointerType_AsType(self->sh_vfunptr));
@@ -133,19 +139,24 @@ shlib_fini(Shlib *__restrict self) {
 	Dee_XDecref(DeeSType_AsType(self->sh_vfunptr));
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #endif /* !CONFIG_NO_CFUNCTION */
-	DeeSystem_DlClose(self->sh_lib);
+	if (self->sh_lib_owner) {
+		Dee_Decref(self->sh_lib_owner);
+	} else {
+		DeeSystem_DlClose(self->sh_lib);
+	}
 }
 
-#ifndef CONFIG_NO_CFUNCTION
 PRIVATE NONNULL((1, 2)) void DCALL
-shlib_visit(Shlib *__restrict self, Dee_visit_t proc, void *arg) {
+shlib_visit(ShLib *__restrict self, Dee_visit_t proc, void *arg) {
+#ifndef CONFIG_NO_CFUNCTION
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	Dee_XVisit(CPointerType_AsType(self->sh_vfunptr));
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	Dee_XVisit(DeeSType_AsType(self->sh_vfunptr));
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-}
 #endif /* !CONFIG_NO_CFUNCTION */
+	Dee_XDecref(self->sh_lib_owner);
+}
 
 #ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE Dee_ATOMIC_XREF(DeeTypeObject) void_ptr = Dee_ATOMIC_XREF_INIT(NULL); /* `void.ptr' */
@@ -176,10 +187,10 @@ again:
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
-shlib_getitem(Shlib *self, DeeObject *name)
+shlib_getitem(ShLib *self, DeeObject *name)
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_getitem(Shlib *self, DeeObject *name)
+shlib_getitem(ShLib *self, DeeObject *name)
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 {
 #ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
@@ -225,8 +236,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_contains(Shlib *self,
-               DeeObject *name) {
+shlib_contains(ShLib *self, DeeObject *name) {
 	void *symaddr;
 	char const *utf8_name;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -245,10 +255,10 @@ err:
 #else /* CONFIG_NO_CFUNCTION */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
-shlib_getattr(Shlib *self, DeeObject *name)
+shlib_getattr(ShLib *self, DeeObject *name)
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_getattr(Shlib *self, DeeObject *name)
+shlib_getattr(ShLib *self, DeeObject *name)
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
@@ -346,10 +356,10 @@ PRIVATE struct type_attr shlib_attr = {
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
-shlib_base(Shlib *self, size_t argc, DeeObject *const *argv)
+shlib_base(ShLib *self, size_t argc, DeeObject *const *argv)
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-shlib_base(Shlib *self, size_t argc, DeeObject *const *argv)
+shlib_base(ShLib *self, size_t argc, DeeObject *const *argv)
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
@@ -539,6 +549,58 @@ err:
 }
 
 
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE DREF ShLib *DCALL
+shlib_ofmodule(DeeTypeObject *UNUSED(tp_self),
+               size_t argc, DeeObject *const *argv) {
+	DREF ShLib *result;
+	DeeModuleObject *mod;
+	struct Dee_module_dexdata *dexdata;
+	DeeArg_Unpack1(err, argc, argv, "ofmodule", &mod);
+	if (DeeObject_AssertTypeExact(mod, &DeeModuleDex_Type))
+		goto err;
+	dexdata = mod->mo_moddata.mo_dexdata;
+	if (dexdata->mdx_handle == DeeSystem_DlOpen_FAILED) {
+		/* This can happen if "mod" is the deemon core itself, and
+		 * the core hadn't had a chance to initialize itself, yet. */
+		COMPILER_UNUSED(DeeModule_GetNativeSymbol(mod, "DeeObject_Type"));
+		if unlikely(dexdata->mdx_handle == DeeSystem_DlOpen_FAILED) {
+			/* Weird... Throw an error */
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Unable to determine native library handle of dex module %k",
+			                mod);
+			goto err;
+		}
+	}
+
+	result = DeeObject_MALLOC(ShLib);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(mod);
+	result->sh_lib_owner = Dee_AsObject(mod);
+#ifndef CONFIG_NO_CFUNCTION
+	result->sh_vfunptr = NULL;
+#if defined(__i386__) && !defined(__x86_64__)
+#ifdef CONFIG_HAVE_FFI_STDCALL
+	result->sh_defcc = FFI_STDCALL; /* Use STDCALL as default, since that's what "DCALL" is on i386 */
+#endif /* CONFIG_HAVE_FFI_STDCALL */
+#else /* ... */
+	result->sh_defcc = CC_DEFAULT;
+#endif /* !... */
+#endif /* !CONFIG_NO_CFUNCTION */
+	result->sh_lib = dexdata->mdx_handle;
+	DeeObject_InitStatic(result, &ShLib_Type);
+	return result;
+err:
+	return NULL;
+}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+/* Could also be implemented without 'CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES', but don't bother */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+
+
 
 PRIVATE struct type_method tpconst shlib_methods[] = {
 	TYPE_METHOD_F("base", &shlib_base, METHOD_FNOREFESCAPE,
@@ -553,20 +615,28 @@ PRIVATE struct type_method tpconst shlib_class_methods[] = {
 	              "Using system-specific debug/export information, try to "
 	              /**/ "convert a symbol address into that symbol's name.\n"
 	              "On success, returns ${(symbolName, offsetFromSymbol)}"),
+#ifndef CONFIG_NO_DEX
+	TYPE_METHOD_F("ofmodule", &shlib_ofmodule, METHOD_FNOREFESCAPE,
+	              "(mod:?DModule)->?.\n"
+	              "#tValueError{Given @mod isn't the deemon core, or a ?Ert:DexModule}"
+	              "Return a shared library descriptor for the underlying system library "
+	              /**/ "descriptor of the deemon core, or a DEX module."),
+#endif /* !CONFIG_NO_DEX */
 	TYPE_METHOD_END
 };
 
-INTERN DeeTypeObject DeeShLib_Type = {
+INTERN DeeTypeObject ShLib_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "ShLib",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_doc      = */ DOC("(filename:?Dstring,defcc?:?Dstring)\n"
+	                         "#pdefcc{Default calling convention (s.a. ?Afunc?GCType)}"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FDEEPIMMUTABLE, /* Mainly set to "TP_FDEEPIMMUTABLE" to allow in nested object-trees */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ Shlib,
+			/* T:              */ ShLib,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &shlib_init,
@@ -582,11 +652,7 @@ INTERN DeeTypeObject DeeShLib_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-#ifndef CONFIG_NO_CFUNCTION
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&shlib_visit,
-#else /* !CONFIG_NO_CFUNCTION */
-	/* .tp_visit         = */ NULL,
-#endif /* CONFIG_NO_CFUNCTION */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

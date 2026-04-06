@@ -203,9 +203,16 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 	}
 	assertEqualsTyped(x, x);
 	if (type(x) !== Super) {
-		/* FIXME: See "assertSet" */
-		assertEqualsTyped(x, copy x);
-		assertEqualsTyped(x, deepcopy x);
+		static local ctypes = try import("ctypes") catch (...) none;
+		if (x is ctypes.LValue) {
+			/* Special case: copying a ctypes l-value produces an r-value */
+			assertEquals(x, copy x);
+			assertEquals(x, deepcopy x);
+		} else {
+			/* FIXME: See "assertSet" */
+			assertEqualsTyped(x, copy x);
+			assertEqualsTyped(x, deepcopy x);
+		}
 	}
 
 	local ItemType = try x.class.ItemType catch (...) Object;

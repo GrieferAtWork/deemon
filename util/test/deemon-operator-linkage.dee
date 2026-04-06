@@ -24,15 +24,20 @@ import * from "rt.hints.method";
 import * from "rt.hints.operator";
 import int, * from ctypes;
 import deemon;
-import ipc;
 import rt;
+
 
 local final DeeObject_ptr = void.ptr;
 local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
 	/* NotImplemented: ctypes was built without C-functions being enabled */
 	return;
 });
-local final deemonExe = try ShLib(ipc.Process.current.exe) catch (...) ({
+local final CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+local final deemonExe = try
+	CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		? ShLib.ofmodule(deemon)
+		: ShLib((Process from ipc).Process.current.exe)
+catch (...) ({
 	/* This can happen under cygwin, where dlopen() on seems to fail for the main binary? */
 	return;
 });

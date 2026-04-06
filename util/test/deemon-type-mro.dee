@@ -32,10 +32,15 @@ assert Type.baseof(Type, type(File));
 /* Assert the MRO/Bases of all type-types */
 test.assertSequence(Type.__mro__(Type), { Type, Object, Callable });
 test.assertSequence(Type.__bases__(Type), { Object, Callable });
-test.assertSequence(Type.__mro__(rt.FileType), { rt.FileType, Type, Object, Callable });
-test.assertSequence(Type.__bases__(rt.FileType), { Type });
-test.assertSequence(Type.__mro__(ctypes.StructuredType), { ctypes.StructuredType, Type, Object, Callable });
-test.assertSequence(Type.__bases__(ctypes.StructuredType), { Type });
+test.assertSequence(Type.__mro__(rt.FileType), { rt.FileType, Type, Callable, Object });
+test.assertSequence(Type.__bases__(rt.FileType), { Type, Callable });
+if (ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
+	test.assertSequence(Type.__mro__(ctypes.CType), { ctypes.CType, Type, Callable, Object });
+	test.assertSequence(Type.__bases__(ctypes.CType), { Type, Callable });
+} else {
+	test.assertSequence(Type.__mro__(ctypes.StructuredType), { ctypes.StructuredType, Type, Object, Callable });
+	test.assertSequence(Type.__bases__(ctypes.StructuredType), { Type });
+}
 
 
 /* Assert the MRO/Bases of some misc. other types */

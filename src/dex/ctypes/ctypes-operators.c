@@ -28,14 +28,19 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_UnpackStructKw */
-#include <deemon/error.h>           /* DeeError_* */
-#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
+#include <deemon/bytes.h>           /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewPtrdiff, DeeInt_NewUIntptr, Dee_INT_UNSIGNED */
-#include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_Decref_unlikely */
-#include <deemon/string.h>          /* DeeString_IsEmpty */
-#include <deemon/system-features.h> /* bzero, memcpy */
+#include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_entry */
+#include <deemon/map.h>             /* DeeMap_Check */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
+#include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/system-features.h> /* bzero, memcmp, memcpy */
 #include <deemon/type.h>            /* DeeType_GetName, Dee_INT_ERROR, Dee_INT_UNSIGNED */
-#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
@@ -101,9 +106,10 @@ PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__compare(CType *tp_self, void const *lhs, DeeObject *rhs) {
 	(void)lhs;
 	(void)rhs;
-	return DeeError_Throwf(&DeeError_TypeError,
-	                       UNSUPPORTED_OPERATOR_FMT("<=>"),
-	                       tp_self);
+	DeeError_Throwf(&DeeError_TypeError,
+	                UNSUPPORTED_OPERATOR_FMT("<=>"),
+	                tp_self);
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE /*WUNUSED*/ NONNULL((1/*, 3*/)) int DCALL
@@ -1213,6 +1219,73 @@ INTERN struct ctype_operators Dee_tpconst clvalue_operators = {
 
 /* Operators for user-defined structure types */
 
+struct struct_initfromseq_data {
+	CStructType          *sifsd_tp_self; /* [1..1] Struct type */
+	struct cstruct_field *sifsd_next;    /* [0..1] Next field to initialize (or "NULL" if there are no more fields) */
+	void                 *sifsd_self;    /* [?..?] Struct instance */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+struct_initfromseq_cb(void *arg, DeeObject *elem) {
+	struct struct_initfromseq_data *data = (struct struct_initfromseq_data *)arg;
+	struct cstruct_field *field = data->sifsd_next;
+	void *field_addr;
+	CType *field_type;
+	struct ctype_operators const *field_ops;
+	if unlikely(!field) {
+		DeeError_Throwf(&DeeError_TypeError,
+		                "Too many initializers for struct type %r",
+		                data->sifsd_tp_self);
+		goto err;
+	}
+	data->sifsd_next = cstruct_field_nextfield(field);
+	field_addr = (void *)((byte_t *)data->sifsd_self + cstruct_field_getoffset(field));
+	field_type = cstruct_field_gettype(field);
+	field_ops  = CType_Operators(field_type);
+	return (*field_ops->co_initfrom)(field_type, field_addr, elem);
+err:
+	return -1;
+}
+
+struct struct_initfrommap_data {
+	CStructType          *sifmd_tp_self; /* [1..1] Struct type */
+	void                 *sifmd_self;    /* [?..?] Struct instance */
+};
+
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
+struct_initfield(CStructType *tp_self, void *self,
+                 DeeStringObject *name, DeeObject *value) {
+	struct cstruct_field *field;
+	void *field_addr;
+	CType *field_type;
+	struct ctype_operators const *field_ops;
+	field = CStructType_FieldByName(tp_self, Dee_AsObject(name));
+	if unlikely(!field)
+		goto err_no_such_field;
+	field_addr = (void *)((byte_t *)self + cstruct_field_getoffset(field));
+	field_type = cstruct_field_gettype(field);
+	field_ops  = CType_Operators(field_type);
+	return (*field_ops->co_initfrom)(field_type, field_addr, value);
+err_no_such_field:
+	err_no_such_struct_field(tp_self,
+	                         DeeString_STR(name),
+	                         DeeString_SIZE(name));
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+struct_initfrommap_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct struct_initfrommap_data *data;
+	data = (struct struct_initfrommap_data *)arg;
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	return struct_initfield(data->sifmd_tp_self, data->sifmd_self,
+	                        (DeeStringObject *)key, value);
+err:
+	return -1;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_initfrom(CStructType *tp_self, void *self, DeeObject *value) {
 	/* >> struct MyStruct {
@@ -1223,13 +1296,78 @@ struct_initfrom(CStructType *tp_self, void *self, DeeObject *value) {
 	 * >> local b = MyStruct({ .x = 10, .y = 20 });
 	 * >> local c = MyStruct(a);  // Must also accept when "a" is the l-value variant of "MyStruct"
 	 */
+	union pointer cvalue;
+	if (Object_IsCStruct(value)) {
+		CStruct *value_ob = Object_AsCStruct(value);
+		if unlikely(tp_self != Dee_TYPE(value_ob))
+			goto bad_rhs_type;
+		cvalue.ptr = CStruct_Data(value_ob);
+copy_from_cvalue:
+		CTYPES_FAULTPROTECT({
+			memcpy(self, cvalue.ptr, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+	} else if (Object_IsCLValue(value)) {
+		CLValue *value_ob = Object_AsCLValue(value);
+		CLValueType *value_type = Dee_TYPE(value_ob);
+		if unlikely(CLValueType_PointedToType(value_type) != CStructType_AsCType(tp_self))
+			goto bad_rhs_type;
+		cvalue = value_ob->cl_value;
+		goto copy_from_cvalue;
+	} else {
+		Dee_ssize_t status;
 
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)value;
-	DeeError_NOTIMPLEMENTED();
+		/* Initialize from Sequence of Mapping (but also: zero-initialize all
+		 * fields such that anything not explicitly initialized is set to 0) */
+		CTYPES_FAULTPROTECT({
+			bzero(self, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+
+		/* Actually have to check if "value" is a mapping order to allow
+		 * field-like initialization (as opposed to anonymous initialization):
+		 * >> struct a { .foo = char.ptr };
+		 * >> struct b { .foo = char.ptr[2] };
+		 * >>
+		 * >> local x = a({ ("foo", "bar") });  // Should "foo" be set to "bar", or should the first field be initialized from ("foo", "bar")?
+		 * >> local y = b({ .foo = "bar" });    // Same deal...
+		 *
+		 * As such, we only allow field-like initialization when mappings are given:
+		 * >> local x = a({ .foo = "bar" });    // OK: set "foo" to "bar"
+		 * >> local y = b({ {"foo", "bar"} });  // OK: init first member with `{"foo", "bar"}' */
+		if (DeeMap_Check(value)) {
+			struct struct_initfrommap_data data;
+			data.sifmd_tp_self = tp_self;
+			data.sifmd_self    = self;
+			status = DeeObject_ForeachPair(value, &struct_initfrommap_cb, &data);
+		} else {
+			/* HINT: This initializer here also handles "DeeNone_Check(value)":
+			 *  - `MyStruct(none)' should return a 0-initialize struct.
+			 *  - The 0-initialization already happened above
+			 *  - And `DeeObject_Foreach(Dee_None)' is a no-op in that it doesn't
+			 *    enumerate anything, meaning no extra initialization will happen */
+			struct struct_initfromseq_data data;
+			data.sifsd_tp_self = tp_self;
+			data.sifsd_self    = self;
+			data.sifsd_next    = CStructType_FirstField(tp_self);
+			status = DeeObject_Foreach(value, &struct_initfromseq_cb, &data);
+		}
+		if unlikely(status < 0)
+			goto err;
+	}
 	return 0;
+bad_rhs_type:
+	DeeObject_TypeAssertFailed(value, CStructType_AsType(tp_self));
+err:
+	return -1;
+}
+
+PRIVATE ATTR_COLD WUNUSED NONNULL((1, 2)) int DCALL
+err_cannot_mix_positional_keyword_in_struct_init(CStructType *tp_self,
+                                                 size_t num_positional,
+                                                 size_t num_keyword) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Cannot mix %" PRFuSIZ " positional with %" PRFuSIZ " "
+	                       "keyword arguments when initializing struct type %r",
+	                       num_positional, num_keyword, CStructType_AsType(tp_self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1237,6 +1375,7 @@ struct_initwith(CStructType *tp_self, void *self,
                 size_t argc, DeeObject *const *argv,
                 DeeObject *kw) {
 	if (!kw) {
+do_init_positional:
 		switch (argc) {
 		case 0:
 			CTYPES_FAULTPROTECT({
@@ -1251,13 +1390,58 @@ struct_initwith(CStructType *tp_self, void *self,
 		                 argc, 0, 1);
 		goto err;
 	}
+
 	/* >> struct MyStruct {
 	 * >>     .x = int,
 	 * >>     .y = int,
 	 * >> };
-	 * >> local c = MyStruct(10, y: 20); */
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+	 * >> local c = MyStruct(x: 10, y: 20); */
+	if (DeeKwds_Check(kw)) {
+		/* Initialize from standard keyword arguments (where values are passed via arguments) */
+		Dee_hash_t i;
+		DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
+		if unlikely(DeeKwds_SIZE(kwds) != argc) {
+			if unlikely(!DeeKwds_SIZE(kwds))
+				goto do_init_positional;
+			err_cannot_mix_positional_keyword_in_struct_init(tp_self,
+			                                                 argc - DeeKwds_SIZE(kwds),
+			                                                 DeeKwds_SIZE(kwds));
+			goto err;
+		}
+		CTYPES_FAULTPROTECT({
+			bzero(self, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+
+		for (i = 0; i <= kwds->kw_mask; ++i) {
+			struct Dee_kwds_entry *entry = &kwds->kw_map[i];
+			if (entry->ke_name) {
+				DeeObject *value = argv[entry->ke_index];
+				if (struct_initfield(tp_self, self, entry->ke_name, value))
+					goto err;
+			}
+		}
+	} else {
+		/* Initialize from custom keyword arguments */
+		struct struct_initfrommap_data data;
+		if unlikely(argc != 0) {
+			size_t num_keyword = DeeObject_Size(kw);
+			if unlikely(num_keyword == (size_t)-1)
+				goto err;
+			if (num_keyword == 0)
+				goto do_init_positional;
+			err_cannot_mix_positional_keyword_in_struct_init(tp_self, argc, num_keyword);
+			goto err;
+		}
+
+		CTYPES_FAULTPROTECT({
+			bzero(self, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+
+		data.sifmd_tp_self = tp_self;
+		data.sifmd_self    = self;
+		if (DeeObject_ForeachPair(kw, &struct_initfrommap_cb, &data) < 0)
+			goto err;
+	}
 	return 0;
 err:
 	return -1;
@@ -1366,8 +1550,43 @@ err_temp:
 	return temp;
 }
 
+#if 1 /* Extension: allow structs to be compared to each other */
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+struct_compare(CStructType *tp_self, void const *lhs, DeeObject *rhs) {
+	int result;
+	union pointer rhs_cvalue;
+	size_t instance_size;
+	if (Object_IsCLValue(rhs)) {
+		CLValue *rhs_ob = Object_AsCLValue(rhs);
+		CLValueType *rhs_type = Dee_TYPE(rhs_ob);
+		if (CLValueType_PointedToType(rhs_type) != CStructType_AsCType(tp_self))
+			goto err_bad_rhs;
+		rhs_cvalue = rhs_ob->cl_value;
+	} else if (Dee_TYPE(rhs) == CStructType_AsType(tp_self)) {
+		rhs_cvalue.ptr = CStruct_Data(Object_AsCStruct(rhs));
+	} else {
+		goto err_bad_rhs;
+	}
+	instance_size = CType_Sizeof(CStructType_AsCType(tp_self));
+	CTYPES_FAULTPROTECT({
+		result = memcmp(lhs, rhs_cvalue.pcvoid, instance_size);
+	}, return Dee_COMPARE_ERR);
+	if (result < 0)
+		return Dee_COMPARE_LO;
+	if (result > 0)
+		return Dee_COMPARE_GR;
+	return Dee_COMPARE_EQ;
+err_bad_rhs:
+	DeeObject_TypeAssertFailed(rhs, CStructType_AsType(tp_self));
+	return Dee_COMPARE_ERR;
+}
+#else
 #undef struct_compare
 #define struct_compare unsupported__compare
+#undef struct_compare_eq
+#define struct_compare_eq unsupported__compare_eq
+#endif
+
 #undef struct_int32
 #define struct_int32 unsupported__int32
 #undef struct_int64
@@ -1479,6 +1698,76 @@ INTERN struct ctype_operators Dee_tpconst cstruct_operators = {
 
 /* Operators for array types */
 
+struct array_initfrom_enumerate_data {
+	CArrayType                   *aifed_tp_self;   /* [1..1] Array type being initialized */
+	CType                        *aifed_item_type; /* [1..1] Array item type */
+	struct ctype_operators const *aifed_item_ops;  /* [1..1] Array item operators */
+	size_t                        aifed_stride;    /* Array item stride */
+	size_t                        aifed_count;     /* Array item count */
+	void                         *aifed_self;      /* Array base pointer */
+};
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+err_array_index_oob(CArrayType *tp_self, void *self, size_t index) {
+	DREF CLValue *lvalue;
+	DREF CLValueType *lv_type = CLValueType_Of(CArrayType_AsCType(tp_self));
+	if unlikely(!lv_type)
+		goto err;
+	lvalue = CLValue_Alloc();
+	if unlikely(!lvalue)
+		goto err_lv_type;
+	lvalue->cl_owner     = NULL;
+	lvalue->cl_value.ptr = self;
+	CLValue_InitInherited(lvalue, lv_type);
+	DeeRT_ErrIndexOutOfBounds(lvalue, index, CArrayType_Count(tp_self));
+	Dee_Decref_unlikely(lvalue);
+	return -1;
+err_lv_type:
+	Dee_Decref(CLValueType_AsType(lv_type));
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+array_initfrom_enumerate_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	void *item_addr;
+	struct array_initfrom_enumerate_data *data;
+	if (!value) /* Nothing to do for unbound items... */
+		return 0;
+	data = (struct array_initfrom_enumerate_data *)arg;
+	if unlikely(index >= data->aifed_count)
+		goto err_index_oob;
+	item_addr = (void *)((byte_t *)data->aifed_self + index * data->aifed_stride);
+	return (*data->aifed_item_ops->co_initfrom)(data->aifed_item_type, item_addr, value);
+err_index_oob:
+	return err_array_index_oob(data->aifed_tp_self, data->aifed_self, index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+array_initfrom_string(CArrayType *tp_self, void *self,
+                      void const *string_value) {
+	size_t string_length, char_size, remaining;
+	if unlikely(!string_value)
+		goto err;
+	string_length = WSTR_LENGTH(string_value);
+	if unlikely(string_length > CArrayType_Count(tp_self))
+		goto err_too_long;
+	char_size = CArrayType_SizeofPointedToType(tp_self);
+	remaining = CArrayType_Count(tp_self) - string_length;
+	CTYPES_FAULTPROTECT({
+		self = mempcpyc(self, string_value, string_length, char_size);
+		bzeroc(self, remaining, char_size);
+	}, goto err);
+	return 0;
+err_too_long:
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot initialize ctypes array %k using "
+	                "%" PRFuSIZ "-character long string",
+	                tp_self, string_length);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_initfrom(CArrayType *tp_self, void *self, DeeObject *value) {
 	/* >> local MyArray = int[42];
@@ -1487,12 +1776,54 @@ array_initfrom(CArrayType *tp_self, void *self, DeeObject *value) {
 	 * >> local a = MyArray({ 10, 20 });
 	 * >> local a = MyArray({ [7] = 10 }); // TBA-syntax; tldr: must support "seq_enumerate_items" for init
 	 */
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)value;
-	DeeError_NOTIMPLEMENTED();
+	Dee_ssize_t status;
+	struct array_initfrom_enumerate_data data;
+
+	if (DeeString_Check(value)) {
+		/* Special handling when this is an array-of-characters */
+		CType *item_type = CArrayType_PointedToType(tp_self);
+		if (item_type == &CChar_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf8(value));
+		} else if (item_type == &CWChar_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsWide(value));
+		} else if (item_type == &CChar16_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf16(value, STRING_ERROR_FREPLAC));
+		} else if (item_type == &CChar32_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf32(value));
+		} else if (item_type == &CInt8_Type || item_type == &CUInt8_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsBytes(value, false));
+		}
+	}
+#if 0 /* Not necessary -- same thing already happens by "seq_enumerate_index" below, so no extra code needed */
+	else if (DeeBytes_Check(value)) {
+		CType *item_type = CArrayType_PointedToType(tp_self);
+		if (item_type == &CChar_Type || item_type == &CInt8_Type || item_type == &CUInt8_Type) {
+			/* Allow direct initialization of array elements in this case */
+			/* ... */
+		}
+	}
+#endif
+
+	/* Pre-initialize everything to 0 */
+	CTYPES_FAULTPROTECT({
+		bzero(self, CType_Sizeof(CArrayType_AsCType(tp_self)));
+	}, goto err);
+
+	/* Enumerate "value" as a sequence */
+	data.aifed_tp_self   = tp_self;
+	data.aifed_item_type = CArrayType_PointedToType(tp_self);
+	data.aifed_item_ops  = CType_Operators(data.aifed_item_type);
+	data.aifed_stride    = CArrayType_SizeofPointedToType(tp_self);
+	data.aifed_count     = CArrayType_Count(tp_self);
+	data.aifed_self      = self;
+	status = DeeObject_InvokeMethodHint(seq_enumerate_index, value,
+	                                    &array_initfrom_enumerate_cb,
+	                                    &data, 0, (size_t)-1);
+	if unlikely(status < 0)
+		goto err;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1510,20 +1841,96 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_bool(CArrayType *tp_self, void const *self) {
+#if 0 /* This would be C-compatible... */
 	(void)tp_self;
 	return self ? 1 : 0;
+#else /* ... but since Array-objects also implement deemon's Sequence
+       *     interface, it makes more sense to return indicative of
+       *     the array being zero-length or not */
+	(void)self;
+	return CArrayType_Count(tp_self) ? 1 : 0;
+#endif
 }
+
+struct array_compare_seq_data {
+	CType        *acsd_to_item; /* [1..1] Array item type */
+	int (DCALL   *acsd_to_item_compare)(CType *tp_self, void const *lhs, DeeObject *rhs); /* [1..1] Array item type compare */
+	byte_t const *acsd_lhs;     /* Pointer to next array element */
+	size_t        acsd_rem;     /* Remaining array elements */
+	size_t        acsd_stride;  /* Item stride array elements */
+};
+
+#define ARRAY_COMPARE_EQ  0    /* LHS[?] == RHS[?] */
+#define ARRAY_COMPARE_ERR (-1) /* Error */
+#define ARRAY_COMPARE_LO  (-3) /* LHS[?] < RHS[?] */
+#define ARRAY_COMPARE_GR  (-4) /* LHS[?] > RHS[?] */
+#define ARRAY_COMPARE_EOF ARRAY_COMPARE_LO /* LHS ends before RHS */
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+array_compare_seq_cb(void *arg, DeeObject *rhs) {
+	int cmp;
+	void const *lhs;
+	struct array_compare_seq_data *data;
+	data = (struct array_compare_seq_data *)arg;
+	if (!data->acsd_rem)
+		return ARRAY_COMPARE_EOF;
+	lhs = data->acsd_lhs;
+	data->acsd_lhs += data->acsd_stride;
+	--data->acsd_rem;
+	cmp = (*data->acsd_to_item_compare)(data->acsd_to_item, lhs, rhs);
+	if (Dee_COMPARE_ISERR(cmp))
+		goto err;
+	if (Dee_COMPARE_ISLO(cmp))
+		return ARRAY_COMPARE_LO;
+	if (Dee_COMPARE_ISGR(cmp))
+		return ARRAY_COMPARE_GR;
+	return ARRAY_COMPARE_EQ;
+err:
+	return ARRAY_COMPARE_ERR;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_compare(CArrayType *tp_self, void const *lhs, DeeObject *rhs) {
-	union pointer rhs_cvalue; /* Support array-to-pointer decay */
-	if (DeeObject_AsPointer(rhs, CArrayType_PointedToType(tp_self), &rhs_cvalue))
+	Dee_ssize_t fe_status; /* fe = ForEach */
+	struct array_compare_seq_data data;
+	union pointer rhs_cvalue;
+	int ap_status; /* ap = AsPointer */
+
+	/* Support array-to-pointer decay */
+	ap_status = DeeObject_TryAsPointer(rhs, CArrayType_PointedToType(tp_self), &rhs_cvalue);
+	if (ap_status <= 0) {
+		if unlikely(ap_status < 0)
+			goto err;
+		if (lhs < rhs_cvalue.ptr)
+			return Dee_COMPARE_LO;
+		if (lhs > rhs_cvalue.ptr)
+			return Dee_COMPARE_GR;
+		return Dee_COMPARE_EQ;
+	}
+
+	/* Still: also support regular sequence compare */
+	data.acsd_to_item         = CArrayType_PointedToType(tp_self);
+	data.acsd_to_item_compare = CType_Operators(data.acsd_to_item)->co_compare;
+	data.acsd_lhs             = (byte_t const *)lhs;
+	data.acsd_rem             = CArrayType_Count(tp_self);
+	data.acsd_stride          = CArrayType_SizeofPointedToType(tp_self);
+	fe_status = DeeObject_Foreach(rhs, &array_compare_seq_cb, &data);
+	ASSERT(fe_status == ARRAY_COMPARE_EQ ||
+	       fe_status == ARRAY_COMPARE_ERR ||
+	       fe_status == ARRAY_COMPARE_LO ||
+	       fe_status == ARRAY_COMPARE_GR);
+	switch (fe_status) {
+	case ARRAY_COMPARE_EQ:
+		return Dee_COMPARE_EQ;
+	case ARRAY_COMPARE_ERR:
 		goto err;
-	if (lhs < rhs_cvalue.ptr)
+	case ARRAY_COMPARE_LO:
 		return Dee_COMPARE_LO;
-	if (lhs > rhs_cvalue.ptr)
+	case ARRAY_COMPARE_GR:
 		return Dee_COMPARE_GR;
-	return Dee_COMPARE_EQ;
+	default: __builtin_unreachable();
+	}
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -78,6 +78,7 @@
 		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Include="..\..\src\dex\ctypes\constants.def" />
 	</ItemGroup>
 	<ItemGroup>
 		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S">

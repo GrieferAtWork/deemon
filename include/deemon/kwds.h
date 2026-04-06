@@ -201,7 +201,7 @@ typedef struct Dee_kwds_object {
 	 *          mapping by calling `DeeKwdsMapping_New()' (see below) */
 	Dee_OBJECT_HEAD
 	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map'. */
-	size_t                                         kw_mask; /* [const] Mask for keyword names. */
+	Dee_hash_t                                     kw_mask; /* [const] Mask for keyword names. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_kwds_entry, kw_map); /* [kw_mask+1][const] Keyword name->index map. */
 } DeeKwdsObject;
 #define DeeKwds_MAPNEXT(i, perturb) \
@@ -210,8 +210,8 @@ typedef struct Dee_kwds_object {
 #define Dee_DEFINE_KWDS(name, kw_size_, kw_mask_, ...) \
 	struct {                                           \
 		Dee_OBJECT_HEAD                                \
-		size_t kw_size;                                \
-		size_t kw_mask;                                \
+		size_t     kw_size;                            \
+		Dee_hash_t kw_mask;                            \
 		struct Dee_kwds_entry kw_map[(kw_mask_) + 1];  \
 	} name = {                                         \
 		Dee_OBJECT_HEAD_INIT(&DeeKwds_Type),           \

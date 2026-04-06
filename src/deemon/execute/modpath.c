@@ -1327,6 +1327,7 @@ module_byaddr_ensure_initialized_impl(void) {
 
 	/* Initialize "deemon_dexdata.mdx_handle" if it wasn't already initialized statically. */
 #ifndef deemon_dexdata__mdx_module__IS_STATIC
+	/* XXX: These methods here don't work when the deemon core lives in a shared library! */
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	deemon_dexdata.mdx_handle = GetModuleHandleW(NULL)
 #elif defined(DeeSystem_DlOpen_USE_dlopen)

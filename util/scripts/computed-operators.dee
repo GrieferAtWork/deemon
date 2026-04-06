@@ -26,7 +26,6 @@ import int, * from ctypes;
 import hashlib;
 import posix;
 import deemon;
-import ipc;
 import rt;
 import fs;
 import errors;
@@ -358,7 +357,11 @@ local final Dee_funptr_t = try void.func(void).ptr catch (NotImplemented) ({
 	/* NotImplemented: ctypes was built without C-functions being enabled */
 	return;
 });
-local final deemonExe = ShLib(ipc.Process.current.exe);
+
+local final CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+local final deemonExe = CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	? ShLib.ofmodule(deemon)
+	: ShLib((Process from ipc).current.exe);
 local final DeeType_GetNativeOperatorWithoutUnsupported = (Dee_funptr_t(DeeObject_ptr, int).ptr)(
 	Mapping.get(deemonExe, "DeeType_GetNativeOperatorWithoutUnsupported") ??
 	Mapping.get(deemonExe, "_DeeType_GetNativeOperatorWithoutUnsupported") ??

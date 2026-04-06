@@ -1158,8 +1158,8 @@ filetype_serialize(DeeFileTypeObject *__restrict self,
 
 PRIVATE DeeTypeObject *tpconst filetype_mro[] = {
 	&DeeType_Type,
-	&DeeObject_Type,
 	&DeeCallable_Type, /* Types can be called to invoke their constructor, so have them implement deemon.Callable. */
+	&DeeObject_Type,
 	NULL,
 };
 

@@ -1,0 +1,134 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import ctypes;
+import .common.test;
+
+if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
+	return;
+
+
+function genericAlignOf(T: ctypes.CType): int {
+	ctypes.struct st {
+		("_", ctypes.char),
+		("v", T),
+	};
+	return st.offsetof("v");
+}
+
+/* Assert that the good 'ol native-c-alignment trick also works with ctypes */
+for (local T: [ctypes.uint8_t, ctypes.uint16_t, ctypes.uint32_t, ctypes.uint64_t, ctypes.uint128_t])
+	test.assertEquals(T.alignof, genericAlignOf(T));
+
+
+ctypes.struct MyComplexStruct {
+	("x", ctypes.int32_t),
+	("y", ctypes.int32_t),
+	ctypes.union {
+		("zle", ctypes.le32),
+		("zbe", ctypes.be32),
+	},
+	("v", ctypes.uint32_t[13]),
+	ctypes.union {
+		("kp", ctypes.char.ptr),
+		("ku64", ctypes.uint64_t),
+	},
+};
+
+
+
+test.assertEquals(0, MyComplexStruct.offsetof("x"));
+test.assertEquals(4, MyComplexStruct.offsetof("y"));
+test.assertEquals(8, MyComplexStruct.offsetof("zle"));
+test.assertEquals(8, MyComplexStruct.offsetof("zbe"));
+test.assertEquals(12, MyComplexStruct.offsetof("v"));
+test.assertEquals(64, MyComplexStruct.offsetof("kp"));
+test.assertEquals(64, MyComplexStruct.offsetof("ku64"));
+
+test.assertEquals(4, MyComplexStruct.offsetafter("x"));
+test.assertEquals(8, MyComplexStruct.offsetafter("y"));
+test.assertEquals(12, MyComplexStruct.offsetafter("zle"));
+test.assertEquals(12, MyComplexStruct.offsetafter("zbe"));
+test.assertEquals(64, MyComplexStruct.offsetafter("v"));
+test.assertEquals(64 + ctypes.Pointer.sizeof, MyComplexStruct.offsetafter("kp"));
+test.assertEquals(72, MyComplexStruct.offsetafter("ku64"));
+
+test.assertEquals(ctypes.uint64_t.alignof, MyComplexStruct.alignof);
+test.assertEquals(72, MyComplexStruct.sizeof);
+
+/* Assert that all types of initialization work for "MyComplexStruct" */
+test.assertEqualsTyped(
+	MyComplexStruct(),
+	MyComplexStruct({}),
+);
+test.assertEqualsTyped(
+	MyComplexStruct(x: 10, y: 20, zle: 0x11223344, v: { 1, 2, 3, 4 }),
+	MyComplexStruct({ 10, 20, { 0x11223344 }, { 1, 2, 3, 4 }, { none } }),
+);
+local myString = "foobar";
+test.assertEqualsTyped(
+	MyComplexStruct(x: 10, y: 20, zle: 0x11223344, v: { 1, 2, 3, 4 }, kp:	 myString),
+	MyComplexStruct({ .x = 10, .y = 20, .zle = 0x11223344, .v = { 1, 2, 3, 4 }, .kp = myString }),
+);
+
+
+
+/* Also assert that string-to-char-pointer always works */
+ctypes.union MyStringUnion {
+	("s", ctypes.char.ptr),
+	("c16", ctypes.char16_t.ptr),
+	("c32", ctypes.char32_t.ptr),
+	("u8_16", ctypes.uint8_t[16].ptr),
+	("u8_8", ctypes.uint8_t[8].ptr),
+	("u8_4", ctypes.uint8_t[4].ptr),
+	("u16_16", ctypes.uint16_t[16].ptr),
+	("u16_8", ctypes.uint16_t[8].ptr),
+	("u16_4", ctypes.uint16_t[4].ptr),
+	("u32_4", ctypes.uint32_t[4].ptr),
+	("ws", ctypes.wchar_t.ptr),
+	("wc_4", ctypes.wchar_t[4].ptr),
+};
+
+local x = MyStringUnion();
+x.s = "foo";
+test.assertSequence(x.u8_4.ind, "foo\0".ordinals);
+
+x.c16 = "foo";
+test.assertSequence(x.u16_4.ind, "foo\0".ordinals);
+if (ctypes.BYTE_ORDER == ctypes.ORDER_LITTLE_ENDIAN) {
+	test.assertSequence(x.u8_8.ind, "f\0o\0o\0\0\0".ordinals);
+} else {
+	test.assertSequence(x.u8_8.ind, "\0f\0o\0o\0\0".ordinals);
+}
+
+x.c32 = "foo";
+test.assertSequence(x.u32_4.ind, "foo\0".ordinals);
+if (ctypes.BYTE_ORDER == ctypes.ORDER_LITTLE_ENDIAN) {
+	test.assertSequence(x.u16_8.ind, "f\0o\0o\0\0\0".ordinals);
+	test.assertSequence(x.u8_16.ind, "f\0\0\0o\0\0\0o\0\0\0\0\0\0\0".ordinals);
+} else {
+	test.assertSequence(x.u16_8.ind, "\0f\0o\0o\0\0".ordinals);
+	test.assertSequence(x.u8_16.ind, "\0\0\0f\0\0\0o\0\0\0o\0\0\0\0".ordinals);
+}
+
+x.ws = "foo";
+test.assertSequence(x.wc_4.ind, "foo\0".ordinals);

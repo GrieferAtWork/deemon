@@ -78,6 +78,7 @@
 		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Include="..\..\src\dex\ctypes\constants.def" />
 		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S">
 			<FileType>Document</FileType>
 			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"

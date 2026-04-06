@@ -30,7 +30,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Free */
-#include <deemon/arg.h>       /* DeeArg_Unpack*, UNPuSIZ */
+#include <deemon/arg.h>       /* DeeArg_UnpackStruct*, UNPuSIZ */
 #include <deemon/bool.h>      /* Dee_False, Dee_True */
 #include <deemon/bytes.h>     /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
@@ -40,7 +40,6 @@
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, Dee_Incref, Dee_uint128_t */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeString_Type */
-#include <deemon/tuple.h>     /* Dee_EmptyTuple */
 #include <deemon/type.h>      /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
@@ -50,7 +49,7 @@
 
 #include "c_api.h"
 
-#include <stdbool.h> /* bool, true */
+#include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t */
 
@@ -225,8 +224,8 @@ do_rethrow:
 #endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
 
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("sizeof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
-#define libctypes_sizeof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+/*[[[deemon (print_CMethod from rt.gen.unpack)("sizeof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_sizeof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_sizeof, &libctypes_sizeof_f_impl, METHOD_FCONSTCALL);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob)
@@ -252,8 +251,8 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("alignof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
-#define libctypes_alignof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+/*[[[deemon (print_CMethod from rt.gen.unpack)("alignof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_alignof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_alignof, &libctypes_alignof_f_impl, METHOD_FCONSTCALL);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeObject *ob)
@@ -276,8 +275,8 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("typeof", "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
-#define libctypes_typeof_params "ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat"
+/*[[[deemon (print_CMethod from rt.gen.unpack)("typeof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+#define libctypes_typeof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_typeof, &libctypes_typeof_f_impl, METHOD_FCONSTCALL);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob)
@@ -406,6 +405,47 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 	                size);
 	return NULL;
 }
+
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap_intfor", """
+	size_t size,
+	bool $signed = true
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "CType");]]]*/
+#define libctypes_bswap_intfor_params "size:?Dint,signed=!t"
+FORCELOCAL WUNUSED DREF CType *DCALL libctypes_bswap_intfor_f_impl(size_t size, bool signed_);
+PRIVATE WUNUSED DREF CType *DCALL libctypes_bswap_intfor_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		size_t size;
+		bool signed_;
+	} args;
+	args.signed_ = true;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "bswap_intfor", &args, &args.size, UNPuSIZ, DeeObject_AsSize, &args.signed_, "b", DeeObject_AsBool);
+	return libctypes_bswap_intfor_f_impl(args.size, args.signed_);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(libctypes_bswap_intfor, &libctypes_bswap_intfor_f, METHOD_FCONSTCALL);
+FORCELOCAL WUNUSED DREF CType *DCALL libctypes_bswap_intfor_f_impl(size_t size, bool signed_)
+/*[[[end]]]*/
+{
+	CType *result = NULL;
+	switch (size) {
+	case 1: result = signed_ ? &CBSwapInt8_Type : &CBSwapUInt8_Type; break;
+	case 2: result = signed_ ? &CBSwapInt16_Type : &CBSwapUInt16_Type; break;
+	case 4: result = signed_ ? &CBSwapInt32_Type : &CBSwapUInt32_Type; break;
+	case 8: result = signed_ ? &CBSwapInt64_Type : &CBSwapUInt64_Type; break;
+	case 16: result = signed_ ? &CBSwapInt128_Type : &CBSwapUInt128_Type; break;
+	default:
+		DeeError_Throwf(&DeeError_ValueError,
+		                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
+		                size);
+		return NULL;
+	}
+	Dee_Incref(CType_AsType(result));
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
 #define libctypes_struct DeeStructType_Type
@@ -673,6 +713,22 @@ PRIVATE bool DCALL libctypes_clear(void) {
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
+/* Define some magic constants that may be of interest to user-code. */
+/*[[[deemon
+import * from deemon;
+import * from rt.gen.dexutils;
+MODULE_NAME = "ctypes";
+
+include("constants.def");
+gi("BYTE_ORDER", "__BYTE_ORDER__");
+gi("FLOAT_WORD_ORDER", "__FLOAT_WORD_ORDER__");
+gi("ORDER_LITTLE_ENDIAN", "__ORDER_LITTLE_ENDIAN__");
+gi("ORDER_BIG_ENDIAN", "__ORDER_BIG_ENDIAN__");
+gi("ORDER_PDP_ENDIAN", "__ORDER_PDP_ENDIAN__");
+]]]*/
+#include "constants.def"
+/*[[[end]]]*/
+
 
 DEX_BEGIN
 
@@ -709,8 +765,8 @@ DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
              "Convenience alias for ?GStructType's constructor with ${union: true}"),
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
-             "(fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType\n"
-             "(name:?Dstring,fields:?X2?S?T2?Dstring?GStructuredType?M?Dstring?GStructuredType)->?GStructType"),
+             "(fields:?X2?S?T2?Dstring?GCType?M?Dstring?GCType)->?GStructType\n"
+             "(name:?Dstring,fields:?X2?S?T2?Dstring?GCType?M?Dstring?GCType)->?GStructType"),
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 /* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
@@ -738,8 +794,8 @@ DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
  */
 
 /* A wrapper around the native shared-library loader. */
-DEX_MEMBER_F_NODOC("ShLib", &DeeShLib_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("dlopen", &DeeShLib_Type, Dee_DEXSYM_READONLY), /* Convenience alias for `ShLib' */
+DEX_MEMBER_F_NODOC("ShLib", &ShLib_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("dlopen", &ShLib_Type, Dee_DEXSYM_READONLY), /* Convenience alias for `ShLib' */
 
 /* Export all the C-types. */
 DEX_MEMBER_F_NODOC("void", DeeSType_AsObject(&DeeCVoid_Type), Dee_DEXSYM_READONLY),
@@ -829,12 +885,40 @@ DEX_MEMBER_F("alignof", &libctypes_alignof, Dee_DEXSYM_READONLY,
              "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
              "Returns the alignment of a given structured type or object in bytes"),
 DEX_MEMBER_F("typeof", &libctypes_typeof, Dee_DEXSYM_READONLY,
-             "(ob:?X7?GStructuredType?GStructured?DType?N?Dbool?Dint?Dfloat)->?GStructuredType\n"
+             "(ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat)->?GCType\n"
              "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
              "Returns the type of a given structured type or object"),
 DEX_MEMBER_F("intfor", &libctypes_intfor, Dee_DEXSYM_READONLY,
-             "(" libctypes_intfor_params ")->?GStructuredType\n"
+             "(" libctypes_intfor_params ")->?GCType\n"
              "#tValueError{No integer matching the requirements of @size is supported}"),
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F("bswap_intfor", &libctypes_bswap_intfor, Dee_DEXSYM_READONLY,
+             "(" libctypes_bswap_intfor_params ")->?GCType\n"
+             "#tValueError{No integer matching the requirements of @size is supported}\n"
+             "Same as ?Gintfor, but returns the relevant byte-swapped type "
+             /**/ "instead (e.g. ?Gbswap_int32_t instead of ?Gint32_t)"),
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define libctypes_leintfor        libctypes_intfor
+#define libctypes_leintfor_params libctypes_intfor_params
+#define libctypes_beintfor        libctypes_bswap_intfor
+#define libctypes_beintfor_params libctypes_bswap_intfor_params
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define libctypes_leintfor        libctypes_bswap_intfor
+#define libctypes_leintfor_params libctypes_bswap_intfor_params
+#define libctypes_beintfor        libctypes_intfor
+#define libctypes_beintfor_params libctypes_intfor_params
+#else /* __BYTE_ORDER__ == ... */
+#error "Unsupported `__BYTE_ORDER__'"
+#endif /* __BYTE_ORDER__ != ... */
+DEX_MEMBER_F("leintfor", &libctypes_leintfor, Dee_DEXSYM_READONLY,
+             "(" libctypes_leintfor_params ")->?GCType\n"
+             "#tValueError{No integer matching the requirements of @size is supported}\n"
+             "Return the relevant little-endian integer type (s.a. ?Gintfor, ?Gbswap_intfor, ?GBYTE_ORDER)"),
+DEX_MEMBER_F("beintfor", &libctypes_beintfor, Dee_DEXSYM_READONLY,
+             "(" libctypes_beintfor_params ")->?GCType\n"
+             "#tValueError{No integer matching the requirements of @size is supported}\n"
+             "Return the relevant big-endian integer type (s.a. ?Gintfor, ?Gbswap_intfor, ?GBYTE_ORDER)"),
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 DEX_MEMBER_F("bswap16", &libctypes_bswap16, Dee_DEXSYM_READONLY,
              "(" libctypes_bswap16_params ")->?Guint16_t\n"
@@ -1306,113 +1390,113 @@ DEX_MEMBER_F("basename", &c_string_basename, Dee_DEXSYM_READONLY,
 
 /* Atomic functions */
 DEX_MEMBER_F("atomic_cmpxch", &c_atomic_atomic_cmpxch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
+             "(ptr:?Aptr?GCObject,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind],weak=!f)->?Dbool\n"
              "Do an atomic compare-and-exchange of memory at @ptr from @oldval to @newval\n"
              /**/ "When @weak is true, the operation is allowed to fail sporadically, even when "
              /**/ "memory at @ptr and @oldval are identical\n"
              "This is a type-generic operation, with the address-width of the atomic operation "
              /**/ "depending on the typing of @ptr. Supported widths are $1, $2, $4 and $8 bytes"),
 DEX_MEMBER_F("atomic_cmpxch_val", &c_atomic_atomic_cmpxch_val, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,oldval:?Q!A!Aptr!Pind],newval:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Same as ?Gatomic_cmpxch, except that rather than returning ?t or ?f indicative of "
              /**/ "the success of the exchange, the #Ireal old value read from @ptr is returned. If "
              /**/ "this is equal to @oldval, the operation was successful. If not, memory pointed-to "
              /**/ "by @ptr remains unchanged"),
 DEX_MEMBER_F("atomic_fetchadd", &c_atomic_atomic_fetchadd, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind += addend; r; })}"),
 DEX_MEMBER_F("atomic_fetchsub", &c_atomic_atomic_fetchsub, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind -= addend; r; })}"),
 DEX_MEMBER_F("atomic_fetchand", &c_atomic_atomic_fetchand, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind &= mask; r; })}"),
 DEX_MEMBER_F("atomic_fetchor", &c_atomic_atomic_fetchor, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind |= mask; r; })}"),
 DEX_MEMBER_F("atomic_fetchxor", &c_atomic_atomic_fetchxor, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind ^= mask; r; })}"),
 DEX_MEMBER_F("atomic_fetchnand", &c_atomic_atomic_fetchnand, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ local r = copy ptr.ind; ptr.ind = ~(ptr.ind & mask); r; })}"),
 DEX_MEMBER_F("atomic_addfetch", &c_atomic_atomic_addfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind += addend; copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_subfetch", &c_atomic_atomic_subfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind -= addend; copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_andfetch", &c_atomic_atomic_andfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind &= mask; copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_orfetch", &c_atomic_atomic_orfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind |= mask; copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_xorfetch", &c_atomic_atomic_xorfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind ^= mask; copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_nandfetch", &c_atomic_atomic_nandfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${({ ptr.ind = ~(ptr.ind & mask); copy ptr.ind; })}"),
 DEX_MEMBER_F("atomic_add", &c_atomic_atomic_add, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind += addend}"),
 DEX_MEMBER_F("atomic_sub", &c_atomic_atomic_sub, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,addend:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,addend:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind -= addend}"),
 DEX_MEMBER_F("atomic_and", &c_atomic_atomic_and, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind &= mask}"),
 DEX_MEMBER_F("atomic_or", &c_atomic_atomic_or, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind |= mask}"),
 DEX_MEMBER_F("atomic_xor", &c_atomic_atomic_xor, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind ^= mask}"),
 DEX_MEMBER_F("atomic_nand", &c_atomic_atomic_nand, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,mask:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,mask:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind = ~(ptr.ind & mask)}"),
 DEX_MEMBER_F("atomic_write", &c_atomic_atomic_write, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,value:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,value:?Q!A!Aptr!Pind])\n"
              "Atomic operation for ${ptr.ind = value}"),
 DEX_MEMBER_F("atomic_fetchinc", &c_atomic_atomic_fetchinc, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject)->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${ptr.ind++}"),
 DEX_MEMBER_F("atomic_fetchdec", &c_atomic_atomic_fetchdec, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject)->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${ptr.ind--}"),
 DEX_MEMBER_F("atomic_incfetch", &c_atomic_atomic_incfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject)->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${++ptr.ind}"),
 DEX_MEMBER_F("atomic_decfetch", &c_atomic_atomic_decfetch, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject)->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${--ptr.ind}"),
 DEX_MEMBER_F("atomic_read", &c_atomic_atomic_read, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)->?Q!A!Aptr!Pind]\n"
+             "(ptr:?Aptr?GCObject)->?Q!A!Aptr!Pind]\n"
              "Atomic operation for ${copy ptr.ind}"),
 DEX_MEMBER_F("atomic_inc", &c_atomic_atomic_inc, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)\n"
+             "(ptr:?Aptr?GCObject)\n"
              "Atomic operation for ${++ptr.ind}"),
 DEX_MEMBER_F("atomic_dec", &c_atomic_atomic_dec, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)\n"
+             "(ptr:?Aptr?GCObject)\n"
              "Atomic operation for ${--ptr.ind}"),
 
 /* Futex functions */
 DEX_MEMBER_F("futex_wakeone", &c_atomic_futex_wakeone, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)\n"
+             "(ptr:?Aptr?GCObject)\n"
              "Wake at most 1 thread that is waiting for @ptr to change (s.a. ?Gfutex_wait)"),
 DEX_MEMBER_F("futex_wakeall", &c_atomic_futex_wakeall, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured)\n"
+             "(ptr:?Aptr?GCObject)\n"
              "Wake all threads that are waiting for @ptr to change (s.a. ?Gfutex_wait)"),
 DEX_MEMBER_F("futex_wait", &c_atomic_futex_wait, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind])\n"
+             "(ptr:?Aptr?GCObject,expected:?Q!A!Aptr!Pind])\n"
              "Atomically check if ${ptr.ind == expected}. If this isn't the case, return immediately. "
              /**/ "Otherwise, wait until another thread makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, "
              /**/ "or until the #I{stars align} (by which I mean that this function might also return sporadically)\n"
              "This function can be used to form the basis of any other synchronization "
              /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
 DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GStructured,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
+             "(ptr:?Aptr?GCObject,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
              "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
              /*   */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"
              "#r{false The given @timeout_nanoseconds has expired}"
@@ -1428,6 +1512,13 @@ DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_True, "Will be removed onc
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_False, "For transitioning phase"),
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+
+/* Magic constants */
+CTYPES_BYTE_ORDER_DEF
+CTYPES_FLOAT_WORD_ORDER_DEF
+CTYPES_ORDER_LITTLE_ENDIAN_DEF
+CTYPES_ORDER_BIG_ENDIAN_DEF
+CTYPES_ORDER_PDP_ENDIAN_DEF
 
 /* clang-format off */
 DEX_END(
