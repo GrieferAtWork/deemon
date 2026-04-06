@@ -67,7 +67,7 @@
  */
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_CTYPES) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES))
-#if 0 /* TODO: Complete, but untested, probably broken, and maybe even incomplete */
+#if 1
 #define CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES
