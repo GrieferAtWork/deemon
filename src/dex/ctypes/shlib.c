@@ -155,7 +155,7 @@ shlib_visit(ShLib *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(DeeSType_AsType(self->sh_vfunptr));
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #endif /* !CONFIG_NO_CFUNCTION */
-	Dee_XDecref(self->sh_lib_owner);
+	Dee_XVisit(self->sh_lib_owner);
 }
 
 #ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES

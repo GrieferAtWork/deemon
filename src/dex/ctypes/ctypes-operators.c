@@ -1360,7 +1360,7 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_cannot_mix_positional_keyword_in_struct_init(CStructType *tp_self,
                                                  size_t num_positional,
                                                  size_t num_keyword) {
