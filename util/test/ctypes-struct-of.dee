@@ -25,6 +25,8 @@ import ctypes;
 if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
 	return;
 
+assert ctypes.le32.implements(deemon.Numeric);
+
 local WeirdStruct = ctypes.struct.of({
 	{ 0, "x", ctypes.le32 },
 	{ 1, "y", ctypes.le32 },
@@ -39,3 +41,7 @@ assert WeirdStruct.typeof_field("y") == ctypes.le32;
 local instance = WeirdStruct();
 instance.x = 0x11223344;
 assert instance.y == 0x112233;
+assert instance.y is ctypes.LValue;
+assert instance.y is ctypes.CObject;
+assert instance.y is deemon.Numeric; /* Special handling, triggered because "le32.implements(Numeric)" */
+assert instance.y.hex() == "0x112233"; /* .hex() is inherited from "Numeric" */

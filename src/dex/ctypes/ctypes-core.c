@@ -31,6 +31,7 @@
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStruct*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* Dee_False, Dee_True */
 #include <deemon/bytes.h>           /* DeeBytes* */
+#include <deemon/numeric.h>           /* DeeBytes* */
 #include <deemon/callable.h>        /* DeeCallable_Type */
 #include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrIndexOutOfBounds, DeeRT_ErrRestrictedAttrCStr */
 #include <deemon/error.h>           /* DeeError_* */
@@ -4486,6 +4487,14 @@ PRIVATE struct type_seq cpointerlvalue_seq = {
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,              /* TODO: &cpointerlvalue_setrange_index_n */
 };
 
+PRIVATE DeeTypeObject *tpconst cnumericlvalue_subclass_mro[] = {
+	CLValueType_AsType(&AbstractCLValue_Type),
+	CType_AsType(&AbstractCObject_Type),
+	&DeeObject_Type,
+	&DeeNumeric_Type,
+	NULL,
+};
+
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF CLValueType *DCALL
@@ -4552,6 +4561,9 @@ CLValuetype_New(CType *__restrict self) {
 			}
 			/* LValue-to-pointer allows for array-style indexing */
 			result->clt_base.ct_base.tp_seq = &cpointerlvalue_seq;
+		} else if (DeeType_Implements(CType_AsType(self), &DeeNumeric_Type)) {
+			/* Retain (and expose) helper methods from "Numeric" if the referenced object is a number */
+			result->clt_base.ct_base.tp_mro = cnumericlvalue_subclass_mro;
 		}
 	}
 
