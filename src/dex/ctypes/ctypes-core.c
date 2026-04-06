@@ -4507,7 +4507,7 @@ DECL_END
 DECL_BEGIN
 
 #ifdef CTYPES_DEFINE_STATIC_POINTER_TYPES
-INTDEF CPointerType CVoidPtr_Type = {
+INTERN CPointerType CVoidPtr_Type = {
 	/* .cpt_base = */ {
 		/* .ct_base = */ {
 			OBJECT_HEAD_INIT(&CPointerType_Type),
@@ -4569,7 +4569,7 @@ INTDEF CPointerType CVoidPtr_Type = {
 	/* .cpt_size = */ 0,
 };
 
-INTDEF CPointerType CCharPtr_Type = {
+INTERN CPointerType CCharPtr_Type = {
 	/* .cpt_base = */ {
 		/* .ct_base = */ {
 			OBJECT_HEAD_INIT(&CPointerType_Type),

@@ -89,7 +89,7 @@ err:
 #define UNSUPPORTED_OPERATOR_FMT(name) "Unsupported ctypes operator " name ": %k"
 
 /* Generic, unsupported types */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 unsupported__bool(CType *tp_self, void const *self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -97,7 +97,7 @@ unsupported__bool(CType *tp_self, void const *self) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__compare(CType *tp_self, void const *lhs, DeeObject *rhs) {
 	(void)lhs;
 	(void)rhs;
@@ -106,7 +106,7 @@ unsupported__compare(CType *tp_self, void const *lhs, DeeObject *rhs) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1/*, 3*/)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1/*, 3*/)) int DCALL
 unsupported__int32(CType *tp_self, void const *self, int32_t *result) {
 	(void)self;
 	(void)result;
@@ -124,7 +124,7 @@ unsupported__int64(CType *tp_self, void const *self, int64_t *result) {
 }
 #endif
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__double(CType *tp_self, void const *self, double *result) {
 	(void)self;
 	(void)result;
@@ -133,13 +133,13 @@ unsupported__double(CType *tp_self, void const *self, double *result) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
 unsupported__int(CType *tp_self, void const *self) {
 	unsupported__int32(tp_self, self, NULL);
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
 unsupported__inv(CType *tp_self, void const *self) {
 	(void)self;
 	DeeError_Throwf(&DeeError_TypeError,
@@ -148,7 +148,7 @@ unsupported__inv(CType *tp_self, void const *self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
 unsupported__pos(CType *tp_self, void const *self) {
 	(void)self;
 	DeeError_Throwf(&DeeError_TypeError,
@@ -157,7 +157,7 @@ unsupported__pos(CType *tp_self, void const *self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
 unsupported__neg(CType *tp_self, void const *self) {
 	(void)self;
 	DeeError_Throwf(&DeeError_TypeError,
@@ -166,7 +166,7 @@ unsupported__neg(CType *tp_self, void const *self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__add(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -176,7 +176,7 @@ unsupported__add(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__sub(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -186,7 +186,7 @@ unsupported__sub(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__mul(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -196,7 +196,7 @@ unsupported__mul(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__div(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -206,7 +206,7 @@ unsupported__div(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__mod(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -216,7 +216,7 @@ unsupported__mod(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__shl(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -226,7 +226,7 @@ unsupported__shl(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__shr(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -236,7 +236,7 @@ unsupported__shr(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__and(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -246,7 +246,7 @@ unsupported__and(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__or(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -256,7 +256,7 @@ unsupported__or(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__xor(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -266,7 +266,7 @@ unsupported__xor(CType *tp_self, void const *self, DeeObject *some_object) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) DREF DeeObject *DCALL
 unsupported__pow(CType *tp_self, void const *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -277,7 +277,7 @@ unsupported__pow(CType *tp_self, void const *self, DeeObject *some_object) {
 }
 
 	/* Inplace operators */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 unsupported__inc(CType *tp_self, void *self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -285,7 +285,7 @@ unsupported__inc(CType *tp_self, void *self) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 unsupported__dec(CType *tp_self, void *self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -293,7 +293,7 @@ unsupported__dec(CType *tp_self, void *self) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_add(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -302,7 +302,7 @@ unsupported__inplace_add(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_sub(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -311,7 +311,7 @@ unsupported__inplace_sub(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_mul(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -320,7 +320,7 @@ unsupported__inplace_mul(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_div(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -329,7 +329,7 @@ unsupported__inplace_div(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_mod(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -338,7 +338,7 @@ unsupported__inplace_mod(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_shl(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -347,7 +347,7 @@ unsupported__inplace_shl(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_shr(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -356,7 +356,7 @@ unsupported__inplace_shr(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_and(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -365,7 +365,7 @@ unsupported__inplace_and(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_or(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -374,7 +374,7 @@ unsupported__inplace_or(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_xor(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -383,7 +383,7 @@ unsupported__inplace_xor(CType *tp_self, void *self, DeeObject *some_object) {
 	                       tp_self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
 unsupported__inplace_pow(CType *tp_self, void *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;

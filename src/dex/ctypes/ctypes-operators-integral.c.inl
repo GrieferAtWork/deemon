@@ -525,10 +525,8 @@ LOCAL_bool(CType *tp_self, void const *self) {
 	(void)tp_self;
 	CTYPES_FAULTPROTECT({
 		cvalue = LOCAL_UNALIGNED_GET(self);
-	}, goto err);
+	}, return -1);
 	return LOCAL_op_iszero(cvalue) ? 0 : 1;
-err:
-	return -1;
 }
 
 
@@ -768,7 +766,7 @@ err:
 }
 
 
-PRIVATE WUNUSED ATTR_COLD int DCALL
+PRIVATE ATTR_COLD int DCALL
 LOCAL_FUNC(divide_by_zero)(LOCAL_intN_t lhs_cvalue,
                            LOCAL_intN_t rhs_cvalue) {
 	struct Dee_variant lhs_var;
