@@ -277,17 +277,17 @@ CType_PrintCRepr_impl(CType *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ctype_crepr(CType *self, size_t argc, DeeObject *const *argv) {
+ctype_typename(CType *self, size_t argc, DeeObject *const *argv) {
 	struct Dee_unicode_printer printer;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("crepr", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typename", params: "
 	char const *varname = \"\";
 ", docStringPrefix: "ctype");]]]*/
-#define ctype_crepr_params "varname=!P{}"
+#define ctype_typename_params "varname=!P{}"
 	struct {
 		char const *varname;
 	} args;
 	args.varname = "";
-	if (DeeArg_UnpackStruct(argc, argv, "|s:crepr", &args))
+	if (DeeArg_UnpackStruct(argc, argv, "|s:typename", &args))
 		goto err;
 /*[[[end]]]*/
 	Dee_unicode_printer_init(&printer);
@@ -321,8 +321,8 @@ PRIVATE struct type_method tpconst ctype_methods[] = {
 	            "(" ctype_frombytes_params ")->?.\n"
 	            "#tValueError{The given ${#data - offset} is less than ?#sizeof}"
 	            "Construct an instance of @this structured type from @data"),
-	TYPE_METHOD("crepr", &ctype_crepr,
-	            "(" ctype_crepr_params ")->?Dstring\n"
+	TYPE_METHOD("typename", &ctype_typename,
+	            "(" ctype_typename_params ")->?Dstring\n"
 	            "Same as ?#{op:str}, but allows you to specify the name of a "
 	            /**/ "variable that should appear to be typed according to @this"),
 
@@ -424,7 +424,7 @@ INTERN DeeTypeObject CType_Type = {
 	                         "\n"
 
 	                         "str->\n"
-	                         "Returns the C-representation of this type\n"
+	                         "Returns the C-representation of this type (s.a. ?#typename)\n"
 	                         "\n"
 
 	                         "repr->\n"
@@ -2365,6 +2365,9 @@ PRIVATE struct type_member tpconst cfunctiontype_members[] = {
 #ifndef CONFIG_NO_CFUNCTION
 	TYPE_MEMBER_FIELD_DOC("returntype", STRUCT_OBJECT_AB, offsetof(CFunctionType, cft_return),
 	                      "->?GCType"),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CFunctionType, cft_return),
+	                      "->?GCType\n"
+	                      "Deprecated alias for ?#returntype"),
 #else /* !CONFIG_NO_CFUNCTION */
 	TYPE_MEMBER_CONST("returntype", &CVoid_Type),
 #endif /* CONFIG_NO_CFUNCTION */
@@ -3677,6 +3680,24 @@ PRIVATE struct type_getset tpconst clvalue_getsets[] = {
 };
 
 
+#ifdef CONFIG_NO_DEEMON_100_COMPAT
+#define clvalue_methods NULL
+#else /* CONFIG_NO_DEEMON_100_COMPAT */
+PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
+clvalue_legacy_ref_func(CLValue *self, size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack0(err, argc, argv, "__ref__");
+	return CLValue_Ptr(self);
+err:
+	return NULL;
+}
+PRIVATE struct type_method tpconst clvalue_methods[] = {
+	TYPE_METHOD("__ref__", &clvalue_legacy_ref_func,
+	            "->?GPointer\n"
+	            "Deprecated alias for ?#ref"),
+	TYPE_METHOD_END
+};
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
 #define clvalue_members cpointer_members
 
@@ -3724,7 +3745,7 @@ INTERN CLValueType AbstractCLValue_Type = {
 			/* .tp_attr          = */ NULL,
 			/* .tp_with          = */ NULL,
 			/* .tp_buffer        = */ NULL,
-			/* .tp_methods       = */ NULL,
+			/* .tp_methods       = */ clvalue_methods,
 			/* .tp_getsets       = */ clvalue_getsets,
 			/* .tp_members       = */ clvalue_members,
 			/* .tp_class_methods = */ NULL,

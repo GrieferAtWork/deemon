@@ -2243,9 +2243,15 @@ PRIVATE struct type_getset tpconst ftype_getsets[] = {
 PRIVATE struct type_member tpconst ftype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
 #ifndef CONFIG_NO_CFUNCTION
+	TYPE_MEMBER_FIELD_DOC("returntype", STRUCT_OBJECT_AB, offsetof(DeeCFunctionTypeObject, ft_orig),
+	                      "->?GStructuredType\n"
+	                      "Forward compatibility with #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(DeeCFunctionTypeObject, ft_orig),
 	                      "->?GStructuredType"),
-#endif /* !CONFIG_NO_CFUNCTION */
+#else /* !CONFIG_NO_CFUNCTION */
+	TYPE_MEMBER_CONST_DOC("returntype", DeeSType_AsType(&DeeCVoid_Type),
+	                      "Forward compatibility with #CCONFIG_EXPERIMENTAL_REWORKED_CTYPES"),
+#endif /* CONFIG_NO_CFUNCTION */
 	TYPE_MEMBER_END
 };
 
