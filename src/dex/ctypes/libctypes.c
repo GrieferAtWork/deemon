@@ -1066,6 +1066,13 @@ DEX_MEMBER_F("trystrdup", &c_malloc_trystrdup, Dee_DEXSYM_READONLY,
              /**/ "	return res;\n"
              /**/ "}"
              "}"),
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+DEX_MEMBER_F("malloc_usable_size", &c_malloc_malloc_usable_size, Dee_DEXSYM_READONLY,
+             "(ptr:?Aptr?Gvoid)->?Dint\n"
+             "Return the usable amount of heap-memory available via @ptr\n"
+             "The is the same number of bytes as would be copied if ?Grealloc "
+             /**/ "needed to allocate a new heap block when given @ptr"),
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 DEX_MEMBER_F("memcpy", &c_string_memcpy, Dee_DEXSYM_READONLY,
              "(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint,count=!1)->?Aptr?Gvoid\n"

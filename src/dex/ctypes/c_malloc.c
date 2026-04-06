@@ -29,6 +29,7 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
+#include <deemon/int.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowUMul */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeObject_AsSizeM1, Dee_DecrefDokill */
@@ -312,7 +313,7 @@ err:
 /*[[[deemon (print_CMethod from rt.gen.unpack)("strdup", """
 	string:ctypes:char_const*, size_t maxlen = (size_t)-1;
 """, visi: "INTERN");]]]*/
-#define c_malloc_strdup_params "string:?Aptr?Gvoid,maxlen=!-1"
+#define c_malloc_strdup_params "string:?Aptr?Gchar,maxlen=!-1"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f_impl(char const *string, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -355,7 +356,7 @@ err:
 /*[[[deemon (print_CMethod from rt.gen.unpack)("trystrdup", """
 	string:ctypes:char_const*, size_t maxlen = (size_t)-1;
 """, visi: "INTERN");]]]*/
-#define c_malloc_trystrdup_params "string:?Aptr?Gvoid,maxlen=!-1"
+#define c_malloc_trystrdup_params "string:?Aptr?Gchar,maxlen=!-1"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *string, size_t maxlen);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -392,6 +393,31 @@ err_r:
 	Dee_Free(resptr);
 	return NULL;
 }
+
+
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+/*[[[deemon (print_CMethod from rt.gen.unpack)("malloc_usable_size", """
+	ptr:ctypes:void*
+""", visi: "INTERN");]]]*/
+#define c_malloc_malloc_usable_size_params "ptr:?Aptr?Gvoid"
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void *ptr);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_malloc_malloc_usable_size_f(DeeObject *__restrict arg0) {
+	union pointer ptr;
+	if unlikely(DeeObject_AsPointer(arg0, &DeeCVoid_Type, &ptr))
+		goto err;
+	return c_malloc_malloc_usable_size_f_impl(ptr.pvoid);
+err:
+	return NULL;
+}
+INTERN DEFINE_CMETHOD1(c_malloc_malloc_usable_size, &c_malloc_malloc_usable_size_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void *ptr)
+/*[[[end]]]*/
+{
+	size_t result;
+	CTYPES_FAULTPROTECT(result = Dee_MallocUsableSize(ptr), return NULL);
+	return DeeInt_NewSize(result);
+}
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 DECL_END
 
