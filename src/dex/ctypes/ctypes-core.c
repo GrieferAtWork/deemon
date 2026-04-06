@@ -1239,6 +1239,17 @@ too_large:
 	result->cat_base.ct_alignof   = item_type->ct_alignof; /* Re-use item alignment. */
 	result->cat_base.ct_operators = &carray_operators;
 
+	/* Technically, if "item_type" is a CStructType, we'd need to implement attribute access
+	 * on the array as accessing the struct members of the 0'th array element. Reason is that
+	 * in regular C, arrays behavior the same as pointers, and deemon's ctypes library allows
+	 * pointers-to-structs to directly access struct members without having to call ".ind"
+	 * first. However, that would ruin the fact that ctypes arrays are already implementing
+	 * deemon's native Sequence-interface (which heavily relies on helper functions and such),
+	 * which would completely conflict with struct members.
+	 *
+	 * As such, in this one edge-case, we (intentionally)
+	 * don't implement array-to-pointer decay! */
+
 	Dee_Incref(CType_AsType(item_type));
 	result->cat_item  = item_type; /* Inherit reference. */
 	result->cat_count = item_count;
@@ -4537,7 +4548,21 @@ CLValuetype_New(CType *__restrict self) {
 			/* LValue-to-struct allows for access to struct members */
 			result->clt_base.ct_base.tp_attr = &cstructlvalue_attr;
 		} else if (CType_IsCArrayType(self)) {
-			/* LValue-to-array allows for access to array elements */
+			/* LValue-to-array allows for access to array elements
+			 *
+			 * NOTE: At this point, we slightly differ from regular C:
+			 *       Since arrays in C act like pointers, and since we
+			 *       allow 1 level of pointer indirection to happen
+			 *       automatically when accessing struct members, we'd
+			 *       technically need expose attribute access to the
+			 *       array's first element, if the array's element
+			 *       types are CStructType.
+			 * However, that would completely conflict with deemon's
+			 * native sequence API, which array types already expose.
+			 * Plus: I don't really see any advantage, since you can
+			 *       just access one of the array's elements and get
+			 *       an L-Value that *can* be used to access struct
+			 *       members. */
 			result->clt_base.ct_base.tp_seq = &carraylvalue_seq;
 			result->clt_base.ct_base.tp_mro = carraylvalue_subclass_mro;
 		} else if (CType_IsCPointerType(self)) {
