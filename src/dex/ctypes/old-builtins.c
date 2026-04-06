@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_CTYPES_BUILTINS_C
-#define GUARD_DEX_CTYPES_BUILTINS_C 1
+#ifndef GUARD_DEX_CTYPES_OLD_BUILTINS_C
+#define GUARD_DEX_CTYPES_OLD_BUILTINS_C 1
 #define DEE_SOURCE
 
 #include "libctypes.h"
@@ -67,30 +67,30 @@ DECL_END
 /* Basic integer types. */
 #define DEFINE_SIZEOF 1
 #define DEFINE_SIGNED 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 2
 #define DEFINE_SIGNED 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 4
 #define DEFINE_SIGNED 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 8
 #define DEFINE_SIGNED 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 16
 #define DEFINE_SIGNED 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 #define DEFINE_SIZEOF 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 2
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 4
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 8
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #define DEFINE_SIZEOF 16
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 /* `char' */
 #ifndef CTYPES_char_UNSIGNED
@@ -109,7 +109,7 @@ DECL_END
 #define DEFINE_TYPE_NAME          DeeCChar_Type
 #define DEFINE_TYPE_NAME_SIGNED   DeeCSChar_Type
 #define DEFINE_TYPE_NAME_UNSIGNED DeeCUChar_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 /* `wchar_t' */
 #ifndef CTYPES_wchar_t_UNSIGNED
@@ -121,7 +121,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCWChar_Type
 #define DEFINE_NO_SIGNED_TYPE_NAME   1
 #define DEFINE_NO_UNSIGNED_TYPE_NAME 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 /* `char16_t' */
 #ifndef CTYPES_char16_t_UNSIGNED
@@ -133,7 +133,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCChar16_Type
 #define DEFINE_NO_SIGNED_TYPE_NAME   1
 #define DEFINE_NO_UNSIGNED_TYPE_NAME 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 /* `char32_t' */
 #ifndef CTYPES_char32_t_UNSIGNED
@@ -145,7 +145,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCChar32_Type
 #define DEFINE_NO_SIGNED_TYPE_NAME   1
 #define DEFINE_NO_UNSIGNED_TYPE_NAME 1
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 
 /* `bool' */
 #define DEFINE_NAME                  "bool"
@@ -155,7 +155,7 @@ DECL_END
 #define DEFINE_NO_SIGNED_TYPE_NAME   1
 #define DEFINE_NO_UNSIGNED_TYPE_NAME 1
 #define CONFIG_BOOL_STRING
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #undef CONFIG_BOOL_STRING
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
@@ -170,7 +170,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCSChar_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCSChar_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUChar_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 /* `unsigned char' */
 #define DEFINE_PRINTF_FMT            "%hhu"
 #define DEFINE_PRINTF_TYP            unsigned char
@@ -181,7 +181,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCUChar_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCSChar_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUChar_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
@@ -196,7 +196,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCShort_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCShort_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUShort_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 /* `unsigned short' */
 #define DEFINE_PRINTF_FMT            "%hu"
 #define DEFINE_PRINTF_TYP            unsigned short
@@ -207,7 +207,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCUShort_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCShort_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUShort_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
@@ -222,7 +222,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCInt_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCInt_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUInt_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 /* `unsigned int' */
 #define DEFINE_PRINTF_FMT            "%u"
 #define DEFINE_PRINTF_TYP            unsigned int
@@ -233,7 +233,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCUInt_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCInt_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCUInt_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #define CONFIG_DONT_PROMOTE_TO_INTEGER
@@ -250,7 +250,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCLong_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCLong_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCULong_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 /* `unsigned long' */
 #define DEFINE_PRINTF_FMT            "%lu"
 #define DEFINE_PRINTF_TYP            unsigned long
@@ -262,7 +262,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCULong_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCLong_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCULong_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
@@ -277,7 +277,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCLLong_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCLLong_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCULLong_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 /* `unsigned long long' */
 #define DEFINE_PRINTF_FMT            "%llu"
 #define DEFINE_PRINTF_TYP            __ULONGLONG
@@ -288,7 +288,7 @@ DECL_END
 #define DEFINE_TYPE_NAME             DeeCULLong_Type
 #define DEFINE_TYPE_NAME_SIGNED      DeeCLLong_Type
 #define DEFINE_TYPE_NAME_UNSIGNED    DeeCULLong_Type
-#include "define-integer.c.inl"
+#include "old-define-integer.c.inl"
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 #undef CONFIG_DONT_PROMOTE_TO_INTEGER
 
@@ -296,17 +296,17 @@ DECL_END
 #define DEFINE_NAME       "float"
 #define DEFINE_TYPE_NAME  DeeCFloat_Type
 #define DEFINE_T          CTYPES_float
-#include "define-float.c.inl"
+#include "old-define-float.c.inl"
 
 #define DEFINE_NAME       "double"
 #define DEFINE_TYPE_NAME  DeeCDouble_Type
 #define DEFINE_T          CTYPES_double
-#include "define-float.c.inl"
+#include "old-define-float.c.inl"
 
 #define DEFINE_NAME       "long_double"
 #define DEFINE_TYPE_NAME  DeeCLDouble_Type
 #define DEFINE_T          CTYPES_ldouble
-#include "define-float.c.inl"
+#include "old-define-float.c.inl"
 
 #endif /* !__INTELLISENSE__ */
 
@@ -406,4 +406,4 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
-#endif /* !GUARD_DEX_CTYPES_BUILTINS_C */
+#endif /* !GUARD_DEX_CTYPES_OLD_BUILTINS_C */

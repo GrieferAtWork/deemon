@@ -23,7 +23,7 @@
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include "ctypes-core.c"
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-#include "cfunction.c"
+#include "old-cfunction.c"
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #define VARARGS
 #endif /* __INTELLISENSE__ */

@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "builtins.c"
+#include "old-builtins.c"
 #define DEFINE_SIZEOF 16
 #define DEFINE_SIGNED 1
 #endif /* __INTELLISENSE__ */

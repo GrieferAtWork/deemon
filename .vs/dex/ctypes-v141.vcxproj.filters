@@ -15,8 +15,6 @@
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-builtin.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-float.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-integral.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\define-float.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\define-integer.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\LICENSE">
 			<Filter>ffi\libffi_msvc</Filter>
 		</ClInclude>
@@ -39,17 +37,14 @@
 			<Filter>ffi\libffi_msvc</Filter>
 		</ClInclude>
 		<ClInclude Include="..\..\src\dex\ctypes\libctypes.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\pointer-math-impl.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\old-define-float.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\old-define-integer.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\old-pointer-math-impl.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\ctypes\array.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\builtins.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\core-operators.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\core.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ctypes-core.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ctypes-operators.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ctypes.c" />
@@ -72,10 +67,15 @@
 			<Filter>ffi\libffi_msvc</Filter>
 		</ClCompile>
 		<ClCompile Include="..\..\src\dex\ctypes\libctypes.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\pointer-math.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\pointer.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-array.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-builtins.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-cfunction.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-core-operators.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-core.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-pointer-math.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-pointer.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\old-struct.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\struct.c" />
 	</ItemGroup>
 	<ItemGroup>
 	</ItemGroup>

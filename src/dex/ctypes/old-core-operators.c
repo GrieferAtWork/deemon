@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_CTYPES_CORE_OPERATORS_C
-#define GUARD_DEX_CTYPES_CORE_OPERATORS_C 1
+#ifndef GUARD_DEX_CTYPES_OLD_CORE_OPERATORS_C
+#define GUARD_DEX_CTYPES_OLD_CORE_OPERATORS_C 1
 #define DEE_SOURCE
 
 #include "libctypes.h"
@@ -1078,4 +1078,4 @@ INTERN_TPCONST struct type_operator tpconst stype_operator_decls[] = {
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
-#endif /* !GUARD_DEX_CTYPES_CORE_OPERATORS_C */
+#endif /* !GUARD_DEX_CTYPES_OLD_CORE_OPERATORS_C */

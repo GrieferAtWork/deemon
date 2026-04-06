@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_CTYPES_POINTER_C
-#define GUARD_DEX_CTYPES_POINTER_C 1
+#ifndef GUARD_DEX_CTYPES_OLD_POINTER_C
+#define GUARD_DEX_CTYPES_OLD_POINTER_C 1
 #define DEE_SOURCE
 
 #include "libctypes.h"
@@ -815,4 +815,4 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
-#endif /* !GUARD_DEX_CTYPES_POINTER_C */
+#endif /* !GUARD_DEX_CTYPES_OLD_POINTER_C */
