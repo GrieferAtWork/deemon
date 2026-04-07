@@ -47,6 +47,7 @@
 DECL_BEGIN
 
 #ifdef DEFINE_cfloat_operators
+#define LOCAL_CObject           CFloat
 #define LOCAL_operators         cfloat_operators
 #define LOCAL_float_t           CTYPES_float
 #define LOCAL_STR_float_t       "float"
@@ -55,6 +56,7 @@ DECL_BEGIN
 #define LOCAL_CFloat_New_t      CTYPES_double /* Float-to-double promotion */
 #define LOCAL_float_IS_float
 #elif defined(DEFINE_cdouble_operators)
+#define LOCAL_CObject           CDouble
 #define LOCAL_operators         cdouble_operators
 #define LOCAL_float_t           CTYPES_double
 #define LOCAL_STR_float_t       "double"
@@ -63,6 +65,7 @@ DECL_BEGIN
 #define LOCAL_CFloat_New_t      CTYPES_double
 #define LOCAL_float_IS_double
 #elif defined(DEFINE_cldouble_operators)
+#define LOCAL_CObject           CLDouble
 #define LOCAL_operators         cldouble_operators
 #define LOCAL_float_t           CTYPES_ldouble
 #define LOCAL_STR_float_t       "long double"
@@ -75,6 +78,7 @@ DECL_BEGIN
 #endif /* !... */
 
 #define LOCAL_FUNC(x)     PP_CAT2(LOCAL_operators, x)
+#define LOCAL_initobject  LOCAL_FUNC(_initobject)
 #define LOCAL_initfrom    LOCAL_FUNC(_initfrom)
 #define LOCAL_initwith    LOCAL_FUNC(_initwith)
 #define LOCAL_bool        LOCAL_FUNC(_bool)
@@ -113,6 +117,12 @@ DECL_BEGIN
 #define LOCAL_inplace_xor LOCAL_FUNC(_inplace_xor)
 #define LOCAL_inplace_pow LOCAL_FUNC(_inplace_pow)
 
+
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) LOCAL_CObject *DCALL
+LOCAL_initobject(LOCAL_CObject *self, void const *src) {
+	memcpy(&self->c_value, src, sizeof(LOCAL_float_t));
+	return self;
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_initfrom(CType *tp_self, void *self, DeeObject *value) {
@@ -433,6 +443,7 @@ err:
 
 
 INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&LOCAL_initobject,
 	/* .co_initfrom    = */ &LOCAL_initfrom,
 	/* .co_initwith    = */ &LOCAL_initwith,
 	/* .co_bool        = */ &LOCAL_bool,
@@ -473,6 +484,7 @@ INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 };
 
 #undef LOCAL_FUNC
+#undef LOCAL_initobject
 #undef LOCAL_initfrom
 #undef LOCAL_initwith
 #undef LOCAL_bool
@@ -511,6 +523,7 @@ INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 #undef LOCAL_inplace_xor
 #undef LOCAL_inplace_pow
 
+#undef LOCAL_CObject
 #undef LOCAL_operators
 #undef LOCAL_float_t
 #undef LOCAL_STR_float_t

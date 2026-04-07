@@ -406,6 +406,12 @@ unsupported__inplace_pow(CType *tp_self, void *self, DeeObject *some_object) {
 /* Void type                                                            */
 /************************************************************************/
 
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) CObject *DCALL
+void_initobject(CObject *__restrict self, void const *src) {
+	(void)src;
+	return self;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 void_initfrom(CType *tp_self, void *self, DeeObject *value) {
 	(void)tp_self;
@@ -470,6 +476,7 @@ void_printcrepr(CType *tp_self, void const *self,
 #define void_inplace_pow unsupported__inplace_pow
 
 INTERN struct ctype_operators Dee_tpconst cvoid_operators = {
+	/* .co_initobject  = */ &void_initobject,
 	/* .co_initfrom    = */ &void_initfrom,
 	/* .co_initwith    = */ &void_initwith,
 	/* .co_bool        = */ &void_bool,
@@ -563,6 +570,13 @@ DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 /* Operators for pointer types */
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) CPointer *DCALL
+pointer_initobject(CPointer *self, union pointer const *src) {
+	self->cp_value.ptr = pointer_get(src);
+	self->cp_owner     = NULL; /* Important! must initialize this also! */
+	return self;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 pointer_initfrom(CPointerType *tp_self, union pointer *self, DeeObject *value) {
 	union pointer cvalue;
@@ -854,6 +868,7 @@ err:
 
 
 INTERN struct ctype_operators Dee_tpconst cpointer_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&pointer_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&pointer_initfrom,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&pointer_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&pointer_bool,
@@ -905,6 +920,19 @@ INTERN struct ctype_operators Dee_tpconst cpointer_operators = {
  * >> b.y = 99;
  * >> assert a.x == 99; */
 
+
+#if 1
+STATIC_ASSERT(offsetof(CPointer, cp_value) == offsetof(CLValue, cl_value));
+STATIC_ASSERT(offsetof(CPointer, cp_owner) == offsetof(CLValue, cl_owner));
+#define lvalue_initobject pointer_initobject
+#else
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) CLValue *DCALL
+lvalue_initobject(CLValue *self, union pointer const *src) {
+	self->cl_value.ptr = pointer_get(src);
+	self->cl_owner     = NULL; /* Important! must initialize this also! */
+	return self;
+}
+#endif
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lvalue_initfrom(CLValueType *tp_self, union pointer *self, DeeObject *value) {
@@ -1176,6 +1204,7 @@ DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_pow, co_inplace_pow)
 #undef DEFINE_LVALUE_BINARY_INPLACE_OP
 
 INTERN struct ctype_operators Dee_tpconst clvalue_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&lvalue_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&lvalue_initfrom,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&lvalue_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&lvalue_bool,
@@ -1218,6 +1247,13 @@ INTERN struct ctype_operators Dee_tpconst clvalue_operators = {
 
 
 /* Operators for user-defined structure types */
+
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) CStruct *DCALL
+struct_initobject(CStruct *self, void const *src) {
+	size_t size = CType_Sizeof(CStructType_AsCType(Dee_TYPE(self)));
+	memcpy(CStruct_Data(self), src, size);
+	return self;
+}
 
 struct struct_initfromseq_data {
 	CStructType          *sifsd_tp_self; /* [1..1] Struct type */
@@ -1654,6 +1690,7 @@ err_bad_rhs:
 
 
 INTERN struct ctype_operators Dee_tpconst cstruct_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&struct_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&struct_initfrom,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&struct_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&struct_bool,
@@ -1697,6 +1734,9 @@ INTERN struct ctype_operators Dee_tpconst cstruct_operators = {
 
 
 /* Operators for array types */
+STATIC_ASSERT(offsetof(CArrayType, cat_base) == offsetof(CStructType, cst_base));
+STATIC_ASSERT(offsetof(CArray, ob_type) == offsetof(CStruct, ob_type));
+#define array_initobject struct_initobject
 
 struct array_initfrom_enumerate_data {
 	CArrayType                   *aifed_tp_self;   /* [1..1] Array type being initialized */
@@ -2160,6 +2200,7 @@ err:
 #define array_inplace_pow unsupported__inplace_pow
 
 INTERN struct ctype_operators Dee_tpconst carray_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&array_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&array_initfrom,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&array_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&array_bool,

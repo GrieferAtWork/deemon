@@ -429,13 +429,8 @@ def_var_data:
 		/* Construct a new C-object that is returned as result. */
 		ASSERTF(!CType_IsCFunctionType(return_type),
 		        "This should have been prevented by the check in 'CFunctionType_New()'");
-		if (CType_IsCPointerType(return_type) || CType_IsCLValueType(return_type)) {
-			/* Must initialize the extra "owner" field (as "NULL") */
-			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
-			((CPointer *)result_cobject)->cp_owner = NULL;
-		}
 		CObject_Init(result_cobject, return_type);
-		memcpy(CObject_Data(result_cobject), ret_mem, CType_Sizeof(return_type));
+		result_cobject = (*CType_Operators(return_type)->co_initobject)(result_cobject, ret_mem);
 		result = Dee_AsObject(result_cobject);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 		DeeSTypeObject *orig_type = tp_self->ft_orig;

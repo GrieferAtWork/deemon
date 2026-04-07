@@ -259,18 +259,17 @@ ctype_frombytes(CType *self, size_t argc, DeeObject *const *argv) {
 		goto err_bad_size;
 	ASSERTF(!CType_IsCFunctionType(self),
 	        "Function types should have sizeof=SIZE_MAX, which "
-	        "should have been caught by 'type_size > data_size'");
+	        "should have been caught by 'type_size > data_size' "
+	        "combined with the fact that a single Bytes object "
+	        "can't possibly have a size that spans all of memory. I "
+	        "mean for starters: what'd be the address of this string?");
 	result = CType_AllocInstance(self);
 	if unlikely(!result)
 		goto err;
-	if (CType_IsCPointerType(self) || CType_IsCLValueType(self)) {
-		/* Must initialize the extra "owner" field (as "NULL") */
-		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
-		((CPointer *)result)->cp_owner = NULL;
-	}
-	memcpy(CObject_Data(result), DeeBytes_DATA(args.data) + args.offset, type_size);
 	CObject_Init(result, self);
-	return result;
+	return (*CType_Operators(self)->co_initobject)(result,
+	                                               DeeBytes_DATA(args.data) +
+	                                               args.offset);
 err_bad_size:
 	data_size = DeeBytes_SIZE(args.data);
 	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
@@ -2715,6 +2714,7 @@ union argument {
 	int64_t s64;
 	uint64_t u64;
 	void *p;
+	union pointer ptr;
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2758,6 +2758,8 @@ cfunction_closure_proc(ffi_cif *cif,
 	int status;
 	DREF DeeObject *result;
 	CFunctionType *tp_self = Dee_TYPE(self);
+	CType *return_type;
+	struct ctype_operators const *return_type_ops;
 	size_t i, argc = CFunction_ArgumentCount(tp_self);
 	DREF DeeObject **deemon_argv;
 	(void)cif;
@@ -2774,13 +2776,8 @@ cfunction_closure_proc(ffi_cif *cif,
 			goto err_deemon_argv_i;
 		ASSERTF(!CType_IsCFunctionType(arg_type),
 		        "Should have been prevented by the check in CFunctionType_New");
-		if (CType_IsCPointerType(arg_type) || CType_IsCLValueType(arg_type)) {
-			/* Must initialize the extra "owner" field (as "NULL") */
-			STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
-			((CPointer *)deemon_arg)->cp_owner = NULL;
-		}
-		memcpy(CObject_Data(deemon_arg), arg, CType_Sizeof(arg_type));
 		CObject_Init(deemon_arg, arg_type);
+		deemon_arg = (*CType_Operators(arg_type)->co_initobject)(deemon_arg, arg);
 		deemon_argv[i] = Dee_AsObject(deemon_arg); /* Inherit reference */
 	}
 
@@ -2796,36 +2793,12 @@ cfunction_closure_proc(ffi_cif *cif,
 		goto err;
 
 	/* Transform "result" into the appropriate return value */
-	switch (tp_self->cft_ffi_return_type->type) {
-	case FFI_TYPE_INT: status = DeeObject_AsInt(result, &return_storage->i); break;
-	case FFI_TYPE_FLOAT: status = DeeObject_AsCFloat(result, (CTYPES_float *)&return_storage->f); break;
-	case FFI_TYPE_DOUBLE: status = DeeObject_AsCDouble(result, (CTYPES_double *)&return_storage->d); break;
-#if FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE
-	case FFI_TYPE_LONGDOUBLE: status = DeeObject_AsCLDouble(result, (CTYPES_ldouble *)&return_storage->ld); break;
-#endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
-	case FFI_TYPE_UINT8: status = DeeObject_AsUInt8(result, &return_storage->u8); break;
-	case FFI_TYPE_SINT8: status = DeeObject_AsInt8(result, &return_storage->s8); break;
-	case FFI_TYPE_UINT16: status = DeeObject_AsUInt16(result, &return_storage->u16); break;
-	case FFI_TYPE_SINT16: status = DeeObject_AsInt16(result, &return_storage->s16); break;
-	case FFI_TYPE_UINT32: status = DeeObject_AsUInt32(result, &return_storage->u32); break;
-	case FFI_TYPE_SINT32: status = DeeObject_AsInt32(result, &return_storage->s32); break;
-	case FFI_TYPE_UINT64: status = DeeObject_AsUInt64(result, &return_storage->u64); break;
-	case FFI_TYPE_SINT64: status = DeeObject_AsInt64(result, &return_storage->s64); break;
-#if 0 /* TODO */
-	case FFI_TYPE_STRUCT:
-		status = 0;
-		break;
-#endif
-	case FFI_TYPE_POINTER:
-		/* TODO */
-		status = 0;
-		break;
-	default:
-		bzero(return_storage, tp_self->cft_ffi_return_type->size);
-		status = 0;
-		break;
-	}
+	return_type = CFunction_ReturnType(tp_self);
+	return_type_ops = CType_Operators(return_type);
+	status = (*return_type_ops->co_initfrom)(return_type, return_storage, result);
 	Dee_Decref(result);
+
+	/* Check for errors during return-value conversion. */
 	if unlikely(status)
 		goto err;
 	return;
@@ -4492,21 +4465,13 @@ clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 	result = CObject_Alloc(base_type);
 	if unlikely(!result)
 		goto err;
+	CObject_Init(result, base_type);
 	CTYPES_FAULTPROTECT({
-		memcpy(CObject_Data(result),
-		       self->cl_value.ptr,
-		       CType_Sizeof(base_type));
+		result = (*CType_Operators(base_type)->co_initobject)(result, self->cl_value.ptr);
 	}, {
 		CObject_Free(base_type, result);
 		goto err;
 	});
-
-	if (CType_IsCPointerType(base_type) || CType_IsCLValueType(base_type)) {
-		/* Must initialize the extra "owner" field (as "NULL") */
-		STATIC_ASSERT(offsetof(CLValue, cl_owner) == offsetof(CPointer, cp_owner));
-		((CPointer *)result)->cp_owner = NULL;
-	}
-	CObject_Init(result, base_type);
 	return result;
 err_cannot_copy_function:
 	DeeError_Throwf(&DeeError_TypeError,

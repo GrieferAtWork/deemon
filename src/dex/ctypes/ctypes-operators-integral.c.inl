@@ -125,18 +125,23 @@
 DECL_BEGIN
 
 #ifdef DEFINE_cint8_operators
+#define LOCAL_CObject       CInt8
 #define LOCAL_operators     cint8_operators
 #define LOCAL_sizeof_intN_t 1
 #elif defined(DEFINE_cint16_operators)
+#define LOCAL_CObject       CInt16
 #define LOCAL_operators     cint16_operators
 #define LOCAL_sizeof_intN_t 2
 #elif defined(DEFINE_cint32_operators)
+#define LOCAL_CObject       CInt32
 #define LOCAL_operators     cint32_operators
 #define LOCAL_sizeof_intN_t 4
 #elif defined(DEFINE_cint64_operators)
+#define LOCAL_CObject       CInt64
 #define LOCAL_operators     cint64_operators
 #define LOCAL_sizeof_intN_t 8
 #elif defined(DEFINE_cint128_operators)
+#define LOCAL_CObject       CInt128
 #define LOCAL_operators     cint128_operators
 #define LOCAL_sizeof_intN_t 16
 
@@ -150,22 +155,27 @@ cint128_unaligned_get(void const *p) {
 #define LOCAL_UNALIGNED_SET              cint128_unaligned_set
 #define cint128_unaligned_set(p, cvalue) memcpy(p, &(cvalue), 16)
 #elif defined(DEFINE_cuint8_operators)
+#define LOCAL_CObject       CUInt8
 #define LOCAL_operators     cuint8_operators
 #define LOCAL_sizeof_intN_t 1
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint16_operators)
+#define LOCAL_CObject       CUInt16
 #define LOCAL_operators     cuint16_operators
 #define LOCAL_sizeof_intN_t 2
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint32_operators)
+#define LOCAL_CObject       CUInt32
 #define LOCAL_operators     cuint32_operators
 #define LOCAL_sizeof_intN_t 4
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint64_operators)
+#define LOCAL_CObject       CUInt64
 #define LOCAL_operators     cuint64_operators
 #define LOCAL_sizeof_intN_t 8
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint128_operators)
+#define LOCAL_CObject       CUInt128
 #define LOCAL_operators     cuint128_operators
 #define LOCAL_sizeof_intN_t 16
 #define LOCAL_UNSIGNED
@@ -181,18 +191,22 @@ cuint128_unaligned_get(void const *p) {
 #define cuint128_unaligned_set(p, cvalue) memcpy(p, &(cvalue), 16)
 #elif defined(DEFINE_cint16_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapInt16
 #define LOCAL_operators     cint16_bswap_operators
 #define LOCAL_sizeof_intN_t 2
 #elif defined(DEFINE_cint32_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapInt32
 #define LOCAL_operators     cint32_bswap_operators
 #define LOCAL_sizeof_intN_t 4
 #elif defined(DEFINE_cint64_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapInt64
 #define LOCAL_operators     cint64_bswap_operators
 #define LOCAL_sizeof_intN_t 8
 #elif defined(DEFINE_cint128_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapInt128
 #define LOCAL_operators     cint128_bswap_operators
 #define LOCAL_sizeof_intN_t 16
 
@@ -213,21 +227,25 @@ cint128_unaligned_get_bswap(void const *p) {
 	}	__WHILE0
 #elif defined(DEFINE_cuint16_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapUInt16
 #define LOCAL_operators     cuint16_bswap_operators
 #define LOCAL_sizeof_intN_t 2
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint32_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapUInt32
 #define LOCAL_operators     cuint32_bswap_operators
 #define LOCAL_sizeof_intN_t 4
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint64_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapUInt64
 #define LOCAL_operators     cuint64_bswap_operators
 #define LOCAL_sizeof_intN_t 8
 #define LOCAL_UNSIGNED
 #elif defined(DEFINE_cuint128_bswap_operators)
 #define LOCAL_BSWAP
+#define LOCAL_CObject       CBSwapUInt128
 #define LOCAL_operators     cuint128_bswap_operators
 #define LOCAL_sizeof_intN_t 16
 #define LOCAL_UNSIGNED
@@ -413,6 +431,7 @@ cuint128_unaligned_get_bswap(void const *p) {
 
 
 #define LOCAL_FUNC(x)     PP_CAT2(LOCAL_operators, x)
+#define LOCAL_initobject  LOCAL_FUNC(_initobject)
 #define LOCAL_initfrom    LOCAL_FUNC(_initfrom)
 #define LOCAL_initwith    LOCAL_FUNC(_initwith)
 #define LOCAL_bool        LOCAL_FUNC(_bool)
@@ -479,6 +498,12 @@ cuint128_unaligned_get_bswap(void const *p) {
 #define LOCAL_op_inc(v)       LOCAL_operator(++v, LOCAL_int128_foo(inc)(v))
 #define LOCAL_op_dec(v)       LOCAL_operator(--v, LOCAL_int128_foo(dec)(v))
 
+
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) LOCAL_CObject *DCALL
+LOCAL_initobject(LOCAL_CObject *self, void const *src) {
+	self->c_value = LOCAL_UNALIGNED_GET(src);
+	return self;
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_initfrom(CType *tp_self, void *self, DeeObject *value) {
@@ -1114,6 +1139,7 @@ err:
 
 
 INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
+	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&LOCAL_initobject,
 	/* .co_initfrom    = */ &LOCAL_initfrom,
 	/* .co_initwith    = */ &LOCAL_initwith,
 	/* .co_bool        = */ &LOCAL_bool,
@@ -1154,6 +1180,7 @@ INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 };
 
 #undef LOCAL_FUNC
+#undef LOCAL_initobject
 #undef LOCAL_initfrom
 #undef LOCAL_initwith
 #undef LOCAL_bool
@@ -1210,6 +1237,7 @@ INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 #undef LOCAL_op_xor
 
 #undef LOCAL_operators
+#undef LOCAL_CObject
 #undef LOCAL_intN_t
 #undef LOCAL_signed_intN_t
 #undef LOCAL_unsigned_intN_t

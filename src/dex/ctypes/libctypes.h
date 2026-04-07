@@ -480,10 +480,28 @@ struct ctype_operators {
 	 *       still be implemented, with the implementation then throwing
 	 *       the appropriate exception. */
 
+	/* Initialize a CObject instance using "src".
+	 * For most types, this simply does:
+	 * >> memcpy(CObject_Data(self), src, CType_Sizeof(Dee_TYPE(self)));
+	 *
+	 * However, some types of c-objects (like CPointer and CLValue) have
+	 * some additional fields that are unrelated to the actual C-value,
+	 * and also need to be initialized, which is then also done by this
+	 * function!
+	 *
+	 * Note for this purpose that no special handling is required in
+	 * regards to dealing with faults caused by reading from "src". If
+	 * accessing that pointer can fault, it's the caller's job to call
+	 * this operator from within "CTYPES_FAULTPROTECT".
+	 *
+	 * @return: * : Always re-returns "self" (for better register channeling) */
+	ATTR_RETNONNULL_T NONNULL_T((1, 2)) CObject *
+	(DCALL *co_initobject)(CObject *__restrict self, void const *src);
+
 	/* Initialize "self" by casting- and assigning "value" to it
 	 * @return: 0 : Success
 	 * @return: -1: Error */
-	WUNUSED_T NONNULL_T((1)) int
+	WUNUSED_T NONNULL_T((1, 3)) int
 	(DCALL *co_initfrom)(CType *tp_self, void *self, DeeObject *value);
 
 	/* Initialize a new instance of "self"
