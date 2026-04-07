@@ -1321,6 +1321,8 @@ PRIVATE struct type_member tpconst LOCAL_X(int_class_members)[] = {
 #endif /* !DEFINE_NO_SIGNED_TYPE_NAME && !DEFINE_NO_UNSIGNED_TYPE_NAME */
 	TYPE_MEMBER_CONST("min", &LOCAL_X(int_min)),
 	TYPE_MEMBER_CONST("max", &LOCAL_X(int_max)),
+	TYPE_MEMBER_CONST("MIN", &LOCAL_X(int_min)), /* Forward compatibility with "CONFIG_EXPERIMENTAL_REWORKED_CTYPES" */
+	TYPE_MEMBER_CONST("MAX", &LOCAL_X(int_max)), /* Forward compatibility with "CONFIG_EXPERIMENTAL_REWORKED_CTYPES" */
 	TYPE_MEMBER_END
 };
 

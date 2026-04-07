@@ -31,18 +31,18 @@ function assertMinMax(sT: StructuredType, uT: StructuredType, bits: deemon.int) 
 	local uMaxVal: deemon.int = (1 << bits) - 1;
 	local sMaxVal: deemon.int = uMaxVal >> 1;
 	local sMinVal: deemon.int = -(sMaxVal + 1);
-	assert sT.min == sMinVal;
-	assert sT.max == sMaxVal;
-	assert uT.min == uMinVal;
-	assert uT.max == uMaxVal;
-	assert type(sT.min) == sT;
-	assert type(sT.max) == sT;
-	assert type(uT.min) == uT;
-	assert type(uT.max) == uT;
-	assert (sT)(sT.min - 1) == sT.max;
-	assert (sT)(sT.max + 1) == sT.min;
-	assert (uT)(uT.min - 1) == uT.max;
-	assert (uT)(uT.max + 1) == uT.min;
+	assert sT.MIN == sMinVal;
+	assert sT.MAX == sMaxVal;
+	assert uT.MIN == uMinVal;
+	assert uT.MAX == uMaxVal;
+	assert type(sT.MIN) == sT;
+	assert type(sT.MAX) == sT;
+	assert type(uT.MIN) == uT;
+	assert type(uT.MAX) == uT;
+	assert (sT)(sT.MIN - 1) == sT.MAX;
+	assert (sT)(sT.MAX + 1) == sT.MIN;
+	assert (uT)(uT.MIN - 1) == uT.MAX;
+	assert (uT)(uT.MAX + 1) == uT.MIN;
 }
 
 assertMinMax(int8_t, uint8_t, 8);
@@ -70,14 +70,14 @@ assert uint128_t == type((uint128_t)0 + 1);
 
 
 /* FIXME: this breaks at the moment
- * (yes: the min/max constants are re-assignable when they shouldn't be) */
+ * (yes: the MIN/MAX constants are re-assignable when they shouldn't be) */
 if (CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
-	local x = int8_t.max;
-	assert int8_t.max == x;
-	assert int8_t.max == 127;
+	local x = int8_t.MAX;
+	assert int8_t.MAX == x;
+	assert int8_t.MAX == 127;
 	x += 42;
-	assert int8_t.max == x - 42;
-	assert int8_t.max == 127;
-	assert (try ({ int8_t.max := 42; none; }) catch (e...) e) is
+	assert int8_t.MAX == x - 42;
+	assert int8_t.MAX == 127;
+	assert (try ({ int8_t.MAX := 42; none; }) catch (e...) e) is
 		deemon.Error;
 }

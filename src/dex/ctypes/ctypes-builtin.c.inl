@@ -703,6 +703,12 @@ PRIVATE struct type_member tpconst LOCAL_cobject_class_members[] = {
 	TYPE_MEMBER_CONST("isfloat", Dee_False),
 #endif /* !LOCAL_IS_FLOAT */
 
+#ifdef LOCAL_IS_UNSIGNED
+	TYPE_MEMBER_CONST("issigned", Dee_False),
+#else /* LOCAL_IS_UNSIGNED */
+	TYPE_MEMBER_CONST("issigned", Dee_True),
+#endif /* !LOCAL_IS_UNSIGNED */
+
 #ifdef LOCAL_MEMBER_minval
 	TYPE_MEMBER_CONST("min", &LOCAL_MEMBER_minval), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
 #endif /* LOCAL_MEMBER_minval */

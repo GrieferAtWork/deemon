@@ -151,7 +151,7 @@ done:
 did_handle:
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-#endif
+#endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
 
 
 #ifdef CONFIG_HAVE_CTYPES_KOS_GUARD

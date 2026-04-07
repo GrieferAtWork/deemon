@@ -446,7 +446,7 @@ INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
 #undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 #undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
 #ifndef CONFIG_NO_CFUNCTION
-#if 0 /* TODO: Finish implementation */
+#if 0 /* TODO: Test in other configurations, add unit test, and enable by default */
 #define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 #define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
 #endif

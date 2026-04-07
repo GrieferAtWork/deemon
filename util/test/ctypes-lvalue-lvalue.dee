@@ -19,7 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import deemon;
+import * from deemon;
 import ctypes;
 import .common.test;
 
@@ -59,8 +59,9 @@ assert base.y == 20;
 local t = lval.x;
 t := 77;
 assert t.ptr == base.x.ptr;
-assert (deemon.int)t.ptr == (deemon.int)base.x.ptr;
+assert (int)t.ptr == (int)base.x.ptr;
 assert t.hex() == "0x4d"; /* (77).hex() -- make sure that lvalue-to-lvalue-to-int is still Numeric! */
+assert t is Numeric;
 assert type(t) === ctypes.int.lvalue.lvalue;
 assert type(t) !== ctypes.int.lvalue;
 

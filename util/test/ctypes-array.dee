@@ -111,11 +111,13 @@ local x = MyStruct(a: 10, c: 20);
 
 /* This is a part where the fact that ctypes arrays are still deemon sequences shines through:
  * They have to throw an IndexError when trying to access an out-of-bounds element */
+assert x.b is Sequence;
 assert TRY(x.b[-1]) is IntegerOverflow from errors; /* XXX: Maybe this should be wrapped as IndexError? */
 assert TRY(x.b[0]) is IndexError from errors;
 
 /* However: we can force the array into a pointer by making use of array-to-pointer decay,
  *          which is no longer a Sequence, and thus no longer does any bounds-checking! */
+assert (x.b + 0) !is Sequence;
 assert (x.b + 0)[-1] == 10;
 assert (x.b + 0)[0] == 20;
 assert (x.b - 1).ind == 10;
