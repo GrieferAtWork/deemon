@@ -276,11 +276,22 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 				*dee_va_ffi_types = &ffi_type_pointer;
 				iter->p           = ((struct pointer_object *)dee_va_arg)->p_ptr.ptr;
 				*argp_iter        = (void *)iter;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+			} else if (Type_IsCLValueType(dee_va_type)) {
+				/* Lvalue argument --> cast to lvalue-base */
+				CLValue *arg_ob = Object_AsCLValue(dee_va_arg);
+				CType *base = CLValueType_LogicalPointedToType(Type_AsCLValueType(dee_va_type));
+				void *cvalue;
+				*dee_va_ffi_types = stype_ffitype(base);
+				CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(arg_ob), goto err_wbuf);
+				*argp_iter = cvalue;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 			} else if (DeeLValueType_Check(dee_va_type)) {
 				/* Lvalue argument --> cast to lvalue-base */
 				dee_va_type       = DeeSType_AsType(DeeType_AsLValueType(dee_va_type)->lt_orig);
 				*dee_va_ffi_types = stype_ffitype(DeeType_AsSType(dee_va_type));
 				*argp_iter        = ((struct lvalue_object *)dee_va_arg)->l_ptr.ptr;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 			} else if (dee_va_type == &DeeNone_Type) {
 				/* none --> NULL pointer */
 				*dee_va_ffi_types = &ffi_type_pointer;

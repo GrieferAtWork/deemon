@@ -95,6 +95,23 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 			memcpy(result, DeeStruct_Data(value), ob_ptr_orig->st_sizeof);
 			return 0;
 		}
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+		if (Object_IsCLValue(value)) {
+			CLValue *value_ob = Object_AsCLValue(value);
+			CType *lv_base = CLValueType_LogicalPointedToType(Dee_TYPE(value_ob));
+			if (lv_base == ob_ptr_orig) {
+				if (CType_Sizeof(ob_ptr_orig) != 1 && CType_Sizeof(ob_ptr_orig) != 2 &&
+				    CType_Sizeof(ob_ptr_orig) != 4 && CType_Sizeof(ob_ptr_orig) != 8)
+					goto err_bad_size;
+				/* Lvalue -> structured-type-derived-from-<ob_ptr_orig> */
+				CTYPES_FAULTPROTECT({
+					void *ptr = *(void **)CLValue_GetLogicalValue(value_ob);
+					memcpy(result, ptr, CType_Sizeof(ob_ptr_orig));
+				}, goto err);
+				return 0;
+			}
+		}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 		if (DeeLValue_Check(value)) {
 			DeeSTypeObject *lv_base;
 			lv_base = DeeType_AsLValueType(Dee_TYPE(value))->lt_orig;
@@ -112,6 +129,7 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 				return 0;
 			}
 		}
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	}
 
 	/* Always accept signed/unsigned integers */

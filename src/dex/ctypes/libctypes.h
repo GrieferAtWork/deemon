@@ -504,6 +504,13 @@ struct ctype_operators {
 	WUNUSED_T NONNULL_T((1, 3)) int
 	(DCALL *co_initfrom)(CType *tp_self, void *self, DeeObject *value);
 
+	/* Same as "co_initfrom", but used for secondary assignments
+	 * (which have different semantics in case of lvalues, where
+	 * secondary assignments re-assign the pointed-to value, rather
+	 * than the lvalue location itself) */
+	WUNUSED_T NONNULL_T((1, 3)) int
+	(DCALL *co_assign)(CType *tp_self, void *self, DeeObject *value);
+
 	/* Initialize a new instance of "self"
 	 * @return: 0 : Success
 	 * @return: -1: Error */
@@ -1264,11 +1271,23 @@ DeeObject_AsGenericPointer(DeeObject *self,
 struct clvalue_type_object {
 	CType       clt_base; /* The underlying type object. */
 	DREF CType *clt_orig; /* [1..1][const] The dereferenced type of an l-value. */
+
+	/* Apply additional l-value dereferences that are necessary
+	 * when working with lvalue-of-lvalue-[of-lvalue-[of-...]]
+	 *
+	 * WARNING: This operator must be called from within CTYPES_FAULTPROTECT */
+	WUNUSED_T NONNULL_T((1))
+	void *(DFCALL *clt_getlogicalptr)(CLValueType const *tp_self, void *ptr);
+	DREF CType    *clt_logicalorig; /* [1..1][const] The dereferenced type of an l-value (after stripping away all recursive l-values) */
+	size_t         clt_logicalind;  /* [const] Number of extra indirections necessary to reach "clt_logicalorig" */
 };
 
 /* Query properties of a given LValue-Type */
-#define CLValueType_PointedToType(self)      (self)->clt_orig
-#define CLValueType_PointedToOperators(self) CType_Operators(CLValueType_PointedToType(self))
+#define CLValueType_PointedToType(self)             (self)->clt_orig
+#define CLValueType_PointedToOperators(self)        CType_Operators(CLValueType_PointedToType(self))
+#define CLValueType_LogicalPointedToType(self)      (self)->clt_logicalorig
+#define CLValueType_LogicalPointedToOperators(self) CType_Operators(CLValueType_LogicalPointedToType(self))
+#define CLValueType_LogicalPtr(self, ptr)           ((*(self)->clt_getlogicalptr)(self, ptr))
 
 INTDEF DeeTypeObject CLValueType_Type;   /* == type(ctypes.int.lvalue) */
 INTDEF CLValueType AbstractCLValue_Type; /* == Type.__base__(ctypes.int.lvalue) */
@@ -1300,6 +1319,9 @@ struct clvalue_object {
 #define CLValue_Init(self, tp)          DeeObject_InitHeapEx(self, tp, CLValueType_AsType)          /* All L-Value types are heap-types */
 #define CLValue_InitInherited(self, tp) DeeObject_InitHeapInheritedEx(self, tp, CLValueType_AsType) /* All L-Value types are heap-types */
 INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CLValue_Ptr(CLValue *__restrict self);
+
+#define CLValue_GetValue(self)        (self)->cl_value.ptr
+#define CLValue_GetLogicalValue(self) CLValueType_LogicalPtr(Dee_TYPE(self), CLValue_GetValue(self))
 
 
 

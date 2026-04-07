@@ -665,7 +665,7 @@ null_pointer:
 	/* Special handling for lvalue->pointer */
 	if (Object_IsCLValue(self)) {
 		CLValue *me = Object_AsCLValue(self);
-		CType *lv_base = CLValueType_PointedToType(Dee_TYPE(me));
+		CType *lv_base = CLValueType_LogicalPointedToType(Dee_TYPE(me));
 		if (CType_IsCPointerType(lv_base)) {
 			CType *base = CPointerType_PointedToType(CType_AsCPointerType(lv_base));
 			/* A pointer of the same type, or a void-pointer. */
@@ -673,7 +673,7 @@ null_pointer:
 			    base == &CVoid_Type ||
 			    pointer_base == &CVoid_Type) {
 				/* LValue -> Pointer (must deref) */
-				CTYPES_FAULTPROTECT(result->ptr = *me->cl_value.pptr, goto err);
+				CTYPES_FAULTPROTECT(result->ptr = *(void **)CLValue_GetLogicalValue(me), goto err);
 				return 0;
 			}
 		}
@@ -727,11 +727,11 @@ DeeObject_TryAsGenericPointer(DeeObject *self,
 	/* Special handling for lvalue->pointer */
 	if (Object_IsCLValue(self)) {
 		CLValue *me = Object_AsCLValue(self);
-		CType *lv_base = CLValueType_PointedToType(Dee_TYPE(me));
+		CType *lv_base = CLValueType_LogicalPointedToType(Dee_TYPE(me));
 		if (CType_IsCPointerType(lv_base)) {
 			*p_pointer_base = CPointerType_PointedToType(CType_AsCPointerType(lv_base));
 			/* LValue -> Pointer (must deref) */
-			CTYPES_FAULTPROTECT(result->ptr = *me->cl_value.pptr, goto err);
+			CTYPES_FAULTPROTECT(result->ptr = *(void **)CLValue_GetLogicalValue(me), goto err);
 			return 0;
 		}
 		goto nope;

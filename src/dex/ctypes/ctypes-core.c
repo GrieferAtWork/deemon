@@ -536,6 +536,13 @@ cobject_init_kw(CObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cobject_assign(CObject *self, DeeObject *value) {
+	CType *tp_self = Dee_TYPE(self);
+	struct ctype_operators const *ops = CType_Operators(tp_self);
+	return (*ops->co_assign)(tp_self, CObject_Data(self), value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cobject_serialize(CObject *__restrict self,
                   DeeSerial *__restrict writer,
                   Dee_seraddr_t addr) {
@@ -1023,9 +1030,9 @@ carray_setitem_index(CArray *__restrict self, size_t index, DeeObject *value) {
 	if unlikely(index >= CArrayType_Count(tp_self))
 		goto err_index_oob;
 	index *= CArrayType_Stride(tp_self);
-	return (*item_ops->co_initfrom)(item_type,
-	                                (byte_t *)CArray_Items(self) + index,
-	                                value);
+	return (*item_ops->co_assign)(item_type,
+	                              (byte_t *)CArray_Items(self) + index,
+	                              value);
 err_index_oob:
 	return DeeRT_ErrIndexOutOfBounds(self, index, CArrayType_Count(tp_self));
 }
@@ -1185,8 +1192,8 @@ INTERN CArrayType AbstractCArray_Type = {
 					/* tp_serialize:   */ &cobject_serialize
 				),
 				/* .tp_dtor        = */ NULL,
-				/* .tp_assign      = */ NULL,
-				/* .tp_move_assign = */ NULL
+				/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_assign,
+				/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_assign
 			},
 			/* .tp_cast = */ {
 				/* .tp_str       = */ NULL,
@@ -1706,7 +1713,7 @@ CStruct_SetAttrField_p(void *self, struct cstruct_field const *field, DeeObject 
 	struct ctype_operators const *ops = CType_Operators(field_type);
 	cvalue.ptr = self;
 	cvalue.sint += field->csf_offset;
-	return (*ops->co_initfrom)(field_type, cvalue.ptr, value);
+	return (*ops->co_assign)(field_type, cvalue.ptr, value);
 }
 
 
@@ -1966,8 +1973,8 @@ INTERN struct empty_cstruct_type_object AbstractCStruct_Type = {
 					/* tp_serialize:   */ &cobject_serialize
 				),
 				/* .tp_dtor        = */ NULL,
-				/* .tp_assign      = */ NULL,
-				/* .tp_move_assign = */ NULL
+				/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_assign,
+				/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&cobject_assign
 			},
 			/* .tp_cast = */ {
 				/* .tp_str       = */ NULL,
@@ -3632,7 +3639,7 @@ cpointer_setitem_index(CPointer *self, size_t index, DeeObject *value) {
 	struct ctype_operators const *ops = CType_Operators(base_type);
 	index *= CPointerType_SizeofPointedToType(tp_self);
 	cvalue.sint += index;
-	return (*ops->co_initfrom)(base_type, cvalue.ptr, value);
+	return (*ops->co_assign)(base_type, cvalue.ptr, value);
 }
 
 
@@ -3843,7 +3850,7 @@ set_value_as_owner:
 	} else if (Object_IsCLValue(value)) {
 		/* Special handling for lvalue->pointer */
 		CLValue *value_ob = Object_AsCLValue(value);
-		CType *lv_base = CLValueType_PointedToType(Dee_TYPE(value_ob));
+		CType *lv_base = CLValueType_LogicalPointedToType(Dee_TYPE(value_ob));
 		if (!CType_IsCPointerType(lv_base)) {
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Cannot cast lvalue type %k to %k. Only lvalue-to-pointer can be cast here",
@@ -3854,7 +3861,7 @@ set_value_as_owner:
 		/* LValue -> Pointer (must deref) */
 		self->cp_owner = NULL; /* Owner is unknown, since "value_ob->cl_value" is the owner of
 		                        * the pointer, but not of whatever the pointer may point *at*. */
-		CTYPES_FAULTPROTECT(self->cp_value.ptr = *value_ob->cl_value.pptr, goto err);
+		CTYPES_FAULTPROTECT(self->cp_value.ptr = *(void **)CLValue_GetLogicalValue(value_ob), goto err);
 	} else if (Object_IsCArray(value)) {
 		/* Special handling for array->pointer
 		 *
@@ -3900,7 +3907,7 @@ cpointer_setind(CPointer *self, DeeObject *value) {
 	CPointerType *tp_self = Dee_TYPE(self);
 	CType *base_type = CPointerType_PointedToType(tp_self);
 	struct ctype_operators const *ops = CType_Operators(base_type);
-	return (*ops->co_initfrom)(base_type, self->cp_value.ptr, value);
+	return (*ops->co_assign)(base_type, self->cp_value.ptr, value);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -4247,11 +4254,16 @@ clvaluetype_fini(CLValueType *__restrict self) {
 		orig->ct_lvalue = NULL;
 	CType_CacheLockEndWrite(orig);
 	Dee_Decref(CType_AsType(orig));
+	Dee_Decref(CType_AsType(self->clt_logicalorig));
 }
 
 PRIVATE struct type_member tpconst clvaluetype_members[] = {
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_True, DOC_GET(islvalue_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CLValueType, clt_orig), "->?GCType"),
+	TYPE_MEMBER_FIELD_DOC("logical_base", STRUCT_OBJECT_AB, offsetof(CLValueType, clt_orig), "->?GCType"),
+	TYPE_MEMBER_FIELD_DOC("logical_ind", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CLValueType, clt_logicalind),
+	                      "Number of extra indirections necessary to reach ?#logical_base "
+	                      /**/ "from ?#base (when ?#base is another ?GLValueType)"),
 	TYPE_MEMBER_END
 };
 
@@ -4326,10 +4338,35 @@ clvalue_init_kw(CLValue *__restrict self, size_t argc,
 	                          "o:LValue", &value))
 		goto err;
 	if (Object_IsCLValue(value)) {
-		CLValue *val = Object_AsCLValue(value);
 		/* Force-cast lvalue */
+		CLValue *val = Object_AsCLValue(value);
+		CLValueType *dst_type = Dee_TYPE(self);
+		CLValueType *src_type = Dee_TYPE(val);
+		if (dst_type->clt_logicalind > src_type->clt_logicalind) {
+			/* Not allowed: target has greater indirection level than source */
+			DeeError_Throwf(&DeeError_TypeError,
+			                "Cannot cast lvalue type %k (with indirection level %" PRFuSIZ ") "
+			                "to lvalue type %k (with a greater indirection lavel %" PRFuSIZ ")",
+			                src_type, src_type->clt_logicalind,
+			                dst_type, dst_type->clt_logicalind);
+			goto err;
+		} else {
+			union pointer cvalue;
+			cvalue = val->cl_value;
+			if (dst_type->clt_logicalind < src_type->clt_logicalind) {
+				/* Unwind (some) indirections... */
+				size_t ind_delta = src_type->clt_logicalind -
+				                   dst_type->clt_logicalind;
+				CTYPES_FAULTPROTECT({
+					do {
+						cvalue.ptr = *cvalue.pptr;
+					} while (--ind_delta);
+				}, goto err);
+			}
+			self->cl_value = cvalue;
+		}
+
 		self->cl_owner = val->cl_owner;
-		self->cl_value = val->cl_value;
 		Dee_XIncref(self->cl_owner);
 	} else if (Object_IsCStruct(value) || Object_IsCArray(value)) {
 		self->cl_value.ptr = CStruct_Data(Object_AsCStruct(value));
@@ -4422,9 +4459,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 clvalue_assign(CLValue *self, DeeObject *value) {
-	CType *base_type = CLValueType_PointedToType(Dee_TYPE(self));
+	union pointer cvalue;
+	CType *base_type = CLValueType_LogicalPointedToType(Dee_TYPE(self));
 	struct ctype_operators const *ops = CType_Operators(base_type);
-	return (*ops->co_initfrom)(base_type, self->cl_value.ptr, value);
+	CTYPES_FAULTPROTECT(cvalue.ptr = CLValue_GetLogicalValue(self), return -1);
+	return (*ops->co_assign)(base_type, cvalue.ptr, value);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
@@ -4436,12 +4475,29 @@ CLValue_Ptr(CLValue *__restrict self) {
 	result = CPointer_Alloc();
 	if unlikely(!result)
 		goto err;
+	/* Always return a pointer to the *logical* base:
+	 * >> struct A { .x = int };
+	 * >> struct B { .x = int.lvalue };
+	 * >> local a = A(x: 10);
+	 * >> local b = B(x: a.x);
+	 * >> assert b.x.ptr == a.x.ptr; // "ptr" of lvalue-to-lvalue must return pointer to logical base! */
+#if 1
+	CTYPES_FAULTPROTECT({
+		result->cp_value.ptr = CLValue_GetLogicalValue(self);
+	}, goto err_r);
+	tp_self      = Dee_TYPE(self);
+	base_type    = CLValueType_LogicalPointedToType(tp_self);
+	pointer_type = CPointerType_Of(base_type);
+	if unlikely(!pointer_type)
+		goto err_r;
+#else
 	tp_self      = Dee_TYPE(self);
 	base_type    = CLValueType_PointedToType(tp_self);
 	pointer_type = CPointerType_Of(base_type);
 	if unlikely(!pointer_type)
 		goto err_r;
 	result->cp_value = self->cl_value;
+#endif
 	Dee_XIncref(self->cl_owner);
 	result->cp_owner = self->cl_owner;
 	CPointer_InitInherited(result, pointer_type);
@@ -4458,7 +4514,7 @@ err:
  * return a copy of the L-Value itself. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CObject *DCALL
 clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	DREF CObject *result;
 	if unlikely(CType_IsCFunctionType(base_type))
 		goto err_cannot_copy_function;
@@ -4467,7 +4523,8 @@ clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 		goto err;
 	CObject_Init(result, base_type);
 	CTYPES_FAULTPROTECT({
-		result = (*CType_Operators(base_type)->co_initobject)(result, self->cl_value.ptr);
+		void *value = CLValueType_LogicalPtr(tp_self, CLValue_GetValue(self));
+		result = (*CType_Operators(base_type)->co_initobject)(result, value);
 	}, {
 		CObject_Free(base_type, result);
 		goto err;
@@ -4475,8 +4532,8 @@ clvalue_new_copy(CLValueType *tp_self, CLValue *self) {
 	return result;
 err_cannot_copy_function:
 	DeeError_Throwf(&DeeError_TypeError,
-	                "Cannot copy lvalue-to-function at %p: %k",
-	                self->cl_value.ptr, tp_self);
+	                "Cannot copy lvalue-to-function %k",
+	                tp_self);
 err:
 	return NULL;
 }
@@ -4597,7 +4654,20 @@ PRIVATE DeeTypeObject *tpconst cfunclvalue_subclass_mro[] = {
 
 STATIC_ASSERT(offsetof(CLValue, cl_value) == offsetof(CPointer, cp_value));
 STATIC_ASSERT(offsetof(CLValueType, clt_orig) == offsetof(CPointerType, cpt_orig));
-#define cfunclvalue_call cfuncpointer_call
+#define cfunclvalue_call_0 cfuncpointer_call
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cfunclvalue_call(CLValue *__restrict self, size_t argc, DeeObject *const *argv) {
+	CLValueType *tp_self = Dee_TYPE(self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
+	CFunctionType *function_type;
+	union pointer cvalue;
+	ASSERT(CType_IsCFunctionType(base_type));
+	function_type = CType_AsCFunctionType(base_type);
+	CTYPES_FAULTPROTECT(cvalue.ptr = CLValue_GetLogicalValue(self), return NULL);
+	return (*function_type->cft_call)(function_type, cvalue.pfunc, argc, argv);
+}
+
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
@@ -4607,94 +4677,112 @@ STATIC_ASSERT(offsetof(CLValueType, clt_orig) == offsetof(CPointerType, cpt_orig
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cstructlvalue_getattr(CLValue *self, DeeObject *attr) {
+	void *cvalue;
 	CStructType *struct_type;
 	if (isptr(attr))
 		return Dee_AsObject(clvalue_getptr(self));
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return Dee_AsObject(CStruct_GetAttr_p(struct_type, self->cl_value.ptr, attr, self->cl_owner));
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return NULL);
+	return Dee_AsObject(CStruct_GetAttr_p(struct_type, cvalue, attr, self->cl_owner));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cstructlvalue_getattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
+	void *cvalue;
 	CStructType *struct_type;
 	if (isptr_string_hash(attr, hash))
 		return Dee_AsObject(clvalue_getptr(self));
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return Dee_AsObject(CStruct_GetAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash, self->cl_owner));
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return NULL);
+	return Dee_AsObject(CStruct_GetAttrStringHash_p(struct_type, cvalue, attr, hash, self->cl_owner));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cstructlvalue_getattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr_string_len_hash(attr, attrlen, hash))
 		return Dee_AsObject(clvalue_getptr(self));
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return Dee_AsObject(CStruct_GetAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash, self->cl_owner));
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return NULL);
+	return Dee_AsObject(CStruct_GetAttrStringLenHash_p(struct_type, cvalue, attr, attrlen, hash, self->cl_owner));
 }
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cstructlvalue_delattr(CLValue *self, DeeObject *attr) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr(attr))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_DelAttr_p(struct_type, self->cl_value.ptr, attr);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_DelAttr_p(struct_type, cvalue, attr);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cstructlvalue_delattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr_string_hash(attr, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_DelAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_DelAttrStringHash_p(struct_type, cvalue, attr, hash);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cstructlvalue_delattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr_string_len_hash(attr, attrlen, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_DEL);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_DelAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_DelAttrStringLenHash_p(struct_type, cvalue, attr, attrlen, hash);
 }
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 cstructlvalue_setattr(CLValue *self, DeeObject *attr, DeeObject *value) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr(attr))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_SetAttr_p(struct_type, self->cl_value.ptr, attr, value);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_SetAttr_p(struct_type, cvalue, attr, value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 cstructlvalue_setattr_string_hash(CLValue *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr_string_hash(attr, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_SetAttrStringHash_p(struct_type, self->cl_value.ptr, attr, hash, value);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_SetAttrStringHash_p(struct_type, cvalue, attr, hash, value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 cstructlvalue_setattr_string_len_hash(CLValue *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value) {
 	CStructType *struct_type;
+	void *cvalue;
 	if (isptr_string_len_hash(attr, attrlen, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ptr", DeeRT_ATTRIBUTE_ACCESS_SET);
-	ASSERT(CType_IsCStructType(CLValueType_PointedToType(Dee_TYPE(self))));
-	struct_type = CType_AsCStructType(CLValueType_PointedToType(Dee_TYPE(self)));
-	return CStruct_SetAttrStringLenHash_p(struct_type, self->cl_value.ptr, attr, attrlen, hash, value);
+	ASSERT(CType_IsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self))));
+	struct_type = CType_AsCStructType(CLValueType_LogicalPointedToType(Dee_TYPE(self)));
+	CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(self), return -1);
+	return CStruct_SetAttrStringLenHash_p(struct_type, cvalue, attr, attrlen, hash, value);
 }
 
 PRIVATE struct type_attr cstructlvalue_attr = {
@@ -4728,10 +4816,10 @@ PRIVATE struct type_attr cstructlvalue_attr = {
 /* LVALUE OF POINTER TO STRUCT                                          */
 /************************************************************************/
 
-#define cstructpointerlvalue_getstruct(self)                                                                                   \
-	(ASSERT(CType_IsCPointerType(CLValueType_PointedToType(Dee_TYPE(self)))),                                                  \
-	 ASSERT(CType_IsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_PointedToType(Dee_TYPE(self)))))), \
-	 CType_AsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_PointedToType(Dee_TYPE(self))))))
+#define cstructpointerlvalue_getstruct(self)                                                                                          \
+	(ASSERT(CType_IsCPointerType(CLValueType_LogicalPointedToType(Dee_TYPE(self)))),                                                  \
+	 ASSERT(CType_IsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_LogicalPointedToType(Dee_TYPE(self)))))), \
+	 CType_AsCStructType(CPointerType_PointedToType(CType_AsCPointerType(CLValueType_LogicalPointedToType(Dee_TYPE(self))))))
 
 PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
 cpointerlvalue_getind(CLValue *__restrict self);
@@ -4745,7 +4833,7 @@ cstructpointerlvalue_getattr(CLValue *self, DeeObject *attr) {
 	if (isind(attr))
 		return Dee_AsObject(cpointerlvalue_getind(self));
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return NULL);
 	return Dee_AsObject(CStruct_GetAttr_p(struct_type, cvalue.ptr, attr, NULL));
 }
 
@@ -4758,7 +4846,7 @@ cstructpointerlvalue_getattr_string_hash(CLValue *self, char const *attr, Dee_ha
 	if (isind_string_hash(attr, hash))
 		return Dee_AsObject(cpointerlvalue_getind(self));
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return NULL);
 	return Dee_AsObject(CStruct_GetAttrStringHash_p(struct_type, cvalue.ptr, attr, hash, NULL));
 }
 
@@ -4771,7 +4859,7 @@ cstructpointerlvalue_getattr_string_len_hash(CLValue *self, char const *attr, si
 	if (isind_string_len_hash(attr, attrlen, hash))
 		return Dee_AsObject(cpointerlvalue_getind(self));
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return NULL);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return NULL);
 	return Dee_AsObject(CStruct_GetAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash, NULL));
 }
 
@@ -4785,7 +4873,7 @@ cstructpointerlvalue_delattr(CLValue *self, DeeObject *attr) {
 	if (isind(attr))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_DEL);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_DelAttr_p(struct_type, cvalue.ptr, attr);
 }
 
@@ -4798,7 +4886,7 @@ cstructpointerlvalue_delattr_string_hash(CLValue *self, char const *attr, Dee_ha
 	if (isind_string_hash(attr, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_DEL);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_DelAttrStringHash_p(struct_type, cvalue.ptr, attr, hash);
 }
 
@@ -4811,7 +4899,7 @@ cstructpointerlvalue_delattr_string_len_hash(CLValue *self, char const *attr, si
 	if (isind_string_len_hash(attr, attrlen, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_DEL);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_DelAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash);
 }
 
@@ -4825,7 +4913,7 @@ cstructpointerlvalue_setattr(CLValue *self, DeeObject *attr, DeeObject *value) {
 	if (isind(attr))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_SET);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_SetAttr_p(struct_type, cvalue.ptr, attr, value);
 }
 
@@ -4838,7 +4926,7 @@ cstructpointerlvalue_setattr_string_hash(CLValue *self, char const *attr, Dee_ha
 	if (isind_string_hash(attr, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_SET);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_SetAttrStringHash_p(struct_type, cvalue.ptr, attr, hash, value);
 }
 
@@ -4851,7 +4939,7 @@ cstructpointerlvalue_setattr_string_len_hash(CLValue *self, char const *attr, si
 	if (isind_string_len_hash(attr, attrlen, hash))
 		return DeeRT_ErrRestrictedAttrCStr(self, "ind", DeeRT_ATTRIBUTE_ACCESS_SET);
 	struct_type = cstructpointerlvalue_getstruct(self);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	return CStruct_SetAttrStringLenHash_p(struct_type, cvalue.ptr, attr, attrlen, hash, value);
 }
 
@@ -4891,7 +4979,7 @@ PRIVATE struct type_attr cstructpointerlvalue_attr = {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 carraylvalue_size(CLValue *__restrict self) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	CArrayType *array_type = CType_AsCArrayType(base_type);
 	ASSERT(CType_IsCArrayType(base_type));
 	return CArrayType_Count(array_type);
@@ -4900,7 +4988,7 @@ carraylvalue_size(CLValue *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
 carraylvalue_getitem_index_fast(CLValue *__restrict self, size_t index) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	CArrayType *array_type = CType_AsCArrayType(base_type);
 	CType *array_item_type;
 	DREF CLValue *result;
@@ -4909,7 +4997,7 @@ carraylvalue_getitem_index_fast(CLValue *__restrict self, size_t index) {
 	ASSERT(CType_IsCArrayType(base_type));
 	array_item_type = CArrayType_PointedToType(array_type);
 	index *= CType_Sizeof(array_item_type);
-	res_cvalue = self->cl_value;
+	CTYPES_FAULTPROTECT(res_cvalue.ptr = CLValue_GetLogicalValue(self), goto err);
 	res_cvalue.sint += index;
 	item_lvalue_type = CLValueType_Of(array_item_type);
 	if unlikely(!item_lvalue_type)
@@ -4931,7 +5019,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
 carraylvalue_getitem_index(CLValue *__restrict self, size_t index) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	CArrayType *array_type = CType_AsCArrayType(base_type);
 	if unlikely(index >= CArrayType_Count(array_type))
 		goto err_index_oob;
@@ -4944,16 +5032,16 @@ err_index_oob:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 carraylvalue_delitem_index(CLValue *__restrict self, size_t index) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	CArrayType *array_type = CType_AsCArrayType(base_type);
 	CType *array_item_type;
 	union pointer res_cvalue;
 	ASSERT(CType_IsCArrayType(base_type));
 	array_item_type = CArrayType_PointedToType(array_type);
 	index *= CType_Sizeof(array_item_type);
-	res_cvalue = self->cl_value;
-	res_cvalue.sint += index;
 	CTYPES_FAULTPROTECT({
+		res_cvalue.ptr = CLValue_GetLogicalValue(self);
+		res_cvalue.sint += index;
 		bzero(res_cvalue.ptr, CType_Sizeof(array_item_type));
 	}, return -1);
 	return 0;
@@ -4962,7 +5050,7 @@ carraylvalue_delitem_index(CLValue *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 carraylvalue_setitem_index(CLValue *self, size_t index, DeeObject *value) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *base_type = CLValueType_PointedToType(tp_self);
+	CType *base_type = CLValueType_LogicalPointedToType(tp_self);
 	CArrayType *array_type = CType_AsCArrayType(base_type);
 	CType *array_item_type;
 	struct ctype_operators const *array_item_type_operators;
@@ -4971,9 +5059,9 @@ carraylvalue_setitem_index(CLValue *self, size_t index, DeeObject *value) {
 	array_item_type = CArrayType_PointedToType(array_type);
 	array_item_type_operators = CType_Operators(array_item_type);
 	index *= CType_Sizeof(array_item_type);
-	res_cvalue = self->cl_value;
+	CTYPES_FAULTPROTECT(res_cvalue.ptr = CLValue_GetLogicalValue(self), return -1);
 	res_cvalue.sint += index;
-	return (*array_item_type_operators->co_initfrom)(array_item_type, res_cvalue.ptr, value);
+	return (*array_item_type_operators->co_assign)(array_item_type, res_cvalue.ptr, value);
 }
 
 PRIVATE DeeTypeObject *tpconst carraylvalue_subclass_mro[] = {
@@ -5019,7 +5107,7 @@ PRIVATE struct type_seq carraylvalue_seq = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cfuncpointerlvalue_call(CLValue *__restrict self, size_t argc, DeeObject *const *argv) {
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base_type = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base_type = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type;
 	CType *pointer_base_type;
 	CFunctionType *function_type;
@@ -5029,7 +5117,7 @@ cfuncpointerlvalue_call(CLValue *__restrict self, size_t argc, DeeObject *const 
 	pointer_base_type = CPointerType_PointedToType(pointer_type);
 	ASSERT(CType_IsCFunctionType(pointer_base_type));
 	function_type = CType_AsCFunctionType(pointer_base_type);
-	CTYPES_FAULTPROTECT(cvalue.pfunc = *self->cl_value.ppfunc, return NULL);
+	CTYPES_FAULTPROTECT(cvalue.pfunc = *(Dee_funptr_t *)CLValue_GetLogicalValue(self), return NULL);
 	return (*function_type->cft_call)(function_type, cvalue.pfunc, argc, argv);
 }
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -5040,12 +5128,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF CLValue *DCALL
 cpointerlvalue_getitem_index(CLValue *__restrict self, ptrdiff_t index) {
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	DREF CLValue *result;
 	DREF CLValueType *pointer_base_lvalue;
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, goto err);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), goto err);
 	result = CLValue_Alloc();
 	if unlikely(!result)
 		goto err;
@@ -5073,14 +5161,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cpointerlvalue_delitem_index(CLValue *__restrict self, ptrdiff_t index) {
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	size_t base_size = CType_Sizeof(pointer_base);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
 	index *= base_size;
-	cvalue.sint += index;
-	CTYPES_FAULTPROTECT(bzero(cvalue.ptr, base_size), return -1);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = *(void **)CLValue_GetLogicalValue(self);
+		cvalue.sint += index;
+		bzero(cvalue.ptr, base_size);
+	}, return -1);
 	return 0;
 }
 
@@ -5088,14 +5178,14 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 cpointerlvalue_setitem_index(CLValue *self, ptrdiff_t index, DeeObject *value) {
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	struct ctype_operators const *pointer_base_operators = CType_Operators(pointer_base);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
 	index *= CType_Sizeof(pointer_base);
 	cvalue.sint += index;
-	return (*pointer_base_operators->co_initfrom)(pointer_base, cvalue.ptr, value);
+	return (*pointer_base_operators->co_assign)(pointer_base, cvalue.ptr, value);
 }
 
 
@@ -5140,12 +5230,12 @@ cpointerlvalue_getind(CLValue *__restrict self) {
 #else /* __OPTIMIZE_SIZE__ */
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	DREF CLValue *result;
 	DREF CLValueType *pointer_base_lvalue;
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, goto err);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), goto err);
 	result = CLValue_Alloc();
 	if unlikely(!result)
 		goto err;
@@ -5175,12 +5265,14 @@ cpointerlvalue_delind(CLValue *__restrict self) {
 #else /* __OPTIMIZE_SIZE__ */
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	size_t base_size = CType_Sizeof(pointer_base);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
-	CTYPES_FAULTPROTECT(bzero(cvalue.ptr, base_size), return -1);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = *(void **)CLValue_GetLogicalValue(self);
+		bzero(cvalue.ptr, base_size);
+	}, return -1);
 	return 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 }
@@ -5192,12 +5284,12 @@ cpointerlvalue_setind(CLValue *self, DeeObject *value) {
 #else /* __OPTIMIZE_SIZE__ */
 	union pointer cvalue;
 	CLValueType *tp_self = Dee_TYPE(self);
-	CType *lvalue_base = CLValueType_PointedToType(tp_self);
+	CType *lvalue_base = CLValueType_LogicalPointedToType(tp_self);
 	CPointerType *pointer_type = (ASSERT(CType_IsCPointerType(lvalue_base)), CType_AsCPointerType(lvalue_base));
 	CType *pointer_base = CPointerType_PointedToType(pointer_type);
 	struct ctype_operators const *pointer_base_operators = CType_Operators(pointer_base);
-	CTYPES_FAULTPROTECT(cvalue.ptr = *self->cl_value.pptr, return -1);
-	return (*pointer_base_operators->co_initfrom)(pointer_base, cvalue.ptr, value);
+	CTYPES_FAULTPROTECT(cvalue.ptr = *(void **)CLValue_GetLogicalValue(self), return -1);
+	return (*pointer_base_operators->co_assign)(pointer_base, cvalue.ptr, value);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -5250,11 +5342,32 @@ PRIVATE DeeTypeObject *tpconst cnumericlvalue_subclass_mro[] = {
 	NULL,
 };
 
+PRIVATE WUNUSED NONNULL((1)) void *DFCALL
+clvalue_getlogicalptr_0(CLValueType const *tp_self, void *ptr) {
+	(void)tp_self;
+	return ptr;
+}
+
+PRIVATE WUNUSED NONNULL((1)) void *DFCALL
+clvalue_getlogicalptr_1(CLValueType const *tp_self, void *ptr) {
+	(void)tp_self;
+	return *(void **)ptr;
+}
+
+PRIVATE WUNUSED NONNULL((1)) void *DFCALL
+clvalue_getlogicalptr_n(CLValueType const *tp_self, void *ptr) {
+	size_t n = tp_self->clt_logicalind;
+	do {
+		ptr = *(void **)ptr;
+	} while (--n);
+	return ptr;
+}
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF CLValueType *DCALL
-CLValuetype_New(CType *__restrict self) {
+CLValueType_New(CType *__restrict self) {
 	DREF CLValueType *result;
+	size_t extra_indirections;
 	result = DeeGCObject_CALLOC(CLValueType);
 	if unlikely(!result)
 		goto err;
@@ -5279,11 +5392,28 @@ CLValuetype_New(CType *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 	result->clt_base.ct_operators = &clvalue_operators;
 
+	/* Determine the "logical" lvalue base type (and how many extra indirections to get there) */
+	for (extra_indirections = 0; CType_IsCLValueType(self);
+	     self = CLValueType_PointedToType(CType_AsCLValueType(self)))
+		++extra_indirections;
+	Dee_Incref(CType_AsType(self));
+	result->clt_logicalorig = self;
+	result->clt_logicalind  = extra_indirections;
+	if (extra_indirections == 0) {
+		result->clt_getlogicalptr = &clvalue_getlogicalptr_0;
+	} else if (extra_indirections == 1) {
+		result->clt_getlogicalptr = &clvalue_getlogicalptr_1;
+	} else {
+		result->clt_getlogicalptr = &clvalue_getlogicalptr_n;
+	}
+
 	/* Special type traits based on lvalue base-class */
 #ifndef CONFIG_NO_CFUNCTION
 	if (CType_IsCFunctionType(self)) {
 		/* LValue-to-function is callable */
-		result->clt_base.ct_base.tp_call = (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfunclvalue_call;
+		result->clt_base.ct_base.tp_call = extra_indirections == 0
+		                                   ? (DREF DeeObject * (DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfunclvalue_call_0
+		                                   : (DREF DeeObject * (DCALL *)(DeeObject *, size_t, DeeObject *const *))&cfunclvalue_call;
 		result->clt_base.ct_base.tp_mro  = cfunclvalue_subclass_mro;
 	} else
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -5331,6 +5461,10 @@ CLValuetype_New(CType *__restrict self) {
 			/* LValue-to-pointer allows for array-style indexing */
 			result->clt_base.ct_base.tp_seq     = &cpointerlvalue_seq;
 			result->clt_base.ct_base.tp_getsets = cpointerlvalue_getsets;
+		} else if (CType_IsCLValueType(self)) {
+			/* TODO: LValue-of-lvalue sounds weird, but is easily possible
+			 *       when accessing a struct member that is itself another
+			 *       l-value! */
 		} else if (DeeType_Implements(CType_AsType(self), &DeeNumeric_Type)) {
 			/* Retain (and expose) helper methods from "Numeric" if the referenced object is a number */
 			result->clt_base.ct_base.tp_mro = cnumericlvalue_subclass_mro;
@@ -5358,7 +5492,7 @@ CLValueType_Of(CType *__restrict self) {
 	CType_CacheLockEndRead(self);
 	if (!result) {
 		/* Lazily construct missing types. */
-		result = CLValuetype_New(self);
+		result = CLValueType_New(self);
 		if likely(result) {
 			CType_CacheLockWrite(self);
 			/* Check if the type was created due to race conditions. */

@@ -1,0 +1,104 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import deemon;
+import ctypes;
+import .common.test;
+
+if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
+	return;
+
+ctypes.struct BaseStruct {
+	.x = ctypes.int,
+	.y = ctypes.int,
+};
+
+ctypes.struct LValueStruct {
+	.x = ctypes.int.lvalue,
+	.y = ctypes.int.lvalue,
+};
+
+local base = BaseStruct(x: 10, y: 20);
+local lval = LValueStruct(x: base.x, y: base.y);
+
+assert lval.x == 10;
+assert lval.y == 20;
+assert base.x == 10;
+assert base.y == 20;
+
+lval.x += 7;
+assert lval.x == 17;
+assert lval.y == 20;
+assert base.x == 17;
+assert base.y == 20;
+
+lval.x = 99;
+assert lval.x == 99;
+assert lval.y == 20;
+assert base.x == 99;
+assert base.y == 20;
+
+local t = lval.x;
+t := 77;
+assert t.ptr == base.x.ptr;
+assert (deemon.int)t.ptr == (deemon.int)base.x.ptr;
+assert t.hex() == "0x4d"; /* (77).hex() -- make sure that lvalue-to-lvalue-to-int is still Numeric! */
+assert type(t) === ctypes.int.lvalue.lvalue;
+assert type(t) !== ctypes.int.lvalue;
+
+assert lval.x == 77;
+assert lval.y == 20;
+assert base.x == 77;
+assert base.y == 20;
+
+
+local ARR = ctypes.int.lvalue[2];
+local arr = (ARR){ base.x, base.y };
+test.assertSequence(arr, { 77, 20 });
+arr := { 78, 21 };
+test.assertSequence(arr, { 78, 21 });
+assert base.x == 78;
+assert base.y == 21;
+arr[1] = 24;
+test.assertSequence(arr, { 78, 24 });
+assert base.x == 78;
+assert base.y == 24;
+
+
+/* This must also work: initializing lvalues with greater-order lvalues.
+ * Notice how we initialize ARR not with "int.lvalue" objects, but
+ * "int.lvalue.lvalue", and it still applies the correct amount of indirection!
+ */
+local arr = (ARR){ lval.x, lval.y };
+assert type(lval.x) == ctypes.int.lvalue.lvalue;
+test.assertSequence(arr, { 78, 24 });
+arr := { 79, 25 };
+test.assertSequence(arr, { 79, 25 });
+assert arr[0] == 79;
+assert arr[1] == 25;
+assert (arr + 0).ind == 79;
+assert (arr + 1).ind == 25;
+assert base.x == 79;
+assert base.y == 25;
+arr[0] = 80;
+test.assertSequence(arr, { 80, 25 });
+assert base.x == 80;
+assert base.y == 25;

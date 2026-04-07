@@ -240,7 +240,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeOb
 		goto err;
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(type))
-		type = CLValueType_PointedToType(CType_AsCLValueType(type));
+		type = CLValueType_LogicalPointedToType(CType_AsCLValueType(type));
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
@@ -264,7 +264,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeO
 		goto err;
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(type))
-		type = CLValueType_PointedToType(CType_AsCLValueType(type));
+		type = CLValueType_LogicalPointedToType(CType_AsCLValueType(type));
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(type))
 		type = DeeSType_AsLValueType(type)->lt_orig;
@@ -287,7 +287,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeOb
 		goto err;
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(result))
-		result = CLValueType_PointedToType(CType_AsCLValueType(result));
+		result = CLValueType_LogicalPointedToType(CType_AsCLValueType(result));
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	if (DeeLValueType_Check(result))
 		result = DeeSType_AsLValueType(result)->lt_orig;

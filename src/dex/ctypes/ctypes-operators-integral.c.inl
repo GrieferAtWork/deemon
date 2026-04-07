@@ -433,6 +433,7 @@ cuint128_unaligned_get_bswap(void const *p) {
 #define LOCAL_FUNC(x)     PP_CAT2(LOCAL_operators, x)
 #define LOCAL_initobject  LOCAL_FUNC(_initobject)
 #define LOCAL_initfrom    LOCAL_FUNC(_initfrom)
+#define LOCAL_assign      LOCAL_FUNC(_assign)
 #define LOCAL_initwith    LOCAL_FUNC(_initwith)
 #define LOCAL_bool        LOCAL_FUNC(_bool)
 #define LOCAL_printcrepr  LOCAL_FUNC(_printcrepr)
@@ -505,6 +506,8 @@ LOCAL_initobject(LOCAL_CObject *self, void const *src) {
 	return self;
 }
 
+#undef LOCAL_assign
+#define LOCAL_assign LOCAL_initfrom
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_initfrom(CType *tp_self, void *self, DeeObject *value) {
 	LOCAL_intN_t cvalue;
@@ -1141,6 +1144,7 @@ err:
 INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&LOCAL_initobject,
 	/* .co_initfrom    = */ &LOCAL_initfrom,
+	/* .co_assign      = */ &LOCAL_assign,
 	/* .co_initwith    = */ &LOCAL_initwith,
 	/* .co_bool        = */ &LOCAL_bool,
 	/* .co_printcrepr  = */ &LOCAL_printcrepr,
@@ -1182,6 +1186,7 @@ INTERN struct ctype_operators Dee_tpconst LOCAL_operators = {
 #undef LOCAL_FUNC
 #undef LOCAL_initobject
 #undef LOCAL_initfrom
+#undef LOCAL_assign
 #undef LOCAL_initwith
 #undef LOCAL_bool
 #undef LOCAL_printcrepr

@@ -32,6 +32,7 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxPTR */
+#include <deemon/none.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewPtrdiff, DeeInt_NewUIntptr, Dee_INT_UNSIGNED */
 #include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>             /* DeeMap_Check */
@@ -73,10 +74,11 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		memcpy(p_result, data, sizeof(CTYPES_ldouble));
 		return 0;
 	} else if (Type_IsCLValueType(tp)) {
-		CType *base = CLValueType_PointedToType(Type_AsCLValueType(tp));
+		CLValue *me = Object_AsCLValue(self);
+		CType *base = CLValueType_LogicalPointedToType(Type_AsCLValueType(tp));
 		if (base == &CLDouble_Type) {
-			byte_t *data = Object_AsCLValue(self)->cl_value.pbyte;
 			CTYPES_FAULTPROTECT({
+				void *data = CLValue_GetLogicalValue(me);
 				memcpy(p_result, data, sizeof(CTYPES_ldouble));
 			}, goto err);
 			return 0;
@@ -94,6 +96,15 @@ err:
 #define UNSUPPORTED_OPERATOR_FMT(name) "Unsupported ctypes operator " name ": %k"
 
 /* Generic, unsupported types */
+PRIVATE /*WUNUSED*/ NONNULL((1, 3)) int DCALL
+unsupported__assign(CType *tp_self, void *self, DeeObject *value) {
+	(void)self;
+	(void)value;
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       UNSUPPORTED_OPERATOR_FMT(":="),
+	                       tp_self);
+}
+
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 unsupported__bool(CType *tp_self, void const *self) {
 	(void)self;
@@ -420,6 +431,9 @@ void_initfrom(CType *tp_self, void *self, DeeObject *value) {
 	return 0;
 }
 
+#undef void_assign
+#define void_assign unsupported__assign
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 void_initwith(CType *tp_self, void *self,
               size_t argc, DeeObject *const *argv,
@@ -478,6 +492,7 @@ void_printcrepr(CType *tp_self, void const *self,
 INTERN struct ctype_operators Dee_tpconst cvoid_operators = {
 	/* .co_initobject  = */ &void_initobject,
 	/* .co_initfrom    = */ &void_initfrom,
+	/* .co_assign      = */ &unsupported__assign,
 	/* .co_initwith    = */ &void_initwith,
 	/* .co_bool        = */ &void_bool,
 	/* .co_printcrepr  = */ &void_printcrepr,
@@ -577,6 +592,8 @@ pointer_initobject(CPointer *self, union pointer const *src) {
 	return self;
 }
 
+#undef pointer_assign
+#define pointer_assign pointer_initfrom
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 pointer_initfrom(CPointerType *tp_self, union pointer *self, DeeObject *value) {
 	union pointer cvalue;
@@ -870,6 +887,7 @@ err:
 INTERN struct ctype_operators Dee_tpconst cpointer_operators = {
 	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&pointer_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&pointer_initfrom,
+	/* .co_assign      = */ (int (DCALL *)(CType *, void *, DeeObject *))&pointer_assign,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&pointer_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&pointer_bool,
 	/* .co_printcrepr  = */ (Dee_ssize_t (DCALL *)(CType *, void const *, Dee_formatprinter_t, void *))&pointer_printcrepr,
@@ -920,6 +938,8 @@ INTERN struct ctype_operators Dee_tpconst cpointer_operators = {
  * >> b.y = 99;
  * >> assert a.x == 99; */
 
+#define lvalue_pointer_get(tp_self, self) \
+	CLValueType_LogicalPtr(tp_self, pointer_get(self))
 
 #if 1
 STATIC_ASSERT(offsetof(CPointer, cp_value) == offsetof(CLValue, cl_value));
@@ -937,15 +957,44 @@ lvalue_initobject(CLValue *self, union pointer const *src) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lvalue_initfrom(CLValueType *tp_self, union pointer *self, DeeObject *value) {
 	union pointer cvalue;
-	CLValue *value_lvalue;
-	if (DeeObject_AssertTypeExact(value, CLValueType_AsType(tp_self)))
-		goto err;
-	value_lvalue = Object_AsCLValue(value);
-	cvalue = value_lvalue->cl_value;
-	CTYPES_FAULTPROTECT(pointer_set(self, cvalue.ptr), goto err);
+	if (Dee_TYPE(value) == CLValueType_AsType(tp_self)) {
+		CLValue *value_lvalue = Object_AsCLValue(value);
+		cvalue = value_lvalue->cl_value;
+	} else {
+		CLValue *value_lvalue;
+		CLValueType *value_lvalue_type;
+		size_t ind_delta;
+		if (!Object_IsCLValue(value))
+			goto err_bad_type;
+		value_lvalue = Object_AsCLValue(value);
+		value_lvalue_type = Dee_TYPE(value_lvalue);
+		if (CLValueType_LogicalPointedToType(value_lvalue_type) !=
+		    CLValueType_LogicalPointedToType(tp_self))
+			goto err_bad_type;
+		if (value_lvalue_type->clt_logicalind < tp_self->clt_logicalind)
+			goto err_bad_type;
+		ind_delta = value_lvalue_type->clt_logicalind - tp_self->clt_logicalind;
+		cvalue = value_lvalue->cl_value;
+		CTYPES_FAULTPROTECT({
+			do {
+				cvalue.ptr = *cvalue.pptr;
+			} while (--ind_delta);
+		}, return -1);
+	}
+	CTYPES_FAULTPROTECT(pointer_set(self, cvalue.ptr), return -1);
 	return 0;
-err:
+err_bad_type:
+	DeeObject_TypeAssertFailed(value, CLValueType_AsType(tp_self));
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+lvalue_assign(CLValueType *tp_self, union pointer *self, DeeObject *value) {
+	union pointer cvalue;
+	struct ctype_operators const *ops;
+	CTYPES_FAULTPROTECT(cvalue.ptr = lvalue_pointer_get(tp_self, self), return -1);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_assign)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr, value);
 }
 
 /*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "value" });]]]*/
@@ -972,11 +1021,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lvalue_bool(CLValueType *tp_self, union pointer const *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = lvalue_pointer_get(tp_self, self), return -1);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_bool)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_bool)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
@@ -985,7 +1034,7 @@ lvalue_printcrepr(CLValueType *tp_self, union pointer const *self,
 	Dee_ssize_t result, temp;
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = lvalue_pointer_get(tp_self, self), return -1);
 	result = DeeFormat_PRINT(printer, arg, "(");
 	if unlikely(result < 0)
 		goto done;
@@ -998,8 +1047,9 @@ lvalue_printcrepr(CLValueType *tp_self, union pointer const *self,
 		goto err_temp;
 	result += temp;
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	temp = (*ops->co_printcrepr)(CLValueType_PointedToType(tp_self), cvalue.ptr, printer, arg);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	temp = (*ops->co_printcrepr)(CLValueType_LogicalPointedToType(tp_self),
+	                             cvalue.ptr, printer, arg);
 	if unlikely(temp < 0)
 		goto err_temp;
 	result += temp;
@@ -1019,7 +1069,7 @@ lvalue_printdrepr(CLValueType *tp_self, union pointer const *self,
 	Dee_ssize_t result, temp;
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT(cvalue.ptr = lvalue_pointer_get(tp_self, self), return -1);
 	result = DeeFormat_PRINT(printer, arg, "(");
 	if unlikely(result < 0)
 		goto done;
@@ -1032,8 +1082,9 @@ lvalue_printdrepr(CLValueType *tp_self, union pointer const *self,
 		goto err_temp;
 	result += temp;
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	temp = (*ops->co_printdrepr)(CLValueType_PointedToType(tp_self), cvalue.ptr, printer, arg);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	temp = (*ops->co_printdrepr)(CLValueType_LogicalPointedToType(tp_self),
+	                             cvalue.ptr, printer, arg);
 	if unlikely(temp < 0)
 		goto err_temp;
 	result += temp;
@@ -1051,99 +1102,118 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lvalue_compare(CLValueType *tp_self, union pointer const *lhs, DeeObject *rhs) {
 	union pointer lhs_cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(lhs_cvalue.ptr = pointer_get(lhs), return Dee_COMPARE_ERR);
+	CTYPES_FAULTPROTECT({
+		lhs_cvalue.ptr = lvalue_pointer_get(tp_self, lhs);
+	}, return Dee_COMPARE_ERR);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_compare)(CLValueType_PointedToType(tp_self), lhs_cvalue.ptr, rhs);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_compare)(CLValueType_LogicalPointedToType(tp_self), lhs_cvalue.ptr, rhs);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lvalue_int32(CLValueType *tp_self, union pointer const *self, int32_t *p_result) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return Dee_INT_ERROR);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return Dee_INT_ERROR);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_int32)(CLValueType_PointedToType(tp_self), cvalue.ptr, p_result);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_int32)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr, p_result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lvalue_int64(CLValueType *tp_self, union pointer const *self, int64_t *p_result) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return Dee_INT_ERROR);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return Dee_INT_ERROR);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_int64)(CLValueType_PointedToType(tp_self), cvalue.ptr, p_result);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_int64)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr, p_result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lvalue_double(CLValueType *tp_self, union pointer const *self, double *p_result) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return -1);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_double)(CLValueType_PointedToType(tp_self), cvalue.ptr, p_result);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_double)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr, p_result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_int(CLValueType *tp_self, union pointer const *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return NULL);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return NULL);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_int)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_int)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_inv(CLValueType *tp_self, union pointer const *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return NULL);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return NULL);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_inv)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_inv)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_pos(CLValueType *tp_self, union pointer const *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return NULL);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return NULL);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_pos)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_pos)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_neg(CLValueType *tp_self, union pointer const *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return NULL);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return NULL);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_neg)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_neg)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
-#define DEFINE_LVALUE_BINARY_OP(lvalue_foo, co_foo)                                     \
-	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL                               \
-	lvalue_foo(CLValueType *tp_self, union pointer const *lhs, DeeObject *rhs) {        \
-		union pointer lhs_cvalue;                                                       \
-		struct ctype_operators const *ops;                                              \
-		CTYPES_FAULTPROTECT(lhs_cvalue.ptr = pointer_get(lhs), return NULL);            \
-		/* Forward to pointed-to memory location */                                     \
-		ops = CLValueType_PointedToOperators(tp_self);                                  \
-		return (*ops->co_foo)(CLValueType_PointedToType(tp_self), lhs_cvalue.ptr, rhs); \
+#define DEFINE_LVALUE_BINARY_OP(lvalue_foo, co_foo)                              \
+	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL                        \
+	lvalue_foo(CLValueType *tp_self, union pointer const *lhs, DeeObject *rhs) { \
+		union pointer lhs_cvalue;                                                \
+		struct ctype_operators const *ops;                                       \
+		CTYPES_FAULTPROTECT({                                                    \
+			lhs_cvalue.ptr = lvalue_pointer_get(tp_self, lhs);                   \
+		}, return NULL);                                                         \
+		/* Forward to pointed-to memory location */                              \
+		ops = CLValueType_LogicalPointedToOperators(tp_self);                    \
+		return (*ops->co_foo)(CLValueType_LogicalPointedToType(tp_self),         \
+		                      lhs_cvalue.ptr, rhs);                              \
 	}
 DEFINE_LVALUE_BINARY_OP(lvalue_add, co_add)
 DEFINE_LVALUE_BINARY_OP(lvalue_sub, co_sub)
@@ -1162,33 +1232,40 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lvalue_inc(CLValueType *tp_self, union pointer *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return -1);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_inc)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_inc)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lvalue_dec(CLValueType *tp_self, union pointer *self) {
 	union pointer cvalue;
 	struct ctype_operators const *ops;
-	CTYPES_FAULTPROTECT(cvalue.ptr = pointer_get(self), return -1);
+	CTYPES_FAULTPROTECT({
+		cvalue.ptr = lvalue_pointer_get(tp_self, self);
+	}, return -1);
 
 	/* Forward to pointed-to memory location */
-	ops = CLValueType_PointedToOperators(tp_self);
-	return (*ops->co_dec)(CLValueType_PointedToType(tp_self), cvalue.ptr);
+	ops = CLValueType_LogicalPointedToOperators(tp_self);
+	return (*ops->co_dec)(CLValueType_LogicalPointedToType(tp_self), cvalue.ptr);
 }
 
-#define DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_foo, co_inplace_foo)                     \
-	PRIVATE WUNUSED NONNULL((1, 3)) int DCALL                                                   \
-	lvalue_inplace_foo(CLValueType *tp_self, union pointer *lhs, DeeObject *rhs) {              \
-		union pointer lhs_cvalue;                                                               \
-		struct ctype_operators const *ops;                                                      \
-		CTYPES_FAULTPROTECT(lhs_cvalue.ptr = pointer_get(lhs), return -1);                      \
-		/* Forward to pointed-to memory location */                                             \
-		ops = CLValueType_PointedToOperators(tp_self);                                          \
-		return (*ops->co_inplace_foo)(CLValueType_PointedToType(tp_self), lhs_cvalue.ptr, rhs); \
+#define DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_foo, co_inplace_foo)        \
+	PRIVATE WUNUSED NONNULL((1, 3)) int DCALL                                      \
+	lvalue_inplace_foo(CLValueType *tp_self, union pointer *lhs, DeeObject *rhs) { \
+		union pointer lhs_cvalue;                                                  \
+		struct ctype_operators const *ops;                                         \
+		CTYPES_FAULTPROTECT({                                                      \
+			lhs_cvalue.ptr = lvalue_pointer_get(tp_self, lhs);                     \
+		}, return -1);                                                             \
+		/* Forward to pointed-to memory location */                                \
+		ops = CLValueType_LogicalPointedToOperators(tp_self);                      \
+		return (*ops->co_inplace_foo)(CLValueType_LogicalPointedToType(tp_self),   \
+		                              lhs_cvalue.ptr, rhs);                        \
 	}
 DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_add, co_inplace_add)
 DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_sub, co_inplace_sub)
@@ -1206,6 +1283,7 @@ DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_pow, co_inplace_pow)
 INTERN struct ctype_operators Dee_tpconst clvalue_operators = {
 	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&lvalue_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&lvalue_initfrom,
+	/* .co_assign      = */ (int (DCALL *)(CType *, void *, DeeObject *))&lvalue_assign,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&lvalue_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&lvalue_bool,
 	/* .co_printcrepr  = */ (Dee_ssize_t (DCALL *)(CType *, void const *, Dee_formatprinter_t, void *))&lvalue_printcrepr,
@@ -1345,9 +1423,11 @@ copy_from_cvalue:
 	} else if (Object_IsCLValue(value)) {
 		CLValue *value_ob = Object_AsCLValue(value);
 		CLValueType *value_type = Dee_TYPE(value_ob);
-		if unlikely(CLValueType_PointedToType(value_type) != CStructType_AsCType(tp_self))
+		if unlikely(CLValueType_LogicalPointedToType(value_type) != CStructType_AsCType(tp_self))
 			goto bad_rhs_type;
-		cvalue = value_ob->cl_value;
+		CTYPES_FAULTPROTECT({
+			cvalue.ptr = CLValue_GetLogicalValue(value_ob);
+		}, goto err);
 		goto copy_from_cvalue;
 	} else {
 		Dee_ssize_t status;
@@ -1483,6 +1563,141 @@ err:
 	return -1;
 }
 
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+struct_assignseq_cb(void *arg, DeeObject *elem) {
+	struct struct_initfromseq_data *data = (struct struct_initfromseq_data *)arg;
+	struct cstruct_field *field = data->sifsd_next;
+	void *field_addr;
+	CType *field_type;
+	struct ctype_operators const *field_ops;
+	if unlikely(!field) {
+		DeeError_Throwf(&DeeError_TypeError,
+		                "Too many initializers for struct type %r",
+		                data->sifsd_tp_self);
+		goto err;
+	}
+	data->sifsd_next = cstruct_field_nextfield(field);
+	field_addr = (void *)((byte_t *)data->sifsd_self + cstruct_field_getoffset(field));
+	field_type = cstruct_field_gettype(field);
+	field_ops  = CType_Operators(field_type);
+	return (*field_ops->co_assign)(field_type, field_addr, elem);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
+struct_assignfield(CStructType *tp_self, void *self,
+                   DeeStringObject *name, DeeObject *value) {
+	struct cstruct_field *field;
+	void *field_addr;
+	CType *field_type;
+	struct ctype_operators const *field_ops;
+	field = CStructType_FieldByName(tp_self, Dee_AsObject(name));
+	if unlikely(!field)
+		goto err_no_such_field;
+	field_addr = (void *)((byte_t *)self + cstruct_field_getoffset(field));
+	field_type = cstruct_field_gettype(field);
+	field_ops  = CType_Operators(field_type);
+	return (*field_ops->co_assign)(field_type, field_addr, value);
+err_no_such_field:
+	err_no_such_struct_field(tp_self,
+	                         DeeString_STR(name),
+	                         DeeString_SIZE(name));
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+struct_assignmap_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct struct_initfrommap_data *data;
+	data = (struct struct_initfrommap_data *)arg;
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	return struct_assignfield(data->sifmd_tp_self, data->sifmd_self,
+	                        (DeeStringObject *)key, value);
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+struct_assign(CStructType *tp_self, void *self, DeeObject *value) {
+	/* >> struct MyStruct {
+	 * >>     .x = int,
+	 * >>     .y = int,
+	 * >> };
+	 * >> local a = MyStruct();
+	 * >> a := { 10, 20 };
+	 * >> a := { .x = 10, .y = 20 };
+	 * >> a := a;  // Must also accept when "a" is the l-value variant of "MyStruct"
+	 */
+	union pointer cvalue;
+	if (Object_IsCStruct(value)) {
+		CStruct *value_ob = Object_AsCStruct(value);
+		if unlikely(tp_self != Dee_TYPE(value_ob))
+			goto bad_rhs_type;
+		cvalue.ptr = CStruct_Data(value_ob);
+copy_from_cvalue:
+		CTYPES_FAULTPROTECT({
+			memcpy(self, cvalue.ptr, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+	} else if (Object_IsCLValue(value)) {
+		CLValue *value_ob = Object_AsCLValue(value);
+		CLValueType *value_type = Dee_TYPE(value_ob);
+		if unlikely(CLValueType_LogicalPointedToType(value_type) != CStructType_AsCType(tp_self))
+			goto bad_rhs_type;
+		CTYPES_FAULTPROTECT({
+			cvalue.ptr = CLValue_GetLogicalValue(value_ob);
+		}, goto err);
+		goto copy_from_cvalue;
+	} else if (DeeNone_Check(value)) {
+		CTYPES_FAULTPROTECT({
+			bzero(self, CType_Sizeof(CStructType_AsCType(tp_self)));
+		}, goto err);
+	} else {
+		Dee_ssize_t status;
+
+		/* Actually have to check if "value" is a mapping order to allow
+		 * field-like initialization (as opposed to anonymous initialization):
+		 * >> struct a { .foo = char.ptr };
+		 * >> struct b { .foo = char.ptr[2] };
+		 * >> local x = a();
+		 * >> local y = b();
+		 * >>
+		 * >> x := { ("foo", "bar") };  // Should "foo" be set to "bar", or should the first field be initialized from ("foo", "bar")?
+		 * >> y := { .foo = "bar" };    // Same deal...
+		 *
+		 * As such, we only allow field-like initialization when mappings are given:
+		 * >> x := { .foo = "bar" };    // OK: set "foo" to "bar"
+		 * >> y := { {"foo", "bar"} };  // OK: assign first member with `{"foo", "bar"}' */
+		if (DeeMap_Check(value)) {
+			struct struct_initfrommap_data data;
+			data.sifmd_tp_self = tp_self;
+			data.sifmd_self    = self;
+			status = DeeObject_ForeachPair(value, &struct_assignmap_cb, &data);
+		} else {
+			/* HINT: This initializer here also handles "DeeNone_Check(value)":
+			 *  - `MyStruct(none)' should return a 0-initialize struct.
+			 *  - The 0-initialization already happened above
+			 *  - And `DeeObject_Foreach(Dee_None)' is a no-op in that it doesn't
+			 *    enumerate anything, meaning no extra initialization will happen */
+			struct struct_initfromseq_data data;
+			data.sifsd_tp_self = tp_self;
+			data.sifsd_self    = self;
+			data.sifsd_next    = CStructType_FirstField(tp_self);
+			status = DeeObject_Foreach(value, &struct_assignseq_cb, &data);
+		}
+		if unlikely(status < 0)
+			goto err;
+	}
+	return 0;
+bad_rhs_type:
+	DeeObject_TypeAssertFailed(value, CStructType_AsType(tp_self));
+err:
+	return -1;
+}
+
+
 #undef struct_bool
 #define struct_bool unsupported__bool
 
@@ -1595,9 +1810,11 @@ struct_compare(CStructType *tp_self, void const *lhs, DeeObject *rhs) {
 	if (Object_IsCLValue(rhs)) {
 		CLValue *rhs_ob = Object_AsCLValue(rhs);
 		CLValueType *rhs_type = Dee_TYPE(rhs_ob);
-		if (CLValueType_PointedToType(rhs_type) != CStructType_AsCType(tp_self))
+		if (CLValueType_LogicalPointedToType(rhs_type) != CStructType_AsCType(tp_self))
 			goto err_bad_rhs;
-		rhs_cvalue = rhs_ob->cl_value;
+		CTYPES_FAULTPROTECT({
+			rhs_cvalue.ptr = CLValue_GetLogicalValue(rhs_ob);
+		}, return Dee_COMPARE_ERR);
 	} else if (Dee_TYPE(rhs) == CStructType_AsType(tp_self)) {
 		rhs_cvalue.ptr = CStruct_Data(Object_AsCStruct(rhs));
 	} else {
@@ -1692,6 +1909,7 @@ err_bad_rhs:
 INTERN struct ctype_operators Dee_tpconst cstruct_operators = {
 	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&struct_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&struct_initfrom,
+	/* .co_assign      = */ (int (DCALL *)(CType *, void *, DeeObject *))&struct_assign,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&struct_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&struct_bool,
 	/* .co_printcrepr  = */ (Dee_ssize_t (DCALL *)(CType *, void const *, Dee_formatprinter_t, void *))&struct_printcrepr,
@@ -1858,6 +2076,80 @@ array_initfrom(CArrayType *tp_self, void *self, DeeObject *value) {
 	data.aifed_self      = self;
 	status = DeeObject_InvokeMethodHint(seq_enumerate_index, value,
 	                                    &array_initfrom_enumerate_cb,
+	                                    &data, 0, (size_t)-1);
+	if unlikely(status < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+array_assign_enumerate_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	void *item_addr;
+	struct array_initfrom_enumerate_data *data;
+	if (!value) /* Nothing to do for unbound items... */
+		return 0;
+	data = (struct array_initfrom_enumerate_data *)arg;
+	if unlikely(index >= data->aifed_count)
+		goto err_index_oob;
+	item_addr = (void *)((byte_t *)data->aifed_self + index * data->aifed_stride);
+	return (*data->aifed_item_ops->co_assign)(data->aifed_item_type, item_addr, value);
+err_index_oob:
+	return err_array_index_oob(data->aifed_tp_self, data->aifed_self, index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+array_assign(CArrayType *tp_self, void *self, DeeObject *value) {
+	/* >> local MyArray = int[42];
+	 * >> local a = MyArray();
+	 * >> a := none;
+	 * >> a := { };
+	 * >> a := { 10, 20 };
+	 * >> a := { [7] = 10 }; // TBA-syntax; tldr: must support "seq_enumerate_items" for assign
+	 */
+	Dee_ssize_t status;
+	struct array_initfrom_enumerate_data data;
+
+	if (DeeString_Check(value)) {
+		/* Special handling when this is an array-of-characters */
+		CType *item_type = CArrayType_PointedToType(tp_self);
+		if (item_type == &CChar_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf8(value));
+		} else if (item_type == &CWChar_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsWide(value));
+		} else if (item_type == &CChar16_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf16(value, STRING_ERROR_FREPLAC));
+		} else if (item_type == &CChar32_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsUtf32(value));
+		} else if (item_type == &CInt8_Type || item_type == &CUInt8_Type) {
+			return array_initfrom_string(tp_self, self, DeeString_AsBytes(value, false));
+		}
+	} else if (DeeNone_Check(value)) {
+		CTYPES_FAULTPROTECT({
+			bzero(self, CType_Sizeof(CArrayType_AsCType(tp_self)));
+		}, goto err);
+		return 0;
+	}
+#if 0 /* Not necessary -- same thing already happens by "seq_enumerate_index" below, so no extra code needed */
+	else if (DeeBytes_Check(value)) {
+		CType *item_type = CArrayType_PointedToType(tp_self);
+		if (item_type == &CChar_Type || item_type == &CInt8_Type || item_type == &CUInt8_Type) {
+			/* Allow direct assignialization of array elements in this case */
+			/* ... */
+		}
+	}
+#endif
+
+	/* Enumerate "value" as a sequence */
+	data.aifed_tp_self   = tp_self;
+	data.aifed_item_type = CArrayType_PointedToType(tp_self);
+	data.aifed_item_ops  = CType_Operators(data.aifed_item_type);
+	data.aifed_stride    = CArrayType_Stride(tp_self);
+	data.aifed_count     = CArrayType_Count(tp_self);
+	data.aifed_self      = self;
+	status = DeeObject_InvokeMethodHint(seq_enumerate_index, value,
+	                                    &array_assign_enumerate_cb,
 	                                    &data, 0, (size_t)-1);
 	if unlikely(status < 0)
 		goto err;
@@ -2202,6 +2494,7 @@ err:
 INTERN struct ctype_operators Dee_tpconst carray_operators = {
 	/* .co_initobject  = */ (CObject *(DCALL *)(CObject *, void const *))&array_initobject,
 	/* .co_initfrom    = */ (int (DCALL *)(CType *, void *, DeeObject *))&array_initfrom,
+	/* .co_assign      = */ (int (DCALL *)(CType *, void *, DeeObject *))&array_assign,
 	/* .co_initwith    = */ (int (DCALL *)(CType *, void *, size_t, DeeObject *const *, DeeObject *))&array_initwith,
 	/* .co_bool        = */ (int (DCALL *)(CType *, void const *))&array_bool,
 	/* .co_printcrepr  = */ (Dee_ssize_t (DCALL *)(CType *, void const *, Dee_formatprinter_t, void *))&array_printcrepr,
