@@ -36,16 +36,13 @@ p.y = 20;
 assert p.x == 10;
 assert p.y == 20;
 
-if (CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
-	/* Pretty C-looking, eh? Well: this is where many of deemon's backward-compat roots
-	 * come into play, but just to help you de-obfuscate what the following line actually
-	 * looks like:
-	 * >> local p = Point({ 10, 20 });
-	 */
-	Point p = { 10, 20 };
-	assert p == Point(x: 10, y: 20);
+/* Pretty C-looking, eh? Well: this is where many of deemon's backward-compat roots
+ * come into play, but just to help you de-obfuscate what the following line actually
+ * looks like:
+ * >> local p = Point({ 10, 20 });
+ */
+Point p2 = { 10, 20 };
+assert p2 == Point(x: 10, y: 20);
 
-	Point p2 = { .x = 10, .y = 20 };
-	assert p2 == Point(x: 10, y: 20);
-}
-
+Point p3 = { .x = 10, .y = 20 };
+assert p3 == Point(x: 10, y: 20);

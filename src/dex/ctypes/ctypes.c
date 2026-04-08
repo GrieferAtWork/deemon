@@ -24,7 +24,6 @@
 #include "libctypes.h"
 /**/
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/bool.h>            /* DeeBool_Type */
@@ -698,7 +697,7 @@ DeeObject_AsGenericPointer(DeeObject *self,
 	error = DeeObject_TryAsGenericPointer(self, p_pointer_base, result);
 	if (error <= 0)
 		return error;
-	return DeeObject_TypeAssertFailed(self, CPointerType_AsType(&DeePointer_Type));
+	return DeeObject_TypeAssertFailed(self, CPointerType_AsType(&AbstractCPointer_Type));
 }
 
 /* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
@@ -821,6 +820,5 @@ err:
 }
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CTYPES_C */

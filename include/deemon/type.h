@@ -2669,7 +2669,7 @@ struct Dee_type_object {
 	 * - !DeeType_IsTypeType types can define per-type extra operators here (without offsets,
 	 *   but instead the direct function pointers).
 	 *
-	 * This way, TypeType types (DeeType_Type, DeeFileType_Type, and DeeSType_Type) can define
+	 * This way, TypeType types (DeeType_Type, DeeFileType_Type, and CType_Type) can define
 	 * their new operators such that anything can invoke them, while normal types can define
 	 * extra flags for the operators they implement.
 	 *

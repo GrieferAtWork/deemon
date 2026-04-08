@@ -32,18 +32,14 @@ assert bswap64(0x8877665544332211) == 0x1122334455667788;
 assert bswap128(0x112233445566778899aabbccddeeff00) == 0x00ffeeddccbbaa998877665544332211;
 assert bswap128(0x00ffeeddccbbaa998877665544332211) == 0x112233445566778899aabbccddeeff00;
 
-if (CONFIG_EXPERIMENTAL_REWORKED_CTYPES) {
-	union i32 {
-		.le = ctypes.le32,
-		.be = ctypes.be32,
-	};
+union i32 {
+	.le = ctypes.le32,
+	.be = ctypes.be32,
+};
 
-	local v = i32();
-	v.le = 0x11223344;
-	assert v.be == 0x44332211;
-	v.be += 4;
-	assert v.be == 0x44332215;
-	assert v.le == 0x15223344;
-}
-
-
+local v = i32();
+v.le = 0x11223344;
+assert v.be == 0x44332211;
+v.be += 4;
+assert v.be == 0x44332215;
+assert v.le == 0x15223344;

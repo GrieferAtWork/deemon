@@ -19,23 +19,20 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import ctypes;
-import * from deemon;
+import deemon;
+import * from ctypes;
 import .common.test;
-
-if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
-	return;
 
 #define TRY(x) (try x catch (e...) e)
 
-local MyArray = ctypes.int[4];
+local MyArray = int[4];
 
-assert MyArray is ctypes.ArrayType;
-assert MyArray.extends(ctypes.Array);
-assert MyArray.implements(Sequence);
-assert ctypes.Array.implements(Sequence);
-assert ctypes.Array.__seqclass__ == Sequence;
-assert MyArray.__seqclass__ == Sequence;
+assert MyArray is ArrayType;
+assert MyArray.extends(Array);
+assert MyArray.implements(deemon.Sequence);
+assert Array.implements(deemon.Sequence);
+assert Array.__seqclass__ == deemon.Sequence;
+assert MyArray.__seqclass__ == deemon.Sequence;
 
 test.assertSequence(MyArray(), {0,0,0,0});
 test.assertSequence(MyArray({1,2,3}), {1,2,3,0});
@@ -51,58 +48,58 @@ test.assertSequence((MyArray.lvalue)a, a);
 
 
 /* Test that strings can be cast into (certain) C-arrays (as well as pointer-to- and lvalue-to-array) */
-test.assertSequence((ctypes.char[4])"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.wchar_t[4])"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.char16_t[4])"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.char32_t[4])"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.int8_t[4])"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.uint8_t[4])"foo", "foo\0".ordinals);
+test.assertSequence((char[4])"foo", "foo\0".ordinals);
+test.assertSequence((wchar_t[4])"foo", "foo\0".ordinals);
+test.assertSequence((char16_t[4])"foo", "foo\0".ordinals);
+test.assertSequence((char32_t[4])"foo", "foo\0".ordinals);
+test.assertSequence((int8_t[4])"foo", "foo\0".ordinals);
+test.assertSequence((uint8_t[4])"foo", "foo\0".ordinals);
 
-test.assertSequence((ctypes.char[4].lvalue)"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.wchar_t[4].lvalue)"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.char16_t[4].lvalue)"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.char32_t[4].lvalue)"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.int8_t[4].lvalue)"foo", "foo\0".ordinals);
-test.assertSequence((ctypes.uint8_t[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((char[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((wchar_t[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((char16_t[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((char32_t[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((int8_t[4].lvalue)"foo", "foo\0".ordinals);
+test.assertSequence((uint8_t[4].lvalue)"foo", "foo\0".ordinals);
 
-test.assertSequence(((ctypes.char[4].ptr)"foo").ind, "foo\0".ordinals);
-test.assertSequence(((ctypes.wchar_t[4].ptr)"foo").ind, "foo\0".ordinals);
-test.assertSequence(((ctypes.char16_t[4].ptr)"foo").ind, "foo\0".ordinals);
-test.assertSequence(((ctypes.char32_t[4].ptr)"foo").ind, "foo\0".ordinals);
-test.assertSequence(((ctypes.int8_t[4].ptr)"foo").ind, "foo\0".ordinals);
-test.assertSequence(((ctypes.uint8_t[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((char[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((wchar_t[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((char16_t[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((char32_t[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((int8_t[4].ptr)"foo").ind, "foo\0".ordinals);
+test.assertSequence(((uint8_t[4].ptr)"foo").ind, "foo\0".ordinals);
 
-test.assertSequence((ctypes.char[3])"foo", "foo".ordinals);
-test.assertSequence((ctypes.wchar_t[3])"foo", "foo".ordinals);
-test.assertSequence((ctypes.char16_t[3])"foo", "foo".ordinals);
-test.assertSequence((ctypes.char32_t[3])"foo", "foo".ordinals);
-test.assertSequence((ctypes.int8_t[3])"foo", "foo".ordinals);
-test.assertSequence((ctypes.uint8_t[3])"foo", "foo".ordinals);
+test.assertSequence((char[3])"foo", "foo".ordinals);
+test.assertSequence((wchar_t[3])"foo", "foo".ordinals);
+test.assertSequence((char16_t[3])"foo", "foo".ordinals);
+test.assertSequence((char32_t[3])"foo", "foo".ordinals);
+test.assertSequence((int8_t[3])"foo", "foo".ordinals);
+test.assertSequence((uint8_t[3])"foo", "foo".ordinals);
 
-test.assertSequence((ctypes.char[3].lvalue)"foo", "foo".ordinals);
-test.assertSequence((ctypes.wchar_t[3].lvalue)"foo", "foo".ordinals);
-test.assertSequence((ctypes.char16_t[3].lvalue)"foo", "foo".ordinals);
-test.assertSequence((ctypes.char32_t[3].lvalue)"foo", "foo".ordinals);
-test.assertSequence((ctypes.int8_t[3].lvalue)"foo", "foo".ordinals);
-test.assertSequence((ctypes.uint8_t[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((char[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((wchar_t[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((char16_t[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((char32_t[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((int8_t[3].lvalue)"foo", "foo".ordinals);
+test.assertSequence((uint8_t[3].lvalue)"foo", "foo".ordinals);
 
-test.assertSequence(((ctypes.char[3].ptr)"foo").ind, "foo".ordinals);
-test.assertSequence(((ctypes.wchar_t[3].ptr)"foo").ind, "foo".ordinals);
-test.assertSequence(((ctypes.char16_t[3].ptr)"foo").ind, "foo".ordinals);
-test.assertSequence(((ctypes.char32_t[3].ptr)"foo").ind, "foo".ordinals);
-test.assertSequence(((ctypes.int8_t[3].ptr)"foo").ind, "foo".ordinals);
-test.assertSequence(((ctypes.uint8_t[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((char[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((wchar_t[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((char16_t[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((char32_t[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((int8_t[3].ptr)"foo").ind, "foo".ordinals);
+test.assertSequence(((uint8_t[3].ptr)"foo").ind, "foo".ordinals);
 
 
 
 /* Assert that zero-length arrays take up no space */
-assert ctypes.int[0].alignof == ctypes.int.alignof;
-assert ctypes.int[0].sizeof == 0;
+assert int[0].alignof == int.alignof;
+assert int[0].sizeof == 0;
 
-ctypes.struct MyStruct {
-	("a", ctypes.uint8_t),
-	("b", ctypes.uint8_t[0]),
-	("c", ctypes.uint8_t),
+struct MyStruct {
+	("a", uint8_t),
+	("b", uint8_t[0]),
+	("c", uint8_t),
 };
 
 assert MyStruct.offsetafter("a") == MyStruct.offsetof("c");
@@ -111,13 +108,13 @@ local x = MyStruct(a: 10, c: 20);
 
 /* This is a part where the fact that ctypes arrays are still deemon sequences shines through:
  * They have to throw an IndexError when trying to access an out-of-bounds element */
-assert x.b is Sequence;
+assert x.b is deemon.Sequence;
 assert TRY(x.b[-1]) is IntegerOverflow from errors; /* XXX: Maybe this should be wrapped as IndexError? */
 assert TRY(x.b[0]) is IndexError from errors;
 
 /* However: we can force the array into a pointer by making use of array-to-pointer decay,
  *          which is no longer a Sequence, and thus no longer does any bounds-checking! */
-assert (x.b + 0) !is Sequence;
+assert (x.b + 0) !is deemon.Sequence;
 assert (x.b + 0)[-1] == 10;
 assert (x.b + 0)[0] == 20;
 assert (x.b - 1).ind == 10;

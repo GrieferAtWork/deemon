@@ -709,12 +709,14 @@ PRIVATE struct type_member tpconst LOCAL_cobject_class_members[] = {
 	TYPE_MEMBER_CONST("issigned", Dee_True),
 #endif /* !LOCAL_IS_UNSIGNED */
 
+#ifdef CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES
 #ifdef LOCAL_MEMBER_minval
-	TYPE_MEMBER_CONST("min", &LOCAL_MEMBER_minval), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
+	TYPE_MEMBER_CONST("min", &LOCAL_MEMBER_minval), /* Deprecated alias */
 #endif /* LOCAL_MEMBER_minval */
 #ifdef LOCAL_MEMBER_maxval
-	TYPE_MEMBER_CONST("max", &LOCAL_MEMBER_maxval), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
+	TYPE_MEMBER_CONST("max", &LOCAL_MEMBER_maxval), /* Deprecated alias */
 #endif /* LOCAL_MEMBER_maxval */
+#endif /* CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES */
 	TYPE_MEMBER_END
 };
 

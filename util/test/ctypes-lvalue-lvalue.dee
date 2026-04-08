@@ -19,21 +19,18 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import * from deemon;
-import ctypes;
+import deemon;
+import * from ctypes;
 import .common.test;
 
-if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
-	return;
-
-ctypes.struct BaseStruct {
-	.x = ctypes.int,
-	.y = ctypes.int,
+struct BaseStruct {
+	.x = int,
+	.y = int,
 };
 
-ctypes.struct LValueStruct {
-	.x = ctypes.int.lvalue,
-	.y = ctypes.int.lvalue,
+struct LValueStruct {
+	.x = int.lvalue,
+	.y = int.lvalue,
 };
 
 local base = BaseStruct(x: 10, y: 20);
@@ -59,11 +56,11 @@ assert base.y == 20;
 local t = lval.x;
 t := 77;
 assert t.ptr == base.x.ptr;
-assert (int)t.ptr == (int)base.x.ptr;
+assert (deemon.int)t.ptr == (deemon.int)base.x.ptr;
 assert t.hex() == "0x4d"; /* (77).hex() -- make sure that lvalue-to-lvalue-to-int is still Numeric! */
-assert t is Numeric;
-assert type(t) === ctypes.int.lvalue.lvalue;
-assert type(t) !== ctypes.int.lvalue;
+assert t is deemon.Numeric;
+assert type(t) === int.lvalue.lvalue;
+assert type(t) !== int.lvalue;
 
 assert lval.x == 77;
 assert lval.y == 20;
@@ -71,7 +68,7 @@ assert base.x == 77;
 assert base.y == 20;
 
 
-local ARR = ctypes.int.lvalue[2];
+local ARR = int.lvalue[2];
 local arr = (ARR){ base.x, base.y };
 test.assertSequence(arr, { 77, 20 });
 arr := { 78, 21 };
@@ -89,7 +86,7 @@ assert base.y == 24;
  * "int.lvalue.lvalue", and it still applies the correct amount of indirection!
  */
 local arr = (ARR){ lval.x, lval.y };
-assert type(lval.x) == ctypes.int.lvalue.lvalue;
+assert type(lval.x) == int.lvalue.lvalue;
 test.assertSequence(arr, { 78, 24 });
 arr := { 79, 25 };
 test.assertSequence(arr, { 79, 25 });

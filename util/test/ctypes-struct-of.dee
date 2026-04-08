@@ -20,30 +20,27 @@
  */
 
 import deemon;
-import ctypes;
+import * from ctypes;
 import .common.test;
 
-if (!ctypes.CONFIG_EXPERIMENTAL_REWORKED_CTYPES)
-	return;
+assert le32.implements(deemon.Numeric);
 
-assert ctypes.le32.implements(deemon.Numeric);
-
-local WeirdStruct = ctypes.struct.of({
-	{ 0, "x", ctypes.le32 },
-	{ 1, "y", ctypes.le32 },
+local WeirdStruct = struct.of({
+	{ 0, "x", le32 },
+	{ 1, "y", le32 },
 });
 
-assert WeirdStruct is ctypes.StructType;
+assert WeirdStruct is StructType;
 assert WeirdStruct.offsetof("x") == 0;
 assert WeirdStruct.offsetof("y") == 1;
-assert WeirdStruct.typeof_field("x") == ctypes.le32;
-assert WeirdStruct.typeof_field("y") == ctypes.le32;
+assert WeirdStruct.typeof_field("x") == le32;
+assert WeirdStruct.typeof_field("y") == le32;
 
 local instance = WeirdStruct();
 instance.x = 0x11223344;
 assert instance.y == 0x112233;
-assert instance.y is ctypes.LValue;
-assert instance.y is ctypes.CObject;
+assert instance.y is LValue;
+assert instance.y is CObject;
 assert instance.y is deemon.Numeric; /* Special handling, triggered because "le32.implements(Numeric)" */
 assert instance.y.hex() == "0x112233"; /* .hex() is inherited from "Numeric" */
 
@@ -68,12 +65,12 @@ test.assertEquals(WeirdStruct(y: 0x99112233).x, 0x11223300);
 assert instance.x.__owner__ === instance;
 assert !deemon.hasattr(instance.x, "ind");
 assert  deemon.hasattr(instance.x, "ptr");
-assert instance.x.ptr is ctypes.Pointer;
-assert type(instance.x.ptr) === ctypes.le32.ptr;
+assert instance.x.ptr is Pointer;
+assert type(instance.x.ptr) === le32.ptr;
 assert instance.x.ptr.__owner__ === instance;
 
 assert  deemon.hasattr(instance.x.ptr, "ind");
 assert !deemon.hasattr(instance.x.ptr, "ptr");
-assert instance.x.ptr.ind is ctypes.LValue;
-assert type(instance.x.ptr.ind) === ctypes.le32.lvalue;
+assert instance.x.ptr.ind is LValue;
+assert type(instance.x.ptr.ind) === le32.lvalue;
 assert instance.x.ptr.ind.__owner__ === instance;

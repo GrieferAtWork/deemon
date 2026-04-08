@@ -37,8 +37,8 @@
 	<ItemGroup>
 		<ClInclude Include="..\..\src\dex\ctypes\_res.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-builtin.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\ctypes-cfunction-call.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-float.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-integral.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\LICENSE" />
@@ -49,9 +49,6 @@
 		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\fficonfig.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffitarget.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\libctypes.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\old-define-float.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\old-define-integer.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\old-pointer-math-impl.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
@@ -67,14 +64,6 @@
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\raw_api.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\types.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\libctypes.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-array.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-builtins.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-cfunction.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-core-operators.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-core.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-pointer-math.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-pointer.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\old-struct.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
 	</ItemGroup>
 	<ItemGroup>

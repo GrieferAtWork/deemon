@@ -60,7 +60,7 @@ DeeSystem_DEFINE_strnlen(strnlen)
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_free_f_impl(void *ptr);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_malloc_free_f(DeeObject *__restrict arg0) {
 	union pointer ptr;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCVoid_Type, &ptr))
+	if unlikely(DeeObject_AsPointer(arg0, &CVoid_Type, &ptr))
 		goto err;
 	return c_malloc_free_f_impl(ptr.pvoid);
 err:
@@ -73,7 +73,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_free_f_impl(void *ptr)
 	/* TODO: This (and the other APIs) should use the system's native
 	 *       malloc()+free() (if available) for the sake of compatibility
 	 *       with other dynamically loaded shared, native libraries. */
-	CTYPES_FAULTPROTECT(Dee_Free(ptr), return NULL);
+	CTYPES_FAULTPROTECT((Dee_Free)(ptr), return NULL);
 	return_none;
 }
 
@@ -98,12 +98,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_f_impl(size_t num_bytes
 {
 	void *ptr;
 	DREF DeeObject *result;
-	ptr = Dee_Malloc(num_bytes);
+	ptr = (Dee_Malloc)(num_bytes);
 	if unlikely(!ptr)
 		goto err;
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		Dee_Free(ptr);
+		(Dee_Free)(ptr);
 	return result;
 err:
 	return NULL;
@@ -122,7 +122,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_realloc_f(size_t argc, DeeObject 
 	} args;
 	union pointer ptr;
 	DeeArg_UnpackStruct2X(err, argc, argv, "realloc", &args, &args.raw_ptr, "o", _DeeArg_AsObject, &args.new_size, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_ptr, &DeeCVoid_Type, &ptr))
+	if unlikely(DeeObject_AsPointer(args.raw_ptr, &CVoid_Type, &ptr))
 		goto err;
 	return c_malloc_realloc_f_impl(ptr.pvoid, args.new_size);
 err:
@@ -141,13 +141,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_realloc_f_impl(void *ptr, size
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(result_ptr = Dee_Realloc(ptr, new_size),
+	CTYPES_FAULTPROTECT(result_ptr = (Dee_Realloc)(ptr, new_size),
 	                    goto err_r);
 	if unlikely(!result_ptr)
 		goto err_r;
 
 	/* Update the resulting pointer. */
-	((struct pointer_object *)result)->p_ptr.ptr = result_ptr;
+	Object_AsCPointer(result)->cp_value.ptr = result_ptr;
 	return result;
 err_r:
 	Dee_DecrefDokill(result);
@@ -184,12 +184,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_calloc_f_impl(size_t count, si
 		DeeRT_ErrIntegerOverflowUMul(count, num_bytes);
 		goto err;
 	}
-	ptr = Dee_Calloc(total);
+	ptr = (Dee_Calloc)(total);
 	if unlikely(!ptr)
 		goto err;
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		Dee_Free(ptr);
+		(Dee_Free)(ptr);
 	return result;
 err:
 	return NULL;
@@ -216,10 +216,10 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trymalloc_f_impl(size_t num_by
 {
 	void *ptr;
 	DREF DeeObject *result;
-	ptr    = Dee_TryMalloc(num_bytes);
+	ptr    = (Dee_TryMalloc)(num_bytes);
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		Dee_Free(ptr);
+		(Dee_Free)(ptr);
 	return result;
 }
 
@@ -236,7 +236,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_tryrealloc_f(size_t argc, DeeObje
 	} args;
 	union pointer ptr;
 	DeeArg_UnpackStruct2X(err, argc, argv, "tryrealloc", &args, &args.raw_ptr, "o", _DeeArg_AsObject, &args.new_size, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_ptr, &DeeCVoid_Type, &ptr))
+	if unlikely(DeeObject_AsPointer(args.raw_ptr, &CVoid_Type, &ptr))
 		goto err;
 	return c_malloc_tryrealloc_f_impl(ptr.pvoid, args.new_size);
 err:
@@ -255,11 +255,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_tryrealloc_f_impl(void *ptr, s
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(result_ptr = Dee_TryRealloc(ptr, new_size),
+	CTYPES_FAULTPROTECT(result_ptr = (Dee_TryRealloc)(ptr, new_size),
 	                    goto err_r);
 
 	/* Update the resulting pointer. */
-	((struct pointer_object *)result)->p_ptr.ptr = result_ptr;
+	Object_AsCPointer(result)->cp_value.ptr = result_ptr;
 	return result;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 err_r:
@@ -296,13 +296,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trycalloc_f_impl(size_t count,
 	if (OVERFLOW_UMUL(count, num_bytes, &total)) {
 		ptr = NULL;
 	} else {
-		ptr = Dee_TryCalloc(total);
+		ptr = (Dee_TryCalloc)(total);
 	}
 	if unlikely(!ptr)
 		goto err;
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		Dee_Free(ptr);
+		(Dee_Free)(ptr);
 	return result;
 err:
 	return NULL;
@@ -323,7 +323,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f(size_t argc, DeeObject *
 	union pointer string;
 	args.maxlen = (size_t)-1;
 	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "strdup", &args, &args.raw_string, "o", _DeeArg_AsObject, &args.maxlen, UNPxSIZ, DeeObject_AsSizeM1);
-	if unlikely(DeeObject_AsPointer(args.raw_string, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(args.raw_string, &CChar_Type, &string))
 		goto err;
 	return c_malloc_strdup_f_impl(string.pcchar, args.maxlen);
 err:
@@ -337,7 +337,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f_impl(char const *stri
 	size_t len;
 	char *resptr;
 	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen), goto err);
-	resptr = (char *)Dee_Mallocc(len + 1, sizeof(char));
+	resptr = (char *)(Dee_Malloc)((len + 1) * sizeof(char));
 	if unlikely(!resptr)
 		goto err;
 	CTYPES_FAULTPROTECT(memcpyc(resptr, string, len, sizeof(char)), goto err_r);
@@ -366,7 +366,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f(size_t argc, DeeObjec
 	union pointer string;
 	args.maxlen = (size_t)-1;
 	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "trystrdup", &args, &args.raw_string, "o", _DeeArg_AsObject, &args.maxlen, UNPxSIZ, DeeObject_AsSizeM1);
-	if unlikely(DeeObject_AsPointer(args.raw_string, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(args.raw_string, &CChar_Type, &string))
 		goto err;
 	return c_malloc_trystrdup_f_impl(string.pcchar, args.maxlen);
 err:
@@ -380,7 +380,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *s
 	size_t len;
 	char *resptr;
 	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen), return NULL);
-	resptr = (char *)Dee_TryMallocc(len + 1, sizeof(char));
+	resptr = (char *)(Dee_TryMalloc)((len + 1) * sizeof(char));
 	if likely(resptr) {
 		CTYPES_FAULTPROTECT(memcpyc(resptr, string, len, sizeof(char)), goto err_r);
 		resptr[len] = '\0';
@@ -403,7 +403,7 @@ err_r:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void *ptr);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_malloc_malloc_usable_size_f(DeeObject *__restrict arg0) {
 	union pointer ptr;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCVoid_Type, &ptr))
+	if unlikely(DeeObject_AsPointer(arg0, &CVoid_Type, &ptr))
 		goto err;
 	return c_malloc_malloc_usable_size_f_impl(ptr.pvoid);
 err:
@@ -414,7 +414,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void
 /*[[[end]]]*/
 {
 	size_t result;
-	CTYPES_FAULTPROTECT(result = Dee_MallocUsableSize(ptr), return NULL);
+	CTYPES_FAULTPROTECT(result = (Dee_MallocUsableSize)(ptr), return NULL);
 	return DeeInt_NewSize(result);
 }
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */

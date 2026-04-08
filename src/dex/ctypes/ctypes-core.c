@@ -24,7 +24,6 @@
 #include "libctypes.h"
 /**/
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
@@ -3104,18 +3103,18 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 
 
 #ifndef CONFIG_NO_CFUNCTION
-INTDEF WUNUSED DREF DeeObject *DCALL
-cfunction_call_v(CFunctionType *__restrict tp_self, Dee_funptr_t self,
-                 size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED DREF DeeObject *DCALL
-cfunction_call(CFunctionType *__restrict tp_self, Dee_funptr_t self,
-               size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+CFunction_CallFunptrVarargs(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+                            size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+CFunction_CallFunptr(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+                     size_t argc, DeeObject *const *argv);
 
 
 #ifndef __INTELLISENSE__
-#include "cfunction-invoke.c.inl"
+#include "ctypes-cfunction-call.c.inl"
 #define VARARGS
-#include "cfunction-invoke.c.inl"
+#include "ctypes-cfunction-call.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 
@@ -3221,8 +3220,8 @@ CFunctionType_New(CType *__restrict return_type,
 
 	/* Assign the appropriate call operator. */
 	result->cft_call = ctypes_cc_isvarargs(calling_convention)
-	                   ? &cfunction_call_v
-	                   : &cfunction_call;
+	                   ? &CFunction_CallFunptrVarargs
+	                   : &CFunction_CallFunptr;
 
 	/* Finalize the cfunction type. */
 	DeeObject_InitStatic(CFunctionType_AsType(result), &CFunctionType_Type);
@@ -5741,9 +5740,6 @@ INTERN CPointerType CCharPtr_Type = {
 };
 #endif /* CTYPES_DEFINE_STATIC_POINTER_TYPES */
 
-
 DECL_END
-
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CTYPES_CORE_C */

@@ -24,7 +24,6 @@
 #include "libctypes.h"
 /**/
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_UnpackStructKw */
@@ -2536,6 +2535,5 @@ INTERN struct ctype_operators Dee_tpconst carray_operators = {
 };
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CTYPES_OPERATORS_C */

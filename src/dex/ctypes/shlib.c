@@ -61,15 +61,11 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject      *sh_lib_owner; /* [0..1][const] Owner of "sh_lib" (in case library was loaded from dex module) */
-	void                *sh_lib;       /* [1..1][owned_if(sh_lib_owner == NULL)][const] Shared library handle. */
+	DREF DeeObject    *sh_lib_owner; /* [0..1][const] Owner of "sh_lib" (in case library was loaded from dex module) */
+	void              *sh_lib;       /* [1..1][owned_if(sh_lib_owner == NULL)][const] Shared library handle. */
 #ifndef CONFIG_NO_CFUNCTION
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-	DREF CPointerType   *sh_vfunptr;   /* [0..1][lock(WRITE_ONCE)] void-function pointer type: "int(<sh_defcc> *)(...)" */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	DREF DeeSTypeObject *sh_vfunptr;   /* [0..1][lock(WRITE_ONCE)] void-function pointer type. */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	ctypes_cc_t          sh_defcc;     /* [const] Default calling convention. */
+	DREF CPointerType *sh_vfunptr;   /* [0..1][lock(WRITE_ONCE)] void-function pointer type: "int(<sh_defcc> *)(...)" */
+	ctypes_cc_t        sh_defcc;     /* [const] Default calling convention. */
 #endif /* !CONFIG_NO_CFUNCTION */
 } ShLib;
 
@@ -133,11 +129,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 shlib_fini(ShLib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	Dee_XDecref(CPointerType_AsType(self->sh_vfunptr));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	Dee_XDecref(DeeSType_AsType(self->sh_vfunptr));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #endif /* !CONFIG_NO_CFUNCTION */
 	if (self->sh_lib_owner) {
 		Dee_Decref(self->sh_lib_owner);
@@ -149,54 +141,13 @@ shlib_fini(ShLib *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 shlib_visit(ShLib *__restrict self, Dee_visit_t proc, void *arg) {
 #ifndef CONFIG_NO_CFUNCTION
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	Dee_XVisit(CPointerType_AsType(self->sh_vfunptr));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	Dee_XVisit(DeeSType_AsType(self->sh_vfunptr));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #endif /* !CONFIG_NO_CFUNCTION */
 	Dee_XVisit(self->sh_lib_owner);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-PRIVATE Dee_ATOMIC_XREF(DeeTypeObject) void_ptr = Dee_ATOMIC_XREF_INIT(NULL); /* `void.ptr' */
-
-INTERN bool DCALL clear_void_pointer(void) {
-	DREF DeeTypeObject *ptr;
-	Dee_atomic_xref_xch_newNULL(&void_ptr, &ptr);
-	Dee_XDecref(ptr);
-	return ptr != NULL;
-}
-
-PRIVATE WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
-	DREF DeeTypeObject *result;
-again:
-	Dee_atomic_xref_get(&void_ptr, &result);
-	if (result)
-		return DeeType_AsSType(result);
-	result = DeePointerType_AsType(DeeSType_Pointer(&DeeCVoid_Type));
-	if likely(result) {
-		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&void_ptr, result)) {
-			Dee_Decref(result);
-			goto again;
-		}
-	}
-	return DeeType_AsSType(result);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
-shlib_getitem(ShLib *self, DeeObject *name)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_getitem(ShLib *self, DeeObject *name)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-{
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-	DREF struct pointer_object *result;
-	DREF DeeSTypeObject *result_type;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+shlib_getitem(ShLib *self, DeeObject *name) {
 	void *symaddr;
 	char const *utf8_name;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -216,21 +167,7 @@ shlib_getitem(ShLib *self, DeeObject *name)
 		Dee_Decref(message);
 		goto err;
 	}
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	return CPointer_NewVoid(symaddr);
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	result_type = get_void_pointer();
-	if unlikely(!result_type)
-		goto err;
-	result = pointer_object_malloc();
-	if unlikely(!result)
-		goto err_type;
-	DeeObject_InitHeapInherited(result, DeeSType_AsType(result_type));
-	result->p_ptr.ptr = symaddr;
-	return Dee_AsObject(result);
-err_type:
-	Dee_Decref_unlikely(DeeSType_AsType(result_type));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 err:
 	return NULL;
 }
@@ -253,20 +190,9 @@ err:
 #ifdef CONFIG_NO_CFUNCTION
 #define shlib_getattr shlib_getitem
 #else /* CONFIG_NO_CFUNCTION */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1, 2)) DREF CPointer *DCALL
-shlib_getattr(ShLib *self, DeeObject *name)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_getattr(ShLib *self, DeeObject *name)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-{
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+shlib_getattr(ShLib *self, DeeObject *name) {
 	DREF CPointerType *result_type;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	DREF struct pointer_object *result;
-	DREF DeeSTypeObject *result_type;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	void *symaddr;
 	char const *utf8_name;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -287,7 +213,6 @@ shlib_getattr(ShLib *self, DeeObject *name)
 	}
 	result_type = self->sh_vfunptr;
 	if (result_type == NULL) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 		DREF CFunctionType *function_type;
 		function_type = CFunctionType_Of(&CInt_Type,
 		                                 (ctypes_cc_t)((unsigned int)self->sh_defcc |
@@ -304,37 +229,8 @@ shlib_getattr(ShLib *self, DeeObject *name)
 			Dee_Decref_unlikely(CPointerType_AsType(result_type));
 			result_type = self->sh_vfunptr;
 		}
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-		DREF DeeSTypeObject *new_type;
-		result_type = DeeCFunctionType_AsSType(DeeSType_CFunction(&DeeCInt_Type,
-		                                                          (ctypes_cc_t)((unsigned int)self->sh_defcc |
-		                                                                        (unsigned int)CC_FVARARGS),
-		                                                          0, NULL, true));
-		if unlikely(!result_type)
-			goto err;
-		new_type = DeePointerType_AsSType(DeeSType_Pointer(result_type));
-		Dee_Decref_unlikely(DeeSType_AsType(result_type));
-		if unlikely(!new_type)
-			goto err;
-		result_type = new_type;
-
-		/* Save the reference in the shlib descriptor. */
-		ASSERT(DeeType_IsHeapType(DeeSType_AsType(result_type)));
-		if (!atomic_cmpxch(&self->sh_vfunptr, NULL, result_type))
-			Dee_DecrefNokill(DeeSType_AsType(result_type));
-		ASSERT(self->sh_vfunptr == result_type);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	}
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	return CPointer_New(result_type, symaddr);
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	result = pointer_object_malloc();
-	if unlikely(!result)
-		goto err;
-	DeeObject_Init(result, DeeSType_AsType(result_type));
-	result->p_ptr.ptr = symaddr;
-	return Dee_AsObject(result);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 err:
 	return NULL;
 }
@@ -354,39 +250,12 @@ PRIVATE struct type_attr shlib_attr = {
 	/* .tp_iterattr = */ (size_t (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attriter *, size_t, struct Dee_attrhint const *__restrict))NULL, /* TODO */
 };
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
-shlib_base(ShLib *self, size_t argc, DeeObject *const *argv)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-shlib_base(ShLib *self, size_t argc, DeeObject *const *argv)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-{
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+shlib_base(ShLib *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "base");
 	return CPointer_NewVoid((void *)self->sh_lib);
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	DREF struct pointer_object *result;
-	DREF DeeSTypeObject *result_type;
-	DeeArg_Unpack0(err, argc, argv, "base");
-	result_type = get_void_pointer();
-	if unlikely(!result_type)
-		goto err;
-	result = pointer_object_malloc();
-	if unlikely(!result)
-		goto err_type;
-	DeeObject_InitHeapInherited(result, DeeSType_AsType(result_type));
-	/* Return the base address of the shared library. */
-	result->p_ptr.ptr = (void *)self->sh_lib;
-
-	return Dee_AsObject(result);
-err_type:
-	Dee_Decref_unlikely(DeeSType_AsType(result_type));
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 }
 
 #undef shlib_addr2name_impl_USE_Dbghelp_dll
@@ -541,7 +410,7 @@ shlib_addr2name(DeeTypeObject *UNUSED(tp_self),
 	union pointer addr;
 	DeeObject *addrob;
 	DeeArg_Unpack1(err, argc, argv, "addr2name", &addrob);
-	if (DeeObject_AsPointer(addrob, &DeeCVoid_Type, &addr))
+	if (DeeObject_AsPointer(addrob, &CVoid_Type, &addr))
 		goto err;
 	return shlib_addr2name_impl(addr.ptr);
 err:

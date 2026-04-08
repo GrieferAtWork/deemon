@@ -20,11 +20,7 @@
 #ifdef __INTELLISENSE__
 #define DEE_SOURCE
 #include "libctypes.h"
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include "ctypes-core.c"
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-#include "old-cfunction.c"
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 #define VARARGS
 #endif /* __INTELLISENSE__ */
 /**/
@@ -52,13 +48,13 @@
 #define byte_t __BYTE_TYPE__
 
 #ifdef VARARGS
-INTERN WUNUSED DREF DeeObject *DCALL
-cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
-                 size_t argc, DeeObject *const *argv)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+CFunction_CallFunptrVarargs(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+                            size_t argc, DeeObject *const *argv)
 #else /* VARARGS */
-INTERN WUNUSED DREF DeeObject *DCALL
-cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
-               size_t argc, DeeObject *const *argv)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+CFunction_CallFunptr(CFunctionType *__restrict tp_self, Dee_funptr_t self,
+                     size_t argc, DeeObject *const *argv)
 #endif /* !VARARGS */
 {
 #ifdef VARARGS
@@ -73,60 +69,61 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 	ffi_type *const *ffi_argtyv;
 #define ret_mem wbuf /* Return memory is located at the start of the wbuffer */
 #ifdef VARARGS
-	if (argc < tp_self->ft_argc) {
+	if (argc < tp_self->cft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Function `(%k)%p' requires at least %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
-		                tp_self, self, tp_self->ft_argc, argc);
+		                tp_self, self, tp_self->cft_argc, argc);
 		goto err;
 	}
 #else /* VARARGS */
-	if (argc != tp_self->ft_argc) {
+	if (argc != tp_self->cft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Function `(%k)%p' requires %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
-		                tp_self, self, tp_self->ft_argc, argc);
+		                tp_self, self, tp_self->cft_argc, argc);
 		goto err;
 	}
 #endif /* !VARARGS */
 #ifdef VARARGS
-	n_varargs = argc - tp_self->ft_argc;
+	n_varargs = argc - tp_self->cft_argc;
 #define va_data_size                                                    \
 	(argc * (sizeof(union argument) + /* Storage for argument value. */ \
 	         sizeof(void *) +         /* Pointer to argument data. */   \
 	         sizeof(ffi_type *) /* Pointer to argument types. */))
 	/* Pointer the memory used for the argument types */
-#define va_argmem_mem   (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argmem)
-#define va_argptr_mem   (void **)((byte_t *)wbuf + tp_self->ft_woff_argmem + (argc * sizeof(union argument)))
-#define va_argtypes_mem (ffi_type **)((byte_t *)wbuf + tp_self->ft_woff_argmem + (argc * (sizeof(union argument) + sizeof(void *))))
+#define va_argmem_mem   (union argument *)((byte_t *)wbuf + tp_self->cft_woff_argmem)
+#define va_argptr_mem   (void **)((byte_t *)wbuf + tp_self->cft_woff_argmem + (argc * sizeof(union argument)))
+#define va_argtypes_mem (ffi_type **)((byte_t *)wbuf + tp_self->cft_woff_argmem + (argc * (sizeof(union argument) + sizeof(void *))))
 #endif /* VARARGS */
 
 #ifdef VARARGS
-	wbuf = Dee_Malloca(tp_self->ft_wsize + va_data_size);
+	wbuf = Dee_Malloca(tp_self->cft_wsize + va_data_size);
 #else /* VARARGS */
-	wbuf = Dee_Malloca(tp_self->ft_wsize);
+	wbuf = Dee_Malloca(tp_self->cft_wsize);
 #endif /* !VARARGS */
 	if unlikely(!wbuf)
 		goto err;
 
 	/* Initialize arguments */
-	iter = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argmem);
+	iter = (union argument *)((byte_t *)wbuf + tp_self->cft_woff_argmem);
 #ifdef VARARGS
-	end       = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_variadic_argmem);
+	end       = (union argument *)((byte_t *)wbuf + tp_self->cft_woff_variadic_argmem);
 	argp_iter = (void **)((byte_t *)iter + argc * sizeof(union argument));
 	ASSERT(iter == va_argmem_mem);
 	ASSERT(argp_iter == va_argptr_mem);
 #else /* VARARGS */
-	end  = (union argument *)((byte_t *)wbuf + tp_self->ft_woff_argptr);
-	ASSERTF(end == iter + tp_self->ft_argc, "Invalid wbuf cache");
+	end  = (union argument *)((byte_t *)wbuf + tp_self->cft_woff_argptr);
+	ASSERTF(end == iter + tp_self->cft_argc, "Invalid wbuf cache");
 	argp_iter = (void **)end;
 #endif /* !VARARGS */
 
 	if (iter < end) {
 		arg_iter = argv;
-#define argt tp_self->ft_argv[(size_t)(arg_iter - argv)]
-		ffi_argtyv = tp_self->ft_ffi_arg_type_v;
+#define argt tp_self->cft_argv[(size_t)(arg_iter - argv)]
+		ffi_argtyv = tp_self->cft_ffi_arg_type_v;
 		for (;;) {
 			DeeObject *arg = *arg_iter;
 			*argp_iter     = (void *)iter;
+			/* TODO: Use ctype_operators::co_initfrom */
 			switch ((*ffi_argtyv)->type) {
 
 			case FFI_TYPE_VOID:
@@ -199,34 +196,22 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 				break;
 
 			case FFI_TYPE_STRUCT:
-				if (DeeObject_AssertType(arg, DeeSType_AsType(argt)))
+				if (DeeObject_AssertType(arg, CType_AsType(argt)))
 					goto err_wbuf;
-				iter->p = DeeStruct_Data(arg);
+				iter->p = CObject_Data(arg);
 				break;
 
 			case FFI_TYPE_POINTER: {
-				DeeSTypeObject *arg_type = argt;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-				if (CType_IsCLValueType(arg_type))
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-				if (DeeLValueType_Check(arg_type))
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-				{
-					if (DeeObject_AssertTypeExact(arg, DeeSType_AsType(arg_type)))
+				CType *arg_type = argt;
+				if (CType_IsCLValueType(arg_type)) {
+					if (DeeObject_AssertTypeExact(arg, CType_AsType(arg_type)))
 						goto err_wbuf;
-					iter->p = ((struct lvalue_object *)arg)->l_ptr.ptr;
+					iter->p = Object_AsCLValue(arg)->cl_value.ptr;
 				} else {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 					ASSERT(CType_IsCPointerType(arg_type));
 					if (DeeObject_AsPointer(arg, CPointerType_PointedToType(CType_AsCPointerType(arg_type)),
 					                        (union pointer *)&iter->p))
 						goto err_wbuf;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-					ASSERT(DeePointerType_Check(arg_type));
-					if (DeeObject_AsPointer(arg, DeeSType_AsPointerType(arg_type)->pt_orig,
-					                        (union pointer *)&iter->p))
-						goto err_wbuf;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 				}
 			}	break;
 
@@ -253,8 +238,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 	if (n_varargs) {
 		dee_va_ffi_types = va_argtypes_mem;
 		// Copy non-vararg types
-		dee_va_ffi_types = (ffi_type **)mempcpyc(dee_va_ffi_types, tp_self->ft_ffi_arg_type_v,
-		                                         tp_self->ft_argc, sizeof(ffi_type *));
+		dee_va_ffi_types = (ffi_type **)mempcpyc(dee_va_ffi_types, tp_self->cft_ffi_arg_type_v,
+		                                         tp_self->cft_argc, sizeof(ffi_type *));
 		dee_va_ffi_types_end = dee_va_ffi_types + n_varargs;
 		ASSERT(dee_va_ffi_types != dee_va_ffi_types_end);
 		for (;;) {
@@ -265,33 +250,23 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 				*dee_va_ffi_types = &ffi_type_pointer;
 				iter->p           = (void *)DeeString_STR(dee_va_arg);
 				*argp_iter        = (void *)iter;
-#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
-			} else if (Object_IsCFunction(dee_va_type)) {
-				*dee_va_ffi_types = &ffi_type_pointer;
-				iter->p           = Object_AsCFunction(dee_va_arg)->cf_func.cff_vptr;
-				*argp_iter        = (void *)iter;
-#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
-			} else if (DeePointerType_Check(dee_va_type)) {
+			} else if (Type_IsCPointerType(dee_va_type)) {
 				/* Pointer argument --> cast to 'void *' */
 				*dee_va_ffi_types = &ffi_type_pointer;
-				iter->p           = ((struct pointer_object *)dee_va_arg)->p_ptr.ptr;
+				iter->p           = Object_AsCPointer(dee_va_arg)->cp_value.ptr;
 				*argp_iter        = (void *)iter;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 			} else if (Type_IsCLValueType(dee_va_type)) {
 				/* Lvalue argument --> cast to lvalue-base */
-				CLValue *arg_ob = Object_AsCLValue(dee_va_arg);
-				CType *base = CLValueType_LogicalPointedToType(Type_AsCLValueType(dee_va_type));
+				CLValueType *ctype = Type_AsCLValueType(dee_va_type);
 				void *cvalue;
-				*dee_va_ffi_types = stype_ffitype(base);
-				CTYPES_FAULTPROTECT(cvalue = CLValue_GetLogicalValue(arg_ob), goto err_wbuf);
+				*dee_va_ffi_types = CType_GetFFIType(CLValueType_AsCType(ctype));
+				if unlikely(!*dee_va_ffi_types)
+					goto err_wbuf;
+				CTYPES_FAULTPROTECT({
+					cvalue = CLValue_GetLogicalValue(Object_AsCLValue(dee_va_arg));
+				}, goto err_wbuf);
 				*argp_iter = cvalue;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-			} else if (DeeLValueType_Check(dee_va_type)) {
-				/* Lvalue argument --> cast to lvalue-base */
-				dee_va_type       = DeeSType_AsType(DeeType_AsLValueType(dee_va_type)->lt_orig);
-				*dee_va_ffi_types = stype_ffitype(DeeType_AsSType(dee_va_type));
-				*argp_iter        = ((struct lvalue_object *)dee_va_arg)->l_ptr.ptr;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+				dee_va_type = CType_AsType(CLValueType_LogicalPointedToType(ctype));
 			} else if (dee_va_type == &DeeNone_Type) {
 				/* none --> NULL pointer */
 				*dee_va_ffi_types = &ffi_type_pointer;
@@ -338,11 +313,17 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self, Dee_funptr_t self,
 				}
 #endif /* ... */
 				*argp_iter = (void *)iter;
+#ifdef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
+			} else if (Object_IsCFunction(dee_va_type)) {
+				*dee_va_ffi_types = &ffi_type_pointer;
+				iter->p           = Object_AsCFunction(dee_va_arg)->cf_func.cff_vptr;
+				*argp_iter        = (void *)iter;
+#endif /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 			} else {
 				/* Fallback: Any structured object. */
-				if (DeeObject_AssertType(dee_va_type, &DeeSType_Type))
+				if (DeeObject_AssertType(dee_va_type, &CType_Type))
 					goto err_wbuf;
-				*dee_va_ffi_types = stype_ffitype(DeeType_AsSType(dee_va_type));
+				*dee_va_ffi_types = CType_GetFFIType(Type_AsCType(dee_va_type));
 				if unlikely(!*dee_va_ffi_types)
 					goto err_wbuf;
 				/* Prefer hard copies */
@@ -381,51 +362,38 @@ def_var_data:
 	}
 #endif /* VARARGS */
 
-#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
-	__try
-#elif defined(CONFIG_HAVE_CTYPES_KOS_GUARD)
-	TRY
-#endif /* Guard... */
-	{
+	/* Actually make the call */
 #ifdef VARARGS
-		if (n_varargs) {
-			ffi_cif va_cif;
-			ffi_status error;
-			error = ffi_prep_cif_var(&va_cif, tp_self->ft_ffi_cif.abi,
-			                         (unsigned int)tp_self->ft_argc,
-			                         (unsigned int)argc,
-			                         tp_self->ft_ffi_return_type,
-			                         va_argtypes_mem);
-
-			if (error != FFI_OK) {
-				DeeError_Throwf(&DeeError_RuntimeError,
-				                "Failed to create variadic function closure (%d)",
-				                (int)error);
-				goto err_wbuf;
-			}
-			ffi_call(&va_cif, self, ret_mem, va_argptr_mem);
-		} else
-#endif /* VARARGS */
-		{
-			ffi_call(&tp_self->ft_ffi_cif, self, ret_mem,
-			         (void **)((byte_t *)wbuf + tp_self->ft_woff_argptr));
+	if (n_varargs) {
+		ffi_cif va_cif;
+		ffi_status error;
+		error = ffi_prep_cif_var(&va_cif, tp_self->cft_ffi_cif.abi,
+		                         (unsigned int)tp_self->cft_argc,
+		                         (unsigned int)argc,
+		                         tp_self->cft_ffi_return_type,
+		                         va_argtypes_mem);
+	
+		if (error != FFI_OK) {
+			DeeError_Throwf(&DeeError_RuntimeError,
+			                "Failed to create variadic function closure (%d)",
+			                (int)error);
+			goto err_wbuf;
 		}
+		CTYPES_FAULTPROTECT({
+			ffi_call(&va_cif, self, ret_mem, va_argptr_mem);
+		}, goto err_wbuf);
+	} else
+#endif /* VARARGS */
+	{
+		void **avalue = (void **)((byte_t *)wbuf + tp_self->cft_woff_argptr);
+		CTYPES_FAULTPROTECT({
+			ffi_call(&tp_self->cft_ffi_cif, self, ret_mem, avalue);
+		}, goto err_wbuf);
 	}
-#ifdef CONFIG_HAVE_CTYPES_SEH_GUARD
-	__except (ctypes_seh_guard((struct _EXCEPTION_POINTERS *)_exception_info())) {
-		goto err_wbuf;
-	}
-#elif defined(CONFIG_HAVE_CTYPES_KOS_GUARD)
-	EXCEPT {
-		ctypes_kos_guard();
-		goto err_wbuf;
-	}
-#endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
 
-	if (tp_self->ft_orig == &DeeCVoid_Type) {
+	if (tp_self->cft_return == &CVoid_Type) {
 		result = DeeNone_NewRef();
 	} else {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 		CType *return_type = tp_self->cft_return;
 		CObject *result_cobject;
 
@@ -443,16 +411,6 @@ def_var_data:
 		CObject_Init(result_cobject, return_type);
 		result_cobject = (*CType_Operators(return_type)->co_initobject)(result_cobject, ret_mem);
 		result = Dee_AsObject(result_cobject);
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-		DeeSTypeObject *orig_type = tp_self->ft_orig;
-		result = DeeType_AllocInstance(&orig_type->st_base);
-		if unlikely(!result)
-			goto done_wbuf;
-
-		/* Construct a new structured type that is returned as result. */
-		DeeObject_Init((DeeStructObject *)result, DeeSType_AsType(orig_type));
-		memcpy(DeeStruct_Data(result), ret_mem, DeeSType_Sizeof(orig_type));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 	}
 #undef ret_mem
 done_wbuf:

@@ -224,34 +224,33 @@ do_rethrow:
 #endif /* CONFIG_HAVE_CTYPES_KOS_GUARD */
 
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("sizeof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("sizeof", """
+	ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat
+""", methodFlags: "METHOD_FCONSTCALL");]]]*/
 #define libctypes_sizeof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_sizeof, &libctypes_sizeof_f_impl, METHOD_FCONSTCALL);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_sizeof_f_impl(DeeObject *ob)
 /*[[[end]]]*/
 {
-	DeeSTypeObject *type;
+	CType *type;
 	size_t result;
 	if (DeeBytes_Check(ob))
 		return DeeInt_NewSize(DeeBytes_SIZE(ob));
-	type = DeeSType_GetTypeOf(ob);
+	type = CType_TypeOf(ob);
 	if unlikely(!type)
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(type))
 		type = CLValueType_LogicalPointedToType(CType_AsCLValueType(type));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	if (DeeLValueType_Check(type))
-		type = DeeSType_AsLValueType(type)->lt_orig;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	result = DeeSType_Sizeof(type);
+	result = CType_Sizeof(type);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("alignof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("alignof", """
+	ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat
+""", methodFlags: "METHOD_FCONSTCALL");]]]*/
 #define libctypes_alignof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_alignof, &libctypes_alignof_f_impl, METHOD_FCONSTCALL);
@@ -259,41 +258,33 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_alignof_f_impl(DeeO
 /*[[[end]]]*/
 {
 	size_t result;
-	DeeSTypeObject *type = DeeSType_GetTypeOf(ob);
+	CType *type = CType_TypeOf(ob);
 	if unlikely(!type)
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(type))
 		type = CLValueType_LogicalPointedToType(CType_AsCLValueType(type));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	if (DeeLValueType_Check(type))
-		type = DeeSType_AsLValueType(type)->lt_orig;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	result = DeeSType_Alignof(type);
+	result = CType_Alignof(type);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("typeof", "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat", methodFlags: "METHOD_FCONSTCALL");]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("typeof", """
+	ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "CType");]]]*/
 #define libctypes_typeof_params "ob:?X7?GCType?GCObject?DType?N?Dbool?Dint?Dfloat"
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob);
+PRIVATE WUNUSED NONNULL((1)) DREF CType *DCALL libctypes_typeof_f_impl(DeeObject *ob);
 PRIVATE DEFINE_CMETHOD1(libctypes_typeof, &libctypes_typeof_f_impl, METHOD_FCONSTCALL);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_typeof_f_impl(DeeObject *ob)
+PRIVATE WUNUSED NONNULL((1)) DREF CType *DCALL libctypes_typeof_f_impl(DeeObject *ob)
 /*[[[end]]]*/
 {
-	DeeSTypeObject *result = DeeSType_GetTypeOf(ob);
+	CType *result = CType_TypeOf(ob);
 	if unlikely(!result)
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 	if (CType_IsCLValueType(result))
 		result = CLValueType_LogicalPointedToType(CType_AsCLValueType(result));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	if (DeeLValueType_Check(result))
-		result = DeeSType_AsLValueType(result)->lt_orig;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-	Dee_Incref(DeeSType_AsType(result));
-	return DeeSType_AsObject(result);
+	Dee_Incref(CType_AsType(result));
+	return result;
 err:
 	return NULL;
 }
@@ -301,10 +292,10 @@ err:
 /*[[[deemon (print_CMethod from rt.gen.unpack)("intfor", """
 	size_t size,
 	bool $signed = true
-""", methodFlags: "METHOD_FCONSTCALL");]]]*/
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "CType");]]]*/
 #define libctypes_intfor_params "size:?Dint,signed=!t"
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bool signed_);
-PRIVATE WUNUSED DREF DeeObject *DCALL libctypes_intfor_f(size_t argc, DeeObject *const *argv) {
+FORCELOCAL WUNUSED DREF CType *DCALL libctypes_intfor_f_impl(size_t size, bool signed_);
+PRIVATE WUNUSED DREF CType *DCALL libctypes_intfor_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t size;
 		bool signed_;
@@ -316,98 +307,44 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD(libctypes_intfor, &libctypes_intfor_f, METHOD_FCONSTCALL);
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bool signed_)
+FORCELOCAL WUNUSED DREF CType *DCALL libctypes_intfor_f_impl(size_t size, bool signed_)
 /*[[[end]]]*/
 {
-	DeeSTypeObject *result = NULL;
+	CType *result;
 	switch (size) {
-
-	case 1:
-		result = signed_
-		         ? &DeeCInt8_Type
-		         : &DeeCUInt8_Type;
-		break;
-
-	case 2:
-		result = signed_
-		         ? &DeeCInt16_Type
-		         : &DeeCUInt16_Type;
-		break;
-
-	case 4:
-		result = signed_
-		         ? &DeeCInt32_Type
-		         : &DeeCUInt32_Type;
-		break;
-
-	case 8:
-		result = signed_
-		         ? &DeeCInt64_Type
-		         : &DeeCUInt64_Type;
-		break;
-
-	case 16:
-		result = signed_
-		         ? &DeeCInt128_Type
-		         : &DeeCUInt128_Type;
-		break;
-
+	case 1: result = signed_ ? &CInt8_Type : &CUInt8_Type; break;
+	case 2: result = signed_ ? &CInt16_Type : &CUInt16_Type; break;
+	case 4: result = signed_ ? &CInt32_Type : &CUInt32_Type; break;
+	case 8: result = signed_ ? &CInt64_Type : &CUInt64_Type; break;
+	case 16: result = signed_ ? &CInt128_Type : &CUInt128_Type; break;
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
-	case CTYPES_sizeof_char:
-		result = signed_
-		         ? &DeeCSChar_Type
-		         : &DeeCUChar_Type;
-		break;
+	case CTYPES_sizeof_char: result = signed_ ? &CSChar_Type : &CUChar_Type; break;
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
-
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
-	case CTYPES_sizeof_short:
-		result = signed_
-		         ? &DeeCShort_Type
-		         : &DeeCUShort_Type;
-		break;
+	case CTYPES_sizeof_short: result = signed_ ? &CShort_Type : &CUShort_Type; break;
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
-
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
-	case CTYPES_sizeof_int:
-		result = signed_
-		         ? &DeeCInt_Type
-		         : &DeeCUInt_Type;
-		break;
+	case CTYPES_sizeof_int: result = signed_ ? &CInt_Type : &CUInt_Type; break;
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
-
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 #if CTYPES_sizeof_long != CTYPES_sizeof_int
-	case CTYPES_sizeof_long:
-		result = signed_
-		         ? &DeeCLong_Type
-		         : &DeeCULong_Type;
-		break;
+	case CTYPES_sizeof_long: result = signed_ ? &CLong_Type : &CULong_Type; break;
 #endif /* CTYPES_sizeof_long != CTYPES_sizeof_int */
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
-
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
-	case CTYPES_sizeof_llong:
-		result = signed_
-		         ? &DeeCLLong_Type
-		         : &DeeCULLong_Type;
-		break;
+	case CTYPES_sizeof_llong: result = signed_ ? &CLLong_Type : &CULLong_Type; break;
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
-
-	default: break;
+	default:
+		DeeError_Throwf(&DeeError_ValueError,
+		                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
+		                size);
+		return NULL;
 	}
-	if (result) {
-		Dee_Incref(DeeSType_AsType(result));
-		return DeeSType_AsObject(result);
-	}
-	DeeError_Throwf(&DeeError_ValueError,
-	                "No C integer type with a width of `%" PRFuSIZ "' bytes exists",
-	                size);
-	return NULL;
+	Dee_Incref(CType_AsType(result));
+	return result;
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 /*[[[deemon (print_CMethod from rt.gen.unpack)("bswap_intfor", """
 	size_t size,
 	bool $signed = true
@@ -429,7 +366,7 @@ PRIVATE DEFINE_CMETHOD(libctypes_bswap_intfor, &libctypes_bswap_intfor_f, METHOD
 FORCELOCAL WUNUSED DREF CType *DCALL libctypes_bswap_intfor_f_impl(size_t size, bool signed_)
 /*[[[end]]]*/
 {
-	CType *result = NULL;
+	CType *result;
 	switch (size) {
 	case 1: result = signed_ ? &CBSwapInt8_Type : &CBSwapUInt8_Type; break;
 	case 2: result = signed_ ? &CBSwapInt16_Type : &CBSwapUInt16_Type; break;
@@ -445,12 +382,8 @@ FORCELOCAL WUNUSED DREF CType *DCALL libctypes_bswap_intfor_f_impl(size_t size, 
 	Dee_Incref(CType_AsType(result));
 	return result;
 }
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
-#define libctypes_struct DeeStructType_Type
-
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 /*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
 	fields:?S?X2?T2?Dstring?DType?GStructType,
 	bool packed = false,
@@ -481,43 +414,15 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF CStructType *DCALL libctypes_union_f_impl(D
 		flags |= CSTRUCTTYPE_F_PACKED;
 	return CStructType_Of(fields, flags, alignment);
 }
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-/*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
-	DeeObject *fields_or_name;
-	DeeObject *fields = NULL;
-""", methodFlags: "METHOD_FCONSTCALL", returnType: "DeeStructTypeObject", docStringPrefix: none);]]]*/
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields_or_name, DeeObject *fields);
-PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
-	struct {
-		DeeObject *fields_or_name;
-		DeeObject *fields;
-	} args;
-	args.fields = NULL;
-	DeeArg_UnpackStruct1Or2(err, argc, argv, "union", &args, &args.fields_or_name, &args.fields);
-	return libctypes_union_f_impl(args.fields_or_name, args.fields);
-err:
-	return NULL;
-}
-PRIVATE DEFINE_CMETHOD(libctypes_union, &libctypes_union_f, METHOD_FCONSTCALL);
-FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields_or_name, DeeObject *fields)
-/*[[[end]]]*/
-{
-	if (!fields)
-		return DeeStructType_FromSequence(NULL, fields_or_name, STRUCT_TYPE_FUNION);
-	if (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type))
-		goto err;
-	return DeeStructType_FromSequence(fields_or_name, fields, STRUCT_TYPE_FUNION);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap16", "uint16_t x:?Guint16_t", isconst: true);]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap16", """
+	uint16_t x:?Guint16_t
+""", isconst: true, returnType: "CObject");]]]*/
 #define libctypes_bswap16_params "x:?Guint16_t"
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap16_f_impl(uint16_t x);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap16_f(DeeObject *__restrict arg0) {
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap16_f_impl(uint16_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL libctypes_bswap16_f(DeeObject *__restrict arg0) {
 	uint16_t x;
 	if (DeeObject_AsUInt16(arg0, &x))
 		goto err;
@@ -526,16 +431,18 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD1(libctypes_bswap16, &libctypes_bswap16_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap16_f_impl(uint16_t x)
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap16_f_impl(uint16_t x)
 /*[[[end]]]*/
 {
-	return int_newu16(BSWAP16(x));
+	return CUInt16_New(BSWAP16(x));
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap32", "uint32_t x:?Guint32_t", isconst: true);]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap32", """
+	uint32_t x:?Guint32_t
+""", isconst: true, returnType: "CObject");]]]*/
 #define libctypes_bswap32_params "x:?Guint32_t"
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap32_f_impl(uint32_t x);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap32_f(DeeObject *__restrict arg0) {
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap32_f_impl(uint32_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL libctypes_bswap32_f(DeeObject *__restrict arg0) {
 	uint32_t x;
 	if (DeeObject_AsUInt32(arg0, &x))
 		goto err;
@@ -544,16 +451,18 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD1(libctypes_bswap32, &libctypes_bswap32_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap32_f_impl(uint32_t x)
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap32_f_impl(uint32_t x)
 /*[[[end]]]*/
 {
-	return int_newu32(BSWAP32(x));
+	return CUInt32_New(BSWAP32(x));
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap64", "uint64_t x:?Guint64_t", isconst: true);]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap64", """
+	uint64_t x:?Guint64_t
+""", isconst: true, returnType: "CObject");]]]*/
 #define libctypes_bswap64_params "x:?Guint64_t"
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap64_f_impl(uint64_t x);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap64_f(DeeObject *__restrict arg0) {
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap64_f_impl(uint64_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL libctypes_bswap64_f(DeeObject *__restrict arg0) {
 	uint64_t x;
 	if (DeeObject_AsUInt64(arg0, &x))
 		goto err;
@@ -562,16 +471,18 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD1(libctypes_bswap64, &libctypes_bswap64_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap64_f_impl(uint64_t x)
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap64_f_impl(uint64_t x)
 /*[[[end]]]*/
 {
-	return int_newu64(BSWAP64(x));
+	return CUInt64_New(BSWAP64(x));
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap128", "Dee_uint128_t x:?Guint128_t", isconst: true);]]]*/
+/*[[[deemon (print_CMethod from rt.gen.unpack)("bswap128", """
+	Dee_uint128_t x:?Guint128_t
+""", isconst: true, returnType: "CObject");]]]*/
 #define libctypes_bswap128_params "x:?Guint128_t"
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL libctypes_bswap128_f(DeeObject *__restrict arg0) {
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x);
+PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL libctypes_bswap128_f(DeeObject *__restrict arg0) {
 	Dee_uint128_t x;
 	if (DeeObject_AsUInt128(arg0, &x))
 		goto err;
@@ -580,7 +491,7 @@ err:
 	return NULL;
 }
 PRIVATE DEFINE_CMETHOD1(libctypes_bswap128, &libctypes_bswap128_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x)
+FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x)
 /*[[[end]]]*/
 {
 	Dee_uint128_t res;
@@ -590,18 +501,18 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t
 	__hybrid_uint128_setword64(res, 0, BSWAP64(__hybrid_uint128_getword64(x, 1)));
 	__hybrid_uint128_setword64(res, 1, BSWAP64(__hybrid_uint128_getword64(x, 0)));
 #endif /* !BSWAP128 */
-	return int_newu128(res);
+	return CUInt128_New(res);
 }
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define libctypes_htole16  DeeCUInt16_Type.st_base
-#define libctypes_letoh16  DeeCUInt16_Type.st_base
-#define libctypes_htole32  DeeCUInt32_Type.st_base
-#define libctypes_letoh32  DeeCUInt32_Type.st_base
-#define libctypes_htole64  DeeCUInt64_Type.st_base
-#define libctypes_letoh64  DeeCUInt64_Type.st_base
-#define libctypes_htole128 DeeCUInt128_Type.st_base
-#define libctypes_letoh128 DeeCUInt128_Type.st_base
+#define libctypes_htole16  CUInt16_Type.ct_base
+#define libctypes_letoh16  CUInt16_Type.ct_base
+#define libctypes_htole32  CUInt32_Type.ct_base
+#define libctypes_letoh32  CUInt32_Type.ct_base
+#define libctypes_htole64  CUInt64_Type.ct_base
+#define libctypes_letoh64  CUInt64_Type.ct_base
+#define libctypes_htole128 CUInt128_Type.ct_base
+#define libctypes_letoh128 CUInt128_Type.ct_base
 #define libctypes_htobe16  libctypes_bswap16
 #define libctypes_betoh16  libctypes_bswap16
 #define libctypes_htobe32  libctypes_bswap32
@@ -619,14 +530,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t
 #define libctypes_letoh64  libctypes_bswap64
 #define libctypes_htole128 libctypes_bswap128
 #define libctypes_letoh128 libctypes_bswap128
-#define libctypes_htobe16  DeeCUInt16_Type.st_base
-#define libctypes_betoh16  DeeCUInt16_Type.st_base
-#define libctypes_htobe32  DeeCUInt32_Type.st_base
-#define libctypes_betoh32  DeeCUInt32_Type.st_base
-#define libctypes_htobe64  DeeCUInt64_Type.st_base
-#define libctypes_betoh64  DeeCUInt64_Type.st_base
-#define libctypes_htobe128 DeeCUInt128_Type.st_base
-#define libctypes_betoh128 DeeCUInt128_Type.st_base
+#define libctypes_htobe16  CUInt16_Type.ct_base
+#define libctypes_betoh16  CUInt16_Type.ct_base
+#define libctypes_htobe32  CUInt32_Type.ct_base
+#define libctypes_betoh32  CUInt32_Type.ct_base
+#define libctypes_htobe64  CUInt64_Type.ct_base
+#define libctypes_betoh64  CUInt64_Type.ct_base
+#define libctypes_htobe128 CUInt128_Type.ct_base
+#define libctypes_betoh128 CUInt128_Type.ct_base
 #else /* __BYTE_ORDER__ == ... */
 #error "Unsupported `__BYTE_ORDER__'"
 #endif /* __BYTE_ORDER__ != ... */
@@ -634,62 +545,62 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t
 
 #ifndef NDEBUG
 PRIVATE void DCALL
-libctypes_fini_type(DeeSTypeObject *__restrict self) {
-	Dee_Free(self->st_array.sa_list);
+libctypes_fini_type(CType *__restrict self) {
+	Dee_Free(self->ct_arrays.sa_list);
 #ifndef CONFIG_NO_CFUNCTION
-	Dee_Free(self->st_cfunction.sf_list);
+	Dee_Free(self->ct_functions.sf_list);
 #endif /* !CONFIG_NO_CFUNCTION */
 }
 
 #define PTR_libctypes_fini &libctypes_fini
 PRIVATE void DCALL libctypes_fini(void) {
 	/* Clear caches for static C-types, so they don't show up as leaks. */
-	libctypes_fini_type(&DeeStructured_Type);
-	libctypes_fini_type(DeePointerType_AsSType(&DeePointer_Type));
-	libctypes_fini_type(DeeLValueType_AsSType(&DeeLValue_Type));
-	libctypes_fini_type(DeeArrayType_AsSType(&DeeArray_Type));
-	libctypes_fini_type(DeeCFunctionType_AsSType(&DeeCFunction_Type));
-	libctypes_fini_type(&DeeCVoid_Type);
-	libctypes_fini_type(&DeeCChar_Type);
-	libctypes_fini_type(&DeeCWChar_Type);
-	libctypes_fini_type(&DeeCChar16_Type);
-	libctypes_fini_type(&DeeCChar32_Type);
-	libctypes_fini_type(&DeeCBool_Type);
-	libctypes_fini_type(&DeeCInt8_Type);
-	libctypes_fini_type(&DeeCInt16_Type);
-	libctypes_fini_type(&DeeCInt32_Type);
-	libctypes_fini_type(&DeeCInt64_Type);
-	libctypes_fini_type(&DeeCUInt8_Type);
-	libctypes_fini_type(&DeeCUInt16_Type);
-	libctypes_fini_type(&DeeCUInt32_Type);
-	libctypes_fini_type(&DeeCUInt64_Type);
-	libctypes_fini_type(&DeeCFloat_Type);
-	libctypes_fini_type(&DeeCDouble_Type);
-	libctypes_fini_type(&DeeCLDouble_Type);
+	libctypes_fini_type(&AbstractCObject_Type);
+	libctypes_fini_type(CPointerType_AsCType(&AbstractCPointer_Type));
+	libctypes_fini_type(CLValueType_AsCType(&AbstractCLValue_Type));
+	libctypes_fini_type(CArrayType_AsCType(&AbstractCArray_Type));
+	libctypes_fini_type(CFunctionType_AsCType(&AbstractCFunction_Type));
+	libctypes_fini_type(&CVoid_Type);
+	libctypes_fini_type(&CChar_Type);
+	libctypes_fini_type(&CWChar_Type);
+	libctypes_fini_type(&CChar16_Type);
+	libctypes_fini_type(&CChar32_Type);
+	libctypes_fini_type(&CBool_Type);
+	libctypes_fini_type(&CInt8_Type);
+	libctypes_fini_type(&CInt16_Type);
+	libctypes_fini_type(&CInt32_Type);
+	libctypes_fini_type(&CInt64_Type);
+	libctypes_fini_type(&CUInt8_Type);
+	libctypes_fini_type(&CUInt16_Type);
+	libctypes_fini_type(&CUInt32_Type);
+	libctypes_fini_type(&CUInt64_Type);
+	libctypes_fini_type(&CFloat_Type);
+	libctypes_fini_type(&CDouble_Type);
+	libctypes_fini_type(&CLDouble_Type);
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
-	libctypes_fini_type(&DeeCSChar_Type);
-	libctypes_fini_type(&DeeCUChar_Type);
+	libctypes_fini_type(&CSChar_Type);
+	libctypes_fini_type(&CUChar_Type);
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
-	libctypes_fini_type(&DeeCShort_Type);
-	libctypes_fini_type(&DeeCUShort_Type);
+	libctypes_fini_type(&CShort_Type);
+	libctypes_fini_type(&CUShort_Type);
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
-	libctypes_fini_type(&DeeCInt_Type);
-	libctypes_fini_type(&DeeCUInt_Type);
+	libctypes_fini_type(&CInt_Type);
+	libctypes_fini_type(&CUInt_Type);
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
-	libctypes_fini_type(&DeeCLong_Type);
-	libctypes_fini_type(&DeeCULong_Type);
+	libctypes_fini_type(&CLong_Type);
+	libctypes_fini_type(&CULong_Type);
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
-	libctypes_fini_type(&DeeCLLong_Type);
-	libctypes_fini_type(&DeeCULLong_Type);
+	libctypes_fini_type(&CLLong_Type);
+	libctypes_fini_type(&CULLong_Type);
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 }
 #endif /* !NDEBUG */
@@ -697,21 +608,6 @@ PRIVATE void DCALL libctypes_fini(void) {
 #ifndef PTR_libctypes_fini
 #define PTR_libctypes_fini NULL
 #endif /* !PTR_libctypes_fini */
-
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-#define PTR_libctypes_clear NULL
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-#define PTR_libctypes_clear libctypes_clear
-INTDEF bool DCALL clear_void_pointer(void);
-#if 1
-#define libctypes_clear clear_void_pointer
-#else
-PRIVATE bool DCALL libctypes_clear(void) {
-	return clear_void_pointer();
-}
-#endif
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-
 
 /* Define some magic constants that may be of interest to user-code. */
 /*[[[deemon
@@ -733,41 +629,23 @@ gi("ORDER_PDP_ENDIAN", "__ORDER_PDP_ENDIAN__");
 DEX_BEGIN
 
 /* Export the underlying type-system used by ctypes. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 DEX_MEMBER_F_NODOC("CType", &CType_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("StructuredType", &CType_Type, Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER_F_NODOC("CType", &DeeSType_Type, Dee_DEXSYM_READONLY), /* Forward compatibility */
-DEX_MEMBER_F_NODOC("StructuredType", &DeeSType_Type, Dee_DEXSYM_READONLY),
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER_F_NODOC("PointerType", &DeePointerType_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("LValueType", &DeeLValueType_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ArrayType", &DeeArrayType_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("StructType", &DeeStructType_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("FunctionType", &DeeCFunctionType_Type, Dee_DEXSYM_READONLY),
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F_NODOC("PointerType", &CPointerType_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("LValueType", &CLValueType_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ArrayType", &CArrayType_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("StructType", &CStructType_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("FunctionType", &CFunctionType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("CObject", CType_AsType(&AbstractCObject_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Structured", CType_AsType(&AbstractCObject_Type), Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER_F_NODOC("CObject", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY), /* Forward compatibility */
-DEX_MEMBER_F_NODOC("Structured", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY),
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER_F_NODOC("Pointer", DeePointerType_AsObject(&DeePointer_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("LValue", DeeLValueType_AsObject(&DeeLValue_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Array", DeeArrayType_AsObject(&DeeArray_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Struct", DeeStructType_AsObject(&DeeStruct_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Function", DeeCFunctionType_AsObject(&DeeCFunction_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("struct", &libctypes_struct, Dee_DEXSYM_READONLY),
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F_NODOC("Pointer", CPointerType_AsType(&AbstractCPointer_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("LValue", CLValueType_AsType(&AbstractCLValue_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Array", CArrayType_AsType(&AbstractCArray_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Struct", CStructType_AsType(&AbstractCStruct_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Function", CFunctionType_AsType(&AbstractCFunction_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("struct", &CStructType_Type, Dee_DEXSYM_READONLY), /* Alias for "StructType" */
 DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
              "(" libctypes_union_params ")->?GStructType\n"
              "#palignment{Minimum alignment of returned struct (if non-empty)}"
              "Convenience alias for ?GStructType's constructor with ${union: true}"),
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
-             "(fields:?X2?S?T2?Dstring?GCType?M?Dstring?GCType)->?GStructType\n"
-             "(name:?Dstring,fields:?X2?S?T2?Dstring?GCType?M?Dstring?GCType)->?GStructType"),
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 /* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
  *       These sub-classes behave the same as the original Pointer/LValue-type, except
@@ -798,33 +676,32 @@ DEX_MEMBER_F_NODOC("ShLib", &ShLib_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("dlopen", &ShLib_Type, Dee_DEXSYM_READONLY), /* Convenience alias for `ShLib' */
 
 /* Export all the C-types. */
-DEX_MEMBER_F_NODOC("void", DeeSType_AsObject(&DeeCVoid_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("char", DeeSType_AsObject(&DeeCChar_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("wchar_t", DeeSType_AsObject(&DeeCWChar_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("char16_t", DeeSType_AsObject(&DeeCChar16_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("char32_t", DeeSType_AsObject(&DeeCChar32_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bool", DeeSType_AsObject(&DeeCBool_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int8_t", DeeSType_AsObject(&DeeCInt8_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int16_t", DeeSType_AsObject(&DeeCInt16_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int32_t", DeeSType_AsObject(&DeeCInt32_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int64_t", DeeSType_AsObject(&DeeCInt64_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int128_t", DeeSType_AsObject(&DeeCInt128_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint8_t", DeeSType_AsObject(&DeeCUInt8_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint16_t", DeeSType_AsObject(&DeeCUInt16_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint32_t", DeeSType_AsObject(&DeeCUInt32_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint64_t", DeeSType_AsObject(&DeeCUInt64_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint128_t", DeeSType_AsObject(&DeeCUInt128_Type), Dee_DEXSYM_READONLY),
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-DEX_MEMBER_F_NODOC("bswap_int8_t", DeeSType_AsObject(&CBSwapInt8_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_int16_t", DeeSType_AsObject(&CBSwapInt16_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_int32_t", DeeSType_AsObject(&CBSwapInt32_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_int64_t", DeeSType_AsObject(&CBSwapInt64_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_int128_t", DeeSType_AsObject(&CBSwapInt128_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_uint8_t", DeeSType_AsObject(&CBSwapUInt8_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_uint16_t", DeeSType_AsObject(&CBSwapUInt16_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_uint32_t", DeeSType_AsObject(&CBSwapUInt32_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_uint64_t", DeeSType_AsObject(&CBSwapUInt64_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("bswap_uint128_t", DeeSType_AsObject(&CBSwapUInt128_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("void", CType_AsType(&CVoid_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("char", CType_AsType(&CChar_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("wchar_t", CType_AsType(&CWChar_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("char16_t", CType_AsType(&CChar16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("char32_t", CType_AsType(&CChar32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bool", CType_AsType(&CBool_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int8_t", CType_AsType(&CInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int16_t", CType_AsType(&CInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int32_t", CType_AsType(&CInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int64_t", CType_AsType(&CInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int128_t", CType_AsType(&CInt128_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint8_t", CType_AsType(&CUInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint16_t", CType_AsType(&CUInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint32_t", CType_AsType(&CUInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint64_t", CType_AsType(&CUInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint128_t", CType_AsType(&CUInt128_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int8_t", CType_AsType(&CBSwapInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int16_t", CType_AsType(&CBSwapInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int32_t", CType_AsType(&CBSwapInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int64_t", CType_AsType(&CBSwapInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int128_t", CType_AsType(&CBSwapInt128_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint8_t", CType_AsType(&CBSwapUInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint16_t", CType_AsType(&CBSwapUInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint32_t", CType_AsType(&CBSwapUInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint64_t", CType_AsType(&CBSwapUInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint128_t", CType_AsType(&CBSwapUInt128_Type), Dee_DEXSYM_READONLY),
 
 /* Endian-specific integer types (e.g. `le16' and `be16')
  * These could be used in structures and always encode/decode
@@ -838,38 +715,37 @@ DEX_MEMBER_F_NODOC("bswap_uint128_t", DeeSType_AsObject(&CBSwapUInt128_Type), De
  * >> };
  * >> x = foo(le: 0x12345678);
  * >> print x.be; // 0x78563412 */
-DEX_MEMBER_F_NODOC("le8", DeeSType_AsObject(&CLeUIntN_Type(1)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("le16", DeeSType_AsObject(&CLeUIntN_Type(2)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("le32", DeeSType_AsObject(&CLeUIntN_Type(4)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("le64", DeeSType_AsObject(&CLeUIntN_Type(8)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("le128", DeeSType_AsObject(&CLeUIntN_Type(16)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("be8", DeeSType_AsObject(&CBeUIntN_Type(1)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("be16", DeeSType_AsObject(&CBeUIntN_Type(2)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("be32", DeeSType_AsObject(&CBeUIntN_Type(4)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("be64", DeeSType_AsObject(&CBeUIntN_Type(8)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("be128", DeeSType_AsObject(&CBeUIntN_Type(16)), Dee_DEXSYM_READONLY),
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+DEX_MEMBER_F_NODOC("le8", CType_AsType(&CLeUIntN_Type(1)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le16", CType_AsType(&CLeUIntN_Type(2)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le32", CType_AsType(&CLeUIntN_Type(4)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le64", CType_AsType(&CLeUIntN_Type(8)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le128", CType_AsType(&CLeUIntN_Type(16)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be8", CType_AsType(&CBeUIntN_Type(1)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be16", CType_AsType(&CBeUIntN_Type(2)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be32", CType_AsType(&CBeUIntN_Type(4)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be64", CType_AsType(&CBeUIntN_Type(8)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be128", CType_AsType(&CBeUIntN_Type(16)), Dee_DEXSYM_READONLY),
 
-DEX_MEMBER_F_NODOC("float", DeeSType_AsObject(&DeeCFloat_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("double", DeeSType_AsObject(&DeeCDouble_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ldouble", DeeSType_AsObject(&DeeCLDouble_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("schar", DeeSType_AsObject(&DeeCSChar_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uchar", DeeSType_AsObject(&DeeCUChar_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("short", DeeSType_AsObject(&DeeCShort_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ushort", DeeSType_AsObject(&DeeCUShort_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("int", DeeSType_AsObject(&DeeCInt_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uint", DeeSType_AsObject(&DeeCUInt_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("long", DeeSType_AsObject(&DeeCLong_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ulong", DeeSType_AsObject(&DeeCULong_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("llong", DeeSType_AsObject(&DeeCLLong_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ullong", DeeSType_AsObject(&DeeCULLong_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("float", CType_AsType(&CFloat_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("double", CType_AsType(&CDouble_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ldouble", CType_AsType(&CLDouble_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("schar", CType_AsType(&CSChar_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uchar", CType_AsType(&CUChar_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("short", CType_AsType(&CShort_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ushort", CType_AsType(&CUShort_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("int", CType_AsType(&CInt_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uint", CType_AsType(&CUInt_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("long", CType_AsType(&CLong_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ulong", CType_AsType(&CULong_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("llong", CType_AsType(&CLLong_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ullong", CType_AsType(&CULLong_Type), Dee_DEXSYM_READONLY),
 
 /* Other, platform-specific C-types. */
-DEX_MEMBER_F_NODOC("size_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_SIZE_T__)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ssize_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_SIZE_T__)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("ptrdiff_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_PTRDIFF_T__)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("intptr_t", DeeSType_AsObject(&CINT_SIZED(__SIZEOF_POINTER__)), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("uintptr_t", DeeSType_AsObject(&CUINT_SIZED(__SIZEOF_POINTER__)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("size_t", CType_AsType(&CUIntN_Type(__SIZEOF_SIZE_T__)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ssize_t", CType_AsType(&CIntN_Type(__SIZEOF_SIZE_T__)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("ptrdiff_t", CType_AsType(&CIntN_Type(__SIZEOF_PTRDIFF_T__)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("intptr_t", CType_AsType(&CIntN_Type(__SIZEOF_POINTER__)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("uintptr_t", CType_AsType(&CUIntN_Type(__SIZEOF_POINTER__)), Dee_DEXSYM_READONLY),
 
 /* Export some helper functions */
 DEX_MEMBER_F("sizeof", &libctypes_sizeof, Dee_DEXSYM_READONLY,
@@ -891,7 +767,6 @@ DEX_MEMBER_F("typeof", &libctypes_typeof, Dee_DEXSYM_READONLY,
 DEX_MEMBER_F("intfor", &libctypes_intfor, Dee_DEXSYM_READONLY,
              "(" libctypes_intfor_params ")->?GCType\n"
              "#tValueError{No integer matching the requirements of @size is supported}"),
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 DEX_MEMBER_F("bswap_intfor", &libctypes_bswap_intfor, Dee_DEXSYM_READONLY,
              "(" libctypes_bswap_intfor_params ")->?GCType\n"
              "#tValueError{No integer matching the requirements of @size is supported}\n"
@@ -918,7 +793,6 @@ DEX_MEMBER_F("beintfor", &libctypes_beintfor, Dee_DEXSYM_READONLY,
              "(" libctypes_beintfor_params ")->?GCType\n"
              "#tValueError{No integer matching the requirements of @size is supported}\n"
              "Return the relevant big-endian integer type (s.a. ?Gintfor, ?Gbswap_intfor, ?GBYTE_ORDER)"),
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 DEX_MEMBER_F("bswap16", &libctypes_bswap16, Dee_DEXSYM_READONLY,
              "(" libctypes_bswap16_params ")->?Guint16_t\n"
@@ -1514,12 +1388,6 @@ DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, Dee_DEXSYM_READONLY,
              "This function can be used to form the basis of any other synchronization "
              /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_True, "Will be removed once this becomes mandatory"),
-#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-DEX_MEMBER("CONFIG_EXPERIMENTAL_REWORKED_CTYPES", Dee_False, "For transitioning phase"),
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
-
 /* Magic constants */
 CTYPES_BYTE_ORDER_DEF
 CTYPES_FLOAT_WORD_ORDER_DEF
@@ -1527,11 +1395,16 @@ CTYPES_ORDER_LITTLE_ENDIAN_DEF
 CTYPES_ORDER_BIG_ENDIAN_DEF
 CTYPES_ORDER_PDP_ENDIAN_DEF
 
+#ifdef CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES
+DEX_MEMBER_F_NODOC("StructuredType", &CType_Type, Dee_DEXSYM_READONLY),                     /* Deprecated alias */
+DEX_MEMBER_F_NODOC("Structured", CType_AsType(&AbstractCObject_Type), Dee_DEXSYM_READONLY), /* Deprecated alias */
+#endif /* CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES */
+
 /* clang-format off */
 DEX_END(
 	/* init:  */ NULL,
 	/* fini:  */ PTR_libctypes_fini,
-	/* clear: */ PTR_libctypes_clear
+	/* clear: */ NULL
 );
 /* clang-format on */
 

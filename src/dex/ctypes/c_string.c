@@ -1472,9 +1472,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memcpy_f(size_t argc, DeeObject *
 	args.elem_count = 1;
 	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memcpy", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCVoid_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CVoid_Type, &src))
 		goto err;
 	return c_string_memcpy_f_impl(dst.pvoid, src.pcvoid, args.num_bytes, args.elem_count);
 err:
@@ -1508,9 +1508,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_mempcpy_f(size_t argc, DeeObject 
 	args.elem_count = 1;
 	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempcpy", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCVoid_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CVoid_Type, &src))
 		goto err;
 	return c_string_mempcpy_f_impl(dst.pvoid, src.pcvoid, args.num_bytes, args.elem_count);
 err:
@@ -1544,9 +1544,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memmove_f(size_t argc, DeeObject 
 	args.elem_count = 1;
 	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":memmove", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCVoid_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CVoid_Type, &src))
 		goto err;
 	return c_string_memmove_f_impl(dst.pvoid, src.pcvoid, args.num_bytes, args.elem_count);
 err:
@@ -1580,9 +1580,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_mempmove_f(size_t argc, DeeObject
 	args.elem_count = 1;
 	if (DeeArg_UnpackStruct(argc, argv, "oo" UNPuSIZ "|" UNPuSIZ ":mempmove", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCVoid_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CVoid_Type, &src))
 		goto err;
 	return c_string_mempmove_f_impl(dst.pvoid, src.pcvoid, args.num_bytes, args.elem_count);
 err:
@@ -1615,9 +1615,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memccpy_f(size_t argc, DeeObject 
 	union pointer src;
 	if (DeeArg_UnpackStruct(argc, argv, "ood" UNPuSIZ ":memccpy", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCVoid_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CVoid_Type, &src))
 		goto err;
 	return c_string_memccpy_f_impl(dst.pvoid, src.pcvoid, args.needle, args.num_bytes);
 err:
@@ -1641,7 +1641,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memset_f(size_t argc, DeeObject *
 	} args;
 	union pointer dst;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memset", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.byte, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
 	return c_string_memset_f_impl(dst.pvoid, args.byte, args.num_bytes);
 err:
@@ -1665,7 +1665,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_mempset_f(size_t argc, DeeObject 
 	} args;
 	union pointer dst;
 	DeeArg_UnpackStruct3X(err, argc, argv, "mempset", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.byte, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
 	return c_string_mempset_f_impl(dst.pvoid, args.byte, args.num_bytes);
 err:
@@ -1691,7 +1691,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_bzero_f(size_t argc, DeeObject *c
 	args.elem_count = 1;
 	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "|" UNPuSIZ ":bzero", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
 	return c_string_bzero_f_impl(dst.pvoid, args.num_bytes, args.elem_count);
 err:
@@ -1721,7 +1721,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memchr_f(size_t argc, DeeObject *
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memchr_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1746,7 +1746,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrchr_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrchr_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1771,7 +1771,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memend_f(size_t argc, DeeObject *
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memend", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memend_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1796,7 +1796,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrend_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrend", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrend_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1821,7 +1821,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memlen_f(size_t argc, DeeObject *
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memlen_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1846,7 +1846,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrlen_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrlen_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1870,7 +1870,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemchr_f(size_t argc, DeeObjec
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemchr_f_impl(haystack.pvoid, args.needle);
 err:
@@ -1894,7 +1894,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemrchr_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemrchr_f_impl(haystack.pvoid, args.needle);
 err:
@@ -1918,7 +1918,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemlen_f(size_t argc, DeeObjec
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemlen_f_impl(haystack.pvoid, args.needle);
 err:
@@ -1942,7 +1942,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemrlen_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemrlen_f_impl(haystack.pvoid, args.needle);
 err:
@@ -1967,7 +1967,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memxchr_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memxchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memxchr_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -1992,7 +1992,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrxchr_f(size_t argc, DeeObject
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrxchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrxchr_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -2017,7 +2017,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memxend_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memxend", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memxend_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -2042,7 +2042,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrxend_f(size_t argc, DeeObject
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrxend", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrxend_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -2067,7 +2067,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memxlen_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memxlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memxlen_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -2092,7 +2092,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrxlen_f(size_t argc, DeeObject
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memrxlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_memrxlen_f_impl(haystack.pvoid, args.needle, args.num_bytes);
 err:
@@ -2116,7 +2116,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemxchr_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemxchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemxchr_f_impl(haystack.pvoid, args.needle);
 err:
@@ -2140,7 +2140,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemrxchr_f(size_t argc, DeeObj
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrxchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemrxchr_f_impl(haystack.pvoid, args.needle);
 err:
@@ -2164,7 +2164,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemxlen_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemxlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemxlen_f_impl(haystack.pvoid, args.needle);
 err:
@@ -2188,7 +2188,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_rawmemrxlen_f(size_t argc, DeeObj
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "rawmemrxlen", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
 	return c_string_rawmemrxlen_f_impl(haystack.pvoid, args.needle);
 err:
@@ -2214,9 +2214,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_bcmp_f(size_t argc, DeeObject *co
 	union pointer a;
 	union pointer b;
 	DeeArg_UnpackStruct3X(err, argc, argv, "bcmp", &args, &args.raw_a, "o", _DeeArg_AsObject, &args.raw_b, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_a, &DeeCVoid_Type, &a))
+	if unlikely(DeeObject_AsPointer(args.raw_a, &CVoid_Type, &a))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_b, &DeeCVoid_Type, &b))
+	if unlikely(DeeObject_AsPointer(args.raw_b, &CVoid_Type, &b))
 		goto err;
 	return c_string_bcmp_f_impl(a.pcvoid, b.pcvoid, args.num_bytes);
 err:
@@ -2242,9 +2242,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memcmp_f(size_t argc, DeeObject *
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memcmp", &args, &args.raw_lhs, "o", _DeeArg_AsObject, &args.raw_rhs, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCVoid_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CVoid_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCVoid_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CVoid_Type, &rhs))
 		goto err;
 	return c_string_memcmp_f_impl(lhs.pcvoid, rhs.pcvoid, args.num_bytes);
 err:
@@ -2274,9 +2274,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memcasecmp_f(size_t argc, DeeObje
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct3X(err, argc, argv, "memcasecmp", &args, &args.raw_lhs, "o", _DeeArg_AsObject, &args.raw_rhs, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCVoid_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CVoid_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCVoid_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CVoid_Type, &rhs))
 		goto err;
 	return c_string_memcasecmp_f_impl(lhs.pcvoid, rhs.pcvoid, args.num_bytes);
 err:
@@ -2304,9 +2304,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memmem_f(size_t argc, DeeObject *
 	union pointer needle;
 	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memmem", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCVoid_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CVoid_Type, &needle))
 		goto err;
 	return c_string_memmem_f_impl(haystack.pcvoid, args.haystack_len, needle.pcvoid, args.needle_len);
 err:
@@ -2336,9 +2336,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memcasemem_f(size_t argc, DeeObje
 	union pointer needle;
 	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasemem", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCVoid_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CVoid_Type, &needle))
 		goto err;
 	return c_string_memcasemem_f_impl(haystack.pcvoid, args.haystack_len, needle.pcvoid, args.needle_len);
 err:
@@ -2368,9 +2368,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrmem_f(size_t argc, DeeObject 
 	union pointer needle;
 	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memrmem", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCVoid_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CVoid_Type, &needle))
 		goto err;
 	return c_string_memrmem_f_impl(haystack.pcvoid, args.haystack_len, needle.pcvoid, args.needle_len);
 err:
@@ -2400,9 +2400,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memcasermem_f(size_t argc, DeeObj
 	union pointer needle;
 	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "o" UNPuSIZ ":memcasermem", &args))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCVoid_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CVoid_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCVoid_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CVoid_Type, &needle))
 		goto err;
 	return c_string_memcasermem_f_impl(haystack.pcvoid, args.haystack_len, needle.pcvoid, args.needle_len);
 err:
@@ -2428,7 +2428,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memrev_f(size_t argc, DeeObject *
 	} args;
 	union pointer dst;
 	DeeArg_UnpackStruct2X(err, argc, argv, "memrev", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCVoid_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
 	return c_string_memrev_f_impl(dst.pvoid, args.num_bytes);
 err:
@@ -2446,7 +2446,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_memrev_f_impl(void *dst, size_
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlen_f_impl(char const *string);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strlen_f(DeeObject *__restrict arg0) {
 	union pointer string;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &string))
 		goto err;
 	return c_string_strlen_f_impl(string.pcchar);
 err:
@@ -2465,7 +2465,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlen_f_impl(char const *stri
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strend_f_impl(char const *string);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strend_f(DeeObject *__restrict arg0) {
 	union pointer string;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &string))
 		goto err;
 	return c_string_strend_f_impl(string.pcchar);
 err:
@@ -2489,7 +2489,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnlen_f(size_t argc, DeeObject 
 	} args;
 	union pointer string;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strnlen", &args, &args.raw_string, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_string, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(args.raw_string, &CChar_Type, &string))
 		goto err;
 	return c_string_strnlen_f_impl(string.pcchar, args.maxlen);
 err:
@@ -2513,7 +2513,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnend_f(size_t argc, DeeObject 
 	} args;
 	union pointer string;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strnend", &args, &args.raw_string, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_string, &DeeCChar_Type, &string))
+	if unlikely(DeeObject_AsPointer(args.raw_string, &CChar_Type, &string))
 		goto err;
 	return c_string_strnend_f_impl(string.pcchar, args.maxlen);
 err:
@@ -2537,7 +2537,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strchr_f(size_t argc, DeeObject *
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strchr_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2561,7 +2561,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strrchr_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strrchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strrchr_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2586,7 +2586,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnchr_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnchr_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2611,7 +2611,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrchr_f(size_t argc, DeeObject
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnrchr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnrchr_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2635,7 +2635,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strchrnul_f(size_t argc, DeeObjec
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strchrnul", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strchrnul_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2659,7 +2659,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strrchrnul_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strrchrnul", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strrchrnul_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2684,7 +2684,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnchrnul_f(size_t argc, DeeObje
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnchrnul", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnchrnul_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2709,7 +2709,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrchrnul_f(size_t argc, DeeObj
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnrchrnul", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnrchrnul_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2733,7 +2733,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stroff_f(size_t argc, DeeObject *
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "stroff", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_stroff_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2757,7 +2757,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strroff_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strroff", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strroff_f_impl(haystack.pcchar, args.needle);
 err:
@@ -2782,7 +2782,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnoff_f(size_t argc, DeeObject 
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnoff", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnoff_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2807,7 +2807,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnroff_f(size_t argc, DeeObject
 	} args;
 	union pointer haystack;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnroff", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.needle, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
 	return c_string_strnroff_f_impl(haystack.pcchar, args.needle, args.maxlen);
 err:
@@ -2832,9 +2832,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcmp_f(size_t argc, DeeObject *
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcmp", &args, &args.raw_lhs, &args.raw_rhs);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCChar_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CChar_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCChar_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CChar_Type, &rhs))
 		goto err;
 	return c_string_strcmp_f_impl(lhs.pcchar, rhs.pcchar);
 err:
@@ -2864,9 +2864,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncmp_f(size_t argc, DeeObject 
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strncmp", &args, &args.raw_lhs, "o", _DeeArg_AsObject, &args.raw_rhs, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCChar_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CChar_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCChar_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CChar_Type, &rhs))
 		goto err;
 	return c_string_strncmp_f_impl(lhs.pcchar, rhs.pcchar, args.maxlen);
 err:
@@ -2895,9 +2895,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcasecmp_f(size_t argc, DeeObje
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcasecmp", &args, &args.raw_lhs, &args.raw_rhs);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCChar_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CChar_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCChar_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CChar_Type, &rhs))
 		goto err;
 	return c_string_strcasecmp_f_impl(lhs.pcchar, rhs.pcchar);
 err:
@@ -2927,9 +2927,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncasecmp_f(size_t argc, DeeObj
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strncasecmp", &args, &args.raw_lhs, "o", _DeeArg_AsObject, &args.raw_rhs, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCChar_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CChar_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCChar_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CChar_Type, &rhs))
 		goto err;
 	return c_string_strncasecmp_f_impl(lhs.pcchar, rhs.pcchar, args.maxlen);
 err:
@@ -2958,9 +2958,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strverscmp_f(size_t argc, DeeObje
 	union pointer lhs;
 	union pointer rhs;
 	DeeArg_UnpackStruct2(err, argc, argv, "strverscmp", &args, &args.raw_lhs, &args.raw_rhs);
-	if unlikely(DeeObject_AsPointer(args.raw_lhs, &DeeCChar_Type, &lhs))
+	if unlikely(DeeObject_AsPointer(args.raw_lhs, &CChar_Type, &lhs))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_rhs, &DeeCChar_Type, &rhs))
+	if unlikely(DeeObject_AsPointer(args.raw_rhs, &CChar_Type, &rhs))
 		goto err;
 	return c_string_strverscmp_f_impl(lhs.pcchar, rhs.pcchar);
 err:
@@ -2989,9 +2989,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcpy_f(size_t argc, DeeObject *
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcpy", &args, &args.raw_dst, &args.raw_src);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_strcpy_f_impl(dst.pchar, src.pcchar);
 err:
@@ -3015,9 +3015,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcat_f(size_t argc, DeeObject *
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcat", &args, &args.raw_dst, &args.raw_src);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_strcat_f_impl(dst.pchar, src.pcchar);
 err:
@@ -3041,9 +3041,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stpcpy_f(size_t argc, DeeObject *
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct2(err, argc, argv, "stpcpy", &args, &args.raw_dst, &args.raw_src);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_stpcpy_f_impl(dst.pchar, src.pcchar);
 err:
@@ -3068,9 +3068,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncpy_f(size_t argc, DeeObject 
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strncpy", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.raw_src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_strncpy_f_impl(dst.pchar, src.pcchar, args.maxlen);
 err:
@@ -3095,9 +3095,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncat_f(size_t argc, DeeObject 
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strncat", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.raw_src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_strncat_f_impl(dst.pchar, src.pcchar, args.maxlen);
 err:
@@ -3122,9 +3122,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stpncpy_f(size_t argc, DeeObject 
 	union pointer dst;
 	union pointer src;
 	DeeArg_UnpackStruct3X(err, argc, argv, "stpncpy", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.raw_src, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_dst, &DeeCChar_Type, &dst))
+	if unlikely(DeeObject_AsPointer(args.raw_dst, &CChar_Type, &dst))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_src, &DeeCChar_Type, &src))
+	if unlikely(DeeObject_AsPointer(args.raw_src, &CChar_Type, &src))
 		goto err;
 	return c_string_stpncpy_f_impl(dst.pchar, src.pcchar, args.maxlen);
 err:
@@ -3148,9 +3148,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strstr_f(size_t argc, DeeObject *
 	union pointer haystack;
 	union pointer needle;
 	DeeArg_UnpackStruct2(err, argc, argv, "strstr", &args, &args.raw_haystack, &args.raw_needle);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCChar_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CChar_Type, &needle))
 		goto err;
 	return c_string_strstr_f_impl(haystack.pcchar, needle.pcchar);
 err:
@@ -3176,9 +3176,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnstr_f(size_t argc, DeeObject 
 	union pointer haystack;
 	union pointer needle;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnstr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.raw_needle, "o", _DeeArg_AsObject, &args.haystack_maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCChar_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CChar_Type, &needle))
 		goto err;
 	return c_string_strnstr_f_impl(haystack.pcchar, needle.pcchar, args.haystack_maxlen);
 err:
@@ -3203,9 +3203,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcasestr_f(size_t argc, DeeObje
 	union pointer haystack;
 	union pointer needle;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcasestr", &args, &args.raw_haystack, &args.raw_needle);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCChar_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CChar_Type, &needle))
 		goto err;
 	return c_string_strcasestr_f_impl(haystack.pcchar, needle.pcchar);
 err:
@@ -3231,9 +3231,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strncasestr_f(size_t argc, DeeObj
 	union pointer haystack;
 	union pointer needle;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strncasestr", &args, &args.raw_haystack, "o", _DeeArg_AsObject, &args.raw_needle, "o", _DeeArg_AsObject, &args.haystack_maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_needle, &DeeCChar_Type, &needle))
+	if unlikely(DeeObject_AsPointer(args.raw_needle, &CChar_Type, &needle))
 		goto err;
 	return c_string_strncasestr_f_impl(haystack.pcchar, needle.pcchar, args.haystack_maxlen);
 err:
@@ -3258,9 +3258,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strspn_f(size_t argc, DeeObject *
 	union pointer haystack;
 	union pointer accept;
 	DeeArg_UnpackStruct2(err, argc, argv, "strspn", &args, &args.raw_haystack, &args.raw_accept);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &CChar_Type, &accept))
 		goto err;
 	return c_string_strspn_f_impl(haystack.pcchar, accept.pcchar);
 err:
@@ -3285,9 +3285,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strcspn_f(size_t argc, DeeObject 
 	union pointer haystack;
 	union pointer accept;
 	DeeArg_UnpackStruct2(err, argc, argv, "strcspn", &args, &args.raw_haystack, &args.raw_accept);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &CChar_Type, &accept))
 		goto err;
 	return c_string_strcspn_f_impl(haystack.pcchar, accept.pcchar);
 err:
@@ -3312,9 +3312,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f(size_t argc, DeeObject 
 	union pointer haystack;
 	union pointer accept;
 	DeeArg_UnpackStruct2(err, argc, argv, "strpbrk", &args, &args.raw_haystack, &args.raw_accept);
-	if unlikely(DeeObject_AsPointer(args.raw_haystack, &DeeCChar_Type, &haystack))
+	if unlikely(DeeObject_AsPointer(args.raw_haystack, &CChar_Type, &haystack))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_accept, &DeeCChar_Type, &accept))
+	if unlikely(DeeObject_AsPointer(args.raw_accept, &CChar_Type, &accept))
 		goto err;
 	return c_string_strpbrk_f_impl(haystack.pcchar, accept.pcchar);
 err:
@@ -3333,7 +3333,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strpbrk_f_impl(char const *hay
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_basename_f_impl(char const *str);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_basename_f(DeeObject *__restrict arg0) {
 	union pointer str;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &str))
 		goto err;
 	return c_string_basename_f_impl(str.pcchar);
 err:
@@ -3351,7 +3351,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_basename_f_impl(char const *st
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strrev_f_impl(char *str);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strrev_f(DeeObject *__restrict arg0) {
 	union pointer str;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &str))
 		goto err;
 	return c_string_strrev_f_impl(str.pchar);
 err:
@@ -3374,7 +3374,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnrev_f(size_t argc, DeeObject 
 	} args;
 	union pointer str;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strnrev", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
 	return c_string_strnrev_f_impl(str.pchar, args.maxlen);
 err:
@@ -3392,7 +3392,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnrev_f_impl(char *str, size
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strlwr_f_impl(char *str);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strlwr_f(DeeObject *__restrict arg0) {
 	union pointer str;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &str))
 		goto err;
 	return c_string_strlwr_f_impl(str.pchar);
 err:
@@ -3415,7 +3415,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f(size_t argc, DeeObject 
 	} args;
 	union pointer str;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strnlwr", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
 	return c_string_strnlwr_f_impl(str.pchar, args.maxlen);
 err:
@@ -3433,7 +3433,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strnlwr_f_impl(char *str, size
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_string_strupr_f_impl(char *str);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL c_string_strupr_f(DeeObject *__restrict arg0) {
 	union pointer str;
-	if unlikely(DeeObject_AsPointer(arg0, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(arg0, &CChar_Type, &str))
 		goto err;
 	return c_string_strupr_f_impl(str.pchar);
 err:
@@ -3456,7 +3456,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnupr_f(size_t argc, DeeObject 
 	} args;
 	union pointer str;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strnupr", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
 	return c_string_strnupr_f_impl(str.pchar, args.maxlen);
 err:
@@ -3479,7 +3479,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strset_f(size_t argc, DeeObject *
 	} args;
 	union pointer str;
 	DeeArg_UnpackStruct2X(err, argc, argv, "strset", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.ch, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
 	return c_string_strset_f_impl(str.pchar, args.ch);
 err:
@@ -3503,7 +3503,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strnset_f(size_t argc, DeeObject 
 	} args;
 	union pointer str;
 	DeeArg_UnpackStruct3X(err, argc, argv, "strnset", &args, &args.raw_str, "o", _DeeArg_AsObject, &args.ch, "d", DeeObject_AsInt, &args.maxlen, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
 	return c_string_strnset_f_impl(str.pchar, args.ch, args.maxlen);
 err:
@@ -3526,7 +3526,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_memfrob_f(size_t argc, DeeObject 
 	} args;
 	union pointer buf;
 	DeeArg_UnpackStruct2X(err, argc, argv, "memfrob", &args, &args.raw_buf, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize);
-	if unlikely(DeeObject_AsPointer(args.raw_buf, &DeeCVoid_Type, &buf))
+	if unlikely(DeeObject_AsPointer(args.raw_buf, &CVoid_Type, &buf))
 		goto err;
 	return c_string_memfrob_f_impl(buf.pvoid, args.num_bytes);
 err:
@@ -3550,9 +3550,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strsep_f(size_t argc, DeeObject *
 	void **stringp;
 	union pointer delim;
 	DeeArg_UnpackStruct2(err, argc, argv, "strsep", &args, &args.raw_stringp, &args.raw_delim);
-	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &DeeCChar_Type, &stringp))
+	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &CChar_Type, &stringp))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &CChar_Type, &delim))
 		goto err;
 	return c_string_strsep_f_impl((char **)stringp, delim.pcchar);
 err:
@@ -3578,9 +3578,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_stresep_f(size_t argc, DeeObject 
 	void **stringp;
 	union pointer delim;
 	DeeArg_UnpackStruct3X(err, argc, argv, "stresep", &args, &args.raw_stringp, "o", _DeeArg_AsObject, &args.raw_delim, "o", _DeeArg_AsObject, &args.escape, "d", DeeObject_AsInt);
-	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &DeeCChar_Type, &stringp))
+	if unlikely(DeeObject_AsPPointer(args.raw_stringp, &CChar_Type, &stringp))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &CChar_Type, &delim))
 		goto err;
 	return c_string_stresep_f_impl((char **)stringp, delim.pcchar, args.escape);
 err:
@@ -3605,9 +3605,9 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strtok_f(size_t argc, DeeObject *
 	union pointer str;
 	union pointer delim;
 	DeeArg_UnpackStruct2(err, argc, argv, "strtok", &args, &args.raw_str, &args.raw_delim);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &CChar_Type, &delim))
 		goto err;
 	return c_string_strtok_f_impl(str.pchar, delim.pcchar);
 err:
@@ -3634,11 +3634,11 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_strtok_r_f(size_t argc, DeeObject
 	union pointer delim;
 	void **save_ptr;
 	DeeArg_UnpackStruct3(err, argc, argv, "strtok_r", &args, &args.raw_str, &args.raw_delim, &args.raw_save_ptr);
-	if unlikely(DeeObject_AsPointer(args.raw_str, &DeeCChar_Type, &str))
+	if unlikely(DeeObject_AsPointer(args.raw_str, &CChar_Type, &str))
 		goto err;
-	if unlikely(DeeObject_AsPointer(args.raw_delim, &DeeCChar_Type, &delim))
+	if unlikely(DeeObject_AsPointer(args.raw_delim, &CChar_Type, &delim))
 		goto err;
-	if unlikely(DeeObject_AsPPointer(args.raw_save_ptr, &DeeCChar_Type, &save_ptr))
+	if unlikely(DeeObject_AsPPointer(args.raw_save_ptr, &CChar_Type, &save_ptr))
 		goto err;
 	return c_string_strtok_r_f_impl(str.pchar, delim.pcchar, (char **)save_ptr);
 err:

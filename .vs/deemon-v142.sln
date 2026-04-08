@@ -404,6 +404,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\ctypes-bswap.dee = ..\util\test\ctypes-bswap.dee
 		..\util\test\ctypes-from-bytes.dee = ..\util\test\ctypes-from-bytes.dee
 		..\util\test\ctypes-futex.dee = ..\util\test\ctypes-futex.dee
+		..\util\test\ctypes-lvalue-lvalue.dee = ..\util\test\ctypes-lvalue-lvalue.dee
 		..\util\test\ctypes-struct-complex.dee = ..\util\test\ctypes-struct-complex.dee
 		..\util\test\ctypes-struct-of.dee = ..\util\test\ctypes-struct-of.dee
 		..\util\test\ctypes-struct.dee = ..\util\test\ctypes-struct.dee
