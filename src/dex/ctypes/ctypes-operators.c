@@ -1412,7 +1412,8 @@ struct_initfrom(CStructType *tp_self, void *self, DeeObject *value) {
 	 */
 	union pointer cvalue;
 	if (Object_IsCStruct(value)) {
-		CStruct *value_ob = Object_AsCStruct(value);
+		CStruct *value_ob;
+		value_ob = Object_AsCStruct(value);
 		if unlikely(tp_self != Dee_TYPE(value_ob))
 			goto bad_rhs_type;
 		cvalue.ptr = CStruct_Data(value_ob);
@@ -1633,7 +1634,8 @@ struct_assign(CStructType *tp_self, void *self, DeeObject *value) {
 	 */
 	union pointer cvalue;
 	if (Object_IsCStruct(value)) {
-		CStruct *value_ob = Object_AsCStruct(value);
+		CStruct *value_ob;
+		value_ob = Object_AsCStruct(value);
 		if unlikely(tp_self != Dee_TYPE(value_ob))
 			goto bad_rhs_type;
 		cvalue.ptr = CStruct_Data(value_ob);

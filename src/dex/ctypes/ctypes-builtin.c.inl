@@ -758,7 +758,7 @@ INTERN CType LOCAL_CObject_Type = {
 				/* tp_copy_ctor:   */ &cobject_copy,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &cobject_init_kw,
-				/* tp_serialize:   */ NULL /* XXX */
+				/* tp_serialize:   */ &cobject_serialize
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,

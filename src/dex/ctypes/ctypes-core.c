@@ -402,6 +402,7 @@ PRIVATE struct type_seq ctype_seq = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ctype_call(CType *self, size_t argc, DeeObject *const *argv) {
 	size_t i;
+	DREF CFunctionType *result;
 
 	/* Create a new instance, or create a new function-type. */
 	if (!argc)
@@ -416,7 +417,8 @@ ctype_call(CType *self, size_t argc, DeeObject *const *argv) {
 		argc = 0;
 
 	/* Use the default calling convention for constructing this function type. */
-	return CFunctionType_AsObject(CFunctionType_Of(self, CC_DEFAULT, argc, (CType *const *)argv));
+	result = CFunctionType_Of(self, CC_DEFAULT, argc, (CType *const *)argv);
+	return Dee_AsObject(CFunctionType_AsType(result));
 create_inst:
 	/* Construct a new instance. */
 	return DeeObject_New(CType_AsType(self), argc, argv);
@@ -2624,7 +2626,7 @@ cfunctiontype_args(CFunctionType *__restrict self) {
 	err_no_cfunction();
 	return NULL;
 #else /* CONFIG_NO_CFUNCTION */
-	return DeeRefVector_NewReadonly(CFunctionType_AsObject(self),
+	return DeeRefVector_NewReadonly(CFunctionType_AsType(self),
 	                                self->cft_argc,
 	                                (DeeObject **)self->cft_argv);
 #endif /* !CONFIG_NO_CFUNCTION */

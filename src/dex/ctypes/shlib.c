@@ -296,7 +296,7 @@ shlib_getattr(ShLib *self, DeeObject *name)
 		if unlikely(!function_type)
 			goto err;
 		result_type = CPointerType_Of(CFunctionType_AsCType(function_type));
-		Dee_Decref_unlikely(CFunctionType_AsObject(function_type));
+		Dee_Decref_unlikely(CFunctionType_AsType(function_type));
 		if unlikely(!result_type)
 			goto err;
 		ASSERT(DeeType_IsHeapType(CPointerType_AsType(result_type)));

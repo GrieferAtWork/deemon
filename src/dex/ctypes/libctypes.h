@@ -446,7 +446,7 @@ INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
 #undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 #undef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
 #ifndef CONFIG_NO_CFUNCTION
-#if 0 /* TODO: Test in other configurations, add unit test, and enable by default */
+#if 1 /* TODO: Write unit test for this */
 #define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES
 #define CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
 #endif
@@ -743,7 +743,7 @@ INTDEF DeeTypeObject CType_Type;   /* == type(ctypes.int) */
 INTDEF CType AbstractCObject_Type; /* == Type.__base__(ctypes.int) */
 
 #define CType_AsType(self)   (&(self)->ct_base)
-#define CType_AsObject(self) ((DeeObject *)&(self)->ct_base)
+#define CType_AsObject(self) ((DeeObject *)&(self)->ct_base) /* TODO: REMOVE */
 #define Type_AsCType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CType, ct_base)
 #define Type_IsCType(self)   DeeType_Extends(Dee_TYPE(self), &CType_Type)
 #define Object_AsCType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CType, ct_base)
@@ -832,7 +832,7 @@ INTDEF CArrayType AbstractCArray_Type; /* == Type.__base__(ctypes.int[42]) */
 
 #define CArrayType_AsCType(self)  (&(self)->cat_base)
 #define CArrayType_AsType(self)   (&(self)->cat_base.ct_base)
-#define CArrayType_AsObject(self) ((DeeObject *)&(self)->cat_base.ct_base)
+#define CArrayType_AsObject(self) ((DeeObject *)&(self)->cat_base.ct_base) /* TODO: REMOVE */
 #define CType_AsCArrayType(self)  COMPILER_CONTAINER_OF(self, CArrayType, cat_base)
 #define CType_IsCArrayType(self)  (Dee_TYPE(&(self)->ct_base) == &CArrayType_Type)
 #define Type_AsCArrayType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CArrayType, cat_base.ct_base)
@@ -981,7 +981,7 @@ INTDEF struct empty_cstruct_type_object {
 
 #define CStructType_AsCType(self)  (&(self)->cst_base)
 #define CStructType_AsType(self)   (&(self)->cst_base.ct_base)
-#define CStructType_AsObject(self) ((DeeObject *)&(self)->cst_base.ct_base)
+#define CStructType_AsObject(self) ((DeeObject *)&(self)->cst_base.ct_base) /* TODO: REMOVE */
 #define CType_AsCStructType(self)  COMPILER_CONTAINER_OF(self, CStructType, cst_base)
 #define CType_IsCStructType(self)  (Dee_TYPE(&(self)->ct_base) == &CStructType_Type)
 #define Type_AsCStructType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CStructType, cst_base.ct_base)
@@ -1093,7 +1093,6 @@ INTDEF struct empty_cfunction_type_object {
 
 #define CFunctionType_AsCType(self)  (&(self)->cft_base)
 #define CFunctionType_AsType(self)   (&(self)->cft_base.ct_base)
-#define CFunctionType_AsObject(self) ((DeeObject *)&(self)->cft_base.ct_base)
 #define CType_AsCFunctionType(self)  COMPILER_CONTAINER_OF(self, CFunctionType, cft_base)
 #define CType_IsCFunctionType(self)  (Dee_TYPE(&(self)->ct_base) == &CFunctionType_Type)
 #define Type_AsCFunctionType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CFunctionType, cft_base.ct_base)
@@ -1169,7 +1168,7 @@ INTDEF CPointerType AbstractCPointer_Type; /* == Type.__base__(ctypes.int.ptr) *
 
 #define CPointerType_AsCType(self)  (&(self)->cpt_base)
 #define CPointerType_AsType(self)   (&(self)->cpt_base.ct_base)
-#define CPointerType_AsObject(self) ((DeeObject *)&(self)->cpt_base.ct_base)
+#define CPointerType_AsObject(self) ((DeeObject *)&(self)->cpt_base.ct_base) /* TODO: REMOVE */
 #define CType_AsCPointerType(self)  COMPILER_CONTAINER_OF(self, CPointerType, cpt_base)
 #define CType_IsCPointerType(self)  (Dee_TYPE(&(self)->ct_base) == &CPointerType_Type)
 #define Type_AsCPointerType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CPointerType, cpt_base.ct_base)
@@ -1294,7 +1293,7 @@ INTDEF CLValueType AbstractCLValue_Type; /* == Type.__base__(ctypes.int.lvalue) 
 
 #define CLValueType_AsCType(self)  (&(self)->clt_base)
 #define CLValueType_AsType(self)   (&(self)->clt_base.ct_base)
-#define CLValueType_AsObject(self) ((DeeObject *)&(self)->clt_base.ct_base)
+#define CLValueType_AsObject(self) ((DeeObject *)&(self)->clt_base.ct_base) /* TODO: REMOVE */
 #define CType_AsCLValueType(self)  COMPILER_CONTAINER_OF(self, CLValueType, clt_base)
 #define CType_IsCLValueType(self)  (Dee_TYPE(&(self)->ct_base) == &CLValueType_Type)
 #define Type_AsCLValueType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CLValueType, clt_base.ct_base)
@@ -1752,7 +1751,7 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
 #define DeeLValueType_AsObject       CLValueType_AsObject
 #define DeeArrayType_AsObject        CArrayType_AsObject
 #define DeeStructType_AsObject       CStructType_AsObject
-#define DeeCFunctionType_AsObject    CFunctionType_AsObject
+#define DeeCFunctionType_AsObject(x) Dee_AsObject(CFunctionType_AsType(x))
 #define CINT_SIZED                   CIntN_Type
 #define CUINT_SIZED                  CUIntN_Type
 #define st_base                      ct_base
