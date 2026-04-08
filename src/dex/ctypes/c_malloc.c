@@ -52,6 +52,60 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
+/* Whitelist of some C libraries where we know that `malloc(0)'
+ * doesn't return `NULL' unless it's *actually* out-of-memory. */
+#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __KOS_SYSTEM_HEADERS__
+#if defined(_MSC_VER)
+#define __MALLOC_ZERO_IS_NONNULL
+#undef __REALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)' acts like `free(p)'... */
+#elif defined(__GLIBC__) || defined(__GNU_LIBRARY__)
+#define __MALLOC_ZERO_IS_NONNULL
+#define __REALLOC_ZERO_IS_NONNULL
+#endif /* ... */
+#endif /* !__KOS_SYSTEM_HEADERS__ */
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+
+
+#undef C_MALLOC_USE_NATIVE
+/* Check for minimal requirements to implement the full suite of heap functions */
+#if (defined(CONFIG_HAVE_realloc) && \
+     defined(CONFIG_HAVE_free) &&    \
+     defined(CONFIG_HAVE_malloc_usable_size))
+#define C_MALLOC_USE_NATIVE
+#endif
+
+
+#ifdef C_MALLOC_USE_NATIVE
+#ifdef CONFIG_HAVE_malloc
+#define c_trymalloc(n)          malloc(n)
+#elif defined(CONFIG_HAVE_calloc)
+#define c_trymalloc(n)          calloc(1, n)
+#else /* ... */
+#define c_trymalloc(n)          realloc(NULL, n)
+#undef __MALLOC_ZERO_IS_NONNULL
+#ifdef __REALLOC_ZERO_IS_NONNULL
+#define __MALLOC_ZERO_IS_NONNULL
+#endif /* __REALLOC_ZERO_IS_NONNULL */
+#endif /* !... */
+#ifdef CONFIG_HAVE_calloc
+#define c_trycalloc(n)          calloc(1, n)
+#endif /* !CONFIG_HAVE_calloc */
+#define c_tryrealloc(p, n)      realloc(p, n)
+#define c_free(p)               free(p)
+#define c_malloc_usable_size(p) malloc_usable_size(p)
+#else /* C_MALLOC_USE_NATIVE */
+#define c_malloc(n)             (Dee_Malloc)(n)
+#define c_calloc(n)             (Dee_Calloc)(n)
+#define c_realloc(p, n)         (Dee_Realloc)(p, n)
+#define c_trymalloc(n)          (Dee_TryMalloc)(n)
+#define c_trycalloc(n)          (Dee_TryCalloc)(n)
+#define c_tryrealloc(p, n)      (Dee_TryRealloc)(p, n)
+#define c_free(p)               (Dee_Free)(p)
+#define c_malloc_usable_size(p) (Dee_MallocUsableSize)(p)
+#endif /* !C_MALLOC_USE_NATIVE */
+
+
 
 /*[[[deemon (print_CMethod from rt.gen.unpack)("free", """
 	ptr:ctypes:void*
@@ -73,7 +127,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_free_f_impl(void *ptr)
 	/* TODO: This (and the other APIs) should use the system's native
 	 *       malloc()+free() (if available) for the sake of compatibility
 	 *       with other dynamically loaded shared, native libraries. */
-	CTYPES_FAULTPROTECT((Dee_Free)(ptr), return NULL);
+	CTYPES_FAULTPROTECT(c_free(ptr), return NULL);
 	return_none;
 }
 
@@ -98,12 +152,28 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_f_impl(size_t num_bytes
 {
 	void *ptr;
 	DREF DeeObject *result;
-	ptr = (Dee_Malloc)(num_bytes);
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __MALLOC_ZERO_IS_NONNULL
+	if unlikely(!num_bytes)
+		num_bytes = 1;
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+#ifdef c_malloc
+	ptr = c_malloc(num_bytes);
 	if unlikely(!ptr)
 		goto err;
+#else /* c_malloc */
+	for (;;) {
+		ptr = c_trymalloc(num_bytes);
+		if likely(ptr)
+			break;
+		if (!Dee_ReleaseSystemMemory())
+			goto err;
+	}
+#endif /* !c_malloc */
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		(Dee_Free)(ptr);
+		c_free(ptr);
 	return result;
 err:
 	return NULL;
@@ -141,8 +211,24 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_realloc_f_impl(void *ptr, size
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(result_ptr = (Dee_Realloc)(ptr, new_size),
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __REALLOC_ZERO_IS_NONNULL
+	if unlikely(!new_size)
+		new_size = 1;
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+#ifdef c_realloc
+	CTYPES_FAULTPROTECT(result_ptr = c_realloc(ptr, new_size),
 	                    goto err_r);
+#else /* c_realloc */
+	for (;;) {
+		CTYPES_FAULTPROTECT(result_ptr = c_tryrealloc(ptr, new_size), goto err_r);
+		if likely(result_ptr)
+			break;
+		if unlikely(!Dee_ReleaseSystemMemory())
+			goto err_r;
+	}
+#endif /* !c_realloc */
 	if unlikely(!result_ptr)
 		goto err_r;
 
@@ -184,12 +270,42 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_calloc_f_impl(size_t count, si
 		DeeRT_ErrIntegerOverflowUMul(count, num_bytes);
 		goto err;
 	}
-	ptr = (Dee_Calloc)(total);
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __MALLOC_ZERO_IS_NONNULL
+	if unlikely(!total)
+		total = 1;
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+#if defined(c_calloc) || defined(c_malloc)
+#ifdef c_calloc
+	ptr = c_calloc(total);
+#else /* c_calloc */
+	ptr = c_malloc(total);
+#endif /* !c_calloc */
 	if unlikely(!ptr)
 		goto err;
+#ifndef c_calloc
+	bzero(ptr, total);
+#endif /* !c_calloc */
+#else /* c_calloc || c_malloc */
+	for (;;) {
+#ifdef c_trycalloc
+		ptr = c_trycalloc(total);
+#else  /* c_trycalloc */
+		ptr = c_trymalloc(total);
+#endif /* !c_trycalloc */
+		if likely(ptr)
+			break;
+		if unlikely(!Dee_ReleaseSystemMemory())
+			goto err;
+	}
+#ifndef c_trycalloc
+	bzero(ptr, total);
+#endif /* !c_trycalloc */
+#endif /* !c_calloc && !c_malloc */
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		(Dee_Free)(ptr);
+		c_free(ptr);
 	return result;
 err:
 	return NULL;
@@ -216,10 +332,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trymalloc_f_impl(size_t num_by
 {
 	void *ptr;
 	DREF DeeObject *result;
-	ptr    = (Dee_TryMalloc)(num_bytes);
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __MALLOC_ZERO_IS_NONNULL
+	if unlikely(!num_bytes)
+		num_bytes = 1;
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+	ptr    = c_trymalloc(num_bytes);
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		(Dee_Free)(ptr);
+		c_free(ptr);
 	return result;
 }
 
@@ -255,7 +377,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_tryrealloc_f_impl(void *ptr, s
 	result = DeePointer_NewVoid(0);
 	if unlikely(!result)
 		goto err;
-	CTYPES_FAULTPROTECT(result_ptr = (Dee_TryRealloc)(ptr, new_size),
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __REALLOC_ZERO_IS_NONNULL
+	if unlikely(!new_size)
+		new_size = 1;
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+	CTYPES_FAULTPROTECT(result_ptr = c_tryrealloc(ptr, new_size),
 	                    goto err_r);
 
 	/* Update the resulting pointer. */
@@ -296,13 +424,25 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trycalloc_f_impl(size_t count,
 	if (OVERFLOW_UMUL(count, num_bytes, &total)) {
 		ptr = NULL;
 	} else {
-		ptr = (Dee_TryCalloc)(total);
+#ifdef C_MALLOC_USE_NATIVE
+#ifndef __MALLOC_ZERO_IS_NONNULL
+	if unlikely(!total)
+		total = 1;
+#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* C_MALLOC_USE_NATIVE */
+#ifdef c_trycalloc
+		ptr = c_trycalloc(total);
+#else /* c_trycalloc */
+		ptr = c_trymalloc(total);
+		if (ptr)
+			bzero(ptr, total);
+#endif /* !c_trycalloc */
 	}
 	if unlikely(!ptr)
 		goto err;
 	result = DeePointer_NewVoid(ptr);
 	if unlikely(!result)
-		(Dee_Free)(ptr);
+		c_free(ptr);
 	return result;
 err:
 	return NULL;
@@ -337,9 +477,19 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f_impl(char const *stri
 	size_t len;
 	char *resptr;
 	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen), goto err);
-	resptr = (char *)(Dee_Malloc)((len + 1) * sizeof(char));
+#ifdef c_malloc
+	resptr = (char *)c_malloc((len + 1) * sizeof(char));
 	if unlikely(!resptr)
 		goto err;
+#else /* c_malloc */
+	for (;;) {
+		resptr = (char *)c_trymalloc((len + 1) * sizeof(char));
+		if likely(resptr)
+			break;
+		if (!Dee_ReleaseSystemMemory())
+			goto err;
+	}
+#endif /* !c_malloc */
 	CTYPES_FAULTPROTECT(memcpyc(resptr, string, len, sizeof(char)), goto err_r);
 	resptr[len] = '\0';
 	result = DeePointer_NewChar(resptr);
@@ -347,7 +497,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_strdup_f_impl(char const *stri
 		goto err_r;
 	return result;
 err_r:
-	Dee_Free(resptr);
+	c_free(resptr);
 err:
 	return NULL;
 }
@@ -380,7 +530,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *s
 	size_t len;
 	char *resptr;
 	CTYPES_FAULTPROTECT(len = strnlen(string, maxlen), return NULL);
-	resptr = (char *)(Dee_TryMalloc)((len + 1) * sizeof(char));
+	resptr = (char *)c_trymalloc((len + 1) * sizeof(char));
 	if likely(resptr) {
 		CTYPES_FAULTPROTECT(memcpyc(resptr, string, len, sizeof(char)), goto err_r);
 		resptr[len] = '\0';
@@ -390,7 +540,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_trystrdup_f_impl(char const *s
 		goto err_r;
 	return result;
 err_r:
-	Dee_Free(resptr);
+	c_free(resptr);
 	return NULL;
 }
 
@@ -414,7 +564,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void
 /*[[[end]]]*/
 {
 	size_t result;
-	CTYPES_FAULTPROTECT(result = (Dee_MallocUsableSize)(ptr), return NULL);
+	CTYPES_FAULTPROTECT(result = c_malloc_usable_size(ptr), return NULL);
 	return DeeInt_NewSize(result);
 }
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
