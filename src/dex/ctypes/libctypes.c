@@ -746,8 +746,8 @@ DEX_MEMBER_F_NODOC("ArrayType", &DeeArrayType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("StructType", &DeeStructType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("FunctionType", &DeeCFunctionType_Type, Dee_DEXSYM_READONLY),
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
-DEX_MEMBER_F_NODOC("CObject", CType_AsObject(&AbstractCObject_Type), Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Structured", CType_AsObject(&AbstractCObject_Type), Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
+DEX_MEMBER_F_NODOC("CObject", CType_AsType(&AbstractCObject_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Structured", CType_AsType(&AbstractCObject_Type), Dee_DEXSYM_READONLY), /* Deprecated alias (try to remove after "CONFIG_EXPERIMENTAL_REWORKED_CTYPES") */
 #else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("CObject", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY), /* Forward compatibility */
 DEX_MEMBER_F_NODOC("Structured", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY),

@@ -369,11 +369,11 @@ PRIVATE struct type_member tpconst ctype_members[] = {
 	                      "Returns the size of @this ?GCType in bytes"),
 	TYPE_MEMBER_FIELD_DOC("alignof", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CType, ct_alignof),
 	                      "Returns the alignment of @this ?GCType in bytes"),
+	TYPE_MEMBER_CONST_DOC("isarray", Dee_False, DOC_GET(isarray_doc)),
+	TYPE_MEMBER_CONST_DOC("isstruct", Dee_False, DOC_GET(isstruct_doc)),
+	TYPE_MEMBER_CONST_DOC("isfunction", Dee_False, DOC_GET(isfunction_doc)),
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_False, DOC_GET(ispointer_doc)),
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_False, DOC_GET(islvalue_doc)),
-	TYPE_MEMBER_CONST_DOC("isarray", Dee_False, DOC_GET(isarray_doc)),
-	TYPE_MEMBER_CONST_DOC("isfunction", Dee_False, DOC_GET(isfunction_doc)),
-	TYPE_MEMBER_CONST_DOC("isstruct", Dee_False, DOC_GET(isstruct_doc)),
 	TYPE_MEMBER_END
 };
 
@@ -413,7 +413,7 @@ ctype_call(CType *self, size_t argc, DeeObject *const *argv) {
 	}
 
 	/* Special case: `xxx(void)' constructs a function prototype with no arguments. */
-	if (argc == 1 && argv[0] == CType_AsObject(&CVoid_Type))
+	if (argc == 1 && Object_AsCType(argv[0]) == &CVoid_Type)
 		argc = 0;
 
 	/* Use the default calling convention for constructing this function type. */
@@ -2437,7 +2437,7 @@ cstruct_of_cb(void *arg, DeeObject *elem) {
 		if unlikely(!field_type_lvalue)
 			goto err_name_and_type;
 		Dee_Decref(name_and_type[1]);
-		name_and_type[1] = CLValueType_AsObject(field_type_lvalue);
+		name_and_type[1] = Dee_AsObject(CLValueType_AsType(field_type_lvalue));
 
 		/* Add field. */
 		cstruct_of_data_maybe_align(data, field_type);
@@ -2539,7 +2539,7 @@ cstruct_ofex_cb(void *arg, DeeObject *elem) {
 		if unlikely(!field_type_lvalue)
 			goto err_args_3;
 		Dee_Decref(args[2]);
-		args[2] = CLValueType_AsObject(field_type_lvalue);
+		args[2] = Dee_AsObject(CLValueType_AsType(field_type_lvalue));
 
 		/* Add field. */
 		if (cstruct_builder_addfield(builder,
