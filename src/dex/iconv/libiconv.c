@@ -794,6 +794,24 @@ DEX_MEMBER_F("detect", &deemon_iconv_detect, Dee_DEXSYM_READONLY,
 DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
+/* TODO: DecodeReader -- Similar to Decoder, but instead of requiring you to *write* encoded
+ *                       data to have its decoded equivalent be written to another file, this
+ *                       one let's you to specify a file to read from, such that reading from
+ *                       the "DecodeReader" wrapper file will return decoded data:
+ * >> @@Open a file for reading, auto-detect its encoding, and return a file
+ * >> @@that allows you to read the file contents as though they were utf-8.
+ * >> function readFileAutoDetect(filename: string): File {
+ * >>     local fp = File.open(filename, "rb");
+ * >>     local head = fp.read(4096);
+ * >>     local codec = iconv.detect(head) ?? "utf-8";
+ * >>     fp.rewind();
+ * >>     return iconv.DecodeReader(codec, fp);
+ * >> }
+ *
+ * Also add "EncodeReader" and "TranscodeReader"
+ *
+ * XXX: I don't really like those class names; maybe come up with some better name?
+ */
 
 /* Fast-pass encode/decode functions (drop-in replacements for equivalents from "codec") */
 DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,
