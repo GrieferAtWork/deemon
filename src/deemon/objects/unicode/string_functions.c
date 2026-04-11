@@ -10419,8 +10419,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"%d\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9]+\" and yield the result as an decimal integer&"
 	              "$\"%x\", $\"%p\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9a-fA-F]+\" and yield the result as a hexadecimal integer&"
 	              "$\"%i\", $\"%u\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*(0([xX][0-9a-fA-F]+#|[bB][01]+)#|[0-9]+)\" and yield the result as an integer with automatic radix&"
-	              "$\"%s\"|?.|Match up to `width' characters with $r\"\\S+\" and return them as a ?.&"
-	              "$\"%c\"|?.|Consume exactly `width' (see above) or one characters and return them as a ?.&"
+	              "$\"%s\"|?.|Match up to #Cwidth characters with $r\"\\S+\" and return them as a ?.&"
+	              "$\"%c\"|?.|Consume exactly #Cwidth (see above) or one characters and return them as a ?.&"
 	              "$\"%[...]\"|?.|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")"
 	              "}\n"
 

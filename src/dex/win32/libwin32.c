@@ -2252,7 +2252,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(vo
 	if (pGetSystemWow64DirectoryW == (PGET_SYSTEM_WOW64_DIRECTORY_W)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
 		RETURN_ERROR(ERROR_INVALID_FUNCTION,
-		             "Unsupported function: `GetSystemWow64DirectoryW'");
+		             "Unsupported function: `GetSystemWow64DirectoryW()'");
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);

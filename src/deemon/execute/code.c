@@ -2684,7 +2684,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "#pmodule{The module to-be used as the declaring module}"
 	                         "#pconstants{An indexable sequence containing the constants that are to be made available to the code}"
 	                         "#pexcept{A sequence of ${(startpc#: int, endpc#: int, entrypc#: int, entrysp#: int, flags#: string #| int = \"\", mask#: Type #| none = none)}-"
-	                         /*         */ "?D{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"}"
+	                         /*         */ "?D{Tuple}s, with @flags being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"}"
 	                         "#pnlocal{The number of local variables to-be allocated for every frame}"
 	                         "#pnstack{The amount of stack space to be allocated for every frame}"
 	                         "#pargc{The max number of dedicated arguments taken by the function (must be >= ${##defaults} and == ${##keywords} if those are given). "

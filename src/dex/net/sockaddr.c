@@ -1858,7 +1858,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "addresses\n"
 #ifdef AF_INET
 	                     "The following special names are recognized as case-insensitive IPv4 host names, "
-	                     "following an optional prefix `INADDR', as well as any number of underscores:\n"
+	                     "following an optional prefix $\"INADDR\", as well as any number of underscores:\n"
 	                     "#T{Name|Value~"
 	                     "$\"ANY\"|$\"0.0.0.0\"&"
 	                     "$\"LOCALHOST\"|$\"127.0.0.1\"&"

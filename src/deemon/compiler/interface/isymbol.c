@@ -258,7 +258,7 @@ PRIVATE struct type_getset tpconst symbol_getsets[] = {
 	            "#tValueError{Attempted to set an invalid symbol type}"
 	            "#tTypeError{Attempted to set the symbol type to one of "
 	            /*            */ "${[\"extern\", \"module\", \"cfield\", \"ifield\", \"alias\", \"arg\"]} "
-	            /*            */ "(use the `set*' member functions instead)}"
+	            /*            */ "(use the ${set*} member functions instead)}"
 	            "#tTypeError{Attempted to modify the typing of an $\"arg\" symbol}"
 	            "Get, del (set to $\"none\"), or set the typing of @this symbol\n"
 	            "The symbol's typing affects the assembly generated when the symbol "

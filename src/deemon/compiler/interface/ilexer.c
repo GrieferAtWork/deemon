@@ -3421,8 +3421,8 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 	                         /**/ "$\"\"|${<EOF>}|End-of-file is encoded as an empty string&"
 	                         /**/ "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id&"
 	                         /**/ "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)&"
-	                         /**/ "$\"0\"|$42|Integer tokens have use the digit 0 as str-id&"
-	                         /**/ "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id&"
+	                         /**/ "$\"0\"|$42|Integer tokens have use the digit $0 as str-id&"
+	                         /**/ "$\".0\"|${1.5}|Floating point tokens are encoded as ${.0} as str-id&"
 	                         /**/ "$\"\\n\"|#C{<LF>}|Any kind of line-feed token is encoded as an LF-character&"
 	                         /**/ "$\" \"|#C{<SPACE>}|A space-sequence of any sort of length is encoded as a single space character&"
 	                         /**/ "$\"//\"|#C{<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes #C{//}"
@@ -4731,7 +4731,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            "Returns sub-portion of text that will be used when reading from the file continues"),
 	TYPE_GETTER("position", &file_position,
 	            "->?T2?Dint?Dint\n"
-	            "Returns the current position (as a pair of integer `line, column', both of which "
+	            "Returns the current position (as a pair of integer ${line, column}, both of which "
 	            /**/ "are zero-based, meaning you'll probably have to add ${+1} to get line numbers as "
 	            /**/ "they would be used in a text editor)\n"
 	            "In the event that @this File is a macro, the positions returned refer to the "

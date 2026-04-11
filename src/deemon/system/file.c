@@ -2776,7 +2776,7 @@ again_dup:
 #ifdef ENOSYS
 			if (error == ENOSYS) {
 				DeeError_Throwf(&DeeError_UnsupportedAPI,
-				                "Unsupported function `dup'");
+				                "Unsupported function `dup()'");
 				goto err;
 			}
 #endif /* ENOSYS */
@@ -2793,7 +2793,7 @@ again_dup:
 		DBG_ALIGNMENT_ENABLE();
 #else /* CONFIG_HAVE_dup */
 		DeeError_Throwf(&DeeError_UnsupportedAPI,
-		                "Unsupported function `dup'");
+		                "Unsupported function `dup()'");
 		goto err;
 #endif /* !CONFIG_HAVE_dup */
 	} else {

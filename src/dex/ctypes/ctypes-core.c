@@ -274,7 +274,7 @@ err_bad_size:
 	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
 		data_size = 0;
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Invalid bytes size: structued type `%r' has an "
+	                //"Invalid bytes size: structued type `%r' has an "
 	                "instance size of `%" PRFuSIZ "', but the given "
 	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
 	                "provides at most `%" PRFuSIZ " bytes'",
