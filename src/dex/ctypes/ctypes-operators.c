@@ -27,25 +27,24 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_UnpackStructKw */
-#include <deemon/bytes.h>           /* DeeError_Throwf, DeeError_TypeError */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
-#include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */
+#include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxPTR */
-#include <deemon/none.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewPtrdiff, DeeInt_NewUIntptr, Dee_INT_UNSIGNED */
 #include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>             /* DeeMap_Check */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
+#include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely */
-#include <deemon/string.h>          /* DeeString* */
-#include <deemon/system-features.h> /* bzero, memcmp, memcpy */
+#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
+#include <deemon/system-features.h> /* bzero*, memcmp, memcpy, mempcpyc */
 #include <deemon/type.h>            /* DeeType_GetName, Dee_INT_ERROR, Dee_INT_UNSIGNED */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #undef byte_t

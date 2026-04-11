@@ -30,8 +30,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Free */
-#include <deemon/arg.h>       /* DeeArg_UnpackStruct*, UNPuSIZ */
-#include <deemon/bool.h>      /* Dee_False, Dee_True */
+#include <deemon/arg.h>       /* DeeArg_UnpackStruct, DeeArg_UnpackStruct1XOr2X, UNPuSIZ */
 #include <deemon/bytes.h>     /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>     /* DeeError_* */
@@ -39,7 +38,6 @@
 #include <deemon/int.h>       /* DeeInt_NewSize */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, Dee_Incref, Dee_uint128_t */
 #include <deemon/objmethod.h> /*  */
-#include <deemon/string.h>    /* DeeString_Type */
 #include <deemon/type.h>      /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */

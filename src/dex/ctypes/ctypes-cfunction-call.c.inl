@@ -19,10 +19,11 @@
  */
 #ifdef __INTELLISENSE__
 #define DEE_SOURCE
-#include "libctypes.h"
 #include "ctypes-core.c"
 #define VARARGS
 #endif /* __INTELLISENSE__ */
+
+#include "libctypes.h"
 /**/
 
 #include <deemon/api.h>
@@ -36,12 +37,11 @@
 #include <deemon/none.h>            /* DeeNone_NewRef, DeeNone_Type */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_funptr_t */
 #include <deemon/string.h>          /* DeeString_STR, DeeString_Type */
-#include <deemon/system-features.h> /* memcpy, mempcpyc */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_AllocInstance */
+#include <deemon/system-features.h> /* mempcpyc */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__ */
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int32_t, uintN_t */
 
 #undef byte_t

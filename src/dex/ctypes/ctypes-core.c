@@ -26,32 +26,32 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>              /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>             /* Dee_False, Dee_True */
 #include <deemon/bytes.h>            /* DeeBytes* */
 #include <deemon/callable.h>         /* DeeCallable_Type */
 #include <deemon/error-rt.h>         /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrIndexOutOfBounds, DeeRT_ErrRestrictedAttrCStr */
-#include <deemon/error.h>            /* DeeError_* */
-#include <deemon/format.h>           /* PRFuSIZ */
+#include <deemon/error.h>            /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>           /* DeeFormat_Printf, PRFuSIZ, PRFxPTR */
 #include <deemon/gc.h>               /* DeeGCObject_CALLOC, DeeGCObject_Callocc, DeeGCObject_FREE, DeeGCObject_Free, DeeGCObject_TryReallocc, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>              /* DeeInt_NewPtrdiff, DeeInt_NewSize */
 #include <deemon/method-hints.h>     /* DeeObject_InvokeMethodHint */
 #include <deemon/mro.h>              /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
-#include <deemon/none.h>             /* return_none */
+#include <deemon/none.h>             /* DeeNone_Check, return_none */
 #include <deemon/numeric.h>          /* DeeNumeric_Type */
 #include <deemon/object.h>           /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DeeObject_*, Dee_BUFFER_FREADONLY, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_Movrefv, Dee_XDecref, Dee_XIncref, return_reference_ */
 #include <deemon/seq.h>              /* DeeRefVector_NewReadonly, DeeSeq_Type */
 #include <deemon/serial.h>           /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>           /* DeeString*, Dee_string_object, Dee_unicode_printer* */
+#include <deemon/string.h>           /* DeeString*, Dee_string_object, Dee_unicode_printer*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmp, bzero, memcpy, strlen */
-#include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>            /* DREF, DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/hash.h>        /* Dee_HashPointer, Dee_HashPtr */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_cinit */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_MIN */
 
-#include <hybrid/align.h>           /* CEIL_ALIGN, IS_POWER_OF_TWO */
+#include <hybrid/align.h>           /* CEIL_ALIGN, IS_ALIGNED, IS_POWER_OF_TWO */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/overflow.h>        /* OVERFLOW_* */
 #include <hybrid/sequence/list.h>   /* LIST_* */
