@@ -1036,8 +1036,9 @@ ivd_fillbuffer_any_locked(IconvDecoder *__restrict self,
 	result = ivd_fillbuffer_locked(self, hint, flags);
 	if (result == 0) {
 maybe_sync_on_eof:
-		if (Dee_TYPE(self) == &IconvEncodeReader_Type ||
-		    Dee_TYPE(self) == &IconvTranscodeReader_Type) {
+		if (self->ivd_pndsize == 0 &&
+		    (Dee_TYPE(self) == &IconvEncodeReader_Type ||
+		     Dee_TYPE(self) == &IconvTranscodeReader_Type)) {
 			STATIC_ASSERT(offsetof(IconvEncodeReader, iver_encoder) ==
 			              offsetof(IconvTranscodeReader, ivtr_encoder));
 			IconvEncodeReader *me = (IconvEncodeReader *)self;
