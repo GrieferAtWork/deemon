@@ -368,57 +368,130 @@ DeeSystem_DEFINE_strncasestr(dee_strncasestr)
 #undef strverscmp
 #define strverscmp dee_strverscmp
 LOCAL WUNUSED NONNULL((1, 2)) int
-dee_strverscmp(char const *s1, char const *s2) {
-	/* FIXME: This is still the old, broken impl... */
-	char const *s1_start = s1;
-	char c1, c2;
-	do {
-		if ((c1 = *s1) != (c2 = *s2)) {
-			unsigned int vala, valb;
+dee_strverscmp(char const *lhs, char const *rhs) {
+	char const *lhs_start = lhs;
+	unsigned char clhs;
+	unsigned char crhs;
+	for (;;) {
+		clhs = (unsigned char)*lhs++;
+		crhs = (unsigned char)*rhs++;
+		if (clhs != crhs)
+			break;
+		if (!clhs)
+			return 0;
+	}
 
-			/* Unwind common digits. */
-			while (s1 != s1_start) {
-				if (s1[-1] < '0' || s1[-1] > '9')
-					break;
-				c2 = c1 = *--s1, --s2;
+	/* Compare "lhs" and "rhs" depending on what they point to now:
+	 * - E=0   (EOF)
+	 * - A=1   (ASCII)
+	 * - D=2   (DIGIT)
+	 * - 0=3   (ZERO)
+	 *
+	 * The 16 combinations here must then be multiplex'd with what
+	 * came before. Since anything that came before was necessarily
+	 * equal between "lhs" and "rhs", there is only 1 option here:
+	 * - R (REGULAR): Last character was ASCII or we're still at the start of input
+	 * - We're inside of a digit sequence (3 options):
+	 *   - I (INTEGER): Inside of a digit sequence that didn't start with '0'
+	 *   - F (FRAC):    Inside of a digit sequence that started with '0' (but also contains non-0 since)
+	 *   - 0 (ZERO):    Preceded by only 0-es
+	 *
+	 * Combine those 2 options, and we get an action-table like this:
+	 *
+	 * ctx  E/E|E/A|E/D|E/0   A/E|A/A|A/D|A/0   D/E|D/A|D/D|D/0   0/E|0/A|0/D|0/0
+	 * R=0   0 |-1 |-1 |-1    +1 |LEX|LEX|LEX   +1 |LEX|NUM|LEX   +1 |LEX|LEX|LEX
+	 * I=1   0 |-1 |-1 |-1    +1 |LEX|-1 |-1    +1 |+1 |NUM|NUM   +1 |+1 |NUM|NUM
+	 * F=2   0 |-1 |-1 |-1    +1 |LEX|LEX|LEX   +1 |LEX|LEX|LEX   +1 |LEX|LEX|LEX
+	 * 0=3   0 |-1 |+1 |+1    +1 |LEX|+1 |+1    -1 |-1 |LEX|LEX   -1 |-1 |LEX|LEX
+	 *
+	 * Actions:
+	 * - 0   :  This state cannot appear (since it would violate "clhs != crhs")
+	 * - -1  :  Return "-1" (lhs < rhs)
+	 * - +1  :  Return "+1" (lhs > rhs)
+	 * - LEX :  Return lexicographical compare of "clhs" / "crhs"
+	 * - NUM :  Compare remainder of string as a decimal number ("clhs" / "crhs" are both digits)
+	 */
+#define CTX_R 0
+#define CTX_I 1
+#define CTX_F 2
+#define CTX_0 3
+	{
+		static int8_t const strverscmp_action_table[64] = {
+#define LEX 2
+#define NUM 3
+			/* ctx   E/E|E/A|E/D|E/0   A/E|A/A|A/D|A/0   D/E|D/A|D/D|D/0   0/E|0/A|0/D|0/0 */
+			/*  R */  0, -1, -1, -1,   +1, LEX,LEX,LEX,  +1, LEX,NUM,LEX,  +1, LEX,LEX,LEX,
+			/*  I */  0, -1, -1, -1,   +1, LEX,-1 ,-1 ,  +1, +1 ,NUM,NUM,  +1, +1 ,NUM,NUM,
+			/*  F */  0, -1, -1, -1,   +1, LEX,LEX,LEX,  +1, LEX,LEX,LEX,  +1, LEX,LEX,LEX,
+			/*  0 */  0, -1, +1, +1,   +1, LEX,+1 ,+1 ,  -1, -1 ,LEX,LEX,  -1, -1 ,LEX,LEX,
+		};
+		unsigned int state;
+		/* Figure out context (row of action table) */
+		unsigned int ctx = CTX_R;
+		char const *lhs_iter = lhs - 1;
+		while (lhs_iter > lhs_start) {
+			unsigned char ch = (unsigned char)*--lhs_iter;
+			if (!isdigit(ch))
+				break;
+			switch (ctx) {
+			case CTX_R:
+			case CTX_0:
+				ctx = ch == '0' ? CTX_0 : CTX_I;
+				break;
+			case CTX_I:
+			case CTX_F:
+				ctx = ch == '0' ? CTX_F : CTX_I;
+				break;
+			default: __builtin_unreachable();
 			}
-
-			/* Check if both strings have digit sequences in the same places. */
-			if ((c1 < '0' || c1 > '9') &&
-			    (c2 < '0' || c2 > '9'))
-				return (int)((unsigned char)c1 - (unsigned char)c2);
-
-			/* Deal with leading zeros. */
-			if (c1 == '0')
-				return -1;
-			if (c2 == '0')
-				return 1;
-
-			/* Compare digits. */
-			vala = c1 - '0';
-			valb = c2 - '0';
-			for (;;) {
-				c1 = *s1++;
-				if (c1 < '0' || c1 > '9')
-					break;
-				vala *= 10;
-				vala += c1 - '0';
-			}
-			for (;;) {
-				c2 = *s2++;
-				if (c2 < '0' || c2 > '9')
-					break;
-				valb *= 10;
-				valb += c2 - '0';
-			}
-
-			/* Return difference between digits. */
-			return (int)vala - (int)valb;
 		}
-		++s1;
-		++s2;
-	} while (c1 != '\0');
-	return 0;
+
+		/* 0-15 (column of action table) */
+#define quantify(ch) (((ch) != 0) + (isdigit(ch) != 0) + ((ch) == '0'))
+		state = quantify(clhs) << 2;
+		state |= quantify(crhs);
+#undef quantify
+
+		/* Select + perform action */
+		switch (strverscmp_action_table[(ctx << 4) | state]) {
+//		case 0: return 0;
+		case +1: return +1;
+		case -1: return -1;
+		case NUM:
+			/* At this point, we know that "*lhs" and "*rhs" point at
+			 * 2 different digit values, both of which are stored in
+			 * "clhs" and "crhs" resp.
+			 *
+			 * However, in addition to those numbers (which we could
+			 * just compare lexicographically on their own), we have
+			 * to check if the digit sequence might continue in either
+			 * input string. And if so: we must return indicative of
+			 * the length of those digit sequences. Only if both digit
+			 * sequences have the same length must the first differing
+			 * character be compared:
+			 * >> "ver.123500"
+			 * >> "ver.1234000"
+			 * >> "ver.1235000"
+			 * >> "ver.12330000" */
+			for (;;) {
+				unsigned char future_clhs = (unsigned char)*lhs;
+				unsigned char future_crhs = (unsigned char)*rhs;
+				if (!isdigit(future_clhs)) {
+					if (isdigit(future_crhs))
+						return -1; /* Sequence in "lhs" is shorter */
+					break;
+				}
+				if (!isdigit(future_crhs))
+					return 1; /* Sequence in "lhs" is longer */
+				++lhs;
+				++rhs;
+			}
+			ATTR_FALLTHROUGH
+		case LEX:
+			return (int)clhs - (int)crhs;
+		default: __builtin_unreachable();
+		}
+	}
 }
 #endif /* !CONFIG_HAVE_strverscmp */
 

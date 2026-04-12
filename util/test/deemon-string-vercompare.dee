@@ -36,8 +36,10 @@ function assertVercompare(a: string, b: string, result: int) {
 		for (local usedB: { b, b.lower(), b.upper() }) {
 			test.assertEquals(0, b.casevercompare(usedB),
 				() -> f"{repr b}.casevercompare({repr usedB})");
-			test.assertEquals(result, usedA.casevercompare(usedB));
-			test.assertEquals(-result, usedB.casevercompare(usedA));
+			test.assertEquals(result, usedA.casevercompare(usedB),
+				() -> f"{repr usedA}.casevercompare({repr usedB})");
+			test.assertEquals(-result, usedB.casevercompare(usedA),
+				() -> f"{repr usedB}.casevercompare({repr usedA})");
 			test.assertEquals(result, usedA.bytes().casevercompare(usedB));
 			test.assertEquals(-result, usedB.bytes().casevercompare(usedA));
 			test.assertEquals(result, usedA.bytes().casevercompare(usedB.bytes()));
@@ -70,11 +72,13 @@ assertVercompare("abc99", "abc100", -1);
 
 /* This list here comes pre-sorted according to "vercompare" */
 local sortedValues: {string...} = {
+	"abc",
 	"abc0000",
 	"abc0000_",
 	"abc0001",
 	"abc0001_",
 	"abc000",
+	"abc000A",
 	"abc000this",
 	"abc001",
 	"abc001can",
@@ -98,6 +102,7 @@ local sortedValues: {string...} = {
 	"abc10_",
 	"abc11",
 	"abc11_",
+	"abc11a",
 	"abc111",
 	"abc1112",     // EOF
 	"abc1112a",    // ASCII
@@ -107,6 +112,11 @@ local sortedValues: {string...} = {
 	"abc11121",
 	"abc11128",
 	"abc11129",
+	"abcd",
+	"ver.123500",
+	"ver.1234000",
+	"ver.1235000",
+	"ver.12330000",
 };
 
 /* Assert that every value from "sortedValues" correctly compares with every other value */

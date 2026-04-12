@@ -564,6 +564,7 @@ LOCAL_memcasecmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 
 
 #ifdef LOCAL_fuzzy_compare
+/* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) size_t DCALL
 LOCAL_fuzzy_compare(LOCAL_uchar_t const *lhs, size_t lhs_len,
                     LOCAL_uchar_t const *rhs, size_t rhs_len) {
@@ -667,80 +668,93 @@ err:
 #endif /* LOCAL_fuzzy_casecompare */
 
 
-#ifndef STRVERSCMP_STATE_MACHINE_DEFINED
-#define STRVERSCMP_STATE_MACHINE_DEFINED
-/* Disclaimer: this implementation of strverscmp() is derived from glibc.
- * It has however been heavily modified so-as to function properly with
- * explicit-length strings (and as such: strings containing NUL-characters) */
+#ifndef STRVERSCMP_ACTION_TABLE_DEFINED
+#define STRVERSCMP_ACTION_TABLE_DEFINED
 
-#define STRVERSCMP_S_N 0x0
-#define STRVERSCMP_S_I 0x3
-#define STRVERSCMP_S_F 0x6
-#define STRVERSCMP_S_Z 0x9
+/* Compare "lhs" and "rhs" depending on what they point to now:
+ * - E=0   (EOF)
+ * - A=1   (ASCII)
+ * - D=2   (DIGIT)
+ * - 0=3   (ZERO)
+ *
+ * The 16 combinations here must then be multiplex'd with what
+ * came before. Since anything that came before was necessarily
+ * equal between "lhs" and "rhs", there is only 1 option here:
+ * - R (REGULAR): Last character was ASCII or we're still at the start of input
+ * - We're inside of a digit sequence (3 options):
+ *   - I (INTEGER): Inside of a digit sequence that didn't start with '0'
+ *   - F (FRAC):    Inside of a digit sequence that started with '0' (but also contains non-0 since)
+ *   - 0 (ZERO):    Preceded by only 0-es
+ *
+ * Combine those 2 options, and we get an action-table like this:
+ *
+ * ctx  E/E|E/A|E/D|E/0   A/E|A/A|A/D|A/0   D/E|D/A|D/D|D/0   0/E|0/A|0/D|0/0
+ * R=0   0 |-1 |-1 |-1    +1 |LEX|LEX|LEX   +1 |LEX|NUM|LEX   +1 |LEX|LEX|LEX
+ * I=1   0 |-1 |-1 |-1    +1 |LEX|-1 |-1    +1 |+1 |NUM|NUM   +1 |+1 |NUM|NUM
+ * F=2   0 |-1 |-1 |-1    +1 |LEX|LEX|LEX   +1 |LEX|LEX|LEX   +1 |LEX|LEX|LEX
+ * 0=3   0 |-1 |+1 |+1    +1 |LEX|+1 |+1    -1 |-1 |LEX|LEX   -1 |-1 |LEX|LEX
+ *
+ * Actions:
+ * - 0   :  Return "0" (lhs == rhs)
+ * - -1  :  Return "-1" (lhs < rhs)
+ * - +1  :  Return "+1" (lhs > rhs)
+ * - LEX :  Return lexicographical compare of "clhs" / "crhs"
+ * - NUM :  Compare remainder of string as a decimal number ("clhs" / "crhs" are both digits)
+ */
 
-#define STRVERSCMP_CMP 2
-#define STRVERSCMP_LEN 3
+#define CTX_R 0
+#define CTX_I 1
+#define CTX_F 2
+#define CTX_0 3
 
-static uint8_t const strverscmp_next_state[] = {
-	/* state    x    d    0  */
-	/* S_N */ STRVERSCMP_S_N, STRVERSCMP_S_I, STRVERSCMP_S_Z,
-	/* S_I */ STRVERSCMP_S_N, STRVERSCMP_S_I, STRVERSCMP_S_I,
-	/* S_F */ STRVERSCMP_S_N, STRVERSCMP_S_F, STRVERSCMP_S_F,
-	/* S_Z */ STRVERSCMP_S_N, STRVERSCMP_S_F, STRVERSCMP_S_Z
+#define LEX 2
+#define NUM 3
+static int8_t const strverscmp_action_table[64] = {
+	/* ctx   E/E|E/A|E/D|E/0   A/E|A/A|A/D|A/0   D/E|D/A|D/D|D/0   0/E|0/A|0/D|0/0 */
+	/*  R */  0, -1, -1, -1,   +1, LEX,LEX,LEX,  +1, LEX,NUM,LEX,  +1, LEX,LEX,LEX,
+	/*  I */  0, -1, -1, -1,   +1, LEX,-1 ,-1 ,  +1, +1 ,NUM,NUM,  +1, +1 ,NUM,NUM,
+	/*  F */  0, -1, -1, -1,   +1, LEX,LEX,LEX,  +1, LEX,LEX,LEX,  +1, LEX,LEX,LEX,
+	/*  0 */  0, -1, +1, +1,   +1, LEX,+1 ,+1 ,  -1, -1 ,LEX,LEX,  -1, -1 ,LEX,LEX,
 };
-
-static int8_t const strverscmp_result_type[] = {
-	/* state   x/x  x/d  x/0  d/x  d/d  d/0   0/x  0/d  0/0  */
-	/* S_N */ STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_LEN, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,
-	/* S_I */ STRVERSCMP_CMP, -1, -1,    +1,  STRVERSCMP_LEN, STRVERSCMP_LEN,  +1,  STRVERSCMP_LEN, STRVERSCMP_LEN,
-	/* S_F */ STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,
-	/* S_Z */ STRVERSCMP_CMP, +1, +1,    -1,  STRVERSCMP_CMP, STRVERSCMP_CMP,  -1,  STRVERSCMP_CMP, STRVERSCMP_CMP
-};
-#endif /* !STRVERSCMP_STATE_MACHINE_DEFINED */
+#endif /* !STRVERSCMP_ACTION_TABLE_DEFINED */
 
 #ifdef LOCAL_strverscmp
-/* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
                  LOCAL_uchar_t const *rhs, size_t rhs_size) {
+	unsigned int state, ctx;
+	LOCAL_uchar_t const *lhs_iter;
+	LOCAL_uchar_t const *lhs_start = lhs;
 	LOCAL_uchar_t clhs;
 	LOCAL_uchar_t crhs;
-	int state, diff;
-#define APPLY_TO_STATE(ch)                         \
-	do {                                           \
-		struct Dee_unitraits const *rec;           \
-		rec = DeeUni_Descriptor(ch);               \
-		if (rec->ut_flags & Dee_UNICODE_ISDIGIT) { \
-			++state;                               \
-			if (rec->ut_digit_idx == 0)            \
-				++state;                           \
-		}                                          \
-	}	__WHILE0
-	
-	state = STRVERSCMP_S_N;
+	struct Dee_unitraits const *rec;
 	for (;;) {
-		/* Deal with EOF */
-		if (!lhs_size || !rhs_size) {
-			if (lhs_size == rhs_size)
+		if (!lhs_size) {
+			if (!rhs_size)
 				return Dee_COMPARE_EQ;
-			if (lhs_size) {
-				clhs = *lhs++;
-				APPLY_TO_STATE(clhs);
-				diff = Dee_COMPARE_GR;
-				state *= 3;
-			} else {
-				crhs = *rhs++;
-				diff = Dee_COMPARE_LO;
-				state *= 3;
-				APPLY_TO_STATE(crhs);
+			state = 0;
+			crhs = *rhs++;
+			--rhs_size;
+			++lhs;
+			goto calc_state_crhs;
+		}
+		if (!rhs_size) {
+			clhs = *lhs++;
+			rec = DeeUni_Descriptor(clhs);
+			state = 1;
+			if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+				++state; /* state = 2; */
+				if (rec->ut_digit_idx == 0)
+					++state; /* state = 3; */
 			}
-			goto return_for_state;
+			state <<= 2;
+			goto with_state;
 		}
 		clhs = *lhs++;
 		crhs = *rhs++;
 		--lhs_size;
 		--rhs_size;
-		APPLY_TO_STATE(clhs);
 		if (clhs != crhs) {
 #ifndef LOCAL_TRANSFORM_IS_NOOP
 			clhs = LOCAL_TRANSFORM(clhs);
@@ -748,134 +762,243 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			if (clhs != crhs)
 #endif /* !LOCAL_TRANSFORM_IS_NOOP */
 			{
-				diff = Dee_CompareNe(clhs, crhs);
-				state *= 3;
-				APPLY_TO_STATE(crhs);
-				goto return_for_state;
+				break;
 			}
 		}
-		state = strverscmp_next_state[state];
 	}
 
-return_for_state:
-	state = strverscmp_result_type[state];
-	switch (state) {
-	case STRVERSCMP_CMP:
-		return diff;
-	case STRVERSCMP_LEN:
-		while (lhs_size) {
-			clhs = *lhs++;
-			--lhs_size;
-			if (!DeeUni_IsDigit(clhs))
-				break;
-			if (!rhs_size)
-				return Dee_COMPARE_GR;
-			crhs = *rhs++;
-			--rhs_size;
-			if (!DeeUni_IsDigit(crhs))
-				return Dee_COMPARE_GR;
+	/* 0-15 (column of action table) */
+	rec = DeeUni_Descriptor(clhs);
+	state = 1;
+	if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+		++state; /* state = 2; */
+		if (rec->ut_digit_idx == 0)
+			++state; /* state = 3; */
+	}
+	state <<= 2;
+calc_state_crhs:
+	rec = DeeUni_Descriptor(crhs);
+	++state;
+	if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+		++state;
+		if (rec->ut_digit_idx == 0)
+			++state;
+	}
+
+with_state:
+	/* Figure out context (row of action table) */
+	ctx = CTX_R;
+	lhs_iter = lhs - 1;
+	while (lhs_iter > lhs_start) {
+		LOCAL_uchar_t ch = *--lhs_iter;
+		rec = DeeUni_Descriptor(ch);
+		if (!(rec->ut_flags & Dee_UNICODE_ISDIGIT))
+			break;
+		switch (ctx) {
+		case CTX_R:
+		case CTX_0:
+			ctx = rec->ut_digit_idx == 0 ? CTX_0 : CTX_I;
+			break;
+		case CTX_I:
+		case CTX_F:
+			ctx = rec->ut_digit_idx == 0 ? CTX_F : CTX_I;
+			break;
+		default: __builtin_unreachable();
 		}
-		if (rhs_size) {
-			crhs = *rhs;
-			if (DeeUni_IsDigit(crhs))
-				return Dee_COMPARE_LO;
-		}
-		return diff;
-	case -1:
-		return Dee_COMPARE_LO;
+	}
+
+	/* Select + perform action */
+	switch (strverscmp_action_table[(ctx << 4) | state]) {
+	case 0:
+		return Dee_COMPARE_EQ;
 	case +1:
 		return Dee_COMPARE_GR;
+	case -1:
+		return Dee_COMPARE_LO;
+	case NUM:
+		/* At this point, we know that "*lhs" and "*rhs" point at
+		 * 2 different digit values, both of which are stored in
+		 * "clhs" and "crhs" resp.
+		 *
+		 * However, in addition to those numbers (which we could
+		 * just compare lexicographically on their own), we have
+		 * to check if the digit sequence might continue in either
+		 * input string. And if so: we must return indicative of
+		 * the length of those digit sequences. Only if both digit
+		 * sequences have the same length must the first differing
+		 * character be compared:
+		 * >> "ver.123500"
+		 * >> "ver.1234000"
+		 * >> "ver.1235000"
+		 * >> "ver.12330000" */
+		for (;;) {
+			LOCAL_uchar_t future_clhs;
+			LOCAL_uchar_t future_crhs;
+			if (!lhs_size) {
+				if (rhs_size && DeeUni_IsDigit(*rhs))
+					return Dee_COMPARE_LO; /* Sequence in "lhs" is shorter */
+				break;
+			}
+			future_clhs = *lhs;
+			if (!rhs_size) {
+				if (!DeeUni_IsDigit(future_clhs))
+					break;
+				return Dee_COMPARE_GR; /* Sequence in "lhs" is longer */
+			}
+			future_crhs = *rhs;
+			if (!DeeUni_IsDigit(future_clhs)) {
+				if (DeeUni_IsDigit(future_crhs))
+					return Dee_COMPARE_LO; /* Sequence in "lhs" is shorter */
+				break;
+			}
+			if (!DeeUni_IsDigit(future_crhs))
+				return Dee_COMPARE_GR; /* Sequence in "lhs" is longer */
+			++lhs;
+			++rhs;
+			--lhs_size;
+			--rhs_size;
+		}
+		ATTR_FALLTHROUGH
+	case LEX:
+		return Dee_Compare(clhs, crhs);
 	default: __builtin_unreachable();
 	}
-#undef APPLY_TO_STATE
 }
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 #endif /* LOCAL_strverscmp */
 
 
 
 #ifdef LOCAL_strcaseverscmp
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
                      LOCAL_uchar_t const *rhs, size_t rhs_size) {
+	unsigned int state, ctx = CTX_R;
 	struct unicode_foldreader lhs_reader;
 	struct unicode_foldreader rhs_reader;
 	uint32_t clhs, crhs;
-	int state, diff;
-#define APPLY_TO_STATE(ch)                         \
-	do {                                           \
-		struct Dee_unitraits const *rec;           \
-		rec = DeeUni_Descriptor(ch);               \
-		if (rec->ut_flags & Dee_UNICODE_ISDIGIT) { \
-			++state;                               \
-			if (rec->ut_digit_idx == 0)            \
-				++state;                           \
-		}                                          \
-	}	__WHILE0
+	struct Dee_unitraits const *rec;
 	LOCAL_unicode_foldreader_init(&lhs_reader, lhs, lhs_size);
 	LOCAL_unicode_foldreader_init(&rhs_reader, rhs, rhs_size);
-	state = STRVERSCMP_S_N;
 	for (;;) {
-		/* Deal with EOF */
-		if (unicode_foldreader_empty(&lhs_reader) ||
-		    unicode_foldreader_empty(&rhs_reader)) {
-			if (!!unicode_foldreader_empty(&lhs_reader) ==
-			    !!unicode_foldreader_empty(&rhs_reader))
+		if (unicode_foldreader_empty(&lhs_reader)) {
+			if (unicode_foldreader_empty(&rhs_reader))
 				return Dee_COMPARE_EQ;
-			if (!unicode_foldreader_empty(&lhs_reader)) {
-				clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
-				APPLY_TO_STATE(clhs);
-				diff = Dee_COMPARE_GR;
-				state *= 3;
-			} else {
-				crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
-				diff = Dee_COMPARE_LO;
-				state *= 3;
-				APPLY_TO_STATE(crhs);
+			state = 0;
+			crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+			goto calc_state_crhs;
+		}
+		if (unicode_foldreader_empty(&rhs_reader)) {
+			clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
+			rec = DeeUni_Descriptor(clhs);
+			state = 1;
+			if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+				++state; /* state = 2; */
+				if (rec->ut_digit_idx == 0)
+					++state; /* state = 3; */
 			}
-			goto return_for_state;
+			state <<= 2;
+			goto with_state;
 		}
 		clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
 		crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
-		APPLY_TO_STATE(clhs);
-		if (clhs != crhs) {
-			diff = Dee_CompareNe(clhs, crhs);
-			state *= 3;
-			APPLY_TO_STATE(crhs);
-			goto return_for_state;
+		if (clhs != crhs)
+			break;
+
+		/* Keep track of context as we go (must be done in main loop
+		 * since "struct unicode_foldreader" doesn't support ungetc) */
+		rec = DeeUni_Descriptor(clhs);
+		if (!(rec->ut_flags & Dee_UNICODE_ISDIGIT)) {
+			ctx = CTX_R;
+		} else {
+			switch (ctx) {
+			case CTX_R: ctx = rec->ut_digit_idx == 0 ? CTX_0 : CTX_I; break;
+			case CTX_0: ctx = rec->ut_digit_idx == 0 ? CTX_0 : CTX_F; break;
+			case CTX_I: break;
+			case CTX_F: break;
+			default: __builtin_unreachable();
+			}
 		}
-		state = strverscmp_next_state[state];
 	}
 
-return_for_state:
-	state = strverscmp_result_type[state];
-	switch (state) {
-	case STRVERSCMP_CMP:
-		return diff;
-	case STRVERSCMP_LEN:
-		while (!unicode_foldreader_empty(&lhs_reader)) {
-			clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
-			if (!DeeUni_IsDigit(clhs))
-				break;
-			if (unicode_foldreader_empty(&rhs_reader))
-				return Dee_COMPARE_GR;
-			crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
-			if (!DeeUni_IsDigit(crhs))
-				return Dee_COMPARE_GR;
-		}
-		if (!unicode_foldreader_empty(&rhs_reader)) {
-			crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
-			if (DeeUni_IsDigit(crhs))
-				return Dee_COMPARE_LO;
-		}
-		return diff;
-	case -1:
-		return Dee_COMPARE_LO;
+	/* 0-15 (column of action table) */
+	rec = DeeUni_Descriptor(clhs);
+	state = 1;
+	if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+		++state; /* state = 2; */
+		if (rec->ut_digit_idx == 0)
+			++state; /* state = 3; */
+	}
+	state <<= 2;
+calc_state_crhs:
+	rec = DeeUni_Descriptor(crhs);
+	++state;
+	if (rec->ut_flags & Dee_UNICODE_ISDIGIT) {
+		++state;
+		if (rec->ut_digit_idx == 0)
+			++state;
+	}
+
+with_state:
+
+	/* Select + perform action */
+	switch (strverscmp_action_table[(ctx << 4) | state]) {
+	case 0:
+		return Dee_COMPARE_EQ;
 	case +1:
 		return Dee_COMPARE_GR;
+	case -1:
+		return Dee_COMPARE_LO;
+	case NUM:
+		/* At this point, we know that "*lhs" and "*rhs" point at
+		 * 2 different digit values, both of which are stored in
+		 * "clhs" and "crhs" resp.
+		 *
+		 * However, in addition to those numbers (which we could
+		 * just compare lexicographically on their own), we have
+		 * to check if the digit sequence might continue in either
+		 * input string. And if so: we must return indicative of
+		 * the length of those digit sequences. Only if both digit
+		 * sequences have the same length must the first differing
+		 * character be compared:
+		 * >> "ver.123500"
+		 * >> "ver.1234000"
+		 * >> "ver.1235000"
+		 * >> "ver.12330000" */
+		for (;;) {
+			uint32_t future_clhs;
+			uint32_t future_crhs;
+			if (unicode_foldreader_empty(&lhs_reader)) {
+				if (!unicode_foldreader_empty(&rhs_reader)) {
+					future_crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+					if (DeeUni_IsDigit(future_crhs))
+						return Dee_COMPARE_LO; /* Sequence in "lhs" is shorter */
+				}
+				break;
+			}
+			future_clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
+			if (unicode_foldreader_empty(&rhs_reader)) {
+				if (!DeeUni_IsDigit(future_clhs))
+					break;
+				return Dee_COMPARE_GR; /* Sequence in "lhs" is longer */
+			}
+			future_crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+			if (!DeeUni_IsDigit(future_clhs)) {
+				if (DeeUni_IsDigit(future_crhs))
+					return Dee_COMPARE_LO; /* Sequence in "lhs" is shorter */
+				break;
+			}
+			if (!DeeUni_IsDigit(future_crhs))
+				return Dee_COMPARE_GR; /* Sequence in "lhs" is longer */
+		}
+		ATTR_FALLTHROUGH
+	case LEX:
+		return Dee_Compare(clhs, crhs);
 	default: __builtin_unreachable();
 	}
-#undef APPLY_TO_STATE
 }
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 #endif /* LOCAL_strcaseverscmp */
 
 
