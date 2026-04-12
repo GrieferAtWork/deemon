@@ -55,10 +55,15 @@ class Task {
 		return _getResult();
 	}
 
-	public timedwaitfor(timeout_nanoseconds: int, def: Object = none): Object {
-		return _reslock.timedwaitfor() ? _getResult() : def;
+	@@@param timeout Timeout specifying how long to wait at
+	@@       most (use interval functions from @import.time)
+	public timedwaitfor(timeout: Numeric, def: Object = none): Object {
+		return _reslock.timedwaitfor(timeout) ? _getResult() : def;
 	}
 
+	@@Convenience wrapper for @waitfor: ensures that the task
+	@@has finished, then return its result. If the task finished
+	@@by throwing an error, that error will be re-thrown here!
 	public property result: Object = {
 		get(): Object {
 			return waitfor();
@@ -142,10 +147,14 @@ insert_current_and_again:
 			doSpawnThread();
 	}
 
+	@@Spawn a new task to asynchronously call @(cb(args...))
+	@@The result of this call can be awaited using @Task.waitfor() or @waitfor
 	public run(cb: Callable, args: Tuple = ()): Task {
 		return runTask(Task(cb, args));
 	}
 
+	@@Schedule @task for execution, potentially spawning an additional
+	@@worker thread if necessary. Always re-returns @task (s.a. @run)
 	public runTask(task: Task): Task {
 		if (!Thread.supported) {
 			/* Deemon was built without threading support -> execute tasks synchronously
@@ -165,12 +174,10 @@ insert_current_and_again:
 		return allTasksDone.waitfor();
 	}
 
-	public timedwaitfor(timeout_nanoseconds: int): bool {
-		return allTasksDone.timedwaitfor();
+	@@@param timeout Timeout specifying how long to wait at
+	@@       most (use interval functions from @import.time)
+	public timedwaitfor(timeout: Numeric): bool {
+		return allTasksDone.timedwaitfor(timeout);
 	}
 
 }
-
-
-
-
