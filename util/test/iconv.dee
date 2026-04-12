@@ -25,6 +25,14 @@ local iconv = try import("iconv") catch (...) none;
 if (iconv is none)
 	return;
 
+/* Make sure that the  */
+test.assertSame(iconv.Encoder, iconv.EncodeWriter);
+test.assertSame(iconv.Decoder, iconv.DecodeReader);
+assert !hasattr(iconv, "Transcode"),
+	"Mustn't be defined, since there'd be no way to logically "
+	"explain why this should alias 'TranscodeReader' instead "
+	"of 'TranscodeWriter', or the inverse.";
+
 function assertEncode(data: string, codec: string, result: Bytes) {
 	/* Encode using convenience wrapper */
 	test.assertEqualsTyped(iconv.encode(data, codec), result);
@@ -77,6 +85,7 @@ function assertTranscode(data: Bytes, incodec: string, outcodec: string, result:
 	test.assertEqualsTyped(iconv.transcode(data, incodec, outcodec), result);
 	test.assertEqualsTyped(iconv.transcode(result, outcodec, incodec), data);
 
+
 	/* Transcode using "iconv.TranscodeWriter" */
 	local w = File.Writer(hint: "bytes");
 	with (local d = iconv.TranscodeWriter(incodec, outcodec, out: w)) {
@@ -91,6 +100,24 @@ function assertTranscode(data: Bytes, incodec: string, outcodec: string, result:
 		d.write(result);
 	}
 	test.assertEqualsTyped(data, w.bytes);
+
+
+	/* Transcode using "iconv.TranscodeReader" */
+	local w;
+	with (local d = iconv.TranscodeReader(incodec, outcodec, input: File.Reader(data))) {
+		(none)repr(d); /* For coverage */
+		w = d.readall(); /* Must use "readall()" here; regular "read()" does not auto-flush on EOF */
+		assert !d.readall();
+	}
+	test.assertEqualsTyped(result, w);
+
+	local w;
+	with (local d = iconv.TranscodeReader(outcodec, incodec, input: File.Reader(result))) {
+		(none)repr(d); /* For coverage */
+		w = d.readall();
+		assert !d.readall();
+	}
+	test.assertEqualsTyped(data, w);
 }
 
 
