@@ -431,6 +431,13 @@ DeeFile_ReadBytes(DeeObject *__restrict self, size_t max_length, bool readall);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytes(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_ReadLinef(DeeObject *__restrict self, size_t max_length, Dee_ioflag_t flags, bool keep_lf);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_ReadBytesf(DeeObject *__restrict self, size_t max_length, Dee_ioflag_t flags, bool readall);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_PReadBytesf(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, Dee_ioflag_t flags, bool readall);
+
 
 /* HINT: `DeeFile_Printf' is literally implemented as
  *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'

@@ -617,6 +617,12 @@ DeeFile_Filename(DeeObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t maxbytes, bool keep_lf) {
+	return DeeFile_ReadLinef(self, maxbytes, Dee_FILEIO_FNORMAL, keep_lf);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_ReadLinef(DeeObject *__restrict self, size_t maxbytes,
+                  Dee_ioflag_t flags, bool keep_lf) {
 	struct Dee_bytes_printer printer;
 	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
@@ -661,10 +667,10 @@ do_operate_using_ft_getc_and_ft_ungetc:
 	/* Keep on reading characters until a linefeed is encountered. */
 	while (Dee_BYTES_PRINTER_SIZE(&printer) < maxbytes) {
 		int ch;
-		ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+		ch = (*ft_getc)((DeeFileObject *)self, flags);
 		if (ch == '\r') {
 			/* If the next character is '\n', then we must consume it as well. */
-			ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+			ch = (*ft_getc)((DeeFileObject *)self, flags);
 			if (ch >= 0 && ch != '\n')
 				ch = (*ft_ungetc)((DeeFileObject *)self, ch);
 			if (ch == GETC_ERR)
@@ -680,6 +686,7 @@ do_operate_using_ft_getc_and_ft_ungetc:
 			}
 			goto done_printer;
 		}
+		flags |= Dee_FILEIO_FNONBLOCKING;
 		if (ch == GETC_ERR)
 			goto err_printer;
 		if (ch == '\n') {
@@ -786,8 +793,13 @@ err_map:
 #define READTEXT_INITIAL_BUFSIZE 1024
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_ReadBytes(DeeObject *__restrict self,
-                  size_t maxbytes, bool readall) {
+DeeFile_ReadBytes(DeeObject *__restrict self, size_t maxbytes, bool readall) {
+	return DeeFile_ReadBytesf(self, maxbytes, Dee_FILEIO_FNORMAL, readall);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_ReadBytesf(DeeObject *__restrict self, size_t maxbytes,
+                   Dee_ioflag_t flags, bool readall) {
 	size_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *buffer,
 	                        size_t bufsize, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -810,7 +822,7 @@ do_handle_filetype:
 		goto do_handle_filetype;
 	}
 do_invoke_generic_ft_read:
-	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t flags))&DeeFile_Readf;
+	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t))&DeeFile_Readf;
 do_invoke_ft_read:
 #ifdef HAVE_file_read_trymap
 	/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
@@ -819,7 +831,7 @@ do_invoke_ft_read:
 	 * which can then be wrapped by a regular `Bytes' object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t flags))&sysfile_read)) {
+	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t))&sysfile_read)) {
 		DREF /*Bytes*/ DeeObject *result;
 		Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
 		if unlikely(os_fd == Dee_fd_INVALID)
@@ -847,7 +859,7 @@ do_invoke_ft_read:
 				goto err_printer;
 
 			/* Read more data. */
-			read_size = (*ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
+			read_size = (*ft_read)((DeeFileObject *)self, buffer, bufsize, flags);
 			if unlikely(read_size == (size_t)-1)
 				goto err_printer;
 			ASSERT(read_size <= bufsize);
@@ -857,6 +869,9 @@ do_invoke_ft_read:
 			maxbytes -= read_size;
 			if (read_size >= bufsize)
 				readtext_bufsize *= 2;
+
+			/* Any additional read-calls must be non-blocking (because we already got some data) */
+			flags |= Dee_FILEIO_FNONBLOCKING;
 		}
 /*done_printer:*/
 		return Dee_bytes_printer_pack(&printer);
@@ -868,9 +883,15 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFile_PReadBytes(DeeObject *__restrict self,
-                   size_t maxbytes, Dee_pos_t pos,
-                   bool readall) {
+DeeFile_PReadBytes(DeeObject *__restrict self, size_t maxbytes,
+                   Dee_pos_t pos, bool readall) {
+	return DeeFile_PReadBytesf(self, maxbytes, pos, Dee_FILEIO_FNORMAL, readall);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFile_PReadBytesf(DeeObject *__restrict self,
+                    size_t maxbytes, Dee_pos_t pos,
+                    Dee_ioflag_t flags, bool readall) {
 	size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
 	                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -893,7 +914,7 @@ do_handle_filetype:
 		goto do_handle_filetype;
 	}
 do_invoke_generic_ft_pread:
-	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t flags))&DeeFile_PReadf;
+	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&DeeFile_PReadf;
 do_invoke_ft_pread:
 #ifdef HAVE_file_read_trymap
 	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
@@ -902,7 +923,7 @@ do_invoke_ft_pread:
 	 * which can then be wrapped by a regular `Bytes' object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t flags))&sysfile_pread)) {
+	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pread)) {
 		DREF /*Bytes*/ DeeObject *result;
 		result = file_read_trymap(DeeSystemFile_GetHandle(self),
 		                          maxbytes, pos, readall);
@@ -926,7 +947,7 @@ do_invoke_ft_pread:
 				goto err_printer;
 
 			/* Read more data. */
-			read_size = (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
+			read_size = (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, flags);
 			if unlikely(read_size == (size_t)-1)
 				goto err_printer;
 			ASSERT(read_size <= bufsize);
@@ -937,6 +958,9 @@ do_invoke_ft_pread:
 			pos += read_size;
 			if (read_size >= bufsize)
 				readtext_bufsize *= 2;
+
+			/* Any additional read-calls must be non-blocking (because we already got some data) */
+			flags |= Dee_FILEIO_FNONBLOCKING;
 		}
 /*done_printer:*/
 		return Dee_bytes_printer_pack(&printer);

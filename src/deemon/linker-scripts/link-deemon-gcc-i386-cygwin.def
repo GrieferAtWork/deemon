@@ -258,6 +258,7 @@ EXPORTS
 	_DeeFile_PRead@20=DeeFile_PRead@20
 	_DeeFile_PReadAll@20=DeeFile_PReadAll@20
 	_DeeFile_PReadBytes@20=DeeFile_PReadBytes@20
+	_DeeFile_PReadBytesf@24=DeeFile_PReadBytesf@24
 	_DeeFile_PReadf@24=DeeFile_PReadf@24
 	_DeeFile_PWrite@20=DeeFile_PWrite@20
 	_DeeFile_PWriteAll@20=DeeFile_PWriteAll@20
@@ -277,7 +278,9 @@ EXPORTS
 	_DeeFile_Read@12=DeeFile_Read@12
 	_DeeFile_ReadAll@12=DeeFile_ReadAll@12
 	_DeeFile_ReadBytes@12=DeeFile_ReadBytes@12
+	_DeeFile_ReadBytesf@16=DeeFile_ReadBytesf@16
 	_DeeFile_ReadLine@12=DeeFile_ReadLine@12
+	_DeeFile_ReadLinef@16=DeeFile_ReadLinef@16
 	_DeeFile_Readf@16=DeeFile_Readf@16
 	_DeeFile_ResetStd@0=DeeFile_ResetStd@0
 	_DeeFile_Seek@16=DeeFile_Seek@16
@@ -1208,9 +1211,11 @@ EXPORTS
 	_DeeRT_ErrCUnboundClassMember@8=DeeRT_ErrCUnboundClassMember@8
 	_DeeRT_ErrCUnboundInstanceMember@12=DeeRT_ErrCUnboundInstanceMember@12
 	_DeeRT_ErrCannotSerialize@4=DeeRT_ErrCannotSerialize@4
+	_DeeRT_ErrCannotWeakReference@4=DeeRT_ErrCannotWeakReference@4
 	_DeeRT_ErrDivideByZero@8=DeeRT_ErrDivideByZero@8
 	_DeeRT_ErrDivideByZeroEx@8=DeeRT_ErrDivideByZeroEx@8
 	_DeeRT_ErrEmptySequence@4=DeeRT_ErrEmptySequence@4
+	_DeeRT_ErrEmptyWeakReference@0=DeeRT_ErrEmptyWeakReference@0
 	_DeeRT_ErrIndexOutOfBounds@12=DeeRT_ErrIndexOutOfBounds@12
 	_DeeRT_ErrIndexOutOfBoundsObj@12=DeeRT_ErrIndexOutOfBoundsObj@12
 	_DeeRT_ErrIndexOverflow@4=DeeRT_ErrIndexOverflow@4
