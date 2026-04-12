@@ -18,7 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if 1
 /*
  * !!! DEPREACTED MODULE !!!
  *
@@ -27,10 +26,9 @@
  * the deemon code.
  *
  * This has now changed:
- * - When deemon is built with "CONFIG_EXPERIMENTAL_USE_ICONV" enabled, this
- *   module, as well as all other modules from "_codecs" go unused, and all
- *   extended codecs are supplied and managed by "iconv" (a port of KOSmk4's
- *   iconv library)
+ * - This module, as well as all (now-deleted) modules from "_codecs" goes
+ *   unused, and all extended codecs are supplied and managed by "iconv"
+ *   (a port of KOSmk4's iconv library)
  * - As such, new user-code shouldn't use this module, especially not the
  *   "register" function (which used to allow one to register additional
  *   codecs)
@@ -54,10 +52,10 @@
  *     >>     operator write(data: Bytes);
  *     >> }
  *     >> register("my-codec", MyEncoder, MyDecoder);
- *     An interface similar to this may to be added to "iconv" in
- *     the future, should the need arise, though for the time being,
- *     "CONFIG_EXPERIMENTAL_USE_ICONV" does not provide a replacement
- *     for any sort of "codec registration API"
+ *     An interface similar to this may to be added to "iconv"
+ *     in the future, should the need arise, though for the time
+ *     being, "iconv" does not provide a replacement for any sort
+ *     of "codec registration API".
  * - To my knowledge, no user-code ever made use of custom codecs, only
  *   using the standard string/Bytes.encode/decode functions, this even
  *   though this is technically an API-breaking change, no code that I'm
@@ -92,246 +90,3 @@ global final encode = __encode;
 function register(name: string, codec: Object) {
 	throw UnsupportedAPI(f"Registering of custom codec {repr name} is no longer supported");
 }
-
-#else
-
-import * from deemon;
-import * from errors;
-import * from util;
-
-local function throwUnknownCodecError(name: string) {
-	throw ValueError(f"Unknown codec {repr name}");
-}
-
-@@Make sure it's not detected as a module name
-local function sanitizeCodecName(name: string) {
-	if (("." in name) || !name || (!name.isalnum(0) && name[0] !in ["_"]))
-		throwUnknownCodecError(name);
-	return name;
-}
-
-
-local function throwEncodeUnsupportedError(...) {
-	throw ValueError("Cannot use this codec for encoding");
-}
-
-local function throwDecodeUnsupportedError(...) {
-	throw ValueError("Cannot use this codec for decoding");
-}
-
-local class CustomCodec {
-	public final member encode: Callable;
-	public final member decode: Callable;
-
-	this(encode: Callable = none, decode: Callable = none) {
-		this.encode = encode;
-		this.decode = decode;
-		if (this.encode is none)
-			this.encode = throwEncodeUnsupportedError;
-		if (this.decode is none)
-			this.decode = throwDecodeUnsupportedError;
-	}
-}
-
-local class CpCodec {
-	public final member cp: string;
-	public final member cpLen: int;
-	public final member cpRev: {int: string};
-
-	this(cp: string) {
-		this.cp = cp;
-		this.cpLen = #cp;
-	}
-
-	public final function encode(data: Object, errors: string): Object {
-		if (cpRev !is bound) {
-			/* Create a mapping for translating unicode
-			 * characters to their encoded ordinals. */
-			cpRev = Dict(
-				for (local ord, ch: enumerate(cp.ordinals))
-					(ch, string.chr(ord)));
-		}
-		File.Writer writer;
-		for (local ch: data) {
-			ch = ch.ord();
-			local mappedCh = cpRev.get(ch);
-			if (mappedCh is none) {
-				switch (errors) {
-				default:
-					throw UnicodeEncodeError(f"Cannot encode character {ch}");
-				case "replace":
-					writer << "?";
-					continue;
-					break;
-				case "ignore":
-					writer << ch;
-					continue;
-				}
-			}
-			writer << mappedCh;
-		}
-		local result = writer.string;
-		if (cpLen <= 256)
-			result = result.bytes();
-		return result;
-	}
-
-	public final function decode(data: Object, errors: string): Object {
-		/* TODO: Add a builtin function to quickly translate
-		 *       strings in a manner such as this one. */
-		File.Writer writer;
-		if (data is string)
-			data = data.ordinals;
-		for (local ch: data) {
-			if (ch >= cpLen) {
-				switch (errors) {
-				default:
-					throw UnicodeDecodeError(f"Cannot decode character {ch}");
-				case "replace":
-					writer << "?";
-					continue;
-					break;
-				case "ignore":
-					writer << ch;
-					continue;
-				}
-			}
-			writer << cp[ch];
-		}
-		return writer.string;
-	}
-}
-
-
-@@Cache of loaded codecs
-final local loadedCodecs = Dict();
-
-@@Cache of loaded codecs
-final local userCodecs = Dict();
-
-local function loadCodecModule(name: string): CpCodec | CustomCodec {
-	/* Load the codec from a module. */
-	local codec_module = import("._codecs." + name);
-	if (hasattr(codec_module, "cp"))
-		return CpCodec(codec_module.operator . ("cp"));
-	if (hasattr(codec_module, "encode")) {
-		local encode_function = codec_module.operator . ("encode");
-		local decode_function = none;
-		if (hasattr(codec_module, "decode"))
-			decode_function = codec_module.operator . ("decode");
-		return CustomCodec(encode_function, decode_function);
-	}
-	if (hasattr(codec_module, "decode"))
-		return CustomCodec(none, codec_module.operator . ("decode"));
-	throwUnknownCodecError(name);
-}
-
-@@Check for a cached, or load a new codec matching @name
-local function getCodecByname(name: string): Object {
-	local result;
-	result = userCodecs.get(name);
-	if (result !is none)
-		return result;
-	result = loadedCodecs.get(name);
-	if (result !is none)
-		return result;
-	try {
-		result = loadCodecModule(name);
-	} catch (FileNotFound) {
-		throwUnknownCodecError(name);
-	}
-	local was, old = loadedCodecs.setnew_ex(name, result)...;
-	if (!was)
-		result = old;
-	return result;
-}
-
-
-@@General purpose `encode()' function that is invoked by the deemon
-@@runtime for @string and @Bytes whenever a codec was specified
-@@that wasn't recognized.
-@@
-@@When this function is called, the given @name has already been normalized,
-@@but has yet to be sanity-checked to become a valid name for a codec module.
-function __encode(data: Object, name: string, errors: string = "strict"): Object {
-	local codec = getCodecByname(sanitizeCodecName(name));
-	try {
-		return codec.encode(data, errors);
-	} catch (AttributeError) {
-		if (!hasattr(codec, "encode"))
-			throwDecodeUnsupportedError();
-		throw;
-	}
-}
-
-@@Same as @__encode, but for the opposite direction, meaning that this
-@@function is called as a general purpose decode() function.
-function __decode(data: Object, name: string, errors: string = "strict"): Object {
-	local codec = getCodecByname(sanitizeCodecName(name));
-	try {
-		return codec.decode(data, errors);
-	} catch (AttributeError) {
-		if (!hasattr(codec, "decode"))
-			throwDecodeUnsupportedError();
-		throw;
-	}
-}
-
-@@Register a given @codec for @name
-@@@throw KeyError A codec that is matching the given @name has already been defined
-@@
-@@The given @codec can be an arbitrary object, which should implement member
-@@functions @(encode(data: Object, errors: string)) and @(decode(data: Object, errors: string))
-@@
-@@If either function is missing, attempting to perform that operation using
-@@the codec will cause a @(ValueError from errors) to be thrown
-function register(name: string, codec: Object) {
-	if (!userCodecs.setnew(name, codec))
-		throw KeyError(f"Codec {repr name} has already been defined");
-}
-
-
-@@Normalize (_NOT_ sanitize) a given codec name, the same way the deemon
-@@core does when the encode/decode functions of @string or @Bytes are invoked.
-local function normalizeCodecName(name: string): string {
-	name = name.casefold().replace("_", "-");
-	if (name.startswith("iso-")) {
-		name = "iso" + name[4:];
-	} else if (name.startswith("cp-")) {
-		name = "cp" + name[3:];
-	}
-	return name;
-}
-
-
-@@Transform @data according to @name
-@@Normally, this function doesn't need to be used, as encoded data is usually
-@@only encapsulated as @Bytes or @string objects, which provide encode/decode
-@@functionality via member functions.
-@@
-@@However, this function can be used to invoke codecs with arbitrary objects
-@@given as input, while also allowing arbitrary objects as output.
-@@@throw ValueError The given @name isn't a known codec
-@@@param errors One of @"strict", @"ignore" or @"replace"
-function decode(data, name: string, errors: string = "strict") {
-	if (data is string || data is Bytes)
-		return data.decode(name, errors);
-	return __decode(data, normalizeCodecName(name), errors);
-}
-
-@@Transform @data according to @name
-@@Normally, this function doesn't need to be used, as encoded data is usually
-@@only encapsulated as @Bytes or @string objects, which provide encode/decode
-@@functionality via member functions.
-@@
-@@However, this function can be used to invoke codecs with arbitrary objects
-@@given as input, while also allowing arbitrary objects as output.
-@@@throw ValueError The given @name isn't a known codec
-@@@param errors One of @"strict", @"ignore" or @"replace"
-function encode(data, name: string, errors: string = "strict") {
-	if (data is string || data is Bytes)
-		return data.encode(name, errors);
-	return __encode(data, normalizeCodecName(name), errors);
-}
-#endif
-

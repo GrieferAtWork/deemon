@@ -727,7 +727,6 @@ again:
 	Dee_atomic_xref_get(&g_libiconv, &result);
 	if (result)
 		return result;
-#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = DeeModule_Import(Dee_AsObject(&str_iconv), NULL, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -735,15 +734,6 @@ again:
 	if (result && unlikely(DeeModule_RunInit(result) < 0))
 		Dee_Clear(result);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	result = DeeModule_Import(Dee_AsObject(&str_codecs), NULL, DeeModule_IMPORT_F_NORMAL);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DeeModule_OpenGlobal(Dee_AsObject(&str_codecs), NULL, true);
-	if (result && unlikely(DeeModule_RunInit(result) < 0))
-		Dee_Clear(result);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
 	if likely(result) {
 		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&g_libiconv, result)) {
 			Dee_Decref_unlikely(result);
@@ -831,11 +821,7 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
 /* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
  * These functions will start by normalizing `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
- * #ifdef CONFIG_EXPERIMENTAL_USE_ICONV
  * call to `encode from iconv' / `decode from iconv':
- * #else // CONFIG_EXPERIMENTAL_USE_ICONV
- * call to `encode from codecs' / `decode from codecs':
- * #endif // !CONFIG_EXPERIMENTAL_USE_ICONV
  * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
  * >>     name = "iso" + name[4:];
@@ -881,21 +867,12 @@ DeeCodec_Decode(DeeObject *self, DeeObject *name,
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
 	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
 	                                Dee_AsObject(&str_decode),
 	                                3,
 	                                self,
 	                                name,
 	                                error_mode_names[error_mode]);
-#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
-	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
-	                                Dee_AsObject(&str___decode),
-	                                3,
-	                                self,
-	                                name,
-	                                error_mode_names[error_mode]);
-#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
 	Dee_Decref(libiconv);
 #if 0
 	if unlikely(!result) {
@@ -946,21 +923,12 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
 	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
 	                                Dee_AsObject(&str_encode),
 	                                3,
 	                                self,
 	                                name,
 	                                error_mode_names[error_mode]);
-#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
-	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
-	                                Dee_AsObject(&str___encode),
-	                                3,
-	                                self,
-	                                name,
-	                                error_mode_names[error_mode]);
-#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
 	Dee_Decref(libiconv);
 #if 0
 	if unlikely(!result) {

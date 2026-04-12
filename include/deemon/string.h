@@ -3187,11 +3187,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 /* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
  * These functions will start by normalizing `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
- * #ifdef CONFIG_EXPERIMENTAL_USE_ICONV
  * call to `encode from iconv' / `decode from iconv':
- * #else // CONFIG_EXPERIMENTAL_USE_ICONV
- * call to `encode from codecs' / `decode from codecs':
- * #endif // !CONFIG_EXPERIMENTAL_USE_ICONV
  * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
  * >>     name = "iso" + name[4:];
