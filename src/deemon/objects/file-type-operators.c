@@ -27,7 +27,7 @@
 #include <deemon/class.h>    /* DeeClass_CallOperator, DeeClass_CallOperatorf */
 #include <deemon/error-rt.h> /* DeeRT_ErrIntegerOverflowS */
 #include <deemon/error.h>    /* DeeError_NOTIMPLEMENTED */
-#include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, Dee_FILEIO_FNORMAL, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPERATOR_FILE_* */
+#include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, Dee_FILEIO_FNORMAL, Dee_GETC_EOF, Dee_GETC_ERR, Dee_ioflag_t, FILE_OPERATOR_*, OPERATOR_FILE_* */
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/int.h>      /* DeeInt_* */
 #include <deemon/none.h>     /* DeeNone_Check, DeeNone_Decref, return_none */
@@ -238,19 +238,19 @@ instance_tgetc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_ioflag_t fla
 		goto err;
 	if (DeeNone_Check(result_ob)) {
 		DeeNone_Decref();
-		return GETC_EOF;
+		return Dee_GETC_EOF;
 	}
 	if unlikely(DeeObject_AsInt(result_ob, &temp))
 		goto err_result_ob;
-	if likely(temp == GETC_EOF || (temp >= 0 && temp <= 0xff)) {
+	if likely(temp == Dee_GETC_EOF || (temp >= 0 && temp <= 0xff)) {
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
+	DeeRT_ErrIntegerOverflowS(temp, Dee_GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -269,9 +269,9 @@ instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch) {
 	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
-	return temp ? ch : GETC_EOF;
+	return temp ? ch : Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -291,9 +291,9 @@ instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
-	return temp ? ch : GETC_EOF;
+	return temp ? ch : Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 
@@ -748,7 +748,7 @@ DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc, &filetype_inherit_getc) {
 	(void)opname;
 	ASSERT(tp_self->ft_getc);
 	result = DeeFileType_invoke_ft_getc(tp_self, tp_self->ft_getc, self, args.flags);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == Dee_GETC_ERR)
 		goto err;
 	return DeeInt_NewInt(result);
 err:
@@ -769,9 +769,9 @@ DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_unge
 	(void)opname;
 	ASSERT(tp_self->ft_ungetc);
 	args.ch = DeeFileType_invoke_ft_ungetc(tp_self, tp_self->ft_ungetc, self, args.ch);
-	if unlikely(args.ch == GETC_ERR)
+	if unlikely(args.ch == Dee_GETC_ERR)
 		goto err;
-	return_bool(args.ch != GETC_EOF);
+	return_bool(args.ch != Dee_GETC_EOF);
 err:
 	return NULL;
 }
@@ -793,9 +793,9 @@ DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
 	(void)opname;
 	ASSERT(tp_self->ft_putc);
 	args.ch = DeeFileType_invoke_ft_putc(tp_self, tp_self->ft_putc, self, args.ch, args.flags);
-	if unlikely(args.ch == GETC_ERR)
+	if unlikely(args.ch == Dee_GETC_ERR)
 		goto err;
-	return_bool(args.ch != GETC_EOF);
+	return_bool(args.ch != Dee_GETC_EOF);
 err:
 	return NULL;
 }

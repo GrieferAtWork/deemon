@@ -34,7 +34,7 @@
 #include <deemon/code.h>    /* DeeCodeObject, DeeCode_Type, DeeFunctionObject, DeeFunction_Type, Dee_code_addr_t, Dee_instruction_t */
 #include <deemon/dict.h>    /* DeeDict_Type */
 #include <deemon/error.h>   /* DeeError_Handled, DeeError_Throw, Dee_ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>    /* DeeFile_*, FILE_OPERATOR_PUTC, FILE_OPERATOR_WRITE, GETC_ERR */
+#include <deemon/file.h>    /* DeeFile_*, Dee_GETC_ERR, FILE_OPERATOR_PUTC, FILE_OPERATOR_WRITE */
 #include <deemon/format.h>  /* PRFx32 */
 #include <deemon/gc.h>      /* DeeGC_Track */
 #include <deemon/hashset.h> /* DeeHashSet_Type */
@@ -435,7 +435,7 @@ gen_print_to_file(struct fungen *__restrict self,
 					DO(fg_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
 					DO(fg_vpush_immINT(self, utf8[0]));                            /* [File], File, ch */
 					DO(fg_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));      /* [File], status */
-					DO(fg_vcheckerr(self, GETC_ERR));                              /* [File] */
+					DO(fg_vcheckerr(self, Dee_GETC_ERR));                              /* [File] */
 				} else {
 					DO(fg_vnotoneref_if_operator_at(self, FILE_OPERATOR_WRITE, 1)); /* [File], File */
 					DO(fg_vpush_addr(self, utf8));                                  /* [File], File, utf8 */
@@ -473,7 +473,7 @@ handle_print_after_and_pop_file:
 			DO(fg_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 1)); /* File */
 			DO(fg_vpush_immINT(self, *print_after));                       /* File, ch */
 			DO(fg_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));      /* status */
-			return fg_vcheckerr(self, GETC_ERR);                           /* - */
+			return fg_vcheckerr(self, Dee_GETC_ERR);                           /* - */
 		}
 		return 0;
 	}

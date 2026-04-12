@@ -26,7 +26,7 @@
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t */
 #include <deemon/filetypes.h>       /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/none.h>            /* return_none */
@@ -1145,7 +1145,7 @@ read_through:
 
 	/* Check for special case: EOF reached. */
 	if (!read_size) {
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 	} else {
 		self->fb_cnt = read_size - 1;
 		self->fb_ptr = self->fb_base + 1;
@@ -1156,7 +1156,7 @@ done:
 err_closed:
 	err_buffer_closed();
 err:
-	result = GETC_ERR;
+	result = Dee_GETC_ERR;
 	goto done;
 did_unlock:
 	result = GETC_DID_UNLOCK;
@@ -1216,9 +1216,9 @@ unget_in_buffer:
 	++self->fb_cnt;
 	return 0;
 eof:
-	return GETC_EOF;
+	return Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1316,7 +1316,7 @@ buffer_getc(Buffer *__restrict self, Dee_ioflag_t flags) {
 	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1328,7 +1328,7 @@ buffer_ungetc(Buffer *__restrict self, int ch) {
 	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

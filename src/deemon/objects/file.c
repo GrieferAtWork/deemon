@@ -29,7 +29,7 @@
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_Check, DeeFileType_CheckExact, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_Check, DeeFileType_CheckExact, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileBuffer_New, DeeFileReader_Type, DeeFileWriter_Type, DeeSystemFileObject, DeeSystemFile_GetHandle, Dee_FILE_BUFFER_FREADONLY, Dee_FILE_BUFFER_MODE_AUTO */
 #include <deemon/format.h>             /* DeeFormat_VPrintf, PRFuSIZ, PRFx32 */
 #include <deemon/int.h>                /* DeeInt_* */
@@ -105,16 +105,16 @@ PRIVATE WUNUSED NONNULL((1)) int
 	}
 	result = DeeFile_Ungetc(Dee_AsObject(self), byte0);
 	if (result == 0)
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 done:
 	return result;
 }
 
-#if GETC_ERR < 0 && GETC_EOF < 0
+#if Dee_GETC_ERR < 0 && Dee_GETC_EOF < 0
 #define IS_ERR_OR_EOF(x) ((x) < 0)
-#else /* GETC_ERR < 0 && GETC_EOF < 0 */
-#define IS_ERR_OR_EOF(x) ((x) == GETC_EOF || (x) == GETC_ERR)
-#endif /* GETC_ERR >= 0 || GETC_EOF >= 0 */
+#else /* Dee_GETC_ERR < 0 && Dee_GETC_EOF < 0 */
+#define IS_ERR_OR_EOF(x) ((x) == Dee_GETC_EOF || (x) == Dee_GETC_ERR)
+#endif /* Dee_GETC_ERR >= 0 || Dee_GETC_EOF >= 0 */
 
 PRIVATE WUNUSED NONNULL((1)) uint32_t
 (DCALL DeeFile_unicode_readutf8)(DeeFileObject *__restrict self,
@@ -250,12 +250,12 @@ PRIVATE WUNUSED NONNULL((1)) uint32_t
 		result |= (buf[4] & 0x3f) << 6;
 		result |= ((byte_t)b & 0x3f);
 check_uni_char:
-		if unlikely(result == (uint32_t)GETC_EOF ||
-		            result == (uint32_t)GETC_ERR) {
+		if unlikely(result == (uint32_t)Dee_GETC_EOF ||
+		            result == (uint32_t)Dee_GETC_ERR) {
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
 			                "Invalid unicode character: U+%.8" PRFx32,
 			                result);
-			result = (uint32_t)GETC_ERR;
+			result = (uint32_t)Dee_GETC_ERR;
 		}
 		break;
 
@@ -309,7 +309,7 @@ check_uni_char:
 		__IF0 { err_2: n = 2; }
 		__IF0 { err_1: n = 1; }
 		__IF0 { err_0: n = 0; }
-		if (b == GETC_EOF)
+		if (b == Dee_GETC_EOF)
 			b = DeeFile_unicode_unget(self, byte0, buf, n);
 		return (uint32_t)b;
 	}
@@ -532,7 +532,7 @@ err_call:
  * defined for the configuration used when deemon was built.
  * NOTE: This function doesn't require that `self' actually be
  *       derived from a `deemon.File'!
- * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * @return: * :             The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
  * @return: Dee_fd_INVALID: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeFile_GetSysFD(DeeObject *__restrict self) {
@@ -673,7 +673,7 @@ do_operate_using_ft_getc_and_ft_ungetc:
 			ch = (*ft_getc)((DeeFileObject *)self, flags);
 			if (ch >= 0 && ch != '\n')
 				ch = (*ft_ungetc)((DeeFileObject *)self, ch);
-			if (ch == GETC_ERR)
+			if (ch == Dee_GETC_ERR)
 				goto err_printer;
 
 			/* Found a \r\n or \r-linefeed. */
@@ -687,7 +687,7 @@ do_operate_using_ft_getc_and_ft_ungetc:
 			goto done_printer;
 		}
 		flags |= Dee_FILEIO_FNONBLOCKING;
-		if (ch == GETC_ERR)
+		if (ch == Dee_GETC_ERR)
 			goto err_printer;
 		if (ch == '\n') {
 			/* Found a \n-linefeed */
@@ -695,7 +695,7 @@ do_operate_using_ft_getc_and_ft_ungetc:
 				goto err_printer;
 			goto done_printer;
 		}
-		if (ch == GETC_EOF) {
+		if (ch == Dee_GETC_EOF) {
 			/* Stop on EOF */
 			if (!Dee_BYTES_PRINTER_SIZE(&printer)) {
 				/* Nothing was read -> return ITER_DONE */
@@ -1910,6 +1910,7 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	TYPE_MEMBER_CONST("Writer", &DeeFileWriter_Type.ft_base),
 	TYPE_MEMBER_CONST("Buffer", &DeeFileBuffer_Type.ft_base),
 	TYPE_MEMBER_CONST("System", &DeeSystemFile_Type.ft_base),
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_MEMBER_CONST_DOC("io", &DeeFile_Type.ft_base,
 	                      "Deprecated alias for backwards-compatible access to "
 	                      /**/ "std-streams that used to be located in ${File.io.stdxxx}\n"
@@ -1917,6 +1918,7 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 	                      /**/ "under ${File.stdxxx} and the ${File.io} type has been "
 	                      /**/ "renamed to ?#System\n"
 	                      /**/ "With that in mind, this field is now simply an alias for ?DFile"),
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_MEMBER_CONST_DOC("SEEK_SET", OBJ_file_SEEK_SET,
 	                      "Deprecated argument for ?#seek (Use the string $\"set\" instead)"),
 	TYPE_MEMBER_CONST_DOC("SEEK_CUR", OBJ_file_SEEK_CUR,
@@ -2272,12 +2274,12 @@ file_getc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "getc");
 /*[[[end]]]*/
 	result = DeeFile_Getc(self);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == Dee_GETC_ERR)
 		goto err;
-#if GETC_EOF != -1
-	if (result == GETC_EOF)
+#if Dee_GETC_EOF != -1
+	if (result == Dee_GETC_EOF)
 		result = -1;
-#endif /* GETC_EOF != -1 */
+#endif /* Dee_GETC_EOF != -1 */
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -2296,9 +2298,9 @@ file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "ungetc", &args.ch, "d", DeeObject_AsInt);
 /*[[[end]]]*/
 	result = DeeFile_Ungetc(self, args.ch);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == Dee_GETC_ERR)
 		goto err;
-	return_bool(result != GETC_EOF);
+	return_bool(result != Dee_GETC_EOF);
 err:
 	return NULL;
 }
@@ -2317,9 +2319,9 @@ file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 /*[[[end]]]*/
 	result = DeeFile_Putc(self, (int)(unsigned int)args.byte);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == Dee_GETC_ERR)
 		goto err;
-	return_bool(result != GETC_EOF);
+	return_bool(result != Dee_GETC_EOF);
 err:
 	return NULL;
 }
@@ -2331,9 +2333,9 @@ file_getutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "getutf8");
 /*[[[end]]]*/
 	result = DeeFile_GetUtf8(self);
-	if unlikely(result == (uint32_t)GETC_ERR)
+	if unlikely(result == (uint32_t)Dee_GETC_ERR)
 		goto err;
-	if (result == (uint32_t)GETC_EOF)
+	if (result == (uint32_t)Dee_GETC_EOF)
 		return DeeString_NewEmpty();
 	return DeeString_Chr(result);
 err:
@@ -2353,9 +2355,9 @@ file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "ungetutf8", &args.ch, UNPu32, DeeObject_AsUInt32);
 /*[[[end]]]*/
 	result = DeeFile_UngetUtf8(self, args.ch);
-	if unlikely(result == GETC_ERR)
+	if unlikely(result == Dee_GETC_ERR)
 		goto err;
-	return_bool(result != GETC_EOF);
+	return_bool(result != Dee_GETC_EOF);
 err:
 	return NULL;
 }
@@ -2622,7 +2624,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            /**/ "file, or return $\"\" if the file's end has been reached."),
 	TYPE_METHOD("ungetutf8", &file_ungetutf8,
 	            "(" file_ungetutf8_params ")->?Dbool\n"
-	            "Unget a given unicode character @ch (as utf-8) to be re-read the next time ?#getuni "
+	            "Unget a given unicode character @ch (as utf-8) to be re-read the next time ?#getutf8 "
 	            /**/ "or ?#read is called. If the file's start has already been reached, ?f is returned "
 	            /**/ "and the character will not be re-read from this file."),
 	TYPE_METHOD("pututf8", &file_pututf8,

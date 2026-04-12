@@ -20,7 +20,7 @@
 #include <deemon/api.h>
 
 #include <deemon/error-rt.h> /* DeeRT_ErrIntegerOverflowS */
-#include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR */
+#include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_ioflag_t, FILE_OPERATOR_* */
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/none.h>     /* DeeNone* */
 #include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
@@ -62,9 +62,9 @@ DeeFile_DefaultReadWithGetc(DeeFileObject *__restrict self, void *buffer,
 	ASSERT(ft_getc != &DeeFile_DefaultGetcWithRead);
 	for (result = 0; result < bufsize; ++result) {
 		int status = (*ft_getc)(self, flags);
-		if unlikely(status == GETC_EOF)
+		if unlikely(status == Dee_GETC_EOF)
 			break;
-		if unlikely(status == GETC_ERR)
+		if unlikely(status == Dee_GETC_ERR)
 			goto err;
 		((byte_t *)buffer)[result] = (byte_t)(unsigned int)status;
 	}
@@ -84,9 +84,9 @@ DeeFile_DefaultWriteWithPutc(DeeFileObject *__restrict self,
 	ASSERT(ft_putc != &DeeFile_DefaultPutcWithWrite);
 	for (result = 0; result < bufsize; ++result) {
 		int status = (*ft_putc)(self, ((byte_t const *)buffer)[result], flags);
-		if unlikely(status == GETC_EOF)
+		if unlikely(status == Dee_GETC_EOF)
 			break;
-		if unlikely(status == GETC_ERR)
+		if unlikely(status == Dee_GETC_ERR)
 			goto err;
 	}
 	return result;
@@ -110,8 +110,8 @@ DeeFile_DefaultGetcWithRead(DeeFileObject *__restrict self,
 	if likely(status > 0)
 		return (unsigned int)result;
 	if (status == 0)
-		return GETC_EOF;
-	return GETC_ERR;
+		return Dee_GETC_EOF;
+	return Dee_GETC_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -131,8 +131,8 @@ DeeFile_DefaultPutcWithWrite(DeeFileObject *__restrict self,
 	if likely(status > 0)
 		return 0;
 	if (status == 0)
-		return GETC_EOF;
-	return GETC_ERR;
+		return Dee_GETC_EOF;
+	return Dee_GETC_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
@@ -626,9 +626,9 @@ do_handle_filetype:
 	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
-	return temp ? ch : GETC_EOF;
+	return temp ? ch : Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -657,19 +657,19 @@ do_handle_filetype:
 		goto err;
 	if (DeeNone_Check(result_ob)) {
 		DeeNone_Decref();
-		return GETC_EOF;
+		return Dee_GETC_EOF;
 	}
 	if unlikely(DeeObject_AsInt(result_ob, &temp))
 		goto err_result_ob;
-	if likely(temp == GETC_EOF || (temp >= 0 && temp <= 0xff)) {
+	if likely(temp == Dee_GETC_EOF || (temp >= 0 && temp <= 0xff)) {
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
+	DeeRT_ErrIntegerOverflowS(temp, Dee_GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 DEFINE_FILE_OPERATOR(int, Putc, (DeeObject *__restrict self, int ch)) {
@@ -703,9 +703,9 @@ do_handle_filetype:
 	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
-	return temp ? ch : GETC_EOF;
+	return temp ? ch : Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -734,19 +734,19 @@ do_handle_filetype:
 		goto err;
 	if (DeeNone_Check(result_ob)) {
 		DeeNone_Decref();
-		return GETC_EOF;
+		return Dee_GETC_EOF;
 	}
 	if unlikely(DeeObject_AsInt(result_ob, &temp))
 		goto err_result_ob;
-	if likely(temp == GETC_EOF || (temp >= 0 && temp <= 0xff)) {
+	if likely(temp == Dee_GETC_EOF || (temp >= 0 && temp <= 0xff)) {
 		Dee_Decref(result_ob);
 		return temp;
 	}
-	DeeRT_ErrIntegerOverflowS(temp, GETC_EOF, 0xff);
+	DeeRT_ErrIntegerOverflowS(temp, Dee_GETC_EOF, 0xff);
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 DEFINE_FILE_OPERATOR(int, Putcf, (DeeObject *__restrict self, int ch, Dee_ioflag_t flags)) {
@@ -780,9 +780,9 @@ do_handle_filetype:
 	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
-	return temp ? ch : GETC_EOF;
+	return temp ? ch : Dee_GETC_EOF;
 err:
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 }
 
 

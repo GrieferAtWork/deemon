@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/bool.h>          /* return_bool, return_false, return_true */
-#include <deemon/file.h>          /* GETC_EOF, OPERATOR_FILE_* */
+#include <deemon/file.h>          /* Dee_GETC_EOF, OPERATOR_FILE_* */
 #include <deemon/int.h>           /* DeeInt_*, INT_UNSIGNED */
 #include <deemon/mro.h>           /* Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
 #include <deemon/none-operator.h> /*  */
@@ -580,11 +580,11 @@ invoke_none_file_char_operator(DeeTypeObject *tp_self, DeeObject *self,
 	(void)argc;
 	(void)argv;
 	(void)opname;
-#if GETC_EOF == -1
+#if Dee_GETC_EOF == -1
 	return DeeInt_NewMinusOne();
-#else /* GETC_EOF == -1 */
-	return DeeInt_NewInt8(GETC_EOF);
-#endif /* GETC_EOF != -1 */
+#else /* Dee_GETC_EOF == -1 */
+	return DeeInt_NewInt8(Dee_GETC_EOF);
+#endif /* Dee_GETC_EOF != -1 */
 }
 
 
@@ -654,10 +654,10 @@ PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_003D_LEAVE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	/**/
 
-	/* Implement char-related file operators such that we always return `GETC_EOF'.
+	/* Implement char-related file operators such that we always return `Dee_GETC_EOF'.
 	 * Without this, `DeeType_GetCustomOperatorById()' would pick noop_custom_operator_cb,
 	 * which would re-return "none", which would then evaluate to "0" (which isn't,
-	 * and can't be the value of `GETC_EOF')
+	 * and can't be the value of `Dee_GETC_EOF')
 	 * iow: without this, `none' would be "/dev/zero", but we want it to be "/dev/null" */
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0008_GETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0009_UNGETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),

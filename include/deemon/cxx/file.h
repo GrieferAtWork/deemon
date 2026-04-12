@@ -23,7 +23,7 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../file.h"   /* DeeFile_*, Dee_STD*, Dee_fd_INVALID, Dee_fd_t, Dee_ioflag_t, GETC_ERR */
+#include "../file.h"   /* DeeFile_*, Dee_GETC_ERR, Dee_STD*, Dee_fd_INVALID, Dee_fd_t, Dee_ioflag_t */
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h" /* DeeObject_* */
 #include "../types.h"  /* DREF, DeeObject, Dee_off_t, Dee_pos_t, Dee_ssize_t, _Dee_HashSelectC */
@@ -158,31 +158,31 @@ public:
 	}
 	WUNUSED int getc() {
 		int result = DeeFile_Getc(this);
-		if (result == GETC_ERR)
+		if (result == Dee_GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	WUNUSED int getc(Dee_ioflag_t flags) {
 		int result = DeeFile_Getcf(this, flags);
-		if (result == GETC_ERR)
+		if (result == Dee_GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int ungetc(int ch) {
 		int result = DeeFile_Ungetc(this, ch);
-		if (result == GETC_ERR)
+		if (result == Dee_GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int putc(int ch) {
 		int result = DeeFile_Putc(this, ch);
-		if (result == GETC_ERR)
+		if (result == Dee_GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}
 	int putc(int ch, Dee_ioflag_t flags) {
 		int result = DeeFile_Putcf(this, ch, flags);
-		if (result == GETC_ERR)
+		if (result == Dee_GETC_ERR)
 			throw_last_deemon_exception();
 		return result;
 	}

@@ -220,8 +220,6 @@ typedef void *Dee_fd_t; /* FILE * */
 #define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009) /* `operator ungetc(ch: int): int' */
 #define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a) /* `operator putc(ch: int): int' */
 #define FILE_OPERATOR_COUNT                    0x000b
-#define GETC_EOF             Dee_GETC_EOF
-#define GETC_ERR             Dee_GETC_ERR
 
 #define OPERATOR_FILE_0000_READ   FILE_OPERATOR_READ
 #define OPERATOR_FILE_0001_WRITE  FILE_OPERATOR_WRITE
@@ -239,26 +237,125 @@ typedef void *Dee_fd_t; /* FILE * */
 struct Dee_filetype_object {
 	DeeTypeObject ft_base; /* Underlying type. */
 
-	/* File operators. */
-	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_read)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_write)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-	/* @param: whence: One of `SEEK_*' from `<stdio.h>' */
-	WUNUSED_T NONNULL_T((1))                   Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
-	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_close)(DeeFileObject *__restrict self);
-	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_pread)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_pwrite)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	/* Read data from file
+	 * @param: bufsize: Read at most this many bytes into "buffer"
+	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer"
+	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING' is given and no data is available right now
+	 * @return: (size_t)-1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t
+	(DCALL *ft_read)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+
+	/* Write data to file
+	 * @param: bufsize: Write at most this many bytes from "buffer"
+	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer".
+	 *                  When there is insufficient space for all `bufsize' bytes, this may be less
+	 *                  than that.
+	 * @return: 0 :     Buf is entirely filled up or is unable to serve write-commands for some
+	 *                  other (file-specific) reason, or the file is full right now, but blocking
+	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING' was given.
+	 * @return: (size_t)-1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3) size_t
+	(DCALL *ft_write)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+
+	/* Change position within the file (move pointer with which `ft_read' / `ft_write' interact)
+	 * @param: whence: One of `Dee_SEEK_*'
+	 * @param: off:    Offset added to the position specified by `whence'
+	 * @param: * :     The file's pointer position *after* the seek (as
+	 *                 an absolute offset usable with `Dee_SEEK_SET')
+	 * @param: (pos_t)-1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) Dee_pos_t
+	(DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+
+	/* Flush changes to underlying components (exact meaning is file-specific).
+	 * Whether or not this operator *must* be called is implementation-specific.
+	 * Many file types don't require this operator all (e.g. deemon.File.Writer),
+	 * others require you to call it in order to flush some sort of state (e.g.
+	 * iconv.EncodeReader("base64") requires you to use "readall()" or "sync()"
+	 * before it'll emit the trailing "===" sequence). Other file types still
+	 * will include a call to this operator in "ft_close".
+	 *
+	 * @return: 0 : Success
+	 * @return: -1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_sync)(DeeFileObject *__restrict self);
+
+	/* Truncate the file's size to exactly "size" bytes.
+	 *
+	 * @return: 0 : Success
+	 * @return: -1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
+
+	/* Close the file. After a call to this function, behavior of all other
+	 * operators is weak-undefined (e.g. `ft_read' might throw an exception,
+	 * or might just indicate EOF).
+	 *
+	 * Note that this operator is *always* optional (any file that is not
+	 * closed explicitly will be closed automatically once its reference
+	 * count drops to zero). Additionally, "File.operator leave()" is
+	 * implemented to automatically call `ft_close'. However, you may still
+	 * want to explicitly close a file in order to more easily control some
+	 * file-specific behavior related to closing (e.g. ipc.Pipe.Writer.close
+	 * will cause ipc.Pipe.Reader.read to stop blocking and indicate EOF).
+	 *
+	 * @return: 0 : Success
+	 * @return: -1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_close)(DeeFileObject *__restrict self);
+
+	/* Same as `ft_read', but rather than reading data from the file's internal
+	 * pointer, the read happens at the absolute position specific by `pos'.
+	 * @param: bufsize: Read at most this many bytes into "buffer"
+	 * @param: pos:     Position from which to read data.
+	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer"
+	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING' is given and no data is available right now
+	 * @return: (size_t)-1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t
+	(DCALL *ft_pread)(DeeFileObject *self, void *buffer,
+	                  size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+
+	/* Same as `ft_write', but rather than writing data to the file's internal
+	 * pointer, the write happens at the absolute position specific by `pos'.
+	 * @param: bufsize: Write at most this many bytes from "buffer"
+	 * @param: pos:     Position to which to write data.
+	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer".
+	 *                  When there is insufficient space for all `bufsize' bytes, this may be less
+	 *                  than that.
+	 * @return: 0 :     Buf is entirely filled up or is unable to serve write-commands for some
+	 *                  other (file-specific) reason, or the file is full right now, but blocking
+	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING' was given.
+	 * @return: (size_t)-1: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3) size_t
+	(DCALL *ft_pwrite)(DeeFileObject *self, void const *buffer,
+	                   size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+
 #define Dee_GETC_EOF (-1)
 #define Dee_GETC_ERR (-2)
-	/* Read and return one byte, or `Dee_GETC_EOF' for EOF and `Dee_GETC_ERR' if an error occurred. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+
+	/* Read and return one byte
+	 * @return: [0,255]:      The byte that was read
+	 * @return: Dee_GETC_EOF: EOF
+	 * @return: Dee_GETC_ERR: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+
 	/* Return a previous read byte. (Required for implementing scanf())
-	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
-	/* Write a single byte to the file.
-	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+	 * @return: 0 :           Success
+	 * @return: Dee_GETC_EOF: Cannot unget -- reached EOF
+	 * @return: Dee_GETC_ERR: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
+
+	/* Write a single byte to the file (same as "ft_write" when called with "bufsize=1")
+	 * @return: 0 :           Success
+	 * @return: Dee_GETC_EOF: EOF
+	 * @return: Dee_GETC_ERR: An error was thrown */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 };
 
 #define DeeType_AsFileType(self) COMPILER_CONTAINER_OF(self, DeeFileTypeObject, ft_base)
@@ -393,7 +490,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_IsAtty(DeeObject *__restrict self
  * defined for the configuration used when deemon was built.
  * NOTE: This function doesn't require that `self' actually be
  *       derived from a `deemon.File'!
- * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * @return: * :             The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
  * @return: Dee_fd_INVALID: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restrict self);
 

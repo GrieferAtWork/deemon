@@ -27,7 +27,7 @@
 #include <deemon/bool.h>            /* return_bool, return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttr */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, OPEN_F* */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */
@@ -2377,7 +2377,7 @@ sysfile_getc(SystemFile *__restrict self, Dee_ioflag_t flags) {
 	(void)flags;
 	if unlikely(!self->sf_handle) {
 		err_file_closed(self);
-		return GETC_ERR;
+		return Dee_GETC_ERR;
 	}
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_fgetc
@@ -2392,21 +2392,21 @@ sysfile_getc(SystemFile *__restrict self, Dee_ioflag_t flags) {
 		}
 	}
 #endif /* !CONFIG_HAVE_fgetc */
-#if defined(CONFIG_HAVE_ferror) || EOF != GETC_EOF
+#if defined(CONFIG_HAVE_ferror) || EOF != Dee_GETC_EOF
 	if (result == EOF) {
 #ifdef CONFIG_HAVE_ferror
 		if (ferror((FILE *)self->sf_handle)) {
 			DBG_ALIGNMENT_ENABLE();
 			error_file_io(self);
-			return GETC_ERR;
+			return Dee_GETC_ERR;
 		}
 #endif /* CONFIG_HAVE_ferror */
-#if EOF != GETC_EOF
+#if EOF != Dee_GETC_EOF
 		DBG_ALIGNMENT_ENABLE();
-		return GETC_EOF;
+		return Dee_GETC_EOF;
 #endif
 	}
-#endif /* CONFIG_HAVE_ferror || EOF != GETC_EOF */
+#endif /* CONFIG_HAVE_ferror || EOF != Dee_GETC_EOF */
 	DBG_ALIGNMENT_ENABLE();
 	return result;
 #else /* CONFIG_HAVE_fgetc || CONFIG_HAVE_fread */
@@ -2420,7 +2420,7 @@ sysfile_getc(SystemFile *__restrict self, Dee_ioflag_t flags) {
 	(void)self;
 	(void)flags;
 	fs_unsupported();
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 #endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_getc */
@@ -2435,12 +2435,12 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
 	int result;
 	if unlikely(!self->sf_handle) {
 		err_file_closed(self);
-		return GETC_ERR;
+		return Dee_GETC_ERR;
 	}
 	DBG_ALIGNMENT_DISABLE();
 	result = ungetc(ch, (FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
-	return result == EOF ? GETC_EOF : 0;
+	return result == EOF ? Dee_GETC_EOF : 0;
 #else /* CONFIG_HAVE_ungetc */
 	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                  FILE_OPERATOR_UNGETC);
@@ -2452,7 +2452,7 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
 	(void)self;
 	(void)ch;
 	fs_unsupported();
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 #endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_ungetc */
@@ -2470,7 +2470,7 @@ sysfile_putc(SystemFile *__restrict self, int ch, Dee_ioflag_t flags) {
 	(void)flags;
 	if unlikely(!self->sf_handle) {
 		err_file_closed(self);
-		return GETC_ERR;
+		return Dee_GETC_ERR;
 	}
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_fputc
@@ -2484,10 +2484,10 @@ sysfile_putc(SystemFile *__restrict self, int ch, Dee_ioflag_t flags) {
 		if (ferror((FILE *)self->sf_handle)) {
 			DBG_ALIGNMENT_ENABLE();
 			error_file_io(self);
-			return GETC_ERR;
+			return Dee_GETC_ERR;
 		}
 #endif /* CONFIG_HAVE_ferror */
-		return GETC_EOF;
+		return Dee_GETC_EOF;
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
@@ -2503,7 +2503,7 @@ sysfile_putc(SystemFile *__restrict self, int ch, Dee_ioflag_t flags) {
 	(void)ch;
 	(void)flags;
 	fs_unsupported();
-	return GETC_ERR;
+	return Dee_GETC_ERR;
 #endif /* DeeSystem_FILE_USE_STUB */
 }
 #endif /* deemon_file_HAVE_sysfile_putc */

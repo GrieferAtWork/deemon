@@ -28,7 +28,7 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t */
 #include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
@@ -221,7 +221,7 @@ mf_getc(DeeMemoryFileObject *__restrict self, Dee_ioflag_t UNUSED(flags)) {
 	DeeMemoryFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
 	if unlikely(self->mf_ptr >= self->mf_end) {
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 	} else {
 		result = *self->mf_ptr++;
 	}
@@ -235,14 +235,14 @@ mf_ungetc(DeeMemoryFileObject *__restrict self, int ch) {
 	DeeMemoryFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
 	if unlikely(self->mf_ptr == self->mf_begin) {
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 	} else {
 #if 0
 		if (self->mf_ptr[-1] != (byte_t)ch) {
 			DeeMemoryFile_LockEndWrite(self);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Incorrect character for ungetc()");
-			return GETC_ERR;
+			return Dee_GETC_ERR;
 		}
 #endif
 		(void)ch;
@@ -573,10 +573,10 @@ reader_getc(DeeFileReaderObject *__restrict self, Dee_ioflag_t UNUSED(flags)) {
 	if unlikely(!self->r_owner) {
 		DeeFileReader_LockEndWrite(self);
 		err_file_closed();
-		return GETC_ERR;
+		return Dee_GETC_ERR;
 	}
 	if unlikely(self->r_ptr >= self->r_end) {
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 	} else {
 		result = *self->r_ptr++;
 	}
@@ -593,17 +593,17 @@ reader_ungetc(DeeFileReaderObject *__restrict self,
 	if unlikely(!self->r_owner) {
 		DeeFileReader_LockEndWrite(self);
 		err_file_closed();
-		return GETC_ERR;
+		return Dee_GETC_ERR;
 	}
 	if unlikely(self->r_ptr == self->r_begin) {
-		result = GETC_EOF;
+		result = Dee_GETC_EOF;
 	} else {
 #if 0
 		if (self->r_ptr[-1] != (byte_t)ch) {
 			DeeFileReader_LockEndWrite(self);
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Incorrect character for ungetc()");
-			return GETC_ERR;
+			return Dee_GETC_ERR;
 		}
 #endif
 		(void)ch;
