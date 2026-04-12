@@ -22,6 +22,17 @@
 
 #include "api.h"
 
+/* Config option: also write "*__unsupported" impls to operator slots */
+#if (!defined(CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS) && \
+     !defined(CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS))
+#if 1
+#define CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS /*!export*/
+#else
+#define CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS /*!export*/
+#endif
+#endif /* !CONFIG_[NO_]CACHE_UNSUPPORTED_NATIVE_OPERATORS */
+
+
 #ifdef CONFIG_BUILDING_DEEMON
 
 /* Figure out if computed operators should be used */

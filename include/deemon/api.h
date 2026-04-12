@@ -267,16 +267,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* NDEBUG */
 #endif /* !CONFIG_[NO_]TRACE_REFCHANGES */
 
-#if (!defined(CONFIG_NO_BADREFCNT_CHECKS) && \
-     !defined(CONFIG_BADREFCNT_CHECKS))
-#ifdef NDEBUG
-#define CONFIG_NO_BADREFCNT_CHECKS
-#else /* NDEBUG */
-#define CONFIG_BADREFCNT_CHECKS
-#endif /* !NDEBUG */
-#endif /* !CONFIG_[NO_]BADREFCNT_CHECKS */
-
-
 #ifdef CONFIG_TRACE_REFCHANGES
 /* Assembly interpreters do not implement the additional
  * overhead required to properly track reference counts.
@@ -285,17 +275,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #else /* CONFIG_TRACE_REFCHANGES */
 #define CONFIG_NO_TRACE_REFCHANGES
 #endif /* !CONFIG_TRACE_REFCHANGES */
-
-
-/* Config option: also write "*__unsupported" impls to operator slots */
-#if (!defined(CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS) && \
-     !defined(CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS))
-#if 1
-#define CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
-#else
-#define CONFIG_NO_CACHE_UNSUPPORTED_NATIVE_OPERATORS
-#endif
-#endif /* !CONFIG_[NO_]CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 
 
 /* Config option: disable all semantically unnecessary overloads/fast-paths to reduce binary size
@@ -331,16 +310,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* CONFIG_TINY_DEEMON */
 #endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
 
-
-/* Config option: provide special optimizations for user-classes without bases */
-#if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
-     !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
-#if !defined(CONFIG_TINY_DEEMON)
-#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-#else /* !CONFIG_TINY_DEEMON */
-#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
-#endif /* CONFIG_TINY_DEEMON */
-#endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* Configure option:
  *     CONFIG_DEFAULT_MESSAGE_FORMAT_(MSVC|GCC)
@@ -400,32 +369,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_HOST_UNIX
 #endif /* Unix... */
 #endif /* !CONFIG_FORCE_HOST_... */
-
-
-/* Include metrics and support for automatically re-compiling `DeeCodeObject'
- * and `DeeFunctionObject' objects into host assembly (using `_hostasm') once
- * - the same code object has used to create functions a given # of times
- * - the same function has been called a given # of times */
-#if (!defined(CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE) && \
-     !defined(CONFIG_NO_HOSTASM_AUTO_RECOMPILE))
-#if ((defined(__i386__) || defined(__x86_64__)) && \
-     (defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HOST_UNIX)))
-#define CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-#else /* ... */
-#define CONFIG_NO_HOSTASM_AUTO_RECOMPILE
-#endif /* !... */
-#endif /* !CONFIG_[HAVE|NO]_HOSTASM_AUTO_RECOMPILE */
-
-/* Enable support for metrics in DeeCodeObject and DeeFunctionObject */
-#if (!defined(CONFIG_HAVE_CODE_METRICS) && \
-     !defined(CONFIG_NO_CODE_METRICS))
-#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-#define CONFIG_HAVE_CODE_METRICS
-#else /* ... */
-#define CONFIG_NO_CODE_METRICS
-#endif /* !... */
-#endif /* !CONFIG_[HAVE|NO]CODE_METRICS */
-
 
 
 

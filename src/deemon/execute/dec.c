@@ -3311,7 +3311,7 @@ DECL_END
 #include <deemon/callable.h> /* DeeCallable_Type */
 #include <deemon/cell.h>     /* DeeCell* */
 #include <deemon/class.h>    /* DeeClassDescriptorObject, DeeClassDescriptor_*, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FMASK, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>     /* DeeCodeObject, DeeCode_Malloc, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_MAXSIZE, Dee_DDI_REGS_FMASK, Dee_EXCEPTION_HANDLER_FMASK, Dee_code_metrics_init, Dee_ddi_exdat, Dee_except_handler, Dee_hostasm_code_init, Dee_hostasm_function_init, code_addr_t, instruction_t */
+#include <deemon/code.h>     /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_Malloc, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_MAXSIZE, Dee_DDI_REGS_FMASK, Dee_EXCEPTION_HANDLER_FMASK, Dee_code_metrics_init, Dee_ddi_exdat, Dee_except_handler, Dee_hostasm_code_init, Dee_hostasm_function_init, code_addr_t, instruction_t */
 #include <deemon/dict.h>     /* DeeDict_New, DeeDict_Type */
 #include <deemon/error.h>
 #include <deemon/exec.h>

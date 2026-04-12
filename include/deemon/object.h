@@ -77,6 +77,15 @@
 /*!fixincludes fake_include "tuple.h"           // DeeTuple_ELEM, DeeTuple_SIZE */
 /*!fixincludes fake_include "type.h"            // DeeType_IsAbstract */
 
+#if (!defined(CONFIG_NO_BADREFCNT_CHECKS) && \
+     !defined(CONFIG_BADREFCNT_CHECKS))
+#ifdef NDEBUG
+#define CONFIG_NO_BADREFCNT_CHECKS
+#else /* NDEBUG */
+#define CONFIG_BADREFCNT_CHECKS
+#endif /* !NDEBUG */
+#endif /* !CONFIG_[NO_]BADREFCNT_CHECKS */
+
 DECL_BEGIN
 
 /* Return value for compare "tp_compare_eq", "tp_compare" and "tp_trycompare_eq". */

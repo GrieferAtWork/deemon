@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryCalloc */
 #include <deemon/format.h>          /* PRFXSIZ, PRFuSIZ */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_AT, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_funptr_t, Dee_refcnt_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_AT, CONFIG_NO_BADREFCNT_CHECKS, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_funptr_t, Dee_refcnt_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, strlen */
 #include <deemon/type.h>            /* DeeType_*, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t, TF_TPVISIT, TP_FGC, TP_FHEAP */
 #include <deemon/util/atomic.h>     /* atomic_* */

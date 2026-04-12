@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_code_frame, Dee_code_object, Dee_hostasm_function_init */
+#include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_code_frame, Dee_code_object, Dee_hostasm_function_init */
 #include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */

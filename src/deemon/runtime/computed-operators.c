@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/computed-operators.h> /* CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
+#include <deemon/computed-operators.h> /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS, CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
 #include <deemon/type.h>               /* type_* */
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS

@@ -928,16 +928,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_init(DeeObject *__restrict self, 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_ctor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
 #define instance_inherited_tctor instance_tctor
@@ -955,16 +945,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_init(DeeObject *__restric
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* No predefined construction operators. (but the type doesn't have a base) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-
 /* No predefined construction operators, but the `TP_FINHERITCTOR' flag is set. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_inherited_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_ctor(DeeObject *__restrict self);
@@ -976,10 +956,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_initkw(DeeObjec
 /* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF NONNULL((1, 2)) void DCALL instance_builtin_destructor(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
@@ -1006,20 +982,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinit(DeeTypeObje
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-#define instance_auto_nobase_tctor instance_nobase_tctor
-#define instance_auto_nobase_ctor  instance_nobase_ctor
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define instance_builtin_auto_nobase_tctor instance_builtin_nobase_tctor
-#define instance_builtin_auto_nobase_ctor  instance_builtin_nobase_ctor
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_builtin_auto_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 #endif /* Dee_TP_FCLASS_AUTOINIT */

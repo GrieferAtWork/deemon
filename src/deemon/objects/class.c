@@ -62,7 +62,53 @@
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+/* Config option: provide special optimizations for user-classes without bases */
+#if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
+     !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
+#if !defined(CONFIG_TINY_DEEMON) && !defined(__OPTIMIZE_SIZE__)
+#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#else /* !CONFIG_TINY_DEEMON && !__OPTIMIZE_SIZE__ */
+#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#endif /* CONFIG_TINY_DEEMON || __OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
+
 DECL_BEGIN
+
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
+/* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+/* No predefined construction operators. (but the type doesn't have a base) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+/* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
+#define instance_auto_nobase_tctor instance_nobase_tctor
+#define instance_auto_nobase_ctor  instance_nobase_ctor
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define instance_builtin_auto_nobase_tctor instance_builtin_nobase_tctor
+#define instance_builtin_auto_nobase_ctor  instance_builtin_nobase_ctor
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 INTERN struct type_cmp instance_builtin_cmp = {
 	/* .tp_hash          = */ &usrtype__hash__with__,
