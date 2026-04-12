@@ -46,20 +46,43 @@
 
 DECL_BEGIN
 
-#define DOC_param_errors "#perrors{One of $\"strict\", $\"replace\", $\"ignore\" or $\"discard\"}"
+#define DOC_param_errors     "#perrors{One of $\"strict\", $\"replace\", $\"ignore\" or $\"discard\"}"
+#define DOC_param_closeout   "#pcloseout{When ?t, propagate ${operator sync} and ${operator close} to @out}"
+#define DOC_param_closeinput "#pcloseinput{When ?t, propagate ${operator sync} and ${operator close} to @input}"
+#define DOC_param_chunksize  "#pchunksize{Hint for how many bytes to read from @input at a time}"
 
 /*[[[deemon
 (print_DEFINE_KWLIST from rt.gen.unpack)({
 	"codec",
 	"out",
 	"errors",
+	"closeout",
+});
+(print_DEFINE_KWLIST from rt.gen.unpack)({
+	"codec",
+	"input",
+	"errors",
+	"closeinput",
+	"chunksize",
 });
 ]]]*/
-#ifndef DEFINED_kwlist__codec_out_errors
-#define DEFINED_kwlist__codec_out_errors
-PRIVATE DEFINE_KWLIST(kwlist__codec_out_errors, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
-#endif /* !DEFINED_kwlist__codec_out_errors */
+#ifndef DEFINED_kwlist__codec_out_errors_closeout
+#define DEFINED_kwlist__codec_out_errors_closeout
+PRIVATE DEFINE_KWLIST(kwlist__codec_out_errors_closeout, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeout", 0xa788672d, 0x6a93c4deffab5326), KEND });
+#endif /* !DEFINED_kwlist__codec_out_errors_closeout */
+#ifndef DEFINED_kwlist__codec_input_errors_closeinput_chunksize
+#define DEFINED_kwlist__codec_input_errors_closeinput_chunksize
+PRIVATE DEFINE_KWLIST(kwlist__codec_input_errors_closeinput_chunksize, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("input", 0xa0556672, 0x9532499416effacb), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeinput", 0x90ae92c4, 0xfc11aaae8d08ecc9), KEX("chunksize", 0xd5f3e634, 0x45395a4186f3ceef), KEND });
+#endif /* !DEFINED_kwlist__codec_input_errors_closeinput_chunksize */
 /*[[[end]]]*/
+
+#define EDO(err, expr)                   \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 
 PRIVATE WUNUSED NONNULL((3)) Dee_ssize_t DCALL
 printcodecname(iconv_codec_t codec, uintptr_half_t flags,
@@ -71,22 +94,11 @@ printcodecname(iconv_codec_t codec, uintptr_half_t flags,
 	result = DeeFormat_Printf(printer, arg, "\"%#q", name);
 	if unlikely(result < 0)
 		goto done;
-	if (flags & ICONV_ERR_TRANSLIT) {
-		temp = DeeFormat_PRINT(printer, arg, "//TRANSLIT");
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-	}
-	if ((flags & ICONV_ERRMASK) == ICONV_ERR_IGNORE) {
-		temp = DeeFormat_PRINT(printer, arg, "//IGNORE");
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-	}
-	temp = DeeFormat_PRINT(printer, arg, "\"");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	if (flags & ICONV_ERR_TRANSLIT)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "//TRANSLIT"));
+	if ((flags & ICONV_ERRMASK) == ICONV_ERR_IGNORE)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "//IGNORE"));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, "\""));
 done:
 	return result;
 err_temp:
@@ -152,18 +164,22 @@ ive_init(IconvEncoder *__restrict self, size_t argc,
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Encoder", params: """
 	codec:?X2?Dstring?Dint,
 	out:?DFile,
-	errors:?X2?Dstring?Dint = NULL = !Pstrict
+	errors:?X2?Dstring?Dint = NULL = !Pstrict,
+	bool closeout = false
 """, docStringPrefix: "ivd");]]]*/
-#define ivd_Encoder_params "codec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict"
+#define ivd_Encoder_params "codec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeout=!f"
 	struct {
 		DeeObject *codec;
 		DeeObject *out;
 		DeeObject *errors;
+		bool closeout;
 	} args;
 	args.errors = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_out_errors, "oo|o:Encoder", &args))
+	args.closeout = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_out_errors_closeout, "oo|ob:Encoder", &args))
 		goto err;
 /*[[[end]]]*/
+	self->ive_closeout = args.closeout;
 	codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.codec, args.errors,
 	                                                        &self->ive_encoder.ice_flags);
 	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
@@ -191,30 +207,17 @@ ive_printrepr(IconvEncoder *__restrict self,
 	result = DeeFormat_PRINT(printer, arg, "Encoder(codec: ");
 	if unlikely(result < 0)
 		goto done;
-	temp = printcodecname(self->ive_encoder.ice_codec, self->ive_encoder.ice_flags, printer, arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ive_encoder.ice_output.ii_arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	EDO(err_temp, printcodecname(self->ive_encoder.ice_codec, self->ive_encoder.ice_flags, printer, arg));
+	EDO(err_temp, DeeFormat_Printf(printer, arg, ", out: %r", self->ive_encoder.ice_output.ii_arg));
 	flags = self->ive_encoder.ice_flags;
 	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
 	if (flags != ICONV_ERR_ERROR) {
-		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		temp = printcodecerrors(flags, printer, arg);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", errors: "));
+		EDO(err_temp, printcodecerrors(flags, printer, arg));
 	}
-	temp = DeeFormat_PRINT(printer, arg, ")");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	if (self->ive_closeout)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", closeout: true"));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
 err_temp:
@@ -261,9 +264,8 @@ err:
 	return NULL;
 }
 
-#define ive_close ive_sync
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-ive_sync(IconvEncoder *__restrict self) {
+ive_sync_impl(IconvEncoder *__restrict self) {
 	Dee_ssize_t status;
 	if unlikely(encoder_acquire(self))
 		goto err;
@@ -274,6 +276,28 @@ ive_sync(IconvEncoder *__restrict self) {
 	        "which should only ever return `-1' on error");
 	if unlikely(status < 0)
 		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ive_close(IconvEncoder *__restrict self) {
+	if (ive_sync_impl(self))
+		goto err;
+	if (self->ive_closeout)
+		return DeeFile_Close(Dee_AsObject(IconvEncoder_GetOut(self)));
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ive_sync(IconvEncoder *__restrict self) {
+	if (ive_sync_impl(self))
+		goto err;
+	if (self->ive_closeout)
+		return DeeFile_Sync(Dee_AsObject(IconvEncoder_GetOut(self)));
 	return 0;
 err:
 	return -1;
@@ -305,6 +329,8 @@ PRIVATE struct type_member tpconst ive_members[] = {
 	TYPE_MEMBER_FIELD_DOC("out", STRUCT_OBJECT,
 	                      offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg),
 	                      "->?DFile"),
+	TYPE_MEMBER_FIELD("closeout", STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_BOOL__),
+	                  offsetof(IconvEncoder, ive_closeout)),
 	TYPE_MEMBER_END
 };
 
@@ -316,6 +342,7 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 		                     "#pcodec{Name of the codec that should be used to encode @data. May "
 		                     /*   */ "also contain some additional flags (s.a. ?Gparsecodecname)}"
 		                     DOC_param_errors
+		                     DOC_param_closeout
 		                     ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
@@ -398,18 +425,22 @@ ivdw_init(IconvDecodeWriter *__restrict self, size_t argc,
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("DecodeWriter", params: """
 	codec:?X2?Dstring?Dint,
 	out:?DFile,
-	errors:?X2?Dstring?Dint = NULL = !Pstrict
+	errors:?X2?Dstring?Dint = NULL = !Pstrict,
+	bool closeout = false
 """, docStringPrefix: "ivd");]]]*/
-#define ivd_Decoder_params "codec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict"
+#define ivd_DecodeWriter_params "codec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeout=!f"
 	struct {
 		DeeObject *codec;
 		DeeObject *out;
 		DeeObject *errors;
+		bool closeout;
 	} args;
 	args.errors = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_out_errors, "oo|o:Decoder", &args))
+	args.closeout = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_out_errors_closeout, "oo|ob:DecodeWriter", &args))
 		goto err;
 /*[[[end]]]*/
+	self->ivdw_closeout = args.closeout;
 	codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.codec, args.errors,
 	                                                        &self->ivdw_decoder.icd_flags);
 	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
@@ -437,30 +468,17 @@ ivdw_printrepr(IconvDecodeWriter *__restrict self,
 	result = DeeFormat_PRINT(printer, arg, "DecodeWriter(codec: ");
 	if unlikely(result < 0)
 		goto done;
-	temp = printcodecname(self->ivdw_decoder.icd_codec, self->ivdw_decoder.icd_flags, printer, arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ivdw_decoder.icd_output.ii_arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	EDO(err_temp, printcodecname(self->ivdw_decoder.icd_codec, self->ivdw_decoder.icd_flags, printer, arg));
+	EDO(err_temp, DeeFormat_Printf(printer, arg, ", out: %r", self->ivdw_decoder.icd_output.ii_arg));
 	flags = self->ivdw_decoder.icd_flags;
 	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
 	if (flags != ICONV_ERR_ERROR) {
-		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		temp = printcodecerrors(flags, printer, arg);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", errors: "));
+		EDO(err_temp, printcodecerrors(flags, printer, arg));
 	}
-	temp = DeeFormat_PRINT(printer, arg, ")");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	if (self->ivdw_closeout)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", closeout: true"));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
 err_temp:
@@ -507,10 +525,17 @@ err:
 	return NULL;
 }
 
-#define ivdw_close ivdw_sync
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ivdw_close(IconvDecodeWriter *__restrict self) {
+	if (self->ivdw_closeout)
+		return DeeFile_Close(Dee_AsObject(IconvDecodeWriter_GetOut(self)));
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ivdw_sync(IconvDecodeWriter *__restrict self) {
-	(void)self;
+	if (self->ivdw_closeout)
+		return DeeFile_Sync(Dee_AsObject(IconvDecodeWriter_GetOut(self)));
 	return 0;
 }
 
@@ -539,10 +564,11 @@ INTERN DeeFileTypeObject IconvDecodeWriter_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "DecodeWriter",
-		/* .tp_doc      = */ DOC("(" ivd_Decoder_params ")\n"
+		/* .tp_doc      = */ DOC("(" ivd_DecodeWriter_params ")\n"
 		                     "#pcodec{Name of the codec that was used to encode @data. May also "
 		                     /*   */ "contain some additional flags (s.a. ?Gparsecodecname)}"
 		                     DOC_param_errors
+		                     DOC_param_closeout
 		                     ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
@@ -619,6 +645,7 @@ STATIC_ASSERT(offsetof(IconvTranscodeWriter, ivtw_encoder.ice_output.ii_arg) ==
 #define ivtw_members ive_members
 
 STATIC_ASSERT(offsetof(IconvTranscodeWriter, ivtw_encoder) == offsetof(IconvEncoder, ive_encoder));
+STATIC_ASSERT(offsetof(IconvTranscodeWriter, ivtw_closeout) == offsetof(IconvEncoder, ive_closeout));
 #define ivtw_close       ive_close
 #define ivtw_sync        ive_sync
 #define ivtw_getoutcodec ive_getcodec
@@ -632,20 +659,24 @@ ivtw_init(IconvTranscodeWriter *__restrict self, size_t argc,
 	incodec:?X2?Dstring?Dint,
 	outcodec:?X2?Dstring?Dint,
 	out:?DFile,
-	errors:?X2?Dstring?Dint = NULL = !Pstrict
+	errors:?X2?Dstring?Dint = NULL = !Pstrict,
+	bool closeout = false
 """, docStringPrefix: "ivd", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(Transcoder_kwlist, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
-#define ivd_Transcoder_params "incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict"
+	static DEFINE_KWLIST(TranscodeWriter_kwlist, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeout", 0xa788672d, 0x6a93c4deffab5326), KEND });
+#define ivd_TranscodeWriter_params "incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeout=!f"
 	struct {
 		DeeObject *incodec;
 		DeeObject *outcodec;
 		DeeObject *out;
 		DeeObject *errors;
+		bool closeout;
 	} args;
 	args.errors = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, Transcoder_kwlist, "ooo|o:Transcoder", &args))
+	args.closeout = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, TranscodeWriter_kwlist, "ooo|ob:TranscodeWriter", &args))
 		goto err;
 /*[[[end]]]*/
+	self->ivtw_closeout = args.closeout;
 	in_codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.incodec, args.errors,
 	                                                           &self->ivtw_decoder.icd_flags);
 	if unlikely(in_codec_id == ICONV_CODEC_UNKNOWN)
@@ -698,38 +729,19 @@ ivtw_printrepr(IconvTranscodeWriter *__restrict self,
 	result = DeeFormat_PRINT(printer, arg, "TranscodeWriter(incodec: ");
 	if unlikely(result < 0)
 		goto done;
-	temp = printcodecname(self->ivtw_decoder.icd_codec, self->ivtw_decoder.icd_flags, printer, arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	temp = DeeFormat_PRINT(printer, arg, ", outcodec: ");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	temp = printcodecname(self->ivtw_encoder.ice_codec, self->ivtw_encoder.ice_flags, printer, arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ivtw_encoder.ice_output.ii_arg);
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	EDO(err_temp, printcodecname(self->ivtw_decoder.icd_codec, self->ivtw_decoder.icd_flags, printer, arg));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ", outcodec: "));
+	EDO(err_temp, printcodecname(self->ivtw_encoder.ice_codec, self->ivtw_encoder.ice_flags, printer, arg));
+	EDO(err_temp, DeeFormat_Printf(printer, arg, ", out: %r", self->ivtw_encoder.ice_output.ii_arg));
 	flags = self->ivtw_decoder.icd_flags | self->ivtw_encoder.ice_flags;
 	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
 	if (flags != ICONV_ERR_ERROR) {
-		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		temp = printcodecerrors(flags, printer, arg);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", errors: "));
+		EDO(err_temp, printcodecerrors(flags, printer, arg));
 	}
-	temp = DeeFormat_PRINT(printer, arg, ")");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
+	if (self->ivtw_closeout)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", closeout: true"));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
 err_temp:
@@ -800,13 +812,14 @@ INTERN DeeFileTypeObject IconvTranscodeWriter_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "TranscodeWriter",
-		/* .tp_doc      = */ DOC("(" ivd_Transcoder_params ")\n"
+		/* .tp_doc      = */ DOC("(" ivd_TranscodeWriter_params ")\n"
 		                         "#pincodec{Name of the codec that was used to encode @data. May also "
 		                         /*     */ "contain some additional flags (s.a. ?Gparsecodecname)}"
 		                         "#poutcodec{Name of the codec that should be used to re-encode @data "
 		                         /*      */ "after it was internally decoded using @incodec. May also "
 		                         /*      */ "contain some additional flags (s.a. ?Gparsecodecname)}"
 		                         DOC_param_errors
+		                         DOC_param_closeout
 		                         ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
@@ -862,6 +875,403 @@ INTERN DeeFileTypeObject IconvTranscodeWriter_Type = {
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL
 };
+
+
+
+
+
+/************************************************************************/
+/* DECODER                                                              */
+/************************************************************************/
+
+#define IVD_DEFAULT_CHUNKSIZE 4096
+
+STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvEncoder, ive_lock));
+#define ivd_acquire(self) encoder_acquire((IconvEncoder *)(self))
+#define ivd_release(self) Dee_nrshared_lock_release(&(self)->ivd_lock)
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+ivd_buffer_printer(void *arg, char const *__restrict data, size_t datalen) {
+	IconvDecoder *me = (IconvDecoder *)arg;
+	byte_t *pnd_end = me->ivd_pndbase + me->ivd_pndsize;
+	byte_t *buf_end = me->ivd_bufbase + me->ivd_bufsize;
+	size_t avail = (size_t)(buf_end - pnd_end);
+	ASSERT(buf_end >= pnd_end);
+	ASSERT(me->ivd_pndbase >= me->ivd_bufbase);
+	if (avail < datalen) {
+		/* Remaining buffer space too small -> try to reclaim leading space */
+		if (me->ivd_pndbase > me->ivd_bufbase) {
+			me->ivd_pndbase = (byte_t *)memmovedown(me->ivd_bufbase, me->ivd_pndbase, me->ivd_pndsize);
+			pnd_end = me->ivd_pndbase + me->ivd_pndsize;
+			ASSERT(buf_end >= pnd_end);
+			avail = (size_t)(buf_end - pnd_end);
+		}
+
+		/* Buffer is just too small; period. -> Must resize to make it larger */
+		if (avail < datalen) {
+			byte_t *new_buffer;
+			size_t min_alloc = me->ivd_pndsize + datalen;
+			size_t new_alloc = me->ivd_bufsize << 1;
+			if (new_alloc < 512)
+				new_alloc = 512;
+			if (new_alloc < min_alloc)
+				new_alloc = min_alloc;
+			new_buffer = (byte_t *)Dee_TryRealloc(me->ivd_bufbase, new_alloc);
+			if unlikely(!new_buffer) {
+				new_alloc = min_alloc;
+				new_buffer = (byte_t *)Dee_Realloc(me->ivd_bufbase, new_alloc);
+				if unlikely(!new_buffer)
+					goto err;
+			}
+			me->ivd_bufbase = new_buffer;
+			me->ivd_pndbase = new_buffer;
+			me->ivd_bufsize = new_alloc;
+			pnd_end = me->ivd_pndbase + me->ivd_pndsize;
+			buf_end = me->ivd_bufbase + me->ivd_bufsize;
+			avail = (size_t)(buf_end - pnd_end);
+		}
+	}
+	ASSERT(avail >= datalen);
+	ASSERT(pnd_end == me->ivd_pndbase + me->ivd_pndsize);
+
+	/* Copy data into buffer */
+	memcpy(pnd_end, data, datalen);
+	me->ivd_pndsize += datalen;
+
+	return (Dee_ssize_t)datalen;
+err:
+	return -1;
+}
+
+/* Fill decoded data buffer by reading from input file.
+ * NOTE: Caller must be holding a lock to `self->ivd_lock'
+ *
+ * @param: hint: Hint for how many bytes to read from input file
+ * @return: 0 :  Input file indicates EOF (no further data was decoded)
+ * @return: * :  This many bytes were read from input file
+ * @return: (size_t)-1: An error was thrown. */
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+ivd_fillbuffer_locked(IconvDecoder *__restrict self,
+                      size_t hint, Dee_ioflag_t flags) {
+	size_t result;
+	byte_t *temp;
+	if (hint > self->ivd_chnksiz) {
+		hint = self->ivd_chnksiz;
+		if unlikely(!hint)
+			hint = 1;
+	}
+	temp = (byte_t *)Dee_Malloca(hint);
+	if unlikely(!temp)
+		goto err;
+
+	/* Read data into "temp" buffer */
+	result = DeeFile_Readf(self->ivd_in, temp, hint, flags);
+	if likely(result != (size_t)-1 &&
+	          result != (size_t)0) {
+		/* Feed data into input printer. */
+		Dee_ssize_t status;
+		status = (*self->ivd_input.ii_printer)(self->ivd_input.ii_arg,
+		                                       (char const *)temp, result);
+		if (status < 0) {
+			if (self->ivd_decoder.icd_flags & ICONV_HASERR) {
+				iconv_codec_t codec = self->ivd_decoder.icd_codec;
+				Dee_pos_t fpos = DeeFile_Tell(self->ivd_in);
+				if unlikely(fpos == (Dee_pos_t)-1)
+					goto err_temp;
+				fpos += (Dee_off_t)status;
+				if (Dee_TYPE(self) == &IconvDecoder_Type) {
+					err_unicode_decode_error(codec, fpos);
+				} else {
+					err_unicode_encode_error(codec, fpos);
+				}
+				goto err_temp;
+			}
+			ASSERTF(result == -1,
+			        "Underlying printer should be `ivd_buffer_printer', "
+			        "which only return `-1' on error");
+		}
+	}
+	Dee_Freea(temp);
+	return result;
+err_temp:
+	Dee_Freea(temp);
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+ivd_fillbuffer_any_locked(IconvDecoder *__restrict self,
+                          size_t hint, Dee_ioflag_t flags) {
+	size_t result, temp;
+	result = ivd_fillbuffer_locked(self, hint, flags);
+	if likely(result != (size_t)-1 && result != 0) {
+		/* If the underlying file-read didn't do anything (i.e.:
+		 * all read data was simply discarded by the decoder),
+		 * try to read some more data... */
+		while unlikely(self->ivd_pndsize == 0) {
+			hint *= 2;
+			if unlikely(!hint)
+				hint = IVD_DEFAULT_CHUNKSIZE;
+			temp = ivd_fillbuffer_locked(self, hint, flags);
+			if unlikely(temp == (size_t)-1) {
+				result = (size_t)-1;
+				break;
+			}
+			if (temp == 0)
+				break; /* EOF */
+			result += temp;
+		}
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ivd_init(IconvDecoder *__restrict self, size_t argc,
+         DeeObject *const *argv, DeeObject *kw) {
+	iconv_codec_t codec_id;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Decoder", params: """
+	codec:?X2?Dstring?Dint,
+	input:?DFile,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict,
+	bool closeinput = false,
+	size_t chunksize = IVD_DEFAULT_CHUNKSIZE = !4096
+""", docStringPrefix: "ivd");]]]*/
+#define ivd_Decoder_params "codec:?X2?Dstring?Dint,input:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeinput=!f,chunksize=!4096"
+	struct {
+		DeeObject *codec;
+		DeeObject *input;
+		DeeObject *errors;
+		bool closeinput;
+		size_t chunksize;
+	} args;
+	args.errors = NULL;
+	args.closeinput = false;
+	args.chunksize = IVD_DEFAULT_CHUNKSIZE;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_input_errors_closeinput_chunksize, "oo|ob" UNPuSIZ ":Decoder", &args))
+		goto err;
+/*[[[end]]]*/
+	self->ivd_closein = args.closeinput;
+	self->ivd_chnksiz = args.chunksize;
+	codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.codec, args.errors,
+	                                                        &self->ivd_decoder.icd_flags);
+	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	self->ivd_decoder.icd_output.ii_printer = &ivd_buffer_printer;
+	self->ivd_decoder.icd_output.ii_arg     = self;
+	self->ivd_decoder.icd_codec = codec_id;
+	if unlikely(do_libiconv_decode_init(&self->ivd_decoder, &self->ivd_input))
+		goto no_such_codec;
+	Dee_nrshared_lock_init(&self->ivd_lock);
+	ASSERT(self->ivd_decoder.icd_output.ii_arg == self);
+	Dee_Incref(args.input);
+	self->ivd_in = args.input;
+	self->ivd_bufbase = NULL;
+	self->ivd_bufsize = 0;
+	self->ivd_pndbase = NULL;
+	self->ivd_pndsize = 0;
+	return 0;
+no_such_codec:
+	err_unknown_codec(codec_id);
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+ivd_fini(IconvDecoder *__restrict self) {
+	Dee_Free(self->ivd_bufbase);
+	Dee_Decref(self->ivd_in);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+ivd_visit(IconvDecoder *__restrict self, Dee_visit_t proc, void *arg) {
+	Dee_Visit(self->ivd_in);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ivd_printrepr(IconvDecoder *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	uintptr_half_t flags;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Decoder(codec: ");
+	if unlikely(result < 0)
+		goto done;
+	EDO(err_temp, printcodecname(self->ivd_decoder.icd_codec, self->ivd_decoder.icd_flags, printer, arg));
+	EDO(err_temp, DeeFormat_Printf(printer, arg, ", input: %r", self->ivd_in));
+	flags = self->ivd_decoder.icd_flags;
+	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
+	if (flags != ICONV_ERR_ERROR) {
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", errors: "));
+		EDO(err_temp, printcodecerrors(flags, printer, arg));
+	}
+	if (self->ivd_closein)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", closeinput: true"));
+	if (self->ivd_chnksiz != IVD_DEFAULT_CHUNKSIZE)
+		EDO(err_temp, DeeFormat_Printf(printer, arg, ", chunksize: %" PRFuSIZ, self->ivd_chnksiz));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+#define ivd_get_isshiftzero_doc ivdw_get_isshiftzero_doc
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ivd_get_isshiftzero(IconvDecoder *__restrict self) {
+	bool result;
+	if (ivd_acquire(self))
+		goto err;
+	result = libiconv_decode_isshiftzero(&self->ivd_decoder);
+	ivd_release(self);
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
+ivd_read(IconvDecoder *self, void *buffer,
+         size_t bufsize, Dee_ioflag_t flags) {
+	size_t result = 0;
+	(void)flags;
+	if (ivd_acquire(self))
+		goto err;
+	while (bufsize) {
+		size_t temp = self->ivd_pndsize;
+		if (temp > bufsize)
+			temp = bufsize;
+		buffer = mempcpy(buffer, self->ivd_pndbase, temp);
+		result += temp;
+		bufsize -= temp;
+		self->ivd_pndbase += temp;
+		self->ivd_pndsize -= temp;
+		if (result != 0)
+			break; /* Got something! */
+		ASSERT(!self->ivd_pndsize);
+		temp = ivd_fillbuffer_any_locked(self, bufsize, flags);
+		if unlikely(temp == (size_t)-1) {
+			result = (size_t)-1;
+			break;
+		}
+		if (temp == 0)
+			break; /* EOF */
+	}
+	ivd_release(self);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ivd_close(IconvDecoder *__restrict self) {
+	if (self->ivd_closein)
+		return DeeFile_Close(self->ivd_in);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ivd_sync(IconvDecoder *__restrict self) {
+	if (self->ivd_closein)
+		return DeeFile_Sync(self->ivd_in);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ivd_getcodec(IconvDecoder *__restrict self) {
+	iconv_codec_t codec = self->ivd_decoder.icd_codec;
+	return get_codec_name(codec);
+}
+
+
+PRIVATE struct type_getset tpconst ivd_getsets[] = {
+	TYPE_GETTER_AB("isshiftzero", &ivd_get_isshiftzero, DOC_GET(ivd_get_isshiftzero_doc)),
+	TYPE_GETTER_AB("codec", &ivd_getcodec, "->?X2?Dstring?Dint"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst ivd_members[] = {
+	TYPE_MEMBER_FIELD_DOC("input", STRUCT_OBJECT, offsetof(IconvDecoder, ivd_in), "->?DFile"),
+	TYPE_MEMBER_FIELD("closeinput", STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_BOOL__),
+	                  offsetof(IconvDecoder, ivd_closein)),
+	TYPE_MEMBER_FIELD("chunksize", STRUCT_ATOMIC | STRUCT_SIZE_T,
+	                  offsetof(IconvDecoder, ivd_chnksiz)),
+	TYPE_MEMBER_FIELD_DOC("__pending_bytes__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(IconvDecoder, ivd_pndsize),
+	                      "Number of decoded, but not-yet-read bytes"),
+	TYPE_MEMBER_FIELD_DOC("__buffer_size__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(IconvDecoder, ivd_bufsize),
+	                      "Size of the internal decode buffer"),
+	TYPE_MEMBER_END
+};
+
+
+
+INTERN DeeFileTypeObject IconvDecoder_Type = {
+	/* .ft_base = */ {
+		OBJECT_HEAD_INIT(&DeeFileType_Type),
+		/* .tp_name     = */ "Decoder",
+		/* .tp_doc      = */ DOC("(" ivd_Decoder_params ")\n"
+		                         "#pcodec{Name of the codec that was used to encode @fp. May also "
+		                         /*   */ "contain some additional flags (s.a. ?Gparsecodecname)}"
+		                         "#pinput{The ?DFile that encoded data is read from and subsequently decoded}"
+		                         DOC_param_errors
+		                         DOC_param_closeinput
+		                         DOC_param_chunksize
+		                         ""),
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
+		/* .tp_init = */ {
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ IconvDecoder,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ &ivd_init,
+				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
+				                            * it'd require per-codec handling not provided by `libiconv' */
+			),
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivd_fini,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ NULL,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ivd_printrepr,
+		},
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ivd_visit,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_iterator      = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ ivd_getsets,
+		/* .tp_members       = */ ivd_members,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
+	},
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *, void *, size_t, Dee_ioflag_t))&ivd_read,
+	/* .ft_write  = */ NULL,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *))&ivd_sync,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *))&ivd_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
+};
+
+
+
 
 DECL_END
 

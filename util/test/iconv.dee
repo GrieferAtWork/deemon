@@ -47,6 +47,14 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 		d.write(result);
 	}
 	test.assertEqualsTyped(data, w.string);
+
+	/* Decode using "iconv.Decoder" */
+	local w;
+	with (local d = iconv.Decoder(codec, input: File.Reader(result))) {
+		(none)repr(d); /* For coverage */
+		w = d.read();
+	}
+	test.assertEqualsTyped(data, w.decode("utf-8"));
 }
 
 function assertTranscode(data: Bytes, incodec: string, outcodec: string, result: Bytes) {

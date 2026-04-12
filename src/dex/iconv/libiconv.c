@@ -52,16 +52,16 @@
 DECL_BEGIN
 
 INTERN ATTR_COLD int DCALL
-err_unicode_decode_error(iconv_codec_t codec, size_t offset) {
+err_unicode_decode_error(iconv_codec_t codec, Dee_pos_t offset) {
 	return DeeError_Throwf(&DeeError_UnicodeDecodeError,
-	                       "Failed to decode %s at offset %" PRFuSIZ,
+	                       "Failed to decode %s at offset %" PRFuN(Dee_SIZEOF_POS_T),
 	                       libiconv_getcodecnames(codec), offset);
 }
 
 INTERN ATTR_COLD int DCALL
-err_unicode_encode_error(iconv_codec_t codec, size_t offset) {
+err_unicode_encode_error(iconv_codec_t codec, Dee_pos_t offset) {
 	return DeeError_Throwf(&DeeError_UnicodeEncodeError,
-	                       "Failed to encode %s at offset %" PRFuSIZ,
+	                       "Failed to encode %s at offset %" PRFuN(Dee_SIZEOF_POS_T),
 	                       libiconv_getcodecnames(codec), offset);
 }
 
@@ -796,29 +796,11 @@ DEX_MEMBER_F_NODOC("EncodeWriter", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READON
 DEX_MEMBER_F_NODOC("DecodeWriter", &IconvDecodeWriter_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("TranscodeWriter", &IconvTranscodeWriter_Type.ft_base, Dee_DEXSYM_READONLY),
 
-/* TODO: Decoder */
-/* TODO: DecodeReader */ /* Alias for "Decoder" */
+DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("DecodeReader", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY), /* Alias for "Decoder" */
 /* TODO: EncodeReader */
 /* TODO: TranscodeReader */
 
-/* TODO: DecodeReader -- Similar to Decoder, but instead of requiring you to *write* encoded
- *                       data to have its decoded equivalent be written to another file, this
- *                       one let's you to specify a file to read from, such that reading from
- *                       the "DecodeReader" wrapper file will return decoded data:
- * >> @@Open a file for reading, auto-detect its encoding, and return a file
- * >> @@that allows you to read the file contents as though they were utf-8.
- * >> function readFileAutoDetect(filename: string): File {
- * >>     local fp = File.open(filename, "rb");
- * >>     local head = fp.read(4096);
- * >>     local codec = iconv.detect(head) ?? "utf-8";
- * >>     fp.rewind();
- * >>     return iconv.DecodeReader(codec, fp);
- * >> }
- *
- * Also add "EncodeReader" and "TranscodeReader"
- *
- * XXX: I don't really like those class names; maybe come up with some better name?
- */
 
 /* Fast-pass encode/decode functions (drop-in replacements for equivalents from "codec") */
 DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,

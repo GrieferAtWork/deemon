@@ -57,10 +57,11 @@ INTDEF DeeTypeObject StrNulArray_Type;
 typedef struct {
 	/* Encoder: convert UTF-8 --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ive_out;     /* [const][1..1] Output file for output of `ive_encoder' (== ive_encoder.ice_output.ii_arg) */
-	Dee_nrshared_lock_t  ive_lock;    /* Lock for `ive_encoder' */
-	struct iconv_printer ive_input;   /* [lock(ive_lock)] Input printer */
-	struct iconv_encode  ive_encoder; /* [lock(ive_lock)] Underlying encoder */
+//	DREF DeeObject      *ive_out;      /* [const][1..1] Output file for output of `ive_encoder' (== ive_encoder.ice_output.ii_arg) */
+	Dee_nrshared_lock_t  ive_lock;     /* Lock for `ive_encoder' */
+	bool                 ive_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+	struct iconv_printer ive_input;    /* [lock(ive_lock)] Input printer */
+	struct iconv_encode  ive_encoder;  /* [lock(ive_lock)] Underlying encoder */
 } IconvEncoder;
 
 INTDEF DeeFileTypeObject IconvEncoder_Type;
@@ -75,10 +76,11 @@ INTDEF DeeFileTypeObject IconvEncoder_Type;
 typedef struct {
 	/* Decode-writer: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ivdw_out;     /* [const][1..1] Output file for output of `ivdw_decoder' (== ivdw_decoder.icd_output.ii_arg) */
-	Dee_nrshared_lock_t  ivdw_lock;    /* Lock for `ivdw_decoder' */
-	struct iconv_printer ivdw_input;   /* [lock(ivdw_lock)] Input printer */
-	struct iconv_decode  ivdw_decoder; /* [lock(ivdw_lock)] Underlying decoder */
+//	DREF DeeObject      *ivdw_out;      /* [const][1..1] Output file for output of `ivdw_decoder' (== ivdw_decoder.icd_output.ii_arg) */
+	Dee_nrshared_lock_t  ivdw_lock;     /* Lock for `ivdw_decoder' */
+	bool                 ivdw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+	struct iconv_printer ivdw_input;    /* [lock(ivdw_lock)] Input printer */
+	struct iconv_decode  ivdw_decoder;  /* [lock(ivdw_lock)] Underlying decoder */
 } IconvDecodeWriter;
 
 INTDEF DeeFileTypeObject IconvDecodeWriter_Type;
@@ -93,11 +95,12 @@ INTDEF DeeFileTypeObject IconvDecodeWriter_Type;
 typedef struct {
 	/* Transcoder: convert <some codec> --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ivtw_out;     /* [const][1..1] Output file for output of `ivtw_encoder' (== ivtw_encoder.ice_output.ii_arg) */
-	Dee_nrshared_lock_t  ivtw_lock;    /* Lock for `ivtw_encoder' */
-	struct iconv_printer ivtw_input;   /* [lock(ivtw_lock)] Input printer */
-	struct iconv_encode  ivtw_encoder; /* [lock(ivtw_lock)] Underlying encoder */
-	struct iconv_decode  ivtw_decoder; /* [lock(ivtw_lock)] Underlying decoder */
+//	DREF DeeObject      *ivtw_out;      /* [const][1..1] Output file for output of `ivtw_encoder' (== ivtw_encoder.ice_output.ii_arg) */
+	Dee_nrshared_lock_t  ivtw_lock;     /* Lock for `ivtw_encoder' */
+	bool                 ivtw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+	struct iconv_printer ivtw_input;    /* [lock(ivtw_lock)] Input printer */
+	struct iconv_encode  ivtw_encoder;  /* [lock(ivtw_lock)] Underlying encoder */
+	struct iconv_decode  ivtw_decoder;  /* [lock(ivtw_lock)] Underlying decoder */
 } IconvTranscodeWriter;
 
 INTDEF DeeFileTypeObject IconvTranscodeWriter_Type;
@@ -106,9 +109,34 @@ INTDEF DeeFileTypeObject IconvTranscodeWriter_Type;
 
 
 
+/************************************************************************/
+/* DECODER                                                              */
+/************************************************************************/
 
-INTDEF ATTR_COLD int DCALL err_unicode_decode_error(iconv_codec_t codec, size_t offset);
-INTDEF ATTR_COLD int DCALL err_unicode_encode_error(iconv_codec_t codec, size_t offset);
+typedef struct {
+	/* Decode-reader: convert <some codec> --> UTF-8 */
+	Dee_FILE_OBJECT_HEAD
+	Dee_nrshared_lock_t  ivd_lock;    /* Lock for `ivd_decoder' */
+	bool                 ivd_closein; /* [const] Propagate "operator sync()" and "operator close()" to `ivd_in' */
+	DREF DeeObject      *ivd_in;      /* [const][1..1] Input file containing encoded data */
+	byte_t              *ivd_bufbase; /* [0..ivd_pendsize][owned][lock(ivd_lock)] Buffer for decoded, but not-yet-read data */
+	size_t               ivd_bufsize; /* [lock(ivd_lock)] Allocated size of `ivd_bufbase' */
+	byte_t              *ivd_pndbase; /* [0..ivd_bufbase][lock(ivd_lock)] Pointer to first unread byte in `ivd_bufbase' */
+	size_t               ivd_pndsize; /* [lock(ivd_lock)] # of decoded, but not-yet-read bytes starting at `ivd_pndbase' */
+	size_t               ivd_chnksiz; /* [lock(ivd_lock)] Max. block size when reading from `ivd_in' */
+	struct iconv_printer ivd_input;   /* [lock(ivd_lock)] Input printer */
+	struct iconv_decode  ivd_decoder; /* [lock(ivd_lock)] Underlying decoder */
+} IconvDecoder;
+
+INTDEF DeeFileTypeObject IconvDecoder_Type;
+
+
+
+
+
+
+INTDEF ATTR_COLD int DCALL err_unicode_decode_error(iconv_codec_t codec, Dee_pos_t offset);
+INTDEF ATTR_COLD int DCALL err_unicode_encode_error(iconv_codec_t codec, Dee_pos_t offset);
 INTDEF ATTR_COLD int DCALL err_unicode_reencode_error(iconv_codec_t codec);
 INTDEF ATTR_COLD int DCALL err_unknown_codec(iconv_codec_t codec);
 
