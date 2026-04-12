@@ -18,6 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+#if 1
 /*
  * !!! DEPREACTED MODULE !!!
  *
@@ -62,6 +63,37 @@
  *   though this is technically an API-breaking change, no code that I'm
  *   aware of should be affected.
  */
+
+import * from deemon;
+import UnsupportedAPI from errors;
+
+@@Deprecated; use @(decode from iconv)
+global final __decode;
+
+@@Deprecated; use @(encode from iconv)
+global final __encode;
+
+try {
+	local iconv = import("iconv");
+	__decode = iconv.decode;
+	__encode = iconv.encode;
+} catch (...) {
+	__decode = (data: Object, name: string, errors: string = "strict") -> data.decode(name, errors);
+	__encode = (data: Object, name: string, errors: string = "strict") -> data.encode(name, errors);
+}
+
+@@Deprecated; use @(decode from iconv)
+global final decode = __decode;
+
+@@Deprecated; use @(encode from iconv)
+global final encode = __encode;
+
+@@Deprecated function; always throws @UnsupportedAPI
+function register(name: string, codec: Object) {
+	throw UnsupportedAPI(f"Registering of custom codec {repr name} is no longer supported");
+}
+
+#else
 
 import * from deemon;
 import * from errors;
@@ -301,3 +333,5 @@ function encode(data, name: string, errors: string = "strict") {
 		return data.encode(name, errors);
 	return __encode(data, normalizeCodecName(name), errors);
 }
+#endif
+
