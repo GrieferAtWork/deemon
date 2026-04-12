@@ -9812,8 +9812,8 @@ DeeSystem_IsStaticPointer(void const *ptr) {
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
-                    /*String*/ DeeObject *__restrict global_name) {
+DeeModule_GetExtern(/*String*/ DeeObject *module_name,
+                    /*String*/ DeeObject *global_name) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
 	mod = DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
@@ -9827,8 +9827,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
-                          /*utf-8*/ char const *__restrict global_name) {
+DeeModule_GetExternString(/*utf-8*/ char const *module_name,
+                          /*utf-8*/ char const *global_name) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
 	mod = DeeModule_ImportString(module_name, strlen(module_name),
@@ -9845,8 +9845,8 @@ err:
 /* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
  * that returns the return value of the call operation. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
-                     /*String*/ DeeObject *__restrict global_name,
+DeeModule_CallExtern(/*String*/ DeeObject *module_name,
+                     /*String*/ DeeObject *global_name,
                      size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
@@ -9861,8 +9861,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
-                           /*utf-8*/ char const *__restrict global_name,
+DeeModule_CallExternString(/*utf-8*/ char const *module_name,
+                           /*utf-8*/ char const *global_name,
                            size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
@@ -9880,8 +9880,8 @@ err:
 /* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
  * that returns the return value of the call operation. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
-                      /*String*/ DeeObject *__restrict global_name,
+DeeModule_CallExternf(/*String*/ DeeObject *module_name,
+                      /*String*/ DeeObject *global_name,
                       char const *__restrict format, ...) {
 	va_list args;
 	DREF DeeObject *result;
@@ -9892,8 +9892,8 @@ DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
-                            /*utf-8*/ char const *__restrict global_name,
+DeeModule_CallExternStringf(/*utf-8*/ char const *module_name,
+                            /*utf-8*/ char const *global_name,
                             char const *__restrict format, ...) {
 	va_list args;
 	DREF DeeObject *result;
@@ -9904,8 +9904,8 @@ DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
-                       /*String*/ DeeObject *__restrict global_name,
+DeeModule_VCallExternf(/*String*/ DeeObject *module_name,
+                       /*String*/ DeeObject *global_name,
                        char const *__restrict format, va_list args) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
@@ -9920,8 +9920,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
-                             /*utf-8*/ char const *__restrict global_name,
+DeeModule_VCallExternStringf(/*utf-8*/ char const *module_name,
+                             /*utf-8*/ char const *global_name,
                              char const *__restrict format, va_list args) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;

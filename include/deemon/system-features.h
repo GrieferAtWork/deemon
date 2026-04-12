@@ -13531,20 +13531,6 @@ dee_memcmp(void const *s1, void const *s2, size_t n) {
 DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
-#define DeeSystem_DEFINE_strrchr(name)             \
-	LOCAL WUNUSED NONNULL((1)) char *              \
-	name(char const *haystack, int needle) {       \
-		char *result = NULL;                       \
-		for (;; ++haystack) {                      \
-			char ch = *haystack;                   \
-			if (ch == (char)(unsigned char)needle) \
-				result = (char *)haystack;         \
-			if (!ch)                               \
-				break;                             \
-		}                                          \
-		return result;                             \
-	}
-
 #define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)        \
 	LOCAL ATTR_PURE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(2, 4) rT * \
 	name(void *__restrict dst, void const *__restrict src,      \
@@ -13664,6 +13650,184 @@ DECL_END
 		return buf;                                                 \
 	}
 
+#define _DeeSystem_DEFINE_strrchrT(T, unsignedT, Tneedle, name) \
+	LOCAL WUNUSED NONNULL((1)) T *                              \
+	name(T const *haystack, Tneedle needle) {                   \
+		T *result = NULL;                                       \
+		for (;; ++haystack) {                                   \
+			T ch = *haystack;                                   \
+			if (ch == (T)(unsignedT)needle)                     \
+				result = (T *)haystack;                         \
+			if (!ch)                                            \
+				break;                                          \
+		}                                                       \
+		return result;                                          \
+	}
+#define _DeeSystem_DEFINE_strnchrT(T, unsignedT, Tneedle, name) \
+	LOCAL WUNUSED NONNULL((1)) T *                              \
+	name(T const *haystack, Tneedle needle, size_t maxlen) {    \
+		T *result = NULL;                                       \
+		for (; maxlen--; ++haystack) {                          \
+			T ch = *haystack;                                   \
+			if (ch == (T)(unsignedT)needle) {                   \
+				result = (T *)haystack;                         \
+				break;                                          \
+			}                                                   \
+			if (!ch)                                            \
+				break;                                          \
+		}                                                       \
+		return result;                                          \
+	}
+#define _DeeSystem_DEFINE_strnrchrT(T, unsignedT, Tneedle, name) \
+	LOCAL WUNUSED NONNULL((1)) T *                               \
+	name(T const *haystack, Tneedle needle, size_t maxlen) {     \
+		T *result = NULL;                                        \
+		for (; maxlen--; ++haystack) {                           \
+			T ch = *haystack;                                    \
+			if (ch == (T)(unsignedT)needle)                      \
+				result = (T *)haystack;                          \
+			if (!ch)                                             \
+				break;                                           \
+		}                                                        \
+		return result;                                           \
+	}
+#define _DeeSystem_DEFINE_strchrnulT(T, unsignedT, Tneedle, name) \
+	LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) T *                \
+	name(T const *haystack, Tneedle needle) {                     \
+		for (; *haystack; ++haystack) {                           \
+			if ((unsignedT)*haystack == (unsignedT)needle)        \
+				break;                                            \
+		}                                                         \
+		return (T *)haystack;                                     \
+	}
+#define _DeeSystem_DEFINE_strrchrnulT(T, unsignedT, Tneedle, name) \
+	LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) T *                 \
+	name(T const *haystack, Tneedle needle) {                      \
+		T const *result = haystack - 1;                            \
+		do {                                                       \
+			if unlikely((unsignedT)*haystack == (unsignedT)needle) \
+				result = haystack;                                 \
+		} while (*haystack++);                                     \
+		return (T *)result;                                        \
+	}
+#define _DeeSystem_DEFINE_strnchrnulT(T, unsignedT, Tneedle, name)                 \
+	LOCAL WUNUSED NONNULL((1)) T *                                                 \
+	name(T const *haystack, Tneedle needle, size_t maxlen) {                       \
+		while (maxlen-- && *haystack && (unsignedT)*haystack != (unsignedT)needle) \
+			++haystack;                                                            \
+		return (T *)haystack;                                                      \
+	}
+#define _DeeSystem_DEFINE_strnrchrnulT(T, unsignedT, Tneedle, name) \
+	LOCAL WUNUSED NONNULL((1)) T *                                  \
+	name(T const *haystack, Tneedle needle, size_t maxlen) {        \
+		T const *result = haystack - 1;                             \
+		for (; maxlen-- && *haystack; ++haystack) {                 \
+			if unlikely((unsignedT)*haystack == (unsignedT)needle)  \
+				result = haystack;                                  \
+		}                                                           \
+		return (T *)result;                                         \
+	}
+#define _DeeSystem_DEFINE_strstrT(T, name)           \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                \
+	name(T const *haystack, T const *needle) {       \
+		T ch, needle_start = *needle++;              \
+		while ((ch = *haystack++) != '\0') {         \
+			if (ch == needle_start) {                \
+				T const *hay2, *ned_iter;            \
+				hay2     = haystack;                 \
+				ned_iter = needle;                   \
+				while ((ch = *ned_iter++) != '\0') { \
+					if (*hay2++ != ch)               \
+						goto miss;                   \
+				}                                    \
+				return (T *)haystack - 1;            \
+			}                                        \
+	miss:                                            \
+			;                                        \
+		}                                            \
+		return NULL;                                 \
+	}
+#define _DeeSystem_DEFINE_strcasestrT(T, unsignedT, name, tolower)                 \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                                              \
+	name(T const *haystack, T const *needle) {                                     \
+		T ch, needle_start = *needle++;                                            \
+		needle_start = (T)tolower((unsignedT)needle_start);                        \
+		while ((ch = *haystack++) != '\0') {                                       \
+			if (ch == needle_start || (T)tolower((unsignedT)ch) == needle_start) { \
+				T const *hay2, *ned_iter;                                          \
+				hay2     = haystack;                                               \
+				ned_iter = needle;                                                 \
+				while ((ch = *ned_iter++) != '\0') {                               \
+					T char2_ch = *hay2++;                                          \
+					if (char2_ch != ch) {                                          \
+						char2_ch = (T)tolower((unsignedT)char2_ch);                \
+						ch = (T)tolower((unsignedT)ch);                            \
+						if (char2_ch != ch)                                        \
+							goto miss;                                             \
+					}                                                              \
+				}                                                                  \
+				return (T *)haystack - 1;                                          \
+			}                                                                      \
+	miss:                                                                          \
+			;                                                                      \
+		}                                                                          \
+		return NULL;                                                               \
+	}
+#define _DeeSystem_DEFINE_strnstrT(T, name)                            \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                                  \
+	name(T const *haystack, T const *needle, size_t haystack_maxlen) { \
+		T ch, needle_start = *needle++;                                \
+		while (haystack_maxlen-- && (ch = *haystack++) != '\0') {      \
+			if (ch == needle_start) {                                  \
+				T const *hay2, *ned_iter;                              \
+				size_t maxlen2;                                        \
+				hay2     = haystack;                                   \
+				ned_iter = needle;                                     \
+				maxlen2  = haystack_maxlen;                            \
+				while ((ch = *ned_iter++) != '\0') {                   \
+					if (!maxlen2-- || *hay2++ != ch)                   \
+						goto miss;                                     \
+				}                                                      \
+				return (T *)haystack - 1;                              \
+			}                                                          \
+	miss:                                                              \
+			;                                                          \
+		}                                                              \
+		return NULL;                                                   \
+	}
+
+#define _DeeSystem_DEFINE_strncasestrT(T, unsignedT, name, tolower)                \
+	LOCAL WUNUSED NONNULL((1, 2)) T *                                              \
+	name(T const *haystack, T const *needle, size_t haystack_maxlen) {             \
+		T ch, needle_start = *needle++;                                            \
+		needle_start = (T)tolower((unsignedT)needle_start);                        \
+		while (haystack_maxlen-- && (ch = *haystack++) != '\0') {                  \
+			if (ch == needle_start || (T)tolower((unsignedT)ch) == needle_start) { \
+				T const *hay2, *ned_iter;                                          \
+				size_t maxlen2;                                                    \
+				hay2     = haystack;                                               \
+				ned_iter = needle;                                                 \
+				maxlen2  = haystack_maxlen;                                        \
+				while ((ch = *ned_iter++) != '\0') {                               \
+					T hay2_ch;                                                     \
+					if (!maxlen2--)                                                \
+						goto miss;                                                 \
+					hay2_ch = *hay2++;                                             \
+					if (hay2_ch != ch) {                                           \
+						hay2_ch = (T)tolower((unsignedT)hay2_ch);                  \
+						ch = (T)tolower((unsignedT)ch);                            \
+						if (hay2_ch != ch)                                         \
+							goto miss;                                             \
+					}                                                              \
+				}                                                                  \
+				return (T *)haystack - 1;                                          \
+			}                                                                      \
+	miss:                                                                          \
+			;                                                                      \
+		}                                                                          \
+		return NULL;                                                               \
+	}
+
 #define DeeSystem_DEFINE_memccpy(name)  _DeeSystem_DEFINE_memccpyT(void, __BYTE_TYPE__, int, name)
 #define DeeSystem_DEFINE_memrchr(name)  _DeeSystem_DEFINE_memrchrT(void, __BYTE_TYPE__, int, name)
 #define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
@@ -13685,6 +13849,18 @@ DECL_END
 #define DeeSystem_DEFINE_strncasecmp(name) _DeeSystem_DEFINE_strncasecmpT(char, unsigned char, name)
 #define DeeSystem_DEFINE_stpncpy(name)     _DeeSystem_DEFINE_stpncpyT(char, name, strnlen)
 #define DeeSystem_DEFINE_strncpy(name)     _DeeSystem_DEFINE_strncpyT(char, name, strnlen)
+#define DeeSystem_DEFINE_strrchr(name)     _DeeSystem_DEFINE_strrchrT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strnchr(name)     _DeeSystem_DEFINE_strnchrT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strnrchr(name)    _DeeSystem_DEFINE_strnrchrT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strchrnul(name)   _DeeSystem_DEFINE_strchrnulT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strrchrnul(name)  _DeeSystem_DEFINE_strrchrnulT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strnchrnul(name)  _DeeSystem_DEFINE_strnchrnulT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strnrchrnul(name) _DeeSystem_DEFINE_strnrchrnulT(char, unsigned char, int, name)
+#define DeeSystem_DEFINE_strstr(name)      _DeeSystem_DEFINE_strstrT(char, name)
+#define DeeSystem_DEFINE_strcasestr(name)  _DeeSystem_DEFINE_strcasestrT(char, unsigned char, name, tolower)
+#define DeeSystem_DEFINE_strnstr(name)     _DeeSystem_DEFINE_strnstrT(char, name)
+#define DeeSystem_DEFINE_strncasestr(name) _DeeSystem_DEFINE_strncasestrT(char, unsigned char, name, tolower)
+
 
 #ifndef CONFIG_HAVE_strcpy
 #define CONFIG_HAVE_strcpy

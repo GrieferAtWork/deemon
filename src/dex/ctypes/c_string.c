@@ -297,205 +297,70 @@ DeeSystem_DEFINE_strrchr(dee_strrchr)
 #define CONFIG_HAVE_strnchr
 #undef strnchr
 #define strnchr dee_strnchr
-LOCAL WUNUSED NONNULL((1)) char *
-dee_strnchr(char const *haystack, int needle, size_t maxlen) {
-	char *result = NULL;
-	for (; maxlen--; ++haystack) {
-		char ch = *haystack;
-		if (ch == (char)(unsigned char)needle) {
-			result = (char *)haystack;
-			break;
-		}
-		if (!ch)
-			break;
-	}
-	return result;
-}
+DeeSystem_DEFINE_strnchr(dee_strnchr)
 #endif /* !CONFIG_HAVE_strnchr */
 
 #ifndef CONFIG_HAVE_strnrchr
 #define CONFIG_HAVE_strnrchr
 #undef strnrchr
 #define strnrchr dee_strnrchr
-LOCAL WUNUSED NONNULL((1)) char *
-dee_strnrchr(char const *haystack, int needle, size_t maxlen) {
-	char *result = NULL;
-	for (; maxlen--; ++haystack) {
-		char ch = *haystack;
-		if (ch == (char)(unsigned char)needle)
-			result = (char *)haystack;
-		if (!ch)
-			break;
-	}
-	return result;
-}
+DeeSystem_DEFINE_strnrchr(dee_strnrchr)
 #endif /* !CONFIG_HAVE_strnrchr */
 
 #ifndef CONFIG_HAVE_strchrnul
 #define CONFIG_HAVE_strchrnul
 #undef strchrnul
 #define strchrnul dee_strchrnul
-LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
-dee_strchrnul(char const *haystack, int needle) {
-	for (; *haystack; ++haystack) {
-		if ((unsigned char)*haystack == (unsigned char)needle)
-			break;
-	}
-	return (char *)haystack;
-}
+DeeSystem_DEFINE_strchrnul(dee_strchrnul)
 #endif /* !CONFIG_HAVE_strchrnul */
 
 #ifndef CONFIG_HAVE_strrchrnul
 #define CONFIG_HAVE_strrchrnul
 #undef strrchrnul
 #define strrchrnul dee_strrchrnul
-LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
-dee_strrchrnul(char const *haystack, int needle) {
-	char const *result = haystack - 1;
-	do {
-		if unlikely((unsigned char)*haystack == (unsigned char)needle)
-			result = haystack;
-	} while (*haystack++);
-	return (char *)result;
-}
+DeeSystem_DEFINE_strrchrnul(dee_strrchrnul)
 #endif /* !CONFIG_HAVE_strrchrnul */
 
 #ifndef CONFIG_HAVE_strnchrnul
 #define CONFIG_HAVE_strnchrnul
 #undef strnchrnul
 #define strnchrnul dee_strnchrnul
-LOCAL WUNUSED NONNULL((1)) char *
-dee_strnchrnul(char const *haystack, int needle, size_t maxlen) {
-	while (maxlen-- && *haystack && (unsigned char)*haystack != (unsigned char)needle)
-		++haystack;
-	return (char *)haystack;
-}
+DeeSystem_DEFINE_strnchrnul(dee_strnchrnul)
 #endif /* !CONFIG_HAVE_strnchrnul */
 
 #ifndef CONFIG_HAVE_strnrchrnul
 #define CONFIG_HAVE_strnrchrnul
 #undef strnrchrnul
 #define strnrchrnul dee_strnrchrnul
-LOCAL WUNUSED NONNULL((1)) char *
-dee_strnrchrnul(char const *haystack, int needle, size_t maxlen) {
-	char const *result = haystack - 1;
-	for (; maxlen-- && *haystack; ++haystack) {
-		if unlikely((unsigned char)*haystack == (unsigned char)needle)
-			result = haystack;
-	}
-	return (char *)result;
-}
+DeeSystem_DEFINE_strnrchrnul(dee_strnrchrnul)
 #endif /* !CONFIG_HAVE_strnrchrnul */
 
 #ifndef CONFIG_HAVE_strstr
 #define CONFIG_HAVE_strstr
 #undef strstr
 #define strstr dee_strstr
-LOCAL WUNUSED NONNULL((1, 2)) char *
-dee_strstr(char const *haystack, char const *needle) {
-	char ch, needle_start = *needle++;
-	while ((ch = *haystack++) != '\0') {
-		if (ch == needle_start) {
-			char const *hay2, *ned_iter;
-			hay2     = haystack;
-			ned_iter = needle;
-			while ((ch = *ned_iter++) != '\0') {
-				if (*hay2++ != ch)
-					goto miss;
-			}
-			return (char *)haystack - 1;
-		}
-miss:
-		;
-	}
-	return NULL;
-}
+DeeSystem_DEFINE_strstr(dee_strstr)
 #endif /* !CONFIG_HAVE_strstr */
 
 #ifndef CONFIG_HAVE_strcasestr
 #define CONFIG_HAVE_strcasestr
 #undef strcasestr
 #define strcasestr dee_strcasestr
-LOCAL WUNUSED NONNULL((1, 2)) char *
-dee_strcasestr(char const *haystack, char const *needle) {
-	char ch, needle_start = *needle++;
-	needle_start = (char)tolower((unsigned char)needle_start);
-	while ((ch = *haystack++) != '\0') {
-		if (ch == needle_start || (char)tolower((unsigned char)ch) == needle_start) {
-			char const *hay2, *ned_iter;
-			hay2     = haystack;
-			ned_iter = needle;
-			while ((ch = *ned_iter++) != '\0') {
-				char char2_ch = *hay2++;
-				if (char2_ch != ch && (char)tolower((unsigned char)char2_ch) != (char)tolower((unsigned char)ch))
-					goto miss;
-			}
-			return (char *)haystack - 1;
-		}
-miss:
-		;
-	}
-	return NULL;
-}
+DeeSystem_DEFINE_strcasestr(dee_strcasestr)
 #endif /* !CONFIG_HAVE_strcasestr */
 
 #ifndef CONFIG_HAVE_strnstr
 #define CONFIG_HAVE_strnstr
 #undef strnstr
 #define strnstr dee_strnstr
-LOCAL WUNUSED NONNULL((1, 2)) char *
-dee_strnstr(char const *haystack, char const *needle, size_t haystack_maxlen) {
-	char ch, needle_start = *needle++;
-	while (haystack_maxlen-- && (ch = *haystack++) != '\0') {
-		if (ch == needle_start) {
-			char const *hay2, *ned_iter;
-			size_t maxlen2;
-			hay2     = haystack;
-			ned_iter = needle;
-			maxlen2  = haystack_maxlen;
-			while ((ch = *ned_iter++) != '\0') {
-				if (!maxlen2-- || *hay2++ != ch)
-					goto miss;
-			}
-			return (char *)haystack - 1;
-		}
-miss:
-		;
-	}
-	return NULL;
-}
+DeeSystem_DEFINE_strnstr(dee_strnstr)
 #endif /* !CONFIG_HAVE_strnstr */
 
 #ifndef CONFIG_HAVE_strncasestr
 #define CONFIG_HAVE_strncasestr
 #undef strncasestr
 #define strncasestr dee_strncasestr
-LOCAL WUNUSED NONNULL((1, 2)) char *
-dee_strncasestr(char const *haystack, char const *needle, size_t haystack_maxlen) {
-	char ch, needle_start = *needle++;
-	needle_start = (char)tolower((unsigned char)needle_start);
-	while (haystack_maxlen-- && (ch = *haystack++) != '\0') {
-		if (ch == needle_start || (char)tolower((unsigned char)ch) == needle_start) {
-			char const *hay2, *ned_iter;
-			size_t maxlen2;
-			hay2     = haystack;
-			ned_iter = needle;
-			maxlen2  = haystack_maxlen;
-			while ((ch = *ned_iter++) != '\0') {
-				char hay2_ch;
-				if (!maxlen2--)
-					goto miss;
-				hay2_ch = *hay2++;
-				if (hay2_ch != ch && (char)tolower((unsigned char)hay2_ch) != (char)tolower((unsigned char)ch))
-					goto miss;
-			}
-			return (char *)haystack - 1;
-		}
-miss:
-		;
-	}
-	return NULL;
-}
+DeeSystem_DEFINE_strncasestr(dee_strncasestr)
 #endif /* !CONFIG_HAVE_strncasestr */
 
 #ifndef CONFIG_HAVE_strverscmp
@@ -504,6 +369,7 @@ miss:
 #define strverscmp dee_strverscmp
 LOCAL WUNUSED NONNULL((1, 2)) int
 dee_strverscmp(char const *s1, char const *s2) {
+	/* FIXME: This is still the old, broken impl... */
 	char const *s1_start = s1;
 	char c1, c2;
 	do {

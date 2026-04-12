@@ -669,7 +669,7 @@ err:
 
 #ifndef STRVERSCMP_STATE_MACHINE_DEFINED
 #define STRVERSCMP_STATE_MACHINE_DEFINED
-/* Disclaimer: this implementation of strverscmp() is derivevd from glibc.
+/* Disclaimer: this implementation of strverscmp() is derived from glibc.
  * It has however been heavily modified so-as to function properly with
  * explicit-length strings (and as such: strings containing NUL-characters) */
 

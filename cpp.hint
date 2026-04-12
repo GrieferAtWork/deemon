@@ -1206,9 +1206,21 @@
 #define _DeeSystem_DEFINE_strncmpT(T,unsignedT,n) static int n(T const*s1,T const*s2,size_t maxlen){}
 #define _DeeSystem_DEFINE_strcasecmpT(T,unsignedT,n) static int n(T const*s1,T const*s2){}
 #define _DeeSystem_DEFINE_strncasecmpT(T,unsignedT,n) static int n(T const*s1,T const*s2,size_t maxlen){}
-#define _DeeSystem_DEFINE_stpncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
-#define _DeeSystem_DEFINE_strncpyT(T,n,strnlen) static T*n(T*buf,T const*src,size_t buflen){}
+#define _DeeSystem_DEFINE_stpncpyT(T,n,...) static T*n(T*buf,T const*src,size_t buflen){}
 #define _DeeSystem_DEFINE_strcasecmpzT(T,Tu,Tr,n,...) Tr n(T const *lhs,T const *rhs,size_t rhs_len){}
+#define _DeeSystem_DEFINE_strncpyT(T,n,...) static T*n(T*buf,T const*src,size_t buflen){}
+#define _DeeSystem_DEFINE_strrchrT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle){}
+#define _DeeSystem_DEFINE_strnchrT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle,size_t maxlen){}
+#define _DeeSystem_DEFINE_strnrchrT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle,size_t maxlen){}
+#define _DeeSystem_DEFINE_strchrnulT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle){}
+#define _DeeSystem_DEFINE_strrchrnulT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle){}
+#define _DeeSystem_DEFINE_strnchrnulT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle,size_t maxlen){}
+#define _DeeSystem_DEFINE_strnrchrnulT(T,unsignedT,Tneedle,n) T*n(T const*haystack,Tneedle needle,size_t maxlen){}
+#define _DeeSystem_DEFINE_strstrT(T,n) T*n(T const*haystack,T const*needle){}
+#define _DeeSystem_DEFINE_strcasestrT(T,unsignedT,n,...) T*n(T const*haystack,T const*needle){}
+#define _DeeSystem_DEFINE_strnstrT(T,n) T*n(T const*haystack,T const*needle,size_t haystack_maxlen){}
+#define _DeeSystem_DEFINE_strncasestrT(T,unsignedT,n,...) T*n(T const*haystack,T const*needle,size_t haystack_maxlen){}
+
 #define DeeSystem_DEFINE_strrchr(n) char*n(char const*haystack,int needle){}
 #define DeeSystem_DEFINE_memccpy(n) _DeeSystem_DEFINE_memccpyT(void,uint8_t,int,n)
 #define DeeSystem_DEFINE_memrchr(n) _DeeSystem_DEFINE_memrchrT(void,uint8_t,int,n)
@@ -1229,6 +1241,17 @@
 #define DeeSystem_DEFINE_strcasecmpz(n)_DeeSystem_DEFINE_strcasecmpzT(char,unsigned char,int,n,tolower)
 #define DeeSystem_DEFINE_stpncpy(n) _DeeSystem_DEFINE_stpncpyT(char,n,strnlen)
 #define DeeSystem_DEFINE_strncpy(n) _DeeSystem_DEFINE_strncpyT(char,n,strnlen)
+#define DeeSystem_DEFINE_strrchr(n) _DeeSystem_DEFINE_strrchrT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strnchr(n) _DeeSystem_DEFINE_strnchrT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strnrchr(n) _DeeSystem_DEFINE_strnrchrT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strchrnul(n) _DeeSystem_DEFINE_strchrnulT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strrchrnul(n) _DeeSystem_DEFINE_strrchrnulT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strnchrnul(n) _DeeSystem_DEFINE_strnchrnulT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strnrchrnul(n) _DeeSystem_DEFINE_strnrchrnulT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_strstr(n) _DeeSystem_DEFINE_strstrT(char,n)
+#define DeeSystem_DEFINE_strcasestr(n) _DeeSystem_DEFINE_strcasestrT(char,unsigned char,n,tolower)
+#define DeeSystem_DEFINE_strnstr(n) _DeeSystem_DEFINE_strnstrT(char,n)
+#define DeeSystem_DEFINE_strncasestr(n) _DeeSystem_DEFINE_strncasestrT(char,unsigned char,n,tolower)
 #define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,n) static rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
 #define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,n) static rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
 #define DeeSystem_DEFINE_memmem(n) _DeeSystem_DEFINE_memmemT(void,uint8_t,memchr,,n)

@@ -1994,40 +1994,40 @@ DeeModule_NextLibTree(DeeModuleObject *prev, /*String*/ DeeObject *prev_libname,
 /* Lookup an external symbol.
  * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetExtern(/*String*/ DeeObject *__restrict module_name,
-                    /*String*/ DeeObject *__restrict global_name);
+DeeModule_GetExtern(/*String*/ DeeObject *module_name,
+                    /*String*/ DeeObject *global_name);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetExternString(/*utf-8*/ char const *__restrict module_name,
-                          /*utf-8*/ char const *__restrict global_name);
+DeeModule_GetExternString(/*utf-8*/ char const *module_name,
+                          /*utf-8*/ char const *global_name);
 
 /* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
  * that returns the return value of the call operation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_CallExtern(/*String*/ DeeObject *__restrict module_name,
-                     /*String*/ DeeObject *__restrict global_name,
+DeeModule_CallExtern(/*String*/ DeeObject *module_name,
+                     /*String*/ DeeObject *global_name,
                      size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_CallExternString(/*utf-8*/ char const *__restrict module_name,
-                           /*utf-8*/ char const *__restrict global_name,
+DeeModule_CallExternString(/*utf-8*/ char const *module_name,
+                           /*utf-8*/ char const *global_name,
                            size_t argc, DeeObject *const *argv);
 
 /* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
  * that returns the return value of the call operation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeModule_CallExternf(/*String*/ DeeObject *__restrict module_name,
-                      /*String*/ DeeObject *__restrict global_name,
+DeeModule_CallExternf(/*String*/ DeeObject *module_name,
+                      /*String*/ DeeObject *global_name,
                       char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_VCallExternf(/*String*/ DeeObject *__restrict module_name,
-                       /*String*/ DeeObject *__restrict global_name,
+DeeModule_VCallExternf(/*String*/ DeeObject *module_name,
+                       /*String*/ DeeObject *global_name,
                        char const *__restrict format, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeModule_CallExternStringf(/*utf-8*/ char const *__restrict module_name,
-                            /*utf-8*/ char const *__restrict global_name,
+DeeModule_CallExternStringf(/*utf-8*/ char const *module_name,
+                            /*utf-8*/ char const *global_name,
                             char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_VCallExternStringf(/*utf-8*/ char const *__restrict module_name,
-                             /*utf-8*/ char const *__restrict global_name,
+DeeModule_VCallExternStringf(/*utf-8*/ char const *module_name,
+                             /*utf-8*/ char const *global_name,
                              char const *__restrict format, va_list args);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* Lookup an external symbol.

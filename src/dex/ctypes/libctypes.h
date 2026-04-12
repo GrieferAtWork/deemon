@@ -847,7 +847,7 @@ struct cstruct_field {
 struct cstruct_type_object {
 	/* Examples:
 	 * >> local x = struct { .x = int };
-	 *    cst_first = "x"
+	 *    cst_first = &cst_fvec[0]  // "x"
 	 *    cst_size  = 2
 	 *    cst_fmsk  = 1
 	 *    cst_fvec  = { {"x", 0, NULL, <int>}, DUMMY }
@@ -855,7 +855,7 @@ struct cstruct_type_object {
 	 * >> local x = struct { ("x", int), union { .s = int, .u = uint } };
 	 * >> print str(x());  // "{ .x = 0, { .s = 0, .u = 0 } }"
 	 * >> print repr(x()); // "struct...(x: 0, union...(s: 0))"
-	 *    cst_first = "x"
+	 *    cst_first = &cst_fvec[0]  // "x"
 	 *    cst_size  = 9
 	 *    cst_fmsk  = 7
 	 *    cst_fvec  = {

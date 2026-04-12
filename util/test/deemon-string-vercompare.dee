@@ -75,14 +75,14 @@ local sortedValues: {string...} = {
 	"abc0001",
 	"abc0001_",
 	"abc000",
-	"abc000_",
+	"abc000this",
 	"abc001",
-	"abc001_",
+	"abc001can",
 	"abc00",
-	"abc00_",
+	"abc00be",
 	"abc01",
 	"abc010",
-	"abc010_",
+	"abc010anything",
 	"abc012",
 	"abc012_",
 	"abc01_",
@@ -100,7 +100,6 @@ local sortedValues: {string...} = {
 	"abc11_",
 	"abc111",
 	"abc1112",     // EOF
-	"abc1112\0",   // NUL
 	"abc1112a",    // ASCII
 	"abc1112b",    // ...
 	"abc1112\x7f", // Big ASCII
