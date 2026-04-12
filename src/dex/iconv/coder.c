@@ -64,6 +64,13 @@ DECL_BEGIN
 	"closeout",
 });
 (print_DEFINE_KWLIST from rt.gen.unpack)({
+	"incodec",
+	"outcodec",
+	"out",
+	"errors",
+	"closeout",
+});
+(print_DEFINE_KWLIST from rt.gen.unpack)({
 	"codec",
 	"input",
 	"errors",
@@ -83,6 +90,10 @@ DECL_BEGIN
 #define DEFINED_kwlist__codec_out_errors_closeout
 PRIVATE DEFINE_KWLIST(kwlist__codec_out_errors_closeout, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeout", 0xa788672d, 0x6a93c4deffab5326), KEND });
 #endif /* !DEFINED_kwlist__codec_out_errors_closeout */
+#ifndef DEFINED_kwlist__incodec_outcodec_out_errors_closeout
+#define DEFINED_kwlist__incodec_outcodec_out_errors_closeout
+PRIVATE DEFINE_KWLIST(kwlist__incodec_outcodec_out_errors_closeout, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeout", 0xa788672d, 0x6a93c4deffab5326), KEND });
+#endif /* !DEFINED_kwlist__incodec_outcodec_out_errors_closeout */
 #ifndef DEFINED_kwlist__codec_input_errors_closeinput_chunksize
 #define DEFINED_kwlist__codec_input_errors_closeinput_chunksize
 PRIVATE DEFINE_KWLIST(kwlist__codec_input_errors_closeinput_chunksize, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("input", 0xa0556672, 0x9532499416effacb), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeinput", 0x90ae92c4, 0xfc11aaae8d08ecc9), KEX("chunksize", 0xd5f3e634, 0x45395a4186f3ceef), KEND });
@@ -681,8 +692,7 @@ ivtw_init(IconvTranscodeWriter *__restrict self, size_t argc,
 	out:?DFile,
 	errors:?X2?Dstring?Dint = NULL = !Pstrict,
 	bool closeout = false
-""", docStringPrefix: "ivd", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(TranscodeWriter_kwlist, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeout", 0xa788672d, 0x6a93c4deffab5326), KEND });
+""", docStringPrefix: "ivd");]]]*/
 #define ivd_TranscodeWriter_params "incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeout=!f"
 	struct {
 		DeeObject *incodec;
@@ -693,7 +703,7 @@ ivtw_init(IconvTranscodeWriter *__restrict self, size_t argc,
 	} args;
 	args.errors = NULL;
 	args.closeout = false;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, TranscodeWriter_kwlist, "ooo|ob:TranscodeWriter", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__incodec_outcodec_out_errors_closeout, "ooo|ob:TranscodeWriter", &args))
 		goto err;
 /*[[[end]]]*/
 	self->ivtw_closeout = args.closeout;
@@ -1006,7 +1016,7 @@ ivd_fillbuffer_locked(IconvDecoder *__restrict self,
 				}
 				goto err_temp;
 			}
-			ASSERTF(result == -1,
+			ASSERTF(status == -1,
 			        "Underlying printer should be `ivd_buffer_printer', "
 			        "which only return `-1' on error");
 		}
@@ -1484,7 +1494,7 @@ STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndsize) == offsetof(IconvDecoder
 STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufsize) == offsetof(IconvDecoder, ivd_bufsize));
 #define iver_members ivd_members
 
-INTDEF DeeFileTypeObject IconvEncodeReader_Type = {
+INTERN DeeFileTypeObject IconvEncodeReader_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "EncodeReader",
@@ -1602,8 +1612,7 @@ ivtr_init(IconvTranscodeReader *__restrict self, size_t argc,
 	errors:?X2?Dstring?Dint = NULL = !Pstrict,
 	bool closeinput = false,
 	size_t chunksize = IVTR_DEFAULT_CHUNKSIZE = !4096
-""", docStringPrefix: "ivd", defineKwList: true);]]]*/
-	static DEFINE_KWLIST(TranscodeReader_kwlist, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("input", 0xa0556672, 0x9532499416effacb), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEX("closeinput", 0x90ae92c4, 0xfc11aaae8d08ecc9), KEX("chunksize", 0xd5f3e634, 0x45395a4186f3ceef), KEND });
+""", docStringPrefix: "ivd");]]]*/
 #define ivd_TranscodeReader_params "incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,input:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeinput=!f,chunksize=!4096"
 	struct {
 		DeeObject *incodec;
@@ -1616,7 +1625,7 @@ ivtr_init(IconvTranscodeReader *__restrict self, size_t argc,
 	args.errors = NULL;
 	args.closeinput = false;
 	args.chunksize = IVTR_DEFAULT_CHUNKSIZE;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, TranscodeReader_kwlist, "ooo|ob" UNPuSIZ ":TranscodeReader", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__incodec_outcodec_input_errors_closeinput_chunksize, "ooo|ob" UNPuSIZ ":TranscodeReader", &args))
 		goto err;
 /*[[[end]]]*/
 	self->ivtr_chnksiz = args.chunksize;
