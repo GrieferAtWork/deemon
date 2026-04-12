@@ -27,21 +27,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>         /* DeeArg_UnpackStructKw */
-#include <deemon/bool.h>        /* return_bool */
-#include <deemon/error.h>       /* DeeError_RuntimeError, DeeError_Throwf */
-#include <deemon/file.h>        /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_Type, DeeFile_WriteAll, Dee_ioflag_t */
-#include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf, PRFxN */
-#include <deemon/int.h>         /* DeeInt_NEWU */
-#include <deemon/object.h>      /* DREF, DeeObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
-#include <deemon/string.h>      /* DeeString_New */
-#include <deemon/type.h>        /* DeeType_GetName, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
-#include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_ERR, Dee_nrshared_lock_* */
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw, UNPuSIZ */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/error.h>           /* DeeError_RuntimeError, DeeError_Throwf */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, Dee_ioflag_t */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxN */
+#include <deemon/int.h>             /* DeeInt_NEWU */
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/string.h>          /* DeeString_New */
+#include <deemon/system-features.h> /* memcpy, memmovedown, mempcpy */
+#include <deemon/type.h>            /* DeeType_GetName, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
+#include <deemon/util/nrlock.h>     /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_ERR, Dee_nrshared_lock_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INTPTR_HALF_T__ */
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN

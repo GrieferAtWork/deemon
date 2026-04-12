@@ -33,10 +33,10 @@
 #include <deemon/bytes.h>           /* DeeBytes*, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/format.h>          /* PCKuN, PRFuSIZ */
+#include <deemon/format.h>          /* PCKuN, PRFuN */
 #include <deemon/int.h>             /* DeeInt_NEWU */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_SIZEOF_POS_T, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t */
 #include <deemon/objmethod.h>
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FIGNORE, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* strcmp */

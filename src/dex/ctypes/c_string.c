@@ -33,7 +33,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt, DeeObject_AsSize */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/system-features.h> /* DeeSystem_DEFINE_*, bcmp, bzero, isalpha, memchr, memcmp, memcpy, memmove, memset, stpcpy, strcat, strchr, strcpy, strend, strlen, strncat, to(lower|upper) */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_*, bcmp, bzero, isalpha, isdigit, memchr, memcmp, memcpy, memmove, memset, stpcpy, strcat, strchr, strcpy, strend, strlen, strncat, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_IsSep */
 #include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 

@@ -23,8 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/file.h>        /* DeeFileObject, DeeFileTypeObject, Dee_FILE_OBJECT_HEAD */
-#include <deemon/types.h>       /* DeeObject, DeeTypeObject, Dee_OBJECT_HEAD */
+#include <deemon/types.h>       /* DREF, DeeObject, DeeTypeObject, Dee_OBJECT_HEAD, Dee_pos_t */
 #include <deemon/util/nrlock.h> /* Dee_nrshared_lock_t */
+
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "iconv.h"
 
