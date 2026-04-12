@@ -147,13 +147,16 @@ insert_current_and_again:
 	}
 
 	public runTask(task: Task): Task {
-#if 0
-		task._run();
-#else
-		tasks.append(task);
-		allTasksDone.clear();
-		maybeSpawnThread();
-#endif
+		if (!Thread.supported) {
+			/* Deemon was built without threading support -> execute tasks synchronously
+			 * HINT: This also means that "allTasksDone" is never cleared, meaning that
+			 *       `waitfor()' below will return immediately. */
+			task._run();
+		} else {
+			tasks.append(task);
+			allTasksDone.clear();
+			maybeSpawnThread();
+		}
 		return task;
 	}
 

@@ -62,8 +62,9 @@ STATIC_ASSERT_MSG(offsetof(struct alignof_variant, v) == __ALIGNOF_POINTER__,
 #endif
 
 #ifdef CONFIG_NO_THREADS
-#define Dee_variant_lock(self)         Dee_variant_gettype_nonatomic(self)
-#define Dee_variant_unlock(self, type) (void)0
+#define Dee_variant_lock(self)                Dee_variant_gettype_nonatomic(self)
+#define Dee_variant_unlock(self, type)        (void)0
+#define Dee_variant_unlock_or_set(self, type) (void)((self)->var_type = (type))
 #else /* CONFIG_NO_THREADS */
 PRIVATE WUNUSED NONNULL((1)) enum Dee_variant_type DCALL
 Dee_variant_lock(struct Dee_variant *__restrict self) {
@@ -75,6 +76,8 @@ Dee_variant_lock(struct Dee_variant *__restrict self) {
 }
 #define Dee_variant_unlock(self, type) \
 	atomic_write((int *)&(self)->var_type, (int)(type))
+#define Dee_variant_unlock_or_set(self, type) \
+	Dee_variant_unlock(self, type)
 #endif /* !CONFIG_NO_THREADS */
 
 /* Initialize "self" as a copy of "other" */
@@ -196,16 +199,16 @@ Dee_variant_getobject(struct Dee_variant *__restrict self) {
 	}
 	if likely(result) {
 		/* Try to remember cached object */
-		enum Dee_variant_type new_type;
-		new_type = Dee_variant_lock(self);
-		if likely(new_type == copy.var_type &&
+		enum Dee_variant_type old_type;
+		old_type = Dee_variant_lock(self);
+		if likely(old_type == copy.var_type &&
 		          bcmp(&copy.var_data, &self->var_data,
 		               sizeof(copy.var_data)) == 0) {
 			Dee_Incref(result);
 			self->var_data.d_object = result;
-			Dee_variant_unlock(self, Dee_VARIANT_OBJECT);
+			Dee_variant_unlock_or_set(self, Dee_VARIANT_OBJECT);
 		} else {
-			Dee_variant_unlock(self, new_type);
+			Dee_variant_unlock(self, old_type);
 		}
 	}
 	return result;
@@ -259,7 +262,7 @@ Dee_variant_getobjecttype(struct Dee_variant *__restrict self) {
 			ASSERT(_old_object);                                           \
 		}                                                                  \
 		setter(self, value);                                               \
-		Dee_variant_unlock(self, type);                                    \
+		Dee_variant_unlock_or_set(self, type);                             \
 		Dee_XDecref(_old_object);                                          \
 	}	__WHILE0
 
@@ -370,7 +373,7 @@ Dee_variant_setobject_if_unbound(struct Dee_variant *__restrict self, DeeObject 
 	}
 	Dee_Incref(value);
 	self->var_data.d_object = value;
-	Dee_variant_unlock(self, Dee_VARIANT_OBJECT);
+	Dee_variant_unlock_or_set(self, Dee_VARIANT_OBJECT);
 	return true;
 }
 
@@ -382,7 +385,7 @@ Dee_variant_setobject_if_unbound(struct Dee_variant *__restrict self, DeeObject 
 			return false;                                        \
 		}                                                        \
 		setter(self, value);                                     \
-		Dee_variant_unlock(self, type);                          \
+		Dee_variant_unlock_or_set(self, type);                   \
 		return true;                                             \
 	}	__WHILE0
 
@@ -496,7 +499,7 @@ Dee_variant_cmpxch(struct Dee_variant *__restrict self,
 	         Dee_variant_samedata(self, oldval, old_type);
 	if (result) {
 		memcpy(&self->var_data, &newval->var_data, sizeof(self->var_data));
-		Dee_variant_unlock(self, newval->var_type);
+		Dee_variant_unlock_or_set(self, newval->var_type);
 		if (old_type == Dee_VARIANT_OBJECT)
 			Dee_Decref(oldval->var_data.d_object);
 	} else {

@@ -41,12 +41,11 @@
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/struct.h>             /* DeeStructObject_* */
 #include <deemon/system-features.h>    /* memcpy, memset */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_HasTerminated, DeeThread_Self, Dee_except_frame */
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
-#include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/variant.h>            /* Dee_VARIANT_INIT_UNBOUND, Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
