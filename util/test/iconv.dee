@@ -40,9 +40,9 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 	/* Decode using convenience wrapper */
 	test.assertEqualsTyped(iconv.decode(result, codec), data);
 
-	/* Decode using "iconv.Decoder" */
+	/* Decode using "iconv.DecodeWriter" */
 	local w = File.Writer(hint: "string");
-	with (local d = iconv.Decoder(codec, out: w)) {
+	with (local d = iconv.DecodeWriter(codec, out: w)) {
 		(none)repr(d); /* For coverage */
 		d.write(result);
 	}
@@ -54,16 +54,16 @@ function assertTranscode(data: Bytes, incodec: string, outcodec: string, result:
 	test.assertEqualsTyped(iconv.transcode(data, incodec, outcodec), result);
 	test.assertEqualsTyped(iconv.transcode(result, outcodec, incodec), data);
 
-	/* Transcode using "iconv.Transcoder" */
+	/* Transcode using "iconv.TranscodeWriter" */
 	local w = File.Writer(hint: "bytes");
-	with (local d = iconv.Transcoder(incodec, outcodec, out: w)) {
+	with (local d = iconv.TranscodeWriter(incodec, outcodec, out: w)) {
 		(none)repr(d); /* For coverage */
 		d.write(data);
 	}
 	test.assertEqualsTyped(result, w.bytes);
 
 	local w = File.Writer(hint: "bytes");
-	with (local d = iconv.Transcoder(outcodec, incodec, out: w)) {
+	with (local d = iconv.TranscodeWriter(outcodec, incodec, out: w)) {
 		(none)repr(d); /* For coverage */
 		d.write(result);
 	}

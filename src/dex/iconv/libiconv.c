@@ -791,9 +791,16 @@ DEX_MEMBER_F("detect", &deemon_iconv_detect, Dee_DEXSYM_READONLY,
 
              "If the function is unable to determine the codec to-be used, it will return ?N"),
 
-DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("EncodeWriter", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY), /* Alias for "Encoder" */
+DEX_MEMBER_F_NODOC("DecodeWriter", &IconvDecodeWriter_Type.ft_base, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("TranscodeWriter", &IconvTranscodeWriter_Type.ft_base, Dee_DEXSYM_READONLY),
+
+/* TODO: Decoder */
+/* TODO: DecodeReader */ /* Alias for "Decoder" */
+/* TODO: EncodeReader */
+/* TODO: TranscodeReader */
+
 /* TODO: DecodeReader -- Similar to Decoder, but instead of requiring you to *write* encoded
  *                       data to have its decoded equivalent be written to another file, this
  *                       one let's you to specify a file to read from, such that reading from
@@ -824,7 +831,7 @@ DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,
              /**/ "function decode(data: string | Bytes, codec: string,\n"
              /**/ "                errors: string = \"strict\"): string {\n"
              /**/ "	local out = import.deemon.File.Writer(hint: \"string\");\n"
-             /**/ "	with (local decoder = iconv.Decoder(codec, out, errors))\n"
+             /**/ "	with (local decoder = iconv.DecodeWriter(codec, out, errors))\n"
              /**/ "		decoder.write(data);\n"
              /**/ "	return out.string;\n"
              /**/ "}"
@@ -839,7 +846,7 @@ DEX_MEMBER_F("encode", &deemon_iconv_encode, Dee_DEXSYM_READONLY,
              /**/ "function encode(data: string | Bytes, codec: string,\n"
              /**/ "                errors: string = \"strict\"): Bytes {\n"
              /**/ "	local out = import.deemon.File.Writer(hint: \"bytes\");\n"
-             /**/ "	with (local encoder = iconv.Encode(codec, out, errors)) {\n"
+             /**/ "	with (local encoder = iconv.Encoder(codec, out, errors)) {\n"
              /**/ "		if (data is string) {\n"
              /**/ "			print encoder: data,;\n"
              /**/ "		} else {\n"
@@ -863,7 +870,7 @@ DEX_MEMBER_F("transcode", &deemon_iconv_transcode, Dee_DEXSYM_READONLY,
              /**/ "                   incodec: string, outcodec: string,\n"
              /**/ "                   errors: string = \"strict\"): Bytes {\n"
              /**/ "	local out = import.deemon.File.Writer(hint: \"bytes\");\n"
-             /**/ "	with (local transcoder = iconv.Transcoder(incodec, outcodec, out, errors)) {\n"
+             /**/ "	with (local transcoder = iconv.TranscodeWriter(incodec, outcodec, out, errors)) {\n"
              /**/ "		if (data is string) {\n"
              /**/ "			print transcoder: data,;\n"
              /**/ "		} else {\n"
