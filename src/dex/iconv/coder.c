@@ -40,10 +40,14 @@
 #include <deemon/type.h>            /* DeeType_GetName, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
 #include <deemon/util/nrlock.h>     /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_ERR, Dee_nrshared_lock_* */
 
-#include <hybrid/typecore.h> /* __SIZEOF_INTPTR_HALF_T__ */
+#include <hybrid/typecore.h> /* __SIZEOF_CHAR__, __SIZEOF_INTPTR_HALF_T__ */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
+
+#ifndef __SIZEOF_BOOL__
+#define __SIZEOF_BOOL__ __SIZEOF_CHAR__
+#endif /* !__SIZEOF_BOOL__ */
 
 DECL_BEGIN
 
