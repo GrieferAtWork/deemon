@@ -499,9 +499,6 @@ do_exec_code:
 		assembler_init_reuse(current_code,
 		                     current_code->co_code +
 		                     preexisting_codesize);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeCode_Type);    /* current_code->ob_type */
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		Dee_DecrefNokill(&self->im_module); /* current_code->co_module */
 		current_assembler.a_constv = (DREF DeeObject **)current_code->co_constv;
 		current_code->co_constv    = NULL;
@@ -1415,9 +1412,6 @@ err_basefile:
 err_compiler:
 	Dee_Decref(self->im_compiler);
 err_frame:
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeFunction_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeObject_FreeTracker(Dee_AsObject(self->im_frame.cf_func));
 	DeeObject_Free(Dee_AsObject(self->im_frame.cf_func));
 err_stream:
@@ -1746,9 +1740,6 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	/* Start tracking the new module as a GC object. */
 	return DeeGC_TRACK(DeeModuleObject, &result->im_module);
 err_r:
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeInteractiveModule_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeObject_FreeTracker(Dee_AsObject(&result->im_module));
 	DeeGCObject_FREE(result);
 err:

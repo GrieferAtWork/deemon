@@ -153,9 +153,7 @@ err_r:
 	/* Drop reference to "tp_self" (if one was held) */
 #if LOCAL_PARAM_HeapType
 	Dee_Decref_unlikely(tp_self);
-#elif !defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE)
-	Dee_DecrefNokill(tp_self);
-#endif /* ... */
+#endif /* LOCAL_PARAM_HeapType */
 err:
 	return NULL;
 }

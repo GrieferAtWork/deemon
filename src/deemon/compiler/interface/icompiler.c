@@ -1016,9 +1016,6 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 	                                                      ast_scope->s_base);
 	if unlikely(!result_ast->a_try.t_catchv && result_ast->a_try.t_catchc) {
 		Dee_DecrefNokill(ast_scope);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeAst_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		ast_free(result_ast);
 		goto done_compiler_end;
 	}

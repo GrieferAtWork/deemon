@@ -371,9 +371,6 @@ err:
 LOCAL NONNULL((1)) void DCALL
 ProxyObject_DecrefSymbolic(DREF ProxyObject *__restrict self) {
 	if (!DeeObject_IsShared(self)) {
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(Dee_TYPE(self));
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	} else {
 		Dee_Incref(self->po_obj);
@@ -480,9 +477,6 @@ err:
 LOCAL NONNULL((1)) void DCALL
 ProxyObject2_DecrefSymbolic(DREF ProxyObject2 *__restrict self) {
 	if (!DeeObject_IsShared(self)) {
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(Dee_TYPE(self));
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	} else {
 		Dee_Incref(self->po_obj2);

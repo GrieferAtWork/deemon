@@ -2314,12 +2314,7 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 }
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeModule_DestroyAnonymousDirectory(self) DeeGCObject_Free(self)
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeModule_DestroyAnonymousDirectory(self) \
-	(Dee_DecrefNokill(&DeeModuleDir_Type), DeeGCObject_Free(self))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 #define sizeof_DeeModuleDir offsetof(DeeModuleObject, mo_moddata)
 PRIVATE WUNUSED DREF /*untracked*/ DeeModuleObject *DCALL

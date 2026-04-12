@@ -423,13 +423,11 @@ DECL_BEGIN
 #error "LOCAL_HAS_GC must be specified statically"
 #endif /* !LOCAL_HAS_GC */
 
-#if (defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0) && \
-     defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#ifdef DEFINE_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0
 /* Special case: nothing other than freeing the object needs to be done! */
 #undef PTR_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0
 #define PTR_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0 ((Dee_tp_destroy_t)&DeeObject_Free)
-#elif (defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free1_HeapType0_GC0) && \
-       defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#elif defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free1_HeapType0_GC0)
 /* Special case: This one doesn't need to be implemented (just needs to be defined)
  * Reason: "DeeType_RequireDestroy_uncached_impl()" checks for this variant
  *         by injecting a direct reference to "tp_free" into "tp_destroy". */
@@ -438,8 +436,7 @@ DECL_BEGIN
 #else /* ... */
 
 #undef LOCAL_HAVE_orig_type
-#if (LOCAL_HAS_HeapType || (defined(LOCAL_HAS_Free) && LOCAL_HAS_Free) || (LOCAL_HAS_Dtor != 0) || \
-     !defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#if LOCAL_HAS_HeapType || (defined(LOCAL_HAS_Free) && LOCAL_HAS_Free) || (LOCAL_HAS_Dtor != 0)
 #define LOCAL_HAVE_orig_type
 #endif /* ... */
 
@@ -612,16 +609,12 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 
 #if LOCAL_HAS_HeapType == 1
 #define LOCAL_decref_orig_type() Dee_Decref_unlikely(orig_type)
-#elif LOCAL_HAS_HeapType == 2 && defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE)
+#elif LOCAL_HAS_HeapType == 2
 #define LOCAL_decref_orig_type()       \
 	if (DeeType_IsHeapType(orig_type)) \
 		Dee_Decref_unlikely(orig_type)
 #elif LOCAL_HAS_HeapType == 0
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define LOCAL_decref_orig_type() /* nothing (ob_type didn't hold a reference) */
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define LOCAL_decref_orig_type() Dee_DecrefNokill(orig_type)
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #else /* LOCAL_HAS_HeapType == ... */
 #error "Invalid 'LOCAL_HAS_HeapType'"
 #endif /* LOCAL_HAS_HeapType != ... */

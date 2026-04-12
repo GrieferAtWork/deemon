@@ -1079,9 +1079,6 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 		 *              so our cleanup process has been greatly simplified. */
 		/*Dee_Decref(me->blkd_code);*/ /* Not actually referenced */
 		/*Dee_Decref(me->blkd_kwds);*/ /* Not actually referenced */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeBlackListKwds_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;

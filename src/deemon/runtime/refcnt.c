@@ -524,7 +524,6 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 
 	/* Select implementation based on type features. */
 	result = DeeObject_DefaultDestroy_table[flags];
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (result == PTR_DeeObject_DefaultDestroy_Dtor0_Free1_HeapType0_GC0) {
 		/* Special case: type has a custom free-function, but nothing other than calling
 		 * said function needs to be done in order to destroy instances ob this type.
@@ -536,7 +535,6 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 		result = (Dee_tp_destroy_t)(Dee_funptr_t)self->tp_init.tp_alloc.tp_free;
 		ASSERT(result);
 	}
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	return result;
 }
 

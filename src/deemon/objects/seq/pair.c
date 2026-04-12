@@ -1135,9 +1135,6 @@ DeeSeqPair_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqPair_Type);
 	if (!DeeObject_IsShared(me)) {
 		DeeSeq_FreePairUninitialized(me);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeSeqPair_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	} else {
 		Dee_Incref(me->sp_items[1]);
 		Dee_Incref(me->sp_items[0]);

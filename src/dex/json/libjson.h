@@ -334,17 +334,10 @@ typedef struct {
 	DeeHashSetObject   djw_active;    /* Set of object that are currently being enumerated */
 } DeeJsonWriter;
 
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeJsonWriter_Init(self, printer, arg, format)            \
 	(json_writer_init(&(self)->djw_writer, printer, arg, format), \
 	 DeeObject_InitStatic(&(self)->djw_active, &DeeHashSet_Type), \
 	 (*DeeHashSet_Type.tp_init.tp_alloc.tp_ctor)(Dee_AsObject(&(self)->djw_active)))
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeJsonWriter_Init(self, printer, arg, format)               \
-	(json_writer_init(&(self)->djw_writer, printer, arg, format),    \
-	 DeeObject_InitInherited(&(self)->djw_active, &DeeHashSet_Type), \
-	 (*DeeHashSet_Type.tp_init.tp_alloc.tp_ctor)(Dee_AsObject(&(self)->djw_active)))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define DeeJsonWriter_Fini(self)                                            \
 	((*DeeHashSet_Type.tp_init.tp_dtor)(Dee_AsObject(&(self)->djw_active)), \
 	 json_writer_fini(&(self)->djw_writer))

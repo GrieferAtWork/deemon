@@ -1338,9 +1338,6 @@ DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqOne_Type);
 	if (!DeeObject_IsShared(me)) {
 		DeeSeq_FreeOneUninitialized(me);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeSeqOne_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	} else {
 		Dee_Incref(me->so_item);
 		Dee_Decref_unlikely(me);

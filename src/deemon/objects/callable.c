@@ -117,10 +117,6 @@ DeeFunctionComposition_Of(size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto done;
 	ASSERT(!DeeObject_IsShared(result));
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeTuple_Type);
-	Dee_Incref(&FunctionComposition_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &FunctionComposition_Type;
 	for (i = 0, dst = result->t_elem; i < argc; ++i) {
 		DeeObject *cb = argv[i];

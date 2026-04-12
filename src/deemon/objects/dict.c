@@ -1806,9 +1806,6 @@ err_r:
 	        "That would mean 'num_items == 0', which it can't "
 	        "be because then we wouldn't have gotten here");
 	_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeDict_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeGCObject_FREE(result);
 err:
 	return NULL;

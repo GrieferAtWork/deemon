@@ -343,9 +343,6 @@ DeeMemoryFile_Close(DREF /*File*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* The file also went away, so we can simply not free its data! */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(DeeFileType_AsType(&DeeMemoryFile_Type));
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker(me);
 		DeeObject_FREE(me);
 	} else {
@@ -2405,9 +2402,6 @@ writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t 
 			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-			Dee_DecrefNokill(&DeeString_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
@@ -2428,9 +2422,6 @@ writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t 
 			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-			Dee_DecrefNokill(&DeeString_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
@@ -2807,9 +2798,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 				Dee_Free((size_t *)utf->u_utf8 - 1);
 			Dee_string_utf_free(utf);
 			DeeObject_Free(wstr);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-			Dee_DecrefNokill(&DeeString_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		}
 		self->w_string = NULL;
 	} else if (self->w_printer.wp_uni.up_buffer &&

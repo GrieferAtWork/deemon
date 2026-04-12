@@ -548,18 +548,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 
-/* Experimental feature switch: The "ob_type"f field of
- * instances of types without TP_FHEAP isn't a reference */
-#if (!defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
-#if 1
-#define CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-#else
-#define CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-
-
 /* Experimental feature switch: Define some new function pointers
  * "tp_new", "tp_new_kw" and "tp_new_copy" that are used to implement
  * `DeeObject_New()', `DeeObject_NewKw()' and `DeeObject_Copy()'

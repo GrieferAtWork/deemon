@@ -293,9 +293,6 @@ DeeTuple_FreeUninitialized(DREF DeeTupleObject *__restrict self) {
 	if likely(self != (DeeTupleObject *)&DeeTuple_Empty) {
 		ASSERT(self->ob_refcnt == 1);
 		ASSERT(self->ob_type == &DeeTuple_Type);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeTuple_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		tuple_tp_free(self);
 	} else {
 		Dee_DecrefNokill(self);
@@ -320,9 +317,6 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__rest
 	ASSERTF(self->ob_refcnt == 1, "The tuple is being shared");
 	if unlikely(!new_size) {
 		/* Special case: Resize to an empty tuple. */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeTuple_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		tuple_tp_free(self);
 		return (DeeTupleObject *)DeeTuple_NewEmpty();
 	}
@@ -400,9 +394,6 @@ DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__r
 	ASSERTF(self->ob_refcnt == 1, "The tuple is being shared");
 	if unlikely(!new_size) {
 		/* Special case: Resize to an empty tuple. */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeTuple_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		tuple_tp_free(self);
 		return (DeeTupleObject *)DeeTuple_NewEmpty();
 	}
@@ -475,9 +466,6 @@ DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF DeeTupleObject *__restri
 	ASSERTF(self->ob_refcnt == 1, "The tuple is being shared");
 	if unlikely(!new_size) {
 		/* Special case: Resize to an empty tuple. */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeTuple_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		tuple_tp_free(self);
 		return (DeeTupleObject *)DeeTuple_NewEmpty();
 	}
@@ -2305,10 +2293,6 @@ make_nullable(DREF DeeTupleObject *__restrict self) {
 		Dee_Incref(&DeeNullableTuple_Empty);
 		return (DREF DeeTupleObject *)&DeeNullableTuple_Empty;
 	}
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeTuple_Type);
-	Dee_Incref(&DeeNullableTuple_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	self->ob_type = &DeeNullableTuple_Type;
 	return self;
 }

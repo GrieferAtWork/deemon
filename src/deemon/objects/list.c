@@ -232,9 +232,6 @@ PUBLIC NONNULL((1)) void DCALL
 DeeList_FreeUninitialized(DREF List *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeList_Type);
 	ASSERT(!DeeObject_IsShared(self));
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeList_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Dee_objectlist_elemv_free(self->l_list.ol_elemv);
 	DeeObject_FreeTracker(Dee_AsObject(self));
 	DeeGCObject_FREE(self);

@@ -1725,10 +1725,8 @@ fungen_exceptinject_fini_and_freeinstance_f(struct fungen *__restrict self,
 	DO(fg_vcallapi(self, &DeeObject_FreeTracker, VCALL_CC_RAWINTPTR, 1)); /* instance */
 #endif /* CONFIG_TRACE_REFCHANGES */
 	DO(vcall_DeeType_FreeInstance(self, me->fei_fafi_type)); /* N/A */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(me->fei_fafi_type))
 		return 0;
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	memloc_init_const(&typeloc, me->fei_fafi_type);
 	return fg_gdecref_loc(self, &typeloc, 1);
 err:
@@ -7105,7 +7103,6 @@ err:
 /* instance, type -> instance */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_Init(struct fungen *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	DeeTypeObject *typ;
 	if (!memval_isconst(fg_vtop(self))) {
 		/* Must do initialization at runtime... */
@@ -7122,9 +7119,6 @@ fg_vcall_DeeObject_Init(struct fungen *__restrict self) {
 	} else {
 		DO(fg_vnoref(self));   /* instance, noref:type */
 	}
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	DO(fg_vref2(self, 2));                               /* instance, ref:type */
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DO(fg_vpopind(self, offsetof(DeeObject, ob_type)));  /* instance */
 #ifdef CONFIG_TRACE_REFCHANGES
 	DO(fg_vpush_NULL(self));                             /* instance, type, NULL */

@@ -2818,9 +2818,6 @@ err_buffer16:
 err_r:
 	DeeObject_FreeTracker((DeeObject *)result);
 	DeeObject_Free(result);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeString_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	return NULL;
 }
 
@@ -2992,9 +2989,6 @@ err_buffer16:
 err_r:
 	/*DeeObject_FreeTracker(result);*/
 	/*DeeObject_Free(result);*/
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	/*Dee_DecrefNokill(&DeeString_Type);*/
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	return NULL;
 }
 
@@ -3686,9 +3680,6 @@ inherit_latin1_string:
 		Dee_string_utf_free(utf);
 		DeeObject_Free(str);
 	}
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeString_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 }
 
 

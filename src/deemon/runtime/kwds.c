@@ -1611,9 +1611,6 @@ DeeKwdsMapping_Decref(DREF /*KwdsMapping*/ DeeObject *__restrict self) {
 		Dee_Decref_unlikely(self);
 	} else {
 		/*Dee_Decref(me->kmo_kwds);*/
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeKwdsMapping_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_Free(me);
 	}
 }

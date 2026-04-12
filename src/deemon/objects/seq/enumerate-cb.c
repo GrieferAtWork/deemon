@@ -471,9 +471,6 @@ SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
 		Dee_rshared_lock_release(&self->sew_lock);
 		Dee_Decref_unlikely(self);
 	} else {
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(Dee_TYPE(self));
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	}
 	Dee_XDecref(err);

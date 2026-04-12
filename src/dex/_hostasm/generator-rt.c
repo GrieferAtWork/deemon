@@ -373,7 +373,6 @@ err:
 }
 #endif /* CONFIG_HAVE_FPU */
 
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 typedef struct {
 	OBJECT_HEAD
 } GenericObject;
@@ -384,7 +383,6 @@ libhostasm_rt_DeeObject_Init(DeeObject *__restrict self,
 	DeeObject_Init((GenericObject *)self, typ);
 	return self;
 }
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 
 DECL_END

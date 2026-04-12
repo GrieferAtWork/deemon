@@ -3484,10 +3484,6 @@ seq_class_concat(DeeObject *UNUSED(self),
 	if likely(result) {
 		DeeTupleObject *retval = (DeeTupleObject *)result;
 		ASSERT(retval->ob_type == &DeeTuple_Type);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&DeeTuple_Type);
-		Dee_Incref(&SeqConcat_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		retval->ob_type = &SeqConcat_Type;
 	}
 	return result;

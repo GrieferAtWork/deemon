@@ -80,11 +80,7 @@ INTDEF DeeTypeObject DeeSeqOne_Type;
 #define DeeSeq_FiniOne_inplace(self) (void)0
 #else /* __INTELLISENSE__ */
 #define DeeSeq_InitOne_inplace(self) (void)DeeObject_InitStatic(self, &DeeSeqOne_Type)
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeSeq_FiniOne_inplace(self) (void)0
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeSeq_FiniOne_inplace(self) (void)Dee_DecrefNokill(&DeeSeqOne_Type)
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #ifdef __INTELLISENSE__
@@ -173,11 +169,7 @@ INTDEF DeeTypeObject DeeSeqPair_Type;
 #define DeeSeq_FiniPair_inplace(self) (void)0
 #else /* __INTELLISENSE__ */
 #define DeeSeq_InitPair_inplace(self) (void)DeeObject_InitStatic(self, &DeeSeqPair_Type)
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeSeq_FiniPair_inplace(self) (void)0
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeSeq_FiniPair_inplace(self) (void)Dee_DecrefNokill(&DeeSeqPair_Type)
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #ifdef __INTELLISENSE__

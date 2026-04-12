@@ -333,18 +333,10 @@ struct query_object {
 /* Last-time finalization (+ free) */
 #define Query_Free(self, db) \
 	(DB_FinalizeStmt(db, (self)->q_stmt), _Query_Free(self))
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define _Query_Free(self)                    \
 	(Dee_XDecref((self)->q_rowfmt),          \
 	 ASSERT((self)->ob_type == &Query_Type), \
 	 DeeObject_FREE(self))
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define _Query_Free(self)                    \
-	(Dee_XDecref((self)->q_rowfmt),          \
-	 ASSERT((self)->ob_type == &Query_Type), \
-	 DeeObject_FREE(self),                   \
-	 Dee_DecrefNokill(&Query_Type))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 /* Check if the query is in-use (returns "false" even if the query hasn't been marked
  * as unused, yet, meaning it is still being finalized and pre-pared for re-use) */

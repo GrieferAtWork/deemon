@@ -506,9 +506,6 @@ Query_GetRow(Query *__restrict self) {
 	if unlikely(existing_row) {
 		Dee_weakref_support_fini(result);
 		Dee_DecrefNokill(self); /* result->r_query */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-		Dee_DecrefNokill(&Row_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		Row_Free(result);
 		return existing_row;
 	}
@@ -516,9 +513,6 @@ Query_GetRow(Query *__restrict self) {
 err_r:
 	Dee_weakref_support_fini(result);
 	Dee_DecrefNokill(self); /* result->r_query */
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&Row_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Row_Free(result);
 err:
 	return NULL;

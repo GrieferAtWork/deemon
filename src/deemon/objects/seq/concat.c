@@ -465,10 +465,6 @@ cat_get_frozen(Cat *__restrict self) {
 
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeTuple_Type);
-	Dee_Incref(&SeqConcat_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &SeqConcat_Type;
 	return result;
 err_r_i:
@@ -816,10 +812,6 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeTuple_Type);
-	Dee_Incref(&SeqConcat_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &SeqConcat_Type;
 	return Dee_AsObject(result);
 err:

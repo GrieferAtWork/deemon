@@ -531,13 +531,8 @@ INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
 		 * storage) to make stuff easier and faster. */
 		ASSERT(IS_ALIGNED((uintptr_t)&block->bp_pair, _Dee_ALIGNOF_BOOL_PAIR));
 		block->bp_free = DeeBool_Block_FREE_NONE;
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		DeeObject_InitStatic(&block->bp_pair.bp_bools[0], &DeeBool_Type);
 		DeeObject_InitStatic(&block->bp_pair.bp_bools[1], &DeeBool_Type);
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-		DeeObject_InitInherited(&block->bp_pair.bp_bools[0], &DeeBool_Type);
-		DeeObject_InitInherited(&block->bp_pair.bp_bools[1], &DeeBool_Type);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		return &block->bp_pair;
 	}
 	return NULL;

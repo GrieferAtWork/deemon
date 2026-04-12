@@ -2343,17 +2343,9 @@ err_r:
 	/* Drop reference to "tp_self" (if one was held) */
 #if LOCAL_PARAM_HeapType > 0
 	Dee_Decref_unlikely(tp_self);
-#elif LOCAL_PARAM_HeapType == 0
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(tp_self);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#else /* ... */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#elif LOCAL_PARAM_HeapType < 0
 	if (DeeType_IsHeapType(tp_self))
 		Dee_Decref_unlikely(tp_self);
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	Dee_Decref_unlikely(tp_self);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !... */
 
 err:

@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #undef HAVE_DEBUG_STATIC_REFS
-#if defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE) && !defined(NDEBUG)
+#if !defined(NDEBUG) && 1
 #define HAVE_DEBUG_STATIC_REFS
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE && !NDEBUG */
+#endif /* !NDEBUG */
 
 DECL_BEGIN
 

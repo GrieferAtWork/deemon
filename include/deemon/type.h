@@ -191,7 +191,6 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #define DeeObject_InitHeapInheritedEx(self, /*inherit(always)*/ type, type_as_type) \
 	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                            \
 	 Dee_ASSERT(type_as_type(type)->tp_flags & Dee_TP_FHEAP), (self)->ob_type = (type))
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeObject_InitStaticEx(self, type, type_as_type)         \
 	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,         \
 	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)), \
@@ -200,16 +199,6 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                              \
 	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)),                      \
 	 Dee_DecrefNokill(type_as_type(type)), (self)->ob_type = (type))
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeObject_InitStaticEx(self, type, type_as_type)         \
-	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,         \
-	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)), \
-	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
-#define DeeObject_InitStaticInheritedEx(self, /*inherit(always)*/ type, type_as_type) \
-	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                              \
-	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)),                      \
-	 (self)->ob_type = (type))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 
 /* >> DeeTypeObject *DeeObject_Init(DeeObject *self, DeeTypeObject *type);
@@ -220,7 +209,6 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
  * @param: DeeTypeoObject *type: The (non-static) type to assign to the object */
 #define DeeObject_Init(self, type)          DeeObject_InitEx(self, type, /**/)
 #define DeeObject_InitInherited(self, type) DeeObject_InitInheritedEx(self, type, /**/)
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeObject_InitEx(self, type, type_as_type)       \
 	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, \
 	 type_as_type(type)->tp_flags & Dee_TP_FHEAP         \
@@ -233,23 +221,10 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 	 ? (void)0                                              \
 	 : Dee_DecrefNokill(type_as_type(type)),                \
 	 (self)->ob_type = (type))
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeObject_InitEx(self, type, type_as_type)       \
-	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, \
-	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
-#define DeeObject_InitInheritedEx(self, type, type_as_type) \
-	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, (self)->ob_type = (type))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeType_IncrefHeapType(self)       (DeeType_IsHeapType(self) ? Dee_Incref(self) : (void)0)
 #define DeeType_DecrefHeapType(self)       (DeeType_IsHeapType(self) ? Dee_Decref_unlikely(self) : (void)0)
 #define DeeType_DecrefHeapTypeNokill(self) (DeeType_IsHeapType(self) ? Dee_DecrefNokill(self) : (void)0)
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeType_IncrefHeapType(self)       Dee_Incref(self)
-#define DeeType_DecrefHeapType(self)       Dee_Decref_unlikely(self)
-#define DeeType_DecrefHeapTypeNokill(self) Dee_DecrefNokill(self)
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 
 

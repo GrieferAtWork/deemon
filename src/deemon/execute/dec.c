@@ -2268,15 +2268,12 @@ decwriter_object_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
 		if unlikely(decwriter_putpointer(self,
 		                                 result + offsetof(DeeObject, ob_type),
 		                                 Dee_AsObject(Dee_TYPE(ref))))
 			goto err_r;
-	} else
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	{
+	} else {
 		if unlikely(decwriter_putobject(self,
 		                                result + offsetof(DeeObject, ob_type),
 		                                Dee_AsObject(Dee_TYPE(ref))))
@@ -2336,16 +2333,13 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
 		if unlikely(decwriter_putpointer(self,
 		                                 result +
 		                                 offsetof(DeeObject, ob_type),
 		                                 Dee_AsObject(Dee_TYPE(ref))))
 			goto err_r;
-	} else
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	{
+	} else {
 		if unlikely(decwriter_putobject(self,
 		                                result +
 		                                offsetof(DeeObject, ob_type),
@@ -2667,15 +2661,12 @@ decwriter_slab_object_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
 		if unlikely(decwriter_putpointer(self,
 		                                 result + offsetof(DeeObject, ob_type),
 		                                 Dee_AsObject(Dee_TYPE(ref))))
 			goto err_r;
-	} else
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	{
+	} else {
 		if unlikely(decwriter_putobject(self,
 		                                result + offsetof(DeeObject, ob_type),
 		                                Dee_AsObject(Dee_TYPE(ref))))
@@ -2747,16 +2738,13 @@ decwriter_slab_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
 		if unlikely(decwriter_putpointer(self,
 		                                 result +
 		                                 offsetof(DeeObject, ob_type),
 		                                 Dee_AsObject(Dee_TYPE(ref))))
 			goto err_r;
-	} else
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	{
+	} else {
 		if unlikely(decwriter_putobject(self,
 		                                result +
 		                                offsetof(DeeObject, ob_type),

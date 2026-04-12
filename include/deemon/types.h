@@ -141,17 +141,10 @@ struct Dee_reftracker;
 #define Dee_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
 
 
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define Dee_OBJECT_HEAD_EX(Ttype)                                                                     \
 	Dee_refcnt_t          ob_refcnt; /* Reference count */                                            \
 	/*maybe:DREF*/ Ttype *ob_type;   /* [1..1][const] Only reference iff type has `TP_FHEAP' flag. */ \
 	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_refcnt_t ob_refcnt;       \
-	DREF Ttype  *ob_type;         \
-	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define Dee_OBJECT_HEAD \
 	Dee_OBJECT_HEAD_EX(DeeTypeObject)
 
@@ -164,11 +157,7 @@ struct Dee_reftracker;
 
 struct Dee_object {
 	Dee_refcnt_t                                    ob_refcnt; /* [lock(ATOMIC)] Object reference counter */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	/*maybe:DREF*/ DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type;Only reference iff type has `TP_FHEAP' flag. */
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-	DREF           DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type */
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 };
 

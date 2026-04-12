@@ -3493,9 +3493,6 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 except_frame_free_for_rethrow(struct Dee_except_frame *__restrict self) {
 	DeeObject_FREE((DeeErrorObject *)self->ef_error);
-#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	Dee_DecrefNokill(&DeeError_ThreadCrash);
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Dee_except_frame_free(self);
 }
 

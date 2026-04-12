@@ -109,11 +109,7 @@ INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 #else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 #define DeeInt_Free(self) DeeObject_Free(self)
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
-#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define DeeInt_Destroy(self) DeeInt_Free(self)
-#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#define DeeInt_Destroy(self) (DeeInt_Free(self), Dee_DecrefNokill(&DeeInt_Type))
-#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **p_div, DeeIntObject **p_rem);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
