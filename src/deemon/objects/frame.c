@@ -227,14 +227,14 @@ err:
 
 
 #ifdef CONFIG_NO_THREADS
-PUBLIC NONNULL((1)) void DCALL
-DeeFrame_LockEndRead(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeFrame_LockEndRead)(DeeObject *__restrict self) {
 	(void)self;
 	COMPILER_IMPURE();
 }
 
-PUBLIC NONNULL((1)) void DCALL
-DeeFrame_LockEndWrite(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeFrame_LockEndWrite)(DeeObject *__restrict self) {
 	(void)self;
 	COMPILER_IMPURE();
 }

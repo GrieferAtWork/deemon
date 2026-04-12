@@ -365,8 +365,14 @@ LOCAL NONNULL((1)) void DCALL
 DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 	DeeDict_LockRead(self);
 	if (_DeeDict_CanOptimizeVTab(self)) {
+#ifdef CONFIG_NO_THREADS
+		if (_DeeDict_CanOptimizeVTab(self))
+#else /* CONFIG_NO_THREADS */
 		if (DeeDict_LockUpgrade(self) || _DeeDict_CanOptimizeVTab(self))
+#endif /* !CONFIG_NO_THREADS */
+		{
 			dict_optimize_vtab(self);
+		}
 		DeeDict_LockDowngrade(self);
 	}
 }

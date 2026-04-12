@@ -669,7 +669,7 @@ again:
 		if ((utf->u_flags & Dee_STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
-			atomic_write(&utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, (char *)DeeString_STR(self));
 			return DeeString_STR(self);
 		}
 	}
@@ -757,7 +757,7 @@ again:
 		if ((utf->u_flags & Dee_STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
-			atomic_write(&utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, (char *)DeeString_STR(self));
 			return DeeString_STR(self);
 		}
 	}
@@ -1187,7 +1187,7 @@ again:
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 			/* The single-byte variant is known to be encoded in UTF-8, or ASCII */
 print_ascii:
-			atomic_write(&utf->u_utf8, DeeString_STR(self));
+			atomic_write(&utf->u_utf8, (char *)DeeString_STR(self));
 			return (*printer)(arg, DeeString_STR(self), DeeString_SIZE(self));
 		}
 	}

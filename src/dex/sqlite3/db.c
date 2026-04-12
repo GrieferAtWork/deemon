@@ -647,11 +647,13 @@ db_thread_interrupt_hook_onwake(struct Dee_thread_interrupt_hook *__restrict sel
 }
 
 
+#ifndef CONFIG_NO_THREADS
 PRIVATE int db_sqlite_progress_handler(void *UNUSED(ignored)) {
 	/* >> If the progress callback returns non-zero, the operation is interrupted */
 	DeeThreadObject *thread = DeeThread_Self();
 	return DeeThread_WasInterrupted(thread);
 }
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
@@ -764,7 +766,9 @@ again_open:
 	 * the calling thread has been interrupted every couple thousand of
 	 * virtual opcodes, acting as a fallback to always allow queries to
 	 * be canceled. */
+#ifndef CONFIG_NO_THREADS
 	sqlite3_progress_handler(self->db_db, 100000, &db_sqlite_progress_handler, NULL);
+#endif /* !CONFIG_NO_THREADS */
 
 	return 0;
 err_sf_hook_ti_hook_lib_self_sf_hook:

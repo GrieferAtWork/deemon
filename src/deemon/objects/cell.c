@@ -105,8 +105,10 @@ cell_serialize(DeeCellObject *__restrict self,
                DeeSerial *__restrict writer,
                Dee_seraddr_t addr) {
 	DREF DeeObject *value = DeeCell_TryGet(Dee_AsObject(self));
+#ifndef CONFIG_NO_THREADS
 	DeeCellObject *out = DeeSerial_Addr2Mem(writer, addr, DeeCellObject);
 	Dee_atomic_rwlock_init(&out->c_lock);
+#endif /* !CONFIG_NO_THREADS */
 	return DeeSerial_XPutObjectInherited(writer, addr + offsetof(DeeCellObject, c_item), value);
 }
 

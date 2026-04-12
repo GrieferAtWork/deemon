@@ -2310,7 +2310,9 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(Pr
 #define msditer_fini generic_proxy2__fini
 
 #if 1
+#ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(MapUnionIterator, mui_lock));
+#endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(MapUnionIterator, mui_iter));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(MapUnionIterator, mui_in2nd));
 #define msditer_clear     muiter_clear
@@ -2382,7 +2384,9 @@ PRIVATE struct type_getset tpconst msditer_getsets[] = {
 #endif
 
 #if 1
+#ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(MapUnionIterator, mui_lock));
+#endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(MapUnionIterator, mui_iter));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof(MapUnionIterator, mui_union));
 #define msditer_visit muiter_visit
@@ -2397,7 +2401,9 @@ msditer_visit(MapSymmetricDifferenceIterator *__restrict self, Dee_visit_t proc,
 #endif
 
 #if 1
+#ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(MapUnionIterator, mui_lock));
+#endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(MapUnionIterator, mui_iter));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof(MapUnionIterator, mui_union));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(MapUnionIterator, mui_in2nd));
@@ -2484,7 +2490,9 @@ err:
 #endif
 
 #if 1
+#ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(MapUnionIterator, mui_lock));
+#endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(MapUnionIterator, mui_iter));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(MapUnionIterator, mui_in2nd));
 #define msditer_hash       muiter_hash

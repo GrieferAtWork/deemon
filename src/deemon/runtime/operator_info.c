@@ -1077,7 +1077,8 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
 				/* Found a base that is implementing this operator!
 				 * -> inheirt it! */
 				if (info->oi_class == OPCLASS_TYPE) {
-					atomic_cmpxch_or_write((void **)((byte_t *)self + info->oi_offset), NULL, base_ptr);
+					atomic_cmpxch_or_write((void **)((byte_t *)self + info->oi_offset),
+					                       NULL, (void *)base_ptr);
 				} else {
 					DeeTypeObject *self_container_origin;
 					void **p_self_container = (void **)((byte_t *)self + info->oi_class);
@@ -1096,7 +1097,8 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
 					self_container_origin = DeeType_GetOperatorContainerOrigin(self, info, self_container);
 					if (self_container_origin != NULL && self_container_origin != self)
 						return DeeType_InheritGenericOperator(self_container_origin, type_type, info);
-					atomic_cmpxch_or_write((void **)((byte_t *)self_container + info->oi_offset), NULL, base_ptr);
+					atomic_cmpxch_or_write((void **)((byte_t *)self_container + info->oi_offset),
+					                       NULL, (void *)base_ptr);
 				}
 #if 1
 				Dee_DPRINTF("[RT] Inherit `" OPNAME("%s") "' from %s into %s\n",

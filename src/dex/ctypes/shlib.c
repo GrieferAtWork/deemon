@@ -275,12 +275,12 @@ PRIVATE HMODULE DCALL get_Dbghelp_dll(void) {
 	HMODULE result;
 again:
 	result = atomic_read(&hDbghelp);
-	if (result == INVALID_HANDLE_VALUE)
+	if (result == (HMODULE)INVALID_HANDLE_VALUE)
 		return NULL;
 	if (result == NULL) {
 		result = LoadLibraryW(wDbghelp_dll);
 		if (result == NULL) {
-			atomic_cmpxch(&hDbghelp, NULL, INVALID_HANDLE_VALUE);
+			atomic_cmpxch(&hDbghelp, NULL, (HMODULE)INVALID_HANDLE_VALUE);
 			return NULL;
 		}
 		if (!atomic_cmpxch(&hDbghelp, NULL, result)) {

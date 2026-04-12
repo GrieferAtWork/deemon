@@ -250,7 +250,19 @@ again_locked:
 err:
 	return -1;
 }
-#endif /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
+#undef Dee_simple_hashset_with_lock_insert
+#ifndef __NO_DEFINE_ALIAS
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(Dee_simple_hashset_with_lock_insert, 8),
+                    DCALL_ASSEMBLY_NAME(Dee_simple_hashset_insert, 8));
+#else /* !__NO_DEFINE_ALIAS */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_simple_hashset_with_lock_insert)(struct Dee_simple_hashset_with_lock *__restrict self,
+                                            DeeObject *item) {
+	return Dee_simple_hashset_insert(&self->shswl_set, item);
+}
+#endif /* __NO_DEFINE_ALIAS */
+#endif /* CONFIG_NO_THREADS */
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL

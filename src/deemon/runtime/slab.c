@@ -1023,7 +1023,7 @@ PRIVATE struct slab_spec tpconst slab_specs[SLAB_COUNT] = {
 #define _SLAB_SPECS_INIT__FULLPAGES(n) /* nothing */
 #endif /* !SLAB_TRACK_FULL_PAGES */
 #ifdef CONFIG_NO_THREADS
-#define _SLAB_SPECS_INIT__LOCK(n, _) /* nothing */
+#define _SLAB_SPECS_INIT__LOCK(n) /* nothing */
 #else /* CONFIG_NO_THREADS */
 #define _SLAB_SPECS_INIT__LOCK(n) , &PP_CAT2(slab_lock, n)
 #endif /* !CONFIG_NO_THREADS */

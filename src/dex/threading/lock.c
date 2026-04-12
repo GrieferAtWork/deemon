@@ -1850,8 +1850,10 @@ semaphore_tickets_set(DeeSemaphoreObject *self, DeeObject *value) {
 		goto err;
 	old_tickets = atomic_xch(&self->sem_semaphore.se_tickets, new_tickets);
 	if (new_tickets > old_tickets) {
+#ifndef CONFIG_NO_THREADS
 		size_t extra = new_tickets - old_tickets;
 		_Dee_semaphore_waiting_wakemany(&self->sem_semaphore, extra);
+#endif /* !CONFIG_NO_THREADS */
 	}
 	return 0;
 err:

@@ -4072,9 +4072,11 @@ thread_init(DeeThreadObject *__restrict self,
 		DBG_memset(&me->ot_thread.t_inout, 0xcc, sizeof(me->ot_thread.t_inout));
 #endif /* !CONFIG_NO_THREADS */
 		me->ot_thread.t_context.d_tls = NULL;
+#ifndef CONFIG_NO_THREADS
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 		me->ot_thread.t_heap = NULL;
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#endif /* !CONFIG_NO_THREADS */
 		return DeeInt_AsIntX(argv[0], &me->ot_tid);
 	}
 #endif /* Dee_pid_t */
@@ -4149,9 +4151,11 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_interrupt.ti_args = NULL;
 	self->t_global.le_prev    = NULL;
 	DBG_memset(&self->t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
+#ifndef CONFIG_NO_THREADS
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	self->t_heap = NULL;
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#endif /* !CONFIG_NO_THREADS */
 	return 0;
 err_main:
 	Dee_XDecref(self->t_inout.io_main);
@@ -5770,9 +5774,12 @@ for (local x: threads)
  */
 
 
-STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0, "Logic in 'DeeRCU_SynchronizeDefault()' assumes that '0' is used here");
 
 #ifndef CONFIG_NO_THREADS
+STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0,
+                  "Logic in 'DeeRCU_SynchronizeDefault()' "
+                  "assumes that '0' is used here");
+
 /* [lock(ATOMIC)] Global RCU "version" number (only here for reading;
  * only `DeeRCU_SynchronizeDefault()' is allowed to write this!) */
 PUBLIC struct Dee_rcu_lock _DeeRCU_Default = { 1 };

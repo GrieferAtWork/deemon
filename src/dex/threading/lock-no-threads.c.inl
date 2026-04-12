@@ -192,8 +192,10 @@ DECL_BEGIN
 #undef Dee_event_t
 #undef Dee_EVENT_INIT_SET
 #undef Dee_EVENT_INIT
+#undef Dee_EVENT_INIT_EX
 #undef Dee_event_init_set
 #undef Dee_event_init
+#undef Dee_event_init_ex
 #undef Dee_event_cinit_set
 #undef Dee_event_cinit
 #undef Dee_event_get
@@ -204,7 +206,6 @@ DECL_BEGIN
 #undef Dee_event_waitfor
 #undef Dee_event_waitfor_timed
 #undef Dee_event_waitfor_noint
-#undef Dee_event_waitfor_noint_timed
 
 #undef Dee_ratomic_lock_t
 #undef Dee_RATOMIC_LOCK_INIT
@@ -425,8 +426,14 @@ typedef struct {
 #define Dee_semaphore_acquire_timed(self, timeout_nanoseconds) (Dee_semaphore_tryacquire(self) ? 0 : _DeeLock_SleepFor(timeout_nanoseconds))
 
 #define Dee_event_t                                        uint8_t
+#define Dee_EVENT_INIT_SET                                 1
+#define Dee_EVENT_INIT                                     0
+#define Dee_EVENT_INIT_EX(set)                             (set) ? 1 : 0
 #define Dee_event_init_set(self)                           (void)(*(self) = 1)
 #define Dee_event_init(self)                               (void)(*(self) = 0)
+#define Dee_event_init_ex(self, set)                       (void)(*(self) = (set) ? 1 : 0)
+#define Dee_event_cinit_set(self)                          (void)(*(self) = 1)
+#define Dee_event_cinit(self)                              Dee_ASSERT(*(self) == 0)
 #define Dee_event_get(self)                                (*(self))
 #define Dee_event_set(self)                                (void)(*(self) = 1)
 #define Dee_event_clear(self)                              (void)(*(self) = 0)
@@ -434,6 +441,7 @@ typedef struct {
 #define Dee_event_clear_ex(self)                           (*(self) = 0, 1)
 #define Dee_event_waitfor(self)                            (Dee_event_get(self) ? 0 : _DeeError_ThrowWouldBlock())
 #define Dee_event_waitfor_timed(self, timeout_nanoseconds) (Dee_event_get(self) ? 0 : _DeeLock_SleepFor(timeout_nanoseconds))
+#define Dee_event_waitfor_noint(self)                      (void)0
 
 
 

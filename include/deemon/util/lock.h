@@ -192,6 +192,11 @@ typedef char Dee_shared_rwlock_t;
 #define Dee_shared_rwlock_waitwrite_timed(self, timeout_nanoseconds) 0
 
 typedef char Dee_semaphore_t;
+#define _Dee_semaphore_waiting_start(self)                     (void)0
+#define _Dee_semaphore_waiting_end(self)                       (void)0
+#define _Dee_semaphore_waiting_wakeone(self)                   1
+#define _Dee_semaphore_waiting_wakeall(self)                   1
+#define _Dee_semaphore_waiting_wakemany(self, n)               1
 #define Dee_SEMAPHORE_INIT(n_tickets)                          0
 #define Dee_semaphore_init(self, n_tickets)                    (void)0
 #define Dee_semaphore_cinit(self, n_tickets)                   (void)0

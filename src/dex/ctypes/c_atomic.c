@@ -599,6 +599,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwai
 	union atomic_operand op_expected;
 	union pointer op_ptr;
 	CType *basetype;
+	(void)timeout_nanoseconds;
 	if unlikely(DeeObject_AsGenericPointer(ptr, &basetype, &op_ptr))
 		goto err;
 	if unlikely(get_atomic_operand(expected, basetype, &op_expected))

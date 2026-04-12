@@ -617,28 +617,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-tls_hash(TLS *__restrict self) {
-	return DeeObject_HashGeneric(self);
-}
-#define DEFINE_TLS_COMPARE(name, op)                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(TLS *self, TLS *other) {                         \
-		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
-			goto err;                                     \
-		return_bool(self op other);                      \
-	err:                                                  \
-		return NULL;                                      \
-	}
-DEFINE_TLS_COMPARE(tls_eq, ==)
-DEFINE_TLS_COMPARE(tls_ne, !=)
-DEFINE_TLS_COMPARE(tls_lo, <)
-DEFINE_TLS_COMPARE(tls_le, <=)
-DEFINE_TLS_COMPARE(tls_gr, >)
-DEFINE_TLS_COMPARE(tls_ge, >=)
-#undef DEFINE_TLS_COMPARE
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tls_bool(TLS *__restrict self) {
 	return ITER_ISOK(self->t_value);
 }
 

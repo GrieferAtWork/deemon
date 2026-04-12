@@ -2541,7 +2541,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
-	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+	    likely(!DeeThread_HasTerminated(me))) {
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF IndexError *result = DeeObject_MALLOC(IndexError);
 		if unlikely(!result) {
@@ -2589,7 +2589,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
-	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+	    likely(!DeeThread_HasTerminated(me))) {
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF NegativeShift *result = DeeObject_MALLOC(NegativeShift);
 		if unlikely(!result) {
@@ -2669,7 +2669,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (is_sequence_error(Dee_TYPE(error->ef_error)) &&
-	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+	    likely(!DeeThread_HasTerminated(me))) {
 		SequenceError *current = (SequenceError *)error->ef_error;
 		struct Dee_variant current_seq;
 		bool current_seq_is_from;
@@ -2724,7 +2724,7 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
-	    likely(!(atomic_read(&me->t_state) & Dee_THREAD_STATE_TERMINATED))) {
+	    likely(!DeeThread_HasTerminated(me))) {
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 		if unlikely(!result) {
