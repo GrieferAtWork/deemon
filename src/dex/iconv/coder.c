@@ -48,7 +48,7 @@ DECL_BEGIN
 
 #define DOC_param_errors     "#perrors{One of $\"strict\", $\"replace\", $\"ignore\" or $\"discard\"}"
 #define DOC_param_closeout   "#pcloseout{When ?t, propagate ${operator sync} and ${operator close} to @out}"
-#define DOC_param_closeinput "#pcloseinput{When ?t, propagate ${operator sync} and ${operator close} to @input}"
+#define DOC_param_closeinput "#pcloseinput{When ?t, propagate ${operator close} to @input}"
 #define DOC_param_chunksize  "#pchunksize{Hint for how many bytes to read from @input at a time}"
 
 /*[[[deemon
@@ -252,6 +252,17 @@ err:
 	return (size_t)-1;
 }
 
+DOC_DEF(ive_get_isinputshiftzero_doc,
+        "->?Dbool\n"
+        "Check if UTF-8 input taken by the given encoder is in its default (zero) shift "
+        /**/ "state. If it isn't, then that must mean that it's still waiting for more UTF-8 "
+        /**/ "data to arrive, and that you should either feed it said data, or deal with the "
+        /**/ "fact that there's something missing in your input.\n"
+        "WARNING: This function #B{DOESN'T} work when the given encoder is targeting UTF-8. "
+        /**/ "This is because special optimizations are performed when encoding UTF-8 "
+        /**/ "(since encoder also always takes UTF-8 as input). In this case, this "
+        /**/ "function will always return !N");
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ive_get_isinputshiftzero(IconvEncoder *__restrict self) {
 	bool result;
@@ -312,15 +323,7 @@ ive_getcodec(IconvEncoder *__restrict self) {
 
 PRIVATE struct type_getset tpconst ive_getsets[] = {
 	TYPE_GETTER_AB("isinputshiftzero", &ive_get_isinputshiftzero,
-	               "->?Dbool\n"
-	               "Check if UTF-8 input taken by the given encoder is in its default (zero) shift "
-	               /**/ "state. If it isn't, then that must mean that it's still waiting for more UTF-8 "
-	               /**/ "data to arrive, and that you should either feed it said data, or deal with the "
-	               /**/ "fact that there's something missing in your input.\n"
-	               "WARNING: This function #B{DOESN'T} work when the given encoder is targeting UTF-8. "
-	               /**/ "This is because special optimizations are performed when encoding UTF-8 "
-	               /**/ "(since encoder also always takes UTF-8 as input). In this case, this "
-	               /**/ "function will always return !N"),
+	               DOC_GET(ive_get_isinputshiftzero_doc)),
 	TYPE_GETTER_AB("codec", &ive_getcodec, "->?X2?Dstring?Dint"),
 	TYPE_GETSET_END
 };
@@ -1004,7 +1007,19 @@ ivd_fillbuffer_any_locked(IconvDecoder *__restrict self,
                           size_t hint, Dee_ioflag_t flags) {
 	size_t result, temp;
 	result = ivd_fillbuffer_locked(self, hint, flags);
-	if likely(result != (size_t)-1 && result != 0) {
+	if (result == 0) {
+maybe_sync_on_eof:
+		if (Dee_TYPE(self) == &IconvEncodeReader_Type) {
+			IconvEncodeReader *me = (IconvEncodeReader *)self;
+			if (libiconv_encode_flush(&me->iver_encoder) == -1)
+				goto err;
+#if 0 /* TODO */
+		} else if (Dee_TYPE(self) == &IconvTranscodeReader_Type) {
+			IconvTranscodeReader *me = (IconvTranscodeReader *)self;
+			/* TODO */
+#endif
+		}
+	} else if likely(result != (size_t)-1) {
 		/* If the underlying file-read didn't do anything (i.e.:
 		 * all read data was simply discarded by the decoder),
 		 * try to read some more data... */
@@ -1017,12 +1032,18 @@ ivd_fillbuffer_any_locked(IconvDecoder *__restrict self,
 				result = (size_t)-1;
 				break;
 			}
-			if (temp == 0)
-				break; /* EOF */
+			if (temp == 0) {
+				/* EOF (but check if we're an "EncodeReader" or "TranscodeReader",
+				 *      in which case we may still be able to produce some more
+				 *      output by flushing the encoder so it resets itself) */
+				goto maybe_sync_on_eof;
+			}
 			result += temp;
 		}
 	}
 	return result;
+err:
+	return (size_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1150,7 +1171,7 @@ ivd_read(IconvDecoder *self, void *buffer,
 			result = (size_t)-1;
 			break;
 		}
-		if (temp == 0)
+		if (temp == 0 && self->ivd_pndsize == 0)
 			break; /* EOF */
 	}
 	ivd_release(self);
@@ -1168,8 +1189,11 @@ ivd_close(IconvDecoder *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ivd_sync(IconvDecoder *__restrict self) {
+	(void)self;
+#if 0 /* Nope: not propagated! */
 	if (self->ivd_closein)
 		return DeeFile_Sync(self->ivd_in);
+#endif
 	return 0;
 }
 
@@ -1270,6 +1294,247 @@ INTERN DeeFileTypeObject IconvDecoder_Type = {
 	/* .ft_putc   = */ NULL
 };
 
+
+
+
+
+
+/************************************************************************/
+/* ENCODE-READER                                                        */
+/************************************************************************/
+
+#define IVD_DEFAULT_CHUNKSIZE 4096
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_lock) == offsetof(IconvEncoder, ive_lock));
+#define iver_acquire(self) encoder_acquire((IconvEncoder *)(self))
+#define iver_release(self) Dee_nrshared_lock_release(&(self)->iver_lock)
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufbase) == offsetof(IconvDecoder, ivd_bufbase));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufsize) == offsetof(IconvDecoder, ivd_bufsize));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndbase) == offsetof(IconvDecoder, ivd_pndbase));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndsize) == offsetof(IconvDecoder, ivd_pndsize));
+#define iver_buffer_printer ivd_buffer_printer
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_in) == offsetof(IconvDecoder, ivd_in));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufbase) == offsetof(IconvDecoder, ivd_bufbase));
+#define iver_fini  ivd_fini
+#define iver_visit ivd_visit
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_lock) == offsetof(IconvDecoder, ivd_lock));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_in) == offsetof(IconvDecoder, ivd_in));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_chnksiz) == offsetof(IconvDecoder, ivd_chnksiz));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_input) == offsetof(IconvDecoder, ivd_input));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_encoder.ice_codec) == offsetof(IconvDecoder, ivd_decoder.icd_codec));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_encoder.ice_flags) == offsetof(IconvDecoder, ivd_decoder.icd_flags));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufbase) == offsetof(IconvDecoder, ivd_bufbase));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufsize) == offsetof(IconvDecoder, ivd_bufsize));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndbase) == offsetof(IconvDecoder, ivd_pndbase));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndsize) == offsetof(IconvDecoder, ivd_pndsize));
+#define iver_fillbuffer_locked     ivd_fillbuffer_locked
+#define iver_fillbuffer_any_locked ivd_fillbuffer_any_locked
+#define iver_read                  ivd_read
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+iver_init(IconvEncodeReader *__restrict self, size_t argc,
+          DeeObject *const *argv, DeeObject *kw) {
+	iconv_codec_t codec_id;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("EncodeReader", params: """
+	codec:?X2?Dstring?Dint,
+	input:?DFile,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict,
+	bool closeinput = false,
+	size_t chunksize = IVD_DEFAULT_CHUNKSIZE = !4096
+""", docStringPrefix: "ivd");]]]*/
+#define ivd_EncodeReader_params "codec:?X2?Dstring?Dint,input:?DFile,errors:?X2?Dstring?Dint=!Pstrict,closeinput=!f,chunksize=!4096"
+	struct {
+		DeeObject *codec;
+		DeeObject *input;
+		DeeObject *errors;
+		bool closeinput;
+		size_t chunksize;
+	} args;
+	args.errors = NULL;
+	args.closeinput = false;
+	args.chunksize = IVD_DEFAULT_CHUNKSIZE;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_input_errors_closeinput_chunksize, "oo|ob" UNPuSIZ ":EncodeReader", &args))
+		goto err;
+/*[[[end]]]*/
+	self->iver_closein = args.closeinput;
+	self->iver_chnksiz = args.chunksize;
+	codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.codec, args.errors,
+	                                                        &self->iver_encoder.ice_flags);
+	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	self->iver_encoder.ice_output.ii_printer = &iver_buffer_printer;
+	self->iver_encoder.ice_output.ii_arg     = self;
+	self->iver_encoder.ice_codec = codec_id;
+	if unlikely(do_libiconv_encode_init(&self->iver_encoder, &self->iver_input))
+		goto no_such_codec;
+	Dee_nrshared_lock_init(&self->iver_lock);
+	ASSERT(self->iver_encoder.ice_output.ii_arg == self);
+	Dee_Incref(args.input);
+	self->iver_in = args.input;
+	self->iver_bufbase = NULL;
+	self->iver_bufsize = 0;
+	self->iver_pndbase = NULL;
+	self->iver_pndsize = 0;
+	return 0;
+no_such_codec:
+	err_unknown_codec(codec_id);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+iver_printrepr(IconvEncodeReader *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	uintptr_half_t flags;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "EncodeReader(codec: ");
+	if unlikely(result < 0)
+		goto done;
+	EDO(err_temp, printcodecname(self->iver_encoder.ice_codec, self->iver_encoder.ice_flags, printer, arg));
+	EDO(err_temp, DeeFormat_Printf(printer, arg, ", input: %r", self->iver_in));
+	flags = self->iver_encoder.ice_flags;
+	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
+	if (flags != ICONV_ERR_ERROR) {
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", errors: "));
+		EDO(err_temp, printcodecerrors(flags, printer, arg));
+	}
+	if (self->iver_closein)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ", closeinput: true"));
+	if (self->iver_chnksiz != IVD_DEFAULT_CHUNKSIZE)
+		EDO(err_temp, DeeFormat_Printf(printer, arg, ", chunksize: %" PRFuSIZ, self->iver_chnksiz));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+#define iver_get_isinputshiftzero_doc ive_get_isinputshiftzero_doc
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iver_get_isinputshiftzero(IconvEncodeReader *__restrict self) {
+	bool result;
+	if (iver_acquire(self))
+		goto err;
+	result = libiconv_encode_isinputshiftzero(&self->iver_encoder);
+	iver_release(self);
+	return_bool(result);
+err:
+	return NULL;
+}
+
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_closein) == offsetof(IconvDecoder, ivd_closein));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_in) == offsetof(IconvDecoder, ivd_in));
+#define iver_close ivd_close
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+iver_sync(IconvEncodeReader *__restrict self) {
+	Dee_ssize_t status;
+	if unlikely(iver_acquire(self))
+		goto err;
+	status = libiconv_encode_flush(&self->iver_encoder);
+	iver_release(self);
+	ASSERTF(status == -1 || status >= 0,
+	        "The underlying printer is `iver_buffer_printer', "
+	        "which should only ever return `-1' on error");
+	if unlikely(status < 0)
+		goto err;
+#if 0 /* Nope: not propagated! */
+	if (self->ivd_closein)
+		return DeeFile_Sync(self->ivd_in);
+#endif
+	return 0;
+err:
+	return -1;
+}
+
+
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_encoder.ice_codec) == offsetof(IconvDecoder, ivd_decoder.icd_codec));
+#define iver_getcodec ivd_getcodec
+
+PRIVATE struct type_getset tpconst iver_getsets[] = {
+	TYPE_GETTER_AB("isinputshiftzero", &iver_get_isinputshiftzero,
+	               DOC_GET(iver_get_isinputshiftzero_doc)),
+	TYPE_GETTER_AB("codec", &iver_getcodec, "->?X2?Dstring?Dint"),
+	TYPE_GETSET_END
+};
+
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_in) == offsetof(IconvDecoder, ivd_in));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_closein) == offsetof(IconvDecoder, ivd_closein));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_chnksiz) == offsetof(IconvDecoder, ivd_chnksiz));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_pndsize) == offsetof(IconvDecoder, ivd_pndsize));
+STATIC_ASSERT(offsetof(IconvEncodeReader, iver_bufsize) == offsetof(IconvDecoder, ivd_bufsize));
+#define iver_members ivd_members
+
+INTDEF DeeFileTypeObject IconvEncodeReader_Type = {
+	/* .ft_base = */ {
+		OBJECT_HEAD_INIT(&DeeFileType_Type),
+		/* .tp_name     = */ "EncodeReader",
+		/* .tp_doc      = */ DOC("(" ivd_EncodeReader_params ")\n"
+		                         "#pcodec{Name of the codec that should be used to encode @input. May "
+		                         /*   */ "also contain some additional flags (s.a. ?Gparsecodecname)}"
+		                         "#pinput{The ?DFile that UTF-8 data should be read from and subsequently encoded}"
+		                         DOC_param_errors
+		                         DOC_param_closeinput
+		                         DOC_param_chunksize
+		                         ""),
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
+		/* .tp_init = */ {
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ IconvEncodeReader,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ &iver_init,
+				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
+				                            * it'd require per-codec handling not provided by `libiconv' */
+			),
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iver_fini,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ NULL,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&iver_printrepr,
+		},
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&iver_visit,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_iterator      = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ iver_getsets,
+		/* .tp_members       = */ iver_members,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
+	},
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *, void *, size_t, Dee_ioflag_t))&iver_read,
+	/* .ft_write  = */ NULL,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *))&iver_sync,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *))&iver_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
+};
 
 
 

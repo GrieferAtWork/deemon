@@ -133,6 +133,30 @@ INTDEF DeeFileTypeObject IconvDecoder_Type;
 
 
 
+/************************************************************************/
+/* ENCODE-READER                                                        */
+/************************************************************************/
+
+typedef struct {
+	/* Decode-reader: convert <some codec> --> UTF-8 */
+	Dee_FILE_OBJECT_HEAD
+	Dee_nrshared_lock_t  iver_lock;    /* Lock for `iver_decoder' */
+	bool                 iver_closein; /* [const] Propagate "operator sync()" and "operator close()" to `iver_in' */
+	DREF DeeObject      *iver_in;      /* [const][1..1] Input file containing encoded data */
+	byte_t              *iver_bufbase; /* [0..iver_pendsize][owned][lock(iver_lock)] Buffer for decoded, but not-yet-read data */
+	size_t               iver_bufsize; /* [lock(iver_lock)] Allocated size of `iver_bufbase' */
+	byte_t              *iver_pndbase; /* [0..iver_bufbase][lock(iver_lock)] Pointer to first unread byte in `iver_bufbase' */
+	size_t               iver_pndsize; /* [lock(iver_lock)] # of decoded, but not-yet-read bytes starting at `iver_pndbase' */
+	size_t               iver_chnksiz; /* [lock(iver_lock)] Max. block size when reading from `iver_in' */
+	struct iconv_printer iver_input;   /* [lock(iver_lock)] Input printer */
+	struct iconv_encode  iver_encoder; /* [lock(iver_lock)] Underlying encoder */
+} IconvEncodeReader;
+
+INTDEF DeeFileTypeObject IconvEncodeReader_Type;
+
+
+
+
 
 
 INTDEF ATTR_COLD int DCALL err_unicode_decode_error(iconv_codec_t codec, Dee_pos_t offset);

@@ -29,6 +29,7 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 	/* Encode using convenience wrapper */
 	test.assertEqualsTyped(iconv.encode(data, codec), result);
 
+
 	/* Encode using "iconv.Encoder" */
 	local w = File.Writer(hint: "bytes");
 	with (local d = iconv.Encoder(codec, out: w)) {
@@ -37,8 +38,20 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 	}
 	test.assertEqualsTyped(result, w.bytes);
 
+
+	/* Encode using "iconv.EncodeReader" */
+	local w;
+	with (local d = iconv.EncodeReader(codec, input: File.Reader(data.encode("utf-8")))) {
+		(none)repr(d);   /* For coverage */
+		w = d.readall(); /* Must use "readall()" here; regular "read()" does not auto-flush on EOF */
+		assert !d.readall();
+	}
+	test.assertEqualsTyped(result, w);
+
+
 	/* Decode using convenience wrapper */
 	test.assertEqualsTyped(iconv.decode(result, codec), data);
+
 
 	/* Decode using "iconv.DecodeWriter" */
 	local w = File.Writer(hint: "string");
@@ -48,11 +61,13 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 	}
 	test.assertEqualsTyped(data, w.string);
 
+
 	/* Decode using "iconv.Decoder" */
 	local w;
 	with (local d = iconv.Decoder(codec, input: File.Reader(result))) {
 		(none)repr(d); /* For coverage */
-		w = d.read();
+		w = d.readall();
+		assert !d.readall();
 	}
 	test.assertEqualsTyped(data, w.decode("utf-8"));
 }

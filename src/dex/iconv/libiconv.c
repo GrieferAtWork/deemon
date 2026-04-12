@@ -798,7 +798,7 @@ DEX_MEMBER_F_NODOC("TranscodeWriter", &IconvTranscodeWriter_Type.ft_base, Dee_DE
 
 DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("DecodeReader", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY), /* Alias for "Decoder" */
-/* TODO: EncodeReader */
+DEX_MEMBER_F_NODOC("EncodeReader", &IconvEncodeReader_Type.ft_base, Dee_DEXSYM_READONLY),
 /* TODO: TranscodeReader */
 
 
