@@ -3691,18 +3691,20 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         "Arguments whose names are singular can be used to construct a timestamp for a "
 	                         /**/ "specific point in time (in this case, the time object is a ?#istimestamp). @time_t "
 	                         /**/ "can be specified in place of @year, @month, @day, @hour, @minute and @second\n"
-	                         "Arguments whose names are plural can be specific to construct a ?#isdelta. "
+	                         "Arguments whose names are plural can be specified to construct a ?#isdelta. "
 	                         /**/ "When multiple time deltas are specified, those deltas are added together.\n"
 	                         "When both singular, and plural arguments are given, the constructed time "
 	                         /**/ "object is a ?#istimestamp equal to that described by the singular "
 	                         /**/ "arguments, and off-set by what is specified by the plural arguments\n"
-	                         "When no arguments are specific, a zero-delta is constructed\n"
+	                         "When no arguments are specified, a zero-delta is constructed\n"
 	                         "\n"
 
 	                         "int->\n"
-	                         "Return then number of nano-seconds described by @this time-object. "
-	                         /**/ "In the case of ?#isdelta, the length of that delta is returned. In the "
-	                         /**/ "case of ?#istimestamp, the total nano-seconds since #C{01-01-0000} are returned.\n"
+	                         "Returns the value of @this time object as the number of nanoseconds since #C{01-01-0000} "
+	                         /**/ "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
+	                         /**/ "objects (s.a. ?#isdelta).\n"
+	                         "This operator allows time objects to be passed to system functions that take "
+	                         /**/ "integer timeouts in nanoseconds, such as ?Asleep?DThread or ?Aaccept?Enet:socket."
 	                         "\n"
 
 	                         "str->\n"
@@ -3714,14 +3716,6 @@ INTERN DeeTypeObject DeeTime_Type = {
 
 	                         "repr->\n"
 	                         "Returns a string representation of the components of @this time object\n"
-	                         "\n"
-
-	                         "int->\n"
-	                         "Returns the value of @this time object as the number of nanoseconds since #C{01-01-0000} "
-	                         /**/ "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
-	                         /**/ "objects (s.a. ?#isdelta).\n"
-	                         "This operator allows time objects to be passed to system functions that take "
-	                         /**/ "integer timeouts in nanoseconds, such as :Thread.sleep or ?Aaccept?Enet:socket."
 	                         "\n"
 
 	                         "-(other:?.)->?.\n"
@@ -3819,9 +3813,9 @@ DEX_MEMBER_F("localtime", &libtime_localtime, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Returns the current time in the host's local timezone (s.a. ?Ggmtime)"),
 /* TODO: timezone()->?GTime
-	* Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
-	* XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
-	*      calculated when given a specific point in (UTC) time. */
+ * Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
+ * XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
+ *      calculated when given a specific point in (UTC) time. */
 DEX_MEMBER_F("tick", &libtime_tick, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Returns the current tick suitable for high-precision timings.\n"
