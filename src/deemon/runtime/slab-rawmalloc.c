@@ -117,7 +117,7 @@
 #undef USE_fslab
 #if !defined(__OPTIMIZE_SIZE__) && 1
 #define USE_psegment /* Allocate slab pages in larger segments */
-#define USE_fslab    /* Use s small cache of recently free'd slab pages */
+#define USE_fslab    /* Use a small cache of recently free'd slab pages */
 #endif /* !__OPTIMIZE_SIZE__ */
 
 DECL_BEGIN
@@ -566,7 +566,7 @@ PRIVATE size_t fslab_treshold = FSLAB_TRESHOLD_MIN - 1;
  * return the # of pages that were actually free'd.
  *
  * @return: 0 : Locks were lost without anything being free'd.
- *              Caller should must try again */
+ *              Caller should try again */
 PRIVATE size_t DCALL
 fslab_free_some_pages_and_release(size_t keep) {
 	size_t result = 0;
@@ -582,8 +582,10 @@ fslab_free_some_pages_and_release(size_t keep) {
 		goto release_locks_2;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-	if (!psegment_lock_tryacquire())
+	if (!psegment_lock_tryacquire()) {
+		fslab_lock_release();
 		return 0;
+	}
 
 	SLIST_INIT(&free_list);
 	for (;;) {
