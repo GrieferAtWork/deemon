@@ -1115,11 +1115,21 @@ carraytype_fini(CArrayType *__restrict self) {
 	self->cat_base.ct_base.tp_mro = NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF CLValueType *DCALL
+carraytype_itemtype(CArrayType *__restrict self) {
+	return CLValueType_Of(CArrayType_PointedToType(self));
+}
+
 PRIVATE struct type_member tpconst carraytype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
 	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(CArrayType, cat_item), "->?GCType"),
 	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(CArrayType, cat_count)),
 	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_getset tpconst carraytype_getsets[] = {
+	TYPE_GETTER_AB("ItemType", &carraytype_itemtype, "->?GLValueType"),
+	TYPE_GETSET_END
 };
 
 INTERN DeeTypeObject CArrayType_Type = {
@@ -1159,7 +1169,7 @@ INTERN DeeTypeObject CArrayType_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ carraytype_getsets,
 	/* .tp_members       = */ carraytype_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
