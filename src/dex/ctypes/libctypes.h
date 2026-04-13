@@ -41,6 +41,68 @@
 #include <ffitarget.h>
 #endif /* !CONFIG_NO_CFUNCTION */
 
+
+
+/*
+ * ===================================================================================
+ * === CTYPES TYPE HIRARCY ===========================================================
+ * ===================================================================================
+ *                                                                                   *
+ *                                                                                   *
+ * ┌──DEEMON──────────┐                                                              *
+ * │                  │                                                              *
+ * │   DeeType_Type   │                                                              *
+ * │   ║       │      │                                                              *
+ * └───║───────│──────┘                                                              *
+ *     ║       │                                                                     *
+ * ┌───║───────│─────────────────────────────────────────────────────CTYPES────────┐ *
+ * │   ║       │                                                                   │ *
+ * │   ╠═══>═╗ v                                                                   │ *
+ * │   ║   CType_Type ═════════════════════> AbstractCObject_Type ─┬───────────┐   │ *
+ * │   ║   │                             ║                         │           │   │ *
+ * │   ║   │                             ╠═> CInt8_Type <──────────┤           │   │ *
+ * │   ║   │                             ╠═> CInt16_Type <─────────┤           │   │ *
+ * │   ║   │                             ╠═> CInt32_Type <─────────┤           │   │ *
+ * │   ║   │                             ╚═> ... <─────────────────┘           │   │ *
+ * │   ║   │                                                                   │   │ *
+ * │   ╠═══╪═════════════>═╗                                                   │   │ *
+ * │   ║   ├─────> CPointerType_Type ══════> AbstractCPointer_Type <───────────┤   │ *
+ * │   ║   │       ║                         │                                 │   │ *
+ * │   ║   │       ║                         v                                 │   │ *
+ * │   ║   │       ╚═══════════════════════> CPointerType_Of() <T.ptr>         │   │ *
+ * │   ║   │                                                                   │   │ *
+ * │   ╠═══╪═════════════>═╗                                                   │   │ *
+ * │   ║   ├─────> CLValueType_Type ═══════> AbstractCLValue_Type <────────────┤   │ *
+ * │   ║   │       ║                         │                                 │   │ *
+ * │   ║   │       ║                         v                                 │   │ *
+ * │   ║   │       ╚═══════════════════════> CLValueType_Of() <T.lvalue>       │   │ *
+ * │   ║   │                                                                   │   │ *
+ * │   ╠═══╪═════════════>═╗                                                   │   │ *
+ * │   ║   ├─────> CArrayType_Type ════════> AbstractCArray_Type <─────────────┤   │ *
+ * │   ║   │       ║                         │                                 │   │ *
+ * │   ║   │       ║                         v                                 │   │ *
+ * │   ║   │       ╚═══════════════════════> CArrayType_Of() <T[N]>            │   │ *
+ * │   ║   │                                                                   │   │ *
+ * │   ╠═══╪═════════════>═╗                                                   │   │ *
+ * │   ║   ├─────> CStructType_Type ═══════> AbstractCStruct_Type <────────────┤   │ *
+ * │   ║   │       ║                         │                                 │   │ *
+ * │   ║   │       ║                         v                                 │   │ *
+ * │   ║   │       ╚═══════════════════════> CStructType_Of() <struct { ... }> │   │ *
+ * │   ║   │                                                                   │   │ *
+ * │   ╚═══╪═════════════>═╗                                                   │   │ *
+ * │       └─────> CFunctionType_Type ─────> AbstractCFunction_Type <──────────┘   │ *
+ * │               ║                         │                                     │ *
+ * │               ║                         v                                     │ *
+ * │               ╚═══════════════════════> CFunctionType_Of() <T.func(ARGS...)>  │ *
+ * │                                                                               │ *
+ * └───────────────────────────────────────────────────────────────────────────────┘ *
+ *                                                                                   *
+ *     ───   baseof (Type.__base__; aka. extends)                                    *
+ *     ═══   typeof (type(x); type of this type; aka. TypeType)                      *
+ *                                                                                   *
+ * ===================================================================================
+ */
+
 #undef CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES
 #if 1
 #define CONFIG_HAVE_CTYPES_DEPRECATED_ALIASES
@@ -810,11 +872,11 @@ struct carray_object {
 #define CArray_ItemAddr(self, i) ((self)->ca_data + ((i) * CArrayType_Stride(Dee_TYPE(self))))
 #define CArray_Items(self)       (self)->ca_data
 
-/* Return a pointer to the `index' element (also asserts that "index" is in-bounds) */
+/* Return a pointer to the `index' element (no bounds checking done) */
 INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index);
 
-/* Return an LValue to the `index' element (also asserts that "index" is in-bounds) */
+/* Return an LValue to the `index' element (no bounds checking done) */
 INTDEF WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CArray_GetItem(CArray *__restrict self, ptrdiff_t index);
 

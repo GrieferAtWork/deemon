@@ -894,7 +894,7 @@ INTERN CType AbstractCObject_Type = {
 /* ARRAY TYPE                                                           */
 /************************************************************************/
 
-/* Return a pointer to the `index' element (also asserts that "index" is in-bounds) */
+/* Return a pointer to the `index' element (no bounds checking done) */
 INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index) {
 	DREF CPointerType *item_pointer_type;
@@ -914,7 +914,7 @@ err:
 	return NULL;
 }
 
-/* Return an LValue to the `index' element (also asserts that "index" is in-bounds) */
+/* Return an LValue to the `index' element (no bounds checking done) */
 INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CArray_GetItem(CArray *__restrict self, ptrdiff_t index) {
 	DREF CLValue *result;
