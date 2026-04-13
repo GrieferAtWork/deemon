@@ -23,7 +23,7 @@
 //#define DEFINE_dict_trygetitem_string_hash
 //#define DEFINE_dict_trygetitem_string_len_hash
 //#define DEFINE_dict_trygetitem_index
-#define DEFINE_dict_getitem
+//#define DEFINE_dict_getitem
 //#define DEFINE_dict_getitem_string_hash
 //#define DEFINE_dict_getitem_string_len_hash
 //#define DEFINE_dict_getitem_index

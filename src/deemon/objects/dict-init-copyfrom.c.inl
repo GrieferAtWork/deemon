@@ -20,7 +20,8 @@
 #ifdef __INTELLISENSE__
 #include "dict.c"
 //#define DEFINE_dict_init_fromcopy
-#define DEFINE_dict_init_fromcopy_keysonly
+//#define DEFINE_dict_init_fromcopy_keysonly
+#define DEFINE_dict_init_fromhashset_keysonly
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -35,7 +36,8 @@
 #include <stddef.h>  /* size_t */
 
 #if (defined(DEFINE_dict_init_fromcopy) + \
-     defined(DEFINE_dict_init_fromcopy_keysonly)) != 1
+     defined(DEFINE_dict_init_fromcopy_keysonly) + \
+     defined(DEFINE_dict_init_fromhashset_keysonly)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -46,12 +48,47 @@ DECL_BEGIN
 #elif defined(DEFINE_dict_init_fromcopy_keysonly)
 #define LOCAL_dict_init_fromcopy dict_init_fromcopy_keysonly
 #define LOCAL_IS_KEYSONLY
+#elif defined(DEFINE_dict_init_fromhashset_keysonly)
+#define LOCAL_dict_init_fromcopy dict_init_fromhashset_keysonly
+#define LOCAL_IS_KEYSONLY
+#define LOCAL_IS_HASHSET
 #else /* ... */
 #error "Invalid configuration"
 #endif /* ... */
 
+#ifdef LOCAL_IS_HASHSET
+#define LOCAL_OtherType                 DeeHashSetObject
+#define LOCAL_Other_LockReadAndOptimize DeeHashSet_LockReadAndOptimize
+#define LOCAL_Other_LockEndRead         DeeHashSet_LockEndRead
+#define LOCAL_Other__GetRealVTab        _DeeHashSet_GetRealVTab
+#define LOCAL_Other_d_vsize             hs_vsize
+#define LOCAL_Other_d_valloc            hs_valloc
+#define LOCAL_Other_d_vused             hs_vused
+#define LOCAL_Other_d_hmask             hs_hmask
+#define LOCAL_Other_d_htab              hs_htab
+#define LOCAL_Other_d_hidxops           hs_hidxops
+#define LOCAL_Other_dict_item           struct Dee_hashset_item
+#define LOCAL_Other_di_hash             hsi_hash
+#define LOCAL_Other_di_key              hsi_key
+#else /* LOCAL_IS_HASHSET */
+#define LOCAL_OtherType                 Dict
+#define LOCAL_Other_LockReadAndOptimize DeeDict_LockReadAndOptimize
+#define LOCAL_Other_LockEndRead         DeeDict_LockEndRead
+#define LOCAL_Other__GetRealVTab        _DeeDict_GetRealVTab
+#define LOCAL_Other_d_vsize             d_vsize
+#define LOCAL_Other_d_valloc            d_valloc
+#define LOCAL_Other_d_vused             d_vused
+#define LOCAL_Other_d_hmask             d_hmask
+#define LOCAL_Other_d_htab              d_htab
+#define LOCAL_Other_d_hidxops           d_hidxops
+#define LOCAL_Other_dict_item           struct Dee_dict_item
+#define LOCAL_Other_di_hash             di_hash
+#define LOCAL_Other_di_key              di_key
+#endif /* !LOCAL_IS_HASHSET */
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
+LOCAL_dict_init_fromcopy(Dict *__restrict self,
+                         LOCAL_OtherType *__restrict other) {
 	Dee_hash_t copy_hmask;
 	Dee_hash_vidx_t copy_valloc;
 	Dee_hash_vidx_t copy_vsize;
@@ -61,18 +98,18 @@ LOCAL_dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
 	struct Dee_dict_item *copy_vtab;
 	union Dee_hash_htab *copy_htab;
 again:
-	DeeDict_LockReadAndOptimize(other);
+	LOCAL_Other_LockReadAndOptimize(other);
 
 	/* Figure out size of the copied tables. */
-	copy_vsize  = other->d_vsize;
+	copy_vsize  = other->LOCAL_Other_d_vsize;
 	copy_hmask  = dict_hmask_from_count(copy_vsize);
 	copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, true);
-	if (copy_valloc >= other->d_valloc) {
-		copy_valloc = other->d_valloc;
+	if (copy_valloc >= other->LOCAL_Other_d_valloc) {
+		copy_valloc = other->LOCAL_Other_d_valloc;
 	} else {
 		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
-		if unlikely(copy_valloc > other->d_valloc)
-			copy_valloc = other->d_valloc;
+		if unlikely(copy_valloc > other->LOCAL_Other_d_valloc)
+			copy_valloc = other->LOCAL_Other_d_valloc;
 	}
 	copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
 	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
@@ -81,19 +118,19 @@ again:
 	/* Try to allocate smaller tables if the first allocation failed. */
 	if unlikely(!copy_tabs) {
 		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
-		if unlikely(copy_valloc > other->d_valloc)
-			copy_valloc = other->d_valloc;
+		if unlikely(copy_valloc > other->LOCAL_Other_d_valloc)
+			copy_valloc = other->LOCAL_Other_d_valloc;
 		copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
 		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
 		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 		if unlikely(!copy_tabs) {
-			DeeDict_LockEndRead(other);
+			LOCAL_Other_LockEndRead(other);
 			copy_tabs = _DeeDict_TabsMalloc(copy_tabssz);
 			if unlikely(!copy_tabs)
 				goto err;
-			DeeDict_LockReadAndOptimize(other);
-			if unlikely(copy_vsize < other->d_vsize) {
-				DeeDict_LockEndRead(other);
+			LOCAL_Other_LockReadAndOptimize(other);
+			if unlikely(copy_vsize < other->LOCAL_Other_d_vsize) {
+				LOCAL_Other_LockEndRead(other);
 				_DeeDict_TabsFree(copy_tabs);
 				goto again;
 			}
@@ -106,21 +143,22 @@ again:
 #ifdef LOCAL_IS_KEYSONLY
 	/* Create reference to copied objects. */
 	{
-		Dee_hash_vidx_t i, vsize = other->d_vsize;
-		struct Dee_dict_item *orig_vtab;
-		orig_vtab = _DeeDict_GetRealVTab(other);
+		Dee_hash_vidx_t i, vsize = other->LOCAL_Other_d_vsize;
+		LOCAL_Other_dict_item *orig_vtab;
+		orig_vtab = LOCAL_Other__GetRealVTab(other);
 		for (i = 0; i < vsize; ++i) {
 			struct Dee_dict_item *dst_item = &copy_vtab[i];
-			struct Dee_dict_item *src_item = &orig_vtab[i];
-			dst_item->di_hash = src_item->di_hash;
-			dst_item->di_key  = src_item->di_key;
+			LOCAL_Other_dict_item *src_item = &orig_vtab[i];
+			dst_item->di_hash = src_item->LOCAL_Other_di_hash;
+			dst_item->di_key  = src_item->LOCAL_Other_di_key;
 			Dee_Incref(dst_item->di_key);
 			/* Value will be initialized by the caller! */
 			DBG_memset(&dst_item->di_value, 0xcc, sizeof(dst_item->di_value));
 		}
 	}
 #else /* LOCAL_IS_KEYSONLY */
-	copy_vtab = (struct Dee_dict_item *)memcpyc(copy_vtab, _DeeDict_GetRealVTab(other), other->d_vsize,
+	copy_vtab = (struct Dee_dict_item *)memcpyc(copy_vtab, _DeeDict_GetRealVTab(other),
+	                                            other->LOCAL_Other_d_vsize,
 	                                            sizeof(struct Dee_dict_item));
 	/* Create reference to copied objects. */
 	{
@@ -138,37 +176,37 @@ again:
 	/* Fill in control structures. */
 	self->d_valloc  = copy_valloc;
 	self->d_vsize   = copy_vsize;
-	self->d_vused   = other->d_vused;
+	self->d_vused   = other->LOCAL_Other_d_vused;
 	_DeeDict_SetRealVTab(self, copy_vtab);
 	self->d_hmask   = copy_hmask;
 	self->d_hidxops = &Dee_hash_hidxio[copy_hidxio];
 	self->d_htab    = copy_htab;
 
-	if (copy_hmask == other->d_hmask) {
+	if (copy_hmask == other->LOCAL_Other_d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
-		Dee_hash_hidxio_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->d_valloc);
+		Dee_hash_hidxio_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->LOCAL_Other_d_valloc);
 		Dee_hash_hidx_t htab_words = copy_hmask + 1;
 		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
 		if (orig_hidxio == copy_hidxio) {
 			size_t sizeof_htab = htab_words << copy_hidxio;
-			(void)memcpy(copy_htab, other->d_htab, sizeof_htab);
+			(void)memcpy(copy_htab, other->LOCAL_Other_d_htab, sizeof_htab);
 		} else if (copy_hidxio > orig_hidxio) {
-			(*self->d_hidxops->hxio_upr)(copy_htab, other->d_htab, htab_words);
+			(*self->d_hidxops->hxio_upr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
 		} else if (copy_hidxio == orig_hidxio - 1) {
-			(*self->d_hidxops->hxio_lwr)(copy_htab, other->d_htab, htab_words);
+			(*self->d_hidxops->hxio_lwr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
 		} else {
 			Dee_hash_hidx_t i;
 			Dee_hash_sethidx_t setter = self->d_hidxops->hxio_set;
-			Dee_hash_gethidx_t getter = other->d_hidxops->hxio_get;
+			Dee_hash_gethidx_t getter = other->LOCAL_Other_d_hidxops->hxio_get;
 			ASSERT(copy_hidxio < orig_hidxio);
 			for (i = 0; i < htab_words; ++i)
-				(*setter)(copy_htab, i, (*getter)(other->d_htab, i));
+				(*setter)(copy_htab, i, (*getter)(other->LOCAL_Other_d_htab, i));
 		}
 	} else {
 		/* Copy has a different hash-mask -> hash table cannot be copied and needs to be re-build! */
 		dict_htab_rebuild_after_optimize(self);
 	}
-	DeeDict_LockEndRead(other);
+	LOCAL_Other_LockEndRead(other);
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
@@ -178,10 +216,26 @@ err:
 	return -1;
 }
 
+#undef LOCAL_OtherType
+#undef LOCAL_Other_LockReadAndOptimize
+#undef LOCAL_Other_LockEndRead
+#undef LOCAL_Other__GetRealVTab
+#undef LOCAL_Other_d_vsize
+#undef LOCAL_Other_d_valloc
+#undef LOCAL_Other_d_vused
+#undef LOCAL_Other_d_hmask
+#undef LOCAL_Other_d_htab
+#undef LOCAL_Other_d_hidxops
+#undef LOCAL_Other_dict_item
+#undef LOCAL_Other_di_hash
+#undef LOCAL_Other_di_key
+
 #undef LOCAL_IS_KEYSONLY
+#undef LOCAL_IS_HASHSET
 #undef LOCAL_dict_init_fromcopy
 
 DECL_END
 
 #undef DEFINE_dict_init_fromcopy
 #undef DEFINE_dict_init_fromcopy_keysonly
+#undef DEFINE_dict_init_fromhashset_keysonly

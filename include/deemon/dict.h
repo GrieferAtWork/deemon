@@ -163,7 +163,7 @@ typedef struct Dee_dict_object {
 
 /* Advance hash-index */
 #define _DeeDict_HashIdxInit(self, p_hs, p_perturb, hash) _DeeHash_HashIdxInit(p_hs, p_perturb, hash, (self)->d_hmask)
-#define _DeeDict_HashIdxNext(self, p_hs, p_perturb, hash) _DeeHash_HashIdxNext(p_hs, p_perturb, hash, (self)->d_hmas)
+#define _DeeDict_HashIdxNext(self, p_hs, p_perturb, hash) _DeeHash_HashIdxNext(p_hs, p_perturb, hash, (self)->d_hmask)
 
 #define _DeeDict_HTabGet(self, htab_index)    (*(self)->d_hidxops->hxio_get)((self)->d_htab, htab_index)
 #define _DeeDict_HTabSet(self, htab_index, v) (*(self)->d_hidxops->hxio_set)((self)->d_htab, htab_index, v)

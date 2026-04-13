@@ -1218,6 +1218,9 @@
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-init-copyfrom.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

@@ -85,7 +85,7 @@ struct Dee_empty_rodict_object {
 	Dee_hash_gethidx_t   rd_hidxget;      /* [1..1] Getter for "rd_htab" */
 	union Dee_hash_htab *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 //	struct Dee_dict_item rd_vtab[0];      /* [rd_vsize] Dict key-item pairs. */
-	__BYTE_TYPE__        rd_htab_data[1]; /* Dict key-item pairs. */
+	__BYTE_TYPE__        rd_htab_data[1]; /* Dict hash-table. */
 };
 DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
 #define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)

@@ -49,14 +49,20 @@
 
 DECL_BEGIN
 
-#define DO(err, expr)                    \
+typedef DeeRoSetObject RoSet;
+
+#define EDO(err, expr)                   \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
 
-typedef DeeRoSetObject RoSet;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+
+/* TODO */
+
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 #define READ_ITEM(x) atomic_read(&(x)->rosi_next)
 
@@ -489,15 +495,15 @@ roset_printrepr(RoSet *__restrict self,
 		if (!self->rs_elem[i].rsi_key)
 			continue;
 		if (!is_first)
-			DO(err, DeeFormat_PRINT(printer, arg, ", "));
-		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].rsi_key));
+			EDO(err_temp, DeeFormat_PRINT(printer, arg, ", "));
+		EDO(err_temp, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].rsi_key));
 		is_first = false;
 	}
-	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
-	                 : DeeFormat_PRINT(printer, arg, " })"));
+	EDO(err_temp, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                       : DeeFormat_PRINT(printer, arg, " })"));
 done:
 	return result;
-err:
+err_temp:
 	return temp;
 }
 
@@ -750,6 +756,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(roset_operators),
 };
 
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 DECL_END
 

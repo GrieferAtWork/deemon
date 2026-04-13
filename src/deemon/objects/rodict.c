@@ -61,12 +61,6 @@
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint8_t */
 
-#ifdef __OPTIMIZE_SIZE__
-#define NULL_IF_Os(v) NULL
-#else /* __OPTIMIZE_SIZE__ */
-#define NULL_IF_Os(v) v
-#endif /* !__OPTIMIZE_SIZE__ */
-
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -981,13 +975,6 @@ rodict_iter(RoDict *__restrict self) {
 err:
 	return NULL;
 }
-
-#ifndef __OPTIMIZE_SIZE__
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodict_sizeob(RoDict *__restrict self) {
-	return DeeInt_NewSize(self->rd_vsize);
-}
-#endif /* !__OPTIMIZE_SIZE__ */
 
 #define rodict_size_fast rodict_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -1917,7 +1904,7 @@ err:
 
 PRIVATE struct type_seq rodict_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
-	/* .tp_sizeob                       = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeob),
+	/* .tp_sizeob                       = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
 	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
 	/* .tp_delitem                      = */ DEFIMPL(&default__map_operator_delitem__unsupported),

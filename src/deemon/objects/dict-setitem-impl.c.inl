@@ -18,7 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "dict.c"
 //#define DEFINE_dict_setitem
 //#define DEFINE_dict_setitem_at
 #define DEFINE_dict_setitem_string_hash
@@ -29,6 +28,11 @@
 //#define DEFINE_dict_mh_setold_ex
 //#define DEFINE_dict_mh_setnew_ex
 //#define DEFINE_dict_mh_setdefault
+//#define DEFINE_hashset_mh_insert
+//#define DEFINE_hashset_insert_at
+//#define DEFINE_hashset_insert_unlocked
+//#define DEFINE_hashset_insert_unlocked_fast_inherited
+//#define DEFINE_hashset_mh_unify
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -44,16 +48,21 @@
 #include <stddef.h>  /* NULL, size_t */
 
 
-#if (defined(DEFINE_dict_setitem) +                         \
-     defined(DEFINE_dict_setitem_at) +                      \
-     defined(DEFINE_dict_setitem_string_hash) +             \
-     defined(DEFINE_dict_setitem_index) +                   \
-     defined(DEFINE_dict_setitem_string_len_hash) +         \
-     defined(DEFINE_dict_setitem_unlocked) +                \
-     defined(DEFINE_dict_setitem_unlocked_fast_inherited) + \
-     defined(DEFINE_dict_mh_setold_ex) +                    \
-     defined(DEFINE_dict_mh_setnew_ex) +                    \
-     defined(DEFINE_dict_mh_setdefault)) != 1
+#if (defined(DEFINE_dict_setitem) +                           \
+     defined(DEFINE_dict_setitem_at) +                        \
+     defined(DEFINE_dict_setitem_string_hash) +               \
+     defined(DEFINE_dict_setitem_index) +                     \
+     defined(DEFINE_dict_setitem_string_len_hash) +           \
+     defined(DEFINE_dict_setitem_unlocked) +                  \
+     defined(DEFINE_dict_setitem_unlocked_fast_inherited) +   \
+     defined(DEFINE_dict_mh_setold_ex) +                      \
+     defined(DEFINE_dict_mh_setnew_ex) +                      \
+     defined(DEFINE_dict_mh_setdefault) +                     \
+     defined(DEFINE_hashset_mh_insert) +                      \
+     defined(DEFINE_hashset_insert_at) +                      \
+     defined(DEFINE_hashset_insert_unlocked) +                \
+     defined(DEFINE_hashset_insert_unlocked_fast_inherited) + \
+     defined(DEFINE_hashset_mh_unify)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -91,17 +100,37 @@ DECL_BEGIN
 #define LOCAL_dict_setitem dict_mh_setdefault
 #define LOCAL_IS_SETNEW
 #define LOCAL_IS_SETDEFAULT
+#elif defined(DEFINE_hashset_mh_insert)
+#define LOCAL_dict_setitem hashset_mh_insert
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_insert_at)
+#define LOCAL_dict_setitem hashset_insert_at
+#define LOCAL_IS_HASHSET
+#define LOCAL_HAS_getindex
+#elif defined(DEFINE_hashset_insert_unlocked)
+#define LOCAL_dict_setitem hashset_insert_unlocked
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_UNLOCKED
+#elif defined(DEFINE_hashset_insert_unlocked_fast_inherited)
+#define LOCAL_dict_setitem hashset_insert_unlocked_fast_inherited
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_UNLOCKED
+#define LOCAL_IS_INHERITED
+#elif defined(DEFINE_hashset_mh_unify)
+#define LOCAL_dict_setitem hashset_mh_unify
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_UNIFY
 #else /* ... */
 #error "Invalid configuration"
 #endif /* ... */
 
-#if defined(LOCAL_IS_SETNEW) || defined(LOCAL_IS_SETOLD)
+#if defined(LOCAL_IS_SETNEW) || defined(LOCAL_IS_SETOLD) || defined(LOCAL_IS_UNIFY)
 #define LOCAL_return_type DREF DeeObject *
 #define LOCAL_ERR         NULL
-#else /* LOCAL_IS_SETNEW || LOCAL_IS_SETOLD */
+#else /* LOCAL_IS_SETNEW || LOCAL_IS_SETOLD || LOCAL_IS_UNIFY */
 #define LOCAL_return_type int
 #define LOCAL_ERR         (-1)
-#endif /* !LOCAL_IS_SETNEW && !LOCAL_IS_SETOLD */
+#endif /* !LOCAL_IS_SETNEW && !LOCAL_IS_SETOLD && !LOCAL_IS_UNIFY */
 
 #ifdef LOCAL_HAS_KEY_IS_STRING_HASH
 #define LOCAL_NONNULL    NONNULL((1, 2, 4))
@@ -133,7 +162,11 @@ DECL_BEGIN
 #define LOCAL_slowcmp(rhs)                       slowcmp_index(index, rhs)
 #define LOCAL_matched_keyob_tryfrom(matched_key) matched_keyob_tryfrom_index(index, matched_key)
 #else /* ... */
+#ifdef LOCAL_IS_HASHSET
+#define LOCAL_NONNULL    NONNULL((1, 2))
+#else /* LOCAL_IS_HASHSET */
 #define LOCAL_NONNULL    NONNULL((1, 2, 3))
+#endif /* !LOCAL_IS_HASHSET */
 #ifdef LOCAL_IS_INHERITED
 #define LOCAL_KEY_PARAMS /*inherit(on_success)*/ DREF DeeObject *key
 #else /* LOCAL_IS_INHERITED */
@@ -147,29 +180,102 @@ DECL_BEGIN
 #define LOCAL_IF_NOT_UNLOCKED(...) /* nothing */
 #endif /* LOCAL_IS_UNLOCKED */
 
-#define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryRead(self))
-#define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryWrite(self))
-#define LOCAL_DeeDict_LockRead(self)       LOCAL_IF_NOT_UNLOCKED(DeeDict_LockRead(self))
-#define LOCAL_DeeDict_LockWrite(self)      LOCAL_IF_NOT_UNLOCKED(DeeDict_LockWrite(self))
-#define LOCAL_DeeDict_LockTryUpgrade(self) LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryUpgrade(self))
-#define LOCAL_DeeDict_LockUpgrade(self)    LOCAL_IF_NOT_UNLOCKED(DeeDict_LockUpgrade(self))
-#define LOCAL_DeeDict_LockDowngrade(self)  LOCAL_IF_NOT_UNLOCKED(DeeDict_LockDowngrade(self))
-#define LOCAL_DeeDict_LockEndWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndWrite(self))
-#define LOCAL_DeeDict_LockEndRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndRead(self))
-#define LOCAL_DeeDict_LockEnd(self)        LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEnd(self))
+#ifdef LOCAL_IS_HASHSET
+#ifdef __INTELLISENSE__
+#include "hashset.c"
+#endif /* __INTELLISENSE__ */
 
+#define LOCAL_Dict                         HashSet
+#define LOCAL_Dee_dict_item                Dee_hashset_item
+#define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryRead(self))
+#define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryWrite(self))
+#define LOCAL_DeeDict_LockRead(self)       LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockRead(self))
+#define LOCAL_DeeDict_LockWrite(self)      LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockWrite(self))
+#define LOCAL_DeeDict_LockTryUpgrade(self) LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryUpgrade(self))
+#define LOCAL_DeeDict_LockUpgrade(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockUpgrade(self))
+#define LOCAL_DeeDict_LockDowngrade(self)  LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockDowngrade(self))
+#define LOCAL_DeeDict_LockEndWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndWrite(self))
+#define LOCAL_DeeDict_LockEndRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndRead(self))
+#define LOCAL_DeeDict_LockEnd(self)        LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEnd(self))
+#define LOCAL__DeeDict_HashIdxInit               _DeeHashSet_HashIdxInit
+#define LOCAL__DeeDict_HashIdxNext               _DeeHashSet_HashIdxNext
+#define LOCAL__DeeDict_GetVirtVTab               _DeeHashSet_GetVirtVTab
+#define LOCAL_dict_makespace_at                  hashset_makespace_at
+#define LOCAL_dict_htab_incrange                 hashset_htab_incrange
+#define LOCAL_dict_htab_decrange                 hashset_htab_decrange
+#define LOCAL_dict_htab_decafter                 hashset_htab_decafter
+#define LOCAL__DeeDict_ShouldOptimizeVTab        _DeeHashSet_ShouldOptimizeVTab
+#define LOCAL_dict_trygrow_vtab_and_htab         hashset_trygrow_vtab_and_htab
+#define LOCAL__DeeDict_CanOptimizeVTab           _DeeHashSet_CanOptimizeVTab
+#define LOCAL_dict_optimize_vtab                 hashset_optimize_vtab
+#define LOCAL__DeeDict_MustGrowVTab              _DeeHashSet_MustGrowVTab
+#define LOCAL__DeeDict_ShouldGrowHTab            _DeeHashSet_ShouldGrowHTab
+#define LOCAL_dict_grow_vtab_and_htab_and_relock hashset_grow_vtab_and_htab_and_relock
+#define LOCAL__DeeDict_CanGrowVTab               _DeeHashSet_CanGrowVTab
+#define LOCAL_dict_trygrow_vtab                  hashset_trygrow_vtab
+
+/* Map dict fields to hashsets */
+#define d_valloc  hs_valloc
+#define d_vsize   hs_vsize
+#define d_vused   hs_vused
+#define d_vtab    hs_vtab
+#define d_hmask   hs_hmask
+#define d_hidxops hs_hidxops
+#define d_htab    hs_htab
+#define d_lock    hs_lock
+#define di_hash   hsi_hash
+#define di_key    hsi_key
+#else /* LOCAL_IS_HASHSET */
+#ifdef __INTELLISENSE__
+#include "dict.c"
+#endif /* __INTELLISENSE__ */
+
+#define LOCAL_Dict                               Dict
+#define LOCAL_Dee_dict_item                      Dee_dict_item
+#define LOCAL_DeeDict_LockTryRead(self)          LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryRead(self))
+#define LOCAL_DeeDict_LockTryWrite(self)         LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryWrite(self))
+#define LOCAL_DeeDict_LockRead(self)             LOCAL_IF_NOT_UNLOCKED(DeeDict_LockRead(self))
+#define LOCAL_DeeDict_LockWrite(self)            LOCAL_IF_NOT_UNLOCKED(DeeDict_LockWrite(self))
+#define LOCAL_DeeDict_LockTryUpgrade(self)       LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryUpgrade(self))
+#define LOCAL_DeeDict_LockUpgrade(self)          LOCAL_IF_NOT_UNLOCKED(DeeDict_LockUpgrade(self))
+#define LOCAL_DeeDict_LockDowngrade(self)        LOCAL_IF_NOT_UNLOCKED(DeeDict_LockDowngrade(self))
+#define LOCAL_DeeDict_LockEndWrite(self)         LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndWrite(self))
+#define LOCAL_DeeDict_LockEndRead(self)          LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndRead(self))
+#define LOCAL_DeeDict_LockEnd(self)              LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEnd(self))
+#define LOCAL__DeeDict_HashIdxInit               _DeeDict_HashIdxInit
+#define LOCAL__DeeDict_HashIdxNext               _DeeDict_HashIdxNext
+#define LOCAL__DeeDict_GetVirtVTab               _DeeDict_GetVirtVTab
+#define LOCAL_dict_makespace_at                  dict_makespace_at
+#define LOCAL_dict_htab_incrange                 dict_htab_incrange
+#define LOCAL_dict_htab_decrange                 dict_htab_decrange
+#define LOCAL_dict_htab_decafter                 dict_htab_decafter
+#define LOCAL__DeeDict_ShouldOptimizeVTab        _DeeDict_ShouldOptimizeVTab
+#define LOCAL_dict_trygrow_vtab_and_htab         dict_trygrow_vtab_and_htab
+#define LOCAL__DeeDict_CanOptimizeVTab           _DeeDict_CanOptimizeVTab
+#define LOCAL_dict_optimize_vtab                 dict_optimize_vtab
+#define LOCAL__DeeDict_MustGrowVTab              _DeeDict_MustGrowVTab
+#define LOCAL__DeeDict_ShouldGrowHTab            _DeeDict_ShouldGrowHTab
+#define LOCAL_dict_grow_vtab_and_htab_and_relock dict_grow_vtab_and_htab_and_relock
+#define LOCAL__DeeDict_CanGrowVTab               _DeeDict_CanGrowVTab
+#define LOCAL_dict_trygrow_vtab                  dict_trygrow_vtab
+#endif /* !LOCAL_IS_HASHSET */
 
 PRIVATE WUNUSED LOCAL_NONNULL LOCAL_return_type DCALL
-LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
+LOCAL_dict_setitem(LOCAL_Dict *self, LOCAL_KEY_PARAMS
+#ifndef LOCAL_IS_HASHSET
 #ifdef LOCAL_IS_INHERITED
                    , /*inherit(on_success)*/ DREF DeeObject *value
 #else /* LOCAL_IS_INHERITED */
                    , DeeObject *value
 #endif /* !LOCAL_IS_INHERITED */
+#endif /* !LOCAL_IS_HASHSET */
 #ifdef LOCAL_HAS_getindex
-                   , /*virt*/Dee_hash_vidx_t (DCALL *getindex)(void *cookie, Dict *self,
-                                                               /*virt*/Dee_hash_vidx_t overwrite_index,
-                                                               DREF DeeObject **p_value)
+                   , /*virt*/Dee_hash_vidx_t (DCALL *getindex)(void *cookie, LOCAL_Dict *self,
+                                                               /*virt*/Dee_hash_vidx_t overwrite_index
+#ifndef LOCAL_IS_HASHSET
+                                                               , DREF DeeObject **p_value
+#endif /* !LOCAL_IS_HASHSET */
+                                                               )
                    , void *getindex_cookie
 #endif /* LOCAL_HAS_getindex */
                    ) {
@@ -220,16 +326,28 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
 #define _LOCAL_incref_value_for_populate_item_key_and_value() Dee_Incref(value)
 #endif /* !LOCAL_IS_INHERITED */
 #ifdef LOCAL_HAS_keyob
+#ifdef LOCAL_IS_HASHSET
+#define LOCAL_populate_item_key_and_value(item)            \
+	(void)((item)->di_key = keyob, /* Inherit reference */ \
+	       _LOCAL_incref_value_for_populate_item_key_and_value())
+#else /* LOCAL_IS_HASHSET */
 #define LOCAL_populate_item_key_and_value(item)                   \
 	(void)((item)->di_key = keyob, /* Inherit reference */        \
 	       _LOCAL_incref_value_for_populate_item_key_and_value(), \
 	       (item)->di_value = value /* Inherit reference */)
+#endif /* !LOCAL_IS_HASHSET */
 #else /* LOCAL_HAS_keyob */
+#ifdef LOCAL_IS_HASHSET
+#define LOCAL_populate_item_key_and_value(item)                 \
+	(void)(_LOCAL_incref_key_for_populate_item_key_and_value(), \
+	       (item)->di_key = key /* Inherit reference */)
+#else /* LOCAL_IS_HASHSET */
 #define LOCAL_populate_item_key_and_value(item)                   \
 	(void)(_LOCAL_incref_key_for_populate_item_key_and_value(),   \
 	       (item)->di_key = key, /* Inherit reference */          \
 	       _LOCAL_incref_value_for_populate_item_key_and_value(), \
 	       (item)->di_value = value /* Inherit reference */)
+#endif /* !LOCAL_IS_HASHSET */
 #endif /* !LOCAL_HAS_keyob */
 
 
@@ -247,8 +365,8 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 	ops = self->d_hidxops;
 	result_htab_idx = (Dee_hash_hidx_t)-1;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
+	for (LOCAL__DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     LOCAL__DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
 #ifdef LOCAL_IS_SETNEW
 		DREF DeeObject *item_value;
@@ -256,7 +374,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #ifndef LOCAL_boolcmp
 		int item_key_cmp_caller_key;
 #endif /* !LOCAL_boolcmp */
-		struct Dee_dict_item *item;
+		struct LOCAL_Dee_dict_item *item;
 		Dee_hash_hidx_t htab_idx; /* index in "d_htab" */
 		Dee_hash_vidx_t vtab_idx; /* index in "d_vtab" */
 
@@ -279,7 +397,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 
 		/* Load referenced item in "d_vtab" */
 		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->d_vsize));
-		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+		item = &LOCAL__DeeDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check for deleted items... */
 		item_key = item->di_key;
@@ -296,25 +414,25 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #ifdef LOCAL_IS_UNLOCKED
 #define LOCAL_verify_unchanged_after_unlock(goto_if_changed) (void)0
 #else /* LOCAL_IS_UNLOCKED */
-#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                           \
-	do {                                                                               \
-		if unlikely(htab_idx != Dee_hash_hidx_ofhash(hs, self->d_hmask))               \
-			goto goto_if_changed;                                                      \
-		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx))             \
-			goto goto_if_changed;                                                      \
-		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])                     \
-			goto goto_if_changed;                                                      \
-		if unlikely(item->di_key != item_key)                                          \
-			goto goto_if_changed;                                                      \
-		if unlikely(item->di_hash != LOCAL_hash)                                       \
-			goto goto_if_changed;                                                      \
-		if (result_htab_idx != (Dee_hash_hidx_t)-1) {                                  \
-			/*virt*/ Dee_hash_vidx_t first_deleted_vtab_idx;                           \
-			first_deleted_vtab_idx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx); \
-			if unlikely(first_deleted_vtab_idx == Dee_HASH_HTAB_EOF ||                 \
-			            _DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key)     \
-				result_htab_idx = (Dee_hash_hidx_t)-1;                                 \
-		}                                                                              \
+#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                             \
+	do {                                                                                 \
+		if unlikely(htab_idx != Dee_hash_hidx_ofhash(hs, self->d_hmask))                 \
+			goto goto_if_changed;                                                        \
+		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx))               \
+			goto goto_if_changed;                                                        \
+		if unlikely(item != &LOCAL__DeeDict_GetVirtVTab(self)[vtab_idx])                 \
+			goto goto_if_changed;                                                        \
+		if unlikely(item->di_key != item_key)                                            \
+			goto goto_if_changed;                                                        \
+		if unlikely(item->di_hash != LOCAL_hash)                                         \
+			goto goto_if_changed;                                                        \
+		if (result_htab_idx != (Dee_hash_hidx_t)-1) {                                    \
+			/*virt*/ Dee_hash_vidx_t first_deleted_vtab_idx;                             \
+			first_deleted_vtab_idx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx);   \
+			if unlikely(first_deleted_vtab_idx == Dee_HASH_HTAB_EOF ||                   \
+			            LOCAL__DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key) \
+				result_htab_idx = (Dee_hash_hidx_t)-1;                                   \
+		}                                                                                \
 	}	__WHILE0
 #endif /* !LOCAL_IS_UNLOCKED */
 
@@ -406,8 +524,17 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !LOCAL_boolcmp */
 			LOCAL_cleanup_data_for_noop_return();
 			return item_value;
-#else /* LOCAL_IS_SETNEW */
+#elif defined(LOCAL_IS_UNIFY)
+#ifdef LOCAL_boolcmp
+			Dee_Incref(item_key);
+			LOCAL_DeeDict_LockEnd(self);
+#endif /* LOCAL_boolcmp */
+			LOCAL_cleanup_data_for_noop_return();
+			return item_key; /* Key already exists -> just return existing instance during unify() */
+#else /* ... */
+#ifndef LOCAL_IS_HASHSET
 			DREF DeeObject *old_value;
+#endif /* !LOCAL_IS_HASHSET */
 			/*virt*/Dee_hash_vidx_t result_vidx;
 
 #ifdef LOCAL_boolcmp
@@ -455,7 +582,7 @@ do_allocate_keyob_for_override:
 			}
 #endif /* LOCAL_HAS_keyob */
 
-			/* Drop the reference to the existing key, as used for the compare,  */
+			/* Drop the reference to the existing key, as used for the compare */
 			Dee_Decref_unlikely(item_key);
 			LOCAL_DeeDict_LockWrite(self);
 #ifdef NEED_override_item_before_consistency_check
@@ -477,15 +604,21 @@ override_item_after_consistency_check:
 			/************************************************************************/
 
 #ifdef LOCAL_HAS_getindex
+#ifdef LOCAL_IS_HASHSET
+			result_vidx = (*getindex)(getindex_cookie, self, vtab_idx);
+#else /* LOCAL_IS_HASHSET */
 			result_vidx = (*getindex)(getindex_cookie, self, vtab_idx, &value);
+#endif /* !LOCAL_IS_HASHSET */
 			if unlikely(result_vidx == Dee_HASH_HTAB_EOF)
 				goto err;
 #endif /* LOCAL_HAS_getindex */
 
 			/* Steal the reference held by the item's old value. */
 			ASSERT(item_key == item->di_key); /* Inherit reference */
+#ifndef LOCAL_IS_HASHSET
 			old_value = item->di_value;       /* Inherit reference */
 			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+#endif /* !LOCAL_IS_HASHSET */
 
 #ifdef LOCAL_HAS_getindex
 			if (vtab_idx == result_vidx)
@@ -514,12 +647,12 @@ override_item_after_consistency_check:
 #endif /* !LOCAL_IS_FAST */
 				{
 					/* Just append a new item at the end, and delete "item" */
-					struct Dee_dict_item *new_item;
+					struct LOCAL_Dee_dict_item *new_item;
 					item->di_key = NULL; /* Deleted! */
 #ifdef LOCAL_HAS_getindex
-					dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
+					LOCAL_dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
 #endif /* LOCAL_HAS_getindex */
-					new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
+					new_item = &LOCAL__DeeDict_GetVirtVTab(self)[result_vidx];
 					++self->d_vsize;
 					new_item->di_hash = LOCAL_hash;
 					LOCAL_populate_item_key_and_value(new_item);
@@ -527,32 +660,32 @@ override_item_after_consistency_check:
 				}
 #ifndef LOCAL_IS_FAST
 				else {
-					struct Dee_dict_item *new_item;
+					struct LOCAL_Dee_dict_item *new_item;
 					ASSERT(self->d_vsize == self->d_valloc);
 					/* Screw around with the vtab/htab to free up a slot for "new_item" */
 #ifdef LOCAL_HAS_getindex
 					if (result_vidx < vtab_idx) {
-						new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
+						new_item = &LOCAL__DeeDict_GetVirtVTab(self)[result_vidx];
 						memmoveupc(new_item + 1, new_item, /* HINT: This also deletes "item" */
 						           (/*Dee_hash_vidx_toreal*/(vtab_idx) - 1) - /*Dee_hash_vidx_toreal*/(result_vidx),
-						           sizeof(struct Dee_dict_item));
-						/* What would also work: "dict_htab_incrange(self, result_vidx, vtab_idx + 1);" */
-						dict_htab_incrange(self, result_vidx, vtab_idx);
+						           sizeof(struct LOCAL_Dee_dict_item));
+						/* What would also work: "LOCAL_dict_htab_incrange(self, result_vidx, vtab_idx + 1);" */
+						LOCAL_dict_htab_incrange(self, result_vidx, vtab_idx);
 					} else
 #endif /* LOCAL_HAS_getindex */
 					{
 						ASSERTF(result_vidx > vtab_idx, "case 'result_vidx == vtab_idx' was already handled above");
 						memmovedownc(item, item + 1, /* HINT: This also deletes "item" */
 						             (/*Dee_hash_vidx_toreal*/(result_vidx) - 1) - /*Dee_hash_vidx_toreal*/(vtab_idx),
-						             sizeof(struct Dee_dict_item));
+						             sizeof(struct LOCAL_Dee_dict_item));
 #ifdef LOCAL_HAS_getindex
-						/* What would also work: "dict_htab_decrange(self, vtab_idx + 1, result_vidx);" */
-						dict_htab_decrange(self, vtab_idx, result_vidx);
+						/* What would also work: "LOCAL_dict_htab_decrange(self, vtab_idx + 1, result_vidx);" */
+						LOCAL_dict_htab_decrange(self, vtab_idx, result_vidx);
 #else /* LOCAL_HAS_getindex */
-						dict_htab_decafter(self, vtab_idx); /* What would also work: "dict_htab_decafter(self, vtab_idx + 1);" */
+						LOCAL_dict_htab_decafter(self, vtab_idx); /* What would also work: "LOCAL_dict_htab_decafter(self, vtab_idx + 1);" */
 #endif /* !LOCAL_HAS_getindex */
 						--result_vidx;
-						new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
+						new_item = &LOCAL__DeeDict_GetVirtVTab(self)[result_vidx];
 					}
 					new_item->di_hash = LOCAL_hash;
 					LOCAL_populate_item_key_and_value(new_item);
@@ -565,19 +698,19 @@ override_item_after_consistency_check:
 						known_deleted_vidx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx);
 						ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
 						ASSERT(Dee_hash_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
-						ASSERT(_DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
+						ASSERT(LOCAL__DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
 						(*LOCAL_ops->hxio_set)(self->d_htab, htab_idx, known_deleted_vidx);
 						(*LOCAL_ops->hxio_set)(self->d_htab, result_htab_idx, result_vidx);
 					}
 
-					if (_DeeDict_ShouldOptimizeVTab(self))
+					if (LOCAL__DeeDict_ShouldOptimizeVTab(self))
 						goto done_overwrite_optimize_vtab;
 
 					/* Dict says it shouldn't be optimized yet, but we have to resort
 					 * to screwing around with table pointers in order to overwrite an
 					 * item -> try to grow the dict (but it's OK if this fails) */
-					if unlikely(!dict_trygrow_vtab_and_htab(self)) {
-						if (_DeeDict_CanOptimizeVTab(self))
+					if unlikely(!LOCAL_dict_trygrow_vtab_and_htab(self)) {
+						if (LOCAL__DeeDict_CanOptimizeVTab(self))
 							goto done_overwrite_optimize_vtab;
 					}
 					goto done_overwrite_unlock_dict;
@@ -594,16 +727,16 @@ override_item_after_consistency_check:
 				known_deleted_vidx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx);
 				ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
 				ASSERT(Dee_hash_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
-				ASSERT(_DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
+				ASSERT(LOCAL__DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
 				(*LOCAL_ops->hxio_set)(self->d_htab, htab_idx, known_deleted_vidx);
 				(*LOCAL_ops->hxio_set)(self->d_htab, result_htab_idx, result_vidx);
 			}
 
 			/* If appropriate, optimize the dict's vtab. */
 #ifndef LOCAL_IS_FAST
-			if (_DeeDict_ShouldOptimizeVTab(self)) {
+			if (LOCAL__DeeDict_ShouldOptimizeVTab(self)) {
 done_overwrite_optimize_vtab:
-				dict_optimize_vtab(self);
+				LOCAL_dict_optimize_vtab(self);
 			}
 #endif /* !LOCAL_IS_FAST */
 
@@ -620,11 +753,13 @@ done_overwrite_unlock_dict:
 			/* Indicate that we successfully overwrote an existing item. */
 #ifdef LOCAL_IS_SETOLD
 			return old_value;
-#else /* LOCAL_IS_SETOLD */
+#elif defined(LOCAL_IS_HASHSET)
+			return 1; /* Nothing inserted */
+#else /* ... */
 			Dee_Decref(old_value);
 			return 0;
-#endif /* !LOCAL_IS_SETOLD */
-#endif /* !LOCAL_IS_SETNEW */
+#endif /* !... */
+#endif /* !... */
 		}
 
 #ifndef LOCAL_boolcmp
@@ -701,17 +836,17 @@ done_overwrite_unlock_dict:
 	 * NOTE: We don't need to check if the htab needs to grow, because
 	 *       the vtab can never be so large that the htab would be unable
 	 *       to handle a fully populated vtab. */
-	if unlikely(_DeeDict_MustGrowVTab(self)) {
+	if unlikely(LOCAL__DeeDict_MustGrowVTab(self)) {
 		Dee_hash_t old_hmask;
-		if (_DeeDict_ShouldGrowHTab(self)) {
+		if (LOCAL__DeeDict_ShouldGrowHTab(self)) {
 do_dict_trygrow_vtab_and_htab:
 			old_hmask = self->d_hmask;
-			if unlikely(!dict_trygrow_vtab_and_htab(self)) {
+			if unlikely(!LOCAL_dict_trygrow_vtab_and_htab(self)) {
 force_grow_without_locks:
 #ifdef LOCAL_IS_UNLOCKED
-				if unlikely(dict_grow_vtab_and_htab_and_relock(self, true))
+				if unlikely(LOCAL_dict_grow_vtab_and_htab_and_relock(self, true))
 #else /* LOCAL_IS_UNLOCKED */
-				if unlikely(dict_grow_vtab_and_htab_and_relock(self, false))
+				if unlikely(LOCAL_dict_grow_vtab_and_htab_and_relock(self, false))
 #endif /* !LOCAL_IS_UNLOCKED */
 				{
 					goto err;
@@ -722,8 +857,8 @@ force_grow_without_locks:
 			ASSERT(old_hmask <= self->d_hmask);
 			if (old_hmask != self->d_hmask) {
 				/* Must re-discover "result_htab_idx" in d_htab (it'll be at the end of the hash-chain) */
-				for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
-				     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
+				for (LOCAL__DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+				     LOCAL__DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 					Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
 					Dee_hash_vidx_t vtab_idx = (*LOCAL_htab_get)(self->d_htab, htab_idx);
 					if (vtab_idx == Dee_HASH_HTAB_EOF) {
@@ -732,8 +867,8 @@ force_grow_without_locks:
 					}
 				}
 			}
-		} else if (_DeeDict_CanGrowVTab(self)) {
-			if (!dict_trygrow_vtab(self)) {
+		} else if (LOCAL__DeeDict_CanGrowVTab(self)) {
+			if (!LOCAL_dict_trygrow_vtab(self)) {
 #ifdef LOCAL_IS_UNLOCKED
 				old_hmask = self->d_hmask;
 #endif /* LOCAL_IS_UNLOCKED */
@@ -747,24 +882,28 @@ force_grow_without_locks:
 	/************************************************************************/
 	/* APPEND NEW ITEM                                                      */
 	/************************************************************************/
-	ASSERT(!_DeeDict_MustGrowVTab(self));
+	ASSERT(!LOCAL__DeeDict_MustGrowVTab(self));
 	{
 		/*virt*/Dee_hash_vidx_t result_vidx;
-		struct Dee_dict_item *result_item;
+		struct LOCAL_Dee_dict_item *result_item;
 
 		/* Figure out where the result item should be insert */
 #ifdef LOCAL_HAS_getindex
+#ifdef LOCAL_IS_HASHSET
+		result_vidx = (*getindex)(getindex_cookie, self, Dee_HASH_HTAB_EOF);
+#else /* LOCAL_IS_HASHSET */
 		result_vidx = (*getindex)(getindex_cookie, self, Dee_HASH_HTAB_EOF, &value);
+#endif /* !LOCAL_IS_HASHSET */
 		if unlikely(result_vidx == Dee_HASH_HTAB_EOF)
 			goto err;
-		dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
+		LOCAL_dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
 #else /* LOCAL_HAS_getindex */
 		result_vidx = Dee_hash_vidx_tovirt(self->d_vsize);
 		ASSERT(result_vidx != Dee_HASH_HTAB_EOF);
 #endif /* !LOCAL_HAS_getindex */
 
 		/* Link in the result item. */
-		result_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
+		result_item = &LOCAL__DeeDict_GetVirtVTab(self)[result_vidx];
 		(*LOCAL_ops->hxio_set)(self->d_htab, result_htab_idx, result_vidx);
 		++self->d_vsize;
 		++self->d_vused;
@@ -783,6 +922,7 @@ force_grow_without_locks:
 #endif /* !LOCAL_HAS_keyob */
 
 		/* Fill in the result item value (and also allocate the return reference for "SETDEFAULT"). */
+#ifndef LOCAL_IS_HASHSET
 #if defined(LOCAL_IS_SETDEFAULT) && defined(LOCAL_IS_INHERITED)
 		Dee_Incref(value);
 #elif defined(LOCAL_IS_SETDEFAULT)
@@ -791,15 +931,20 @@ force_grow_without_locks:
 		Dee_Incref(value);
 #endif /* ... */
 		result_item->di_value = value;
+#endif /* !LOCAL_IS_HASHSET */
 	}
 	LOCAL_DeeDict_LockEndWrite(self);
-#ifdef LOCAL_IS_SETDEFAULT
+#ifdef LOCAL_IS_UNIFY
+	return_reference(key);
+#elif defined(LOCAL_IS_SETDEFAULT)
 	return value;
 #elif defined(LOCAL_IS_SETNEW)
 	return ITER_DONE;
-#else /* LOCAL_IS_SETNEW */
+#elif defined(LOCAL_IS_HASHSET)
+	return 1; /* Successfully inserted "key" */
+#else /* ... */
 	return 0;
-#endif /* !LOCAL_IS_SETNEW */
+#endif /* !... */
 #endif /* !LOCAL_IS_SETOLD */
 err:
 #ifdef LOCAL_HAS_keyob
@@ -842,6 +987,20 @@ downgrade_lock_and_try_again:
 #undef LOCAL_slowcmp
 #undef LOCAL_matched_keyob_tryfrom
 
+#undef LOCAL_Dict
+#undef LOCAL_Dee_dict_item
+#ifdef LOCAL_IS_HASHSET
+#undef d_valloc
+#undef d_vsize
+#undef d_vused
+#undef d_vtab
+#undef d_hmask
+#undef d_hidxops
+#undef d_htab
+#undef d_lock
+#undef di_hash
+#undef di_key
+#endif /* LOCAL_IS_HASHSET */
 #undef LOCAL_IS_INHERITED
 #undef LOCAL_IS_UNLOCKED
 #undef LOCAL_IF_NOT_UNLOCKED
@@ -855,6 +1014,22 @@ downgrade_lock_and_try_again:
 #undef LOCAL_DeeDict_LockEndWrite
 #undef LOCAL_DeeDict_LockEndRead
 #undef LOCAL_DeeDict_LockEnd
+#undef LOCAL__DeeDict_HashIdxInit
+#undef LOCAL__DeeDict_HashIdxNext
+#undef LOCAL__DeeDict_GetVirtVTab
+#undef LOCAL_dict_makespace_at
+#undef LOCAL_dict_htab_incrange
+#undef LOCAL_dict_htab_decrange
+#undef LOCAL_dict_htab_decafter
+#undef LOCAL__DeeDict_ShouldOptimizeVTab
+#undef LOCAL_dict_trygrow_vtab_and_htab
+#undef LOCAL__DeeDict_CanOptimizeVTab
+#undef LOCAL_dict_optimize_vtab
+#undef LOCAL__DeeDict_MustGrowVTab
+#undef LOCAL__DeeDict_ShouldGrowHTab
+#undef LOCAL_dict_grow_vtab_and_htab_and_relock
+#undef LOCAL__DeeDict_CanGrowVTab
+#undef LOCAL_dict_trygrow_vtab
 #undef LOCAL_KEY_PARAMS
 #undef LOCAL_NONNULL
 #undef LOCAL_HAS_PARAM_HASH
@@ -869,6 +1044,8 @@ downgrade_lock_and_try_again:
 #undef LOCAL_IS_SETOLD
 #undef LOCAL_IS_SETNEW
 #undef LOCAL_IS_SETDEFAULT
+#undef LOCAL_IS_HASHSET
+#undef LOCAL_IS_UNIFY
 #undef LOCAL_HAS_getindex
 #undef LOCAL_dict_setitem
 

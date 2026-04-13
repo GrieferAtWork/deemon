@@ -29,6 +29,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Int, Dee_COMPARE_ERR, Dee_Decref, Dee_hash_t, return_reference_ */
 #include <deemon/rodict.h>          /* DeeRoDictObject */
 #include <deemon/string.h>          /* DeeString* */
+#include <deemon/hashset.h>          /* DeeString* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, memmovedown, strlen */
 #include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 
@@ -378,6 +379,75 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 }
 
 
+/************************************************************************/
+/* HASHSET HELPERS                                                      */
+/************************************************************************/
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+#define _DeeHashSet_ShouldGrowHTab(self)            _DeeDict_ShouldGrowHTab2((self)->hs_vused, (self)->hs_hmask)
+#define _DeeHashSet_MustGrowHTab(self)              _DeeDict_MustGrowHTab2((self)->hs_valloc, (self)->hs_hmask)
+#define _DeeHashSet_ShouldOptimizeVTab(self)        _DeeDict_ShouldOptimizeVTab2((self)->hs_vsize, (self)->hs_vused)
+#define _DeeHashSet_CanOptimizeVTab(self)           _DeeDict_CanOptimizeVTab2((self)->hs_vsize, (self)->hs_vused)
+#define _DeeHashSet_MustGrowVTab(self)              _DeeDict_MustGrowVTab2((self)->hs_vsize, (self)->hs_valloc)
+#define _DeeHashSet_CanGrowVTab(self)               _DeeDict_CanGrowVTab2((self)->hs_valloc, (self)->hs_hmask)
+#define _DeeHashSet_ShouldShrinkVTab(self)          _DeeDict_ShouldShrinkVTab2((self)->hs_vused, (self)->hs_valloc)
+#define _DeeHashSet_ShouldShrinkVTab_NEWALLOC(self) _DeeDict_ShouldShrinkVTab_NEWALLOC2((self)->hs_vused)
+#define _DeeHashSet_CanShrinkVTab(self)             _DeeDict_CanShrinkVTab2((self)->hs_vused, (self)->hs_valloc)
+#define _DeeHashSet_ShouldShrinkHTab(self)          _DeeDict_ShouldShrinkHTab2((self)->hs_valloc, (self)->hs_hmask)
+#define _DeeHashSet_CanShrinkHTab(self)             _DeeDict_CanShrinkHTab2((self)->hs_valloc, (self)->hs_hmask)
+
+/* Default hint in `DeeHashSet_FromSequence' when the sequence doesn't provide one itself. */
+#ifndef HASHSET_FROMSEQ_DEFAULT_HINT
+#define HASHSET_FROMSEQ_DEFAULT_HINT DICT_FROMSEQ_DEFAULT_HINT
+#endif /* !HASHSET_FROMSEQ_DEFAULT_HINT */
+
+#define hashset_suggested_max_valloc_from_count             dict_suggested_max_valloc_from_count
+#define hashset_valloc_from_hmask_and_count                 dict_valloc_from_hmask_and_count
+#define hashset_hmask_from_count                            dict_hmask_from_count
+#define hashset_tiny_hmask_from_count                       dict_tiny_hmask_from_count
+#define hashset_sizeoftabs_from_hmask_and_valloc(hmask, valloc) \
+	hashset_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
+LOCAL ATTR_CONST size_t DCALL
+hashset_sizeoftabs_from_hmask_and_valloc_and_hidxio(Dee_hash_t hmask,
+                                                    Dee_hash_vidx_t valloc,
+                                                    Dee_hash_hidxio_t hidxio) {
+	size_t result, hmask_size;
+	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_hashset_item), &result))
+		goto toobig;
+	if (OVERFLOW_UADD(hmask, 1, &hmask_size))
+		goto toobig;
+	if unlikely(((hmask_size << hidxio) >> hidxio) != hmask_size)
+		goto toobig;
+	hmask_size <<= hidxio;
+	if (OVERFLOW_UADD(result, hmask_size, &result))
+		goto toobig;
+	return result;
+toobig:
+	return (size_t)-1; /* Force down-stream allocation failure */
+}
+
+
+/* HashSet-specific, internal APIs */
+INTDEF NONNULL((1)) void DCALL
+hashset_optimize_vtab(DeeHashSetObject *__restrict self);
+
+LOCAL NONNULL((1)) void DCALL
+DeeHashSet_LockReadAndOptimize(DeeHashSetObject *__restrict self) {
+	DeeHashSet_LockRead(self);
+	if (_DeeHashSet_CanOptimizeVTab(self)) {
+#ifdef CONFIG_NO_THREADS
+		if (_DeeHashSet_CanOptimizeVTab(self))
+#else /* CONFIG_NO_THREADS */
+		if (DeeHashSet_LockUpgrade(self) || _DeeHashSet_CanOptimizeVTab(self))
+#endif /* !CONFIG_NO_THREADS */
+		{
+			hashset_optimize_vtab(self);
+		}
+		DeeHashSet_LockDowngrade(self);
+	}
+}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
+
+
 
 
 /************************************************************************/
@@ -395,8 +465,8 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 	_RoDict_SizeOf3(valloc, hmask, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
 #define _RoDict_SafeSizeOf(valloc, hmask) \
 	_RoDict_SafeSizeOf3(valloc, hmask, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
-#define _RoDict_SizeOf3(valloc, hmask, hidxio)           \
-	(offsetof(DeeRoDictObject, rd_vtab) +                \
+#define _RoDict_SizeOf3(valloc, hmask, hidxio)                    \
+	(offsetof(DeeRoDictObject, rd_vtab) +                         \
 	 ((Dee_hash_vidx_t)(valloc) * sizeof(struct Dee_dict_item)) + \
 	 (((Dee_hash_t)(hmask) + 1) << hidxio))
 LOCAL ATTR_CONST size_t DCALL
@@ -455,6 +525,49 @@ hmask_memmovedown_and_maybe_downcast(union Dee_hash_htab *dst, Dee_hash_hidxio_t
 		}
 	}
 }
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+/************************************************************************/
+/* ROSET HELPERS                                                        */
+/************************************************************************/
+
+#define _RoSet_TryMalloc(sizeof)     ((DREF DeeRoSetObject *)DeeObject_TryMalloc(sizeof))
+#define _RoSet_TryCalloc(sizeof)     ((DREF DeeRoSetObject *)DeeObject_TryCalloc(sizeof))
+#define _RoSet_TryRealloc(p, sizeof) ((DREF DeeRoSetObject *)DeeObject_TryRealloc(p, sizeof))
+#define _RoSet_Malloc(sizeof)        ((DREF DeeRoSetObject *)DeeObject_Malloc(sizeof))
+#define _RoSet_Calloc(sizeof)        ((DREF DeeRoSetObject *)DeeObject_Calloc(sizeof))
+#define _RoSet_Realloc(p, sizeof)    ((DREF DeeRoSetObject *)DeeObject_Realloc(p, sizeof))
+#define _RoSet_Free(p)               DeeObject_Free(p)
+
+#define _RoSet_SizeOf(valloc, hmask) \
+	_RoSet_SizeOf3(valloc, hmask, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
+#define _RoSet_SafeSizeOf(valloc, hmask) \
+	_RoSet_SafeSizeOf3(valloc, hmask, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
+#define _RoSet_SizeOf3(valloc, hmask, hidxio)                        \
+	(offsetof(DeeRoSetObject, rs_vtab) +                             \
+	 ((Dee_hash_vidx_t)(valloc) * sizeof(struct Dee_hashset_item)) + \
+	 (((Dee_hash_t)(hmask) + 1) << hidxio))
+LOCAL ATTR_CONST size_t DCALL
+_RoSet_SafeSizeOf3(Dee_hash_vidx_t valloc, Dee_hash_t hmask, Dee_hash_hidxio_t hidxio) {
+	size_t result, hmask_size;
+	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_hashset_item), &result))
+		goto toobig;
+	if (OVERFLOW_UADD(hmask, 1, &hmask_size))
+		goto toobig;
+	if unlikely(((hmask_size << hidxio) >> hidxio) != hmask_size)
+		goto toobig;
+	hmask_size <<= hidxio;
+	if (OVERFLOW_UADD(result, hmask_size, &result))
+		goto toobig;
+	if (OVERFLOW_UADD(result, offsetof(DeeRoSetObject, rs_vtab), &result))
+		goto toobig;
+	return result;
+toobig:
+	return (size_t)-1; /* Force down-stream allocation failure */
+}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 DECL_END
 
