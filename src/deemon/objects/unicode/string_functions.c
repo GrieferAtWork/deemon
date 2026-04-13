@@ -10619,8 +10619,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "The obvious problem here is that this alternative representation uses 2 characters "
 	                /**/ "where previously there was only one. ?#casefold solves this problem by replacing $\"\xC3\x9F\" "
 	                /**/ "with $\"ss\", allowing functions such as ?#casecompare to indicate equal strings in "
-	                /**/ "cases such as ${\"Stra\xc3\x9f"
-	                "e\".casecompare(\"Strasse\") == 0}"),
+	                /**/ "cases such as ${\"Stra\xc3\x9f" "e\".casecompare(\"Strasse\") == 0}"),
 
 	/* Case-sensitive query functions */
 	TYPE_KWMETHOD_F(STR_replace, &string_replace,
@@ -12135,7 +12134,7 @@ nope:
 	return false;
 }
 
-LOCAL uint16_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) uint16_t *DCALL
 memmemwb(uint16_t const *haystack, size_t haystack_length,
          uint8_t const *needle, size_t needle_length) {
 	uint16_t *candidate;
@@ -12159,7 +12158,7 @@ nope:
 	return NULL;
 }
 
-LOCAL uint32_t *DCALL
+LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) uint32_t *DCALL
 memmemlb(uint32_t const *haystack, size_t haystack_length,
          uint8_t const *needle, size_t needle_length) {
 	uint32_t *candidate;

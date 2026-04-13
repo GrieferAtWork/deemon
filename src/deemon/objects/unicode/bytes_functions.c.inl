@@ -600,7 +600,7 @@ bytes_casefindany(Bytes *self, size_t argc,
 		goto err;
 	if (data.bcfad_result < data.bcfad_size || status == -2) {
 		return DeeSeq_OfPairII(args.start + data.bcfad_result,
-		                      args.start + data.bcfad_result + data.bcfad_reslen);
+		                       args.start + data.bcfad_result + data.bcfad_reslen);
 	}
 not_found:
 	return_none;
@@ -637,7 +637,7 @@ bytes_caseindexany(Bytes *self, size_t argc,
 		goto err;
 	if (data.bcfad_result < data.bcfad_size || status == -2) {
 		return DeeSeq_OfPairII(args.start + data.bcfad_result,
-		                      args.start + data.bcfad_result + data.bcfad_reslen);
+		                       args.start + data.bcfad_result + data.bcfad_reslen);
 	}
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);

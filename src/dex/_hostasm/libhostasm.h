@@ -176,10 +176,6 @@ DECL_BEGIN
 
 
 
-#define Dee_code_object     Dee_code_object
-#define Dee_module_object   Dee_module_object
-#define Dee_module_symbol   Dee_module_symbol
-#define Dee_class_attribute Dee_class_attribute
 struct Dee_code_object;
 struct Dee_module_object;
 struct Dee_module_symbol;

@@ -2833,7 +2833,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "Returns @this ?. as a C-style escaped string\n"
 	                         "${"
 	                         /**/ "operator repr() {\n"
-	                         /**/ "	return \"\\\"{}\\\"\".format({ this.encode(\"c-escape\") });\n"
+	                         /**/ "	return '\"{}\"'.format({ this.encode(\"c-escape\") });\n"
 	                         /**/ "}"
 	                         "}\n"
 	                         "\n"
