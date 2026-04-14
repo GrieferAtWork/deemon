@@ -18,10 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "dict.c"
 //#define DEFINE_dict_init_fromcopy
 //#define DEFINE_dict_init_fromcopy_keysonly
-#define DEFINE_dict_init_fromhashset_keysonly
+//#define DEFINE_dict_init_fromhashset_keysonly
+#define DEFINE_hashset_init_fromcopy
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -35,9 +35,10 @@
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* size_t */
 
-#if (defined(DEFINE_dict_init_fromcopy) + \
-     defined(DEFINE_dict_init_fromcopy_keysonly) + \
-     defined(DEFINE_dict_init_fromhashset_keysonly)) != 1
+#if (defined(DEFINE_dict_init_fromcopy) +             \
+     defined(DEFINE_dict_init_fromcopy_keysonly) +    \
+     defined(DEFINE_dict_init_fromhashset_keysonly) + \
+     defined(DEFINE_hashset_init_fromcopy)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -51,12 +52,65 @@ DECL_BEGIN
 #elif defined(DEFINE_dict_init_fromhashset_keysonly)
 #define LOCAL_dict_init_fromcopy dict_init_fromhashset_keysonly
 #define LOCAL_IS_KEYSONLY
-#define LOCAL_IS_HASHSET
+#define LOCAL_IS_OTHER_HASHSET
+#elif defined(DEFINE_hashset_init_fromcopy)
+#define LOCAL_dict_init_fromcopy hashset_init_fromcopy
+#define LOCAL_IS_KEYSONLY
+#define LOCAL_IS_OTHER_HASHSET
+#define LOCAL_IS_SELF_HASHSET
 #else /* ... */
 #error "Invalid configuration"
 #endif /* ... */
 
-#ifdef LOCAL_IS_HASHSET
+#ifdef LOCAL_IS_SELF_HASHSET
+#ifdef __INTELLISENSE__
+#include "hashset.c"
+#endif /* __INTELLISENSE__ */
+#define LOCAL_SelfType                                              DeeHashSetObject
+#define LOCAL_Self_d_vsize                                          hs_vsize
+#define LOCAL_Self_d_valloc                                         hs_valloc
+#define LOCAL_Self_d_vused                                          hs_vused
+#define LOCAL_Self_d_hmask                                          hs_hmask
+#define LOCAL_Self_d_htab                                           hs_htab
+#define LOCAL_Self_d_hidxops                                        hs_hidxops
+#define LOCAL_Self_dict_item                                        struct Dee_hashset_item
+#define LOCAL_Self_di_hash                                          hsi_hash
+#define LOCAL_Self_di_key                                           hsi_key
+#define LOCAL_Self_dict_hmask_from_count                            hashset_hmask_from_count
+#define LOCAL_Self_dict_valloc_from_hmask_and_count                 hashset_valloc_from_hmask_and_count
+#define LOCAL_Self_dict_sizeoftabs_from_hmask_and_valloc_and_hidxio hashset_sizeoftabs_from_hmask_and_valloc_and_hidxio
+#define LOCAL_Self__DeeDict_TabsTryMalloc                           _DeeHashSet_TabsTryMalloc
+#define LOCAL_Self__DeeDict_TabsMalloc                              _DeeHashSet_TabsMalloc
+#define LOCAL_Self__DeeDict_TabsFree                                _DeeHashSet_TabsFree
+#define LOCAL_Self__DeeDict_SetRealVTab                             _DeeHashSet_SetRealVTab
+#define LOCAL_Self_dict_htab_rebuild_after_optimize                 hashset_htab_rebuild_after_optimize
+#define LOCAL_Self_dict_verify                                      hashset_verify
+#else /* LOCAL_IS_SELF_HASHSET */
+#ifdef __INTELLISENSE__
+#include "dict.c"
+#endif /* __INTELLISENSE__ */
+#define LOCAL_SelfType                                              Dict
+#define LOCAL_Self_d_vsize                                          d_vsize
+#define LOCAL_Self_d_valloc                                         d_valloc
+#define LOCAL_Self_d_vused                                          d_vused
+#define LOCAL_Self_d_hmask                                          d_hmask
+#define LOCAL_Self_d_htab                                           d_htab
+#define LOCAL_Self_d_hidxops                                        d_hidxops
+#define LOCAL_Self_dict_item                                        struct Dee_dict_item
+#define LOCAL_Self_di_hash                                          di_hash
+#define LOCAL_Self_di_key                                           di_key
+#define LOCAL_Self_dict_hmask_from_count                            dict_hmask_from_count
+#define LOCAL_Self_dict_valloc_from_hmask_and_count                 dict_valloc_from_hmask_and_count
+#define LOCAL_Self_dict_sizeoftabs_from_hmask_and_valloc_and_hidxio dict_sizeoftabs_from_hmask_and_valloc_and_hidxio
+#define LOCAL_Self__DeeDict_TabsTryMalloc                           _DeeDict_TabsTryMalloc
+#define LOCAL_Self__DeeDict_TabsMalloc                              _DeeDict_TabsMalloc
+#define LOCAL_Self__DeeDict_TabsFree                                _DeeDict_TabsFree
+#define LOCAL_Self__DeeDict_SetRealVTab                             _DeeDict_SetRealVTab
+#define LOCAL_Self_dict_htab_rebuild_after_optimize                 dict_htab_rebuild_after_optimize
+#define LOCAL_Self_dict_verify                                      dict_verify
+#endif /* !LOCAL_IS_SELF_HASHSET */
+
+#ifdef LOCAL_IS_OTHER_HASHSET
 #define LOCAL_OtherType                 DeeHashSetObject
 #define LOCAL_Other_LockReadAndOptimize DeeHashSet_LockReadAndOptimize
 #define LOCAL_Other_LockEndRead         DeeHashSet_LockEndRead
@@ -70,7 +124,7 @@ DECL_BEGIN
 #define LOCAL_Other_dict_item           struct Dee_hashset_item
 #define LOCAL_Other_di_hash             hsi_hash
 #define LOCAL_Other_di_key              hsi_key
-#else /* LOCAL_IS_HASHSET */
+#else /* LOCAL_IS_OTHER_HASHSET */
 #define LOCAL_OtherType                 Dict
 #define LOCAL_Other_LockReadAndOptimize DeeDict_LockReadAndOptimize
 #define LOCAL_Other_LockEndRead         DeeDict_LockEndRead
@@ -84,10 +138,10 @@ DECL_BEGIN
 #define LOCAL_Other_dict_item           struct Dee_dict_item
 #define LOCAL_Other_di_hash             di_hash
 #define LOCAL_Other_di_key              di_key
-#endif /* !LOCAL_IS_HASHSET */
+#endif /* !LOCAL_IS_OTHER_HASHSET */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_dict_init_fromcopy(Dict *__restrict self,
+LOCAL_dict_init_fromcopy(LOCAL_SelfType *__restrict self,
                          LOCAL_OtherType *__restrict other) {
 	Dee_hash_t copy_hmask;
 	Dee_hash_vidx_t copy_valloc;
@@ -95,50 +149,50 @@ LOCAL_dict_init_fromcopy(Dict *__restrict self,
 	Dee_hash_hidxio_t copy_hidxio;
 	void *copy_tabs;
 	size_t copy_tabssz;
-	struct Dee_dict_item *copy_vtab;
+	LOCAL_Self_dict_item *copy_vtab;
 	union Dee_hash_htab *copy_htab;
 again:
 	LOCAL_Other_LockReadAndOptimize(other);
 
 	/* Figure out size of the copied tables. */
 	copy_vsize  = other->LOCAL_Other_d_vsize;
-	copy_hmask  = dict_hmask_from_count(copy_vsize);
-	copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, true);
+	copy_hmask  = LOCAL_Self_dict_hmask_from_count(copy_vsize);
+	copy_valloc = LOCAL_Self_dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, true);
 	if (copy_valloc >= other->LOCAL_Other_d_valloc) {
 		copy_valloc = other->LOCAL_Other_d_valloc;
 	} else {
-		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
+		copy_valloc = LOCAL_Self_dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
 		if unlikely(copy_valloc > other->LOCAL_Other_d_valloc)
 			copy_valloc = other->LOCAL_Other_d_valloc;
 	}
 	copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
-	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-	copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
+	copy_tabssz = LOCAL_Self_dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
+	copy_tabs   = LOCAL_Self__DeeDict_TabsTryMalloc(copy_tabssz);
 
 	/* Try to allocate smaller tables if the first allocation failed. */
 	if unlikely(!copy_tabs) {
-		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
+		copy_valloc = LOCAL_Self_dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
 		if unlikely(copy_valloc > other->LOCAL_Other_d_valloc)
 			copy_valloc = other->LOCAL_Other_d_valloc;
 		copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
-		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
+		copy_tabssz = LOCAL_Self_dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
+		copy_tabs   = LOCAL_Self__DeeDict_TabsTryMalloc(copy_tabssz);
 		if unlikely(!copy_tabs) {
 			LOCAL_Other_LockEndRead(other);
-			copy_tabs = _DeeDict_TabsMalloc(copy_tabssz);
+			copy_tabs = LOCAL_Self__DeeDict_TabsMalloc(copy_tabssz);
 			if unlikely(!copy_tabs)
 				goto err;
 			LOCAL_Other_LockReadAndOptimize(other);
 			if unlikely(copy_vsize < other->LOCAL_Other_d_vsize) {
 				LOCAL_Other_LockEndRead(other);
-				_DeeDict_TabsFree(copy_tabs);
+				LOCAL_Self__DeeDict_TabsFree(copy_tabs);
 				goto again;
 			}
 		}
 	}
 
 	/* Copy data into copy's tables. */
-	copy_vtab = (struct Dee_dict_item *)copy_tabs;
+	copy_vtab = (LOCAL_Self_dict_item *)copy_tabs;
 	copy_htab = (union Dee_hash_htab *)(copy_vtab + copy_valloc);
 #ifdef LOCAL_IS_KEYSONLY
 	/* Create reference to copied objects. */
@@ -147,24 +201,26 @@ again:
 		LOCAL_Other_dict_item *orig_vtab;
 		orig_vtab = LOCAL_Other__GetRealVTab(other);
 		for (i = 0; i < vsize; ++i) {
-			struct Dee_dict_item *dst_item = &copy_vtab[i];
+			LOCAL_Self_dict_item *dst_item = &copy_vtab[i];
 			LOCAL_Other_dict_item *src_item = &orig_vtab[i];
-			dst_item->di_hash = src_item->LOCAL_Other_di_hash;
-			dst_item->di_key  = src_item->LOCAL_Other_di_key;
-			Dee_Incref(dst_item->di_key);
+			dst_item->LOCAL_Self_di_hash = src_item->LOCAL_Other_di_hash;
+			dst_item->LOCAL_Self_di_key  = src_item->LOCAL_Other_di_key;
+			Dee_Incref(dst_item->LOCAL_Self_di_key);
+#ifndef LOCAL_IS_SELF_HASHSET
 			/* Value will be initialized by the caller! */
 			DBG_memset(&dst_item->di_value, 0xcc, sizeof(dst_item->di_value));
+#endif /* !LOCAL_IS_SELF_HASHSET */
 		}
 	}
 #else /* LOCAL_IS_KEYSONLY */
-	copy_vtab = (struct Dee_dict_item *)memcpyc(copy_vtab, _DeeDict_GetRealVTab(other),
+	copy_vtab = (LOCAL_Self_dict_item *)memcpyc(copy_vtab, _DeeDict_GetRealVTab(other),
 	                                            other->LOCAL_Other_d_vsize,
-	                                            sizeof(struct Dee_dict_item));
+	                                            sizeof(LOCAL_Self_dict_item));
 	/* Create reference to copied objects. */
 	{
 		Dee_hash_vidx_t i;
 		for (i = 0; i < copy_vsize; ++i) {
-			struct Dee_dict_item *item;
+			LOCAL_Self_dict_item *item;
 			item = &copy_vtab[i];
 			ASSERTF(item->di_key, "Table was optimized above, so there should be no deleted keys!");
 			Dee_Incref(item->di_key);
@@ -174,13 +230,13 @@ again:
 #endif /* !LOCAL_IS_KEYSONLY */
 
 	/* Fill in control structures. */
-	self->d_valloc  = copy_valloc;
-	self->d_vsize   = copy_vsize;
-	self->d_vused   = other->LOCAL_Other_d_vused;
-	_DeeDict_SetRealVTab(self, copy_vtab);
-	self->d_hmask   = copy_hmask;
-	self->d_hidxops = &Dee_hash_hidxio[copy_hidxio];
-	self->d_htab    = copy_htab;
+	self->LOCAL_Self_d_valloc  = copy_valloc;
+	self->LOCAL_Self_d_vsize   = copy_vsize;
+	self->LOCAL_Self_d_vused   = other->LOCAL_Other_d_vused;
+	LOCAL_Self__DeeDict_SetRealVTab(self, copy_vtab);
+	self->LOCAL_Self_d_hmask   = copy_hmask;
+	self->LOCAL_Self_d_hidxops = &Dee_hash_hidxio[copy_hidxio];
+	self->LOCAL_Self_d_htab    = copy_htab;
 
 	if (copy_hmask == other->LOCAL_Other_d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
@@ -191,12 +247,12 @@ again:
 			size_t sizeof_htab = htab_words << copy_hidxio;
 			(void)memcpy(copy_htab, other->LOCAL_Other_d_htab, sizeof_htab);
 		} else if (copy_hidxio > orig_hidxio) {
-			(*self->d_hidxops->hxio_upr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
+			(*self->LOCAL_Self_d_hidxops->hxio_upr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
 		} else if (copy_hidxio == orig_hidxio - 1) {
-			(*self->d_hidxops->hxio_lwr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
+			(*self->LOCAL_Self_d_hidxops->hxio_lwr)(copy_htab, other->LOCAL_Other_d_htab, htab_words);
 		} else {
 			Dee_hash_hidx_t i;
-			Dee_hash_sethidx_t setter = self->d_hidxops->hxio_set;
+			Dee_hash_sethidx_t setter = self->LOCAL_Self_d_hidxops->hxio_set;
 			Dee_hash_gethidx_t getter = other->LOCAL_Other_d_hidxops->hxio_get;
 			ASSERT(copy_hidxio < orig_hidxio);
 			for (i = 0; i < htab_words; ++i)
@@ -204,17 +260,39 @@ again:
 		}
 	} else {
 		/* Copy has a different hash-mask -> hash table cannot be copied and needs to be re-build! */
-		dict_htab_rebuild_after_optimize(self);
+		LOCAL_Self_dict_htab_rebuild_after_optimize(self);
 	}
 	LOCAL_Other_LockEndRead(other);
-#ifdef DICT_INITFROM_NEEDSLOCK
+#if defined(HASHSET_INITFROM_NEEDSLOCK) && defined(LOCAL_IS_SELF_HASHSET)
+	Dee_atomic_rwlock_init(&self->hs_lock);
+#elif defined(DICT_INITFROM_NEEDSLOCK) && !defined(LOCAL_IS_SELF_HASHSET)
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
-	dict_verify(self);
+	LOCAL_Self_dict_verify(self);
 	return 0;
 err:
 	return -1;
 }
+
+#undef LOCAL_SelfType
+#undef LOCAL_Self_d_vsize
+#undef LOCAL_Self_d_valloc
+#undef LOCAL_Self_d_vused
+#undef LOCAL_Self_d_hmask
+#undef LOCAL_Self_d_htab
+#undef LOCAL_Self_d_hidxops
+#undef LOCAL_Self_dict_item
+#undef LOCAL_Self_di_hash
+#undef LOCAL_Self_di_key
+#undef LOCAL_Self_dict_hmask_from_count
+#undef LOCAL_Self_dict_valloc_from_hmask_and_count
+#undef LOCAL_Self_dict_sizeoftabs_from_hmask_and_valloc_and_hidxio
+#undef LOCAL_Self__DeeDict_TabsTryMalloc
+#undef LOCAL_Self__DeeDict_TabsMalloc
+#undef LOCAL_Self__DeeDict_TabsFree
+#undef LOCAL_Self__DeeDict_SetRealVTab
+#undef LOCAL_Self_dict_htab_rebuild_after_optimize
+#undef LOCAL_Self_dict_verify
 
 #undef LOCAL_OtherType
 #undef LOCAL_Other_LockReadAndOptimize
@@ -231,7 +309,8 @@ err:
 #undef LOCAL_Other_di_key
 
 #undef LOCAL_IS_KEYSONLY
-#undef LOCAL_IS_HASHSET
+#undef LOCAL_IS_OTHER_HASHSET
+#undef LOCAL_IS_SELF_HASHSET
 #undef LOCAL_dict_init_fromcopy
 
 DECL_END
@@ -239,3 +318,4 @@ DECL_END
 #undef DEFINE_dict_init_fromcopy
 #undef DEFINE_dict_init_fromcopy_keysonly
 #undef DEFINE_dict_init_fromhashset_keysonly
+#undef DEFINE_hashset_init_fromcopy

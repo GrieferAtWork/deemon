@@ -65,6 +65,8 @@ typedef struct Dee_rodict_object {
 //	COMPILER_FLEXIBLE_ARRAY(byte_t,               rd_htab_data); /* Dict hash-table. */
 } DeeRoDictObject;
 
+#define DeeRoDict_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoDictObject, self)->rd_vsize == 0)
+
 /* The main `_RoDict' container class. */
 DDATDEF DeeTypeObject DeeRoDict_Type;
 #define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */

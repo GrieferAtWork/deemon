@@ -436,6 +436,31 @@ get_ItemType_of(DREF DeeObject *ob) {
 	return result;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+PRIVATE struct nonempty_roset_instance_struct {
+	Dee_OBJECT_HEAD /* All of the below fields are [const] */
+	/*real*/Dee_hash_vidx_t rs_vsize;        /* # of keys in the set. */
+	Dee_hash_t              rs_hmask;        /* [>= rs_vsize] Hash-mask */
+	Dee_hash_gethidx_t      rs_hidxget;      /* [1..1] Getter for "rs_htab" */
+	union Dee_hash_htab    *rs_htab;         /* [== (byte_t *)(_DeeRoSet_GetRealVTab(this) + rs_vsize)] Hash-table (contains indices into "rs_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
+	struct Dee_hashset_item rs_vtab[1];      /* [rs_vsize] Hashset keys (never contains deleted keys). */
+	byte_t                  rs_htab_data[2]; /* Hashset hash-table. */
+} nonempty_roset_instance = {
+	OBJECT_HEAD_INIT(&DeeRoSet_Type),
+	/* .rs_vsize     = */ 1,
+	/* .rs_hmask     = */ 1,
+	/* .rs_hidxget   = */ &Dee_hash_gethidx8,
+	/* .rs_htab      = */ (union Dee_hash_htab *)nonempty_roset_instance.rs_htab_data,
+	/* .rs_vtab      = */ { Dee_HASHSET_ITEM_INIT(0, DeeInt_Zero) }, /* hash(int(0)) == 0 */
+	/* .rs_htab_data = */ { Dee_hash_vidx_tovirt(0), Dee_HASH_HTAB_EOF },
+};
+
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_vsize) == offsetof(DeeRoSetObject, rs_vsize));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_hmask) == offsetof(DeeRoSetObject, rs_hmask));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_hidxget) == offsetof(DeeRoSetObject, rs_hidxget));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_htab) == offsetof(DeeRoSetObject, rs_htab));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_vtab) == offsetof(DeeRoSetObject, rs_vtab));
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 PRIVATE struct nonempty_roset_instance_struct {
 	Dee_OBJECT_HEAD
 	size_t                rs_mask;    /* [>= rs_size] Allocated set size. */
@@ -447,10 +472,10 @@ PRIVATE struct nonempty_roset_instance_struct {
 	/* .rs_size = */ 1,
 	/* .rs_elem = */ { { DeeInt_Zero, 0 } } /* hash(int(0)) == 0 */
 };
-
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_mask) == offsetof(DeeRoSetObject, rs_mask));
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_size) == offsetof(DeeRoSetObject, rs_size));
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offsetof(DeeRoSetObject, rs_elem));
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 #define nonempty_stub_set (Dee_AsObject(&nonempty_roset_instance))
 
@@ -461,7 +486,7 @@ PRIVATE struct nonempty_rodict_instance_struct {
 	/*real*/Dee_hash_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
 	Dee_hash_t              rd_hmask;        /* [>= rd_vsize] Hash-mask */
 	Dee_hash_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
-	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
+	union Dee_hash_htab    *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 	struct Dee_dict_item    rd_vtab[1];      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
 	byte_t                  rd_htab_data[2]; /* Dict hash-table. */
 } nonempty_rodict_instance = {
@@ -469,7 +494,7 @@ PRIVATE struct nonempty_rodict_instance_struct {
 	/* .rd_vsize     = */ 1,
 	/* .rd_hmask     = */ 1,
 	/* .rd_hidxget   = */ &Dee_hash_gethidx8,
-	/* .rd_htab      = */ nonempty_rodict_instance.rd_htab_data,
+	/* .rd_htab      = */ (union Dee_hash_htab *)nonempty_rodict_instance.rd_htab_data,
 	/* .rd_vtab      = */ { Dee_DICT_ITEM_INIT(0, DeeInt_Zero, DeeInt_Zero) }, /* hash(int(0)) == 0 */
 	/* .rd_htab_data = */ { Dee_hash_vidx_tovirt(0), Dee_HASH_HTAB_EOF },
 };

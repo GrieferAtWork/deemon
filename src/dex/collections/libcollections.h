@@ -584,9 +584,6 @@ INTDEF struct uset_item empty_set_items[1];
 #define empty_set_items ((struct uset_item *)empty_dict_items)
 #endif /* !__INTELLISENSE__ */
 
-INTDEF WUNUSED NONNULL((1)) DREF USet *DCALL USet_FromSequence(DeeObject *__restrict sequence);
-INTDEF WUNUSED NONNULL((1)) DREF UDict *DCALL UDict_FromSequence(DeeObject *__restrict sequence);
-
 INTDEF WUNUSED DREF URoSet *DCALL URoSet_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromSequence(DeeObject *__restrict sequence);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromUSet(USet *__restrict self);

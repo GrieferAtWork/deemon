@@ -18,13 +18,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "dict.c"
-#define DEFINE_dict_first
+//#define DEFINE_dict_first
 //#define DEFINE_dict_firstkey
 //#define DEFINE_dict_firstvalue
 //#define DEFINE_dict_last
 //#define DEFINE_dict_lastkey
 //#define DEFINE_dict_lastvalue
+#define DEFINE_hashset_first
+//#define DEFINE_hashset_last
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -45,7 +46,9 @@
      defined(DEFINE_dict_firstvalue) + \
      defined(DEFINE_dict_last) +       \
      defined(DEFINE_dict_lastkey) +    \
-     defined(DEFINE_dict_lastvalue)) != 1
+     defined(DEFINE_dict_lastvalue) +  \
+     defined(DEFINE_hashset_first) +   \
+     defined(DEFINE_hashset_last)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -89,6 +92,24 @@
 #define LOCAL_dict_setspecial dict_setlastvalue
 #define LOCAL_IS_LAST
 #define LOCAL_IS_VALUE
+#elif defined(DEFINE_hashset_first)
+#define LOCAL_dict_trygetspecial           hashset_trygetfirst
+#define LOCAL_dict_getspecial              hashset_getfirst
+#define LOCAL_dict_delspecial              hashset_delfirst
+#define LOCAL_dict_setspecial              hashset_setfirst
+#define LOCAL_dict_setspecial_key_getindex hashset_setfirst_getindex
+#define LOCAL_IS_FIRST
+#define LOCAL_IS_KEY
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_last)
+#define LOCAL_dict_trygetspecial           hashset_trygetlast
+#define LOCAL_dict_getspecial              hashset_getlast
+#define LOCAL_dict_delspecial              hashset_dellast
+#define LOCAL_dict_setspecial              hashset_setlast
+#define LOCAL_dict_setspecial_key_getindex hashset_setlast_getindex
+#define LOCAL_IS_LAST
+#define LOCAL_IS_KEY
+#define LOCAL_IS_HASHSET
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -124,6 +145,60 @@
 #define LOCAL_STR_getset LOCAL_str_getset
 #endif /* !LOCAL_STR_getset */
 
+#ifdef LOCAL_IS_HASHSET
+#ifdef __INTELLISENSE__
+#include "hashset.c"
+#endif /* __INTELLISENSE__ */
+
+#define LOCAL_Dict                         HashSet
+#define LOCAL_Dee_dict_item                Dee_hashset_item
+#define LOCAL_DeeDict_LockTryRead(self)    DeeHashSet_LockTryRead(self)
+#define LOCAL_DeeDict_LockTryWrite(self)   DeeHashSet_LockTryWrite(self)
+#define LOCAL_DeeDict_LockRead(self)       DeeHashSet_LockRead(self)
+#define LOCAL_DeeDict_LockWrite(self)      DeeHashSet_LockWrite(self)
+#define LOCAL_DeeDict_LockTryUpgrade(self) DeeHashSet_LockTryUpgrade(self)
+#define LOCAL_DeeDict_LockUpgrade(self)    DeeHashSet_LockUpgrade(self)
+#define LOCAL_DeeDict_LockDowngrade(self)  DeeHashSet_LockDowngrade(self)
+#define LOCAL_DeeDict_LockEndWrite(self)   DeeHashSet_LockEndWrite(self)
+#define LOCAL_DeeDict_LockEndRead(self)    DeeHashSet_LockEndRead(self)
+#define LOCAL_DeeDict_LockEnd(self)        DeeHashSet_LockEnd(self)
+#define LOCAL__DeeDict_GetRealVTab         _DeeHashSet_GetRealVTab
+#define LOCAL_DeeDict_Type                 DeeHashSet_Type
+#define LOCAL_dict_autoshrink              hashset_autoshrink
+
+/* Map dict fields to hashsets */
+#define d_valloc  hs_valloc
+#define d_vsize   hs_vsize
+#define d_vused   hs_vused
+#define d_vtab    hs_vtab
+#define d_hmask   hs_hmask
+#define d_hidxops hs_hidxops
+#define d_htab    hs_htab
+#define d_lock    hs_lock
+#define di_hash   hsi_hash
+#define di_key    hsi_key
+#else /* LOCAL_IS_HASHSET */
+#ifdef __INTELLISENSE__
+#include "dict.c"
+#endif /* __INTELLISENSE__ */
+
+#define LOCAL_Dict                         Dict
+#define LOCAL_Dee_dict_item                Dee_dict_item
+#define LOCAL_DeeDict_LockTryRead(self)    DeeDict_LockTryRead(self)
+#define LOCAL_DeeDict_LockTryWrite(self)   DeeDict_LockTryWrite(self)
+#define LOCAL_DeeDict_LockRead(self)       DeeDict_LockRead(self)
+#define LOCAL_DeeDict_LockWrite(self)      DeeDict_LockWrite(self)
+#define LOCAL_DeeDict_LockTryUpgrade(self) DeeDict_LockTryUpgrade(self)
+#define LOCAL_DeeDict_LockUpgrade(self)    DeeDict_LockUpgrade(self)
+#define LOCAL_DeeDict_LockDowngrade(self)  DeeDict_LockDowngrade(self)
+#define LOCAL_DeeDict_LockEndWrite(self)   DeeDict_LockEndWrite(self)
+#define LOCAL_DeeDict_LockEndRead(self)    DeeDict_LockEndRead(self)
+#define LOCAL_DeeDict_LockEnd(self)        DeeDict_LockEnd(self)
+#define LOCAL__DeeDict_GetRealVTab         _DeeDict_GetRealVTab
+#define LOCAL_DeeDict_Type                 DeeDict_Type
+#define LOCAL_dict_autoshrink              dict_autoshrink
+#endif /* !LOCAL_IS_HASHSET */
+
 DECL_BEGIN
 
 #ifdef LOCAL_IS_KEY
@@ -133,19 +208,19 @@ DECL_BEGIN
 #endif /* ... */
 
 #ifdef LOCAL_IS_FIRST
-#define LOCAL_dict_loaditem(self, item)      \
-	do {                                     \
-		(item) = _DeeDict_GetRealVTab(self); \
-		while (!(item)->di_key)              \
-			++(item);                        \
+#define LOCAL_dict_loaditem(self, item)            \
+	do {                                           \
+		(item) = LOCAL__DeeDict_GetRealVTab(self); \
+		while (!(item)->di_key)                    \
+			++(item);                              \
 	}	__WHILE0
 #else /* LOCAL_IS_FIRST */
-#define LOCAL_dict_loaditem(self, item)      \
-	do {                                     \
-		(item) = _DeeDict_GetRealVTab(self); \
-		(item) += (self)->d_vsize;           \
-		while (!(--(item))->di_key)          \
-			;                                \
+#define LOCAL_dict_loaditem(self, item)            \
+	do {                                           \
+		(item) = LOCAL__DeeDict_GetRealVTab(self); \
+		(item) += (self)->d_vsize;                 \
+		while (!(--(item))->di_key)                \
+			;                                      \
 	}	__WHILE0
 #endif /* !LOCAL_IS_FIRST */
 
@@ -162,9 +237,9 @@ DECL_BEGIN
 
 #ifdef LOCAL_dict_getspecial
 PRIVATE WUNUSED NONNULL((1)) DREF LOCAL_value_type *DCALL
-LOCAL_dict_getspecial(Dict *__restrict self) {
+LOCAL_dict_getspecial(LOCAL_Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
-	struct Dee_dict_item *item;
+	struct LOCAL_Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
 	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
@@ -184,7 +259,9 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 	return result;
 err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
-	DeeRT_ErrTUnboundAttrCStr(&DeeDict_Type, Dee_AsObject(self), LOCAL_STR_getset);
+	DeeRT_ErrTUnboundAttrCStr(&LOCAL_DeeDict_Type,
+	                          Dee_AsObject(self),
+	                          LOCAL_STR_getset);
 #ifdef LOCAL_IS_PAIR
 	DeeSeq_FreePairUninitialized(result);
 err:
@@ -195,9 +272,9 @@ err:
 
 #ifdef LOCAL_dict_trygetspecial
 PRIVATE WUNUSED NONNULL((1)) DREF LOCAL_value_type *DCALL
-LOCAL_dict_trygetspecial(Dict *__restrict self) {
+LOCAL_dict_trygetspecial(LOCAL_Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
-	struct Dee_dict_item *item;
+	struct LOCAL_Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
 	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
@@ -236,25 +313,31 @@ err:
 /************************************************************************/
 #ifdef LOCAL_dict_delspecial
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-LOCAL_dict_delspecial(Dict *__restrict self) {
+LOCAL_dict_delspecial(LOCAL_Dict *__restrict self) {
 	DREF DeeObject *old_key;
+#ifndef LOCAL_IS_HASHSET
 	DREF DeeObject *old_value;
-	struct Dee_dict_item *item;
+#endif /* !LOCAL_IS_HASHSET */
+	struct LOCAL_Dee_dict_item *item;
 	DeeDict_LockWrite(self);
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
 		return 0;
 	}
 	LOCAL_dict_loaditem(self, item);
-	old_key   = item->di_key;
-	old_value = item->di_value;
+	old_key = item->di_key;
 	item->di_key = NULL;
+#ifndef LOCAL_IS_HASHSET
+	old_value = item->di_value;
 	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+#endif /* !LOCAL_IS_HASHSET */
 	--self->d_vused;
-	dict_autoshrink(self);
+	LOCAL_dict_autoshrink(self);
 	DeeDict_LockEndWrite(self);
 	Dee_Decref(old_key);
+#ifndef LOCAL_IS_HASHSET
 	Dee_Decref(old_value);
+#endif /* !LOCAL_IS_HASHSET */
 	return 0;
 }
 #endif /* LOCAL_dict_delspecial */
@@ -269,7 +352,7 @@ LOCAL_dict_delspecial(Dict *__restrict self) {
 
 #ifdef LOCAL_dict_setspecial_pair
 PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
-LOCAL_dict_setspecial_pair_getindex(void *arg, Dict *self,
+LOCAL_dict_setspecial_pair_getindex(void *arg, LOCAL_Dict *self,
                                     /*virt*/ Dee_hash_vidx_t overwrite_index,
                                     DeeObject **p_value) {
 	struct dict_mh_seq_setitem_index_impl_data *data;
@@ -288,7 +371,7 @@ LOCAL_dict_setspecial_pair_getindex(void *arg, Dict *self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-LOCAL_dict_setspecial_pair(Dict *self, DeeObject *key, DeeObject *value) {
+LOCAL_dict_setspecial_pair(LOCAL_Dict *self, DeeObject *key, DeeObject *value) {
 	int result;
 	struct dict_mh_seq_setitem_index_impl_data data;
 	data.dsqsii_deleted_key = NULL;
@@ -306,17 +389,22 @@ LOCAL_dict_setspecial_pair(Dict *self, DeeObject *key, DeeObject *value) {
 #define DICT_SETSPECIAL_PAIR_OLDKEY_DATA_DEFINED
 struct dict_setspecial_key_old_data {
 	DREF DeeObject *sskod_key;   /* out[0..1] Old key */
+#ifndef LOCAL_IS_HASHSET
 	DREF DeeObject *sskod_value; /* out[0..1] Old value */
+#endif /* !LOCAL_IS_HASHSET */
 };
 #endif /* !DICT_SETSPECIAL_PAIR_OLDKEY_DATA_DEFINED */
 
 PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
-LOCAL_dict_setspecial_key_getindex(void *arg, Dict *self,
-                                   /*virt*/ Dee_hash_vidx_t overwrite_index,
-                                   DeeObject **p_value) {
+LOCAL_dict_setspecial_key_getindex(void *arg, LOCAL_Dict *self,
+                                   /*virt*/ Dee_hash_vidx_t overwrite_index
+#ifndef LOCAL_IS_HASHSET
+                                   , DeeObject **p_value
+#endif /* !LOCAL_IS_HASHSET */
+                                   ) {
 	struct dict_setspecial_key_old_data *data;
 	/*real*/ Dee_hash_vidx_t result;
-	struct Dee_dict_item *item;
+	struct LOCAL_Dee_dict_item *item;
 	(void)overwrite_index;
 	data = (struct dict_setspecial_key_old_data *)arg;
 	if unlikely(!self->d_vused) {
@@ -325,38 +413,52 @@ LOCAL_dict_setspecial_key_getindex(void *arg, Dict *self,
 		return Dee_HASH_HTAB_EOF;
 	}
 	LOCAL_dict_loaditem(self, item);
-	result = (Dee_hash_vidx_t)(item - _DeeDict_GetRealVTab(self));
+	result = (Dee_hash_vidx_t)(item - LOCAL__DeeDict_GetRealVTab(self));
 	Dee_hash_vidx_real2virt(&result);
 	if (overwrite_index == result) {
-		data->sskod_key   = NULL;
+		data->sskod_key = NULL;
+#ifndef LOCAL_IS_HASHSET
 		data->sskod_value = item->di_value;
 		Dee_Incref(data->sskod_value);
+#endif /* !LOCAL_IS_HASHSET */
 	} else {
 		/* Delete existing item. */
 		data->sskod_key   = item->di_key;   /* Inherit reference */
+#ifndef LOCAL_IS_HASHSET
 		data->sskod_value = item->di_value; /* Inherit reference */
+#endif /* !LOCAL_IS_HASHSET */
 		item->di_key = NULL;
 		--self->d_vused;
 	}
+#ifndef LOCAL_IS_HASHSET
 	*p_value = data->sskod_value;
+#endif /* !LOCAL_IS_HASHSET */
 	return result;
 }
 #endif /* LOCAL_dict_setspecial_key_getindex */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_dict_setspecial(Dict *self, DeeObject *value) {
+LOCAL_dict_setspecial(LOCAL_Dict *self, DeeObject *value) {
 #ifdef LOCAL_IS_KEY
 	int result;
 	struct dict_setspecial_key_old_data data;
-	data.sskod_key   = NULL;
+	data.sskod_key = NULL;
+#ifndef LOCAL_IS_HASHSET
 	data.sskod_value = NULL;
+#endif /* !LOCAL_IS_HASHSET */
+#ifdef LOCAL_IS_HASHSET
+	result = hashset_insert_at(self, value, &LOCAL_dict_setspecial_key_getindex, &data);
+#else /* LOCAL_IS_HASHSET */
 	result = dict_setitem_at(self, value, Dee_None, &LOCAL_dict_setspecial_key_getindex, &data);
+#endif /* !LOCAL_IS_HASHSET */
 	Dee_XDecref(data.sskod_key);
+#ifndef LOCAL_IS_HASHSET
 	Dee_XDecref(data.sskod_value);
+#endif /* !LOCAL_IS_HASHSET */
 	return result;
 #elif defined(LOCAL_IS_VALUE)
 	DREF DeeObject *old_value;
-	struct Dee_dict_item *item;
+	struct LOCAL_Dee_dict_item *item;
 	DeeDict_LockWrite(self);
 	if unlikely(!self->d_vused)
 		goto err_empty;
@@ -397,6 +499,33 @@ DECL_END
 #undef LOCAL_str_getset
 #undef LOCAL_STR_getset
 
+#undef LOCAL_Dict
+#undef LOCAL_Dee_dict_item
+#undef LOCAL_DeeDict_LockTryRead
+#undef LOCAL_DeeDict_LockTryWrite
+#undef LOCAL_DeeDict_LockRead
+#undef LOCAL_DeeDict_LockWrite
+#undef LOCAL_DeeDict_LockTryUpgrade
+#undef LOCAL_DeeDict_LockUpgrade
+#undef LOCAL_DeeDict_LockDowngrade
+#undef LOCAL_DeeDict_LockEndWrite
+#undef LOCAL_DeeDict_LockEndRead
+#undef LOCAL_DeeDict_LockEnd
+#undef LOCAL__DeeDict_GetRealVTab
+#undef LOCAL_DeeDict_Type
+#undef LOCAL_dict_autoshrink
+#ifdef LOCAL_IS_HASHSET
+#undef d_valloc
+#undef d_vsize
+#undef d_vused
+#undef d_vtab
+#undef d_hmask
+#undef d_hidxops
+#undef d_htab
+#undef d_lock
+#undef di_hash
+#undef di_key
+#endif /* LOCAL_IS_HASHSET */
 #undef LOCAL_dict_getspecial
 #undef LOCAL_dict_trygetspecial
 #undef LOCAL_dict_delspecial
@@ -407,6 +536,7 @@ DECL_END
 #undef LOCAL_IS_FIRST
 #undef LOCAL_IS_LAST
 #undef LOCAL_IS_PAIR
+#undef LOCAL_IS_HASHSET
 #undef LOCAL_IS_KEY
 #undef LOCAL_IS_VALUE
 
@@ -417,3 +547,5 @@ DECL_END
 #undef DEFINE_dict_last
 #undef DEFINE_dict_lastkey
 #undef DEFINE_dict_lastvalue
+#undef DEFINE_hashset_first
+#undef DEFINE_hashset_last

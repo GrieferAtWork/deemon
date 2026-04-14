@@ -225,6 +225,17 @@ asm_allowconst(DeeObject *__restrict self) {
 	}
 	if (type == &DeeRoSet_Type) {
 		/* Special case: Only allow read-only sets of constant expressions. */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+		size_t j;
+		DeeRoSetObject *me = (DeeRoSetObject *)self;
+		for (j = 0; j < me->rs_vsize; ++j) {
+			struct Dee_hashset_item *item;
+			item = &_DeeRoSet_GetRealVTab(me)[j];
+			if (!asm_allowconst(item->hsi_key))
+				goto illegal;
+		}
+		goto allowed;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		struct Dee_roset_item *iter, *end;
 		iter = ((DeeRoSetObject *)self)->rs_elem;
 		end  = iter + ((DeeRoSetObject *)self)->rs_mask + 1;
@@ -235,6 +246,7 @@ asm_allowconst(DeeObject *__restrict self) {
 				goto illegal;
 		}
 		goto allowed;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 	}
 	if (type == &DeeRoDict_Type) {
 		/* Special case: Only allow read-only dicts of constant expressions. */
@@ -358,6 +370,17 @@ again0:
 		int temp, result;
 		size_t i;
 		result = CONSTEXPR_ALLOWED;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+		for (i = 0; i < me->rs_vsize; ++i) {
+			struct Dee_hashset_item *item;
+			item = &_DeeRoSet_GetRealVTab(me)[i];
+			temp = allow_constexpr(item->hsi_key);
+			if (temp == CONSTEXPR_ILLEGAL)
+				goto illegal;
+			if (temp == CONSTEXPR_USECOPY)
+				result = CONSTEXPR_USECOPY;
+		}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		for (i = 0; i <= me->rs_mask; ++i) {
 			if (!me->rs_elem[i].rsi_key)
 				continue;
@@ -367,6 +390,7 @@ again0:
 			if (temp == CONSTEXPR_USECOPY)
 				result = CONSTEXPR_USECOPY;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return result;
 	}
 
@@ -401,6 +425,24 @@ again0:
 			size_t i;
 			DeeHashSetObject *me = (DeeHashSetObject *)self;
 			DeeHashSet_LockRead(me);
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+			for (i = Dee_hash_vidx_tovirt(0);
+			     Dee_hash_vidx_virt_lt_real(i, me->hs_vsize); ++i) {
+				int temp;
+				DeeObject *key;
+				struct Dee_hashset_item *item;
+				item = &_DeeHashSet_GetVirtVTab(me)[i];
+				key = item->hsi_key;
+				if (!key)
+					continue;
+				temp = allow_constexpr(key);
+				if (temp == CONSTEXPR_ILLEGAL) {
+					DeeHashSet_LockEndRead(me);
+					CONSTEXPR_FRAME_BREAK;
+					goto illegal;
+				}
+			}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 			for (i = 0; i <= me->hs_mask; ++i) {
 				int temp;
 				DeeObject *key = me->hs_elem[i].hsi_key;
@@ -413,6 +455,7 @@ again0:
 					goto illegal;
 				}
 			}
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 			DeeHashSet_LockEndRead(me);
 		}
 		CONSTEXPR_FRAME_END;

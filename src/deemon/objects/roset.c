@@ -43,11 +43,26 @@
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
 #include "roset.h"
+#include "dict-utils.h"
+#include "rodict.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
+#ifndef DICT_NDEBUG
+#include <hybrid/align.h> /* IS_POWER_OF_TWO */
+#endif /* !DICT_NDEBUG */
+
 DECL_BEGIN
+
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
 
 typedef DeeRoSetObject RoSet;
 

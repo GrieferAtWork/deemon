@@ -2357,12 +2357,23 @@ again:
 		return true;
 	} else if (tp == &DeeRoSet_Type) {
 		DeeRoSetObject *me = (DeeRoSetObject *)self;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+		Dee_hash_vidx_t i;
+		for (i = 0; i < me->rs_vsize; ++i) {
+			struct Dee_hashset_item *it = &me->rs_vtab[i];
+			if (it->hsi_key) {
+				if (!DeeObject_IsDeepImmutable(it->hsi_key))
+					return false;
+			}
+		}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		size_t i;
 		for (i = 0; i <= me->rs_mask; ++i) {
 			struct Dee_roset_item *it = &me->rs_elem[i];
 			if (it->rsi_key && !DeeObject_IsDeepImmutable(it->rsi_key))
 				return false;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return true;
 #if 0
 	} else if (tp == &DeeSeqOne_Type) { /* Already handled by "ProxyObject" below */

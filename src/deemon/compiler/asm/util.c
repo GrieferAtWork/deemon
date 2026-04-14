@@ -235,7 +235,55 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	return result;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+/* NOTE: Caller must ensure that "self" is optimized
+ * @return: * :        read-lock to "self" is still held; success
+ * @return: NULL:      read-lock to "self" was released; error was thrown
+ * @return: ITER_DONE: read-lock to "self" was released; caller should start over */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeRoSetObject *DCALL
+roset_fromset_locked_or_unlock(DeeHashSetObject *__restrict self) {
+	DREF DeeRoSetObject *result;
+	size_t sizeof_result;
+	size_t vsize;
+	size_t i, hmask;
+	shift_t src_hidxio;
+	shift_t dst_hidxio;
+	ASSERT(DeeHashSet_LockReading(self));
+	ASSERT(!_DeeHashSet_CanOptimizeVTab(self));
+	DeeHashSet_LockReadAndOptimize(self);
+	vsize         = self->hs_vused;
+	hmask         = self->hs_hmask;
+	src_hidxio    = Dee_HASH_HIDXIO_FROM_VALLOC(self->hs_valloc);
+	dst_hidxio    = Dee_HASH_HIDXIO_FROM_VALLOC(vsize);
+	sizeof_result = _RoSet_SizeOf3(vsize, hmask, dst_hidxio);
+	result = _RoSet_TryMalloc(sizeof_result);
+	if unlikely(!result) {
+		DeeHashSet_LockEndRead(self);
+		return Dee_CollectMemory(sizeof_result)
+		       ? (DREF DeeRoSetObject *)ITER_DONE
+		       : (DREF DeeRoSetObject *)NULL;
+	}
 
+	/* Copy over data as-is from the set (no need to rehash or anything). */
+	result->rs_htab = (union Dee_hash_htab *)mempcpyc(_DeeRoSet_GetRealVTab(result),
+	                                                  _DeeHashSet_GetRealVTab(self), vsize,
+	                                                  sizeof(struct Dee_hashset_item));
+	hmask_memcpy_and_maybe_downcast(result->rs_htab, dst_hidxio,
+	                                self->hs_htab, src_hidxio,
+	                                hmask + 1);
+	for (i = 0; i < vsize; ++i) {
+		struct Dee_hashset_item *item;
+		item = &_DeeRoSet_GetRealVTab(result)[i];
+		ASSERT(item->hsi_key);
+		Dee_Incref(item->hsi_key);
+	}
+	result->rs_vsize   = vsize;
+	result->rs_hmask   = hmask;
+	result->rs_hidxget = Dee_hash_hidxio[dst_hidxio].hxio_get;
+	DeeObject_InitStatic(result, &DeeRoSet_Type);
+	return result;
+}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 /* NOTE: _Always_ inherits references to `key' */
 PRIVATE NONNULL((1, 3)) void DCALL
 roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
@@ -258,6 +306,7 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
 #define SIZEOF_ROSET(mask) \
 	(offsetof(DeeRoSetObject, rs_elem) + (((mask) + 1) * sizeof(struct Dee_roset_item)))
 #define ROSET_INITIAL_MASK 0x1f
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -601,6 +650,96 @@ PRIVATE WUNUSED NONNULL((1)) int
 	 *       set.
 	 *   #2: Otherwise, push all set keys manually, before
 	 *       packing everything together as a set. */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+	int32_t cid;
+	size_t i, num_items;
+	DREF DeeRoSetObject *roset;
+check_hashset_again:
+	DeeHashSet_LockRead(value);
+	if (!DeeHashSet_SIZE(value)) {
+		/* Simple case: The HashSet is empty, so we can just pack an empty HashSet at runtime. */
+unlock_and_push_empty_hashset:
+		DeeHashSet_LockEndRead(value);
+		Dee_Decref(value);
+		return asm_gpack_hashset(0);
+	}
+
+	/* Ensure that "val" is optimized */
+	if unlikely(_DeeHashSet_CanOptimizeVTab(value)) {
+		bool atomic_upgrade = DeeHashSet_LockUpgrade(value);
+		if (atomic_upgrade || _DeeHashSet_CanOptimizeVTab(value))
+			hashset_optimize_vtab(value);
+		DeeHashSet_LockDowngrade(value);
+		if unlikely(!atomic_upgrade && !DeeHashSet_SIZE(value))
+			goto unlock_and_push_empty_hashset;
+	}
+
+	/* Verify constants */
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, value->hs_vsize); ++i) {
+		struct Dee_hashset_item *item;
+		item = &_DeeHashSet_GetVirtVTab(value)[i];
+		if (!asm_allowconst(item->hsi_key)) {
+			DeeHashSet_LockEndRead(value);
+			goto push_hashset_parts;
+		}
+	}
+
+	/* After verifying constants, directly cast into an RoSet */
+	roset = roset_fromset_locked_or_unlock(value);
+	if unlikely(!ITER_ISOK(roset)) {
+		if (roset)
+			goto check_hashset_again;
+		goto err_value;
+	}
+	Dee_Decref(value);
+
+	/* All right! we've got the ro-HashSet all packed together!
+	 * -> Register it as a constant. */
+	cid = asm_newconst_inherited(roset);
+	if unlikely(cid < 0)
+		goto err;
+
+	/* Now push the ro-HashSet, then cast it to a regular one. */
+	if (asm_gpush_const((uint16_t)cid))
+		goto err;
+	if (asm_gcast_hashset())
+		goto err;
+	return 0;
+
+push_hashset_parts:
+	/* Construct a HashSet by pushing its individual parts. */
+	num_items = 0;
+	DeeHashSet_LockRead(value);
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, value->hs_vsize); ++i) {
+		int error;
+		struct Dee_hashset_item *item;
+		DREF DeeObject *item_key;
+		item     = &_DeeHashSet_GetVirtVTab(value)[i];
+		item_key = item->hsi_key;
+		if (!item_key)
+			continue;
+		Dee_Incref(item_key);
+		DeeHashSet_LockEndRead(value);
+
+		/* Push the key & item. */
+		error = asm_gpush_constexpr_inherited(item_key);
+		if unlikely(error)
+			goto err_value;
+		++num_items;
+		DeeHashSet_LockRead(value);
+	}
+	DeeHashSet_LockEndRead(value);
+	Dee_Decref(value);
+
+	/* With everything pushed, pack together the HashSet. */
+	return asm_gpack_hashset((uint16_t)num_items);
+err_value:
+	Dee_Decref(value);
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 	int32_t cid;
 	size_t i, mask, ro_mask, num_items;
 	struct Dee_hashset_item *elem;
@@ -696,6 +835,7 @@ err_value:
 	Dee_Decref(value);
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 INTERN WUNUSED NONNULL((1)) int

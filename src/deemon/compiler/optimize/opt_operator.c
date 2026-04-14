@@ -397,14 +397,14 @@ dont_do_inline_constant_arg_optimization:
 				/* from: >> local foo = "{}".format({ bar });
 				 * to:   >> local foo = str bar; */
 				int error;
-				DREF struct ast *str_arg;
+				DREF struct ast *arg_asstr;
 				OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}\".format({ x })' to `str x'\n");
-				str_arg = ast_operator1(OPERATOR_STR, AST_OPERATOR_FNORMAL, argv[0]);
-				if unlikely(!str_arg)
+				arg_asstr = ast_operator1(OPERATOR_STR, AST_OPERATOR_FNORMAL, argv[0]);
+				if unlikely(!arg_asstr)
 					goto err;
-				str_arg = ast_setddi(str_arg, &ast_template_for_ddi->a_ddi);
-				error   = ast_assign(ast_callattr_format, str_arg);
-				ast_decref(str_arg);
+				arg_asstr = ast_setddi(arg_asstr, &ast_template_for_ddi->a_ddi);
+				error   = ast_assign(ast_callattr_format, arg_asstr);
+				ast_decref(arg_asstr);
 				if unlikely(error)
 					goto err;
 				++optimizer_count;
@@ -439,14 +439,14 @@ dont_do_inline_constant_arg_optimization:
 			/* from: >> local foo = "{!r}".format({ bar });
 			 * to:   >> local foo = repr bar; */
 			int error;
-			DREF struct ast *str_arg;
+			DREF struct ast *arg_asstr;
 			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{!r}\".format({ x })' to `repr x'\n");
-			str_arg = ast_operator1(OPERATOR_REPR, AST_OPERATOR_FNORMAL, argv[0]);
-			if unlikely(!str_arg)
+			arg_asstr = ast_operator1(OPERATOR_REPR, AST_OPERATOR_FNORMAL, argv[0]);
+			if unlikely(!arg_asstr)
 				goto err;
-			str_arg = ast_setddi(str_arg, &ast_template_for_ddi->a_ddi);
-			error   = ast_assign(ast_callattr_format, str_arg);
-			ast_decref(str_arg);
+			arg_asstr = ast_setddi(arg_asstr, &ast_template_for_ddi->a_ddi);
+			error   = ast_assign(ast_callattr_format, arg_asstr);
+			ast_decref(arg_asstr);
 			if unlikely(error)
 				goto err;
 			++optimizer_count;

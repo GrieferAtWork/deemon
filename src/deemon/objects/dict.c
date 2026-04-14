@@ -30,6 +30,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/float.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/map.h>                /* DeeMap_Type */
@@ -101,7 +102,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL /* "INTERN" because shared with "./hashset.c" */
 diter_copy(DictIterator *__restrict self,
            DictIterator *__restrict other) {
 	self->di_dict = other->di_dict;
@@ -279,7 +280,7 @@ diter_hash(DictIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 diter_compare(DictIterator *lhs, DictIterator *rhs) {
-	if (DeeObject_AssertType(rhs, &DictIterator_Type))
+	if (DeeObject_AssertType(rhs, Dee_TYPE(lhs)))
 		goto err;
 	Dee_return_compareT(Dee_hash_vidx_t, atomic_read(&lhs->di_vidx),
 	                    /*            */ atomic_read(&rhs->di_vidx));
@@ -287,7 +288,7 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE struct type_cmp diter_cmp = {
+INTERN struct type_cmp diter_cmp = { /* "INTERN" because shared with "./hashset.c" */
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&diter_hash,
 	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&diter_compare,
@@ -301,7 +302,8 @@ PRIVATE struct type_cmp diter_cmp = {
 };
 
 
-PRIVATE struct type_method tpconst diter_methods[] = {
+INTDEF struct type_method tpconst diter_methods[]; /* "INTERN" because shared with "./hashset.c" */
+INTERN_TPCONST struct type_method tpconst diter_methods[] = {
 	TYPE_METHOD_HINTREF(Iterator_advance),
 	TYPE_METHOD_END
 };
@@ -612,27 +614,6 @@ dict_makespace_at_impl(Dict *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx)
 
 LOCAL NONNULL((1)) void DCALL
 dict_makespace_at(Dict *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx);
-
-
-
-
-/************************************************************************/
-/************************************************************************/
-/* HIGH-LEVEL API                                                       */
-/************************************************************************/
-/************************************************************************/
-PRIVATE WUNUSED NONNULL((1)) int DCALL dict_mh_seq_erase(Dict *__restrict self, size_t start, size_t count);
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL dict_mh_seq_reverse(Dict *self, size_t start, size_t end);
-PRIVATE NONNULL((1)) bool DCALL dict_shrink_impl(Dict *__restrict self, bool fully_shrink);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_shrink(Dict *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_reserve(Dict *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-PRIVATE WUNUSED NONNULL((1)) bool DCALL dict_cc(Dict *__restrict self);
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_sizeof(Dict *__restrict self);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_compare(Dict *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_compare_eq(Dict *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs);
 
 #else /* __INTELLISENSE__ */
 DECL_END
@@ -952,803 +933,60 @@ DECL_END
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other) {
-	size_t tabssz;
-	Dee_hash_hidxio_t hidxio;
-	struct Dee_dict_item *vtab;
-	self->d_valloc  = other->rd_vsize;
-	self->d_vsize   = other->rd_vsize;
-	self->d_vused   = other->rd_vsize;
-	self->d_hmask   = other->rd_hmask;
-	ASSERT(self->d_valloc <= self->d_hmask);
-	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
-	ASSERT(other->rd_hidxget == Dee_hash_hidxio[hidxio].hxio_get);
-	self->d_hidxops = &Dee_hash_hidxio[hidxio];
-	tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, self->d_valloc, hidxio);
-	vtab   = (struct Dee_dict_item *)_DeeDict_TabsMalloc(tabssz);
-	if unlikely(!vtab)
-		goto err;
 
-	/* Because they're binary-compatible, we can just copy data from "other" as-is.
-	 * This will duplicate both the vtab, as well as the htab! */
-	vtab = (struct Dee_dict_item *)memcpy(vtab, other->rd_vtab, tabssz);
-	_DeeDict_SetRealVTab(self, vtab);
-	self->d_htab = (union Dee_hash_htab *)(vtab + self->d_valloc);
-#ifdef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* DICT_INITFROM_NEEDSLOCK */
-	return 0;
-err:
-	return -1;
-}
+#ifdef __INTELLISENSE__
+/************************************************************************/
+/************************************************************************/
+/* HIGH-LEVEL API                                                       */
+/************************************************************************/
+/************************************************************************/
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromrodict(Dict *__restrict self, DeeRoDictObject *__restrict other) {
-	int result = dict_init_fromrodict_noincref(self, other);
-	if likely(result == 0) {
-		Dee_hash_vidx_t i;
-		struct Dee_dict_item *vtab;
-		vtab = _DeeDict_GetRealVTab(self);
-		ASSERT(self->d_vused == self->d_vsize);
-		for (i = 0; i < self->d_vused; ++i) {
-			struct Dee_dict_item *item = &vtab[i];
-			Dee_Incref(item->di_key);
-			Dee_Incref(item->di_value);
-		}
-		dict_verify(self);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromrodict_keysonly(Dict *__restrict self, DeeRoDictObject *__restrict other) {
-	int result = dict_init_fromrodict_noincref(self, other);
-	if likely(result == 0) {
-		Dee_hash_vidx_t i;
-		struct Dee_dict_item *vtab;
-		vtab = _DeeDict_GetRealVTab(self);
-		ASSERT(self->d_vused == self->d_vsize);
-		for (i = 0; i < self->d_vused; ++i) {
-			struct Dee_dict_item *item = &vtab[i];
-			Dee_Incref(item->di_key);
-			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
-		}
-	}
-	return result;
-}
-
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict(Dict *__restrict self, DeeRoDictObject *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict_keysonly(Dict *__restrict self, DeeRoDictObject *__restrict other);
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromroset_noincref(Dict *__restrict self, DeeRoSetObject *__restrict other) {
-	size_t i, tabssz;
-	Dee_hash_hidxio_t hidxio;
-	struct Dee_dict_item *dst_vtab;
-	struct Dee_hashset_item *src_vtab;
-	self->d_valloc  = other->rs_vsize;
-	self->d_vsize   = other->rs_vsize;
-	self->d_vused   = other->rs_vsize;
-	self->d_hmask   = other->rs_hmask;
-	ASSERT(self->d_valloc <= self->d_hmask);
-	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
-	ASSERT(other->rs_hidxget == Dee_hash_hidxio[hidxio].hxio_get);
-	self->d_hidxops = &Dee_hash_hidxio[hidxio];
-	tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, self->d_valloc, hidxio);
-	dst_vtab   = (struct Dee_dict_item *)_DeeDict_TabsMalloc(tabssz);
-	if unlikely(!dst_vtab)
-		goto err;
-
-	/* Because they're binary-compatible, we can just copy data from "other" as-is.
-	 * This will duplicate both the vtab, as well as the htab! */
-	src_vtab = other->rs_vtab;
-	for (i = 0; i < tabssz; ++i) {
-		dst_vtab[i].di_hash = src_vtab[i].hsi_hash;
-		dst_vtab[i].di_key  = src_vtab[i].hsi_key;
-		DBG_memset(&dst_vtab[i].di_value, 0xcc, sizeof(dst_vtab[i].di_value));
-	}
-
-	_DeeDict_SetRealVTab(self, dst_vtab);
-	self->d_htab = (union Dee_hash_htab *)(dst_vtab + self->d_valloc);
-#ifdef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* DICT_INITFROM_NEEDSLOCK */
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromroset_keysonly(Dict *__restrict self, DeeRoSetObject *__restrict other) {
-	int result = dict_init_fromroset_noincref(self, other);
-	if likely(result == 0) {
-		Dee_hash_vidx_t i;
-		struct Dee_dict_item *vtab;
-		vtab = _DeeDict_GetRealVTab(self);
-		ASSERT(self->d_vused == self->d_vsize);
-		for (i = 0; i < self->d_vused; ++i) {
-			struct Dee_dict_item *item = &vtab[i];
-			Dee_Incref(item->di_key);
-			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
-		}
-	}
-	return result;
-}
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromroset_noincref(Dict *__restrict self, DeeRoSetObject *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromroset_keysonly(Dict *__restrict self, DeeRoSetObject *__restrict other);
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
+PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL dict_new_copy(Dict *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewKeyValuesInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **key_values);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self);
+PRIVATE ATTR_NOINLINE NONNULL((1, 2)) void DCALL dict_visit(Dict *__restrict self, Dee_visit_t proc, void *arg);
+LOCAL NONNULL((1)) void DCALL dict_initfrom_empty(Dict *__restrict self);
+LOCAL NONNULL((1)) void DCALL dict_initfrom_hint(Dict *__restrict self, size_t num_items, bool allow_overalloc);
+LOCAL WUNUSED NONNULL((1)) int DCALL dict_initfrom_seq(Dict *__restrict self, DeeObject *seq);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_assign(Dict *self, DeeObject *seq);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_moveassign(Dict *self, Dict *other);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_ctor(Dict *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_init(Dict *__restrict self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_serialize(Dict *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL dict_printrepr(Dict *__restrict self, Dee_formatprinter_t printer, void *arg);
+PRIVATE NONNULL((1)) int DCALL dict_mh_clear(Dict *__restrict self);
 
-PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
-dict_new_copy(Dict *__restrict self) {
-	DREF Dict *result = DeeGCObject_MALLOC(Dict);
-	if unlikely(!result)
-		goto err;
-	if unlikely(dict_init_fromcopy(result, self))
-		goto err_r;
-#ifndef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&result->d_lock);
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-	Dee_weakref_support_init(result);
-	DeeObject_InitStatic(result, &DeeDict_Type);
-	return DeeGC_TRACK(Dict, result);
-err_r:
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
-}
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_mh_seq_erase(Dict *__restrict self, size_t start, size_t count);
 
-PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
-DeeDict_FromSequence(DeeObject *__restrict self) {
-	Dee_ssize_t foreach_status;
-	DREF Dict *result;
-	size_t hint;
-	if (DeeDict_CheckExact(self)) {
-		/* Special optimization when "self" is another dict:
-		 * Optimize "self" and then duplicate its control structures */
-		return Dee_AsObject(dict_new_copy((Dict *)self));
-	}
-	if (DeeRoDict_Check(self)) {
-		/* Special optimization when "self" is an RoDict:
-		 * Duplicate its control structures */
-		return DeeDict_FromRoDict(self);
-	}
-	hint = DeeObject_SizeFast(self);
-	if likely(hint != (size_t)-1) {
-		result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
-	} else {
-		result = (DREF Dict *)DeeDict_TryNewWithWeakHint(DICT_FROMSEQ_DEFAULT_HINT);
-	}
-	if unlikely(!result) {
-		result = (DREF Dict *)DeeDict_New();
-		if unlikely(!result)
-			goto err;
-	}
-	foreach_status = DeeObject_ForeachPair(self, &dict_fromsequence_foreach_cb, result);
-	if unlikely(foreach_status < 0)
-		goto err_r;
-	return Dee_AsObject(result);
-err_r:
-	Dee_DecrefDokill(result);
-err:
-	return NULL;
-}
+PRIVATE WUNUSED NONNULL((1)) int DCALL dict_mh_seq_reverse(Dict *self, size_t start, size_t end);
+PRIVATE NONNULL((1)) bool DCALL dict_shrink_impl(Dict *__restrict self, bool fully_shrink);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_shrink(Dict *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_reserve(Dict *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) bool DCALL dict_cc(Dict *__restrict self);
 
-PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
-DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
-	DREF DeeObject *result;
-	if (DeeDict_CheckExact(self) && !DeeObject_IsShared(self))
-		return self; /* Can re-use existing Dict object. */
-	result = DeeDict_FromSequence(self);
-	if likely(result)
-		Dee_Decref_unlikely(self);
-	return result;
-}
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_sizeof(Dict *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_compare(Dict *lhs, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_compare_eq(Dict *lhs, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs);
+#else /* __INTELLISENSE__ */
+DECL_END
+#define DEFINE_HIGH_LEVEL
+#define DEFINE_DeeDict
+#include "dict-impl.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
 
-PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
-DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self) {
-	DREF Dict *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeRoDict_Type);
-	result = DeeGCObject_MALLOC(Dict);
-	if unlikely(!result)
-		goto err;
-	if unlikely(dict_init_fromrodict(result, (DeeRoDictObject *)self))
-		goto err_r;
-#ifndef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&result->d_lock);
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-	Dee_weakref_support_init(result);
-	DeeObject_InitStatic(result, &DeeDict_Type);
-	return Dee_AsObject(DeeGC_TRACK(Dict, result));
-err_r:
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
-}
-
-
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) int DCALL
-dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_item *item,
-                                                  Dee_hash_hidx_t htab_idx, size_t num_items,
-                                                  /*inherit(on_success)*/ DREF DeeObject **key_values) {
-	/*virt*/Dee_hash_vidx_t vtab_idx;
-	DREF DeeObject **dups;
-	Dee_hash_t hash;
-	struct Dee_objectlist duplicates;
-	ASSERT(num_items > 0);
-	Dee_objectlist_init(&duplicates);
-	dups = Dee_objectlist_alloc(&duplicates, 2);
-	if unlikely(!dups)
-		goto err_duplicates;
-	dups[0] = item->di_key;   /* Inherit reference (on_success) */
-	dups[1] = item->di_value; /* Inherit reference (on_success) */
-	item->di_key = NULL;      /* Deleted */
-	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
-	hash = item->di_hash;
-	ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-	vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
-	/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
-	++self->d_vsize;
-	item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
-	_DeeDict_HTabSet(self, htab_idx, vtab_idx);
-	item->di_hash  = hash;
-	item->di_key   = key_values[0]; /* Inherit reference */
-	item->di_value = key_values[1]; /* Inherit reference */
-	--num_items;
-	key_values += 2;
-
-	/* Insert remaining items (and keep colling references to overwritten keys/values) */
-	while (num_items--) {
-		Dee_hash_t hs, perturb;
-		DREF DeeObject *key   = *key_values++;
-		DREF DeeObject *value = *key_values++;
-		hash = DeeObject_Hash(key);
-		for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
-		     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
-			int key_cmp;
-			htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
-			vtab_idx = _DeeDict_HTabGet(self, htab_idx);
-			if likely(vtab_idx == Dee_HASH_HTAB_EOF)
-				break;
-			item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
-			if likely(item->di_hash != hash)
-				continue; /* Not what we're looking for... */
-			if unlikely(!item->di_key)
-				continue; /* Deleted key (highly unlikely, but *could* happen) */
-			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
-			if (Dee_COMPARE_ISERR(key_cmp))
-				goto err_duplicates;
-			if likely(Dee_COMPARE_ISNE(key_cmp))
-				continue;
-
-			/* Another duplicate -> override it like before... */
-			dups = Dee_objectlist_alloc(&duplicates, 2);
-			if unlikely(!dups)
-				goto err_duplicates;
-			dups[0] = item->di_key;   /* Inherit reference */
-			dups[1] = item->di_value; /* Inherit reference */
-			item->di_key = NULL;      /* Deleted */
-			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
-
-			ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-			vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
-			/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
-			goto account_size_and_append_item;
-		}
-
-		/* Append key/value-pair at the end of the vtab. */
-		ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-		vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
-		++self->d_vused;
-account_size_and_append_item:
-		++self->d_vsize;
-		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
-		_DeeDict_HTabSet(self, htab_idx, vtab_idx);
-		item->di_hash  = hash;
-		item->di_key   = key;   /* Inherit reference */
-		item->di_value = value; /* Inherit reference */
-	}
-
-	/* Drop all of the collected duplicate references */
-	Dee_objectlist_fini(&duplicates);
-	return 0;
-err_duplicates:
-	Dee_objectlist_elemv_free(duplicates.ol_elemv);
-	return -1;
-}
-
-/* Create a new Dict by inheriting a set of passed key-item pairs.
- * @param: key_values: A vector containing `num_items*2' elements,
- *                     even ones being keys and odd ones being items.
- * @param: num_items:  The number of key-value pairs passed.
- * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeDict_NewKeyValuesInherited(size_t num_items,
-                              /*inherit(on_success)*/ DREF DeeObject **key_values) {
-	size_t i;
-	DREF Dict *result;
-	result = (DREF Dict *)DeeDict_NewWithHint(num_items);
-	if unlikely(!result)
-		goto err;
-	for (i = 0; i < num_items; ++i) {
-		struct Dee_dict_item *item;
-		DREF DeeObject *key   = key_values[(i * 2) + 0];
-		DREF DeeObject *value = key_values[(i * 2) + 1];
-		Dee_hash_t hs, perturb, hash = DeeObject_Hash(key);
-		Dee_hash_hidx_t htab_idx;
-		Dee_hash_vidx_t vtab_idx; /*virt*/
-
-		for (_DeeDict_HashIdxInit(result, &hs, &perturb, hash);;
-		     _DeeDict_HashIdxNext(result, &hs, &perturb, hash)) {
-			int key_cmp;
-			htab_idx = Dee_hash_hidx_ofhash(hs, result->d_hmask);
-			vtab_idx = _DeeDict_HTabGet(result, htab_idx);
-			if likely(vtab_idx == Dee_HASH_HTAB_EOF)
-				break;
-			item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
-			if likely(item->di_hash != hash)
-				continue; /* Not what we're looking for... */
-			if unlikely(!item->di_key)
-				continue; /* Deleted key (highly unlikely, but *could* happen) */
-			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
-			if (Dee_COMPARE_ISERR(key_cmp))
-				goto err_r;
-			if likely(Dee_COMPARE_ISNE(key_cmp))
-				continue;
-
-			/* Damn it! there are duplicate keys in the caller-given items.
-			 * -> Must keep track of those duplicates as we go... */
-			key_values += i * 2;
-			num_items -= i;
-			if unlikely(dict_insert_items_inherited_after_first_duplicate(result, item, htab_idx,
-			                                                              num_items, key_values))
-				goto err_r;
-			dict_verify(result);
-			goto done;
-		}
-
-		/* Append key/value-pair at the end of the vtab. */
-		ASSERTF(result->d_vsize < result->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-		ASSERT(result->d_vused == result->d_vsize);
-		vtab_idx = Dee_hash_vidx_tovirt(result->d_vsize);
-		++result->d_vused;
-		++result->d_vsize;
-		item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
-		_DeeDict_HTabSet(result, htab_idx, vtab_idx);
-		item->di_hash  = hash;
-		item->di_key   = key;   /* Inherit reference */
-		item->di_value = value; /* Inherit reference */
-	}
-	dict_verify(result);
-done:
-	return Dee_AsObject(result);
-err_r:
-	/* Free "result" without inheriting references to already inserted key/value pairs */
-	ASSERTF(_DeeDict_GetVirtVTab(result) != DeeDict_EmptyVTab,
-	        "That would mean 'num_items == 0', which it can't "
-	        "be because then we wouldn't have gotten here");
-	_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
-}
-
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_fini(Dict *__restrict self) {
-	if (_DeeDict_GetVirtVTab(self) != DeeDict_EmptyVTab) {
-		Dee_hash_vidx_t i;
-		struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
-		for (i = 0; i < self->d_vsize; ++i) {
-			if (vtab[i].di_key) {
-				Dee_Decref(vtab[i].di_key);
-				Dee_Decref(vtab[i].di_value);
-			}
-		}
-		_DeeDict_TabsFree(vtab);
-	}
-}
-
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_visit(Dict *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_hash_vidx_t i;
-	struct Dee_dict_item *vtab;
-	DeeDict_LockRead(self);
-	vtab = _DeeDict_GetVirtVTab(self);
-	for (i = Dee_hash_vidx_tovirt(0);
-	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		if (vtab[i].di_key) {
-			Dee_Visit(vtab[i].di_key);
-			Dee_Visit(vtab[i].di_value);
-		}
-	}
-	DeeDict_LockEndRead(self);
-}
-
-
-LOCAL NONNULL((1)) void DCALL
-dict_initfrom_empty(Dict *__restrict self) {
-	self->d_valloc  = 0;
-	self->d_vsize   = 0;
-	self->d_vused   = 0;
-	_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
-	self->d_hmask   = 0;
-	self->d_hidxops = &Dee_hash_hidxio[0];
-	self->d_htab    = DeeDict_EmptyHTab;
-#ifdef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* DICT_INITFROM_NEEDSLOCK */
-}
-
-LOCAL NONNULL((1)) void DCALL
-dict_initfrom_hint(Dict *__restrict self, size_t num_items, bool allow_overalloc) {
-	Dee_hash_t hmask;
-	Dee_hash_vidx_t valloc;
-	Dee_hash_hidxio_t hidxio;
-	void *tabs;
-	if unlikely(!num_items) {
-init_empty:
-		hmask  = 0;
-		valloc = 0;
-		hidxio = 0;
-		tabs   = (void *)_DeeHash_EmptyTab;
-	} else {
-		size_t tabssz;
-		hmask  = dict_hmask_from_count(num_items);
-		valloc = dict_valloc_from_hmask_and_count(hmask, num_items, allow_overalloc);
-		hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
-		tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, hidxio);
-		tabs   = _DeeDict_TabsTryCalloc(tabssz);
-		if unlikely(!tabs)
-			goto init_empty;
-	}
-	self->d_valloc  = valloc;
-	self->d_vsize   = 0;
-	self->d_vused   = 0;
-	_DeeDict_SetRealVTab(self, (struct Dee_dict_item *)tabs);
-	self->d_hmask   = hmask;
-	self->d_hidxops = &Dee_hash_hidxio[hidxio];
-	self->d_htab    = (union Dee_hash_htab *)((struct Dee_dict_item *)tabs + valloc);
-#ifdef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* DICT_INITFROM_NEEDSLOCK */
-}
-
-LOCAL WUNUSED NONNULL((1)) int DCALL
-dict_initfrom_seq(Dict *__restrict self, DeeObject *seq) {
-	Dee_ssize_t foreach_status;
-	size_t hint;
-
-	/* Special optimization when "seq" is a Dict: Duplicate its control structures */
-	if (DeeDict_CheckExact(seq))
-		return dict_init_fromcopy(self, (Dict *)seq);
-
-	/* Special optimization when "seq" is an RoDict: Duplicate its control structures */
-	if (DeeRoDict_Check(seq))
-		return dict_init_fromrodict(self, (DeeRoDictObject *)seq);
-
-	hint = DeeObject_SizeFast(seq);
-	if likely(hint != (size_t)-1) {
-		dict_initfrom_hint(self, hint, false);
-	} else {
-		dict_initfrom_hint(self, DICT_FROMSEQ_DEFAULT_HINT, true);
-	}
-	foreach_status = DeeObject_ForeachPair(seq, &dict_fromsequence_foreach_cb, self);
-	if unlikely(foreach_status < 0)
-		goto err_self;
-	dict_verify(self);
-	return 0;
-err_self:
-	dict_fini(self);
-	return -1;
-}
-
-
-
-/* Minimal (mostly) Dict-compatible buffer for constructing temporary dict objects. */
-#define _DictBuffer_startoff offsetof(Dict, d_valloc)
-#ifndef CONFIG_NO_THREADS
-#define _DictBuffer_endoff_WITHOUT_LOCK offsetof(Dict, d_lock)
-#else /* !CONFIG_NO_THREADS */
-#define _DictBuffer_endoff_WITHOUT_LOCK offsetof(Dict, ob_weakrefs)
-#endif /* CONFIG_NO_THREADS */
-#ifdef DICT_INITFROM_NEEDSLOCK
-#define _DictBuffer_endoff_WITH_LOCK offsetof(Dict, ob_weakrefs)
-#else /* DICT_INITFROM_NEEDSLOCK */
-#define _DictBuffer_endoff_WITH_LOCK _DictBuffer_endoff_WITHOUT_LOCK
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-#define _DictBuffer_NWORDS_WITH_LOCK    CEILDIV(_DictBuffer_endoff_WITH_LOCK - _DictBuffer_startoff, sizeof(uintptr_t))
-#define _DictBuffer_NWORDS_WITHOUT_LOCK CEILDIV(_DictBuffer_endoff_WITHOUT_LOCK - _DictBuffer_startoff, sizeof(uintptr_t))
-
-typedef struct {
-	uintptr_t db_data[_DictBuffer_NWORDS_WITH_LOCK];
-} DictBuffer;
-#define DictBuffer_AsDict(self) ((Dict *)((byte_t *)((self)->db_data) - _DictBuffer_startoff))
-#define Dict_AsDictBuffer(self) ((DictBuffer *)((byte_t *)(self) + _DictBuffer_startoff))
-#define DictBuffer_Fini(self) \
-	dict_fini(DictBuffer_AsDict(self))
-#define DictBuffer_InitEmpty(self) dict_initfrom_empty(DictBuffer_AsDict(self))
-#define DictBuffer_InitWithHint(self, num_items, allow_overalloc) \
-	dict_initfrom_hint(DictBuffer_AsDict(self), num_items, allow_overalloc)
-#define DictBuffer_InitFromSequence(self, seq) \
-	dict_initfrom_seq(DictBuffer_AsDict(self), seq)
-
-/* Init "self" by stealing data from "dict"
- * CAUTION: WILL NOT INITIALIZE THE BUFFER'S LOCK WORD!!! */
-#define DictBuffer_FromDict(self, dict) \
-	memcpyp((self)->db_data, Dict_AsDictBuffer(dict), _DictBuffer_NWORDS_WITHOUT_LOCK)
-
-/* Transfer the contents of the buffer into "dict"
- * CAUTION: WILL OVERRIDE WHATEVER WAS IN "dict" BEFORE!!! */
-#define DictBuffer_IntoDict(self, dict) \
-	memcpyp(Dict_AsDictBuffer(dict), (self)->db_data, _DictBuffer_NWORDS_WITHOUT_LOCK)
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_assign(Dict *self, DeeObject *seq) {
-	DictBuffer new_buffer;
-	DictBuffer old_buffer;
-	if unlikely(self == (Dict *)seq)
-		return 0;
-	if unlikely(DictBuffer_InitFromSequence(&new_buffer, seq))
-		goto err;
-	DeeDict_LockWrite(self);
-	DictBuffer_FromDict(&old_buffer, self);
-	DictBuffer_IntoDict(&new_buffer, self);
-	DeeDict_LockEndWrite(self);
-	DictBuffer_Fini(&old_buffer);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_moveassign(Dict *self, Dict *other) {
-	if likely(self != other) {
-		DictBuffer old_buffer;
-		DeeLock_Acquire2(DeeDict_LockWrite(self), DeeDict_LockTryWrite(self), DeeDict_LockEndWrite(self),
-		                 DeeDict_LockWrite(other), DeeDict_LockTryWrite(other), DeeDict_LockEndWrite(other));
-		DictBuffer_FromDict(&old_buffer, self);
-		DictBuffer_IntoDict(Dict_AsDictBuffer(other), self);
-		DictBuffer_InitEmpty(Dict_AsDictBuffer(other));
-		DeeDict_LockEndWrite(other);
-		DeeDict_LockEndWrite(self);
-		DictBuffer_Fini(&old_buffer);
-	}
-	return 0;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_ctor(Dict *__restrict self) {
-#ifndef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-	Dee_weakref_support_init(self);
-	dict_initfrom_empty(self);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_copy(Dict *__restrict self, Dict *__restrict other) {
-#ifndef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-	Dee_weakref_support_init(self);
-	return dict_init_fromcopy(self, other);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_init(Dict *__restrict self, size_t argc, DeeObject *const *argv) {
-#ifndef DICT_INITFROM_NEEDSLOCK
-	Dee_atomic_rwlock_init(&self->d_lock);
-#endif /* !DICT_INITFROM_NEEDSLOCK */
-	Dee_weakref_support_init(self);
-	switch (argc) {
-
-	case 1: {
-		DeeObject *arg = argv[0];
-		if (DeeInt_Check(arg)) {
-			size_t hint;
-			if unlikely(DeeInt_AsSize(arg, &hint))
-				goto err;
-			dict_initfrom_hint(self, hint, false);
-			return 0;
-		}
-		return dict_initfrom_seq(self, arg);
-	}	break;
-
-	case 2: {
-		int weak;
-		size_t hint;
-		if unlikely(DeeObject_AsSize(argv[0], &hint))
-			goto err;
-		weak = DeeObject_Bool(argv[1]);
-		if unlikely(weak < 0)
-			goto err;
-		dict_initfrom_hint(self, hint, !!weak);
-		return 0;
-	}	break;
-
-	default: break;
-	}
-	return err_invalid_argc(STR_Dict, argc, 1, 2);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_serialize(Dict *__restrict self,
-               DeeSerial *__restrict writer,
-               Dee_seraddr_t addr) {
-#define ADDROF(field) (addr + offsetof(Dict, field))
-	Dict *out;
-	struct Dee_hash_hidxio_ops const *out__d_hidxops;
-	Dee_hash_vidx_t self__d_valloc;
-again:
-	out = DeeSerial_Addr2Mem(writer, addr, Dict);
-	DeeDict_LockRead(self);
-	out->d_valloc = self__d_valloc = self->d_valloc;
-	out->d_vsize  = self->d_vsize;
-	out->d_vused  = self->d_vused;
-	out->d_hmask  = self->d_hmask;
-	Dee_weakref_support_init(out);
-	out__d_hidxops = self->d_hidxops; /* Relocated later... */
-	Dee_atomic_rwlock_init(&out->d_lock);
-	if (self->d_vtab == DeeDict_EmptyVTab) {
-		ASSERT(self->d_htab == DeeDict_EmptyHTab);
-		DeeDict_LockEndRead(self);
-		if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_vtab), DeeDict_EmptyVTab))
-			goto err;
-		if (DeeSerial_PutStaticDeemon(writer, ADDROF(d_htab), DeeDict_EmptyHTab))
-			goto err;
-	} else {
-		Dee_hash_vidx_t i, out__d_vsize;
-		Dee_seraddr_t addrof_out__d_vtab;
-		size_t sizeof_out__d_vtab;
-		struct Dee_dict_item *out__d_vtab;
-		struct Dee_dict_item *in__d_vtab;
-		Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self__d_valloc);
-		sizeof_out__d_vtab = self__d_valloc * sizeof(struct Dee_dict_item);
-		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
-		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
-		if (!Dee_SERADDR_ISOK(addrof_out__d_vtab)) {
-			DeeDict_LockEndRead(self);
-			addrof_out__d_vtab = DeeSerial_Malloc(writer, sizeof_out__d_vtab, NULL);
-			if (!Dee_SERADDR_ISOK(addrof_out__d_vtab))
-				goto err;
-			DeeDict_LockRead(self);
-			if unlikely(self__d_valloc != self->d_valloc) {
-free_out__d_vtab__and__again:
-				DeeDict_LockEndRead(self);
-				DeeSerial_Free(writer, addrof_out__d_vtab, NULL);
-				goto again;
-			}
-			out = DeeSerial_Addr2Mem(writer, addr, Dict);
-			if unlikely(out->d_vsize != self->d_vsize)
-				goto free_out__d_vtab__and__again;
-			if unlikely(out->d_vused != self->d_vused)
-				goto free_out__d_vtab__and__again;
-			if unlikely(out->d_hmask != self->d_hmask)
-				goto free_out__d_vtab__and__again;
-			if unlikely(out__d_hidxops != self->d_hidxops)
-				goto free_out__d_vtab__and__again;
-			if unlikely(self->d_vtab == DeeDict_EmptyVTab)
-				goto free_out__d_vtab__and__again;
-		}
-		out          = DeeSerial_Addr2Mem(writer, addr, Dict);
-		out__d_vsize = out->d_vsize;
-		out__d_vtab  = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct Dee_dict_item);
-		in__d_vtab   = _DeeDict_GetRealVTab(self);
-		memcpy(out__d_vtab, in__d_vtab, sizeof_out__d_vtab);
-		for (i = 0; i < out__d_vsize; ++i) {
-			if (out__d_vtab[i].di_key) {
-				Dee_Incref(out__d_vtab[i].di_key);
-				Dee_Incref(out__d_vtab[i].di_value);
-			}
-		}
-		DeeDict_LockEndRead(self);
-		for (i = 0; i < out__d_vsize; ++i) {
-			if (out__d_vtab[i].di_key) {
-				int error;
-				Dee_seraddr_t addrof_out__d_vtab_i = addrof_out__d_vtab + i * sizeof(struct Dee_dict_item);
-				DREF DeeObject *key   = out__d_vtab[i].di_key;
-				DREF DeeObject *value = out__d_vtab[i].di_value;
-				error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct Dee_dict_item, di_key), key);
-				if likely(error == 0)
-					error = DeeSerial_PutObject(writer, addrof_out__d_vtab_i + offsetof(struct Dee_dict_item, di_value), value);
-				Dee_Decref_unlikely(key);
-				Dee_Decref_unlikely(value);
-				out__d_vtab = DeeSerial_Addr2Mem(writer, addrof_out__d_vtab, struct Dee_dict_item);
-				if unlikely(error) {
-					for (; i < out__d_vsize; ++i) {
-						if (out__d_vtab[i].di_key) {
-							Dee_Decref_unlikely(out__d_vtab[i].di_key);
-							Dee_Decref_unlikely(out__d_vtab[i].di_value);
-						}
-					}
-					goto err;
-				}
-			}
-		}
-		if (DeeSerial_PutAddr(writer, ADDROF(d_vtab), addrof_out__d_vtab - sizeof(struct Dee_dict_item)))
-			goto err;
-		if (DeeSerial_PutAddr(writer, ADDROF(d_htab), addrof_out__d_vtab + (self__d_valloc * sizeof(struct Dee_dict_item))))
-			goto err;
-	}
-	return DeeSerial_PutStaticDeemon(writer, ADDROF(d_hidxops), (void *)out__d_hidxops);
-err:
-	return -1;
-#undef ADDROF
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_printrepr(Dict *__restrict self,
-               Dee_formatprinter_t printer, void *arg) {
-	Dee_ssize_t temp, result;
-	/*virt*/ struct Dee_dict_item *vtab;
-	/*virt*/ Dee_hash_vidx_t i;
-	bool is_first;
-	result = DeeFormat_PRINT(printer, arg, "Dict({ ");
-	if unlikely(result < 0)
-		return result;
-	is_first = true;
-	DeeDict_LockRead(self);
-	vtab = _DeeDict_GetVirtVTab(self);
-	for (i = Dee_hash_vidx_tovirt(0);
-	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		DREF DeeObject *key, *value;
-		key = vtab[i].di_key;
-		if (key == NULL)
-			continue;
-		value = vtab[i].di_value;
-		Dee_Incref(key);
-		Dee_Incref(value);
-		DeeDict_LockEndRead(self);
-		/* Print this key/value pair. */
-		temp = DeeFormat_Printf(printer, arg, "%s%R: %R", is_first ? "" : ", ", key, value);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		is_first = false;
-		DeeDict_LockRead(self);
-	}
-	DeeDict_LockEndRead(self);
-	temp = is_first ? DeeFormat_PRINT(printer, arg, "})")
-	                : DeeFormat_PRINT(printer, arg, " })");
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	return result;
-err_temp:
-	return temp;
-}
-
-PRIVATE NONNULL((1)) int DCALL
-dict_mh_clear(Dict *__restrict self) {
-	Dee_hash_vidx_t i, vsize;
-	struct Dee_dict_item *vtab;
-	DeeDict_LockWrite(self);
-	if (!self->d_vsize) {
-		DeeDict_LockEndWrite(self);
-		return 0;
-	}
-	vtab  = _DeeDict_GetRealVTab(self);
-	vsize = self->d_vsize;
-	self->d_valloc  = 0;
-	self->d_vsize   = 0;
-	self->d_vused   = 0;
-	_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
-	self->d_hmask   = 0;
-	self->d_hidxops = &Dee_hash_hidxio[0];
-	self->d_htab    = DeeDict_EmptyHTab;
-	DeeDict_LockEndWrite(self);
-	ASSERTF(vtab != (struct Dee_dict_item *)_DeeHash_EmptyTab,
-	        "Should have been handled by '!self->d_vsize' above");
-	for (i = 0; i < vsize; ++i) {
-		if (vtab[i].di_key) {
-			Dee_Decref(vtab[i].di_key);
-			Dee_Decref(vtab[i].di_value);
-		}
-	}
-	_DeeDict_TabsFree(vtab);
-	return 0;
-}
 
 #ifdef DCALL_RETURN_COMMON
 #define dict_clear (*(void (DCALL *)(Dict *__restrict))&dict_mh_clear)
@@ -1758,6 +996,7 @@ dict_clear(Dict *__restrict self) {
 	dict_mh_clear(self);
 }
 #endif /* !DCALL_RETURN_COMMON */
+
 
 INTERN WUNUSED NONNULL((1)) int DCALL /* INTERN because shared with "./hashset.c" */
 dict_bool(DeeDictObject *__restrict self) {
@@ -2467,12 +1706,6 @@ err:
 	return -1;
 }
 
-
-PRIVATE struct type_gc tpconst dict_gc = {
-	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear,
-	/* .tp_cc    = */ (bool (DCALL *)(DeeObject *__restrict))&dict_cc,
-};
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_contains(Dict *self, DeeObject *key) {
 	int result = dict_hasitem(self, key);
@@ -2482,6 +1715,11 @@ dict_contains(Dict *self, DeeObject *key) {
 err:
 	return NULL;
 }
+
+PRIVATE struct type_gc tpconst dict_gc = {
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear,
+	/* .tp_cc    = */ (bool (DCALL *)(DeeObject *__restrict))&dict_cc,
+};
 
 PRIVATE struct type_seq dict_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
@@ -2890,8 +2128,12 @@ err:
 #define D_TItem  "?T2" D_TKey D_TValue
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
+PRIVATE DEFINE_FLOAT(float_1_point_0, 1.0);
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
+	Dee_Incref(&float_1_point_0);
+	return Dee_AsObject(&float_1_point_0);
+}
 #define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
 #define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

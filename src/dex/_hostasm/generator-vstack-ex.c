@@ -1508,6 +1508,28 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeDictObject, ob_weakrefs))); /* instance */
 		return 1;
 	} else if (tp_ctor == DeeHashSet_Type.tp_init.tp_alloc.tp_ctor) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_valloc))); /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_vsize)));  /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_vused)));  /* instance */
+		DO(fg_vpush_addr(self, DeeHashSet_EmptyVTab));               /* instance, DeeHashSet_EmptyVTab */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_vtab)));   /* instance */
+		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_hmask)));  /* instance */
+		DO(fg_vpush_funptr(self, &Dee_hash_hidxio[0]));              /* instance, &Dee_hash_hidxio[0] */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_hidxops)));/* instance */
+		DO(fg_vpush_addr(self, DeeHashSet_EmptyHTab));               /* instance, DeeHashSet_EmptyHTab */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_htab)));   /* instance */
+#ifndef CONFIG_NO_THREADS
+		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                       /* instance, ATOMIC_RWLOCK_INIT */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_lock)));   /* instance */
+#endif /* !CONFIG_NO_THREADS */
+		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, Dee_WEAKREF_SUPPORT_INIT */
+		DO(fg_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs))); /* instance */
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_mask))); /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
@@ -1522,6 +1544,7 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 #endif /* !CONFIG_NO_THREADS */
 		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                       /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs))); /* instance */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return 1;
 	} else if (tp_ctor == DeeList_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_NULL(self));                                        /* instance, NULL */
@@ -5388,20 +5411,33 @@ fg_vpackseq(struct fungen *__restrict self,
 		DREF DeeObject *cseq;
 		elemv  = fg_vtop(self) - (elemc - 1);
 		if (asmap) {
-			struct Dee_rodict_builder cseq_builder;
+			struct Dee_rodict_builder cseq_map_builder;
 			size_t pairc = (size_t)(elemc / 2);
-			Dee_rodict_builder_init_with_hint(&cseq_builder, pairc);
+			Dee_rodict_builder_init_with_hint(&cseq_map_builder, pairc);
 			for (i = 0; i < pairc; ++i) {
 				DeeObject *key   = memval_const_getobj(&elemv[(i * 2) + 0]);
 				DeeObject *value = memval_const_getobj(&elemv[(i * 2) + 1]);
-				if unlikely(Dee_rodict_builder_setitem(&cseq_builder, key, value)) {
-/*err_cseq_builder:*/
-					Dee_rodict_builder_fini(&cseq_builder);
+				if unlikely(Dee_rodict_builder_setitem(&cseq_map_builder, key, value)) {
+/*err_cseq_map_builder:*/
+					Dee_rodict_builder_fini(&cseq_map_builder);
 					goto err;
 				}
 			}
-			cseq = Dee_AsObject(Dee_rodict_builder_pack(&cseq_builder));
+			cseq = Dee_AsObject(Dee_rodict_builder_pack(&cseq_map_builder));
 		} else if (DeeType_Extends(seq_type, &DeeSet_Type)) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+			struct Dee_roset_builder cseq_set_builder;
+			Dee_roset_builder_init_with_hint(&cseq_set_builder, elemc);
+			for (i = 0; i < elemc; ++i) {
+				DeeObject *key = memval_const_getobj(&elemv[i]);
+				if unlikely(Dee_roset_builder_insert(&cseq_set_builder, key) < 0) {
+/*err_cseq_set_builder:*/
+					Dee_roset_builder_fini(&cseq_set_builder);
+					goto err;
+				}
+			}
+			cseq = Dee_AsObject(Dee_roset_builder_pack(&cseq_set_builder));
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 			cseq = Dee_AsObject(DeeRoSet_NewWithHint(elemc));
 			if unlikely(!cseq)
 				goto err;
@@ -5413,6 +5449,7 @@ fg_vpackseq(struct fungen *__restrict self,
 					goto err;
 				}
 			}
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		} else {
 			cseq = Dee_AsObject(DeeTuple_NewUninitialized(elemc));
 			if unlikely(!cseq)
@@ -6904,9 +6941,9 @@ is_constexpr_empty_sequence(struct fungen *__restrict gen,
 	if (tp_self == &DeeMap_Type)
 		return true;
 	if (tp_self == &DeeRoDict_Type)
-		return ((DeeRoDictObject *)self)->rd_vsize == 0;
+		return DeeRoDict_IsEmpty(self);
 	if (tp_self == &DeeRoSet_Type)
-		return ((DeeRoSetObject *)self)->rs_size == 0;
+		return DeeRoSet_IsEmpty(self);
 	if (DeeType_GetOperatorFlags(tp_self, OPERATOR_ITER) & METHOD_FCONSTCALL) {
 		/* Construct an iterator to see if the sequence is empty. */
 		DREF DeeObject *elem = NULL;

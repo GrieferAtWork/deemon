@@ -29,6 +29,9 @@
 //#define DEFINE_dict_mh_setnew_ex
 //#define DEFINE_dict_mh_setdefault
 //#define DEFINE_hashset_mh_insert
+//#define DEFINE_hashset_mh_insert_index
+//#define DEFINE_hashset_mh_insert_string_hash
+//#define DEFINE_hashset_mh_insert_string_len_hash
 //#define DEFINE_hashset_insert_at
 //#define DEFINE_hashset_insert_unlocked
 //#define DEFINE_hashset_insert_unlocked_fast_inherited
@@ -59,6 +62,9 @@
      defined(DEFINE_dict_mh_setnew_ex) +                      \
      defined(DEFINE_dict_mh_setdefault) +                     \
      defined(DEFINE_hashset_mh_insert) +                      \
+     defined(DEFINE_hashset_mh_insert_index) +                \
+     defined(DEFINE_hashset_mh_insert_string_hash) +          \
+     defined(DEFINE_hashset_mh_insert_string_len_hash) +      \
      defined(DEFINE_hashset_insert_at) +                      \
      defined(DEFINE_hashset_insert_unlocked) +                \
      defined(DEFINE_hashset_insert_unlocked_fast_inherited) + \
@@ -102,6 +108,18 @@ DECL_BEGIN
 #define LOCAL_IS_SETDEFAULT
 #elif defined(DEFINE_hashset_mh_insert)
 #define LOCAL_dict_setitem hashset_mh_insert
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_insert_index)
+#define LOCAL_dict_setitem hashset_mh_insert_index
+#define LOCAL_HAS_KEY_IS_INDEX
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_insert_string_hash)
+#define LOCAL_dict_setitem hashset_mh_insert_string_hash
+#define LOCAL_HAS_KEY_IS_STRING_HASH
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_insert_string_len_hash)
+#define LOCAL_dict_setitem hashset_mh_insert_string_len_hash
+#define LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 #define LOCAL_IS_HASHSET
 #elif defined(DEFINE_hashset_insert_at)
 #define LOCAL_dict_setitem hashset_insert_at
@@ -185,18 +203,18 @@ DECL_BEGIN
 #include "hashset.c"
 #endif /* __INTELLISENSE__ */
 
-#define LOCAL_Dict                         HashSet
-#define LOCAL_Dee_dict_item                Dee_hashset_item
-#define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryRead(self))
-#define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryWrite(self))
-#define LOCAL_DeeDict_LockRead(self)       LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockRead(self))
-#define LOCAL_DeeDict_LockWrite(self)      LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockWrite(self))
-#define LOCAL_DeeDict_LockTryUpgrade(self) LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryUpgrade(self))
-#define LOCAL_DeeDict_LockUpgrade(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockUpgrade(self))
-#define LOCAL_DeeDict_LockDowngrade(self)  LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockDowngrade(self))
-#define LOCAL_DeeDict_LockEndWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndWrite(self))
-#define LOCAL_DeeDict_LockEndRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndRead(self))
-#define LOCAL_DeeDict_LockEnd(self)        LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEnd(self))
+#define LOCAL_Dict                               HashSet
+#define LOCAL_Dee_dict_item                      Dee_hashset_item
+#define LOCAL_DeeDict_LockTryRead(self)          LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryRead(self))
+#define LOCAL_DeeDict_LockTryWrite(self)         LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryWrite(self))
+#define LOCAL_DeeDict_LockRead(self)             LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockRead(self))
+#define LOCAL_DeeDict_LockWrite(self)            LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockWrite(self))
+#define LOCAL_DeeDict_LockTryUpgrade(self)       LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryUpgrade(self))
+#define LOCAL_DeeDict_LockUpgrade(self)          LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockUpgrade(self))
+#define LOCAL_DeeDict_LockDowngrade(self)        LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockDowngrade(self))
+#define LOCAL_DeeDict_LockEndWrite(self)         LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndWrite(self))
+#define LOCAL_DeeDict_LockEndRead(self)          LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndRead(self))
+#define LOCAL_DeeDict_LockEnd(self)              LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEnd(self))
 #define LOCAL__DeeDict_HashIdxInit               _DeeHashSet_HashIdxInit
 #define LOCAL__DeeDict_HashIdxNext               _DeeHashSet_HashIdxNext
 #define LOCAL__DeeDict_GetVirtVTab               _DeeHashSet_GetVirtVTab
@@ -306,10 +324,12 @@ LOCAL_dict_setitem(LOCAL_Dict *self, LOCAL_KEY_PARAMS
 
 
 	/* Helper macros for doing cleanup on no-op return paths. */
-#if defined(LOCAL_HAS_keyob) && defined(LOCAL_IS_INHERITED)
+#if defined(LOCAL_HAS_keyob) && defined(LOCAL_IS_INHERITED) && !defined(LOCAL_IS_HASHSET)
 #define LOCAL_cleanup_data_for_noop_return() (unlikely(keyob) ? Dee_Decref(keyob) : (void)0, Dee_Decref_unlikely(value))
 #elif defined(LOCAL_HAS_keyob)
 #define LOCAL_cleanup_data_for_noop_return() (unlikely(keyob) ? Dee_Decref(keyob) : (void)0)
+#elif defined(LOCAL_IS_INHERITED) && defined(LOCAL_IS_HASHSET)
+#define LOCAL_cleanup_data_for_noop_return() (Dee_Decref_unlikely(key))
 #elif defined(LOCAL_IS_INHERITED)
 #define LOCAL_cleanup_data_for_noop_return() (Dee_Decref_unlikely(key), Dee_Decref_unlikely(value))
 #else /* ... */
@@ -531,6 +551,20 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* LOCAL_boolcmp */
 			LOCAL_cleanup_data_for_noop_return();
 			return item_key; /* Key already exists -> just return existing instance during unify() */
+#elif (defined(LOCAL_IS_HASHSET) && (defined(DEFINE_hashset_mh_insert) ||                 \
+                                     defined(DEFINE_hashset_mh_insert_index) ||           \
+                                     defined(DEFINE_hashset_mh_insert_string_hash) ||     \
+                                     defined(DEFINE_hashset_mh_insert_string_len_hash) || \
+                                     defined(DEFINE_hashset_insert_unlocked) ||           \
+                                     defined(DEFINE_hashset_insert_unlocked_fast_inherited)))
+			/* Directly indicate failure (without moving the already-present item to the back) */
+#ifdef LOCAL_boolcmp
+			LOCAL_DeeDict_LockEnd(self);
+#else /* LOCAL_boolcmp */
+			Dee_Decref_unlikely(item_key);
+#endif /* !LOCAL_boolcmp */
+			LOCAL_cleanup_data_for_noop_return();
+			return 0; /* Insert didn't happen */
 #else /* ... */
 #ifndef LOCAL_IS_HASHSET
 			DREF DeeObject *old_value;
@@ -1061,3 +1095,11 @@ DECL_END
 #undef DEFINE_dict_mh_setold_ex
 #undef DEFINE_dict_mh_setnew_ex
 #undef DEFINE_dict_mh_setdefault
+#undef DEFINE_hashset_mh_insert
+#undef DEFINE_hashset_mh_insert_index
+#undef DEFINE_hashset_mh_insert_string_hash
+#undef DEFINE_hashset_mh_insert_string_len_hash
+#undef DEFINE_hashset_insert_at
+#undef DEFINE_hashset_insert_unlocked
+#undef DEFINE_hashset_insert_unlocked_fast_inherited
+#undef DEFINE_hashset_mh_unify

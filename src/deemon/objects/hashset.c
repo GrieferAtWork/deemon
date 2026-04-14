@@ -46,6 +46,7 @@
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/objectlist.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
@@ -56,6 +57,7 @@
 #include "generic-proxy.h"
 #include "dict-utils.h"
 #include "hashset.h"
+#include "dict.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -71,6 +73,260 @@ DECL_BEGIN
 typedef DeeHashSetObject HashSet;
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+/************************************************************************/
+/* ITERATOR                                                             */
+/************************************************************************/
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObject, po_obj));
+#define siter_fini      generic_proxy__fini
+#define siter_visit     generic_proxy__visit
+#define siter_serialize generic_proxy__serialize_and_wordcopy_atomic(Dee_SIZEOF_HASH_VIDX_T)
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+siter_ctor(HashSetIterator *__restrict self) {
+	self->hsi_set = (DREF HashSet *)DeeHashSet_New();
+	if unlikely(!self->hsi_set)
+		goto err;
+	self->hsi_vidx = Dee_hash_vidx_tovirt(0);
+	return 0;
+err:
+	return -1;
+}
+
+#if 1
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(DictIterator, di_dict));
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_vidx) == offsetof(DictIterator, di_vidx));
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL diter_copy(DictIterator *__restrict self, DictIterator *__restrict other);
+#define siter_copy diter_copy
+#else
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+siter_copy(HashSetIterator *__restrict self,
+           HashSetIterator *__restrict other) {
+	self->hsi_set = other->hsi_set;
+	Dee_Incref(self->hsi_set);
+	self->hsi_vidx = atomic_read(&other->hsi_vidx);
+	return 0;
+}
+#endif
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+siter_init(HashSetIterator *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_HashSetIterator", params: "
+	DeeHashSetObject *set;
+", docStringPrefix: "siter");]]]*/
+#define siter__HashSetIterator_params "set:?DHashSet"
+	struct {
+		DeeHashSetObject *set;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_HashSetIterator", &args.set);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.set, &DeeHashSet_Type))
+		goto err;
+	self->hsi_set = args.set;
+	Dee_Incref(args.set);
+	self->hsi_vidx = Dee_hash_vidx_tovirt(0);
+	return 0;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+siter_next(HashSetIterator *__restrict self) {
+	DREF DeeObject *result;
+	HashSet *set = self->hsi_set;
+	for (;;) {
+		/*virt*/ Dee_hash_vidx_t old_vidx = atomic_read(&self->hsi_vidx);
+		/*virt*/ Dee_hash_vidx_t new_vidx = old_vidx;
+		DeeHashSet_LockRead(set);
+		do {
+			if unlikely(new_vidx > set->hs_vsize) {
+				DeeHashSet_LockEndRead(set);
+				return ITER_DONE;
+			}
+			result = _DeeHashSet_GetVirtVTab(set)[new_vidx].hsi_key;
+			++new_vidx;
+		} while (!result);
+		Dee_Incref(result);
+		DeeHashSet_LockEndRead(set);
+		if (atomic_cmpxch_or_write(&self->hsi_vidx, old_vidx, new_vidx))
+			break;
+		Dee_Decref_unlikely(result);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+siter_advance(HashSetIterator *__restrict self, size_t skip) {
+	/*virt*/ Dee_hash_vidx_t old_vidx, new_vidx;
+	HashSet *set = self->hsi_set;
+	for (;;) {
+		old_vidx = atomic_read(&self->hsi_vidx);
+		new_vidx = old_vidx;
+		DeeHashSet_LockRead(set);
+		ASSERT(set->hs_vused <= set->hs_vsize);
+		if (set->hs_vused == set->hs_vsize) {
+			/* HashSet is optimized -> can just increment "new_vidx" */
+			if (OVERFLOW_UADD(new_vidx, skip, &new_vidx))
+				new_vidx = (size_t)-1;
+			if (new_vidx > Dee_hash_vidx_tovirt(set->hs_vsize))
+				new_vidx = Dee_hash_vidx_tovirt(set->hs_vsize);
+		} else {
+			/* Only keys that haven't been deleted count. */
+			size_t n_skip = skip;
+			struct Dee_hashset_item *virt_vtab = _DeeHashSet_GetVirtVTab(set);
+			for (; Dee_hash_vidx_virt_lt_real(new_vidx, set->hs_vsize) && n_skip; ++new_vidx) {
+				if (virt_vtab[new_vidx].hsi_key)
+					--n_skip;
+			}
+		}
+		DeeHashSet_LockEndRead(set);
+		if (atomic_cmpxch_or_write(&self->hsi_vidx, old_vidx, new_vidx))
+			break;
+	}
+	return new_vidx - old_vidx;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+siter_bool(HashSetIterator *__restrict self) {
+	HashSet *set = self->hsi_set;
+	/*virt*/Dee_hash_vidx_t vidx = atomic_read(&self->hsi_vidx);
+	struct Dee_hashset_item *virt_vtab;
+	ASSERT(vidx >= Dee_hash_vidx_tovirt(0));
+	DeeHashSet_LockRead(set);
+	virt_vtab = _DeeHashSet_GetVirtVTab(set);
+	for (; Dee_hash_vidx_virt_lt_real(vidx, set->hs_vsize); ++vidx) {
+		if (virt_vtab[vidx].hsi_key) {
+			DeeHashSet_LockEndRead(set);
+			return 1;
+		}
+	}
+	DeeHashSet_LockEndRead(set);
+	return 0;
+}
+
+#if 1
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_vidx) == offsetof(DictIterator, di_vidx));
+INTDEF struct type_cmp diter_cmp;
+#define siter_cmp diter_cmp
+#else
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+siter_hash(HashSetIterator *self) {
+	return atomic_read(&self->hsi_vidx);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+siter_compare(HashSetIterator *lhs, HashSetIterator *rhs) {
+	if (DeeObject_AssertType(rhs, Dee_TYPE(lhs)))
+		goto err;
+	Dee_return_compareT(Dee_hash_vidx_t, atomic_read(&lhs->hsi_vidx),
+	                    /*            */ atomic_read(&rhs->hsi_vidx));
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE struct type_cmp siter_cmp = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&siter_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&siter_compare,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
+};
+#endif
+
+
+#if 1
+INTDEF struct type_method tpconst diter_methods[];
+#define siter_methods diter_methods
+#else
+PRIVATE struct type_method tpconst siter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+#endif
+
+PRIVATE struct type_method_hint tpconst siter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &siter_advance),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst siter_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(HashSetIterator, hsi_set), "->?DHashSet"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject HashSetIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_HashSetIterator",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(" siter__HashSetIterator_params ")"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ HashSetIterator,
+			/* tp_ctor:        */ &siter_ctor,
+			/* tp_copy_ctor:   */ &siter_copy,
+			/* tp_any_ctor:    */ &siter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &siter_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&siter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&siter_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ NULL,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&siter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &siter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&siter_next,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ siter_methods,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ siter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ siter_method_hints,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* HASHSET                                                              */
+/************************************************************************/
 
 /* Heap functions for allocating/freeing hashset tables (hs_vtab + hs_htab) */
 #define _DeeHashSet_TabsMalloc(n_bytes)          Dee_Malloc(n_bytes)
@@ -191,7 +447,7 @@ hashset_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc);
 
 /* Re-build the hashset's "hs_htab" (allowed to assume that "hs_vtab" does not contain deleted keys) */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-hashset_htab_rebuilhs_after_optimize(HashSet *__restrict self);
+hashset_htab_rebuild_after_optimize(HashSet *__restrict self);
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 hashset_do_optimize_vtab_without_rebuild(HashSet *__restrict self);
@@ -290,38 +546,14 @@ hashset_makespace_at_impl(HashSet *__restrict self, /*real*/ Dee_hash_vidx_t vta
 LOCAL NONNULL((1)) void DCALL
 hashset_makespace_at(HashSet *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx);
 
-
-
-
-/************************************************************************/
-/************************************************************************/
-/* HIGH-LEVEL API                                                       */
-/************************************************************************/
-/************************************************************************/
-PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_mh_seq_erase(HashSet *__restrict self, size_t start, size_t count);
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_mh_seq_reverse(HashSet *self, size_t start, size_t end);
-PRIVATE NONNULL((1)) bool DCALL hashset_shrink_impl(HashSet *__restrict self, bool fully_shrink);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_shrink(HashSet *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_reserve(HashSet *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-PRIVATE WUNUSED NONNULL((1)) bool DCALL hashset_cc(HashSet *__restrict self);
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_sizeof(HashSet *__restrict self);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_compare(HashSet *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_compare_eq(HashSet *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_trycompare_eq(HashSet *lhs, DeeObject *rhs);
-
 #else /* __INTELLISENSE__ */
 DECL_END
 #define DEFINE_DeeHashSet
-#include "hashset-impl.c.inl"
+#include "dict-impl.c.inl"
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 
-/************************************************************************/
-/* HIGH-LEVEL API                                                       */
-/************************************************************************/
 /* @param: getindex: returns the unoptimized (iow: including deleted keys)
  *                   index in "hs_vtab" where the new key should be inserted.
  *                   All of the other functions above simply append at the end of
@@ -343,13 +575,18 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_insert(HashSet *self, DeeOb
 #define hashset_insert_unlocked hashset_mh_insert
 #else /* !HAVE_hashset_insert_unlocked */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_insert_unlocked(HashSet *self, DeeObject *key);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_insert_unlocked_fast_inherited(HashSet *self, /*inherit(on_success)*/ DREF DeeObject *key);
-#define HAVE_hashset_insert_unlocked_fast_inherited
 #endif /* HAVE_hashset_insert_unlocked */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL hashset_mh_unify(HashSet *self, DeeObject *key);
-
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_contains(HashSet *self, DeeObject *key);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_contains_with_range(HashSet *self, DeeObject *key, size_t start, size_t end);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_remove(HashSet *self, DeeObject *key);
 #ifndef __INTELLISENSE__
 DECL_END
+#define DEFINE_hashset_mh_contains
+#include "dict-getitem-impl.c.inl"
+#define DEFINE_hashset_mh_contains_with_range
+#include "dict-getitem-impl.c.inl"
+
 #define DEFINE_hashset_mh_insert
 #include "dict-setitem-impl.c.inl"
 #define DEFINE_hashset_insert_at
@@ -357,15 +594,100 @@ DECL_END
 #ifdef HAVE_hashset_insert_unlocked
 #define DEFINE_hashset_insert_unlocked
 #include "dict-setitem-impl.c.inl"
-#define DEFINE_hashset_insert_unlocked_fast_inherited
-#include "dict-setitem-impl.c.inl"
 #endif /* HAVE_hashset_insert_unlocked */
-#define DEFINE_hashsetmh__unify
+#define DEFINE_hashset_mh_unify
 #include "dict-setitem-impl.c.inl"
+
+#define DEFINE_hashset_mh_remove
+#include "dict-delitem-impl.c.inl"
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define hashset_fromsequence_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))&hashset_insert_unlocked)
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+hashset_fromsequence_foreach_cb(void *self, DeeObject *key) {
+	return hashset_insert_unlocked((HashSet *)self, key);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+
+
+#undef HASHSET_INITFROM_NEEDSLOCK
+#ifndef HAVE_hashset_insert_unlocked /* Because of "#define dict_setitem_unlocked dict_setitem" */
+#define HASHSET_INITFROM_NEEDSLOCK
+#endif /* !HAVE_hashset_insert_unlocked */
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_init_fromcopy(HashSet *__restrict self,
+                      HashSet *__restrict other);
+
+#ifndef __INTELLISENSE__
+DECL_END
+#define DEFINE_hashset_init_fromcopy
+#include "dict-init-copyfrom.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
+
+
+#ifdef __INTELLISENSE__
+/************************************************************************/
+/************************************************************************/
+/* HIGH-LEVEL API                                                       */
+/************************************************************************/
+/************************************************************************/
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_init_fromroset_noincref(HashSet *__restrict self, DeeRoSetObject *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_init_fromroset(HashSet *__restrict self, DeeRoSetObject *__restrict other);
+PRIVATE WUNUSED NONNULL((1)) DREF HashSet *DCALL hashset_new_copy(HashSet *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromRoHashSet(/*RoHashSet*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **items);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL hashset_fini(HashSet *__restrict self);
+PRIVATE ATTR_NOINLINE NONNULL((1, 2)) void DCALL hashset_visit(HashSet *__restrict self, Dee_visit_t proc, void *arg);
+LOCAL NONNULL((1)) void DCALL hashset_initfrom_empty(HashSet *__restrict self);
+LOCAL NONNULL((1)) void DCALL hashset_initfrom_hint(HashSet *__restrict self, size_t num_items, bool allow_overalloc);
+LOCAL WUNUSED NONNULL((1)) int DCALL hashset_initfrom_seq(HashSet *__restrict self, DeeObject *seq);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_assign(HashSet *self, DeeObject *seq);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_moveassign(HashSet *self, HashSet *other);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_ctor(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_copy(HashSet *__restrict self, HashSet *__restrict other);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_init(HashSet *__restrict self, size_t argc, DeeObject *const *argv);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_serialize(HashSet *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL hashset_printrepr(HashSet *__restrict self, Dee_formatprinter_t printer, void *arg);
+PRIVATE NONNULL((1)) int DCALL hashset_mh_clear(HashSet *__restrict self);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_mh_seq_erase(HashSet *__restrict self, size_t start, size_t count);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_mh_seq_reverse(HashSet *self, size_t start, size_t end);
+PRIVATE NONNULL((1)) bool DCALL hashset_shrink_impl(HashSet *__restrict self, bool fully_shrink);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_shrink(HashSet *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_reserve(HashSet *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+PRIVATE WUNUSED NONNULL((1)) bool DCALL hashset_cc(HashSet *__restrict self);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_sizeof(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_compare(HashSet *lhs, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_compare_eq(HashSet *lhs, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_seq_trycompare_eq(HashSet *lhs, DeeObject *rhs);
+#else /* __INTELLISENSE__ */
+DECL_END
+#define DEFINE_HIGH_LEVEL
+#define DEFINE_DeeHashSet
+#include "dict-impl.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
+
+#ifdef DCALL_RETURN_COMMON
+#define hashset_clear (*(void (DCALL *)(HashSet *__restrict))&hashset_mh_clear)
+#else /* DCALL_RETURN_COMMON */
+PRIVATE NONNULL((1)) void DCALL
+hashset_clear(HashSet *__restrict self) {
+	hashset_mh_clear(self);
+}
+#endif /* !DCALL_RETURN_COMMON */
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -468,7 +790,6 @@ hashset_mh_seq_setitem_index(HashSet *self, size_t index, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 hashset_mh_seq_xchitem_index(HashSet *self, size_t index, DeeObject *key) {
-	DREF DeeObject *result;
 	struct hashset_mh_seq_setitem_index_impl_data data;
 	data.hssqsii_index       = index;
 	data.hssqsii_deleted_key = NULL;
@@ -511,6 +832,23 @@ hashset_mh_seq_pushfront(HashSet *self, DeeObject *key) {
 	return hashset_mh_seq_insert(self, 0, key);
 }
 
+#if 1 /* Because regular "hashset_mh_insert" doesn't move already-present items to the back */
+PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
+hashset_mh_seq_append_cb(void *arg, HashSet *self,
+                         /*virt*/ Dee_hash_vidx_t overwrite_index) {
+	(void)arg;
+	(void)overwrite_index;
+	return Dee_hash_vidx_tovirt(self->hs_vsize);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_mh_seq_append(HashSet *self, DeeObject *key) {
+	int result = hashset_insert_at(self, key, &hashset_mh_seq_append_cb, NULL);
+	if (result > 0)
+		result = 0;
+	return result;
+}
+#else
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 hashset_mh_seq_append(HashSet *self, DeeObject *key) {
 	int result = hashset_mh_insert(self, key); /* This will move "key" to back if it was already present */
@@ -518,6 +856,7 @@ hashset_mh_seq_append(HashSet *self, DeeObject *key) {
 		result = 0;
 	return result;
 }
+#endif
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hashset_mh_seq_getitem_index(HashSet *__restrict self, size_t index) {
@@ -545,7 +884,6 @@ hashset_mh_seq_trygetitem_index(HashSet *__restrict self, size_t index) {
 	struct Dee_hashset_item *item;
 	DeeHashSet_LockReadAndOptimize(self);
 	if unlikely(index >= self->hs_vused) {
-		size_t real_size = self->hs_vused;
 		DeeHashSet_LockEndRead(self);
 		return ITER_DONE;
 	}
@@ -676,8 +1014,6 @@ hashset_mh_seq_foreach(HashSet *__restrict self, Dee_foreach_t cb, void *arg) {
 	return result;
 err_temp:
 	return temp;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -709,8 +1045,6 @@ hashset_mh_seq_foreach_reverse(HashSet *__restrict self, Dee_foreach_t cb, void 
 	return result;
 err_temp:
 	return temp;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -742,8 +1076,6 @@ hashset_mh_seq_enumerate_index(HashSet *__restrict self, Dee_seq_enumerate_index
 	return result;
 err_temp:
 	return temp;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -775,10 +1107,105 @@ hashset_mh_seq_enumerate_index_reverse(HashSet *__restrict self, Dee_seq_enumera
 	return result;
 err_temp:
 	return temp;
-err:
-	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF HashSetIterator *DCALL
+hashset_iter(HashSet *__restrict self) {
+	DREF HashSetIterator *result = DeeObject_MALLOC(HashSetIterator);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->hsi_set  = self;
+	result->hsi_vidx = Dee_hash_vidx_tovirt(0);
+	DeeObject_InitStatic(result, &HashSetIterator_Type);
+	return result;
+err:
+	return NULL;
+}
+
+
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define hashset_mh_insertall_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))&hashset_mh_insert)
+#define hashset_mh_removeall_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))&hashset_mh_remove)
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+hashset_mh_insertall_cb(void *self, DeeObject *key) {
+	return (Dee_ssize_t)hashset_mh_insert((HashSet *)self, key);
+}
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+hashset_mh_removeall_cb(void *self, DeeObject *key) {
+	return (Dee_ssize_t)hashset_mh_remove((HashSet *)self, key);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_mh_insertall(HashSet *self, DeeObject *keys) {
+	Dee_ssize_t result = DeeObject_Foreach(keys, &hashset_mh_insertall_cb, self);
+	if (result > 0)
+		result = 0;
+	return (int)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_mh_removeall(HashSet *self, DeeObject *keys) {
+	Dee_ssize_t result = DeeObject_Foreach(keys, &hashset_mh_removeall_cb, self);
+	if (result > 0)
+		result = 0;
+	return (int)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+hashset_contains(HashSet *self, DeeObject *key) {
+	int result = hashset_mh_contains(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+hashset_mh_pop_impl(HashSet *__restrict self) {
+	DREF DeeObject *result;
+	struct Dee_hashset_item *item;
+	DeeHashSet_LockWrite(self);
+	if unlikely(!self->hs_vused) {
+		DeeHashSet_LockEndWrite(self);
+		return ITER_DONE;
+	}
+	item = _DeeHashSet_GetRealVTab(self) + self->hs_vsize - 1;
+	while (!item->hsi_key) {
+		ASSERT(_DeeHashSet_CanOptimizeVTab(self));
+		ASSERT(item > _DeeHashSet_GetRealVTab(self));
+		--item;
+	}
+	result = item->hsi_key; /* Inherit reference */
+	item->hsi_key = NULL;
+	--self->hs_vused;
+	hashset_autoshrink(self);
+	DeeHashSet_LockEndWrite(self);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+hashset_mh_pop(HashSet *__restrict self) {
+	DREF DeeObject *result = hashset_mh_pop_impl(self);
+	if unlikely(result == ITER_DONE) {
+		DeeRT_ErrEmptySequence(self);
+		result = NULL;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+hashset_mh_pop_with_default(HashSet *self, DeeObject *def) {
+	DREF DeeObject *result = hashset_mh_pop_impl(self);
+	if unlikely(result == ITER_DONE) {
+		Dee_Incref(def);
+		result = def;
+	}
+	return result;
+}
 
 
 STATIC_ASSERT(offsetof(DeeHashSetObject, hs_valloc) == offsetof(DeeDictObject, d_valloc));
@@ -830,6 +1257,24 @@ PRIVATE struct type_seq hashset_seq = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_trygetfirst(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_trygetlast(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_getfirst(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_getlast(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_delfirst(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_dellast(HashSet *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_setfirst(HashSet *self, DeeObject *value);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_setlast(HashSet *self, DeeObject *value);
+
+#ifndef __INTELLISENSE__
+DECL_END
+#define DEFINE_hashset_first
+#include "dict-firstlast-impl.c.inl"
+#define DEFINE_hashset_last
+#include "dict-firstlast-impl.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
+
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -865,7 +1310,6 @@ PRIVATE struct type_getset tpconst hashset_getsets[] = {
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_GETSET_END
 };
-
 
 
 STATIC_ASSERT(offsetof(HashSet, hs_valloc) == offsetof(DeeDictObject, d_valloc));
@@ -2727,12 +3171,8 @@ PRIVATE struct type_method_hint tpconst hashset_method_hints[] = {
 
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-PRIVATE DEFINE_FLOAT(float_1_point_0, 1.0);
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
-	Dee_Incref(&float_1_point_0);
-	return Dee_AsObject(&float_1_point_0);
-}
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
 #define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
 #define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

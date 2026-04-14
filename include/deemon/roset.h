@@ -62,13 +62,15 @@ DECL_BEGIN
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 typedef struct Dee_roset_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
-	/*real*/Dee_hash_vidx_t                          rs_vsize;      /* # of key-value pairs in the set. */
+	/*real*/Dee_hash_vidx_t                          rs_vsize;      /* # of keys in the set. */
 	Dee_hash_t                                       rs_hmask;      /* [>= rs_vsize] Hash-mask */
 	Dee_hash_gethidx_t                               rs_hidxget;    /* [1..1] Getter for "rs_htab" */
 	union Dee_hash_htab                             *rs_htab;       /* [== (byte_t *)(_DeeRoSet_GetRealVTab(this) + rs_vsize)] Hash-table (contains indices into "rs_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_hashset_item, rs_vtab);      /* [rs_vsize] Hashset keys (never contains deleted keys). */
 //	COMPILER_FLEXIBLE_ARRAY(byte_t,                  rs_htab_data); /* Hashset hash-table. */
 } DeeRoSetObject;
+
+#define DeeRoSet_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoSetObject, self)->rs_vsize == 0)
 
 /* The main `_RoSet' container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;
@@ -85,7 +87,7 @@ DeeRoSet_FromHashSet(/*HashSet*/ DeeObject *__restrict self);
  * NOTE: This is _NOT_ a singleton! */
 struct Dee_empty_roset_object {
 	Dee_OBJECT_HEAD
-	size_t               rs_vsize;        /* # of key-value pairs in the dict. */
+	size_t               rs_vsize;        /* # of keys in the dict. */
 	size_t               rs_hmask;        /* [>= rs_vsize] Hash-mask */
 	Dee_hash_gethidx_t   rs_hidxget;      /* [1..1] Getter for "rs_htab" */
 	union Dee_hash_htab *rs_htab;         /* [== (byte_t *)(_DeeRoSet_GetRealVTab(this) + rs_vsize)] Hash-table (contains indices into "rs_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
@@ -180,6 +182,8 @@ typedef struct Dee_roset_object {
 	size_t                                         rs_size;  /* [<= rs_mask] Amount of non-NULL keys. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_roset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
 } DeeRoSetObject;
+
+#define DeeRoSet_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoSetObject, self)->rs_size == 0)
 
 /* The main `_RoSet' container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;

@@ -18,15 +18,18 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "dict.c"
 //#define DEFINE_dict_delitem
 //#define DEFINE_dict_delitem_string_hash
-#define DEFINE_dict_delitem_string_len_hash
+//#define DEFINE_dict_delitem_string_len_hash
 //#define DEFINE_dict_delitem_index
 //#define DEFINE_dict_popvalue
 //#define DEFINE_dict_mh_remove
 //#define DEFINE_dict_mh_pop
 //#define DEFINE_dict_mh_pop_with_default
+#define DEFINE_hashset_mh_remove
+//#define DEFINE_hashset_mh_remove_string_hash
+//#define DEFINE_hashset_mh_remove_string_len_hash
+//#define DEFINE_hashset_mh_remove_index
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -38,14 +41,18 @@
 
 #include <stddef.h> /* NULL, size_t */
 
-#if (defined(DEFINE_dict_delitem) +                 \
-     defined(DEFINE_dict_delitem_string_hash) +     \
-     defined(DEFINE_dict_delitem_string_len_hash) + \
-     defined(DEFINE_dict_delitem_index) +           \
-     defined(DEFINE_dict_popvalue) +                \
-     defined(DEFINE_dict_mh_remove) +               \
-     defined(DEFINE_dict_mh_pop) +                  \
-     defined(DEFINE_dict_mh_pop_with_default)) != 1
+#if (defined(DEFINE_dict_delitem) +                      \
+     defined(DEFINE_dict_delitem_string_hash) +          \
+     defined(DEFINE_dict_delitem_string_len_hash) +      \
+     defined(DEFINE_dict_delitem_index) +                \
+     defined(DEFINE_dict_popvalue) +                     \
+     defined(DEFINE_dict_mh_remove) +                    \
+     defined(DEFINE_dict_mh_pop) +                       \
+     defined(DEFINE_dict_mh_pop_with_default) +          \
+     defined(DEFINE_hashset_mh_remove) +                 \
+     defined(DEFINE_hashset_mh_remove_string_hash) +     \
+     defined(DEFINE_hashset_mh_remove_string_len_hash) + \
+     defined(DEFINE_hashset_mh_remove_index)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -70,6 +77,21 @@ DECL_BEGIN
 #define LOCAL_dict_delitem dict_mh_pop
 #elif defined(DEFINE_dict_mh_pop_with_default)
 #define LOCAL_dict_delitem dict_mh_pop_with_default
+#elif defined(DEFINE_hashset_mh_remove)
+#define LOCAL_dict_delitem hashset_mh_remove
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_remove_string_hash)
+#define LOCAL_dict_delitem hashset_mh_remove_string_hash
+#define LOCAL_HAS_KEY_IS_STRING_HASH
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_remove_string_len_hash)
+#define LOCAL_dict_delitem hashset_mh_remove_string_len_hash
+#define LOCAL_HAS_KEY_IS_STRING_LEN_HASH
+#define LOCAL_IS_HASHSET
+#elif defined(DEFINE_hashset_mh_remove_index)
+#define LOCAL_dict_delitem hashset_mh_remove_index
+#define LOCAL_HAS_KEY_IS_INDEX
+#define LOCAL_IS_HASHSET
 #else /* ... */
 #error "Invalid configuration"
 #endif /* ... */
@@ -81,7 +103,7 @@ DECL_BEGIN
 #elif defined(DEFINE_dict_mh_pop) || defined(DEFINE_dict_mh_pop_with_default)
 #define LOCAL_return_type DREF DeeObject *
 #define LOCAL_ERR         NULL
-#elif defined(DEFINE_dict_mh_remove)
+#elif defined(DEFINE_dict_mh_remove) || defined(LOCAL_IS_HASHSET)
 #define LOCAL_return_type int
 #define LOCAL_PRESENT     1
 #define LOCAL_MISSING     0
@@ -124,6 +146,44 @@ DECL_BEGIN
 #define LOCAL_IF_NOT_UNLOCKED(...) /* nothing */
 #endif /* LOCAL_IS_UNLOCKED */
 
+#ifdef LOCAL_IS_HASHSET
+#ifdef __INTELLISENSE__
+#include "hashset.c"
+#endif /* __INTELLISENSE__ */
+#define LOCAL_Dict                         HashSet
+#define LOCAL_Dee_dict_item                Dee_hashset_item
+#define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryRead(self))
+#define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryWrite(self))
+#define LOCAL_DeeDict_LockRead(self)       LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockRead(self))
+#define LOCAL_DeeDict_LockWrite(self)      LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockWrite(self))
+#define LOCAL_DeeDict_LockTryUpgrade(self) LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockTryUpgrade(self))
+#define LOCAL_DeeDict_LockUpgrade(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockUpgrade(self))
+#define LOCAL_DeeDict_LockDowngrade(self)  LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockDowngrade(self))
+#define LOCAL_DeeDict_LockEndWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndWrite(self))
+#define LOCAL_DeeDict_LockEndRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEndRead(self))
+#define LOCAL_DeeDict_LockEnd(self)        LOCAL_IF_NOT_UNLOCKED(DeeHashSet_LockEnd(self))
+#define LOCAL__DeeDict_GetVirtVTab         _DeeHashSet_GetVirtVTab
+#define LOCAL__DeeDict_HashIdxInit         _DeeHashSet_HashIdxInit
+#define LOCAL__DeeDict_HashIdxNext         _DeeHashSet_HashIdxNext
+#define LOCAL_dict_autoshrink              hashset_autoshrink
+
+/* Map dict fields to hashsets */
+#define d_valloc  hs_valloc
+#define d_vsize   hs_vsize
+#define d_vused   hs_vused
+#define d_vtab    hs_vtab
+#define d_hmask   hs_hmask
+#define d_hidxops hs_hidxops
+#define d_htab    hs_htab
+#define d_lock    hs_lock
+#define di_hash   hsi_hash
+#define di_key    hsi_key
+#else /* LOCAL_IS_HASHSET */
+#ifdef __INTELLISENSE__
+#include "dict.c"
+#endif /* __INTELLISENSE__ */
+#define LOCAL_Dict                         Dict
+#define LOCAL_Dee_dict_item                Dee_dict_item
 #define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryRead(self))
 #define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeDict_LockTryWrite(self))
 #define LOCAL_DeeDict_LockRead(self)       LOCAL_IF_NOT_UNLOCKED(DeeDict_LockRead(self))
@@ -134,10 +194,15 @@ DECL_BEGIN
 #define LOCAL_DeeDict_LockEndWrite(self)   LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndWrite(self))
 #define LOCAL_DeeDict_LockEndRead(self)    LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEndRead(self))
 #define LOCAL_DeeDict_LockEnd(self)        LOCAL_IF_NOT_UNLOCKED(DeeDict_LockEnd(self))
+#define LOCAL__DeeDict_GetVirtVTab         _DeeDict_GetVirtVTab
+#define LOCAL__DeeDict_HashIdxInit         _DeeDict_HashIdxInit
+#define LOCAL__DeeDict_HashIdxNext         _DeeDict_HashIdxNext
+#define LOCAL_dict_autoshrink              dict_autoshrink
+#endif /* !LOCAL_IS_HASHSET */
 
 
 PRIVATE WUNUSED LOCAL_NONNULL LOCAL_return_type DCALL
-LOCAL_dict_delitem(Dict *self, LOCAL_KEY_PARAMS) {
+LOCAL_dict_delitem(LOCAL_Dict *self, LOCAL_KEY_PARAMS) {
 	Dee_hash_gethidx_t htab_get;
 #ifndef DICT_NDEBUG
 #define LOCAL_htab_get (ASSERT(htab_get == self->d_hidxops->hxio_get), htab_get)
@@ -163,13 +228,13 @@ LOCAL_dict_delitem(Dict *self, LOCAL_KEY_PARAMS) {
 	LOCAL_DeeDict_LockRead(self);
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 	htab_get = self->d_hidxops->hxio_get;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
+	for (LOCAL__DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     LOCAL__DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
 #ifndef LOCAL_boolcmp
 		int item_key_cmp_caller_key;
 #endif /* !LOCAL_boolcmp */
-		struct Dee_dict_item *item;
+		struct LOCAL_Dee_dict_item *item;
 		Dee_hash_hidx_t htab_idx; /* index in "d_htab" */
 		Dee_hash_vidx_t vtab_idx; /* index in "d_vtab" */
 
@@ -183,7 +248,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 
 		/* Load referenced item in "d_vtab" */
 		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->d_vsize));
-		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+		item = &LOCAL__DeeDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check for deleted items... */
 		item_key = item->di_key;
@@ -204,7 +269,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 			goto goto_if_changed;                                          \
 		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx)) \
 			goto goto_if_changed;                                          \
-		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])         \
+		if unlikely(item != &LOCAL__DeeDict_GetVirtVTab(self)[vtab_idx])   \
 			goto goto_if_changed;                                          \
 		if unlikely(item->di_key != item_key)                              \
 			goto goto_if_changed;                                          \
@@ -253,7 +318,9 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		if likely(Dee_COMPARE_ISEQ_NO_ERR(item_key_cmp_caller_key))
 #endif /* !LOCAL_boolcmp */
 		{
+#ifndef LOCAL_IS_HASHSET
 			DREF DeeObject *old_value;
+#endif /* !LOCAL_IS_HASHSET */
 
 #ifdef LOCAL_boolcmp
 			/* At this point we're still holding a read-lock.
@@ -291,10 +358,12 @@ delete_item_after_consistency_check:
 			/************************************************************************/
 			ASSERT(item_key == item->di_key);
 			item->di_key = NULL;              /* Inherit reference */
+#ifndef LOCAL_IS_HASHSET
 			old_value = item->di_value;       /* Inherit reference */
 			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+#endif /* !LOCAL_IS_HASHSET */
 			--self->d_vused;
-			dict_autoshrink(self);
+			LOCAL_dict_autoshrink(self);
 
 			/* Release the dict write-lock now that we're done. */
 			LOCAL_DeeDict_LockEndWrite(self);
@@ -304,7 +373,9 @@ delete_item_after_consistency_check:
 
 			/* Indicate that we successfully overwrote an existing item. */
 #ifdef LOCAL_PRESENT
+#ifndef LOCAL_IS_HASHSET
 			Dee_Decref(old_value);
+#endif /* !LOCAL_IS_HASHSET */
 			return LOCAL_PRESENT;
 #else /* LOCAL_PRESENT */
 			return old_value;
@@ -375,6 +446,9 @@ downgrade_lock_and_try_again:
 
 #undef LOCAL_IS_UNLOCKED
 #undef LOCAL_IF_NOT_UNLOCKED
+
+#undef LOCAL_Dict
+#undef LOCAL_Dee_dict_item
 #undef LOCAL_DeeDict_LockTryRead
 #undef LOCAL_DeeDict_LockTryWrite
 #undef LOCAL_DeeDict_LockRead
@@ -385,6 +459,23 @@ downgrade_lock_and_try_again:
 #undef LOCAL_DeeDict_LockEndWrite
 #undef LOCAL_DeeDict_LockEndRead
 #undef LOCAL_DeeDict_LockEnd
+#undef LOCAL__DeeDict_GetVirtVTab
+#undef LOCAL__DeeDict_HashIdxInit
+#undef LOCAL__DeeDict_HashIdxNext
+#undef LOCAL_dict_autoshrink
+#ifdef LOCAL_IS_HASHSET
+#undef d_valloc
+#undef d_vsize
+#undef d_vused
+#undef d_vtab
+#undef d_hmask
+#undef d_hidxops
+#undef d_htab
+#undef d_lock
+#undef di_hash
+#undef di_key
+#endif /* LOCAL_IS_HASHSET */
+
 #undef LOCAL_KEY_PARAMS
 #undef LOCAL_NONNULL
 #undef LOCAL_HAS_PARAM_HASH
@@ -396,6 +487,7 @@ downgrade_lock_and_try_again:
 #undef LOCAL_HAS_KEY_IS_STRING
 #undef LOCAL_HAS_KEY_IS_STRING_HASH
 #undef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
+#undef LOCAL_IS_HASHSET
 #undef LOCAL_dict_delitem
 
 DECL_END
@@ -408,3 +500,7 @@ DECL_END
 #undef DEFINE_dict_mh_remove
 #undef DEFINE_dict_mh_pop
 #undef DEFINE_dict_mh_pop_with_default
+#undef DEFINE_hashset_mh_remove
+#undef DEFINE_hashset_mh_remove_string_hash
+#undef DEFINE_hashset_mh_remove_string_len_hash
+#undef DEFINE_hashset_mh_remove_index

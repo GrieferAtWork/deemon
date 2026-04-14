@@ -92,8 +92,17 @@ check_foreach_elem(DeeObject *seq, bool (DCALL *check)(DeeObject *ob)) {
 		}
 		return true;
 	} else if (tp_seq == &DeeRoSet_Type) {
-		size_t i;
 		DeeRoSetObject *me = (DeeRoSetObject *)seq;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+		Dee_hash_vidx_t i;
+		for (i = 0; i < me->rs_vsize; ++i) {
+			struct Dee_hashset_item *item;
+			item = &_DeeRoSet_GetRealVTab(me)[i];
+			if (!(*check)(item->hsi_key))
+				goto nope;
+		}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
+		size_t i;
 		for (i = 0; i <= me->rs_mask; ++i) {
 			DeeObject *key = me->rs_elem[i].rsi_key;
 			if (!key)
@@ -101,10 +110,11 @@ check_foreach_elem(DeeObject *seq, bool (DCALL *check)(DeeObject *ob)) {
 			if (!(*check)(key))
 				goto nope;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return true;
 	} else if (tp_seq == &DeeRoDict_Type) {
-		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)seq;
+		Dee_hash_vidx_t i;
 		for (i = 0; i < me->rd_vsize; ++i) {
 			struct Dee_dict_item *item;
 			item = &_DeeRoDict_GetRealVTab(me)[i];

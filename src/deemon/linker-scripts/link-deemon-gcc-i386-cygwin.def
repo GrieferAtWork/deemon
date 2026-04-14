@@ -367,15 +367,10 @@ EXPORTS
 	_DeeGC_TrackAll@12=DeeGC_TrackAll@12
 	_DeeGC_TrackEx@8=DeeGC_TrackEx@8
 	_DeeGC_Untrack@4=DeeGC_Untrack@4
-	_DeeHashSet_Contains@8=DeeHashSet_Contains@8
 	_DeeHashSet_FromRoSet@4=DeeHashSet_FromRoSet@4
 	_DeeHashSet_FromSequence@4=DeeHashSet_FromSequence@4
 	_DeeHashSet_FromSequenceInheritedOnSuccess@4=DeeHashSet_FromSequenceInheritedOnSuccess@4
-	_DeeHashSet_Insert@8=DeeHashSet_Insert@8
 	_DeeHashSet_NewItemsInherited@8=DeeHashSet_NewItemsInherited@8
-	_DeeHashSet_NewWithHint@4=DeeHashSet_NewWithHint@4
-	_DeeHashSet_Remove@8=DeeHashSet_Remove@8
-	_DeeHashSet_Unify@8=DeeHashSet_Unify@8
 	_DeeHeap_CheckMemory@0=DeeHeap_CheckMemory@0
 	_DeeHeap_DumpMemoryLeaks@4=DeeHeap_DumpMemoryLeaks@4
 	_DeeHeap_Footprint@0=DeeHeap_Footprint@0

@@ -68,7 +68,6 @@ DECL_BEGIN
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL USet_InitEmpty(USet *__restrict self);
 PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitCopy(USet *__restrict self, USet *__restrict other);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitSequence(USet *__restrict self, DeeObject *__restrict sequence);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL uset_mh_insert(USet *self, DeeObject *ob);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL uset_mh_remove(USet *self, DeeObject *ob);
 LOCAL NONNULL((1, 2)) void DCALL USet_DoInsertTrackedUnlocked(USet *self, DREF DeeObject *ob);
@@ -600,43 +599,14 @@ again:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-USet_InitSequence(USet *__restrict self,
+udict_init_sequence(USet *__restrict self,
                   DeeObject *__restrict sequence) {
 	DeeTypeObject *type = Dee_TYPE(sequence);
 	if (type == &USet_Type)
 		return USet_InitCopy(self, (USet *)sequence);
-	if (type == &DeeHashSet_Type) {
-		DeeHashSetObject *src;
-		src = (DeeHashSetObject *)sequence;
-		Dee_atomic_rwlock_init(&self->us_lock);
-again_hashset:
-		DeeHashSet_LockRead(src);
-		self->us_used = self->us_size = src->hs_used;
-		if (!self->us_used) {
-			self->us_mask = 0;
-			self->us_elem = empty_set_items;
-		} else {
-			size_t i;
-			self->us_mask = src->hs_mask;
-			self->us_elem = (struct uset_item *)Dee_TryCallocc(src->hs_mask + 1,
-			                                                   sizeof(struct uset_item));
-			if unlikely(!self->us_elem) {
-				DeeHashSet_LockEndRead(src);
-				if (Dee_CollectMemoryc(self->us_mask + 1, sizeof(struct uset_item)))
-					goto again_hashset;
-				return -1;
-			}
-			for (i = 0; i <= src->hs_mask; ++i) {
-				DeeObject *key = src->hs_elem[i].hsi_key;
-				if (!key || key == dummy)
-					continue;
-				Dee_Incref(key);
-				USet_DoInsertTrackedUnlocked(self, key);
-			}
-		}
-		DeeHashSet_LockEndRead(src);
-		Dee_weakref_support_init(self);
-	} else if (type == &URoSet_Type) {
+	/* TODO: Optimizations for `DeeHashSet_Type' */
+	/* TODO: Optimizations for `DeeRoSet_Type' */
+	if (type == &URoSet_Type) {
 		URoSet *src = (URoSet *)sequence;
 		Dee_atomic_rwlock_init(&self->us_lock);
 		self->us_used = self->us_size = src->urs_size;
@@ -652,30 +622,6 @@ again_hashset:
 			Dee_XMovrefv((DeeObject **)self->us_elem,
 			             (DeeObject **)src->urs_elem,
 			             src->urs_mask + 1);
-		}
-		Dee_weakref_support_init(self);
-	} else if (type == &DeeRoSet_Type) {
-		size_t i;
-		DeeRoSetObject *src;
-		src = (DeeRoSetObject *)sequence;
-		Dee_atomic_rwlock_init(&self->us_lock);
-		self->us_used = self->us_size = src->rs_size;
-		if unlikely(!self->us_size) {
-			self->us_mask = 0;
-			self->us_elem = (struct uset_item *)empty_set_items;
-		} else {
-			self->us_mask = src->rs_mask;
-			self->us_elem = (struct uset_item *)Dee_Callocc(src->rs_mask + 1,
-			                                                sizeof(struct uset_item));
-			if unlikely(!self->us_elem)
-				goto err;
-			for (i = 0; i <= src->rs_mask; ++i) {
-				DeeObject *key = src->rs_elem[i].rsi_key;
-				if (!key)
-					continue;
-				Dee_Incref(key);
-				USet_DoInsertTrackedUnlocked(self, key);
-			}
 		}
 		Dee_weakref_support_init(self);
 	} else {
@@ -701,22 +647,6 @@ err_self:
 	Dee_Free(self->us_elem);
 err:
 	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF USet *DCALL
-USet_FromSequence(DeeObject *__restrict sequence) {
-	DREF USet *result;
-	result = DeeGCObject_MALLOC(USet);
-	if unlikely(!result)
-		goto err;
-	if unlikely(USet_InitSequence(result, sequence))
-		goto err_r;
-	DeeObject_InitStatic(result, &USet_Type);
-	return DeeGC_TRACK(USet, result);
-err_r:
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
 }
 
 
@@ -1056,7 +986,7 @@ uset_init(USet *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	DeeArg_Unpack1(err, argc, argv, "UniqueSet", &seq);
-	return USet_InitSequence(self, seq);
+	return udict_init_sequence(self, seq);
 err:
 	return -1;
 }
@@ -1790,112 +1720,62 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF URoSet *DCALL
-URoSet_FromSequence(DeeObject *__restrict sequence) {
+PRIVATE WUNUSED NONNULL((1)) DREF URoSet *DCALL
+URoSet_FromSequence_fallback(DeeObject *__restrict self) {
+	/* Fallback: Try the fast-sequence interface. */
 	DREF URoSet *result;
-	DeeTypeObject *type = Dee_TYPE(sequence);
-	if (type == &URoSet_Type) {
-		return_reference_((URoSet *)sequence);
-	} else if (type == &USet_Type) {
-		return URoSet_FromUSet((USet *)sequence);
-	} else if (type == &DeeHashSet_Type) {
-		size_t i, mask;
-		DeeHashSetObject *src;
-		src = (DeeHashSetObject *)sequence;
-again_lock_hashset_src:
-		DeeHashSet_LockRead(src);
+	size_t sizehint = DeeObject_SizeFast(self);
+	if (sizehint != (size_t)-1) {
+		size_t mask;
+		if (sizehint == 0)
+			return URoSet_New();
 		mask = 1;
-		while ((src->hs_used & mask) != src->hs_used)
+		/* Figure out how large the mask of the set is going to be. */
+		while ((sizehint & mask) != sizehint)
 			mask = (mask << 1) | 1;
 		result = (DREF URoSet *)DeeObject_TryCallocc(offsetof(URoSet, urs_elem),
-		                                             mask + 1, sizeof(struct uset_item));
-		if unlikely(!result) {
-			size_t oldsize;
-			oldsize = src->hs_used;
-			DeeHashSet_LockEndRead(src);
-			result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
-			                                          mask + 1, sizeof(struct uset_item));
-			if unlikely(!result)
-				goto err;
-			DeeHashSet_LockRead(src);
-			if (oldsize != src->hs_used) {
-				DeeHashSet_LockEndRead(src);
-				DeeObject_Free(result);
-				goto again_lock_hashset_src;
-			}
-		}
+		                                             mask + 1,
+		                                             sizeof(struct uset_item));
+		if unlikely(!result)
+			goto use_zero_sizehint;
 		result->urs_mask = mask;
-		result->urs_size = src->hs_used;
-		for (i = 0; i <= src->hs_mask; ++i) {
-			DREF DeeObject *key;
-			key = src->hs_elem[i].hsi_key;
-			if (key != NULL && key != dummy) {
-				Dee_Incref(key);
-				URoSet_DoInsertUnlocked(result, key);
-			}
-		}
-		DeeHashSet_LockEndRead(src);
-	} else if (type == &DeeRoSet_Type) {
-		size_t i;
-		DeeRoSetObject *src;
-		src    = (DeeRoSetObject *)sequence;
-		result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
-		                                          src->rs_mask + 1,
-		                                          sizeof(struct uset_item));
+	} else {
+use_zero_sizehint:
+		result = (DREF URoSet *)DeeObject_Mallocc(offsetof(URoSet, urs_elem),
+		                                          1, sizeof(struct uset_item));
 		if unlikely(!result)
 			goto err;
-		result->urs_mask = src->rs_mask;
-		result->urs_size = src->rs_size;
-		for (i = 0; i <= src->rs_mask; ++i) {
-			DREF DeeObject *key;
-			key = src->rs_elem[i].rsi_key;
-			if (key != NULL) {
-				Dee_Incref(key);
-				URoSet_DoInsertUnlocked(result, key);
-			}
-		}
-	} else {
-		/* Fallback: Try the fast-sequence interface. */
-		size_t sizehint = DeeObject_SizeFast(sequence);
-		if (sizehint != (size_t)-1) {
-			size_t mask;
-			if (sizehint == 0)
-				return URoSet_New();
-			mask = 1;
-			/* Figure out how large the mask of the set is going to be. */
-			while ((sizehint & mask) != sizehint)
-				mask = (mask << 1) | 1;
-			result = (DREF URoSet *)DeeObject_TryCallocc(offsetof(URoSet, urs_elem),
-			                                             mask + 1,
-			                                             sizeof(struct uset_item));
-			if unlikely(!result)
-				goto use_zero_sizehint;
-			result->urs_mask = mask;
-		} else {
-use_zero_sizehint:
-			result = (DREF URoSet *)DeeObject_Mallocc(offsetof(URoSet, urs_elem),
-			                                          1, sizeof(struct uset_item));
-			if unlikely(!result)
-				goto err;
-			result->urs_mask            = 0;
-			result->urs_size            = 0;
-			result->urs_elem[0].usi_key = NULL;
-		}
-		if unlikely(DeeObject_Foreach(sequence, &roset_init_foreach_cb, &result))
-			goto err_r_elem;
+		result->urs_mask            = 0;
+		result->urs_size            = 0;
+		result->urs_elem[0].usi_key = NULL;
 	}
+	if unlikely(DeeObject_Foreach(self, &roset_init_foreach_cb, &result))
+		goto err_r_elem;
 	DeeObject_InitStatic(result, &URoSet_Type);
 	return result;
 err_r_elem:
 	{
 		STATIC_ASSERT(sizeof(DREF DeeObject *) == sizeof(struct uset_item));
-		Dee_XDecrefv((DREF DeeObject **)result->urs_elem,
-		             result->urs_mask + 1);
+		Dee_XDecrefv((DREF DeeObject **)result->urs_elem, result->urs_mask + 1);
 	}
 /*err_r:*/
 	DeeObject_Free(result);
 err:
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF URoSet *DCALL
+URoSet_FromSequence(DeeObject *__restrict sequence) {
+	DeeTypeObject *type = Dee_TYPE(sequence);
+	if (type == &URoSet_Type)
+		return_reference_((URoSet *)sequence);
+	if (type == &USet_Type)
+		return URoSet_FromUSet((USet *)sequence);
+
+	/* TODO: Optimizations for `DeeHashSet_Type' */
+	/* TODO: Optimizations for `DeeRoSet_Type' */
+
+	return URoSet_FromSequence_fallback(sequence);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL

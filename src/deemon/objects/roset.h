@@ -31,8 +31,12 @@ DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeRoSetObject, rosi_set)  /* [1..1][const] The set being iterated. */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+	/*real*/Dee_hash_vidx_t              rosi_vidx; /* [lock(ATOMIC)] Index of next item to yield. */
+#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 	struct Dee_roset_item               *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
 	                                                 * The first candidate for the next item. */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 } RoSetIterator;
 
 INTDEF DeeTypeObject RoSetIterator_Type;
