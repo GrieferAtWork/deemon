@@ -33,7 +33,7 @@
 
 #include <deemon/alloc.h>  /* DeeObject_* */
 #include <deemon/gc.h>     /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_Track */
-#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_TYPE, OBJECT_HEAD */
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Decref_unlikely, Dee_TYPE, OBJECT_HEAD */
 #include <deemon/type.h>   /* DeeObject_InitHeap, DeeObject_InitStatic */
 
 #include <stddef.h> /* NULL */

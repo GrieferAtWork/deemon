@@ -35,6 +35,7 @@
 #include <deemon/file.h>               /* DeeFileType_Type */
 #include <deemon/format.h>             /* DeeFormat_PrintStr, DeeFormat_Printf */
 #include <deemon/gc.h>                 /* DeeGCSlab_Free, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/hashset.h>            /* Dee_hashset_item */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMap_Type */

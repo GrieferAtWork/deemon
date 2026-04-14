@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h> /* DeeTypeObject */
-#include <deemon/roset.h>  /* DeeRoSetObject, Dee_roset_item */
+#include <deemon/object.h>       /* DeeTypeObject */
+#include <deemon/roset.h>        /* DeeRoSetObject, Dee_roset_item */
+#include <deemon/util/hash-io.h> /* Dee_hash_vidx_t */
 
 #include "generic-proxy.h"
 

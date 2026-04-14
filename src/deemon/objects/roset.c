@@ -33,18 +33,18 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/system-features.h>    /* memcpy */
+#include <deemon/system-features.h>    /* memcpy, memset */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
-#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
-#include "generic-proxy.h"
-#include "roset.h"
 #include "dict-utils.h"
+#include "generic-proxy.h"
 #include "rodict.h"
+#include "roset.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -53,7 +53,6 @@
 #define byte_t __BYTE_TYPE__
 
 #ifndef DICT_NDEBUG
-#include <hybrid/align.h> /* IS_POWER_OF_TWO */
 #endif /* !DICT_NDEBUG */
 
 DECL_BEGIN

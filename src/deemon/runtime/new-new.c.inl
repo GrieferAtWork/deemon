@@ -346,7 +346,7 @@ print('#endif /' '* __INTELLISENSE__ *' '/');
 #include <deemon/alloc.h>  /* DeeObject_* */
 #include <deemon/gc.h>     /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_Track */
 #include <deemon/kwds.h>   /* DeeKwds_Check, DeeKwds_SIZE */
-#include <deemon/object.h> /* DREF, DeeObject, DeeObject_Size, DeeTypeObject, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_TYPE, OBJECT_HEAD */
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_Size, DeeTypeObject, Dee_Decref_unlikely, Dee_TYPE, OBJECT_HEAD */
 #include <deemon/type.h>   /* DeeObject_*, DeeType_IsGC, DeeType_IsHeapType */
 
 #include <stddef.h> /* NULL, size_t */

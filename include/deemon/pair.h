@@ -54,7 +54,7 @@
 #if !defined(CONFIG_ENABLE_SEQ_ONE_TYPE) || !defined(CONFIG_ENABLE_SEQ_PAIR_TYPE)
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeObject_FREE, DeeObject_MALLOC */
-#include "object.h" /* Dee_DecrefNokill, Dee_Incref */
+#include "object.h" /* Dee_Incref */
 #include "tuple.h"  /* DeeTuple* */
 #include "type.h"   /* DeeObject_InitStatic */
 #endif /* !__INTELLISENSE__ */

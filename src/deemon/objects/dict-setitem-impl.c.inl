@@ -41,15 +41,17 @@
 #include <deemon/api.h>
 
 #include <deemon/dict.h>            /* DeeDict_*, Dee_dict_item, _DeeDict_* */
+#include <deemon/hashset.h>         /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
 #include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_hash_t, ITER_DONE */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_hash_t, ITER_DONE, return_reference */
 #include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
 #include <deemon/util/hash-io.h>    /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
+#include "dict-utils.h"
+
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-
 
 #if (defined(DEFINE_dict_setitem) +                           \
      defined(DEFINE_dict_setitem_at) +                        \

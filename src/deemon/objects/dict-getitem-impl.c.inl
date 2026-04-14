@@ -22,7 +22,7 @@
 //#define DEFINE_dict_trygetitem_string_hash
 //#define DEFINE_dict_trygetitem_string_len_hash
 //#define DEFINE_dict_trygetitem_index
-//#define DEFINE_dict_getitem
+#define DEFINE_dict_getitem
 //#define DEFINE_dict_getitem_string_hash
 //#define DEFINE_dict_getitem_string_len_hash
 //#define DEFINE_dict_getitem_index
@@ -38,7 +38,7 @@
 //#define DEFINE_hashset_mh_contains_string_hash
 //#define DEFINE_hashset_mh_contains_string_len_hash
 //#define DEFINE_hashset_mh_contains_index
-#define DEFINE_hashset_mh_contains_with_range
+//#define DEFINE_hashset_mh_contains_with_range
 //#define DEFINE_hashset_mh_contains_with_range_string_hash
 //#define DEFINE_hashset_mh_contains_with_range_string_len_hash
 //#define DEFINE_hashset_mh_contains_with_range_index
@@ -48,8 +48,11 @@
 
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
+#include <deemon/hashset.h>      /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
 #include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_BOUND_*, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref_unlikely, Dee_Incref, Dee_hash_t, ITER_DONE */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
+
+#include "dict-utils.h"
 
 #include <stddef.h> /* NULL, size_t */
 

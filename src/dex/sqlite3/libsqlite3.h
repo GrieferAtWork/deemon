@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_Free, _Dee_MallococBufsize */
 #include <deemon/bytes.h>           /* DeeBytesObject */
 #include <deemon/error_types.h>     /* DeeSystemErrorObject */
-#include <deemon/object.h>          /* Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_XDecref */
+#include <deemon/object.h>          /* Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>          /* DeeStringObject, Dee_string_fini_hook */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
 #include <deemon/thread.h>          /* DeeThreadObject, Dee_thread_interrupt_hook */

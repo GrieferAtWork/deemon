@@ -18,13 +18,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-//#define DEFINE_dict_first
+#define DEFINE_dict_first
 //#define DEFINE_dict_firstkey
 //#define DEFINE_dict_firstvalue
 //#define DEFINE_dict_last
 //#define DEFINE_dict_lastkey
 //#define DEFINE_dict_lastvalue
-#define DEFINE_hashset_first
+//#define DEFINE_hashset_first
 //#define DEFINE_hashset_last
 #endif /* __INTELLISENSE__ */
 
@@ -32,12 +32,15 @@
 
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab */
 #include <deemon/error-rt.h>     /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
+#include <deemon/hashset.h>      /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_GetRealVTab */
 #include <deemon/none.h>         /* Dee_None */
 #include <deemon/object.h>       /* Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/pair.h>         /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>          /* DeeSeq_Unpack */
 #include <deemon/types.h>        /* DREF, DeeObject, Dee_AsObject, ITER_DONE */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_real2virt, Dee_hash_vidx_t */
+
+#include "dict-utils.h"
 
 #include <stddef.h> /* NULL */
 

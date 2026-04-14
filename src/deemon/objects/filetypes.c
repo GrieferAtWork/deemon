@@ -28,7 +28,7 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t */
 #include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */

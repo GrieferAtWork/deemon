@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC */
-#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD */
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD */
 #include <deemon/serial.h> /* Dee_seraddr_t */
 #include <deemon/type.h>   /* DeeObject_InitStatic, DeeObject_IsShared, Dee_visit_t, type_cmp */
 

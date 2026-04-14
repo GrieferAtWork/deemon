@@ -31,7 +31,7 @@
 #include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
 #include <deemon/float.h>              /* DeeFloat_Type */
-#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_* */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item, _DeeHashSet_GetVirtVTab */
 #include <deemon/int.h>                /* DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeKwds_Type */
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
@@ -40,7 +40,7 @@
 #include <deemon/object.h>             /* DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_TYPE */
 #include <deemon/objmethod.h>          /* DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
-#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item, _DeeRoSet_GetRealVTab */
 #include <deemon/string.h>             /* DeeString_Type */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/thread.h>             /* DeeThread_Type */

@@ -53,7 +53,7 @@
 #include <deemon/operator-hints.h>  /* DeeNO_call_kw_t, DeeNO_call_t, DeeType_RequireNativeOperator */
 #include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/rodict.h>          /* DeeRoDict*, Dee_rodict_builder* */
-#include <deemon/roset.h>           /* DeeRoSet* */
+#include <deemon/roset.h>           /* DeeRoSet*, Dee_roset_builder, Dee_roset_builder_fini, Dee_roset_builder_init_with_hint, Dee_roset_builder_insert, Dee_roset_builder_pack */
 #include <deemon/seq.h>             /* DeeSeq_Type, DeeSeq_Unpack, DeeSharedVector_* */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString*, DeeUni_IsSymCont, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */

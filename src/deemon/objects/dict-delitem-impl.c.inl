@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-//#define DEFINE_dict_delitem
+#define DEFINE_dict_delitem
 //#define DEFINE_dict_delitem_string_hash
 //#define DEFINE_dict_delitem_string_len_hash
 //#define DEFINE_dict_delitem_index
@@ -26,7 +26,7 @@
 //#define DEFINE_dict_mh_remove
 //#define DEFINE_dict_mh_pop
 //#define DEFINE_dict_mh_pop_with_default
-#define DEFINE_hashset_mh_remove
+//#define DEFINE_hashset_mh_remove
 //#define DEFINE_hashset_mh_remove_string_hash
 //#define DEFINE_hashset_mh_remove_string_len_hash
 //#define DEFINE_hashset_mh_remove_index
@@ -36,8 +36,11 @@
 
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
+#include <deemon/hashset.h>      /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
 #include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_hash_t, ITER_DONE */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
+
+#include "dict-utils.h"
 
 #include <stddef.h> /* NULL, size_t */
 

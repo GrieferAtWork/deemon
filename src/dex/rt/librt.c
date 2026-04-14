@@ -46,7 +46,7 @@
 #include <deemon/filetypes.h>         /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
 #include <deemon/float.h>             /* DeeFloat_Type */
 #include <deemon/gc.h>                /* DeeGCEnumTracked_Singleton, Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
-#include <deemon/hashset.h>           /* DeeHashSet_Type */
+#include <deemon/hashset.h>           /* DeeHashSet_Type, Dee_HASHSET_ITEM_INIT, Dee_hashset_item */
 #include <deemon/instancemethod.h>    /* DeeInstanceMethod_Type */
 #include <deemon/int.h>               /* DeeInt_* */
 #include <deemon/kwds.h>              /* DeeBlackListKw_Type, DeeBlackListKwds_Type, DeeKw_Wrap, DeeKwdsMapping_Type, DeeKwds_Type */
@@ -62,7 +62,7 @@
 #include <deemon/pair.h>              /* DeeSeq_OfOne, DeeSeq_OfPair */
 #include <deemon/property.h>          /* DeeProperty_Type */
 #include <deemon/rodict.h>            /* DeeRoDictObject, DeeRoDict_Type, Dee_EmptyRoDict */
-#include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
+#include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_EmptyRoSet, Dee_roset_item */
 #include <deemon/seq.h>               /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeRefVector_NewReadonly, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_Type, DeeSharedVector_Type, Dee_EmptySeq */
 #include <deemon/set.h>               /* DeeSet_Type, Dee_EmptySet, Dee_UniversalSet */
 #include <deemon/string.h>            /* DeeStringObject, DeeString_Type, Dee_EmptyString */
@@ -3560,6 +3560,10 @@ DEX_MEMBER_F("Mapping_empty", Dee_EmptyMap, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "A general-purpose, empty mapping singleton"),
 DEX_MEMBER_F("RoDict_empty", Dee_EmptyRoDict, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "An empty instance of ?GRoDict"),
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+DEX_MEMBER_F("RoSet_empty", Dee_EmptyRoSet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+             "An empty instance of ?GRoSet"),
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 DEX_MEMBER_F("Tuple_empty", Dee_EmptyTuple, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "The empty tuple singleton ${()}"),
 DEX_MEMBER_F("String_empty", Dee_EmptyString, DEXSYM_READONLY | DEXSYM_CONSTEXPR,

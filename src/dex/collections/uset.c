@@ -32,12 +32,10 @@
 #include <deemon/dict.h>            /* DeeDict_Dummy */
 #include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
-#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_* */
+#include <deemon/gc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>             /* DeeIterator_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */

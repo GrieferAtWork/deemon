@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/hashset.h> /* DeeHashSetObject, Dee_hashset_item */
-#include <deemon/object.h>  /* DeeTypeObject */
+#include <deemon/hashset.h>      /* DeeHashSetObject, Dee_hashset_item */
+#include <deemon/object.h>       /* DeeTypeObject */
+#include <deemon/util/hash-io.h> /* Dee_hash_vidx_t */
 
 #include "generic-proxy.h"
 

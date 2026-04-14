@@ -20,15 +20,41 @@
 #ifdef __INTELLISENSE__
 #define DEFINE_DeeDict
 //#define DEFINE_DeeHashSet
+#define DEFINE_LOW_LEVEL
 #define DEFINE_HIGH_LEVEL
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
-#include <deemon/dict.h>
-#include <deemon/hashset.h>
 
-#include "dict-utils.h"
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac, Dee_TryMallocac */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw, UNPuSIZ */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/dict.h>            /* DeeDict_*, _DeeDict_* */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK */
+#include <deemon/hashset.h>         /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
+#include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init */
+#include <deemon/operator-hints.h>  /* DeeType_HasNativeOperator */
+#include <deemon/rodict.h>          /* DeeRoDict* */
+#include <deemon/roset.h>           /* DeeRoSet* */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* bzeroc, memcpy*, memmovedownc, memmoveupc */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, Dee_Visit, Dee_visit_t */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_hash_*, _DeeHash_EmptyTab */
+#include <deemon/util/lock.h>       /* DeeLock_Acquire2, Dee_atomic_rwlock_init */
+#include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
+
+#include <hybrid/align.h>    /* CEILDIV */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
 #include "../runtime/kwlist.h"
+#include "dict-utils.h"
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -273,7 +299,7 @@
 #define LOCAL__DeeDict_CanShrinkVTab                            _DeeHashSet_CanShrinkVTab
 #define LOCAL__DeeDict_ShouldShrinkHTab                         _DeeHashSet_ShouldShrinkHTab
 #define LOCAL__DeeDict_CanShrinkHTab                            _DeeHashSet_CanShrinkHTab
-#define LOCAL_DICT_FROMSEQ_DEFAULT_HINT                         DICT_FROMSEQ_DEFAULT_HINT
+#define LOCAL_DICT_FROMSEQ_DEFAULT_HINT                         HASHSET_FROMSEQ_DEFAULT_HINT
 #define LOCAL_dict_suggested_max_valloc_from_count              hashset_suggested_max_valloc_from_count
 #define LOCAL_dict_valloc_from_hmask_and_count                  hashset_valloc_from_hmask_and_count
 #define LOCAL_dict_hmask_from_count                             hashset_hmask_from_count
@@ -353,7 +379,7 @@ DECL_BEGIN
 /* LOW-LEVEL API                                                        */
 /************************************************************************/
 /************************************************************************/
-#ifndef DEFINE_HIGH_LEVEL
+#ifdef DEFINE_LOW_LEVEL
 PRIVATE WUNUSED DREF LOCAL_Dict *DCALL
 LOCAL_dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	DREF LOCAL_Dict *result;
@@ -473,7 +499,7 @@ LOCAL_dict_do_optimize_vtab_without_rebuild(LOCAL_Dict *__restrict self) {
 
 INTERN NONNULL((1)) void DCALL
 LOCAL_dict_optimize_vtab(LOCAL_Dict *__restrict self) {
-	ASSERT(_DeeDict_CanOptimizeVTab(self));
+	ASSERT(LOCAL__DeeDict_CanOptimizeVTab(self));
 	LOCAL_dict_do_optimize_vtab_without_rebuild(self);
 	LOCAL_dict_htab_rebuild_after_optimize(self);
 }
@@ -490,7 +516,7 @@ LOCAL_dict_htab_rebuild(LOCAL_Dict *__restrict self) {
  * do so without ever releasing that lock.
  * NOTES:
  * - This function will NEVER rehash the dict or change the contents of d_htab!
- * - The caller must ensure that `_DeeDict_CanGrowVTab(self)' is true
+ * - The caller must ensure that `LOCAL__DeeDict_CanGrowVTab(self)' is true
  * @return: true:  Success
  * @return: false: Failure */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
@@ -505,8 +531,8 @@ LOCAL_dict_trygrow_vtab(LOCAL_Dict *__restrict self) {
 	union Dee_hash_htab *new_htab;
 
 	/* Must truly allocate a new, larger v-table */
-	ASSERT(_DeeDict_CanGrowVTab(self));
-	new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, true);
+	ASSERT(LOCAL__DeeDict_CanGrowVTab(self));
+	new_valloc = LOCAL_dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, true);
 	old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
 	new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
@@ -516,7 +542,7 @@ LOCAL_dict_trygrow_vtab(LOCAL_Dict *__restrict self) {
 	old_vtab = LOCAL_NULL_IF__DeeDict_EmptyVTab_REAL(old_vtab);
 	new_vtab = (struct LOCAL_Dee_dict_item *)LOCAL__DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab) {
-		new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, false);
+		new_valloc = LOCAL_dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, false);
 		old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
 		new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
@@ -543,7 +569,7 @@ LOCAL_dict_trygrow_vtab(LOCAL_Dict *__restrict self) {
 }
 
 /* Same as `dict_trygrow_vtab()', but allowed to grow the htab
- * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
+ * also, and can be used even when "!LOCAL__DeeDict_CanGrowVTab(self)"
  * Tries to make it so "d_valloc >= min_valloc"
  * @return: true:  Success: "d_valloc >= min_valloc"
  * @return: false: Failure */
@@ -624,7 +650,7 @@ LOCAL_dict_trygrow_vtab_and_htab_with(LOCAL_Dict *__restrict self,
 
 
 /* Same as `dict_trygrow_vtab()', but allowed to grow the htab
- * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
+ * also, and can be used even when "!LOCAL__DeeDict_CanGrowVTab(self)"
  * @return: true:  Success
  * @return: false: Failure */
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
@@ -681,7 +707,7 @@ err:
 #define LOCAL_HAVE_dict_setitem_unlocked
 #endif /* ... */
 
-/* Make it so "!_DeeDict_MustGrowVTab(self)"
+/* Make it so "!LOCAL__DeeDict_MustGrowVTab(self)"
  * (aka: " d_vsize < d_valloc && d_valloc <= d_hmask")
  * Allowed to release+re-acquire a write-lock to "self".
  * @return: 0 : Success (lock was lost and later re-acquired)
@@ -718,7 +744,7 @@ again:
 #else /* LOCAL_HAVE_dict_setitem_unlocked */
 	ASSERT(LOCAL_DeeDict_LockWriting(self));
 #endif /* !LOCAL_HAVE_dict_setitem_unlocked */
-	ASSERT(_DeeDict_MustGrowVTab(self));
+	ASSERT(LOCAL__DeeDict_MustGrowVTab(self));
 
 	/* Figure out allocation sizes (never overallocate here; we only get here when memory is low!) */
 	old_hmask = self->d_hmask;
@@ -785,7 +811,7 @@ free_buffer_and_try_again:
 		self->d_htab = new_htab;
 	} else {
 		/* Must rebuild htab */
-		if (_DeeDict_CanOptimizeVTab(self))
+		if (LOCAL__DeeDict_CanOptimizeVTab(self))
 			LOCAL_dict_do_optimize_vtab_without_rebuild(self);
 		new_vtab = (struct LOCAL_Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
 		                                                 sizeof(struct LOCAL_Dee_dict_item));
@@ -810,7 +836,7 @@ err:
 #undef LOCAL_HAVE_dict_setitem_unlocked
 
 #if 0
-/* Make it so "!_DeeDict_MustGrowHTab(self)".
+/* Make it so "!LOCAL__DeeDict_MustGrowHTab(self)".
  * Allowed to release+re-acquire a write-lock to "self".
  * @return: 0 : Success (lock was lost and later re-acquired)
  * @return: -1: Failure (lock was lost and an error was thrown) */
@@ -882,8 +908,8 @@ err:
 
 /* Shrink the vtab and release a lock to "self". Must be called when:
  * - holding a write-lock
- * - _DeeDict_CanShrinkHTab(self) is true
- * - _DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
+ * - LOCAL__DeeDict_CanShrinkHTab(self) is true
+ * - LOCAL__DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
  * NOTE: After a call to this function, the caller must always rebuild the htab! */
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_dict_shrink_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
@@ -924,8 +950,8 @@ LOCAL_dict_shrink_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
 
 /* Shrink the vtab+htab. Must be called while:
  * - holding a write-lock
- * - _DeeDict_CanShrinkVTab(self) is true
- * - _DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
+ * - LOCAL__DeeDict_CanShrinkVTab(self) is true
+ * - LOCAL__DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 LOCAL_dict_shrink_vtab_and_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
 	bool must_rebuild_htab = false;
@@ -1053,7 +1079,7 @@ LOCAL_dict_makespace_at(LOCAL_Dict *__restrict self, /*real*/ Dee_hash_vidx_t vt
 	if (vtab_idx < self->d_vsize)
 		LOCAL_dict_makespace_at_impl(self, vtab_idx);
 }
-#endif /* !DEFINE_HIGH_LEVEL */
+#endif /* DEFINE_LOW_LEVEL */
 
 
 
@@ -1519,7 +1545,7 @@ LOCAL_dict_initfrom_empty(LOCAL_Dict *__restrict self) {
 	self->d_valloc  = 0;
 	self->d_vsize   = 0;
 	self->d_vused   = 0;
-	_DeeDict_SetVirtVTab(self, LOCAL_DeeDict_EmptyVTab);
+	LOCAL__DeeDict_SetVirtVTab(self, LOCAL_DeeDict_EmptyVTab);
 	self->d_hmask   = 0;
 	self->d_hidxops = &Dee_hash_hidxio[0];
 	self->d_htab    = LOCAL_DeeDict_EmptyHTab;
@@ -1869,11 +1895,7 @@ LOCAL_dict_printrepr(LOCAL_Dict *__restrict self,
 	/*virt*/ struct LOCAL_Dee_dict_item *vtab;
 	/*virt*/ Dee_hash_vidx_t i;
 	bool is_first;
-#ifdef DEFINE_DeeHashSet
-	result = DeeFormat_PRINT(printer, arg, "HashSet({ ");
-#else /* DEFINE_DeeHashSet */
-	result = DeeFormat_PRINT(printer, arg, "Dict({ ");
-#endif /* !DEFINE_DeeHashSet */
+	result = DeeFormat_PRINT(printer, arg, PP_STR(LOCAL_Dict) "({ ");
 	if unlikely(result < 0)
 		return result;
 	is_first = true;
@@ -1931,7 +1953,7 @@ LOCAL_dict_mh_clear(LOCAL_Dict *__restrict self) {
 	self->d_valloc  = 0;
 	self->d_vsize   = 0;
 	self->d_vused   = 0;
-	_DeeDict_SetVirtVTab(self, LOCAL_DeeDict_EmptyVTab);
+	LOCAL__DeeDict_SetVirtVTab(self, LOCAL_DeeDict_EmptyVTab);
 	self->d_hmask   = 0;
 	self->d_hidxops = &Dee_hash_hidxio[0];
 	self->d_htab    = LOCAL_DeeDict_EmptyHTab;
@@ -2492,4 +2514,5 @@ DECL_END
 
 #undef DEFINE_DeeDict
 #undef DEFINE_DeeHashSet
+#undef DEFINE_LOW_LEVEL
 #undef DEFINE_HIGH_LEVEL

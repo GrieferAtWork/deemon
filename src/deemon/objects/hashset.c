@@ -24,40 +24,40 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>               /* return_bool */
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/dict.h>               /* DeeDict_Dummy */
-#include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence */
-#include <deemon/float.h>              /*  */
-#include <deemon/format.h>             /* DeeFormat_PRINT */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_Dummy */
+#include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence, DeeRT_ErrIndexOutOfBounds */
+#include <deemon/format.h>             /* DeeFormat_PRINT, PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/method-hints.h>       /* DeeMA_*, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h>    /* memcpyc */
+#include <deemon/system-features.h>    /* memcpyc, memset */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_*, _DeeHash_EmptyTab */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
-#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
-#include <deemon/util/objectlist.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
+#include <hybrid/align.h>       /* IS_POWER_OF_TWO */
+#include <hybrid/overflow.h>    /* OVERFLOW_UADD */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
-#include <hybrid/align.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-#include "generic-proxy.h"
 #include "dict-utils.h"
-#include "hashset.h"
 #include "dict.h"
+#include "generic-proxy.h"
+#include "hashset.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -549,6 +549,7 @@ hashset_makespace_at(HashSet *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx
 #else /* __INTELLISENSE__ */
 DECL_END
 #define DEFINE_DeeHashSet
+#define DEFINE_LOW_LEVEL
 #include "dict-impl.c.inl"
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */

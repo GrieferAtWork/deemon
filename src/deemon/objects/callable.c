@@ -27,12 +27,12 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_NewUninitialized */
 #include <deemon/type.h>               /* DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FCONSTCALL, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/strings.h"

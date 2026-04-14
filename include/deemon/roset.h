@@ -24,13 +24,16 @@
 
 #include "api.h"
 
-#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_hash_t */
-#include "hashset.h"
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include <stddef.h> /* size_t */
+#include "hashset.h"      /* Dee_hashset_item */
+#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_hash_t, Dee_ssize_t */
+#include "util/hash-io.h" /* Dee_hash_*, _DeeHash_* */
+
+#include <stddef.h> /* NULL, size_t */
 
 #ifndef __INTELLISENSE__
-#include "object.h" /* DeeObject_ForeachPair, Dee_Incref */
+#include "object.h" /* DeeObject_Foreach, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

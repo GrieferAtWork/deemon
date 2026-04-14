@@ -38,7 +38,7 @@
 #include <deemon/system.h>            /* DeeSystem_* */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
-#include <deemon/type.h>              /* DeeObject_InitInherited, DeeObject_InitStatic */
+#include <deemon/type.h>              /* DeeObject_InitStatic */
 #include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */

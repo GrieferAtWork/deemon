@@ -31,7 +31,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString_PrintAscii, DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_InitInherited, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
 #include <deemon/util/atomic.h>        /* atomic_orfetch */
 
 #include <hybrid/align.h>    /* IS_ALIGNED */

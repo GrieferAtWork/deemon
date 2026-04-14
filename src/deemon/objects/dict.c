@@ -22,38 +22,36 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPuSIZ */
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
-#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/float.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/float.h>              /*  */
+#include <deemon/format.h>             /* PRFuSIZ, PRFxSIZ */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_Type */
+#include <deemon/int.h>                /* DeeInt_NEWU */
 #include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
 #include <deemon/none.h>               /* Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
-#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeqPair_ELEM, DeeSeq_* */
 #include <deemon/rodict.h>             /* DeeRoDict* */
-#include <deemon/roset.h>              /* DeeRoSet_Type */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
-#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* bzeroc, memcpy*, memmovedownc, memmoveupc, memset */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/system-features.h>    /* memset */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
-#include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
-#include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
-#include <hybrid/align.h>    /* CEILDIV, IS_POWER_OF_TWO */
-#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/align.h>    /* IS_POWER_OF_TWO */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/kwlist.h"
@@ -618,6 +616,7 @@ dict_makespace_at(Dict *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx);
 #else /* __INTELLISENSE__ */
 DECL_END
 #define DEFINE_DeeDict
+#define DEFINE_LOW_LEVEL
 #include "dict-impl.c.inl"
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */

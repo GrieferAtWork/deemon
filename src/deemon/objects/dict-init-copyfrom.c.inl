@@ -18,19 +18,22 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-//#define DEFINE_dict_init_fromcopy
+#define DEFINE_dict_init_fromcopy
 //#define DEFINE_dict_init_fromcopy_keysonly
 //#define DEFINE_dict_init_fromhashset_keysonly
-#define DEFINE_hashset_init_fromcopy
+//#define DEFINE_hashset_init_fromcopy
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
 
 #include <deemon/dict.h>            /* DeeDict_LockEndRead, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_SetRealVTab */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_LockEndRead, Dee_hashset_item, _DeeHashSet_GetRealVTab, _DeeHashSet_SetRealVTab */
 #include <deemon/object.h>          /* Dee_Incref, Dee_hash_t */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
+
+#include "dict-utils.h"
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* size_t */

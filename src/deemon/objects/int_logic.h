@@ -32,8 +32,8 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_Free */
-#include <deemon/int.h>             /* DeeIntObject, DeeInt_Type, Dee_DIGIT_BITS, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
-#include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill */
+#include <deemon/int.h>             /* DeeIntObject, Dee_DIGIT_BITS, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
+#include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, memset, memsetl, memsetq, memsetw */
 
 #include <stddef.h> /* size_t */
