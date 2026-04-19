@@ -100,8 +100,10 @@ rodict_verify(RoDict *__restrict self) {
 	     Dee_hash_vidx_virt_lt_real(i, self->rd_vsize); ++i) {
 		struct Dee_dict_item *item = &_DeeRoDict_GetVirtVTab(self)[i];
 		if (item->di_key) {
+#if 0 /* Cannot be asserted -- we might get here from "tp_visit", which can screw with reference counts */
 			ASSERT_OBJECT(item->di_key);
 			ASSERT_OBJECT(item->di_value);
+#endif
 			++real_vused;
 		}
 	}

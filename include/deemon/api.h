@@ -396,7 +396,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 /* Experimental feature switch: HashSet remembers the order in which items are inserted. */
 #if (!defined(CONFIG_EXPERIMENTAL_ORDERED_HASHSET) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET))
-#if 0 /* TODO: Implementation is incomplete */
+#if 0 /* TODO: Implementation is complete, but not fully tested in all situations */
 #define CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #else
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET

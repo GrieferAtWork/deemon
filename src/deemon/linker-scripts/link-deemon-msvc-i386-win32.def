@@ -1289,9 +1289,6 @@ EXPORTS
 	DeeRoDict_FromDict@4=_DeeRoDict_FromDict@4
 	DeeRoDict_FromSequence@4=_DeeRoDict_FromSequence@4
 	DeeRoSet_FromSequence@4=_DeeRoSet_FromSequence@4
-	DeeRoSet_Insert@8=_DeeRoSet_Insert@8
-	DeeRoSet_New@0=_DeeRoSet_New@0
-	DeeRoSet_NewWithHint@4=_DeeRoSet_NewWithHint@4
 	DeeSeqOne_DecrefSymbolic@4=_DeeSeqOne_DecrefSymbolic@4
 	DeeSeqPair_DecrefSymbolic@4=_DeeSeqPair_DecrefSymbolic@4
 	DeeSeqRange_DoClamp@8=_DeeSeqRange_DoClamp@8

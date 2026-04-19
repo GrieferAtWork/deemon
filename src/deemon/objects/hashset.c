@@ -345,7 +345,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 #undef HAVE_hashset_insert_unlocked
 #endif /* __OPTIMIZE_SIZE__ */
 
-#if defined(DICT_NDEBUG) && 0
+#if defined(DICT_NDEBUG) && 0 /* TODO: Remove "&& 0" after "CONFIG_EXPERIMENTAL_ORDERED_HASHSET" */
 #define hashset_verify(self) (void)0
 #else /* DICT_NDEBUG */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
@@ -362,12 +362,13 @@ hashset_verify(HashSet *__restrict self) {
 	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_HASH_HIDXIO_COUNT);
 	ops = self->hs_hidxops;
 	ASSERT(ops == &Dee_hash_hidxio[hidxio]);
-	ASSERT(ops == &Dee_hash_hidxio[hidxio]);
 	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
 	     Dee_hash_vidx_virt_lt_real(i, self->hs_vsize); ++i) {
 		struct Dee_hashset_item *item = &_DeeHashSet_GetVirtVTab(self)[i];
 		if (item->hsi_key) {
+#if 0 /* Cannot be asserted -- we might get here from "tp_visit", which can screw with reference counts */
 			ASSERT_OBJECT(item->hsi_key);
+#endif
 			++real_vused;
 		}
 	}

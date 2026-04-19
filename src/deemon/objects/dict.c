@@ -427,13 +427,14 @@ dict_verify(Dict *__restrict self) {
 	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_HASH_HIDXIO_COUNT);
 	ops = self->d_hidxops;
 	ASSERT(ops == &Dee_hash_hidxio[hidxio]);
-	ASSERT(ops == &Dee_hash_hidxio[hidxio]);
 	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
 	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		struct Dee_dict_item *item = &_DeeDict_GetVirtVTab(self)[i];
 		if (item->di_key) {
+#if 0 /* Cannot be asserted -- we might get here from "tp_visit", which can screw with reference counts */
 			ASSERT_OBJECT(item->di_key);
 			ASSERT_OBJECT(item->di_value);
+#endif
 			++real_vused;
 		}
 	}

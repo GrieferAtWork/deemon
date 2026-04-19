@@ -84,7 +84,7 @@ typedef DeeRoSetObject RoSet;
 /************************************************************************/
 
 
-#if defined(DICT_NDEBUG) && 0
+#if defined(DICT_NDEBUG) && 0 /* TODO: Remove "&& 0" after "CONFIG_EXPERIMENTAL_ORDERED_HASHSET" */
 #define roset_verify(self) (void)0
 #else /* DICT_NDEBUG */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
@@ -103,7 +103,9 @@ roset_verify(RoSet *__restrict self) {
 	     Dee_hash_vidx_virt_lt_real(i, self->rs_vsize); ++i) {
 		struct Dee_hashset_item *item = &_DeeRoSet_GetVirtVTab(self)[i];
 		if (item->hsi_key) {
+#if 0 /* Cannot be asserted -- we might get here from "tp_visit", which can screw with reference counts */
 			ASSERT_OBJECT(item->hsi_key);
+#endif
 			++real_vused;
 		}
 	}
@@ -391,6 +393,7 @@ again:
 		src = &_DeeDict_GetRealVTab(dict_keys)[i];
 		dst->hsi_hash = src->di_hash;
 		dst->hsi_key  = src->di_key;
+		Dee_Incref(dst->hsi_key);
 	}
 	hmask_memcpy_and_maybe_downcast(result->rs_htab, dst_hidxio,
 	                                dict_keys->d_htab, src_hidxio,
@@ -675,8 +678,6 @@ roset_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 	int cmp_result;
 	struct Dee_hashset_item *lhs_item;
 	struct roset_compare_seq_foreach_data *data;
-	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs_item), foreach))
-		return ROSET_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	data = (struct roset_compare_seq_foreach_data *)arg;
 	set = data->rscsfd_lhs;
 	if unlikely(data->rscsfd_index >= set->rs_vsize)
