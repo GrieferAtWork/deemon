@@ -148,8 +148,8 @@ Dee_roset_builder_pack(struct Dee_roset_builder *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_t" */
 Dee_roset_builder_insert(/*struct Dee_roset_builder*/ void *__restrict self, DeeObject *key);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_t" */
-Dee_roset_builder_setitem_inherited(/*struct Dee_roset_builder*/ void *__restrict self,
-                                    /*inherit(always)*/ DREF DeeObject *key);
+Dee_roset_builder_insert_inherited(/*struct Dee_roset_builder*/ void *__restrict self,
+                                   /*inherit(always)*/ DREF DeeObject *key);
 /* Insert all elements from "keys" into "self"
  * @return: * : The # of keys that weren't inserted because they were already present.
  * @return: -1: An error was thrown. */

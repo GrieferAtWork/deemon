@@ -18,10 +18,9 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "rodict.c"
 //#define DEFINE_rodict_contains
 //#define DEFINE_rodict_getitem
-#define DEFINE_rodict_getitemnr
+//#define DEFINE_rodict_getitemnr
 //#define DEFINE_rodict_bounditem
 //#define DEFINE_rodict_hasitem
 //#define DEFINE_rodict_trygetitem
@@ -42,6 +41,11 @@
 //#define DEFINE_rodict_hasitem_string_len_hash
 //#define DEFINE_rodict_getitemnr_string_hash
 //#define DEFINE_rodict_getitemnr_string_len_hash
+#define DEFINE_roset_contains
+//#define DEFINE_roset_mh_contains
+//#define DEFINE_roset_mh_contains_index
+//#define DEFINE_roset_mh_contains_string_hash
+//#define DEFINE_roset_mh_contains_string_len_hash
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_rodict_contains) +                     \
@@ -66,7 +70,12 @@
      defined(DEFINE_rodict_bounditem_string_len_hash) +    \
      defined(DEFINE_rodict_hasitem_string_len_hash) +      \
      defined(DEFINE_rodict_getitemnr_string_hash) +        \
-     defined(DEFINE_rodict_getitemnr_string_len_hash)) != 1
+     defined(DEFINE_rodict_getitemnr_string_len_hash) +    \
+     defined(DEFINE_roset_contains) +                      \
+     defined(DEFINE_roset_mh_contains) +                   \
+     defined(DEFINE_roset_mh_contains_index) +             \
+     defined(DEFINE_roset_mh_contains_string_hash) +       \
+     defined(DEFINE_roset_mh_contains_string_len_hash)) != 1
 #error "Must #define exactly 1 of these macros"
 #endif /* ... */
 
@@ -154,6 +163,29 @@
 #define LOCAL_rodict_getitem rodict_getitemnr_string_len_hash
 #define LOCAL_IS_NOREF
 #define LOCAL_HAS_STRING_LEN_HASH
+#elif defined(DEFINE_roset_contains)
+#define LOCAL_rodict_getitem roset_contains
+#define LOCAL_IS_HASHSET
+#define LOCAL_RETURNS_DEEMON_BOOL
+#elif defined(DEFINE_roset_mh_contains)
+#define LOCAL_rodict_getitem roset_mh_contains
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#elif defined(DEFINE_roset_mh_contains_index)
+#define LOCAL_rodict_getitem roset_mh_contains_index
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_INDEX
+#elif defined(DEFINE_roset_mh_contains_string_hash)
+#define LOCAL_rodict_getitem roset_mh_contains_string_hash
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_STRING_HASH
+#elif defined(DEFINE_roset_mh_contains_string_len_hash)
+#define LOCAL_rodict_getitem roset_mh_contains_string_len_hash
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_STRING_LEN_HASH
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -169,6 +201,35 @@
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
 #include <stddef.h> /* NULL, size_t */
+
+#ifdef LOCAL_IS_HASHSET
+#ifdef __INTELLISENSE__
+#include "roset.c"
+#endif /* __INTELLISENSE__ */
+
+#define LOCAL_RoDict                 RoSet
+#define LOCAL__DeeRoDict_HashIdxInit _DeeRoSet_HashIdxInit
+#define LOCAL__DeeRoDict_HashIdxNext _DeeRoSet_HashIdxNext
+#define LOCAL__DeeRoDict_GetVirtVTab _DeeRoSet_GetVirtVTab
+#define LOCAL_Dee_dict_item          Dee_hashset_item
+
+#define rd_hmask   rs_hmask
+#define rd_hidxget rs_hidxget
+#define rd_htab    rs_htab
+#define rd_vsize   rs_vsize
+#define di_hash    hsi_hash
+#define di_key     hsi_key
+#else /* LOCAL_IS_HASHSET */
+#ifdef __INTELLISENSE__
+#include "rodict.c"
+#endif /* __INTELLISENSE__ */
+
+#define LOCAL_RoDict                 RoDict
+#define LOCAL__DeeRoDict_HashIdxInit _DeeRoDict_HashIdxInit
+#define LOCAL__DeeRoDict_HashIdxNext _DeeRoDict_HashIdxNext
+#define LOCAL__DeeRoDict_GetVirtVTab _DeeRoDict_GetVirtVTab
+#define LOCAL_Dee_dict_item          Dee_dict_item
+#endif /* !LOCAL_IS_HASHSET */
 
 DECL_BEGIN
 
@@ -219,8 +280,9 @@ DECL_BEGIN
 #define LOCAL_compare(rhs) DeeObject_TryCompareEq(key, rhs)
 #endif /* !... */
 
+
 PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DCALL
-LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
+LOCAL_rodict_getitem(LOCAL_RoDict *self, LOCAL_KEY_PARAMS) {
 #ifdef LOCAL_HAS_PARAM_HASH
 #define LOCAL_hash hash
 #elif defined(LOCAL_HAS_INDEX)
@@ -231,9 +293,9 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 #endif /* !... */
 	Dee_hash_t hs, perturb;
 
-	for (_DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
-	     _DeeRoDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
-		struct Dee_dict_item *item;
+	for (LOCAL__DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     LOCAL__DeeRoDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
+		struct LOCAL_Dee_dict_item *item;
 		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->rd_hmask);
 		Dee_hash_vidx_t vtab_idx = (*self->rd_hidxget)(self->rd_htab, htab_idx); /*virt*/
 
@@ -243,7 +305,7 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 
 		/* Load referenced item in "rd_vtab" */
 		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->rd_vsize));
-		item = &_DeeRoDict_GetVirtVTab(self)[vtab_idx];
+		item = &LOCAL__DeeRoDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check if hash really matches. */
 		if (item->di_hash != LOCAL_hash)
@@ -309,12 +371,26 @@ err:
 
 DECL_END
 
+#undef LOCAL_RoDict
+#undef LOCAL__DeeRoDict_HashIdxInit
+#undef LOCAL__DeeRoDict_HashIdxNext
+#undef LOCAL__DeeRoDict_GetVirtVTab
+#undef LOCAL_Dee_dict_item
+#ifdef LOCAL_IS_HASHSET
+#undef rd_hmask
+#undef rd_hidxget
+#undef rd_htab
+#undef rd_vsize
+#undef di_hash
+#undef di_key
+#endif /* LOCAL_IS_HASHSET */
 #undef LOCAL_rodict_getitem
 #undef LOCAL_RETURNS_DEEMON_BOOL
 #undef LOCAL_IS_NOREF
 #undef LOCAL_IS_BOUND
 #undef LOCAL_IS_HAS
 #undef LOCAL_IS_TRY
+#undef LOCAL_IS_HASHSET
 #undef LOCAL_HAS_INDEX
 #undef LOCAL_HAS_STRING_HASH
 #undef LOCAL_HAS_STRING_LEN_HASH
@@ -342,3 +418,8 @@ DECL_END
 #undef DEFINE_rodict_hasitem_string_len_hash
 #undef DEFINE_rodict_getitemnr_string_hash
 #undef DEFINE_rodict_getitemnr_string_len_hash
+#undef DEFINE_roset_contains
+#undef DEFINE_roset_mh_contains
+#undef DEFINE_roset_mh_contains_index
+#undef DEFINE_roset_mh_contains_string_hash
+#undef DEFINE_roset_mh_contains_string_len_hash

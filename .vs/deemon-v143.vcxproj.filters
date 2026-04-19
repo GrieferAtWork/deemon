@@ -1272,6 +1272,9 @@
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\rodict-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\rodict.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>

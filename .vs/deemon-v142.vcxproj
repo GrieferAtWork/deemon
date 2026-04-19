@@ -432,6 +432,7 @@
 		<ClInclude Include="..\src\deemon\objects\list.h" />
 		<ClInclude Include="..\src\deemon\objects\objmethod.h" />
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\rodict-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\rodict.h" />
 		<ClInclude Include="..\src\deemon\objects\roset.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
