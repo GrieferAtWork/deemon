@@ -23,26 +23,26 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/arg.h>                /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStructKw, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_LockEndRead, DeeDict_Type, Dee_dict_item, _DeeDict_GetRealVTab */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
-#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
+#include <deemon/format.h>             /* PRFuSIZ, PRFxSIZ */
+#include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_LockEndRead, DeeHashSet_Type, Dee_hashset_item, _DeeHashSet_GetRealVTab */
 #include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewSize */
 #include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* DeeSeqPair*, DeeSeq_* */
-#include <deemon/rodict.h>             /* DeeRoDict*, Dee_EmptyRoDict, Dee_empty_rodict_object, Dee_rodict_builder*, _DeeRoDict_* */
-#include <deemon/roset.h>              /* DeeRoSet_Type */
+#include <deemon/rodict.h>             /* DeeRoDict*, Dee_rodict_builder*, _DeeRoDict_* */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, _DeeRoSet_GetRealVTab */
 #include <deemon/seq.h>                /* DeeIterator_Type */
-#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/system-features.h>    /* bzero*, memcpy, memmovedownc, mempcpyc, memset */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
+#include <deemon/system-features.h>    /* memcpy, memset */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 
@@ -57,9 +57,7 @@
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
 
-#include <stdbool.h> /* false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uint8_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

@@ -18,13 +18,29 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-//#define DEFINE_DeeRoDict
-#define DEFINE_DeeRoSet
+#define DEFINE_DeeRoDict
+//#define DEFINE_DeeRoSet
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
 
+#include <deemon/arg.h>             /* DeeArg_Unpack1 */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab */
+#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/rodict.h>          /* DeeRoDict*, Dee_EmptyRoDict, Dee_RODICT_BUILDER_INIT, Dee_empty_rodict_object, Dee_rodict_builder*, Dee_rodict_object, _DeeRoDict_* */
+#include <deemon/roset.h>           /* DeeRoSet*, Dee_EmptyRoSet, Dee_RODICT_BUILDER_INIT, Dee_empty_roset_object, Dee_roset_builder, Dee_roset_builder_cinit, Dee_roset_builder_fini, Dee_roset_builder_init, Dee_roset_builder_init_with_hint, Dee_roset_builder_insert, Dee_roset_builder_insert_inherited, Dee_roset_builder_insertall, Dee_roset_builder_pack, Dee_roset_object, _DeeRoSet_GetRealVTab, _DeeRoSet_GetVirtVTab, _DeeRoSet_HashIdxInit, _DeeRoSet_HashIdxNext */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/system-features.h> /* bzero*, memcpy, memmovedownc, mempcpyc */
+#include <deemon/type.h>            /* DeeObject_InitStatic, Dee_Visit, Dee_visit_t */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_hash_* */
+
 #include "seq/default-map-proxy.h"
+
+#include <stdbool.h> /* false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uint8_t */
 
 #if (defined(DEFINE_DeeRoDict) + \
      defined(DEFINE_DeeRoSet)) != 1

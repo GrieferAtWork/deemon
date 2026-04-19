@@ -23,23 +23,29 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/bool.h>               /* return_false, return_true */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct1XOr2X, UNPuSIZ, _DeeArg_AsObject */
+#include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
-#include <deemon/error-rt.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_LockEndRead, Dee_dict_item, _DeeDict_GetRealVTab */
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrUnboundAttr */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr, PRFuSIZ, PRFxSIZ */
+#include <deemon/hashset.h>            /* Dee_hashset_item */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
+#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
+#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item, _DeeRoSet_GetRealVTab, _DeeRoSet_GetVirtVTab, _DeeRoSet_HashIdxInit, _DeeRoSet_HashIdxNext */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/system-features.h>    /* memcpy, memset */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
-#include <hybrid/align.h>
+#include <hybrid/align.h>    /* IS_POWER_OF_TWO */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
