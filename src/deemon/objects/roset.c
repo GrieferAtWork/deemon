@@ -49,6 +49,7 @@
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/strings.h"
+#include "../runtime/method-hint-defaults.h"
 #include "dict-utils.h"
 #include "generic-proxy.h"
 #include "rodict.h"
@@ -464,6 +465,7 @@ DECL_BEGIN
 /* Key-contains operators. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL roset_contains(RoSet *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL roset_mh_contains(RoSet *self, DeeObject *key);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL roset_mh_contains_with_range(RoSet *self, DeeObject *key, size_t start, size_t end);
 
 #ifdef __OPTIMIZE_SIZE__
 #define SUBSTITUDE_roset_contains
@@ -472,6 +474,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL roset_mh_contains(RoSet *self, DeeObje
 #ifndef __INTELLISENSE__
 DECL_END
 #define DEFINE_roset_mh_contains
+#include "rodict-getitem.c.inl"
+#define DEFINE_roset_mh_contains_with_range
 #include "rodict-getitem.c.inl"
 
 #ifndef SUBSTITUDE_roset_contains
@@ -798,6 +802,7 @@ PRIVATE struct type_method tpconst roset_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+	TYPE_METHOD_HINTREF(__seq_contains__),
 	TYPE_METHOD_END
 };
 
@@ -819,6 +824,9 @@ PRIVATE struct type_method_hint tpconst roset_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_compare, &roset_mh_seq_compare, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &roset_mh_seq_trycompare_eq, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains, &roset_mh_contains, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_key, &default__seq_contains_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range, &roset_mh_contains_with_range, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &default__seq_contains_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 

@@ -41,41 +41,49 @@
 //#define DEFINE_rodict_hasitem_string_len_hash
 //#define DEFINE_rodict_getitemnr_string_hash
 //#define DEFINE_rodict_getitemnr_string_len_hash
-#define DEFINE_roset_contains
+//#define DEFINE_roset_contains
 //#define DEFINE_roset_mh_contains
 //#define DEFINE_roset_mh_contains_index
 //#define DEFINE_roset_mh_contains_string_hash
 //#define DEFINE_roset_mh_contains_string_len_hash
+#define DEFINE_roset_mh_contains_with_range
+//#define DEFINE_roset_mh_contains_with_range_index
+//#define DEFINE_roset_mh_contains_with_range_string_hash
+//#define DEFINE_roset_mh_contains_with_range_string_len_hash
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_rodict_contains) +                     \
-     defined(DEFINE_rodict_getitem) +                      \
-     defined(DEFINE_rodict_getitemnr) +                    \
-     defined(DEFINE_rodict_bounditem) +                    \
-     defined(DEFINE_rodict_hasitem) +                      \
-     defined(DEFINE_rodict_trygetitem) +                   \
-     defined(DEFINE_rodict_trygetitemnr) +                 \
-     defined(DEFINE_rodict_getitem_index) +                \
-     defined(DEFINE_rodict_bounditem_index) +              \
-     defined(DEFINE_rodict_hasitem_index) +                \
-     defined(DEFINE_rodict_trygetitem_index) +             \
-     defined(DEFINE_rodict_trygetitem_string_hash) +       \
-     defined(DEFINE_rodict_trygetitemnr_string_hash) +     \
-     defined(DEFINE_rodict_getitem_string_hash) +          \
-     defined(DEFINE_rodict_bounditem_string_hash) +        \
-     defined(DEFINE_rodict_hasitem_string_hash) +          \
-     defined(DEFINE_rodict_trygetitem_string_len_hash) +   \
-     defined(DEFINE_rodict_trygetitemnr_string_len_hash) + \
-     defined(DEFINE_rodict_getitem_string_len_hash) +      \
-     defined(DEFINE_rodict_bounditem_string_len_hash) +    \
-     defined(DEFINE_rodict_hasitem_string_len_hash) +      \
-     defined(DEFINE_rodict_getitemnr_string_hash) +        \
-     defined(DEFINE_rodict_getitemnr_string_len_hash) +    \
-     defined(DEFINE_roset_contains) +                      \
-     defined(DEFINE_roset_mh_contains) +                   \
-     defined(DEFINE_roset_mh_contains_index) +             \
-     defined(DEFINE_roset_mh_contains_string_hash) +       \
-     defined(DEFINE_roset_mh_contains_string_len_hash)) != 1
+#if (defined(DEFINE_rodict_contains) +                          \
+     defined(DEFINE_rodict_getitem) +                           \
+     defined(DEFINE_rodict_getitemnr) +                         \
+     defined(DEFINE_rodict_bounditem) +                         \
+     defined(DEFINE_rodict_hasitem) +                           \
+     defined(DEFINE_rodict_trygetitem) +                        \
+     defined(DEFINE_rodict_trygetitemnr) +                      \
+     defined(DEFINE_rodict_getitem_index) +                     \
+     defined(DEFINE_rodict_bounditem_index) +                   \
+     defined(DEFINE_rodict_hasitem_index) +                     \
+     defined(DEFINE_rodict_trygetitem_index) +                  \
+     defined(DEFINE_rodict_trygetitem_string_hash) +            \
+     defined(DEFINE_rodict_trygetitemnr_string_hash) +          \
+     defined(DEFINE_rodict_getitem_string_hash) +               \
+     defined(DEFINE_rodict_bounditem_string_hash) +             \
+     defined(DEFINE_rodict_hasitem_string_hash) +               \
+     defined(DEFINE_rodict_trygetitem_string_len_hash) +        \
+     defined(DEFINE_rodict_trygetitemnr_string_len_hash) +      \
+     defined(DEFINE_rodict_getitem_string_len_hash) +           \
+     defined(DEFINE_rodict_bounditem_string_len_hash) +         \
+     defined(DEFINE_rodict_hasitem_string_len_hash) +           \
+     defined(DEFINE_rodict_getitemnr_string_hash) +             \
+     defined(DEFINE_rodict_getitemnr_string_len_hash) +         \
+     defined(DEFINE_roset_contains) +                           \
+     defined(DEFINE_roset_mh_contains) +                        \
+     defined(DEFINE_roset_mh_contains_index) +                  \
+     defined(DEFINE_roset_mh_contains_string_hash) +            \
+     defined(DEFINE_roset_mh_contains_string_len_hash) +        \
+     defined(DEFINE_roset_mh_contains_with_range) +             \
+     defined(DEFINE_roset_mh_contains_with_range_index) +       \
+     defined(DEFINE_roset_mh_contains_with_range_string_hash) + \
+     defined(DEFINE_roset_mh_contains_with_range_string_len_hash)) != 1
 #error "Must #define exactly 1 of these macros"
 #endif /* ... */
 
@@ -186,6 +194,29 @@
 #define LOCAL_IS_HASHSET
 #define LOCAL_IS_HAS
 #define LOCAL_HAS_STRING_LEN_HASH
+#elif defined(DEFINE_roset_mh_contains_with_range)
+#define LOCAL_rodict_getitem roset_mh_contains_with_range
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_roset_mh_contains_with_range_index)
+#define LOCAL_rodict_getitem roset_mh_contains_with_range_index
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_INDEX
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_roset_mh_contains_with_range_string_hash)
+#define LOCAL_rodict_getitem roset_mh_contains_with_range_string_hash
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_STRING_HASH
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_roset_mh_contains_with_range_string_len_hash)
+#define LOCAL_rodict_getitem roset_mh_contains_with_range_string_len_hash
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_HAS
+#define LOCAL_HAS_STRING_LEN_HASH
+#define LOCAL_IS_WITH_RANGE
 #else /* ... */
 #error "Invalid configuration"
 #endif /* !... */
@@ -247,9 +278,9 @@ DECL_BEGIN
 #define LOCAL_return_ERR        return NULL
 #elif defined(LOCAL_IS_HAS)
 #define LOCAL_return_type       int
-#define LOCAL_return_NOKEY      return Dee_BOUND_MISSING
-#define LOCAL_return_ITEM(item) return Dee_BOUND_YES
-#define LOCAL_return_ERR        return Dee_BOUND_ERR
+#define LOCAL_return_NOKEY      return Dee_HAS_NO
+#define LOCAL_return_ITEM(item) return Dee_HAS_YES
+#define LOCAL_return_ERR        return Dee_HAS_ERR
 #elif defined(LOCAL_IS_NOREF)
 #define LOCAL_return_type       DeeObject *
 #ifdef LOCAL_IS_TRY
@@ -284,7 +315,13 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DCALL
-LOCAL_rodict_getitem(LOCAL_RoDict *self, LOCAL_KEY_PARAMS) {
+LOCAL_rodict_getitem(LOCAL_RoDict *self,
+                     LOCAL_KEY_PARAMS
+#ifdef LOCAL_IS_WITH_RANGE
+                     , size_t start
+                     , size_t end
+#endif /* LOCAL_IS_WITH_RANGE */
+                     ) {
 #ifdef LOCAL_HAS_PARAM_HASH
 #define LOCAL_hash hash
 #elif defined(LOCAL_HAS_INDEX)
@@ -294,6 +331,11 @@ LOCAL_rodict_getitem(LOCAL_RoDict *self, LOCAL_KEY_PARAMS) {
 #define LOCAL_hash hash
 #endif /* !... */
 	Dee_hash_t hs, perturb;
+
+#ifdef LOCAL_IS_WITH_RANGE
+	if (start >= end)
+		return Dee_HAS_NO;
+#endif /* LOCAL_IS_WITH_RANGE */
 
 	for (LOCAL__DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
 	     LOCAL__DeeRoDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
@@ -330,6 +372,11 @@ LOCAL_rodict_getitem(LOCAL_RoDict *self, LOCAL_KEY_PARAMS) {
 #endif /* !LOCAL_boolcmp */
 
 		/* Found it! */
+#ifdef LOCAL_IS_WITH_RANGE
+		if (Dee_hash_vidx_toreal(vtab_idx) < start ||
+		    Dee_hash_vidx_toreal(vtab_idx) >= end)
+			return Dee_HAS_NO;
+#endif /* LOCAL_IS_WITH_RANGE */
 		LOCAL_return_ITEM(item);
 	}
 
@@ -391,6 +438,7 @@ DECL_END
 #undef LOCAL_IS_NOREF
 #undef LOCAL_IS_BOUND
 #undef LOCAL_IS_HAS
+#undef LOCAL_IS_WITH_RANGE
 #undef LOCAL_IS_TRY
 #undef LOCAL_IS_HASHSET
 #undef LOCAL_HAS_INDEX
@@ -425,3 +473,7 @@ DECL_END
 #undef DEFINE_roset_mh_contains_index
 #undef DEFINE_roset_mh_contains_string_hash
 #undef DEFINE_roset_mh_contains_string_len_hash
+#undef DEFINE_roset_mh_contains_with_range
+#undef DEFINE_roset_mh_contains_with_range_index
+#undef DEFINE_roset_mh_contains_with_range_string_hash
+#undef DEFINE_roset_mh_contains_with_range_string_len_hash

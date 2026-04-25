@@ -22,7 +22,7 @@
 //#define DEFINE_dict_trygetitem_string_hash
 //#define DEFINE_dict_trygetitem_string_len_hash
 //#define DEFINE_dict_trygetitem_index
-#define DEFINE_dict_getitem
+//#define DEFINE_dict_getitem
 //#define DEFINE_dict_getitem_string_hash
 //#define DEFINE_dict_getitem_string_len_hash
 //#define DEFINE_dict_getitem_index
@@ -38,7 +38,7 @@
 //#define DEFINE_hashset_mh_contains_string_hash
 //#define DEFINE_hashset_mh_contains_string_len_hash
 //#define DEFINE_hashset_mh_contains_index
-//#define DEFINE_hashset_mh_contains_with_range
+#define DEFINE_hashset_mh_contains_with_range
 //#define DEFINE_hashset_mh_contains_with_range_string_hash
 //#define DEFINE_hashset_mh_contains_with_range_string_len_hash
 //#define DEFINE_hashset_mh_contains_with_range_index
