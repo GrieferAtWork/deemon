@@ -2079,7 +2079,7 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeObject_RequireMethodHint(self, name) \
 	DeeType_RequireMethodHint(Dee_TYPE(self), name)
 #define DeeObject_InvokeMethodHint(name, ...) \
-	(*DeeObject_RequireMethodHint(_Dee_PRIVATE_VA_ARGS_0((__VA_ARGS__)), name))(__VA_ARGS__)
+	(*DeeObject_RequireMethodHint(_Dee_PRIVATE_VA_ARGS_0((__VA_ARGS__)), name))((DeeObject *)__VA_ARGS__)
 #define _Dee_PRIVATE_VA_ARGS_0_(x, ...) x
 #define _Dee_PRIVATE_VA_ARGS_0(args)    _Dee_PRIVATE_VA_ARGS_0_ args
 

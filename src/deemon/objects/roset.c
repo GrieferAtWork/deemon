@@ -32,9 +32,9 @@
 #include <deemon/hashset.h>            /* Dee_hashset_item */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
-#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
+#include <deemon/rodict.h>             /* DeeRoDictObject, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item, _DeeRoSet_GetRealVTab, _DeeRoSet_GetVirtVTab, _DeeRoSet_HashIdxInit, _DeeRoSet_HashIdxNext */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -84,7 +84,7 @@ typedef DeeRoSetObject RoSet;
 /************************************************************************/
 
 
-#if defined(DICT_NDEBUG) && 0 /* TODO: Remove "&& 0" after "CONFIG_EXPERIMENTAL_ORDERED_HASHSET" */
+#ifdef DICT_NDEBUG
 #define roset_verify(self) (void)0
 #else /* DICT_NDEBUG */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
@@ -438,7 +438,7 @@ roset_from_rodict_keys(/*HashSet*/ DeeRoDictObject *__restrict dict_keys) {
 		dst->hsi_key  = src->di_key;
 		Dee_Incref(dst->hsi_key);
 	}
-	DeeObject_InitStatic(result, &DeeRoDict_Type);
+	DeeObject_InitStatic(result, &DeeRoSet_Type);
 	return result;
 err:
 	return NULL;

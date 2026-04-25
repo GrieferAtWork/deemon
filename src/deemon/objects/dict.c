@@ -37,7 +37,7 @@
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
 #include <deemon/none.h>               /* Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeqPair_ELEM, DeeSeq_* */
 #include <deemon/rodict.h>             /* DeeRoDict* */
 #include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type */

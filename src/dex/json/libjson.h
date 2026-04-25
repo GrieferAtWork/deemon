@@ -341,9 +341,9 @@ typedef struct {
 #define DeeJsonWriter_Fini(self)                                            \
 	((*DeeHashSet_Type.tp_init.tp_dtor)(Dee_AsObject(&(self)->djw_active)), \
 	 json_writer_fini(&(self)->djw_writer))
-#define DeeJsonWriter_IsActive(self, obj)     DeeHashSet_Contains(Dee_AsObject(&(self)->djw_active), obj)
-#define DeeJsonWriter_InsertActive(self, obj) DeeHashSet_Insert(Dee_AsObject(&(self)->djw_active), obj)
-#define DeeJsonWriter_RemoveActive(self, obj) DeeHashSet_Remove(Dee_AsObject(&(self)->djw_active), obj)
+#define DeeJsonWriter_IsActive(self, obj)     DeeHashSet_Contains(&(self)->djw_active, obj)
+#define DeeJsonWriter_InsertActive(self, obj) DeeHashSet_Insert(&(self)->djw_active, obj)
+#define DeeJsonWriter_RemoveActive(self, obj) DeeHashSet_Remove(&(self)->djw_active, obj)
 
 /* Convert an object `obj' to JSON and write said JSON to `self'.
  * This function supports the same set of object types as are supported

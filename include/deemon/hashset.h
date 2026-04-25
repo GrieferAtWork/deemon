@@ -31,7 +31,7 @@
 #include "api.h"
 
 #include "object.h"       /* DeeObject_NewDefault */
-#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
+#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
 #include "util/hash-io.h" /* Dee_hash_*, _DeeHash_* */
 #include "util/lock.h"    /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
@@ -160,6 +160,10 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Insert(DeeObject *self, Dee
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Remove(DeeObject *self, DeeObject *item);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Contains(DeeObject *self, DeeObject *item);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeHashSet_Unify(DeeObject *self, DeeObject *item);
+#define DeeHashSet_Insert(self, item)   DeeHashSet_Insert(Dee_AsObject(self), item)
+#define DeeHashSet_Remove(self, item)   DeeHashSet_Remove(Dee_AsObject(self), item)
+#define DeeHashSet_Contains(self, item) DeeHashSet_Contains(Dee_AsObject(self), item)
+#define DeeHashSet_Unify(self, item)    DeeHashSet_Unify(Dee_AsObject(self), item)
 #else /* __INTELLISENSE__ */
 #define DeeHashSet_Insert(self, item)   DeeObject_InvokeMethodHint(set_insert, self, item)
 #define DeeHashSet_Remove(self, item)   DeeObject_InvokeMethodHint(set_remove, self, item)
@@ -273,19 +277,24 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 /* @return:  1: Successfully inserted/removed the object.
  * @return:  0: An identical object already exists/was already removed.
  * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Insert(DeeObject *self, DeeObject *item);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Remove(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeHashSet_Insert)(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeHashSet_Remove)(DeeObject *self, DeeObject *item);
 
 /* @return:  1/true:  The object exists.
  * @return:  0/false: No such object exists.
  * @return: -1:       An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Contains(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeHashSet_Contains)(DeeObject *self, DeeObject *item);
 
 /* Unifies a given object, either inserting it into the set and re-returning
  * it, or returning another, identical instance already apart of the set. */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeHashSet_Unify(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeHashSet_Unify)(DeeObject *self, DeeObject *item);
+
+#define DeeHashSet_Insert(self, item)   DeeHashSet_Insert(Dee_AsObject(self), item)
+#define DeeHashSet_Remove(self, item)   DeeHashSet_Remove(Dee_AsObject(self), item)
+#define DeeHashSet_Contains(self, item) DeeHashSet_Contains(Dee_AsObject(self), item)
+#define DeeHashSet_Unify(self, item)    DeeHashSet_Unify(Dee_AsObject(self), item)
 
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 

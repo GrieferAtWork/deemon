@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 //#define DEFINE_dict_setitem
 //#define DEFINE_dict_setitem_at
-#define DEFINE_dict_setitem_string_hash
+//#define DEFINE_dict_setitem_string_hash
 //#define DEFINE_dict_setitem_index
 //#define DEFINE_dict_setitem_string_len_hash
 //#define DEFINE_dict_setitem_unlocked
@@ -28,7 +28,7 @@
 //#define DEFINE_dict_mh_setold_ex
 //#define DEFINE_dict_mh_setnew_ex
 //#define DEFINE_dict_mh_setdefault
-//#define DEFINE_hashset_mh_insert
+#define DEFINE_hashset_mh_insert
 //#define DEFINE_hashset_mh_insert_index
 //#define DEFINE_hashset_mh_insert_string_hash
 //#define DEFINE_hashset_mh_insert_string_len_hash

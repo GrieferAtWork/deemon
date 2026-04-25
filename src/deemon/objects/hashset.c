@@ -34,7 +34,7 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -52,6 +52,7 @@
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 #include <hybrid/typecore.h>    /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
+#include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "dict-utils.h"
@@ -345,7 +346,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 #undef HAVE_hashset_insert_unlocked
 #endif /* __OPTIMIZE_SIZE__ */
 
-#if defined(DICT_NDEBUG) && 0 /* TODO: Remove "&& 0" after "CONFIG_EXPERIMENTAL_ORDERED_HASHSET" */
+#ifdef DICT_NDEBUG
 #define hashset_verify(self) (void)0
 #else /* DICT_NDEBUG */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
@@ -609,7 +610,7 @@ DECL_BEGIN
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 #define hashset_fromsequence_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))&hashset_insert_unlocked)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 hashset_fromsequence_foreach_cb(void *self, DeeObject *key) {
 	return hashset_insert_unlocked((HashSet *)self, key);
 }
@@ -824,7 +825,7 @@ hashset_mh_seq_insert_impl_cb(void *arg, HashSet *self,
 	return Dee_hash_vidx_tovirt(result);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 hashset_mh_seq_insert(HashSet *self, size_t index, DeeObject *key) {
 	return hashset_insert_at(self, key, &hashset_mh_seq_insert_impl_cb, (void *)(uintptr_t)index);
 }
@@ -2085,8 +2086,8 @@ hashset_rehash(HashSet *__restrict self, int sizedir) {
 
 /* Unifies a given object, either inserting it into the set and re-returning
  * it, or returning another, identical instance already apart of the set. */
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeHashSet_Unify(DeeObject *self, DeeObject *search_item) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeHashSet_Unify)(DeeObject *self, DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct Dee_hashset_item *vector;
@@ -2189,9 +2190,9 @@ err:
 /* @return:  1: Successfully inserted/removed the object.
  * @return:  0: An identical object already exists/was already removed.
  * @return: -1: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Insert(DeeObject *self,
-                  DeeObject *search_item) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeHashSet_Insert)(DeeObject *self,
+                          DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct Dee_hashset_item *vector;
@@ -2280,9 +2281,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Remove(DeeObject *self,
-                  DeeObject *search_item) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeHashSet_Remove)(DeeObject *self,
+                          DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct Dee_hashset_item *vector;
@@ -2354,8 +2355,8 @@ err:
 /* @return:  1/true:  The object exists.
  * @return:  0/false: No such object exists.
  * @return: -1:       An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Contains(DeeObject *self, DeeObject *search_item) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeHashSet_Contains)(DeeObject *self, DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct Dee_hashset_item *vector;
