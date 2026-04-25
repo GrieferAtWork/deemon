@@ -419,7 +419,6 @@ PRIVATE WUNUSED DREF RoDict *DCALL rodict_init(size_t argc, DeeObject *const *ar
 PRIVATE NONNULL((1)) void DCALL rodict_fini(RoDict *__restrict self);
 PRIVATE NONNULL((1, 2)) void DCALL rodict_visit(RoDict *__restrict self, Dee_visit_t proc, void *arg);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer);
-PRIVATE WUNUSED NONNULL((1)) int DCALL rodict_bool(RoDict *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL rodict_printrepr(RoDict *__restrict self, Dee_formatprinter_t printer, void *arg);
 #else /* __INTELLISENSE__ */
 DECL_END

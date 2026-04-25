@@ -1595,3 +1595,5 @@
 #define DEFINE_LVALUE_BINARY_OP(lvalue_foo,...)DeeObject*lvalue_foo(CLValueType*tp_self,union pointer const*lhs,DeeObject*rhs){}
 #define DEFINE_LVALUE_BINARY_INPLACE_OP(lvalue_inplace_foo,...)int lvalue_inplace_foo(CLValueType*tp_self,union pointer*lhs,DeeObject*rhs){}
 #define CStructType_ForeachField(...) for(;;)
+
+#define Dee_HIDDEN_IMPL(...) __VA_ARGS__ {}

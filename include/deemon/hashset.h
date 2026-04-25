@@ -137,21 +137,20 @@ DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
 
 #define DeeHashSet_New() DeeObject_NewDefault(&DeeHashSet_Type)
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_TryNewWithHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_TryNewWithWeakHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_NewWithHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_NewWithWeakHint(size_t num_items);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromRoSet(/*RoSet*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_TryNewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_TryNewWithWeakHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_NewWithWeakHint(size_t num_items);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromRoSet(/*RoSet*/ DeeObject *__restrict self);
 
-/* Create a new HashSet by inheriting a set of passed key-item pairs.
- * @param: items:     A vector containing `num_items' elements,
- *                    even ones being keys and odd ones being items.
- * @param: num_items: The number of items passed.
- * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeHashSet_NewItemsInherited(size_t num_items,
+/* Create a new HashSet by inheriting a set of passed keys.
+ * @param: items:    A vector containing `num_keys' objects.
+ * @param: num_keys: The number of keys passed.
+ * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL
+DeeHashSet_NewItemsInherited(size_t num_keys,
                              /*inherit(on_success)*/ DREF DeeObject **items);
 
 

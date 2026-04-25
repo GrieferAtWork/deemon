@@ -72,9 +72,9 @@ DDATDEF DeeTypeObject DeeRoDict_Type;
 #define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
 #define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL
 DeeRoDict_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL
 DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self);
 
 

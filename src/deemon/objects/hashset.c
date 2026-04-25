@@ -1443,7 +1443,11 @@ PRIVATE struct type_operator const hashset_operators[] = {
 PUBLIC DeeTypeObject DeeHashSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_HashSet),
-	/* .tp_doc      = */ DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
+	/* .tp_doc      = */ DOC("A mutable set-like container that uses hashing to detect/prevent duplicates. "
+	                         /**/ "Similar to ?DDict, ?. also retains the order in which elements were (first) "
+	                         /**/ "inserted, meaning that ?#{op:iter} yields consistent and well-defined results, "
+	                         /**/ "and that operations like ?#__seq_insert__ (?Ainsert?DSequence) behave as one "
+	                         /**/ "would expect them to behave.\n"
 	                         "\n"
 
 	                         "()\n"
@@ -1451,41 +1455,48 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	                         "\n"
 
 	                         "(hint:?Dint,weak=!f)\n"
-	                         "#pweak{When true, @hint represents a lower-bound guess for how many items to allocate. "
-	                         /*  */ "In this case, then runtime may allocate much more space than needed for @items if "
+	                         "#pweak{When true, @hint represents a lower-bound guess for how many keys to allocate. "
+	                         /*  */ "In this case, then runtime may allocate much more space than needed if "
 	                         /*  */ "doing so would be appropriate for the hash-mask appropriate for @hint}"
-	                         "Create a new set, while trying to pre-alloc enough space for @hint items. When @hint is "
+	                         "Create a new ?., while trying to pre-alloc enough space for @hint keys. When @hint is "
 	                         /**/ "too large to pre-allocate a buffer of sufficient size, a smaller buffer, or no buffer "
 	                         /**/ "at all may be pre-allocated.\n"
 	                         "\n"
 
-	                         "(items:?S?O)\n"
-	                         "Create a new HashSet populated with elements from @seq\n"
+	                         "(keys:?S?O)\n"
+	                         "Create a new HashSet populated with elements from @keys\n"
+	                         "\n"
+
+	                         ":=(keys:?S?O)->\n"
+	                         "Replace the contents of @this ?. with @keys\n"
+	                         "\n"
+
+	                         "move:=(other:?.)->\n"
+	                         "Similar to ?#{op:assign}, but also clear @other at the same time\n"
 	                         "\n"
 
 	                         "copy->\n"
-	                         "Returns a shallow copy of @this HashSet\n"
+	                         "Returns a shallow copy of @this ?.\n"
 	                         "\n"
 
 	                         "deepcopy->\n"
-	                         "Returns a deep copy of @this HashSet\n"
+	                         "Returns a deep copy of @this ?.\n"
 	                         "\n"
 
 	                         "bool->\n"
-	                         "Returns ?t if @this HashSet is non-empty\n"
-	                         "\n"
-
-	                         "contains->\n"
-	                         "Returns ?t if @item is apart of @this HashSet\n"
-	                         "\n"
-
-	                         "#->\n"
-	                         "Returns the number of items apart of @this HashSet\n"
+	                         "Returns ?t if @this ?. is non-empty\n"
 	                         "\n"
 
 	                         "iter->\n"
-	                         "Returns an iterator for enumerating all items "
-	                         /**/ "in @this HashSet, following a random order"),
+	                         "Enumerate keys stored in the ?., in order of being added\n"
+	                         "\n"
+
+	                         "#->\n"
+	                         "Returns the number of keys within @this ?.\n"
+	                         "\n"
+
+	                         "contains->\n"
+	                         "Returns ?t if @item is apart of @this ?. (s.a. ?#contains)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(HashSet),
 	/* .tp_features = */ TF_NONE,

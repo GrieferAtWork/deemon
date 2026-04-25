@@ -219,11 +219,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromRoDict(/
 #define DeeDict_Clear(self) ((*DeeDict_Type.tp_gc->tp_clear)(self))
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
- * @param: key_values: A vector containing `num_items*2' elements,
+ * @param: key_values: A vector containing `num_items*2' objects,
  *                     even ones being keys and odd ones being items.
  * @param: num_items:  The number of key-value pairs passed.
- * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+ * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
                               /*inherit(on_success)*/ DREF DeeObject **key_values);
 

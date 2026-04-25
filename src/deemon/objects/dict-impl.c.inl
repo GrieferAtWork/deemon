@@ -426,21 +426,30 @@ err:
 	return NULL;
 }
 
+
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_TryNewWithHint(size_t num_items));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_TryNewWithHint(size_t num_items));
 PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_TryNewWithHint(size_t num_items) {
 	return Dee_AsObject(LOCAL_dict_new_with_hint(num_items, true, false));
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_TryNewWithWeakHint(size_t num_items));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_TryNewWithWeakHint(size_t num_items));
 PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_TryNewWithWeakHint(size_t num_items) {
 	return Dee_AsObject(LOCAL_dict_new_with_hint(num_items, true, true));
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_NewWithHint(size_t num_items));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_NewWithHint(size_t num_items));
 PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_NewWithHint(size_t num_items) {
 	return Dee_AsObject(LOCAL_dict_new_with_hint(num_items, false, false));
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_NewWithWeakHint(size_t num_items));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_NewWithWeakHint(size_t num_items));
 PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_NewWithWeakHint(size_t num_items) {
 	return Dee_AsObject(LOCAL_dict_new_with_hint(num_items, false, true));
@@ -1250,6 +1259,8 @@ err:
 	return NULL;
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self));
 PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_FromSequence(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
@@ -1290,6 +1301,8 @@ err:
 	return NULL;
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self));
 PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *result;
@@ -1301,6 +1314,8 @@ LOCAL_DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObj
 	return result;
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromRoSet(/*RoSet*/ DeeObject *__restrict self));
 PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self) {
 	DREF LOCAL_Dict *result;
@@ -1423,11 +1438,13 @@ err_duplicates:
 }
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
- * @param: key_values: A vector containing `num_items*LOCAL_OBJECTS_PER_ITEM' elements,
+ * @param: key_values: A vector containing `num_items*LOCAL_OBJECTS_PER_ITEM' objects,
  *                     even ones being keys and odd ones being items.
  * @param: num_items:  The number of key-value pairs passed.
- * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+ * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_NewKeyValuesInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **key_values));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeHashSet_NewItemsInherited(size_t num_keys, /*inherit(on_success)*/ DREF DeeObject **items));
+PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 LOCAL_DeeDict_NewKeyValuesInherited(size_t num_items,
                                     /*inherit(on_success)*/ DREF DeeObject **key_values) {
 	size_t i;

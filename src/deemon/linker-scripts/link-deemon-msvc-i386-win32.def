@@ -371,6 +371,10 @@ EXPORTS
 	DeeHashSet_FromSequence@4=_DeeHashSet_FromSequence@4
 	DeeHashSet_FromSequenceInheritedOnSuccess@4=_DeeHashSet_FromSequenceInheritedOnSuccess@4
 	DeeHashSet_NewItemsInherited@8=_DeeHashSet_NewItemsInherited@8
+	DeeHashSet_NewWithHint@4=_DeeHashSet_NewWithHint@4
+	DeeHashSet_NewWithWeakHint@4=_DeeHashSet_NewWithWeakHint@4
+	DeeHashSet_TryNewWithHint@4=_DeeHashSet_TryNewWithHint@4
+	DeeHashSet_TryNewWithWeakHint@4=_DeeHashSet_TryNewWithWeakHint@4
 	DeeHeap_CheckMemory@0=_DeeHeap_CheckMemory@0
 	DeeHeap_DumpMemoryLeaks@4=_DeeHeap_DumpMemoryLeaks@4
 	DeeHeap_Footprint@0=_DeeHeap_Footprint@0
@@ -1288,6 +1292,7 @@ EXPORTS
 	DeeRegex_SearchNoEpsilon@12=_DeeRegex_SearchNoEpsilon@12
 	DeeRoDict_FromDict@4=_DeeRoDict_FromDict@4
 	DeeRoDict_FromSequence@4=_DeeRoDict_FromSequence@4
+	DeeRoSet_FromHashSet@4=_DeeRoSet_FromHashSet@4
 	DeeRoSet_FromSequence@4=_DeeRoSet_FromSequence@4
 	DeeSeqOne_DecrefSymbolic@4=_DeeSeqOne_DecrefSymbolic@4
 	DeeSeqPair_DecrefSymbolic@4=_DeeSeqPair_DecrefSymbolic@4
@@ -1672,6 +1677,11 @@ EXPORTS
 	Dee_rodict_builder_pack@4=_Dee_rodict_builder_pack@4
 	Dee_rodict_builder_setitem@12=_Dee_rodict_builder_setitem@12
 	Dee_rodict_builder_setitem_inherited@12=_Dee_rodict_builder_setitem_inherited@12
+	Dee_roset_builder_fini@4=_Dee_roset_builder_fini@4
+	Dee_roset_builder_init_with_hint@8=_Dee_roset_builder_init_with_hint@8
+	Dee_roset_builder_insert@8=_Dee_roset_builder_insert@8
+	Dee_roset_builder_insert_inherited@8=_Dee_roset_builder_insert_inherited@8
+	Dee_roset_builder_pack@4=_Dee_roset_builder_pack@4
 	Dee_rshared_lock_acquire@4=_Dee_rshared_lock_acquire@4
 	Dee_rshared_lock_acquire_noint@4=_Dee_rshared_lock_acquire_noint@4
 	Dee_rshared_lock_acquire_timed@12=_Dee_rshared_lock_acquire_timed@12

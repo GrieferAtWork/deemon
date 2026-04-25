@@ -2344,9 +2344,9 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 
 	                         "(hint:?Dint,weak=!f)\n"
 	                         "#pweak{When true, @hint represents a lower-bound guess for how many items to allocate. "
-	                         /*  */ "In this case, then runtime may allocate much more space than needed for @items if "
+	                         /*  */ "In this case, then runtime may allocate much more space than needed if "
 	                         /*  */ "doing so would be appropriate for the hash-mask appropriate for @hint}"
-	                         "Create a new dict, while trying to pre-alloc enough space for @hint items. When @hint is "
+	                         "Create a new ?., while trying to pre-alloc enough space for @hint items. When @hint is "
 	                         /**/ "too large to pre-allocate a buffer of sufficient size, a smaller buffer, or no buffer "
 	                         /**/ "at all may be pre-allocated.\n"
 	                         "\n"
@@ -2360,7 +2360,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 
 	                         ":=(items:?S" D_TItem ")->\n"
 	                         ":=(items:?M" D_TKey D_TValue ")->\n"
-	                         "Replace the contents of @this dict with @items\n"
+	                         "Replace the contents of @this ?. with @items\n"
 	                         "\n"
 
 	                         "move:=(other:?.)->\n"
@@ -2368,15 +2368,15 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         "\n"
 
 	                         "iter->\n"
-	                         "Enumerate key-value pairs stored in the ?.\n"
+	                         "Enumerate key-value pairs stored in the ?., in order of being added\n"
 	                         "\n"
 
-	                         "size->\n"
+	                         "#->\n"
 	                         "Return the number of key-value pairs\n"
 	                         "\n"
 
 	                         "contains(key:" D_TKey ")->\n"
-	                         "Check if the dict contains a @key\n"
+	                         "Check if the ?. contains a @key\n"
 	                         "\n"
 
 	                         "[](key:" D_TKey ")->" D_TValue "\n"

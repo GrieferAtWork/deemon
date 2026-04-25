@@ -80,9 +80,9 @@ DDATDEF DeeTypeObject DeeRoSet_Type;
 #define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet' is final */
 #define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL
 DeeRoSet_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL
 DeeRoSet_FromHashSet(/*HashSet*/ DeeObject *__restrict self);
 
 
@@ -122,7 +122,7 @@ struct Dee_roset_builder {
 	Dee_hash_sethidx_t rsb_hidxset; /* [?..1][valid_if(rsb_set)] Setter for `rsb_set->rs_htab' */
 };
 
-#define Dee_RODICT_BUILDER_INIT { NULL, 0, NULL }
+#define Dee_ROSET_BUILDER_INIT { NULL, 0, NULL }
 #define Dee_roset_builder_init(self) \
 	(void)((self)->rsb_set   = NULL, \
 	       (self)->rsb_valloc = 0)

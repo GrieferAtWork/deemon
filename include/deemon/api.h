@@ -642,7 +642,8 @@ DECL_END
 #endif /* !Dee_tpconst_IS_const */
 #endif /* DEE_SOURCE */
 
-
+/* Special macro used to aid an IDE with finding decls */
+#define Dee_HIDDEN_IMPL(...) /* nothing */
 
 /* Calling convention used for the deemon API
  * DCALL_CALLER_CLEANUP: When defined, a function:

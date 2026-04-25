@@ -244,6 +244,8 @@ LOCAL_rodict_htab_rebuild(LOCAL_RoDict *__restrict me, Dee_hash_sethidx_t hidxse
 /************************************************************************/
 /* RODICT BUILDER API                                                   */
 /************************************************************************/
+Dee_HIDDEN_IMPL(PUBLIC NONNULL((1)) void DCALL Dee_rodict_builder_fini(struct Dee_rodict_builder *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC NONNULL((1)) void DCALL Dee_roset_builder_fini(struct Dee_roset_builder *__restrict self));
 PUBLIC NONNULL((1)) void DCALL
 LOCAL_Dee_rodict_builder_fini(struct LOCAL_Dee_rodict_builder *__restrict self) {
 	size_t i;
@@ -261,9 +263,11 @@ LOCAL_Dee_rodict_builder_fini(struct LOCAL_Dee_rodict_builder *__restrict self) 
 	LOCAL__RoDict_Free(dict);
 }
 
+Dee_HIDDEN_IMPL(PUBLIC NONNULL((1)) void DCALL Dee_rodict_builder_init_with_hint(struct Dee_rodict_builder *__restrict self, size_t num_items));
+Dee_HIDDEN_IMPL(PUBLIC NONNULL((1)) void DCALL Dee_roset_builder_init_with_hint(struct Dee_roset_builder *__restrict self, size_t num_items));
 PUBLIC NONNULL((1)) void DCALL
 LOCAL_Dee_rodict_builder_init_with_hint(struct LOCAL_Dee_rodict_builder *__restrict self,
-                                  size_t num_items) {
+                                        size_t num_items) {
 	LOCAL_RoDict *dict;
 	size_t sizeof_dict;
 	size_t hmask;
@@ -322,6 +326,8 @@ LOCAL_rodict_trunc_vtab(LOCAL_RoDict *__restrict self, size_t old_valloc, size_t
 
 /* Pack the result of the builder and return it.
  * This function never fails, but "self" becomes invalid as a result. */
+Dee_HIDDEN_IMPL(PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeRoDictObject *DCALL Dee_rodict_builder_pack(struct Dee_rodict_builder *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeRoSetObject *DCALL Dee_roset_builder_pack(struct Dee_roset_builder *__restrict self));
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF LOCAL_RoDict *DCALL
 LOCAL_Dee_rodict_builder_pack(struct LOCAL_Dee_rodict_builder *__restrict self) {
 	LOCAL_RoDict *result = self->rdb_dict;
@@ -458,6 +464,8 @@ err:
 	return -1;
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL Dee_roset_builder_insert_inherited(/*struct Dee_roset_builder*/ void *__restrict self, /*inherit(always)*/ DREF DeeObject *key));
 #ifdef DEFINE_DeeRoSet
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_t" */
 LOCAL_Dee_rodict_builder_setitem_inherited(/*struct LOCAL_Dee_rodict_builder*/ void *__restrict self,
@@ -564,6 +572,8 @@ err:
 }
 
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL Dee_rodict_builder_setitem(/*struct Dee_rodict_builder*/ void *__restrict self, DeeObject *key, DeeObject *value));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL Dee_roset_builder_insert(/*struct Dee_roset_builder*/ void *__restrict self, DeeObject *key));
 #ifdef DEFINE_DeeRoSet
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_t" */
 LOCAL_Dee_rodict_builder_setitem(/*struct LOCAL_Dee_rodict_builder*/ void *__restrict self,
@@ -600,7 +610,9 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL DeeRoDict_FromSequence(DeeObject *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self));
+PUBLIC WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL
 LOCAL_DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (tp_self == &LOCAL_DeeRoDict_Type)
@@ -621,6 +633,8 @@ LOCAL_DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	return Dee_AsObject(LOCAL_rodict_from_generic_sequence(self));
 }
 
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self));
+Dee_HIDDEN_IMPL(PUBLIC WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL DeeRoSet_FromHashSet(/*HashSet*/ DeeObject *__restrict self));
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self) {
 	DREF LOCAL_RoDict *result;
@@ -682,6 +696,8 @@ err:
 
 
 
+Dee_HIDDEN_IMPL(PUBLIC struct Dee_empty_rodict_object DeeRoDict_EmptyInstance =);
+Dee_HIDDEN_IMPL(PUBLIC struct Dee_empty_roset_object DeeRoSet_EmptyInstance =);
 PUBLIC struct LOCAL_Dee_empty_rodict_object LOCAL_DeeRoDict_EmptyInstance = {
 	OBJECT_HEAD_INIT(&LOCAL_DeeRoDict_Type),
 	/* .rd_vsize     = */ 0,

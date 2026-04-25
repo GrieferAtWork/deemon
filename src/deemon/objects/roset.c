@@ -327,6 +327,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 /* ROSET                                                                */
 /************************************************************************/
 
+/* Can re-use some operators from "RoDict" because "rs_vsize" and "rd_vsize" share the same offset. */
 STATIC_ASSERT(offsetof(DeeRoSetObject, rs_vsize) == offsetof(DeeRoDictObject, rd_vsize));
 INTDEF WUNUSED NONNULL((1)) int DCALL rodict_bool(DeeRoDictObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL rodict_size(DeeRoDictObject *__restrict self);
@@ -453,7 +454,6 @@ PRIVATE WUNUSED DREF RoSet *DCALL roset_init(size_t argc, DeeObject *const *argv
 PRIVATE NONNULL((1)) void DCALL roset_fini(RoSet *__restrict self);
 PRIVATE NONNULL((1, 2)) void DCALL roset_visit(RoSet *__restrict self, Dee_visit_t proc, void *arg);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL roset_serialize(RoSet *__restrict self, DeeSerial *__restrict writer);
-PRIVATE WUNUSED NONNULL((1)) int DCALL roset_bool(RoSet *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL roset_printrepr(RoSet *__restrict self, Dee_formatprinter_t printer, void *arg);
 #else /* __INTELLISENSE__ */
 DECL_END
@@ -822,13 +822,13 @@ PRIVATE struct type_member tpconst roset_class_members[] = {
 
 PRIVATE struct type_method tpconst roset_methods[] = {
 //	TYPE_KWMETHOD("byhash", &roset_byhash, DOC_GET(set_byhash_doc)), /* TODO */
+	TYPE_METHOD_HINTREF(Sequence_contains),
 	TYPE_METHOD_HINTREF(__seq_iter__),
 	TYPE_METHOD_HINTREF(__seq_size__),
 	TYPE_METHOD_HINTREF(__seq_getitem__),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
-	TYPE_METHOD_HINTREF(__seq_contains__),
 	TYPE_METHOD_END
 };
 
@@ -886,7 +886,28 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	                         "(set:?DHashSet)\n"
 	                         "(set:?DSet)\n"
 	                         "(seq:?S?O)\n"
-	                         "Convert the given set/seq into an ?. and return it"),
+	                         "Convert the given set/seq into an ?. and return it\n"
+	                         "\n"
+
+	                         "copy->\n"
+	                         "deepcopy->\n"
+	                         "Always re-returns @this\n"
+	                         "\n"
+
+	                         "bool->\n"
+	                         "Returns ?t if @this ?. is non-empty\n"
+	                         "\n"
+
+	                         "iter->\n"
+	                         "Enumerate keys stored in the ?., in order of being specified during construction\n"
+	                         "\n"
+
+	                         "#->\n"
+	                         "Returns the number of keys within @this ?.\n"
+	                         "\n"
+
+	                         "contains->\n"
+	                         "Returns ?t if @item is apart of @this ?. (s.a. ?#contains)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
