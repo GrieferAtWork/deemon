@@ -228,15 +228,15 @@ err:
 
 PRIVATE struct type_cmp siter_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&siter_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&siter_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 #endif
 
@@ -284,21 +284,21 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&siter_bool,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&siter_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &siter_cmp,
-	/* .tp_seq           = */ NULL,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&siter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ siter_methods,
 	/* .tp_getsets       = */ NULL,
@@ -307,8 +307,8 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ siter_method_hints,
-	/* .tp_call          = */ NULL,
-	/* .tp_callable      = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
 
@@ -1504,21 +1504,21 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&hashset_moveassign,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&hashset_bool,
-		/* .tp_print     = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&hashset_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&hashset_visit,
 	/* .tp_gc            = */ &hashset_gc,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__47C97A4265F9F31F),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__48CC5897A5CA5795), /* TODO */
 	/* .tp_seq           = */ &hashset_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ hashset_methods,
 	/* .tp_getsets       = */ hashset_getsets,
@@ -1527,8 +1527,8 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ hashset_class_members,
 	/* .tp_method_hints  = */ hashset_method_hints,
-	/* .tp_call          = */ NULL,
-	/* .tp_callable      = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ hashset_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(hashset_operators),
@@ -2724,9 +2724,11 @@ PRIVATE struct type_member tpconst hashsetiterator_members[] = {
 	TYPE_MEMBER_END
 };
 
+#define depreacted_STR__HashSetIterator "_HashSetIterator"
+
 INTERN DeeTypeObject HashSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_HashSetIterator",
+	/* .tp_name     = */ depreacted_STR__HashSetIterator,
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(set:?DHashSet)"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -3227,9 +3229,11 @@ PRIVATE struct type_operator const hashset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FNOREFESCAPE),
 };
 
+#define depreacted_STR_HashSet DeeString_STR(&str_HashSet)
+
 PUBLIC DeeTypeObject DeeHashSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ DeeString_STR(&str_HashSet),
+	/* .tp_name     = */ depreacted_STR_HashSet,
 	/* .tp_doc      = */ DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
 	                         "\n"
 

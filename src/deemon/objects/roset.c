@@ -302,7 +302,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 	/* .tp_cmp           = */ &rsiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rsiter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
@@ -749,18 +749,44 @@ PRIVATE struct type_seq roset_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_iter,
 	/* .tp_sizeob       = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&roset_contains,
-	/* .tp_getitem      = */ NULL,
-	/* .tp_delitem      = */ NULL,
-	/* .tp_setitem      = */ NULL,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
+	/* .tp_getitem      = */ DEFIMPL_UNSUPPORTED(&default__getitem__unsupported),
+	/* .tp_delitem      = */ DEFIMPL_UNSUPPORTED(&default__delitem__unsupported),
+	/* .tp_setitem      = */ DEFIMPL_UNSUPPORTED(&default__setitem__unsupported),
+	/* .tp_getrange     = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
+	/* .tp_delrange     = */ DEFIMPL_UNSUPPORTED(&default__delrange__unsupported),
+	/* .tp_setrange     = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
 	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&roset_mh_seq_foreach,
-	/* .tp_foreach_pair = */ NULL,
-	/* .tp_bounditem    = */ NULL,
-	/* .tp_hasitem      = */ NULL,
+	/* .tp_foreach_pair = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem    = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
+	/* .tp_hasitem      = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
 	/* .tp_size         = */ (size_t (DCALL *)(DeeObject *__restrict))&roset_size,
 	/* .tp_size_fast    = */ (size_t (DCALL *)(DeeObject *__restrict))&roset_size_fast,
+	/* .tp_getitem_index              = */ DEFIMPL_UNSUPPORTED(&default__getitem_index__unsupported),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL_UNSUPPORTED(&default__delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL_UNSUPPORTED(&default__setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL_UNSUPPORTED(&default__bounditem_index__unsupported),
+	/* .tp_hasitem_index              = */ DEFIMPL_UNSUPPORTED(&default__hasitem_index__unsupported),
+	/* .tp_getrange_index             = */ DEFIMPL_UNSUPPORTED(&default__getrange_index__unsupported),
+	/* .tp_delrange_index             = */ DEFIMPL_UNSUPPORTED(&default__delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL_UNSUPPORTED(&default__setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__getrange_index_n__unsupported),
+	/* .tp_delrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL_UNSUPPORTED(&default__trygetitem__unsupported),
+	/* .tp_trygetitem_index           = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_index__unsupported),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_string_hash__unsupported),
+	/* .tp_getitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__getitem_string_hash__unsupported),
+	/* .tp_delitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__delitem_string_hash__unsupported),
+	/* .tp_setitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__setitem_string_hash__unsupported),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL_UNSUPPORTED(&default__bounditem_string_hash__unsupported),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__hasitem_string_hash__unsupported),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_string_len_hash__unsupported),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__getitem_string_len_hash__unsupported),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__delitem_string_len_hash__unsupported),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__setitem_string_len_hash__unsupported),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL_UNSUPPORTED(&default__bounditem_string_len_hash__unsupported),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__hasitem_string_len_hash__unsupported),
 };
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
@@ -879,21 +905,21 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&roset_bool,
-		/* .tp_print     = */ NULL,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&roset_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&roset_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO: &roset_cmp */
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__48CC5897A5CA5795), /* TODO: &roset_cmp */
 	/* .tp_seq           = */ &roset_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
 	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ roset_methods,
 	/* .tp_getsets       = */ roset_getsets,
@@ -902,8 +928,8 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ roset_class_members,
 	/* .tp_method_hints  = */ roset_method_hints,
-	/* .tp_call          = */ NULL,
-	/* .tp_callable      = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ roset_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(roset_operators),
@@ -1038,9 +1064,11 @@ PRIVATE struct type_member tpconst roset_iterator_members[] = {
 	TYPE_MEMBER_END
 };
 
+#define deprecated_STR__RoSetIterator "_RoSetIterator"
+
 INTERN DeeTypeObject RoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_RoSetIterator",
+	/* .tp_name     = */ deprecated_STR__RoSetIterator,
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(" rosetiterator__RoSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1388,7 +1416,7 @@ roset_asvector_nothrow(RoSet *self, size_t dst_length, /*out*/ DREF DeeObject **
 	return self->rs_size;
 }
 
-PRIVATE struct type_seq roset_seq = {
+PRIVATE struct type_seq deprecated_roset_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&roset_contains,
@@ -1443,25 +1471,25 @@ roset_sizeof(RoSet *self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE struct type_method tpconst roset_methods[] = {
+PRIVATE struct type_method tpconst deprecated_roset_methods[] = {
 	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSequence */
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_getset tpconst roset_getsets[] = {
+PRIVATE struct type_getset tpconst deprecated_roset_getsets[] = {
 	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER_AB_F("__sizeof__", &roset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
-PRIVATE struct type_member tpconst roset_members[] = {
+PRIVATE struct type_member tpconst deprecated_roset_members[] = {
 	TYPE_MEMBER_FIELD("__mask__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(RoSet, rs_mask)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(RoSet, rs_size)),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member tpconst roset_class_members[] = {
+PRIVATE struct type_member tpconst deprecated_roset_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &RoSetIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoSet_Type),
 	TYPE_MEMBER_END
@@ -1532,7 +1560,7 @@ err:
 
 
 
-PRIVATE struct type_operator const roset_operators[] = {
+PRIVATE struct type_operator const deprecated_roset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR | METHOD_FNOREFESCAPE),
@@ -1549,10 +1577,12 @@ PRIVATE struct type_operator const roset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 };
 
+#define deprecated_STR__RoSet "_RoSet"
+
 /* The main `_RoSet' container class. */
 PUBLIC DeeTypeObject DeeRoSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_RoSet",
+	/* .tp_name     = */ deprecated_STR__RoSet,
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(" roset__RoSet_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
@@ -1583,24 +1613,24 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__F6E3D7B2219AE1EB),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__48CC5897A5CA5795), /* TODO: &roset_cmp */
-	/* .tp_seq           = */ &roset_seq,
+	/* .tp_seq           = */ &deprecated_roset_seq,
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
 	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ roset_methods,
-	/* .tp_getsets       = */ roset_getsets,
-	/* .tp_members       = */ roset_members,
+	/* .tp_methods       = */ deprecated_roset_methods,
+	/* .tp_getsets       = */ deprecated_roset_getsets,
+	/* .tp_members       = */ deprecated_roset_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ roset_class_members,
+	/* .tp_class_members = */ deprecated_roset_class_members,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,
-	/* .tp_operators     = */ roset_operators,
-	/* .tp_operators_size= */ COMPILER_LENOF(roset_operators),
+	/* .tp_operators     = */ deprecated_roset_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(deprecated_roset_operators),
 };
 
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
