@@ -140,7 +140,11 @@ typedef int32_t Dee_dec_off32_t;
 #define DI_NIDENT 4    /* Number of identification bytes */
 
 
-#define DVERSION_CUR  1 /* The currently active version of the DEC file format. */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define DVERSION_CUR  0x0001 /* The currently active version of the DEC file format. */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define DVERSION_CUR  0x0100 /* The currently active version of the DEC file format. */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 
 #define Dee_DEC_MACH_UNKNOWN 0

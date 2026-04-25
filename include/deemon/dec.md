@@ -13,7 +13,7 @@ This document describes and documents the `.dec` file format.
 
 The purpose of `.dec` files is to speed up module imports by allowing the compiler to skip (re-)compilation of `.dee` source files if a matching, and sufficiently up-to-date `.dec` file can be found.
 
-By default, the deemon compiler uses and emits `.<module name>.dec` files for every `.dee` file it encounters when executing user-code and hitting `import` statements or expressions.
+By default, the deemon compiler and runtime uses and emits `.<module name>.dec` files for every `<module name>.dee` file it encounters when compiling/executing user-code and hitting `import` statements or expressions.
 
 
 
@@ -27,7 +27,7 @@ Every `.dec` file is made up of 3 segments:
 - **HEAP**: A specially formatted sequence of data-blobs containing dumps of pre-initialized, unrelocated deemon objects
 	- s.a. `Dec_Ehdr::e_heap`
 	- s.a. `struct Dee_heapregion`
-- **RELOC**: Various tables of offsets into other parts of the `.dec` files, describing locations where certain types of relocations must be applied
+- **RELOC**: Various tables of offsets into other parts of the `.dec` file, describing locations where certain types of relocations must be applied
 	- s.a. `Dec_Ehdr::e_typedata::td_reloc::*`
 	- s.a. `Dec_Rel`
 	- s.a. `Dec_RRel`
@@ -37,8 +37,8 @@ Every `.dec` file is made up of 3 segments:
 
 ## EHDR
 
-- The **EHDR** is *variable-length*, with its exact length being dependent on various factors relating to how deemon was compiled.
-- The exact size of the **EHDR** can be read from field `er_offsetof_heap`, which specifies the offset to the **HEAP** portion of the `.dec` file
+- The **EHDR** is technically *variable-length*, with its exact length being dependent on various factors relating to how deemon was compiled (meaning its size is still a compile-time constant at the time deemon was compiled).
+- The exact size of the **EHDR** can always be read from field `er_offsetof_heap`, which specifies the offset to the **HEAP** portion of the `.dec` file
 - The following only documents the compilation-independent portion of the **EHDR**
 
 
@@ -49,10 +49,10 @@ Every `.dec` file is made up of 3 segments:
 | `00-03`      | `4`  | -      | `e_ident`             | `"\177DEC"`          | Yes       | Magic identification marker for .dec file.<br/>Always has the value `{DECMAG0,DECMAG1,DECMAG2,DECMAG3}` |
 | `04-04`      | `1`  | -      | `e_mach`              | `1`                  | Yes       | Host architecture identifier of system that generated this file (one of `Dee_DEC_MACH_*`) |
 | `05-05`      | `1`  | -      | `e_type`              | `0`                  | Yes       | Type of `.dec` file. Always `0` (aka. `Dee_DEC_TYPE_RELOC`) in files found on-disk |
-| `06-07`      | `2`  | -      | `e_version`           | `1`                  | Yes       | Version number of `.dec` file. Always `1` (aka. `DVERSION_CUR`).<br/>For backwards-compatibility with an older `.dec` file format, this is maintained as a 2-byte field at offset `6` |
+| `06-07`      | `2`  | -      | `e_version`           | `1`                  | Yes       | Version number of `.dec` file. Always `1` (aka. `DVERSION_CUR`).<br/>For backwards-compatibility with an older `.dec` file format, this is maintained as a *little-endian* 2-byte field at offset `6` |
 | `08-09`      | `2`  | No     | `er_offsetof_heap`    | `96`                 | Yes       | Offset from start of file to start of **HEAP** segment. As such, this is also the size of the **EHDR** segment |
 | `0A-0A`      | `1`  | No     | `er_sizeof_pointer`   | `4`                  | Yes       | The size of a pointer (in bytes). This field also specifies the word-size of locations affected by relocation (s.a. **RELOC**) and the size of fields and links in the **HEAP** |
-| `0B-0B`      | `1`  | No     | `er_endian`           | `1`                  | Yes       | Type code describing byte-order of multi-word integer fields throughout the entire file (one of `Dee_DEC_ENDIAN_*`) |
+| `0B-0B`      | `1`  | No     | `er_endian`           | `1`                  | Yes       | Type code describing byte-order of multi-word integer fields throughout the entire file (one of `Dee_DEC_ENDIAN_*`).<br/>Note that to simply header validation, `e_version` is always written as *little-endian*, meaning its value remains the same no matter the value of `er_endian`. |
 | `0C-0F`      | `4`  | No     | `er_offsetof_eof`     | `0x000394FB`         | Yes       | Offset to end of **RELOC** segment, and expected to match the total size of the `.dec` file, as would be reported by `struct stat::st_size` |
 | `10-1F`      | `16` | -      | `er_deemon_build_id`  | `0x0011223344556677` `0x8899AABBCCDDEEFF` | Yes | The value of `DeeModule_GetBuildId(&DeeModule_Deemon)`. This field serves the purpose of verifying that the `.dec` file is compatible with the current deemon installation. If wrong, the `.dec` file is outdated and can't be used. |
 | `20-27`      | `8`  | No     | `er_build_timestamp`  | `0x00064729E08F8FC0` | -         | The # of microseconds since `01-01-1970` when this dec file was generated. When the associated `.dee` file (or any of the files listed by `er_offsetof_files`) is newer than this, then the `.dec` file must be ignored. |
