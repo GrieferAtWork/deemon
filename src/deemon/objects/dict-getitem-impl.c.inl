@@ -38,10 +38,14 @@
 //#define DEFINE_hashset_mh_contains_string_hash
 //#define DEFINE_hashset_mh_contains_string_len_hash
 //#define DEFINE_hashset_mh_contains_index
-#define DEFINE_hashset_mh_contains_with_range
+//#define DEFINE_hashset_mh_contains_with_range
 //#define DEFINE_hashset_mh_contains_with_range_string_hash
 //#define DEFINE_hashset_mh_contains_with_range_string_len_hash
 //#define DEFINE_hashset_mh_contains_with_range_index
+#define DEFINE_hashset_mh_find
+//#define DEFINE_hashset_mh_find_string_hash
+//#define DEFINE_hashset_mh_find_string_len_hash
+//#define DEFINE_hashset_mh_find_index
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -79,7 +83,11 @@
      defined(DEFINE_hashset_mh_contains_with_range) +                 \
      defined(DEFINE_hashset_mh_contains_with_range_string_hash) +     \
      defined(DEFINE_hashset_mh_contains_with_range_string_len_hash) + \
-     defined(DEFINE_hashset_mh_contains_with_range_index)) != 1
+     defined(DEFINE_hashset_mh_contains_with_range_index) +           \
+     defined(DEFINE_hashset_mh_find) +                                \
+     defined(DEFINE_hashset_mh_find_string_hash) +                    \
+     defined(DEFINE_hashset_mh_find_string_len_hash) +                \
+     defined(DEFINE_hashset_mh_find_index)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
 
@@ -183,27 +191,55 @@ DECL_BEGIN
 #define LOCAL_IS_HAS
 #define LOCAL_IS_HASHSET
 #define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_hashset_mh_find)
+#define LOCAL_dict_getitem hashset_mh_find
+#define LOCAL_IS_FIND
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_hashset_mh_find_string_hash)
+#define LOCAL_dict_getitem hashset_mh_find_string_hash
+#define LOCAL_HAS_KEY_IS_STRING_HASH
+#define LOCAL_IS_FIND
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_hashset_mh_find_string_len_hash)
+#define LOCAL_dict_getitem hashset_mh_find_string_len_hash
+#define LOCAL_HAS_KEY_IS_STRING_LEN_HASH
+#define LOCAL_IS_FIND
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_WITH_RANGE
+#elif defined(DEFINE_hashset_mh_find_index)
+#define LOCAL_dict_getitem hashset_mh_find_index
+#define LOCAL_HAS_KEY_IS_INDEX
+#define LOCAL_IS_FIND
+#define LOCAL_IS_HASHSET
+#define LOCAL_IS_WITH_RANGE
 #else /* ... */
 #error "Invalid configuration"
 #endif /* ... */
 
 #ifdef LOCAL_IS_TRY
-#define LOCAL_return_type DREF DeeObject *
-#define LOCAL_MISSING     ITER_DONE
-#define LOCAL_ERR         NULL
+#define LOCAL_return_type       DREF DeeObject *
+#define LOCAL_MISSING           ITER_DONE
+#define LOCAL_ERR               NULL
 #elif defined(LOCAL_IS_HAS)
-#define LOCAL_return_type int
-#define LOCAL_PRESENT     1
-#define LOCAL_MISSING     0
-#define LOCAL_ERR         (-1)
+#define LOCAL_return_type       int
+#define LOCAL_PRESENT(vtab_idx) 1
+#define LOCAL_MISSING           0
+#define LOCAL_ERR               (-1)
+#elif defined(LOCAL_IS_FIND)
+#define LOCAL_return_type       size_t
+#define LOCAL_PRESENT(vtab_idx) Dee_hash_vidx_toreal(vtab_idx)
+#define LOCAL_MISSING           (size_t)-1
+#define LOCAL_ERR               (size_t)Dee_COMPARE_ERR
 #elif defined(LOCAL_IS_BOUND)
-#define LOCAL_return_type int
-#define LOCAL_PRESENT     Dee_BOUND_YES
-#define LOCAL_MISSING     Dee_BOUND_MISSING
-#define LOCAL_ERR         Dee_BOUND_ERR
+#define LOCAL_return_type       int
+#define LOCAL_PRESENT(vtab_idx) Dee_BOUND_YES
+#define LOCAL_MISSING           Dee_BOUND_MISSING
+#define LOCAL_ERR               Dee_BOUND_ERR
 #else /* ... */
-#define LOCAL_return_type DREF DeeObject *
-#define LOCAL_ERR         NULL
+#define LOCAL_return_type       DREF DeeObject *
+#define LOCAL_ERR               NULL
 #endif /* !... */
 
 
@@ -327,10 +363,10 @@ LOCAL_dict_getitem(LOCAL_Dict *self,
 #define LOCAL_PRESENT_AT(vtab_idx)               \
 	((Dee_hash_vidx_toreal(vtab_idx) >= start && \
 	  Dee_hash_vidx_toreal(vtab_idx) < end)      \
-	 ? LOCAL_PRESENT                             \
+	 ? LOCAL_PRESENT(vtab_idx)                   \
 	 : LOCAL_MISSING)
 #else /* LOCAL_IS_WITH_RANGE */
-#define LOCAL_PRESENT_AT(vtab_idx) LOCAL_PRESENT
+#define LOCAL_PRESENT_AT(vtab_idx) LOCAL_PRESENT(vtab_idx)
 #endif /* !LOCAL_IS_WITH_RANGE */
 
 	LOCAL_DeeDict_LockRead(self);
@@ -552,6 +588,7 @@ err:
 #undef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 #undef LOCAL_IS_TRY
 #undef LOCAL_IS_HAS
+#undef LOCAL_IS_FIND
 #undef LOCAL_IS_BOUND
 #undef LOCAL_IS_HASHSET
 #undef LOCAL_IS_WITH_RANGE
@@ -583,3 +620,7 @@ DECL_END
 #undef DEFINE_hashset_mh_contains_with_range_string_hash
 #undef DEFINE_hashset_mh_contains_with_range_string_len_hash
 #undef DEFINE_hashset_mh_contains_with_range_index
+#undef DEFINE_hashset_mh_find
+#undef DEFINE_hashset_mh_find_string_hash
+#undef DEFINE_hashset_mh_find_string_len_hash
+#undef DEFINE_hashset_mh_find_index

@@ -2281,6 +2281,8 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_reverse, &dict_mh_seq_reverse, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(seq_sort, &dict_mh_sort, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(seq_sort_with_key, &dict_mh_sort_with_key, METHOD_FNOREFESCAPE),
+	/* TODO: seq_find   (can use hash to speed up find) */
+	/* TODO: seq_rfind  (alias for seq_find; since items must be distinct there can only be 1) */
 	TYPE_METHOD_HINT_END
 };
 

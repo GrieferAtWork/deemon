@@ -1566,6 +1566,8 @@ PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &rodict_mh_seq_compare_eq, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_compare, &rodict_mh_seq_compare, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &rodict_mh_seq_trycompare_eq, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	/* TODO: seq_find   (can use hash to speed up find) */
+	/* TODO: seq_rfind  (alias for seq_find; since items must be distinct there can only be 1) */
 	TYPE_METHOD_HINT_END
 };
 

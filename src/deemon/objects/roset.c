@@ -466,18 +466,26 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL roset_contains(RoSet *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL roset_mh_contains(RoSet *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL roset_mh_contains_with_range(RoSet *self, DeeObject *key, size_t start, size_t end);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL roset_mh_find(RoSet *self, DeeObject *key, size_t start, size_t end);
 
 #ifdef __OPTIMIZE_SIZE__
 #define SUBSTITUDE_roset_contains
+#define SUBSTITUDE_roset_mh_contains
+#define SUBSTITUDE_roset_mh_contains_with_range
 #endif /* __OPTIMIZE_SIZE__ */
 
 #ifndef __INTELLISENSE__
 DECL_END
+#define DEFINE_roset_mh_find
+#include "rodict-getitem.c.inl"
+#ifndef SUBSTITUDE_roset_mh_contains
 #define DEFINE_roset_mh_contains
 #include "rodict-getitem.c.inl"
+#endif /* !SUBSTITUDE_roset_mh_contains */
+#ifndef SUBSTITUDE_roset_mh_contains_with_range
 #define DEFINE_roset_mh_contains_with_range
 #include "rodict-getitem.c.inl"
-
+#endif /* !SUBSTITUDE_roset_mh_contains_with_range */
 #ifndef SUBSTITUDE_roset_contains
 #define DEFINE_roset_contains
 #include "rodict-getitem.c.inl"
@@ -485,10 +493,29 @@ DECL_END
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
+#ifdef SUBSTITUDE_roset_mh_contains_with_range
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+roset_mh_contains_with_range(RoSet *self, DeeObject *key, size_t start, size_t end) {
+	size_t index = roset_mh_find(self, key, start, end);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return index != (size_t)-1 ? 1 : 0;
+err:
+	return -1;
+}
+#endif /* SUBSTITUDE_roset_mh_contains_with_range */
+
+#ifdef SUBSTITUDE_roset_mh_contains
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+roset_mh_contains(RoSet *self, DeeObject *key) {
+	return roset_mh_contains_with_range(self, key, 0, (size_t)-1);
+}
+#endif /* SUBSTITUDE_roset_mh_contains */
+
 #ifdef SUBSTITUDE_roset_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 roset_contains(RoSet *self, DeeObject *key) {
-	int result = roset_hasitem(self, key);
+	int result = roset_mh_contains(self, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -829,6 +856,8 @@ PRIVATE struct type_method tpconst roset_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+	TYPE_METHOD_HINTREF(__seq_find__),
+	TYPE_METHOD_HINTREF(__seq_rfind__),
 	TYPE_METHOD_END
 };
 
@@ -853,6 +882,10 @@ PRIVATE struct type_method_hint tpconst roset_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_contains_with_key, &default__seq_contains_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range, &roset_mh_contains_with_range, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &default__seq_contains_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find, &roset_mh_find, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &default__seq_find_with_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &roset_mh_find, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &default__seq_rfind_with_key__with__seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 

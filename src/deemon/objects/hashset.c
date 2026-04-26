@@ -582,13 +582,26 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_insert_unlocked(HashSet *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL hashset_mh_unify(HashSet *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_contains(HashSet *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_contains_with_range(HashSet *self, DeeObject *key, size_t start, size_t end);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL hashset_mh_find(HashSet *self, DeeObject *key, size_t start, size_t end);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_mh_remove(HashSet *self, DeeObject *key);
+
+#ifdef __OPTIMIZE_SIZE__
+#define SUBSTITUDE_hashset_mh_contains
+#define SUBSTITUDE_hashset_mh_contains_with_range
+#endif /* __OPTIMIZE_SIZE__ */
+
 #ifndef __INTELLISENSE__
 DECL_END
+#define DEFINE_hashset_mh_find
+#include "dict-getitem-impl.c.inl"
+#ifndef SUBSTITUDE_hashset_mh_contains
 #define DEFINE_hashset_mh_contains
 #include "dict-getitem-impl.c.inl"
+#endif /* !SUBSTITUDE_hashset_mh_contains */
+#ifndef SUBSTITUDE_hashset_mh_contains_with_range
 #define DEFINE_hashset_mh_contains_with_range
 #include "dict-getitem-impl.c.inl"
+#endif /* !SUBSTITUDE_hashset_mh_contains_with_range */
 
 #define DEFINE_hashset_mh_insert
 #include "dict-setitem-impl.c.inl"
@@ -606,6 +619,24 @@ DECL_END
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
+#ifdef SUBSTITUDE_hashset_mh_contains_with_range
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_mh_contains_with_range(RoSet *self, DeeObject *key, size_t start, size_t end) {
+	size_t index = hashset_mh_find(self, key, start, end);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return index != (size_t)-1 ? 1 : 0;
+err:
+	return -1;
+}
+#endif /* SUBSTITUDE_hashset_mh_contains_with_range */
+
+#ifdef SUBSTITUDE_hashset_mh_contains
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashset_mh_contains(RoSet *self, DeeObject *key) {
+	return hashset_mh_contains_with_range(self, key, 0, (size_t)-1);
+}
+#endif /* SUBSTITUDE_hashset_mh_contains */
 
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 #define hashset_fromsequence_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))&hashset_insert_unlocked)
@@ -1260,6 +1291,7 @@ PRIVATE struct type_seq hashset_seq = {
 };
 
 
+#ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_trygetfirst(HashSet *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_trygetlast(HashSet *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL hashset_getfirst(HashSet *__restrict self);
@@ -1268,8 +1300,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_delfirst(HashSet *__restrict self
 PRIVATE WUNUSED NONNULL((1)) int DCALL hashset_dellast(HashSet *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_setfirst(HashSet *self, DeeObject *value);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_setlast(HashSet *self, DeeObject *value);
-
-#ifndef __INTELLISENSE__
+#else /* __INTELLISENSE__ */
 DECL_END
 #define DEFINE_hashset_first
 #include "dict-firstlast-impl.c.inl"
@@ -1372,6 +1403,8 @@ PRIVATE struct type_method tpconst hashset_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_setitem__),
 	TYPE_METHOD_HINTREF(__seq_compare__),
 	TYPE_METHOD_HINTREF(__seq_compare_eq__),
+	TYPE_METHOD_HINTREF(__seq_find__),
+	TYPE_METHOD_HINTREF(__seq_rfind__),
 	TYPE_METHOD_END
 };
 
@@ -1381,6 +1414,10 @@ PRIVATE struct type_method_hint tpconst hashset_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_contains_with_key, &default__seq_contains_with_key__with__seq_operator_foreach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range, &hashset_mh_contains_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &default__seq_contains_with_range_and_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find, &hashset_mh_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &default__seq_find_with_key__with__seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &hashset_mh_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &default__seq_rfind_with_key__with__seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_unify, &hashset_mh_unify, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_insert, &hashset_mh_insert, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_insertall, &hashset_mh_insertall, METHOD_FNOREFESCAPE),
