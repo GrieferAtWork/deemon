@@ -7675,7 +7675,7 @@ default__seq_any__with__seq_operator_foreach(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_any_foreach_cb, NULL);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 
@@ -7753,7 +7753,7 @@ default__seq_any_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_any_with_key_foreach_cb, key);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 
@@ -7837,7 +7837,7 @@ default__seq_any_with_range__with__seq_enumerate_index(DeeObject *__restrict sel
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_any_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 
@@ -7910,7 +7910,7 @@ default__seq_any_with_range_and_key__with__seq_enumerate_index(DeeObject *self, 
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_any_with_key_enumerate_cb, key, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 
@@ -7969,7 +7969,7 @@ default__seq_all__with__seq_operator_foreach(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_all_foreach_cb, NULL);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 
@@ -8047,7 +8047,7 @@ default__seq_all_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_all_with_key_foreach_cb, key);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 
@@ -8116,7 +8116,7 @@ default__seq_all_with_range__with__seq_enumerate_index(DeeObject *__restrict sel
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_all_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 
@@ -8189,7 +8189,7 @@ default__seq_all_with_range_and_key__with__seq_enumerate_index(DeeObject *self, 
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_all_with_key_enumerate_cb, key, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 
