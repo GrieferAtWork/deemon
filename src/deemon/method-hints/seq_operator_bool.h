@@ -110,16 +110,16 @@ err:
 	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_compare_eq = {
-	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, Dee_EmptySeq);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = CALL_DEPENDENCY(seq_operator_compare_eq, self, Dee_EmptySeq);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }}
 %{$with__set_operator_compare_eq = {
-	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, Dee_EmptySet);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = CALL_DEPENDENCY(set_operator_compare_eq, self, Dee_EmptySet);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }}
 %{$with__map_operator_compare_eq = {
-	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMap);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMap);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }}
 %{$with__set_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetfirst, self);

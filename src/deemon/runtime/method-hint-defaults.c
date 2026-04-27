@@ -440,20 +440,20 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__seq_operator_compare_eq(DeeObject *__restrict self) {
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, Dee_EmptySeq);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, Dee_EmptySeq);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__set_operator_compare_eq(DeeObject *__restrict self) {
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, Dee_EmptySet);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, Dee_EmptySet);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__map_operator_compare_eq(DeeObject *__restrict self) {
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMap);
-	return Dee_HAS_FROM_COMPARE_EQ(result);
+	int cmp_result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMap);
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
