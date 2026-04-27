@@ -60,15 +60,11 @@ __seq_endswith__.seq_endswith([[nonnull]] DeeObject *self,
 %{$with__seq_trygetlast = {
 	int cmp_result;
 	DREF DeeObject *last = CALL_DEPENDENCY(seq_trygetlast, self);
-	if (last == ITER_DONE)
-		return Dee_HAS_NO;
-	if unlikely(!last)
-		goto err;
+	if (!ITER_ISOK(last))
+		return Dee_HAS_FROMITERNOK(last);
 	cmp_result = DeeObject_TryCompareEq(item, last);
 	Dee_Decref(last);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &item);
@@ -106,15 +102,11 @@ __seq_endswith__.seq_endswith_with_key([[nonnull]] DeeObject *self,
 	int cmp_result;
 	DREF DeeObject *last;
 	last = CALL_DEPENDENCY(seq_trygetlast, self);
-	if unlikely(!last)
-		goto err;
-	if (last == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(last))
+		return Dee_HAS_FROMITERNOK(last);
 	cmp_result = DeeObject_TryCompareKeyEq(item, last, key);
 	Dee_Decref(last);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[4];
@@ -169,10 +161,8 @@ __seq_endswith__.seq_endswith_with_range([[nonnull]] DeeObject *self,
 			return Dee_HAS_NO;
 	}
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
-	if unlikely(!selfitem)
-		goto err;
-	if (selfitem == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(selfitem))
+		return Dee_HAS_FROMITERNOK(selfitem);
 	cmp_result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
@@ -227,10 +217,8 @@ __seq_endswith__.seq_endswith_with_range_and_key([[nonnull]] DeeObject *self,
 	if (start >= end)
 		return Dee_HAS_NO;
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
-	if unlikely(!selfitem)
-		goto err;
-	if (selfitem == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(selfitem))
+		return Dee_HAS_FROMITERNOK(selfitem);
 	cmp_result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(selfitem);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);

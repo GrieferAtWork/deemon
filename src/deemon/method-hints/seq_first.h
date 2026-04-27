@@ -119,10 +119,8 @@ __seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
 }}
 %{$with__seq_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetfirst, self);
-	if (result == ITER_DONE)
-		return Dee_BOUND_NO;
-	if unlikely(!result)
-		return Dee_BOUND_ERR;
+	if (!ITER_ISOK(result))
+		return Dee_BOUND_FROMITERNOK(result);
 	Dee_Decref(result);
 	return Dee_BOUND_YES;
 }}

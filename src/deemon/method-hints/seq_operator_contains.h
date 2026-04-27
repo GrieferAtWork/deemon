@@ -93,11 +93,9 @@ err:
 		goto err_trycatch;
 	real_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);
-	if unlikely(!ITER_ISOK(real_value)) {
+	if (!ITER_ISOK(real_value)) {
 		Dee_Decref(key_and_value[1]);
-		if (real_value == ITER_DONE)
-			return Dee_HAS_NO;
-		goto err;
+		return Dee_HAS_FROMITERNOK(real_value);
 	}
 	cmp_result = DeeObject_TryCompareEq(key_and_value[1], real_value);
 	Dee_Decref(real_value);
@@ -106,7 +104,6 @@ err:
 err_trycatch:
 	if (DeeError_Catch(&DeeError_NotImplemented))
 		return Dee_HAS_NO;
-err:
 	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_contains_with_foreach_cb)]] {

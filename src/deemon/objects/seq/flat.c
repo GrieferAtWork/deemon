@@ -2344,13 +2344,13 @@ sfi_bool(SeqFlatIterator *__restrict self) {
 		Dee_Incref(curriter);
 		SeqFlatIterator_LockRelease(self);
 		result = DeeObject_BoolInherited(curriter);
-		if (result != 0)
+		if (result != Dee_HAS_NO)
 			break; /* non-empty, or error */
 
 		/* Current iterator has been exhausted -> load the next one */
 		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
 		if (!ITER_ISOK(new_currseq))
-			return new_currseq == ITER_DONE ? 0 : -1;  /* Error or ITER_DONE */
+			return Dee_HAS_FROMITERNOK(new_currseq); /* Error or ITER_DONE */
 		new_curriter = DeeObject_Iter(new_currseq);
 		Dee_Decref(new_currseq);
 		if unlikely(!new_curriter)
@@ -2365,7 +2365,7 @@ sfi_bool(SeqFlatIterator *__restrict self) {
 	}
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

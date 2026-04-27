@@ -24,7 +24,7 @@
 [[alias(Set.insert)]]
 __set_insert__(key)->?Dbool {
 	int result = CALL_DEPENDENCY(set_insert, self, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -32,14 +32,14 @@ err:
 }
 
 /* Insert a key into a set
- * @return: 1 : Given `key' was inserted and wasn't already present
- * @return: 0 : Given `key' was already present
- * @return: -1: Error */
+ * @return: Dee_HAS_YES: Given `key' was inserted and wasn't already present
+ * @return: Dee_HAS_NO:  Given `key' was already present
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __set_insert__.set_insert([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
+%{$none = Dee_HAS_NO}
 %{$empty = "default__set_insert__unsupported"}
 %{$with__map_setnew = {
 	int result;
@@ -51,7 +51,7 @@ __set_insert__.set_insert([[nonnull]] DeeObject *self,
 	Dee_Decref(map_key_and_value[0]);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_size__and__set_insertall = {
 	int temp;
@@ -72,19 +72,17 @@ err:
 		goto err;
 	return old_size == new_size ? 0 : 1;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_contains__and__seq_append = {
 	int contains = CALL_DEPENDENCY(seq_contains, self, key);
-	if unlikely(contains < 0)
-		goto err;
-	if (contains)
-		return 0;
+	if (Dee_HAS_ISNO_OR_ERR(contains))
+		return contains;
 	if unlikely(CALL_DEPENDENCY(seq_append, self, key))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &key);
@@ -92,7 +90,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 set_insert = {

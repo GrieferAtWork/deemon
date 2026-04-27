@@ -615,10 +615,8 @@ rodict_getitem_index(RoDict *self, size_t key) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodict_bounditem_index(RoDict *self, size_t key) {
 	DREF DeeObject *value = rodict_trygetitem_index(self, key);
-	if unlikely(!value)
-		return Dee_BOUND_ERR;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_DecrefNokill(value);
 	return Dee_BOUND_YES;
 }

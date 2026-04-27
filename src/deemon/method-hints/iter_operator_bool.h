@@ -39,8 +39,8 @@ int __iter_bool__.iter_operator_bool([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *next = CALL_DEPENDENCY(iter_peek, self);
 	if unlikely(!next)
 		goto err;
-	if (next == ITER_DONE)
-		return 0;
+	if (!ITER_ISOK(next))
+		return Dee_HAS_FROMITERNOK(next);
 	Dee_Decref_unlikely(next);
 	return 1;
 err:

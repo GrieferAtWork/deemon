@@ -742,12 +742,10 @@ filter_getlast(Filter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_bool(Filter *self) {
 	DREF DeeObject *result = filter_trygetfirst(self);
-	if (result == ITER_DONE)
-		return 0;
-	if unlikely(result == NULL)
-		return -1;
+	if (!ITER_ISOK(result))
+		return Dee_HAS_FROMITERNOK(result);
 	Dee_Decref(result);
-	return 1;
+	return Dee_HAS_YES;
 }
 
 #define filter_boundlast  filter_nonempty_asbound

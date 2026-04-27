@@ -24,7 +24,7 @@
 [[alias(Set.remove)]]
 __set_remove__(key)->?Dbool {
 	int result = CALL_DEPENDENCY(set_remove, self, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -32,14 +32,14 @@ err:
 }
 
 /* Remove a key from a set
- * @return: 1 : Given `key' was removed
- * @return: 0 : Given `key' was wasn't present
- * @return: -1: Error */
+ * @return: Dee_HAS_YES: Given `key' was removed
+ * @return: Dee_HAS_NO:  Given `key' was wasn't present
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __set_remove__.set_remove([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
+%{$none = Dee_HAS_NO}
 %{$empty = "default__set_remove__unsupported"}
 %{$with__map_operator_trygetitem__and__map_operator_delitem = {
 	int temp;
@@ -55,7 +55,7 @@ __set_remove__.set_remove([[nonnull]] DeeObject *self,
 		Dee_Decref(map_key_and_value[1]);
 neq_map_key:
 		Dee_Decref(map_key_and_value[0]);
-		return 0;
+		return Dee_HAS_NO;
 	}
 	temp = DeeObject_TryCompareEq(map_key_and_value[1], current_value);
 	Dee_Decref(map_key_and_value[1]);
@@ -68,13 +68,13 @@ neq_map_key:
 	Dee_Decref(map_key_and_value[0]);
 	if unlikely(temp)
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err_map_key_and_value:
 	Dee_Decref(map_key_and_value[1]);
 err_map_key:
 	Dee_Decref(map_key_and_value[0]);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_size__and__set_removeall = {
 	int temp;
@@ -93,17 +93,17 @@ err:
 	new_size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(new_size == (size_t)-1)
 		goto err;
-	return old_size == new_size ? 0 : 1;
+	return Dee_HAS_FROMBOOL(old_size != new_size);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_removeall = {
 	size_t count = CALL_DEPENDENCY(seq_removeall, self, key, 0, (size_t)-1, (size_t)-1);
 	if unlikely(count == (size_t)-1)
 		goto err;
-	return count ? 1 : 0;
+	return Dee_HAS_FROMBOOL(count != 0);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &key);
@@ -111,7 +111,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 set_remove = {

@@ -772,12 +772,10 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_remove(Dict *self, DeeObject *key) {
 	DREF DeeObject *value = dict_popvalue(self, key);
-	if unlikely(!value)
-		return -1;
-	if (value == ITER_DONE)
-		return 0;
+	if (!ITER_ISOK(value))
+		return Dee_HAS_FROMITERNOK(value);
 	Dee_Decref(value);
-	return 1;
+	return Dee_HAS_YES;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -852,10 +850,8 @@ dict_getitem_string_len_hash(Dict *self, char const *key, size_t keylen, Dee_has
 
 PRIVATE WUNUSED int DCALL
 bound_from_trygetitem(DREF DeeObject *value) {
-	if unlikely(!value)
-		return Dee_BOUND_ERR;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_Decref(value);
 	return Dee_BOUND_YES;
 }

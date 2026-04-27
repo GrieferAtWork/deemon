@@ -24,7 +24,7 @@
 [[alias(Mapping.remove)]]
 __map_remove__(key)->?Dbool {
 	int result = CALL_DEPENDENCY(map_remove, self, key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -33,26 +33,26 @@ err:
 
 
 /* Remove a single key, returning true/false indicative of that key having been removed.
- * @return: 1 : Key was removed
- * @return: 0 : Key didn't exist (nothing was removed)
- * @return: -1: Error */
+ * @return: Dee_HAS_YES: Key was removed
+ * @return: Dee_HAS_NO:  Key didn't exist (nothing was removed)
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __map_remove__.map_remove([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
+%{$none = Dee_HAS_NO}
 %{$empty = "default__map_remove__unsupported"}
 %{$with__map_operator_bounditem__and__map_operator_delitem = {
 	int bound = CALL_DEPENDENCY(map_operator_bounditem, self, key);
 	if unlikely(Dee_BOUND_ISERR(bound))
 		goto err;
 	if (!Dee_BOUND_ISBOUND(bound))
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(CALL_DEPENDENCY(map_operator_delitem, self, key))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_size__and__map_operator_delitem = {
 	size_t new_size;
@@ -60,15 +60,15 @@ err:
 	if unlikely(old_size == (size_t)-1)
 		goto err;
 	if unlikely(old_size == 0)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(CALL_DEPENDENCY(map_operator_delitem, self, key))
 		goto err;
 	new_size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(new_size == (size_t)-1)
 		goto err;
-	return old_size == new_size ? 0 : 1;
+	return Dee_HAS_FROMBOOL(old_size != new_size);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_enumerate__and__seq_operator_delitem = [[prefix(DEFINE_map_pop_with_seq_enumerate_cb)]] {
 	Dee_ssize_t status;
@@ -78,7 +78,7 @@ err:
 	status = CALL_DEPENDENCY(seq_enumerate, self, &map_pop_with_seq_enumerate_cb, &data);
 	if (status == MAP_POP_WITH_SEQ_ENUMERATE__SUCCESS) {
 		Dee_Decref(data.mpwse_key);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	ASSERT(status == 0 || status == -1);
 	return (int)status;
@@ -91,7 +91,7 @@ err:
 	status = CALL_DEPENDENCY(seq_enumerate_index, self, &map_pop_with_seq_enumerate_index_cb, &data, 0, (size_t)-1);
 	if (status == MAP_POP_WITH_SEQ_ENUMERATE_INDEX__SUCCESS) {
 		Dee_Decref(data.mpwsei_key);
-		return 1;
+		return Dee_HAS_YES;
 	}
 	ASSERT(status == 0 || status == -1);
 	return (int)status;
@@ -101,7 +101,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 map_remove = {

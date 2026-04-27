@@ -2460,10 +2460,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 module_bound_libname(DeeModuleObject *__restrict self) {
 	DREF /*String*/ DeeObject *result;
 	result = DeeModule_GetLibName(self, 0);
-	if (result == ITER_DONE)
-		return Dee_BOUND_NO;
-	if unlikely(!result)
-		return Dee_BOUND_ERR;
+	if (!ITER_ISOK(result))
+		return Dee_BOUND_FROMITERNOK(result); /* Unbound or error */
 	Dee_Decref(result);
 	return Dee_BOUND_YES;
 }

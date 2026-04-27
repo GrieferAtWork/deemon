@@ -101,9 +101,9 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem, self, index);
-		if (has > 0) {
+		if (Dee_HAS_ISYES(has)) {
 			DeeRT_ErrUnboundKey(self, index);
-		} else if (has == 0) {
+		} else if (Dee_HAS_ISNO(has)) {
 			DeeRT_ErrUnknownKey(self, index);
 		}
 		result = NULL;
@@ -145,9 +145,9 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_index, self, index);
-		if (has > 0) {
+		if (Dee_HAS_ISYES(has)) {
 			DeeRT_ErrUnboundKeyInt(self, index);
-		} else if (has == 0) {
+		} else if (Dee_HAS_ISNO(has)) {
 			DeeRT_ErrUnknownKeyInt(self, index);
 		}
 		result = NULL;
@@ -188,9 +188,9 @@ tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_hash, self, key, hash);
-		if (has > 0) {
+		if (Dee_HAS_ISYES(has)) {
 			DeeRT_ErrUnboundKeyStr(self, key);
-		} else if (has == 0) {
+		} else if (Dee_HAS_ISNO(has)) {
 			DeeRT_ErrUnboundKeyStr(self, key);
 		}
 		result = NULL;
@@ -287,9 +287,9 @@ err:
 	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
 	if unlikely(result == ITER_DONE) {
 		int has = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_len_hash, self, key, keylen, hash);
-		if (has > 0) {
+		if (Dee_HAS_ISYES(has)) {
 			DeeRT_ErrUnboundKeyStrLen(self, key, keylen);
-		} else if (has == 0) {
+		} else if (Dee_HAS_ISNO(has)) {
 			DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 		}
 		result = NULL;
@@ -596,14 +596,10 @@ err:
 }}
 %{using tp_seq->tp_trygetitem: {
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
-	if unlikely(!value)
-		goto err;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_Decref(value);
 	return Dee_BOUND_YES;
-err:
-	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -664,14 +660,10 @@ err:
 }}
 %{using tp_seq->tp_trygetitem_index: {
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
-	if unlikely(!value)
-		goto err;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_Decref(value);
 	return Dee_BOUND_YES;
-err:
-	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -721,14 +713,10 @@ err:
 }}
 %{using tp_seq->tp_trygetitem_string_hash: {
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
-	if unlikely(!value)
-		goto err;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_Decref(value);
 	return Dee_BOUND_YES;
-err:
-	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -784,14 +772,10 @@ err:
 }}
 %{using tp_seq->tp_trygetitem_string_len_hash: {
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
-	if unlikely(!value)
-		goto err;
-	if (value == ITER_DONE)
-		return Dee_BOUND_MISSING;
+	if (!ITER_ISOK(value))
+		return Dee_BOUND_FROMITERNOK_MISSING(value);
 	Dee_Decref(value);
 	return Dee_BOUND_YES;
-err:
-	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -815,7 +799,7 @@ tp_seq->tp_hasitem([[nonnull]] DeeObject *self,
 		goto err;
 	return CALL_DEPENDENCY(tp_seq->tp_hasitem_index, self, index_value);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using [tp_seq->tp_hasitem_index, tp_seq->tp_hasitem_string_hash]: {
 	size_t index_value;
@@ -828,7 +812,7 @@ err:
 		goto err;
 	return CALL_DEPENDENCY(tp_seq->tp_hasitem_index, self, index_value);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_hasitem_index: {
 	size_t index_value;
@@ -836,7 +820,7 @@ err:
 		goto err;
 	return CALL_DEPENDENCY(tp_seq->tp_hasitem_index, self, index_value);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_hasitem_string_len_hash: {
 	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
@@ -846,7 +830,7 @@ err:
 	                       DeeString_SIZE(index),
 	                       DeeString_Hash(index));
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_hasitem_string_hash: {
 	if (DeeObject_AssertTypeExact(index, &DeeString_Type))
@@ -855,7 +839,7 @@ err:
 	                       DeeString_STR(index),
 	                       DeeString_Hash(index));
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_bounditem: [[disliked]] {
 	return CALL_DEPENDENCY(tp_seq->tp_bounditem, self, index);
@@ -867,7 +851,7 @@ err:
 	return IF_TYPED_ELSE(tdefault__hasitem_index__with__size__and__getitem_index_fast(tp_self, self, index_value),
 	                     default__hasitem_index__with__size__and__getitem_index_fast(self, index_value));
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -878,9 +862,9 @@ tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
 	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return index < size ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index < size);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_bounditem_index: [[disliked]] {
 	return CALL_DEPENDENCY(tp_seq->tp_bounditem_index, self, index);
@@ -894,7 +878,7 @@ err:
 	Dee_Decref_likely(indexob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -917,7 +901,7 @@ tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
 	Dee_Decref_likely(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -931,11 +915,11 @@ tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
 }}
 %{using tp_seq->tp_hasitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
 	int result;
-	WITH_ZSTRING(err, zkey, key, keylen, return 0,
+	WITH_ZSTRING(err, zkey, key, keylen, return Dee_HAS_NO,
 	             result = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_hash, self, zkey, hash));
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{using tp_seq->tp_hasitem: [[disliked]] {
 	int result;
@@ -946,7 +930,7 @@ err:
 	Dee_Decref_likely(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} = OPERATOR_GETITEM;
 
 

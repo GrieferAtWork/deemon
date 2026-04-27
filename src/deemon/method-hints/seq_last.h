@@ -186,10 +186,8 @@ err:
 }}
 %{$with__seq_trygetlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetlast, self);
-	if (result == ITER_DONE)
-		return Dee_BOUND_NO;
-	if unlikely(!result)
-		return Dee_BOUND_ERR;
+	if (!ITER_ISOK(result))
+		return Dee_BOUND_FROMITERNOK(result);
 	Dee_Decref(result);
 	return Dee_BOUND_YES;
 }}

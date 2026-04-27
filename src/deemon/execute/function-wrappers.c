@@ -4847,10 +4847,8 @@ framesymbolsbyname_bounditem(FrameSymbolsByName *self, DeeObject *key) {
 		if unlikely(clid == (canonical_lid_t)-1)
 			goto err;
 		result = FrameSymbolsByName_GetCLidValue(self, clid);
-		if unlikely(!result)
-			goto err;
-		if (result == ITER_DONE)
-			return Dee_BOUND_NO;
+		if (!ITER_ISOK(result))
+			return Dee_BOUND_FROMITERNOK(result); /* Unbound or error */
 		Dee_Decref(result);
 		return Dee_BOUND_YES;
 	}
@@ -4922,10 +4920,8 @@ framesymbolsbyname_bounditem_index(FrameSymbolsByName *self, size_t key) {
 		if unlikely(clid == (canonical_lid_t)-1)
 			goto err;
 		result = FrameSymbolsByName_GetCLidValue(self, clid);
-		if unlikely(!result)
-			goto err;
-		if (result == ITER_DONE)
-			return Dee_BOUND_NO; /* Unbound */
+		if (!ITER_ISOK(result))
+			return Dee_BOUND_FROMITERNOK(result); /* Unbound or error */
 		Dee_Decref(result);
 		return Dee_BOUND_YES; /* Bound */
 	}
@@ -5002,10 +4998,8 @@ framesymbolsbyname_bounditem_string_len_hash(FrameSymbolsByName *self,
 		if unlikely(clid == (canonical_lid_t)-1)
 			goto err;
 		result = FrameSymbolsByName_GetCLidValue(self, clid);
-		if unlikely(!result)
-			goto err;
-		if (result == ITER_DONE)
-			return Dee_BOUND_NO; /* Unbound */
+		if (!ITER_ISOK(result))
+			return Dee_BOUND_FROMITERNOK(result); /* Unbound or error */
 		Dee_Decref(result);
 		return Dee_BOUND_YES; /* Bound */
 	}

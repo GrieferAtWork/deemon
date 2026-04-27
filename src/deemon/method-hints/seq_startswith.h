@@ -60,15 +60,11 @@ __seq_startswith__.seq_startswith([[nonnull]] DeeObject *self,
 %{$with__seq_trygetfirst = {
 	int cmp_result;
 	DREF DeeObject *first = CALL_DEPENDENCY(seq_trygetfirst, self);
-	if (first == ITER_DONE)
-		return Dee_HAS_NO;
-	if unlikely(!first)
-		goto err;
+	if (!ITER_ISOK(first))
+		return Dee_HAS_FROMITERNOK(first);
 	cmp_result = DeeObject_TryCompareEq(item, first);
 	Dee_Decref(first);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &item);
@@ -106,15 +102,11 @@ __seq_startswith__.seq_startswith_with_key([[nonnull]] DeeObject *self,
 	int cmp_result;
 	DREF DeeObject *first;
 	first = CALL_DEPENDENCY(seq_trygetfirst, self);
-	if unlikely(!first)
-		goto err;
-	if (first == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(first))
+		return Dee_HAS_FROMITERNOK(first);
 	cmp_result = DeeObject_TryCompareKeyEq(item, first, key);
 	Dee_Decref(first);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[4];
@@ -160,15 +152,11 @@ __seq_startswith__.seq_startswith_with_range([[nonnull]] DeeObject *self,
 	if (start >= end)
 		return Dee_HAS_NO;
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
-	if unlikely(!selfitem)
-		goto err;
-	if (selfitem == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(selfitem))
+		return Dee_HAS_FROMITERNOK(selfitem);
 	cmp_result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
@@ -208,15 +196,11 @@ __seq_startswith__.seq_startswith_with_range_and_key([[nonnull]] DeeObject *self
 	if (start >= end)
 		return Dee_HAS_NO;
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
-	if unlikely(!selfitem)
-		goto err;
-	if (selfitem == ITER_DONE)
-		return Dee_HAS_NO;
+	if (!ITER_ISOK(selfitem))
+		return Dee_HAS_FROMITERNOK(selfitem);
 	cmp_result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(selfitem);
 	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
-err:
-	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);

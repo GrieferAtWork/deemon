@@ -1831,7 +1831,7 @@ DeeMA___set_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__set_insert__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insert))(self, args.key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -1860,7 +1860,7 @@ DeeMA___set_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__set_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, args.key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -2338,7 +2338,7 @@ DeeMA___map_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__map_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_remove))(self, args.key);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

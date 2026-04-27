@@ -123,19 +123,15 @@ err:
 }}
 %{$with__set_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetfirst, self);
-	if (result == ITER_DONE)
-		return Dee_HAS_NO;
-	if unlikely(!result)
-		return Dee_HAS_ERR;
+	if (!ITER_ISOK(result))
+		return Dee_HAS_FROMITERNOK(result);
 	Dee_Decref(result);
 	return Dee_HAS_YES;
 }}
 %{$with__set_trygetlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetlast, self);
-	if (result == ITER_DONE)
-		return Dee_HAS_NO;
-	if unlikely(!result)
-		return Dee_HAS_ERR;
+	if (!ITER_ISOK(result))
+		return Dee_HAS_FROMITERNOK(result);
 	Dee_Decref(result);
 	return Dee_HAS_YES;
 }}
