@@ -1467,11 +1467,9 @@ blkw_bool_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blkw_bool(DeeBlackListKwObject *__restrict self) {
-	int status = (int)DeeObject_ForeachPair(self->blkw_kw, &blkw_bool_foreach_cb, self);
-	ASSERT(status == 0 || status == -1 || status == -2);
-	if (status == -2)
-		status = 1;
-	return status;
+	Dee_ssize_t foreach_status = DeeObject_ForeachPair(self->blkw_kw, &blkw_bool_foreach_cb, self);
+	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL

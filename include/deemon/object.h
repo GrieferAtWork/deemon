@@ -2029,12 +2029,18 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 #define Dee_BOUND_INTO_eM1_m1_y0_nM2(v) ((v) == Dee_BOUND_ERR ? -1 : (v) == Dee_BOUND_MISSING ? 1 : (v) == Dee_BOUND_YES ? 0 : (/*Dee_ASSERT((v) == Dee_BOUND_NO),*/ -2))
 #define Dee_BOUND_FROM_eM1_mP_y0_nM2(v) ((v) == -1 ? Dee_BOUND_ERR : (v) > 0 ? Dee_BOUND_MISSING : (v) == 0 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -2),*/ Dee_BOUND_NO))
+
+#define Dee_BOUND_INTO_eM1_m1_yM2_n0(v) ((v) == Dee_BOUND_ERR ? -1 : (v) == Dee_BOUND_MISSING ? 1 : (v) == Dee_BOUND_YES ? -2 : (/*Dee_ASSERT((v) == Dee_BOUND_NO),*/ 0))
+#define Dee_BOUND_FROM_eM1_mP_yM2_n0(v) ((v) == -1 ? Dee_BOUND_ERR : (v) > 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == 0),*/ Dee_BOUND_NO))
 #else
 #define Dee_BOUND_FROM_eM1_m0_yM2_nM3(v)     ((v) == -1 ? Dee_BOUND_ERR : (v) == 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
 #define Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(v) ((v) == -1 ? Dee_BOUND_ERR : ((v) == 0 || (v) == -4) ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
 
 #define Dee_BOUND_INTO_eM1_m1_y0_nM2(v) ((v) == Dee_BOUND_ERR ? -1 : (v) == Dee_BOUND_MISSING ? 1 : (v) == Dee_BOUND_YES ? 0 : (/*Dee_ASSERT((v) == Dee_BOUND_NO),*/ -2))
 #define Dee_BOUND_FROM_eM1_mP_y0_nM2(v) ((v) == -1 ? Dee_BOUND_ERR : (v) > 0 ? Dee_BOUND_MISSING : (v) == 0 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -2),*/ Dee_BOUND_NO))
+
+#define Dee_BOUND_INTO_eM1_m1_yM2_n0(v) ((v) == Dee_BOUND_ERR ? -1 : (v) == Dee_BOUND_MISSING ? 1 : (v) == Dee_BOUND_YES ? -2 : (/*Dee_ASSERT((v) == Dee_BOUND_NO),*/ 0))
+#define Dee_BOUND_FROM_eM1_mP_yM2_n0(v) ((v) == -1 ? Dee_BOUND_ERR : (v) > 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == 0),*/ Dee_BOUND_NO))
 #endif
 
 

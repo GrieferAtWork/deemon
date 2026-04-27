@@ -94,7 +94,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool dee_memcaseeq(uint8_t const *a, uint8_t const
 
 struct notify_entry {
 	uint16_t              nh_class; /* The notification class. */
-	uint16_t              nh_pad[(sizeof(void *)-2)/2]; /* ... */
+	uint16_t              nh_pad[(sizeof(void *) - 2) / 2]; /* ... */
 	DREF DeeStringObject *nh_name;  /* [0..1] The notification name (or NULL if the entry is unused) */
 	Dee_hash_t            nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr' when `Dee_NOTIFICATION_CLASS_FNOCASE' is set) */
 	Dee_notify_t          nh_func;  /* [1..1][valid_if(nh_name)] The callback invoked for the purposes of this notification. */

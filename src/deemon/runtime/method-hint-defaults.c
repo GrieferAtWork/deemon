@@ -10365,11 +10365,7 @@ err_trycatch:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
-	if (Dee_COMPARE_ISERR(temp))
-		return -1;
-	if (Dee_COMPARE_ISEQ(temp))
-		return -2;
-	return 0;
+	return Dee_COMPARE_INTO_eM1_eqM2_ne0(temp);
 }
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -10469,9 +10465,7 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if (Dee_COMPARE_ISERR(temp))
-		return -1;
-	return Dee_COMPARE_ISEQ(temp) ? -2 : 0;
+	return Dee_COMPARE_INTO_eM1_eqM2_ne0(temp);
 }
 #endif /* !DEFINED_seq_contains_with_key_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -10539,11 +10533,7 @@ default__seq_contains_with_range__unsupported(DeeObject *self, DeeObject *item, 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
-	if (Dee_COMPARE_ISERR(temp))
-		return -1;
-	if (Dee_COMPARE_ISEQ(temp))
-		return -2;
-	return 0;
+	return Dee_COMPARE_INTO_eM1_eqM2_ne0(temp);
 }
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 #ifndef DEFINED_seq_contains_enumerate_cb
@@ -10644,9 +10634,7 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 	struct seq_count_with_key_data *data;
 	data = (struct seq_count_with_key_data *)arg;
 	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
-	if (Dee_COMPARE_ISERR(temp))
-		return -1;
-	return Dee_COMPARE_ISEQ(temp) ? -2 : 0;
+	return Dee_COMPARE_INTO_eM1_eqM2_ne0(temp);
 }
 #endif /* !DEFINED_seq_contains_with_key_foreach_cb */
 #ifndef DEFINED_seq_contains_with_key_enumerate_cb
@@ -16035,9 +16023,7 @@ default__set_operator_bool__with__set_operator_foreach(DeeObject *__restrict sel
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach))(self, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

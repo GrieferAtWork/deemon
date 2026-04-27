@@ -921,35 +921,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_any_cb(void *UNUSED(arg), DeeObject *subseq) {
 	int result = DeeObject_InvokeMethodHint(seq_any, subseq);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_mh_seq_any(SeqFlat *__restrict self) {
 	int result = (int)sf_foreachseq(self, &sf_mh_seq_any_cb, NULL);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_any_with_key_cb(void *arg, DeeObject *subseq) {
 	int result = DeeObject_InvokeMethodHint(seq_any_with_key, subseq, (DeeObject *)arg);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_any_with_key(SeqFlat *self, DeeObject *key) {
 	int result = (int)sf_foreachseq(self, &sf_mh_seq_any_with_key_cb, key);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -957,18 +949,14 @@ sf_mh_seq_any_with_range_cb(void *UNUSED(arg), DeeObject *subseq,
                             size_t subseq_start, size_t subseq_end,
                             size_t UNUSED(range_start)) {
 	int result = DeeObject_InvokeMethodHint(seq_any_with_range, subseq, subseq_start, subseq_end);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_mh_seq_any_with_range(SeqFlat *__restrict self, size_t start, size_t end) {
 	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_any_with_range_cb, NULL);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -977,18 +965,14 @@ sf_mh_seq_any_with_range_and_key_cb(void *arg, DeeObject *subseq,
                                     size_t UNUSED(range_start)) {
 	int result = DeeObject_InvokeMethodHint(seq_any_with_range_and_key, subseq,
 	                                        subseq_start, subseq_end, (DeeObject *)arg);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sf_mh_seq_any_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *key) {
 	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_any_with_range_and_key_cb, key);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 #endif /* WANT_sf_mh_seq_any */
 
@@ -997,47 +981,27 @@ sf_mh_seq_any_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObj
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_all_cb(void *UNUSED(arg), DeeObject *subseq) {
 	int result = DeeObject_InvokeMethodHint(seq_all, subseq);
-	if (result > 0) {
-		result = 0; /* Still all */
-	} else if (result == 0) {
-		result = -2; /* Not all */
-	}
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_mh_seq_all(SeqFlat *__restrict self) {
-	int result = (int)sf_foreachseq(self, &sf_mh_seq_all_cb, NULL);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == 0) {
-		result = 1; /* Still all */
-	} else if (result == -2) {
-		result = 0; /* Not all */
-	}
-	return result;
+	Dee_ssize_t foreach_result;
+	foreach_result = sf_foreachseq(self, &sf_mh_seq_all_cb, NULL);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_all_with_key_cb(void *arg, DeeObject *subseq) {
 	int result = DeeObject_InvokeMethodHint(seq_all_with_key, subseq, (DeeObject *)arg);
-	if (result > 0) {
-		result = 0; /* Still all */
-	} else if (result == 0) {
-		result = -2; /* Not all */
-	}
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_all_with_key(SeqFlat *self, DeeObject *key) {
-	int result = (int)sf_foreachseq(self, &sf_mh_seq_all_with_key_cb, key);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == 0) {
-		result = 1; /* Still all */
-	} else if (result == -2) {
-		result = 0; /* Not all */
-	}
-	return result;
+	Dee_ssize_t foreach_result;
+	foreach_result = sf_foreachseq(self, &sf_mh_seq_all_with_key_cb, key);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1045,24 +1009,14 @@ sf_mh_seq_all_with_range_cb(void *UNUSED(arg), DeeObject *subseq,
                             size_t subseq_start, size_t subseq_end,
                             size_t UNUSED(range_start)) {
 	int result = DeeObject_InvokeMethodHint(seq_all_with_range, subseq, subseq_start, subseq_end);
-	if (result > 0) {
-		result = 0; /* Still all */
-	} else if (result == 0) {
-		result = -2; /* Not all */
-	}
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_mh_seq_all_with_range(SeqFlat *__restrict self, size_t start, size_t end) {
-	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_cb, NULL);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == 0) {
-		result = 1; /* Still all */
-	} else if (result == -2) {
-		result = 0; /* Not all */
-	}
-	return result;
+	Dee_ssize_t foreach_result;
+	foreach_result = sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_cb, NULL);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1071,24 +1025,14 @@ sf_mh_seq_all_with_range_and_key_cb(void *arg, DeeObject *subseq,
                                     size_t UNUSED(range_start)) {
 	int result = DeeObject_InvokeMethodHint(seq_all_with_range_and_key, subseq,
 	                                        subseq_start, subseq_end, (DeeObject *)arg);
-	if (result > 0) {
-		result = 0; /* Still all */
-	} else if (result == 0) {
-		result = -2; /* Not all */
-	}
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sf_mh_seq_all_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *key) {
-	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_and_key_cb, key);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == 0) {
-		result = 1; /* Still all */
-	} else if (result == -2) {
-		result = 0; /* Not all */
-	}
-	return result;
+	Dee_ssize_t foreach_result;
+	foreach_result = sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_and_key_cb, key);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_result);
 }
 #endif /* WANT_sf_mh_seq_all */
 
@@ -1797,18 +1741,14 @@ sf_mh_seq_count_with_range_and_key(SeqFlat *self, DeeObject *item, size_t start,
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_contains_cb(void *arg, DeeObject *subseq) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, subseq, (DeeObject *)arg);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_contains(SeqFlat *self, DeeObject *item) {
 	int result = (int)sf_foreachseq(self, &sf_mh_seq_contains_cb, item);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 struct sf_mh_seq_contains_with_key_data {
@@ -1820,9 +1760,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_contains_with_key_cb(void *arg, DeeObject *subseq) {
 	struct sf_mh_seq_contains_with_key_data *data = (struct sf_mh_seq_contains_with_key_data *)arg;
 	int result = DeeObject_InvokeMethodHint(seq_contains_with_key, subseq, data->sfmhscwk_item, data->sfmhscwk_key);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1833,9 +1771,7 @@ sf_mh_seq_contains_with_key(SeqFlat *self, DeeObject *item, DeeObject *key) {
 	data.sfmhscwk_key  = key;
 	result = (int)sf_foreachseq(self, &sf_mh_seq_contains_with_key_cb, &data);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1845,18 +1781,14 @@ sf_mh_seq_contains_with_range_cb(void *arg, DeeObject *subseq,
 	int result = DeeObject_InvokeMethodHint(seq_contains_with_range,
 	                                        subseq, (DeeObject *)arg,
 	                                        subseq_start, subseq_end);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_contains_with_range(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
 	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_contains_with_range_cb, item);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 
 struct sf_mh_seq_contains_with_range_and_key_data {
@@ -1872,9 +1804,7 @@ sf_mh_seq_contains_with_range_and_key_cb(void *arg, DeeObject *subseq,
 	                                        subseq, data->sfmhscwrak_item,
 	                                        subseq_start, subseq_end,
 	                                        data->sfmhscwrak_key);
-	if (result > 0)
-		result = -2;
-	return (Dee_ssize_t)result;
+	return Dee_HAS_INTO_eM1_n0_yM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -1886,9 +1816,7 @@ sf_mh_seq_contains_with_range_and_key(SeqFlat *self, DeeObject *item,
 	data.sfmhscwrak_key  = key;
 	result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_contains_with_range_and_key_cb, &data);
 	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		result = 1;
-	return result;
+	return Dee_HAS_FROM_eM1_n0_yM2(result);
 }
 #endif /* WANT_sf_mh_seq_contains */
 
