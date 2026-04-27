@@ -415,106 +415,62 @@ se_setitem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen,
 	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setitem_string_len_hash_cb, &data);
 }
 
-#define SEQEACH_FOREACH_ERR     (-1)
-#define SEQEACH_FOREACH_NO      (-2)
-#define SEQEACH_FOREACH_YES     0
-#define SEQEACH_FOREACH_MISSING 1 /* Found something that isn't present -> must be distinct from "found nothing" */
-
-LOCAL ATTR_CONST Dee_ssize_t DCALL
-seqeach_map_bound2fe(int bounditem_result) {
-	switch (bounditem_result) {
-	case Dee_BOUND_YES:
-		return SEQEACH_FOREACH_YES; /* Item is bound */
-	case Dee_BOUND_NO:
-		return SEQEACH_FOREACH_NO; /* Item exists, but isn't bound */
-	case Dee_BOUND_MISSING:
-		return SEQEACH_FOREACH_MISSING; /* Item doesn't exist */
-	case Dee_BOUND_ERR:
-		return SEQEACH_FOREACH_ERR;
-	default: __builtin_unreachable();
-	}
-}
-
-LOCAL ATTR_CONST int DCALL
-seqeach_map_fe2bound(Dee_ssize_t foreach_result) {
-	switch (foreach_result) {
-	case SEQEACH_FOREACH_ERR:
-		return Dee_BOUND_ERR;
-	case SEQEACH_FOREACH_YES:
-		return Dee_BOUND_YES;
-	case SEQEACH_FOREACH_NO:
-		return Dee_BOUND_NO;
-	default: /* "default:" because "SEQSOME_FOREACH_MISSING" is positive */
-		return Dee_BOUND_MISSING;
-	}
-}
-
-LOCAL ATTR_CONST Dee_ssize_t DCALL
-seqeach_map_has2fe(int hasitem_result) {
-	if (Dee_HAS_ISYES(hasitem_result))
-		return SEQEACH_FOREACH_YES; /* Item exists */
-	if (Dee_HAS_ISNO(hasitem_result))
-		return SEQEACH_FOREACH_NO; /* Item doesn't exists */
-	return SEQEACH_FOREACH_ERR;
-}
-
-LOCAL ATTR_CONST int DCALL
-seqeach_map_fe2has(Dee_ssize_t foreach_result) {
-	switch (foreach_result) {
-	case SEQEACH_FOREACH_YES:
-		return Dee_HAS_YES;
-	case SEQEACH_FOREACH_NO:
-		return Dee_HAS_NO;
-	case SEQEACH_FOREACH_ERR:
-		return Dee_HAS_ERR;
-	default: __builtin_unreachable();
-	}
-}
-
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_bounditem_foreach_cb(void *arg, DeeObject *item) {
-	return seqeach_map_bound2fe(DeeObject_BoundItem(item, (DeeObject *)arg));
+	int result = DeeObject_BoundItem(item, (DeeObject *)arg);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_bounditem(SeqEachBase *self, DeeObject *index) {
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_bounditem_foreach_cb, index));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_bounditem_foreach_cb, index);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasitem_foreach_cb(void *arg, DeeObject *item) {
-	return seqeach_map_has2fe(DeeObject_HasItem(item, (DeeObject *)arg));
+	int result = DeeObject_HasItem(item, (DeeObject *)arg);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasitem(SeqEachBase *self, DeeObject *index) {
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                     &se_hasitem_foreach_cb, index));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasitem_foreach_cb, index);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_bounditem_index_foreach_cb(void *arg, DeeObject *item) {
-	return seqeach_map_bound2fe(DeeObject_BoundItemIndex(item, (size_t)(uintptr_t)arg));
+	int result = DeeObject_BoundItemIndex(item, (size_t)(uintptr_t)arg);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 se_bounditem_index(SeqEachBase *self, size_t index) {
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_bounditem_index_foreach_cb,
-	                                                       (void *)(uintptr_t)index));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_bounditem_index_foreach_cb,
+	                                            (void *)(uintptr_t)index);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasitem_index_foreach_cb(void *arg, DeeObject *item) {
-	return seqeach_map_has2fe(DeeObject_HasItemIndex(item, (size_t)(uintptr_t)arg));
+	int result = DeeObject_HasItemIndex(item, (size_t)(uintptr_t)arg);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 se_hasitem_index(SeqEachBase *self, size_t index) {
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                     &se_hasitem_index_foreach_cb,
-	                                                     (void *)(uintptr_t)index));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasitem_index_foreach_cb,
+	                                            (void *)(uintptr_t)index);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 struct se_bounditem_string_hash_foreach_data {
@@ -524,38 +480,46 @@ struct se_bounditem_string_hash_foreach_data {
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_bounditem_string_hash_foreach_cb(void *arg, DeeObject *item) {
+	int result;
 	struct se_bounditem_string_hash_foreach_data *data;
-	data = (struct se_bounditem_string_hash_foreach_data *)arg;
-	return seqeach_map_bound2fe(DeeObject_BoundItemStringHash(item, data->ssbishfd_key,
-	                                                          data->ssbishfd_hash));
+	data   = (struct se_bounditem_string_hash_foreach_data *)arg;
+	result = DeeObject_BoundItemStringHash(item, data->ssbishfd_key,
+	                                       data->ssbishfd_hash);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_bounditem_string_hash(SeqEachBase *self, char const *key, Dee_hash_t hash) {
 	struct se_bounditem_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_bounditem_string_hash_foreach_cb,
-	                                                       &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_bounditem_string_hash_foreach_cb,
+	                                            &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasitem_string_hash_foreach_cb(void *arg, DeeObject *item) {
 	struct se_bounditem_string_hash_foreach_data *data;
-	data = (struct se_bounditem_string_hash_foreach_data *)arg;
-	return seqeach_map_has2fe(DeeObject_HasItemStringHash(item, data->ssbishfd_key,
-	                                                      data->ssbishfd_hash));
+	int result;
+	data   = (struct se_bounditem_string_hash_foreach_data *)arg;
+	result = DeeObject_HasItemStringHash(item, data->ssbishfd_key,
+	                                     data->ssbishfd_hash);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasitem_string_hash(SeqEachBase *self, char const *key, Dee_hash_t hash) {
 	struct se_bounditem_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                     &se_hasitem_string_hash_foreach_cb,
-	                                                     &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                                &se_hasitem_string_hash_foreach_cb,
+	                                                &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 struct se_bounditem_string_len_hash_foreach_data {
@@ -566,42 +530,50 @@ struct se_bounditem_string_len_hash_foreach_data {
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_bounditem_string_len_hash_foreach_cb(void *arg, DeeObject *item) {
+	int result;
 	struct se_bounditem_string_len_hash_foreach_data *data;
-	data = (struct se_bounditem_string_len_hash_foreach_data *)arg;
-	return seqeach_map_bound2fe(DeeObject_BoundItemStringLenHash(item, data->ssbislhfd_key,
-	                                                             data->ssbislhfd_keylen,
-	                                                             data->ssbislhfd_hash));
+	data   = (struct se_bounditem_string_len_hash_foreach_data *)arg;
+	result = DeeObject_BoundItemStringLenHash(item, data->ssbislhfd_key,
+	                                          data->ssbislhfd_keylen,
+	                                          data->ssbislhfd_hash);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_bounditem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	struct se_bounditem_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_bounditem_string_len_hash_foreach_cb,
-	                                                       &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_bounditem_string_len_hash_foreach_cb,
+	                                            &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasitem_string_len_hash_foreach_cb(void *arg, DeeObject *item) {
 	struct se_bounditem_string_len_hash_foreach_data *data;
+	int result;
 	data = (struct se_bounditem_string_len_hash_foreach_data *)arg;
-	return seqeach_map_has2fe(DeeObject_HasItemStringLenHash(item, data->ssbislhfd_key,
-	                                                         data->ssbislhfd_keylen,
-	                                                         data->ssbislhfd_hash));
+	result = DeeObject_HasItemStringLenHash(item, data->ssbislhfd_key,
+	                                        data->ssbislhfd_keylen,
+	                                        data->ssbislhfd_hash);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasitem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	struct se_bounditem_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                     &se_hasitem_string_len_hash_foreach_cb,
-	                                                     &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasitem_string_len_hash_foreach_cb,
+	                                            &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 
@@ -740,24 +712,30 @@ se_setattr_string_len_hash(SeqEachBase *self, char const *attr,
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_boundattr_foreach_cb(void *arg, DeeObject *attr) {
-	return seqeach_map_bound2fe(DeeObject_BoundAttr(attr, (DeeObject *)arg));
+	int result = DeeObject_BoundAttr(attr, (DeeObject *)arg);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_boundattr(SeqEachBase *self, DeeObject *attr) {
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                         &se_boundattr_foreach_cb, attr));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_boundattr_foreach_cb, attr);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasattr_foreach_cb(void *arg, DeeObject *attr) {
-	return seqeach_map_has2fe(DeeObject_HasAttr(attr, (DeeObject *)arg));
+	int result = DeeObject_HasAttr(attr, (DeeObject *)arg);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasattr(SeqEachBase *self, DeeObject *attr) {
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_hasattr_foreach_cb, attr));
+	Dee_ssize_t foreach_status;
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasattr_foreach_cb, attr);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 struct se_boundattr_string_hash_foreach_data {
@@ -768,36 +746,44 @@ struct se_boundattr_string_hash_foreach_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_boundattr_string_hash_foreach_cb(void *arg, DeeObject *attr) {
 	struct se_boundattr_string_hash_foreach_data *data;
-	data = (struct se_boundattr_string_hash_foreach_data *)arg;
-	return seqeach_map_bound2fe(DeeObject_BoundAttrStringHash(attr, data->ssbashfd_attr,
-	                                                          data->ssbashfd_hash));
+	int result;
+	data   = (struct se_boundattr_string_hash_foreach_data *)arg;
+	result = DeeObject_BoundAttrStringHash(attr, data->ssbashfd_attr,
+	                                       data->ssbashfd_hash);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_boundattr_string_hash(SeqEachBase *self, char const *attr, Dee_hash_t hash) {
 	struct se_boundattr_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                         &se_boundattr_string_hash_foreach_cb,
-	                                                         &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_boundattr_string_hash_foreach_cb,
+	                                            &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasattr_string_hash_foreach_cb(void *arg, DeeObject *attr) {
 	struct se_boundattr_string_hash_foreach_data *data;
-	data = (struct se_boundattr_string_hash_foreach_data *)arg;
-	return seqeach_map_has2fe(DeeObject_HasAttrStringHash(attr, data->ssbashfd_attr, data->ssbashfd_hash));
+	int result;
+	data   = (struct se_boundattr_string_hash_foreach_data *)arg;
+	result = DeeObject_HasAttrStringHash(attr, data->ssbashfd_attr, data->ssbashfd_hash);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasattr_string_hash(SeqEachBase *self, char const *attr, Dee_hash_t hash) {
 	struct se_boundattr_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_hasattr_string_hash_foreach_cb,
-	                                                       &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasattr_string_hash_foreach_cb,
+	                                            &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 struct se_boundattr_string_len_hash_foreach_data {
@@ -809,41 +795,49 @@ struct se_boundattr_string_len_hash_foreach_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_boundattr_string_len_hash_foreach_cb(void *arg, DeeObject *attr) {
 	struct se_boundattr_string_len_hash_foreach_data *data;
-	data = (struct se_boundattr_string_len_hash_foreach_data *)arg;
-	return seqeach_map_bound2fe(DeeObject_BoundAttrStringLenHash(attr, data->ssbaslhfd_attr,
-	                                                             data->ssbaslhfd_attrlen,
-	                                                             data->ssbaslhfd_hash));
+	int result;
+	data   = (struct se_boundattr_string_len_hash_foreach_data *)arg;
+	result = DeeObject_BoundAttrStringLenHash(attr, data->ssbaslhfd_attr,
+	                                          data->ssbaslhfd_attrlen,
+	                                          data->ssbaslhfd_hash);
+	return Dee_BOUND_INTO_eM1_m1_y0_nM2(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_boundattr_string_len_hash(SeqEachBase *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	struct se_boundattr_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_fe2bound(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                         &se_boundattr_string_len_hash_foreach_cb,
-	                                                         &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_boundattr_string_len_hash_foreach_cb,
+	                                            &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 se_hasattr_string_len_hash_foreach_cb(void *arg, DeeObject *attr) {
 	struct se_boundattr_string_len_hash_foreach_data *data;
-	data = (struct se_boundattr_string_len_hash_foreach_data *)arg;
-	return seqeach_map_has2fe(DeeObject_HasAttrStringLenHash(attr, data->ssbaslhfd_attr,
-	                                                         data->ssbaslhfd_attrlen,
-	                                                         data->ssbaslhfd_hash));
+	int result;
+	data   = (struct se_boundattr_string_len_hash_foreach_data *)arg;
+	result = DeeObject_HasAttrStringLenHash(attr, data->ssbaslhfd_attr,
+	                                        data->ssbaslhfd_attrlen,
+	                                        data->ssbaslhfd_hash);
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasattr_string_len_hash(SeqEachBase *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	struct se_boundattr_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_fe2has(DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
-	                                                       &se_hasattr_string_len_hash_foreach_cb,
-	                                                       &data));
+	foreach_status = DeeObject_InvokeMethodHint(seq_operator_foreach, self->se_seq,
+	                                            &se_hasattr_string_len_hash_foreach_cb,
+	                                            &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 
@@ -2708,30 +2702,14 @@ se_foreach_bool_cb(void *arg, DeeObject *elem) {
 	int result;
 	(void)arg;
 	result = DeeObject_Bool(elem);
-	if (Dee_HAS_ISERR(result))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(result))
-		return SEQEACH_FOREACH_NO;
-	return SEQEACH_FOREACH_YES;
-err:
-	return SEQEACH_FOREACH_ERR;
+	return Dee_HAS_INTO_eM1_nM2_y0(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_bool(SeqEachOperator *__restrict self) {
 	Dee_ssize_t result = seo_foreach(self, &se_foreach_bool_cb, NULL);
-	ASSERT(result == SEQEACH_FOREACH_YES ||
-	       result == SEQEACH_FOREACH_ERR ||
-	       result == SEQEACH_FOREACH_NO);
-	switch (result) {
-	case SEQEACH_FOREACH_NO:
-		return 0;
-	case SEQEACH_FOREACH_YES:
-		return 1;
-	case SEQEACH_FOREACH_ERR:
-		return -1;
-	default: __builtin_unreachable();
-	}
+	ASSERT(result == 0 || result == -1 || result == -2);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2916,46 +2894,58 @@ seo_setattr_string_len_hash(SeqEachOperator *self, char const *attr,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_boundattr(SeqEachOperator *self, DeeObject *attr) {
-	return seqeach_map_fe2bound(seo_foreach(self, &se_boundattr_foreach_cb, attr));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_boundattr_foreach_cb, attr);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_hasattr(SeqEachOperator *self, DeeObject *attr) {
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasattr_foreach_cb, attr));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_hasattr_foreach_cb, attr);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_boundattr_string_hash(SeqEachOperator *self, char const *attr, Dee_hash_t hash) {
 	struct se_boundattr_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_fe2bound(seo_foreach(self, &se_boundattr_string_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_boundattr_string_hash_foreach_cb, &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_hasattr_string_hash(SeqEachOperator *self, char const *attr, Dee_hash_t hash) {
 	struct se_boundattr_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasattr_string_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_hasattr_string_hash_foreach_cb, &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_boundattr_string_len_hash(SeqEachOperator *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	struct se_boundattr_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_fe2bound(seo_foreach(self, &se_boundattr_string_len_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_boundattr_string_len_hash_foreach_cb, &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_hasattr_string_len_hash(SeqEachOperator *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
 	struct se_boundattr_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbaslhfd_attr    = attr;
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasattr_string_len_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_hasattr_string_len_hash_foreach_cb, &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 
@@ -3185,65 +3175,81 @@ err:
 #define seo_operator_bounditem_PTR &seo_operator_bounditem
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_bounditem(SeqEachOperator *self, DeeObject *index) {
-	return seqeach_map_fe2bound(seo_foreach(self, &se_bounditem_foreach_cb, index));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_bounditem_foreach_cb, index);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 #define seo_operator_hasitem_PTR &seo_operator_hasitem
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_hasitem(SeqEachOperator *self, DeeObject *index) {
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasitem_foreach_cb, index));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_hasitem_foreach_cb, index);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 #define seo_operator_bounditem_index_PTR &seo_operator_bounditem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_operator_bounditem_index(SeqEachOperator *self, size_t index) {
-	return seqeach_map_fe2bound(seo_foreach(self, &se_bounditem_index_foreach_cb,
-	                                        (void *)(uintptr_t)index));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_bounditem_index_foreach_cb,
+	                             (void *)(uintptr_t)index);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 #define seo_operator_hasitem_index_PTR &seo_operator_hasitem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_operator_hasitem_index(SeqEachOperator *self, size_t index) {
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasitem_index_foreach_cb,
-	                                      (void *)(uintptr_t)index));
+	Dee_ssize_t foreach_status;
+	foreach_status = seo_foreach(self, &se_hasitem_index_foreach_cb,
+	                             (void *)(uintptr_t)index);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 #define seo_operator_bounditem_string_hash_PTR &seo_operator_bounditem_string_hash
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_bounditem_string_hash(SeqEachOperator *self, char const *key, Dee_hash_t hash) {
 	struct se_bounditem_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_fe2bound(seo_foreach(self, &se_bounditem_string_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_bounditem_string_hash_foreach_cb, &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 #define seo_operator_hasitem_string_hash_PTR &seo_operator_hasitem_string_hash
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_hasitem_string_hash(SeqEachOperator *self, char const *key, Dee_hash_t hash) {
 	struct se_bounditem_string_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasitem_string_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_hasitem_string_hash_foreach_cb, &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 #define seo_operator_bounditem_string_len_hash_PTR &seo_operator_bounditem_string_len_hash
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_bounditem_string_len_hash(SeqEachOperator *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	struct se_bounditem_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_fe2bound(seo_foreach(self, &se_bounditem_string_len_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_bounditem_string_len_hash_foreach_cb, &data);
+	return (int)Dee_BOUND_FROM_eM1_mP_y0_nM2(foreach_status);
 }
 
 #define seo_operator_hasitem_string_len_hash_PTR &seo_operator_hasitem_string_len_hash
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_operator_hasitem_string_len_hash(SeqEachOperator *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	struct se_bounditem_string_len_hash_foreach_data data;
+	Dee_ssize_t foreach_status;
 	data.ssbislhfd_key    = key;
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
-	return seqeach_map_fe2has(seo_foreach(self, &se_hasitem_string_len_hash_foreach_cb, &data));
+	foreach_status = seo_foreach(self, &se_hasitem_string_len_hash_foreach_cb, &data);
+	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
 }
 
 #define seo_operator_sizeob_PTR                     &sew_sizeob
