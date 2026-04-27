@@ -2815,13 +2815,13 @@ do_infinite_timeout:
 			/* Timeout */
 			ASSERT(i <= self->lu_size - 1);
 			if (i >= self->lu_size - 1)
-				return Dee_HAS_NO;
+				return Dee_HAS_YES;
 			/* Check if all other locks are currently available. */
 			return lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), i + 1);
 		}
 		timeout_nanoseconds *= 1000;
 	}
-	return Dee_HAS_NO;
+	return Dee_HAS_YES;
 }
 
 /* Release all locks from the union
