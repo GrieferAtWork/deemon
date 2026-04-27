@@ -97,8 +97,12 @@ DECL_BEGIN
 
 #define Dee_COMPARE_ISERR(x)       __builtin_expect((x) == Dee_COMPARE_ERR, 0)
 #define Dee_COMPARE_ISEQ_NO_ERR(x) ((x) == 0) /* Never matches "Dee_COMPARE_ERR" */
-#define Dee_COMPARE_ISEQ(x)        ((x) == 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISNE_OR_ERR(x) ((x) != 0) /* Guarantied to match "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISLO_OR_ERR(x) ((x) < 0)  /* Guarantied to match "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISLE_OR_ERR(x) ((x) <= 0) /* Guarantied to match "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISGR_NO_ERR(x) ((x) > 0)  /* Never matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISGE_NO_ERR(x) ((x) >= 0) /* Never matches "Dee_COMPARE_ERR" */
+#define Dee_COMPARE_ISEQ(x)        ((x) == 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISNE(x)        ((x) != 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISLO(x)        ((x) < 0)  /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISLE(x)        ((x) <= 0) /* Undefined if matches "Dee_COMPARE_ERR" */
@@ -117,14 +121,14 @@ DECL_BEGIN
 
 /* Helper macros for implementing compare operators. */
 #if Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1
-#define Dee_Compare(a, b)           (((a) > (b)) - ((a) < (b)))
-#define Dee_CompareFromDiff(diff)   (((diff) > 0) - ((diff) < 0))
+#define Dee_Compare(a, b)           (+((a) > (b)) - +((a) < (b)))
+#define Dee_CompareFromDiff(diff)   (+((diff) > 0) - +((diff) < 0))
 #else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
 #define Dee_Compare(a, b)           ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
 #define Dee_CompareFromDiff(diff)   ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
 #endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 || Dee_COMPARE_GR != 1 */
 #if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
-#define Dee_CompareNe(a, b)         ((((a) > (b)) << 1) - 1)
+#define Dee_CompareNe(a, b)         ((+((a) > (b)) << 1) - 1)
 #else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
 #define Dee_CompareNe(a, b)         ((a) < (b) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
 #endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
@@ -160,21 +164,21 @@ DECL_BEGIN
 	do {                                                        \
 		int _rtceqin_temp = DeeObject_Compare(Dee_AsObject(a),  \
 		                                      Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                    \
+		if (Dee_COMPARE_ISNE_OR_ERR(_rtceqin_temp))             \
 			return _rtceqin_temp;                               \
 	}	__WHILE0
 #define Dee_return_DeeObject_CompareEq_if_ne(a, b)                \
 	do {                                                          \
 		int _rtceqin_temp = DeeObject_CompareEq(Dee_AsObject(a),  \
 		                                        Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                      \
+		if (Dee_COMPARE_ISNE_OR_ERR(_rtceqin_temp))               \
 			return _rtceqin_temp;                                 \
 	}	__WHILE0
 #define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                \
 	do {                                                             \
 		int _rtceqin_temp = DeeObject_TryCompareEq(Dee_AsObject(a),  \
 		                                           Dee_AsObject(b)); \
-		if (_rtceqin_temp != Dee_COMPARE_EQ)                         \
+		if (Dee_COMPARE_ISNE_OR_ERR(_rtceqin_temp))                  \
 			return _rtceqin_temp;                                    \
 	}	__WHILE0
 
@@ -1617,6 +1621,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 
 /* Suggested return values for `DeeObject_HasItem()' and `DeeObject_HasAttr()'
+ * HINT: Can also be used for `DeeObject_Bool()'
  * In actuality:
  * @return: < 0:  Error
  * @return: == 0: No (item/attr does not exist)
@@ -1630,12 +1635,29 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_ISNO(x)  ((x) == 0)
 #define Dee_HAS_ISYES(x) ((x) > 0)
 
-/* >> #define Dee_HAS_FROMBOOL(has_item) ((has_item) ? Dee_HAS_YES : Dee_HAS_NO) */
+#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) (Dee_COMPARE_ISEQ(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) (Dee_COMPARE_ISNE(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) (Dee_COMPARE_ISLO(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) (Dee_COMPARE_ISLE(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) (Dee_COMPARE_ISGR(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) (Dee_COMPARE_ISGE(cmp) ? Dee_HAS_YES : Dee_HAS_NO)
+
+#define Dee_HAS_FROM_COMPARE_EQ(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp))
+#define Dee_HAS_FROM_COMPARE_NE(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp))
+#define Dee_HAS_FROM_COMPARE_LO(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp))
+#define Dee_HAS_FROM_COMPARE_LE(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp))
+#define Dee_HAS_FROM_COMPARE_GR(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp))
+#define Dee_HAS_FROM_COMPARE_GE(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp))
+
+/* >> #define Dee_HAS_FROMBOOL(value) ((value) ? Dee_HAS_YES : Dee_HAS_NO)
+ * WARNING: Passing negative values here results in undefined behavior! */
 #if Dee_HAS_YES > 0 && Dee_HAS_NO == 0
-#define Dee_HAS_FROMBOOL(has_item) (has_item)
+#define Dee_HAS_FROMBOOL(value) (+(value))
 #else /* Dee_HAS_YES > 0 && Dee_HAS_NO == 0 */
-#define Dee_HAS_FROMBOOL(has_item) ((has_item) ? Dee_HAS_YES : Dee_HAS_NO)
+#define Dee_HAS_FROMBOOL(value) ((value) ? Dee_HAS_YES : Dee_HAS_NO)
 #endif /* Dee_HAS_YES <= 0 || Dee_HAS_NO != 0 */
+
+
 
 /* Possible values returned by C-API isbound checking functions.
  * These values have been intentionally chosen so-as to be binary-
@@ -1687,9 +1709,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 /* #define Dee_BOUND_FROMBOOL(is_bound) ((is_bound) ? Dee_BOUND_YES : Dee_BOUND_NO) */
 #if Dee_BOUND_NO == 0 && Dee_BOUND_YES == 1
-#define Dee_BOUND_FROMBOOL(is_bound) ((int)!!(is_bound))
+#define Dee_BOUND_FROMBOOL(is_bound) (+!!(is_bound))
 #elif Dee_BOUND_NO == 2 && Dee_BOUND_YES == 1
-#define Dee_BOUND_FROMBOOL(is_bound) (2 - (int)!!(is_bound))
+#define Dee_BOUND_FROMBOOL(is_bound) (2 - +!!(is_bound))
 #else /* Dee_BOUND_NO == ... && Dee_BOUND_YES == ... */
 #define Dee_BOUND_FROMBOOL(is_bound) ((is_bound) ? Dee_BOUND_YES : Dee_BOUND_NO)
 #endif /* Dee_BOUND_NO != ... || Dee_BOUND_YES != ... */
@@ -1697,7 +1719,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 /* #define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
  * Considers is_present == true as bound */
 #if Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1
-#define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((int)!!(is_present))
+#define Dee_BOUND_FROMPRESENT_BOUND(is_present) (+!!(is_present))
 #else /* Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
 #define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
@@ -1705,9 +1727,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 /* #define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_NO : Dee_BOUND_MISSING)
  * Considers is_present == true as unbound */
 #if Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 1
-#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((int)!!(is_present))
+#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) (+!!(is_present))
 #elif Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 2
-#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((int)!!(is_present) << 1)
+#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) (+!!(is_present) << 1)
 #else /* Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
 #define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
@@ -1720,6 +1742,25 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
 	(Dee_HAS_ISERR(has_value) ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
 
+
+
+/* Helpers for converting bound-values into has-values */
+
+/* >> Dee_HAS_FROMBOUND(bound_status)
+ *    - Dee_BOUND_ERR     => Dee_HAS_ISERR(...)
+ *    - Dee_BOUND_MISSING => Dee_HAS_ISNO(...)
+ *    - Dee_BOUND_YES     => Dee_HAS_ISYES(...)
+ *    - Dee_BOUND_NO      => Dee_HAS_ISNO(...) */
+#define Dee_HAS_FROMBOUND(bound_status)        ((bound_status) == Dee_BOUND_NO ? Dee_HAS_NO : (bound_status))
+#define Dee_HAS_FROMBOUND_NO_ERR(bound_status) (+((bound_status) == Dee_BOUND_YES))
+
+/* >> Dee_HAS_FROMBOUND(bound_status)
+ *    - Dee_BOUND_ERR     => Dee_HAS_ISERR(...)
+ *    - Dee_BOUND_MISSING => Dee_HAS_ISNO(...)
+ *    - Dee_BOUND_YES     => Dee_HAS_ISYES(...)
+ *    - Dee_BOUND_NO      => Dee_HAS_ISYES(...) */
+#define Dee_HAS_FROMPRESENT_NO_ERR(bound_status) (bound_status) /* Always binary-compatible! */
+#define Dee_HAS_FROMPRESENT(bound_status)        (bound_status) /* Always binary-compatible! */
 
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')

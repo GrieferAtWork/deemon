@@ -112,7 +112,7 @@ impl_instance_builtin_compare_eq(DeeTypeObject *tp_self,
 			temp = DeeObject_TryCompareEq(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
-			if (temp != Dee_COMPARE_EQ)
+			if (Dee_COMPARE_ISNE_OR_ERR(temp))
 				return temp; /* Error, or non-equal */
 			Dee_instance_desc_lock_read(instance);
 		}
@@ -144,7 +144,7 @@ tp_cmp->tp_compare_eq([[nonnull]] DeeObject *lhs,
 	/* Compare the underlying objects. */
 	if (DeeType_HasBaseForCompare(THIS_TYPE)) {
 		int result = DeeObject_TCompareEq(DeeType_Base(THIS_TYPE), lhs, rhs);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 	}
 	return impl_instance_builtin_compare_eq(THIS_TYPE, lhs, rhs);
@@ -244,7 +244,7 @@ tp_cmp->tp_compare([[nonnull]] DeeObject *lhs,
 	/* Compare the underlying objects. */
 	if (DeeType_HasBaseForCompare(THIS_TYPE)) {
 		int result = DeeObject_TCompare(DeeType_Base(THIS_TYPE), lhs, rhs);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 	}
 	return impl_instance_builtin_compare(THIS_TYPE, lhs, rhs);
@@ -472,7 +472,7 @@ tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
 	/* Compare the underlying objects. */
 	if (DeeType_HasBaseForCompare(THIS_TYPE)) {
 		int result = DeeObject_TTryCompareEq(DeeType_Base(THIS_TYPE), lhs, rhs);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 	}
 	return impl_instance_builtin_compare_eq(THIS_TYPE, lhs, rhs);

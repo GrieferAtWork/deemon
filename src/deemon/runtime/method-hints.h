@@ -87,8 +87,8 @@ Dee_type_struct_cache_destroy(struct Dee_type_struct_cache *__restrict self) {
  *    "MyClass1.__seq_size__" will access it using "ASM_GETMEMBER_THIS_R",
  *    meaning that "MyClass1" appears in "MyClass1.__seq_size__.__refs__",
  *    and thus forms a reference loop with "MyClass1" (one that cannot be
- *    resolved because when "MyClass1" is cleared, we don't drop the cached
- *    reference to "MyClass1.__seq_size__")
+ *    resolved because when "MyClass1" is cleared, because we don't drop
+ *    the cached reference to "MyClass1.__seq_size__")
  *    So to prevent this from happening, we do the next-best thing by just
  *    storing the addresses where relevant callbacks can be found in the
  *    type's class member table.
@@ -571,6 +571,8 @@ struct Dee_type_mh_cache {
 	(_Dee_type_mh_cache_fini_structcache_(self) \
 	 Dee_type_mh_cache_free(self))
 
+/* @return: * :   Method hint cache of "self"
+ * @return: NULL: An error was thrown. */
 INTDEF WUNUSED NONNULL((1)) struct Dee_type_mh_cache *DCALL
 Dee_type_mh_cache_of(DeeTypeObject *__restrict self);
 

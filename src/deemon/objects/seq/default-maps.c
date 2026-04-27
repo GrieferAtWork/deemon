@@ -1773,9 +1773,7 @@ msd_bool(MapSymmetricDifference *__restrict self) {
 	result = DeeObject_InvokeMethodHint(set_operator_compare_eq, a_keys, b_keys);
 	Dee_Decref(b_keys);
 	Dee_Decref(a_keys);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 0 : 1;
+	return Dee_HAS_FROM_COMPARE_NE(result);
 err_a_keys:
 	Dee_Decref(a_keys);
 err:

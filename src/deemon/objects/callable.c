@@ -159,7 +159,7 @@ composition_compare_eq(DeeTupleObject *self, DeeTupleObject *other) {
 		return Dee_COMPARE_NE;
 	for (i = 0; i < self->t_size; ++i) {
 		int temp = DeeObject_TryCompareEq(self->t_elem[i], other->t_elem[i]);
-		if (!Dee_COMPARE_ISEQ(temp))
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 	return Dee_COMPARE_EQ;

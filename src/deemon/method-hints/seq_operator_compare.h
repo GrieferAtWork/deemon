@@ -852,13 +852,7 @@ if (isEq) {
 if (isEq) {
 	print('	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));');
 } else {
-	print('	if (DeeInt_IsZero(resultob)) {');
-	print('		result = Dee_COMPARE_EQ;');
-	print('	} else if (DeeInt_IsNeg(resultob)) {');
-	print('		result = Dee_COMPARE_LO;');
-	print('	} else {');
-	print('		result = Dee_COMPARE_GR;');
-	print('	}');
+	print('	result = DeeInt_AsCompare(resultob);');
 }
 	print('	Dee_Decref(resultob);');
 	print('	return result;');
@@ -1442,13 +1436,7 @@ err:
 		goto err;
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	if (DeeInt_IsZero(resultob)) {
-		result = Dee_COMPARE_EQ;
-	} else if (DeeInt_IsNeg(resultob)) {
-		result = Dee_COMPARE_LO;
-	} else {
-		result = Dee_COMPARE_GR;
-	}
+	result = DeeInt_AsCompare(resultob);
 	Dee_Decref(resultob);
 	return result;
 err_resultob:

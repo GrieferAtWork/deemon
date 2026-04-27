@@ -4193,6 +4193,9 @@ DeeSeq_Max(DeeObject *self) {
 
 /* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
  * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+ *
+ * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)'
+ *
  * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
  * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
 PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int

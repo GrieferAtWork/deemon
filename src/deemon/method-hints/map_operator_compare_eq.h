@@ -96,7 +96,7 @@ err:
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
+	result = Dee_COMPARE_FROMBOOL(!DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:

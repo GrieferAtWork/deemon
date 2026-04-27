@@ -125,7 +125,7 @@ if (isFind) {
 	print('			if unlikely(!ITER_ISOK(seq_item)) {');
 	print('				if unlikely(!seq_item)');
 	print('					goto err;');
-	print('				cmp_result = 1; /' '* item > <unbound> *' '/');
+	print('				cmp_result = Dee_COMPARE_GR; /' '* item > <unbound> *' '/');
 	print('			} else {');
 if (hasKey) {
 	print('				cmp_result = DeeObject_CompareKey(item, seq_item, key);');
@@ -364,7 +364,7 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
@@ -451,7 +451,7 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
@@ -537,7 +537,7 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
@@ -626,7 +626,7 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
@@ -716,7 +716,7 @@ __seq_brange__.seq_brange([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_Compare(item, seq_item);
 				Dee_Decref(seq_item);
@@ -860,7 +860,7 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
 					goto err;
-				cmp_result = 1; /* item > <unbound> */
+				cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);

@@ -473,7 +473,7 @@ LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index_fast)(DeeObject *c
 		}
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -515,7 +515,7 @@ LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_trygetitem_index)(DeeObject *con
 		}
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -567,7 +567,7 @@ LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index)(DeeObject *const 
 		}
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -654,7 +654,7 @@ LOCAL_seq_docompare__(lhs_xvector__rhs_sizeob_and_getitem)(DeeObject *const *lhs
 		}
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -764,7 +764,7 @@ LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index_fast)(DeeObject *co
 			return Dee_COMPARE_GR;
 		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -795,7 +795,7 @@ LOCAL_seq_docompare__(lhs_vector__rhs_size_and_trygetitem_index)(DeeObject *cons
 			return Dee_COMPARE_GR;
 		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -836,7 +836,7 @@ LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index)(DeeObject *const *
 			return Dee_COMPARE_GR;
 		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -885,7 +885,7 @@ LOCAL_seq_docompare__(lhs_vector__rhs_sizeob_and_getitem)(DeeObject *const *lhs_
 			return Dee_COMPARE_GR;
 		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
 		Dee_Decref(rhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1015,7 +1015,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index_fast__rhs_size_and_getitem_inde
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1060,7 +1060,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index_fast__rhs_size_and_trygetitem_i
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1114,7 +1114,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index_fast__rhs_size_and_getitem_inde
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1177,7 +1177,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index_fast__rhs_sizeob_and_getitem)(D
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1232,7 +1232,7 @@ LOCAL_seq_docompare__(lhs_size_and_trygetitem_index__rhs_size_and_getitem_index_
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1284,7 +1284,7 @@ LOCAL_seq_docompare__(lhs_size_and_trygetitem_index__rhs_size_and_trygetitem_ind
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1344,7 +1344,7 @@ LOCAL_seq_docompare__(lhs_size_and_trygetitem_index__rhs_size_and_getitem_index)
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1412,7 +1412,7 @@ LOCAL_seq_docompare__(lhs_size_and_trygetitem_index__rhs_sizeob_and_getitem)(Dee
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1476,7 +1476,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index__rhs_size_and_getitem_index_fas
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1534,7 +1534,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index__rhs_size_and_trygetitem_index)
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1601,7 +1601,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index__rhs_size_and_getitem_index)(De
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1676,7 +1676,7 @@ LOCAL_seq_docompare__(lhs_size_and_getitem_index__rhs_sizeob_and_getitem)(DeeObj
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1748,7 +1748,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_size_and_getitem_index_fast)(D
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -1814,7 +1814,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_size_and_trygetitem_index)(Dee
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1889,7 +1889,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_size_and_getitem_index)(DeeObj
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -1914,7 +1914,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
 	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
-	if (temp != Dee_COMPARE_EQ)
+	if (Dee_COMPARE_ISNE_OR_ERR(temp))
 		return temp; /* Not-equal or error */
 #else /* DEFINE_compareeq */
 	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
@@ -1971,7 +1971,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 			Dee_Decref(rhs_elem);
 			Dee_Decref(lhs_elem);
 		}
-		if (temp != Dee_COMPARE_EQ) {
+		if (Dee_COMPARE_ISNE_OR_ERR(temp)) {
 			Dee_Decref(index_ob);
 			return temp;
 		}
@@ -1987,7 +1987,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
 	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
-	if (Dee_COMPARE_ISGR(temp))
+	if (Dee_COMPARE_ISGR_NO_ERR(temp))
 		temp = Dee_COMPARE_LO;
 	ASSERT(Dee_COMPARE_ISERR(temp) ||
 	       Dee_COMPARE_ISLO(temp) ||
@@ -2058,7 +2058,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_size_and_getitem_index_fast)(
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 	}
 #ifdef DEFINE_compareeq
@@ -2124,7 +2124,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_size_and_trygetitem_index)(De
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -2199,7 +2199,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_size_and_getitem_index)(DeeTy
 		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 		Dee_Decref(rhs_elem);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -2224,7 +2224,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
 	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
-	if (temp != Dee_COMPARE_EQ)
+	if (Dee_COMPARE_ISNE_OR_ERR(temp))
 		return temp; /* Not-equal or error */
 #else /* DEFINE_compareeq */
 	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
@@ -2281,7 +2281,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 			Dee_Decref(rhs_elem);
 			Dee_Decref(lhs_elem);
 		}
-		if (temp != Dee_COMPARE_EQ) {
+		if (Dee_COMPARE_ISNE_OR_ERR(temp)) {
 			Dee_Decref(index_ob);
 			return temp;
 		}
@@ -2297,7 +2297,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
 	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
-	if (Dee_COMPARE_ISGR(temp))
+	if (Dee_COMPARE_ISGR_NO_ERR(temp))
 		temp = Dee_COMPARE_LO;
 	ASSERT(Dee_COMPARE_ISERR(temp) ||
 	       Dee_COMPARE_ISLO(temp) ||

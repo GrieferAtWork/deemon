@@ -548,8 +548,10 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 	 ? (size_t)(-Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size) \
 	 : (size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size)
 
-#define DeeInt_IsNeg(self)  (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0)
-#define DeeInt_IsZero(self) (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 0)
+#define DeeInt_IsNeg(self)     (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0)
+#define DeeInt_IsZero(self)    (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 0)
+#define DeeInt_AsCompare(self) \
+	(DeeInt_IsZero(resultob) ? Dee_COMPARE_EQ : DeeInt_IsNeg(resultob) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
 
 
 /* Return values for `DeeInt_TryAs*' */

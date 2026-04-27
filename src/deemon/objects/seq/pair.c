@@ -281,10 +281,11 @@ sp_contains(SeqPair *self, DeeObject *value) {
 	int cmp = DeeObject_TryCompareEq(value, self->sp_items[0]);
 	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
-	if (Dee_COMPARE_ISNE(cmp))
+	if (Dee_COMPARE_ISNE(cmp)) {
 		cmp = DeeObject_TryCompareEq(value, self->sp_items[1]);
-	if (Dee_COMPARE_ISERR(cmp))
-		goto err;
+		if (Dee_COMPARE_ISERR(cmp))
+			goto err;
+	}
 	return_bool(Dee_COMPARE_ISEQ(cmp));
 err:
 	return NULL;

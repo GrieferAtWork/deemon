@@ -1067,7 +1067,7 @@ compare_objtabs_eq(JITObjectTable *__restrict a,
 				if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
 					int temp = DeeObject_TryCompareEq(a->ot_list[i].oe_value,
 					                                  b->ot_list[i].oe_value);
-					if unlikely(temp != Dee_COMPARE_EQ)
+					if unlikely(Dee_COMPARE_ISNE_OR_ERR(temp))
 						return temp;
 				}
 			} else {
@@ -1168,7 +1168,7 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 		if (!a->jf_globals || !b->jf_globals)
 			goto nope;
 		temp = DeeObject_TryCompareEq(a->jf_globals, b->jf_globals);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			goto done_temp;
 	}
 	if (a->jf_impbase != b->jf_impbase) {
@@ -1176,7 +1176,7 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 			goto nope;
 		temp = DeeObject_TryCompareEq((DeeObject *)a->jf_impbase,
 		                              (DeeObject *)b->jf_impbase);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			goto done_temp;
 	}
 	if (a->jf_import != b->jf_import) {
@@ -1184,14 +1184,14 @@ jf_compare_eq(JITFunction *a, JITFunction *b) {
 			goto nope;
 		temp = DeeObject_TryCompareEq(a->jf_import,
 		                              b->jf_import);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			goto done_temp;
 	}
 	temp = compare_objtabs_eq(&a->jf_args, &b->jf_args);
-	if (temp != Dee_COMPARE_EQ)
+	if (Dee_COMPARE_ISNE_OR_ERR(temp))
 		goto done_temp;
 	temp = compare_objtabs_eq(&a->jf_refs, &b->jf_refs);
-	if (temp != Dee_COMPARE_EQ)
+	if (Dee_COMPARE_ISNE_OR_ERR(temp))
 		goto done_temp;
 yes:
 	return Dee_COMPARE_EQ;

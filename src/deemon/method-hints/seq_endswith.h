@@ -38,7 +38,7 @@ __seq_endswith__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable
 			result = CALL_DEPENDENCY(seq_endswith_with_range_and_key, self, item, start, end, key);
 		}
 	}
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -49,28 +49,26 @@ err:
 
 
 
-/* @return: 0 : Does not start with
- * @return: 1 : Does start with
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Does not end with
+ * @return: Dee_HAS_YES: Does end with
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_endswith__.seq_endswith([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_trygetlast = {
-	int result;
+	int cmp_result;
 	DREF DeeObject *last = CALL_DEPENDENCY(seq_trygetlast, self);
 	if (last == ITER_DONE)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(!last)
 		goto err;
-	result = DeeObject_TryCompareEq(item, last);
+	cmp_result = DeeObject_TryCompareEq(item, last);
 	Dee_Decref(last);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &item);
@@ -78,7 +76,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_endswith = {
@@ -95,30 +93,28 @@ seq_endswith = {
 
 
 
-/* @return: 0 : Does not start with
- * @return: 1 : Does start with
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Does not end with
+ * @return: Dee_HAS_YES: Does end with
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_endswith__.seq_endswith_with_key([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *item,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_trygetlast = {
-	int result;
+	int cmp_result;
 	DREF DeeObject *last;
 	last = CALL_DEPENDENCY(seq_trygetlast, self);
 	if unlikely(!last)
 		goto err;
 	if (last == ITER_DONE)
-		return 0;
-	result = DeeObject_TryCompareKeyEq(item, last, key);
+		return Dee_HAS_NO;
+	cmp_result = DeeObject_TryCompareKeyEq(item, last, key);
 	Dee_Decref(last);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[4];
@@ -131,7 +127,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_endswith_with_key = {
@@ -149,41 +145,39 @@ seq_endswith_with_key = {
 
 
 
-/* @return: 0 : Does not start with
- * @return: 1 : Does start with
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Does not end with
+ * @return: Dee_HAS_YES: Does end with
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_endswith__.seq_endswith_with_range([[nonnull]] DeeObject *self,
                                          [[nonnull]] DeeObject *item,
                                          size_t start, size_t end)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_size__and__operator_trygetitem_index = {
-	int result;
+	int cmp_result;
 	DREF DeeObject *selfitem;
 	size_t selfsize;
 	if (start >= end)
-		return 0;
+		return Dee_HAS_NO;
 	selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(selfsize == (size_t)-1)
 		goto err;
 	if (end > selfsize) {
 		end = selfsize;
 		if (start >= end)
-			return 0;
+			return Dee_HAS_NO;
 	}
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)
-		return 0;
-	result = DeeObject_TryCompareEq(item, selfitem);
+		return Dee_HAS_NO;
+	cmp_result = DeeObject_TryCompareEq(item, selfitem);
 	Dee_Decref(selfitem);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
@@ -191,7 +185,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_endswith_with_range = {
@@ -212,18 +206,18 @@ seq_endswith_with_range = {
 
 
 
-/* @return: 0 : Does not start with
- * @return: 1 : Does start with
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Does not end with
+ * @return: Dee_HAS_YES: Does end with
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_endswith__.seq_endswith_with_range_and_key([[nonnull]] DeeObject *self,
                                                  [[nonnull]] DeeObject *item,
                                                  size_t start, size_t end,
                                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_size__and__operator_trygetitem_index = {
-	int result;
+	int cmp_result;
 	DREF DeeObject *selfitem;
 	size_t selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(selfsize == (size_t)-1)
@@ -231,19 +225,17 @@ __seq_endswith__.seq_endswith_with_range_and_key([[nonnull]] DeeObject *self,
 	if (end > selfsize)
 		end = selfsize;
 	if (start >= end)
-		return 0;
+		return Dee_HAS_NO;
 	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)
-		return 0;
-	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
+		return Dee_HAS_NO;
+	cmp_result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(selfitem);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
@@ -251,7 +243,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_endswith_with_range_and_key = {

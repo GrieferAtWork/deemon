@@ -25,7 +25,7 @@
 /************************************************************************/
 __set_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(set_operator_bool, self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -61,9 +61,9 @@ __set_bool__.set_operator_bool([[nonnull]] DeeObject *__restrict self)
 	size_t size = CALL_DEPENDENCY(set_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return size != 0;
+	return Dee_HAS_FROMBOOL(size != 0);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__set_operator_sizeob = {
 	int result;
@@ -72,11 +72,11 @@ err:
 		goto err;
 	if (DeeObject_AssertTypeExact(sizeob, &DeeInt_Type))
 		goto err;
-	result = DeeInt_IsZero(sizeob) ? 0 : 1;
+	result = Dee_HAS_FROMBOOL(!DeeInt_IsZero(sizeob));
 	Dee_Decref(sizeob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	int retval;
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
@@ -84,13 +84,13 @@ err:
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
 	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 

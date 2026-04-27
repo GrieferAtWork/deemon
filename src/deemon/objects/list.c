@@ -4038,7 +4038,7 @@ list_compare_eq_v(List *lhs, DeeObject *const *rhsv, size_t elemc) {
 		DeeList_LockEndRead(lhs);
 		temp = DeeObject_TryCompareEq(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
-		if (temp != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(temp))
 			return temp;
 		DeeList_LockRead(lhs);
 	}
@@ -4068,7 +4068,7 @@ list_compare_v(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 		DeeList_LockEndRead(lhs);
 		diff = DeeObject_Compare(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
-		if (diff != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(diff))
 			return diff;
 		DeeList_LockRead(lhs);
 	}

@@ -1199,13 +1199,13 @@ function_compare_eq(Function *self, Function *other) {
 		goto err;
 	result = DeeObject_CompareEq(Dee_AsObject(code),
 	                             Dee_AsObject(other->fo_code));
-	if (result != Dee_COMPARE_EQ)
+	if (Dee_COMPARE_ISNE_OR_ERR(result))
 		goto done;
 	ASSERT(code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < code->co_refc; ++i) {
 		result = DeeObject_TryCompareEq(self->fo_refv[i],
 		                                other->fo_refv[i]);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			goto done;
 	}
 	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
@@ -1234,7 +1234,7 @@ function_compare_eq(Function *self, Function *other) {
 			result = DeeObject_TryCompareEq(lhs, rhs);
 			Dee_Decref_unlikely(lhs);
 			Dee_Decref_unlikely(rhs);
-			if (result != Dee_COMPARE_EQ)
+			if (Dee_COMPARE_ISNE_OR_ERR(result))
 				goto done;
 		}
 	}

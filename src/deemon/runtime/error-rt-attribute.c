@@ -1548,7 +1548,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		if (!rhs->e_msg)
 			return Dee_COMPARE_GR;
 		result = (*cmp)(lhs->e_msg, rhs->e_msg);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 	}
 	if (lhs->e_cause != rhs->e_cause) {
@@ -1557,7 +1557,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		if (!rhs->e_cause)
 			return Dee_COMPARE_GR;
 		result = (*cmp)(lhs->e_cause, rhs->e_cause);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 	}
 	if (lhs->ae_obj != rhs->ae_obj) {
@@ -1570,7 +1570,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 		                     DeeObject_Id(rhs->ae_obj));
 #else
 		result = (*cmp)(lhs->ae_obj, rhs->ae_obj);
-		if (result != Dee_COMPARE_EQ)
+		if (Dee_COMPARE_ISNE_OR_ERR(result))
 			return result;
 #endif
 	}
@@ -1600,7 +1600,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 				size_t rhs_len = (rhs->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ) ? WSTR_LENGTH(rhs_str) : strlen(rhs_str);
 				result = dee_memcmp2(lhs_str, lhs_len, rhs_str, rhs_len);
 			}
-			if (result != Dee_COMPARE_EQ)
+			if (Dee_COMPARE_ISNE_OR_ERR(result))
 				return result;
 		}
 		if (lhs_decl != rhs_decl) {
@@ -1618,7 +1618,7 @@ AttributeError_compare_impl(AttributeError *lhs, AttributeError *rhs,
 			} else {
 				result = (*cmp)(lhs_decl,
 				                rhs_decl);
-				if (result != Dee_COMPARE_EQ)
+				if (Dee_COMPARE_ISNE_OR_ERR(result))
 					return result;
 			}
 #endif

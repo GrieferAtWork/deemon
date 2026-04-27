@@ -384,6 +384,12 @@ function detectConstantReturnValue(body: string): string | int | none {
 				return -1;
 			case "Dee_COMPARE_GR":
 				return 1;
+			case "Dee_HAS_NO":
+				return 0;
+			case "Dee_HAS_YES":
+				return 1;
+			case "Dee_HAS_ERR":
+				return -1;
 			}
 			return try int(returnExpr) catch (...) none;
 		}	break;
@@ -2024,16 +2030,17 @@ function printMhInitSpecs() {
 		print("),");
 	}
 	print("};");
-
 }
 
 function printMhUnsupportedArrayMembers() {
 	RESET_PREFIX();
-	for (local none, native: NATIVE_METHOD_HINTS) {
+	local longestNameLength = (NATIVE_METHOD_HINTS.keys.each.length > ...) + 1;
+	for (local name, native: NATIVE_METHOD_HINTS) {
+		print("	/* [Dee_TMH_", (name + "]").ljust(longestNameLength), " = */ "),;
 		if (native.unsupportedImpl !is none) {
-			print(f"	(Dee_funptr_t)&default__{native.name}__unsupported,");
+			print(f"(Dee_funptr_t)&default__{native.name}__unsupported,");
 		} else {
-			print(f"	NULL,");
+			print(f"NULL,");
 		}
 	}
 }

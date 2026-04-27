@@ -49,7 +49,7 @@ DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	DeeArg_Unpack0(err, argc, argv, "__seq_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bool))(self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -900,7 +900,7 @@ DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_contains_with_range_and_key))(self, args.item, args.start, args.end, args.key);
 		}
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -977,7 +977,7 @@ DeeMA___seq_startswith__(DeeObject *__restrict self, size_t argc, DeeObject *con
 			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_startswith_with_range_and_key))(self, args.item, args.start, args.end, args.key);
 		}
 	}
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -1012,7 +1012,7 @@ DeeMA___seq_endswith__(DeeObject *__restrict self, size_t argc, DeeObject *const
 			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_endswith_with_range_and_key))(self, args.item, args.start, args.end, args.key);
 		}
 	}
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -1679,7 +1679,7 @@ DeeMA___set_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	DeeArg_Unpack0(err, argc, argv, "__set_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_bool))(self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

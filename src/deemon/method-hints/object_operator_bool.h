@@ -32,7 +32,7 @@ operator {
 	                 (self == Dee_True || self == Dee_False));
 #endif /* !Dee_CONFIG_BOOL_TLS */
 	if (tp_self == &DeeBool_Type)
-		return DeeBool_IsTrue(self) ? 1 : 0;
+		return Dee_HAS_FROMBOOL(DeeBool_IsTrue(self));
 #endif /* !__OPTIMIZE_SIZE__ */
 )]]
 [[wunused]] int
@@ -43,13 +43,13 @@ tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_BOOL);
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
 	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} = OPERATOR_BOOL;
 
 } /* operator */

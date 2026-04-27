@@ -39,7 +39,7 @@ __seq_contains__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable
 			result = CALL_DEPENDENCY(seq_contains_with_range_and_key, self, item, start, end, key);
 		}
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -67,14 +67,14 @@ default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 
 
 
-/* @return: 0 : Not contained
- * @return: 1 : Is contained
- * @return: -1: Error */
+/* @return: Dee_HAS_YES: Is contained
+ * @return: Dee_HAS_NO:  Not contained
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_contains__.seq_contains([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 /* Can't use "using" here since the impl would only be used if the user
  * defines "__seq_contains__", and we want to use it whenever possible! */
 %{$with__seq_operator_contains = {
@@ -83,10 +83,10 @@ __seq_contains__.seq_contains([[nonnull]] DeeObject *self,
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__map_operator_trygetitem = {
-	int result;
+	int cmp_result;
 	DREF DeeObject *real_value;
 	DREF DeeObject *key_and_value[2];
 	if (DeeSeq_Unpack(item, 2, key_and_value))
@@ -96,29 +96,28 @@ err:
 	if unlikely(!ITER_ISOK(real_value)) {
 		Dee_Decref(key_and_value[1]);
 		if (real_value == ITER_DONE)
-			return 0;
+			return Dee_HAS_NO;
 		goto err;
 	}
-	result = DeeObject_TryCompareEq(key_and_value[1], real_value);
+	cmp_result = DeeObject_TryCompareEq(key_and_value[1], real_value);
 	Dee_Decref(real_value);
 	Dee_Decref(key_and_value[1]);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+	return Dee_HAS_FROM_COMPARE_EQ(cmp_result);
 err_trycatch:
 	if (DeeError_Catch(&DeeError_NotImplemented))
-		return 0;
+		return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_contains_with_foreach_cb)]] {
 	Dee_ssize_t status;
 	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_contains_with_foreach_cb, item);
 	if unlikely(status == -1)
 		goto err;
-	return status /*== -2*/ ? 1 : 0;
+	ASSERT(status == -2 || status == 0);
+	return Dee_HAS_FROMBOOL(status != 0);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_find = {
 	return default__seq_contains_with_range__with__seq_find(self, item, 0, (size_t)-1);
@@ -129,7 +128,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_contains = {
@@ -181,15 +180,15 @@ seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
 
 
 
-/* @return: 0 : Not contained
- * @return: 1 : Is contained
- * @return: -1: Error */
+/* @return: Dee_HAS_YES: Is contained
+ * @return: Dee_HAS_NO:  Not contained
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *item,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_contains_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
@@ -200,7 +199,7 @@ __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
-		foreach_status = 1;
+		foreach_status = Dee_HAS_YES;
 	return (int)foreach_status;
 }}
 %{$with__seq_find_with_key = {
@@ -217,7 +216,7 @@ __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_contains_with_key = {
@@ -252,30 +251,30 @@ seq_contains_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 
 
 
-/* @return: 0 : Not contained
- * @return: 1 : Is contained
- * @return: -1: Error */
+/* @return: Dee_HAS_YES: Is contained
+ * @return: Dee_HAS_NO:  Not contained
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_contains__.seq_contains_with_range([[nonnull]] DeeObject *self,
                                          [[nonnull]] DeeObject *item,
                                          size_t start, size_t end)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_contains_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_enumerate_cb, item, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if (foreach_status == -2)
-		foreach_status = 1;
+		foreach_status = Dee_HAS_YES;
 	return (int)foreach_status;
 }}
 %{$with__seq_find = {
 	size_t match = CALL_DEPENDENCY(seq_find, self, item, start, end);
 	if unlikely(match == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return match != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(match != (size_t)-1);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
@@ -283,7 +282,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_contains_with_range = {
@@ -317,16 +316,16 @@ seq_contains_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 
 
 
-/* @return: 0 : Not contained
- * @return: 1 : Is contained
- * @return: -1: Error */
+/* @return: Dee_HAS_YES: Is contained
+ * @return: Dee_HAS_NO:  Not contained
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_contains__.seq_contains_with_range_and_key([[nonnull]] DeeObject *self,
                                                  [[nonnull]] DeeObject *item,
                                                  size_t start, size_t end,
                                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_contains_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
@@ -337,16 +336,16 @@ __seq_contains__.seq_contains_with_range_and_key([[nonnull]] DeeObject *self,
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
-		foreach_status = 1;
+		foreach_status = Dee_HAS_YES;
 	return (int)foreach_status;
 }}
 %{$with__seq_find_with_key = {
 	size_t match = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);
 	if unlikely(match == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return match != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(match != (size_t)-1);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
@@ -354,7 +353,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_contains_with_range_and_key = {
@@ -384,7 +383,7 @@ __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
 %{$empty = return_false}
 %{$with__seq_contains = {
 	int result = CALL_DEPENDENCY(seq_contains, self, item);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

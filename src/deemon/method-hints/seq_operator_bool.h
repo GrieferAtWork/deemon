@@ -23,7 +23,7 @@
 /************************************************************************/
 __seq_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(seq_operator_bool, self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -59,7 +59,7 @@ default_seq_bool_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 [[operator([Sequence, Set, Mapping]: tp_cast.tp_bool)]]
 int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator bool"))}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_bool_with_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_bool_with_foreach_cb, NULL);
@@ -86,15 +86,15 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
 	return (int)(Dee_ssize_t)skip;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_size = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return size != 0;
+	return Dee_HAS_FROMBOOL(size != 0);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_sizeob = {
 	int result;
@@ -103,61 +103,49 @@ err:
 		goto err;
 	if (DeeObject_AssertTypeExact(sizeob, &DeeInt_Type))
 		goto err;
-	result = DeeInt_IsZero(sizeob) ? 0 : 1;
+	result = Dee_HAS_FROMBOOL(!DeeInt_IsZero(sizeob));
 	Dee_Decref(sizeob);
 	return result;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, Dee_EmptySeq);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
-err:
-	return -1;
+	return Dee_HAS_FROM_COMPARE_EQ(result);
 }}
 %{$with__set_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, Dee_EmptySet);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
-err:
-	return -1;
+	return Dee_HAS_FROM_COMPARE_EQ(result);
 }}
 %{$with__map_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMap);
-	if (Dee_COMPARE_ISERR(result))
-		goto err;
-	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
-err:
-	return -1;
+	return Dee_HAS_FROM_COMPARE_EQ(result);
 }}
 %{$with__set_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetfirst, self);
 	if (result == ITER_DONE)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(!result)
-		return -1;
+		return Dee_HAS_ERR;
 	Dee_Decref(result);
-	return 1;
+	return Dee_HAS_YES;
 }}
 %{$with__set_trygetlast = {
 	DREF DeeObject *result = CALL_DEPENDENCY(set_trygetlast, self);
 	if (result == ITER_DONE)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(!result)
-		return -1;
+		return Dee_HAS_ERR;
 	Dee_Decref(result);
-	return 1;
+	return Dee_HAS_YES;
 }}
 %{$with__set_boundfirst = {
 	int status = CALL_DEPENDENCY(set_boundfirst, self);
-	return Dee_BOUND_ISERR(status) ? -1 : Dee_BOUND_ISBOUND(status);
+	return Dee_HAS_FROMBOUND(status);
 }}
 %{$with__set_boundlast = {
 	int status = CALL_DEPENDENCY(set_boundlast, self);
-	return Dee_BOUND_ISERR(status) ? -1 : Dee_BOUND_ISBOUND(status);
+	return Dee_HAS_FROMBOUND(status);
 }} {
 	int retval;
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
@@ -165,13 +153,13 @@ err:
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
 	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_operator_bool = {

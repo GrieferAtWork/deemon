@@ -1597,3 +1597,6 @@
 #define CStructType_ForeachField(...) for(;;)
 
 #define Dee_HIDDEN_IMPL(...) __VA_ARGS__ {}
+#define STATIC_ASSERT_HAS_ISERR(...)
+#define STATIC_ASSERT_HAS_ISYES(...)
+#define STATIC_ASSERT_HAS_ISNO_(...)
