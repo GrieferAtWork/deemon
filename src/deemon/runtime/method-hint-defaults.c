@@ -374,9 +374,7 @@ default__seq_operator_bool__with__seq_operator_foreach(DeeObject *__restrict sel
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 #ifndef DEFINED_default_seq_bool_with_foreach_pair_cb
@@ -394,9 +392,7 @@ default__seq_operator_bool__with__seq_operator_foreach_pair(DeeObject *__restric
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach_pair))(self, &default_seq_bool_with_foreach_pair_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -408,7 +404,7 @@ default__seq_operator_bool__with__seq_operator_iter(DeeObject *__restrict self) 
 	skip = DeeObject_InvokeMethodHint(iter_advance, iter, 1);
 	Dee_Decref_likely(iter);
 	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
-	return (int)(Dee_ssize_t)skip;
+	return Dee_HAS_FROM_eM1_n0_y1((int)(Dee_ssize_t)skip);
 err:
 	return Dee_HAS_ERR;
 }
@@ -1767,7 +1763,7 @@ default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *
 	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	if (Dee_COMPARE_ISEQ(cmp))
-		return value ? -3 : -2;
+		return value ? -2 : -3;
 	return 0;
 err:
 	return -1;
@@ -1775,11 +1771,10 @@ err:
 #endif /* !DEFINED_default_bounditem_with_seq_enumerate */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_hasitem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
-	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
-	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -3 || status == -2)
-		return Dee_HAS_YES;
-	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
+	Dee_ssize_t foreach_status;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
+	ASSERT(foreach_status == -3 || foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	return Dee_HAS_FROM_eM1_n0_yM2_yM3((int)foreach_status);
 }
 
 
@@ -1821,23 +1816,20 @@ default__seq_operator_hasitem_index__with__seq_operator_getitem_index(DeeObject 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 default_bounditem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	if ((size_t)(uintptr_t)arg == index)
-		return value ? -4 : -3;
-	return -2;
+		return value ? -2 : -3;
+	return -4;
 }
 #endif /* !DEFINED_default_bounditem_index_with_seq_enumerate_index */
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_hasitem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
 	size_t end_index;
-	Dee_ssize_t status;
+	Dee_ssize_t foreach_status;
 	if (OVERFLOW_UADD(index, 1, &end_index))
 		end_index = (size_t)-1;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
-	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -2)
-		return Dee_HAS_NO;
-	if (status == -4 || status == -3)
-		return Dee_HAS_YES;
-	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
+	ASSERT(foreach_status == -4 || foreach_status == -3 || foreach_status == -2 ||
+	       foreach_status == -1 || foreach_status == 0);
+	return Dee_HAS_FROM_eM1_n0_nM4_yM2_yM3(foreach_status);
 }
 
 
@@ -1883,13 +1875,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_bounditem__with__seq_enumerate(DeeObject *self, DeeObject *index) {
 	Dee_ssize_t status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_bounditem_with_seq_enumerate_cb, (void *)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -3)
-		return Dee_BOUND_YES;
-	if (status == -2)
-		return Dee_BOUND_NO;
-	if (status == -1)
-		return Dee_BOUND_ERR;
-	return Dee_BOUND_MISSING;
+	return Dee_BOUND_FROM_eM1_m0_yM2_nM3((int)status);
 }
 
 
@@ -1946,19 +1932,13 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bounditem_index__with__seq_enumerate_index(DeeObject *__restrict self, size_t index) {
 	size_t end_index;
-	Dee_ssize_t status;
+	Dee_ssize_t foreach_status;
 	if (OVERFLOW_UADD(index, 1, &end_index))
 		end_index = (size_t)-1;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
-	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -1)
-		return Dee_BOUND_ERR;
-	if (status == -3)
-		return Dee_BOUND_NO;
-	if (status == -4)
-		return Dee_BOUND_YES;
-	ASSERT(status == -2 || status == 0);
-	return Dee_BOUND_MISSING;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_bounditem_index_with_seq_enumerate_index_cb, (void *)(uintptr_t)index, index, end_index);
+	ASSERT(foreach_status == -4 || foreach_status == -3 || foreach_status == -2 ||
+	       foreach_status == -1 || foreach_status == 0);
+	return Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(foreach_status);
 }
 
 
@@ -10396,12 +10376,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_contains__with__seq_operator_foreach(DeeObject *self, DeeObject *item) {
 	Dee_ssize_t status;
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_contains_with_foreach_cb, item);
-	if unlikely(status == -1)
-		goto err;
-	ASSERT(status == -2 || status == 0);
-	return Dee_HAS_FROMBOOL(status != 0);
-err:
-	return Dee_HAS_ERR;
+	return Dee_HAS_FROM_eM1_n0_yM2(status);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -10506,12 +10481,8 @@ default__seq_contains_with_key__with__seq_operator_foreach(DeeObject *self, DeeO
 	data.gscwk_key   = key;
 	data.gscwk_kelem = item;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_contains_with_key_foreach_cb, &data);
-	ASSERT(foreach_status == 0 ||
-	       foreach_status == -1 ||
-	       foreach_status == -2);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -10590,9 +10561,7 @@ default__seq_contains_with_range__with__seq_enumerate_index(DeeObject *self, Dee
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_contains_enumerate_cb, item, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -10697,12 +10666,8 @@ default__seq_contains_with_range_and_key__with__seq_enumerate_index(DeeObject *s
 	data.gscwk_key   = key;
 	data.gscwk_kelem = item;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_contains_with_key_enumerate_cb, &data, start, end);
-	ASSERT(foreach_status == 0 ||
-	       foreach_status == -1 ||
-	       foreach_status == -2);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -18732,18 +18697,7 @@ default__map_operator_bounditem__with__map_enumerate(DeeObject *self, DeeObject 
 	Dee_ssize_t status;
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &default_map_bounditem_with_enumerate_cb, key);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -2) {
-		status = Dee_BOUND_YES;
-	} else if (status == -3) {
-		status = Dee_BOUND_NO;
-	} else if (status == 0) {
-		status = Dee_BOUND_MISSING;
-	} else {
-#if Dee_BOUND_ERR != -1
-		status = Dee_BOUND_ERR;
-#endif /* Dee_BOUND_ERR != -1 */
-	}
-	return (int)status;
+	return Dee_BOUND_FROM_eM1_m0_yM2_nM3((int)status);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL

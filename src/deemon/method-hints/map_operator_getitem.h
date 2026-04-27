@@ -712,18 +712,7 @@ __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
 	Dee_ssize_t status;
 	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_bounditem_with_enumerate_cb, key);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -2) {
-		status = Dee_BOUND_YES;
-	} else if (status == -3) {
-		status = Dee_BOUND_NO;
-	} else if (status == 0) {
-		status = Dee_BOUND_MISSING;
-	} else {
-#if Dee_BOUND_ERR != -1
-		status = Dee_BOUND_ERR;
-#endif /* Dee_BOUND_ERR != -1 */
-	}
-	return (int)status;
+	return Dee_BOUND_FROM_eM1_m0_yM2_nM3((int)status);
 }}
 %{$with__map_operator_contains = {
 	int result_status;

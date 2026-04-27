@@ -1723,8 +1723,42 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* !Dee_HAS_FROM_COMPARE_GE */
 
 
-/* Custom converts that are useful for `Dee_foreach_t' status values. */
+/* Custom converters that are useful for `Dee_foreach_t' status values:
+ * Dee_HAS_FROM_eM1_n0_yM2:                           Dee_HAS_INTO_eM1_n0_yM2:
+ * >> Dee_HAS_ISERR(Dee_HAS_FROM_eM1_n0_yM2(-1));     >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_ERR) == -1;
+ * >> Dee_HAS_ISNO (Dee_HAS_FROM_eM1_n0_yM2(0));      >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_NO)  == 0;
+ * >> Dee_HAS_ISYES(Dee_HAS_FROM_eM1_n0_yM2(-2));     >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_YES) == -2;
+ *
+ * Dee_HAS_FROM_eM1_nM2_y0:                           Dee_HAS_INTO_eM1_nM2_y0:
+ * >> Dee_HAS_ISERR(Dee_HAS_FROM_eM1_nM2_y0(-1));     >> Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_ERR) == -1;
+ * >> Dee_HAS_ISNO (Dee_HAS_FROM_eM1_nM2_y0(-2));     >> Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_NO)  == -2;
+ * >> Dee_HAS_ISYES(Dee_HAS_FROM_eM1_nM2_y0(0));      >> Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_YES) == 0;
+ *
+ * Dee_HAS_FROM_eM1_n0_y1:                            Dee_HAS_INTO_eM1_n0_y1:
+ * >> Dee_HAS_ISERR(Dee_HAS_FROM_eM1_n0_y1(-1));      >> Dee_HAS_INTO_eM1_n0_y1(Dee_HAS_ERR) == -1;
+ * >> Dee_HAS_ISNO (Dee_HAS_FROM_eM1_n0_y1(0));       >> Dee_HAS_INTO_eM1_n0_y1(Dee_HAS_NO)  == 0;
+ * >> Dee_HAS_ISYES(Dee_HAS_FROM_eM1_n0_y1(1));       >> Dee_HAS_INTO_eM1_n0_y1(Dee_HAS_YES) == 1;
+ *
+ * Dee_HAS_FROM_eM1_n1_y0:                            Dee_HAS_INTO_eM1_n1_y0:
+ * >> Dee_HAS_ISERR(Dee_HAS_FROM_eM1_n1_y0(-1));      >> Dee_HAS_INTO_eM1_n1_y0(Dee_HAS_ERR) == -1;
+ * >> Dee_HAS_ISNO (Dee_HAS_FROM_eM1_n1_y0(1));       >> Dee_HAS_INTO_eM1_n1_y0(Dee_HAS_NO)  == 1;
+ * >> Dee_HAS_ISYES(Dee_HAS_FROM_eM1_n1_y0(0));       >> Dee_HAS_INTO_eM1_n1_y0(Dee_HAS_YES) == 0;
+ *
+ * Using these, you can easily count/stop-on the first true/false
+ * matching element of some sequence. */
 #if 1
+/* IN    -   ^1   -1   CANON   REQ
+ * -1    1    0   -1    -1     <0
+ *  0    0    1    0     0     ==0
+ * -2    2    3    2     1     >0 */
+#define Dee_HAS_FROM_eM1_n0_yM2(v)     ((-(v) ^ 1) - 1)
+
+/* IN  OUT
+ * <0  -1
+ *  0  0
+ * >0  -2 */
+#define Dee_HAS_INTO_eM1_n0_yM2(v) (-+((v) < 0) - (+((v) > 0) << 1))
+
 /* IN    -   ^1   -1   ^2    CANON   REQ
  * -1    1    0   -1   -3     -1     <0
  * -2    2    3    2    0      0     ==0
@@ -1737,34 +1771,58 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  * >0  0 */
 #define Dee_HAS_INTO_eM1_nM2_y0(v) (-+((v) < 0) - (+((v) == 0) << 1))
 
-/* IN    -   ^1   -1   CANON   REQ
- * -1    1    0   -1    -1     <0
- *  0    0    1    0     0     ==0
- * -2    2    3    2     1     >0 */
-#define Dee_HAS_FROM_eM1_n0_yM2(v) ((-(v) ^ 1) - 1)
-
-/* IN  OUT
- * <0  -1
- *  0  0
- * >0  -2 */
-#define Dee_HAS_INTO_eM1_n0_yM2(v) (-+((v) < 0) - (+((v) > 0) << 1))
+#define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
 
 /* IN  OUT
  * <0  -1
  *  0  0
  * >0  1 */
 #define Dee_HAS_INTO_eM1_n0_y1(v)  ((v > 0) - (v < 0))
-#define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
+
+/* IN  ^1  CANON   REQ
+ * -1  -2   -1     <0
+ *  1   0    0     ==0
+ *  0   1    1     >0 */
+#define Dee_HAS_FROM_eM1_n1_y0(v) ((v) ^ 1)
+
+/* IN  OUT
+ * <0  -1
+ *  0  1
+ * >0  0 */
+#define Dee_HAS_INTO_eM1_n1_y0(v)  (((v) == 0) - ((v) < 0))
+
+
+/* IN    -   ^1   -1   CANON   REQ
+ * -1    1    0   -1    -1     <0
+ *  0    0    1    0     0     ==0
+ * -2    2    3    2     1     >0
+ * -3    3    2    1     1     >0 */
+#define Dee_HAS_FROM_eM1_n0_yM2_yM3(v) ((-(v) ^ 1) - 1)
+
+/* IN    -   ^1   &~4  -1   CANON   REQ
+ * -1    1    0    0   -1    -1     <0
+ *  0    0    1    1    0     0     ==0
+ * -4    4    5    1    4     0     ==0
+ * -2    2    3    3    2     1     >0
+ * -3    3    2    2    1     1     >0 */
+#define Dee_HAS_FROM_eM1_n0_nM4_yM2_yM3(v) (((-(v) ^ 1) & ~4) - 1)
 #else
+#define Dee_HAS_FROM_eM1_n0_yM2(v)     ((v) == -1 ? Dee_HAS_ERR : (v) == 0 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == -2),*/ Dee_HAS_YES))
+#define Dee_HAS_INTO_eM1_n0_yM2(v)     (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? -2 : 0)
+
 #define Dee_HAS_FROM_eM1_nM2_y0(v) ((v) == -1 ? Dee_HAS_ERR : (v) == -2 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == 0),*/ Dee_HAS_YES))
 #define Dee_HAS_INTO_eM1_nM2_y0(v) (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 0 : -2)
 
-#define Dee_HAS_FROM_eM1_n0_yM2(v) ((v) == -1 ? Dee_HAS_ERR : (v) == 0 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == -2),*/ Dee_HAS_YES))
-#define Dee_HAS_INTO_eM1_n0_yM2(v) (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? -2 : 0)
-
 #define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
 #define Dee_HAS_INTO_eM1_n0_y1(v)  (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 1 : 0)
+
+#define Dee_HAS_FROM_eM1_n1_y0(v)  ((v) == -1 ? Dee_HAS_ERR : (v) == 0 ? Dee_HAS_YES : (/*Dee_ASSERT((v) == 1),*/ Dee_HAS_NO))
+#define Dee_HAS_INTO_eM1_n1_y0(v)  (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISNO_NO_ERR(v) ? 1 : 0)
+
+#define Dee_HAS_FROM_eM1_n0_yM2_yM3(v)     ((v) == -1 ? Dee_HAS_ERR : (v) == 0 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == -2 || (v) == -3),*/ Dee_HAS_YES))
+#define Dee_HAS_FROM_eM1_n0_nM4_yM2_yM3(v) ((v) == -1 ? Dee_HAS_ERR : ((v) == 0 || (v) == -4) ? Dee_HAS_NO : (/*Dee_ASSERT((v) == -2 || (v) == -3),*/ Dee_HAS_YES))
 #endif
+
 
 #if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0
 /* IN   OUT
@@ -1790,10 +1848,16 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 /* Possible values returned by C-API isbound checking functions.
  * These values have been intentionally chosen so-as to be binary-
- * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
-#define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to equal `Dee_HAS_ERR' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to equal `Dee_HAS_NO' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to equal `Dee_HAS_YES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+ * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()'
+ *
+ * WARNING: This compatibility only goes 1 way!
+ *          Unlike the Dee_HAS_* API, which defines behavior for
+ *          all integer values, Dee_BOUND_* only accepts these 4
+ *          values, with all other values resulting in undefined
+ *          behavior! */
+#define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to be accepted by `Dee_HAS_ISERR' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+#define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to be accepted by `Dee_HAS_ISNO' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+#define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to be accepted by `Dee_HAS_ISYES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
 #define Dee_BOUND_NO       2
 
 /* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
@@ -1939,6 +2003,24 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #else /* Dee_BOUND_MISSING == 0 */
 #define Dee_BOUND_FROMITERNOK_MISSING(obj) ((obj) == NULL ? Dee_BOUND_ERR : Dee_BOUND_MISSING)
 #endif /* Dee_BOUND_MISSING != 0 */
+
+
+/* Custom converters that are useful for `Dee_foreach_t' status values:
+ * Dee_BOUND_FROM_eM1_m0_yM2_nM3:                             Dee_HAS_INTO_eM1_n0_yM2:
+ * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(-1) == Dee_BOUND_ERR;     >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_ERR) == -1;
+ * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(0)  == Dee_BOUND_MISSING; >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_NO)  == 0;
+ * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(-2) == Dee_BOUND_YES;     >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_YES) == -2;
+ * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(-3) == Dee_BOUND_NO;      >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_NO)  == 0;
+ *
+ * Using these, you can easily count/stop-on the first true/false
+ * matching element of some sequence. */
+#if 1 /* TODO: Bit magic */
+#define Dee_BOUND_FROM_eM1_m0_yM2_nM3(v)     ((v) == -1 ? Dee_BOUND_ERR : (v) == 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
+#define Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(v) ((v) == -1 ? Dee_BOUND_ERR : ((v) == 0 || (v) == -4) ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
+#else
+#define Dee_BOUND_FROM_eM1_m0_yM2_nM3(v)     ((v) == -1 ? Dee_BOUND_ERR : (v) == 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
+#define Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(v) ((v) == -1 ? Dee_BOUND_ERR : ((v) == 0 || (v) == -4) ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
+#endif
 
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')

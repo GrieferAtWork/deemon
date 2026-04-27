@@ -109,12 +109,7 @@ err_trycatch:
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_contains_with_foreach_cb)]] {
 	Dee_ssize_t status;
 	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_contains_with_foreach_cb, item);
-	if unlikely(status == -1)
-		goto err;
-	ASSERT(status == -2 || status == 0);
-	return Dee_HAS_FROMBOOL(status != 0);
-err:
-	return Dee_HAS_ERR;
+	return Dee_HAS_FROM_eM1_n0_yM2(status);
 }}
 %{$with__seq_find = {
 	return default__seq_contains_with_range__with__seq_find(self, item, 0, (size_t)-1);
@@ -192,12 +187,8 @@ __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
 	data.gscwk_key   = key;
 	data.gscwk_kelem = item;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_contains_with_key_foreach_cb, &data);
-	ASSERT(foreach_status == 0 ||
-	       foreach_status == -1 ||
-	       foreach_status == -2);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_find_with_key = {
 	return default__seq_contains_with_range_and_key__with__seq_find_with_key(self, item, 0, (size_t)-1, key);
@@ -261,9 +252,7 @@ __seq_contains__.seq_contains_with_range([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_enumerate_cb, item, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_find = {
 	size_t match = CALL_DEPENDENCY(seq_find, self, item, start, end);
@@ -329,12 +318,8 @@ __seq_contains__.seq_contains_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gscwk_key   = key;
 	data.gscwk_kelem = item;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_with_key_enumerate_cb, &data, start, end);
-	ASSERT(foreach_status == 0 ||
-	       foreach_status == -1 ||
-	       foreach_status == -2);
-	if (foreach_status == -2)
-		foreach_status = Dee_HAS_YES;
-	return (int)foreach_status;
+	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_find_with_key = {
 	size_t match = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);

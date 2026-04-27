@@ -473,7 +473,7 @@ default_bounditem_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *
 	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	if (Dee_COMPARE_ISEQ(cmp))
-		return value ? -3 : -2;
+		return value ? -2 : -3;
 	return 0;
 err:
 	return -1;
@@ -522,13 +522,12 @@ err:
 	return Dee_HAS_ERR;
 }}
 %{$with__seq_enumerate = [[prefix(DEFINE_default_bounditem_with_seq_enumerate)]] {
-	Dee_ssize_t status = CALL_DEPENDENCY(seq_enumerate, self,
-	                                     &default_bounditem_with_seq_enumerate_cb,
-	                                     (void *)index);
-	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -3 || status == -2)
-		return Dee_HAS_YES;
-	return (int)status; /* 0 (index doesn't exist) or -1 (error) */
+	Dee_ssize_t foreach_status;
+	foreach_status = CALL_DEPENDENCY(seq_enumerate, self,
+	                                 &default_bounditem_with_seq_enumerate_cb,
+	                                 (void *)index);
+	ASSERT(foreach_status == -3 || foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	return Dee_HAS_FROM_eM1_n0_yM2_yM3((int)foreach_status);
 }} = $with__seq_operator_getitem;
 
 seq_operator_hasitem = {
@@ -561,8 +560,8 @@ seq_operator_hasitem = {
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 default_bounditem_index_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	if ((size_t)(uintptr_t)arg == index)
-		return value ? -4 : -3;
-	return -2;
+		return value ? -2 : -3;
+	return -4;
 }
 #endif /* !DEFINED_default_bounditem_index_with_seq_enumerate_index */
 )]
@@ -596,18 +595,15 @@ err:
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_default_bounditem_index_with_seq_enumerate_index)]] {
 	size_t end_index;
-	Dee_ssize_t status;
+	Dee_ssize_t foreach_status;
 	if (OVERFLOW_UADD(index, 1, &end_index))
 		end_index = (size_t)-1;
-	status = CALL_DEPENDENCY(seq_enumerate_index, self,
-	                         &default_bounditem_index_with_seq_enumerate_index_cb,
-	                         (void *)(uintptr_t)index, index, end_index);
-	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -2)
-		return Dee_HAS_NO;
-	if (status == -4 || status == -3)
-		return Dee_HAS_YES;
-	return (int)status; /* 0 (empty; aka: index doesn't exist) or -1 (error) */
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                                 &default_bounditem_index_with_seq_enumerate_index_cb,
+	                                 (void *)(uintptr_t)index, index, end_index);
+	ASSERT(foreach_status == -4 || foreach_status == -3 || foreach_status == -2 ||
+	       foreach_status == -1 || foreach_status == 0);
+	return Dee_HAS_FROM_eM1_n0_nM4_yM2_yM3(foreach_status);
 }} = $with__seq_operator_getitem_index;
 
 seq_operator_hasitem_index = {
@@ -674,13 +670,7 @@ err:
 	                                     &default_bounditem_with_seq_enumerate_cb,
 	                                     (void *)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -3)
-		return Dee_BOUND_YES;
-	if (status == -2)
-		return Dee_BOUND_NO;
-	if (status == -1)
-		return Dee_BOUND_ERR;
-	return Dee_BOUND_MISSING;
+	return Dee_BOUND_FROM_eM1_m0_yM2_nM3((int)status);
 }} = $with__seq_operator_getitem;
 
 seq_operator_bounditem = {
@@ -758,21 +748,15 @@ err:
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_default_bounditem_index_with_seq_enumerate_index)]] {
 	size_t end_index;
-	Dee_ssize_t status;
+	Dee_ssize_t foreach_status;
 	if (OVERFLOW_UADD(index, 1, &end_index))
 		end_index = (size_t)-1;
-	status = CALL_DEPENDENCY(seq_enumerate_index, self,
-	                         &default_bounditem_index_with_seq_enumerate_index_cb,
-	                         (void *)(uintptr_t)index, index, end_index);
-	ASSERT(status == -4 || status == -3 || status == -2 || status == -1 || status == 0);
-	if (status == -1)
-		return Dee_BOUND_ERR;
-	if (status == -3)
-		return Dee_BOUND_NO;
-	if (status == -4)
-		return Dee_BOUND_YES;
-	ASSERT(status == -2 || status == 0);
-	return Dee_BOUND_MISSING;
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                                 &default_bounditem_index_with_seq_enumerate_index_cb,
+	                                 (void *)(uintptr_t)index, index, end_index);
+	ASSERT(foreach_status == -4 || foreach_status == -3 || foreach_status == -2 ||
+	       foreach_status == -1 || foreach_status == 0);
+	return Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(foreach_status);
 }} = $with__seq_operator_getitem_index;
 
 seq_operator_bounditem_index = {

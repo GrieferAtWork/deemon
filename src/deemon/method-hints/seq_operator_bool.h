@@ -64,17 +64,13 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_operator_foreach_pair = [[prefix(DEFINE_default_seq_bool_with_foreach_pair_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_seq_bool_with_foreach_pair_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if (foreach_status == -2)
-		foreach_status = 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_operator_iter = {
 	size_t skip;
@@ -84,7 +80,7 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 	skip = DeeObject_InvokeMethodHint(iter_advance, iter, 1);
 	Dee_Decref_likely(iter);
 	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
-	return (int)(Dee_ssize_t)skip;
+	return Dee_HAS_FROM_eM1_n0_y1((int)(Dee_ssize_t)skip);
 err:
 	return Dee_HAS_ERR;
 }}
