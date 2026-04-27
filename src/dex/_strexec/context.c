@@ -1149,7 +1149,7 @@ set_global:
 			int error;
 			error = DeeObject_HasItemStringLenHash(self->jc_globals,
 			                                   name, namelen, hash);
-			if unlikely(Dee_HAS_ISERR(error))
+			if (Dee_HAS_ISERR(error))
 				goto err;
 			if (error)
 				goto set_global; /* Known global */

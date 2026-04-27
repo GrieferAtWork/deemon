@@ -29,7 +29,7 @@
 #include <deemon/int.h>          /* DeeInt_* */
 #include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
 #include <deemon/none.h>         /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, return_reference */
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref_unlikely, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, return_reference */
 #include <deemon/pair.h>         /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/tuple.h>        /* DEFINE_TUPLE, DeeNullableTuple_Empty, DeeNullableTuple_Type, DeeTuple* */
 #include <deemon/type.h>         /* DeeObject_IsShared */
@@ -49,7 +49,7 @@ DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	DeeArg_Unpack0(err, argc, argv, "__seq_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_bool))(self);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -576,9 +576,9 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_any_with_range))(self, args.start, args.end);
 	}
 check_result:
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -645,9 +645,9 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_all_with_range))(self, args.start, args.end);
 	}
 check_result:
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -714,9 +714,9 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_parity_with_range))(self, args.start, args.end);
 	}
 check_result:
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -900,9 +900,9 @@ DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 			result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_contains_with_range_and_key))(self, args.item, args.start, args.end, args.key);
 		}
 	}
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -1218,9 +1218,9 @@ DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	int result = !DeeNone_Check(args.key)
 	             ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_remove_with_key))(self, args.item, args.start, args.end, args.key)
 	             : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_remove))(self, args.item, args.start, args.end);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -1242,9 +1242,9 @@ DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	int result = !DeeNone_Check(args.key)
 	             ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_rremove_with_key))(self, args.item, args.start, args.end, args.key)
 	             : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_rremove))(self, args.item, args.start, args.end);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -1679,7 +1679,7 @@ DeeMA___set_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	DeeArg_Unpack0(err, argc, argv, "__set_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_bool))(self);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -1831,9 +1831,9 @@ DeeMA___set_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__set_insert__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insert))(self, args.key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -1860,7 +1860,7 @@ DeeMA___set_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__set_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, args.key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -2222,9 +2222,9 @@ DeeMA___map_setold__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setold__", &args, &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold))(self, args.key, args.value);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -2267,9 +2267,9 @@ DeeMA___map_setnew__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setnew__", &args, &args.key, &args.value);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew))(self, args.key, args.value);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -2338,7 +2338,7 @@ DeeMA___map_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeArg_Unpack1(err, argc, argv, "__map_remove__", &args.key);
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_remove))(self, args.key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

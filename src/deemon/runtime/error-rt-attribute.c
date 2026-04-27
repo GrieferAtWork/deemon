@@ -33,7 +33,7 @@
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/mro.h>                /* DeeObject_FindAttrInfoStringLenHash, DeeObject_TFindPrivateAttrInfoStringLenHash, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_*, Dee_attrinfo */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/objmethod.h>          /* DeeClsMemberObject, DeeClsMember_Type, DeeClsMethodObject, DeeClsMethod_Type, DeeClsPropertyObject, DeeClsProperty_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
@@ -1104,9 +1104,9 @@ AttributeError_init_access_flag(AttributeError *__restrict self,
 	if (!state)
 		return 0;
 	temp = DeeObject_Bool(state);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if (temp)
+	if (Dee_HAS_ISYES_NO_ERR(temp))
 		self->ae_flags |= mask;
 	return 0;
 err:

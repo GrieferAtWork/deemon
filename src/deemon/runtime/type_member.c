@@ -32,7 +32,7 @@
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/mro.h>             /* Dee_ATTRINFO_*, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrperm_t, type_member_get, type_method_vcallf */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
-#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, strlen */
 #include <deemon/type.h>            /* Dee_kwobjmethod_t, STRUCT_*, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
@@ -967,9 +967,9 @@ Dee_type_member_set_impl(struct type_member const *desc,
 	case STRUCT_BOOL32:
 	case STRUCT_BOOL64: {
 		int boolval = DeeObject_Bool(value);
-		if unlikely(boolval < 0)
+		if (Dee_HAS_ISERR(boolval))
 			goto err;
-		boolval = !!boolval;
+		boolval = !!Dee_HAS_ISYES_NO_ERR(boolval);
 		switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST)) {
 		case STRUCT_BOOL8:  FIELD(uint8_t)  = (uint8_t )(unsigned int)boolval; break;
 		case STRUCT_BOOL16: FIELD(uint16_t) = (uint16_t)(unsigned int)boolval; break;
@@ -991,11 +991,11 @@ Dee_type_member_set_impl(struct type_member const *desc,
 		int boolval;
 		uint8_t mask, *pfield;
 		boolval = DeeObject_Bool(value);
-		if unlikely(boolval < 0)
+		if (Dee_HAS_ISERR(boolval))
 			goto err;
 		mask = STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST));
 		pfield = &FIELD(uint8_t);
-		if (boolval) {
+		if (Dee_HAS_ISYES_NO_ERR(boolval)) {
 			IF_THREADS(if (desc->m_desc.md_field.mdf_type & STRUCT_ATOMIC) {
 				atomic_or(pfield, mask);
 			} else) {

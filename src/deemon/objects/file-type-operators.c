@@ -31,7 +31,7 @@
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/int.h>      /* DeeInt_* */
 #include <deemon/none.h>     /* DeeNone_Check, DeeNone_Decref, return_none */
-#include <deemon/object.h>   /* ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
+#include <deemon/object.h>   /* ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
 #include <deemon/super.h>    /* DeeSuperObject, DeeSuper_Type */
 #include <deemon/type.h>     /* Dee_OPERATOR_INVOKE_INIT, Dee_operator_invoke, Dee_operator_t, Dee_opinfo, OPCC_SPECIAL, OPCLASS_TYPE, TYPE_OPERATOR_DECL, type_operator */
 
@@ -267,9 +267,9 @@ instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch) {
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return temp ? ch : Dee_GETC_EOF;
+	return Dee_HAS_ISYES_NO_ERR(temp) ? ch : Dee_GETC_EOF;
 err:
 	return Dee_GETC_ERR;
 }
@@ -289,9 +289,9 @@ instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self,
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return temp ? ch : Dee_GETC_EOF;
+	return Dee_HAS_ISYES_NO_ERR(temp) ? ch : Dee_GETC_EOF;
 err:
 	return Dee_GETC_ERR;
 }

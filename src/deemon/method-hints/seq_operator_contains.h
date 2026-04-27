@@ -39,9 +39,9 @@ __seq_contains__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable
 			result = CALL_DEPENDENCY(seq_contains_with_range_and_key, self, item, start, end, key);
 		}
 	}
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -380,7 +380,7 @@ __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
 %{$empty = return_false}
 %{$with__seq_contains = {
 	int result = CALL_DEPENDENCY(seq_contains, self, item);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

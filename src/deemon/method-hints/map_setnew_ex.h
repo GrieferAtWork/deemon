@@ -47,7 +47,7 @@ err:
 
 /* @return: ITER_DONE: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
  * @return: * :        The given `key' already exists (nothing was inserted; returned object is the already-present value)
- * @return: -1:        Error */
+ * @return: NULL:      Error */
 [[wunused]] DREF DeeObject *
 __map_setnew_ex__.map_setnew_ex([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *key,
@@ -61,7 +61,7 @@ __map_setnew_ex__.map_setnew_ex([[nonnull]] DeeObject *self,
 		goto err;
 	if (old_value != ITER_DONE)
 		return old_value;
-	if unlikely(CALL_DEPENDENCY(map_setnew, self, key, value) < 0)
+	if (Dee_HAS_ISERR(CALL_DEPENDENCY(map_setnew, self, key, value)))
 		goto err;
 	return ITER_DONE;
 err:
@@ -126,9 +126,9 @@ err:
 	if unlikely(temp)
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_status1;
-	if (temp) {
+	if (Dee_HAS_ISYES_NO_ERR(temp)) {
 		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}

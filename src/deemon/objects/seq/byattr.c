@@ -197,7 +197,7 @@ byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
 	                                     self->mba_map, specs->as_name,
 	                                     specs->as_hash);
 	if (!Dee_HAS_ISNO(has)) {
-		if unlikely(Dee_HAS_ISERR(has))
+		if (Dee_HAS_ISERR(has))
 			goto err;
 		result->ad_name = specs->as_name;
 		result->ad_doc  = NULL;

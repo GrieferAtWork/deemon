@@ -48,8 +48,8 @@
 #include <hybrid/align.h>    /* IS_POWER_OF_TWO */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
-#include "../runtime/strings.h"
 #include "../runtime/method-hint-defaults.h"
+#include "../runtime/strings.h"
 #include "dict-utils.h"
 #include "generic-proxy.h"
 #include "rodict.h"

@@ -31,7 +31,7 @@
 #include <deemon/map.h>                /* DeeMap_*, Dee_EmptyMap */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Clear, Dee_CompareNe, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Clear, Dee_CompareNe, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_NewEmpty */
@@ -176,9 +176,9 @@ mu_contains(MapUnion *__restrict self, DeeObject *key) {
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if (temp)
+	if (Dee_HAS_ISYES_NO_ERR(temp))
 		goto done;
 	Dee_Decref_unlikely(result);
 
@@ -524,10 +524,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 muiter_set_in2nd(MapUnionIterator *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		return newval;
 	MapUnionIterator_LockWrite(self);
-	self->mui_in2nd = !!newval;
+	self->mui_in2nd = !!Dee_HAS_ISYES_NO_ERR(newval);
 	MapUnionIterator_LockEndWrite(self);
 	return 0;
 }
@@ -858,10 +858,10 @@ muiter_bool(MapUnionIterator *__restrict self) {
 	is_second = self->mui_in2nd;
 	MapUnionIterator_LockEndRead(self);
 	result = DeeObject_BoolInherited(iter);
-	if (result != 0)
+	if (Dee_HAS_ISYES_OR_ERR(result))
 		return result;
 	if (is_second)
-		return 0; /* Nothing left to enumerate */
+		return Dee_HAS_NO; /* Nothing left to enumerate */
 	/* Special case: iterator is now located at end of first mapping
 	 * -> it will be able to yield more items if the second mapping
 	 *    contains at least 1 key not present in the first mapping. */
@@ -1825,7 +1825,7 @@ msd_getitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -1848,7 +1848,7 @@ msd_trygetitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -1864,11 +1864,11 @@ msd_hasitem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_a, key);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		return Dee_HAS_NO;
 	}
@@ -1914,7 +1914,7 @@ msd_getitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -1937,7 +1937,7 @@ msd_trygetitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -1953,11 +1953,11 @@ msd_hasitem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_a, key);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->msd_b, key);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		return Dee_HAS_NO;
 	}
@@ -2004,7 +2004,7 @@ msd_getitem_string_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -2028,7 +2028,7 @@ msd_trygetitem_string_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -2045,11 +2045,11 @@ msd_hasitem_string_hash(MapSymmetricDifference *__restrict self,
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_a, key, hash);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->msd_b, key, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		return Dee_HAS_ERR;
 	}
@@ -2097,7 +2097,7 @@ msd_getitem_string_len_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		goto err_key_r;
 	}
@@ -2121,7 +2121,7 @@ msd_trygetitem_string_len_hash(MapSymmetricDifference *__restrict self,
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		Dee_Decref(result);
 		return ITER_DONE;
@@ -2138,11 +2138,11 @@ msd_hasitem_string_len_hash(MapSymmetricDifference *__restrict self,
 	result = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_a, key, keylen, hash);
 	if (result == 0)
 		return DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	exists = DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->msd_b, key, keylen, hash);
 	if unlikely(exists != 0) {
-		if unlikely(Dee_HAS_ISERR(exists))
+		if (Dee_HAS_ISERR(exists))
 			goto err;
 		return Dee_HAS_NO;
 	}
@@ -2366,10 +2366,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 msditer_set_in2nd(MapSymmetricDifferenceIterator *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		return newval;
 	MapSymmetricDifferenceIterator_LockWrite(self);
-	self->msdi_in2nd = !!newval;
+	self->msdi_in2nd = !!Dee_HAS_ISYES_NO_ERR(newval);
 	MapSymmetricDifferenceIterator_LockEndWrite(self);
 	return 0;
 }
@@ -2809,14 +2809,14 @@ MapIntersection_NonEmpty(DeeObject *map, DeeObject *keys) {
 			status = DeeObject_InvokeMethodHint(set_operator_foreach, keys, &map_containsany_foreach_cb, map);
 		}
 		if (status == MAP_CONTAINSANY_FOREACH__FOUND)
-			return 1;
+			return Dee_HAS_YES;
 		if (status == 0)
-			return 0;
-		return -1;
+			return Dee_HAS_NO;
+		return Dee_HAS_ERR;
 	}
 	__builtin_unreachable();
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 
@@ -2863,10 +2863,10 @@ MapDifference_NonEmpty(DeeObject *map, DeeObject *keys) {
 		Dee_ssize_t status;
 		status = DeeObject_InvokeMethodHint(map_operator_foreach_pair, map, &set_containsall_foreach_pair_lhsmap_cb, keys);
 		if (status == SET_CONTAINSALL_FOREACH_PAIR_LHSMAP__MISSING)
-			return 1;
+			return Dee_HAS_YES;
 		if (status == 0)
-			return 0;
-		return -1;
+			return Dee_HAS_NO;
+		return Dee_HAS_ERR;
 	}
 	__builtin_unreachable();
 }
@@ -2876,10 +2876,10 @@ MapDifferenceMapKeys_NonEmpty(DeeObject *map, DeeObject *map2) {
 	Dee_ssize_t status;
 	status = DeeObject_InvokeMethodHint(map_operator_foreach_pair, map, &mapkeys_containsall_foreach_pair_lhsmap_cb, map2);
 	if (status == SET_CONTAINSALL_FOREACH_PAIR_LHSMAP__MISSING)
-		return 1;
+		return Dee_HAS_YES;
 	if (status == 0)
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }
 
 DECL_END

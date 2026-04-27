@@ -24,7 +24,7 @@
 
 #include <deemon/bool.h>            /* DeeBool*, Dee_CONFIG_BOOL_TLS, Dee_False, Dee_True, return_bool */
 #include <deemon/int.h>             /* DeeInt_Type */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/operator-hints.h>  /* DeeNO_*_t, _DeeType_RequireNativeOperator, maketyped__* */
 #include <deemon/super.h>           /*  */
 #include <deemon/system-features.h> /* pow */
@@ -41,18 +41,28 @@
 
 DECL_BEGIN
 
-#define STATIC_ASSERT_HAS_ISERR(v)    \
-	STATIC_ASSERT(Dee_HAS_ISERR(v));  \
-	STATIC_ASSERT(!Dee_HAS_ISYES(v)); \
-	STATIC_ASSERT(!Dee_HAS_ISNO(v))
-#define STATIC_ASSERT_HAS_ISYES(v)    \
-	STATIC_ASSERT(!Dee_HAS_ISERR(v)); \
-	STATIC_ASSERT(Dee_HAS_ISYES(v));  \
-	STATIC_ASSERT(!Dee_HAS_ISNO(v))
-#define STATIC_ASSERT_HAS_ISNO_(v)     \
-	STATIC_ASSERT(!Dee_HAS_ISERR(v)); \
-	STATIC_ASSERT(!Dee_HAS_ISYES(v)); \
-	STATIC_ASSERT(Dee_HAS_ISNO(v))
+#define STATIC_ASSERT_HAS_ISERR(v)          \
+	STATIC_ASSERT(Dee_HAS_ISERR(v));        \
+	STATIC_ASSERT(!Dee_HAS_ISYES(v));       \
+	STATIC_ASSERT(!Dee_HAS_ISNO(v));        \
+	STATIC_ASSERT(Dee_HAS_ISNO_OR_ERR(v));  \
+	STATIC_ASSERT(Dee_HAS_ISYES_OR_ERR(v))
+#define STATIC_ASSERT_HAS_ISYES(v)          \
+	STATIC_ASSERT(!Dee_HAS_ISERR(v));       \
+	STATIC_ASSERT(Dee_HAS_ISYES(v));        \
+	STATIC_ASSERT(!Dee_HAS_ISNO(v));        \
+	STATIC_ASSERT(!Dee_HAS_ISNO_OR_ERR(v)); \
+	STATIC_ASSERT(Dee_HAS_ISYES_OR_ERR(v)); \
+	STATIC_ASSERT(Dee_HAS_ISYES_NO_ERR(v)); \
+	STATIC_ASSERT(!Dee_HAS_ISNO_NO_ERR(v))
+#define STATIC_ASSERT_HAS_ISNO_(v)           \
+	STATIC_ASSERT(!Dee_HAS_ISERR(v));        \
+	STATIC_ASSERT(!Dee_HAS_ISYES(v));        \
+	STATIC_ASSERT(Dee_HAS_ISNO(v));          \
+	STATIC_ASSERT(Dee_HAS_ISNO_OR_ERR(v));   \
+	STATIC_ASSERT(!Dee_HAS_ISYES_OR_ERR(v)); \
+	STATIC_ASSERT(!Dee_HAS_ISYES_NO_ERR(v)); \
+	STATIC_ASSERT(Dee_HAS_ISNO_NO_ERR(v))
 
 /* Assert that Dee_HAS_* and Dee_BOUND_* work */
 STATIC_ASSERT_HAS_ISERR(-77); /* All negative values must be treated as error */
@@ -142,6 +152,21 @@ STATIC_ASSERT(Dee_BOUND_FROMITERNOK((DeeObject *)ITER_DONE) == Dee_BOUND_NO);
 STATIC_ASSERT(Dee_BOUND_FROMITERNOK_MISSING((DeeObject *)NULL) == Dee_BOUND_ERR);
 STATIC_ASSERT(Dee_BOUND_FROMITERNOK_MISSING((DeeObject *)ITER_DONE) == Dee_BOUND_MISSING);
 
+STATIC_ASSERT_HAS_ISERR(Dee_HAS_FROM_eM1_nM2_y0(-1));
+STATIC_ASSERT_HAS_ISYES(Dee_HAS_FROM_eM1_nM2_y0(0));
+STATIC_ASSERT_HAS_ISNO_(Dee_HAS_FROM_eM1_nM2_y0(-2));
+
+STATIC_ASSERT(Dee_HAS_INTO_eM1_nM2_y0(-77) == -1);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_ERR) == -1);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_NO) == -2);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_nM2_y0(Dee_HAS_YES) == 0);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_nM2_y0(77) == 0);
+
+STATIC_ASSERT(Dee_HAS_INTO_eM1_n0_yM2(-77) == -1);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_ERR) == -1);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_NO) == 0);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_YES) == -2);
+STATIC_ASSERT(Dee_HAS_INTO_eM1_n0_yM2(77) == -2);
 #undef STATIC_ASSERT_HAS_ISERR
 #undef STATIC_ASSERT_HAS_ISYES
 #undef STATIC_ASSERT_HAS_ISNO_
@@ -2215,7 +2240,7 @@ DeeObject_BoolInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 #endif /* !Dee_CONFIG_BOOL_TLS */
 	if (tp_self == &DeeBool_Type) {
 		DeeBool_Decref(self);
-		return DeeBool_IsTrue(self) ? 1 : 0;
+		return Dee_HAS_FROMBOOL(DeeBool_IsTrue(self));
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
@@ -2237,13 +2262,13 @@ DeeObject_BoolInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restr
 #endif /* !Dee_CONFIG_BOOL_TLS */
 	if (tp_self == &DeeBool_Type) {
 		DeeBool_Decref(self);
-		return DeeBool_IsTrue(self) ? 1 : 0;
+		return Dee_HAS_FROMBOOL(DeeBool_IsTrue(self));
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
 	result = (*tp_bool)(self);
-	if likely(result >= 0)
+	if likely(!Dee_HAS_ISERR(result))
 		Dee_Decref(self);
 	return result;
 }
@@ -2262,7 +2287,7 @@ DeeObject_BoolOb(DeeObject *__restrict self) {
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
 	result = (*tp_bool)(self);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -2284,7 +2309,7 @@ DeeObject_BoolObInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
 	result = (*tp_bool)(self);
 	Dee_Decref(self);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -2305,7 +2330,7 @@ DeeObject_BoolObInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__res
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
 	result = (*tp_bool)(self);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	Dee_Decref(self);
 	return_bool(result);

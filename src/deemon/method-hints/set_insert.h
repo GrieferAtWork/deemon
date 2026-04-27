@@ -24,9 +24,9 @@
 [[alias(Set.insert)]]
 __set_insert__(key)->?Dbool {
 	int result = CALL_DEPENDENCY(set_insert, self, key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -76,8 +76,10 @@ err:
 }}
 %{$with__seq_contains__and__seq_append = {
 	int contains = CALL_DEPENDENCY(seq_contains, self, key);
-	if (Dee_HAS_ISNO_OR_ERR(contains))
-		return contains;
+	if (Dee_HAS_ISERR(contains))
+		goto err;
+	if (Dee_HAS_ISYES_NO_ERR(contains))
+		return Dee_HAS_NO; /* Already contained */
 	if unlikely(CALL_DEPENDENCY(seq_append, self, key))
 		goto err;
 	return Dee_HAS_YES;

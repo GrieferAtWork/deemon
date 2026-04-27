@@ -33,7 +33,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_ssize_t, return_reference, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_Incref_n, Dee_ssize_t, return_reference, return_reference_ */
 #include <deemon/pair.h>            /* DeeSeq_OfPairInherited */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
@@ -1512,9 +1512,9 @@ string_bytes(String *self, size_t argc,
 	byte_t const *my_bytes;
 	if (argc == 1) {
 		int temp = DeeObject_Bool(argv[0]);
-		if unlikely(temp < 0)
+		if (Dee_HAS_ISERR(temp))
 			goto err;
-		allow_invalid = !!temp;
+		allow_invalid = !!Dee_HAS_ISYES_NO_ERR(temp);
 	} else {
 		DeeArg_Unpack0Or1XOr2XOr3X(err, argc, argv, "bytes",
 		                           &start, UNPuSIZ, DeeObject_AsSize,

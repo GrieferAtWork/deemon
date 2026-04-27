@@ -36,7 +36,7 @@
 #include <deemon/map.h>           /* DeeMap_Type */
 #include <deemon/none-operator.h> /* DeeNone_Operator* */
 #include <deemon/none.h>          /* return_none */
-#include <deemon/object.h>        /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_OBJECT_HEAD_INIT, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
+#include <deemon/object.h>        /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref*, Dee_HAS_ISNO, Dee_HAS_NO, Dee_Incref, Dee_Incref_n, Dee_OBJECT_HEAD_INIT, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
 #include <deemon/pair.h>          /* DeeSeq_OfPairInherited, DeeSeq_OfPairvInherited */
 #include <deemon/seq.h>           /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>        /* DeeSerial*, Dee_seraddr_t */
@@ -2810,7 +2810,7 @@ proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self,
 }
 
 #define DeeObject_CompareLo_S(a, b) \
-	((a) == (b) ? 0 : DeeObject_CmpLoAsBool(a, b))
+	((a) == (b) ? Dee_HAS_NO : DeeObject_CmpLoAsBool(a, b))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_keys_iterator_bool(RangeMapProxyKeysIterator *__restrict self) {
@@ -2825,7 +2825,7 @@ proxy_keys_iterator_bool(RangeMapProxyKeysIterator *__restrict self) {
 	result = DeeObject_CompareLo_S(prvkey, maxkey);
 	Dee_Decref(maxkey);
 	Dee_Decref(prvkey);
-	if (result == 0)
+	if (Dee_HAS_ISNO(result))
 		result = DeeObject_Bool(self->rmpki_base.rmpii_base.rmpi_iter);
 	return result;
 }

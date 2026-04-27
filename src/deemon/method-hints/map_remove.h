@@ -24,7 +24,7 @@
 [[alias(Mapping.remove)]]
 __map_remove__(key)->?Dbool {
 	int result = CALL_DEPENDENCY(map_remove, self, key);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

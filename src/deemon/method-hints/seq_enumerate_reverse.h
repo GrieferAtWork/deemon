@@ -121,9 +121,9 @@ err:
 	for (;;) {
 		DREF DeeObject *item;
 		int size_is_nonzero = DeeObject_Bool(sizeob);
-		if unlikely(size_is_nonzero < 0)
+		if (Dee_HAS_ISERR(size_is_nonzero))
 			goto err_sizeob;
-		if (!size_is_nonzero)
+		if (Dee_HAS_ISNO_NO_ERR(size_is_nonzero))
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob;
@@ -290,9 +290,9 @@ err:
 		} else {
 			size_is_greater_start = DeeObject_Bool(sizeob);
 		}
-		if unlikely(size_is_greater_start < 0)
+		if (Dee_HAS_ISERR(size_is_greater_start))
 			goto err_sizeob_startob;
-		if (!size_is_greater_start)
+		if (Dee_HAS_ISNO_NO_ERR(size_is_greater_start))
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob_startob;

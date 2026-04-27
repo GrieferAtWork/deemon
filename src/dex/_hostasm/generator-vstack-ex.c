@@ -48,7 +48,7 @@
 #include <deemon/mro.h>             /* DeeObject_TFindAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCopy, DeeNone_OperatorCtor */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK */
+#include <deemon/object.h>          /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK */
 #include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeClsMember*, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod_Type, DeeKwClsMethod*, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
 #include <deemon/operator-hints.h>  /* DeeNO_call_kw_t, DeeNO_call_t, DeeType_RequireNativeOperator */
 #include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
@@ -4396,12 +4396,12 @@ fg_vopbool(struct fungen *__restrict self,
 		constval = memval_const_getobj(vtop);
 		if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_BOOL) & METHOD_FCONSTCALL) {
 			int temp = DeeObject_Bool(constval);
-			if unlikely(temp < 0) {
+			if (Dee_HAS_ISERR(temp)) {
 				if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 					goto err;
 				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 			} else {
-				memval_const_setobj_ex(vtop, DeeBool_For(temp), &DeeBool_Type);
+				memval_const_setobj_ex(vtop, DeeBool_For(Dee_HAS_ISYES_NO_ERR(temp)), &DeeBool_Type);
 				return 0;
 			}
 		}
@@ -4491,7 +4491,7 @@ again:
 			DeeObject *constval = memval_const_getobj(vtop);
 			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_BOOL) & METHOD_FCONSTCALL) {
 				int temp = DeeObject_Bool(constval);
-				if likely(temp >= 0) {
+				if (!Dee_HAS_ISERR(temp)) {
 					memval_const_setobj_ex(vtop, DeeBool_For(!temp), &DeeBool_Type);
 					return 0;
 				}

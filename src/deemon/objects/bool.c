@@ -28,7 +28,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_HAS_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString_PrintAscii, DeeString_STR */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
@@ -166,9 +166,9 @@ bool_and(DeeObject *self, DeeObject *other) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_xor(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return_bool(DeeBool_IsTrue_10(self) ^ int_as_01(temp));
+	return_bool(DeeBool_IsTrue_10(self) ^ int_as_01(Dee_HAS_ISYES_NO_ERR(temp)));
 err:
 	return NULL;
 }
@@ -176,9 +176,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_div(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}
@@ -190,9 +190,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_mod(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}
@@ -231,9 +231,9 @@ bool_pow(DeeObject *self, DeeObject *other) {
 	if (DeeBool_IsTrue(self))
 		return_true;
 	temp = DeeObject_Bool(other);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return_bool(!temp);
+	return_bool(Dee_HAS_ISNO_NO_ERR(temp));
 err:
 	return NULL;
 }
@@ -308,9 +308,9 @@ bool_compare_eq(DeeObject *self, DeeObject *other) {
 		return Dee_COMPARE_NE;
 	}
 	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (DeeBool_IsTrue_10(self) == int_as_01(error))
+	if (DeeBool_IsTrue_10(self) == int_as_01(Dee_HAS_ISYES_NO_ERR(error)))
 		return Dee_COMPARE_EQ;
 	return Dee_COMPARE_NE;
 err:
@@ -325,9 +325,10 @@ bool_compare(DeeObject *self, DeeObject *other) {
 		                   bool_forcompare(other));
 	}
 	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	Dee_return_compare(DeeBool_IsTrue_10(self), int_as_01(error));
+	Dee_return_compare(DeeBool_IsTrue_10(self),
+	                   int_as_01(Dee_HAS_ISYES_NO_ERR(error)));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -335,9 +336,10 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(DeeBool_IsTrue_10(self) == int_as_01(error));
+	return_bool(DeeBool_IsTrue_10(self) ==
+	            int_as_01(Dee_HAS_ISYES_NO_ERR(error)));
 err:
 	return NULL;
 }
@@ -345,9 +347,10 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(DeeBool_IsTrue_10(self) != int_as_01(error));
+	return_bool(DeeBool_IsTrue_10(self) !=
+	            int_as_01(Dee_HAS_ISYES_NO_ERR(error)));
 err:
 	return NULL;
 }
@@ -372,9 +375,9 @@ bool_gr(DeeObject *self, DeeObject *other) {
 	if (!DeeBool_IsTrue(self))
 		return_false; /* false > X --> false */
 	other_bool = DeeObject_Bool(other); /* true > X --> !X */
-	if unlikely(other_bool < 0)
+	if (Dee_HAS_ISERR(other_bool))
 		goto err;
-	return_bool(!other_bool);
+	return_bool(Dee_HAS_ISNO_NO_ERR(other_bool));
 err:
 	return NULL;
 }
@@ -385,9 +388,9 @@ bool_ge(DeeObject *self, DeeObject *other) {
 	if (DeeBool_IsTrue(self))
 		return_true; /* true >= X --> true */
 	error = DeeObject_Bool(other);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(!error); /* false >= X --> !X */
+	return_bool(Dee_HAS_ISNO_NO_ERR(error)); /* false >= X --> !X */
 err:
 	return NULL;
 }

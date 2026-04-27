@@ -34,7 +34,7 @@
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
@@ -736,7 +736,7 @@ object_hasattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	result = DeeObject_HasAttr(self, name);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:
@@ -815,9 +815,9 @@ object_not(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int temp;
 	DeeArg_Unpack0(err, argc, argv, "__not__");
 	temp = DeeObject_Bool(self);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return_bool(!temp);
+	return_bool(Dee_HAS_ISNO_NO_ERR(temp));
 err:
 	return NULL;
 }

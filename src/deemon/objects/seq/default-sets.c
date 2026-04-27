@@ -30,7 +30,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Clear, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
@@ -155,7 +155,7 @@ invset_printrepr(SetInversion *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invset_contains(SetInversion *self, DeeObject *key) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, self->si_set, key);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(!result);
 err:
@@ -474,10 +474,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_set_in2nd(SetUnionIterator *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		return newval;
 	SetUnionIterator_LockWrite(self);
-	self->sui_in2nd = !!newval;
+	self->sui_in2nd = !!Dee_HAS_ISYES_NO_ERR(newval);
 	SetUnionIterator_LockEndWrite(self);
 	return 0;
 }
@@ -595,10 +595,10 @@ read_from_iter:
 			 * If it is, don't yield it now, but yield it later, as
 			 * part of the enumeration of the second set. */
 			temp = DeeObject_InvokeMethodHint(seq_contains, self->sui_union->su_b, result);
-			if (temp != 0) {
+			if (Dee_HAS_ISYES_OR_ERR(temp)) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if unlikely(temp < 0) {
+				if (Dee_HAS_ISERR(temp)) {
 					result = NULL;
 					goto done;
 				}
@@ -840,9 +840,9 @@ su_contains(SetUnion *self, DeeObject *item) {
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if (temp)
+	if (Dee_HAS_ISYES_NO_ERR(temp))
 		goto done;
 	Dee_Decref_unlikely(result);
 
@@ -867,10 +867,11 @@ su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
 	contains = DeeObject_InvokeMethodHint(seq_contains, data->feicid_seq, elem);
-	if unlikely(contains < 0)
-		goto err;
-	if (contains)
+	if (Dee_HAS_ISYES_OR_ERR(contains)) {
+		if (Dee_HAS_ISERR(contains))
+			goto err;
 		return 0; /* Don't enumerate if contained in caller-set object. */
+	}
 	return (*data->feicid_proc)(data->feicid_arg, elem);
 err:
 	return -1;
@@ -882,13 +883,9 @@ su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
 	contains = DeeObject_InvokeMethodHint(seq_contains, data->feicid_seq, elem);
-	if unlikely(contains < 0)
-		goto err;
-	if (!contains)
-		return 0; /* Don't enumerate if not contained in caller-set object. */
+	if (Dee_HAS_ISNO_OR_ERR(contains))
+		return contains; /* Don't enumerate if not contained in caller-set object. */
 	return (*data->feicid_proc)(data->feicid_arg, elem);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1064,10 +1061,10 @@ read_from_iter:
 			                                  is_second ? self->ssd_set->ssd_b
 			                                            : self->ssd_set->ssd_a,
 			                                  result);
-			if (temp != 0) {
+			if (Dee_HAS_ISYES_OR_ERR(temp)) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
-				if unlikely(temp < 0) {
+				if (Dee_HAS_ISERR(temp)) {
 					result = NULL;
 					goto done;
 				}
@@ -1217,12 +1214,13 @@ ssd_contains(SetSymmetricDifference *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int cona, conb;
 	cona = DeeObject_InvokeMethodHint(seq_contains, self->ssd_a, item);
-	if unlikely(cona < 0)
+	if (Dee_HAS_ISERR(cona))
 		goto err;
 	conb = DeeObject_InvokeMethodHint(seq_contains, self->ssd_b, item);
-	if unlikely(conb < 0)
+	if (Dee_HAS_ISERR(conb))
 		goto err;
-	result = DeeBool_For(!!cona ^ !!conb);
+	result = DeeBool_For(!!Dee_HAS_ISYES(cona) ^
+	                     !!Dee_HAS_ISYES(conb));
 	Dee_Incref(result);
 done:
 	return result;
@@ -1559,9 +1557,9 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if (!temp)
+	if (Dee_HAS_ISNO_NO_ERR(temp))
 		goto done;
 	Dee_Decref(result);
 
@@ -1822,8 +1820,8 @@ sd_contains(SetDifference *self, DeeObject *item) {
 
 	/* Check the primary set for the object. */
 	temp = DeeObject_InvokeMethodHint(seq_contains, self->sd_a, item);
-	if (temp <= 0) {
-		if unlikely(temp < 0)
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return_false;
 	}
@@ -1832,7 +1830,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
 	temp = DeeObject_InvokeMethodHint(seq_contains, self->sd_b, item);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
 	return_bool(!temp);
 err:
@@ -1959,8 +1957,8 @@ INTERN DeeTypeObject SetDifference_Type = {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_containsany_foreach_lhs_cb(void *arg, DeeObject *key) {
 	int is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
-	if (is_contained != 0) {
-		if unlikely(is_contained < 0)
+	if (Dee_HAS_ISYES_OR_ERR(is_contained)) {
+		if (Dee_HAS_ISERR(is_contained))
 			goto err;
 		return SET_CONTAINSANY_FOREACH_LHS__FOUND;
 	}
@@ -1989,8 +1987,8 @@ set_containsany_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_containsall_foreach_lhs_cb(void *arg, DeeObject *key) {
 	int is_contained = DeeObject_InvokeMethodHint(seq_contains, (DeeObject *)arg, key);
-	if (is_contained <= 0) {
-		if unlikely(is_contained < 0)
+	if (Dee_HAS_ISNO_OR_ERR(is_contained)) {
+		if (Dee_HAS_ISERR(is_contained))
 			goto err;
 		return SET_CONTAINSALL_FOREACH_LHS__MISSING;
 	}

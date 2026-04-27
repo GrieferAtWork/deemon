@@ -36,7 +36,7 @@
 #include <deemon/int.h>                /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FESCAPED */
 #include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_HAS_*, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
@@ -576,9 +576,9 @@ done:
 		int newval, result = -1;                                                                                      \
 		struct TPPKeyword *item;                                                                                      \
 		newval = DeeObject_Bool(value);                                                                               \
-		if unlikely(newval < 0)                                                                                       \
+		if (Dee_HAS_ISERR(newval))                                                                            \
 			goto done;                                                                                                \
-		if (!newval)                                                                                                  \
+		if (Dee_HAS_ISNO_NO_ERR(newval))                                                                              \
 			return keyword_del_##name(self);                                                                          \
 		if (COMPILER_BEGIN(self->ci_compiler))                                                                        \
 			goto done;                                                                                                \
@@ -1145,7 +1145,7 @@ err:
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                 \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
@@ -1157,7 +1157,7 @@ err:
 	err:                                                               \
 		return NULL;                                                   \
 	}                                                                  \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                      \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                             \
 	lexer_del_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
 			goto err;                                                  \
@@ -1167,15 +1167,15 @@ err:
 	err:                                                               \
 		return -1;                                                     \
 	}                                                                  \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                          \
 	lexer_set_##name(DeeCompilerWrapperObject *self,                   \
 	                 DeeObject *value) {                               \
 		int newval = DeeObject_Bool(value);                            \
-		if unlikely(newval < 0)                                        \
+		if (Dee_HAS_ISERR(newval))                             \
 			goto err;                                                  \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
 			goto err;                                                  \
-		if (newval) {                                                  \
+		if (Dee_HAS_ISYES_NO_ERR(newval)) {                            \
 			TPPLexer_Current->l_flags |= flag;                         \
 		} else {                                                       \
 			TPPLexer_Current->l_flags &= ~flag;                        \
@@ -4117,9 +4117,8 @@ file_setdisallowguard(DeeCompilerItemObject *__restrict self,
                       DeeObject *__restrict value) {
 	struct TPPFile *file;
 	int result = -1;
-	int newval;
-	newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	int newval = DeeObject_Bool(value);
+	if (Dee_HAS_ISERR(newval))
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4128,7 +4127,7 @@ file_setdisallowguard(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval) {
+			if (Dee_HAS_ISYES_NO_ERR(newval)) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NOGUARD;
 			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_NOGUARD;
@@ -4186,9 +4185,8 @@ file_setissystemheader(DeeCompilerItemObject *__restrict self,
                        DeeObject *__restrict value) {
 	struct TPPFile *file;
 	int result = -1;
-	int newval;
-	newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	int newval = DeeObject_Bool(value);
+	if (Dee_HAS_ISERR(newval))
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4197,7 +4195,7 @@ file_setissystemheader(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval) {
+			if (Dee_HAS_ISYES_NO_ERR(newval)) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_SYSHEADER;
 			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_SYSHEADER;
@@ -4255,9 +4253,8 @@ file_setnonblocking(DeeCompilerItemObject *__restrict self,
                     DeeObject *__restrict value) {
 	struct TPPFile *file;
 	int result = -1;
-	int newval;
-	newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	int newval = DeeObject_Bool(value);
+	if (Dee_HAS_ISERR(newval))
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4266,7 +4263,7 @@ file_setnonblocking(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_TEXT) {
 			err_not_a_textfile(file);
 		} else {
-			if (newval) {
+			if (Dee_HAS_ISYES_NO_ERR(newval)) {
 				file->f_textfile.f_flags |= TPP_TEXTFILE_FLAG_NONBLOCK;
 			} else {
 				file->f_textfile.f_flags &= ~TPP_TEXTFILE_FLAG_NONBLOCK;
@@ -4480,9 +4477,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setallowselfexpansion(DeeCompilerItemObject *__restrict self,
                            DeeObject *__restrict value) {
 	struct TPPFile *file;
-	int newval, result = -1;
-	newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	int result = -1;
+	int newval = DeeObject_Bool(value);
+	if (Dee_HAS_ISERR(newval))
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4491,7 +4488,7 @@ file_setallowselfexpansion(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
 		    !(file->f_macro.m_flags & TPP_MACROFILE_KIND_FUNCTION)) {
 			err_not_a_functionmacrofile(file);
-		} else if (newval) {
+		} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 			file->f_macro.m_flags |= TPP_MACROFILE_FLAG_FUNC_SELFEXPAND;
 		} else {
 			file->f_macro.m_flags &= ~TPP_MACROFILE_FLAG_FUNC_SELFEXPAND;
@@ -4548,9 +4545,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setkeepargumentspace(DeeCompilerItemObject *__restrict self,
                           DeeObject *__restrict value) {
 	struct TPPFile *file;
-	int newval, result = -1;
-	newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	int result = -1;
+	int newval = DeeObject_Bool(value);
+	if (Dee_HAS_ISERR(newval))
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
@@ -4559,7 +4556,7 @@ file_setkeepargumentspace(DeeCompilerItemObject *__restrict self,
 		if (file->f_kind != TPPFILE_KIND_MACRO ||
 		    !(file->f_macro.m_flags & TPP_MACROFILE_KIND_FUNCTION)) {
 			err_not_a_functionmacrofile(file);
-		} else if (newval) {
+		} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 			file->f_macro.m_flags |= TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC;
 		} else {
 			file->f_macro.m_flags &= ~TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC;

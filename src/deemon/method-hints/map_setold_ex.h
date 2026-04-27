@@ -157,8 +157,8 @@ __map_setold_ex__.map_setold_ex([[nonnull]] DeeObject *self,
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
 	if (ITER_ISOK(old_value)) {
 		int status = CALL_DEPENDENCY(map_setold, self, key, value);
-		if unlikely(status <= 0) {
-			if unlikely(status < 0)
+		if unlikely(Dee_HAS_ISNO_OR_ERR(status)) {
+			if (Dee_HAS_ISERR(status))
 				goto err_old_value;
 			Dee_Decref(old_value);
 			return ITER_DONE;
@@ -227,9 +227,9 @@ err:
 	if unlikely(temp)
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_status1;
-	if (temp) {
+	if (Dee_HAS_ISYES_NO_ERR(temp)) {
 		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
 		return ITER_DONE;
 	}

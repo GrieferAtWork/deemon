@@ -31,7 +31,7 @@
 #include <deemon/int.h>       /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
 #include <deemon/kwds.h>      /* DeeKw_ForceWrap */
 #include <deemon/none.h>      /* DeeNone_Check, DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t */
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/string.h>    /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
 #include <deemon/super.h>     /* DeeSuper* */
 #include <deemon/tuple.h>     /* DeeTuple* */
@@ -678,9 +678,9 @@ err_list_items_count:
 #ifndef DEFINE_sfa_skipexpr
 			{
 				int asbool = DeeObject_BoolInherited(result);
-				if unlikely(asbool < 0)
+				if (Dee_HAS_ISERR(asbool))
 					goto err;
-				result = DeeBool_For(!asbool);
+				result = DeeBool_For(Dee_HAS_ISNO_NO_ERR(asbool));
 				Dee_Incref(result);
 			}
 #endif /* !DEFINE_sfa_skipexpr */
@@ -1365,7 +1365,7 @@ LOCAL_sfa_evalland_operand(struct string_format_advanced *__restrict self LOCAL_
 			goto err;
 #else /* DEFINE_sfa_skipexpr */
 		lhs_bool = DeeObject_BoolInherited(lhs);
-		if unlikely(lhs_bool < 0)
+		if (Dee_HAS_ISERR(lhs_bool))
 			goto err;
 		if (!lhs_bool) {
 			if unlikely(sfa_skipor(self))
@@ -1376,9 +1376,9 @@ LOCAL_sfa_evalland_operand(struct string_format_advanced *__restrict self LOCAL_
 			if unlikely(!lhs)
 				goto err;
 			lhs_bool = DeeObject_BoolInherited(lhs);
-			if unlikely(lhs_bool < 0)
+			if (Dee_HAS_ISERR(lhs_bool))
 				goto err;
-			lhs = DeeBool_New(lhs_bool);
+			lhs = DeeBool_New(Dee_HAS_ISYES_NO_ERR(lhs_bool));
 		}
 #endif /* !DEFINE_sfa_skipexpr */
 	} while (self->sfa_exprtok == SFA_TOK_LAND);
@@ -1398,9 +1398,9 @@ LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__
 			goto err;
 #else /* DEFINE_sfa_skipexpr */
 		lhs_bool = DeeObject_BoolInherited(lhs);
-		if unlikely(lhs_bool < 0)
+		if (Dee_HAS_ISERR(lhs_bool))
 			goto err;
-		if (lhs_bool) {
+		if (Dee_HAS_ISYES_NO_ERR(lhs_bool)) {
 			if unlikely(sfa_skiplor(self))
 				goto err;
 			lhs = DeeBool_NewTrue();
@@ -1409,9 +1409,9 @@ LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__
 			if unlikely(!lhs)
 				goto err;
 			lhs_bool = DeeObject_BoolInherited(lhs);
-			if unlikely(lhs_bool < 0)
+			if (Dee_HAS_ISERR(lhs_bool))
 				goto err;
-			lhs = DeeBool_New(lhs_bool);
+			lhs = DeeBool_New(Dee_HAS_ISYES_NO_ERR(lhs_bool));
 		}
 #endif /* !DEFINE_sfa_skipexpr */
 	} while (self->sfa_exprtok == SFA_TOK_LOR);
@@ -1427,7 +1427,7 @@ LOCAL_sfa_evalcond_operand(struct string_format_advanced *__restrict self LOCAL_
 	ASSERT(self->sfa_exprtok == '?');
 #ifndef DEFINE_sfa_skipexpr
 	lhs_bool = DeeObject_BoolInherited(lhs);
-	if unlikely(lhs_bool < 0)
+	if (Dee_HAS_ISERR(lhs_bool))
 		goto err;
 #endif /* !DEFINE_sfa_skipexpr */
 	sfa_yield(self);
@@ -1440,7 +1440,7 @@ LOCAL_sfa_evalcond_operand(struct string_format_advanced *__restrict self LOCAL_
 	sfa_yield(self);
 	return sfa_skipcond(self);
 #else /* DEFINE_sfa_skipexpr */
-	if (lhs_bool) {
+	if (Dee_HAS_ISYES_NO_ERR(lhs_bool)) {
 		result = sfa_evallor(self);
 		if unlikely(!result)
 			goto err;

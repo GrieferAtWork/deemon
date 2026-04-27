@@ -42,7 +42,7 @@
 #include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/module.h>             /* Dee_MODULE_SYMBOL_EQUALS */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/seq.h>                /* DeeSeq_AsHeapVector, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bcmpc, strlen */
@@ -915,14 +915,14 @@ ast_setloopisforeach(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		if (!me->a_loop.l_iter) {
 			DeeRT_ErrUnboundAttrCStr(self, "loopiter");
 			result = -1;
@@ -964,14 +964,14 @@ ast_setloopispostcond(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FLOOP_POSTCOND;
 	} else {
 		me->a_flag &= ~AST_FLOOP_POSTCOND;
@@ -1008,14 +1008,14 @@ ast_setloopisunlikely(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FLOOP_UNLIKELY;
 	} else {
 		me->a_flag &= ~AST_FLOOP_UNLIKELY;
@@ -1648,14 +1648,14 @@ ast_setloopctlisbreak(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag &= ~AST_FLOOPCTL_CON;
 	} else {
 		me->a_flag |= AST_FLOOPCTL_CON;
@@ -1957,14 +1957,14 @@ ast_setconditionalisbool(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FCOND_BOOL;
 	} else {
 		me->a_flag &= ~AST_FCOND_BOOL;
@@ -2001,14 +2001,14 @@ ast_setconditionalislikely(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FCOND_LIKELY;
 	} else {
 		me->a_flag &= ~AST_FCOND_LIKELY;
@@ -2045,14 +2045,14 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FCOND_UNLIKELY;
 	} else {
 		me->a_flag &= ~AST_FCOND_UNLIKELY;
@@ -2137,14 +2137,14 @@ ast_setboolisnegated(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_BOOL) {
 		result = err_invalid_ast_type(self, AST_BOOL);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_flag |= AST_FBOOL_NEGATE;
 	} else {
 		me->a_flag &= ~AST_FBOOL_NEGATE;
@@ -2809,14 +2809,14 @@ ast_setoperatorispost(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FPOSTOP;
 	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FPOSTOP;
@@ -2853,14 +2853,14 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FVARARGS;
 	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FVARARGS;
@@ -2897,14 +2897,14 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FMAYBEPFX;
 	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FMAYBEPFX;
@@ -2941,14 +2941,14 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 	int result = 0;
 	struct ast *me;
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR) {
 		result = err_invalid_ast_type(self, AST_OPERATOR);
-	} else if (newval) {
+	} else if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		me->a_operator.o_exflag |= AST_OPERATOR_FDONTOPT;
 	} else {
 		me->a_operator.o_exflag &= ~AST_OPERATOR_FDONTOPT;

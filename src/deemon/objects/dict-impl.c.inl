@@ -34,7 +34,7 @@
 #include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK */
 #include <deemon/hashset.h>         /* DeeHashSet_*, Dee_hashset_item, _DeeHashSet_* */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init */
 #include <deemon/operator-hints.h>  /* DeeType_HasNativeOperator */
 #include <deemon/rodict.h>          /* DeeRoDict* */
 #include <deemon/roset.h>           /* DeeRoSet* */
@@ -1777,9 +1777,9 @@ LOCAL_dict_init(LOCAL_Dict *__restrict self,
 		if unlikely(DeeObject_AsSize(argv[0], &hint))
 			goto err;
 		weak = DeeObject_Bool(argv[1]);
-		if unlikely(weak < 0)
+		if (Dee_HAS_ISERR(weak))
 			goto err;
-		LOCAL_dict_initfrom_hint(self, hint, !!weak);
+		LOCAL_dict_initfrom_hint(self, hint, !!Dee_HAS_ISYES_NO_ERR(weak));
 		return 0;
 	}	break;
 

@@ -37,7 +37,7 @@
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>               /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_HAS_ERR, Dee_HAS_NO, Dee_Incref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutFuncPtr, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
@@ -501,6 +501,13 @@ DeeFile_PWriteAll(DeeObject *self,
 	return result;
 }
 
+/* Check if the given file is an interactive device.
+ * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
+ *       invokes `self.isatty()' without arguments, casting the return value to bool.
+ *       This function is used to implement the auto-buffering mode of `File.Buffer'
+ * @return: >  0 (Dee_HAS_YES) : The file is a TTY
+ * @return: == 0 (Dee_HAS_NO)  : The file isn't a TTY
+ * @return: <  0 (Dee_HAS_ERR) : An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
@@ -520,8 +527,8 @@ err_call:
 	 *           different level. */
 	if (DeeError_Catch(&DeeError_AttributeError) ||
 	    DeeError_Catch(&DeeError_NotImplemented))
-		return 0;
-	return -1;
+		return Dee_HAS_NO;
+	return Dee_HAS_ERR;
 }
 
 /* Return the system file descriptor of the given file, or throw

@@ -31,7 +31,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject, DeeSeq_OfPair */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
@@ -583,7 +583,7 @@ so_mh_seq_any_with_range(SeqOne *__restrict self,
                          size_t start, size_t end) {
 	if (start == 0 && end >= 1)
 		return so_mh_seq_any((ProxyObject *)self);
-	return 0;
+	return Dee_HAS_NO;
 }
 
 #define so_mh_seq_all_with_key    so_mh_seq_any_with_key
@@ -595,7 +595,7 @@ so_mh_seq_any_with_key(SeqOne *self, DeeObject *key) {
 		goto err;
 	return DeeObject_BoolInherited(keyed);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 #define so_mh_seq_all_with_range_and_key    so_mh_seq_any_with_range_and_key
@@ -605,7 +605,7 @@ so_mh_seq_any_with_range_and_key(SeqOne *self, size_t start,
                                  size_t end, DeeObject *key) {
 	if (start == 0 && end >= 1)
 		return so_mh_seq_any_with_key(self, key);
-	return 0;
+	return Dee_HAS_NO;
 }
 
 #define so_mh_seq_max          so_mh_seq_min
@@ -748,9 +748,9 @@ so_mh_seq_contains_with_range_and_key(SeqOne *self, DeeObject *item,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 so_mh_seq_locate(SeqOne *self, DeeObject *match, DeeObject *def) {
 	int matches = so_mh_seq_any_with_key(self, match);
-	if unlikely(matches < 0)
+	if (Dee_HAS_ISERR(matches))
 		goto err;
-	if (matches)
+	if (Dee_HAS_ISYES_NO_ERR(matches))
 		def = self->so_item;
 	return_reference(def);
 err:
@@ -762,9 +762,9 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 so_mh_seq_locate_with_range(SeqOne *self, DeeObject *match,
                             size_t start, size_t end, DeeObject *def) {
 	int matches = so_mh_seq_any_with_range_and_key(self, start, end, match);
-	if unlikely(matches < 0)
+	if (Dee_HAS_ISERR(matches))
 		goto err;
-	if (matches)
+	if (Dee_HAS_ISYES_NO_ERR(matches))
 		def = self->so_item;
 	return_reference(def);
 err:

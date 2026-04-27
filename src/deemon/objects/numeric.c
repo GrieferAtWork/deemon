@@ -29,7 +29,7 @@
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/numeric.h>            /*  */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_HAS_*, Dee_TYPE, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */
@@ -635,7 +635,7 @@ DeeObject_IsFloat(DeeObject *__restrict self) {
 		goto err;
 	return DeeObject_BoolInherited(attr);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -646,9 +646,9 @@ numeric_get_trunc(DeeObject *__restrict self) {
 	/* >> if (!this.isfloat)
 	 * >>     return this; */
 	error = DeeObject_IsFloat(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (!error)
+	if (Dee_HAS_ISNO_NO_ERR(error))
 		return_reference_(self);
 
 	/* >> local res = (int from deemon)this; */
@@ -659,9 +659,9 @@ numeric_get_trunc(DeeObject *__restrict self) {
 	/* >> if (this == res)
 	 * >>     return this; */
 	error = DeeObject_CmpEqAsBool(self, res);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err_res;
-	if (error) {
+	if (Dee_HAS_ISYES_NO_ERR(error)) {
 		Dee_Decref(res);
 		return_reference_(self);
 	}

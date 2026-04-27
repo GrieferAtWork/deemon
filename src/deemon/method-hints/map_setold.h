@@ -24,9 +24,9 @@
 [[alias(Mapping.setold)]]
 __map_setold__(key,value)->?Dbool {
 	int result = CALL_DEPENDENCY(map_setold, self, key, value);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -34,41 +34,34 @@ err:
 
 /* Override the value of a pre-existing key
  * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
- * @return: 1 :   The value of `key' was set to `value'
- * @return: 0 :   The given `key' doesn't exist (nothing was updated)
- * @return: -1:   Error */
+ * @return: Dee_HAS_YES: The value of `key' was set to `value'
+ * @return: Dee_HAS_NO:  The given `key' doesn't exist (nothing was updated)
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __map_setold__.map_setold([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key,
                           [[nonnull]] DeeObject *value)
 %{unsupported(auto)}
-%{$none = 0}
+%{$none = Dee_HAS_NO}
 %{$empty = "default__map_setold__unsupported"}
 %{$with__map_setold_ex = {
 	DREF DeeObject *old_value;
 	old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
-	if unlikely(!old_value)
-		goto err;
-	if (old_value == ITER_DONE)
-		return 0;
+	if (!ITER_ISOK(old_value))
+		return Dee_HAS_FROMITERNOK(old_value);
 	Dee_Decref(old_value);
-	return 1;
-err:
-	return -1;
+	return Dee_HAS_YES;
 }}
 %{$with__map_operator_trygetitem__and__map_operator_setitem = {
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
-	if (!ITER_ISOK(old_value)) {
-		if unlikely(!old_value)
-			goto err;
-		return 0; /* Key doesn't exist */
-	}
+	if (!ITER_ISOK(old_value))
+		return Dee_HAS_FROMITERNOK(old_value); /* Error, or key doesn't exist */
 	Dee_Decref(old_value);
 	if unlikely(CALL_DEPENDENCY(map_operator_setitem, self, key, value))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[2];
@@ -79,7 +72,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 map_setold = {

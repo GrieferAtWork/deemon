@@ -194,11 +194,7 @@ seq_removeif_with_removeall_item_compare_eq(DeeObject *self, DeeObject *should_r
 	int result;
 	(void)self;
 	result = DeeObject_Bool(should_result);
-	if unlikely(result < 0)
-		goto err;
-	return result ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
+	return Dee_COMPARE_EQ_FROMHAS(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

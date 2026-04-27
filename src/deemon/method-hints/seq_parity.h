@@ -85,9 +85,9 @@ __seq_parity__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?D
 		         : CALL_DEPENDENCY(seq_parity_with_range, self, args.start, args.end);
 	}
 check_result:
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}
@@ -97,8 +97,10 @@ err:
 #define DEFINED_seq_parity_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_parity_foreach_cb(void *arg, DeeObject *item) {
+	int temp;
 	(void)arg;
-	return (Dee_ssize_t)DeeObject_Bool(item);
+	temp = DeeObject_Bool(item);
+	return (Dee_ssize_t)Dee_HAS_INTO_eM1_n0_y1(temp);
 }
 #endif /* !DEFINED_seq_parity_foreach_cb */
 )]
@@ -106,14 +108,14 @@ seq_parity_foreach_cb(void *arg, DeeObject *item) {
 [[wunused]]
 int __seq_parity__.seq_parity([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_count = {
 	size_t count = CALL_DEPENDENCY(seq_count, self, Dee_True);
 	if unlikely(count == (size_t)-1)
 		goto err;
-	return count & 1;
+	return Dee_HAS_FROMBOOL(count & 1);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -121,14 +123,14 @@ err:
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 2)
 		foreach_status &= 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_y1((int)foreach_status);
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 %[define(DEFINE_seq_parity_foreach_with_key_cb =
@@ -136,11 +138,13 @@ err:
 #define DEFINED_seq_parity_foreach_with_key_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_parity_foreach_with_key_cb(void *arg, DeeObject *item) {
+	int temp;
 	(void)arg;
 	item = DeeObject_Call((DeeObject *)arg, 1, &item);
 	if unlikely(!item)
 		goto err;
-	return (Dee_ssize_t)DeeObject_BoolInherited(item);
+	temp = DeeObject_BoolInherited(item);
+	return (Dee_ssize_t)Dee_HAS_INTO_eM1_n0_y1(temp);
 err:
 	return -1;
 }
@@ -151,14 +155,14 @@ err:
 int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_with_key_cb, key);
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 2)
 		foreach_status &= 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_y1((int)foreach_status);
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[3];
@@ -170,7 +174,7 @@ int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 %[define(DEFINE_seq_parity_enumerate_cb =
@@ -191,14 +195,14 @@ seq_parity_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_parity__.seq_parity_with_range([[nonnull]] DeeObject *__restrict self,
                                          size_t start, size_t end)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_count_with_range = {
 	size_t count = CALL_DEPENDENCY(seq_count_with_range, self, Dee_True, start, end);
 	if unlikely(count == (size_t)-1)
 		goto err;
-	return count & 1;
+	return Dee_HAS_FROMBOOL(count & 1);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -206,14 +210,14 @@ err:
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 2)
 		foreach_status &= 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_y1((int)foreach_status);
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 %[define(DEFINE_seq_parity_enumerate_with_key_cb =
@@ -235,21 +239,21 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
                                                  size_t start, size_t end,
                                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_with_key_cb, key, start, end);
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 2)
 		foreach_status &= 1;
-	return (int)foreach_status;
+	return Dee_HAS_FROM_eM1_n0_y1((int)foreach_status);
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_parity = {

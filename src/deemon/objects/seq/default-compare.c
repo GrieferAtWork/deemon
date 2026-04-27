@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h> /* DREF, DeeObject, DeeObject_BoolInherited, DeeObject_TryCompareEq, Dee_COMPARE_ISERR, Dee_COMPARE_ISNE, Dee_Decref, Dee_ssize_t, ITER_DONE */
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_BoolInherited, DeeObject_TryCompareEq, Dee_COMPARE_ISERR, Dee_COMPARE_ISNE, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_ssize_t, ITER_DONE */
 
 #include "default-compare.h"
 
@@ -41,9 +41,9 @@ set_compare__lhs_foreach__rhs__cb(void *arg, DeeObject *lhs_elem) {
 	if unlikely(!contains_ob)
 		goto err;
 	contains = DeeObject_BoolInherited(contains_ob);
-	if unlikely(contains < 0)
+	if (Dee_HAS_ISERR(contains))
 		goto err;
-	if (!contains)
+	if (Dee_HAS_ISNO_NO_ERR(contains))
 		return -2; /* Not contained */
 	return 1;
 err:

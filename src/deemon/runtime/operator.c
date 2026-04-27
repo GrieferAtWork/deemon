@@ -29,7 +29,7 @@
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_Decrefv, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, return_reference_ */
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_Decrefv, Dee_HAS_ERR, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
@@ -1083,7 +1083,7 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorUInt32, DeeObject_InplaceXo
 			goto err;                                      \
 		return DeeObject_BoolInherited(result);            \
 	err:                                                   \
-		return -1;                                         \
+		return Dee_HAS_ERR;                                \
 	}
 DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpEqAsBool, DeeObject_CmpEq)
 DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpNeAsBool, DeeObject_CmpNe)

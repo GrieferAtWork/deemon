@@ -890,7 +890,7 @@ cdict_bounditem(CachedDict *self, DeeObject *key) {
 	DREF DeeObject *value;
 	Dee_hash_t hash = DeeObject_Hash(key);
 	int result = cdict_iscached(self, key, hash);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	if (result)
 		return Dee_BOUND_YES;

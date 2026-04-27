@@ -39,7 +39,7 @@
 #include <deemon/map.h>               /* DeeMap_Type */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_F* */
 #include <deemon/none.h>              /* DeeNone_Type */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_DecrefNokill, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_DecrefNokill, Dee_HAS_ISERR, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/rodict.h>            /* DeeRoDict_Type */
 #include <deemon/roset.h>             /* DeeRoSet_Type */
 #include <deemon/seq.h>               /* DeeSeq_Type */
@@ -1209,7 +1209,7 @@ INTERN WUNUSED NONNULL((1)) int
 	if (self->a_type == AST_CONSTEXPR &&
 	    !(optimizer_flags & OPTIMIZE_FNOPREDICT)) {
 		int result = DeeObject_Bool(self->a_constexpr);
-		if unlikely(result < 0)
+		if (Dee_HAS_ISERR(result))
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 		return result;
 	}

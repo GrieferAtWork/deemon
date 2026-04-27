@@ -30,7 +30,7 @@
 #include "../error-rt.h"        /* DeeRT_ErrCannotWeakReference, DeeRT_ErrEmptyWeakReference */
 #include "../error.h"           /* DeeError_Current */
 #include "../none.h"            /* DeeNone_Check */
-#include "../object.h"          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_Incref_traced, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, _Dee_HashSelectC */
+#include "../object.h"          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ISERR, Dee_Decref*, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_Incref_traced, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, _Dee_HashSelectC */
 #include "../super.h"           /* DeeSuper_New, DeeSuper_Of */
 #include "../system-features.h" /* pow, strlen */
 #include "../type.h"            /* DeeObject_* */
@@ -3078,7 +3078,7 @@ public:
 	}
 
 	WUNUSED bool istrue() {
-		return throw_if_negative(DeeObject_Bool(this)) != 0;
+		return !!Dee_HAS_ISYES_NO_ERR(throw_if_negative(DeeObject_Bool(this)));
 	}
 	WUNUSED bool isfalse() {
 		return !istrue();

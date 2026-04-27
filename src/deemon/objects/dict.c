@@ -37,7 +37,7 @@
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
 #include <deemon/none.h>               /* Dee_None, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeqPair_ELEM, DeeSeq_* */
 #include <deemon/rodict.h>             /* DeeRoDict* */
 #include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type */
@@ -1412,7 +1412,7 @@ again_index_start:
 		if unlikely(!should_result_ob)
 			goto err_key_and_value;
 		should_result = DeeObject_BoolInherited(should_result_ob);
-		if unlikely(should_result < 0)
+		if (Dee_HAS_ISERR(should_result))
 			goto err_key_and_value;
 		ASSERT(DeeSeqPair_ELEM(key_and_value)[0] == item_key);
 		ASSERT(DeeSeqPair_ELEM(key_and_value)[1] == item_value);
@@ -1429,7 +1429,7 @@ again_index_start:
 			Dee_Decref_unlikely(DeeSeqPair_ELEM(key_and_value)[1]);
 			DBG_memset(DeeSeqPair_ELEM(key_and_value), 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
-		if (!should_result) {
+		if (Dee_HAS_ISNO_NO_ERR(should_result)) {
 			++start;
 			continue;
 		}

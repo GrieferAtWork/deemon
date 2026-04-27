@@ -25,7 +25,7 @@
 /************************************************************************/
 __set_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(set_operator_bool, self);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

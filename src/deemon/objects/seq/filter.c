@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_DecrefNokill, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
@@ -51,7 +51,7 @@ invoke_filter(DeeObject *filter, DeeObject *elem) {
 		goto err;
 	return DeeObject_BoolInherited(filter_result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -112,9 +112,9 @@ again:
 	if unlikely(!ITER_ISOK(result))
 		goto done;
 	pred_bool = invoke_filter(self->fi_func, result);
-	if unlikely(pred_bool < 0)
+	if (Dee_HAS_ISERR(pred_bool))
 		goto err_r;
-	if (!pred_bool) {
+	if (Dee_HAS_ISNO_NO_ERR(pred_bool)) {
 		Dee_Decref(result);
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -263,9 +263,9 @@ filter_foreach_cb(void *arg, DeeObject *elem) {
 	struct filter_foreach_data *data;
 	data      = (struct filter_foreach_data *)arg;
 	pred_bool = invoke_filter(data->ffd_fun, elem);
-	if unlikely(pred_bool < 0)
+	if (Dee_HAS_ISERR(pred_bool))
 		goto err;
-	if (!pred_bool)
+	if (Dee_HAS_ISNO_NO_ERR(pred_bool))
 		return 0; /* Don't enumerate this one. */
 	return (*data->ffd_proc)(data->ffd_arg, elem);
 err:
@@ -294,9 +294,9 @@ filterub_mh_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 	data = (struct filterub_mh_seq_enumerate_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faued_fun, value);
-		if unlikely(pred_bool < 0)
+		if (Dee_HAS_ISERR(pred_bool))
 			goto err;
-		if (!pred_bool)
+		if (Dee_HAS_ISNO_NO_ERR(pred_bool))
 			value = NULL; /* Treat as unbound */
 	}
 	return (*data->faued_proc)(data->faued_arg, index, value);
@@ -325,9 +325,9 @@ filterub_mh_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	data = (struct filterub_mh_seq_enumerate_index_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faueid_fun, value);
-		if unlikely(pred_bool < 0)
+		if (Dee_HAS_ISERR(pred_bool))
 			goto err;
-		if (!pred_bool)
+		if (Dee_HAS_ISNO_NO_ERR(pred_bool))
 			value = NULL; /* Treat as unbound */
 	}
 	return (*data->faueid_proc)(data->faueid_arg, index, value);
@@ -349,14 +349,14 @@ filterub_mh_seq_enumerate_index(Filter *self, Dee_seq_enumerate_index_t proc,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 filter_contains(Filter *self, DeeObject *elem) {
 	int result = DeeObject_InvokeMethodHint(seq_contains, self->f_seq, elem);
-	if (result <= 0) {
-		if unlikely(result < 0)
+	if (Dee_HAS_ISNO_OR_ERR(result)) {
+		if (Dee_HAS_ISERR(result))
 			goto err;
 		goto nope;
 	}
 	result = invoke_filter(self->f_fun, elem);
-	if (result <= 0) {
-		if unlikely(result < 0)
+	if (Dee_HAS_ISNO_OR_ERR(result)) {
+		if (Dee_HAS_ISERR(result))
 			goto err;
 		goto nope;
 	}
@@ -375,9 +375,9 @@ filterub_getitem(Filter *self, DeeObject *index) {
 	if unlikely(!result)
 		goto err;
 	temp = invoke_filter(self->f_fun, result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		DeeRT_ErrUnboundKey(Dee_AsObject(self), index);
 		goto err_r;
 	}
@@ -396,9 +396,9 @@ filterub_getitem_index(Filter *self, size_t index) {
 	if unlikely(!result)
 		goto err;
 	temp = invoke_filter(self->f_fun, result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		DeeRT_ErrUnboundIndex(self, index);
 		goto err_r;
 	}
@@ -421,9 +421,9 @@ filter_bounditem_handle_itemvalue(Filter *self, /*inherit(always)*/ DREF DeeObje
 	}
 	temp = invoke_filter(self->f_fun, itemvalue);
 	Dee_Decref(itemvalue);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if unlikely(!temp)
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp))
 		return Dee_BOUND_NO;
 	return Dee_BOUND_YES;
 err:
@@ -452,9 +452,9 @@ filterub_trygetitem(Filter *self, DeeObject *index) {
 	if unlikely(!ITER_ISOK(result))
 		return result;
 	temp = invoke_filter(self->f_fun, result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		Dee_Decref(result);
 		return ITER_DONE;
 	}
@@ -472,9 +472,9 @@ filterub_trygetitem_index(Filter *self, size_t index) {
 	if unlikely(!ITER_ISOK(result))
 		return result;
 	temp = invoke_filter(self->f_fun, result);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err_r;
-	if unlikely(!temp) {
+	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
 		Dee_Decref(result);
 		return ITER_DONE;
 	}
@@ -543,15 +543,16 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 filter_verify_insert(void *arg, DeeObject *item) {
 	Filter *self = (Filter *)arg;
 	int result = invoke_filter(self->f_fun, item);
-	if likely(result > 0)
+	if likely(Dee_HAS_ISYES(result))
 		return 0;
-	if (result == 0) {
-		result = DeeError_Throwf(&DeeError_ValueError,
-		                         "Cannot insert %k into filtered sequence: "
-		                         /**/ "item is black-listed by filter");
+	if (Dee_HAS_ISNO(result)) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Cannot insert %k into filtered sequence: "
+		                /**/ "item is black-listed by filter");
+	} else {
+		ASSERT(Dee_HAS_ISERR(result));
 	}
-	ASSERT(result == -1);
-	return result;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

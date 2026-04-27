@@ -23,7 +23,7 @@
 #include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_ioflag_t, FILE_OPERATOR_* */
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/none.h>     /* DeeNone* */
-#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
+#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
 #include <deemon/super.h>    /* DeeSuper* */
 #include <deemon/type.h>     /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_GetName */
 
@@ -624,9 +624,9 @@ do_handle_filetype:
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return temp ? ch : Dee_GETC_EOF;
+	return Dee_HAS_ISYES_NO_ERR(temp) ? ch : Dee_GETC_EOF;
 err:
 	return Dee_GETC_ERR;
 }
@@ -701,9 +701,9 @@ do_handle_filetype:
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return temp ? ch : Dee_GETC_EOF;
+	return Dee_HAS_ISYES_NO_ERR(temp) ? ch : Dee_GETC_EOF;
 err:
 	return Dee_GETC_ERR;
 }
@@ -778,9 +778,9 @@ do_handle_filetype:
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	return temp ? ch : Dee_GETC_EOF;
+	return Dee_HAS_ISYES_NO_ERR(temp) ? ch : Dee_GETC_EOF;
 err:
 	return Dee_GETC_ERR;
 }

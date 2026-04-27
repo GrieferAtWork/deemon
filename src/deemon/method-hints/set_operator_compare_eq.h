@@ -46,9 +46,7 @@ __set_compare_eq__.set_operator_compare_eq([[nonnull]] DeeObject *lhs,
 	if unlikely(!cmp_ob)
 		goto err;
 	result = DeeObject_BoolInherited(cmp_ob);
-	if unlikely(result < 0)
-		goto err;
-	return Dee_COMPARE_FROMBOOL(result);
+	return Dee_COMPARE_EQ_FROMHAS(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -58,9 +56,7 @@ err:
 	if unlikely(!cmp_ob)
 		goto err;
 	result = DeeObject_BoolInherited(cmp_ob);
-	if unlikely(result < 0)
-		goto err;
-	return Dee_COMPARE_FROM_NOT_EQUALS(result);
+	return Dee_COMPARE_NE_FROMHAS(result);
 err:
 	return Dee_COMPARE_ERR;
 }}
@@ -94,11 +90,11 @@ err:
 	if (DeeBool_Check(resultob)) {
 		bool retval = DeeBool_IsTrue(resultob);
 		DeeBool_Decref(resultob);
-		return Dee_COMPARE_FROMBOOL(retval);
+		return Dee_COMPARE_EQ_FROMBOOL(retval);
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;
-	result = Dee_COMPARE_FROMBOOL(DeeInt_IsZero(resultob));
+	result = Dee_COMPARE_EQ_FROMBOOL(DeeInt_IsZero(resultob));
 	Dee_Decref(resultob);
 	return result;
 err_resultob:

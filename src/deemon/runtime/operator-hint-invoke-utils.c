@@ -26,7 +26,7 @@
 #include <deemon/error-rt.h>       /* DeeRT_Err* */
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_*, INT_SIGNED, INT_UNSIGNED */
 #include <deemon/none.h>           /* DeeNone_Check */
-#include <deemon/object.h>         /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/object.h>         /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_ERR, Dee_TYPE, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include <deemon/operator-hints.h> /* DeeNO_int_t, _DeeType_RequireNativeOperator */
 #include <deemon/super.h>          /* DeeObject_T* */
 #include <deemon/tuple.h>          /* DeeTuple* */
@@ -865,7 +865,7 @@ DeeObject_ContainsAsBool(DeeObject *self, DeeObject *some_object) {
 		goto err;
 	return DeeObject_BoolInherited(resultob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 

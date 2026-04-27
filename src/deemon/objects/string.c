@@ -1275,7 +1275,7 @@ string_compare_eq(String *lhs, DeeObject *rhs) {
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
+		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	DeeObject_TypeAssertFailed2(rhs, &DeeString_Type, &DeeBytes_Type);
 	return Dee_COMPARE_ERR;
 }
@@ -1291,7 +1291,7 @@ string_trycompare_eq(String *lhs, DeeObject *rhs) {
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
+		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	return Dee_COMPARE_NE;
 }
 
@@ -1406,7 +1406,7 @@ string_mh_seq_compare_eq(String *lhs, DeeObject *rhs) {
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
+		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	return string_compare_seq(lhs, rhs);
 }
 
@@ -1421,7 +1421,7 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 		return compare_strings(lhs, (String *)rhs);
 	}
 	if likely(tp_rhs == &DeeBytes_Type)
-		return Dee_COMPARE_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
+		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	if (!DeeType_HasNativeOperator(tp_rhs, foreach))
 		return Dee_COMPARE_NE;
 	return string_compare_seq(lhs, rhs);

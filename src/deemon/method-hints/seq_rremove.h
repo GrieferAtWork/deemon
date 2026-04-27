@@ -26,9 +26,9 @@ __seq_rremove__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=
 	int result = !DeeNone_Check(key)
 	             ? CALL_DEPENDENCY(seq_rremove_with_key, self, item, start, end, key)
 	             : CALL_DEPENDENCY(seq_rremove, self, item, start, end);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -37,15 +37,15 @@ err:
 
 
 
-/* @return: 0 : Item was not removed
- * @return: 1 : Item was removed
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Item was not removed
+ * @return: Dee_HAS_YES: Item was removed
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_rremove__.seq_rremove([[nonnull]] DeeObject *self,
                             [[nonnull]] DeeObject *item,
                             size_t start, size_t end)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_enumerate_index_reverse__and__seq_operator_delitem_index =
 [[prefix(DEFINE_default_remove_with_enumerate_index_and_delitem_index_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -56,25 +56,19 @@ __seq_rremove__.seq_rremove([[nonnull]] DeeObject *self,
 	                                 &default_remove_with_enumerate_index_and_delitem_index_cb,
 	                                 &data, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == 0)
-		return 0; /* Not found */
-	return 1;     /* Found and removed */
-err:
-	return -1;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_rfind__and__seq_operator_delitem_index = {
 	size_t index = CALL_DEPENDENCY(seq_rfind, self, item, start, end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if (index == (size_t)-1)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, index))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, item, start, end);
@@ -82,20 +76,20 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 
-/* @return: 0 : Item was not removed
- * @return: 1 : Item was removed
- * @return: -1: Error */
+/* @return: Dee_HAS_NO:  Item was not removed
+ * @return: Dee_HAS_YES: Item was removed
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __seq_rremove__.seq_rremove_with_key([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *item,
                                      size_t start, size_t end,
                                      [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_enumerate_index_reverse__and__seq_operator_delitem_index =
 [[prefix(DEFINE_default_remove_with_key_with_enumerate_index_and_delitem_index_cb)]] {
 	Dee_ssize_t foreach_status;
@@ -107,25 +101,19 @@ __seq_rremove__.seq_rremove_with_key([[nonnull]] DeeObject *self,
 	                                 &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
 	                                 &data, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == 0)
-		return 0; /* Not found */
-	return 1;     /* Found and removed */
-err:
-	return -1;
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_rfind_with_key__and__seq_operator_delitem_index = {
 	size_t index = CALL_DEPENDENCY(seq_rfind_with_key, self, item, start, end, key);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if (index == (size_t)-1)
-		return 0;
+		return Dee_HAS_NO;
 	if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, index))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
@@ -133,7 +121,7 @@ err:
 		goto err;
 	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 seq_rremove = {

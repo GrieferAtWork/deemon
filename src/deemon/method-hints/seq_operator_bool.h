@@ -23,7 +23,7 @@
 /************************************************************************/
 __seq_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(seq_operator_bool, self);
-	if unlikely(Dee_HAS_ISERR(result))
+	if (Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
 err:

@@ -24,9 +24,9 @@
 [[alias(Mapping.setnew)]]
 __map_setnew__(key,value)->?Dbool {
 	int result = CALL_DEPENDENCY(map_setnew, self, key, value);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -34,9 +34,9 @@ err:
 
 /* Insert a new key whilst making sure that the key doesn't already exist
  * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
- * @return: 1 :   The value of `key' was set to `value' (the key didn't exist or used to be unbound)
- * @return: 0 :   The given `key' already exists (nothing was inserted)
- * @return: -1:   Error */
+ * @return: Dee_HAS_YES: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
+ * @return: Dee_HAS_NO:  The given `key' already exists (nothing was inserted)
+ * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __map_setnew__.map_setnew([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *key,
@@ -50,11 +50,11 @@ __map_setnew__.map_setnew([[nonnull]] DeeObject *self,
 	if unlikely(!old_value)
 		goto err;
 	if (old_value == ITER_DONE)
-		return 1;
+		return Dee_HAS_YES;
 	Dee_Decref(old_value);
-	return 0;
+	return Dee_HAS_NO;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__map_operator_trygetitem__and__map_setdefault = {
 	DREF DeeObject *temp;
@@ -63,15 +63,15 @@ err:
 		if unlikely(!bound)
 			goto err;
 		Dee_Decref(bound);
-		return 0; /* Key already exists */
+		return Dee_HAS_NO; /* Key already exists */
 	}
 	temp = CALL_DEPENDENCY(map_setdefault, self, key, value);
 	if unlikely(!temp)
 		goto err;
 	Dee_Decref(temp);
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }}
 %{$with__map_operator_trygetitem__and__map_operator_setitem = {
 	DREF DeeObject *bound = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
@@ -79,14 +79,15 @@ err:
 		if unlikely(!bound)
 			goto err;
 		Dee_Decref(bound);
-		return 0; /* Key already exists */
+		return Dee_HAS_NO; /* Key already exists */
 	}
 	if unlikely(CALL_DEPENDENCY(map_operator_setitem, self, key, value))
 		goto err;
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
+	int status;
 	DREF DeeObject *result;
 	DeeObject *args[2];
 	args[0] = key;
@@ -94,9 +95,10 @@ err:
 	result = LOCAL_CALLATTR(self, 2, args);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	status = DeeObject_BoolInherited(result);
+	return Dee_HAS_INTO_eM1_n0_y1(status);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 map_setnew = {

@@ -89,9 +89,9 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if unlikely(temp < 0)
+		if (Dee_HAS_ISERR(temp))
 			goto err_size;
-		if (!temp)
+		if (Dee_HAS_ISNO_NO_ERR(temp))
 			break;
 		if (DeeObject_Dec(&size))
 			goto err_size;
@@ -190,9 +190,9 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if unlikely(temp < 0)
+		if (Dee_HAS_ISERR(temp))
 			goto err_size;
-		if (!temp)
+		if (Dee_HAS_ISNO_NO_ERR(temp))
 			break;
 		if (DeeObject_Dec(&size))
 			goto err_size;
@@ -284,9 +284,9 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if unlikely(temp < 0)
+		if (Dee_HAS_ISERR(temp))
 			goto err_size;
-		if (!temp)
+		if (Dee_HAS_ISNO_NO_ERR(temp))
 			break;
 		if (DeeObject_Dec(&size))
 			goto err_size;

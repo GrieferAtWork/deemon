@@ -38,7 +38,7 @@
 #include <deemon/list.h>            /* DeeList_* */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>            /* DeeNone* */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_hash_t */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/seq.h>             /* DeeRange_New, DeeSeq_* */
 #include <deemon/string.h>          /* DeeString_FromBackslashEscaped, DeeString_NewUtf8, DeeUni_IsSpace, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
@@ -804,9 +804,9 @@ done_y1:
 		{
 			int new_result;
 			new_result = DeeObject_BoolInherited(result);
-			if unlikely(new_result < 0)
+			if (Dee_HAS_ISERR(new_result))
 				goto err_invoke;
-			result = DeeBool_For(!new_result);
+			result = DeeBool_For(Dee_HAS_ISNO_NO_ERR(new_result));
 			Dee_Incref(result);
 		}
 #endif /* JIT_EVAL */
@@ -2860,10 +2860,10 @@ DEFINE_SECONDARY(CmpEQOperand) {
 					lhs = merge;
 					if (inverted) {
 						int b = DeeObject_Bool(lhs);
-						if unlikely(b < 0)
+						if (Dee_HAS_ISERR(b))
 							goto err_r;
 						Dee_Decref(lhs);
-						lhs = DeeBool_For(!b);
+						lhs = DeeBool_For(Dee_HAS_ISNO_NO_ERR(b));
 						Dee_Incref(lhs);
 					}
 				}
@@ -3150,10 +3150,10 @@ DEFINE_SECONDARY(LandOperand) {
 #ifdef JIT_EVAL
 			{
 				int b = DeeSeq_All(lhs);
-				if (b < 0)
+				if (Dee_HAS_ISERR(b))
 					goto err_invoke_norhs;
 				Dee_Decref(lhs);
-				lhs = DeeBool_For(b);
+				lhs = DeeBool_For(Dee_HAS_ISYES_NO_ERR(b));
 				Dee_Incref(lhs);
 			}
 #endif /* JIT_EVAL */
@@ -3162,19 +3162,19 @@ DEFINE_SECONDARY(LandOperand) {
 #ifdef JIT_EVAL
 		{
 			int b = DeeObject_Bool(lhs);
-			if (b < 0)
+			if (Dee_HAS_ISERR(b))
 				goto err_invoke_norhs;
 			Dee_Decref(lhs);
-			if (b) {
+			if (Dee_HAS_ISYES_NO_ERR(b)) {
 				lhs = CALL_PRIMARY(As);
 				if (ISERR(lhs))
 					goto err;
 				LOAD_LVALUE(lhs, err);
 				b = DeeObject_Bool(lhs);
-				if (b < 0)
+				if (Dee_HAS_ISERR(b))
 					goto err_invoke_norhs;
 				Dee_Decref(lhs);
-				lhs = DeeBool_For(b);
+				lhs = DeeBool_For(Dee_HAS_ISYES_NO_ERR(b));
 				Dee_Incref(lhs);
 			} else {
 				if unlikely(JITLexer_SkipAs(self, flags))
@@ -3222,10 +3222,10 @@ DEFINE_SECONDARY(LorOperand) {
 #ifdef JIT_EVAL
 			{
 				int b = DeeSeq_Any(lhs);
-				if (b < 0)
+				if (Dee_HAS_ISERR(b))
 					goto err_invoke_norhs;
 				Dee_Decref(lhs);
-				lhs = DeeBool_For(b);
+				lhs = DeeBool_For(Dee_HAS_ISYES_NO_ERR(b));
 				Dee_Incref(lhs);
 			}
 #endif /* JIT_EVAL */
@@ -3234,10 +3234,10 @@ DEFINE_SECONDARY(LorOperand) {
 #ifdef JIT_EVAL
 		{
 			int b = DeeObject_Bool(lhs);
-			if (b < 0)
+			if (Dee_HAS_ISERR(b))
 				goto err_invoke_norhs;
 			Dee_Decref(lhs);
-			if (b) {
+			if (Dee_HAS_ISYES_NO_ERR(b)) {
 				if unlikely(JITLexer_SkipLand(self, flags))
 					goto err;
 				lhs = DeeBool_NewTrue();
@@ -3247,10 +3247,10 @@ DEFINE_SECONDARY(LorOperand) {
 					goto err;
 				LOAD_LVALUE(lhs, err);
 				b = DeeObject_Bool(lhs);
-				if (b < 0)
+				if (Dee_HAS_ISERR(b))
 					goto err_invoke_norhs;
 				Dee_Decref(lhs);
-				lhs = DeeBool_For(b);
+				lhs = DeeBool_For(Dee_HAS_ISYES_NO_ERR(b));
 				Dee_Incref(lhs);
 			}
 		}
@@ -3294,12 +3294,12 @@ DEFINE_SECONDARY(CondOperand) {
 #ifdef JIT_EVAL
 		{
 			int b = DeeObject_Bool(lhs);
-			if unlikely(b < 0)
+			if (Dee_HAS_ISERR(b))
 				goto err_invoke;
 			if (self->jl_tok == ':') {
 				/* Missing true-branch. */
 				JITLexer_Yield(self);
-				if (b) {
+				if (Dee_HAS_ISYES_NO_ERR(b)) {
 					/* true?:<SKIP> */
 					if unlikely(JITLexer_SkipCond(self, flags))
 						goto err_r;
@@ -3313,7 +3313,7 @@ DEFINE_SECONDARY(CondOperand) {
 				}
 				goto continue_expr;
 			}
-			if (b) {
+			if (Dee_HAS_ISYES_NO_ERR(b)) {
 				/* true?<EXPR>[:[<SKIP>]] */
 				Dee_Decref(lhs);
 				lhs = JITLexer_EvalCond(self, flags);

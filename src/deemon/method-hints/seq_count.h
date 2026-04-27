@@ -69,10 +69,12 @@ __seq_count__.seq_count([[nonnull]] DeeObject *self,
  * types. This also optimizes the case when "self" is a Mapping, where
  * seq_operator_contains is implemented to use map_operator_trygetitem */
 %{$with__set_operator_contains = {
+	int status;
 	DREF DeeObject *contains = CALL_DEPENDENCY(seq_operator_contains, self, item);
 	if unlikely(!contains)
 		goto err;
-	return (size_t)DeeObject_BoolInherited(contains);
+	status = DeeObject_BoolInherited(contains);
+	return (size_t)Dee_HAS_INTO_eM1_n0_y1(status);
 err:
 	return (size_t)-1;
 }}

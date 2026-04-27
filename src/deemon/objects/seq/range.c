@@ -32,7 +32,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Singleton */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -526,13 +526,13 @@ range_contains(Range *self, DeeObject *index) {
 		/* >> if (!(self->r_start <= index))
 		 * >>     return false; */
 		error = DeeObject_CmpLeAsBool(self->r_start, index);
-		if (error <= 0) /* if false-or-error */
+		if (Dee_HAS_ISNO_OR_ERR(error)) /* if false-or-error */
 			goto err_or_false;
 
 		/* >> if (self->r_end <= index)
 		 * >>     return false; */
 		error = DeeObject_CmpLeAsBool(self->r_end, index);
-		if (error != 0) /* if true-or-error */
+		if (Dee_HAS_ISYES_OR_ERR(error)) /* if true-or-error */
 			goto err_or_false;
 		if (self->r_step) {
 			/* >> temp = index - self->r_start; */
@@ -558,7 +558,7 @@ range_contains(Range *self, DeeObject *index) {
 
 			/* >> if ((index - self->r_start) % self->r_step)
 			 * >>     return false; */
-			if (error != 0) /* if true-or-error */
+			if (Dee_HAS_ISYES_OR_ERR(error)) /* if true-or-error */
 				goto err_or_false;
 		}
 	} else {
@@ -567,13 +567,13 @@ range_contains(Range *self, DeeObject *index) {
 		/* >> if (self->r_start < index)
 		 * >>     return false; */
 		error = DeeObject_CmpLoAsBool(self->r_start, index);
-		if (error != 0) /* if true-or-error */
+		if (Dee_HAS_ISYES_OR_ERR(error)) /* if true-or-error */
 			goto err_or_false;
 
 		/* >> if (!(self->r_end < index))
 		 * >>     return false; */
 		error = DeeObject_CmpLoAsBool(self->r_end, index);
-		if (error <= 0) /* if false-or-error */
+		if (Dee_HAS_ISNO_OR_ERR(error)) /* if false-or-error */
 			goto err_or_false;
 
 		/* >> temp = self->r_start - index; */
@@ -594,7 +594,7 @@ range_contains(Range *self, DeeObject *index) {
 
 		/* >> if ((self->r_start - index) % -self->r_step)
 		 * >>     return false; */
-		if (error != 0) /* if false-or-error */
+		if (Dee_HAS_ISYES_OR_ERR(error)) /* if false-or-error */
 			goto err_or_false;
 	}
 	return_true;
@@ -658,8 +658,8 @@ range_size(Range *__restrict self) {
 		Dee_Decref(temp);
 	}
 	error = DeeObject_CmpLoAsBool(result, DeeInt_Zero);
-	if unlikely(error != 0) {
-		if unlikely(error < 0)
+	if unlikely(Dee_HAS_ISYES_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
 			goto err_r;
 		temp = DeeObject_NewDefault(Dee_TYPE(result));
 		Dee_Decref(result);
@@ -713,8 +713,8 @@ do_compare_positive:
 			goto do_compare_positive;
 		error = DeeObject_CmpLeAsBool(result, self->r_end);
 	}
-	if unlikely(error != 0) {
-		if unlikely(error < 0)
+	if unlikely(Dee_HAS_ISYES_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
 			goto err_r;
 		goto err_r_oob;
 	}
@@ -764,8 +764,8 @@ range_getrange(Range *self,
 		 * goto got_ns_ne;
 		 */
 		error = DeeObject_CmpLoAsBool(end, DeeInt_Zero);
-		if (error != 0) {
-			if unlikely(error < 0)
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
 				goto err;
 			if (self->r_step) {
 				temp = DeeObject_Mul(self->r_step, end);
@@ -781,8 +781,8 @@ range_getrange(Range *self,
 			if unlikely(!mylen)
 				goto err;
 			error = DeeObject_CmpGeAsBool(mylen, end);
-			if (error != 0) {
-				if unlikely(error < 0)
+			if (Dee_HAS_ISYES_OR_ERR(error)) {
+				if (Dee_HAS_ISERR(error))
 					goto err;
 				return_reference_(Dee_AsObject(self));
 			}
@@ -812,8 +812,8 @@ range_getrange(Range *self,
 	 * }
 	 */
 	error = DeeObject_CmpLoAsBool(start, DeeInt_Zero);
-	if (error != 0) {
-		if unlikely(error < 0)
+	if (Dee_HAS_ISYES_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
 			goto err_mylen;
 		new_start = DeeObject_Add(mylen, start);
 		if unlikely(!new_start)
@@ -828,8 +828,8 @@ reuse_old_end:
 		 *     return_reference_(Dee_EmptySeq);
 		 */
 		error = DeeObject_CmpLeAsBool(mylen, new_start);
-		if (error != 0) {
-			if unlikely(error < 0)
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
 				goto err_mylen_ns;
 return_empty_seq_mylen_ns:
 			Dee_Decref(new_start);
@@ -847,8 +847,8 @@ return_empty_seq_mylen_ns:
 		 * }
 		 */
 		error = DeeObject_CmpLoAsBool(end, DeeInt_Zero);
-		if (error != 0) {
-			if unlikely(error < 0)
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
 				goto err_mylen_ns;
 			new_end = DeeObject_Add(mylen, end);
 			if unlikely(!new_end)
@@ -858,8 +858,8 @@ return_empty_seq_mylen_ns:
 			 *     goto reuse_old_end;
 			 */
 			error = DeeObject_CmpLeAsBool(mylen, end);
-			if (error != 0) {
-				if unlikely(error < 0)
+			if (Dee_HAS_ISYES_OR_ERR(error)) {
+				if (Dee_HAS_ISERR(error))
 					goto err_mylen_ns;
 				goto reuse_old_end;
 			}
@@ -876,8 +876,8 @@ return_empty_seq_mylen_ns:
 		error = new_end == end
 		        ? DeeObject_CmpGeAsBool(new_start, new_end)
 		        : DeeObject_CmpLeAsBool(new_end, new_start);
-		if (error != 0) {
-			if unlikely(error < 0)
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
 				goto err_mylen_ns_ne;
 			Dee_Decref(new_end);
 			goto return_empty_seq_mylen_ns;

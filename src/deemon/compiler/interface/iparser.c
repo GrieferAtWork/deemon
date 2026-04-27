@@ -32,7 +32,7 @@
 #include <deemon/compiler/symbol.h>    /* current_basescope */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeStringObject, Dee_EmptyString */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
@@ -390,11 +390,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 parser_setlfstmt(DeeCompilerWrapperObject *self,
                  DeeObject *value) {
 	int newval = DeeObject_Bool(value);
-	if unlikely(newval < 0)
+	if (Dee_HAS_ISERR(newval))
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	if (newval) {
+	if (Dee_HAS_ISYES_NO_ERR(newval)) {
 		parser_flags |= PARSE_FLFSTMT;
 	} else {
 		parser_flags &= ~PARSE_FLFSTMT;

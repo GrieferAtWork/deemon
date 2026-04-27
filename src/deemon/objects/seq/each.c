@@ -1556,11 +1556,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ss_trycompare_eq(SeqEachBase *self, DeeObject *other) {
 	/* `seq.some == other'  <=>  `other in seq' */
 	int contains = DeeObject_InvokeMethodHint(seq_contains, self->se_seq, other);
-	if unlikely(contains < 0)
-		goto err;
-	return contains ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
+	return Dee_COMPARE_EQ_FROMHAS(contains);
 }
 
 #define SEQSOME_FOREACH_ERR     (-1)
@@ -2712,9 +2708,9 @@ se_foreach_bool_cb(void *arg, DeeObject *elem) {
 	int result;
 	(void)arg;
 	result = DeeObject_Bool(elem);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	if (result == 0)
+	if (Dee_HAS_ISNO_NO_ERR(result))
 		return SEQEACH_FOREACH_NO;
 	return SEQEACH_FOREACH_YES;
 err:
@@ -3463,9 +3459,9 @@ ss_foreach_bool_cb(void *arg, DeeObject *elem) {
 	int result;
 	(void)arg;
 	result = DeeObject_Bool(elem);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	if (result == 0)
+	if (Dee_HAS_ISNO_NO_ERR(result))
 		return SEQSOME_FOREACH_NO;
 	return SEQSOME_FOREACH_YES;
 err:

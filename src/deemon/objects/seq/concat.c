@@ -172,7 +172,7 @@ catiterator_bool(CatIterator *__restrict self) {
 
 	/* Check if the current iterator has remaining elements. */
 	result = DeeObject_BoolInherited(curr);
-	if (result != 0)
+	if (Dee_HAS_ISYES_OR_ERR(result))
 		goto done;
 	iterpos = atomic_read(&self->cti_pseq);
 
@@ -180,7 +180,7 @@ catiterator_bool(CatIterator *__restrict self) {
 	catend = DeeTuple_END(self->cti_cat);
 	for (; iterpos < catend; ++iterpos) {
 		result = DeeObject_InvokeMethodHint(seq_operator_bool, *iterpos);
-		if (result != 0)
+		if (Dee_HAS_ISYES_OR_ERR(result))
 			break;
 	}
 done:
@@ -708,10 +708,10 @@ cat_bool(Cat *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->t_size; ++i) {
 		int temp = DeeObject_Bool(self->t_elem[i]);
-		if (temp != 0)
+		if (Dee_HAS_ISYES_OR_ERR(temp))
 			return temp;
 	}
-	return 0;
+	return Dee_HAS_NO;
 }
 
 

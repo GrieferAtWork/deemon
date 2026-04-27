@@ -40,7 +40,7 @@
 #include <deemon/map.h>             /* DeeSharedItem, DeeSharedMap_Decref, DeeSharedMap_NewShared */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* DeeNone*, Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* DeeNO_shl_t, DeeType_RequireNativeOperator */
 #include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOneInheritedOnSuccess, DeeSeq_OfPairInheritedOnSuccess */
 #include <deemon/rodict.h>          /* Dee_EmptyRoDict */
@@ -5387,9 +5387,9 @@ do_pack_dict:
 							}
 						}
 						temp = DeeObject_Bool(value);
-						if unlikely(temp < 0)
+						if (Dee_HAS_ISERR(temp))
 							HANDLE_EXCEPT();
-						value = LOCAL_DeeBool_For(temp);
+						value = LOCAL_DeeBool_For(Dee_HAS_ISYES_NO_ERR(temp));
 					}
 					PUSHREF(value);
 					DISPATCH();
@@ -5636,9 +5636,9 @@ prefix_jf_16:
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					temp = DeeObject_BoolInherited(prefix_ob);
-					if unlikely(temp < 0)
+					if (Dee_HAS_ISERR(temp))
 						HANDLE_EXCEPT();
-					if (!temp) {
+					if (Dee_HAS_ISNO_NO_ERR(temp)) {
 						if ((int16_t)imm_val < 0) {
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();
@@ -5663,9 +5663,9 @@ prefix_jt_16:
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					temp = DeeObject_BoolInherited(prefix_ob);
-					if unlikely(temp < 0)
+					if (Dee_HAS_ISERR(temp))
 						HANDLE_EXCEPT();
-					if (temp) {
+					if (Dee_HAS_ISYES_NO_ERR(temp)) {
 						if ((int16_t)imm_val < 0) {
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();

@@ -109,14 +109,14 @@ DECL_BEGIN
 #define Dee_COMPARE_ISGR(x)        ((x) > 0)  /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISGE(x)        ((x) >= 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 
-/* #define Dee_COMPARE_FROMBOOL(is_equal)            ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
- * #define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ) */
+/* #define Dee_COMPARE_EQ_FROMBOOL(is_equal)     ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+ * #define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ) */
 #if Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0
-#define Dee_COMPARE_FROMBOOL(is_equal)            (!(is_equal))
-#define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) (is_not_equal) /* @assume(is_not_equal >= 0) */
+#define Dee_COMPARE_EQ_FROMBOOL(is_equal)     (+!(is_equal))
+#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) (+!!(is_not_equal)) /* @assume(is_not_equal >= 0) */
 #else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0 */
-#define Dee_COMPARE_FROMBOOL(is_equal)            ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
-#define Dee_COMPARE_FROM_NOT_EQUALS(is_not_equal) ((is_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
+#define Dee_COMPARE_EQ_FROMBOOL(is_equal)     ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_ERR >= 0 */
 
 /* Helper macros for implementing compare operators. */
@@ -1635,7 +1635,10 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_ISNO(x)  ((x) == 0) /* Never matches "Dee_HAS_ISERR" */
 #define Dee_HAS_ISYES(x) ((x) > 0)  /* Never matches "Dee_HAS_ISERR" */
 
-#define Dee_HAS_ISNO_OR_ERR(x) ((x) <= 0)
+#define Dee_HAS_ISNO_OR_ERR(x)  ((x) <= 0)
+#define Dee_HAS_ISNO_NO_ERR(x)  (!(x))
+#define Dee_HAS_ISYES_OR_ERR(x) ((x) != 0)
+#define Dee_HAS_ISYES_NO_ERR(x) (x)
 
 /* >> #define Dee_HAS_FROMBOOL(value) ((value) ? Dee_HAS_YES : Dee_HAS_NO)
  * WARNING: Passing negative values here results in undefined behavior! */
@@ -1719,6 +1722,21 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_FROM_COMPARE_GE(cmp) (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp))
 #endif /* !Dee_HAS_FROM_COMPARE_GE */
 
+
+/* Custom converts that are useful for `Dee_foreach_t' status values. */
+#define Dee_HAS_FROM_eM1_nM2_y0(v) ((v) == -1 ? Dee_HAS_ERR : (v) == -2 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == 0),*/ Dee_HAS_YES))
+#define Dee_HAS_INTO_eM1_nM2_y0(v) (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 0 : -2)
+
+#define Dee_HAS_FROM_eM1_n0_yM2(v) ((v) == -1 ? Dee_HAS_ERR : (v) == 0 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == -2),*/ Dee_HAS_YES))
+#define Dee_HAS_INTO_eM1_n0_yM2(v) (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? -2 : 0)
+
+#define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
+#define Dee_HAS_INTO_eM1_n0_y1(v)  (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 1 : 0)
+
+#define Dee_COMPARE_EQ_FROMHAS(is_equal_or_err) \
+	(Dee_HAS_ISERR(is_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_EQ_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_equal_or_err)))
+#define Dee_COMPARE_NE_FROMHAS(is_not_equal_or_err) \
+	(Dee_HAS_ISERR(is_not_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_NE_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_not_equal_or_err)))
 
 
 /* Possible values returned by C-API isbound checking functions.

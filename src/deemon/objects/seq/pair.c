@@ -32,7 +32,7 @@
 #include <deemon/int.h>                /* DeeInt_One, DeeInt_Zero */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeq_OfOne */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
@@ -568,13 +568,13 @@ DeeObject_BoolWithKey(DeeObject *self, DeeObject *key) {
 		goto err;
 	return DeeObject_BoolInherited(keyed);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_mh_seq_any(SeqPair *__restrict self) {
 	int result = DeeObject_Bool(self->sp_items[0]);
-	if (result == 0)
+	if (Dee_HAS_ISNO(result))
 		result = DeeObject_Bool(self->sp_items[1]);
 	return result;
 }
@@ -582,27 +582,27 @@ sp_mh_seq_any(SeqPair *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sp_mh_seq_any_with_key(SeqPair *self, DeeObject *key) {
 	int result = DeeObject_BoolWithKey(self->sp_items[0], key);
-	if (result == 0)
+	if (Dee_HAS_ISNO(result))
 		result = DeeObject_BoolWithKey(self->sp_items[1], key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_mh_seq_any_with_range(SeqPair *__restrict self, size_t start, size_t end) {
-	int result = 0;
+	int result = Dee_HAS_NO;
 	if (start <= 0 && end > 0)
 		result = DeeObject_Bool(self->sp_items[0]);
-	if (result == 0 && (start <= 1 && end > 1))
+	if (Dee_HAS_ISNO(result)&& (start <= 1 && end > 1))
 		result = DeeObject_Bool(self->sp_items[1]);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sp_mh_seq_any_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObject *key) {
-	int result = 0;
+	int result = Dee_HAS_NO;
 	if (start <= 0 && end > 0)
 		result = DeeObject_BoolWithKey(self->sp_items[0], key);
-	if (result == 0 && (start <= 1 && end > 1))
+	if (Dee_HAS_ISNO(result) && (start <= 1 && end > 1))
 		result = DeeObject_BoolWithKey(self->sp_items[1], key);
 	return result;
 }
@@ -610,7 +610,7 @@ sp_mh_seq_any_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObj
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_mh_seq_all(SeqPair *__restrict self) {
 	int result = DeeObject_Bool(self->sp_items[0]);
-	if (result > 0)
+	if (Dee_HAS_ISYES(result))
 		result = DeeObject_Bool(self->sp_items[1]);
 	return result;
 }
@@ -618,27 +618,27 @@ sp_mh_seq_all(SeqPair *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sp_mh_seq_all_with_key(SeqPair *self, DeeObject *key) {
 	int result = DeeObject_BoolWithKey(self->sp_items[0], key);
-	if (result > 0)
+	if (Dee_HAS_ISYES(result))
 		result = DeeObject_BoolWithKey(self->sp_items[1], key);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_mh_seq_all_with_range(SeqPair *__restrict self, size_t start, size_t end) {
-	int result = 1;
+	int result = Dee_HAS_YES;
 	if (start <= 0 && end > 0)
 		result = DeeObject_Bool(self->sp_items[0]);
-	if (result > 0 && (start <= 1 && end > 1))
+	if (Dee_HAS_ISYES(result) && (start <= 1 && end > 1))
 		result = DeeObject_Bool(self->sp_items[1]);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sp_mh_seq_all_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObject *key) {
-	int result = 1;
+	int result = Dee_HAS_YES;
 	if (start <= 0 && end > 0)
 		result = DeeObject_BoolWithKey(self->sp_items[0], key);
-	if (result > 0 && (start <= 1 && end > 1))
+	if (Dee_HAS_ISYES(result) && (start <= 1 && end > 1))
 		result = DeeObject_BoolWithKey(self->sp_items[1], key);
 	return result;
 }
@@ -647,12 +647,13 @@ sp_mh_seq_all_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObj
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_mh_seq_parity(SeqPair *__restrict self) {
 	int result = DeeObject_Bool(self->sp_items[0]);
-	if (result >= 0) {
+	if (!Dee_HAS_ISERR(result)) {
 		int temp = DeeObject_Bool(self->sp_items[1]);
-		if unlikely(temp < 0) {
+		if (Dee_HAS_ISERR(temp)) {
 			result = temp;
 		} else {
-			result = (result != 0) ^ (temp != 0);
+			result = Dee_HAS_FROMBOOL(!!Dee_HAS_ISYES_NO_ERR(result) ^
+			                          !!Dee_HAS_ISYES_NO_ERR(temp));
 		}
 	}
 	return result;
@@ -661,12 +662,13 @@ sp_mh_seq_parity(SeqPair *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sp_mh_seq_parity_with_key(SeqPair *self, DeeObject *key) {
 	int result = DeeObject_BoolWithKey(self->sp_items[0], key);
-	if (result >= 0) {
+	if (!Dee_HAS_ISERR(result)) {
 		int temp = DeeObject_BoolWithKey(self->sp_items[1], key);
-		if unlikely(temp < 0) {
+		if (Dee_HAS_ISERR(temp)) {
 			result = temp;
 		} else {
-			result = (result != 0) ^ (temp != 0);
+			result = Dee_HAS_FROMBOOL(!!Dee_HAS_ISYES_NO_ERR(result) ^
+			                          !!Dee_HAS_ISYES_NO_ERR(temp));
 		}
 	}
 	return result;
@@ -677,7 +679,7 @@ sp_mh_seq_parity_with_range(SeqPair *__restrict self, size_t start, size_t end) 
 	if (end > 2)
 		end = 2;
 	if (start >= end)
-		return 0;
+		return Dee_HAS_NO;
 	switch (start) {
 	case 0:
 		if (end == 1)
@@ -694,7 +696,7 @@ sp_mh_seq_parity_with_range_and_key(SeqPair *self, size_t start, size_t end, Dee
 	if (end > 2)
 		end = 2;
 	if (start >= end)
-		return 0;
+		return Dee_HAS_NO;
 	switch (start) {
 	case 0:
 		if (end == 1)

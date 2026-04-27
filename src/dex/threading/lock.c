@@ -35,7 +35,7 @@
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref_unlikely, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /* DeeCMethodObject */
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -468,20 +468,32 @@ DOC_DEF(doc_rwlock_writelock,
 /************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_acquire(DeeObject *__restrict self) {
-	DeeObject *result;
+	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_acquire), 0, NULL);
-	Dee_XDecref_unlikely(result);
-	return likely(result) ? 0 : -1;
+	if unlikely(!result)
+		goto err;
+	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_release(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_release), 0, NULL);
-	Dee_XDecref_unlikely(result);
-	return likely(result) ? 0 : -1;
+	if unlikely(!result)
+		goto err;
+	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	return 0;
+err:
+	return -1;
 }
 
+/* Try to acquire a lock.
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_tryacquire(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
@@ -490,7 +502,7 @@ lock_do_tryacquire(DeeObject *__restrict self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE struct type_with lock_with = {
@@ -502,10 +514,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_acquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "acquire");
 	for (;;) {
-		int error = lock_do_tryacquire(self);
-		if unlikely(error < 0)
+		int status = lock_do_tryacquire(self);
+		if (Dee_HAS_ISERR(status))
 			goto err;
-		if (error)
+		if (Dee_HAS_ISYES_NO_ERR(status))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -529,9 +541,9 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_do_tryacquire(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (error)
+	if (Dee_HAS_ISYES_NO_ERR(error))
 		goto ok;
 	if (args.timeout_nanoseconds == (uint64_t)-1) {
 		DREF DeeObject *result;
@@ -547,9 +559,9 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = lock_do_tryacquire(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (error)
+	if (Dee_HAS_ISYES_NO_ERR(error))
 		goto ok;
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &args.timeout_nanoseconds))
@@ -565,6 +577,10 @@ err:
 	return NULL;
 }
 
+/* Check if lock is currently acquired
+ * @return: Dee_HAS_YES: Yes
+ * @return: Dee_HAS_NO:  No
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_is_acquired(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
@@ -573,15 +589,15 @@ lock_is_acquired(DeeObject *__restrict self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_available_get(DeeObject *__restrict self) {
 	int result = lock_is_acquired(self);
-	if unlikely(result < 0)
+	if (Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(!result);
+	return_bool(Dee_HAS_ISNO_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -591,9 +607,9 @@ lock_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
 	for (;;) {
 		int error = lock_is_acquired(self);
-		if unlikely(error < 0)
+		if (Dee_HAS_ISERR(error))
 			goto err;
-		if (!error)
+		if (Dee_HAS_ISNO_NO_ERR(error))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -617,9 +633,9 @@ lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_is_acquired(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (!error)
+	if (Dee_HAS_ISNO_NO_ERR(error))
 		goto ok;
 	if (args.timeout_nanoseconds == (uint64_t)-1) {
 		DREF DeeObject *result;
@@ -635,9 +651,9 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = lock_is_acquired(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	if (!error)
+	if (Dee_HAS_ISNO_NO_ERR(error))
 		goto ok;
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &args.timeout_nanoseconds))
@@ -738,6 +754,11 @@ INTERN DeeTypeObject DeeLock_Type = {
 /************************************************************************/
 /* Abstract RWLock API                                                  */
 /************************************************************************/
+
+/* Try to acquire a read-lock
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryread(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -746,9 +767,13 @@ rwlock_do_tryread(DeeObject *self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Try to acquire a write-lock
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_trywrite(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -757,9 +782,13 @@ rwlock_do_trywrite(DeeObject *self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Try to upgrade a read- into a write-lock
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryupgrade(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -768,9 +797,10 @@ rwlock_do_tryupgrade(DeeObject *self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Release a read-lock */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endread(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -783,6 +813,7 @@ err:
 	return -1;
 }
 
+/* Release a write-lock */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endwrite(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -795,6 +826,10 @@ err:
 	return -1;
 }
 
+/* Check if at least 1 read-/write-lock is currently held
+ * @return: Dee_HAS_YES: Yes
+ * @return: Dee_HAS_NO:  No
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_reading(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -803,9 +838,13 @@ rwlock_do_reading(DeeObject *self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Check if at least 1 write-lock is currently held
+ * @return: Dee_HAS_YES: Yes
+ * @return: Dee_HAS_NO:  No
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_writing(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -814,83 +853,99 @@ rwlock_do_writing(DeeObject *self) {
 		goto err;
 	return DeeObject_BoolInherited(result_ob);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Acquire a read-lock
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_read(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_tryread(self);
-		if unlikely(error < 0)
+		if (Dee_HAS_ISERR(error))
 			goto err;
-		if (error)
+		if (Dee_HAS_ISYES_NO_ERR(error))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
 	}
-	return 0;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Acquire a write-lock
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_write(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_trywrite(self);
-		if unlikely(error < 0)
+		if (Dee_HAS_ISERR(error))
 			goto err;
-		if (error)
+		if (Dee_HAS_ISYES_NO_ERR(error))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
 	}
-	return 0;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Wait until it is possible to acquire a read-lock (iow: until there are no more write-locks)
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_waitread(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_writing(self);
-		if unlikely(error < 0)
+		if (Dee_HAS_ISERR(error))
 			goto err;
-		if (!error)
+		if (Dee_HAS_ISYES_NO_ERR(error))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
 	}
-	return 0;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Wait until it is possible to acquire a write-lock (iow: until there are no more read/write-locks)
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_waitwrite(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_reading(self);
-		if unlikely(error < 0)
+		if (Dee_HAS_ISERR(error))
 			goto err;
-		if (!error)
+		if (Dee_HAS_ISYES_NO_ERR(error))
 			break;
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
 	}
-	return 0;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Acquire a read-lock with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Timeout expired
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_timedread(DeeObject *self, uint64_t timeout_nanoseconds) {
 	int error;
 	uint64_t now_microseconds, then_microseconds;
 	error = rwlock_do_tryread(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
@@ -901,26 +956,30 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = rwlock_do_tryread(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
+		return Dee_HAS_NO; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	SCHED_YIELD();
 	goto do_wait_with_timeout;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Acquire a write-lock with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Timeout expired
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_timedwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
 	int error;
 	uint64_t now_microseconds, then_microseconds;
 	error = rwlock_do_trywrite(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
@@ -931,26 +990,30 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = rwlock_do_trywrite(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
+		return Dee_HAS_NO; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	SCHED_YIELD();
 	goto do_wait_with_timeout;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Wait for a read-lock with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Timeout expired
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_timedwaitread(DeeObject *self, uint64_t timeout_nanoseconds) {
 	int error;
 	uint64_t now_microseconds, then_microseconds;
 	error = rwlock_do_writing(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
@@ -961,26 +1024,30 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = rwlock_do_writing(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
+		return Dee_HAS_NO; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	SCHED_YIELD();
 	goto do_wait_with_timeout;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Wait for a write-lock with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Timeout expired
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_timedwaitwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
 	int error;
 	uint64_t now_microseconds, then_microseconds;
 	error = rwlock_do_reading(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
@@ -991,24 +1058,26 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 do_wait_with_timeout:
 	error = rwlock_do_reading(self);
-	if (error <= 0)
+	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
+		return Dee_HAS_NO; /* Timeout */
 	timeout_nanoseconds *= 1000;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	SCHED_YIELD();
 	goto do_wait_with_timeout;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_read(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
 	DeeArg_Unpack0(err, argc, argv, "read");
-	if unlikely(rwlock_do_read(self))
+	error = rwlock_do_read(self);
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_none;
 err:
@@ -1017,8 +1086,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_write(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
 	DeeArg_Unpack0(err, argc, argv, "write");
-	if unlikely(rwlock_do_write(self))
+	error = rwlock_do_write(self);
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_none;
 err:
@@ -1030,7 +1101,7 @@ rwlock_end(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeArg_Unpack0(err, argc, argv, "end");
 	error = rwlock_do_writing(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	if (error) {
 		error = rwlock_do_endwrite(self);
@@ -1049,13 +1120,14 @@ rwlock_upgrade(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeArg_Unpack0(err, argc, argv, "upgrade");
 	error = rwlock_do_tryupgrade(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	if (error)
 		return_true;
 	if unlikely(rwlock_do_endread(self))
 		goto err;
-	if unlikely(rwlock_do_write(self))
+	error = rwlock_do_write(self);
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_false;
 err:
@@ -1074,9 +1146,9 @@ rwlock_timedread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedread(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -1093,17 +1165,19 @@ rwlock_timedwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwrite(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
 	DeeArg_Unpack0(err, argc, argv, "waitread");
-	if unlikely(rwlock_do_waitread(self))
+	error = rwlock_do_waitread(self);
+	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_none;
 err:
@@ -1112,8 +1186,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int status;
 	DeeArg_Unpack0(err, argc, argv, "waitwrite");
-	if unlikely(rwlock_do_waitwrite(self))
+	status = rwlock_do_waitwrite(self);
+	if (Dee_HAS_ISERR(status))
 		goto err;
 	return_none;
 err:
@@ -1132,9 +1208,9 @@ rwlock_timedwaitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitread(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -1151,9 +1227,9 @@ rwlock_timedwaitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitwrite(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -1161,9 +1237,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_canread_get(DeeObject *__restrict self) {
 	int error = rwlock_do_writing(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -1171,9 +1247,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_canwrite_get(DeeObject *__restrict self) {
 	int error = rwlock_do_reading(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -1383,6 +1459,9 @@ rwlock_writelock_printrepr(DeeGenericRWLockProxyObject *__restrict self,
 	return DeeFormat_Printf(printer, arg, "%r.writelock", self->grwl_lock);
 }
 
+/* Acquire a read-lock
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
@@ -1395,6 +1474,9 @@ err:
 	return -1;
 }
 
+/* Release a read-lock
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
@@ -1407,6 +1489,9 @@ err:
 	return -1;
 }
 
+/* Acquire a write-lock
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_enter(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
@@ -1419,6 +1504,9 @@ err:
 	return -1;
 }
 
+/* Release a write-lock
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_leave(DeeGenericRWLockProxyObject *__restrict self) {
 	DREF DeeObject *temp;
@@ -2046,9 +2134,9 @@ event_isset_get(DeeEventObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 event_isset_set(DeeEventObject *self, DeeObject *value) {
 	int val = DeeObject_Bool(value);
-	if unlikely(val < 0)
+	if (Dee_HAS_ISERR(val))
 		goto err;
-	if (val) {
+	if (Dee_HAS_ISYES_NO_ERR(val)) {
 		Dee_event_set(&self->e_event);
 	} else {
 		Dee_event_clear(&self->e_event);
@@ -2171,7 +2259,7 @@ lock_union_allocator_init(struct lock_union_allocator *__restrict self,
 	if unlikely(!self->lua_union)
 		goto err;
 	self->lua_union->lu_size = 0;
-	self->lua_alloc           = hint;
+	self->lua_alloc          = hint;
 	return 0;
 err:
 	return -1;
@@ -2427,13 +2515,16 @@ lock_union_leave_x1_count_except(LockUnion *__restrict self,
 				goto err_count;
 		}
 	}
-	return 0;
+	return Dee_HAS_NO;
 err_count:
 	lock_union_leave_nx_count(self, count);
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 
+/* Acquire all locks from the union
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_acquire(LockUnion *__restrict self) {
 	size_t i = 1;
@@ -2441,29 +2532,28 @@ lock_union_do_acquire(LockUnion *__restrict self) {
 		goto err;
 	for (; i < self->lu_size; ++i) {
 		int ok = lock_do_tryacquire(self->lu_elem[i]);
-		if (ok < 0)
+		if (Dee_HAS_ISERR(ok))
 			goto err_release;
-		if (ok == 0) {
+		if (Dee_HAS_ISNO_NO_ERR(ok)) {
 			size_t already_holding;
 			if unlikely(lock_union_leave_x1_count(self, i))
 				goto err;
 blocking_acquire_lock_i:
-			ok = lock_do_acquire(self->lu_elem[i]);
-			if unlikely(ok < 0)
+			if unlikely(lock_do_acquire(self->lu_elem[i]))
 				goto err;
 			already_holding = i;
 			for (i = 0; i < self->lu_size; ++i) {
 				if (i == already_holding)
 					continue;
 				ok = lock_do_tryacquire(self->lu_elem[i]);
-				if (ok < 0) {
+				if (Dee_HAS_ISERR(ok)) {
 					lock_union_leave_nx_count(self, i);
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
 						lock_do_release_nx(self->lu_elem[already_holding]);
 					goto err;
 				}
-				if (ok == 0) {
+				if (Dee_HAS_ISNO_NO_ERR(ok)) {
 					lock_union_leave_nx_count(self, i);
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
@@ -2489,6 +2579,9 @@ err:
 	return -1;
 }
 
+/* Wait for all locks from the union
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_waitfor(LockUnion *__restrict self) {
 	size_t i = 0;
@@ -2499,11 +2592,14 @@ lock_union_do_waitfor(LockUnion *__restrict self) {
 			goto err;
 		Dee_Decref(result);
 	} while (++i < self->lu_size);
-	return 0;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lock_union_do_available_or_acquired(LockUnion *__restrict self,
                                     DeeObject *__restrict attr_name,
@@ -2516,54 +2612,52 @@ lock_union_do_available_or_acquired(LockUnion *__restrict self,
 		if unlikely(!result)
 			goto err;
 		status = DeeObject_BoolInherited(result);
-		if unlikely(status < 0)
-			goto err;
-		if (!status)
-			return 0;
+		if (Dee_HAS_ISNO_OR_ERR(status))
+			return status;
 		++start_index;
 	} while (start_index < self->lu_size);
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Acquire the lock with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
-	int status;
 	DeeObject *result;
 	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedacquire),
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
-	status = DeeObject_BoolInherited(result);
-	if unlikely(status >= 0)
-		status = status ? 0 : 1;
-	return status;
+	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* Wait for the lock to become available with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO : Timeout
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
-	int status;
 	DeeObject *result;
 	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedwaitfor),
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
-	status = DeeObject_BoolInherited(result);
-	if unlikely(status >= 0)
-		status = status ? 0 : 1;
-	return status;
+	return DeeObject_BoolInherited(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 
 /* Try to acquire all locks except for the lock at index `already_holding'.
- * @return: 1:  Success
- * @return: 0:  Failure
- * @return: -1: Error */
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_tryacquire_except(LockUnion *__restrict self,
                              size_t already_holding) {
@@ -2573,18 +2667,22 @@ lock_union_tryacquire_except(LockUnion *__restrict self,
 		if (i == already_holding)
 			continue;
 		error = lock_do_tryacquire(self->lu_elem[i]);
-		if (error > 0)
+		if (Dee_HAS_ISYES(error))
 			continue; /* Success */
-		if unlikely(error < 0) {
+		if (Dee_HAS_ISERR(error)) {
 			lock_union_leave_nx_count(self, i);
 			return error;
 		}
 		/* Acquire failed (release all already-acquired locks) */
 		return lock_union_leave_x1_count_except(self, i, already_holding);
 	}
-	return 1;
+	return Dee_HAS_YES;
 }
 
+/* Acquire all locks from the union with a timeout
+ * @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_acquire_timed(LockUnion *__restrict self,
                             uint64_t timeout_nanoseconds) {
@@ -2593,58 +2691,65 @@ lock_union_do_acquire_timed(LockUnion *__restrict self,
 	uint64_t now_microseconds, then_microseconds;
 	if (timeout_nanoseconds == (uint64_t)-1) {
 do_infinite_timeout:
-		return lock_union_do_acquire(self);
+		ok = lock_union_do_acquire(self);
+		if likely(ok == 0) {
+			ok = Dee_HAS_YES;
+		} else {
+			STATIC_ASSERT(Dee_HAS_ISERR(-1));
+			ASSERT(ok == -1);
+		}
+		return ok;
 	}
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
 		goto do_infinite_timeout;
 	ok = lock_do_timedacquire(self->lu_elem[0], timeout_nanoseconds);
-	if (ok != 0)
+	if (Dee_HAS_ISNO_OR_ERR(ok))
 		return ok; /* Error or timeout */
 	now_microseconds = DeeThread_GetTimeMicroSeconds();
 	if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
 		/* Timeout */
 		if (self->lu_size == 1)
-			return 0;
+			return Dee_HAS_YES;
 		ok = lock_union_tryacquire_except(self, 0);
-		if unlikely(ok < 0) {
+		if (Dee_HAS_ISERR(ok)) {
 			lock_do_release_nx(self->lu_elem[0]);
 			goto err;
 		}
-		if (ok > 0)
-			return 0; /* Able to acquire all remaining locks without blocking */
+		if (Dee_HAS_ISYES_NO_ERR(ok))
+			return Dee_HAS_YES; /* Able to acquire all remaining locks without blocking */
 		if unlikely(lock_do_release(self->lu_elem[0]))
 			goto err;
-		return 1;
+		return Dee_HAS_NO;
 	}
 	timeout_nanoseconds *= 1000;
 
 	/* First lock has been acquired -> now to acquire the rest of them! */
 	for (i = 1; i < self->lu_size; ++i) {
 		ok = lock_do_tryacquire(self->lu_elem[i]);
-		if (ok < 0)
+		if (Dee_HAS_ISERR(ok))
 			goto err_release;
-		if (ok == 0) {
+		if (Dee_HAS_ISNO_NO_ERR(ok)) {
 			size_t already_holding;
 			if unlikely(lock_union_leave_x1_count(self, i))
 				goto err;
 blocking_acquire_lock_i:
 			ok = lock_do_timedacquire(self->lu_elem[i], timeout_nanoseconds);
-			if (ok != 0)
+			if (Dee_HAS_ISNO_OR_ERR(ok))
 				return ok; /* Error or timeout */
 			now_microseconds = DeeThread_GetTimeMicroSeconds();
 			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
 				/* Timeout */
 				ok = lock_union_tryacquire_except(self, i);
-				if unlikely(ok < 0) {
+				if (Dee_HAS_ISERR(ok)) {
 					lock_do_release_nx(self->lu_elem[i]);
 					goto err;
 				}
-				if (ok > 0)
-					return 0; /* Able to acquire all remaining locks without blocking */
+				if (Dee_HAS_ISYES(ok))
+					return Dee_HAS_YES; /* Able to acquire all remaining locks without blocking */
 				if unlikely(lock_do_release(self->lu_elem[i]))
 					goto err;
-				return 1;
+				return Dee_HAS_NO;
 			}
 			timeout_nanoseconds *= 1000;
 			already_holding = i;
@@ -2652,14 +2757,14 @@ blocking_acquire_lock_i:
 				if (i == already_holding)
 					continue;
 				ok = lock_do_tryacquire(self->lu_elem[i]);
-				if (ok < 0) {
+				if (Dee_HAS_ISERR(ok)) {
 					lock_union_leave_nx_count(self, i);
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
 						lock_do_release_nx(self->lu_elem[already_holding]);
 					goto err;
 				}
-				if (ok == 0) {
+				if (Dee_HAS_ISNO_NO_ERR(ok)) {
 					lock_union_leave_nx_count(self, i);
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
@@ -2678,13 +2783,16 @@ blocking_acquire_lock_i:
 			break;
 		}
 	}
-	return 0;
+	return Dee_HAS_YES;
 err_release:
 	lock_union_leave_nx_count(self, i);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
+/* @return: Dee_HAS_YES: Success
+ * @return: Dee_HAS_NO:  Failure
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_waitfor_timed(LockUnion *__restrict self,
                             uint64_t timeout_nanoseconds) {
@@ -2700,25 +2808,25 @@ do_infinite_timeout:
 		goto do_infinite_timeout;
 	for (i = 0; i < self->lu_size; ++i) {
 		ok = lock_do_timedwaitfor(self->lu_elem[i], timeout_nanoseconds);
-		if (ok != 0)
+		if (Dee_HAS_ISNO_OR_ERR(ok))
 			return ok; /* Error or timeout */
 		now_microseconds = DeeThread_GetTimeMicroSeconds();
 		if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds)) {
 			/* Timeout */
 			ASSERT(i <= self->lu_size - 1);
 			if (i >= self->lu_size - 1)
-				return 0;
+				return Dee_HAS_NO;
 			/* Check if all other locks are currently available. */
-			ok = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), i + 1);
-			if (ok > 0)
-				ok = ok ? 0 : 1;
-			return ok;
+			return lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), i + 1);
 		}
 		timeout_nanoseconds *= 1000;
 	}
-	return 0;
+	return Dee_HAS_NO;
 }
 
+/* Release all locks from the union
+ * @return: 0 : Success
+ * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_release(LockUnion *__restrict self) {
 	size_t i = self->lu_size;
@@ -2741,16 +2849,16 @@ lock_union_do_tryacquire(LockUnion *__restrict self) {
 	size_t i = 0;
 	for (; i < self->lu_size; ++i) {
 		int ok = lock_do_tryacquire(self->lu_elem[i]);
-		if (ok < 0)
+		if (Dee_HAS_ISERR(ok))
 			goto err_release;
-		if (ok == 0)
+		if (Dee_HAS_ISNO_NO_ERR(ok))
 			return lock_union_leave_x1_count(self, i);
 	}
-	return 1;
+	return Dee_HAS_YES;
 err_release:
 	lock_union_leave_nx_count(self, i);
 /*err:*/
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2759,9 +2867,9 @@ lock_union_tryacquire(LockUnion *__restrict self,
 	int error;
 	DeeArg_Unpack0(err, argc, argv, "tryacquire");
 	error = lock_union_do_tryacquire(self);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error != 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -2801,9 +2909,9 @@ lock_union_timedacquire(LockUnion *__restrict self,
 	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_union_do_acquire_timed(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -2811,8 +2919,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_waitfor(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
+	int status;
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
-	if unlikely(lock_union_do_waitfor(self))
+	status = lock_union_do_waitfor(self);
+	if (Dee_HAS_ISERR(status))
 		goto err;
 	return_none;
 err:
@@ -2832,9 +2942,9 @@ lock_union_timedwaitfor(LockUnion *__restrict self,
 	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
 	error = lock_union_do_waitfor_timed(self, args.timeout_nanoseconds);
-	if unlikely(error < 0)
+	if (Dee_HAS_ISERR(error))
 		goto err;
-	return_bool(error == 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
@@ -2842,9 +2952,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_available_get(LockUnion *__restrict self) {
 	int status = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_available), 0);
-	if unlikely(status < 0)
+	if (Dee_HAS_ISERR(status))
 		goto err;
-	return_bool(status != 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(status));
 err:
 	return NULL;
 }
@@ -2852,9 +2962,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_acquired_get(LockUnion *__restrict self) {
 	int status = lock_union_do_available_or_acquired(self, Dee_AsObject(&str_acquired), 0);
-	if unlikely(status < 0)
+	if (Dee_HAS_ISERR(status))
 		goto err;
-	return_bool(status != 0);
+	return_bool(Dee_HAS_ISYES_NO_ERR(status));
 err:
 	return NULL;
 }

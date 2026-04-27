@@ -36,7 +36,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/method-hints.h>    /* TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* DeeNone_Check, return_none */
-#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_ERR, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_ERR, Dee_Decref, Dee_DecrefDokill, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
@@ -669,9 +669,9 @@ bs_setitem_index(Bitset *self, size_t bitno, DeeObject *value) {
 	if unlikely(bitno >= self->bs_nbits)
 		goto err_too_large;
 	temp = DeeObject_Bool(value);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if (temp) {
+	if (Dee_HAS_ISYES_NO_ERR(temp)) {
 		bitset_atomic_set(self->bs_bitset, bitno);
 	} else {
 		bitset_atomic_clear(self->bs_bitset, bitno);
@@ -1270,9 +1270,9 @@ bs_init(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (init_or_minbits) {
 		int temp = DeeObject_Bool(init_or_minbits);
-		if unlikely(temp < 0)
+		if (Dee_HAS_ISERR(temp))
 			goto err;
-		if (!temp)
+		if (Dee_HAS_ISNO_NO_ERR(temp))
 			goto init_fixed_length_as_empty;
 		result = Bitset_Alloc(nbits);
 		if unlikely(!result)
@@ -2741,9 +2741,9 @@ bsv_setitem_index(BitsetView *self, size_t bitno, DeeObject *value) {
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	temp = DeeObject_Bool(value);
-	if unlikely(temp < 0)
+	if (Dee_HAS_ISERR(temp))
 		goto err;
-	if (temp) {
+	if (Dee_HAS_ISYES_NO_ERR(temp)) {
 		bitset_atomic_set(BitsetView_GetBitset(self), bitno);
 	} else {
 		bitset_atomic_clear(BitsetView_GetBitset(self), bitno);

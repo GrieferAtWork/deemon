@@ -259,7 +259,7 @@
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
 #include <deemon/hashset.h>      /* Dee_hashset_item */
 #include <deemon/int.h>          /* DeeInt_Size_TryCompareEq */
-#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_BOUND_*, Dee_COMPARE_ISERR, Dee_COMPARE_ISNE_OR_ERR, Dee_hash_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_BOUND_*, Dee_COMPARE_*, Dee_HAS_*, Dee_hash_t, ITER_DONE, return_reference_ */
 #include <deemon/rodict.h>       /* _DeeRoDict_* */
 #include <deemon/roset.h>        /* _DeeRoSet_GetVirtVTab, _DeeRoSet_HashIdxInit, _DeeRoSet_HashIdxNext */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
