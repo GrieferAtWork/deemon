@@ -1724,6 +1724,38 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 
 /* Custom converts that are useful for `Dee_foreach_t' status values. */
+#if 1
+/* IN    -   ^1   -1   ^2    CANON   REQ
+ * -1    1    0   -1   -3     -1     <0
+ * -2    2    3    2    0      0     ==0
+ *  0    0    1    0    2      1     >0 */
+#define Dee_HAS_FROM_eM1_nM2_y0(v) (((-(v) ^ 1) - 1) ^ 2)
+
+/* IN  OUT
+ * <0  -1
+ *  0  -2
+ * >0  0 */
+#define Dee_HAS_INTO_eM1_nM2_y0(v) (-+((v) < 0) - (+((v) == 0) << 1))
+
+/* IN    -   ^1   -1   CANON   REQ
+ * -1    1    0   -1    -1     <0
+ *  0    0    1    0     0     ==0
+ * -2    2    3    2     1     >0 */
+#define Dee_HAS_FROM_eM1_n0_yM2(v) ((-(v) ^ 1) - 1)
+
+/* IN  OUT
+ * <0  -1
+ *  0  0
+ * >0  -2 */
+#define Dee_HAS_INTO_eM1_n0_yM2(v) (-+((v) < 0) - (+((v) > 0) << 1))
+
+/* IN  OUT
+ * <0  -1
+ *  0  0
+ * >0  1 */
+#define Dee_HAS_INTO_eM1_n0_y1(v)  ((v > 0) - (v < 0))
+#define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
+#else
 #define Dee_HAS_FROM_eM1_nM2_y0(v) ((v) == -1 ? Dee_HAS_ERR : (v) == -2 ? Dee_HAS_NO : (/*Dee_ASSERT((v) == 0),*/ Dee_HAS_YES))
 #define Dee_HAS_INTO_eM1_nM2_y0(v) (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 0 : -2)
 
@@ -1732,11 +1764,28 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 #define Dee_HAS_FROM_eM1_n0_y1(v)  (v)
 #define Dee_HAS_INTO_eM1_n0_y1(v)  (Dee_HAS_ISERR(v) ? -1 : Dee_HAS_ISYES_NO_ERR(v) ? 1 : 0)
+#endif
 
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0
+/* IN   OUT
+ * <0   -2
+ * ==0  +/-1
+ * >0   0 */
+#define Dee_COMPARE_EQ_FROMHAS(is_equal_or_err) \
+	(-(+((is_equal_or_err) < 0) << 1) + +((is_equal_or_err) == 0))
+
+/* IN   OUT
+ * <0   -2
+ * ==0  0
+ * >0   +/-1 */
+#define Dee_COMPARE_NE_FROMHAS(is_not_equal_or_err) \
+	(-(+((is_not_equal_or_err) < 0) << 1) + +((is_not_equal_or_err) > 0))
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 */
 #define Dee_COMPARE_EQ_FROMHAS(is_equal_or_err) \
 	(Dee_HAS_ISERR(is_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_EQ_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_equal_or_err)))
 #define Dee_COMPARE_NE_FROMHAS(is_not_equal_or_err) \
 	(Dee_HAS_ISERR(is_not_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_NE_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_not_equal_or_err)))
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
 
 
 /* Possible values returned by C-API isbound checking functions.
@@ -1815,12 +1864,28 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
 
 /* Considers has_value == true as bound */
+#if Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1
+/* IN   OUT
+ * <0   -1
+ * ==0  0
+ * >0   1 */
+#define Dee_BOUND_FROMHAS_BOUND(has_value) (+((has_value) > 0) - +((has_value) < 0))
+#else /* Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
 #define Dee_BOUND_FROMHAS_BOUND(has_value) \
 	(Dee_HAS_ISERR(has_value) ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_BOUND(has_value))
+#endif /* Dee_BOUND_ERR != -1 || Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
 
 /* Considers has_value == true as unbound */
+#if Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 2
+/* IN   OUT
+ * <0   -1
+ * ==0  0
+ * >0   2 */
+#define Dee_BOUND_FROMHAS_UNBOUND(has_value) ((+((has_value) > 0) << 1) - +((has_value) < 0))
+#else /* Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 2 */
 #define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
 	(Dee_HAS_ISERR(has_value) ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
+#endif /* Dee_BOUND_ERR != -1 || Dee_BOUND_MISSING != 0 || Dee_BOUND_NO != 2 */
 
 
 
@@ -1831,8 +1896,18 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *    - Dee_BOUND_MISSING => Dee_HAS_ISNO(...)
  *    - Dee_BOUND_YES     => Dee_HAS_ISYES(...)
  *    - Dee_BOUND_NO      => Dee_HAS_ISNO(...) */
+#if Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2
+/* IN   &~2   CANON  REQ
+ * -1   -3   -1     <0
+ *  0    0    0     ==0
+ *  1    1    1     >0
+ *  2    0    0     ==0 */
+#define Dee_HAS_FROMBOUND(bound_status)        ((bound_status) & ~2)
+#define Dee_HAS_FROMBOUND_NO_ERR(bound_status) ((bound_status) & ~2) /* WARNING: Don't use this macro when `bound_status' may be `Dee_BOUND_ERR' */
+#else /* Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2 */
 #define Dee_HAS_FROMBOUND(bound_status)        ((bound_status) == Dee_BOUND_NO ? Dee_HAS_NO : (bound_status))
 #define Dee_HAS_FROMBOUND_NO_ERR(bound_status) (+((bound_status) == Dee_BOUND_YES))
+#endif /* Dee_BOUND_ERR != -1 || Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 || Dee_BOUND_NO != 2 */
 
 /* >> Dee_HAS_FROMBOUND(bound_status)
  *    - Dee_BOUND_ERR     => Dee_HAS_ISERR(...)
