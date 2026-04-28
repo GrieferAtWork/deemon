@@ -843,6 +843,7 @@ PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Init(DeeDeepCopyContext *__restrict self) {
 	self->ser_type       = &deepcopy_serial_type;
+	self->dcc_hooks      = NULL;
 	self->dcc_heap       = NULL;
 	self->dcc_obheap     = NULL;
 	self->dcc_gcheap     = NULL;
@@ -1001,26 +1002,72 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 	Dee_seraddr_t out_addr;
 
 	/* Check if "ob" falls into an address range that should be replaced */
-	size_t lo = 0, hi = self->dcc_ptrmapc;
-	while (lo < hi) {
-		size_t mid = (lo + hi) / 2;
-		struct Dee_deepcopy_mapitem *ent = &self->dcc_ptrmapv[mid];
-		if ((byte_t *)ob < ent->dcmi_old_minaddr) {
-			hi = mid;
-		} else if ((byte_t *)ob > ent->dcmi_old_maxaddr) {
-			lo = mid + 1;
-		} else {
-			/* Object has already been encoded */
-			uintptr_t offset = (uintptr_t)((byte_t *)ob - ent->dcmi_old_minaddr);
-			DeeObject *result = (DeeObject *)(ent->dcmi_new + offset);
-			++result->ob_refcnt;
-			return result;
+	{
+		size_t lo = 0, hi = self->dcc_ptrmapc;
+		while (lo < hi) {
+			size_t mid = (lo + hi) / 2;
+			struct Dee_deepcopy_mapitem *ent = &self->dcc_ptrmapv[mid];
+			if ((byte_t *)ob < ent->dcmi_old_minaddr) {
+				hi = mid;
+			} else if ((byte_t *)ob > ent->dcmi_old_maxaddr) {
+				lo = mid + 1;
+			} else {
+				/* Object has already been encoded */
+				uintptr_t offset = (uintptr_t)((byte_t *)ob - ent->dcmi_old_minaddr);
+				DeeObject *result = (DeeObject *)(ent->dcmi_new + offset);
+				++result->ob_refcnt;
+				return result;
+			}
 		}
 	}
 
-	/* Check if "ob" is considered "deeply immutable" */
-	if (DeeObject_IsDeepImmutable(ob))
-		return DeeDeepCopy_AddImmutable(self, ob);
+	/* Deal with custom deepcopy hooks */
+	if (self->dcc_hooks) {
+		struct Dee_deepcopy_vars vars;
+		struct Dee_deepcopy_hook *iter;
+		vars.dcv_obj  = ob;
+		vars.dcv_mode = Dee_DEEPCOPY_V_MODE_AUTO;
+		iter = self->dcc_hooks;
+		do {
+			(*iter->dch_hook)(iter, &vars);
+		} while ((iter = iter->dch_next) != NULL);
+
+		/* Check if a hook forced "ob" to be replaced */
+		if unlikely(vars.dcv_obj != ob) {
+			size_t lo = 0, hi = self->dcc_ptrmapc;
+			ob = vars.dcv_obj;
+			while (lo < hi) {
+				size_t mid = (lo + hi) / 2;
+				struct Dee_deepcopy_mapitem *ent = &self->dcc_ptrmapv[mid];
+				if ((byte_t *)ob < ent->dcmi_old_minaddr) {
+					hi = mid;
+				} else if ((byte_t *)ob > ent->dcmi_old_maxaddr) {
+					lo = mid + 1;
+				} else {
+					/* Object has already been encoded */
+					uintptr_t offset = (uintptr_t)((byte_t *)ob - ent->dcmi_old_minaddr);
+					DeeObject *result = (DeeObject *)(ent->dcmi_new + offset);
+					++result->ob_refcnt;
+					return result;
+				}
+			}
+		}
+
+		/* Evaluation execution mode */
+		if (vars.dcv_mode == Dee_DEEPCOPY_V_MODE_AUTO) {
+			vars.dcv_mode = DeeObject_IsDeepImmutable(ob)
+			                ? Dee_DEEPCOPY_V_MODE_REF
+			                : Dee_DEEPCOPY_V_MODE_COPY;
+		}
+
+		/* If instructed to, link "ob" as a reference, rather than a copy */
+		if (vars.dcv_mode == Dee_DEEPCOPY_V_MODE_REF)
+			return DeeDeepCopy_AddImmutable(self, ob);
+	} else {
+		/* Check if "ob" is considered "deeply immutable" */
+		if (DeeObject_IsDeepImmutable(ob))
+			return DeeDeepCopy_AddImmutable(self, ob);
+	}
 
 	/* Serialize the object (if possible) */
 	tp = Dee_TYPE(ob);

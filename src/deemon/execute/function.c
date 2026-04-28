@@ -28,6 +28,7 @@
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_class_operator */
 #include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, code_addr_t */
+#include <deemon/deepcopy.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
@@ -2214,6 +2215,7 @@ again:
 	DeeYieldFunctionIterator_LockEndRead(other);
 	Dee_rshared_rwlock_init(&self->yi_lock);
 	if (code) {
+		DeeDeepCopyContext deep_ctx;
 		DeeObject *this_arg;
 		DeeObject *varargs;
 		size_t i, argc, refc;
@@ -2226,15 +2228,27 @@ again:
 		refc     = self->yi_func->yf_func->fo_code->co_refc;
 		refv     = self->yi_func->yf_func->fo_refv;
 
+		DeeDeepCopy_Init(&deep_ctx);
+
+		/* TODO: Must also (somehow) register "argv" with "deep_ctx" such that it will treat
+		 *       those objects as though they were "DeeObject_IsDeepImmutable" (meaning that
+		 *       no matter which way they're nested, they won't get copied, such that the
+		 *       copy of the iterator will continue to reference the same argument objects
+		 *       as were given during the original invocation)  */
+
 		/* With all objects now referenced, we still have to replace
 		 * all locals and the stack with deep copies of themself. */
 		for (i = 0; i < stack_size; ++i) {
 			DeeObject *elem;
 			elem = self->yi_frame.cf_stack[i];
 			if (elem != this_arg && elem != varargs) {
+				/* TODO: Must create deep copies of stack/locals using the same deepcopy context! */
 				if (inplace_deepcopy_noarg(&self->yi_frame.cf_stack[i],
-				                           argc, argv, refc, refv))
+				                           argc, argv, refc, refv)) {
+err_self_deep_ctx:
+					DeeDeepCopy_Fini(&deep_ctx);
 					goto err_self;
+				}
 			}
 		}
 		for (i = 0; i < code->co_localc; ++i) {
@@ -2243,9 +2257,13 @@ again:
 			if (elem != this_arg && elem != varargs) {
 				if (inplace_deepcopy_noarg(&self->yi_frame.cf_frame[i],
 				                           argc, argv, refc, refv))
-					goto err_self;
+					goto err_self_deep_ctx;
 			}
 		}
+
+		/* Realize deep copies that were made of local/stack variables */
+		DeeDeepCopy_Pack(&deep_ctx);
+
 		/* WARNING: There are some thing that we don't copy, such as the this-argument.
 		 *          Similarly, we also don't copy function input arguments! */
 	} else {

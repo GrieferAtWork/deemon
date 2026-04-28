@@ -128,6 +128,30 @@ typedef struct Dee_deepcopy_heap {
 struct Dee_gc_head;
 struct Dee_weakref;
 
+#define Dee_DEEPCOPY_V_MODE_AUTO 0 /* Determine mode automatically via `DeeObject_IsDeepImmutable()' (default) */
+#define Dee_DEEPCOPY_V_MODE_REF  1 /* Link source object by-reference (default when `DeeObject_IsDeepImmutable() == true') */
+#define Dee_DEEPCOPY_V_MODE_COPY 2 /* Copy source object (default when `DeeObject_IsDeepImmutable() == false') */
+
+struct Dee_deepcopy_vars {
+#if 0 /* TODO */
+	DREF DeeObject *dcv_obj;  /* [1..1] The object being copied (overwrite to inject custom objects)
+	                           * WARNING: Don't override if some native heap-structure owned by this
+	                           *          object may be (indirectly) referenced by some other object!
+	                           * e.g.: When copying a StringSplitIterator, don't override the linked
+	                           *       string object, because the "union Dee_charptr_const" would not
+	                           *       end up getting copied correctly. */
+#else
+	DeeObject      *dcv_obj;  /* [1..1][const] The object being copied */
+#endif
+	unsigned int    dcv_mode; /* Deepcopy mode (one of `Dee_DEEPCOPY_V_MODE_*') */
+};
+
+struct Dee_deepcopy_hook {
+	struct Dee_deepcopy_hook *dch_next; /* [0..1] Next hook */
+	void (DCALL *dch_hook)(struct Dee_deepcopy_hook *__restrict self,
+	                       struct Dee_deepcopy_vars *__restrict vars);
+};
+
 /*
  * Context controller for creating deep copies of objects by use of "tp_serialize":
  * >>    DeeObject *copy1;
@@ -153,6 +177,7 @@ struct Dee_weakref;
  * and "ob2". */
 typedef struct {
 	Dee_SERIAL_HEAD
+	struct Dee_deepcopy_hook    *dcc_hooks;      /* [0..N] Linked list of deepcopy hooks */
 	Dee_deepcopy_heap_t         *dcc_heap;       /* [0..N][owned] Deepcopy heap */
 	Dee_deepcopy_heap_t         *dcc_obheap;     /* [0..N][owned] Deepcopy heap for objects */
 	Dee_deepcopy_heap_t         *dcc_gcheap;     /* [0..N][owned] Deepcopy heap for gc objects */
