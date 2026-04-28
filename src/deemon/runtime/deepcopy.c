@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_Free */
-#include <deemon/deepcopy.h>         /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy, Dee_deepcopy_uheap_destroy_ob, Dee_deepcopy_uheap_free, Dee_deepcopy_uheap_tryalloc */
+#include <deemon/deepcopy.h>         /* DeeDeepCopyContext, Dee_DEEPCOPY_V_MODE_AUTO, Dee_DEEPCOPY_V_MODE_COPY, Dee_DEEPCOPY_V_MODE_REF, Dee_deepcopy_heap_*, Dee_deepcopy_hook, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy, Dee_deepcopy_uheap_destroy_ob, Dee_deepcopy_uheap_free, Dee_deepcopy_uheap_tryalloc, Dee_deepcopy_vars */
 #include <deemon/error-rt.h>         /* DeeRT_ErrCannotSerialize */
 #include <deemon/gc.h>               /* DeeGCSlab_*, DeeGC_*, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/object.h>           /* ASSERT_OBJECT, Dee_Decref_unlikely, Dee_Decrefv_unlikely, Dee_Incref */

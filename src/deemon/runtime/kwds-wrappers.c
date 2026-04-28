@@ -32,7 +32,7 @@
 #include <deemon/format.h>             /* PRFu16, PRFuSIZ */
 #include <deemon/kwds.h>               /* DeeBlackListKw*, DeeKw_*, DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMap_Type */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_COMPARE_ERR, Dee_Decref*, Dee_HAS_NO, Dee_HAS_YES, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_COMPARE_ERR, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
