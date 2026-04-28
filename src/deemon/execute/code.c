@@ -1172,7 +1172,7 @@ check_other_threads:
 				if (DeeThread_CheckInterruptSelf(caller))
 					goto err;
 #define WANT_err
-				DeeThread_SleepNoInt(100);
+				DeeThread_SleepNoInt(100000);
 				goto check_other_threads;
 			}
 

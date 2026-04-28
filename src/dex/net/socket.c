@@ -174,7 +174,7 @@ again:
 		socket_endread(self);
 		if (state & (SOCKET_FBINDING | SOCKET_FCONNECTING)) {
 			/* Socket is currently binding/connecting (wait a bit more) */
-			DeeThread_SleepNoInt(1000);
+			DeeThread_SleepNoInt(1000000);
 			goto again;
 		}
 		if (throw_error) {
@@ -366,7 +366,7 @@ again_shutdown:
 		    SOCKET_FSHUTTINGDOWN) {
 			/* Special case: Another shutdown operation is still in progress. */
 			socket_endread(self);
-			DeeThread_SleepNoInt(1000);
+			DeeThread_SleepNoInt(1000000);
 			goto again_shutdown;
 		}
 		/* We'll have to do the shutdown. */
@@ -434,7 +434,7 @@ again_shutdown:
 		    SOCKET_FSHUTTINGDOWN) {
 			/* Special case: The socket is already being shut down. */
 			socket_endread(self);
-			DeeThread_SleepNoInt(1000);
+			DeeThread_SleepNoInt(1000000);
 			goto again_shutdown;
 		}
 		/* Actually do the shutdown. */
@@ -492,7 +492,7 @@ again:
 
 		socket_endread(self);
 		/* The socket is already in the middle of a binding-call. */
-		DeeThread_SleepNoInt(1000);
+		DeeThread_SleepNoInt(1000000);
 		goto again;
 	}
 	DBG_ALIGNMENT_DISABLE();
@@ -607,7 +607,7 @@ again:
 		socket_endread(self);
 		/* The socket is already in the middle of a connecting-call.
 		 * Wait for that other connect() call to complete, then try again. */
-		DeeThread_SleepNoInt(1000);
+		DeeThread_SleepNoInt(1000000);
 		goto again;
 	}
 	/* Do the connect system call. */
@@ -780,7 +780,7 @@ again:
 
 		socket_endread(self);
 		/* The socket is already in the middle of a listening-call. */
-		DeeThread_SleepNoInt(1000);
+		DeeThread_SleepNoInt(1000000);
 		goto again;
 	}
 	/* Do the listen system call. */
@@ -942,7 +942,7 @@ do_try_select:
 		/* Acquire an exclusive lock to prevent anyone else from stealing our client. */
 		if (!socket_tryupgrade(self)) {
 			socket_endread(self);
-			DeeThread_SleepNoInt(1000);
+			DeeThread_SleepNoInt(1000000);
 			goto do_try_select;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -1020,7 +1020,7 @@ do_timed_select:
 		if (!socket_tryupgrade(self)) {
 			uint64_t now;
 			socket_endread(self);
-			DeeThread_SleepNoInt(1000);
+			DeeThread_SleepNoInt(1000000);
 			now = DeeThread_GetTimeMicroSeconds();
 			if (now >= end_time)
 				goto do_try_select;

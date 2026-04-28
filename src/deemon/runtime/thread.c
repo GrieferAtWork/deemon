@@ -392,51 +392,58 @@ DeeThread_SetName(char const *__restrict name) {
 
 
 
-/* Figure out how to implement `DeeThread_GetTimeMicroSeconds()' */
-#undef DeeThread_GetTimeMicroSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
-#undef DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_MONOTONIC
-#undef DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME
-#undef DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_MONOTONIC
-#undef DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_REALTIME
-#undef DeeThread_GetTimeMicroSeconds_USE_gettimeofday64
-#undef DeeThread_GetTimeMicroSeconds_USE_gettimeofday
-#undef DeeThread_GetTimeMicroSeconds_USE_time
-#undef DeeThread_GetTimeMicroSeconds_USE_COUNTER
+/* Figure out how to implement `DeeThread_GetTimeNanoSeconds()' */
+#undef DeeThread_GetTimeNanoSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
+#undef DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_MONOTONIC
+#undef DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME
+#undef DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_MONOTONIC
+#undef DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_REALTIME
+#undef DeeThread_GetTimeNanoSeconds_USE_gettimeofday64
+#undef DeeThread_GetTimeNanoSeconds_USE_gettimeofday
+#undef DeeThread_GetTimeNanoSeconds_USE_time
+#undef DeeThread_GetTimeNanoSeconds_USE_COUNTER
 #if 0
 /* ... */
 #elif defined(CONFIG_HOST_WINDOWS)
-#define DeeThread_GetTimeMicroSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
+#define DeeThread_GetTimeNanoSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
 #elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_MONOTONIC)
-#define DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_MONOTONIC
+#define DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_MONOTONIC
 #elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME
+#define DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME
 #elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_MONOTONIC)
-#define DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_MONOTONIC
+#define DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_MONOTONIC
 #elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_REALTIME)
-#define DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_REALTIME
+#define DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_REALTIME
 #elif defined(CONFIG_HAVE_gettimeofday64)
-#define DeeThread_GetTimeMicroSeconds_USE_gettimeofday64
+#define DeeThread_GetTimeNanoSeconds_USE_gettimeofday64
 #elif defined(CONFIG_HAVE_gettimeofday)
-#define DeeThread_GetTimeMicroSeconds_USE_gettimeofday
+#define DeeThread_GetTimeNanoSeconds_USE_gettimeofday
 #elif defined(CONFIG_HAVE_time64)
-#undef DeeThread_GetTimeMicroSeconds_USE_time64
+#define DeeThread_GetTimeNanoSeconds_USE_time64
 #elif defined(CONFIG_HAVE_time)
-#undef DeeThread_GetTimeMicroSeconds_USE_time
+#define DeeThread_GetTimeNanoSeconds_USE_time
 #else /* ... */
-#undef DeeThread_GetTimeMicroSeconds_USE_COUNTER
+#define DeeThread_GetTimeNanoSeconds_USE_COUNTER
 #endif /* !... */
 
 
 /* Get the current time (offset from some undefined point) in microseconds. */
 PUBLIC WUNUSED uint64_t
 (DCALL DeeThread_GetTimeMicroSeconds)(void) {
-#ifdef DeeThread_GetTimeMicroSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
+	return DeeThread_GetTimeNanoSeconds() / UINT16_C(1000);
+}
+
+
+/* Get the current time (offset from some undefined point) in nanoseconds. */
+PUBLIC WUNUSED uint64_t
+(DCALL DeeThread_GetTimeNanoSeconds)(void) {
+#ifdef DeeThread_GetTimeNanoSeconds_USE_QueryPerformanceCounter__OR__GetTickCount
 	static uint64_t performance_freq = 0;
-	static uint64_t performance_freq_div_1000000 = 0;
-	static uint64_t performance_1000000_div_freq = 0;
+	static uint64_t performance_freq_div_1000000000 = 0;
+	static uint64_t performance_1000000000_div_freq = 0;
 	static WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 	static ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
-	uint64_t result;
+	uint64_t counter;
 	if (performance_freq == 0) {
 		uint64_t new_freq;
 		DBG_ALIGNMENT_DISABLE();
@@ -445,54 +452,53 @@ PUBLIC WUNUSED uint64_t
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(!new_freq)
 			new_freq = 1;
-		performance_freq             = new_freq;
-		performance_freq_div_1000000 = new_freq / 1000000;
-		performance_1000000_div_freq = 1000000 / new_freq;
+		performance_freq                = new_freq;
+		performance_freq_div_1000000000 = new_freq / UINT32_C(1000000000);
+		performance_1000000000_div_freq = UINT32_C(1000000000) / new_freq;
 	}
 	DBG_ALIGNMENT_DISABLE();
-	if unlikely(!QueryPerformanceCounter((LARGE_INTEGER *)&result)) {
-do_tickcount:
-		if (!lp_GetTickCount64) {
-			*(FARPROC *)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(wKernel32), "GetTickCount64");
-			if (!lp_GetTickCount64) {
-				result = (uint64_t)GetTickCount();
-				DBG_ALIGNMENT_ENABLE();
-				return result * 1000;
-			}
-		}
-		result = (*lp_GetTickCount64)();
+	if likely(QueryPerformanceCounter((LARGE_INTEGER *)&counter)) {
+		uint64_t result;
 		DBG_ALIGNMENT_ENABLE();
-		return result * 1000;
+#if 1
+		if (!OVERFLOW_UMUL(counter, 1000000000, &result)) {
+			result /= performance_freq;
+		} else
+#endif
+		if (performance_freq >= UINT32_C(1000000000)) {
+			result = counter / performance_freq_div_1000000000;
+		} else {
+			result = counter * performance_1000000000_div_freq;
+		}
+		return result;
+	}
+do_tickcount:
+	if (!lp_GetTickCount64)
+		*(FARPROC *)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(wKernel32), "GetTickCount64");
+	if (lp_GetTickCount64) {
+		counter = (*lp_GetTickCount64)();
+	} else {
+		counter = GetTickCount();
 	}
 	DBG_ALIGNMENT_ENABLE();
-#if 1
-	if (!OVERFLOW_UMUL(result, 1000000, &result)) {
-		result /= performance_freq;
-	} else
-#endif
-	if (performance_freq >= 1000000) {
-		result /= performance_freq_div_1000000;
-	} else {
-		result *= performance_1000000_div_freq;
-	}
-	return result;
-#endif /* DeeThread_GetTimeMicroSeconds_USE_QueryPerformanceCounter__OR__GetTickCount */
+	return counter * UINT32_C(1000000);
+#endif /* DeeThread_GetTimeNanoSeconds_USE_QueryPerformanceCounter__OR__GetTickCount */
 
-#if (defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_MONOTONIC) || \
-     defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME) ||  \
-     defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_MONOTONIC) ||   \
-     defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_REALTIME) ||    \
-     defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday64) ||                  \
-     defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday))
+#if (defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_MONOTONIC) || \
+     defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME) ||  \
+     defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_MONOTONIC) ||   \
+     defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_REALTIME) ||    \
+     defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday64) ||                  \
+     defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday))
 #undef LOCAL_use_time64
 #undef LOCAL_need_baseline
-#if (defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_MONOTONIC) || \
-     defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME) ||  \
-     defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday64))
+#if (defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_MONOTONIC) || \
+     defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME) ||  \
+     defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday64))
 #define LOCAL_use_time64
 #endif /* ... */
-#if (!defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME) && \
-     !defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_REALTIME))
+#if (!defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME) && \
+     !defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_REALTIME))
 #define LOCAL_need_baseline
 #endif /* ... */
 #ifdef LOCAL_use_time64
@@ -502,8 +508,8 @@ do_tickcount:
 #define LOCAL_struct_timespec struct timespec
 #define LOCAL_struct_timeval  struct timeval
 #endif /* !LOCAL_use_time64 */
-#if (defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday) || \
-     defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday64))
+#if (defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday) || \
+     defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday64))
 #define LOCAL_struct_timespec_OR_timeval_IS_timeval
 #define LOCAL_struct_timespec_OR_timeval LOCAL_struct_timeval
 #else /* ... */
@@ -519,18 +525,18 @@ do_tickcount:
 	uint32_t used_tv_usec;
 
 	/* Retrieve the current time. */
-#if defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_MONOTONIC)
+#if defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_MONOTONIC)
 	(void)clock_gettime64(CLOCK_MONOTONIC, &ts);
-#elif defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_MONOTONIC)
+#elif defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_MONOTONIC)
 	(void)clock_gettime(CLOCK_MONOTONIC, &ts);
 #else /* ... */
-#if defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime64_CLOCK_REALTIME)
+#if defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime64_CLOCK_REALTIME)
 	if (clock_gettime64(CLOCK_REALTIME, &ts) != 0)
-#elif defined(DeeThread_GetTimeMicroSeconds_USE_clock_gettime_CLOCK_REALTIME)
+#elif defined(DeeThread_GetTimeNanoSeconds_USE_clock_gettime_CLOCK_REALTIME)
 	if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
-#elif defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday64)
+#elif defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday64)
 	if (gettimeofday64(&ts, NULL) != 0)
-#elif defined(DeeThread_GetTimeMicroSeconds_USE_gettimeofday)
+#elif defined(DeeThread_GetTimeNanoSeconds_USE_gettimeofday)
 	if (gettimeofday(&ts, NULL) != 0)
 #endif
 	{
@@ -569,30 +575,29 @@ do_tickcount:
 		baseline_tv_usec = used_tv_usec;
 		return 0;
 	}
+#endif /* LOCAL_need_baseline */
 	used_tv_sec -= baseline_tv_sec;
 	if (OVERFLOW_USUB(used_tv_usec, baseline_tv_usec, &used_tv_usec)) {
 		--used_tv_sec;
-		used_tv_usec += MICROSECONDS_PER_SECOND;
+		used_tv_usec += UINT32_C(1000000000);
 	}
-#endif /* LOCAL_need_baseline */
-
-	return used_tv_usec + (used_tv_sec * MICROSECONDS_PER_SECOND);
+	return ((uint64_t)used_tv_sec * UINT32_C(1000000000)) + used_tv_usec;
 #endif /* ... */
 
-#ifdef DeeThread_GetTimeMicroSeconds_USE_time64
+#ifdef DeeThread_GetTimeNanoSeconds_USE_time64
 	time64_t t = time64(NULL);
-	return (uint64_t)t * MICROSECONDS_PER_SECOND;
-#endif /* DeeThread_GetTimeMicroSeconds_USE_time64 */
+	return (uint64_t)t * UINT32_C(1000000000);
+#endif /* DeeThread_GetTimeNanoSeconds_USE_time64 */
 
-#ifdef DeeThread_GetTimeMicroSeconds_USE_time
+#ifdef DeeThread_GetTimeNanoSeconds_USE_time
 	time_t t = time(NULL);
-	return (uint64_t)t * MICROSECONDS_PER_SECOND;
-#endif /* DeeThread_GetTimeMicroSeconds_USE_time */
+	return (uint64_t)t * UINT32_C(1000000000);
+#endif /* DeeThread_GetTimeNanoSeconds_USE_time */
 
-#ifdef DeeThread_GetTimeMicroSeconds_USE_COUNTER
+#ifdef DeeThread_GetTimeNanoSeconds_USE_COUNTER
 	static uint64_t counter = 0;
-	return atomic_fetchinc(&counter);
-#endif /* DeeThread_GetTimeMicroSeconds_USE_COUNTER */
+	return atomic_fetchadd(&counter, UINT32_C(1000000000));
+#endif /* DeeThread_GetTimeNanoSeconds_USE_COUNTER */
 }
 
 
@@ -623,26 +628,25 @@ do_tickcount:
 #endif /* !CONFIG_HAVE_useconds_t */
 #endif /* DeeThread_Sleep_USE_usleep */
 
-/* Sleep for the specified number of microseconds (1/1000000 seconds). */
-PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
-	/* TODO: Change this function to use nano-seconds instead! */
+/* Sleep for the specified number of nanoseconds (1/1_000_000_000 seconds). */
+PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t nanoseconds) {
 #ifdef DeeThread_Sleep_USE_SleepEx
 	uint64_t end_time;
-	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
+	end_time = DeeThread_GetTimeNanoSeconds() + nanoseconds;
 	if (DeeThread_CheckInterrupt())
 		goto err;
 again:
 	/* XXX: More precision? */
 	DBG_ALIGNMENT_DISABLE();
-	if (SleepEx((DWORD)(microseconds / 1000), TRUE)) {
+	if (SleepEx((DWORD)(nanoseconds / UINT32_C(1000000)), TRUE)) {
 		uint64_t now;
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		/* Continue sleeping for the remainder of the given time. */
-		now = DeeThread_GetTimeMicroSeconds();
+		now = DeeThread_GetTimeNanoSeconds();
 		if (now < end_time) {
-			microseconds = end_time - now;
+			nanoseconds = end_time - now;
 			goto again;
 		}
 	}
@@ -655,12 +659,12 @@ err:
 #ifdef DeeThread_Sleep_USE_nanosleep
 #ifdef CONFIG_HAVE_nanosleep64
 	struct timespec64 sleep_time, rem;
-	sleep_time.tv_sec  = (time64_t)(microseconds / 1000000);
+	sleep_time.tv_sec  = (time64_t)(nanoseconds / UINT32_C(1000000000));
 #else /* CONFIG_HAVE_nanosleep64 */
 	struct timespec sleep_time, rem;
-	sleep_time.tv_sec  = (time_t)(microseconds / 1000000);
+	sleep_time.tv_sec  = (time_t)(nanoseconds / UINT32_C(1000000000));
 #endif /* !CONFIG_HAVE_nanosleep64 */
-	sleep_time.tv_nsec = (long)(microseconds % 1000000) * 1000;
+	sleep_time.tv_nsec = (long)(nanoseconds % UINT32_C(1000000000));
 again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_nanosleep64
@@ -688,7 +692,7 @@ err:
 #ifdef DeeThread_Sleep_USE_usleep
 again:
 	DBG_ALIGNMENT_DISABLE();
-	if (usleep((useconds_t)microseconds)) {
+	if (usleep((useconds_t)nanoseconds / UINT16_C(1000))) {
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
 			goto err;
@@ -709,8 +713,8 @@ err:
 #else /* CONFIG_HAVE_select64 */
 	struct timeval tv;
 #endif /* !CONFIG_HAVE_select64 */
-	tv.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
-	tv.tv_usec = microseconds % MICROSECONDS_PER_SECOND;
+	tv.tv_sec  = nanoseconds / UINT32_C(1000000000);
+	tv.tv_usec = (nanoseconds % UINT32_C(1000000000)) / 1000;
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_select64
 	if (select64(0, NULL, NULL, NULL, &tv))
@@ -738,8 +742,8 @@ err:
 #else /* CONFIG_HAVE_pselect64 */
 	struct timespec ts;
 #endif /* !CONFIG_HAVE_pselect64 */
-	ts.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
-	ts.tv_nsec = (microseconds % MICROSECONDS_PER_SECOND) * 1000;
+	ts.tv_sec  = nanoseconds / UINT32_C(1000000000);
+	ts.tv_nsec = nanoseconds % UINT32_C(1000000000);
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_pselect64
 	if (pselect64(0, NULL, NULL, NULL, &ts, NULL))
@@ -772,20 +776,20 @@ err:
 }
 
 PUBLIC void DCALL
-DeeThread_SleepNoInt(uint64_t microseconds) {
+DeeThread_SleepNoInt(uint64_t nanoseconds) {
 #ifdef DeeThread_Sleep_USE_SleepEx
-	SleepEx((DWORD)(microseconds / 1000), TRUE);
+	SleepEx((DWORD)(nanoseconds / UINT32_C(1000000)), TRUE);
 #endif /* DeeThread_Sleep_USE_SleepEx */
 
 #ifdef DeeThread_Sleep_USE_nanosleep
 #ifdef CONFIG_HAVE_nanosleep64
 	struct timespec64 sleep_time;
-	sleep_time.tv_sec  = (time64_t)(microseconds / 1000000);
+	sleep_time.tv_sec = (time64_t)(nanoseconds / UINT32_C(1000000000));
 #else /* CONFIG_HAVE_nanosleep64 */
 	struct timespec sleep_time;
-	sleep_time.tv_sec  = (time_t)(microseconds / 1000000);
+	sleep_time.tv_sec = (time_t)(nanoseconds / UINT32_C(1000000000));
 #endif /* !CONFIG_HAVE_nanosleep64 */
-	sleep_time.tv_nsec = (long)(microseconds % 1000000) * 1000;
+	sleep_time.tv_nsec = (long)(nanoseconds % UINT32_C(1000000000));
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_nanosleep64
 	nanosleep64(&sleep_time, NULL);
@@ -797,7 +801,7 @@ DeeThread_SleepNoInt(uint64_t microseconds) {
 
 #ifdef DeeThread_Sleep_USE_usleep
 	DBG_ALIGNMENT_DISABLE();
-	usleep((useconds_t)microseconds);
+	usleep((useconds_t)nanoseconds / UINT16_C(1000));
 	DBG_ALIGNMENT_ENABLE();
 #endif /* DeeThread_Sleep_USE_usleep */
 
@@ -807,8 +811,8 @@ DeeThread_SleepNoInt(uint64_t microseconds) {
 #else /* CONFIG_HAVE_select64 */
 	struct timeval tv;
 #endif /* !CONFIG_HAVE_select64 */
-	tv.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
-	tv.tv_usec = microseconds % MICROSECONDS_PER_SECOND;
+	tv.tv_sec  = nanoseconds / UINT32_C(1000000000);
+	tv.tv_usec = nanoseconds % UINT32_C(1000000000);
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_select64
 	select64(0, NULL, NULL, NULL, &tv);
@@ -824,8 +828,8 @@ DeeThread_SleepNoInt(uint64_t microseconds) {
 #else /* CONFIG_HAVE_pselect64 */
 	struct timespec ts;
 #endif /* !CONFIG_HAVE_pselect64 */
-	ts.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
-	ts.tv_nsec = (microseconds % MICROSECONDS_PER_SECOND) * 1000;
+	ts.tv_sec  = nanoseconds / UINT32_C(1000000000);
+	ts.tv_nsec = nanoseconds % UINT32_C(1000000000);
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_pselect64
 	pselect64(0, NULL, NULL, NULL, &ts, NULL);
@@ -836,7 +840,7 @@ DeeThread_SleepNoInt(uint64_t microseconds) {
 #endif /* DeeThread_Sleep_USE_pselect */
 
 #ifdef DeeThread_Sleep_USE_STUB
-	(void)microseconds;
+	(void)nanoseconds;
 #endif /* DeeThread_Sleep_USE_STUB */
 }
 
@@ -1957,6 +1961,9 @@ DeeThread_AllocateCurrentThread(void) {
 	thread_list_lock_acquire_noint();
 	thread_list_insert(&result->at_os_thread.ot_thread);
 	thread_list_lock_release();
+
+	/* Remember that deemon is now running in SMP-mode! */
+	atomic_write(&DeeThread_IsMultiThreaded, true);
 
 	return &result->at_os_thread.ot_thread;
 }
@@ -4590,7 +4597,7 @@ thread_sleep(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1X(err, argc, argv, "sleep", &args.timeout_in_nanoseconds, UNPu64, DeeObject_AsUInt64);
 /*[[[end]]]*/
-	if (DeeThread_Sleep(args.timeout_in_nanoseconds / 1000))
+	if (DeeThread_Sleep(args.timeout_in_nanoseconds))
 		goto err;
 	return_none;
 err:
@@ -5468,7 +5475,7 @@ suspend_me:
 				DeeThread_Resume(me);
 				COMPILER_BARRIER();
 				/* Sleep a bit. */
-				if (DeeThread_Sleep(100))
+				if (DeeThread_Sleep(100000))
 					goto err_free_result;
 				goto suspend_me;
 			}

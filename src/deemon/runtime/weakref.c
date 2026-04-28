@@ -1074,7 +1074,8 @@ restart_clear_weakrefs:
 }
 
 
-/* Special "dummy" object used to  */
+/* Special "dummy" object used to carry weak references that
+ * were transferred by `Dee_weakref_list_transfer_to_dummy()' */
 PRIVATE DeeNoneObject weakref_dummy = {
 	/* .ob_refcnt = */ 0,
 	/* .ob_type   = */ &DeeNone_Type,

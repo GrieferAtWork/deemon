@@ -621,12 +621,15 @@ DDATDEF bool DeeThread_IsMultiThreaded;
 #endif /* !CONFIG_NO_THREADS */
 
 
-/* Sleep for the specified number of microseconds (1/1000000 seconds). */
-DFUNDEF WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds);
-DFUNDEF void (DCALL DeeThread_SleepNoInt)(uint64_t microseconds);
+/* Sleep for the specified number of nanoseconds (1/1_000_000_000 seconds). */
+DFUNDEF WUNUSED int (DCALL DeeThread_Sleep)(uint64_t nanoseconds);
+DFUNDEF void (DCALL DeeThread_SleepNoInt)(uint64_t nanoseconds);
 
 /* Get the current time (offset from some undefined point) in microseconds. */
-DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);
+DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void); /* TODO: REMOVE ME */
+
+/* Get the current time (offset from some undefined point) in nanoseconds. */
+DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeNanoSeconds)(void);
 
 /* Return the thread controller object for the calling thread.
  * If the calling thread wasn't created by `DeeThread_Start()',

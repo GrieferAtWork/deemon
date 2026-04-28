@@ -335,7 +335,7 @@ DECL_BEGIN
 	 ? 1                                       \
 	 : (timeout_nanoseconds) == (uint64_t)-1   \
 	   ? _DeeError_ThrowWouldBlock()           \
-	   : (DeeThread_Sleep((timeout_nanoseconds) / 1000) ? -1 : 1))
+	   : (DeeThread_Sleep(timeout_nanoseconds) ? -1 : 1))
 #else
 #define _DeeLock_SleepFor(timeout_nanoseconds) \
 	((timeout_nanoseconds) == 0 ? 1 : _DeeError_ThrowWouldBlock())

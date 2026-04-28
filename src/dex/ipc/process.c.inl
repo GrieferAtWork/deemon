@@ -3611,13 +3611,9 @@ process_join_impl2(Process *__restrict self,
 		Process_LockEndWrite(self);
 		/* Wait for another process to finish joining */
 		if (timeout_nanoseconds != 0) {
-			uint64_t timeout_micro;
-			timeout_micro = timeout_nanoseconds;
-			timeout_micro /= 1000;
-			timeout_micro /= 2;
-			if (timeout_micro > 1000)
-				timeout_micro = 1000;
-			if (DeeThread_Sleep(1000))
+			if (timeout_nanoseconds > 1000000)
+				timeout_nanoseconds = 1000000;
+			if (DeeThread_Sleep(timeout_nanoseconds))
 				goto err; /* Error (interrupt delivery) */
 		}
 		return 2;
@@ -3736,14 +3732,10 @@ do_handle_EAGAIN:
 			self->p_state &= ~PROCESS_FLAG_JOINING;
 			Process_LockEndWrite(self);
 			if (timeout_nanoseconds != 0) {
-				uint64_t timeout_micro;
-				timeout_micro = timeout_nanoseconds;
-				timeout_micro /= 1000;
-				timeout_micro /= 2;
-				if (timeout_micro > 1000)
-					timeout_micro = 1000;
-				if (DeeThread_Sleep(1000))
-					goto err; /* Error (interrupt delivery) */
+			if (timeout_nanoseconds > 1000000)
+				timeout_nanoseconds = 1000000;
+			if (DeeThread_Sleep(timeout_nanoseconds))
+				goto err; /* Error (interrupt delivery) */
 			}
 			return 2;
 		}
@@ -3846,7 +3838,7 @@ again:
 	if (self->p_state & PROCESS_FLAG_JOINING) {
 		Process_LockEndWrite(self);
 		/* Wait for another process to finish joining */
-		if (DeeThread_Sleep(1000))
+		if (DeeThread_Sleep(1000000))
 			goto err; /* Error (interrupt delivery) */
 		goto again;
 	}

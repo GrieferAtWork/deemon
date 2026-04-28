@@ -766,7 +766,7 @@ restart:
 			                sock_getafnameorid(family));
 #ifdef TRY_AGAIN
 		} else if (error == TRY_AGAIN && attempt_counter < 3) {
-			if (DeeThread_Sleep(10000))
+			if (DeeThread_Sleep(10000000))
 				goto err;
 			++attempt_counter;
 			goto restart;
@@ -1028,7 +1028,7 @@ retry_addrinfo:
 			sysdb_lock_endread();
 #ifdef EAI_AGAIN
 			if (error == EAI_AGAIN && attempt_counter < 3) {
-				if (DeeThread_Sleep(10000))
+				if (DeeThread_Sleep(10000000))
 					goto err;
 				++attempt_counter;
 				goto retry_addrinfo;
@@ -1255,7 +1255,7 @@ do_gethostbyname_again:
 				err_no_host_data(host, NULL, family, error);
 #ifdef TRY_AGAIN
 			} else if (error == TRY_AGAIN && gethostbyname_attempt_counter < 3) {
-				if (DeeThread_Sleep(10000))
+				if (DeeThread_Sleep(10000000))
 					goto err;
 				++gethostbyname_attempt_counter;
 				goto do_gethostbyname_again;
