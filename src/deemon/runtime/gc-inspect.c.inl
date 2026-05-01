@@ -626,11 +626,65 @@ err:
 	return NULL;
 }
 
+
+typedef struct {
+	DeeObject *gcird_obj;    /* [1..1] Object to check for being reachable */
+	bool       gcird_result; /* Result */
+} GC_IsReachable_data;
+
+PRIVATE NONNULL((1)) void DCALL
+GC_IsReachableDirect_cb(DeeObject *__restrict ob, void *arg) {
+	GC_IsReachable_data *data;
+	data = (GC_IsReachable_data *)arg;
+	if (data->gcird_obj == ob)
+		data->gcird_result = true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+GC_IsReachableDirect(DeeObject *from, DeeObject *obj) {
+	GC_IsReachable_data data;
+	data.gcird_obj    = obj;
+	data.gcird_result = false;
+	DeeObject_Visit(from, &GC_IsReachableDirect_cb, &data);
+	return data.gcird_result;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+GC_IsReachableTransitive_cb(DeeObject *__restrict ob, void *arg) {
+	GC_IsReachable_data *data;
+	data = (GC_IsReachable_data *)arg;
+	if (data->gcird_obj == ob) {
+		data->gcird_result = true;
+	} else if (!data->gcird_result) {
+		DeeObject_Visit(ob, &GC_IsReachableTransitive_cb, data);
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+GC_IsReachableTransitive(DeeObject *from, DeeObject *obj) {
+	GC_IsReachable_data data;
+	data.gcird_obj    = obj;
+	data.gcird_result = false;
+	DeeObject_Visit(from, &GC_IsReachableTransitive_cb, &data);
+	return data.gcird_result;
+}
+
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 gccoll_contains(GCCollection *self, DeeObject *ob) {
 	int result;
 	if (!gccoll_loaded(self)) {
-		/* TODO: Optimizations for known load functions */
+		/* Optimizations for known load functions */
+		if (self->gcc_populate == &GCCollection_PopulateReachableDirect) {
+			return_bool(GC_IsReachableDirect(self->gcc_obj, ob));
+		} else if (self->gcc_populate == &GCCollection_PopulateReachableTransitive) {
+			return_bool(GC_IsReachableTransitive(self->gcc_obj, ob));
+		} else if (self->gcc_populate == &GCCollection_PopulateReferringDirect) {
+			return_bool(DeeType_IsGC(Dee_TYPE(ob)) && GC_IsReachableDirect(ob, self->gcc_obj));
+		} else if (self->gcc_populate == &GCCollection_PopulateReferringTransitive) {
+			return_bool(DeeType_IsGC(Dee_TYPE(ob)) && GC_IsReachableTransitive(ob, self->gcc_obj));
+		}
 	}
 	result = default__seq_contains__with__seq_operator_foreach(Dee_AsObject(self), ob);
 	if (Dee_HAS_ISERR(result))
