@@ -701,9 +701,9 @@ do_continue_normal_forloop:
 					if unlikely(!result)
 						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 					temp = DeeObject_BoolInherited(result);
-					if (Dee_HAS_ISERR(temp))
-						goto err_scope;
-					if (Dee_HAS_ISNO_NO_ERR(temp)) {
+					if (Dee_HAS_ISNO_OR_ERR(temp)) {
+						if (Dee_HAS_ISERR(temp))
+							goto err_scope;
 						/* Stop iteration (jump to the end of the for-block). */
 						self->jl_tokend = block_end;
 						JITLexer_Yield(self);
@@ -930,9 +930,9 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 			goto err_scope;
 		}
 		temp = DeeObject_BoolInherited(result);
-		if (Dee_HAS_ISERR(temp))
-			goto err_scope;
-		if (Dee_HAS_ISNO_NO_ERR(temp)) {
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err_scope;
 			/* The loop doesn't actually get executed. */
 do_skip_loop:
 			if (JITLexer_SkipStatement(self))
@@ -973,9 +973,9 @@ do_check_while_condition:
 		if unlikely(!result)
 			goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 		temp = DeeObject_BoolInherited(result);
-		if (Dee_HAS_ISERR(temp))
-			goto err_scope;
-		if (Dee_HAS_ISYES_NO_ERR(temp)) {
+		if (Dee_HAS_ISYES_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err_scope;
 			/* Loop back around, but check for interrupts first. */
 			if (DeeThread_CheckInterrupt())
 				goto err_scope;
@@ -1104,9 +1104,9 @@ continue_with_loop_cond:
 		if unlikely(!result)
 			goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 		temp = DeeObject_BoolInherited(result);
-		if (Dee_HAS_ISERR(temp))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(temp)) {
+		if (Dee_HAS_ISYES_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err;
 			/* Loop back to the start of the loop-block */
 			if (DeeThread_CheckInterrupt())
 				goto err;

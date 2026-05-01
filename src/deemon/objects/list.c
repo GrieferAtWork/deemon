@@ -707,9 +707,9 @@ again:
 		if unlikely(!callback_result)
 			goto err;
 		temp = DeeObject_BoolInherited(callback_result);
-		if (Dee_HAS_ISERR(temp))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(temp)) {
+		if (Dee_HAS_ISYES_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err;
 			/* This is the element we're supposed to remove. */
 			DeeList_LockWrite(me);
 

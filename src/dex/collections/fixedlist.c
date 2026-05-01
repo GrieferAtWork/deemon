@@ -1120,9 +1120,9 @@ again_elem:
 			if unlikely(!bshould)
 				goto err;
 			error = DeeObject_BoolInherited(bshould);
-			if (Dee_HAS_ISERR(error))
-				goto err;
-			if (Dee_HAS_ISYES_NO_ERR(error)) {
+			if (Dee_HAS_ISYES_OR_ERR(error)) {
+				if (Dee_HAS_ISERR(error))
+					goto err;
 				/* Found one! */
 				FixedList_LockWrite(self);
 				if unlikely(self->fl_elem[i] != elem) {

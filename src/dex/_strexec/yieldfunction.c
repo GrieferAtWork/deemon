@@ -497,9 +497,9 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			if unlikely(!value)
 				goto err;
 			temp = DeeObject_BoolInherited(value);
-			if (Dee_HAS_ISERR(temp))
-				goto err;
-			if (Dee_HAS_ISNO_NO_ERR(temp)) {
+			if (Dee_HAS_ISNO_OR_ERR(temp)) {
+				if (Dee_HAS_ISERR(temp))
+					goto err;
 				if (self->ji_lex.jl_tok == ')') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
@@ -534,9 +534,9 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			goto err;
 		/* Check if loop iteration should continue. */
 		temp = DeeObject_BoolInherited(value);
-		if (Dee_HAS_ISERR(temp))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(temp)) {
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err;
 			/* Restore the old position (which is presumably just after the loop block) */
 			JITLexer_YieldAt(&self->ji_lex, old_pos);
 			/* Don't jump back, but break out of the loop. */
@@ -577,9 +577,9 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 				goto err;
 			/* Check if loop iteration should continue. */
 			temp = DeeObject_BoolInherited(value);
-			if (Dee_HAS_ISERR(temp))
-				goto err;
-			if (Dee_HAS_ISNO_NO_ERR(temp)) {
+			if (Dee_HAS_ISNO_OR_ERR(temp)) {
+				if (Dee_HAS_ISERR(temp))
+					goto err;
 				/* Restore the old position (which is presumably just after the loop block) */
 				JITLexer_YieldAt(&self->ji_lex, old_pos);
 				/* Don't jump back, but break out of the loop. */
@@ -785,10 +785,11 @@ do_break_dowhile_loop:
 					if unlikely(!value)
 						goto err;
 					temp = DeeObject_BoolInherited(value);
-					if (Dee_HAS_ISERR(temp))
-						goto err;
-					if (Dee_HAS_ISNO_NO_ERR(temp))
+					if (Dee_HAS_ISNO_OR_ERR(temp)) {
+						if (Dee_HAS_ISERR(temp))
+							goto err;
 						goto do_break_dowhile_loop;
+					}
 				}
 				/* Check for interrupts before jumping backwards. */
 				if (DeeThread_CheckInterrupt())
@@ -810,9 +811,9 @@ do_break_dowhile_loop:
 					if unlikely(!value)
 						goto err;
 					temp = DeeObject_BoolInherited(value);
-					if (Dee_HAS_ISERR(temp))
-						goto err;
-					if (Dee_HAS_ISNO_NO_ERR(temp)) {
+					if (Dee_HAS_ISNO_OR_ERR(temp)) {
+						if (Dee_HAS_ISERR(temp))
+							goto err;
 						JITLexer_YieldAt(&self->ji_lex, st->js_while.f_loop);
 						goto do_break_loop; /* Break out of the loop */
 					}
@@ -850,9 +851,9 @@ do_break_dowhile_loop:
 						if unlikely(!value)
 							goto err;
 						temp = DeeObject_BoolInherited(value);
-						if (Dee_HAS_ISERR(temp))
-							goto err;
-						if (Dee_HAS_ISNO_NO_ERR(temp)) {
+						if (Dee_HAS_ISNO_OR_ERR(temp)) {
+							if (Dee_HAS_ISERR(temp))
+								goto err;
 							JITLexer_YieldAt(&self->ji_lex, st->js_for.f_loop);
 							goto do_break_loop; /* Break out of the loop */
 						}
@@ -1404,9 +1405,9 @@ err_obj_scope:
 					goto err_scope;
 				}
 				temp = DeeObject_BoolInherited(value);
-				if (Dee_HAS_ISERR(temp))
-					goto err_scope;
-				if (Dee_HAS_ISNO_NO_ERR(temp)) {
+				if (Dee_HAS_ISNO_OR_ERR(temp)) {
+					if (Dee_HAS_ISERR(temp))
+						goto err_scope;
 					/* The while-statement's body is never reached. */
 					JITContext_PopScope(&self->ji_ctx);
 					if (JITLexer_SkipStatement(&self->ji_lex))

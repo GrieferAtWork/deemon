@@ -1104,10 +1104,11 @@ AttributeError_init_access_flag(AttributeError *__restrict self,
 	if (!state)
 		return 0;
 	temp = DeeObject_Bool(state);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		self->ae_flags |= mask;
+	}
 	return 0;
 err:
 	return -1;

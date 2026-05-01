@@ -669,9 +669,9 @@ bs_setitem_index(Bitset *self, size_t bitno, DeeObject *value) {
 	if unlikely(bitno >= self->bs_nbits)
 		goto err_too_large;
 	temp = DeeObject_Bool(value);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp)) {
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		bitset_atomic_set(self->bs_bitset, bitno);
 	} else {
 		bitset_atomic_clear(self->bs_bitset, bitno);
@@ -1270,10 +1270,11 @@ bs_init(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (init_or_minbits) {
 		int temp = DeeObject_Bool(init_or_minbits);
-		if (Dee_HAS_ISERR(temp))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(temp))
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err;
 			goto init_fixed_length_as_empty;
+		}
 		result = Bitset_Alloc(nbits);
 		if unlikely(!result)
 			goto err;
@@ -2741,9 +2742,9 @@ bsv_setitem_index(BitsetView *self, size_t bitno, DeeObject *value) {
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	temp = DeeObject_Bool(value);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp)) {
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		bitset_atomic_set(BitsetView_GetBitset(self), bitno);
 	} else {
 		bitset_atomic_clear(BitsetView_GetBitset(self), bitno);

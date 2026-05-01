@@ -41,10 +41,11 @@ set_compare__lhs_foreach__rhs__cb(void *arg, DeeObject *lhs_elem) {
 	if unlikely(!contains_ob)
 		goto err;
 	contains = DeeObject_BoolInherited(contains_ob);
-	if (Dee_HAS_ISERR(contains))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(contains))
+	if (Dee_HAS_ISNO_OR_ERR(contains)) {
+		if (Dee_HAS_ISERR(contains))
+			goto err;
 		return -2; /* Not contained */
+	}
 	return 1;
 err:
 	return -1;

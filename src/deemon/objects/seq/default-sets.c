@@ -840,10 +840,11 @@ su_contains(SetUnion *self, DeeObject *item) {
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
-	if (Dee_HAS_ISERR(temp))
-		goto err_r;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err_r;
 		goto done;
+	}
 	Dee_Decref_unlikely(result);
 
 	/* Check the second set, and forward the return value. */
@@ -1557,10 +1558,11 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
-	if (Dee_HAS_ISERR(temp))
-		goto err_r;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err_r;
 		goto done;
+	}
 	Dee_Decref(result);
 
 	/* Check the second set, and forward the return value. */

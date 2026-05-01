@@ -51,9 +51,9 @@ default_seq_rlocate_foreach_cb(void *arg, DeeObject *item) {
 	if unlikely(!match_result_ob)
 		goto err;
 	match_result = DeeObject_BoolInherited(match_result_ob);
-	if (Dee_HAS_ISERR(match_result))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(match_result)) {
+	if (Dee_HAS_ISYES_OR_ERR(match_result)) {
+		if (Dee_HAS_ISERR(match_result))
+			goto err;
 		Dee_Incref(item);
 		Dee_Decref(data->dsrlwf_result);
 		data->dsrlwf_result = item;

@@ -76,10 +76,11 @@ err:
 }}
 %{$with__seq_contains__and__seq_append = {
 	int contains = CALL_DEPENDENCY(seq_contains, self, key);
-	if (Dee_HAS_ISERR(contains))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(contains))
+	if (Dee_HAS_ISYES_OR_ERR(contains)) {
+		if (Dee_HAS_ISERR(contains))
+			goto err;
 		return Dee_HAS_NO; /* Already contained */
+	}
 	if unlikely(CALL_DEPENDENCY(seq_append, self, key))
 		goto err;
 	return Dee_HAS_YES;

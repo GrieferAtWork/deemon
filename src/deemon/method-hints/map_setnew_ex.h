@@ -126,15 +126,13 @@ err:
 	if unlikely(temp)
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
-	if (Dee_HAS_ISERR(temp))
-		goto err_status1;
-	if (Dee_HAS_ISYES_NO_ERR(temp)) {
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
 		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return ITER_DONE;
 	}
 	return status[1];
-err_status1:
-	Dee_Decref(status[1]);
 err:
 	return NULL;
 }

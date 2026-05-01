@@ -646,10 +646,11 @@ numeric_get_trunc(DeeObject *__restrict self) {
 	/* >> if (!this.isfloat)
 	 * >>     return this; */
 	error = DeeObject_IsFloat(self);
-	if (Dee_HAS_ISERR(error))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(error))
+	if (Dee_HAS_ISNO_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
+			goto err;
 		return_reference_(self);
+	}
 
 	/* >> local res = (int from deemon)this; */
 	res = DeeObject_Int(self);
@@ -659,10 +660,10 @@ numeric_get_trunc(DeeObject *__restrict self) {
 	/* >> if (this == res)
 	 * >>     return this; */
 	error = DeeObject_CmpEqAsBool(self, res);
-	if (Dee_HAS_ISERR(error))
-		goto err_res;
-	if (Dee_HAS_ISYES_NO_ERR(error)) {
+	if (Dee_HAS_ISYES_OR_ERR(error)) {
 		Dee_Decref(res);
+		if (Dee_HAS_ISERR(error))
+			goto err;
 		return_reference_(self);
 	}
 
@@ -670,8 +671,6 @@ numeric_get_trunc(DeeObject *__restrict self) {
 	result = DeeObject_New(Dee_TYPE(self), 1, &res);
 	Dee_Decref(res);
 	return result;
-err_res:
-	Dee_Decref(res);
 err:
 	return NULL;
 }

@@ -121,10 +121,11 @@ err:
 	for (;;) {
 		DREF DeeObject *item;
 		int size_is_nonzero = DeeObject_Bool(sizeob);
-		if (Dee_HAS_ISERR(size_is_nonzero))
-			goto err_sizeob;
-		if (Dee_HAS_ISNO_NO_ERR(size_is_nonzero))
+		if (Dee_HAS_ISNO_OR_ERR(size_is_nonzero)) {
+			if (Dee_HAS_ISERR(size_is_nonzero))
+				goto err_sizeob;
 			break;
+		}
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob;
 		item = CALL_DEPENDENCY(seq_operator_getitem, self, sizeob);
@@ -290,10 +291,11 @@ err:
 		} else {
 			size_is_greater_start = DeeObject_Bool(sizeob);
 		}
-		if (Dee_HAS_ISERR(size_is_greater_start))
-			goto err_sizeob_startob;
-		if (Dee_HAS_ISNO_NO_ERR(size_is_greater_start))
+		if (Dee_HAS_ISNO_OR_ERR(size_is_greater_start)) {
+			if (Dee_HAS_ISERR(size_is_greater_start))
+				goto err_sizeob_startob;
 			break;
+		}
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob_startob;
 		item = CALL_DEPENDENCY(seq_operator_getitem, self, sizeob);

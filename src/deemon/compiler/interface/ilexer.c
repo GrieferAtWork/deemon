@@ -576,10 +576,11 @@ done:
 		int newval, result = -1;                                                                                      \
 		struct TPPKeyword *item;                                                                                      \
 		newval = DeeObject_Bool(value);                                                                               \
-		if (Dee_HAS_ISERR(newval))                                                                            \
-			goto done;                                                                                                \
-		if (Dee_HAS_ISNO_NO_ERR(newval))                                                                              \
+		if (Dee_HAS_ISNO_OR_ERR(newval)) {                                                                            \
+			if (Dee_HAS_ISERR(newval))                                                                                \
+				goto done;                                                                                            \
 			return keyword_del_##name(self);                                                                          \
+		}                                                                                                             \
 		if (COMPILER_BEGIN(self->ci_compiler))                                                                        \
 			goto done;                                                                                                \
 		item = DeeCompilerItem_VALUE(self, struct TPPKeyword);                                                        \
@@ -1171,7 +1172,7 @@ err:
 	lexer_set_##name(DeeCompilerWrapperObject *self,                   \
 	                 DeeObject *value) {                               \
 		int newval = DeeObject_Bool(value);                            \
-		if (Dee_HAS_ISERR(newval))                             \
+		if (Dee_HAS_ISERR(newval))                                     \
 			goto err;                                                  \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
 			goto err;                                                  \

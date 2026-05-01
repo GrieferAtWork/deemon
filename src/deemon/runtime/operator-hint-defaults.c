@@ -2024,18 +2024,20 @@ tdefault__compare_eq__with__lo__and__gr(DeeTypeObject *tp_self, DeeObject *lhs, 
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Different */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_gr == &usrtype__gr__with__GR ? &tusrtype__gr__with__GR : tp_self->tp_cmp->tp_gr == &default__gr__with__le ? &tdefault__gr__with__le : tp_self->tp_cmp->tp_gr == &default__gr__with__compare ? &tdefault__gr__with__compare : &tdefault__gr))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Different */
+	}
 	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
@@ -2048,18 +2050,20 @@ tdefault__compare_eq__with__le__and__ge(DeeTypeObject *tp_self, DeeObject *lhs, 
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Different */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_gr == &usrtype__gr__with__GR ? &tusrtype__gr__with__GR : tp_self->tp_cmp->tp_gr == &default__gr__with__compare ? &tdefault__gr__with__compare : &tdefault__gr))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Different */
+	}
 	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
@@ -2142,18 +2146,20 @@ default__compare_eq__with__lo__and__gr(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Different */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_gr)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Different */
+	}
 	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
@@ -2170,18 +2176,20 @@ default__compare_eq__with__le__and__ge(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Different */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_gr)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Different */
+	}
 	return Dee_COMPARE_EQ;
 err:
 	return Dee_COMPARE_ERR;
@@ -2256,18 +2264,20 @@ tdefault__compare__with__eq__and__lo(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_lo == &usrtype__lo__with__LO ? &tusrtype__lo__with__LO : tp_self->tp_cmp->tp_lo == &default__lo__with__ge ? &tdefault__lo__with__ge : &tdefault__lo))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2281,18 +2291,20 @@ tdefault__compare__with__eq__and__le(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_le == &usrtype__le__with__LE ? &tusrtype__le__with__LE : tp_self->tp_cmp->tp_le == &default__le__with__gr ? &tdefault__le__with__gr : &tdefault__le))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2306,18 +2318,20 @@ tdefault__compare__with__eq__and__gr(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_gr == &usrtype__gr__with__GR ? &tusrtype__gr__with__GR : tp_self->tp_cmp->tp_gr == &default__gr__with__le ? &tdefault__gr__with__le : &tdefault__gr))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2331,18 +2345,20 @@ tdefault__compare__with__eq__and__ge(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_ge == &usrtype__ge__with__GE ? &tusrtype__ge__with__GE : tp_self->tp_cmp->tp_ge == &default__ge__with__lo ? &tdefault__ge__with__lo : &tdefault__ge))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2356,18 +2372,20 @@ tdefault__compare__with__ne__and__lo(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_lo == &usrtype__lo__with__LO ? &tusrtype__lo__with__LO : tp_self->tp_cmp->tp_lo == &default__lo__with__ge ? &tdefault__lo__with__ge : &tdefault__lo))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2381,18 +2399,20 @@ tdefault__compare__with__ne__and__le(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_le == &usrtype__le__with__LE ? &tusrtype__le__with__LE : tp_self->tp_cmp->tp_le == &default__le__with__gr ? &tdefault__le__with__gr : &tdefault__le))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2406,18 +2426,20 @@ tdefault__compare__with__ne__and__gr(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_gr == &usrtype__gr__with__GR ? &tusrtype__gr__with__GR : tp_self->tp_cmp->tp_gr == &default__gr__with__le ? &tdefault__gr__with__le : &tdefault__gr))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2431,18 +2453,20 @@ tdefault__compare__with__ne__and__ge(DeeTypeObject *tp_self, DeeObject *lhs, Dee
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*(tp_self->tp_cmp->tp_ge == &usrtype__ge__with__GE ? &tusrtype__ge__with__GE : tp_self->tp_cmp->tp_ge == &default__ge__with__lo ? &tdefault__ge__with__lo : &tdefault__ge))(tp_self, lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2484,18 +2508,20 @@ default__compare__with__eq__and__lo(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_lo)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2513,18 +2539,20 @@ default__compare__with__eq__and__le(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_le)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2542,18 +2570,20 @@ default__compare__with__eq__and__gr(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_gr)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2571,18 +2601,20 @@ default__compare__with__eq__and__ge(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_ge)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2600,18 +2632,20 @@ default__compare__with__ne__and__lo(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_lo)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2629,18 +2663,20 @@ default__compare__with__ne__and__le(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_le)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_LO; /* Less */
+	}
 	return Dee_COMPARE_GR;     /* Greater */
 err:
 	return Dee_COMPARE_ERR;
@@ -2658,18 +2694,20 @@ default__compare__with__ne__and__gr(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_gr)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;
@@ -2687,18 +2725,20 @@ default__compare__with__ne__and__ge(DeeObject *lhs, DeeObject *rhs) {
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(temp))
+	if (Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_EQ; /* Equal */
+	}
 	cmp_ob = (*Dee_TYPE(lhs)->tp_cmp->tp_ge)(lhs, rhs);
 	if unlikely(!cmp_ob)
 		goto err;
 	temp = DeeObject_BoolInherited(cmp_ob);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(temp))
+	if (Dee_HAS_ISYES_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		return Dee_COMPARE_GR; /* Greater */
+	}
 	return Dee_COMPARE_LO;     /* Less */
 err:
 	return Dee_COMPARE_ERR;

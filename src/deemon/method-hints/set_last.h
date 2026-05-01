@@ -89,10 +89,11 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if (Dee_HAS_ISERR(temp))
-			goto err_size;
-		if (Dee_HAS_ISNO_NO_ERR(temp))
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err_size;
 			break;
+		}
 		if (DeeObject_Dec(&size))
 			goto err_size;
 		result = CALL_DEPENDENCY(seq_operator_trygetitem, self, size);
@@ -190,10 +191,11 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if (Dee_HAS_ISERR(temp))
-			goto err_size;
-		if (Dee_HAS_ISNO_NO_ERR(temp))
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err_size;
 			break;
+		}
 		if (DeeObject_Dec(&size))
 			goto err_size;
 		temp = CALL_DEPENDENCY(seq_operator_bounditem, self, size);
@@ -284,10 +286,11 @@ err:
 		goto err;
 	for (;;) {
 		int temp = DeeObject_Bool(size);
-		if (Dee_HAS_ISERR(temp))
-			goto err_size;
-		if (Dee_HAS_ISNO_NO_ERR(temp))
+		if (Dee_HAS_ISNO_OR_ERR(temp)) {
+			if (Dee_HAS_ISERR(temp))
+				goto err_size;
 			break;
+		}
 		if (DeeObject_Dec(&size))
 			goto err_size;
 		temp = CALL_DEPENDENCY(seq_operator_bounditem, self, size);

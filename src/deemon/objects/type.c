@@ -1659,18 +1659,20 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 	if unlikely(!temp)
 		goto err;
 	error = DeeObject_BoolInherited(temp);
-	if (Dee_HAS_ISERR(error))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(error))
+	if (Dee_HAS_ISNO_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
+			goto err;
 		goto nope;
+	}
 	temp = DeeObject_GetAttrString(Dee_AsObject(self), name);
 	if unlikely(!temp)
 		goto err;
 	error = DeeObject_BoolInherited(temp);
-	if (Dee_HAS_ISERR(error))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(error))
+	if (Dee_HAS_ISYES_OR_ERR(error)) {
+		if (Dee_HAS_ISERR(error))
+			goto err;
 		return_true;
+	}
 nope:
 	return_false;
 err:

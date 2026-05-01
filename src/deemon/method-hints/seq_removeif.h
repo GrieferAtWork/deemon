@@ -85,9 +85,9 @@ err:
 			if unlikely(!pred_result)
 				goto err;
 			should_remove = DeeObject_BoolInherited(pred_result);
-			if (Dee_HAS_ISERR(should_remove))
-				goto err;
-			if (Dee_HAS_ISYES_NO_ERR(should_remove)) {
+			if (Dee_HAS_ISYES_OR_ERR(should_remove)) {
+				if (Dee_HAS_ISERR(should_remove))
+					goto err;
 				/* Delete this one */
 				if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, start))
 					goto err;

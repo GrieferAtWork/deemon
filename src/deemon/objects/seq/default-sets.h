@@ -66,6 +66,7 @@ INTDEF DeeTypeObject SetInversion_Type;
 
 
 
+/* {"a", "c"} + {"b", "c"}   ->   {"a", "b", "c"} */
 typedef struct {
 	PROXY_OBJECT_HEAD2(su_a,  /* [1..1][const] The first set of the union. */
 	                   su_b); /* [1..1][const] The second set of the union. */
@@ -108,6 +109,7 @@ INTDEF DeeTypeObject SetUnionIterator_Type;
 
 
 
+/* {"a", "b"} & {"a"}   ->   {"a"} */
 typedef struct {
 	PROXY_OBJECT_HEAD2(si_a,  /* [1..1][const] The first set of the intersection. */
 	                   si_b); /* [1..1][const] The second set of the intersection. */
@@ -130,6 +132,7 @@ INTDEF DeeTypeObject SetIntersectionIterator_Type;
 
 
 
+/* {"a", "b"} - {"b"}   ->   {"a"} */
 typedef struct {
 	PROXY_OBJECT_HEAD2(sd_a,  /* [1..1][const] The primary set. */
 	                   sd_b); /* [1..1][const] The set of objects excluded from `sd_a'. */
@@ -152,6 +155,7 @@ INTDEF DeeTypeObject SetDifferenceIterator_Type;
 
 
 
+/* {"a", "b"} ^ {"a", "c"}   ->   {"b", "c"} */
 typedef struct {
 	PROXY_OBJECT_HEAD2(ssd_a,  /* [1..1][const] The first set. */
 	                   ssd_b); /* [1..1][const] The second set. */

@@ -27,7 +27,7 @@ __set_add__(rhs:?X3?DSet?DSequence?S?O)->?DSet {
 }
 
 
-/* {"a"} + {"b"}   ->   {"a", "b"} */
+/* {"a", "c"} + {"b", "c"}   ->   {"a", "b", "c"} */
 [[operator(Set: tp_math->tp_add)]]
 [[operator(Set: tp_math->tp_or)]]
 [[wunused]] DREF DeeObject *

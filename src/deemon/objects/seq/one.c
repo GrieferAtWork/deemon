@@ -748,10 +748,11 @@ so_mh_seq_contains_with_range_and_key(SeqOne *self, DeeObject *item,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 so_mh_seq_locate(SeqOne *self, DeeObject *match, DeeObject *def) {
 	int matches = so_mh_seq_any_with_key(self, match);
-	if (Dee_HAS_ISERR(matches))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(matches))
+	if (Dee_HAS_ISYES_OR_ERR(matches)) {
+		if (Dee_HAS_ISERR(matches))
+			goto err;
 		def = self->so_item;
+	}
 	return_reference(def);
 err:
 	return NULL;
@@ -762,10 +763,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 so_mh_seq_locate_with_range(SeqOne *self, DeeObject *match,
                             size_t start, size_t end, DeeObject *def) {
 	int matches = so_mh_seq_any_with_range_and_key(self, start, end, match);
-	if (Dee_HAS_ISERR(matches))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(matches))
+	if (Dee_HAS_ISYES_OR_ERR(matches)) {
+		if (Dee_HAS_ISERR(matches))
+			goto err;
 		def = self->so_item;
+	}
 	return_reference(def);
 err:
 	return NULL;

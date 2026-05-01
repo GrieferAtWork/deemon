@@ -5636,9 +5636,9 @@ prefix_jf_16:
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					temp = DeeObject_BoolInherited(prefix_ob);
-					if (Dee_HAS_ISERR(temp))
-						HANDLE_EXCEPT();
-					if (Dee_HAS_ISNO_NO_ERR(temp)) {
+					if (Dee_HAS_ISNO_OR_ERR(temp)) {
+						if (Dee_HAS_ISERR(temp))
+							HANDLE_EXCEPT();
 						if ((int16_t)imm_val < 0) {
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();
@@ -5663,9 +5663,9 @@ prefix_jt_16:
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
 					temp = DeeObject_BoolInherited(prefix_ob);
-					if (Dee_HAS_ISERR(temp))
-						HANDLE_EXCEPT();
-					if (Dee_HAS_ISYES_NO_ERR(temp)) {
+					if (Dee_HAS_ISYES_OR_ERR(temp)) {
+						if (Dee_HAS_ISERR(temp))
+							HANDLE_EXCEPT();
 						if ((int16_t)imm_val < 0) {
 							if (DeeThread_CheckInterruptSelf(this_thread))
 								HANDLE_EXCEPT();

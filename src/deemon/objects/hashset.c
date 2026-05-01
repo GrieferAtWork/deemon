@@ -982,9 +982,9 @@ again_index_start:
 		if unlikely(!should_result_ob)
 			goto err;
 		should_result = DeeObject_BoolInherited(should_result_ob);
-		if (Dee_HAS_ISERR(should_result))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(should_result)) {
+		if (Dee_HAS_ISNO_OR_ERR(should_result)) {
+			if (Dee_HAS_ISERR(should_result))
+				goto err;
 			++start;
 			continue;
 		}

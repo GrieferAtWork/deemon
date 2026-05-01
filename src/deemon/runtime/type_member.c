@@ -990,12 +990,12 @@ Dee_type_member_set_impl(struct type_member const *desc,
 	case STRUCT_BOOLBIT7: {
 		int boolval;
 		uint8_t mask, *pfield;
-		boolval = DeeObject_Bool(value);
-		if (Dee_HAS_ISERR(boolval))
-			goto err;
 		mask = STRUCT_BOOLBITMASK(desc->m_desc.md_field.mdf_type & ~(STRUCT_ATOMIC | STRUCT_CONST));
 		pfield = &FIELD(uint8_t);
-		if (Dee_HAS_ISYES_NO_ERR(boolval)) {
+		boolval = DeeObject_Bool(value);
+		if (Dee_HAS_ISYES_OR_ERR(boolval)) {
+			if (Dee_HAS_ISERR(boolval))
+				goto err;
 			IF_THREADS(if (desc->m_desc.md_field.mdf_type & STRUCT_ATOMIC) {
 				atomic_or(pfield, mask);
 			} else) {

@@ -3459,11 +3459,12 @@ ss_foreach_bool_cb(void *arg, DeeObject *elem) {
 	int result;
 	(void)arg;
 	result = DeeObject_Bool(elem);
-	if (Dee_HAS_ISERR(result))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(result))
-		return 0;
-	return -2;
+	if (Dee_HAS_ISYES_OR_ERR(result)) {
+		if (Dee_HAS_ISERR(result))
+			goto err;
+		return -2;
+	}
+	return 0;
 err:
 	return -1;
 }

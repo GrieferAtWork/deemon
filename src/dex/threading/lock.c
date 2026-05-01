@@ -360,10 +360,11 @@ lock_acquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[end]]]*/
 	for (;;) {
 		int status = lock_do_tryacquire(self);
-		if (Dee_HAS_ISERR(status))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(status))
+		if (Dee_HAS_ISYES_OR_ERR(status)) {
+			if (Dee_HAS_ISERR(status))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -454,10 +455,11 @@ lock_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[end]]]*/
 	for (;;) {
 		int error = lock_is_acquired(self);
-		if (Dee_HAS_ISERR(error))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(error))
+		if (Dee_HAS_ISNO_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -752,10 +754,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_read(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_tryread(self);
-		if (Dee_HAS_ISERR(error))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(error))
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -772,10 +775,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_write(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_trywrite(self);
-		if (Dee_HAS_ISERR(error))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(error))
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -792,10 +796,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_waitread(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_writing(self);
-		if (Dee_HAS_ISERR(error))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(error))
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -812,10 +817,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_waitwrite(DeeObject *self) {
 	for (;;) {
 		int error = rwlock_do_reading(self);
-		if (Dee_HAS_ISERR(error))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(error))
+		if (Dee_HAS_ISYES_OR_ERR(error)) {
+			if (Dee_HAS_ISERR(error))
+				goto err;
 			break;
+		}
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -2195,9 +2201,9 @@ event_isset_get(DeeEventObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 event_isset_set(DeeEventObject *self, DeeObject *value) {
 	int val = DeeObject_Bool(value);
-	if (Dee_HAS_ISERR(val))
-		goto err;
-	if (Dee_HAS_ISYES_NO_ERR(val)) {
+	if (Dee_HAS_ISYES_OR_ERR(val)) {
+		if (Dee_HAS_ISERR(val))
+			goto err;
 		Dee_event_set(&self->e_event);
 	} else {
 		Dee_event_clear(&self->e_event);
@@ -2600,10 +2606,10 @@ lock_union_do_acquire(LockUnion *__restrict self) {
 		goto err;
 	for (; i < self->lu_size; ++i) {
 		int ok = lock_do_tryacquire(self->lu_elem[i]);
-		if (Dee_HAS_ISERR(ok))
-			goto err_release;
-		if (Dee_HAS_ISNO_NO_ERR(ok)) {
+		if (Dee_HAS_ISNO_OR_ERR(ok)) {
 			size_t already_holding;
+			if (Dee_HAS_ISERR(ok))
+				goto err_release;
 			if unlikely(lock_union_leave_x1_count(self, i))
 				goto err;
 blocking_acquire_lock_i:
@@ -2614,18 +2620,13 @@ blocking_acquire_lock_i:
 				if (i == already_holding)
 					continue;
 				ok = lock_do_tryacquire(self->lu_elem[i]);
-				if (Dee_HAS_ISERR(ok)) {
+				if (Dee_HAS_ISNO_OR_ERR(ok)) {
 					lock_union_leave_nx_count(self, i);
 					ASSERT(already_holding != i);
 					if (already_holding >= i)
 						lock_do_release_nx(self->lu_elem[already_holding]);
-					goto err;
-				}
-				if (Dee_HAS_ISNO_NO_ERR(ok)) {
-					lock_union_leave_nx_count(self, i);
-					ASSERT(already_holding != i);
-					if (already_holding >= i)
-						lock_do_release_nx(self->lu_elem[already_holding]);
+					if (Dee_HAS_ISERR(ok))
+						goto err;
 
 					/* Force at least 1 interrupt-check in here, just in
 					 * case none of the lock types we're trying to acquire
@@ -2775,10 +2776,10 @@ lock_union_do_acquire_timed(LockUnion *__restrict self,
 		/* First lock has been acquired -> now to acquire the rest of them! */
 		for (i = 1; i < self->lu_size; ++i) {
 			ok = lock_do_tryacquire(self->lu_elem[i]);
-			if (Dee_HAS_ISERR(ok))
-				goto err_release;
-			if (Dee_HAS_ISNO_NO_ERR(ok)) {
+			if (Dee_HAS_ISNO_OR_ERR(ok)) {
 				size_t already_holding;
+				if (Dee_HAS_ISERR(ok))
+					goto err_release;
 				if unlikely(lock_union_leave_x1_count(self, i))
 					goto err;
 blocking_acquire_lock_i:
@@ -2791,18 +2792,13 @@ blocking_acquire_lock_i:
 					if (i == already_holding)
 						continue;
 					ok = lock_do_tryacquire(self->lu_elem[i]);
-					if (Dee_HAS_ISERR(ok)) {
+					if (Dee_HAS_ISNO_OR_ERR(ok)) {
 						lock_union_leave_nx_count(self, i);
 						ASSERT(already_holding != i);
 						if (already_holding >= i)
 							lock_do_release_nx(self->lu_elem[already_holding]);
-						goto err;
-					}
-					if (Dee_HAS_ISNO_NO_ERR(ok)) {
-						lock_union_leave_nx_count(self, i);
-						ASSERT(already_holding != i);
-						if (already_holding >= i)
-							lock_do_release_nx(self->lu_elem[already_holding]);
+						if (Dee_HAS_ISERR(ok))
+							goto err;
 	
 						/* Force at least 1 interrupt-check in here, just in
 						 * case none of the lock types we're trying to acquire
@@ -2826,12 +2822,13 @@ blocking_acquire_lock_i:
 handle_timeout_at_i:
 	/* Timeout */
 	ok = lock_union_tryacquire_except(self, i);
-	if (Dee_HAS_ISERR(ok)) {
-		lock_do_release_nx(self->lu_elem[i]);
-		goto err;
-	}
-	if (Dee_HAS_ISYES_NO_ERR(ok))
+	if (Dee_HAS_ISYES_OR_ERR(ok)) {
+		if (Dee_HAS_ISERR(ok)) {
+			lock_do_release_nx(self->lu_elem[i]);
+			goto err;
+		}
 		return Dee_HAS_YES; /* Able to acquire all remaining locks without blocking */
+	}
 	if unlikely(lock_do_release(self->lu_elem[i]))
 		goto err;
 	return Dee_HAS_NO;
@@ -2896,10 +2893,11 @@ lock_union_do_tryacquire(LockUnion *__restrict self) {
 	size_t i = 0;
 	for (; i < self->lu_size; ++i) {
 		int ok = lock_do_tryacquire(self->lu_elem[i]);
-		if (Dee_HAS_ISERR(ok))
-			goto err_release;
-		if (Dee_HAS_ISNO_NO_ERR(ok))
+		if (Dee_HAS_ISNO_OR_ERR(ok)) {
+			if (Dee_HAS_ISERR(ok))
+				goto err_release;
 			return lock_union_leave_x1_count(self, i);
+		}
 	}
 	return Dee_HAS_YES;
 err_release:

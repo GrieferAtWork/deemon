@@ -176,9 +176,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_div(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
+	if unlikely(Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}
@@ -190,9 +190,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_mod(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
-	if (Dee_HAS_ISERR(temp))
-		goto err;
-	if unlikely(Dee_HAS_ISNO_NO_ERR(temp)) {
+	if unlikely(Dee_HAS_ISNO_OR_ERR(temp)) {
+		if (Dee_HAS_ISERR(temp))
+			goto err;
 		DeeRT_ErrDivideByZero(self, other);
 		goto err;
 	}

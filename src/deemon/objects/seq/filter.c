@@ -112,18 +112,16 @@ again:
 	if unlikely(!ITER_ISOK(result))
 		goto done;
 	pred_bool = invoke_filter(self->fi_func, result);
-	if (Dee_HAS_ISERR(pred_bool))
-		goto err_r;
-	if (Dee_HAS_ISNO_NO_ERR(pred_bool)) {
+	if (Dee_HAS_ISNO_OR_ERR(pred_bool)) {
 		Dee_Decref(result);
+		if (Dee_HAS_ISERR(pred_bool))
+			goto err;
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		goto again;
 	}
 done:
 	return result;
-err_r:
-	Dee_Decref(result);
 err:
 	return NULL;
 }
@@ -263,10 +261,11 @@ filter_foreach_cb(void *arg, DeeObject *elem) {
 	struct filter_foreach_data *data;
 	data      = (struct filter_foreach_data *)arg;
 	pred_bool = invoke_filter(data->ffd_fun, elem);
-	if (Dee_HAS_ISERR(pred_bool))
-		goto err;
-	if (Dee_HAS_ISNO_NO_ERR(pred_bool))
+	if (Dee_HAS_ISNO_OR_ERR(pred_bool)) {
+		if (Dee_HAS_ISERR(pred_bool))
+			goto err;
 		return 0; /* Don't enumerate this one. */
+	}
 	return (*data->ffd_proc)(data->ffd_arg, elem);
 err:
 	return -1;
@@ -294,10 +293,11 @@ filterub_mh_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
 	data = (struct filterub_mh_seq_enumerate_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faued_fun, value);
-		if (Dee_HAS_ISERR(pred_bool))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(pred_bool))
+		if (Dee_HAS_ISNO_OR_ERR(pred_bool)) {
+			if (Dee_HAS_ISERR(pred_bool))
+				goto err;
 			value = NULL; /* Treat as unbound */
+		}
 	}
 	return (*data->faued_proc)(data->faued_arg, index, value);
 err:
@@ -325,10 +325,11 @@ filterub_mh_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
 	data = (struct filterub_mh_seq_enumerate_index_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faueid_fun, value);
-		if (Dee_HAS_ISERR(pred_bool))
-			goto err;
-		if (Dee_HAS_ISNO_NO_ERR(pred_bool))
+		if (Dee_HAS_ISNO_OR_ERR(pred_bool)) {
+			if (Dee_HAS_ISERR(pred_bool))
+				goto err;
 			value = NULL; /* Treat as unbound */
+		}
 	}
 	return (*data->faueid_proc)(data->faueid_arg, index, value);
 err:

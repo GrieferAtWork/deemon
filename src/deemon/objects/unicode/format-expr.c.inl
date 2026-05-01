@@ -1398,9 +1398,9 @@ LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__
 			goto err;
 #else /* DEFINE_sfa_skipexpr */
 		lhs_bool = DeeObject_BoolInherited(lhs);
-		if (Dee_HAS_ISERR(lhs_bool))
-			goto err;
-		if (Dee_HAS_ISYES_NO_ERR(lhs_bool)) {
+		if (Dee_HAS_ISYES_OR_ERR(lhs_bool)) {
+			if (Dee_HAS_ISERR(lhs_bool))
+				goto err;
 			if unlikely(sfa_skiplor(self))
 				goto err;
 			lhs = DeeBool_NewTrue();
