@@ -103,9 +103,9 @@ err_trycatch:
 	return Dee_HAS_ERR;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_contains_with_foreach_cb)]] {
-	Dee_ssize_t status;
-	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_contains_with_foreach_cb, item);
-	return Dee_HAS_FROM_eM1_n0_yM2(status);
+	Dee_ssize_t foreach_status;
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_contains_with_foreach_cb, item);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }}
 %{$with__seq_find = {
 	return default__seq_contains_with_range__with__seq_find(self, item, 0, (size_t)-1);

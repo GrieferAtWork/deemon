@@ -10370,9 +10370,9 @@ default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_contains__with__seq_operator_foreach(DeeObject *self, DeeObject *item) {
-	Dee_ssize_t status;
-	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_contains_with_foreach_cb, item);
-	return Dee_HAS_FROM_eM1_n0_yM2(status);
+	Dee_ssize_t foreach_status;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_contains_with_foreach_cb, item);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -16023,7 +16023,7 @@ default__set_operator_bool__with__set_operator_foreach(DeeObject *__restrict sel
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach))(self, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
-	return Dee_HAS_FROM_eM1_n0_yM2(foreach_status);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)foreach_status);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

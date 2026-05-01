@@ -564,7 +564,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(hasattr)(LOCAL_SeqEach *self, DeeObject *attr) {
 	Dee_ssize_t foreach_status;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasattr_foreach_cb, attr);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -584,7 +584,7 @@ LOCAL_seX(hasattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t
 	data.ssbashfd_attr = attr;
 	data.ssbashfd_hash = hash;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasattr_string_hash_foreach_cb, &data);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -606,7 +606,7 @@ LOCAL_seX(hasattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size_t
 	data.ssbaslhfd_attrlen = attrlen;
 	data.ssbaslhfd_hash    = hash;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasattr_string_len_hash_foreach_cb, &data);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 
@@ -833,7 +833,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(operator_hasitem)(LOCAL_SeqEach *self, DeeObject *index) {
 	Dee_ssize_t foreach_status;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasitem_foreach_cb, index);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 #define LOCAL_seX_operator_bounditem_index_PTR &LOCAL_seX(operator_bounditem_index)
@@ -851,7 +851,7 @@ LOCAL_seX(operator_hasitem_index)(LOCAL_SeqEach *self, size_t index) {
 	Dee_ssize_t foreach_status;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasitem_index_foreach_cb,
 	                                    (void *)(uintptr_t)index);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 #define LOCAL_seX_operator_bounditem_string_hash_PTR &LOCAL_seX(operator_bounditem_string_hash)
@@ -873,7 +873,7 @@ LOCAL_seX(operator_hasitem_string_hash)(LOCAL_SeqEach *self, char const *key, De
 	data.ssbishfd_key  = key;
 	data.ssbishfd_hash = hash;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasitem_string_hash_foreach_cb, &data);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 #define LOCAL_seX_operator_bounditem_string_len_hash_PTR &LOCAL_seX(operator_bounditem_string_len_hash)
@@ -897,7 +897,7 @@ LOCAL_seX(operator_hasitem_string_len_hash)(LOCAL_SeqEach *self, char const *key
 	data.ssbislhfd_keylen = keylen;
 	data.ssbislhfd_hash   = hash;
 	foreach_status = LOCAL_seX(foreach)(self, &se_hasitem_string_len_hash_foreach_cb, &data);
-	return Dee_HAS_FROM_eM1_nM2_y0(foreach_status);
+	return Dee_HAS_FROM_eM1_nM2_y0((int)foreach_status);
 }
 
 #define LOCAL_seX_operator_sizeob_PTR                     &sew_sizeob
