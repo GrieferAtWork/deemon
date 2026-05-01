@@ -967,7 +967,7 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_peek_t)(DeeO
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_getseq_t)(DeeObject *__restrict self);
 
 /* __timeout_nanoseconds__ */
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_object_as_timeout_nanoseconds_t)(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_object_as_timeout_nanoseconds_t)(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
 
 /* Anonymous method hints */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_foreach_reverse_t)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);

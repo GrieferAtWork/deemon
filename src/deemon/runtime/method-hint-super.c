@@ -4334,7 +4334,7 @@ super_mh__iter_getseq(DeeSuperObject *__restrict self) {
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 super_mh__object_as_timeout_nanoseconds(DeeSuperObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_object_as_timeout_nanoseconds, &specs);

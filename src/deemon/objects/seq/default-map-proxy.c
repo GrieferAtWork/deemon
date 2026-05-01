@@ -77,20 +77,6 @@ struct ds_mX_foreach_cb_data {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_mk_enumerate_cb(void *arg, DeeObject *key, DeeObject *UNUSED(value)) {
-	struct ds_mX_foreach_cb_data *data = (struct ds_mX_foreach_cb_data *)arg;
-	return (*data->dmxfcd_cb)(data->dmxfcd_arg, key);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_mk_foreach(DefaultSequence_MapProxy *self, Dee_foreach_t cb, void *arg) {
-	struct ds_mX_foreach_cb_data data;
-	data.dmxfcd_cb  = cb;
-	data.dmxfcd_arg = arg;
-	return DeeObject_InvokeMethodHint(map_enumerate, self->dsmp_map, &ds_mk_enumerate_cb, &data);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_mv_enumerate_cb(void *arg, DeeObject *UNUSED(key), DeeObject *value) {
 	struct ds_mX_foreach_cb_data *data = (struct ds_mX_foreach_cb_data *)arg;
 	return value ? (*data->dmxfcd_cb)(data->dmxfcd_arg, value) : 0;
@@ -291,8 +277,8 @@ PRIVATE struct type_seq ds_mk_seq = {
 	/* .tp_getrange                   = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
 	/* .tp_delrange                   = */ DEFIMPL_UNSUPPORTED(&default__delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_mk_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter), /* Can't use "map_enumerate" on underlying mapping because that will evaluate keys, which could have unintended side-effects */
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
 	/* .tp_hasitem                    = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
 	/* .tp_size                       = */ DEFIMPL(&default__seq_operator_size__with__seq_operator_foreach), /* XXX: When the map can't have unbound keys, this is equal to its length */

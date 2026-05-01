@@ -295,7 +295,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__iter_setindex(DeeSuperObject *se
 INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__iter_rewind(DeeSuperObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_peek(DeeSuperObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_getseq(DeeSuperObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__object_as_timeout_nanoseconds(DeeSuperObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__object_as_timeout_nanoseconds(DeeSuperObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
 /*[[[end]]]*/
 /* clang-format on */
 

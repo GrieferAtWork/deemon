@@ -22797,12 +22797,12 @@ default__iter_getseq__empty(DeeObject *__restrict UNUSED(self)) {
 
 
 /* object_as_timeout_nanoseconds */
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__object_as_timeout_nanoseconds(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), object_as_timeout_nanoseconds))(self, p_timeout_nanoseconds);
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__object_as_timeout_nanoseconds__with_callattr___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
 	int result;
 	DREF DeeObject *attr = DeeObject_GetAttr(self, Dee_AsObject(&str___timeout_nanoseconds__));
@@ -22815,7 +22815,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(Dee_TYPE(self), self, p_timeout_nanoseconds);
@@ -22832,12 +22832,12 @@ err:
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__object_as_timeout_nanoseconds__unsupported(DeeObject *__restrict self, uint64_t *__restrict UNUSED(p_timeout_nanoseconds)) {
 	return err_obj_unsupportedf(self, "__timeout_nanoseconds__");
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__object_as_timeout_nanoseconds__none(DeeObject *__restrict UNUSED(self), uint64_t *__restrict p_timeout_nanoseconds) {
 	*p_timeout_nanoseconds = 0;
 	return 0;
@@ -25263,7 +25263,7 @@ tdefault__iter_getseq__with_callobjectcache___iter_seq__(DeeTypeObject *tp_self,
 }
 
 /* object_as_timeout_nanoseconds */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeTypeObject *tp_self, DeeObject *self, uint64_t *p_timeout_nanoseconds) {
 	int result;
 	DREF DeeObject *attr = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___timeout_nanoseconds__, 1, (DeeObject *const *)&self);

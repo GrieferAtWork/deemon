@@ -1210,26 +1210,6 @@ object_get_deep_immutable(DeeObject *__restrict self) {
 	return_bool(DeeObject_IsDeepImmutable(self));
 }
 
-/*
-import * from deemon;
-class Foo {
-	this = default;
-	public member a;
-};
-
-local x = Foo(10);
-local map = Mapping.fromattr(x);
-assert !map.keys.contains("d");
-
----
-
-^ That code must enumerate attributes of "self", which also requires
-  those attributes to be evaluated. -- The bug here probably lies in
-  the fact that those attributes are evaluated in the above code, but
-  that needs to be fixed first
-*/
-#if 0 /* FIXME */
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_timeout_nanoseconds(DeeObject *__restrict self) {
 	uint64_t timeout;
@@ -1239,7 +1219,6 @@ object_timeout_nanoseconds(DeeObject *__restrict self) {
 err:
 	return NULL;
 }
-#endif
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
@@ -1337,14 +1316,12 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 
 
 	/* Helpers for invoking method hints... */
-#if 0 /* FIXME */
 	TYPE_GETTER_AB(STR___timeout_nanoseconds__, &object_timeout_nanoseconds,
 	               "->?Dint\n"
 	               "Invoke the $__timeout_nanoseconds__ method hint for this object and "
 	               /**/ "return the number of nanoseconds that this object describes when "
 	               /**/ "treated as a #Ctimeout argument in various APIs\n"
 	               "Types (such as ?Dint or ?Etime:Time) overwrite this attribute"),
-#endif
 	TYPE_GETSET_END
 };
 
