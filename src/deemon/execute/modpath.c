@@ -1186,11 +1186,11 @@ dexrange_union_object(DeeObject *__restrict ob, void *arg) {
 		 * But since this whole idea of looking at module exports to
 		 * get ~some~ idea of the associated module's boundaries is
 		 * already a wholly flawed approach (there can **always** be
-		 * pointers we missed and thus didn't associated with that
+		 * pointers we missed and thus didn't associate with some
 		 * module), this is "good enough" for a fallback mechanism.
 		 *
 		 * Because in general: there should always be some OS-specific
-		 * was to determine which module some pointer is associated
+		 * way to determine which module some pointer is associated
 		 * with, which is all we need to not have to get here. */
 		DeeObject_Visit(ob, &dexrange_union_object_r, me);
 	}
