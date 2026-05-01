@@ -571,6 +571,7 @@ again:
 	}
 	gc_lock_release(DeeGC_TRACK_F_NORMAL);
 	GCSet_FiniMarkers(&visited);
+	GCSet_Fini(&decref_later);
 }
 
 
