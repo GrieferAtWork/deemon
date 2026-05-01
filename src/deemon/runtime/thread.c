@@ -43,7 +43,7 @@
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
 #include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_*, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_*, time, time64, tss_*, usleep */
 #include <deemon/system.h>             /* DeeNTSystem_HandleGenericError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS, DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_LISTRCU, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
+#include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS, DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_TIMEOUT_REPEAT_BEGIN, DeeThread_TIMEOUT_REPEAT_END, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_LISTRCU, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
 #include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -55,7 +55,7 @@
 
 #include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>             /* __i386__, __x86_64__ */
-#include <hybrid/overflow.h>         /* OVERFLOW_* */
+#include <hybrid/overflow.h>         /* OVERFLOW_UMUL, OVERFLOW_USUB */
 #include <hybrid/sched/yield.h>      /* SCHED_YIELD */
 #include <hybrid/sequence/bsearch.h> /* BSEARCH */
 #include <hybrid/sequence/list.h>    /* LIST_* */
@@ -3415,7 +3415,6 @@ DeeThread_WaitFor(/*Thread*/ DeeObject *__restrict self,
 		if (timeout_nanoseconds == 0)
 			goto timeout; /* Try-join */
 		if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
 			do {
 				if (!(state & Dee_THREAD_STATE_WAITING)) {
 					atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
@@ -3426,27 +3425,21 @@ do_infinite_timeout:
 				state = atomic_read(&me->t_state);
 			} while (!(state & Dee_THREAD_STATE_TERMINATED));
 		} else {
-			int error;
-			uint64_t now_microseconds, then_microseconds;
-			now_microseconds = DeeThread_GetTimeMicroSeconds();
-			if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-				goto do_infinite_timeout;
-do_wait_with_timeout:
-			if (!(state & Dee_THREAD_STATE_WAITING)) {
-				atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
-				state |= Dee_THREAD_STATE_WAITING;
+			DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+				int error;
+				if (!(state & Dee_THREAD_STATE_WAITING)) {
+					atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
+					state |= Dee_THREAD_STATE_WAITING;
+				}
+				error = DeeFutex_Wait32Timed(&me->t_state, state, timeout_nanoseconds);
+				if unlikely(error != 0)
+					return error; /* Timeout or error */
+				state = atomic_read(&me->t_state);
+				if (state & Dee_THREAD_STATE_TERMINATED)
+					return 0;
 			}
-			error = DeeFutex_WaitIntTimed(&me->t_state, state, timeout_nanoseconds);
-			if unlikely(error != 0)
-				return error; /* Timeout or error */
-			state = atomic_read(&me->t_state);
-			if (!(state & Dee_THREAD_STATE_TERMINATED)) {
-				now_microseconds = DeeThread_GetTimeMicroSeconds();
-				if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-					goto timeout; /* Timeout */
-				timeout_nanoseconds *= 1000;
-				goto do_wait_with_timeout;
-			}
+			DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+			goto timeout;
 		}
 	}
 	return 0;

@@ -44,7 +44,7 @@
 #include <deemon/string.h>          /* DeeUni_ToLower, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
-#include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
+#include <deemon/thread.h>          /* DeeThread_GetTimeNanoSeconds */
 #include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
@@ -2486,9 +2486,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libtime_tick_f_impl(void)
 		goto err;
 
 	/* Load the current tick. */
-	tick = DeeThread_GetTimeMicroSeconds(); /* TODO: Use a higher resolution source (can go up to nanoseconds) */
-	__hybrid_int128_set64(result->t_nanos, tick);
-	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
+	tick = DeeThread_GetTimeNanoSeconds();
+	__hybrid_uint128_set64(result->t_unanos, tick);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
 	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);

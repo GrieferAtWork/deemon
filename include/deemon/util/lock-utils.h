@@ -43,10 +43,9 @@
 #define Dee_atomic_rwlock_waitwrite_timed_p(self, timeout_nanoseconds, err_label, timeout_label) (void)0
 #else /* CONFIG_NO_THREADS */
 
-#include <hybrid/__overflow.h>    /* __hybrid_overflow_uadd, __hybrid_overflow_usub */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 
-#include "../thread.h" /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
+#include "../thread.h" /* DeeThread_CheckInterrupt, DeeThread_TIMEOUT_REPEAT_BEGIN, DeeThread_TIMEOUT_REPEAT_END_EX */
 #include "lock.h"      /* Dee_atomic_lock_available, Dee_atomic_lock_tryacquire, Dee_atomic_rwlock_* */
 
 DECL_BEGIN
@@ -62,24 +61,15 @@ DECL_BEGIN
 #define _Dee_generic_lock_spinuntil_timed_p(ok, timeout_nanoseconds, err_label, timeout_label) \
 	do {                                                                                       \
 		if (!(ok)) {                                                                           \
-			uint64_t _now_microseconds, _then_microseconds;                                    \
-			if ((timeout_nanoseconds == (uint64_t)-1) ||                                       \
-			    (_now_microseconds = DeeThread_GetTimeMicroSeconds(),                          \
-			     __hybrid_overflow_uadd(_now_microseconds,                                     \
-			                            timeout_nanoseconds / 1000,                            \
-			                            &_then_microseconds))) {                               \
+			if (timeout_nanoseconds == (uint64_t)-1) {                                         \
 				_Dee_generic_lock_spinuntil_p(ok, err_label);                                  \
 			} else {                                                                           \
-				while (!(ok)) {                                                                \
-					_now_microseconds = DeeThread_GetTimeMicroSeconds();                       \
-					if (__hybrid_overflow_usub(_then_microseconds, _now_microseconds,          \
-					                           &timeout_nanoseconds))                          \
-						goto timeout_label; /* Timeout */                                      \
-					timeout_nanoseconds *= 1000;                                               \
-					if (DeeThread_CheckInterrupt())                                            \
-						goto err;                                                              \
+				DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {                         \
+					if (ok)                                                                    \
+						break;                                                                 \
 					__hybrid_yield();                                                          \
 				}                                                                              \
+				DeeThread_TIMEOUT_REPEAT_END_EX(&timeout_nanoseconds, goto timeout_label);     \
 			}                                                                                  \
 		}                                                                                      \
 	}	__WHILE0

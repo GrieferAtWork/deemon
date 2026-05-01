@@ -45,7 +45,7 @@
 #include <deemon/string.h>          /* DEFINE_STRING, DeeString*, Dee_UNICODE_PRINTER_*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_WIDTH_2BYTE, WSTR_LENGTH */
 #include <deemon/system-features.h> /* *_FILENO, *exec*, *spawn*, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_SetErrno, F_OK, O_CLOEXEC, WNOHANG, X_OK, _Exit, access, bzero*, chdir, close, cwait, detach, dup, dup2, environ, errno, fchdir, fork, getcwd, getpid, kill, memchr, memcpyc, mempcpyc, pipe2, read, strend, strlen, syscall, vfork, waccess, wait, wait4, waitpid, wchdir, wenviron, wgetcwd, write */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_* */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_Sleep */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_Sleep, DeeThread_TIMEOUT_REPEAT_BEGIN, DeeThread_TIMEOUT_REPEAT_END */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
@@ -53,7 +53,7 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __linux__ */
-#include <hybrid/overflow.h>        /* OVERFLOW_* */
+#include <hybrid/overflow.h>        /* OVERFLOW_UCAST */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>   /* SLIST_* */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_INT__, __SSIZE_TYPE__ */
@@ -3800,24 +3800,17 @@ process_join_impl(Process *__restrict self,
 	if (timeout_nanoseconds == 0) {
 		result = process_join_impl2(self, timeout_nanoseconds, p_status);
 	} else if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
 		do {
 			result = process_join_impl2(self, timeout_nanoseconds, p_status);
 		} while (result == 2);
 	} else {
-		uint64_t now_microseconds, then_microseconds;
-		now_microseconds = DeeThread_GetTimeMicroSeconds();
-		if (OVERFLOW_UADD(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-			goto do_infinite_timeout;
-		for (;;) {
+		DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
 			result = process_join_impl2(self, timeout_nanoseconds, p_status);
 			if (result != 2)
-				break;
-			now_microseconds = DeeThread_GetTimeMicroSeconds();
-			if (OVERFLOW_USUB(then_microseconds, now_microseconds, &timeout_nanoseconds))
-				return 2; /* Timeout */
-			timeout_nanoseconds *= 1000;
+				return result;
 		}
+		DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+		return 2; /* Timeout */
 	}
 	return result;
 }

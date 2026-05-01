@@ -85,8 +85,9 @@ DECL_END
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 #include <hybrid/typecore.h>       /* __SIZEOF_POINTER__ */
 
-#include "futex.h" /* DeeFutex_* */
-#include "lock.h"  /* _Dee_SHARED_WAITWORD, _Dee_SHARED_WAITWORD__INIT, _Dee_shared_waitword_* */
+#include "../thread.h" /* DeeThreadObject, DeeThread_Self, DeeThread_TIMEOUT_REPEAT_BEGIN, DeeThread_TIMEOUT_REPEAT_END */
+#include "futex.h"     /* DeeFutex_* */
+#include "lock.h"      /* _Dee_SHARED_WAITWORD, _Dee_SHARED_WAITWORD__INIT, _Dee_shared_waitword_* */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint32_t, uint64_t */
@@ -103,7 +104,6 @@ DECL_END
 #define _Dee_NRLOCK_TID_INVALID_IS_ZERO
 #endif /* __HYBRID_GETTID_INVALID_IS_ZERO */
 #else /* __hybrid_tid_t_IS_NUMERIC && __HYBRID_SIZEOF_TID__ == ... */
-#include "../thread.h" /* DeeThreadObject, DeeThread_Self */
 #define _Dee_SIZEOF_NRLOCK_TID_T __SIZEOF_POINTER__
 #define _Dee_nrlock_tid_t        DeeThreadObject *
 #define _Dee_nrlock_gettid       DeeThread_Self
@@ -236,17 +236,27 @@ Dee_nrshared_lock_acquire(Dee_nrshared_lock_t *__restrict self) {
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_nrshared_lock_acquire_timed(Dee_nrshared_lock_t *__restrict self,
                                 uint64_t timeout_nanoseconds) {
+	int error;
 	_Dee_nrlock_tid_t owner;
-	_Dee_nrlock_tid_t caller = _Dee_nrlock_gettid();
-	for (;;) {
-		int error;
-		owner = __hybrid_atomic_cmpxch_val(&self->nrs_lock.nra_tid,
-		                                   _Dee_NRLOCK_TID_INVALID, caller,
-		                                   __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
-		if (owner == NULL)
-			return Dee_NRLOCK_OK;
-		if (owner == caller)
-			return Dee_NRLOCK_ALREADY;
+	_Dee_nrlock_tid_t caller;
+	caller = _Dee_nrlock_gettid();
+again:
+	owner = __hybrid_atomic_cmpxch_val(&self->nrs_lock.nra_tid,
+	                                   _Dee_NRLOCK_TID_INVALID, caller,
+	                                   __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+	if (owner == NULL)
+		return Dee_NRLOCK_OK;
+	if (owner == caller)
+		return Dee_NRLOCK_ALREADY;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+		_Dee_nrshared_lock_waiting_start(self);
+		error = _Dee_nrlock_gettid_futex_wait(&self->nrs_lock.nra_tid, owner);
+		_Dee_nrshared_lock_waiting_end(self);
+		if unlikely(error)
+			return Dee_NRLOCK_ERR;
+		goto again;
+	}
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
 		_Dee_nrshared_lock_waiting_start(self);
 		error = _Dee_nrlock_gettid_futex_wait_timed(&self->nrs_lock.nra_tid,
 		                                            owner, timeout_nanoseconds);
@@ -256,7 +266,16 @@ Dee_nrshared_lock_acquire_timed(Dee_nrshared_lock_t *__restrict self,
 				return Dee_NRLOCK_FAIL;
 			return Dee_NRLOCK_ERR;
 		}
+		owner = __hybrid_atomic_cmpxch_val(&self->nrs_lock.nra_tid,
+		                                   _Dee_NRLOCK_TID_INVALID, caller,
+		                                   __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+		if (owner == NULL)
+			return Dee_NRLOCK_OK;
+		if (owner == caller)
+			return Dee_NRLOCK_ALREADY;
 	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return Dee_NRLOCK_FAIL; /* Timeout */
 }
 
 /* @return: Dee_NRLOCK_OK:      Success
@@ -285,10 +304,31 @@ Dee_nrshared_lock_acquire_noint(Dee_nrshared_lock_t *__restrict self) {
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_nrshared_lock_acquire_noint_timed(Dee_nrshared_lock_t *__restrict self,
                                       uint64_t timeout_nanoseconds) {
+	int error;
 	_Dee_nrlock_tid_t owner;
-	_Dee_nrlock_tid_t caller = _Dee_nrlock_gettid();
-	for (;;) {
-		int error;
+	_Dee_nrlock_tid_t caller;
+	caller = _Dee_nrlock_gettid();
+again:
+	owner = __hybrid_atomic_cmpxch_val(&self->nrs_lock.nra_tid,
+	                                   _Dee_NRLOCK_TID_INVALID, caller,
+	                                   __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+	if (owner == NULL)
+		return Dee_NRLOCK_OK;
+	if (owner == caller)
+		return Dee_NRLOCK_ALREADY;
+	if (timeout_nanoseconds == (uint64_t)-1) {
+		_Dee_nrshared_lock_waiting_start(self);
+		_Dee_nrlock_gettid_futex_wait_noint(&self->nrs_lock.nra_tid, owner);
+		_Dee_nrshared_lock_waiting_end(self);
+		goto again;
+	}
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		_Dee_nrshared_lock_waiting_start(self);
+		error = _Dee_nrlock_gettid_futex_wait_noint_timed(&self->nrs_lock.nra_tid,
+		                                                  owner, timeout_nanoseconds);
+		_Dee_nrshared_lock_waiting_end(self);
+		if (error != 0)
+			return Dee_NRLOCK_FAIL;
 		owner = __hybrid_atomic_cmpxch_val(&self->nrs_lock.nra_tid,
 		                                   _Dee_NRLOCK_TID_INVALID, caller,
 		                                   __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
@@ -296,13 +336,9 @@ Dee_nrshared_lock_acquire_noint_timed(Dee_nrshared_lock_t *__restrict self,
 			return Dee_NRLOCK_OK;
 		if (owner == caller)
 			return Dee_NRLOCK_ALREADY;
-		_Dee_nrshared_lock_waiting_start(self);
-		error = _Dee_nrlock_gettid_futex_wait_noint_timed(&self->nrs_lock.nra_tid,
-		                                                  owner, timeout_nanoseconds);
-		_Dee_nrshared_lock_waiting_end(self);
-		if unlikely(error)
-			return Dee_NRLOCK_FAIL;
 	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return Dee_NRLOCK_FAIL; /* Timeout */
 }
 
 DECL_END

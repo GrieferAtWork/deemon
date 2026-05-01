@@ -32,6 +32,7 @@
 #include "api.h"
 
 #include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_* */
+#include <hybrid/__overflow.h>    /* __hybrid_overflow_usub64 */
 #include <hybrid/host.h>          /* __arm__, __i386__, __linux__, __unix__, __x86_64__ */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __UINT32_C, __UINT_FAST32_TYPE__, __ULONG32_TYPE__ */
@@ -630,6 +631,51 @@ DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void); /* TODO: R
 
 /* Get the current time (offset from some undefined point) in nanoseconds. */
 DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeNanoSeconds)(void);
+
+/* Helper macros for repeating an operation until a timeout has expired.
+ * These macros use `DeeThread_GetTimeNanoSeconds()', but are designed to
+ * safely handle overflow as may happen for very large timeouts:
+ *
+ * >> uint64_t timeout_nanoseconds = ...;
+ * >> DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+ * >>     bool ok = interruptible_timeout_operation(timeout_nanoseconds);
+ * >>     if (ok)
+ * >>         return SUCCESS;
+ * >>     if (DeeThread_CheckInterrupt())
+ * >>         return ERROR;
+ * >> }
+ * >> DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+ * >> return TIMEOUT;
+ */
+#define DeeThread_TIMEOUT_REPEAT_BEGIN(p_timeout_nanoseconds)               \
+	do {                                                                    \
+		uint64_t _tmo_new_nano;                                             \
+		uint64_t _tmo_now_nano = DeeThread_GetTimeNanoSeconds();            \
+		uint64_t _tmo_then_nano = _tmo_now_nano + *(p_timeout_nanoseconds); \
+		bool _tmo_saw_rollover = _tmo_now_nano <= _tmo_then_nano;           \
+		do {                                                                \
+			__IF1
+#define DeeThread_TIMEOUT_REPEAT_UPDATE(p_timeout_nanoseconds, timeout_expr) \
+			if (!(_tmo_new_nano = DeeThread_GetTimeNanoSeconds(),            \
+			      _tmo_saw_rollover |= _tmo_new_nano < _tmo_now_nano,        \
+			      _tmo_now_nano = _tmo_new_nano,                             \
+			      __hybrid_overflow_usub64(_tmo_then_nano, _tmo_now_nano,    \
+			                               p_timeout_nanoseconds) &&         \
+			      _tmo_saw_rollover))                                        \
+				;                                                            \
+			else                                                             \
+				timeout_expr
+#define DeeThread_TIMEOUT_REPEAT_END(p_timeout_nanoseconds) \
+		DeeThread_TIMEOUT_REPEAT_END_EX(p_timeout_nanoseconds, break)
+#define DeeThread_TIMEOUT_REPEAT_END_EX(p_timeout_nanoseconds, timeout_expr)      \
+			else;                                                                 \
+			DeeThread_TIMEOUT_REPEAT_UPDATE(p_timeout_nanoseconds, timeout_expr); \
+		} __WHILE1;                                                               \
+	}	__WHILE0
+#define DeeThread_TIMEOUT_REPEAT_END_DUMMY() \
+			else;                            \
+		} __WHILE0;                          \
+	}	__WHILE0
 
 /* Return the thread controller object for the calling thread.
  * If the calling thread wasn't created by `DeeThread_Start()',

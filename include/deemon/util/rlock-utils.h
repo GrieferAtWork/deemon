@@ -43,12 +43,11 @@
 #else /* CONFIG_NO_THREADS */
 
 #include <hybrid/__atomic.h>       /* __ATOMIC_ACQUIRE, __hybrid_atomic_* */
-#include <hybrid/__overflow.h>     /* __hybrid_overflow_uadd, __hybrid_overflow_usub */
 #include <hybrid/sched/__gettid.h> /* __hybrid_gettid, __hybrid_gettid_iscaller */
 #include <hybrid/sched/__yield.h>  /* __hybrid_yield */
 
-#include "../thread.h" /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
-#include "rlock.h"     /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t */
+#include "../thread.h" /* DeeThread_CheckInterrupt, DeeThread_TIMEOUT_REPEAT_BEGIN, DeeThread_TIMEOUT_REPEAT_END, DeeThread_TIMEOUT_REPEAT_END_EX */
+#include "rlock.h"     /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_* */
 
 #include <stdint.h> /* uint64_t, uintptr_t */
 
@@ -87,7 +86,6 @@ err:
 LOCAL WUNUSED NONNULL((1)) int DCALL
 _Dee_ratomic_lock_acquire_timed_p_impl(Dee_ratomic_lock_t *__restrict self,
                                        uint64_t timeout_nanoseconds) {
-	uint64_t now_microseconds, then_microseconds;
 	if (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) == 0) {
 		if (!__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			goto waitfor;
@@ -101,32 +99,28 @@ settid:
 	}
 waitfor:
 	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		while (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) != 0) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			__hybrid_yield();
+		for (;;) {
+			while (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) != 0) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
+				__hybrid_yield();
+			}
+			if (__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+				goto settid;
 		}
-		if (__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-			goto settid;
-		goto do_infinite_timeout;
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	while (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) == 0) {
-		if (__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-			goto settid;
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		while (__hybrid_atomic_load(&self->ra_lock, __ATOMIC_ACQUIRE) == 0) {
+			if (__hybrid_atomic_cmpxch(&self->ra_lock, 0, 1, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
+				goto settid;
+		}
+		timeout_nanoseconds *= 1000;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	__hybrid_yield();
-	goto do_wait_with_timeout;
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return 1; /* Timeout */
 err:
 	return -1;
 }
@@ -160,28 +154,21 @@ err:
 	do {                                                                                      \
 		if (__hybrid_atomic_load(&(self)->ra_lock, __ATOMIC_ACQUIRE) != 0 &&                  \
 		    !__hybrid_gettid_iscaller((self)->ra_tid)) {                                      \
-			uint64_t _now_microseconds, _then_microseconds;                                   \
-			if ((timeout_nanoseconds == (uint64_t)-1) ||                                      \
-			    (_now_microseconds = DeeThread_GetTimeMicroSeconds(),                         \
-			     __hybrid_overflow_uadd(_now_microseconds,                                    \
-			                            timeout_nanoseconds / 1000,                           \
-			                            &_then_microseconds))) {                              \
+			if (timeout_nanoseconds == (uint64_t)-1) {                                        \
 				while (__hybrid_atomic_load(&(self)->ra_lock, __ATOMIC_ACQUIRE) != 0) {       \
 					if (DeeThread_CheckInterrupt())                                           \
 						goto err_label;                                                       \
 					__hybrid_yield();                                                         \
 				}                                                                             \
 			} else {                                                                          \
-				while (__hybrid_atomic_load(&(self)->ra_lock, __ATOMIC_ACQUIRE) != 0) {       \
-					_now_microseconds = DeeThread_GetTimeMicroSeconds();                      \
-					if (__hybrid_overflow_usub(_then_microseconds, _now_microseconds,         \
-					                           &timeout_nanoseconds))                         \
-						goto timeout_label; /* Timeout */                                     \
-					timeout_nanoseconds *= 1000;                                              \
+				DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {                        \
+					if (__hybrid_atomic_load(&(self)->ra_lock, __ATOMIC_ACQUIRE) == 0)        \
+						break;                                                                \
 					if (DeeThread_CheckInterrupt())                                           \
-						goto err;                                                             \
+						goto err_label;                                                       \
 					__hybrid_yield();                                                         \
 				}                                                                             \
+				DeeThread_TIMEOUT_REPEAT_END_EX(&timeout_nanoseconds, goto timeout_label);    \
 			}                                                                                 \
 		}                                                                                     \
 	}	__WHILE0
@@ -272,40 +259,24 @@ err:
 LOCAL NONNULL((1)) int DCALL
 _Dee_ratomic_rwlock_read_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
                                       uint64_t timeout_nanoseconds) {
-	uint64_t now_microseconds, then_microseconds;
-	uintptr_t lockword;
 again:
-	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword != (uintptr_t)-1) {
-		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock,
-		                                 lockword, lockword + 1,
-		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-			goto again;
+	if (Dee_ratomic_rwlock_tryread(self))
 		return 0;
-	}
-	if (__hybrid_gettid_iscaller(self->rarw_tid)) {
-		++self->rarw_nwrite; /* read-after-write */
-		return 0;
-	}
 	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		goto do_infinite_timeout;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+		goto again;
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (__hybrid_atomic_cmpxch(&self->rarw_lock.arw_lock, 0, 1,
-	                           __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-		return 0;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	__hybrid_yield();
-	goto do_wait_with_timeout;
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		if (Dee_ratomic_rwlock_tryread(self))
+			return 0;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return 1; /* Timeout */
 err:
 	return -1;
 }
@@ -313,43 +284,24 @@ err:
 LOCAL NONNULL((1)) int DCALL
 _Dee_ratomic_rwlock_write_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
                                        uint64_t timeout_nanoseconds) {
-	uint64_t now_microseconds, then_microseconds;
-	uintptr_t lockword;
 again:
-	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword == 0) {
-		if (!__hybrid_atomic_cmpxch_weak(&self->rarw_lock.arw_lock, 0, (uintptr_t)-1,
-		                                 __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-			goto again;
-settid:
-		self->rarw_tid = __hybrid_gettid();
+	if (Dee_ratomic_rwlock_trywrite(self))
 		return 0;
-	}
-	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->rarw_tid)) {
-			++self->rarw_nwrite;
-			return 0;
-		}
-	}
 	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		goto do_infinite_timeout;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+		goto again;
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (!__hybrid_atomic_cmpxch(&self->rarw_lock.arw_lock, 0, (uintptr_t)-1,
-	                            __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
-		goto settid;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	__hybrid_yield();
-	goto do_wait_with_timeout;
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		if (Dee_ratomic_rwlock_trywrite(self))
+			return 0;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return 1; /* Timeout */
 err:
 	return -1;
 }
@@ -357,31 +309,24 @@ err:
 LOCAL NONNULL((1)) int DCALL
 _Dee_ratomic_rwlock_waitread_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
                                           uint64_t timeout_nanoseconds) {
-	uint64_t now_microseconds, then_microseconds;
-	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword != (uintptr_t)-1)
+again:
+	if (Dee_ratomic_rwlock_canread(self))
 		return 0;
-	if (__hybrid_gettid_iscaller(self->rarw_tid))
-		return 0; /* read-after-write */
 	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		goto do_infinite_timeout;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+		goto again;
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) != (uintptr_t)-1)
-		return 0;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	__hybrid_yield();
-	goto do_wait_with_timeout;
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		if (Dee_ratomic_rwlock_canread(self))
+			return 0;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return 1; /* Timeout */
 err:
 	return -1;
 }
@@ -389,33 +334,24 @@ err:
 LOCAL NONNULL((1)) int DCALL
 _Dee_ratomic_rwlock_waitwrite_timed_p_impl(Dee_ratomic_rwlock_t *__restrict self,
                                            uint64_t timeout_nanoseconds) {
-	uint64_t now_microseconds, then_microseconds;
-	uintptr_t lockword;
-	lockword = __hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE);
-	if (lockword == 0)
+again:
+	if (Dee_ratomic_rwlock_canwrite(self))
 		return 0;
-	if (lockword == (uintptr_t)-1) {
-		if (__hybrid_gettid_iscaller(self->rarw_tid))
-			return 0;
-	}
 	if (timeout_nanoseconds == (uint64_t)-1) {
-do_infinite_timeout:
-		goto do_infinite_timeout;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+		goto again;
 	}
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_uadd(now_microseconds, timeout_nanoseconds / 1000, &then_microseconds))
-		goto do_infinite_timeout;
-do_wait_with_timeout:
-	if (__hybrid_atomic_load(&self->rarw_lock.arw_lock, __ATOMIC_ACQUIRE) == 0)
-		return 0;
-	now_microseconds = DeeThread_GetTimeMicroSeconds();
-	if (__hybrid_overflow_usub(then_microseconds, now_microseconds, &timeout_nanoseconds))
-		return 1; /* Timeout */
-	timeout_nanoseconds *= 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	__hybrid_yield();
-	goto do_wait_with_timeout;
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+		if (Dee_ratomic_rwlock_canwrite(self))
+			return 0;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		__hybrid_yield();
+	}
+	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	return 1; /* Timeout */
 err:
 	return -1;
 }
