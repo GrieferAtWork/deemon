@@ -433,7 +433,7 @@ final class UnpackParamDecoder {
 
 	public printCDecodeDecl(cIn: string, cOut: string, err: string, cInit: string | none) {
 		local decodeText = decode(cIn, cOut, err).strip();
-		if (cInit !is none) {
+		if (cInit !is none && cOutDefaultInit !is none) {
 			local isCInitCheck = f"{cIn} != {cInit}";
 			if (cInit == "Dee_None") {
 				isCInitCheck = f"!DeeNone_Check({cIn})";
@@ -507,7 +507,16 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	"obj:buffer": UnpackTypeProxy('DeeObject *', 'o', '?DBytes'),
 
 	/* Misc. Deemon runtime */
-	"rt:timeout": UnpackTypeProxy('uint64_t', '" UNPx64 "', '?X2?Etime:Time?Dint'),
+//	"rt:timeout": UnpackTypeProxy('uint64_t', '" UNPx64 "', '?X2?Etime:Time?Dint'),
+	/* This actually accepts anything with a "__timeout_nanoseconds__" attribute:
+	 * - import.time.Time: Allows specifying arbitrary timeouts, and, in the case
+	 *   of absolute timestamps, the delta until that timestamp is reached will be
+	 *   used as timeout instead.
+	 * - none: Same as "int(0)"
+	 * - int: Only accepts "int(0)" (timeout immediately) and "int(-1)" (never time out) */
+	"rt:timeout": UnpackParamDecoder("uint64_t", "?X3?Etime:Time?Dint?N", (cIn, cOut, err) ->
+			f"if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, {cIn}, &{cOut}))\n"
+			f"	goto {err};\n", none),
 
 	/* Misc. C types */
 	"c:bool":      UnpackTypeProxy("bool", "b", "?Dbool"),

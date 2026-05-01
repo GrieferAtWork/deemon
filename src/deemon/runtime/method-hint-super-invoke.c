@@ -4100,7 +4100,18 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_getseq[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__iter_getseq__with_callobjectcache___iter_seq__, &tdefault__iter_getseq__with_callobjectcache___iter_seq__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE struct mh_super_map tpconst mh_super_maps[263] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__object_as_timeout_nanoseconds[5] = {
+	(Dee_funptr_t)&default__object_as_timeout_nanoseconds,
+	(Dee_funptr_t)&default__object_as_timeout_nanoseconds__with_callattr___timeout_nanoseconds__,
+	(Dee_funptr_t)&default__object_as_timeout_nanoseconds__unsupported,
+	(Dee_funptr_t)&default__object_as_timeout_nanoseconds__none,
+	NULL
+};
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__object_as_timeout_nanoseconds[2] = {
+	MH_SUPER_MAP_TYPED_INIT(&default__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__, &tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__),
+	MH_SUPER_MAP_TYPED_END
+};
+PRIVATE struct mh_super_map tpconst mh_super_maps[264] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_bool, msm_with_type__seq_operator_bool),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_sizeob, msm_with_type__seq_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_size, msm_with_type__seq_operator_size),
@@ -4364,6 +4375,7 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[263] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_rewind, msm_with_type__iter_rewind),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_peek, msm_with_type__iter_peek),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_getseq, msm_with_type__iter_getseq),
+	MH_SUPER_MAP_INIT(NULL, msm_with_super__object_as_timeout_nanoseconds, msm_with_type__object_as_timeout_nanoseconds),
 };
 /*[[[end]]]*/
 /* clang-format on */

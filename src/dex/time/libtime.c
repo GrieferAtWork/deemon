@@ -32,10 +32,11 @@
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero */
-#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>          /* DeeFormat_*, PRF* */
-#include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewInt128, INT_SIGNED */
+#include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKwArgs* */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT_END, TYPE_METHOD_HINT_F, type_method_hint */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
@@ -45,7 +46,7 @@
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThread_GetTimeNanoSeconds */
-#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 
@@ -56,7 +57,7 @@
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* size_t */
-#include <stdint.h>  /* INT64_C, UINT16_C, UINT32_C, UINT64_C, int8_t, int32_t, int64_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* INT64_C, UINT16_C, UINT32_C, UINT64_C, UINT64_MAX, int8_t, int64_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -1688,60 +1689,6 @@ err:
 }
 
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-time_int(DeeTimeObject *__restrict self) {
-	/* Return as nano-seconds */
-	Dee_int128_t result;
-	DeeTime_AsNano(self, &result);
-	return DeeInt_NewInt128(result);
-}
-
-PRIVATE int DCALL
-int128_overflow(Dee_int128_t const *__restrict value,
-                unsigned int after_bits) {
-	return DeeError_Throwf(&DeeError_IntegerOverflow,
-	                       "%s integer overflow after %u bits in %" PRFd128,
-	                       __hybrid_int128_isneg(*value)
-	                       ? "negative"
-	                       : "positive",
-	                       after_bits,
-	                       *value);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_int64(DeeTimeObject *__restrict self,
-           int64_t *__restrict p_result) {
-	Dee_int128_t result;
-	DeeTime_AsNano(self, &result);
-	if unlikely(!__hybrid_int128_is64bit(result)) {
-		if (__hybrid_uint128_is64bit(*(Dee_uint128_t const *)&result)) {
-			*(uint64_t *)p_result = __hybrid_uint128_get64(*(Dee_uint128_t const *)&result);
-			return INT_SIGNED;
-		}
-		return int128_overflow(&result, 64);
-	}
-	*p_result = __hybrid_int128_get64(result);
-	return INT_SIGNED;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_int32(DeeTimeObject *__restrict self,
-           int32_t *__restrict p_result) {
-	Dee_int128_t result;
-	DeeTime_AsNano(self, &result);
-	if unlikely(!__hybrid_int128_is32bit(result)) {
-		if (__hybrid_uint128_is32bit(*(Dee_uint128_t const *)&result)) {
-			*(uint32_t *)p_result = __hybrid_uint128_get32(*(Dee_uint128_t const *)&result);
-			return INT_SIGNED;
-		}
-		return int128_overflow(&result, 32);
-	}
-	*p_result = __hybrid_int128_get32(result);
-	return INT_SIGNED;
-}
-
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 time_doformat_string(DeeTimeObject *__restrict self,
                      char const *__restrict format) {
@@ -2063,6 +2010,64 @@ time_get_asdelta(DeeTimeObject *__restrict self) {
 	return_reference_(self);
 }
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+time_as_nano_delta(DeeTimeObject *__restrict self,
+                   Dee_int128_t *__restrict p_timeout_nanoseconds) {
+	DeeTime_AsNano(self, p_timeout_nanoseconds);
+	if (self->t_kind == TIME_KIND_TIMESTAMP) {
+		Dee_int128_t now;
+		time_now_utc(&now);
+		__hybrid_int128_sub128(*p_timeout_nanoseconds, now);
+		if (__hybrid_int128_isneg(*p_timeout_nanoseconds))
+			__hybrid_int128_setzero(*p_timeout_nanoseconds);
+	} else {
+		if unlikely(__hybrid_int128_isneg(*p_timeout_nanoseconds))
+			goto err_negative_delta;
+	}
+	return 0;
+err_negative_delta:
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Cannot use negative delta-time %k as timeout",
+	                       self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+time_as_timeout_nanoseconds(DeeTimeObject *__restrict self,
+                            uint64_t *__restrict p_timeout_nanoseconds) {
+	union {
+		Dee_uint128_t u;
+		Dee_int128_t s;
+	} result;
+	if unlikely(time_as_nano_delta(self, &result.s))
+		goto err;
+	*p_timeout_nanoseconds = __hybrid_uint128_get64(result.u);
+
+	/* Don't allow "UINT64_MAX" as a timeout value, because that
+	 * one's reserved for infinite timeouts, which we're never
+	 * supposed to return! */
+	if unlikely(__hybrid_uint128_ge64(result.u, UINT64_MAX))
+		*p_timeout_nanoseconds = UINT64_MAX - 1;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_as_timeout_nanoseconds_obj(DeeTimeObject *__restrict self) {
+	/* Return as nano-seconds */
+	union {
+		Dee_uint128_t u;
+		Dee_int128_t s;
+	} result;
+	if unlikely(time_as_nano_delta(self, &result.s))
+		goto err;
+	return DeeInt_NewUInt128(result.u);
+err:
+	return NULL;
+}
+
+
 PRIVATE struct type_getset tpconst time_getsets[] = {
 	/* Access to individual time parts by name */
 #define DEFINE_LIBTIME_AS_FIELD(name, doc) \
@@ -2187,9 +2192,20 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	                 /**/ "algorithms that may be used around the world to determine isdst "
 	                 /**/ "being enabled, or certain countries/timezones that may not even "
 	                 /**/ "have daylight savings time."),
+	TYPE_GETTER_AB_F("__timeout_nanoseconds__ ", &time_as_timeout_nanoseconds_obj, METHOD_FNOREFESCAPE,
+	                 "->?Dint\n"
+	                 "Integration in order to allow ?.-objects to be used as #Ctimeout arguments with "
+	                 /**/ "various APIs. When @this ?#istimestamp, return the number of nanoseconds "
+	                 /**/ "between ?Ggmtime and @this, or $0 when that number would be negative. When "
+	                 /**/ "@this ?#isdelta, return the number of nanoseconds described by that delta. "
+	                 /**/ "When the delta is negative, a :ValueError is thrown"),
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_method_hint tpconst time_method_hints[] = {
+	TYPE_METHOD_HINT_F(object_as_timeout_nanoseconds, &time_as_timeout_nanoseconds, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
 time_neg(DeeTimeObject *__restrict self) {
@@ -2413,10 +2429,10 @@ err:
 
 
 PRIVATE struct type_math time_math = {
-	/* .tp_int32  = */ (int(DCALL *)(DeeObject *__restrict, int32_t *__restrict))&time_int32,
-	/* .tp_int64  = */ (int(DCALL *)(DeeObject *__restrict, int64_t *__restrict))&time_int64,
+	/* .tp_int32  = */ NULL,
+	/* .tp_int64  = */ NULL,
 	/* .tp_double = */ NULL,
-	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_int,
+	/* .tp_int    = */ NULL,
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ &DeeObject_NewRef,
 	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_neg,
@@ -3657,11 +3673,12 @@ time_hash(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_compare(DeeTimeObject *self, DeeObject *other) {
+time_compare(DeeTimeObject *self, DeeTimeObject *other) {
 	Dee_int128_t lhs, rhs;
-	if (DeeObject_AsInt128(other, &rhs))
+	if (DeeObject_AssertType(other, &DeeTime_Type))
 		goto err;
 	DeeTime_AsNano(self, &lhs);
+	DeeTime_AsNano(other, &rhs);
 	if (__hybrid_int128_lo128(lhs, rhs))
 		return Dee_COMPARE_LO;
 	if (__hybrid_int128_gr128(lhs, rhs))
@@ -3696,14 +3713,6 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                         /**/ "object is a ?#istimestamp equal to that described by the singular "
 	                         /**/ "arguments, and off-set by what is specified by the plural arguments\n"
 	                         "When no arguments are specified, a zero-delta is constructed\n"
-	                         "\n"
-
-	                         "int->\n"
-	                         "Returns the value of @this time object as the number of nanoseconds since #C{01-01-0000} "
-	                         /**/ "for timestamps (s.a. ?#istimestamp), or the number of delta-nanoseconds for delta time "
-	                         /**/ "objects (s.a. ?#isdelta).\n"
-	                         "This operator allows time objects to be passed to system functions that take "
-	                         /**/ "integer timeouts in nanoseconds, such as ?Asleep?DThread or ?Aaccept?Enet:socket."
 	                         "\n"
 
 	                         "str->\n"
@@ -3799,6 +3808,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_class_methods = */ time_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ time_class_members,
+	/* .tp_method_hints  = */ time_method_hints,
 };
 
 

@@ -132,6 +132,16 @@ err:
 }
 
 PRIVATE ATTR_COLD NONNULL((1)) int
+err_obj_unsupportedf(DeeObject *self, char const *method_format, ...) {
+	int result;
+	va_list args;
+	va_start(args, method_format);
+	result = err_api_vunsupportedf("Object", self, method_format, args);
+	va_end(args);
+	return result;
+}
+
+PRIVATE ATTR_COLD NONNULL((1)) int
 err_seq_unsupportedf(DeeObject *self, char const *method_format, ...) {
 	int result;
 	va_list args;
@@ -22784,6 +22794,54 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__iter_getseq__empty(DeeObject *__restrict UNUSED(self)) {
 	return DeeSeq_NewEmpty();
 }
+
+
+/* object_as_timeout_nanoseconds */
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__object_as_timeout_nanoseconds(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), object_as_timeout_nanoseconds))(self, p_timeout_nanoseconds);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__object_as_timeout_nanoseconds__with_callattr___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
+	int result;
+	DREF DeeObject *attr = DeeObject_GetAttr(self, Dee_AsObject(&str___timeout_nanoseconds__));
+	if unlikely(!attr)
+		goto err;
+	result = DeeObject_AsUInt64M1(attr, p_timeout_nanoseconds);
+	Dee_Decref(attr);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(Dee_TYPE(self), self, p_timeout_nanoseconds);
+#else /* __OPTIMIZE_SIZE__ */
+	int result;
+	DREF DeeObject *attr = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc_get___timeout_nanoseconds__, 1, (DeeObject *const *)&self);
+	if unlikely(!attr)
+		goto err;
+	result = DeeObject_AsUInt64M1(attr, p_timeout_nanoseconds);
+	Dee_Decref(attr);
+	return result;
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__object_as_timeout_nanoseconds__unsupported(DeeObject *__restrict self, uint64_t *__restrict UNUSED(p_timeout_nanoseconds)) {
+	return err_obj_unsupportedf(self, "__timeout_nanoseconds__");
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__object_as_timeout_nanoseconds__none(DeeObject *__restrict UNUSED(self), uint64_t *__restrict p_timeout_nanoseconds) {
+	*p_timeout_nanoseconds = 0;
+	return 0;
+}
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -25202,6 +25260,20 @@ tdefault__iter_peek__with_callobjectcache___iter_peek__(DeeTypeObject *tp_self, 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__iter_getseq__with_callobjectcache___iter_seq__(DeeTypeObject *tp_self, DeeObject *self) {
 	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___iter_seq__, 1, (DeeObject *const *)&self);
+}
+
+/* object_as_timeout_nanoseconds */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeTypeObject *tp_self, DeeObject *self, uint64_t *p_timeout_nanoseconds) {
+	int result;
+	DREF DeeObject *attr = mhcache_call(tp_self, tp_self->tp_mhcache->mhc_get___timeout_nanoseconds__, 1, (DeeObject *const *)&self);
+	if unlikely(!attr)
+		goto err;
+	result = DeeObject_AsUInt64M1(attr, p_timeout_nanoseconds);
+	Dee_Decref(attr);
+	return result;
+err:
+	return -1;
 }
 /*[[[end]]]*/
 /* clang-format on */

@@ -31,6 +31,7 @@
 #include <deemon/float.h>              /* DeeFloat_Type */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
@@ -42,6 +43,7 @@
 #include <deemon/type.h>               /* DeeObject_IsDeepImmutable, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_Id */
 
+#include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -1208,6 +1210,37 @@ object_get_deep_immutable(DeeObject *__restrict self) {
 	return_bool(DeeObject_IsDeepImmutable(self));
 }
 
+/*
+import * from deemon;
+class Foo {
+	this = default;
+	public member a;
+};
+
+local x = Foo(10);
+local map = Mapping.fromattr(x);
+assert !map.keys.contains("d");
+
+---
+
+^ That code must enumerate attributes of "self", which also requires
+  those attributes to be evaluated. -- The bug here probably lies in
+  the fact that those attributes are evaluated in the above code, but
+  that needs to be fixed first
+*/
+#if 0 /* FIXME */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+object_timeout_nanoseconds(DeeObject *__restrict self) {
+	uint64_t timeout;
+	if (DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, self, &timeout))
+		goto err;
+	return DeeInt_NewUInt64(timeout);
+err:
+	return NULL;
+}
+#endif
+
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
 	TYPE_GETTER_AB_F(STR_this, &DeeObject_NewRef,
@@ -1223,6 +1256,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                 METHOD_FCONSTCALL,
 	                 "->?DSuper\n"
 	                 "Returns a view for the super-instance of @this object"),
+
 	TYPE_GETTER_AB_F("__itable__", &instance_get_itable,
 	                 METHOD_FCONSTCALL,
 	                 "->?X2?S?O?AObjectTable?Ert:ClassDescriptor\n"
@@ -1300,7 +1334,27 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dint\n"
 	                 "Return the size of @this object in bytes."),
+
+
+	/* Helpers for invoking method hints... */
+#if 0 /* FIXME */
+	TYPE_GETTER_AB(STR___timeout_nanoseconds__, &object_timeout_nanoseconds,
+	               "->?Dint\n"
+	               "Invoke the $__timeout_nanoseconds__ method hint for this object and "
+	               /**/ "return the number of nanoseconds that this object describes when "
+	               /**/ "treated as a #Ctimeout argument in various APIs\n"
+	               "Types (such as ?Dint or ?Etime:Time) overwrite this attribute"),
+#endif
 	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst object_method_hints[] = {
+	/* Must explicitly specify these method hints as being unsupported, since we're technically
+	 * implementing their attributes (but are only doing so in order to expose these hints to
+	 * user-code). Without this, these method hints would get linked to the wrapper methods/
+	 * getsets above, which would result in an infinite loop that'd end in a stack overflow */
+	TYPE_METHOD_HINT(object_as_timeout_nanoseconds, &default__object_as_timeout_nanoseconds__unsupported),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst object_members[] = {
@@ -1386,7 +1440,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ object_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ object_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,

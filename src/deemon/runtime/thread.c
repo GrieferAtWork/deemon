@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPu64 */
+#include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* DeeBool_NewTrue, Dee_CONFIG_BOOL_TLS, Dee_False, Dee_FalseTrue, Dee_True, _DeeBool_Pair, return_bool, return_false */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeFunctionObject, DeeFunction_Check, Dee_CODE_FRAME_NOT_EXECUTING, Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -34,6 +34,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFd64 */
 #include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_CALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -4217,15 +4218,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedjoin", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "thread");]]]*/
-#define thread_timedjoin_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define thread_timedjoin_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedjoin", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	result = DeeThread_Join(self, args.timeout_nanoseconds);
+	result = DeeThread_Join(self, timeout);
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
@@ -4249,15 +4253,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "thread");]]]*/
-#define thread_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define thread_timedwaitfor_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitfor", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = DeeThread_WaitFor(self, args.timeout_nanoseconds);
+	error = DeeThread_WaitFor(self, timeout);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -4517,7 +4524,7 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	              "->?T2?Dbool?O\n"
 	              "Old, deprecated name for ?#tryjoin"),
 	TYPE_METHOD_F("timed_join", &thread_timedjoin, METHOD_FNOREFESCAPE,
-	              "(timeout_nanoseconds:?Dint)->?T2?Dbool?O\n"
+	              "(" thread_timedjoin_params ")->?T2?Dbool?O\n"
 	              "Old, deprecated name for ?#timedjoin"),
 	TYPE_METHOD_F("crash_error", &thread_crash_error, METHOD_FNOREFESCAPE,
 	              "->?X2?O?N\n"
@@ -4582,15 +4589,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sleep", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "thread");]]]*/
-#define thread_sleep_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define thread_sleep_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "sleep", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "sleep", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	if (DeeThread_Sleep(args.timeout_nanoseconds))
+	if (DeeThread_Sleep(timeout))
 		goto err;
 	return_none;
 err:

@@ -1281,6 +1281,9 @@ DEF_STRING(str___iter_peek__, "__iter_peek__", 0x787817d8, 0xa72422dc5cd23509)
 #define Dee_HashStr____iter_seq__ _Dee_HashSelectC(0x3d5add24, 0x112e7a4c0e030d70)
 DEF_STRING(str___iter_seq__, "__iter_seq__", 0x3d5add24, 0x112e7a4c0e030d70)
 #define STR___iter_seq__ DeeString_STR(&str___iter_seq__)
+#define Dee_HashStr____timeout_nanoseconds__ _Dee_HashSelectC(0x6d7eff54, 0x4829a3b51ec90782)
+DEF_STRING(str___timeout_nanoseconds__, "__timeout_nanoseconds__", 0x6d7eff54, 0x4829a3b51ec90782)
+#define STR___timeout_nanoseconds__ DeeString_STR(&str___timeout_nanoseconds__)
 
 #ifdef Dee_fd_t_IS_HANDLE
 #define Dee_HashStr__getsysfd _Dee_HashSelectC(0x75b169b6, 0x74235841d2ace4f0)

@@ -125,14 +125,15 @@ struct mh_init_spec {
 	Dee_funptr_t                                mis_withattr_prim;      /* [1..1][valid_if(mis_attr_prim)] Fallback for direct CallAttr(mis_attr_prim) (e.g. `default__seq_operator_bool__with_callattr___seq_bool__') */
 	__UINTPTR_HALF_TYPE__                       mis_offsetof_cache;     /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] Offset of the cache-slot in `struct Dee_type_mh_cache' (e.g. "mhc___seq_bool__") */
 	__UINTPTR_HALF_TYPE__                       mis_attr_kind;          /* [valid_if(mis_attr_prim || mis_attr_seco)] Attribute kind (one of `MH_KIND_*') */
-#define MH_KIND_METHOD        0 /* Attribute is a method */
-#define MH_KIND_GETSET_GET    1 /* Attribute is getset (get). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_DEL    2 /* Attribute is getset (del). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_SET    3 /* Attribute is getset (set). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_BOUND  4 /* Attribute is getset (bound). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_TRYGET 5 /* Attribute is getset (tryget). The get/del/set and bound-callbacks are loaded. */
-#define MH_KIND_GETSET_SZ_GET 6 /* Attribute is getset: "size_t (DCALL *)(DeeObject *__restrict self)" */
-#define MH_KIND_GETSET_SZ_SET 7 /* Attribute is getset: "int (DCALL *)(DeeObject *__restrict self, size_t value)" */
+#define MH_KIND_METHOD          0 /* Attribute is a method */
+#define MH_KIND_GETSET_GET      1 /* Attribute is getset (get). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_DEL      2 /* Attribute is getset (del). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_SET      3 /* Attribute is getset (set). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_BOUND    4 /* Attribute is getset (bound). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_TRYGET   5 /* Attribute is getset (tryget). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_SZ_GET   6 /* Attribute is getset: "size_t (DCALL *)(DeeObject *__restrict self)" */
+#define MH_KIND_GETSET_SZ_SET   7 /* Attribute is getset: "int (DCALL *)(DeeObject *__restrict self, size_t value)" */
+#define MH_KIND_GETSET_MISC_GET 8 /* Attribute is getset (get) that can only be explicitly overwritten, or invoked via a "withattr" wrapper */
 	Dee_funptr_t                                mis_withcache_object;   /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] default__seq_operator_bool__with_callobjectcache___seq_bool__ */
 	mh_init_select_t                            mis_select;             /* [0..1] Custom fallback resolver function (used when there are no attribute matches) */
 };
@@ -421,6 +422,7 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	/* [Dee_TMH_iter_rewind]                             = */ (Dee_funptr_t)&default__iter_rewind__unsupported,
 	/* [Dee_TMH_iter_peek]                               = */ (Dee_funptr_t)&default__iter_peek__unsupported,
 	/* [Dee_TMH_iter_getseq]                             = */ (Dee_funptr_t)&default__iter_getseq__unsupported,
+	/* [Dee_TMH_object_as_timeout_nanoseconds]           = */ (Dee_funptr_t)&default__object_as_timeout_nanoseconds__unsupported,
 /*[[[end]]]*/
 	/* clang-format on */
 };
@@ -1794,7 +1796,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_getseq[2]
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_seq, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_getseq__with_callattr_seq),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[263] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[264] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, NULL, mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_sizeob, mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_size, mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &mh_select_seq_operator_size),
@@ -2058,6 +2060,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[263] = {
 	MH_INIT_SPEC_INIT(&str___iter_index__, mh_secondary_iter_rewind, NULL, NULL, &default__iter_rewind__with_callattr___iter_index__, offsetof(struct Dee_type_mh_cache, mhc_del___iter_index__), MH_KIND_GETSET_DEL, &default__iter_rewind__with_callobjectcache___iter_index__, &mh_select_iter_rewind),
 	MH_INIT_SPEC_INIT(&str___iter_peek__, mh_secondary_iter_peek, NULL, NULL, &default__iter_peek__with_callattr___iter_peek__, offsetof(struct Dee_type_mh_cache, mhc___iter_peek__), MH_KIND_METHOD, &default__iter_peek__with_callobjectcache___iter_peek__, &mh_select_iter_peek),
 	MH_INIT_SPEC_INIT(&str___iter_seq__, mh_secondary_iter_getseq, NULL, NULL, &default__iter_getseq__with_callattr___iter_seq__, offsetof(struct Dee_type_mh_cache, mhc_get___iter_seq__), MH_KIND_GETSET_GET, &default__iter_getseq__with_callobjectcache___iter_seq__, NULL),
+	MH_INIT_SPEC_INIT(&str___timeout_nanoseconds__, NULL, NULL, NULL, &default__object_as_timeout_nanoseconds__with_callattr___timeout_nanoseconds__, offsetof(struct Dee_type_mh_cache, mhc_get___timeout_nanoseconds__), MH_KIND_GETSET_MISC_GET, &default__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__, NULL),
 };
 /*[[[end]]]*/
 /* clang-format on */
@@ -3157,6 +3160,7 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_iter_rewind                             = */ &default__iter_rewind__empty,
 	/* .mh_iter_peek                               = */ &default__iter_peek__empty,
 	/* .mh_iter_getseq                             = */ &default__iter_getseq__empty,
+	/* .mh_object_as_timeout_nanoseconds           = */ NULL,
 /*[[[end]]]*/
 	/* clang-format on */
 };

@@ -2021,7 +2021,11 @@ function printMhInitSpecs() {
 			} else if (getsetType in ["size_t"]) {
 				print(f"MH_KIND_GETSET_SZ_{native.getsetMember.upper()}"),;
 			} else {
+#if 1
+				print(f"MH_KIND_GETSET_MISC_{native.getsetMember.upper()}"),;
+#else
 				throw Error(f"Unsupported getset return type {repr getsetType}");
+#endif
 			}
 		}
 		print(", ", methodHint is none ? "NULL" : f"&default__{

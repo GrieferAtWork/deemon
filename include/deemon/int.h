@@ -548,10 +548,11 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 	 ? (size_t)(-Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size) \
 	 : (size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size)
 
-#define DeeInt_IsNeg(self)     (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0)
-#define DeeInt_IsZero(self)    (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 0)
-#define DeeInt_AsCompare(self) \
-	(DeeInt_IsZero(resultob) ? Dee_COMPARE_EQ : DeeInt_IsNeg(resultob) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#define DeeInt_IsNeg(self)      (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0)
+#define DeeInt_IsZero(self)     (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 0)
+#define DeeInt_AsCompare(self)  (DeeInt_IsZero(resultob) ? Dee_COMPARE_EQ : (DeeInt_IsNeg(resultob) ? Dee_COMPARE_LO : Dee_COMPARE_GR))
+#define DeeInt_IsOne(self)      (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == 1 && ((DeeIntObject *)(self))->ob_digit[0] == 1)
+#define DeeInt_IsMinusOne(self) (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == -1 && ((DeeIntObject *)(self))->ob_digit[0] == 1)
 
 
 /* Return values for `DeeInt_TryAs*' */

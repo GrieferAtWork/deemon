@@ -876,6 +876,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_as_timeout_nanoseconds.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_assign.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>

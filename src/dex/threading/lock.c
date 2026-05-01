@@ -28,11 +28,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuSIZ */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>            /* return_bool, return_false, return_true */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>          /* DeeFormat_*, PCKu64, PRFuPTR */
 #include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
@@ -376,13 +377,16 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "lock");]]]*/
-#define lock_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define lock_timedacquire_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedacquire", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
 	error = lock_do_tryacquire(self);
 	if (Dee_HAS_ISYES_OR_ERR(error)) {
@@ -390,14 +394,14 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		goto ok;
 	}
-	if (args.timeout_nanoseconds == (uint64_t)-1) {
+	if (timeout == (uint64_t)-1) {
 		DREF DeeObject *result;
 		result = DeeObject_CallAttr(self, Dee_AsObject(&str_acquire), 0, NULL);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(result);
 	} else {
-		DeeThread_TIMEOUT_REPEAT_BEGIN(&args.timeout_nanoseconds) {
+		DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			SCHED_YIELD();
@@ -408,7 +412,7 @@ lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 				goto ok;
 			}
 		}
-		DeeThread_TIMEOUT_REPEAT_END(&args.timeout_nanoseconds);
+		DeeThread_TIMEOUT_REPEAT_END(&timeout);
 		return_false; /* Timeout */
 	}
 ok:
@@ -467,13 +471,16 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "lock");]]]*/
-#define lock_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define lock_timedwaitfor_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitfor", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
 	error = lock_is_acquired(self);
 	if (Dee_HAS_ISNO_OR_ERR(error)) {
@@ -481,14 +488,14 @@ lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		goto ok;
 	}
-	if (args.timeout_nanoseconds == (uint64_t)-1) {
+	if (timeout == (uint64_t)-1) {
 		DREF DeeObject *result;
 		result = DeeObject_CallAttr(self, Dee_AsObject(&str_waitfor), 0, NULL);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(result);
 	} else {
-		DeeThread_TIMEOUT_REPEAT_BEGIN(&args.timeout_nanoseconds) {
+		DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			SCHED_YIELD();
@@ -499,7 +506,7 @@ lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 				goto ok;
 			}
 		}
-		DeeThread_TIMEOUT_REPEAT_END(&args.timeout_nanoseconds);
+		DeeThread_TIMEOUT_REPEAT_END(&timeout);
 		return_false; /* Timeout */
 	}
 ok:
@@ -525,7 +532,7 @@ DOC_DEF(doc_lock_timedacquire,
         "(" lock_timedacquire_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#acquire, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire the lock and fail by returning ?f instead.");
 DOC_DEF(doc_lock_waitfor,
         "(" lock_waitfor_params ")\n"
@@ -537,7 +544,7 @@ DOC_DEF(doc_lock_timedwaitfor,
         "(" lock_timedwaitfor_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#waitfor, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for the lock to become available, and fail "
         /**/ "by returning ?f instead.");
 DOC_DEF(doc_lock_available,
@@ -578,9 +585,9 @@ INTERN DeeTypeObject DeeLock_Type = {
 	                         "following functions through use of the above attributes:\n"
 	                         "${"
 	                         /**/ "function acquire();\n"
-	                         /**/ "function timedacquire(timeout_nanoseconds: int): bool;\n"
+	                         /**/ "function timedacquire(timeout: int): bool;\n"
 	                         /**/ "function waitfor();\n"
-	                         /**/ "function timedwaitfor(timeout_nanoseconds: int): bool;\n"
+	                         /**/ "function timedwaitfor(timeout: int): bool;\n"
 	                         /**/ "property available: bool = { get(): bool; };"
 	                         "}\n"
 	                         "This base-class also implements ?#{op:enter} and ?#{op:leave} such that they "
@@ -823,13 +830,13 @@ err:
  * @return: Dee_HAS_NO:  Timeout expired
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_do_timedread(DeeObject *self, uint64_t timeout_nanoseconds) {
+rwlock_do_timedread(DeeObject *self, uint64_t timeout) {
 	int error = rwlock_do_tryread(self);
 	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
-	if (timeout_nanoseconds == (uint64_t)-1)
+	if (timeout == (uint64_t)-1)
 		return rwlock_do_read(self);
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -837,7 +844,7 @@ rwlock_do_timedread(DeeObject *self, uint64_t timeout_nanoseconds) {
 		if (Dee_HAS_ISYES_OR_ERR(error))
 			return error; /* Error or success */
 	}
-	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_END(&timeout);
 	return Dee_HAS_NO; /* Timeout */
 err:
 	return Dee_HAS_ERR;
@@ -848,13 +855,13 @@ err:
  * @return: Dee_HAS_NO:  Timeout expired
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_do_timedwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
+rwlock_do_timedwrite(DeeObject *self, uint64_t timeout) {
 	int error = rwlock_do_trywrite(self);
 	if (Dee_HAS_ISYES_OR_ERR(error))
 		return error; /* Error or success */
-	if (timeout_nanoseconds == (uint64_t)-1)
+	if (timeout == (uint64_t)-1)
 		return rwlock_do_write(self);
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -862,7 +869,7 @@ rwlock_do_timedwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
 		if (Dee_HAS_ISYES_OR_ERR(error))
 			return error; /* Error or success */
 	}
-	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_END(&timeout);
 	return Dee_HAS_NO; /* Timeout */
 err:
 	return Dee_HAS_ERR;
@@ -873,16 +880,16 @@ err:
  * @return: Dee_HAS_NO:  Timeout expired
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_do_timedwaitread(DeeObject *self, uint64_t timeout_nanoseconds) {
+rwlock_do_timedwaitread(DeeObject *self, uint64_t timeout) {
 	int error = rwlock_do_writing(self);
 	if (Dee_HAS_ISNO_OR_ERR(error)) {
 		if (Dee_HAS_ISERR(error))
 			goto err;
 		return Dee_HAS_YES;
 	}
-	if (timeout_nanoseconds == (uint64_t)-1)
+	if (timeout == (uint64_t)-1)
 		return rwlock_do_waitread(self);
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -893,7 +900,7 @@ rwlock_do_timedwaitread(DeeObject *self, uint64_t timeout_nanoseconds) {
 			return Dee_HAS_YES;
 		}
 	}
-	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_END(&timeout);
 	return Dee_HAS_NO; /* Timeout */
 err:
 	return Dee_HAS_ERR;
@@ -904,16 +911,16 @@ err:
  * @return: Dee_HAS_NO:  Timeout expired
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rwlock_do_timedwaitwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
+rwlock_do_timedwaitwrite(DeeObject *self, uint64_t timeout) {
 	int error = rwlock_do_reading(self);
 	if (Dee_HAS_ISNO_OR_ERR(error)) {
 		if (Dee_HAS_ISERR(error))
 			goto err;
 		return Dee_HAS_YES;
 	}
-	if (timeout_nanoseconds == (uint64_t)-1)
+	if (timeout == (uint64_t)-1)
 		return rwlock_do_waitread(self);
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		SCHED_YIELD();
@@ -924,7 +931,7 @@ rwlock_do_timedwaitwrite(DeeObject *self, uint64_t timeout_nanoseconds) {
 			return Dee_HAS_YES;
 		}
 	}
-	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_END(&timeout);
 	return Dee_HAS_NO; /* Timeout */
 err:
 	return Dee_HAS_ERR;
@@ -1008,15 +1015,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedread", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "rwlock");]]]*/
-#define rwlock_timedread_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define rwlock_timedread_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedread", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = rwlock_do_timedread(self, args.timeout_nanoseconds);
+	error = rwlock_do_timedread(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));
@@ -1028,15 +1038,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwrite", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "rwlock");]]]*/
-#define rwlock_timedwrite_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define rwlock_timedwrite_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwrite", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = rwlock_do_timedwrite(self, args.timeout_nanoseconds);
+	error = rwlock_do_timedwrite(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));
@@ -1078,15 +1091,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwaitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitread", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "rwlock");]]]*/
-#define rwlock_timedwaitread_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define rwlock_timedwaitread_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitread", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = rwlock_do_timedwaitread(self, args.timeout_nanoseconds);
+	error = rwlock_do_timedwaitread(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));
@@ -1098,15 +1114,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwaitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitwrite", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "rwlock");]]]*/
-#define rwlock_timedwaitwrite_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define rwlock_timedwaitwrite_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitwrite", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = rwlock_do_timedwaitwrite(self, args.timeout_nanoseconds);
+	error = rwlock_do_timedwaitwrite(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));
@@ -1178,9 +1197,9 @@ DOC_DEF(doc_rwlock_timedread,
         "(" rwlock_timedread_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#read, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire a shared (read) lock and fail by returning ?f instead.\n"
-        "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
+        "Same as ${this.readlock.timedacquire(timeout)}");
 DOC_DEF(doc_rwlock_write,
         "(" rwlock_write_params ")\n"
         "#t{:Interrupt}"
@@ -1190,9 +1209,9 @@ DOC_DEF(doc_rwlock_timedwrite,
         "(" rwlock_timedwrite_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#write, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to acquire an exclusive (write) lock and fail by returning ?f instead.\n"
-        "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
+        "Same as ${this.writelock.timedacquire(timeout)}");
 DOC_DEF(doc_rwlock_waitread,
         "(" rwlock_waitread_params ")\n"
         "#t{:Interrupt}"
@@ -1204,10 +1223,10 @@ DOC_DEF(doc_rwlock_timedwaitread,
         "(" rwlock_timedwaitread_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#waitread, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for a shared (read) lock to become available, and "
         /**/ "fail by returning ?f instead.\n"
-        "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
+        "Same as ${this.readlock.timedwaitfor(timeout)}");
 DOC_DEF(doc_rwlock_waitwrite,
         "(" rwlock_waitwrite_params ")\n"
         "#t{:Interrupt}"
@@ -1219,10 +1238,10 @@ DOC_DEF(doc_rwlock_timedwaitwrite,
         "(" rwlock_timedwaitwrite_params ")->?Dbool\n"
         "#t{:Interrupt}"
         "Same as ?#waitwrite, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "most @timeout. Once that amount of time has elapsed, "
         /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
         /**/ "fail by returning ?f instead.\n"
-        "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
+        "Same as ${this.writelock.timedwaitfor(timeout)}");
 DOC_DEF(doc_rwlock_endread,
         "()\n"
         "#tValueError{No shared (read) lock is currently held}"
@@ -1320,12 +1339,12 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 	                         /**/ "function write();\n"
 	                         /**/ "function end();\n"
 	                         /**/ "function upgrade(): bool;\n"
-	                         /**/ "function timedread(timeout_nanoseconds: int): bool;\n"
-	                         /**/ "function timedwrite(timeout_nanoseconds: int): bool;\n"
+	                         /**/ "function timedread(timeout: int): bool;\n"
+	                         /**/ "function timedwrite(timeout: int): bool;\n"
 	                         /**/ "function waitread();\n"
 	                         /**/ "function waitwrite();\n"
-	                         /**/ "function timedwaitread(timeout_nanoseconds: int): bool;\n"
-	                         /**/ "function timedwaitwrite(timeout_nanoseconds: int): bool;\n"
+	                         /**/ "function timedwaitread(timeout: int): bool;\n"
+	                         /**/ "function timedwaitwrite(timeout: int): bool;\n"
 	                         /**/ "property canread: bool = { get(): bool; };\n"
 	                         /**/ "property canwrite: bool = { get(): bool; };\n"
 	                         /**/ "property readlock: RWLockReadLock = { get(): RWLockReadLock; };\n"
@@ -1891,15 +1910,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_timedacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "semaphore");]]]*/
-#define semaphore_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define semaphore_timedacquire_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedacquire", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = Dee_semaphore_acquire_timed(&self->sem_semaphore, args.timeout_nanoseconds);
+	error = Dee_semaphore_acquire_timed(&self->sem_semaphore, timeout);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -1924,15 +1946,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_timedwaitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "semaphore");]]]*/
-#define semaphore_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define semaphore_timedwaitfor_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitfor", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = Dee_semaphore_waitfor_timed(&self->sem_semaphore, args.timeout_nanoseconds);
+	error = Dee_semaphore_waitfor_timed(&self->sem_semaphore, timeout);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -2119,15 +2144,18 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_timedwaitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "event");]]]*/
-#define event_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define event_timedwaitfor_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitfor", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = Dee_event_waitfor_timed(&self->e_event, args.timeout_nanoseconds);
+	error = Dee_event_waitfor_timed(&self->e_event, timeout);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -2186,7 +2214,7 @@ PRIVATE struct type_method tpconst event_methods[] = {
 	TYPE_METHOD_F(STR_timedwaitfor, &event_timedwaitfor, METHOD_FNOREFESCAPE,
 	              "(" event_timedwaitfor_params ")->?Dbool\n"
 	              "Same as ?#waitfor, returning ?t on success, but block for at "
-	              /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+	              /**/ "most @timeout. Once that amount of time has elapsed, "
 	              /**/ "stop trying to wait for the event to become set, and fail by "
 	              /**/ "returning ?f instead."),
 	TYPE_METHOD_F("set", &event_set, METHOD_FNOREFESCAPE,
@@ -2432,7 +2460,6 @@ err:
 
 PRIVATE WUNUSED DREF LockUnion *DCALL
 lock_union_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("LockUnion", params: """
 	locks:?S?GLock
 """, docStringPrefix: "lock_union");]]]*/
@@ -2667,10 +2694,10 @@ err:
  * @return: Dee_HAS_NO:  Failure
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
+lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout) {
 	DeeObject *result;
 	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedacquire),
-	                             PCKu64, timeout_nanoseconds);
+	                             PCKu64, timeout);
 	if unlikely(result == NULL)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -2683,10 +2710,10 @@ err:
  * @return: Dee_HAS_NO : Timeout
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
+lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout) {
 	DeeObject *result;
 	result = DeeObject_CallAttrf(self, Dee_AsObject(&str_timedwaitfor),
-	                             PCKu64, timeout_nanoseconds);
+	                             PCKu64, timeout);
 	if unlikely(result == NULL)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -2726,10 +2753,10 @@ lock_union_tryacquire_except(LockUnion *__restrict self,
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_acquire_timed(LockUnion *__restrict self,
-                            uint64_t timeout_nanoseconds) {
+                            uint64_t timeout) {
 	int ok;
 	size_t i;
-	if (timeout_nanoseconds == (uint64_t)-1) {
+	if (timeout == (uint64_t)-1) {
 		ok = lock_union_do_acquire(self);
 		if likely(ok == 0) {
 			ok = Dee_HAS_YES;
@@ -2740,8 +2767,8 @@ lock_union_do_acquire_timed(LockUnion *__restrict self,
 		return ok;
 	}
 
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
-		ok = lock_do_timedacquire(self->lu_elem[0], timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
+		ok = lock_do_timedacquire(self->lu_elem[0], timeout);
 		if (Dee_HAS_ISNO_OR_ERR(ok))
 			return ok; /* Error or timeout */
 
@@ -2755,10 +2782,10 @@ lock_union_do_acquire_timed(LockUnion *__restrict self,
 				if unlikely(lock_union_leave_x1_count(self, i))
 					goto err;
 blocking_acquire_lock_i:
-				ok = lock_do_timedacquire(self->lu_elem[i], timeout_nanoseconds);
+				ok = lock_do_timedacquire(self->lu_elem[i], timeout);
 				if (Dee_HAS_ISNO_OR_ERR(ok))
 					return ok; /* Error or timeout */
-				DeeThread_TIMEOUT_REPEAT_UPDATE(&timeout_nanoseconds, goto handle_timeout_at_i);
+				DeeThread_TIMEOUT_REPEAT_UPDATE(&timeout, goto handle_timeout_at_i);
 				already_holding = i;
 				for (i = 0; i < self->lu_size; ++i) {
 					if (i == already_holding)
@@ -2792,7 +2819,7 @@ blocking_acquire_lock_i:
 		}
 		return Dee_HAS_YES;
 	}
-	DeeThread_TIMEOUT_REPEAT_END(&timeout_nanoseconds);
+	DeeThread_TIMEOUT_REPEAT_END(&timeout);
 
 	/* Timeout */
 	i = 0;
@@ -2819,19 +2846,19 @@ err:
  * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_union_do_waitfor_timed(LockUnion *__restrict self,
-                            uint64_t timeout_nanoseconds) {
+                            uint64_t timeout) {
 	int ok;
 	size_t i;
-	if (timeout_nanoseconds == (uint64_t)-1)
+	if (timeout == (uint64_t)-1)
 		return lock_union_do_waitfor(self);
-	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout_nanoseconds) {
+	DeeThread_TIMEOUT_REPEAT_BEGIN(&timeout) {
 		for (i = 0;; ++i) {
 			if (i >= self->lu_size)
 				return Dee_HAS_YES;
-			ok = lock_do_timedwaitfor(self->lu_elem[i], timeout_nanoseconds);
+			ok = lock_do_timedwaitfor(self->lu_elem[i], timeout);
 			if (Dee_HAS_ISNO_OR_ERR(ok))
 				return ok; /* Error or timeout */
-			DeeThread_TIMEOUT_REPEAT_UPDATE(&timeout_nanoseconds, goto timeout);
+			DeeThread_TIMEOUT_REPEAT_UPDATE(&timeout, goto timeout);
 		}
 	}
 	DeeThread_TIMEOUT_REPEAT_END_DUMMY();
@@ -2930,15 +2957,18 @@ lock_union_timedacquire(LockUnion *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "lock_union");]]]*/
-#define lock_union_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define lock_union_timedacquire_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedacquire", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = lock_union_do_acquire_timed(self, args.timeout_nanoseconds);
+	error = lock_union_do_acquire_timed(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));
@@ -2967,15 +2997,18 @@ lock_union_timedwaitfor(LockUnion *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	timeout_nanoseconds:rt:timeout;
+	timeout:rt:timeout;
 """, docStringPrefix: "lock_union");]]]*/
-#define lock_union_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define lock_union_timedwaitfor_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedwaitfor", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	error = lock_union_do_waitfor_timed(self, args.timeout_nanoseconds);
+	error = lock_union_do_waitfor_timed(self, timeout);
 	if (Dee_HAS_ISERR(error))
 		goto err;
 	return_bool(Dee_HAS_ISYES_NO_ERR(error));

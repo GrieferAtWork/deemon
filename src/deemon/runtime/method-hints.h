@@ -383,6 +383,7 @@ struct Dee_type_mh_cache {
 	DeeMH_iter_rewind_t mh_iter_rewind;
 	DeeMH_iter_peek_t mh_iter_peek;
 	DeeMH_iter_getseq_t mh_iter_getseq;
+	DeeMH_object_as_timeout_nanoseconds_t mh_object_as_timeout_nanoseconds;
 /*[[[end]]]*/
 	/* clang-format on */
 
@@ -391,7 +392,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 154
+#define MHC_COUNT 155
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -547,7 +548,8 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___iter_rewind__;
 	Dee_mhc_slot_t mhc___iter_peek__;
 	Dee_mhc_slot_t mhc_get___iter_seq__;
-#define MHC_LAST mhc_get___iter_seq__
+	Dee_mhc_slot_t mhc_get___timeout_nanoseconds__;
+#define MHC_LAST mhc_get___timeout_nanoseconds__
 /*[[[end]]]*/
 	/* clang-format on */
 

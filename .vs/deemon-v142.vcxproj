@@ -300,6 +300,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_update.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_values.h" />
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_as_timeout_nanoseconds.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_assign.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_call.h" />

@@ -930,6 +930,7 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_iter_rewind                             = */ &default__iter_rewind__empty,
 	/* .mh_iter_peek                               = */ &default__iter_peek__empty,
 	/* .mh_iter_getseq                             = */ &default__iter_getseq__none,
+	/* .mh_object_as_timeout_nanoseconds           = */ &default__object_as_timeout_nanoseconds__none,
 /*[[[end]]]*/
 	/* clang-format on */
 };

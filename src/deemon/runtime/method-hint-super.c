@@ -4333,6 +4333,22 @@ super_mh__iter_getseq(DeeSuperObject *__restrict self) {
 	}
 	__builtin_unreachable();
 }
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+super_mh__object_as_timeout_nanoseconds(DeeSuperObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_object_as_timeout_nanoseconds, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_object_as_timeout_nanoseconds_t)specs.smh_cb)(self->s_self, p_timeout_nanoseconds);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_object_as_timeout_nanoseconds_t)specs.smh_cb)(Dee_AsObject(self), p_timeout_nanoseconds);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, uint64_t *))specs.smh_cb)(self->s_type, self->s_self, p_timeout_nanoseconds);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -4604,6 +4620,7 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	/* .mh_iter_rewind                             = */ (DeeMH_iter_rewind_t)&super_mh__iter_rewind,
 	/* .mh_iter_peek                               = */ (DeeMH_iter_peek_t)&super_mh__iter_peek,
 	/* .mh_iter_getseq                             = */ (DeeMH_iter_getseq_t)&super_mh__iter_getseq,
+	/* .mh_object_as_timeout_nanoseconds           = */ (DeeMH_object_as_timeout_nanoseconds_t)&super_mh__object_as_timeout_nanoseconds,
 /*[[[end]]]*/
 /* clang-format on */
 };

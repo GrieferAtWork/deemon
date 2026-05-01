@@ -1375,12 +1375,12 @@ DEX_MEMBER_F("futex_wait", &c_atomic_futex_wait, Dee_DEXSYM_READONLY,
              "This function can be used to form the basis of any other synchronization "
              /**/ "primitive (mutex, semaphore, condition-variable, events, #Ianything)"),
 DEX_MEMBER_F("futex_timedwait", &c_atomic_futex_timedwait, Dee_DEXSYM_READONLY,
-             "(ptr:?Aptr?GCObject,expected:?Q!A!Aptr!Pind],timeout_nanoseconds:?Dint)->?Dbool\n"
+             "(ptr:?Aptr?GCObject,expected:?Q!A!Aptr!Pind],timeout:?X3?Etime:Time?Dint?N)->?Dbool\n"
              "#r{true You were woken up, either sporadically, because the value of ${ptr.ind} differs "
              /*   */ "from @expected, or because another thread called ?Gfutex_wakeone or ?Gfutex_wakeall}"
-             "#r{false The given @timeout_nanoseconds has expired}"
+             "#r{false The given @timeout has expired}"
              "Atomically check if ${ptr.ind == expected}. If this isn't the case, immediately return ?t. "
-             /**/ "Otherwise, wait until either @timeout_nanoseconds have elapsed, or another thread "
+             /**/ "Otherwise, wait until either @timeout have elapsed, or another thread "
              /**/ "makes a call to ?Gfutex_wakeone or ?Gfutex_wakeall, or until the #I{stars align} "
              /**/ "(by which I mean that this function might also return sporadically)\n"
              "This function can be used to form the basis of any other synchronization "

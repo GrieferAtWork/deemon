@@ -40,6 +40,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Repeat */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_ATOI_STRING_FSIGNED, Dee_DIGIT_*, Dee_INT_PRINT*, Dee_INT_STRING*, INT_NEG_OVERFLOW, INT_POS_OVERFLOW, INT_SIGNED, INT_UNSIGNED, _Dee_int_1digit_object */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT_END, TYPE_METHOD_HINT_F, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_COMPARE_*, Dee_Compare*, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -5419,6 +5420,35 @@ DECL_BEGIN
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+int_as_timeout_nanoseconds_badval(DeeIntObject *__restrict self) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Cannot use %r as timeout. Only 0 and -1 as allowed",
+	                       self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+int_as_timeout_nanoseconds(DeeIntObject *__restrict self,
+                           uint64_t *__restrict p_timeout_nanoseconds) {
+	if (DeeInt_IsZero(self)) {
+		*p_timeout_nanoseconds = 0;
+	} else if (DeeInt_IsMinusOne(self)) {
+		*p_timeout_nanoseconds = (uint64_t)-1;
+	} else {
+		goto err_invalid_timeout;
+	}
+	return 0;
+err_invalid_timeout:
+	return int_as_timeout_nanoseconds_badval(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_as_timeout_nanoseconds_obj(DeeIntObject *__restrict self) {
+	if (DeeInt_IsZero(self) || DeeInt_IsMinusOne(self))
+		return_reference_(self);
+	int_as_timeout_nanoseconds_badval(self);
+	return NULL;
+}
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER_AB_F("__sizeof__", &int_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?."),
@@ -5536,6 +5566,14 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	DECLARE_UNSIGNEDn(128, "128 .bitmask"),
 #undef DECLARE_UNSIGNEDn
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
+
+	TYPE_GETTER_AB_F(STR___timeout_nanoseconds__, &int_as_timeout_nanoseconds_obj, METHOD_FCONSTCALL,
+	                 "->?Dint\n"
+	                 "Integration to allow the integer $0 and ${-1} to be used as #Ctimeout arguments in "
+	                 /**/ "APIs that accept timeouts. For this purpose, $0 means that no timeout is "
+	                 /**/ "specified, such that the API shall return immediately, and ${-1} indicates an "
+	                 /**/ "infinite timeout, meaning that the API will only return when interrupted, or "
+	                 /**/ "upon reaching whatever state the API is supposed to wait for."),
 	TYPE_GETSET_END
 };
 
@@ -5546,6 +5584,12 @@ PRIVATE struct type_member tpconst int_members[] = {
 	TYPE_MEMBER_CONST("isfinite", Dee_True),
 	TYPE_MEMBER_END
 };
+
+PRIVATE struct type_method_hint tpconst int_method_hints[] = {
+	TYPE_METHOD_HINT_F(object_as_timeout_nanoseconds, &int_as_timeout_nanoseconds, METHOD_FCONSTCALL),
+	TYPE_METHOD_HINT_END
+};
+
 
 
 /* The max sequence size is the signed value of SIZE_MAX,
@@ -5764,7 +5808,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_class_methods = */ int_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ int_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ int_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	/* .tp_mro           = */ NULL,

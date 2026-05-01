@@ -2917,6 +2917,14 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter_getseq__with
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_getseq__unsupported(DeeObject *__restrict self);
 #define default__iter_getseq__none (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_getseq__empty(DeeObject *__restrict self);
+
+/* object_as_timeout_nanoseconds */
+INTDEF WUNUSED NONNULL((1)) int DCALL default__object_as_timeout_nanoseconds(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__object_as_timeout_nanoseconds__with_callattr___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__object_as_timeout_nanoseconds__with_callobjectcache___timeout_nanoseconds__(DeeTypeObject *tp_self, DeeObject *self, uint64_t *p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__object_as_timeout_nanoseconds__unsupported(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__object_as_timeout_nanoseconds__none(DeeObject *__restrict self, uint64_t *__restrict p_timeout_nanoseconds);
 /*[[[end]]]*/
 /* clang-format on */
 

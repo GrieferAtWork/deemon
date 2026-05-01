@@ -27,13 +27,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPx64 */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL */
 #include <deemon/file.h>            /* Dee_fd_osfhandle_GETSET */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_*, Dee_Atou16, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>            /* DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/notify.h>          /* Dee_GetEnv */
 #include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
@@ -1947,16 +1948,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("accept", params: """
-	timeout_nanoseconds:rt:timeout = (uint64_t)-1;
+	timeout:rt:timeout = DeeInt_MinusOne;
 """, docStringPrefix: "socket");]]]*/
-#define socket_accept_params "timeout_nanoseconds:?X2?Etime:Time?Dint=!-1"
+#define socket_accept_params "timeout:?X3?Etime:Time?Dint?N=!-1"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	args.timeout_nanoseconds = (uint64_t)-1;
-	DeeArg_Unpack0Or1X(err, argc, argv, "accept", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	args.raw_timeout = DeeInt_MinusOne;
+	DeeArg_Unpack0Or1(err, argc, argv, "accept", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
-	return socket_doaccept(self, args.timeout_nanoseconds);
+	return socket_doaccept(self, timeout);
 err:
 	return NULL;
 }

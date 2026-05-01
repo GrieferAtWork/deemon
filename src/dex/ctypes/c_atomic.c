@@ -26,11 +26,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64, _DeeArg_AsObject */
+#include <deemon/arg.h>             /* DeeArg_Unpack* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_Check */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_TYPE */
 #include <deemon/objmethod.h>       /*  */
@@ -580,30 +581,33 @@ err:
 /*[[[deemon (print_CMethod from rt.gen.unpack)("futex_timedwait", "
 	ptr,
 	expected,
-	timeout_nanoseconds:rt:timeout
+	timeout:rt:timeout
 ", visi: "INTERN");]]]*/
-#define c_atomic_futex_timedwait_params "ptr,expected,timeout_nanoseconds:?X2?Etime:Time?Dint"
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout_nanoseconds);
+#define c_atomic_futex_timedwait_params "ptr,expected,timeout:?X3?Etime:Time?Dint?N"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_atomic_futex_timedwait_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeObject *ptr;
 		DeeObject *expected;
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_UnpackStruct3X(err, argc, argv, "futex_timedwait", &args, &args.ptr, "o", _DeeArg_AsObject, &args.expected, "o", _DeeArg_AsObject, &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
-	return c_atomic_futex_timedwait_f_impl(args.ptr, args.expected, args.timeout_nanoseconds);
+	uint64_t timeout;
+	DeeArg_UnpackStruct3(err, argc, argv, "futex_timedwait", &args, &args.ptr, &args.expected, &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
+	return c_atomic_futex_timedwait_f_impl(args.ptr, args.expected, timeout);
 err:
 	return NULL;
 }
 INTERN DEFINE_CMETHOD(c_atomic_futex_timedwait, &c_atomic_futex_timedwait_f, METHOD_FNORMAL);
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout_nanoseconds)
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout)
 /*[[[end]]]*/
 {
 	int wait_error;
 	union atomic_operand op_expected;
 	union pointer op_ptr;
 	CType *basetype;
-	(void)timeout_nanoseconds;
+	(void)timeout;
 	if unlikely(DeeObject_AsGenericPointer(ptr, &basetype, &op_ptr))
 		goto err;
 	if unlikely(get_atomic_operand(expected, basetype, &op_expected))
@@ -623,7 +627,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwai
 		v8_index    = (op_ptr.uint & 3);
 		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
 		if (expected_oldval.v8[v8_index] == op_expected.ao_u8) {
-			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout);
 		} else {
 			wait_error = 0;
 		}
@@ -642,7 +646,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwai
 		v16_index   = (op_ptr.uint & 2) >> 1;
 		CTYPES_FAULTPROTECT(expected_oldval.v32 = atomic_read(aligned_ptr), goto err);
 		if (expected_oldval.v16[v16_index] == op_expected.ao_u16) {
-			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(aligned_ptr, expected_oldval.v32, timeout);
 		} else {
 			wait_error = 0;
 		}
@@ -654,7 +658,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwai
 			goto err_unaligned;
 		CTYPES_FAULTPROTECT(true_oldval = atomic_read(op_ptr.p32), goto err);
 		if (true_oldval == op_expected.ao_u32) {
-			wait_error = DeeFutex_Wait32Timed(op_ptr.pvoid, op_expected.ao_u32, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait32Timed(op_ptr.pvoid, op_expected.ao_u32, timeout);
 		} else {
 			wait_error = 0;
 		}
@@ -667,7 +671,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwai
 			goto err_unaligned;
 		CTYPES_FAULTPROTECT(true_oldval = atomic_read(op_ptr.p64), goto err);
 		if (true_oldval == op_expected.ao_u64) {
-			wait_error = DeeFutex_Wait64Timed(op_ptr.pvoid, op_expected.ao_u64, timeout_nanoseconds);
+			wait_error = DeeFutex_Wait64Timed(op_ptr.pvoid, op_expected.ao_u64, timeout);
 		} else {
 			wait_error = 0;
 		}

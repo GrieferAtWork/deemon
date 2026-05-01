@@ -54,8 +54,6 @@
 %[include("object_operator_delattr.h")]
 %[include("object_operator_setattr.h")]
 
-/* TODO: Object.__format__ */
-
 /************************************************************************/
 /* For `deemon.Sequence'                                                */
 /************************************************************************/
@@ -289,3 +287,12 @@
 /* TODO: __numeric_divmod__ */
 /* TODO: __numeric_isfloat__ */
 /* TODO: __numeric_...__ (Just look at the other functions currently defined by "Numeric") */
+
+
+
+/************************************************************************/
+/* For `deemon.Object'                                                  */
+/************************************************************************/
+%[include("object_as_timeout_nanoseconds.h")]
+/* TODO: Object.__format__ */
+

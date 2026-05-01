@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_UntrackAlloc */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64 */
+#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/bytes.h>           /* DeeBytes_DATA, DeeBytes_SIZE */
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_* */
@@ -37,6 +37,7 @@
 #include <deemon/file.h>            /* DeeFile_*, Dee_OPEN_FRDONLY, Dee_STD*, Dee_fd_osfhandle_GETSET, OPEN_F* */
 #include <deemon/format.h>          /* DeeFormat_*, Dee_sprintf, PRF* */
 #include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_*, Dee_GetEnv, Dee_NOTIFICATION_CLASS_ENVIRON, Dee_NOTIFICATION_CLASS_PWD */
@@ -3985,17 +3986,20 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedjoin", params: """
-	timeout_nanoseconds:rt:timeout
+	timeout:rt:timeout
 """, docStringPrefix: "process");]]]*/
-#define process_timedjoin_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
+#define process_timedjoin_params "timeout:?X3?Etime:Time?Dint?N"
 	struct {
-		uint64_t timeout_nanoseconds;
+		DeeObject *raw_timeout;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
+	uint64_t timeout;
+	DeeArg_Unpack1(err, argc, argv, "timedjoin", &args.raw_timeout);
+	if unlikely(DeeObject_InvokeMethodHint(object_as_timeout_nanoseconds, args.raw_timeout, &timeout))
+		goto err;
 /*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	error = process_join_impl(self, args.timeout_nanoseconds, &status);
+	error = process_join_impl(self, timeout, &status);
 	if unlikely(error < 0)
 		goto err;
 	if (error != 0) {
