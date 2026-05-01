@@ -47,6 +47,7 @@
 #include "gc-inspect.h"
 #include "kwlist.h"
 #include "method-hint-defaults.h"
+#include "strings.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -729,6 +730,16 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF GCCollection *DCALL
+gccoll_frozen(GCCollection *__restrict self) {
+	if (gccoll_loadcache(self))
+		goto err;
+	return_reference_(self);
+err:
+	return NULL;
+}
+
+
 
 PRIVATE struct type_seq gccoll_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gccoll_iter,
@@ -779,6 +790,13 @@ PRIVATE struct type_member tpconst gccoll_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_getset tpconst gccoll_getsets[] = {
+	/* cached=return_self;  frozen=gccoll_loadcache()+return_self */
+	TYPE_GETTER_AB(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &gccoll_frozen, "->?."),
+	TYPE_GETSET_END
+};
+
 INTERN DeeTypeObject GCCollection_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_GCCollection",
@@ -818,7 +836,7 @@ INTERN DeeTypeObject GCCollection_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL, /* TODO: cached=return_self;  frozen=gccoll_loadcache()+return_self */
+	/* .tp_getsets       = */ gccoll_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
