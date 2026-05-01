@@ -351,7 +351,7 @@ seq_contains_with_range_and_key = {
 
 
 /* "operator contains(item)" -- implement bi-directionally with "Sequence.contains(item)" */
-[[operator(Sequence: tp_seq->tp_contains)]]
+[[operator([Sequence, Set]: tp_seq->tp_contains)]]
 [[wunused]] DREF DeeObject *
 __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *item)

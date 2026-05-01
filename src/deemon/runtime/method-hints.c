@@ -1025,8 +1025,9 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_operator_c
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_contains, NULL, Dee_SEQCLASS_SEQ, &default__seq_operator_contains__with_callattr_contains),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_contains[2] = {
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_contains[3] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_SEQ),
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_SET),
 	MH_INIT_SPEC_OPERATOR_END
 };
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_locate[2] = {

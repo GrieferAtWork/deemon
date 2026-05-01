@@ -628,10 +628,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 gccoll_contains(GCCollection *self, DeeObject *ob) {
+	int result;
 	if (!gccoll_loaded(self)) {
-		/* TODXXO: Optimizations for known load functions */
+		/* TODO: Optimizations for known load functions */
 	}
-	return default__seq_operator_contains__with__seq_contains(Dee_AsObject(self), ob);
+	result = default__seq_contains__with__seq_operator_foreach(Dee_AsObject(self), ob);
+	if (Dee_HAS_ISERR(result))
+		goto err;
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
