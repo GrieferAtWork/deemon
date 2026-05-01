@@ -668,12 +668,12 @@ DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeNanoSeconds)(void);
 #define DeeThread_TIMEOUT_REPEAT_END(p_timeout_nanoseconds) \
 		DeeThread_TIMEOUT_REPEAT_END_EX(p_timeout_nanoseconds, break)
 #define DeeThread_TIMEOUT_REPEAT_END_EX(p_timeout_nanoseconds, timeout_expr)      \
-			else;                                                                 \
+			else{}                                                                \
 			DeeThread_TIMEOUT_REPEAT_UPDATE(p_timeout_nanoseconds, timeout_expr); \
 		} __WHILE1;                                                               \
 	}	__WHILE0
 #define DeeThread_TIMEOUT_REPEAT_END_DUMMY() \
-			else;                            \
+			else{}                           \
 		} __WHILE0;                          \
 	}	__WHILE0
 
