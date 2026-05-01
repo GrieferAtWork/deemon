@@ -3985,12 +3985,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, status;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedjoin", params: """
-	uint64_t timeout_nanoseconds
-""");]]]*/
+	timeout_nanoseconds:rt:timeout
+""", docStringPrefix: "process");]]]*/
+#define process_timedjoin_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedjoin", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
@@ -5151,11 +5152,11 @@ PRIVATE struct type_method tpconst process_methods[] = {
 	              "#tSystemError{Failed to join @this process for some reason}"
 	              "Same as ?#join, but don't check for interrupts and fail immediately"),
 	TYPE_METHOD_F("timedjoin", &process_timedjoin, METHOD_FNOREFESCAPE,
-	              "(timeout_in_nanoseconds:?Dint)->?X2?Dint?N\n"
+	              "(" process_timedjoin_params ")->?X2?Dint?N\n"
 	              "#tValueError{@this process was never started}"
 	              "#tValueError{@this process as already detached or joined}"
 	              "#tSystemError{Failed to join @this process for some reason}"
-	              "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
+	              "Same as ?#join, but only attempt to join for a given @timeout_nanoseconds"),
 	TYPE_METHOD_F("detach", &process_detach, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#tValueError{@this process was never started}"

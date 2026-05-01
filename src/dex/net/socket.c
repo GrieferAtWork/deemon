@@ -1947,8 +1947,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("accept", params: """
-	uint64_t timeout_nanoseconds = (uint64_t)-1;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout = (uint64_t)-1;
+""", docStringPrefix: "socket");]]]*/
+#define socket_accept_params "timeout_nanoseconds:?X2?Etime:Time?Dint=!-1"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
@@ -2555,8 +2556,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
 	              "Note that calling this function may require the user to whitelist deemon in their firewall"),
 	TYPE_METHOD_F("accept", &socket_accept, METHOD_FNOREFESCAPE,
-	              "(timeout_nanoseconds=!-1)->?Gsocket\n"
-	              "(timeout_nanoseconds=!-1)->?N\n"
+	              "(" socket_accept_params ")->?X2?Gsocket?N\n"
 	              "#t{:Interrupt}"
 	              "#t{?ANotListening?ANotBound?GNetError}{@this socket is not listening for incoming connections}"
 	              "#t{?ANoSupport?GNetError}{The type of @this socket does not allow accepting of incoming connections}"

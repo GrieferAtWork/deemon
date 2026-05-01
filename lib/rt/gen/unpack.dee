@@ -506,6 +506,9 @@ global final UNPACK_PARAM_DECODERS: {string: UnpackParamDecoder | UnpackTypeProx
 	/* Misc. Deemon types */
 	"obj:buffer": UnpackTypeProxy('DeeObject *', 'o', '?DBytes'),
 
+	/* Misc. Deemon runtime */
+	"rt:timeout": UnpackTypeProxy('uint64_t', '" UNPx64 "', '?X2?Etime:Time?Dint'),
+
 	/* Misc. C types */
 	"c:bool":      UnpackTypeProxy("bool", "b", "?Dbool"),
 	"c:int":       UnpackTypeProxy("int", "d", "?Dint"),

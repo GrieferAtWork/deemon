@@ -300,165 +300,6 @@ PRIVATE DEFINE_STRING_EX(str_end, "end", 0x37fb4a05, 0x6de935c204dc3d01);
 /*[[[end]]]*/
 
 
-/* Pre-defined doc strings for lock-like objects */
-DOC_DEF(doc_lock_acquire,
-        "()\n"
-        "#t{:Interrupt}"
-        "Acquire @this lock, blocking until that becomes possible");
-DOC_DEF(doc_lock_release,
-        "()\n"
-        "#tValueError{You're not holding this lock}"
-        "Release a lock previously acquired by ?#acquire or some other means");
-DOC_DEF(doc_lock_tryacquire,
-        "->?Dbool\n"
-        "Try to acquire @this lock, returning ?t on success, and ?f if doing so would block");
-DOC_DEF(doc_lock_timedacquire,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#acquire, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire the lock and fail by returning ?f instead.");
-DOC_DEF(doc_lock_waitfor,
-        "()\n"
-        "#t{:Interrupt}"
-        "Wait until @this lock can be acquired without blocking\n"
-        "Note that by the time this function returns, trying to acquire the "
-        /**/ "lock might already block once again.");
-DOC_DEF(doc_lock_timedwaitfor,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#waitfor, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to wait for the lock to become available, and fail "
-        /**/ "by returning ?f instead.");
-DOC_DEF(doc_lock_available,
-        "->?Dbool\n"
-        "Check if @this lock could currently be acquired without blocking\n"
-        "Same as ${this.timedwaitfor(0)}");
-DOC_DEF(doc_lock_acquired,
-        "->?Dbool\n"
-        "Check if @this lock is currently being held");
-
-
-/* Pre-defined doc strings for rwlock-like objects */
-DOC_DEF(doc_rwlock_tryread,
-        "->?Dbool\n"
-        "Try to acquire a shared (read) lock to @this.\n"
-        "Same as ${this.readlock.tryacquire()}");
-DOC_DEF(doc_rwlock_trywrite,
-        "->?Dbool\n"
-        "Try to acquire an exclusive (write) lock to @this.\n"
-        "Same as ${this.writelock.tryacquire()}");
-DOC_DEF(doc_rwlock_read,
-        "()\n"
-        "#t{:Interrupt}"
-        "Acquire a shared (read) lock to @this, blocking until that becomes possible.\n"
-        "Same as ${this.readlock.tryacquire()}");
-DOC_DEF(doc_rwlock_timedread,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#read, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire a shared (read) lock and fail by returning ?f instead.\n"
-        "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
-DOC_DEF(doc_rwlock_write,
-        "()\n"
-        "#t{:Interrupt}"
-        "Acquire an exclusive (write) lock to @this, blocking until that becomes possible.\n"
-        "Same as ${this.writelock.tryacquire()}");
-DOC_DEF(doc_rwlock_timedwrite,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#write, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to acquire an exclusive (write) lock and fail by returning ?f instead.\n"
-        "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
-DOC_DEF(doc_rwlock_waitread,
-        "()\n"
-        "#t{:Interrupt}"
-        "Wait until a shared (read) lock can be acquired without blocking\n"
-        "Note that by the time this function returns, trying to acquire a "
-        /**/ "shared (read) lock might already block once again.\n"
-        "Same as ${this.readlock.waitfor()}");
-DOC_DEF(doc_rwlock_timedwaitread,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#waitread, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to wait for a shared (read) lock to become available, and "
-        /**/ "fail by returning ?f instead.\n"
-        "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
-DOC_DEF(doc_rwlock_waitwrite,
-        "()\n"
-        "#t{:Interrupt}"
-        "Wait until an exclusive (write) lock can be acquired without blocking\n"
-        "Note that by the time this function returns, trying to acquire an exclusive (write) "
-        /**/ "lock might already block once again.\n"
-        "Same as ${this.writelock.waitfor()}");
-DOC_DEF(doc_rwlock_timedwaitwrite,
-        "(timeout_nanoseconds:?Dint)->?Dbool\n"
-        "#t{:Interrupt}"
-        "Same as ?#waitwrite, returning ?t on success, but block for at "
-        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
-        /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
-        /**/ "fail by returning ?f instead.\n"
-        "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
-DOC_DEF(doc_rwlock_endread,
-        "()\n"
-        "#tValueError{No shared (read) lock is currently held}"
-        "Release a shared (read) lock from @this, previously acquired by ?#read or some other function.\n"
-        "Same as ${this.readlock.release()}");
-DOC_DEF(doc_rwlock_endwrite,
-        "()\n"
-        "#tValueError{No exclusive (write) lock is currently held}"
-        "Release an exclusive (write) lock from @this, previously acquired by ?#write or some other function.\n"
-        "Same as ${this.writelock.release()}");
-DOC_DEF(doc_rwlock_end,
-        "()\n"
-        "#tValueError{No lock of any kind is currently held}"
-        "Release either an exclusive (write), or a shared (read) lock from @this");
-DOC_DEF(doc_rwlock_tryupgrade,
-        "->?DBool\n"
-        "Try to upgrade a shared (read) lock (s.a. ?#read) into an exclusive (write) lock (s.a. ?#write)\n"
-        "If the lock was upgraded, return ?t. Otherwise, the shared (read) lock is kept, and ?f is returned.");
-DOC_DEF(doc_rwlock_upgrade,
-        "->?DBool\n"
-        "#t{:Interrupt}"
-        "#tValueError{Not holding a shared (read) lock at the moment}"
-        "#r{true Lock upgrade could be performed atomically (without dropping the shared (read) lock temporarily)}"
-        "#r{false Lock upgrade was performed by temporarily dropping the shared (read) lock, before acquiring an exclusive (write) lock}"
-        "Upgrade a shared (read) lock into an exclusive (write) lock (if an interrupt error is thrown, the shared (read) lock was released)");
-DOC_DEF(doc_rwlock_downgrade,
-        "()\n"
-        "#tValueError{Not holding an exclusive (write) lock at the moment}"
-        "Downgrade an exclusive (write) lock into a shared (read) lock, but maintain some kind of lock at every point in time");
-DOC_DEF(doc_rwlock_reading,
-        "->?Dbool\n"
-        "Returns ?t if either a shared- (read) or an exclusive (write) lock is being held");
-DOC_DEF(doc_rwlock_writing,
-        "->?Dbool\n"
-        "Returns ?t if some thread is holding an exclusive (write) lock");
-DOC_DEF(doc_rwlock_canread,
-        "->?Dbool\n"
-        "Returns ?t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)\n"
-        "Same as ${this.timedwaitread(0)}");
-DOC_DEF(doc_rwlock_canwrite,
-        "->?Dbool\n"
-        "Returns ?t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)\n"
-        "Same as ${this.timedwaitwrite(0)}");
-DOC_DEF(doc_rwlock_readlock,
-        "->?GRWLockReadLock\n"
-        "Return a ?GLock-compatible wrapper object around @this read/write-lock "
-        /**/ "that can be used to acquire a shared (read) locks");
-DOC_DEF(doc_rwlock_writelock,
-        "->?GRWLockWriteLock\n"
-        "Return a ?GLock-compatible wrapper object around @this read/write-lock "
-        /**/ "that can be used to acquire an exclusive (write) locks");
-
-
-
-
-
 
 
 
@@ -512,7 +353,10 @@ PRIVATE struct type_with lock_with = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_acquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("acquire", params: "", docStringPrefix: "lock");]]]*/
+#define lock_acquire_params ""
 	DeeArg_Unpack0(err, argc, argv, "acquire");
+/*[[[end]]]*/
 	for (;;) {
 		int status = lock_do_tryacquire(self);
 		if (Dee_HAS_ISERR(status))
@@ -532,12 +376,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_timedacquire(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "lock");]]]*/
+#define lock_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = lock_do_tryacquire(self);
 	if (Dee_HAS_ISYES_OR_ERR(error)) {
@@ -599,7 +444,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor", params: "", docStringPrefix: "lock");]]]*/
+#define lock_waitfor_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	for (;;) {
 		int error = lock_is_acquired(self);
 		if (Dee_HAS_ISERR(error))
@@ -619,12 +467,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_timedwaitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "lock");]]]*/
+#define lock_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = lock_is_acquired(self);
 	if (Dee_HAS_ISNO_OR_ERR(error)) {
@@ -658,6 +507,49 @@ ok:
 err:
 	return NULL;
 }
+
+
+/* Pre-defined doc strings for lock-like objects */
+DOC_DEF(doc_lock_acquire,
+        "(" lock_acquire_params ")\n"
+        "#t{:Interrupt}"
+        "Acquire @this lock, blocking until that becomes possible");
+DOC_DEF(doc_lock_release,
+        "()\n"
+        "#tValueError{You're not holding this lock}"
+        "Release a lock previously acquired by ?#acquire or some other means");
+DOC_DEF(doc_lock_tryacquire,
+        "->?Dbool\n"
+        "Try to acquire @this lock, returning ?t on success, and ?f if doing so would block");
+DOC_DEF(doc_lock_timedacquire,
+        "(" lock_timedacquire_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#acquire, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to acquire the lock and fail by returning ?f instead.");
+DOC_DEF(doc_lock_waitfor,
+        "(" lock_waitfor_params ")\n"
+        "#t{:Interrupt}"
+        "Wait until @this lock can be acquired without blocking\n"
+        "Note that by the time this function returns, trying to acquire the "
+        /**/ "lock might already block once again.");
+DOC_DEF(doc_lock_timedwaitfor,
+        "(" lock_timedwaitfor_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#waitfor, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to wait for the lock to become available, and fail "
+        /**/ "by returning ?f instead.");
+DOC_DEF(doc_lock_available,
+        "->?Dbool\n"
+        "Check if @this lock could currently be acquired without blocking\n"
+        "Same as ${this.timedwaitfor(0)}");
+DOC_DEF(doc_lock_acquired,
+        "->?Dbool\n"
+        "Check if @this lock is currently being held");
+
+
+
 
 PRIVATE struct type_method tpconst lock_methods[] = {
 	TYPE_METHOD(STR_acquire, &lock_acquire, DOC_GET(doc_lock_acquire)),
@@ -1041,7 +933,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_read(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("read", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_read_params ""
 	DeeArg_Unpack0(err, argc, argv, "read");
+/*[[[end]]]*/
 	error = rwlock_do_read(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -1053,7 +948,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_write(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("write", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_write_params ""
 	DeeArg_Unpack0(err, argc, argv, "write");
+/*[[[end]]]*/
 	error = rwlock_do_write(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -1065,7 +963,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_end(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("end", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_end_params ""
 	DeeArg_Unpack0(err, argc, argv, "end");
+/*[[[end]]]*/
 	error = rwlock_do_writing(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -1084,7 +985,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_upgrade(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("upgrade", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_upgrade_params ""
 	DeeArg_Unpack0(err, argc, argv, "upgrade");
+/*[[[end]]]*/
 	error = rwlock_do_tryupgrade(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -1104,12 +1008,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedread", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "rwlock");]]]*/
+#define rwlock_timedread_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedread", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = rwlock_do_timedread(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -1123,12 +1028,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwrite", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "rwlock");]]]*/
+#define rwlock_timedwrite_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwrite", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = rwlock_do_timedwrite(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -1141,7 +1047,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitread", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_waitread_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitread");
+/*[[[end]]]*/
 	error = rwlock_do_waitread(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -1153,7 +1062,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_waitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int status;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitwrite", params: "", docStringPrefix: "rwlock");]]]*/
+#define rwlock_waitwrite_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitwrite");
+/*[[[end]]]*/
 	status = rwlock_do_waitwrite(self);
 	if (Dee_HAS_ISERR(status))
 		goto err;
@@ -1166,12 +1078,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwaitread(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitread", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "rwlock");]]]*/
+#define rwlock_timedwaitread_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitread", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitread(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -1185,12 +1098,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rwlock_timedwaitwrite(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitwrite", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "rwlock");]]]*/
+#define rwlock_timedwaitwrite_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitwrite", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = rwlock_do_timedwaitwrite(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -1245,6 +1159,122 @@ rwlock_writelock_get(DeeObject *__restrict self) {
 done:
 	return result;
 }
+
+/* Pre-defined doc strings for rwlock-like objects */
+DOC_DEF(doc_rwlock_tryread,
+        "->?Dbool\n"
+        "Try to acquire a shared (read) lock to @this.\n"
+        "Same as ${this.readlock.tryacquire()}");
+DOC_DEF(doc_rwlock_trywrite,
+        "->?Dbool\n"
+        "Try to acquire an exclusive (write) lock to @this.\n"
+        "Same as ${this.writelock.tryacquire()}");
+DOC_DEF(doc_rwlock_read,
+        "(" rwlock_read_params ")\n"
+        "#t{:Interrupt}"
+        "Acquire a shared (read) lock to @this, blocking until that becomes possible.\n"
+        "Same as ${this.readlock.tryacquire()}");
+DOC_DEF(doc_rwlock_timedread,
+        "(" rwlock_timedread_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#read, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to acquire a shared (read) lock and fail by returning ?f instead.\n"
+        "Same as ${this.readlock.timedacquire(timeout_nanoseconds)}");
+DOC_DEF(doc_rwlock_write,
+        "(" rwlock_write_params ")\n"
+        "#t{:Interrupt}"
+        "Acquire an exclusive (write) lock to @this, blocking until that becomes possible.\n"
+        "Same as ${this.writelock.tryacquire()}");
+DOC_DEF(doc_rwlock_timedwrite,
+        "(" rwlock_timedwrite_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#write, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to acquire an exclusive (write) lock and fail by returning ?f instead.\n"
+        "Same as ${this.writelock.timedacquire(timeout_nanoseconds)}");
+DOC_DEF(doc_rwlock_waitread,
+        "(" rwlock_waitread_params ")\n"
+        "#t{:Interrupt}"
+        "Wait until a shared (read) lock can be acquired without blocking\n"
+        "Note that by the time this function returns, trying to acquire a "
+        /**/ "shared (read) lock might already block once again.\n"
+        "Same as ${this.readlock.waitfor()}");
+DOC_DEF(doc_rwlock_timedwaitread,
+        "(" rwlock_timedwaitread_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#waitread, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to wait for a shared (read) lock to become available, and "
+        /**/ "fail by returning ?f instead.\n"
+        "Same as ${this.readlock.timedwaitfor(timeout_nanoseconds)}");
+DOC_DEF(doc_rwlock_waitwrite,
+        "(" rwlock_waitwrite_params ")\n"
+        "#t{:Interrupt}"
+        "Wait until an exclusive (write) lock can be acquired without blocking\n"
+        "Note that by the time this function returns, trying to acquire an exclusive (write) "
+        /**/ "lock might already block once again.\n"
+        "Same as ${this.writelock.waitfor()}");
+DOC_DEF(doc_rwlock_timedwaitwrite,
+        "(" rwlock_timedwaitwrite_params ")->?Dbool\n"
+        "#t{:Interrupt}"
+        "Same as ?#waitwrite, returning ?t on success, but block for at "
+        /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
+        /**/ "stop trying to wait for an exclusive (write) lock to become available, and "
+        /**/ "fail by returning ?f instead.\n"
+        "Same as ${this.writelock.timedwaitfor(timeout_nanoseconds)}");
+DOC_DEF(doc_rwlock_endread,
+        "()\n"
+        "#tValueError{No shared (read) lock is currently held}"
+        "Release a shared (read) lock from @this, previously acquired by ?#read or some other function.\n"
+        "Same as ${this.readlock.release()}");
+DOC_DEF(doc_rwlock_endwrite,
+        "()\n"
+        "#tValueError{No exclusive (write) lock is currently held}"
+        "Release an exclusive (write) lock from @this, previously acquired by ?#write or some other function.\n"
+        "Same as ${this.writelock.release()}");
+DOC_DEF(doc_rwlock_end,
+        "()\n"
+        "#tValueError{No lock of any kind is currently held}"
+        "Release either an exclusive (write), or a shared (read) lock from @this");
+DOC_DEF(doc_rwlock_tryupgrade,
+        "->?DBool\n"
+        "Try to upgrade a shared (read) lock (s.a. ?#read) into an exclusive (write) lock (s.a. ?#write)\n"
+        "If the lock was upgraded, return ?t. Otherwise, the shared (read) lock is kept, and ?f is returned.");
+DOC_DEF(doc_rwlock_upgrade,
+        "->?DBool\n"
+        "#t{:Interrupt}"
+        "#tValueError{Not holding a shared (read) lock at the moment}"
+        "#r{true Lock upgrade could be performed atomically (without dropping the shared (read) lock temporarily)}"
+        "#r{false Lock upgrade was performed by temporarily dropping the shared (read) lock, before acquiring an exclusive (write) lock}"
+        "Upgrade a shared (read) lock into an exclusive (write) lock (if an interrupt error is thrown, the shared (read) lock was released)");
+DOC_DEF(doc_rwlock_downgrade,
+        "()\n"
+        "#tValueError{Not holding an exclusive (write) lock at the moment}"
+        "Downgrade an exclusive (write) lock into a shared (read) lock, but maintain some kind of lock at every point in time");
+DOC_DEF(doc_rwlock_reading,
+        "->?Dbool\n"
+        "Returns ?t if either a shared- (read) or an exclusive (write) lock is being held");
+DOC_DEF(doc_rwlock_writing,
+        "->?Dbool\n"
+        "Returns ?t if some thread is holding an exclusive (write) lock");
+DOC_DEF(doc_rwlock_canread,
+        "->?Dbool\n"
+        "Returns ?t so-long as no-one is holding an exclusive (write) lock (inverse of ?#writing)\n"
+        "Same as ${this.timedwaitread(0)}");
+DOC_DEF(doc_rwlock_canwrite,
+        "->?Dbool\n"
+        "Returns ?t so-long as no shared- (read) and no exclusive (write) locks are being held (inverse of ?#reading)\n"
+        "Same as ${this.timedwaitwrite(0)}");
+DOC_DEF(doc_rwlock_readlock,
+        "->?GRWLockReadLock\n"
+        "Return a ?GLock-compatible wrapper object around @this read/write-lock "
+        /**/ "that can be used to acquire a shared (read) locks");
+DOC_DEF(doc_rwlock_writelock,
+        "->?GRWLockWriteLock\n"
+        "Return a ?GLock-compatible wrapper object around @this read/write-lock "
+        /**/ "that can be used to acquire an exclusive (write) locks");
+
 
 PRIVATE struct type_method tpconst rwlock_methods[] = {
 	TYPE_METHOD(STR_read, &rwlock_read, DOC_GET(doc_rwlock_read)),
@@ -1346,10 +1376,19 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "RWLockReadLock", &self->grwl_lock);
-	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("RWLockReadLock", params: """
+	lock:?GRWLock
+""", docStringPrefix: "rwlock_readlock");]]]*/
+#define rwlock_readlock_RWLockReadLock_params "lock:?GRWLock"
+	struct {
+		DeeObject *lock;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "RWLockReadLock", &args.lock);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.lock, &DeeRWLock_Type))
 		goto err;
-	Dee_Incref(self->grwl_lock);
+	self->grwl_lock = args.lock;
+	Dee_Incref(args.lock);
 	return 0;
 err:
 	return -1;
@@ -1358,10 +1397,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_writelock_init(DeeGenericRWLockProxyObject *__restrict self,
                       size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "RWLockWriteLock", &self->grwl_lock);
-	if (DeeObject_AssertType(self->grwl_lock, &DeeLock_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("RWLockWriteLock", params: """
+	lock:?GRWLock
+""", docStringPrefix: "rwlock_writelock");]]]*/
+#define rwlock_writelock_RWLockWriteLock_params "lock:?GRWLock"
+	struct {
+		DeeObject *lock;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "RWLockWriteLock", &args.lock);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.lock, &DeeLock_Type))
 		goto err;
-	Dee_Incref(self->grwl_lock);
+	self->grwl_lock = args.lock;
+	Dee_Incref(args.lock);
 	return 0;
 err:
 	return -1;
@@ -1626,7 +1674,7 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 	/* .tp_name     = */ "RWLockReadLock",
 	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's shared (read) set of locking functions\n"
 	                         "\n"
-	                         "(lock:?GRWLock)"),
+	                         "(" rwlock_readlock_RWLockReadLock_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1674,7 +1722,7 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 	/* .tp_name     = */ "RWLockWriteLock",
 	/* .tp_doc      = */ DOC("Wrapper for a ?GRWLock's exclusive (write) set of locking functions\n"
 	                         "\n"
-	                         "(lock:?GRWLock)"),
+	                         "(" rwlock_writelock_RWLockWriteLock_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1798,7 +1846,10 @@ semaphore_leave(DeeSemaphoreObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_tryacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryacquire", params: "", docStringPrefix: "semaphore");]]]*/
+#define semaphore_tryacquire_params ""
 	DeeArg_Unpack0(err, argc, argv, "tryacquire");
+/*[[[end]]]*/
 	return_bool(Dee_semaphore_tryacquire(&self->sem_semaphore));
 err:
 	return NULL;
@@ -1806,7 +1857,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_acquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("acquire", params: "", docStringPrefix: "semaphore");]]]*/
+#define semaphore_acquire_params ""
 	DeeArg_Unpack0(err, argc, argv, "acquire");
+/*[[[end]]]*/
 	if unlikely(Dee_semaphore_acquire(&self->sem_semaphore))
 		goto err;
 	return_none;
@@ -1818,7 +1872,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_release(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwrite", params: """
 	size_t count = 1;
-""");]]]*/
+""", docStringPrefix: "semaphore");]]]*/
+#define semaphore_timedwrite_params "count=!1"
 	struct {
 		size_t count;
 	} args;
@@ -1836,12 +1891,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_timedacquire(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "semaphore");]]]*/
+#define semaphore_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = Dee_semaphore_acquire_timed(&self->sem_semaphore, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1853,7 +1909,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_waitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor", params: "", docStringPrefix: "semaphore");]]]*/
+#define semaphore_waitfor_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	if unlikely(Dee_semaphore_waitfor(&self->sem_semaphore))
 		goto err;
 	return_none;
@@ -1865,12 +1924,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 semaphore_timedwaitfor(DeeSemaphoreObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "semaphore");]]]*/
+#define semaphore_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = Dee_semaphore_waitfor_timed(&self->sem_semaphore, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -1923,9 +1983,9 @@ PRIVATE struct type_method tpconst semaphore_methods[] = {
 	TYPE_METHOD_F(STR_tryacquire, &semaphore_tryacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
 	TYPE_METHOD_F(STR_acquire, &semaphore_acquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
 	TYPE_METHOD_F(STR_release, &semaphore_release, METHOD_FNOREFESCAPE,
-	              "(tickets=!1)\n"
+	              "(" semaphore_timedwrite_params ")\n"
 	              "#tIntegerOverflow{The new total number of tickets would be too large}"
-	              "Release @tickets tickets to the semaphore"),
+	              "Release @count tickets to the semaphore"),
 	TYPE_METHOD_F(STR_timedacquire, &semaphore_timedacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
 	TYPE_METHOD_F(STR_waitfor, &semaphore_waitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
 	TYPE_METHOD_F(STR_timedwaitfor, &semaphore_timedwaitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
@@ -2059,12 +2119,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_timedwaitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "event");]]]*/
+#define event_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = Dee_event_waitfor_timed(&self->e_event, args.timeout_nanoseconds);
 	if unlikely(error < 0)
@@ -2076,7 +2137,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_set(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("set", params: "", docStringPrefix: "event");]]]*/
+#define event_set_params ""
 	DeeArg_Unpack0(err, argc, argv, "set");
+/*[[[end]]]*/
 	Dee_event_set(&self->e_event);
 	return_none;
 err:
@@ -2085,7 +2149,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_clear(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("clear", params: "", docStringPrefix: "event");]]]*/
+#define event_clear_params ""
 	DeeArg_Unpack0(err, argc, argv, "clear");
+/*[[[end]]]*/
 	Dee_event_clear(&self->e_event);
 	return_none;
 err:
@@ -2117,16 +2184,16 @@ PRIVATE struct type_method tpconst event_methods[] = {
 	              "()\n"
 	              "Wait until the event becomes set"),
 	TYPE_METHOD_F(STR_timedwaitfor, &event_timedwaitfor, METHOD_FNOREFESCAPE,
-	              "(timeout_nanoseconds:?Dint)->?Dbool\n"
+	              "(" event_timedwaitfor_params ")->?Dbool\n"
 	              "Same as ?#waitfor, returning ?t on success, but block for at "
 	              /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
 	              /**/ "stop trying to wait for the event to become set, and fail by "
 	              /**/ "returning ?f instead."),
 	TYPE_METHOD_F("set", &event_set, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" event_set_params ")\n"
 	              "Trigger the event as having taken place"),
 	TYPE_METHOD_F("clear", &event_clear, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" event_clear_params ")\n"
 	              "Clear the event as not having taken place"),
 	TYPE_METHOD_END
 };
@@ -2366,8 +2433,16 @@ err:
 PRIVATE WUNUSED DREF LockUnion *DCALL
 lock_union_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "LockUnion", &seq);
-	return LockUnion_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("LockUnion", params: """
+	locks:?S?GLock
+""", docStringPrefix: "lock_union");]]]*/
+#define lock_union_LockUnion_params "locks:?S?GLock"
+	struct {
+		DeeObject *locks;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "LockUnion", &args.locks);
+/*[[[end]]]*/
+	return LockUnion_FromSequence(args.locks);
 err:
 	return NULL;
 }
@@ -2810,7 +2885,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_tryacquire(LockUnion *__restrict self,
                       size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryacquire", params: "", docStringPrefix: "lock_union");]]]*/
+#define lock_union_tryacquire_params ""
 	DeeArg_Unpack0(err, argc, argv, "tryacquire");
+/*[[[end]]]*/
 	error = lock_union_do_tryacquire(self);
 	if (Dee_HAS_ISERR(error))
 		goto err;
@@ -2822,7 +2900,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_acquire(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("acquire", params: "", docStringPrefix: "lock_union");]]]*/
+#define lock_union_acquire_params ""
 	DeeArg_Unpack0(err, argc, argv, "acquire");
+/*[[[end]]]*/
 	if unlikely(lock_union_do_acquire(self))
 		goto err;
 	return_none;
@@ -2833,7 +2914,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_release(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("release", params: "", docStringPrefix: "lock_union");]]]*/
+#define lock_union_release_params ""
 	DeeArg_Unpack0(err, argc, argv, "release");
+/*[[[end]]]*/
 	if unlikely(lock_union_do_release(self))
 		goto err;
 	return_none;
@@ -2846,12 +2930,13 @@ lock_union_timedacquire(LockUnion *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedacquire", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "lock_union");]]]*/
+#define lock_union_timedacquire_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedacquire", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = lock_union_do_acquire_timed(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -2865,7 +2950,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_waitfor(LockUnion *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	int status;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor", params: "", docStringPrefix: "lock_union");]]]*/
+#define lock_union_waitfor_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	status = lock_union_do_waitfor(self);
 	if (Dee_HAS_ISERR(status))
 		goto err;
@@ -2879,12 +2967,13 @@ lock_union_timedwaitfor(LockUnion *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	int error;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("timedwaitfor", params: """
-	uint64_t timeout_nanoseconds;
-""");]]]*/
+	timeout_nanoseconds:rt:timeout;
+""", docStringPrefix: "lock_union");]]]*/
+#define lock_union_timedwaitfor_params "timeout_nanoseconds:?X2?Etime:Time?Dint"
 	struct {
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_Unpack1X(err, argc, argv, "timedwaitfor", &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 /*[[[end]]]*/
 	error = lock_union_do_waitfor_timed(self, args.timeout_nanoseconds);
 	if (Dee_HAS_ISERR(error))
@@ -2990,7 +3079,7 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 	                         /**/ "}"
 	                         "}\n"
 	                         "\n"
-	                         "(locks:?S?GLock)"),
+	                         "(" lock_union_LockUnion_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

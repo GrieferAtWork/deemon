@@ -577,8 +577,12 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("futex_timedwait", "ptr,expected, uint64_t timeout_nanoseconds", visi: "INTERN");]]]*/
-#define c_atomic_futex_timedwait_params "ptr,expected,timeout_nanoseconds:?Dint"
+/*[[[deemon (print_CMethod from rt.gen.unpack)("futex_timedwait", "
+	ptr,
+	expected,
+	timeout_nanoseconds:rt:timeout
+", visi: "INTERN");]]]*/
+#define c_atomic_futex_timedwait_params "ptr,expected,timeout_nanoseconds:?X2?Etime:Time?Dint"
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout_nanoseconds);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_atomic_futex_timedwait_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -586,7 +590,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_atomic_futex_timedwait_f(size_t argc, De
 		DeeObject *expected;
 		uint64_t timeout_nanoseconds;
 	} args;
-	DeeArg_UnpackStruct3X(err, argc, argv, "futex_timedwait", &args, &args.ptr, "o", _DeeArg_AsObject, &args.expected, "o", _DeeArg_AsObject, &args.timeout_nanoseconds, UNPu64, DeeObject_AsUInt64);
+	DeeArg_UnpackStruct3X(err, argc, argv, "futex_timedwait", &args, &args.ptr, "o", _DeeArg_AsObject, &args.expected, "o", _DeeArg_AsObject, &args.timeout_nanoseconds, UNPx64, DeeObject_AsUInt64M1);
 	return c_atomic_futex_timedwait_f_impl(args.ptr, args.expected, args.timeout_nanoseconds);
 err:
 	return NULL;
