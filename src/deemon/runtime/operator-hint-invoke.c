@@ -221,6 +221,17 @@ STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_yM2_nM3(0) == Dee_BOUND_MISSING);
 STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_yM2_nM3(-2) == Dee_BOUND_YES);
 STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_yM2_nM3(-3) == Dee_BOUND_NO);
 
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_yM2_nM3(Dee_BOUND_ERR) == -1);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_yM2_nM3(Dee_BOUND_MISSING) == 0);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_yM2_nM3(Dee_BOUND_YES) == -2);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_yM2_nM3(Dee_BOUND_NO) == -3);
+
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(Dee_BOUND_ERR) == -1);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(Dee_BOUND_MISSING) == 0 ||
+              Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(Dee_BOUND_MISSING) == -4);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(Dee_BOUND_YES) == -2);
+STATIC_ASSERT(Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(Dee_BOUND_NO) == -3);
+
 STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(-1) == Dee_BOUND_ERR);
 STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(0) == Dee_BOUND_MISSING);
 STATIC_ASSERT(Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(-4) == Dee_BOUND_MISSING);
@@ -288,9 +299,355 @@ STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_EQ) == 1);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_LO) == -2);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_GR) == -2);
 
+/*Helper script to brute-force solutions to mapper macros:
+
+import * from deemon;
+
+#if 0
+#define EXPECTED_IS_PREDICATE
+#endif
+
+#ifdef EXPECTED_IS_PREDICATE
+#define Expected Callable with int
+#else
+#define Expected int
+#endif
+
+#define OPS "+-&|^*>~N"
+
+function apply(value: int, op: (string, int)): int {
+	local what, addend = op...;
+	switch (what) {
+	case "+": return value + addend; break;
+	case "-": return value - addend; break;
+	case "*": return value * addend; break;
+	case ">": return value >> addend; break;
+	case "&": return value & addend; break;
+	case "|": return value | addend; break;
+	case "^": return value ^ addend; break;
+	case "~": return ~value; break;
+	case "N": return -value; break;
+	default: throw Error();
+	}
+}
+
+function enumerateOps(): {(string, int)...} {
+	for (local operand: {1,2,3,-1,-2,-3,4,-4//,5,-5,6,-6,7,-7
+	}) {
+		for (local op: OPS) {
+			if (op in "~N" && operand != 1)
+				continue;
+			if (op in "><" && operand < 0)
+				continue;
+			yield (op, operand);
+		}
+	}
+}
+
+function mapWithOp(map: {int: Expected}, op: (string, int)): {int: int} | none | bool {
+	local result = Dict();
+	local isSolution = true;
+	for (local key, expected: map) {
+		key = apply(key, op);
+		local oldExpected = result.get(key);
+		if (oldExpected is none) {
+			result[key] = expected;
+		} else {
+			// Important: duplicate output mappings can be coalesced at any step!
+			// Without this, we'd get solutions that *would* work, but would also
+			// be way more complicated that they'd need to be.
+			if (oldExpected != expected)
+				return none;
+		}
+#ifdef EXPECTED_IS_PREDICATE
+		if (!expected(key))
+#else // EXPECTED_IS_PREDICATE
+		if (key != expected)
+#endif // !EXPECTED_IS_PREDICATE
+		{
+			isSolution = false;
+		}
+	}
+	if (isSolution)
+		return true;
+	return result;
+}
+
+function findSolution(MAP: {int: Expected}) {
+	@@List of pending trees left to check:
+	@@ {mapAfterOps, previousOps}
+	local pending: {({int:Expected}, {(string,int)...})...}
+		= { (MAP, {}) };
+	for (;;) {
+		local newPending = List();
+		print("Checking at depth: ", pending.first.last.length);
+		for (local mapAfterOps, previousOps: pending) {
+			for (local nextOp: enumerateOps()) {
+				if (previousOps &&
+				    previousOps.last.first == nextOp.first)
+					continue; // Don't repeat ops
+				local newMap = mapWithOp(mapAfterOps, nextOp);
+				if (bool.istrue(newMap)) {
+					print("SOLUTION:");
+					for (local op: previousOps)
+						print(repr op);
+					print(repr nextOp);
+					return;
+				} else if (newMap !is none) {
+					newPending.append((
+						newMap,
+						{previousOps..., nextOp}.frozen
+					));
+				}
+			}
+		}
+		pending = newPending;
+		if (!newPending)
+			throw Error("No solution");
+	}
+}
+
+#define M(v) v // (((((v) * -3) ^ 3) - 1) >> 2)
+
+findSolution({
+	M(-1) : -1,
+	M( 0) :  0,
+	M(-4) :  0,
+	M(-2) :  1,
+	M(-3) :  2,
+});
+*/
+
+#if 0 /* C-version of the above (because finding certain solutions took too long before I noticed a bug) */
+typedef int8_t value_t;
+static value_t const in[] = { -1, 0, 1, 2 }, out[] = { -1, -4, -2, -3 };
+#define N_VALUES COMPILER_LENOF(in)
+#define out_isok(i, value) (out[i] == value)
+
+enum OP {
+	SHR,
+	ADD,
+//	SUB,
+	AND,
+	OR,
+	XOR,
+	MUL,
+#define HASARG(op) ((op) <= SHR)
+	INV,
+	NEG,
+	OP_COUNT
+};
+
+static char const *opname(enum OP op) {
+	switch (op) {
+	case ADD: return "+";
+//	case SUB: return "-";
+	case AND: return "&";
+	case OR: return "|";
+	case XOR: return "^";
+	case MUL: return "*";
+	case SHR: return ">>";
+	case INV: return "~";
+	case NEG: return "NEG";
+	default: __builtin_unreachable();
+	}
+}
+
+static value_t apply(value_t v, enum OP op, value_t operand) {
+	switch (op) {
+	case ADD: return v + operand;
+//	case SUB: return v - operand;
+	case AND: return v & operand;
+	case OR: return v | operand;
+	case XOR: return v ^ operand;
+	case MUL: return v * operand;
+	case SHR: return v >> operand;
+	case INV: return ~v;
+	case NEG: return -v;
+	default: __builtin_unreachable();
+	}
+}
+
+enum status {
+	SOLUTION,
+	FAILURE,
+	CONTINUE
+};
+
+static enum status apply_op(value_t const in_values[N_VALUES],
+                            value_t ou_values[N_VALUES],
+                            enum OP op, value_t operand) {
+	bool is_solution = true;
+	unsigned int i;
+	for (i = 0; i < N_VALUES; ++i) {
+		value_t value = apply(in_values[i], op, operand);
+		if (!out_isok(i, value))
+			is_solution = false;
+		ou_values[i] = value;
+	}
+	if (is_solution)
+		return SOLUTION;
+	// If "ou_values" contains duplicates at this point, then "op" is failure
+#if 1
+	for (i = 0; i < N_VALUES; ++i) {
+		unsigned int j;
+		for (j = 0; j < i; ++j) {
+			if (ou_values[i] == ou_values[j] &&
+			    /* Important: duplicate output mappings can be coalesced at any step!
+			     * Without this, we'd get solutions that *would* work, but would also
+			     * be way more complicated that they'd need to be. */
+			    out[i] != out[j])
+				return FAILURE;
+		}
+	}
+#endif
+	return CONTINUE;
+}
+
+struct candidate_op {
+	uint8_t co_op;   /* Operation (one of "enum OP") */
+	value_t co_val;  /* Operand value */
+};
+
+typedef uint8_t nops_t;
+struct candidate {
+	nops_t  c_nops;
+	value_t c_values[N_VALUES]; /* Values after "c_ops" were applied */
+	COMPILER_FLEXIBLE_ARRAY(struct candidate_op, c_ops); /* How we got here... */
+};
+
+struct candidates {
+	size_t             cs_alc; /* Allocated # of candidates */
+	size_t             cs_cnt; /* # of candidates */
+	struct candidate **cs_vec; /* [0..cs_cnt] Vector of candidates */
+};
+
+static void
+candidates_append(struct candidates *__restrict self,
+                  /*inherit*/ struct candidate *__restrict item) {
+	if (self->cs_cnt >= self->cs_alc) {
+		struct candidate **new_vec;
+		size_t new_alloc = (self->cs_alc << 1) | 1;
+		if (new_alloc < 15)
+			new_alloc = 15;
+		new_vec = (struct candidate **)Dee_TryReallocc(self->cs_vec, new_alloc,
+		                                               sizeof(struct candidate *));
+		if unlikely(!new_vec) {
+			new_alloc = self->cs_cnt + 1;
+			new_vec = (struct candidate **)Dee_Reallocc(self->cs_vec, new_alloc,
+			                                            sizeof(struct candidate *));
+			if unlikely(!new_vec)
+				Dee_Fatalf("OOM");
+		}
+		self->cs_vec = new_vec;
+		self->cs_alc = new_alloc;
+	}
+	ASSERT(self->cs_cnt < self->cs_alc);
+	self->cs_vec[self->cs_cnt++] = item;
+}
+
+static struct candidate *
+candidates_handle_children(struct candidates *__restrict self,
+                           struct candidate *__restrict parent) {
+	size_t value_i;
+	uint8_t op;
+	struct candidate *next;
+	static value_t const values[] = {
+		1, 2, 3, -1, -2, -3, 4, -4 //,5,-5,6,-6,7,-7
+	};
+	enum OP last_op = OP_COUNT;
+	nops_t next_ops = parent->c_nops + 1;
+	size_t next_sizeof = _Dee_MallococBufsize(offsetof(struct candidate, c_ops),
+	                                          next_ops, sizeof(struct candidate_op));
+	if (parent->c_nops)
+		last_op = (enum OP)parent->c_ops[parent->c_nops - 1].co_op;
+	next = (struct candidate *)Dee_Malloc(next_sizeof);
+	if unlikely(!next)
+		Dee_Fatalf("OOM");
+	for (value_i = 0; value_i < COMPILER_LENOF(values); ++value_i) {
+		value_t operand = values[value_i];
+		for (op = 0; op < (unsigned int)OP_COUNT; ++op) {
+			enum status status;
+			if ((op == INV || op == NEG) && operand != 1)
+				continue;
+			if (op == SHR && operand <= 0)
+				continue;
+			if (last_op == (enum OP)op)
+				continue; // Don't repeat ops
+			status = apply_op(parent->c_values, next->c_values, (enum OP)op, operand);
+			if (status == FAILURE)
+				continue;
+			memcpyc(next->c_ops, parent->c_ops, parent->c_nops, sizeof(struct candidate_op));
+			next->c_nops = next_ops;
+			next->c_ops[parent->c_nops].co_op  = (enum OP)op;
+			next->c_ops[parent->c_nops].co_val = operand;
+			if (status == SOLUTION)
+				return next;
+			if (parent->c_nops < 7) { /* Not enough ram after this point... (even getting here takes 41GiB) */
+				candidates_append(self, next);
+				next = (struct candidate *)Dee_Malloc(next_sizeof);
+				if unlikely(!next)
+					Dee_Fatalf("OOM");
+			}
+		}
+	}
+	return NULL;
+}
+
+#include <deemon/file.h>
+
+#define HAVE_find_solution
+static void find_solution(void) {
+	struct candidates old_candidates;
+	struct candidate *candy;
+	struct candidate *solution;
+	DREF DeeObject *fout = DeeFile_GetStd(Dee_STDOUT);
+	candy = (struct candidate *)Dee_Malloc(offsetof(struct candidate, c_ops));
+	if unlikely(!candy)
+		Dee_Fatalf("OOM");
+	candy->c_nops = 0;
+	memcpyc(candy->c_values, in, N_VALUES, sizeof(value_t));
+	old_candidates.cs_alc = 1;
+	old_candidates.cs_cnt = 1;
+	old_candidates.cs_vec = (struct candidate **)Dee_Mallocc(1, sizeof(struct candidate *));
+	if unlikely(!old_candidates.cs_vec)
+		Dee_Fatalf("OOM");
+	old_candidates.cs_vec[0] = candy;
+	for (;;) {
+		size_t i;
+		struct candidates new_candidates;
+		new_candidates.cs_alc = 0;
+		new_candidates.cs_cnt = 0;
+		new_candidates.cs_vec = NULL;
+		DeeFile_Printf(fout, "DEPTH: %d\n", old_candidates.cs_vec[0]->c_nops);
+		for (i = 0; i < old_candidates.cs_cnt; ++i) {
+			candy = old_candidates.cs_vec[i];
+			solution = candidates_handle_children(&new_candidates, candy);
+			Dee_Free(candy);
+			if (solution)
+				goto got_solution;
+		}
+		Dee_Free(old_candidates.cs_vec);
+		old_candidates = new_candidates;
+	}
+	{
+		unsigned int i;
+got_solution:
+		for (i = 0; i < solution->c_nops; ++i) {
+			struct candidate_op *op = &solution->c_ops[i];
+			DeeFile_Printf(fout, "%s %d\n", opname((enum OP)op->co_op), (int)op->co_val);
+		}
+	}
+}
+#endif
 #undef STATIC_ASSERT_HAS_ISERR
 #undef STATIC_ASSERT_HAS_ISYES
 #undef STATIC_ASSERT_HAS_ISNO_
+
+#ifdef HAVE_find_solution /* Move this into "DeeObject_Assign()", then execode deemon code "42 := none" */
+	if (DeeInt_Check(self) && DeeNone_Check(value))
+		find_solution();
+#endif /* HAVE_find_solution */
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorExportedApi from "..method-hints.method-hints")();]]]*/

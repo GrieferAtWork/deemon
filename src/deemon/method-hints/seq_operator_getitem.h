@@ -756,7 +756,7 @@ err:
 	                                 (void *)(uintptr_t)index, index, end_index);
 	ASSERT(foreach_status == -4 || foreach_status == -3 || foreach_status == -2 ||
 	       foreach_status == -1 || foreach_status == 0);
-	return Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(foreach_status);
+	return Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3((int)foreach_status);
 }} = $with__seq_operator_getitem_index;
 
 seq_operator_bounditem_index = {
