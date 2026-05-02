@@ -1111,13 +1111,13 @@ bytes_reversed(Bytes *self, size_t argc,
 		goto err;
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
-	CLAMP_SUBSTR(&args.start, &args.end, &size, empty);
+	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
-	src += size;
+	src += args.end;
 	do {
 		*dst++ = *--src;
 	} while (--size);

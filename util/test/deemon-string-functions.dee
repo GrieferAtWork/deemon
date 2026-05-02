@@ -1,0 +1,128 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import .common.test;
+
+#define TEST1(expected, actual, ...) \
+	test.assertEquals(expected, actual.__VA_ARGS__); \
+	test.assertEquals(expected.bytes(), actual.bytes().__VA_ARGS__)
+#define TEST2(expected, actual, ...) test.assertEquals(expected, actual.__VA_ARGS__)
+#define TEST4(expected, actual, ...) test.assertEquals(expected, actual.__VA_ARGS__)
+
+/* reversed */
+TEST1("a\U000000FFbcdef", "fedcb\U000000FFa", reversed());
+TEST2("a\U0000FFFFbcdef", "fedcb\U0000FFFFa", reversed());
+TEST4("a\UFFFFFFFFbcdef", "fedcb\UFFFFFFFFa", reversed());
+
+TEST1("", "fedcb\U000000FFa", reversed(0, 0));
+TEST2("", "fedcb\U0000FFFFa", reversed(0, 0));
+TEST4("", "fedcb\UFFFFFFFFa", reversed(0, 0));
+
+TEST1("f", "fedcb\U000000FFa", reversed(0, 1));
+TEST2("f", "fedcb\U0000FFFFa", reversed(0, 1));
+TEST4("f", "fedcb\UFFFFFFFFa", reversed(0, 1));
+
+TEST1("\U000000FF", "fedcb\U000000FFa", reversed(5, 6));
+TEST2("\U0000FFFF", "fedcb\U0000FFFFa", reversed(5, 6));
+TEST4("\UFFFFFFFF", "fedcb\UFFFFFFFFa", reversed(5, 6));
+
+/* expandtabs */
+TEST1("a   b\na\U000000FFc d", "a\tb\na\U000000FFc\td", expandtabs(4));
+TEST2("a   b\na\U0000FFFFc d", "a\tb\na\U0000FFFFc\td", expandtabs(4));
+TEST4("a   b\na\UFFFFFFFFc d", "a\tb\na\UFFFFFFFFc\td", expandtabs(4));
+
+/* unifylines */
+TEST1("a\nb\n\U000000FF\nd", "a\nb\r\U000000FF\r\nd", unifylines());
+TEST2("a\nb\n\U0000FFFF\nd", "a\nb\r\U0000FFFF\r\nd", unifylines());
+TEST4("a\nb\n\UFFFFFFFF\nd", "a\nb\r\UFFFFFFFF\r\nd", unifylines());
+
+TEST1("a<br>b<br>\U000000FF<br>d", "a\nb\r\U000000FF\r\nd", unifylines("<br>"));
+TEST2("a<br>b<br>\U0000FFFF<br>d", "a\nb\r\U0000FFFF\r\nd", unifylines("<br>"));
+TEST4("a<br>b<br>\UFFFFFFFF<br>d", "a\nb\r\UFFFFFFFF\r\nd", unifylines("<br>"));
+
+/* indent */
+TEST1("a\nb\r\U000000FF\r\nd", "a\nb\r\U000000FF\r\nd", indent(""));
+TEST1("", "", indent("HEAD"));
+TEST1("HEADa\nHEADb\rHEAD\U000000FF\r\nHEADd", "a\nb\r\U000000FF\r\nd", indent("HEAD"));
+TEST2("HEADa\nHEADb\rHEAD\U0000FFFF\r\nHEADd", "a\nb\r\U0000FFFF\r\nd", indent("HEAD"));
+TEST4("HEADa\nHEADb\rHEAD\UFFFFFFFF\r\nHEADd", "a\nb\r\UFFFFFFFF\r\nd", indent("HEAD"));
+
+
+/* dedent */
+TEST1("a\nb\r\U000000FF\r\nd", "HEADa\nHEADb\rHEAD\U000000FF\r\nHEADd", dedent(999, "HEAD"));
+TEST2("a\nb\r\U0000FFFF\r\nd", "HEADa\nHEADb\rHEAD\U0000FFFF\r\nHEADd", dedent(999, "HEAD"));
+TEST4("a\nb\r\UFFFFFFFF\r\nd", "HEADa\nHEADb\rHEAD\UFFFFFFFF\r\nHEADd", dedent(999, "HEAD"));
+
+TEST1("Da\nDb\rD\U000000FF\r\nDd", "HEADa\nHEADb\rHEAD\U000000FF\r\nHEADd", dedent(3, "HEAD"));
+TEST2("Da\nDb\rD\U0000FFFF\r\nDd", "HEADa\nHEADb\rHEAD\U0000FFFF\r\nHEADd", dedent(3, "HEAD"));
+TEST4("Da\nDb\rD\UFFFFFFFF\r\nDd", "HEADa\nHEADb\rHEAD\UFFFFFFFF\r\nHEADd", dedent(3, "HEAD"));
+
+TEST1("a\nb\r\U000000FF\r\nd", "    a\n    b\r    \U000000FF\r\n    d", dedent(999));
+TEST2("a\nb\r\U0000FFFF\r\nd", "    a\n    b\r    \U0000FFFF\r\n    d", dedent(999));
+TEST4("a\nb\r\UFFFFFFFF\r\nd", "    a\n    b\r    \UFFFFFFFF\r\n    d", dedent(999));
+
+TEST1("a\nb\r\U000000FF\r\nd", "    a\n    b\r    \U000000FF\r\n    d", dedent(4));
+TEST2("a\nb\r\U0000FFFF\r\nd", "    a\n    b\r    \U0000FFFF\r\n    d", dedent(4));
+TEST4("a\nb\r\UFFFFFFFF\r\nd", "    a\n    b\r    \UFFFFFFFF\r\n    d", dedent(4));
+
+TEST1(" a\n b\r \U000000FF\r\n d", "    a\n    b\r    \U000000FF\r\n    d", dedent(3));
+TEST2(" a\n b\r \U0000FFFF\r\n d", "    a\n    b\r    \U0000FFFF\r\n    d", dedent(3));
+TEST4(" a\n b\r \UFFFFFFFF\r\n d", "    a\n    b\r    \UFFFFFFFF\r\n    d", dedent(3));
+
+
+/* replace */
+TEST1("XaX\tb\nXaX\U000000FFc\td", "a\tb\na\U000000FFc\td", replace("a", "XaX"));
+TEST2("XaX\tb\nXaX\U0000FFFFc\td", "a\tb\na\U0000FFFFc\td", replace("a", "XaX"));
+TEST4("XaX\tb\nXaX\UFFFFFFFFc\td", "a\tb\na\UFFFFFFFFc\td", replace("a", "XaX"));
+
+TEST1("XaX\tb\na\U000000FFc\td", "a\tb\na\U000000FFc\td", replace("a", "XaX", 1));
+TEST2("XaX\tb\na\U0000FFFFc\td", "a\tb\na\U0000FFFFc\td", replace("a", "XaX", 1));
+TEST4("XaX\tb\na\UFFFFFFFFc\td", "a\tb\na\UFFFFFFFFc\td", replace("a", "XaX", 1));
+
+TEST1("a\tb\na\U000000FFc\td", "a\tb\na\U000000FFc\td", replace("", "XaX"));
+TEST2("a\tb\na\U0000FFFFc\td", "a\tb\na\U0000FFFFc\td", replace("", "XaX"));
+TEST4("a\tb\na\UFFFFFFFFc\td", "a\tb\na\UFFFFFFFFc\td", replace("", "XaX"));
+
+TEST1("XaX", "", replace("", "XaX"));
+
+TEST1("\U000000FF", "\U000000FF", replace("FF", "XaX"));
+TEST2("\U0000FFFF", "\U0000FFFF", replace("FF", "XaX"));
+TEST4("\UFFFFFFFF", "\UFFFFFFFF", replace("FF", "XaX"));
+
+
+/* casereplace */
+TEST1("XaX\tb\nXaX\U000000FFc\td", "a\tb\nA\U000000FFc\td", casereplace("a", "XaX"));
+TEST2("XaX\tb\nXaX\U0000FFFFc\td", "a\tb\nA\U0000FFFFc\td", casereplace("a", "XaX"));
+TEST4("XaX\tb\nXaX\UFFFFFFFFc\td", "a\tb\nA\UFFFFFFFFc\td", casereplace("a", "XaX"));
+
+TEST1("XaX\tb\nA\U000000FFc\td", "a\tb\nA\U000000FFc\td", casereplace("a", "XaX", 1));
+TEST2("XaX\tb\nA\U0000FFFFc\td", "a\tb\nA\U0000FFFFc\td", casereplace("a", "XaX", 1));
+TEST4("XaX\tb\nA\UFFFFFFFFc\td", "a\tb\nA\UFFFFFFFFc\td", casereplace("a", "XaX", 1));
+
+TEST1("a\tb\na\U000000FFc\td", "a\tb\na\U000000FFc\td", casereplace("", "XaX"));
+TEST2("a\tb\na\U0000FFFFc\td", "a\tb\na\U0000FFFFc\td", casereplace("", "XaX"));
+TEST4("a\tb\na\UFFFFFFFFc\td", "a\tb\na\UFFFFFFFFc\td", casereplace("", "XaX"));
+
+TEST1("XaX", "", casereplace("", "XaX"));
+
+TEST1("\U000000FF", "\U000000FF", casereplace("FF", "XaX"));
+TEST2("\U0000FFFF", "\U0000FFFF", casereplace("FF", "XaX"));
+TEST4("\UFFFFFFFF", "\UFFFFFFFF", casereplace("FF", "XaX"));

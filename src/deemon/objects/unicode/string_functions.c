@@ -189,6 +189,7 @@ DeeString_Reversed(String *__restrict self,
 		if unlikely(!result)
 			goto err;
 		dst = (uint8_t *)DeeString_STR(result);
+		my_str += begin;
 		do {
 			--flip_size;
 			*(uint8_t *)dst = ((uint8_t *)my_str)[flip_size];
@@ -202,6 +203,7 @@ DeeString_Reversed(String *__restrict self,
 		if unlikely(!buf)
 			goto err;
 		dst = (uint8_t *)buf;
+		my_str += begin * 2;
 		do {
 			--flip_size;
 			*(uint16_t *)dst = ((uint16_t *)my_str)[flip_size];
@@ -216,6 +218,7 @@ DeeString_Reversed(String *__restrict self,
 		if unlikely(!buf)
 			goto err;
 		dst = (uint8_t *)buf;
+		my_str += begin * 4;
 		do {
 			--flip_size;
 			*(uint32_t *)dst = ((uint32_t *)my_str)[flip_size];
@@ -680,10 +683,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
 DeeString_Indent(String *self, String *filler) {
 	/* Simple case: if the filler, or self-string are
 	 *              empty, nothing would get inserted! */
-	if unlikely(DeeString_IsEmpty(filler))
+	if unlikely(DeeString_IsEmpty(self) || DeeString_IsEmpty(filler))
 		return_reference_(self);
-	if unlikely(DeeString_IsEmpty(self))
-		return_reference_(filler);
 	{
 		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		union Dee_charptr_const flush_start, iter, end;
@@ -1259,9 +1260,9 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp8 = ptr.cp8 + findlen;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp8 = ptr.cp8 + findlen;
 			}
 			/* If we never found `find', our printer will still be empty.
 			 * >> In that case we don't need to write the entire string to it,
@@ -1293,9 +1294,9 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp16 = ptr.cp16 + findlen;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp16 = ptr.cp16 + findlen;
 			}
 			if (Dee_UNICODE_PRINTER_ISEMPTY(&p) && begin.cp16 == mystr.cp16)
 				goto retself;
@@ -1323,9 +1324,9 @@ string_replace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp32 = ptr.cp32 + findlen;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp32 = ptr.cp32 + findlen;
 			}
 			if (Dee_UNICODE_PRINTER_ISEMPTY(&p) && begin.cp32 == mystr.cp32)
 				goto retself;
@@ -1395,9 +1396,9 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp8 = ptr.cp8 + match_length;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp8 = ptr.cp8 + match_length;
 			}
 			/* If we never found `find', our printer will still be empty.
 			 * >> In that case we don't need to write the entire string to it,
@@ -1430,9 +1431,9 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp16 = ptr.cp16 + match_length;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp16 = ptr.cp16 + match_length;
 			}
 			if (Dee_UNICODE_PRINTER_ISEMPTY(&p) && begin.cp16 == mystr.cp16)
 				goto retself;
@@ -1461,9 +1462,9 @@ string_casereplace(String *__restrict self, size_t argc,
 					goto err_printer;
 				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
+				begin.cp32 = ptr.cp32 + match_length;
 				if unlikely(!--args.max_)
 					break;
-				begin.cp32 = ptr.cp32 + match_length;
 			}
 			if (Dee_UNICODE_PRINTER_ISEMPTY(&p) && begin.cp32 == mystr.cp32)
 				goto retself;
@@ -1544,7 +1545,7 @@ err:
 			if unlikely(DeeObject_AsSize(argv[0], &start))             \
 				goto err_maybe_overflow;                               \
 			if unlikely(start >= DeeString_WLEN(self)) {               \
-				DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), start,    \
+				DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), start,   \
 				                          DeeString_WLEN(self));       \
 				goto err;                                              \
 			}                                                          \
