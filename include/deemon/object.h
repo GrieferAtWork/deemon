@@ -61,7 +61,7 @@
 
 #include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
 #include <hybrid/host.h>     /* __i386__, __x86_64__ */
-#include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__ */
+#include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_BIT__, __CHAR_UNSIGNED__, __SIZEOF_*__ */
 
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_[u]int128_t, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
 #include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */

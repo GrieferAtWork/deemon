@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h> /* DREF, DeeObject, DeeObject_BoolInherited, DeeObject_TryCompareEq, Dee_COMPARE_INTO_eM1_eq1_neM2, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_ssize_t, ITER_DONE */
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_BoolInherited, DeeObject_TryCompareEq, Dee_COMPARE_INTO_eM1_eq1_neM2, Dee_Decref, Dee_HAS_ISERR, Dee_HAS_ISNO_OR_ERR, Dee_ssize_t, ITER_DONE */
 
 #include "default-compare.h"
 

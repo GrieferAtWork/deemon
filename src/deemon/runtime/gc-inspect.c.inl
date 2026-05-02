@@ -28,11 +28,11 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
-#include <deemon/bool.h>               /* return_false, return_true */
+#include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/gc.h>                 /* DeeGC_*, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/object.h>             /* DeeObject_*, Dee_Decref*, Dee_Incref, Dee_XDecrefv_unlikely, return_reference */
+#include <deemon/object.h>             /* DeeObject_*, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_XDecrefv_unlikely, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */

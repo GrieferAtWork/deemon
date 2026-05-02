@@ -35,7 +35,7 @@
 #include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_TRACK, DeeGC_Track */
 #include <deemon/int.h>             /* DeeInt_Check, DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_Incref_n, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref*, Dee_XIncref, Dee_XMovrefv, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_OR_ERR, Dee_Incref, Dee_Incref_n, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref*, Dee_XIncref, Dee_XMovrefv, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzeroc, memcpyc */

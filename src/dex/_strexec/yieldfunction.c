@@ -32,7 +32,7 @@
 #include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/none.h>            /* DeeNone_Check */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_Incref, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_*, Dee_Incref, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeRefVector_NewReadonly, DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcpy* */
