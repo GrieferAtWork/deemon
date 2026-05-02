@@ -969,9 +969,9 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed < key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed > key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
@@ -988,9 +988,9 @@ err:
 }
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed != key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
@@ -1007,9 +1007,9 @@ err:
 }
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed != key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,

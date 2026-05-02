@@ -1525,16 +1525,16 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGrAsBool)(DeeObject *sel
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *self, DeeObject *some_object);
 
 
-/* @return: == -1: `lhs < rhs'
- * @return: == 0:  `lhs == rhs'
- * @return: == 1:  `lhs > rhs'
+/* @return: == Dee_COMPARE_LO: `lhs < rhs'
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs'
+ * @return: == Dee_COMPARE_GR: `lhs > rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
-/* @return: == -1: `lhs != rhs'
- * @return: == 0:  `lhs == rhs'
- * @return: == 1:  `lhs != rhs'
+/* @return: == Dee_COMPARE_LO: `lhs != rhs'
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs'
+ * @return: == Dee_COMPARE_GR: `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareEq)(DeeObject *lhs, DeeObject *rhs);
@@ -1546,35 +1546,35 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
  * - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
  * - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
  * - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
- * @return: == -1: `lhs != rhs'
- * @return: == 0:  `lhs == rhs'
- * @return: == 1:  `lhs != rhs'
+ * @return: == Dee_COMPARE_LO: `lhs != rhs'
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs'
+ * @return: == Dee_COMPARE_GR: `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCompareEq)(DeeObject *lhs, DeeObject *rhs);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed < key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed > key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, DeeObject *key);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed != key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
                                DeeObject *rhs, DeeObject *key);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == -1: `lhs_keyed != key(rhs)'
- * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
@@ -1635,9 +1635,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  * @return: < 0:  Dee_HAS_ERR: Error
  * @return: == 0: Dee_HAS_NO : No (item/attr does not exist)
  * @return: > 0:  Dee_HAS_YES: Yes (item/attr does exist) */
-#define Dee_HAS_ERR (-1)
-#define Dee_HAS_NO  0
-#define Dee_HAS_YES 1
+#define Dee_HAS_ERR (-1) /* In doc-strings: actually means any negative value: "< 0" */
+#define Dee_HAS_NO  0    /* In doc-strings: means 0 exactly:                   "== 0" */
+#define Dee_HAS_YES 1    /* In doc-strings: actually means any positive value: "> 0" */
 
 /* Helper methods for testing return values of `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
 #define Dee_HAS_ISERR(x) unlikely((x) < 0)
@@ -1832,14 +1832,14 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  * ==0  +/-1
  * >0   0 */
 #define Dee_COMPARE_EQ_FROMHAS(is_equal_or_err) \
-	(-(+((is_equal_or_err) < 0) << 1) + +((is_equal_or_err) == 0))
+	(+((is_equal_or_err) == 0) - (+((is_equal_or_err) < 0) << 1))
 
 /* IN   OUT
  * <0   -2
  * ==0  0
  * >0   +/-1 */
 #define Dee_COMPARE_NE_FROMHAS(is_not_equal_or_err) \
-	(-(+((is_not_equal_or_err) < 0) << 1) + +((is_not_equal_or_err) > 0))
+	(+((is_not_equal_or_err) > 0) - (+((is_not_equal_or_err) < 0) << 1))
 #else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 */
 #define Dee_COMPARE_EQ_FROMHAS(is_equal_or_err) \
 	(Dee_HAS_ISERR(is_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_EQ_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_equal_or_err)))
@@ -2046,10 +2046,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
- * @return: == 0: Item doesn't exist
- * @return: > 0:  Item exists
- * @return: < 0:  An error was thrown
- * HINT: Use `Dee_HAS_IS*' to test return value */
+ * @return: Dee_HAS_YES: Item exists
+ * @return: Dee_HAS_NO:  Item doesn't exist
+ * @return: Dee_HAS_ERR: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);

@@ -648,37 +648,38 @@ struct Dee_type_cmp {
 	WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *tp_hash)(DeeObject *__restrict self);
 
 	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
-	 * @return: Dee_COMPARE_ERR: An error occurred.
-	 * @return: -1: `lhs != rhs'
-	 * @return: 0:  `lhs == rhs'
-	 * @return: 1:  `lhs != rhs' */
+	 * @return: Dee_COMPARE_LO: `lhs != rhs'
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
+	 * @return: Dee_COMPARE_GR: `lhs != rhs'
+	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare_eq)(DeeObject *self, DeeObject *some_object);
 
 	/* Rich-compare operator that can be defined instead
 	 * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
-	 * @return: Dee_COMPARE_ERR: An error occurred.
-	 * @return: -1: `lhs < rhs'
-	 * @return: 0:  `lhs == rhs'
-	 * @return: 1:  `lhs > rhs' */
+	 * @return: Dee_COMPARE_LO: `lhs < rhs'
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
+	 * @return: Dee_COMPARE_GR: `lhs > rhs'
+	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
 
 	/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented', `TypeError' or `ValueError'.
 	 * Instead of throwing these errors, this implementation should handle these errors by returning
-	 * either `-1' or `1' to indicate non-equality.
+	 * either `Dee_COMPARE_LO' or `Dee_COMPARE_GR' to indicate non-equality (if you're unsure which
+	 * one to return, you can also just return `Dee_COMPARE_NE' instead).
 	 *
 	 * [1] With "shouldn't" I mean *REALLY* shouldn't. As in: unless you *really* want it to throw
 	 *     one of those errors, you should either use API functions that never throw these errors,
 	 *     or add `DeeError_Catch()' calls to your function to catch those errors by returning either
-	 *     `-1' or `1' instead.
+	 *     `Dee_COMPARE_LO' or `Dee_COMPARE_GR' instead.
 	 *
 	 * !!! THIS OPERATOR CANNOT BE USED TO SUBSTITUTE "tp_compare_eq" !!!
 	 * -> Defining this operator but not defining "tp_compare_eq" is !NOT VALID!
 	 *    However, "tp_trycompare_eq" can ITSELF be substituted by "tp_compare_eq"
 	 *
-	 * @return: Dee_COMPARE_ERR: An error occurred.
-	 * @return: -1: `lhs != rhs'
-	 * @return: 0:  `lhs == rhs'
-	 * @return: 1:  `lhs != rhs' */
+	 * @return: Dee_COMPARE_LO: `lhs != rhs'
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
+	 * @return: Dee_COMPARE_GR: `lhs != rhs'
+	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_trycompare_eq)(DeeObject *self, DeeObject *some_object);
 
 	/* Individual compare operators. */
@@ -724,12 +725,13 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem)(DeeObject *self, DeeObject *index);
 
 	/* Check if a given item exists (`deemon.hasitem(self, index)') (inherited alongside `tp_getitem')
-	 * @return: >  0: Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
-	 * @return: == 0: Doesn't exist. (in `tp_getitem': `KeyError')
-	 * @return: <  0: Error. */
+	 * @return: Dee_HAS_YES: Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
+	 * @return: Dee_HAS_NO:  Doesn't exist. (in `tp_getitem': `KeyError')
+	 * @return: Dee_HAS_ERR: Error. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
 
-	/* Aliases for `tp_sizeob' */
+	/* Aliases for `tp_sizeob' that returns the size in its native form.
+	 * @return: (size_t)-1: Error */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size)(DeeObject *__restrict self);
 
 	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions.
@@ -1245,6 +1247,7 @@ struct Dee_type_iterator {
 	 * @return: 0 : Success
 	 * @return: 1 : Iterator has been exhausted
 	 * @return: -1: Error */
+	/* TODO: Change this API to use Dee_HAS_* instead (though this will flip the meaning of 0/1) */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
 
 	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
@@ -1361,9 +1364,9 @@ struct Dee_type_attr {
 	                     struct Dee_attrdesc *__restrict result);
 
 	/* [0..1] Like `tp_getattr', but handles attribute errors:
-	 * @return: >  0: Attribute exists.
-	 * @return: == 0: Attribute doesn't exist.
-	 * @return: <  0: An error occurred. .*/
+	 * @return: Dee_HAS_YES: Attribute exists.
+	 * @return: Dee_HAS_NO:  Attribute doesn't exist.
+	 * @return: Dee_HAS_ERR: An error occurred. .*/
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr)(DeeObject *self, /*String*/ DeeObject *attr);
 
 	/* [0..1] Like `tp_getattr', but handles attribute errors:
@@ -2922,9 +2925,10 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOper
 
 
 /* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
- * @return: -1 / ---   / NULL:          Error.
- * @return:  0 / true  / * :            OK.
- * @return:  1 / false / Dee_ITER_DONE: Not found. */
+ * @return: Dee_BOUND_ERR     / ---   / NULL:          Error.
+ * @return: Dee_BOUND_YES     / true  / * :            OK.
+ * @return: Dee_BOUND_NO      / ---   / NULL:          Unbound or error.
+ * @return: Dee_BOUND_MISSING / false / Dee_ITER_DONE: Not found. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) ATTR_INS(6, 5) DREF DeeObject *DCALL DeeObject_TGenericCallAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);

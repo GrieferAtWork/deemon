@@ -638,16 +638,16 @@ got_solution:
 			DeeFile_Printf(fout, "%s %d\n", opname((enum OP)op->co_op), (int)op->co_val);
 		}
 	}
+#ifdef HAVE_find_solution /* Move this into "DeeObject_Assign()", then execode deemon code "42 := none" */
+	if (DeeInt_Check(self) && DeeNone_Check(value))
+		find_solution();
+#endif /* HAVE_find_solution */
 }
 #endif
 #undef STATIC_ASSERT_HAS_ISERR
 #undef STATIC_ASSERT_HAS_ISYES
 #undef STATIC_ASSERT_HAS_ISNO_
 
-#ifdef HAVE_find_solution /* Move this into "DeeObject_Assign()", then execode deemon code "42 := none" */
-	if (DeeInt_Check(self) && DeeNone_Check(value))
-		find_solution();
-#endif /* HAVE_find_solution */
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorExportedApi from "..method-hints.method-hints")();]]]*/
