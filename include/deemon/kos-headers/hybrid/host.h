@@ -345,6 +345,31 @@
 
 
 
+
+/* Behavior of signed shift operations (`(-1 >> 1) == ???')
+ *
+ * The exact result of such an operation is arch-specific, but
+ * for our purpose, we narrow down the range of  possibilities
+ * to one of 3 options:
+ *   #1: (-1 >> 1) == -1                --> Signed divide (most significant bit is copied)
+ *   #2: (-1 >> 1) == 0x7fffffff[...]   --> Unsigned divide (most significant bit is set to `0')
+ *   #3: (-1 >> 1) == ?                 --> Something entirely different.
+ *
+ * For these 3 cases, we define 0 or 1 of 2 macros:
+ *   #1: #define __ARCH_SIGNED_SHIFT_IS_SDIV
+ *   #2: #define __ARCH_SIGNED_SHIFT_IS_UDIV
+ *   #3: Don't define anything.
+ */
+#undef __ARCH_SIGNED_SHIFT_IS_SDIV
+#undef __ARCH_SIGNED_SHIFT_IS_UDIV
+#if (-1 >> 1) == -1
+#define __ARCH_SIGNED_SHIFT_IS_SDIV
+#elif (-1 >> 1) > 0 /* Any positive value would mean that the sign-bit was set to `0' */
+#define __ARCH_SIGNED_SHIFT_IS_UDIV
+#endif
+
+
+
 /* The `va_list' structure  is simply  a pointer into  the argument  list,
  * where arguments can be indexed by alignment of at least sizeof(void *).
  * This allows one to do the following:

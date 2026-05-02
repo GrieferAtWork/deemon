@@ -420,7 +420,7 @@ findSolution({
 
 #if 0 /* C-version of the above (because finding certain solutions took too long before I noticed a bug) */
 typedef int8_t value_t;
-static value_t const in[] = { -1, 0, 1, 2 }, out[] = { -1, -4, -2, -3 };
+static value_t const in[] = { -2, -3, -1, 0 }, out[] = { -1,  1,  2, 0 };
 #define N_VALUES COMPILER_LENOF(in)
 #define out_isok(i, value) (out[i] == value)
 

@@ -2016,7 +2016,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *
  * Using these, you can easily count/stop-on the first true/false
  * matching element of some sequence. */
-#if Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2
+#if defined(__ARCH_SIGNED_SHIFT_IS_SDIV) && Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2
 #define Dee_BOUND_INTO_eM1_m0_yM2_nM3(v)     (((((v) * -3) ^ 3) - 3) >> 2) /* in[] = { -1, 0, 1, 2 }, out[] = { -1, 0, -2, -3 } */
 #define Dee_BOUND_FROM_eM1_m0_yM2_nM3(v)     (((((v) * -3) ^ 3) - 1) >> 2) /* in[] = { -1, 0, -2, -3 }, out[] = { -1, 0, 1, 2 } */
 #if 1 /* This version returns "0" for "Dee_BOUND_MISSING" */
@@ -2025,10 +2025,10 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_BOUND_INTO_eM1_m0_mM4_yM2_nM3(v) (((((v) & 3) * -3) >> 1) | -4)
 #endif
 #define Dee_BOUND_FROM_eM1_m0_mM4_yM2_nM3(v) ((-((((v) & 3) - 3) ^ 2)) >> 1)
-#define Dee_BOUND_INTO_eM1_m1_y0_nM2(v)      (((((v) + 2) ^ -3) + 3) >> 1)                                /* in[] = { -1, 0, 1, 2 }, out[] = { -1, 1, 0, -2 } */
-#define Dee_BOUND_FROM_eM1_mP_y0_nM2(v)      ((v) > 0 ? Dee_BOUND_MISSING : ((((v) * -3) ^ 3) - 1) >> 1)
+#define Dee_BOUND_INTO_eM1_m1_y0_nM2(v)      (((((v) + 2) ^ -3) + 3) >> 1) /* in[] = { -1, 0, 1, 2 }, out[] = { -1, 1, 0, -2 } */
+#define Dee_BOUND_FROM_eM1_mP_y0_nM2(v)      (((((((v) - 1) & (((v) - 1) >> (sizeof(v) * __CHAR_BIT__ - 1))) * -3) ^ 4) - 3) >> 2) /* in[] = { -2, -1, -3, 0 }, out[] = { -1, 1, 2, 0 } */
+#define Dee_BOUND_FROM_eM1_mP_yM2_n0(v)      ((((((((v) - 1) & (((v) - 1) >> (sizeof(v) * __CHAR_BIT__ - 1))) + 1) ^ -2) * -3) >> 1) ^ 1) /* in[] = { -2, -3, -1, 0 }, out[] = { -1, 1, 2, 0 } */
 #define Dee_BOUND_INTO_eM1_m1_yM2_n0(v)      (((-((v) ^ 1)) >> 1) ^ -2)                                   /* in[] = { -1, 0, 1, 2 }, out[] = { -1, 1, -2, 0 } */
-#define Dee_BOUND_FROM_eM1_mP_yM2_n0(v)      ((v) > 0 ? Dee_BOUND_MISSING : ((((v) ^ -2) * -3) >> 1) ^ 1)
 #else /* Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2 */
 #define Dee_BOUND_INTO_eM1_m0_yM2_nM3(v)     ((v) == Dee_BOUND_ERR ? -1 : (v) == Dee_BOUND_MISSING ? 0 : (v) == Dee_BOUND_YES ? -2 : (/*Dee_ASSERT((v) == Dee_BOUND_NO),*/ -3))
 #define Dee_BOUND_FROM_eM1_m0_yM2_nM3(v)     ((v) == -1 ? Dee_BOUND_ERR : (v) == 0 ? Dee_BOUND_MISSING : (v) == -2 ? Dee_BOUND_YES : (/*Dee_ASSERT((v) == -3),*/ Dee_BOUND_NO))
