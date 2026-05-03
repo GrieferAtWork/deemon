@@ -1,0 +1,171 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from errors;
+import .common.test;
+
+#define TRY(x) (try x catch (e...) e)
+
+function assertTrait(ord: int, trait: string) {
+	local UNRELATED = "\x80";
+	if (trait == "cntrl") {
+		/* U+0080 is a CNTRL character, so need a
+		 * different unrelated char in this trait */
+		UNRELATED = "\xA0";
+	}
+	local chr = string.chr(ord);
+	local chr_x80 = f"{chr}{UNRELATED}";
+	local chr_ffff = f"{chr}\U0000ffff";
+	local chr_ffffffff = f"{chr}\Uffffffff";
+	local x80_chr_ffff = f"{UNRELATED}{chr}\U0000ffff";
+	local x80_chr_ffffffff = f"{UNRELATED}{chr}\Uffffffff";
+	local x80_chr_x80 = f"{UNRELATED}{chr}{UNRELATED}";
+	local istrait = f"is{trait}";
+	local isanytrait = f"isany{trait}";
+	local chr_bytes = chr;
+	local chr_x80_bytes = chr_x80;
+	local x80_chr_x80_bytes = x80_chr_x80;
+
+	if (ord <= 0xff) {
+		chr_bytes = chr.bytes();
+		chr_x80_bytes = chr_x80.bytes();
+		x80_chr_x80_bytes = x80_chr_x80.bytes();
+	}
+
+	/* Test whole-string functionality */
+	assert !UNRELATED.operator . (istrait)();
+	assert !UNRELATED.operator . (isanytrait)();
+	assert chr.operator . (istrait)();
+	assert chr.operator . (isanytrait)();
+	assert chr_bytes.operator . (istrait)();
+	assert chr_bytes.operator . (isanytrait)();
+	assert chr_x80.operator . (isanytrait)();
+	assert chr_x80_bytes.operator . (isanytrait)();
+	assert x80_chr_x80.operator . (isanytrait)();
+	assert x80_chr_x80_bytes.operator . (isanytrait)();
+	assert chr_ffff.operator . (isanytrait)();
+	assert chr_ffffffff.operator . (isanytrait)();
+	assert x80_chr_ffff.operator . (isanytrait)();
+	assert x80_chr_ffffffff.operator . (isanytrait)();
+
+	/* Test character-at functionality */
+	assert chr.operator . (istrait)(0);
+	assert chr_bytes.operator . (istrait)(0);
+	assert TRY(chr.operator . (istrait)(1)) ==
+		IndexError(seq: chr, index: 1, length: 1);
+	assert TRY(chr_bytes.operator . (istrait)(1)) ==
+		IndexError(seq: chr_bytes, index: 1, length: 1);
+	assert chr_ffff.operator . (istrait)(0);
+	assert chr_ffffffff.operator . (isanytrait)(0);
+
+	/* Test characters-in-range functionality */
+	assert chr.operator . (istrait)(0, 1);
+	assert chr_bytes.operator . (istrait)(0, 1);
+	assert chr_ffff.operator . (istrait)(0, 1);
+	assert chr_ffffffff.operator . (istrait)(0, 1);
+
+	assert chr.operator . (istrait)(0, 0);
+	assert chr_bytes.operator . (istrait)(0, 0);
+	assert chr_ffff.operator . (istrait)(0, 0);
+	assert chr_ffffffff.operator . (istrait)(0, 0);
+
+	assert chr.operator . (isanytrait)(0, 1);
+	assert chr_bytes.operator . (isanytrait)(0, 1);
+	assert chr_ffff.operator . (isanytrait)(0, 1);
+	assert chr_ffffffff.operator . (isanytrait)(0, 1);
+
+	assert !chr.operator . (isanytrait)(0, 0);
+	assert !chr_bytes.operator . (isanytrait)(0, 0);
+	assert !chr_ffff.operator . (isanytrait)(0, 0);
+	assert !chr_ffffffff.operator . (isanytrait)(0, 0);
+
+	assert chr_x80.operator . (istrait)(0, 1);
+	assert chr_x80_bytes.operator . (istrait)(0, 1);
+
+	assert chr_x80.operator . (isanytrait)(0, 1);
+	assert chr_x80_bytes.operator . (isanytrait)(0, 1);
+
+	assert !x80_chr_x80.operator . (istrait)(0, 1);
+	assert !x80_chr_x80_bytes.operator . (istrait)(0, 1);
+	assert !x80_chr_ffff.operator . (istrait)(0, 1), f"{repr x80_chr_ffff}.{istrait}(0, 1)";
+	assert !x80_chr_ffffffff.operator . (istrait)(0, 1);
+
+	assert !x80_chr_x80.operator . (isanytrait)(0, 1);
+	assert !x80_chr_x80_bytes.operator . (isanytrait)(0, 1);
+	assert !x80_chr_ffff.operator . (isanytrait)(0, 1);
+	assert !x80_chr_ffffffff.operator . (isanytrait)(0, 1);
+
+	assert x80_chr_x80.operator . (istrait)(1, 2);
+	assert x80_chr_x80_bytes.operator . (istrait)(1, 2);
+	assert x80_chr_ffff.operator . (istrait)(1, 2);
+	assert x80_chr_ffffffff.operator . (istrait)(1, 2);
+
+	assert x80_chr_x80.operator . (isanytrait)(1, 2);
+	assert x80_chr_x80_bytes.operator . (isanytrait)(1, 2);
+	assert x80_chr_ffff.operator . (isanytrait)(1, 2);
+	assert x80_chr_ffffffff.operator . (isanytrait)(1, 2);
+}
+
+
+assertTrait(0x1f, "cntrl");
+assertTrait(0x09, "tab");
+assertTrait(0x09, "cempty");
+assertTrait(0x20, "cempty");
+assertTrait(0x20, "white");
+assertTrait(0x0a, "lf");
+assertTrait(0x0d, "lf");
+assertTrait(0x09, "space");
+assertTrait(0x0a, "space");
+assertTrait(0x20, "space");
+assertTrait(0x61, "lower");
+assertTrait(0x41, "upper");
+assertTrait(0x41, "alpha");
+assertTrait(0x61, "alpha");
+assertTrait(0x30, "digit");
+assertTrait(0x41, "hex");
+assertTrait(0x61, "hex");
+assertTrait(0x41, "xdigit");
+assertTrait(0x61, "xdigit");
+assertTrait(0x41, "alnum");
+assertTrait(0x61, "alnum");
+assertTrait(0x30, "alnum");
+assertTrait(0x21, "punct");
+assertTrait(0x21, "graph");
+assertTrait(0x41, "graph");
+assertTrait(0x61, "graph");
+assertTrait(0x30, "graph");
+assertTrait(0x20, "print");
+assertTrait(0x21, "print");
+assertTrait(0x41, "print");
+assertTrait(0x61, "print");
+assertTrait(0x30, "print");
+assertTrait(0x09, "blank");
+assertTrait(0x20, "blank");
+assertTrait(0x41, "title");
+assertTrait(0x30, "numeric");
+assertTrait(0x41, "symstrt");
+assertTrait(0x41, "symcont");
+assertTrait(0x30, "symcont");
+assertTrait(0x00, "ascii");
+assertTrait(0x7f, "ascii");
+assertTrait(0xaa, "xalpha");
+assertTrait(0x01C5, "xtitle"); /* Never appears in the latin-1 range */
+assertTrait(0xb2, "xnumeric");

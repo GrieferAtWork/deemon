@@ -2272,7 +2272,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr32)(uint32_t ch);
 #define Dee_UNICODE_ISGRAPH    __UNICODE_ISGRAPH
 #define Dee_UNICODE_ISPRINT    __UNICODE_ISPRINT
 #define Dee_UNICODE_ISBLANK    __UNICODE_ISBLANK
-#define Dee_UNICODE_ISTITLE    __UNICODE_ISTITLE
+#define Dee_UNICODE_ISXTITLE   __UNICODE_ISTITLE
 #define Dee_UNICODE_ISXNUMERIC __UNICODE_ISXNUMERIC
 #define Dee_UNICODE_ISNUMERIC  __UNICODE_ISNUMERIC
 #define Dee_UNICODE_ISSYMSTRT  __UNICODE_ISSYMSTRT
@@ -2351,7 +2351,7 @@ typedef uint16_t Dee_uniflag_t;
 #define Dee_UNICODE_ISLOWER  0x0020                                      /* islower: 61-7A */
 #define Dee_UNICODE_ISUPPER  0x0040                                      /* isupper: 41-5A */
 #define Dee_UNICODE_ISXALPHA 0x0080                                      /* <Misc alpha characters> (doesn't appear in ASCII) */
-#define Dee_UNICODE_ISALPHA  (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISTITLE | Dee_UNICODE_ISXALPHA) /* isalpha: 41-5A, 61-7A */
+#define Dee_UNICODE_ISALPHA  (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISXTITLE | Dee_UNICODE_ISXALPHA) /* isalpha: 41-5A, 61-7A */
 #define Dee_UNICODE_ISDIGIT  0x0100                                      /*          30-39 */
 #define Dee_UNICODE_ISHEX    0x0200                                      /*          41-46, 61-66 */
 #define Dee_UNICODE_ISXDIGIT (Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISHEX)   /* isxdigit: 30-39, 41-46, 61-66 */
@@ -2360,8 +2360,9 @@ typedef uint16_t Dee_uniflag_t;
 #define Dee_UNICODE_ISGRAPH  (Dee_UNICODE_ISPUNCT | Dee_UNICODE_ISALNUM | Dee_UNICODE_ISXNUMERIC) /* isgraph: 21-7E */
 #define Dee_UNICODE_ISPRINT  (Dee_UNICODE_ISWHITE | Dee_UNICODE_ISGRAPH) /* isprint: 20-7E */
 #define Dee_UNICODE_ISBLANK  (Dee_UNICODE_ISCTAB | Dee_UNICODE_ISWHITE)  /* isblank: 09, 20 */
+#define Dee_UNICODE_ISTITLE  (Dee_UNICODE_ISUPPER | Dee_UNICODE_ISXTITLE)
 /* Extended unicode flags. */
-#define Dee_UNICODE_ISTITLE    0x0800 /* Is title cased */
+#define Dee_UNICODE_ISXTITLE   0x0800 /* Is title cased */
 #define Dee_UNICODE_ISXNUMERIC 0x1000 /* + all other characters that contain numbers, such as ² */
 #define Dee_UNICODE_ISNUMERIC  (Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISXNUMERIC) /* All numeric characters */
 #define Dee_UNICODE_ISSYMSTRT  0x2000 /* Symbol start character */
@@ -2631,6 +2632,9 @@ DDATDEF char const _DeeAscii_Itoa[101];
 #define DeeUni_IsSymCont(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISSYMCONT)
 #endif /* !DeeUni_IsSymCont */
 #define DeeUni_IsSpaceNoLf(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISEMPTY)
+#define DeeUni_IsXAlpha(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_ISXALPHA)
+#define DeeUni_IsXTitle(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_ISXTITLE)
+#define DeeUni_IsXNumeric(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_ISXNUMERIC)
 
 
 

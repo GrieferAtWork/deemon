@@ -1274,48 +1274,54 @@ err:
 }
 
 
-#define DeeBytes_IsCntrl(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISCNTRL)
-#define DeeBytes_IsTab(self, start, end)     DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISTAB)
-#define DeeBytes_IsCempty(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISEMPTY)
-#define DeeBytes_IsWhite(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISWHITE)
-#define DeeBytes_IsLF(self, start, end)      DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLF)
-#define DeeBytes_IsSpace(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSPACE)
-#define DeeBytes_IsLower(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLOWER)
-#define DeeBytes_IsUpper(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISUPPER)
-#define DeeBytes_IsAlpha(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALPHA)
-#define DeeBytes_IsDigit(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISDIGIT)
-#define DeeBytes_IsHex(self, start, end)     DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISHEX)
-#define DeeBytes_IsXdigit(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
-#define DeeBytes_IsAlnum(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALNUM)
-#define DeeBytes_IsPunct(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPUNCT)
-#define DeeBytes_IsGraph(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISGRAPH)
-#define DeeBytes_IsPrint(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPRINT)
-#define DeeBytes_IsBlank(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISBLANK)
-#define DeeBytes_IsNumeric(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
-#define DeeBytes_IsSymStrt(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
-#define DeeBytes_IsSymCont(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeBytes_IsCntrl(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISCNTRL)
+#define DeeBytes_IsTab(self, start, end)      DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISTAB)
+#define DeeBytes_IsCempty(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISEMPTY)
+#define DeeBytes_IsWhite(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISWHITE)
+#define DeeBytes_IsLF(self, start, end)       DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLF)
+#define DeeBytes_IsSpace(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSPACE)
+#define DeeBytes_IsLower(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLOWER)
+#define DeeBytes_IsUpper(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISUPPER)
+#define DeeBytes_IsAlpha(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALPHA)
+#define DeeBytes_IsDigit(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISDIGIT)
+#define DeeBytes_IsHex(self, start, end)      DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISHEX)
+#define DeeBytes_IsXdigit(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
+#define DeeBytes_IsAlnum(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALNUM)
+#define DeeBytes_IsPunct(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPUNCT)
+#define DeeBytes_IsGraph(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISGRAPH)
+#define DeeBytes_IsPrint(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPRINT)
+#define DeeBytes_IsBlank(self, start, end)    DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISBLANK)
+#define DeeBytes_IsNumeric(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
+#define DeeBytes_IsSymStrt(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
+#define DeeBytes_IsSymCont(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeBytes_IsXAlpha(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXALPHA)
+#define DeeBytes_IsXTitle(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXTITLE)
+#define DeeBytes_IsXNumeric(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXNUMERIC)
 
-#define DeeBytes_IsAnyCntrl(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISCNTRL)
-#define DeeBytes_IsAnyTab(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTAB)
-#define DeeBytes_IsAnyCempty(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISEMPTY)
-#define DeeBytes_IsAnyWhite(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISWHITE)
-#define DeeBytes_IsAnyLF(self, start, end)      DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLF)
-#define DeeBytes_IsAnySpace(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSPACE)
-#define DeeBytes_IsAnyLower(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLOWER)
-#define DeeBytes_IsAnyUpper(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISUPPER)
-#define DeeBytes_IsAnyAlpha(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALPHA)
-#define DeeBytes_IsAnyDigit(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISDIGIT)
-#define DeeBytes_IsAnyHex(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISHEX)
-#define DeeBytes_IsAnyXdigit(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
-#define DeeBytes_IsAnyAlnum(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALNUM)
-#define DeeBytes_IsAnyPunct(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPUNCT)
-#define DeeBytes_IsAnyGraph(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISGRAPH)
-#define DeeBytes_IsAnyPrint(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPRINT)
-#define DeeBytes_IsAnyBlank(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISBLANK)
-#define DeeBytes_IsAnyTitle(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTITLE)
-#define DeeBytes_IsAnyNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
-#define DeeBytes_IsAnySymStrt(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
-#define DeeBytes_IsAnySymCont(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeBytes_IsAnyCntrl(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISCNTRL)
+#define DeeBytes_IsAnyTab(self, start, end)      DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTAB)
+#define DeeBytes_IsAnyCempty(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISEMPTY)
+#define DeeBytes_IsAnyWhite(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISWHITE)
+#define DeeBytes_IsAnyLF(self, start, end)       DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLF)
+#define DeeBytes_IsAnySpace(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSPACE)
+#define DeeBytes_IsAnyLower(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLOWER)
+#define DeeBytes_IsAnyUpper(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISUPPER)
+#define DeeBytes_IsAnyAlpha(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALPHA)
+#define DeeBytes_IsAnyDigit(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISDIGIT)
+#define DeeBytes_IsAnyHex(self, start, end)      DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISHEX)
+#define DeeBytes_IsAnyXdigit(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
+#define DeeBytes_IsAnyAlnum(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALNUM)
+#define DeeBytes_IsAnyPunct(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPUNCT)
+#define DeeBytes_IsAnyGraph(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISGRAPH)
+#define DeeBytes_IsAnyPrint(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPRINT)
+#define DeeBytes_IsAnyBlank(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISBLANK)
+#define DeeBytes_IsAnyTitle(self, start, end)    DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTITLE)
+#define DeeBytes_IsAnyNumeric(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
+#define DeeBytes_IsAnySymStrt(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
+#define DeeBytes_IsAnySymCont(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeBytes_IsAnyXAlpha(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXALPHA)
+#define DeeBytes_IsAnyXTitle(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXTITLE)
+#define DeeBytes_IsAnyXNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXNUMERIC)
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestTrait(Bytes *__restrict self,
@@ -1390,7 +1396,7 @@ DeeBytes_IsAnyAscii(Bytes *__restrict self,
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		if (byte > 0x7f) {
+		if (byte <= 0x7f) {
 			result = true;
 			break;
 		}
@@ -1406,7 +1412,7 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = true;
-	Dee_uniflag_t flags = (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSPACE);
+	Dee_uniflag_t flags = (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISSPACE);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1417,8 +1423,8 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 			result = false;
 			break;
 		}
-		flags = (f & Dee_UNICODE_ISSPACE) ? (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSPACE)
-		                              : (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISSPACE);
+		flags = (f & Dee_UNICODE_ISSPACE) ? (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISSPACE)
+		                                  : (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISSPACE);
 	} while (--size);
 empty:
 	return result;
@@ -1509,6 +1515,9 @@ DEFINE_BYTES_TRAIT(issymstrt, DeeBytes_IsSymStrt, DeeUni_IsSymStrt(ch))
 DEFINE_BYTES_TRAIT(issymcont, DeeBytes_IsSymCont, DeeUni_IsSymCont(ch))
 DEFINE_BYTES_TRAIT(issymbol, DeeBytes_IsSymbol, DeeUni_IsSymStrt(ch))
 DEFINE_BYTES_TRAIT(isascii, DeeBytes_IsAscii, ch <= 0x7f)
+DEFINE_BYTES_TRAIT(isxalpha, DeeBytes_IsXAlpha, DeeUni_IsXAlpha(ch))
+DEFINE_BYTES_TRAIT(isxtitle, DeeBytes_IsXTitle, DeeUni_IsXTitle(ch))
+DEFINE_BYTES_TRAIT(isxnumeric, DeeBytes_IsXNumeric, DeeUni_IsXNumeric(ch))
 DEFINE_ANY_BYTES_TRAIT(isanycntrl, DeeBytes_IsAnyCntrl)
 DEFINE_ANY_BYTES_TRAIT(isanytab, DeeBytes_IsAnyTab)
 DEFINE_ANY_BYTES_TRAIT(isanycempty, DeeBytes_IsAnyCempty)
@@ -1531,6 +1540,9 @@ DEFINE_ANY_BYTES_TRAIT(isanynumeric, DeeBytes_IsAnyNumeric)
 DEFINE_ANY_BYTES_TRAIT(isanysymstrt, DeeBytes_IsAnySymStrt)
 DEFINE_ANY_BYTES_TRAIT(isanysymcont, DeeBytes_IsAnySymCont)
 DEFINE_ANY_BYTES_TRAIT(isanyascii, DeeBytes_IsAnyAscii)
+DEFINE_ANY_BYTES_TRAIT(isanyxalpha, DeeBytes_IsAnyXAlpha)
+DEFINE_ANY_BYTES_TRAIT(isanyxtitle, DeeBytes_IsAnyXTitle)
+DEFINE_ANY_BYTES_TRAIT(isanyxnumeric, DeeBytes_IsAnyXNumeric)
 #undef DEFINE_ANY_BYTES_TRAIT
 #undef DEFINE_BYTES_TRAIT
 
@@ -5858,7 +5870,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "#tIntegerOverflow{The given @index is negative or too large}"    \
 	              doc)
 #define DEFINE_BYTES_TRAIT(name, func, are_xxx) \
-	DEFINE_BYTES_TRAIT_EX(name, func, "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} " are_xxx)
+	DEFINE_BYTES_TRAIT_EX(name, func, "Returns ?t if $this, ${this[index]}, or all latin-1 characters in ${this.substr(start, end)} " are_xxx)
 	DEFINE_BYTES_TRAIT("iscntrl", bytes_iscntrl, "are control characters"),
 	DEFINE_BYTES_TRAIT("istab", bytes_istab, "are tabulator characters (#C{U+0009}, #C{U+000B}, #C{U+000C}, ...)"),
 	DEFINE_BYTES_TRAIT("iscempty", bytes_iscempty, "are tabulator (?#istab) or white-space (?#iswhite) characters (alias for ?#isspacexlf)"),
@@ -5881,6 +5893,11 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	DEFINE_BYTES_TRAIT("issymcont", bytes_issymcont, "can be used to continue a symbol name"),
 	DEFINE_BYTES_TRAIT("isspacexlf", bytes_iscempty, "are space-characters, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#iscempty)"),
 	DEFINE_BYTES_TRAIT("isascii", bytes_isascii, "are ascii-characters, that is have an ordinal value ${<= 0x7f}"),
+	DEFINE_BYTES_TRAIT("isxalpha", bytes_isxalpha, "are alphabetical, but may not be classified as either ?#islower or ?#isupper (automatically included in ?#isalpha)"),
+	DEFINE_BYTES_TRAIT("isxtitle", bytes_isxtitle, "are title-cased, but may not be classified as ?#isupper (automatically included in ?#istitle)"),
+	DEFINE_BYTES_TRAIT("isxnumeric", bytes_isxnumeric, "are numeric, but may not be classified as ?#isdigit (automatically included in ?#isnumeric)"),
+#undef DEFINE_BYTES_TRAIT
+
 	TYPE_METHOD_F("istitle", &bytes_istitle,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "(index:?Dint)->?Dbool\n"
@@ -5907,7 +5924,6 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "(start:?Dint,end:?Dint)->?Dbool\n"
 	              "Returns ?t if $this, or the sub-bytes ${this.substr(start, end)} "
 	              /**/ "is a valid symbol name"),
-#undef DEFINE_BYTES_TRAIT
 
 #define DEFINE_ANY_BYTES_TRAIT_EX(name, func, doc)                                    \
 	TYPE_KWMETHOD_F(name, &func,                                                      \
@@ -5915,7 +5931,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                METHOD_FNOREFESCAPE,                                              \
 	                "(start=!0,end=!-1)->?Dbool\n" doc)
 #define DEFINE_ANY_BYTES_TRAIT(name, func, is_xxx) \
-	DEFINE_ANY_BYTES_TRAIT_EX(name, func, "Returns ?t if any character in ${this.substr(start, end)} " is_xxx)
+	DEFINE_ANY_BYTES_TRAIT_EX(name, func, "Returns ?t if any latin-1 character in ${this.substr(start, end)} " is_xxx)
 	DEFINE_ANY_BYTES_TRAIT("isanycntrl", bytes_isanycntrl, "is a control character"),
 	DEFINE_ANY_BYTES_TRAIT("isanytab", bytes_isanytab, "is a tabulator character (#C{U+0009}, #C{U+000B}, #C{U+000C}, ...)"),
 	DEFINE_ANY_BYTES_TRAIT("isanycempty", bytes_isanycempty, "is a tabulator (?#istab) or white-space (?#iswhite) character (alias for ?#isanyspacexlf)"),
@@ -5938,13 +5954,17 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	DEFINE_ANY_BYTES_TRAIT("isanysymstrt", bytes_isanysymstrt, "can be used to start a symbol name"),
 	DEFINE_ANY_BYTES_TRAIT("isanysymcont", bytes_isanysymcont, "can be used to continue a symbol name"),
 	DEFINE_ANY_BYTES_TRAIT("isanyspacexlf", bytes_isanycempty, "is a space character, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#isanycempty)"),
+	DEFINE_ANY_BYTES_TRAIT("isanyxalpha", bytes_isanyxalpha, "is alphabetical, but may not be classified as either ?#isanylower or ?#isanyupper (automatically included in ?#isanyalpha)"),
+	DEFINE_ANY_BYTES_TRAIT("isanyxtitle", bytes_isanyxtitle, "is title-cased, but may not be classified as ?#isanyupper (automatically included in ?#isanytitle)"),
+	DEFINE_ANY_BYTES_TRAIT("isanyxnumeric", bytes_isanyxnumeric, "is numeric, but may not be classified as ?#isanydigit (automatically included in ?#isanynumeric)"),
+#undef DEFINE_ANY_BYTES_TRAIT
+#undef DEFINE_ANY_BYTES_TRAIT_EX
+
 	TYPE_KWMETHOD_F("isanyascii", &bytes_isanyascii,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(start=!0,end=!-1)->?Dbool\n"
 	                "Returns ?t if any character in ${this.substr(start, end)} is "
 	                /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
-#undef DEFINE_ANY_BYTES_TRAIT
-#undef DEFINE_ANY_BYTES_TRAIT_EX
 
 	TYPE_METHOD_F("asnumeric", &bytes_asdigit,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,

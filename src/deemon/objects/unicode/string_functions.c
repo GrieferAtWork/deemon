@@ -563,6 +563,9 @@ err:
 #define DeeString_IsNumeric(self, start, end)  DeeString_TestTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
 #define DeeString_IsSymStrt(self, start, end)  DeeString_TestTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
 #define DeeString_IsSymCont(self, start, end)  DeeString_TestTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeString_IsXAlpha(self, start, end)   DeeString_TestTrait(self, start, end, Dee_UNICODE_ISXALPHA)
+#define DeeString_IsXTitle(self, start, end)   DeeString_TestTrait(self, start, end, Dee_UNICODE_ISXTITLE)
+#define DeeString_IsXNumeric(self, start, end) DeeString_TestTrait(self, start, end, Dee_UNICODE_ISXNUMERIC)
 
 #define DeeString_IsAnyCntrl(self, start, end)    DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISCNTRL)
 #define DeeString_IsAnyTab(self, start, end)      DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISTAB)
@@ -585,6 +588,9 @@ err:
 #define DeeString_IsAnyNumeric(self, start, end)  DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
 #define DeeString_IsAnySymStrt(self, start, end)  DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
 #define DeeString_IsAnySymCont(self, start, end)  DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
+#define DeeString_IsAnyXAlpha(self, start, end)   DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISXALPHA)
+#define DeeString_IsAnyXTitle(self, start, end)   DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISXTITLE)
+#define DeeString_IsAnyXNumeric(self, start, end) DeeString_TestAnyTrait(self, start, end, Dee_UNICODE_ISXNUMERIC)
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeString_TestTrait(String *__restrict self,
@@ -644,7 +650,7 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsTitle(String *__restrict self,
                   size_t start_index,
                   size_t end_index) {
-	bool was_space = false;
+	bool was_space = true;
 	DeeString_Foreach(self, start_index, end_index, ch, {
 		Dee_uniflag_t f = DeeUni_Flags(ch);
 		if (f & Dee_UNICODE_ISSPACE) {
@@ -652,11 +658,11 @@ DeeString_IsTitle(String *__restrict self,
 		} else if (was_space) {
 			was_space = false;
 			/* Space must be followed by title- or upper-case */
-			if (!(f & (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER)))
+			if (!(f & Dee_UNICODE_ISTITLE))
 				return false;
 		} else {
 			/* Title- or upper-case anywhere else is illegal */
-			if (f & (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER))
+			if (f & Dee_UNICODE_ISTITLE)
 				return false;
 		}
 	});
@@ -1598,6 +1604,9 @@ DEFINE_STRING_TRAIT(issymstrt, DeeString_IsSymStrt, DeeUni_IsSymStrt(ch))
 DEFINE_STRING_TRAIT(issymcont, DeeString_IsSymCont, DeeUni_IsSymCont(ch))
 DEFINE_STRING_TRAIT(issymbol, DeeString_IsSymbol, DeeUni_IsSymStrt(ch))
 DEFINE_STRING_TRAIT(isascii, DeeString_IsAscii, ch <= 0x7f)
+DEFINE_STRING_TRAIT(isxalpha, DeeString_IsXAlpha, DeeUni_IsXAlpha(ch))
+DEFINE_STRING_TRAIT(isxtitle, DeeString_IsXTitle, DeeUni_IsXTitle(ch))
+DEFINE_STRING_TRAIT(isxnumeric, DeeString_IsXNumeric, DeeUni_IsXNumeric(ch))
 DEFINE_ANY_STRING_TRAIT(isanycntrl, DeeString_IsAnyCntrl)
 DEFINE_ANY_STRING_TRAIT(isanytab, DeeString_IsAnyTab)
 DEFINE_ANY_STRING_TRAIT(isanycempty, DeeString_IsAnyCempty)
@@ -1620,6 +1629,9 @@ DEFINE_ANY_STRING_TRAIT(isanynumeric, DeeString_IsAnyNumeric)
 DEFINE_ANY_STRING_TRAIT(isanysymstrt, DeeString_IsAnySymStrt)
 DEFINE_ANY_STRING_TRAIT(isanysymcont, DeeString_IsAnySymCont)
 DEFINE_ANY_STRING_TRAIT(isanyascii, DeeString_IsAnyAscii)
+DEFINE_ANY_STRING_TRAIT(isanyxalpha, DeeString_IsAnyXAlpha)
+DEFINE_ANY_STRING_TRAIT(isanyxtitle, DeeString_IsAnyXTitle)
+DEFINE_ANY_STRING_TRAIT(isanyxnumeric, DeeString_IsAnyXNumeric)
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_STRING_TRAIT
 
@@ -10471,6 +10483,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_STRING_TRAIT("issymcont", string_issymcont, "can be used to continue a symbol name"),
 	DEFINE_STRING_TRAIT("isspacexlf", string_iscempty, "are space-characters, where linefeeds are not considered as spaces (Is-Space-eXcluding-Line-Feed) (alias for ?#iscempty)"),
 	DEFINE_STRING_TRAIT("isascii", string_isascii, "are ascii-characters, that is have an ordinal value ${<= 0x7f}"),
+	DEFINE_STRING_TRAIT("isxalpha", string_isxalpha, "are alphabetical, but may not be classified as either ?#islower or ?#isupper (automatically included in ?#isalpha)"),
+	DEFINE_STRING_TRAIT("isxtitle", string_isxtitle, "are title-cased, but may not be classified as ?#isupper (automatically included in ?#istitle)"),
+	DEFINE_STRING_TRAIT("isxnumeric", string_isxnumeric, "are numeric, but may not be classified as ?#isdigit (automatically included in ?#isnumeric)"),
 #undef DEFINE_STRING_TRAIT
 #undef DEFINE_STRING_TRAIT_EX
 
@@ -10532,6 +10547,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_ANY_STRING_TRAIT("isanysymcont", string_isanysymcont, "can be used to continue a symbol name"),
 	DEFINE_ANY_STRING_TRAIT("isanyspacexlf", string_isanycempty, "is a space character, where linefeeds are not considered as spaces (Is-Space-eXcluding-Line-Feed) (alias for ?#isanycempty)"),
 	DEFINE_ANY_STRING_TRAIT("isanyascii", string_isanyascii, " is an ascii character, that is has an ordinal value ${<= 0x7f}"),
+	DEFINE_ANY_STRING_TRAIT("isanyxalpha", string_isanyxalpha, "is alphabetical, but may not be classified as either ?#isanylower or ?#isanyupper (automatically included in ?#isanyalpha)"),
+	DEFINE_ANY_STRING_TRAIT("isanyxtitle", string_isanyxtitle, "is title-cased, but may not be classified as ?#isanyupper (automatically included in ?#isanytitle)"),
+	DEFINE_ANY_STRING_TRAIT("isanyxnumeric", string_isanyxnumeric, "is numeric, but may not be classified as ?#isanydigit (automatically included in ?#isanynumeric)"),
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_ANY_STRING_TRAIT_EX
 

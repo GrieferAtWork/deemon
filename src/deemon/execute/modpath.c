@@ -6269,7 +6269,7 @@ err_module_not_found(DeeObject *__restrict module_name) {
 #else
 #define IS_VALID_MODULE_CHARACTER(ch)                                      \
 	((DeeUni_Flags(ch) &                                                   \
-	  (Dee_UNICODE_ISALPHA | Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISTITLE | \
+	  (Dee_UNICODE_ISALPHA | Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISXTITLE | \
 	   Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISSYMSTRT | Dee_UNICODE_ISSYMCONT)) ||         \
 	 ((ch) == '-' || (ch) == '=' || (ch) == ',' || (ch) == '(' ||          \
 	  (ch) == ')' || (ch) == '[' || (ch) == ']' || (ch) == '{' ||          \

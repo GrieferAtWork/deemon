@@ -19,11 +19,18 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import * from deemon;
+import * from errors;
 import .common.test;
+
+#define TRY(x) (try x catch (e...) e)
 
 #define TEST1(expected, actual, ...) \
 	test.assertEquals(expected, actual.__VA_ARGS__); \
 	test.assertEquals(expected.bytes(), actual.bytes().__VA_ARGS__)
+#define V_TEST1(expected, actual, ...) \
+	test.assertEquals(expected, actual.__VA_ARGS__); \
+	test.assertEquals(expected, actual.bytes().__VA_ARGS__)
 #define TEST2(expected, actual, ...) test.assertEquals(expected, actual.__VA_ARGS__)
 #define TEST4(expected, actual, ...) test.assertEquals(expected, actual.__VA_ARGS__)
 
@@ -126,3 +133,15 @@ TEST1("XaX", "", casereplace("", "XaX"));
 TEST1("\U000000FF", "\U000000FF", casereplace("FF", "XaX"));
 TEST2("\U0000FFFF", "\U0000FFFF", casereplace("FF", "XaX"));
 TEST4("\UFFFFFFFF", "\UFFFFFFFF", casereplace("FF", "XaX"));
+
+/* ord */
+V_TEST1(0x000000FF, "\U000000FF", ord());
+TEST2(0x0000FFFF, "\U0000FFFF", ord());
+TEST4(0xFFFFFFFF, "\UFFFFFFFF", ord());
+
+V_TEST1(0x000000FF, "a\U000000FFc", ord(1));
+TEST2(0x0000FFFF, "a\U0000FFFFc", ord(1));
+TEST4(0xFFFFFFFF, "a\UFFFFFFFFc", ord(1));
+
+local s = "foo";
+test.assertEquals(TRY(s.ord(6)), IndexError(seq: s, index: 6, length: 3));

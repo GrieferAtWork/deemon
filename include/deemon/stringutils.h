@@ -388,9 +388,11 @@ DFUNDEF NONNULL((1)) void
 		if (_len_ > (iend))                                   \
 			_len_ = (iend);                                   \
 		if ((ibegin) < _len_) {                               \
+			_len_ -= (ibegin);                                \
 			Dee_SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {  \
 			                                                  \
 			Dee_CASE_WIDTH_1BYTE:                             \
+				_str_.cp8 += (ibegin);                        \
 				for (; _len_; --_len_, ++_str_.cp8) {         \
 					uint8_t ch = *_str_.cp8;                  \
 					do __VA_ARGS__ __WHILE0;                  \
@@ -398,6 +400,7 @@ DFUNDEF NONNULL((1)) void
 				break;                                        \
 			                                                  \
 			Dee_CASE_WIDTH_2BYTE:                             \
+				_str_.cp16 += (ibegin);                       \
 				for (; _len_; --_len_, ++_str_.cp16) {        \
 					uint16_t ch = *_str_.cp16;                \
 					do __VA_ARGS__ __WHILE0;                  \
@@ -405,6 +408,7 @@ DFUNDEF NONNULL((1)) void
 				break;                                        \
 			                                                  \
 			Dee_CASE_WIDTH_4BYTE:                             \
+				_str_.cp32 += (ibegin);                       \
 				for (; _len_; --_len_, ++_str_.cp32) {        \
 					uint32_t ch = *_str_.cp32;                \
 					do __VA_ARGS__ __WHILE0;                  \
