@@ -2374,9 +2374,8 @@ typedef uint16_t Dee_uniflag_t;
  * -> Using this, we can greatly optimize unicode database
  *    lookups by checking the size of a character at compile-
  *    time, meaning that when working with 8-bit characters,
- *    no call to `DeeUni_Descriptor()' needs to be assembled.
- * NOTE: Technically, this should be called `DeeLatin1_Flags'... */
-DDATDEF Dee_uniflag_t const _DeeAscii_Flags[256];
+ *    no call to `DeeUni_Descriptor()' needs to be assembled. */
+DDATDEF Dee_uniflag_t const _DeeLatin1_Flags[256];
 
 /* When `ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT', then the associated unicode
  * character has a digit value equal to `ut_digit_idx' (iow: the digit decode step
@@ -2407,74 +2406,34 @@ DFUNDEF NONNULL((2)) size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch, uint32_t buf[Dee_UNICODE_FOLDED_MAX]);
 
 #ifndef __NO_builtin_choose_expr
-#define DeeUni_Flags(ch)                                  \
-	__builtin_choose_expr(sizeof(ch) == 1,                \
-	                      _DeeAscii_Flags[(uint8_t)(ch)], \
-	                      DeeUni_Descriptor(ch)->ut_flags)
+#define DeeUni_Flags(ch) __builtin_choose_expr(sizeof(ch) == 1, _DeeLatin1_Flags[(uint8_t)(ch)], DeeUni_Descriptor(ch)->ut_flags)
 #else /* !__NO_builtin_choose_expr */
-#define DeeUni_Flags(ch)              \
-	(sizeof(ch) == 1                  \
-	 ? _DeeAscii_Flags[(uint8_t)(ch)] \
-	 : DeeUni_Descriptor(ch)->ut_flags)
+#define DeeUni_Flags(ch) (sizeof(ch) == 1 ? _DeeLatin1_Flags[(uint8_t)(ch)] : DeeUni_Descriptor(ch)->ut_flags)
 #endif /* __NO_builtin_choose_expr */
 
-
-
-#define _DeeAscii_IsUpper(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISUPPER)
-#define _DeeAscii_IsLower(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISLOWER)
-#define _DeeAscii_IsDigit(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_ISDIGIT)
-#define _DeeAscii_ToLower(ch) (_DeeAscii_IsUpper(ch) ? (uint8_t)(ch) + 0x20 : (uint8_t)(ch))
-#define _DeeAscii_ToUpper(ch) (_DeeAscii_IsLower(ch) ? (uint8_t)(ch) - 0x20 : (uint8_t)(ch))
-#define _DeeAscii_ToTitle(ch) _DeeAscii_ToUpper(ch)
-
-/* Lookup table for the numerical hex-value of ascii characters.
- * Bytes that can't be used as hex-characters yield some value >= 16. */
-DDATDEF uint8_t const _DeeAscii_HexValue[256];
-#define _DeeAscii_GetNumeric8(ch) _DeeAscii_HexValue[(uint8_t)(ch)]
-
-LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeAscii_SwapCase(uint8_t ch) {
-	if (ch >= 0x41 && ch <= 0x5a)
-		return ch + 0x20;
-	if (ch >= 0x61 && ch <= 0x7a)
-		return ch - 0x20;
-	return ch;
-}
-
-LOCAL WUNUSED ATTR_CONST uint32_t DCALL _DeeUni_SwapCase(uint32_t ch) {
+LOCAL WUNUSED ATTR_CONST uint32_t DCALL DeeUni_SwapCase(uint32_t ch) {
 	struct Dee_unitraits const *record = DeeUni_Descriptor(ch);
 	return (uint32_t)(ch + ((record->ut_flags & Dee_UNICODE_ISUPPER)
 	                        ? record->ut_lower
 	                        : record->ut_upper));
 }
 
-
-
 #define DeeUni_Convert(ch, kind) ((uint32_t)((ch) + *(int32_t *)((uintptr_t)DeeUni_Descriptor(ch) + (kind))))
 #define Dee_UNICODE_CONVERT_LOWER offsetof(struct Dee_unitraits, ut_lower)
 #define Dee_UNICODE_CONVERT_UPPER offsetof(struct Dee_unitraits, ut_upper)
 #define Dee_UNICODE_CONVERT_TITLE offsetof(struct Dee_unitraits, ut_title)
 
-
 /* ctype-style character conversion. */
-#ifndef __NO_builtin_choose_expr
-#define DeeUni_ToLower(ch)  __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeAscii_ToLower(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_lower))
-#define DeeUni_ToUpper(ch)  __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeAscii_ToUpper(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_upper))
-#define DeeUni_ToTitle(ch)  __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeAscii_ToTitle(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_title))
-#define DeeUni_SwapCase(ch) __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeAscii_SwapCase((uint8_t)(ch)), _DeeUni_SwapCase(ch))
-#else /* !__NO_builtin_choose_expr */
-#define DeeUni_ToLower(ch)  (sizeof(ch) == 1 ? (uint32_t)_DeeAscii_ToLower(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_lower))
-#define DeeUni_ToUpper(ch)  (sizeof(ch) == 1 ? (uint32_t)_DeeAscii_ToUpper(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_upper))
-#define DeeUni_ToTitle(ch)  (sizeof(ch) == 1 ? (uint32_t)_DeeAscii_ToTitle(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_title))
-#define DeeUni_SwapCase(ch) (sizeof(ch) == 1 ? (uint32_t)_DeeAscii_SwapCase((uint8_t)(ch)) : _DeeUni_SwapCase(ch))
-#endif /* __NO_builtin_choose_expr */
-
+#define DeeUni_ToLower(ch) ((uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_lower))
+#define DeeUni_ToUpper(ch) ((uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_upper))
+#define DeeUni_ToTitle(ch) ((uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_title))
 
 
 /* character-to-decimal conversion. */
 DFUNDEF ATTR_CONST WUNUSED uint8_t (DCALL DeeUni_GetNumericIdx8)(uint8_t digit_idx);
 DFUNDEF ATTR_CONST WUNUSED uint64_t (DCALL DeeUni_GetNumericIdx64)(uint8_t digit_idx);
 DFUNDEF ATTR_CONST WUNUSED double (DCALL DeeUni_GetNumericIdxD)(uint8_t digit_idx);
-LOCAL ATTR_CONST WUNUSED uint8_t (DCALL _DeeUni_GetNumeric8)(uint32_t ch) {
+LOCAL ATTR_CONST WUNUSED uint8_t (DCALL DeeUni_GetNumeric8)(uint32_t ch) {
 	struct Dee_unitraits const *traits = DeeUni_Descriptor(ch);
 #ifndef __OPTIMIZE_SIZE__
 	if likely(traits->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
@@ -2483,7 +2442,7 @@ LOCAL ATTR_CONST WUNUSED uint8_t (DCALL _DeeUni_GetNumeric8)(uint32_t ch) {
 	return DeeUni_GetNumericIdx8(traits->ut_digit_idx);
 }
 
-LOCAL ATTR_CONST WUNUSED uint64_t (DCALL _DeeUni_GetNumeric64)(uint32_t ch) {
+LOCAL ATTR_CONST WUNUSED uint64_t (DCALL DeeUni_GetNumeric64)(uint32_t ch) {
 	struct Dee_unitraits const *traits = DeeUni_Descriptor(ch);
 #ifndef __OPTIMIZE_SIZE__
 	if likely(traits->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
@@ -2492,7 +2451,7 @@ LOCAL ATTR_CONST WUNUSED uint64_t (DCALL _DeeUni_GetNumeric64)(uint32_t ch) {
 	return DeeUni_GetNumericIdx64(traits->ut_digit_idx);
 }
 
-LOCAL ATTR_CONST WUNUSED double (DCALL _DeeUni_GetNumericD)(uint32_t ch) {
+LOCAL ATTR_CONST WUNUSED double (DCALL DeeUni_GetNumericD)(uint32_t ch) {
 	struct Dee_unitraits const *traits = DeeUni_Descriptor(ch);
 #ifndef __OPTIMIZE_SIZE__
 	if likely(traits->ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT)
@@ -2500,17 +2459,6 @@ LOCAL ATTR_CONST WUNUSED double (DCALL _DeeUni_GetNumericD)(uint32_t ch) {
 #endif /* !__OPTIMIZE_SIZE__ */
 	return DeeUni_GetNumericIdxD(traits->ut_digit_idx);
 }
-#define _DeeAscii_GetNumeric64(ch) (uint64_t)_DeeAscii_GetNumeric8(ch)
-#define _DeeAscii_GetNumericD(ch)  (double)_DeeAscii_GetNumeric8(ch)
-#ifndef __NO_builtin_choose_expr
-#define DeeUni_GetNumeric8(ch)  __builtin_choose_expr(sizeof(ch) == 1, _DeeAscii_GetNumeric8(ch), _DeeUni_GetNumeric8(ch))
-#define DeeUni_GetNumeric64(ch) __builtin_choose_expr(sizeof(ch) == 1, _DeeAscii_GetNumeric64(ch), _DeeUni_GetNumeric64(ch))
-#define DeeUni_GetNumericD(ch)  __builtin_choose_expr(sizeof(ch) == 1, _DeeAscii_GetNumericD(ch), _DeeUni_GetNumericD(ch))
-#else /* !__NO_builtin_choose_expr */
-#define DeeUni_GetNumeric8(ch)  (sizeof(ch) == 1 ? _DeeAscii_GetNumeric8(ch) : _DeeUni_GetNumeric8(ch))
-#define DeeUni_GetNumeric64(ch) (sizeof(ch) == 1 ? _DeeAscii_GetNumeric64(ch) : _DeeUni_GetNumeric64(ch))
-#define DeeUni_GetNumericD(ch)  (sizeof(ch) == 1 ? _DeeAscii_GetNumericD(ch) : _DeeUni_GetNumericD(ch))
-#endif /* __NO_builtin_choose_expr */
 
 
 
@@ -2523,18 +2471,7 @@ LOCAL ATTR_CONST WUNUSED double (DCALL _DeeUni_GetNumericD)(uint32_t ch) {
 	((*(p_result) = DeeUni_AsDigitVal(ch)) < (radix))
 
 /* Returns 0xff if `ch' isn't a digit */
-#ifndef __NO_builtin_choose_expr
-#define DeeUni_AsDigitVal(ch)                        \
-	__builtin_choose_expr(sizeof(ch) == 1,           \
-	                      _DeeAscii_GetNumeric8(ch), \
-	                      _DeeUni_FastGetDigit8(ch))
-#else /* !__NO_builtin_choose_expr */
-#define DeeUni_AsDigitVal(ch)    \
-	(sizeof(ch) == 1             \
-	 ? _DeeAscii_GetNumeric8(ch) \
-	 : _DeeUni_FastGetDigit8(ch))
-#endif /* __NO_builtin_choose_expr */
-LOCAL ATTR_CONST WUNUSED uint8_t DCALL _DeeUni_FastGetDigit8(uint32_t ch) {
+LOCAL ATTR_CONST WUNUSED uint8_t DCALL DeeUni_AsDigitVal(uint32_t ch) {
 	struct Dee_unitraits const *traits = DeeUni_Descriptor(ch);
 	if (!(traits->ut_flags & Dee_UNICODE_ISXDIGIT))
 		return 0xff; /* Filter out stuff like `²' */
@@ -2551,21 +2488,10 @@ LOCAL ATTR_CONST WUNUSED uint8_t DCALL _DeeUni_FastGetDigit8(uint32_t ch) {
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 
-DDATDEF char const _DeeAscii_Itoa[101];
-/* >> char DeeAscii_ItoaDigit(bool upper, uint8_t digit); */
-#define DeeAscii_ItoaDigit(upper, digit) \
-	_DeeAscii_Itoa[(digit) + (!!(upper) << 6)]
-#define DeeAscii_ItoaDigits(upper)     (&_DeeAscii_Itoa[(!!(upper) << 6)])
-#define DeeAscii_ItoaLowerDigit(digit) DeeAscii_ItoaDigit(0, digit)
-#define DeeAscii_ItoaUpperDigit(digit) DeeAscii_ItoaDigit(1, digit)
-
-
-
-
-#define DeeUniTrait_AsDigit(traits, radix, p_result) \
-	((*(p_result) = _DeeUniTrait_FastGetDigit(traits)) < (radix))
 #define _DeeUniTrait_FastGetDigit(traits) \
 	((traits)->ut_flags & Dee_UNICODE_ISXDIGIT ? (traits)->ut_digit_idx : 0xff)
+#define DeeUniTrait_AsDigit(traits, radix, p_result) \
+	((*(p_result) = _DeeUniTrait_FastGetDigit(traits)) < (radix))
 
 /* ctype-style character traits testing. */
 #ifndef DeeUni_IsCntrl
@@ -2635,6 +2561,68 @@ DDATDEF char const _DeeAscii_Itoa[101];
 #define DeeUni_IsXAlpha(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_ISXALPHA)
 #define DeeUni_IsXTitle(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_ISXTITLE)
 #define DeeUni_IsXNumeric(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_ISXNUMERIC)
+
+
+
+
+/* ASCII-only character traits (that treat bytes 80h-FFh as undefined; `_DeeAscii_Flags[80h-FFh] == 0') */
+DDATDEF Dee_uniflag_t const _DeeAscii_Flags[256];
+
+#define DeeAscii_Flags(ch)       _DeeAscii_Flags[(uint8_t)(ch)]
+#define DeeAscii_IsCntrl(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISCNTRL)
+#define DeeAscii_IsTab(ch)       (DeeAscii_Flags(ch) & Dee_UNICODE_ISTAB)
+#define DeeAscii_IsWhite(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISWHITE)
+#define DeeAscii_IsEmpty(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISEMPTY)
+#define DeeAscii_IsLF(ch)        (DeeAscii_Flags(ch) & Dee_UNICODE_ISLF)
+#define DeeAscii_IsSpace(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISSPACE)
+#define DeeAscii_IsLower(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISLOWER)
+#define DeeAscii_IsUpper(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISUPPER)
+#define DeeAscii_IsAlpha(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISALPHA)
+#define DeeAscii_IsDigit(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISDIGIT)
+#define DeeAscii_IsHex(ch)       (DeeAscii_Flags(ch) & Dee_UNICODE_ISHEX)
+#define DeeAscii_IsXDigit(ch)    (DeeAscii_Flags(ch) & Dee_UNICODE_ISXDIGIT)
+#define DeeAscii_IsAlnum(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISALNUM)
+#define DeeAscii_IsPunct(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISPUNCT)
+#define DeeAscii_IsGraph(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISGRAPH)
+#define DeeAscii_IsPrint(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISPRINT)
+#define DeeAscii_IsBlank(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISBLANK)
+#define DeeAscii_IsTitle(ch)     (DeeAscii_Flags(ch) & Dee_UNICODE_ISTITLE)
+#define DeeAscii_IsNumeric(ch)   (DeeAscii_Flags(ch) & Dee_UNICODE_ISNUMERIC)
+#define DeeAscii_IsSymStrt(ch)   (DeeAscii_Flags(ch) & Dee_UNICODE_ISSYMSTRT)
+#define DeeAscii_IsSymCont(ch)   (DeeAscii_Flags(ch) & Dee_UNICODE_ISSYMCONT)
+#define DeeAscii_IsSpaceNoLf(ch) (DeeAscii_Flags(ch) & Dee_UNICODE_ISEMPTY)
+#define DeeAscii_IsXAlpha(ch)    (DeeAscii_Flags(ch) & Dee_UNICODE_ISXALPHA)
+#define DeeAscii_IsXTitle(ch)    (DeeAscii_Flags(ch) & Dee_UNICODE_ISXTITLE)
+#define DeeAscii_IsXNumeric(ch)  (DeeAscii_Flags(ch) & Dee_UNICODE_ISXNUMERIC)
+#define _DeeAscii_ToLower(ch)    ((uint8_t)((uint8_t)(ch) + 0x20))
+#define _DeeAscii_ToUpper(ch)    ((uint8_t)((uint8_t)(ch) - 0x20))
+#define DeeAscii_ToLower(ch)     (DeeAscii_IsUpper(ch) ? _DeeAscii_ToLower(ch) : (uint8_t)(ch))
+#define DeeAscii_ToUpper(ch)     (DeeAscii_IsLower(ch) ? _DeeAscii_ToUpper(ch) : (uint8_t)(ch))
+#define DeeAscii_ToTitle(ch)     DeeAscii_ToUpper(ch)
+#define DeeAscii_SwapCase(ch)    (DeeAscii_IsLower(ch) ? _DeeAscii_ToUpper(ch) : (DeeAscii_IsUpper(ch) ? _DeeAscii_ToLower(ch) : (uint8_t)(ch)))
+
+/* Lookup table for the numerical hex-value of ascii characters.
+ * Bytes that can't be used as hex-characters yield some value >= 16. */
+DDATDEF uint8_t const _DeeAscii_HexValue[256];
+
+/* Returns 0xff if `ch' isn't a digit */
+#define DeeAscii_AsDigitVal(ch) _DeeAscii_HexValue[(uint8_t)(ch)]
+
+/* Store the digit-value of `ch' in `*p_result' and check if it belongs to `radix'
+ * @return: true:  Success (`*p_result' contains the decimal value of the digit)
+ * @return: false: Error. Either `ch' isn't a digit, or it can't be used in `radix'.
+ *                 In this case, the contents of `*p_result' are undefined. */
+#define DeeAscii_AsDigit(ch, radix, p_result) \
+	((*(p_result) = DeeAscii_AsDigitVal(ch)) < (radix))
+
+DDATDEF char const _DeeAscii_Itoa[101];
+/* >> char DeeAscii_ItoaDigit(bool upper, uint8_t digit); */
+#define DeeAscii_ItoaDigit(upper, digit) \
+	_DeeAscii_Itoa[(digit) + (!!(upper) << 6)]
+#define DeeAscii_ItoaDigits(upper)     (&_DeeAscii_Itoa[(!!(upper) << 6)])
+#define DeeAscii_ItoaLowerDigit(digit) DeeAscii_ItoaDigit(0, digit)
+#define DeeAscii_ItoaUpperDigit(digit) DeeAscii_ItoaDigit(1, digit)
+
 
 
 

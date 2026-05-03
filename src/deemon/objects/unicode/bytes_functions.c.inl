@@ -61,6 +61,90 @@
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintptr_t */
 
+/* Have a compile-time select to choose encoding of bytes:
+ * - ASCII   (with bytes 80h-FFh being undefined)
+ * - LATIN-1 (with bytes 80h-FFh mapping to U+0000-U+00FF)
+ */
+#ifdef CONFIG_BYTES_IS_ASCII
+#undef CONFIG_BYTES_IS_LATIN1
+#elif defined(CONFIG_BYTES_IS_LATIN1)
+#undef CONFIG_BYTES_IS_ASCII
+#elif 1
+#define CONFIG_BYTES_IS_ASCII
+#else /* ... */
+#define CONFIG_BYTES_IS_LATIN1 /* TODO: This doesn't work in all cases */
+#endif /* !... */
+
+
+#define DeeBytes_ENC_IsSign(x) DeeUni_IsSign(x)
+#ifdef CONFIG_BYTES_IS_ASCII
+#define DeeBytes_ENC_Flags(ch)                    DeeAscii_Flags(ch)
+#define DeeBytes_ENC_IsCntrl(ch)                  DeeAscii_IsCntrl(ch)
+#define DeeBytes_ENC_IsTab(ch)                    DeeAscii_IsTab(ch)
+#define DeeBytes_ENC_IsWhite(ch)                  DeeAscii_IsWhite(ch)
+#define DeeBytes_ENC_IsEmpty(ch)                  DeeAscii_IsEmpty(ch)
+#define DeeBytes_ENC_IsLF(ch)                     DeeAscii_IsLF(ch)
+#define DeeBytes_ENC_IsSpace(ch)                  DeeAscii_IsSpace(ch)
+#define DeeBytes_ENC_IsLower(ch)                  DeeAscii_IsLower(ch)
+#define DeeBytes_ENC_IsUpper(ch)                  DeeAscii_IsUpper(ch)
+#define DeeBytes_ENC_IsAlpha(ch)                  DeeAscii_IsAlpha(ch)
+#define DeeBytes_ENC_IsDigit(ch)                  DeeAscii_IsDigit(ch)
+#define DeeBytes_ENC_IsHex(ch)                    DeeAscii_IsHex(ch)
+#define DeeBytes_ENC_IsXDigit(ch)                 DeeAscii_IsXDigit(ch)
+#define DeeBytes_ENC_IsAlnum(ch)                  DeeAscii_IsAlnum(ch)
+#define DeeBytes_ENC_IsPunct(ch)                  DeeAscii_IsPunct(ch)
+#define DeeBytes_ENC_IsGraph(ch)                  DeeAscii_IsGraph(ch)
+#define DeeBytes_ENC_IsPrint(ch)                  DeeAscii_IsPrint(ch)
+#define DeeBytes_ENC_IsBlank(ch)                  DeeAscii_IsBlank(ch)
+#define DeeBytes_ENC_IsTitle(ch)                  DeeAscii_IsTitle(ch)
+#define DeeBytes_ENC_IsNumeric(ch)                DeeAscii_IsNumeric(ch)
+#define DeeBytes_ENC_IsSymStrt(ch)                DeeAscii_IsSymStrt(ch)
+#define DeeBytes_ENC_IsSymCont(ch)                DeeAscii_IsSymCont(ch)
+#define DeeBytes_ENC_IsSpaceNoLf(ch)              DeeAscii_IsSpaceNoLf(ch)
+#define DeeBytes_ENC_IsXAlpha(ch)                 DeeAscii_IsXAlpha(ch)
+#define DeeBytes_ENC_IsXTitle(ch)                 DeeAscii_IsXTitle(ch)
+#define DeeBytes_ENC_IsXNumeric(ch)               DeeAscii_IsXNumeric(ch)
+#define DeeBytes_ENC_ToLower(ch)                  DeeAscii_ToLower(ch)
+#define DeeBytes_ENC_ToUpper(ch)                  DeeAscii_ToUpper(ch)
+#define DeeBytes_ENC_ToTitle(ch)                  DeeAscii_ToTitle(ch)
+#define DeeBytes_ENC_SwapCase(ch)                 DeeAscii_SwapCase(ch)
+#define DeeBytes_ENC_AsDigitVal(ch)               DeeAscii_AsDigitVal(ch)
+#define DeeBytes_ENC_AsDigit(ch, radix, p_result) DeeAscii_AsDigit(ch, radix, p_result)
+#else /* CONFIG_BYTES_IS_ASCII */
+#define DeeBytes_ENC_Flags(ch)                    DeeUni_Flags(ch)
+#define DeeBytes_ENC_IsCntrl(ch)                  DeeUni_IsCntrl(ch)
+#define DeeBytes_ENC_IsTab(ch)                    DeeUni_IsTab(ch)
+#define DeeBytes_ENC_IsWhite(ch)                  DeeUni_IsWhite(ch)
+#define DeeBytes_ENC_IsEmpty(ch)                  DeeUni_IsEmpty(ch)
+#define DeeBytes_ENC_IsLF(ch)                     DeeUni_IsLF(ch)
+#define DeeBytes_ENC_IsSpace(ch)                  DeeUni_IsSpace(ch)
+#define DeeBytes_ENC_IsLower(ch)                  DeeUni_IsLower(ch)
+#define DeeBytes_ENC_IsUpper(ch)                  DeeUni_IsUpper(ch)
+#define DeeBytes_ENC_IsAlpha(ch)                  DeeUni_IsAlpha(ch)
+#define DeeBytes_ENC_IsDigit(ch)                  DeeUni_IsDigit(ch)
+#define DeeBytes_ENC_IsHex(ch)                    DeeUni_IsHex(ch)
+#define DeeBytes_ENC_IsXDigit(ch)                 DeeUni_IsXDigit(ch)
+#define DeeBytes_ENC_IsAlnum(ch)                  DeeUni_IsAlnum(ch)
+#define DeeBytes_ENC_IsPunct(ch)                  DeeUni_IsPunct(ch)
+#define DeeBytes_ENC_IsGraph(ch)                  DeeUni_IsGraph(ch)
+#define DeeBytes_ENC_IsPrint(ch)                  DeeUni_IsPrint(ch)
+#define DeeBytes_ENC_IsBlank(ch)                  DeeUni_IsBlank(ch)
+#define DeeBytes_ENC_IsTitle(ch)                  DeeUni_IsTitle(ch)
+#define DeeBytes_ENC_IsNumeric(ch)                DeeUni_IsNumeric(ch)
+#define DeeBytes_ENC_IsSymStrt(ch)                DeeUni_IsSymStrt(ch)
+#define DeeBytes_ENC_IsSymCont(ch)                DeeUni_IsSymCont(ch)
+#define DeeBytes_ENC_IsSpaceNoLf(ch)              DeeUni_IsSpaceNoLf(ch)
+#define DeeBytes_ENC_IsXAlpha(ch)                 DeeUni_IsXAlpha(ch)
+#define DeeBytes_ENC_IsXTitle(ch)                 DeeUni_IsXTitle(ch)
+#define DeeBytes_ENC_IsXNumeric(ch)               DeeUni_IsXNumeric(ch)
+#define DeeBytes_ENC_ToLower(ch)                  ((uint8_t)DeeUni_ToLower(ch))
+#define DeeBytes_ENC_ToUpper(ch)                  ((uint8_t)DeeUni_ToUpper(ch))
+#define DeeBytes_ENC_ToTitle(ch)                  ((uint8_t)DeeUni_ToTitle(ch))
+#define DeeBytes_ENC_SwapCase(ch)                 ((uint8_t)DeeUni_SwapCase(ch))
+#define DeeBytes_ENC_AsDigitVal(ch)               DeeUni_AsDigitVal(ch)
+#define DeeBytes_ENC_AsDigit(ch, radix, p_result) DeeUni_AsDigit(ch, radix, p_result)
+#endif /* !CONFIG_BYTES_IS_ASCII */
+
 DECL_BEGIN
 
 #undef byte_t
@@ -1335,7 +1419,7 @@ DeeBytes_TestTrait(Bytes *__restrict self,
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		if (!(DeeUni_Flags(byte) & flags)) {
+		if (!(DeeBytes_ENC_Flags(byte) & flags)) {
 			result = false;
 			break;
 		}
@@ -1376,7 +1460,7 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		if (DeeUni_Flags(byte) & flags) {
+		if (DeeBytes_ENC_Flags(byte) & flags) {
 			result = true;
 			break;
 		}
@@ -1418,7 +1502,7 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		Dee_uniflag_t f = DeeUni_Flags(byte);
+		Dee_uniflag_t f = DeeBytes_ENC_Flags(byte);
 		if (!(f & flags)) {
 			result = false;
 			break;
@@ -1442,7 +1526,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		if (!(DeeUni_Flags(byte) & flags)) {
+		if (!(DeeBytes_ENC_Flags(byte) & flags)) {
 			result = false;
 			break;
 		}
@@ -1492,32 +1576,32 @@ empty:
 	err:                                                                            \
 		return NULL;                                                                \
 	}
-DEFINE_BYTES_TRAIT(iscntrl, DeeBytes_IsCntrl, DeeUni_IsCntrl(ch))
-DEFINE_BYTES_TRAIT(istab, DeeBytes_IsTab, DeeUni_IsTab(ch))
-DEFINE_BYTES_TRAIT(iscempty, DeeBytes_IsCempty, DeeUni_IsEmpty(ch))
-DEFINE_BYTES_TRAIT(iswhite, DeeBytes_IsWhite, DeeUni_IsWhite(ch))
-DEFINE_BYTES_TRAIT(islf, DeeBytes_IsLF, DeeUni_IsLF(ch))
-DEFINE_BYTES_TRAIT(isspace, DeeBytes_IsSpace, DeeUni_IsSpace(ch))
-DEFINE_BYTES_TRAIT(islower, DeeBytes_IsLower, DeeUni_IsLower(ch))
-DEFINE_BYTES_TRAIT(isupper, DeeBytes_IsUpper, DeeUni_IsUpper(ch))
-DEFINE_BYTES_TRAIT(isalpha, DeeBytes_IsAlpha, DeeUni_IsAlpha(ch))
-DEFINE_BYTES_TRAIT(isdigit, DeeBytes_IsDigit, DeeUni_IsDigit(ch))
-DEFINE_BYTES_TRAIT(ishex, DeeBytes_IsHex, DeeUni_IsHex(ch))
-DEFINE_BYTES_TRAIT(isxdigit, DeeBytes_IsXdigit, DeeUni_IsXDigit(ch))
-DEFINE_BYTES_TRAIT(isalnum, DeeBytes_IsAlnum, DeeUni_IsAlnum(ch))
-DEFINE_BYTES_TRAIT(ispunct, DeeBytes_IsPunct, DeeUni_IsPunct(ch))
-DEFINE_BYTES_TRAIT(isgraph, DeeBytes_IsGraph, DeeUni_IsGraph(ch))
-DEFINE_BYTES_TRAIT(isprint, DeeBytes_IsPrint, DeeUni_IsPrint(ch))
-DEFINE_BYTES_TRAIT(isblank, DeeBytes_IsBlank, DeeUni_IsBlank(ch))
-DEFINE_BYTES_TRAIT(istitle, DeeBytes_IsTitle, DeeUni_IsTitle(ch))
-DEFINE_BYTES_TRAIT(isnumeric, DeeBytes_IsNumeric, DeeUni_IsNumeric(ch))
-DEFINE_BYTES_TRAIT(issymstrt, DeeBytes_IsSymStrt, DeeUni_IsSymStrt(ch))
-DEFINE_BYTES_TRAIT(issymcont, DeeBytes_IsSymCont, DeeUni_IsSymCont(ch))
-DEFINE_BYTES_TRAIT(issymbol, DeeBytes_IsSymbol, DeeUni_IsSymStrt(ch))
+DEFINE_BYTES_TRAIT(iscntrl, DeeBytes_IsCntrl, DeeBytes_ENC_IsCntrl(ch))
+DEFINE_BYTES_TRAIT(istab, DeeBytes_IsTab, DeeBytes_ENC_IsTab(ch))
+DEFINE_BYTES_TRAIT(iscempty, DeeBytes_IsCempty, DeeBytes_ENC_IsEmpty(ch))
+DEFINE_BYTES_TRAIT(iswhite, DeeBytes_IsWhite, DeeBytes_ENC_IsWhite(ch))
+DEFINE_BYTES_TRAIT(islf, DeeBytes_IsLF, DeeBytes_ENC_IsLF(ch))
+DEFINE_BYTES_TRAIT(isspace, DeeBytes_IsSpace, DeeBytes_ENC_IsSpace(ch))
+DEFINE_BYTES_TRAIT(islower, DeeBytes_IsLower, DeeBytes_ENC_IsLower(ch))
+DEFINE_BYTES_TRAIT(isupper, DeeBytes_IsUpper, DeeBytes_ENC_IsUpper(ch))
+DEFINE_BYTES_TRAIT(isalpha, DeeBytes_IsAlpha, DeeBytes_ENC_IsAlpha(ch))
+DEFINE_BYTES_TRAIT(isdigit, DeeBytes_IsDigit, DeeBytes_ENC_IsDigit(ch))
+DEFINE_BYTES_TRAIT(ishex, DeeBytes_IsHex, DeeBytes_ENC_IsHex(ch))
+DEFINE_BYTES_TRAIT(isxdigit, DeeBytes_IsXdigit, DeeBytes_ENC_IsXDigit(ch))
+DEFINE_BYTES_TRAIT(isalnum, DeeBytes_IsAlnum, DeeBytes_ENC_IsAlnum(ch))
+DEFINE_BYTES_TRAIT(ispunct, DeeBytes_IsPunct, DeeBytes_ENC_IsPunct(ch))
+DEFINE_BYTES_TRAIT(isgraph, DeeBytes_IsGraph, DeeBytes_ENC_IsGraph(ch))
+DEFINE_BYTES_TRAIT(isprint, DeeBytes_IsPrint, DeeBytes_ENC_IsPrint(ch))
+DEFINE_BYTES_TRAIT(isblank, DeeBytes_IsBlank, DeeBytes_ENC_IsBlank(ch))
+DEFINE_BYTES_TRAIT(istitle, DeeBytes_IsTitle, DeeBytes_ENC_IsTitle(ch))
+DEFINE_BYTES_TRAIT(isnumeric, DeeBytes_IsNumeric, DeeBytes_ENC_IsNumeric(ch))
+DEFINE_BYTES_TRAIT(issymstrt, DeeBytes_IsSymStrt, DeeBytes_ENC_IsSymStrt(ch))
+DEFINE_BYTES_TRAIT(issymcont, DeeBytes_IsSymCont, DeeBytes_ENC_IsSymCont(ch))
+DEFINE_BYTES_TRAIT(issymbol, DeeBytes_IsSymbol, DeeBytes_ENC_IsSymStrt(ch))
 DEFINE_BYTES_TRAIT(isascii, DeeBytes_IsAscii, ch <= 0x7f)
-DEFINE_BYTES_TRAIT(isxalpha, DeeBytes_IsXAlpha, DeeUni_IsXAlpha(ch))
-DEFINE_BYTES_TRAIT(isxtitle, DeeBytes_IsXTitle, DeeUni_IsXTitle(ch))
-DEFINE_BYTES_TRAIT(isxnumeric, DeeBytes_IsXNumeric, DeeUni_IsXNumeric(ch))
+DEFINE_BYTES_TRAIT(isxalpha, DeeBytes_IsXAlpha, DeeBytes_ENC_IsXAlpha(ch))
+DEFINE_BYTES_TRAIT(isxtitle, DeeBytes_IsXTitle, DeeBytes_ENC_IsXTitle(ch))
+DEFINE_BYTES_TRAIT(isxnumeric, DeeBytes_IsXNumeric, DeeBytes_ENC_IsXNumeric(ch))
 DEFINE_ANY_BYTES_TRAIT(isanycntrl, DeeBytes_IsAnyCntrl)
 DEFINE_ANY_BYTES_TRAIT(isanytab, DeeBytes_IsAnyTab)
 DEFINE_ANY_BYTES_TRAIT(isanycempty, DeeBytes_IsAnyCempty)
@@ -1566,8 +1650,7 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		}
 		ch = DeeBytes_DATA(self)[index];
 	}
-	digit = DeeUni_AsDigitVal(ch);
-	if likely(digit < 10)
+	if likely(DeeBytes_ENC_AsDigit(ch, 10, &digit))
 		return DeeInt_NEWU(digit);
 	if (defl)
 		return_reference_(defl);
@@ -1601,8 +1684,7 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 		}
 		ch = DeeBytes_DATA(self)[index];
 	}
-	digit = DeeUni_AsDigitVal(ch);
-	if likely(digit != 0xff)
+	if likely(DeeBytes_ENC_AsDigit(ch, 16, &digit))
 		return DeeInt_NEWU(digit);
 	if (defl)
 		return_reference_(defl);
@@ -1645,7 +1727,7 @@ bytes_lower(Bytes *self, size_t argc,
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
-		*dst++ = (byte_t)DeeUni_ToLower(byte);
+		*dst++ = DeeBytes_ENC_ToLower(byte);
 	} while (--size);
 	return result;
 empty:
@@ -1683,7 +1765,7 @@ bytes_upper(Bytes *self, size_t argc,
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
-		*dst++ = (byte_t)DeeUni_ToUpper(byte);
+		*dst++ = DeeBytes_ENC_ToUpper(byte);
 	} while (--size);
 	return result;
 empty:
@@ -1723,9 +1805,9 @@ bytes_title(Bytes *self, size_t argc,
 	do {
 		byte_t byte = *src++;
 		*dst++ = kind == Dee_UNICODE_CONVERT_TITLE
-		         ? (byte_t)DeeUni_ToTitle(byte)
-		         : (byte_t)DeeUni_ToLower(byte);
-		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
+		         ? DeeBytes_ENC_ToTitle(byte)
+		         : DeeBytes_ENC_ToLower(byte);
+		kind = DeeBytes_ENC_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 	} while (--size);
 	return result;
 empty:
@@ -1762,10 +1844,10 @@ bytes_capitalize(Bytes *self, size_t argc,
 	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	byte = *src++;
-	*dst++ = (byte_t)DeeUni_ToUpper(byte);
+	*dst++ = DeeBytes_ENC_ToUpper(byte);
 	while (--size) {
 		byte = *src++;
-		*dst++ = (byte_t)DeeUni_ToLower(byte);
+		*dst++ = DeeBytes_ENC_ToLower(byte);
 	}
 	return result;
 empty:
@@ -1803,7 +1885,7 @@ bytes_swapcase(Bytes *self, size_t argc,
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
-		*dst++ = (byte_t)DeeUni_SwapCase(byte);
+		*dst++ = DeeBytes_ENC_SwapCase(byte);
 	} while (--size);
 	return result;
 empty:
@@ -1841,7 +1923,7 @@ bytes_tolower(Bytes *self, size_t argc,
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *iter;
-		*iter = (byte_t)DeeUni_ToLower(byte);
+		*iter = DeeBytes_ENC_ToLower(byte);
 		++iter;
 	} while (--size);
 empty:
@@ -1877,7 +1959,7 @@ bytes_toupper(Bytes *self, size_t argc,
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *iter;
-		*iter = (byte_t)DeeUni_ToUpper(byte);
+		*iter = DeeBytes_ENC_ToUpper(byte);
 		++iter;
 	} while (--size);
 empty:
@@ -1915,9 +1997,9 @@ bytes_totitle(Bytes *self, size_t argc,
 	do {
 		byte_t byte = *iter;
 		*iter = kind == Dee_UNICODE_CONVERT_TITLE
-		        ? (byte_t)DeeUni_ToTitle(byte)
-		        : (byte_t)DeeUni_ToLower(byte);
-		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
+		        ? DeeBytes_ENC_ToTitle(byte)
+		        : DeeBytes_ENC_ToLower(byte);
+		kind = DeeBytes_ENC_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		++iter;
 	} while (--size);
 empty:
@@ -1952,11 +2034,11 @@ bytes_tocapitalize(Bytes *self, size_t argc,
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	byte = *iter;
-	*iter = (byte_t)DeeUni_ToUpper(byte);
+	*iter = DeeBytes_ENC_ToUpper(byte);
 	++iter;
 	while (--size) {
 		byte = *iter;
-		*iter = (byte_t)DeeUni_ToLower(byte);
+		*iter = DeeBytes_ENC_ToLower(byte);
 		++iter;
 	}
 empty:
@@ -1992,7 +2074,7 @@ bytes_toswapcase(Bytes *self, size_t argc,
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *iter;
-		*iter = (byte_t)DeeUni_SwapCase(byte);
+		*iter = DeeBytes_ENC_SwapCase(byte);
 		++iter;
 	} while (--size);
 empty:
@@ -3532,7 +3614,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		src = DeeBytes_DATA(self);
 		src_len    = DeeBytes_SIZE(self);
 		fill_front = (args.width - src_len);
-		while (src_len && DeeUni_IsSign(src[0])) {
+		while (src_len && DeeBytes_ENC_IsSign(src[0])) {
 			*dst++ = *src++;
 			--src_len;
 		}
@@ -3568,9 +3650,9 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 		flush_start = iter;
 		for (; iter < end; ++iter) {
 			byte_t ch = *iter;
-			if (!DeeUni_IsTab(ch)) {
+			if (!DeeBytes_ENC_IsTab(ch)) {
 				++line_inset;
-				if (DeeUni_IsLF(ch))
+				if (DeeBytes_ENC_IsLF(ch))
 					line_inset = 0; /* Reset insets at line starts. */
 				continue;
 			}
@@ -3704,7 +3786,7 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		flush_start = iter;
 		while (iter < end) {
 			byte_t ch = *iter;
-			if (DeeUni_IsLF(ch)) {
+			if (DeeBytes_ENC_IsLF(ch)) {
 				++iter;
 				/* Deal with windows-style linefeeds. */
 				if (ch == ASCII_CR && *iter == ASCII_LF)
@@ -3779,7 +3861,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 			flush_start = iter;
 			while (iter < end) {
 				byte_t ch = *iter;
-				if (DeeUni_IsLF(ch)) {
+				if (DeeBytes_ENC_IsLF(ch)) {
 					++iter;
 					if (ch == UNICODE_CR && *iter == UNICODE_LF)
 						++iter;
@@ -3804,12 +3886,12 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				goto err_printer;
 		} else {
 			/* Remove leading characters. */
-			for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
+			for (i = 0; i < args.max_ && DeeBytes_ENC_IsSpace(*iter); ++i)
 				++iter;
 			flush_start = iter;
 			while (iter < end) {
 				byte_t ch = *iter;
-				if (DeeUni_IsLF(ch)) {
+				if (DeeBytes_ENC_IsLF(ch)) {
 					++iter;
 					if (ch == ASCII_CR && *iter == ASCII_LF)
 						++iter;
@@ -3820,7 +3902,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 						goto err_printer;
 
 					/* Skip up to `args.max_' characters after a linefeed. */
-					for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
+					for (i = 0; i < args.max_ && DeeBytes_ENC_IsSpace(*iter); ++i)
 						++iter;
 					flush_start = iter;
 					continue;
@@ -3897,8 +3979,8 @@ bytes_casecommon(Bytes *self, size_t argc, DeeObject *const *argv) {
 		byte_t a = args.lhs_ptr[result];
 		byte_t b = args.rhs_ptr[result];
 		if (a != b) {
-			a = (byte_t)DeeUni_IsLower(a);
-			b = (byte_t)DeeUni_IsLower(b);
+			a = DeeBytes_ENC_ToLower(a);
+			b = DeeBytes_ENC_ToLower(b);
 			if (a != b)
 				break;
 		}
@@ -3924,8 +4006,8 @@ bytes_casercommon(Bytes *self, size_t argc, DeeObject *const *argv) {
 		byte_t a = args.lhs_ptr[-1];
 		byte_t b = args.rhs_ptr[-1];
 		if (a != b) {
-			a = (byte_t)DeeUni_IsLower(a);
-			b = (byte_t)DeeUni_IsLower(b);
+			a = DeeBytes_ENC_ToLower(a);
+			b = DeeBytes_ENC_ToLower(b);
 			if (a != b)
 				break;
 		}

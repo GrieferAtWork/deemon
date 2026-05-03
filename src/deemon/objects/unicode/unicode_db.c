@@ -214,7 +214,7 @@ PUBLIC NONNULL((2)) size_t
 }
 
 
-PUBLIC Dee_uniflag_t const _DeeAscii_Flags[256] = {
+PUBLIC Dee_uniflag_t const _DeeLatin1_Flags[256] = {
 /*[[[deemon
 import * from deemon;
 
@@ -223,54 +223,54 @@ function getTrait(ord: int, trait: string): bool {
 	return chr.operator . (f"is{trait}")(0);
 }
 
-#define ascii_iscntrl(ch)    getTrait(ch, "cntrl")
-#define ascii_isctab(ch)     ((ch) == 0x09)
-#define ascii_isxtab(ch)     ((ch) >= 0x0b && (ch) <= 0x0c)
-#define ascii_iswhite(ch)    getTrait(ch, "white")
-#define ascii_islf(ch)       getTrait(ch, "lf")
-#define ascii_islower(ch)    getTrait(ch, "lower")
-#define ascii_isupper(ch)    getTrait(ch, "upper")
-#define ascii_isxalpha(ch)   getTrait(ch, "xalpha")
-#define ascii_isdigit(ch)    getTrait(ch, "digit")
-#define ascii_ishex(ch)      getTrait(ch, "hex")
-#define ascii_ispunct(ch)    getTrait(ch, "punct")
-#define ascii_istitle(ch)    getTrait(ch, "xtitle")
-#define ascii_isxnumeric(ch) getTrait(ch, "xnumeric")
-#define ascii_issymstrt(ch)  getTrait(ch, "symstrt")
-#define ascii_issymcont(ch)  getTrait(ch, "symcont")
+#define latin1_iscntrl(ch)    getTrait(ch, "cntrl")
+#define latin1_isctab(ch)     ((ch) == 0x09)
+#define latin1_isxtab(ch)     ((ch) >= 0x0b && (ch) <= 0x0c)
+#define latin1_iswhite(ch)    getTrait(ch, "white")
+#define latin1_islf(ch)       getTrait(ch, "lf")
+#define latin1_islower(ch)    getTrait(ch, "lower")
+#define latin1_isupper(ch)    getTrait(ch, "upper")
+#define latin1_isxalpha(ch)   getTrait(ch, "xalpha")
+#define latin1_isdigit(ch)    getTrait(ch, "digit")
+#define latin1_ishex(ch)      getTrait(ch, "hex")
+#define latin1_ispunct(ch)    getTrait(ch, "punct")
+#define latin1_isxtitle(ch)   getTrait(ch, "xtitle")
+#define latin1_isxnumeric(ch) getTrait(ch, "xnumeric")
+#define latin1_issymstrt(ch)  getTrait(ch, "symstrt")
+#define latin1_issymcont(ch)  getTrait(ch, "symcont")
 
 for (local i: [:256]) {
 	local s = string.chr(i);
 	local flags = [];
-	if (ascii_iscntrl(i))
+	if (latin1_iscntrl(i))
 		flags.append("TCNTRL");
-	if (ascii_isctab(i))
+	if (latin1_isctab(i))
 		flags.append("TCTAB");
-	if (ascii_isxtab(i))
+	if (latin1_isxtab(i))
 		flags.append("TXTAB");
-	if (ascii_iswhite(i))
+	if (latin1_iswhite(i))
 		flags.append("TWHITE");
-	if (ascii_islf(i))
+	if (latin1_islf(i))
 		flags.append("TLF");
-	if (ascii_islower(i))
+	if (latin1_islower(i))
 		flags.append("TLOWER");
-	if (ascii_isupper(i))
+	if (latin1_isupper(i))
 		flags.append("TUPPER");
-	if (ascii_isxalpha(i))
+	if (latin1_isxalpha(i))
 		flags.append("TXALPHA");
-	if (ascii_isdigit(i))
+	if (latin1_isdigit(i))
 		flags.append("TDIGIT");
-	if (ascii_ishex(i))
+	if (latin1_ishex(i))
 		flags.append("THEX");
-	if (ascii_ispunct(i))
+	if (latin1_ispunct(i))
 		flags.append("TPUNCT");
-	if (ascii_istitle(i))
+	if (latin1_isxtitle(i))
 		flags.append("TXTITLE");
-	if (ascii_isxnumeric(i))
+	if (latin1_isxnumeric(i))
 		flags.append("TXNUMERIC");
-	if (ascii_issymstrt(i))
+	if (latin1_issymstrt(i))
 		flags.append("TSYMSTRT");
-	if (ascii_issymcont(i))
+	if (latin1_issymcont(i))
 		flags.append("TSYMCONT");
 	print("\t /" "* [", i.hex(2), "] = *" "/ ", flags ? " | ".join(flags) : "0", ",");
 }
@@ -531,6 +531,322 @@ for (local i: [:256]) {
 	 /* [0xfd] = */ TLOWER | TSYMSTRT | TSYMCONT,
 	 /* [0xfe] = */ TLOWER | TSYMSTRT | TSYMCONT,
 	 /* [0xff] = */ TLOWER | TSYMSTRT | TSYMCONT,
+/*[[[end]]]*/
+};
+
+
+PUBLIC Dee_uniflag_t const _DeeAscii_Flags[256] = {
+/*[[[deemon
+import * from deemon;
+
+#define ascii_iscntrl(ch)    ((ch) <= 0x1f || (ch) == 0x7f)
+#define ascii_isctab(ch)     ((ch) == 0x09)
+#define ascii_isxtab(ch)     ((ch) >= 0x0b && (ch) <= 0x0c)
+#define ascii_iswhite(ch)    ((ch) == 0x20)
+#define ascii_islf(ch)       ((ch) == 0xa || (ch) == 0xd)
+#define ascii_islower(ch)    ((ch) >= 0x61 && (ch) <= 0x7a)
+#define ascii_isupper(ch)    ((ch) >= 0x41 && (ch) <= 0x5a)
+#define ascii_isxalpha(ch)   false
+#define ascii_isdigit(ch)    ((ch) >= 0x30 && (ch) <= 0x39)
+#define ascii_ishex(ch)      (((ch) >= 0x41 && (ch) <= 0x46) || ((ch) >= 0x61 && (ch) <= 0x66))
+#define ascii_ispunct(ch)    (((ch) >= 0x21 && (ch) <= 0x2f) || ((ch) >= 0x3a && (ch) <= 0x40) || ((ch) >= 0x5b && (ch) <= 0x60) || ((ch) >= 0x7b && (ch) <= 0x7e))
+#define ascii_isxtitle(ch)   false
+#define ascii_isxnumeric(ch) false
+#define ascii_issymstrt(ch)  (ascii_isupper(ch) || ascii_islower(ch) || (ch) == 0x5f || (ch) == 0x24)
+#define ascii_issymcont(ch)  (ascii_isupper(ch) || ascii_islower(ch) || ascii_isdigit(ch) || (ch) == 0x5f || (ch) == 0x24)
+
+for (local i: [:256]) {
+	local s = string.chr(i);
+	local flags = [];
+	if (ascii_iscntrl(i))
+		flags.append("TCNTRL");
+	if (ascii_isctab(i))
+		flags.append("TCTAB");
+	if (ascii_isxtab(i))
+		flags.append("TXTAB");
+	if (ascii_iswhite(i))
+		flags.append("TWHITE");
+	if (ascii_islf(i))
+		flags.append("TLF");
+	if (ascii_islower(i))
+		flags.append("TLOWER");
+	if (ascii_isupper(i))
+		flags.append("TUPPER");
+	if (ascii_isxalpha(i))
+		flags.append("TXALPHA");
+	if (ascii_isdigit(i))
+		flags.append("TDIGIT");
+	if (ascii_ishex(i))
+		flags.append("THEX");
+	if (ascii_ispunct(i))
+		flags.append("TPUNCT");
+	if (ascii_isxtitle(i))
+		flags.append("TXTITLE");
+	if (ascii_isxnumeric(i))
+		flags.append("TXNUMERIC");
+	if (ascii_issymstrt(i))
+		flags.append("TSYMSTRT");
+	if (ascii_issymcont(i))
+		flags.append("TSYMCONT");
+	print("\t /" "* [", i.hex(2), "] = *" "/ ", flags ? " | ".join(flags) : "0", ",");
+}
+]]]*/
+	 /* [0x00] = */ TCNTRL,
+	 /* [0x01] = */ TCNTRL,
+	 /* [0x02] = */ TCNTRL,
+	 /* [0x03] = */ TCNTRL,
+	 /* [0x04] = */ TCNTRL,
+	 /* [0x05] = */ TCNTRL,
+	 /* [0x06] = */ TCNTRL,
+	 /* [0x07] = */ TCNTRL,
+	 /* [0x08] = */ TCNTRL,
+	 /* [0x09] = */ TCNTRL | TCTAB,
+	 /* [0x0a] = */ TCNTRL | TLF,
+	 /* [0x0b] = */ TCNTRL | TXTAB,
+	 /* [0x0c] = */ TCNTRL | TXTAB,
+	 /* [0x0d] = */ TCNTRL | TLF,
+	 /* [0x0e] = */ TCNTRL,
+	 /* [0x0f] = */ TCNTRL,
+	 /* [0x10] = */ TCNTRL,
+	 /* [0x11] = */ TCNTRL,
+	 /* [0x12] = */ TCNTRL,
+	 /* [0x13] = */ TCNTRL,
+	 /* [0x14] = */ TCNTRL,
+	 /* [0x15] = */ TCNTRL,
+	 /* [0x16] = */ TCNTRL,
+	 /* [0x17] = */ TCNTRL,
+	 /* [0x18] = */ TCNTRL,
+	 /* [0x19] = */ TCNTRL,
+	 /* [0x1a] = */ TCNTRL,
+	 /* [0x1b] = */ TCNTRL,
+	 /* [0x1c] = */ TCNTRL,
+	 /* [0x1d] = */ TCNTRL,
+	 /* [0x1e] = */ TCNTRL,
+	 /* [0x1f] = */ TCNTRL,
+	 /* [0x20] = */ TWHITE,
+	 /* [0x21] = */ TPUNCT,
+	 /* [0x22] = */ TPUNCT,
+	 /* [0x23] = */ TPUNCT,
+	 /* [0x24] = */ TPUNCT | TSYMSTRT | TSYMCONT,
+	 /* [0x25] = */ TPUNCT,
+	 /* [0x26] = */ TPUNCT,
+	 /* [0x27] = */ TPUNCT,
+	 /* [0x28] = */ TPUNCT,
+	 /* [0x29] = */ TPUNCT,
+	 /* [0x2a] = */ TPUNCT,
+	 /* [0x2b] = */ TPUNCT,
+	 /* [0x2c] = */ TPUNCT,
+	 /* [0x2d] = */ TPUNCT,
+	 /* [0x2e] = */ TPUNCT,
+	 /* [0x2f] = */ TPUNCT,
+	 /* [0x30] = */ TDIGIT | TSYMCONT,
+	 /* [0x31] = */ TDIGIT | TSYMCONT,
+	 /* [0x32] = */ TDIGIT | TSYMCONT,
+	 /* [0x33] = */ TDIGIT | TSYMCONT,
+	 /* [0x34] = */ TDIGIT | TSYMCONT,
+	 /* [0x35] = */ TDIGIT | TSYMCONT,
+	 /* [0x36] = */ TDIGIT | TSYMCONT,
+	 /* [0x37] = */ TDIGIT | TSYMCONT,
+	 /* [0x38] = */ TDIGIT | TSYMCONT,
+	 /* [0x39] = */ TDIGIT | TSYMCONT,
+	 /* [0x3a] = */ TPUNCT,
+	 /* [0x3b] = */ TPUNCT,
+	 /* [0x3c] = */ TPUNCT,
+	 /* [0x3d] = */ TPUNCT,
+	 /* [0x3e] = */ TPUNCT,
+	 /* [0x3f] = */ TPUNCT,
+	 /* [0x40] = */ TPUNCT,
+	 /* [0x41] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x42] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x43] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x44] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x45] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x46] = */ TUPPER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x47] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x48] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x49] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4a] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4b] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4c] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4d] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4e] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x4f] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x50] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x51] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x52] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x53] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x54] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x55] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x56] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x57] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x58] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x59] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x5a] = */ TUPPER | TSYMSTRT | TSYMCONT,
+	 /* [0x5b] = */ TPUNCT,
+	 /* [0x5c] = */ TPUNCT,
+	 /* [0x5d] = */ TPUNCT,
+	 /* [0x5e] = */ TPUNCT,
+	 /* [0x5f] = */ TPUNCT | TSYMSTRT | TSYMCONT,
+	 /* [0x60] = */ TPUNCT,
+	 /* [0x61] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x62] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x63] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x64] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x65] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x66] = */ TLOWER | THEX | TSYMSTRT | TSYMCONT,
+	 /* [0x67] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x68] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x69] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6a] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6b] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6c] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6d] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6e] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x6f] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x70] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x71] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x72] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x73] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x74] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x75] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x76] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x77] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x78] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x79] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x7a] = */ TLOWER | TSYMSTRT | TSYMCONT,
+	 /* [0x7b] = */ TPUNCT,
+	 /* [0x7c] = */ TPUNCT,
+	 /* [0x7d] = */ TPUNCT,
+	 /* [0x7e] = */ TPUNCT,
+	 /* [0x7f] = */ TCNTRL,
+	 /* [0x80] = */ 0,
+	 /* [0x81] = */ 0,
+	 /* [0x82] = */ 0,
+	 /* [0x83] = */ 0,
+	 /* [0x84] = */ 0,
+	 /* [0x85] = */ 0,
+	 /* [0x86] = */ 0,
+	 /* [0x87] = */ 0,
+	 /* [0x88] = */ 0,
+	 /* [0x89] = */ 0,
+	 /* [0x8a] = */ 0,
+	 /* [0x8b] = */ 0,
+	 /* [0x8c] = */ 0,
+	 /* [0x8d] = */ 0,
+	 /* [0x8e] = */ 0,
+	 /* [0x8f] = */ 0,
+	 /* [0x90] = */ 0,
+	 /* [0x91] = */ 0,
+	 /* [0x92] = */ 0,
+	 /* [0x93] = */ 0,
+	 /* [0x94] = */ 0,
+	 /* [0x95] = */ 0,
+	 /* [0x96] = */ 0,
+	 /* [0x97] = */ 0,
+	 /* [0x98] = */ 0,
+	 /* [0x99] = */ 0,
+	 /* [0x9a] = */ 0,
+	 /* [0x9b] = */ 0,
+	 /* [0x9c] = */ 0,
+	 /* [0x9d] = */ 0,
+	 /* [0x9e] = */ 0,
+	 /* [0x9f] = */ 0,
+	 /* [0xa0] = */ 0,
+	 /* [0xa1] = */ 0,
+	 /* [0xa2] = */ 0,
+	 /* [0xa3] = */ 0,
+	 /* [0xa4] = */ 0,
+	 /* [0xa5] = */ 0,
+	 /* [0xa6] = */ 0,
+	 /* [0xa7] = */ 0,
+	 /* [0xa8] = */ 0,
+	 /* [0xa9] = */ 0,
+	 /* [0xaa] = */ 0,
+	 /* [0xab] = */ 0,
+	 /* [0xac] = */ 0,
+	 /* [0xad] = */ 0,
+	 /* [0xae] = */ 0,
+	 /* [0xaf] = */ 0,
+	 /* [0xb0] = */ 0,
+	 /* [0xb1] = */ 0,
+	 /* [0xb2] = */ 0,
+	 /* [0xb3] = */ 0,
+	 /* [0xb4] = */ 0,
+	 /* [0xb5] = */ 0,
+	 /* [0xb6] = */ 0,
+	 /* [0xb7] = */ 0,
+	 /* [0xb8] = */ 0,
+	 /* [0xb9] = */ 0,
+	 /* [0xba] = */ 0,
+	 /* [0xbb] = */ 0,
+	 /* [0xbc] = */ 0,
+	 /* [0xbd] = */ 0,
+	 /* [0xbe] = */ 0,
+	 /* [0xbf] = */ 0,
+	 /* [0xc0] = */ 0,
+	 /* [0xc1] = */ 0,
+	 /* [0xc2] = */ 0,
+	 /* [0xc3] = */ 0,
+	 /* [0xc4] = */ 0,
+	 /* [0xc5] = */ 0,
+	 /* [0xc6] = */ 0,
+	 /* [0xc7] = */ 0,
+	 /* [0xc8] = */ 0,
+	 /* [0xc9] = */ 0,
+	 /* [0xca] = */ 0,
+	 /* [0xcb] = */ 0,
+	 /* [0xcc] = */ 0,
+	 /* [0xcd] = */ 0,
+	 /* [0xce] = */ 0,
+	 /* [0xcf] = */ 0,
+	 /* [0xd0] = */ 0,
+	 /* [0xd1] = */ 0,
+	 /* [0xd2] = */ 0,
+	 /* [0xd3] = */ 0,
+	 /* [0xd4] = */ 0,
+	 /* [0xd5] = */ 0,
+	 /* [0xd6] = */ 0,
+	 /* [0xd7] = */ 0,
+	 /* [0xd8] = */ 0,
+	 /* [0xd9] = */ 0,
+	 /* [0xda] = */ 0,
+	 /* [0xdb] = */ 0,
+	 /* [0xdc] = */ 0,
+	 /* [0xdd] = */ 0,
+	 /* [0xde] = */ 0,
+	 /* [0xdf] = */ 0,
+	 /* [0xe0] = */ 0,
+	 /* [0xe1] = */ 0,
+	 /* [0xe2] = */ 0,
+	 /* [0xe3] = */ 0,
+	 /* [0xe4] = */ 0,
+	 /* [0xe5] = */ 0,
+	 /* [0xe6] = */ 0,
+	 /* [0xe7] = */ 0,
+	 /* [0xe8] = */ 0,
+	 /* [0xe9] = */ 0,
+	 /* [0xea] = */ 0,
+	 /* [0xeb] = */ 0,
+	 /* [0xec] = */ 0,
+	 /* [0xed] = */ 0,
+	 /* [0xee] = */ 0,
+	 /* [0xef] = */ 0,
+	 /* [0xf0] = */ 0,
+	 /* [0xf1] = */ 0,
+	 /* [0xf2] = */ 0,
+	 /* [0xf3] = */ 0,
+	 /* [0xf4] = */ 0,
+	 /* [0xf5] = */ 0,
+	 /* [0xf6] = */ 0,
+	 /* [0xf7] = */ 0,
+	 /* [0xf8] = */ 0,
+	 /* [0xf9] = */ 0,
+	 /* [0xfa] = */ 0,
+	 /* [0xfb] = */ 0,
+	 /* [0xfc] = */ 0,
+	 /* [0xfd] = */ 0,
+	 /* [0xfe] = */ 0,
+	 /* [0xff] = */ 0,
 /*[[[end]]]*/
 };
 

@@ -44,7 +44,7 @@ function assertTrait(ord: int, trait: string) {
 	local chr_x80_bytes = chr_x80;
 	local x80_chr_x80_bytes = x80_chr_x80;
 
-	if (ord <= 0xff) {
+	if (ord <= 0x7f) {
 		chr_bytes = chr.bytes();
 		chr_x80_bytes = chr_x80.bytes();
 		x80_chr_x80_bytes = x80_chr_x80.bytes();

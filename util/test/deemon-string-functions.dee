@@ -25,9 +25,20 @@ import .common.test;
 
 #define TRY(x) (try x catch (e...) e)
 
+#if 1
+#define TEST1(expected, actual, ...) \
+	try { \
+		test.assertEquals(expected, actual.__VA_ARGS__); \
+		test.assertEquals(expected.bytes(), actual.bytes().__VA_ARGS__); \
+	} catch (...) { \
+		print(__FILE__, "(", __LINE__, ") : HERE"); \
+		throw; \
+	}
+#else
 #define TEST1(expected, actual, ...) \
 	test.assertEquals(expected, actual.__VA_ARGS__); \
 	test.assertEquals(expected.bytes(), actual.bytes().__VA_ARGS__)
+#endif
 #define V_TEST1(expected, actual, ...) \
 	test.assertEquals(expected, actual.__VA_ARGS__); \
 	test.assertEquals(expected, actual.bytes().__VA_ARGS__)
@@ -144,4 +155,51 @@ TEST2(0x0000FFFF, "a\U0000FFFFc", ord(1));
 TEST4(0xFFFFFFFF, "a\UFFFFFFFFc", ord(1));
 
 local s = "foo";
-test.assertEquals(TRY(s.ord(6)), IndexError(seq: s, index: 6, length: 3));
+test.assertEquals(IndexError(seq: s, index: 6, length: 3), TRY(s.ord(6)));
+
+
+/* casefold */
+test.assertEquals("x\xDF\xFF".bytes(), "X\xDF\U000000FF".bytes().casefold());
+test.assertEquals("xss\U000000FF", "X\xDF\U000000FF".casefold());
+test.assertEquals("xss\U0000FFFF", "X\xDF\U0000FFFF".casefold());
+test.assertEquals("xss\UFFFFFFFF", "X\xDF\UFFFFFFFF".casefold());
+
+
+/* asdigit */
+for (local s, f, sx: {
+	{ "7", "f", "7x" },
+	{ "7".bytes(), "f".bytes(), "7x".bytes() },
+}) {
+	test.assertEquals(7, s.asdigit());
+	test.assertEquals(7, s.asdigit(0));
+	test.assertEquals(IndexError(seq: s, index: 1, length: 1), TRY(s.asdigit(1)));
+	test.assertEquals(7, sx.asdigit(0));
+	assert TRY(sx.asdigit()) is ValueError;
+	assert TRY(f.asdigit()) is ValueError;
+	assert TRY(f.asdigit(0)) is ValueError;
+	test.assertEquals(9, f.asdigit(0, 9));
+
+	test.assertEquals(7, s.asnumeric());
+	test.assertEquals(7, s.asnumeric(0));
+	test.assertEquals(IndexError(seq: s, index: 1, length: 1), TRY(s.asnumeric(1)));
+	test.assertEquals(7, sx.asnumeric(0));
+	assert TRY(sx.asnumeric()) is ValueError;
+	assert TRY(f.asnumeric()) is ValueError;
+	assert TRY(f.asnumeric(0)) is ValueError;
+	test.assertEquals(9, f.asnumeric(0, 9));
+
+	test.assertEquals(7, s.asxdigit());
+	test.assertEquals(7, s.asxdigit(0));
+	test.assertEquals(IndexError(seq: s, index: 1, length: 1), TRY(s.asxdigit(1)));
+	test.assertEquals(7, sx.asxdigit(0));
+	assert TRY(sx.asxdigit()) is ValueError;
+	test.assertEquals(15, f.asxdigit());
+	test.assertEquals(15, f.asxdigit(0));
+	test.assertEquals(15, f.asxdigit(0, 9));
+	test.assertEquals(9, sx.asxdigit(1, 9));
+}
+
+assert TRY("\u00B2".asdigit()) is ValueError;
+assert TRY("\u00B2".asxdigit()) is ValueError;
+test.assertEquals(2, "\u00B2".asnumeric());
+
