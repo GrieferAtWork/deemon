@@ -185,6 +185,97 @@ test.assertEquals("", "\U0000FFFF".casefold(1, 1));
 test.assertEquals("", "\UFFFFFFFF".casefold(1, 1));
 
 
+/* lower */
+TEST1("fedcb\U000000FFa", "FEDCB\U000000FFA", lower());
+TEST2("fedcb\U0000FFFFa", "FEDCB\U0000FFFFA", lower());
+TEST4("fedcb\UFFFFFFFFa", "FEDCB\UFFFFFFFFA", lower());
+
+TEST1("", "FEDCB\U000000FFA", lower(0, 0));
+TEST2("", "FEDCB\U0000FFFFA", lower(0, 0));
+TEST4("", "FEDCB\UFFFFFFFFA", lower(0, 0));
+
+TEST1("f", "FEDCB\U000000FFA", lower(0, 1));
+TEST2("f", "FEDCB\U0000FFFFA", lower(0, 1));
+TEST4("f", "FEDCB\UFFFFFFFFA", lower(0, 1));
+
+TEST1("\U000000FF", "FEDCB\U000000FFA", lower(5, 6));
+TEST2("\U0000FFFF", "FEDCB\U0000FFFFA", lower(5, 6));
+TEST4("\UFFFFFFFF", "FEDCB\UFFFFFFFFA", lower(5, 6));
+
+
+/* upper */
+TEST1("FEDCB\U000000F7A", "fedcb\U000000F7a", upper());
+TEST2("FEDCB\U0000FFFFA", "fedcb\U0000FFFFa", upper());
+TEST4("FEDCB\UFFFFFFFFA", "fedcb\UFFFFFFFFa", upper());
+
+TEST1("", "fedcb\U000000F7a", upper(0, 0));
+TEST2("", "fedcb\U0000FFFFa", upper(0, 0));
+TEST4("", "fedcb\UFFFFFFFFa", upper(0, 0));
+
+TEST1("F", "fedcb\U000000F7a", upper(0, 1));
+TEST2("F", "fedcb\U0000FFFFa", upper(0, 1));
+TEST4("F", "fedcb\UFFFFFFFFa", upper(0, 1));
+
+TEST1("\U000000F7", "fedcb\U000000F7a", upper(5, 6));
+TEST2("\U0000FFFF", "fedcb\U0000FFFFa", upper(5, 6));
+TEST4("\UFFFFFFFF", "fedcb\UFFFFFFFFa", upper(5, 6));
+
+
+/* title */
+TEST1("Fedcb\U000000F7a", "fedcb\U000000F7a", title());
+TEST2("Fedcb\U0000FFFFa", "fedcb\U0000FFFFa", title());
+TEST4("Fedcb\UFFFFFFFFa", "fedcb\UFFFFFFFFa", title());
+
+TEST1("", "fedcb\U000000F7a", title(0, 0));
+TEST2("", "fedcb\U0000FFFFa", title(0, 0));
+TEST4("", "fedcb\UFFFFFFFFa", title(0, 0));
+
+TEST1("F", "fedcb\U000000F7a", title(0, 1));
+TEST2("F", "fedcb\U0000FFFFa", title(0, 1));
+TEST4("F", "fedcb\UFFFFFFFFa", title(0, 1));
+
+TEST1("\U000000F7", "fedcb\U000000F7a", title(5, 6));
+TEST2("\U0000FFFF", "fedcb\U0000FFFFa", title(5, 6));
+TEST4("\UFFFFFFFF", "fedcb\UFFFFFFFFa", title(5, 6));
+
+
+/* capitalize */
+TEST1("Fedcb\U000000F7a", "fedcb\U000000F7a", capitalize());
+TEST2("Fedcb\U0000FFFFa", "fedcb\U0000FFFFa", capitalize());
+TEST4("Fedcb\UFFFFFFFFa", "fedcb\UFFFFFFFFa", capitalize());
+
+TEST1("", "fedcb\U000000F7a", capitalize(0, 0));
+TEST2("", "fedcb\U0000FFFFa", capitalize(0, 0));
+TEST4("", "fedcb\UFFFFFFFFa", capitalize(0, 0));
+
+TEST1("F", "fedcb\U000000F7a", capitalize(0, 1));
+TEST2("F", "fedcb\U0000FFFFa", capitalize(0, 1));
+TEST4("F", "fedcb\UFFFFFFFFa", capitalize(0, 1));
+
+TEST1("\U000000F7", "fedcb\U000000F7a", capitalize(5, 6));
+TEST2("\U0000FFFF", "fedcb\U0000FFFFa", capitalize(5, 6));
+TEST4("\UFFFFFFFF", "fedcb\UFFFFFFFFa", capitalize(5, 6));
+
+
+/* swapcase */
+TEST1("fEDCB\U000000F7A", "Fedcb\U000000F7a", swapcase());
+TEST2("fEDCB\U0000FFFFA", "Fedcb\U0000FFFFa", swapcase());
+TEST4("fEDCB\UFFFFFFFFA", "Fedcb\UFFFFFFFFa", swapcase());
+
+TEST1("", "Fedcb\U000000F7a", swapcase(0, 0));
+TEST2("", "Fedcb\U0000FFFFa", swapcase(0, 0));
+TEST4("", "Fedcb\UFFFFFFFFa", swapcase(0, 0));
+
+TEST1("f", "Fedcb\U000000F7a", swapcase(0, 1));
+TEST2("f", "Fedcb\U0000FFFFa", swapcase(0, 1));
+TEST4("f", "Fedcb\UFFFFFFFFa", swapcase(0, 1));
+
+TEST1("\U000000F7", "Fedcb\U000000F7a", swapcase(5, 6));
+TEST2("\U0000FFFF", "Fedcb\U0000FFFFa", swapcase(5, 6));
+TEST4("\UFFFFFFFF", "Fedcb\UFFFFFFFFa", swapcase(5, 6));
+
+
+
 /* asdigit */
 for (local s, f, sx: {
 	{ "7", "f", "7x" },

@@ -3075,7 +3075,7 @@ string_findany(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	return_none;
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -3198,7 +3198,7 @@ string_rfindany(String *self, size_t argc,
 		goto not_found;
 	return DeeInt_NewSize(result);
 not_found:
-	return_none;
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -10673,14 +10673,14 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When @needle is ?Ert:SeqSome, same as ?#rindexany on the wrapped sequence"),
 	TYPE_KWMETHOD_F("findany", &string_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(" string_findany_params ")->?X2?Dint?N\n"
+	                "(" string_findany_params ")->?Dint\n"
 	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
-	                /**/ "and return the lowest starting index, or ?N if no such position exists"),
+	                /**/ "and return the lowest starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &string_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(" string_rfindany_params ")->?X2?Dint?N\n"
+	                "(" string_rfindany_params ")->?Dint\n"
 	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
-	                /**/ "and return the greatest starting index, or ?N if no such position exists"),
+	                /**/ "and return the greatest starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &string_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_indexany_params ")->?Dint\n"

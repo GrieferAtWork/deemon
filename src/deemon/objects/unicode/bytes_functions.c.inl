@@ -583,7 +583,7 @@ bytes_findany(Bytes *self, size_t argc,
 	if (data.bfad_result < data.bfad_size || status == -2)
 		return DeeInt_NewSize(args.start + data.bfad_result);
 not_found:
-	return_none;
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -787,7 +787,7 @@ bytes_rfindany(Bytes *self, size_t argc,
 		return DeeInt_NewSize(index);
 	}
 not_found:
-	return_none;
+	return DeeInt_NewMinusOne();
 err:
 	return NULL;
 }
@@ -6177,18 +6177,18 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                /**/ "and return its starting index"),
 	TYPE_KWMETHOD_F("findany", &bytes_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(" bytes_findany_params ")->?X2?Dint?N\n"
+	                "(" bytes_findany_params ")->?Dint\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
-	                /**/ "and return the lowest starting index, or ?N if no such position exists"),
+	                /**/ "and return the lowest starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &bytes_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(" bytes_rfindany_params ")->?X2?Dint?N\n"
+	                "(" bytes_rfindany_params ")->?Dint\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find all instances of any of the given @needles within ${this.substr(start, end)}, "
-	                /**/ "and return the greatest starting index, or ?N if no such position exists"),
+	                /**/ "and return the greatest starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &bytes_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(" bytes_indexany_params ")->?X2?Dint?N\n"

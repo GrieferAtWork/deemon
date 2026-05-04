@@ -22,6 +22,8 @@
 import * from errors;
 import .common.test;
 
+#define TRY(x) (try x catch (e...) e)
+
 
 function t(x, w) {
 	assert w("xxx") !in x;
@@ -31,6 +33,9 @@ function t(x, w) {
 	assert (try x.rindex(w("xxx")) catch (e...) e) is ItemNotFound;
 	for (local op: { "find", "index" }) {
 		local rop = f"r{op}";
+		assert x.operator . (op)(x) == 0;
+//		assert x.operator . (op)({x}.some) == 0; // TODO
+		assert x.operator . (op + "any")({x}) == 0;
 		assert x.operator . (op)(w("a")) == 0;
 		assert x.operator . (op)(w("b")) == 1;
 		assert x.operator . (op)(w("c")) == 2;
@@ -41,6 +46,9 @@ function t(x, w) {
 		assert x.operator . (op)(w("abc")) == 0;
 		assert x.operator . (op)(w("bcd")) == 1;
 		assert x.operator . (op)(w("abcd")) == 0;
+		assert x.operator . (rop)(x) == 0;
+//		assert x.operator . (rop)({x}.some) == 0; // TODO
+		assert x.operator . (rop + "any")({x}) == 0;
 		assert x.operator . (rop)(w("d")) == 3;
 		assert x.operator . (rop)(w("c")) == 2;
 		assert x.operator . (rop)(w("b")) == 1;
@@ -66,6 +74,9 @@ function t(x, w) {
 		for (local baseOp: { "find", "index" }) {
 			local op = f"case{baseOp}";
 			local rop = f"caser{baseOp}";
+			assert xOP(x).operator . (op)(wOP(x)) == (0, #x);
+//			assert xOP(x).operator . (op)({wOP(x)}.some) == (0, #x); // TODO
+			assert xOP(x).operator . (op + "any")({wOP(x)}) == (0, #x);
 			assert xOP(x).operator . (op)(wOP("a")) == (0, 1);
 			assert xOP(x).operator . (op)(wOP("b")) == (1, 2);
 			assert xOP(x).operator . (op)(wOP("c")) == (2, 3);
@@ -76,6 +87,9 @@ function t(x, w) {
 			assert xOP(x).operator . (op)(wOP("abc")) == (0, 3);
 			assert xOP(x).operator . (op)(wOP("bcd")) == (1, 4);
 			assert xOP(x).operator . (op)(wOP("abcd")) == (0, 4);
+			assert xOP(x).operator . (rop)(wOP(x)) == (0, #x);
+//			assert xOP(x).operator . (rop)({wOP(x)}.some) == (0, #x); // TODO
+			assert xOP(x).operator . (rop + "any")({wOP(x)}) == (0, #x);
 			assert xOP(x).operator . (rop)(wOP("d")) == (3, 4);
 			assert xOP(x).operator . (rop)(wOP("c")) == (2, 3);
 			assert xOP(x).operator . (rop)(wOP("b")) == (1, 2);
@@ -130,8 +144,8 @@ function t(x, w) {
 }
 
 t("abcd", x -> x);
-t("abcd\u1234", x -> x); /* Test 16-bit code paths */
-t("abcd\u12345678", x -> x); /* Test 32-bit code paths */
+t("abcd\U00001234", x -> x); /* Test 16-bit code paths */
+t("abcd\U12345678", x -> x); /* Test 32-bit code paths */
 
 /* string function cannot be used with Bytes arguments, since
  * raw Bytes cannot be implicitly converted into strings (since
@@ -139,3 +153,50 @@ t("abcd\u12345678", x -> x); /* Test 32-bit code paths */
 //t("abcd", x -> x.bytes());
 t("abcd".bytes(), x -> x);
 t("abcd".bytes(), x -> x.bytes());
+
+
+global BASE_BLOB = "Line1\nDATA\n{FOO}\nLine4\nend";
+
+for (local blob: {
+	BASE_BLOB,
+	BASE_BLOB.bytes(),
+	BASE_BLOB + "\U0000FFFF",
+	BASE_BLOB + "\UFFFFFFFF",
+}) {
+	test.assertEquals(blob.find("Line1"), 0);
+	test.assertEquals(blob.rfind("Line1"), 0);
+	test.assertEquals(blob.index("Line1"), 0);
+	test.assertEquals(blob.rindex("Line1"), 0);
+	test.assertSequence(blob.casefind("Line1"), {0,5});
+	test.assertSequence(blob.caserfind("Line1"), {0,5});
+	test.assertSequence(blob.caseindex("Line1"), {0,5});
+	test.assertSequence(blob.caserindex("Line1"), {0,5});
+
+	test.assertEquals(blob.find("line1"), -1);
+	test.assertEquals(blob.rfind("line1"), -1);
+	assert TRY(blob.index("line1")) is ItemNotFound;
+	assert TRY(blob.rindex("line1")) is ItemNotFound;
+	test.assertSequence(blob.casefind("line1"), {0,5});
+	test.assertSequence(blob.caserfind("line1"), {0,5});
+	test.assertSequence(blob.caseindex("line1"), {0,5});
+	test.assertSequence(blob.caserindex("line1"), {0,5});
+
+	test.assertEquals(blob.findany({"ine", "nd"}), 1);
+	test.assertEquals(blob.rfindany({"ine", "nd"}), 24);
+	test.assertEquals(blob.indexany({"ine", "nd"}), 1);
+	test.assertEquals(blob.rindexany({"ine", "nd"}), 24);
+	test.assertSequence(blob.casefindany({"ine", "nd"}), {1,4});
+	test.assertSequence(blob.caserfindany({"ine", "nd"}), {24,26});
+	test.assertSequence(blob.caseindexany({"ine", "nd"}), {1,4});
+	test.assertSequence(blob.caserindexany({"ine", "nd"}), {24,26});
+
+	test.assertEquals(blob.findany({"INE", "ND"}), -1);
+	test.assertEquals(blob.rfindany({"INE", "ND"}), -1);
+	assert TRY(blob.indexany({"INE", "ND"})) is ItemNotFound;
+	assert TRY(blob.rindexany({"INE", "ND"})) is ItemNotFound;
+	test.assertSequence(blob.casefindany({"INE", "ND"}), {1,4});
+	test.assertSequence(blob.caserfindany({"INE", "ND"}), {24,26});
+	test.assertSequence(blob.caseindexany({"INE", "ND"}), {1,4});
+	test.assertSequence(blob.caserindexany({"INE", "ND"}), {24,26});
+}
+

@@ -27,14 +27,14 @@ function assertFindFunction(expected, s: string, find: string, args: Tuple) {
 	local index = find.replace("find", "index");
 	local casefind = "case" + find;
 	local caseindex = casefind.replace("find", "index");
-	assert expected       == s.operator . (casefind)(args...);
-	assert expected       == s.bytes().operator . (casefind)(args...);
-	assert expected.first == s.operator . (find)(args...);
-	assert expected.first == s.bytes().operator . (find)(args...);
-	assert expected       == try s.operator . (caseindex)(args...) catch (ItemNotFound) none;
-	assert expected       == try s.bytes().operator . (caseindex)(args...) catch (ItemNotFound) none;
-	assert expected.first == try s.operator . (index)(args...) catch (ItemNotFound) none;
-	assert expected.first == try s.bytes().operator . (index)(args...) catch (ItemNotFound) none;
+	test.assertEquals(expected, s.operator . (casefind)(args...));
+	test.assertEquals(expected, s.bytes().operator . (casefind)(args...));
+	test.assertEquals(expected.first ?? -1, s.operator . (find)(args...));
+	test.assertEquals(expected.first ?? -1, s.bytes().operator . (find)(args...));
+	test.assertEquals(expected, try s.operator . (caseindex)(args...) catch (ItemNotFound) none);
+	test.assertEquals(expected, try s.bytes().operator . (caseindex)(args...) catch (ItemNotFound) none);
+	test.assertEquals(expected.first ?? -1, try s.operator . (index)(args...) catch (ItemNotFound) -1);
+	test.assertEquals(expected.first ?? -1, try s.bytes().operator . (index)(args...) catch (ItemNotFound) -1);
 }
 
 assertFindFunction((3, 6), "foobar", "find",  ("bar",));
