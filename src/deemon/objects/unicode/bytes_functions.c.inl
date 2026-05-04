@@ -341,7 +341,7 @@ bytes_casefind(Bytes *self, size_t argc,
 		return DeeSeq_OfPairII(index, index + needle.n_size);
 	}
 not_found:
-	return DeeInt_NewMinusOne();
+	return_none;
 err:
 	return NULL;
 }

@@ -4642,8 +4642,8 @@ err:
 
 struct string_join_data {
 	struct Dee_unicode_printer sjd_out;   /* Output printer */
-	String                *sjd_sep;   /* [1..1] Separator */
-	bool                   sjd_first; /* True if this is the first element. */
+	String                    *sjd_sep;   /* [1..1] Separator */
+	bool                       sjd_first; /* True if this is the first element. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL

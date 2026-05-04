@@ -276,6 +276,141 @@ TEST4("\UFFFFFFFF", "Fedcb\UFFFFFFFFa", swapcase(5, 6));
 
 
 
+/* substr */
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", substr());
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", substr());
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", substr());
+
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", substr(0, 99));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", substr(0, 99));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", substr(0, 99));
+
+TEST1("", "Fedcb\U000000F7a", substr(0, 0));
+TEST2("", "Fedcb\U0000FFFFa", substr(0, 0));
+TEST4("", "Fedcb\UFFFFFFFFa", substr(0, 0));
+
+TEST1("F", "Fedcb\U000000F7a", substr(0, 1));
+TEST2("F", "Fedcb\U0000FFFFa", substr(0, 1));
+TEST4("F", "Fedcb\UFFFFFFFFa", substr(0, 1));
+
+TEST1("\U000000F7", "Fedcb\U000000F7a", substr(5, 6));
+TEST2("\U0000FFFF", "Fedcb\U0000FFFFa", substr(5, 6));
+TEST4("\UFFFFFFFF", "Fedcb\UFFFFFFFFa", substr(5, 6));
+
+
+
+/* center */
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", center(0));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", center(0));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", center(0));
+
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", center(7));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", center(7));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", center(7));
+
+TEST1(" Fedcb\U000000F7a ", "Fedcb\U000000F7a", center(9));
+TEST2(" Fedcb\U0000FFFFa ", "Fedcb\U0000FFFFa", center(9));
+TEST4(" Fedcb\UFFFFFFFFa ", "Fedcb\UFFFFFFFFa", center(9));
+
+TEST1("-Fedcb\U000000F7a-", "Fedcb\U000000F7a", center(9, "-"));
+TEST2("-Fedcb\U0000FFFFa-", "Fedcb\U0000FFFFa", center(9, "-"));
+TEST4("-Fedcb\UFFFFFFFFa-", "Fedcb\UFFFFFFFFa", center(9, "-"));
+
+TEST1("-Fedcb\U000000F7a-", "Fedcb\U000000F7a", center(9, "-*"));
+TEST2("-Fedcb\U0000FFFFa-", "Fedcb\U0000FFFFa", center(9, "-*"));
+TEST4("-Fedcb\UFFFFFFFFa-", "Fedcb\UFFFFFFFFa", center(9, "-*"));
+
+TEST1("-*-Fedcb\U000000F7a-*-", "Fedcb\U000000F7a", center(13, "-*"));
+TEST2("-*-Fedcb\U0000FFFFa-*-", "Fedcb\U0000FFFFa", center(13, "-*"));
+TEST4("-*-Fedcb\UFFFFFFFFa-*-", "Fedcb\UFFFFFFFFa", center(13, "-*"));
+
+
+/* ljust */
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", ljust(0));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", ljust(0));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", ljust(0));
+
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", ljust(7));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", ljust(7));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", ljust(7));
+
+TEST1("Fedcb\U000000F7a  ", "Fedcb\U000000F7a", ljust(9));
+TEST2("Fedcb\U0000FFFFa  ", "Fedcb\U0000FFFFa", ljust(9));
+TEST4("Fedcb\UFFFFFFFFa  ", "Fedcb\UFFFFFFFFa", ljust(9));
+
+TEST1("Fedcb\U000000F7a--", "Fedcb\U000000F7a", ljust(9, "-"));
+TEST2("Fedcb\U0000FFFFa--", "Fedcb\U0000FFFFa", ljust(9, "-"));
+TEST4("Fedcb\UFFFFFFFFa--", "Fedcb\UFFFFFFFFa", ljust(9, "-"));
+
+TEST1("Fedcb\U000000F7a-*", "Fedcb\U000000F7a", ljust(9, "-*"));
+TEST2("Fedcb\U0000FFFFa-*", "Fedcb\U0000FFFFa", ljust(9, "-*"));
+TEST4("Fedcb\UFFFFFFFFa-*", "Fedcb\UFFFFFFFFa", ljust(9, "-*"));
+
+TEST1("Fedcb\U000000F7a-*-*-", "Fedcb\U000000F7a", ljust(12, "-*"));
+TEST2("Fedcb\U0000FFFFa-*-*-", "Fedcb\U0000FFFFa", ljust(12, "-*"));
+TEST4("Fedcb\UFFFFFFFFa-*-*-", "Fedcb\UFFFFFFFFa", ljust(12, "-*"));
+
+
+/* rjust */
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(0));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(0));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(0));
+
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(7));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(7));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(7));
+
+TEST1("  Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(9));
+TEST2("  Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(9));
+TEST4("  Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(9));
+
+TEST1("--Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(9, "-"));
+TEST2("--Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(9, "-"));
+TEST4("--Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(9, "-"));
+
+TEST1("-*Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(9, "-*"));
+TEST2("-*Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(9, "-*"));
+TEST4("-*Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(9, "-*"));
+
+TEST1("-*-*-Fedcb\U000000F7a", "Fedcb\U000000F7a", rjust(12, "-*"));
+TEST2("-*-*-Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", rjust(12, "-*"));
+TEST4("-*-*-Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", rjust(12, "-*"));
+
+
+/* zfill */
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", zfill(0));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", zfill(0));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", zfill(0));
+
+TEST1("Fedcb\U000000F7a", "Fedcb\U000000F7a", zfill(7));
+TEST2("Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", zfill(7));
+TEST4("Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", zfill(7));
+
+TEST1("00Fedcb\U000000F7a", "Fedcb\U000000F7a", zfill(9));
+TEST2("00Fedcb\U0000FFFFa", "Fedcb\U0000FFFFa", zfill(9));
+TEST4("00Fedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", zfill(9));
+
+TEST1("+00edcb\U000000F7a", "+edcb\U000000F7a", zfill(9));
+TEST2("+00edcb\U0000FFFFa", "+edcb\U0000FFFFa", zfill(9));
+TEST4("+00edcb\UFFFFFFFFa", "+edcb\UFFFFFFFFa", zfill(9));
+
+TEST1("-00edcb\U000000F7a", "-edcb\U000000F7a", zfill(9));
+TEST2("-00edcb\U0000FFFFa", "-edcb\U0000FFFFa", zfill(9));
+TEST4("-00edcb\UFFFFFFFFa", "-edcb\UFFFFFFFFa", zfill(9));
+
+TEST1("ZZFedcb\U000000F7a", "Fedcb\U000000F7a", zfill(9, "Z"));
+TEST2("ZZFedcb\U0000FFFFa", "Fedcb\U0000FFFFa", zfill(9, "Z"));
+TEST4("ZZFedcb\UFFFFFFFFa", "Fedcb\UFFFFFFFFa", zfill(9, "Z"));
+
+TEST1("+ZZedcb\U000000F7a", "+edcb\U000000F7a", zfill(9, "Z"));
+TEST2("+ZZedcb\U0000FFFFa", "+edcb\U0000FFFFa", zfill(9, "Z"));
+TEST4("+ZZedcb\UFFFFFFFFa", "+edcb\UFFFFFFFFa", zfill(9, "Z"));
+
+TEST1("-ZZedcb\U000000F7a", "-edcb\U000000F7a", zfill(9, "Z"));
+TEST2("-ZZedcb\U0000FFFFa", "-edcb\U0000FFFFa", zfill(9, "Z"));
+TEST4("-ZZedcb\UFFFFFFFFa", "-edcb\UFFFFFFFFa", zfill(9, "Z"));
+
+
 /* asdigit */
 for (local s, f, sx: {
 	{ "7", "f", "7x" },
@@ -314,3 +449,19 @@ assert TRY("\u00B2".asdigit()) is ValueError;
 assert TRY("\u00B2".asxdigit()) is ValueError;
 test.assertEquals(2, "\u00B2".asnumeric());
 
+
+/* TODO: string.segments() */
+/* TODO: string.distribute() */
+/* TODO: string.partition() */
+/* TODO: string.rpartition() */
+/* TODO: string.casepartition() */
+/* TODO: string.caserpartition() */
+/* TODO: All the different compare functions: compare, casecompare, vercompare,
+ *       casevercompare, fuzzycompare, casefuzzycompare, common, rcommon,
+ *       casecommon, casercommon, wildcompare, wmatch, casewildcompare, casewmatch */
+/* TODO: string.findmatch() / string.indexmatch() / string.partitionmatch() */
+/* TODO: string.rfindmatch() / string.rindexmatch() / string.rpartitionmatch() */
+/* TODO: string.casefindmatch() / string.caseindexmatch() / string.casepartitionmatch() */
+/* TODO: string.caserfindmatch() / string.caserindexmatch() / string.caserpartitionmatch() */
+/* TODO: The entirety of the regex API (not the actual regex eval, but test
+ *       to make sure that all function correctly decode & handle arguments) */

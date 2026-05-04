@@ -163,40 +163,166 @@ for (local blob: {
 	BASE_BLOB + "\U0000FFFF",
 	BASE_BLOB + "\UFFFFFFFF",
 }) {
-	test.assertEquals(blob.find("Line1"), 0);
-	test.assertEquals(blob.rfind("Line1"), 0);
-	test.assertEquals(blob.index("Line1"), 0);
-	test.assertEquals(blob.rindex("Line1"), 0);
-	test.assertSequence(blob.casefind("Line1"), {0,5});
-	test.assertSequence(blob.caserfind("Line1"), {0,5});
-	test.assertSequence(blob.caseindex("Line1"), {0,5});
-	test.assertSequence(blob.caserindex("Line1"), {0,5});
-
-	test.assertEquals(blob.find("line1"), -1);
-	test.assertEquals(blob.rfind("line1"), -1);
-	assert TRY(blob.index("line1")) is ItemNotFound;
-	assert TRY(blob.rindex("line1")) is ItemNotFound;
-	test.assertSequence(blob.casefind("line1"), {0,5});
-	test.assertSequence(blob.caserfind("line1"), {0,5});
-	test.assertSequence(blob.caseindex("line1"), {0,5});
-	test.assertSequence(blob.caserindex("line1"), {0,5});
-
-	test.assertEquals(blob.findany({"ine", "nd"}), 1);
-	test.assertEquals(blob.rfindany({"ine", "nd"}), 24);
-	test.assertEquals(blob.indexany({"ine", "nd"}), 1);
-	test.assertEquals(blob.rindexany({"ine", "nd"}), 24);
+	test.assertEqualsTyped(blob.findany({"ine", "nd"}), 1);
+	test.assertEqualsTyped(blob.rfindany({"ine", "nd"}), 24);
+	test.assertEqualsTyped(blob.indexany({"ine", "nd"}), 1);
+	test.assertEqualsTyped(blob.rindexany({"ine", "nd"}), 24);
 	test.assertSequence(blob.casefindany({"ine", "nd"}), {1,4});
 	test.assertSequence(blob.caserfindany({"ine", "nd"}), {24,26});
 	test.assertSequence(blob.caseindexany({"ine", "nd"}), {1,4});
 	test.assertSequence(blob.caserindexany({"ine", "nd"}), {24,26});
 
-	test.assertEquals(blob.findany({"INE", "ND"}), -1);
-	test.assertEquals(blob.rfindany({"INE", "ND"}), -1);
+	test.assertEqualsTyped(blob.findany({"INE", "ND"}), -1);
+	test.assertEqualsTyped(blob.rfindany({"INE", "ND"}), -1);
 	assert TRY(blob.indexany({"INE", "ND"})) is ItemNotFound;
 	assert TRY(blob.rindexany({"INE", "ND"})) is ItemNotFound;
 	test.assertSequence(blob.casefindany({"INE", "ND"}), {1,4});
 	test.assertSequence(blob.caserfindany({"INE", "ND"}), {24,26});
 	test.assertSequence(blob.caseindexany({"INE", "ND"}), {1,4});
 	test.assertSequence(blob.caserindexany({"INE", "ND"}), {24,26});
+
+	function doFind(what, args...) {
+		local result = blob.find(what, args...);
+		test.assertEqualsTyped(result, blob.findany({what}, args...));
+		test.assertEqualsTyped(result, try blob.index(what, args...) catch (ItemNotFound) -1);
+		test.assertEqualsTyped(result, try blob.indexany({what}, args...) catch (ItemNotFound) -1);
+		return result;
+	}
+
+	function doRFind(what, args...) {
+		local result = blob.rfind(what, args...);
+		test.assertEqualsTyped(result, blob.rfindany({what}, args...));
+		test.assertEqualsTyped(result, try blob.rindex(what, args...) catch (ItemNotFound) -1);
+		test.assertEqualsTyped(result, try blob.rindexany({what}, args...) catch (ItemNotFound) -1);
+		return result;
+	}
+
+	function doCaseFind(what, args...) {
+		local result = blob.casefind(what, args...);
+		test.assertEqualsTyped(result, blob.casefindany({what}, args...));
+		test.assertEqualsTyped(result, try blob.caseindex(what, args...) catch (ItemNotFound) none);
+		test.assertEqualsTyped(result, try blob.caseindexany({what}, args...) catch (ItemNotFound) none);
+		return result;
+	}
+
+	function doCaseRFind(what, args...) {
+		local result = blob.caserfind(what, args...);
+		test.assertEqualsTyped(result, blob.caserfindany({what}, args...));
+		test.assertEqualsTyped(result, try blob.caserindex(what, args...) catch (ItemNotFound) none);
+		test.assertEqualsTyped(result, try blob.caserindexany({what}, args...) catch (ItemNotFound) none);
+		return result;
+	}
+
+	test.assertEqualsTyped(doFind("Line1"), 0);
+	test.assertEqualsTyped(doRFind("Line1"), 0);
+	test.assertSequence(doCaseFind("Line1"), {0,5});
+	test.assertSequence(doCaseRFind("Line1"), {0,5});
+
+	test.assertEqualsTyped(doFind("line1"), -1);
+	test.assertEqualsTyped(doRFind("line1"), -1);
+	test.assertSequence(doCaseFind("line1"), {0,5});
+	test.assertSequence(doCaseRFind("line1"), {0,5});
+
+	test.assertEqualsTyped(doFind("Line1", 3), -1);
+	test.assertEqualsTyped(doRFind("Line1", 3), -1);
+	test.assertNone(doCaseFind("Line1", 3));
+	test.assertNone(doCaseRFind("Line1", 3));
+
+	test.assertEqualsTyped(doFind("Line"), 0);
+	test.assertEqualsTyped(doRFind("Line"), 17);
+	test.assertSequence(doCaseFind("line"), {0,4});
+	test.assertSequence(doCaseRFind("line"), {17,21});
+
+	test.assertEqualsTyped(doFind("Line", 3), 17);
+	test.assertEqualsTyped(doRFind("Line", 3), 17);
+	test.assertSequence(doCaseFind("line", 3), {17,21});
+	test.assertSequence(doCaseRFind("line", 3), {17,21});
+
+	test.assertEqualsTyped(doFind("Line", 3, 21), 17);
+	test.assertEqualsTyped(doRFind("Line", 3, 21), 17);
+	test.assertSequence(doCaseFind("line", 3, 21), {17,21});
+	test.assertSequence(doCaseRFind("line", 3, 21), {17,21});
+
+	test.assertEqualsTyped(doFind("Line", 3, 20), -1);
+	test.assertEqualsTyped(doRFind("Line", 3, 20), -1);
+	test.assertNone(doCaseFind("line", 3, 20));
+	test.assertNone(doCaseRFind("line", 3, 20));
+
+	test.assertEqualsTyped(doFind("Line", 0, 21), 0);
+	test.assertEqualsTyped(doRFind("Line", 0, 21), 17);
+	test.assertSequence(doCaseFind("line", 0, 21), {0,4});
+	test.assertSequence(doCaseRFind("line", 0, 21), {17,21});
+
+	test.assertEqualsTyped(doFind("Line", 0, 20), 0);
+	test.assertEqualsTyped(doRFind("Line", 0, 20), 0);
+	test.assertSequence(doCaseFind("line", 0, 20), {0,4});
+	test.assertSequence(doCaseRFind("line", 0, 20), {0,4});
+
+	assert blob.startswith("Line1");
+	assert blob.casestartswith("Line1");
+	assert !blob.startswith("line1");
+	assert blob.casestartswith("line1");
+
+	assert blob.startswith("Line1", 0, 99);
+	assert blob.casestartswith("Line1", 0, 99);
+	assert !blob.startswith("line1", 0, 99);
+	assert blob.casestartswith("line1", 0, 99);
+
+	assert !blob.startswith("Line1", 1, 99);
+	assert !blob.casestartswith("Line1", 1, 99);
+	assert !blob.startswith("line1", 1, 99);
+	assert !blob.casestartswith("line1", 1, 99);
+
+	assert blob.startswith("ine1", 1, 99);
+	assert blob.casestartswith("ine1", 1, 99);
+	assert !blob.startswith("INE1", 1, 99);
+	assert blob.casestartswith("INE1", 1, 99);
+
+	assert !blob.startswith("ine1", 1, 4);
+	assert !blob.casestartswith("ine1", 1, 4);
+	assert !blob.startswith("INE1", 1, 4);
+	assert !blob.casestartswith("INE1", 1, 4);
+
+	assert blob.startswith("ine1", 1, 5);
+	assert blob.casestartswith("ine1", 1, 5);
+	assert !blob.startswith("INE1", 1, 5);
+	assert blob.casestartswith("INE1", 1, 5);
+
+	local eBlob = blob;
+	local base = 0;
+	if (blob.last in "\U0000FFFF\UFFFFFFFF") {
+		eBlob = blob.last + blob[:-1];
+		base = 1;
+	}
+
+	assert eBlob.endswith("\nend");
+	assert eBlob.caseendswith("\nend");
+	assert !eBlob.endswith("\nEND");
+	assert eBlob.caseendswith("\nEND");
+
+	assert eBlob.endswith("\nend", base + 22);
+	assert eBlob.caseendswith("\nend", base + 22);
+	assert !eBlob.endswith("\nEND", base + 22);
+	assert eBlob.caseendswith("\nEND", base + 22);
+
+	assert eBlob.endswith("\nend", base + 22, base + 26);
+	assert eBlob.caseendswith("\nend", base + 22, base + 26);
+	assert !eBlob.endswith("\nEND", base + 22, base + 26);
+	assert eBlob.caseendswith("\nEND", base + 22, base + 26);
+
+	assert eBlob.endswith("\nend", 0, base + 26);
+	assert eBlob.caseendswith("\nend", 0, base + 26);
+	assert !eBlob.endswith("\nEND", 0, base + 26);
+	assert eBlob.caseendswith("\nEND", 0, base + 26);
+
+	assert !eBlob.endswith("\nend", 0, base + 25);
+	assert !eBlob.caseendswith("\nend", 0, base + 25);
+	assert !eBlob.endswith("\nEND", 0, base + 25);
+	assert !eBlob.caseendswith("\nEND", 0, base + 25);
+
+	assert eBlob.endswith("\nen", 0, base + 25);
+	assert eBlob.caseendswith("\nen", 0, base + 25);
+	assert !eBlob.endswith("\nEN", 0, base + 25);
+	assert eBlob.caseendswith("\nEN", 0, base + 25);
 }
 
