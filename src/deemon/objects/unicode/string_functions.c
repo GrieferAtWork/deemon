@@ -10664,7 +10664,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index\n"
 	                "When @needle is ?Ert:SeqSome, same as ?#indexany on the wrapped sequence"),
-	TYPE_KWMETHOD_F("rindex", &string_rindex,
+	TYPE_KWMETHOD_F(STR_rindex, &string_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(" string_rindex_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"

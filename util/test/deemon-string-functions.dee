@@ -25,7 +25,7 @@ import .common.test;
 
 #define TRY(x) (try x catch (e...) e)
 
-#if 1
+#if 0
 #define TEST1(expected, actual, ...) \
 	try { \
 		test.assertEquals(expected, actual.__VA_ARGS__); \
@@ -163,6 +163,26 @@ test.assertEquals("x\xDF\xFF".bytes(), "X\xDF\U000000FF".bytes().casefold());
 test.assertEquals("xss\U000000FF", "X\xDF\U000000FF".casefold());
 test.assertEquals("xss\U0000FFFF", "X\xDF\U0000FFFF".casefold());
 test.assertEquals("xss\UFFFFFFFF", "X\xDF\UFFFFFFFF".casefold());
+test.assertEquals("\xFF".bytes(), "\U000000FF".bytes().casefold());
+test.assertEquals("\U000000FF", "\U000000FF".casefold());
+test.assertEquals("\U0000FFFF", "\U0000FFFF".casefold());
+test.assertEquals("\UFFFFFFFF", "\UFFFFFFFF".casefold());
+test.assertEquals("\xDF\xFF".bytes(), "X\xDF\U000000FF".bytes().casefold(1, 9));
+test.assertEquals("ss\U000000FF", "X\xDF\U000000FF".casefold(1, 9));
+test.assertEquals("ss\U0000FFFF", "X\xDF\U0000FFFF".casefold(1, 9));
+test.assertEquals("ss\UFFFFFFFF", "X\xDF\UFFFFFFFF".casefold(1, 9));
+test.assertEquals("".bytes(), "\U000000FF".bytes().casefold(1, 9));
+test.assertEquals("", "\U000000FF".casefold(1, 9));
+test.assertEquals("", "\U0000FFFF".casefold(1, 9));
+test.assertEquals("", "\UFFFFFFFF".casefold(1, 9));
+test.assertEquals("".bytes(), "X\xDF\U000000FF".bytes().casefold(1, 1));
+test.assertEquals("", "X\xDF\U000000FF".casefold(1, 1));
+test.assertEquals("", "X\xDF\U0000FFFF".casefold(1, 1));
+test.assertEquals("", "X\xDF\UFFFFFFFF".casefold(1, 1));
+test.assertEquals("".bytes(), "\U000000FF".bytes().casefold(1, 1));
+test.assertEquals("", "\U000000FF".casefold(1, 1));
+test.assertEquals("", "\U0000FFFF".casefold(1, 1));
+test.assertEquals("", "\UFFFFFFFF".casefold(1, 1));
 
 
 /* asdigit */

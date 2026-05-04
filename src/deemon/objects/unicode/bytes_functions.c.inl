@@ -1200,8 +1200,7 @@ bytes_reversed(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
-	src += args.end;
+	src = DeeBytes_DATA(self) + args.end;
 	do {
 		*dst++ = *--src;
 	} while (--size);
@@ -1724,7 +1723,7 @@ bytes_lower(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
+	src = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *src++;
 		*dst++ = DeeBytes_ENC_ToLower(byte);
@@ -1762,7 +1761,7 @@ bytes_upper(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
+	src = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *src++;
 		*dst++ = DeeBytes_ENC_ToUpper(byte);
@@ -1801,7 +1800,7 @@ bytes_title(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
+	src = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *src++;
 		*dst++ = kind == Dee_UNICODE_CONVERT_TITLE
@@ -1842,7 +1841,7 @@ bytes_capitalize(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
+	src = DeeBytes_DATA(self) + args.start;
 	byte = *src++;
 	*dst++ = DeeBytes_ENC_ToUpper(byte);
 	while (--size) {
@@ -1882,7 +1881,7 @@ bytes_swapcase(Bytes *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	dst = DeeBytes_BUFFER_DATA(result);
-	src = DeeBytes_DATA(self);
+	src = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *src++;
 		*dst++ = DeeBytes_ENC_SwapCase(byte);
@@ -6170,7 +6169,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index"),
-	TYPE_KWMETHOD_F("rindex", &bytes_rindex,
+	TYPE_KWMETHOD_F(STR_rindex, &bytes_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	                "(" bytes_rindex_params ")->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
