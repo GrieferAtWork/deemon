@@ -479,7 +479,7 @@ err:
 PRIVATE struct type_seq dswk_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dswk_iter,
 	/* .tp_sizeob       = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
-	/* .tp_contains     = */ DEFIMPL(&default__seq_operator_contains),
+	/* .tp_contains     = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem      = */ DEFIMPL_UNSUPPORTED(&default__getitem__unsupported),
 	/* .tp_delitem      = */ DEFIMPL_UNSUPPORTED(&default__delitem__unsupported),
 	/* .tp_setitem      = */ DEFIMPL_UNSUPPORTED(&default__setitem__unsupported),
