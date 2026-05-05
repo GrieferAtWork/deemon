@@ -176,7 +176,7 @@ typedef struct Dee_file_buffer_object {
 /* File buffer mode flags. */
 #define Dee_FILE_BUFFER_MODE_NONE (Dee_FILE_BUFFER_FNODYNSCALE) /* Do not perform any buffering (causes a zero-length buffer to be used internally)
                                                                  * NOTE: When set, `ZERO(0)' must be passed for `size' */
-#define Dee_FILE_BUFFER_MODE_FULL (Dee_FILE_BUFFER_FNORMAL)     /* Do full buffering. (Data is only synced when the buffer becomes full, or when sync() is called) */
+#define Dee_FILE_BUFFER_MODE_FULL (Dee_FILE_BUFFER_FNORMAL)     /* Do full buffering. (Data is only synced when the buffer becomes full, or when `operator sync()' is called) */
 #define Dee_FILE_BUFFER_MODE_LINE (Dee_FILE_BUFFER_FLNBUF)      /* Do line-buffering. (Same as `Dee_FILE_BUFFER_MODE_FULL', but also flush whenever data was written that contained a line-feed) */
 #define Dee_FILE_BUFFER_MODE_AUTO (Dee_FILE_BUFFER_FLNIFTTY)    /* Automatically determine the buffer mode based on calling `isatty()' on the
                                                                  * underlying file. When true, use line-buffering. Otherwise, use full buffering. */
@@ -197,7 +197,9 @@ DeeFileBuffer_New(DeeObject *__restrict file,
 
 /* Change the operations mode of a given buffer.
  * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
- * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
+ * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically.
+ * @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size);
@@ -318,7 +320,7 @@ DeeFileReader_NewObjectBuffer(DeeObject *__restrict data,
 
 
 
-/* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
+/* Experimental feature switch: `File.Writer' can also write bytes */
 #if (!defined(CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES) && \
      !defined(CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES))
 #if 1

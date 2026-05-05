@@ -477,9 +477,9 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restri
  * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
  *       invokes `self.isatty()' without arguments, casting the return value to bool.
  *       This function is used to implement the auto-buffering mode of `File.Buffer'
- * @return: >  0 (Dee_HAS_YES) : The file is a TTY
- * @return: == 0 (Dee_HAS_NO)  : The file isn't a TTY
- * @return: <  0 (Dee_HAS_ERR) : An error occurred. */
+ * @return: Dee_HAS_YES: The file is a TTY
+ * @return: Dee_HAS_NO:  The file isn't a TTY
+ * @return: Dee_HAS_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
 
 /* Return the system file descriptor of the given file, or throw

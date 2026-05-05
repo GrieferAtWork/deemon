@@ -53,30 +53,30 @@
 import opendir from posix;
 for (local name: [opendir("cxx").each.d_name...].sorted()) {
 	if (name != "api.h")
-		print("#include <deemon/cxx/", name, ">");
+		print("#include \"cxx/", name, "\"");
 }
 ]]]*/
-#include <deemon/cxx/bool.h>
-#include <deemon/cxx/bytes.h>
-#include <deemon/cxx/callable.h>
-#include <deemon/cxx/cell.h>
-#include <deemon/cxx/dict.h>
-#include <deemon/cxx/file.h>
-#include <deemon/cxx/float.h>
-#include <deemon/cxx/function.h>
-#include <deemon/cxx/hashset.h>
-#include <deemon/cxx/int.h>
-#include <deemon/cxx/iterator.h>
-#include <deemon/cxx/list.h>
-#include <deemon/cxx/mapping.h>
-#include <deemon/cxx/none.h>
-#include <deemon/cxx/numeric.h>
-#include <deemon/cxx/object.h>
-#include <deemon/cxx/sequence.h>
-#include <deemon/cxx/set.h>
-#include <deemon/cxx/string.h>
-#include <deemon/cxx/tuple.h>
-#include <deemon/cxx/type.h>
+#include "cxx/bool.h"
+#include "cxx/bytes.h"
+#include "cxx/callable.h"
+#include "cxx/cell.h"
+#include "cxx/dict.h"
+#include "cxx/file.h"
+#include "cxx/float.h"
+#include "cxx/function.h"
+#include "cxx/hashset.h"
+#include "cxx/int.h"
+#include "cxx/iterator.h"
+#include "cxx/list.h"
+#include "cxx/mapping.h"
+#include "cxx/none.h"
+#include "cxx/numeric.h"
+#include "cxx/object.h"
+#include "cxx/sequence.h"
+#include "cxx/set.h"
+#include "cxx/string.h"
+#include "cxx/tuple.h"
+#include "cxx/type.h"
 /*[[[end]]]*/
 
 #endif /* !GUARD_DEEMON_CXX_H */

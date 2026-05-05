@@ -323,7 +323,9 @@ err_r:
 
 /* Change the operations mode of a given buffer.
  * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
- * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
+ * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically.
+ * @return: 0 : Success
+ * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size) {

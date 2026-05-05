@@ -2437,7 +2437,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		 * timestamp, that can only be because that source file no longer exists (or is somehow
 		 * inaccessible to us?). Anyways: in either case, the ".dec" file should be deleted (so
 		 * there aren't any leftovers in the likely case of the source having been deleted), and
-		 * if the source actually still exists, then it must be re-compiled! */
+		 * if the source actually still exists, then it must be re-compiled anyways! */
 		if unlikely(dee_file_last_modified == 0) {
 			int status;
 			Dee_Decref_likely(dec_stream);
