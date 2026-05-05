@@ -39,6 +39,7 @@ import "...src.deemon.method-hints.method-hints" as mh;
 
 global final FILES_AND_PATHS = {
 	"../../src/deemon/runtime/*.c",
+	"../../src/deemon/runtime/*.c.inl",
 	"../../src/deemon/objects/*.c",
 	"../../src/deemon/objects/seq/*.c",
 	"../../src/deemon/objects/unicode/*.c",
