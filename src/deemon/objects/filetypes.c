@@ -29,7 +29,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t */
-#include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
+#include <deemon/filetypes.h>          /* DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/mapfile.h>            /* DeeMapFile* */
@@ -910,7 +910,6 @@ writer_ctor(DeeFileWriterObject *__restrict self) {
 	return 0;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 PRIVATE NONNULL((1, 2)) void DCALL
 writer_init_bytes(DeeFileWriterObject *__restrict self,
                   DeeBytesObject *__restrict bytes) {
@@ -930,24 +929,17 @@ writer_init_empty_bytes(DeeFileWriterObject *__restrict self) {
 	self->w_printer.wp_byt.bp_length = 0;
 	self->w_string = (DREF DeeStringObject *)ITER_DONE;
 }
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_init_empty_with_hint(DeeFileWriterObject *__restrict self,
                             char const *__restrict hint) {
 	if (strcmp(hint, "string") == 0) {
 		writer_init_empty_string(self);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	} else if (strcmp(hint, "bytes") == 0) {
 		writer_init_empty_bytes(self);
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	} else if (strcmp(hint, "data") == 0) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		/* Prefer bytes-mode when it comes to "data" */
 		writer_init_empty_bytes(self);
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		writer_init_empty_string(self);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	} else {
 		return DeeError_Throwf(&DeeError_ValueError,
 		                       "Unsupported file writer hint %q",
@@ -981,12 +973,9 @@ writer_copy(DeeFileWriterObject *__restrict self,
 	DREF DeeObject *data = DeeFileWriter_GetData((DeeObject *)other);
 	if unlikely(!data)
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (DeeBytes_Check(data)) {
 		writer_init_bytes(self, (DeeBytesObject *)data);
-	} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	{
+	} else {
 		ASSERT_OBJECT_TYPE_EXACT(data, &DeeString_Type);
 		writer_init_string(self, (DeeStringObject *)data);
 	}
@@ -1019,21 +1008,13 @@ writer_init(DeeFileWriterObject *__restrict self, size_t argc, DeeObject *const 
 		if (args.hint)
 			return writer_init_empty_with_hint(self, DeeString_STR(args.hint));
 		writer_init_empty_string(self);
-	} else {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-		if (DeeBytes_Check(args.data)) {
-			writer_init_bytes(self, (DeeBytesObject *)args.data);
-		} else if (DeeString_Check(args.data)) {
-			writer_init_string(self, (DeeStringObject *)args.data);
-		} else {
-			DeeObject_TypeAssertFailed3(args.data, &DeeBytes_Type, &DeeString_Type, &DeeNone_Type);
-			goto err;
-		}
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		if (DeeObject_AssertTypeExact(args.data, &DeeString_Type))
-			goto err;
+	} else if (DeeBytes_Check(args.data)) {
+		writer_init_bytes(self, (DeeBytesObject *)args.data);
+	} else if (DeeString_Check(args.data)) {
 		writer_init_string(self, (DeeStringObject *)args.data);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	} else {
+		DeeObject_TypeAssertFailed3(args.data, &DeeBytes_Type, &DeeString_Type, &DeeNone_Type);
+		goto err;
 	}
 	return 0;
 err:
@@ -1060,7 +1041,6 @@ writer_init_kw(DeeFileWriterObject *__restrict self, size_t argc,
 	Dee_atomic_rwlock_init(&self->w_lock);
 	if (DeeNone_Check(args.data))
 		return writer_init_empty_with_hint(self, args.hint);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (DeeBytes_Check(args.data)) {
 		writer_init_bytes(self, (DeeBytesObject *)args.data);
 	} else if (DeeString_Check(args.data)) {
@@ -1069,13 +1049,6 @@ writer_init_kw(DeeFileWriterObject *__restrict self, size_t argc,
 		DeeObject_TypeAssertFailed3(args.data, &DeeBytes_Type, &DeeString_Type, &DeeNone_Type);
 		goto err;
 	}
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-#undef writer__FileWriter_params
-#define writer__FileWriter_params "data:?X2?Dstring?N=!N,hint=!P{string}"
-	if (DeeObject_AssertTypeExact(args.data, &DeeString_Type))
-		goto err;
-	writer_init_string(self, (DeeStringObject *)args.data);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	return 0;
 err:
 	return -1;
@@ -1086,12 +1059,10 @@ writer_serialize(DeeFileWriterObject *__restrict self,
                  DeeSerial *__restrict writer,
                  Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(DeeFileWriterObject, field))
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
 	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
 	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
 	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	DeeFileWriterObject *out;
 	size_t self__up_length;
 	void *self__up_buffer;
@@ -1101,7 +1072,6 @@ again:
 	DeeFileWriter_LockRead(self);
 	self__up_length = self->w_printer.wp_uni.up_length;
 	self__up_buffer = self->w_printer.wp_uni.up_buffer;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
 		size_t bytes_size;
 		DREF DeeBytesObject *bytes = (DREF DeeBytesObject *)self__up_buffer;
@@ -1127,7 +1097,6 @@ again:
 		DeeFileWriter_LockEndRead(self);
 		return DeeSerial_PutObjectInherited(writer, ADDROF(w_printer.wp_byt.bp_bytes), bytes);
 	}
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	self__up_flags = self->w_printer.wp_uni.up_flags;
 	memcpy(self__up_pend, self->w_printer.wp_uni.up_pend, sizeof(self__up_pend));
 	if (self__up_buffer) {
@@ -1202,12 +1171,9 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 writer_fini(DeeFileWriterObject *__restrict self) {
 	if (self->w_string) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
 			Dee_XDecref_likely(self->w_printer.wp_byt.bp_bytes);
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			Dee_Decref(self->w_string);
 		}
 	} else if (!self->w_printer.wp_uni.up_buffer) {
@@ -1221,7 +1187,6 @@ writer_fini(DeeFileWriterObject *__restrict self) {
 	}
 }
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define PTR_writer_visit &writer_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) {
@@ -1252,38 +1217,11 @@ writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) 
 	}
 	DeeFileWriter_LockEndRead(self);
 }
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-#if 1 /* String objects don't need to be visited */
-#define PTR_writer_visit NULL
-#else
-#define PTR_writer_visit &writer_visit
-PRIVATE NONNULL((1, 2)) void DCALL
-writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) {
-	DeeFileWriter_LockRead(self);
-	if (self->w_string) {
-		Dee_Visit(self->w_string);
-	} else if (!self->w_printer.wp_uni.up_buffer) {
-		/* ... */
-	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
-		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
-		                                DeeStringObject,
-		                                s_str));
-	} else {
-		/* ... */
-	}
-	DeeFileWriter_LockEndRead(self);
-}
-#endif
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 writer_printrepr(DeeFileWriterObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DREF DeeObject *content;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	content = DeeFileWriter_GetData(Dee_AsObject(self));
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	content = DeeFileWriter_GetString(Dee_AsObject(self));
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	if unlikely(!content)
 		goto err;
 	return DeeFormat_Printf(printer, arg, "File.Writer(%R)", content);
@@ -1366,7 +1304,6 @@ err_collect:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 PRIVATE WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFileWriter_PackBytesAndUnlock(DeeFileWriterObject *__restrict me) {
 	size_t bytes_used, bytes_size;
@@ -1753,36 +1690,10 @@ again:
 err:
 	return NULL;
 }
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
-DeeFileWriter_GetBytes(DeeObject *__restrict self) {
-	char const *utf8;
-	DREF DeeObject *result;
-	DREF DeeObject *string = DeeFileWriter_GetString(self);
-	if unlikely(!string)
-		goto err;
-	utf8 = DeeString_AsUtf8(string);
-	if unlikely(!utf8)
-		goto err_string;
-	result = DeeBytes_NewViewRo(string, utf8, WSTR_LENGTH(utf8));
-	Dee_Decref_unlikely(string);
-	return result;
-err_string:
-	Dee_Decref_unlikely(string);
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF /*string|Bytes*/ DeeObject *DCALL
-DeeFileWriter_GetData(DeeObject *__restrict self) {
-	return DeeFileWriter_GetString(self);
-}
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 /* Returns the current string written by the writer. */
 PUBLIC WUNUSED NONNULL((1)) /*string*/ DREF DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	DREF DeeObject *result;
 	DREF DeeObject *data = DeeFileWriter_GetData(self);
 	if likely(DeeString_Check(data))
@@ -1793,32 +1704,14 @@ DeeFileWriter_GetString(DeeObject *__restrict self) {
 	                           STRING_ERROR_FSTRICT);
 	Dee_Decref_unlikely(data);
 	return result;
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	DeeFileWriterObject *me = (DeeFileWriterObject *)self;
-	DREF DeeStringObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
-again:
-	DeeFileWriter_LockWrite(me);
-	result = DeeFileWriter_PackStringOrUnlock(me);
-	if (result != (DREF DeeStringObject *)ITER_DONE)
-		return Dee_AsObject(result);
-	goto again;
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 }
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define writer_delstring_or_bytes__keep       0
 #define writer_delstring_or_bytes__set_bytes  1
 #define writer_delstring_or_bytes__set_string 2
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-writer_delstring_or_bytes(DeeFileWriterObject *__restrict self, unsigned int how)
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-writer_delstring(DeeFileWriterObject *__restrict self)
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-{
+writer_delstring_or_bytes(DeeFileWriterObject *__restrict self, unsigned int how) {
 	DeeFileWriter_LockWrite(self);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (DeeFileWriter_IsBytes(self)) {
 		DREF DeeBytesObject *bytes;
 		bytes = self->w_printer.wp_byt.bp_bytes;
@@ -1831,18 +1724,14 @@ writer_delstring(DeeFileWriterObject *__restrict self)
 		Dee_XDecref_likely(bytes);
 		return 0;
 	}
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	if (self->w_string) {
 		DREF DeeStringObject *old_string;
 		old_string = self->w_string;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (how == writer_delstring_or_bytes__set_bytes) {
 			self->w_string = (DREF DeeStringObject *)ITER_DONE;
 			self->w_printer.wp_byt.bp_bytes  = NULL;
 			self->w_printer.wp_byt.bp_length = 0;
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			self->w_string = NULL;
 			Dee_unicode_printer_init(&self->w_printer.wp_uni);
 		}
@@ -1851,16 +1740,13 @@ writer_delstring(DeeFileWriterObject *__restrict self)
 	} else if (!self->w_printer.wp_uni.up_buffer) {
 		ASSERT(self->w_printer.wp_uni.up_length == 0);
 		ASSERT((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (how == writer_delstring_or_bytes__set_bytes) {
 			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
 			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
 			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
 			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
 			self->w_string = (DREF DeeStringObject *)ITER_DONE;
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			Dee_unicode_printer_init(&self->w_printer.wp_uni);
 		}
 		DeeFileWriter_LockEndWrite(self);
@@ -1868,28 +1754,22 @@ writer_delstring(DeeFileWriterObject *__restrict self)
 		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (how == writer_delstring_or_bytes__set_bytes) {
 			self->w_string = (DREF DeeStringObject *)ITER_DONE;
 			self->w_printer.wp_byt.bp_bytes  = NULL;
 			self->w_printer.wp_byt.bp_length = 0;
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			Dee_unicode_printer_init(&self->w_printer.wp_uni);
 		}
 		DeeFileWriter_LockEndWrite(self);
 	} else {
 		struct Dee_unicode_printer old_printer;
 		memcpy(&old_printer, &self->w_printer.wp_uni, sizeof(old_printer));
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (how == writer_delstring_or_bytes__set_bytes) {
 			self->w_string = (DREF DeeStringObject *)ITER_DONE;
 			self->w_printer.wp_byt.bp_bytes  = NULL;
 			self->w_printer.wp_byt.bp_length = 0;
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			Dee_unicode_printer_init(&self->w_printer.wp_uni);
 		}
 		DeeFileWriter_LockEndWrite(self);
@@ -1899,13 +1779,10 @@ writer_delstring(DeeFileWriterObject *__restrict self)
 }
 
 #define writer_getstring DeeFileWriter_GetString
-
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_delstring(DeeFileWriterObject *__restrict self) {
 	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__set_string);
 }
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_setstring(DeeFileWriterObject *__restrict self,
@@ -1934,16 +1811,13 @@ writer_setstring(DeeFileWriterObject *__restrict self,
 	}
 	DeeFileWriter_LockEndWrite(self);
 	if (old_string) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (old_string == (DREF DeeStringObject *)ITER_DONE) {
 			DREF DeeBytesObject *old_bytes;
 			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
 			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
 			old_bytes = (DREF DeeBytesObject *)old_printer.up_buffer;
 			Dee_XDecref_likely(old_bytes);
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			Dee_Decref(old_string);
 		}
 	} else if (!old_printer.up_buffer) {
@@ -1964,9 +1838,7 @@ err:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define writer_getbytes DeeFileWriter_GetBytes
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_delbytes(DeeFileWriterObject *__restrict self) {
 	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__set_bytes);
@@ -2016,11 +1888,8 @@ do_del_bytes:
 err:
 	return -1;
 }
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define writer_getdata DeeFileWriter_GetData
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_deldata(DeeFileWriterObject *__restrict self) {
 	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__keep);
@@ -2036,11 +1905,6 @@ writer_setdata(DeeFileWriterObject *__restrict self, DeeObject *data) {
 		return writer_deldata(self);
 	return DeeObject_TypeAssertFailed3(data, &DeeString_Type, &DeeBytes_Type, &DeeNone_Type);
 }
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-#define writer_getdata writer_getstring
-#define writer_deldata writer_delstring
-#define writer_setdata writer_setstring
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2048,7 +1912,6 @@ writer_sizeof(DeeFileWriterObject *self) {
 	size_t result;
 	DeeFileWriter_LockRead(self);
 	result = sizeof(DeeFileWriterObject);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (DeeFileWriter_IsBytes(self)) {
 		if (!self->w_printer.wp_byt.bp_bytes) {
 			ASSERT(self->w_printer.wp_byt.bp_length == 0);
@@ -2058,9 +1921,7 @@ writer_sizeof(DeeFileWriterObject *self) {
 			result += offsetof(DeeBytesObject, b_buffer);
 			result += self->w_printer.wp_byt.bp_length;
 		}
-	} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	if (self->w_printer.wp_uni.up_buffer) {
+	} else if (self->w_printer.wp_uni.up_buffer) {
 		shift_t width = self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
 		size_t wsiz = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer) + 1;
 		result += Dee_STRING_MUL_SIZEOF_WIDTH(wsiz, width);
@@ -2077,7 +1938,6 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 	                 METHOD_FNOREFESCAPE,
 	                 "->?Dstring\n"
 	                 "Get/set the currently written text string (in utf-8)"),
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	TYPE_GETSET_AB_F("bytes",
 	                 &writer_getbytes,
 	                 &writer_delbytes,
@@ -2085,7 +1945,6 @@ PRIVATE struct type_getset tpconst writer_getsets[] = {
 	                 METHOD_FNOREFESCAPE,
 	                 "->?DBytes\n"
 	                 "Get/set the currently written data bytes"),
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	TYPE_GETSET_AB_F("data",
 	                 &writer_getdata,
 	                 &writer_deldata,
@@ -2120,10 +1979,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(DeeFileWriterObject *self, size_t argc, DeeObject *const *argv) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
 	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "size");
@@ -2137,22 +1994,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(DeeFileWriterObject *self, size_t argc, DeeObject *const *argv) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
 	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("allocated", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "allocated");
 /*[[[end]]]*/
 	DeeFileWriter_LockRead(self);
 	if (self->w_printer.wp_uni.up_buffer) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (DeeFileWriter_IsBytes(self)) {
 			result = DeeBytes_SIZE(self->w_printer.wp_byt.bp_bytes);
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
 			result = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
 		}
 	} else {
@@ -2183,10 +2035,7 @@ PRIVATE struct type_method tpconst writer_methods[] = {
 };
 
 #define UNICODE_PRINTER_INITIAL_BUFSIZE 64
-
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-#define BYTES_PRINTER_INITIAL_BUFSIZE UNICODE_PRINTER_INITIAL_BUFSIZE
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+#define BYTES_PRINTER_INITIAL_BUFSIZE   UNICODE_PRINTER_INITIAL_BUFSIZE
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 writer_tryappend8_string_locked(DeeFileWriterObject *__restrict self,
@@ -2497,12 +2346,6 @@ err:
 	return false;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
-utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 /* @return: 1 : Try again (lock was released)
  * @return: 0 : Success (lock is kept)
  * @return: -1: Error (lock was released) */
@@ -2603,7 +2446,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 err:
 	return -1;
 }
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 writer_write(DeeFileWriterObject *__restrict self,
@@ -2613,13 +2455,10 @@ writer_write(DeeFileWriterObject *__restrict self,
 	uint8_t *flush_start, *iter, *end;
 again:
 	DeeFileWriter_LockWrite(self);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 again_locked:
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	if (self->w_string) {
 		DeeStringObject *wstr = self->w_string;
 		unsigned int width;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (wstr == (DeeStringObject *)ITER_DONE) {
 			DREF DeeBytesObject *bytes;
 			DREF DeeBytesObject *new_bytes;
@@ -2742,7 +2581,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 			self->w_printer.wp_byt.bp_length += bufsize;
 			goto done_unlock;
 		}
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 		width = self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
 		ASSERT(DeeString_WIDTH(wstr) != STRING_WIDTH_1BYTE);
 		ASSERT(DeeString_WIDTH(wstr) == width);
@@ -2856,14 +2694,10 @@ unlock_and_destroy_new_bytes_and_try_again:
 		/* Complete the sequence, and append the character. */
 		tempptr = (uint8_t *)mempcpy(full_sequence, self->w_printer.wp_uni.up_pend, gotlen);
 		memcpy(tempptr, buffer, missing);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		tempptr = full_sequence;
 		ch32 = Dee_unicode_readutf8_chk(&tempptr);
 		if unlikely(!ch32)
 			goto convert_to_bytes;
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		ch32 = utf8_getchar(full_sequence, seqlen);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 		if (!writer_tryappendch_string_locked(self, ch32)) {
 			DeeFileWriter_LockEndWrite(self);
 			if (Dee_CollectMemory(4))
@@ -2881,12 +2715,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 		uint32_t ch32;
 
 		/* Search for UTF-8 byte sequences */
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-		if (*iter < 0x80)
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		if (*iter < 0xc0)
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		if (*iter < 0x80) {
 			++iter;
 			continue;
 		}
@@ -2902,9 +2731,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 
 		/* Goto a multi-byte sequence. */
 		seqlen = Dee_unicode_utf8seqlen[*iter];
-#ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-		ASSERT(seqlen);
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 		if (seqlen > (size_t)(end - iter)) {
 			/* Incomplete sequence (remember the portion already given) */
 			seqlen = (uint8_t)(end - iter);
@@ -2914,7 +2740,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 		}
 
 		/* The full sequence has been given! */
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if unlikely(!seqlen) {
 convert_to_bytes_at_iter:
 			buffer  = iter;
@@ -2936,19 +2761,6 @@ convert_to_bytes_at_iter:
 			goto again;
 		}
 		flush_start = iter;
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		ch32 = utf8_getchar(iter, seqlen);
-		if (!writer_tryappendch_string_locked(self, ch32)) {
-			DeeFileWriter_LockEndWrite(self);
-			if (!Dee_CollectMemory(4))
-				goto err;
-			buffer  = iter;
-			bufsize = (size_t)(end - iter);
-			goto again;
-		}
-		iter += seqlen;
-		flush_start = iter;
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	}
 
 	/* Flush the remainder. */
@@ -2963,11 +2775,8 @@ convert_to_bytes_at_iter:
 	}
 done_unlock:
 	DeeFileWriter_LockEndWrite(self);
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 done:
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	return result;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	{
 		int status;
 convert_to_bytes:
@@ -2978,7 +2787,6 @@ convert_to_bytes:
 			goto again;
 		}
 	}
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 err:
 	return (size_t)-1;
 }
@@ -3007,7 +2815,6 @@ err:
 PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 writer_pwrite(DeeFileWriterObject *self, void const *buffer,
               size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	int status;
 	size_t old_length;
 	void *base;
@@ -3060,25 +2867,7 @@ again:
 	return bufsize;
 err:
 	return (size_t)-1;
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	(void)self;
-	(void)buffer;
-	(void)bufsize;
-	(void)pos;
-	(void)flags;
-	return (size_t)DeeError_NOTIMPLEMENTED();
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 }
-
-#ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-#define writer_deldata writer_delstring
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-#define IF_WRITER_BYTES(x) x
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-#define IF_WRITER_BYTES(x) /* nothing */
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 	/* .ft_base = */ {
@@ -3089,8 +2878,8 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		                         "#pdata{The initial contents of the file}"
 		                         "#phint{Hints at how written data will eventually be retrieved. "
 		                         /*  */ "One of $\"string\" (for ?#string)"
-		                         /*  */ IF_WRITER_BYTES(", $\"bytes\" (for ?#bytes)")
-		                         /*  */ IF_WRITER_BYTES(" or $\"data\" (for ?#data)")
+		                         /*  */ ", $\"bytes\" (for ?#bytes)"
+		                         /*  */ " or $\"data\" (for ?#data)"
 		                         /*  */ ". Note that this is merely a hint, and that all methods "
 		                         /*  */ "available for retrieving the contents of the file will "
 		                         /*  */ "always work, no matter what hint was specified}"),
@@ -3159,12 +2948,8 @@ DeeFileWriter_New(unsigned int hint) {
 	Dee_atomic_rwlock_init(&result->w_lock);
 	Dee_unicode_printer_init(&result->w_printer.wp_uni);
 	result->w_string = NULL;
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 	if (hint == Dee_FILE_WRITER_HINT_BYTES)
 		result->w_string = (DREF DeeStringObject *)ITER_DONE;
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	(void)hint;
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	DeeFileObject_InitStatic(result, &DeeFileWriter_Type);
 done:
 	return Dee_AsObject(result);

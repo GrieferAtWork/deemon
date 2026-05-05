@@ -320,16 +320,6 @@ DeeFileReader_NewObjectBuffer(DeeObject *__restrict data,
 
 
 
-/* Experimental feature switch: `File.Writer' can also write bytes */
-#if (!defined(CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES))
-#if 1
-#define CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
-#else
-#define CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_FILE_WRITER_BYTES */
-
 struct Dee_bytes_object;
 typedef struct Dee_file_writer_object {
 	Dee_FILE_OBJECT_HEAD
@@ -345,7 +335,6 @@ typedef struct Dee_file_writer_object {
 	 * Or in other words: the current "writer.string" is now an
 	 *                    alias for `writer.bytes.decode("utf-8")' */
 	union {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		struct {
 			size_t                        bp_length; /* # of bytes currently used within `bp_bytes' */
 			DREF struct Dee_bytes_object *bp_bytes;  /* [0..1][owned] The resulting Bytes object.
@@ -361,9 +350,6 @@ typedef struct Dee_file_writer_object {
 		                                    * The printer used to generate the string. */
 #define DeeFileWriter_IsBytes(self)  ((self)->w_string == (DREF DeeStringObject *)ITER_DONE)
 #define DeeFileWriter_IsString(self) ((self)->w_string != (DREF DeeStringObject *)ITER_DONE)
-#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		struct Dee_unicode_printer wp_uni; /* [lock(w_lock)][owned_if(!w_string)] The printer used to generate the string. */
-#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	} w_printer;
 	DREF DeeStringObject      *w_string;  /* [lock(w_lock)][0..1][valid_if((w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
 	                                       * Cached variant of the last-accessed, generated multi-byte string. */

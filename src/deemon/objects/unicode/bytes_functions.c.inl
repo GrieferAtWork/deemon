@@ -36,7 +36,7 @@
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeq_NewEmpty */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeAscii_ItoaLowerDigit, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_*, Dee_uniflag_t, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeAscii_*, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_*, Dee_uniflag_t, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrev, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memcasecmp, memchr, memcmp, memcpy*, mempcpy, memset, open */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* METHOD_F*, TYPE_*METHOD*, type_method */
@@ -59,7 +59,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uintptr_t */
+#include <stdint.h>  /* uint8_t, uintptr_t */
 
 /* Have a compile-time select to choose encoding of bytes:
  * - ASCII   (with bytes 80h-FFh being undefined)
