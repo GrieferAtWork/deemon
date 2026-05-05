@@ -308,8 +308,8 @@ struct Dee_gc_head {
 
 #define _Dee_GC_HEAD_UNTRACKED_INIT { NULL }, NULL
 
-#define Dee_GC_OBJECT_OFFSET sizeof(struct Dee_gc_head)
-#define Dee_GC_HEAD_SIZE     sizeof(struct Dee_gc_head)
+#define Dee_GC_OBJECT_OFFSET (2 * __SIZEOF_POINTER__)
+#define Dee_GC_HEAD_SIZE     (2 * __SIZEOF_POINTER__)
 #define DeeGC_Head(ob)       ((struct Dee_gc_head *)((__BYTE_TYPE__ *)Dee_AsObject(ob) - Dee_GC_OBJECT_OFFSET))
 #ifdef __INTELLISENSE__
 #define DeeGC_Object(head)   ((DeeObject *)((__BYTE_TYPE__ *)&(head)->gc_info + Dee_GC_OBJECT_OFFSET))
@@ -507,7 +507,7 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 
 /* Check if an object-size of "N" is supported for slab allocation */
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
-#define DeeGCSlab_IsSupported(N) ((N) <= (Dee_SLAB_CHUNKSIZE_MAX - 2 * __SIZEOF_POINTER__))
+#define DeeGCSlab_IsSupported(N) ((N) <= (Dee_SLAB_CHUNKSIZE_MAX - Dee_GC_OBJECT_OFFSET))
 #else /* Dee_SLAB_CHUNKSIZE_MAX */
 #define DeeGCSlab_IsSupported(N) 0
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */

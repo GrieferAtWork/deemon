@@ -75,6 +75,9 @@
 
 DECL_BEGIN
 
+STATIC_ASSERT(sizeof(struct Dee_gc_head) == Dee_GC_OBJECT_OFFSET);
+STATIC_ASSERT(sizeof(struct Dee_gc_head) == Dee_GC_HEAD_SIZE);
+
 #ifndef NDEBUG
 PRIVATE NONNULL((1, 2)) void DCALL
 gc_dprint_object_info(DeeTypeObject *tp, DeeObject *ob) {

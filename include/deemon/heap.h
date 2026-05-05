@@ -242,7 +242,8 @@ DFUNDEF size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes);
  * @return: 1 : Success */
 DFUNDEF int DCALL DeeHeap_SetOpt(int option, size_t value);
 
-/* Trim pre-allocated heap buffers, but keep at least `pad' bytes allocated (if already allocated)
+/* Trim pre-allocated heap buffers, but keep at least `pad'
+ * bytes allocated per heap instance (if already allocated)
  * @return: * : The # of bytes released back to the system. */
 DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
 
