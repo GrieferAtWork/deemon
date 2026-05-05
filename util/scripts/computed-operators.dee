@@ -155,57 +155,73 @@ final class SubTable {
 #define InitializerSpec RegexAlign | PPDirective | Field | NativeOperator | SubTable | Object/*InitializerSpecs*/
 #define InitializerSpecs {InitializerSpec...}
 
-global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
-	"DeeTypeObject": {
-		RegexAlign(r"OBJECT_HEAD_INIT\([^)]*\)"),
-		Field("tp_name"),
-		Field("tp_doc"),
-		Field("tp_flags"),
-		Field("tp_weakrefs"),
-		Field("tp_features"),
-		Field("tp_base"),
-		/* .tp_init = */ {
-			Field("__tp_alloc"),
-			Field("tp_dtor"),
-			Field("tp_assign"),      /* NativeOperator("tp_assign") */
-			Field("tp_move_assign"), /* NativeOperator("tp_move_assign") */
-			Field("tp_new"),
-			Field("tp_new_kw"),
-			Field("tp_new_copy"),
-			Field("tp_destroy"),
-			Field("tp_finalize"),
-		},
-		/* .tp_cast = */ {
-			NativeOperator("tp_str"),
-			NativeOperator("tp_repr"),
-			NativeOperator("tp_bool"),
-			NativeOperator("tp_print"),
-			NativeOperator("tp_printrepr"),
-		},
-		Field("tp_visit"),
-		Field("tp_gc"),
-		SubTable("tp_math", "type_math"),
-		SubTable("tp_cmp", "type_cmp"),
-		SubTable("tp_seq", "type_seq"),
-		NativeOperator("tp_iter_next"),
-		SubTable("tp_iterator", "type_iterator"), // Field("tp_iterator"),
-		Field("tp_attr"),                         // SubTable("tp_attr", "type_attr"),
-		SubTable("tp_with", "type_with"),
-		Field("tp_buffer"),
-		Field("tp_methods"),
-		Field("tp_getsets"),
-		Field("tp_members"),
-		Field("tp_class_methods"),
-		Field("tp_class_getsets"),
-		Field("tp_class_members"),
-		Field("tp_method_hints"),
-		NativeOperator("tp_call"),
-		SubTable("tp_callable", "type_callable"),
-		Field("tp_mro"),
-		Field("tp_operators"),
-		Field("tp_operators_size"),
-		Field("tp_mhcache"),
+global final ENTRY_POINTS: {string...} = { "DeeTypeObject", "DeeFileTypeObject" };
+global final TYPE_OBJECT_INITIALIZER = {
+	RegexAlign(r"OBJECT_HEAD_INIT\([^)]*\)"),
+	Field("tp_name"),
+	Field("tp_doc"),
+	Field("tp_flags"),
+	Field("tp_weakrefs"),
+	Field("tp_features"),
+	Field("tp_base"),
+	/* .tp_init = */ {
+		Field("__tp_alloc"),
+		Field("tp_dtor"),
+		Field("tp_assign"),      /* NativeOperator("tp_assign") */
+		Field("tp_move_assign"), /* NativeOperator("tp_move_assign") */
+		Field("tp_new"),
+		Field("tp_new_kw"),
+		Field("tp_new_copy"),
+		Field("tp_destroy"),
+		Field("tp_finalize"),
 	},
+	/* .tp_cast = */ {
+		NativeOperator("tp_str"),
+		NativeOperator("tp_repr"),
+		NativeOperator("tp_bool"),
+		NativeOperator("tp_print"),
+		NativeOperator("tp_printrepr"),
+	},
+	Field("tp_visit"),
+	Field("tp_gc"),
+	SubTable("tp_math", "type_math"),
+	SubTable("tp_cmp", "type_cmp"),
+	SubTable("tp_seq", "type_seq"),
+	NativeOperator("tp_iter_next"),
+	SubTable("tp_iterator", "type_iterator"), // Field("tp_iterator"),
+	Field("tp_attr"),                         // SubTable("tp_attr", "type_attr"),
+	SubTable("tp_with", "type_with"),
+	Field("tp_buffer"),
+	Field("tp_methods"),
+	Field("tp_getsets"),
+	Field("tp_members"),
+	Field("tp_class_methods"),
+	Field("tp_class_getsets"),
+	Field("tp_class_members"),
+	Field("tp_method_hints"),
+	NativeOperator("tp_call"),
+	SubTable("tp_callable", "type_callable"),
+	Field("tp_mro"),
+	Field("tp_operators"),
+	Field("tp_operators_size"),
+	Field("tp_mhcache"),
+};
+global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
+	"DeeFileTypeObject": {
+		TYPE_OBJECT_INITIALIZER,
+		Field("ft_read"),
+		Field("ft_write"),
+		Field("ft_seek"),
+		Field("ft_sync"),
+		Field("ft_trunc"),
+		Field("ft_close"),
+		Field("ft_pread"),
+		Field("ft_pwrite"),
+		Field("ft_getc"),
+		Field("ft_ungetc"),
+		Field("ft_putc"),
+	},
+	"DeeTypeObject": TYPE_OBJECT_INITIALIZER,
 	"type_math": {
 		NativeOperator("tp_int32"),
 		NativeOperator("tp_int64"),
@@ -921,7 +937,7 @@ final class StructInitializer {
 		 * - Extract the value of "tp_name"
 		 * - Use the type's "tp_name" to find its runtime representation
 		 */
-		if (structTyp != "DeeTypeObject")
+		if (structTyp !in ENTRY_POINTS)
 			return;
 		local typeTpName;
 		try {

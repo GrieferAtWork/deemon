@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* DeeBool_Check, DeeBool_IsTrue, return_bool */
 #include <deemon/bytes.h>              /* DeeBytes_NewView, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/callable.h>           /* DeeCallable_Type */
-#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_Check, DeeFileType_CheckExact, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileBuffer_New, DeeFileReader_Type, DeeFileWriter_Type, DeeSystemFileObject, DeeSystemFile_GetHandle, Dee_FILE_BUFFER_FREADONLY, Dee_FILE_BUFFER_MODE_AUTO */
@@ -35,7 +35,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/mapfile.h>            /* DeeMapFile* */
 #include <deemon/module.h>             /* DeeModule* */
-#include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
+#include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize, _DeeNone_rets0_1 */
 #include <deemon/none.h>               /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_HAS_ERR, Dee_HAS_NO, Dee_Incref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutFuncPtr, Dee_seraddr_t */
@@ -2709,13 +2709,13 @@ PRIVATE struct type_method tpconst file_methods[] = {
 
 PRIVATE struct type_with file_with = {
 	/* Implement with-control for files to close the file upon exit. */
-	/* .tp_enter = */ NULL,
-	/* .tp_leave = */ &DeeFile_Close
+	/* .tp_enter = */ DEFIMPL((int (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1),
+	/* .tp_leave = */ &DeeFile_Close,
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_next(DeeFileObject *__restrict self) {
-	return DeeFile_ReadLine(Dee_AsObject(self), (size_t)-1, true);
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_next(DeeObject *__restrict self) {
+	return DeeFile_ReadLine(self, (size_t)-1, true);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2763,7 +2763,47 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 
 
 PRIVATE struct type_seq file_seq = {
-	/* .tp_iter = */ &DeeObject_NewRef
+	/* .tp_iter = */ &DeeObject_NewRef,
+	/* .tp_sizeob                     = */ DEFIMPL_UNSUPPORTED(&default__sizeob__unsupported),
+	/* .tp_contains                   = */ DEFIMPL_UNSUPPORTED(&default__contains__unsupported),
+	/* .tp_getitem                    = */ DEFIMPL_UNSUPPORTED(&default__getitem__unsupported),
+	/* .tp_delitem                    = */ DEFIMPL_UNSUPPORTED(&default__delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL_UNSUPPORTED(&default__setitem__unsupported),
+	/* .tp_getrange                   = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
+	/* .tp_delrange                   = */ DEFIMPL_UNSUPPORTED(&default__delrange__unsupported),
+	/* .tp_setrange                   = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_bounditem                  = */ DEFIMPL_UNSUPPORTED(&default__bounditem__unsupported),
+	/* .tp_hasitem                    = */ DEFIMPL_UNSUPPORTED(&default__hasitem__unsupported),
+	/* .tp_size                       = */ DEFIMPL_UNSUPPORTED(&default__size__unsupported),
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL_UNSUPPORTED(&default__getitem_index__unsupported),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL_UNSUPPORTED(&default__delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL_UNSUPPORTED(&default__setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL_UNSUPPORTED(&default__bounditem_index__unsupported),
+	/* .tp_hasitem_index              = */ DEFIMPL_UNSUPPORTED(&default__hasitem_index__unsupported),
+	/* .tp_getrange_index             = */ DEFIMPL_UNSUPPORTED(&default__getrange_index__unsupported),
+	/* .tp_delrange_index             = */ DEFIMPL_UNSUPPORTED(&default__delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL_UNSUPPORTED(&default__setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__getrange_index_n__unsupported),
+	/* .tp_delrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL_UNSUPPORTED(&default__setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL_UNSUPPORTED(&default__trygetitem__unsupported),
+	/* .tp_trygetitem_index           = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_index__unsupported),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_string_hash__unsupported),
+	/* .tp_getitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__getitem_string_hash__unsupported),
+	/* .tp_delitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__delitem_string_hash__unsupported),
+	/* .tp_setitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__setitem_string_hash__unsupported),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL_UNSUPPORTED(&default__bounditem_string_hash__unsupported),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL_UNSUPPORTED(&default__hasitem_string_hash__unsupported),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL_UNSUPPORTED(&default__trygetitem_string_len_hash__unsupported),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__getitem_string_len_hash__unsupported),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__delitem_string_len_hash__unsupported),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__setitem_string_len_hash__unsupported),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL_UNSUPPORTED(&default__bounditem_string_len_hash__unsupported),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL_UNSUPPORTED(&default__hasitem_string_len_hash__unsupported),
 };
 
 
@@ -2776,7 +2816,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 file_shr(DeeObject *self, DeeObject *some_object) {
 	DeeBuffer buffer;
 	size_t result;
@@ -2798,34 +2838,47 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_repr(DeeObject *__restrict self) {
 	if (Dee_TYPE(self) == &DeeFile_Type.ft_base)
-		return (DREF DeeStringObject *)DeeString_New("File()");
+		return DeeString_New("File()");
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;
 }
 
 
 PRIVATE struct type_math file_math = {
-	/* .tp_int32  = */ NULL,
-	/* .tp_int64  = */ NULL,
-	/* .tp_double = */ NULL,
-	/* .tp_int    = */ NULL,
-	/* .tp_inv    = */ NULL,
-	/* .tp_pos    = */ NULL,
-	/* .tp_neg    = */ NULL,
-	/* .tp_add    = */ NULL,
-	/* .tp_sub    = */ NULL,
-	/* .tp_mul    = */ NULL,
-	/* .tp_div    = */ NULL,
-	/* .tp_mod    = */ NULL,
+	/* .tp_int32  = */ DEFIMPL_UNSUPPORTED(&default__int32__unsupported),
+	/* .tp_int64  = */ DEFIMPL_UNSUPPORTED(&default__int64__unsupported),
+	/* .tp_double = */ DEFIMPL_UNSUPPORTED(&default__double__unsupported),
+	/* .tp_int    = */ DEFIMPL_UNSUPPORTED(&default__int__unsupported),
+	/* .tp_inv    = */ DEFIMPL_UNSUPPORTED(&default__inv__unsupported),
+	/* .tp_pos    = */ DEFIMPL_UNSUPPORTED(&default__pos__unsupported),
+	/* .tp_neg    = */ DEFIMPL_UNSUPPORTED(&default__neg__unsupported),
+	/* .tp_add    = */ DEFIMPL_UNSUPPORTED(&default__add__unsupported),
+	/* .tp_sub    = */ DEFIMPL_UNSUPPORTED(&default__sub__unsupported),
+	/* .tp_mul    = */ DEFIMPL_UNSUPPORTED(&default__mul__unsupported),
+	/* .tp_div    = */ DEFIMPL_UNSUPPORTED(&default__div__unsupported),
+	/* .tp_mod    = */ DEFIMPL_UNSUPPORTED(&default__mod__unsupported),
 	/* .tp_shl    = */ &file_shl,
 	/* .tp_shr    = */ &file_shr,
-	/* .tp_and    = */ NULL,
-	/* .tp_or     = */ NULL,
-	/* .tp_xor    = */ NULL,
-	/* .tp_pow    = */ NULL
+	/* .tp_and    = */ DEFIMPL_UNSUPPORTED(&default__and__unsupported),
+	/* .tp_or     = */ DEFIMPL_UNSUPPORTED(&default__or__unsupported),
+	/* .tp_xor    = */ DEFIMPL_UNSUPPORTED(&default__xor__unsupported),
+	/* .tp_pow    = */ DEFIMPL_UNSUPPORTED(&default__pow__unsupported),
+	/* .tp_inc         = */ DEFIMPL_UNSUPPORTED(&default__inc__unsupported),
+	/* .tp_dec         = */ DEFIMPL_UNSUPPORTED(&default__dec__unsupported),
+	/* .tp_inplace_add = */ DEFIMPL_UNSUPPORTED(&default__inplace_add__unsupported),
+	/* .tp_inplace_sub = */ DEFIMPL_UNSUPPORTED(&default__inplace_sub__unsupported),
+	/* .tp_inplace_mul = */ DEFIMPL_UNSUPPORTED(&default__inplace_mul__unsupported),
+	/* .tp_inplace_div = */ DEFIMPL_UNSUPPORTED(&default__inplace_div__unsupported),
+	/* .tp_inplace_mod = */ DEFIMPL_UNSUPPORTED(&default__inplace_mod__unsupported),
+	/* .tp_inplace_shl = */ DEFIMPL(&default__inplace_shl__with__shl),
+	/* .tp_inplace_shr = */ DEFIMPL(&default__inplace_shr__with__shr),
+	/* .tp_inplace_and = */ DEFIMPL_UNSUPPORTED(&default__inplace_and__unsupported),
+	/* .tp_inplace_or  = */ DEFIMPL_UNSUPPORTED(&default__inplace_or__unsupported),
+	/* .tp_inplace_xor = */ DEFIMPL_UNSUPPORTED(&default__inplace_xor__unsupported),
+	/* .tp_inplace_pow = */ DEFIMPL_UNSUPPORTED(&default__inplace_pow__unsupported),
 };
 
 #if 0 /* Even though `File' is technically a sequence, don't spam its
@@ -2963,20 +3016,22 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
+			/* .tp_move_assign = */ NULL,
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_repr,
-			/* .tp_bool = */ NULL
+			/* .tp_str  = */ DEFIMPL(&object_str),
+			/* .tp_repr = */ &file_repr,
+			/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+			/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+			/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 		},
 		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ &file_math,
-		/* .tp_cmp           = */ NULL,
+		/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__FA8008618F75C42A),
 		/* .tp_seq           = */ &file_seq,
-		/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_next,
-		/* .tp_iterator      = */ NULL,
+		/* .tp_iter_next     = */ &file_next,
+		/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ &file_with,
 		/* .tp_buffer        = */ NULL,
@@ -2985,7 +3040,10 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ file_class_methods,
 		/* .tp_class_getsets = */ file_class_getsets,
-		/* .tp_class_members = */ file_class_members
+		/* .tp_class_members = */ file_class_members,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+		/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	},
 	/* .ft_read   = */ NULL,
 	/* .ft_write  = */ NULL,
@@ -2997,7 +3055,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
-	/* .ft_putc   = */ NULL
+	/* .ft_putc   = */ NULL,
 };
 
 DECL_END

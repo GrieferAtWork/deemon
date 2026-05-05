@@ -23,11 +23,11 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TryMemalign */
+#include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* DeeBool*, Dee_CONFIG_BOOL_TLS, Dee_False, Dee_True, _DeeBool_Pair, _Dee_ALIGNOF_BOOL_PAIR, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
-#include <deemon/arg.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_HAS_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */

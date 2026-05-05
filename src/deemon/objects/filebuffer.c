@@ -22,22 +22,23 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeDbg_*, DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
-#include <deemon/bool.h>            /* return_bool */
-#include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t */
-#include <deemon/filetypes.h>       /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
-#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
-#include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_IncrefIfNotZero, Dee_SIZEOF_POS_T, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, OBJECT_HEAD_INIT */
-#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeUni_ToLower */
-#include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
-#include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
-#include <deemon/util/atomic.h>     /* atomic_read */
-#include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
-#include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */
+#include <deemon/alloc.h>              /* DeeDbg_*, DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
+#include <deemon/bool.h>               /* return_bool */
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t */
+#include <deemon/filetypes.h>          /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
+#include <deemon/none.h>               /* return_none */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_IncrefIfNotZero, Dee_SIZEOF_POS_T, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeUni_ToLower */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
+#include <deemon/type.h>               /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_init */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
@@ -2101,31 +2102,34 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&buffer_fini,
 			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
+			/* .tp_move_assign = */ NULL,
 		},
 		/* .tp_cast = */ {
-			/* .tp_str       = */ NULL,
-			/* .tp_repr      = */ NULL,
-			/* .tp_bool      = */ NULL,
+			/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+			/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+			/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
 			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_print,
-			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_printrepr
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&buffer_printrepr,
 		},
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&buffer_visit,
 		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_iterator      = */ NULL,
+		/* .tp_math          = */ DEFIMPL(&default__tp_math__3BDA91520F130F8D),
+		/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__FA8008618F75C42A),
+		/* .tp_seq           = */ DEFIMPL(&default__tp_seq__97D29BAD40C180DA),
+		/* .tp_iter_next     = */ DEFIMPL(&file_next),
+		/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
+		/* .tp_with          = */ DEFIMPL(&default__tp_with__F4A3C35C8BEE80E5),
 		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */ buffer_methods,
 		/* .tp_getsets       = */ buffer_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ buffer_class_methods,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
+		/* .tp_class_members = */ NULL,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+		/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	},
 	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&buffer_read,
 	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&buffer_write,
@@ -2137,7 +2141,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&buffer_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&buffer_ungetc,
-	/* .ft_putc   = */ NULL
+	/* .ft_putc   = */ NULL,
 };
 
 

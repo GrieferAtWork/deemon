@@ -110,9 +110,14 @@ DECL_BEGIN
 
 /* Reusable default operators (and operator callbacks that get inherited) */
 /*[[[begin::computed-operator-decls]]]*/
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Close(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL file_next(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL file_repr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL file_shl(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL file_shr(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_object_compare_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_object_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_object_ne(DeeObject *lhs, DeeObject *rhs);
@@ -131,6 +136,8 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL module_printrepr(DeeObject *__r
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL module_str(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_repr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_str(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL sysfile_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL sysfile_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_compare_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_ne(DeeObject *lhs, DeeObject *rhs);
@@ -159,6 +166,7 @@ INTDEF struct type_cmp default__tp_cmp__FEC430738D08383C;
 INTDEF struct type_iterator default__tp_iterator__712535FF7E4C26E5;
 INTDEF struct type_math default__tp_math__22D95991F3D69B20;
 INTDEF struct type_math default__tp_math__2E23147A197C0EE6;
+INTDEF struct type_math default__tp_math__3BDA91520F130F8D;
 INTDEF struct type_math default__tp_math__47C97A4265F9F31F;
 INTDEF struct type_math default__tp_math__6AAE313158D20BA0;
 INTDEF struct type_math default__tp_math__B29E727096DFDAFC;
@@ -166,6 +174,8 @@ INTDEF struct type_math default__tp_math__E5A99B058858326C;
 INTDEF struct type_math default__tp_math__E66FA6851AAFE176;
 INTDEF struct type_math default__tp_math__EFED4BCD35433C3C;
 INTDEF struct type_math default__tp_math__F6E3D7B2219AE1EB;
+INTDEF struct type_seq default__tp_seq__97D29BAD40C180DA;
+INTDEF struct type_with default__tp_with__F4A3C35C8BEE80E5;
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 INTDEF struct type_callable default__tp_callable__EC3FFC1C149A47D0;
 INTDEF struct type_cmp default__tp_cmp__FA8008618F75C42A;

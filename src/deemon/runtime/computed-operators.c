@@ -23,10 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/computed-operators.h> /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS, CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
+#include <deemon/file.h>               /* DeeFile_Close */
+#include <deemon/none-operator.h>      /* _DeeNone_rets0_1 */
 #include <deemon/type.h>               /* type_* */
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
-#include <deemon/object.h> /* DREF, DeeObject, DeeObject_NewKw */
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_NewKw, DeeObject_NewRef */
 
 #include "../objects/seq/concat.h"
 #include "method-hint-defaults.h"
@@ -329,6 +331,39 @@ INTERN struct type_math default__tp_math__2E23147A197C0EE6 = {
 	/* .tp_inplace_xor = */ &default__map_operator_inplace_xor__unsupported,
 	/* .tp_inplace_pow = */ UNSUPPORTED(&default__inplace_pow__unsupported),
 };
+INTERN struct type_math default__tp_math__3BDA91520F130F8D = {
+	/* .tp_int32       = */ UNSUPPORTED(&default__int32__unsupported),
+	/* .tp_int64       = */ UNSUPPORTED(&default__int64__unsupported),
+	/* .tp_double      = */ UNSUPPORTED(&default__double__unsupported),
+	/* .tp_int         = */ UNSUPPORTED(&default__int__unsupported),
+	/* .tp_inv         = */ UNSUPPORTED(&default__inv__unsupported),
+	/* .tp_pos         = */ UNSUPPORTED(&default__pos__unsupported),
+	/* .tp_neg         = */ UNSUPPORTED(&default__neg__unsupported),
+	/* .tp_add         = */ UNSUPPORTED(&default__add__unsupported),
+	/* .tp_sub         = */ UNSUPPORTED(&default__sub__unsupported),
+	/* .tp_mul         = */ UNSUPPORTED(&default__mul__unsupported),
+	/* .tp_div         = */ UNSUPPORTED(&default__div__unsupported),
+	/* .tp_mod         = */ UNSUPPORTED(&default__mod__unsupported),
+	/* .tp_shl         = */ &file_shl,
+	/* .tp_shr         = */ &file_shr,
+	/* .tp_and         = */ UNSUPPORTED(&default__and__unsupported),
+	/* .tp_or          = */ UNSUPPORTED(&default__or__unsupported),
+	/* .tp_xor         = */ UNSUPPORTED(&default__xor__unsupported),
+	/* .tp_pow         = */ UNSUPPORTED(&default__pow__unsupported),
+	/* .tp_inc         = */ UNSUPPORTED(&default__inc__unsupported),
+	/* .tp_dec         = */ UNSUPPORTED(&default__dec__unsupported),
+	/* .tp_inplace_add = */ UNSUPPORTED(&default__inplace_add__unsupported),
+	/* .tp_inplace_sub = */ UNSUPPORTED(&default__inplace_sub__unsupported),
+	/* .tp_inplace_mul = */ UNSUPPORTED(&default__inplace_mul__unsupported),
+	/* .tp_inplace_div = */ UNSUPPORTED(&default__inplace_div__unsupported),
+	/* .tp_inplace_mod = */ UNSUPPORTED(&default__inplace_mod__unsupported),
+	/* .tp_inplace_shl = */ &default__inplace_shl__with__shl,
+	/* .tp_inplace_shr = */ &default__inplace_shr__with__shr,
+	/* .tp_inplace_and = */ UNSUPPORTED(&default__inplace_and__unsupported),
+	/* .tp_inplace_or  = */ UNSUPPORTED(&default__inplace_or__unsupported),
+	/* .tp_inplace_xor = */ UNSUPPORTED(&default__inplace_xor__unsupported),
+	/* .tp_inplace_pow = */ UNSUPPORTED(&default__inplace_pow__unsupported),
+};
 INTERN struct type_math default__tp_math__47C97A4265F9F31F = {
 	/* .tp_int32       = */ UNSUPPORTED(&default__int32__unsupported),
 	/* .tp_int64       = */ UNSUPPORTED(&default__int64__unsupported),
@@ -559,6 +594,58 @@ INTERN struct type_math default__tp_math__F6E3D7B2219AE1EB = {
 	/* .tp_inplace_or  = */ &default__set_operator_inplace_add__unsupported,
 	/* .tp_inplace_xor = */ &default__set_operator_inplace_xor__unsupported,
 	/* .tp_inplace_pow = */ UNSUPPORTED(&default__inplace_pow__unsupported),
+};
+INTERN struct type_seq default__tp_seq__97D29BAD40C180DA = {
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeObject_NewRef,
+	/* .tp_sizeob                       = */ UNSUPPORTED(&default__sizeob__unsupported),
+	/* .tp_contains                     = */ UNSUPPORTED(&default__contains__unsupported),
+	/* .tp_getitem                      = */ UNSUPPORTED(&default__getitem__unsupported),
+	/* .tp_delitem                      = */ UNSUPPORTED(&default__delitem__unsupported),
+	/* .tp_setitem                      = */ UNSUPPORTED(&default__setitem__unsupported),
+	/* .tp_getrange                     = */ UNSUPPORTED(&default__getrange__unsupported),
+	/* .tp_delrange                     = */ UNSUPPORTED(&default__delrange__unsupported),
+	/* .tp_setrange                     = */ UNSUPPORTED(&default__setrange__unsupported),
+	/* .tp_foreach                      = */ &default__foreach__with__iter,
+	/* .tp_foreach_pair                 = */ &default__foreach_pair__with__iter,
+	/* .tp_bounditem                    = */ UNSUPPORTED(&default__bounditem__unsupported),
+	/* .tp_hasitem                      = */ UNSUPPORTED(&default__hasitem__unsupported),
+	/* .tp_size                         = */ UNSUPPORTED(&default__size__unsupported),
+	/* .tp_size_fast                    = */ NULL,
+	/* .tp_getitem_index                = */ UNSUPPORTED(&default__getitem_index__unsupported),
+	/* .tp_getitem_index_fast           = */ NULL,
+	/* .tp_delitem_index                = */ UNSUPPORTED(&default__delitem_index__unsupported),
+	/* .tp_setitem_index                = */ UNSUPPORTED(&default__setitem_index__unsupported),
+	/* .tp_bounditem_index              = */ UNSUPPORTED(&default__bounditem_index__unsupported),
+	/* .tp_hasitem_index                = */ UNSUPPORTED(&default__hasitem_index__unsupported),
+	/* .tp_getrange_index               = */ UNSUPPORTED(&default__getrange_index__unsupported),
+	/* .tp_delrange_index               = */ UNSUPPORTED(&default__delrange_index__unsupported),
+	/* .tp_setrange_index               = */ UNSUPPORTED(&default__setrange_index__unsupported),
+	/* .tp_getrange_index_n             = */ UNSUPPORTED(&default__getrange_index_n__unsupported),
+	/* .tp_delrange_index_n             = */ UNSUPPORTED(&default__delrange_index_n__unsupported),
+	/* .tp_setrange_index_n             = */ UNSUPPORTED(&default__setrange_index_n__unsupported),
+	/* .tp_trygetitem                   = */ UNSUPPORTED(&default__trygetitem__unsupported),
+	/* .tp_trygetitem_index             = */ UNSUPPORTED(&default__trygetitem_index__unsupported),
+	/* .tp_trygetitem_string_hash       = */ UNSUPPORTED(&default__trygetitem_string_hash__unsupported),
+	/* .tp_getitem_string_hash          = */ UNSUPPORTED(&default__getitem_string_hash__unsupported),
+	/* .tp_delitem_string_hash          = */ UNSUPPORTED(&default__delitem_string_hash__unsupported),
+	/* .tp_setitem_string_hash          = */ UNSUPPORTED(&default__setitem_string_hash__unsupported),
+	/* .tp_bounditem_string_hash        = */ UNSUPPORTED(&default__bounditem_string_hash__unsupported),
+	/* .tp_hasitem_string_hash          = */ UNSUPPORTED(&default__hasitem_string_hash__unsupported),
+	/* .tp_trygetitem_string_len_hash   = */ UNSUPPORTED(&default__trygetitem_string_len_hash__unsupported),
+	/* .tp_getitem_string_len_hash      = */ UNSUPPORTED(&default__getitem_string_len_hash__unsupported),
+	/* .tp_delitem_string_len_hash      = */ UNSUPPORTED(&default__delitem_string_len_hash__unsupported),
+	/* .tp_setitem_string_len_hash      = */ UNSUPPORTED(&default__setitem_string_len_hash__unsupported),
+	/* .tp_bounditem_string_len_hash    = */ UNSUPPORTED(&default__bounditem_string_len_hash__unsupported),
+	/* .tp_hasitem_string_len_hash      = */ UNSUPPORTED(&default__hasitem_string_len_hash__unsupported),
+	/* .tp_asvector                     = */ NULL,
+	/* .tp_asvector_nothrow             = */ NULL,
+	/* .tp_trygetitemnr                 = */ NULL,
+	/* .tp_trygetitemnr_string_hash     = */ NULL,
+	/* .tp_trygetitemnr_string_len_hash = */ NULL,
+};
+INTERN struct type_with default__tp_with__F4A3C35C8BEE80E5 = {
+	/* .tp_enter = */ (int (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1,
+	/* .tp_leave = */ &DeeFile_Close,
 };
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 INTERN struct type_callable default__tp_callable__EC3FFC1C149A47D0 = {

@@ -22,23 +22,24 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
-#include <deemon/bool.h>            /* return_bool, return_false, return_true */
-#include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttr */
-#include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, OPEN_F* */
-#include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
-#include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
-#include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */
-#include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
-#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
-#include <deemon/stringutils.h>     /* Dee_unicode_utf8seqlen_safe */
-#include <deemon/system-features.h> /* *open*, *read*, *seek*, *write*, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, O_*, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fputc, fsync, ftello, ftello64, ftruncate, ftruncate64, isatty, memcpyc, mempcpyc, setvbuf, sync, truncate, truncate64, ungetc */
-#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_* */
-#include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>                /* DEFINE_KWLIST, DeeArg_Unpack* */
+#include <deemon/bool.h>               /* return_bool, return_false, return_true */
+#include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_GETC_EOF, Dee_GETC_ERR, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, OPEN_F* */
+#include <deemon/filetypes.h>          /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
+#include <deemon/int.h>                /* DeeInt_NewInt, DeeInt_NewUIntptr */
+#include <deemon/none.h>               /* return_none */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/string.h>             /* DeeString*, DeeUni_ToLower */
+#include <deemon/stringutils.h>        /* Dee_unicode_utf8seqlen_safe */
+#include <deemon/system-features.h>    /* *open*, *read*, *seek*, *write*, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, O_*, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fputc, fsync, ftello, ftello64, ftruncate, ftruncate64, isatty, memcpyc, mempcpyc, setvbuf, sync, truncate, truncate64, ungetc */
+#include <deemon/system.h>             /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_* */
+#include <deemon/type.h>               /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -3066,91 +3067,136 @@ PRIVATE struct type_member tpconst sysfile_members[] = {
 #endif /* DeeSystem_FILE_USE_stdio_FILE */
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sysfile_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void * arg) {
+	SystemFile *me = (SystemFile *)self;
 #ifdef DeeSystemFile_HAVE_sf_filename
-	if (self->sf_filename != NULL)
-		return DeeFormat_Printf(printer, arg, "<File %r>", self->sf_filename);
+	if (me->sf_filename != NULL)
+		return DeeFormat_Printf(printer, arg, "<File %r>", me->sf_filename);
 #endif /* DeeSystemFile_HAVE_sf_filename */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
-	return DeeFormat_Printf(printer, arg, "<File (handle %p)>", self->sf_handle);
+	return DeeFormat_Printf(printer, arg, "<File (handle %p)>", me->sf_handle);
 #elif defined(DeeSystem_FILE_USE_unix_fd)
-	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", self->sf_handle);
+	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", me->sf_handle);
 #elif defined(DeeSystem_FILE_USE_stdio_FILE) && defined(CONFIG_HAVE_fileno)
-	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", fileno(self->sf_handle));
+	return DeeFormat_Printf(printer, arg, "<File (fd %d)>", fileno(me->sf_handle));
 #else /* ... */
-	(void)self;
+	(void)me;
 	return DeeFormat_PRINT(printer, arg, "<File>");
 #endif /* !... */
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sysfile_printrepr(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sysfile_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void * arg) {
+	SystemFile *me = (SystemFile *)self;
 #ifdef DeeSystemFile_HAVE_sf_filename
-	if (self->sf_filename != NULL)
-		return DeeFormat_Printf(printer, arg, "File.open(%r)", self->sf_filename);
+	if (me->sf_filename != NULL)
+		return DeeFormat_Printf(printer, arg, "File.open(%r)", me->sf_filename);
 #endif /* DeeSystemFile_HAVE_sf_filename */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
 	{
-		char const *name = self->ob_type->ft_base.tp_name;
+		char const *name = me->ob_type->ft_base.tp_name;
 		if (name == NULL)
 			name = DeeSystemFile_Type.ft_base.tp_name;
 		return DeeFormat_Printf(printer, arg, "%s(fd: HANDLE(%#" PRFxPTR "), inherit: %s)",
-		                        name, self->sf_handle,
-		                        self->sf_ownhandle == self->sf_handle ? "true" : "false");
+		                        name, me->sf_handle,
+		                        me->sf_ownhandle == me->sf_handle ? "true" : "false");
 	}
 #elif defined(DeeSystem_FILE_USE_unix_fd)
 	{
-		char const *name = self->ob_type->ft_base.tp_name;
+		char const *name = me->ob_type->ft_base.tp_name;
 		if (name == NULL)
 			name = DeeSystemFile_Type.ft_base.tp_name;
 		return DeeFormat_Printf(printer, arg, "%s(fd: %d, inherit: %s)",
-		                        name, self->sf_handle,
-		                        self->sf_ownhandle == self->sf_handle ? "true" : "false");
+		                        name, me->sf_handle,
+		                        me->sf_ownhandle == me->sf_handle ? "true" : "false");
 	}
 #else /* ... */
-	return sysfile_print(self, printer, arg);
+	return sysfile_print(me, printer, arg);
 #endif /* !... */
 }
 
 
+
+#ifdef CONFIG_NO_DOC
+#define sysfile_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const sysfile_doc[] =
+"Base-class for os-specific file I/O\n"
+"\n"
+
+#ifdef deemon_file_HAVE_sysfile_init_kw
+"(fd:"
+#ifdef DeeSystem_FILE_USE_nt_HANDLE
+"?X3?Dint?DFile?Ewin32:HANDLE"
+#else  /* DeeSystem_FILE_USE_nt_HANDLE */
+"?X2?Dint?DFile"
+#endif /* !DeeSystem_FILE_USE_nt_HANDLE */
+",inherit=!f,duplicate=!f)\n"
+"Construct a new SystemFile wrapper for @handle. When @inherit is "
+/**/ "?t, the given @handle is inherited (and automatically closed "
+/**/ "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
+/**/ "is ?t, the given @handle is duplicated, and the duplicated copy "
+/**/ "will be stored inside (in this case, @inherit is ignored)"
+#endif /* deemon_file_HAVE_sysfile_init_kw */
+"";
+#endif /* !CONFIG_NO_DOC */
+#ifdef deemon_file_HAVE_sysfile_init_kw
+#define PTR_sysfile_init_kw &sysfile_init_kw
+#else /* deemon_file_HAVE_sysfile_init_kw */
+#define PTR_sysfile_init_kw NULL
+#endif /* !deemon_file_HAVE_sysfile_init_kw */
+
+#ifdef deemon_file_HAVE_sysfile_fini
+#define PTR_sysfile_fini &sysfile_fini
+#else /* deemon_file_HAVE_sysfile_fini */
+#define PTR_sysfile_fini NULL
+#endif /* !deemon_file_HAVE_sysfile_fini */
+
+#ifndef deemon_file_HAVE_sysfile_methods
+#define sysfile_methods NULL
+#endif /* !deemon_file_HAVE_sysfile_methods */
+#ifndef deemon_file_HAVE_sysfile_members
+#define sysfile_members NULL
+#endif /* !deemon_file_HAVE_sysfile_members */
+
+#ifdef deemon_file_HAVE_sysfile_pread
+#define PTR_sysfile_pread &sysfile_pread
+#else /* deemon_file_HAVE_sysfile_pread */
+#define PTR_sysfile_pread NULL
+#endif /* !deemon_file_HAVE_sysfile_pread */
+#ifdef deemon_file_HAVE_sysfile_pwrite
+#define PTR_sysfile_pwrite &sysfile_pwrite
+#else /* deemon_file_HAVE_sysfile_pwrite */
+#define PTR_sysfile_pwrite NULL
+#endif /* !deemon_file_HAVE_sysfile_pwrite */
+#ifdef deemon_file_HAVE_sysfile_getc
+#define PTR_sysfile_getc &sysfile_getc
+#else /* deemon_file_HAVE_sysfile_getc */
+#define PTR_sysfile_getc NULL
+#endif /* !deemon_file_HAVE_sysfile_getc */
+#ifdef deemon_file_HAVE_sysfile_ungetc
+#define PTR_sysfile_ungetc &sysfile_ungetc
+#else /* deemon_file_HAVE_sysfile_ungetc */
+#define PTR_sysfile_ungetc NULL
+#endif /* !deemon_file_HAVE_sysfile_ungetc */
+#ifdef deemon_file_HAVE_sysfile_putc
+#define PTR_sysfile_putc &sysfile_putc
+#else /* deemon_file_HAVE_sysfile_putc */
+#define PTR_sysfile_putc NULL
+#endif /* !deemon_file_HAVE_sysfile_putc */
 
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_SystemFile",
-#ifdef CONFIG_NO_DOC
-		/* .tp_doc      = */ NULL,
-#else /* CONFIG_NO_DOC */
-		/* .tp_doc      = */ "Base-class for os-specific file I/O\n"
-		                     "\n"
-#ifdef deemon_file_HAVE_sysfile_init_kw
-		                     "(fd:"
-#ifdef DeeSystem_FILE_USE_nt_HANDLE
-		                     "?X3?Dint?DFile?Ewin32:HANDLE"
-#else /* DeeSystem_FILE_USE_nt_HANDLE */
-		                     "?X2?Dint?DFile"
-#endif /* !DeeSystem_FILE_USE_nt_HANDLE */
-		                     ",inherit=!f,duplicate=!f)\n"
-		                     "Construct a new SystemFile wrapper for @handle. When @inherit is "
-		                     /**/ "?t, the given @handle is inherited (and automatically closed "
-		                     /**/ "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
-		                     /**/ "is ?t, the given @handle is duplicated, and the duplicated copy "
-		                     /**/ "will be stored inside (in this case, @inherit is ignored)"
-#endif /* deemon_file_HAVE_sysfile_init_kw */
-		                     "",
-#endif /* !CONFIG_NO_DOC */
+		/* .tp_doc      = */ sysfile_doc,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONLOOPING,
 		/* .tp_base     = */ &DeeFile_Type.ft_base,
 		/* .tp_init = */ {
-#ifdef deemon_file_HAVE_sysfile_init_kw
-#define PTR_sysfile_init_kw &sysfile_init_kw
-#else /* deemon_file_HAVE_sysfile_init_kw */
-#define PTR_sysfile_init_kw NULL
-#endif /* !deemon_file_HAVE_sysfile_init_kw */
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ SystemFile,
 				/* tp_ctor:        */ NULL,
@@ -3159,46 +3205,36 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 				/* tp_any_ctor_kw: */ PTR_sysfile_init_kw,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */
 			),
-#undef PTR_sysfile_init_kw
-#ifdef deemon_file_HAVE_sysfile_fini
-			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,
-#else /* deemon_file_HAVE_sysfile_fini */
-			/* .tp_dtor        = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_fini */
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))PTR_sysfile_fini,
 			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
+			/* .tp_move_assign = */ NULL,
 		},
 		/* .tp_cast = */ {
-			/* .tp_str       = */ NULL,
-			/* .tp_repr      = */ NULL,
-			/* .tp_bool      = */ NULL,
-			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_print,
-			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sysfile_printrepr
+			/* .tp_str       = */ DEFIMPL(&default__str__with__print),
+			/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+			/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+			/* .tp_print     = */ &sysfile_print,
+			/* .tp_printrepr = */ &sysfile_printrepr,
 		},
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_iterator      = */ NULL,
+		/* .tp_math          = */ DEFIMPL(&default__tp_math__3BDA91520F130F8D),
+		/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__FA8008618F75C42A),
+		/* .tp_seq           = */ DEFIMPL(&default__tp_seq__97D29BAD40C180DA),
+		/* .tp_iter_next     = */ DEFIMPL(&file_next),
+		/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
+		/* .tp_with          = */ DEFIMPL(&default__tp_with__F4A3C35C8BEE80E5),
 		/* .tp_buffer        = */ NULL,
-#ifdef deemon_file_HAVE_sysfile_methods
 		/* .tp_methods       = */ sysfile_methods,
-#else /* deemon_file_HAVE_sysfile_methods */
-		/* .tp_methods       = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_methods */
 		/* .tp_getsets       = */ sysfile_getsets,
-#ifdef deemon_file_HAVE_sysfile_members
 		/* .tp_members       = */ sysfile_members,
-#else /* deemon_file_HAVE_sysfile_members */
-		/* .tp_members       = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_members */
 		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ sysfile_class_members
+		/* .tp_class_members = */ sysfile_class_members,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+		/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	},
 	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&sysfile_read,
 	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&sysfile_write,
@@ -3206,32 +3242,13 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_pos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
-#ifdef deemon_file_HAVE_sysfile_pread
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pread,
-#else /* deemon_file_HAVE_sysfile_pread */
-	/* .ft_pread  = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_pread */
-#ifdef deemon_file_HAVE_sysfile_pwrite
-	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pwrite,
-#else /* deemon_file_HAVE_sysfile_pwrite */
-	/* .ft_pwrite = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_pwrite */
-#ifdef deemon_file_HAVE_sysfile_getc
-	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&sysfile_getc,
-#else /* deemon_file_HAVE_sysfile_getc */
-	/* .ft_getc   = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_getc */
-#ifdef deemon_file_HAVE_sysfile_ungetc
-	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&sysfile_ungetc,
-#else /* deemon_file_HAVE_sysfile_ungetc */
-	/* .ft_ungetc = */ NULL,
-#endif /* !deemon_file_HAVE_sysfile_ungetc */
-#ifdef deemon_file_HAVE_sysfile_putc
-	/* .ft_putc   = */ (int (DCALL *)(DeeFileObject *__restrict, int, Dee_ioflag_t))&sysfile_putc
-#else /* deemon_file_HAVE_sysfile_putc */
-	/* .ft_putc   = */ NULL
-#endif /* !deemon_file_HAVE_sysfile_putc */
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))PTR_sysfile_pread,
+	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))PTR_sysfile_pwrite,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))PTR_sysfile_getc,
+	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))PTR_sysfile_ungetc,
+	/* .ft_putc   = */ (int (DCALL *)(DeeFileObject *__restrict, int, Dee_ioflag_t))PTR_sysfile_putc,
 };
+
 
 PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 	/* .ft_base = */ {
@@ -3253,29 +3270,34 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
+			/* .tp_move_assign = */ NULL,
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str  = */ DEFIMPL(&default__str__with__print),
+			/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+			/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
+			/* .tp_print     = */ DEFIMPL(&sysfile_print),
+			/* .tp_printrepr = */ DEFIMPL(&sysfile_printrepr),
 		},
 		/* .tp_visit         = */ NULL,
 		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_iterator      = */ NULL,
+		/* .tp_math          = */ DEFIMPL(&default__tp_math__3BDA91520F130F8D),
+		/* .tp_cmp           = */ DEFIMPL_UNSUPPORTED(&default__tp_cmp__FA8008618F75C42A),
+		/* .tp_seq           = */ DEFIMPL(&default__tp_seq__97D29BAD40C180DA),
+		/* .tp_iter_next     = */ DEFIMPL(&file_next),
+		/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
+		/* .tp_with          = */ DEFIMPL(&default__tp_with__F4A3C35C8BEE80E5),
 		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */ NULL,
 		/* .tp_getsets       = */ NULL,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
+		/* .tp_class_members = */ NULL,
+		/* .tp_method_hints  = */ NULL,
+		/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+		/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 	},
 	/* .ft_read   = */ NULL,
 	/* .ft_write  = */ NULL,
@@ -3287,7 +3309,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
-	/* .ft_putc   = */ NULL
+	/* .ft_putc   = */ NULL,
 };
 
 DECL_END
