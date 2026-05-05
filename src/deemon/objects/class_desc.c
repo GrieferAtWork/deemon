@@ -234,15 +234,22 @@ coti_copy(ClassOperatorTableIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 coti_init(ClassOperatorTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	ClassOperatorTable *tab;
-	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTableIterator", &tab);
-	if (DeeObject_AssertTypeExact(tab, &ClassOperatorTableIterator_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ClassOperatorTableIterator", params: """
+	ClassOperatorTable *tab:?Ert:ClassOperatorTable
+""", docStringPrefix: "coti");]]]*/
+#define coti__ClassOperatorTableIterator_params "tab:?Ert:ClassOperatorTable"
+	struct {
+		ClassOperatorTable *tab;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTableIterator", &args.tab);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.tab, &ClassOperatorTableIterator_Type))
 		goto err;
-	self->co_desc = tab->co_desc;
-	self->co_iter = tab->co_desc->cd_clsop_list;
-	self->co_end = (tab->co_desc->cd_clsop_list +
-                    tab->co_desc->cd_clsop_mask + 1);
-	Dee_Incref(tab->co_desc);
+	self->co_desc = args.tab->co_desc;
+	self->co_iter = args.tab->co_desc->cd_clsop_list;
+	self->co_end = (args.tab->co_desc->cd_clsop_list +
+                    args.tab->co_desc->cd_clsop_mask + 1);
+	Dee_Incref(args.tab->co_desc);
 	return 0;
 err:
 	return -1;
@@ -310,7 +317,7 @@ PRIVATE struct type_member tpconst coti_members[] = {
 INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassOperatorTableIterator",
-	/* .tp_doc      = */ DOC("(tab:?Ert:ClassOperatorTable)\n"
+	/* .tp_doc      = */ DOC("(" coti__ClassOperatorTableIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?X2?Dstring?Dint?Dint"),
 	/* .tp_flags    = */ TP_FFINAL,
@@ -368,9 +375,18 @@ STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_init(ClassOperatorTable *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTable", &self->co_desc);
-	if (DeeObject_AssertTypeExact(self->co_desc, &DeeClassDescriptor_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ClassOperatorTable", params: """
+	DeeClassDescriptorObject *desc:?Ert:ClassDescriptor
+""", docStringPrefix: "cot");]]]*/
+#define cot__ClassOperatorTable_params "desc:?Ert:ClassDescriptor"
+	struct {
+		DeeClassDescriptorObject *desc;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ClassOperatorTable", &args.desc);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.desc, &DeeClassDescriptor_Type))
 		goto err;
+	self->co_desc = args.desc;
 	Dee_Incref(self->co_desc);
 	return 0;
 err:
@@ -571,7 +587,7 @@ cot_printrepr(ClassOperatorTable *__restrict self,
 INTERN DeeTypeObject ClassOperatorTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassOperatorTable",
-	/* .tp_doc      = */ DOC("(desc:?Ert:ClassDescriptor)"),
+	/* .tp_doc      = */ DOC("(" cot__ClassOperatorTable_params ")"),
 	/* .tp_flags    = */ TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -691,14 +707,21 @@ STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_end) == offsetof(ClassAttr
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cati_iter(ClassAttributeTableIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	ClassAttributeTable *tab;
-	DeeArg_Unpack1(err, argc, argv, "_ClassAttributeTableIterator", &tab);
-	if (DeeObject_AssertTypeExact(tab, &ClassAttributeTable_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ClassAttributeTableIterator", params: """
+	ClassAttributeTable *tab:?Ert:ClassAttributeTable
+""", docStringPrefix: "cati");]]]*/
+#define cati__ClassAttributeTableIterator_params "tab:?Ert:ClassAttributeTable"
+	struct {
+		ClassAttributeTable *tab;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ClassAttributeTableIterator", &args.tab);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.tab, &ClassAttributeTable_Type))
 		goto err;
-	self->ca_desc = tab->ca_desc;
-	self->ca_iter = tab->ca_start;
-	self->ca_end  = (tab->ca_start + tab->ca_mask + 1);
-	Dee_Incref(tab->ca_desc);
+	self->ca_desc = args.tab->ca_desc;
+	self->ca_iter = args.tab->ca_start;
+	self->ca_end  = (args.tab->ca_start + args.tab->ca_mask + 1);
+	Dee_Incref(args.tab->ca_desc);
 	return 0;
 err:
 	return -1;
@@ -904,7 +927,7 @@ PRIVATE struct type_method_hint tpconst cati_method_hints[] = {
 
 PRIVATE struct type_getset tpconst cati_getsets[] = {
 	TYPE_GETTER_AB_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE,
-	                 "->?AAttributeTable?Ert:ClassDescriptor"),
+	                 "->?Ert:ClassAttributeTable"),
 	TYPE_GETSET_END
 };
 
@@ -1213,7 +1236,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassAttributeTableIterator",
-	/* .tp_doc      = */ DOC("(tab:?Ert:ClassAttributeTable)\n"
+	/* .tp_doc      = */ DOC("(" cati__ClassAttributeTableIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dstring?AAttribute?Ert:ClassDescriptor"),
 	/* .tp_flags    = */ TP_FFINAL,
@@ -2157,7 +2180,7 @@ err:
 	return NULL;
 }
 
-PRIVATE NONNULL((1, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 cd_add_operator(ClassDescriptor *__restrict self,
                 Dee_operator_t name, uint16_t index,
                 Dee_operator_t *__restrict operator_count) {
@@ -2351,14 +2374,20 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: "
 		DeeStringObject *name;
-		DeeStringObject *doc   = (DeeStringObject *)Dee_EmptyString;
-		DeeStringObject *flags = (DeeStringObject *)Dee_EmptyString;
-		DeeObject *operators   = Dee_EmptyTuple;
-		DeeObject *iattr       = Dee_EmptyTuple;
-		DeeObject *cattr       = Dee_EmptyTuple;
-		uint16_t isize         = (uint16_t)-1;
-		uint16_t csize         = (uint16_t)-1;
-");]]]*/
+		DeeStringObject *doc
+			= (DeeStringObject *)Dee_EmptyString;
+		DeeStringObject *flags:?X2?Dstring?Dint
+			= (DeeStringObject *)Dee_EmptyString;
+		DeeObject *operators:?S?T2?X2?Dstring?Dint?Dint
+			= Dee_EmptyTuple;
+		DeeObject *iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring
+			= Dee_EmptyTuple;
+		DeeObject *cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring
+			= Dee_EmptyTuple;
+		uint16_t isize?:?Dint = (uint16_t)-1;
+		uint16_t csize?:?Dint = (uint16_t)-1;
+", docStringPrefix: "cd");]]]*/
+#define cd__ClassDescriptor_params "name:?Dstring,doc=!P{},flags:?X2?Dstring?Dint=!P{},operators:?S?T2?X2?Dstring?Dint?Dint=!T0,iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,isize?:?Dint,csize?:?Dint"
 	struct {
 		DeeStringObject *name;
 		DeeStringObject *doc;
@@ -2488,11 +2517,7 @@ err:
 PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassDescriptor",
-	/* .tp_doc      = */ DOC("(name:?Dstring,doc:?Dstring=!P{},flags:?X2?Dstring?Dint=!P{},"
-	                         /**/ "operators:?S?T2?X2?Dstring?Dint?Dint=!T0,"
-	                         /**/ "iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
-	                         /**/ "cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,"
-	                         /**/ "isize?:?Dint,csize?:?Dint)\n"
+	/* .tp_doc      = */ DOC("(" cd__ClassDescriptor_params ")\n"
 	                         "#tValueError{Some operator or attribute was defined multiple times}"
 	                         "#tValueError{A specified operator name wasn't recognized (custom operators must be encoded as IDs)}"
 	                         "#tValueError{A specified set of flags contains an invalid option}"
@@ -2860,42 +2885,51 @@ PRIVATE struct type_member tpconst ot_members[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_init(ObjectTable *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	DeeObject *ob;
-	DeeTypeObject *type = NULL;
 	struct Dee_class_desc *desc;
-	DeeArg_Unpack1Or2(err, argc, argv, "_ObjectTable", &ob, &type);
-	if (type) {
-		if (DeeObject_AssertImplements(ob, type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ObjectTable", params: "
+	ob:?X2?O?DType,
+	typ?:?DType
+", docStringPrefix: "cd");]]]*/
+#define cd__ObjectTable_params "ob:?X2?O?DType,typ?:?DType"
+	struct {
+		DeeObject *ob;
+		DeeTypeObject *typ;
+	} args;
+	args.typ = NULL;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "_ObjectTable", &args, &args.ob, &args.typ);
+/*[[[end]]]*/
+	if (args.typ) {
+		if (DeeObject_AssertImplements(args.ob, args.typ))
 			goto err;
 	} else {
-		type = Dee_TYPE(ob);
-		if (type == &DeeSuper_Type) {
-			type = DeeSuper_TYPE(ob);
-			ob   = DeeSuper_SELF(ob);
+		args.typ = Dee_TYPE(args.ob);
+		if (args.typ == &DeeSuper_Type) {
+			args.typ = DeeSuper_TYPE(args.ob);
+			args.ob  = DeeSuper_SELF(args.ob);
 		}
 	}
-	if (DeeType_IsTypeType(type)) {
-		if (!DeeType_IsClass(ob))
+	if (DeeType_IsTypeType(args.typ)) {
+		if (!DeeType_IsClass(args.ob))
 			goto err_no_class;
 		/* Class member table. */
-		desc          = DeeClass_DESC(ob);
+		desc          = DeeClass_DESC(args.ob);
 		self->ot_desc = Dee_class_desc_as_instance(desc);
 		self->ot_size = desc->cd_desc->cd_cmemb_size;
 	} else {
-		if (!DeeType_IsClass(type))
+		if (!DeeType_IsClass(args.typ))
 			goto err_no_class;
 		/* Instance member table. */
-		desc          = DeeClass_DESC(type);
-		self->ot_desc = DeeInstance_DESC(desc, ob);
+		desc          = DeeClass_DESC(args.typ);
+		self->ot_desc = DeeInstance_DESC(desc, args.ob);
 		self->ot_size = desc->cd_desc->cd_imemb_size;
 	}
-	self->ot_owner = Dee_AsObject(ob);
-	Dee_Incref(ob);
+	self->ot_owner = Dee_AsObject(args.ob);
+	Dee_Incref(args.ob);
 	return 0;
 err_no_class:
 	DeeError_Throwf(&DeeError_TypeError,
 	                "Type `%k' isn't a class",
-	                type);
+	                args.typ);
 err:
 	return -1;
 }
@@ -2913,7 +2947,7 @@ ot_copy(ObjectTable *__restrict self, ObjectTable *__restrict other) {
 INTERN DeeTypeObject ObjectTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjectTable",
-	/* .tp_doc      = */ DOC("(ob:?X2?O?DType,typ?:?DType)\n"
+	/* .tp_doc      = */ DOC("(" cd__ObjectTable_params ")\n"
 	                         "#tTypeError{The given @ob isn't a class or class instance}"
 	                         "Load the object member table of a class, or class instance"),
 	/* .tp_flags    = */ TP_FFINAL,

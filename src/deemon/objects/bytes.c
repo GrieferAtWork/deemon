@@ -120,13 +120,20 @@ bytesiter_copy(BytesIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	Bytes *bytes;
-	DeeArg_Unpack1(err, argc, argv, "_BytesIterator", &bytes);
-	if (DeeObject_AssertTypeExact(bytes, &DeeBytes_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesIterator", params: """
+	Bytes *bytes:?DBytes
+""", docStringPrefix: "bytesiter");]]]*/
+#define bytesiter__BytesIterator_params "bytes:?DBytes"
+	struct {
+		Bytes *bytes;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesIterator", &args.bytes);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.bytes, &DeeBytes_Type))
 		goto err;
-	self->bi_bytes = bytes;
-	Dee_Incref(bytes);
-	self->bi_iter = DeeBytes_DATA(bytes);
+	self->bi_bytes = args.bytes;
+	Dee_Incref(args.bytes);
+	self->bi_iter = DeeBytes_DATA(args.bytes);
 	return 0;
 err:
 	return -1;
@@ -171,7 +178,9 @@ PRIVATE struct type_member tpconst bytesiter_members[] = {
 INTERN DeeTypeObject BytesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesIterator",
-	/* .tp_doc      = */ DOC("next->?Dint"),
+	/* .tp_doc      = */ DOC("(" bytesiter__BytesIterator_params ")\n"
+	                         "\n"
+	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -862,9 +871,9 @@ compare_string_bytes(DeeStringObject *lhs,
 
 
 struct bytes_compare_seq_data {
-	byte_t               *bcsd_data;  /* [1..bcsd_size] The LHS byte-block */
-	size_t                bcsd_size;  /* # of bytes in `bcsd_data' */
-	size_t                bcsd_index; /* [<= bcsd_size] Index to next byte */
+	byte_t *bcsd_data;  /* [1..bcsd_size] The LHS byte-block */
+	size_t  bcsd_size;  /* # of bytes in `bcsd_data' */
+	size_t  bcsd_index; /* [<= bcsd_size] Index to next byte */
 };
 
 
@@ -1025,20 +1034,20 @@ err:
 }
 
 
-#define DEFINE_BYTES_COMPARE(name, op)                    \
+#define DEFINE_BYTES_COMPARE(name, OP)                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Bytes *self, DeeObject *other) {                 \
 		int diff = bytes_compare(self, other);            \
-		if (Dee_COMPARE_ISERR(diff))              \
+		if (Dee_COMPARE_ISERR(diff))                      \
 			goto err;                                     \
-		return_bool(diff op 0);                           \
+		return_bool(Dee_COMPARE_IS##OP(diff));            \
 	err:                                                  \
 		return NULL;                                      \
 	}
-DEFINE_BYTES_COMPARE(bytes_lo, <)
-DEFINE_BYTES_COMPARE(bytes_le, <=)
-DEFINE_BYTES_COMPARE(bytes_gr, >)
-DEFINE_BYTES_COMPARE(bytes_ge, >=)
+DEFINE_BYTES_COMPARE(bytes_lo, LO)
+DEFINE_BYTES_COMPARE(bytes_le, LE)
+DEFINE_BYTES_COMPARE(bytes_gr, GR)
+DEFINE_BYTES_COMPARE(bytes_ge, GE)
 #undef DEFINE_BYTES_COMPARE
 
 INTERN WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
@@ -1635,9 +1644,16 @@ PRIVATE struct type_buffer bytes_buffer = {
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "fromseq", &seq);
-	return (DREF Bytes *)DeeBytes_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromseq", params: """
+	seq:?S?Dint
+""", docStringPrefix: "bytes");]]]*/
+#define bytes_fromseq_params "seq:?S?Dint"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "fromseq", &args.seq);
+/*[[[end]]]*/
+	return (DREF Bytes *)DeeBytes_FromSequence(args.seq);
 err:
 	return NULL;
 }
@@ -1645,18 +1661,25 @@ err:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject *const *argv) {
-	DeeObject *hex_str;
 	DREF Bytes *result;
 	byte_t *dst;
 	union Dee_charptr_const iter, end;
 	size_t length;
-	DeeArg_Unpack1(err, argc, argv, "fromhex", &hex_str);
-	if (DeeObject_AssertTypeExact(hex_str, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromhex", params: """
+	DeeObject *hex_string:?Dstring
+""", docStringPrefix: "bytes");]]]*/
+#define bytes_fromhex_params "hex_string:?Dstring"
+	struct {
+		DeeObject *hex_string;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "fromhex", &args.hex_string);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.hex_string, &DeeString_Type))
 		goto err;
-	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(hex_str)) {
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(args.hex_string)) {
 
 	CASE_WIDTH_1BYTE:
-		iter.cp8 = DeeString_Get1Byte(hex_str);
+		iter.cp8 = DeeString_Get1Byte(args.hex_string);
 		length   = WSTR_LENGTH(iter.cp8);
 		result   = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
@@ -1689,7 +1712,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		break;
 
 	CASE_WIDTH_2BYTE:
-		iter.cp16 = DeeString_Get2Byte(hex_str);
+		iter.cp16 = DeeString_Get2Byte(args.hex_string);
 		length    = WSTR_LENGTH(iter.cp16);
 		result    = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
@@ -1722,7 +1745,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		break;
 
 	CASE_WIDTH_4BYTE:
-		iter.cp32 = DeeString_Get4Byte(hex_str);
+		iter.cp32 = DeeString_Get4Byte(args.hex_string);
 		length    = WSTR_LENGTH(iter.cp32);
 		result    = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
@@ -1765,12 +1788,12 @@ done:
 err_invalid:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Non-hexadecimal character in %r",
-	                hex_str);
+	                args.hex_string);
 	goto err;
 err_unbalanced:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Unbalanced hexadecimal character in %r",
-	                hex_str);
+	                args.hex_string);
 err:
 	return NULL;
 }
@@ -1780,7 +1803,7 @@ err:
 PRIVATE struct type_method tpconst bytes_class_methods[] = {
 	TYPE_METHOD_F("fromseq", &bytes_fromseq,
 	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because returns writable buffer */
-	              "(seq:?S?Dint)->?.\n"
+	              "(" bytes_fromseq_params ")->?.\n"
 	              "#tNotImplemented{The given @seq cannot be iterated, or contains at "
 	              /*            */ "least one item that cannot be converted into an integer}"
 	              "#tIntegerOverflow{At least one of the integers found in @seq is lower "
@@ -1790,7 +1813,7 @@ PRIVATE struct type_method tpconst bytes_class_methods[] = {
 	              "Passing ?N for @seq will return an empty ?. object"),
 	TYPE_METHOD_F("fromhex", &bytes_fromhex,
 	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because returns writable buffer */
-	              "(hex_string:?Dstring)->?.\n"
+	              "(" bytes_fromhex_params ")->?.\n"
 	              "#tValueError{The given @hex_string contains non-hexadecimal and non-space characters}"
 	              "#tValueError{The given @hex_string contains an unbalanced hexadecimal digit}"
 	              "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "

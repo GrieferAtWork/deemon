@@ -1029,7 +1029,16 @@ cdict_bool(CachedDict *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_init(CachedDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "CachedDict", &self->cd_map);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("CachedDict", params: """
+	map:?DMapping
+""", docStringPrefix: "cdict");]]]*/
+#define cdict_CachedDict_params "map:?DMapping"
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "CachedDict", &args.map);
+/*[[[end]]]*/
+	self->cd_map = args.map;
 	Dee_Incref(self->cd_map);
 	self->cd_mask = 0;
 	self->cd_size = 0;
@@ -1146,7 +1155,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	                         "Create a new, empty ?.\n"
 	                         "\n"
 
-	                         "(map:?DMapping)\n"
+	                         "(" cdict_CachedDict_params ")\n"
 	                         "Create a cache mapping for @map"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,

@@ -2371,13 +2371,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pututf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *str;
 	char const *utf8;
 	size_t written;
-	DeeArg_Unpack1(err, argc, argv, "pututf8", &str);
-	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pututf8", params: "
+	data:?Dstring
+", docStringPrefix: "file");]]]*/
+#define file_pututf8_params "data:?Dstring"
+	struct {
+		DeeObject *data;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "pututf8", &args.data);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.data, &DeeString_Type))
 		goto err;
-	utf8 = DeeString_AsUtf8(str);
+	utf8 = DeeString_AsUtf8(args.data);
 	if unlikely(!utf8)
 		goto err;
 	written = DeeFile_Write(self, utf8, WSTR_LENGTH(utf8));
@@ -2422,8 +2429,9 @@ file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (argc == 1 && DeeBool_Check(argv[0])) {
 		args.keeplf = DeeBool_IsTrue(argv[0]);
 	} else {
-		if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ "b:readline", &args))
-			goto err;
+		DeeArg_UnpackStruct1XOr2X(err, argc, argv, "readline", &args,
+		                          &args.maxbytes, UNPxSIZ, DeeObject_AsSizeM1,
+		                          &args.keeplf, "b", DeeObject_AsBool);
 	}
 	result = DeeFile_ReadLine(self, args.maxbytes, args.keeplf);
 	if (result == ITER_DONE)
@@ -2635,7 +2643,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            /**/ "or ?#read is called. If the file's start has already been reached, ?f is returned "
 	            /**/ "and the character will not be re-read from this file."),
 	TYPE_METHOD("pututf8", &file_pututf8,
-	            "(data:?Dstring)->?Dbool\n"
+	            "(" file_pututf8_params ")->?Dbool\n"
 	            "Append a unicode string @data (as utf-8) at the end of @this File, returning "
 	            /**/ "?t on success, or ?f if the file has entered an end-of-file state."),
 
@@ -2820,6 +2828,26 @@ PRIVATE struct type_math file_math = {
 	/* .tp_pow    = */ NULL
 };
 
+#if 0 /* Even though `File' is technically a sequence, don't spam its
+       * members with all the additional functions provided by `DeeSeq_Type'.
+       * Especially considering that `File' does its own handling for
+       * operations such as `a|b' (creating a multi-targeted file), whereas
+       * `Sequence' already implements that operator as a union (in the case
+       * of file: of all lines in either file).
+       * Besides: A lot of sequence functions expect to be able to re-run
+       *          iterators multiple times, yet file iterators expect the
+       *          user to rewind the file before they can be iterated again,
+       *          meaning that in that respect, `File' isn't 100% compliant
+       *          to the `Sequence' interface, meaning we're kind-of not
+       *          even allowed to consider ourselves a sequence.
+       *          But as already said: that's a good thing, because
+       *          we don't even want to be considered one. */
+#define file_tp_base &DeeSeq_Type
+#else
+#define file_tp_base &DeeObject_Type
+#endif
+
+
 PUBLIC DeeFileTypeObject DeeFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
@@ -2923,24 +2951,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-#if 0 /* Even though `File' is technically a sequence, don't spam its
-       * members with all the additional functions provided by `DeeSeq_Type'.
-       * Especially considering that `File' does its own handling for
-       * operations such as `a|b' (creating a multi-targeted file), whereas
-       * `Sequence' already implements that operator as a union (in the case
-       * of file: of all lines in either file).
-       * Besides: A lot of sequence functions expect to be able to re-run
-       *          iterators multiple times, yet file iterators expect the
-       *          user to rewind the file before they can be iterated again,
-       *          meaning that in that respect, `File' isn't 100% compliant
-       *          to the `Sequence' interface, meaning we're kind-of not
-       *          even allowed to consider ourselves a sequence.
-       *          But as already said: that's a good thing, because
-       *          we don't even want to be considered one. */
-		/* .tp_base     = */ &DeeSeq_Type,
-#else
-		/* .tp_base     = */ &DeeObject_Type,
-#endif
+		/* .tp_base     = */ file_tp_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ DeeFileObject,

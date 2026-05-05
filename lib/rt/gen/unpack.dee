@@ -358,7 +358,7 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 });
 
 function makeIdentifier(name: string): string {
-	return name.replace("()", "_call").replace(" ", "_");
+	return name.replace("()", "_call").replace(" ", "_").replace(".", "_");
 }
 
 
@@ -1062,27 +1062,14 @@ function getUnpackFormat(params: string | {UnpackParam...} = (),
 local function printDocStringWithPrefix(prefix: string, name: string, params: {UnpackParam...}) {
 	local docstring = ",".join(params.each.docParam);
 	switch (prefix) {
-	case "string":
-		docstring = docstring.replace("?Dstring", "?.");
-		break;
-	case "bytes":
-		docstring = docstring.replace("?DBytes", "?.");
-		break;
-	case "super":
-		docstring = docstring.replace("?DSuper", "?.");
-		break;
-	case "list":
-		docstring = docstring.replace("?DList", "?.");
-		break;
-	case "tuple":
-		docstring = docstring.replace("?DTuple", "?.");
-		break;
-	case "set":
-		docstring = docstring.replace("?DSet", "?.");
-		break;
-	case "type":
-		docstring = docstring.replace("?DType", "?.");
-		break;
+	case "string":   docstring = docstring.replace("?Dstring", "?."); break;
+	case "bytes":    docstring = docstring.replace("?DBytes", "?."); break;
+	case "super":    docstring = docstring.replace("?DSuper", "?."); break;
+	case "list":     docstring = docstring.replace("?DList", "?."); break;
+	case "tuple":    docstring = docstring.replace("?DTuple", "?."); break;
+	case "set":      docstring = docstring.replace("?DSet", "?."); break;
+	case "type":     docstring = docstring.replace("?DType", "?."); break;
+	case "callable": docstring = docstring.replace("?DCallable", "?."); break;
 	default: break;
 	}
 	print("#define ", prefix, "_", makeIdentifier(name), '_params "', docstring, '"');

@@ -170,20 +170,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 composition_call(DeeTupleObject *self, size_t argc, DeeObject *const *argv) {
 	size_t i;
-	DREF DeeObject *result;
-	DeeArg_Unpack1(err, argc, argv, "Composition.operator ()", &result);
-	Dee_Incref(result);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Composition.operator ()", params: """
+	result
+""", docStringPrefix: "composition");]]]*/
+#define composition_Composition_operator__call_params "result"
+	struct {
+		DeeObject *result;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "Composition.operator ()", &args.result);
+/*[[[end]]]*/
+	Dee_Incref(args.result);
 	i = self->t_size;
 	while (i) {
 		DREF DeeObject *new_result;
 		--i;
-		new_result = DeeObject_Call(self->t_elem[i], 1, &result);
-		Dee_Decref_unlikely(result);
-		result = new_result;
-		if unlikely(!result)
+		new_result = DeeObject_Call(self->t_elem[i], 1, &args.result);
+		Dee_Decref_unlikely(args.result);
+		args.result = new_result;
+		if unlikely(!args.result)
 			break;
 	}
-	return result;
+	return args.result;
 err:
 	return NULL;
 }
@@ -263,7 +270,11 @@ PRIVATE struct type_getset tpconst composition_getsets[] = {
 INTERN DeeTypeObject FunctionComposition_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionComposition",
-	/* .tp_doc      = */ DOC("Used to implement ?Acompose?DCallable"),
+	/* .tp_doc      = */ DOC("Used to implement ?Acompose?DCallable\n"
+	                         "\n"
+	                         "(callbacks!:?DCallable)\n"
+	                         "\n"
+	                         "call(" composition_Composition_operator__call_params ")->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -315,8 +326,17 @@ INTERN DeeTypeObject FunctionComposition_Type = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 callable_compose2(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *callbacks[2];
-	DeeArg_Unpack1(err, argc, argv, "compose", &callbacks[1]);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("compose", params: """
+	before:?DCallable
+""", docStringPrefix: "callable");]]]*/
+#define callable_compose_params "before:?."
+	struct {
+		DeeObject *before;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "compose", &args.before);
+/*[[[end]]]*/
 	callbacks[0] = self;
+	callbacks[1] = args.before;
 	return DeeFunctionComposition_Of(2, callbacks);
 err:
 	return NULL;
@@ -325,7 +345,7 @@ err:
 
 PRIVATE struct type_method tpconst callable_methods[] = {
 	TYPE_METHOD_F("compose", &callable_compose2, METHOD_FCONSTCALL,
-	              "(before:?.)->?.\n"
+	              "(" callable_compose_params ")->?.\n"
 	              "Return a composed single-argument callable that invokes @before on a given "
 	              /**/ "argument, then invokes @this with the return value of @before:"
 	              "${"

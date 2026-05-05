@@ -27,6 +27,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
+#include <deemon/arg.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_HAS_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
@@ -72,11 +73,15 @@ bool_return_false(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_new(size_t argc, DeeObject *const *argv) {
-	if unlikely(argc != 1)
-		goto err_bad_argc;
-	return DeeObject_BoolOb(argv[0]);
-err_bad_argc:
-	err_invalid_argc("bool", argc, 1, 1);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("bool", params: "ob", docStringPrefix: "bool");]]]*/
+#define bool_bool_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "bool", &args.ob);
+/*[[[end]]]*/
+	return DeeObject_BoolOb(args.ob);
+err:
 	return NULL;
 }
 
@@ -555,7 +560,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	                         "Return the $false singleton\n"
 	                         "\n"
 
-	                         "(ob)\n"
+	                         "(" bool_bool_params ")\n"
 	                         "Convert the given @ob into a boolean"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FTRUNCATE | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,

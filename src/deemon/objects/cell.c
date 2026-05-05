@@ -87,7 +87,16 @@ cell_copy(DeeCellObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_init(DeeCellObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "Cell", &self->c_item);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Cell", params: """
+	item
+""", docStringPrefix: "cell");]]]*/
+#define cell_Cell_params "item"
+	struct {
+		DeeObject *item;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "Cell", &args.item);
+/*[[[end]]]*/
+	self->c_item = args.item;
 	Dee_Incref(self->c_item);
 	Dee_atomic_rwlock_init(&self->c_lock);
 	return 0;
@@ -538,8 +547,8 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 	                         "Create a new, empty ?.\n"
 	                         "\n"
 
-	                         "(obj)\n"
-	                         "Create a new ?. containing @obj"),
+	                         "(" cell_Cell_params ")\n"
+	                         "Create a new ?. containing @item"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

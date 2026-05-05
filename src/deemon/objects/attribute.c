@@ -341,19 +341,27 @@ attr_init_kw(DeeAttributeObject *__restrict self,
              size_t argc, DeeObject *const *argv,
              DeeObject *kw) {
 	Dee_attrperm_t perm;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Attribute", params: """
+	decl:?DType,
+	name:?Dstring,
+	doc?:?Dstring = NULL,
+	perm:?X3?Dint?Dstring?N=!N = Dee_None,
+	attrtype?:?DType = NULL
+""", docStringPrefix: "attribute");]]]*/
+#define attribute_Attribute_params "decl:?DType,name:?Dstring,doc?:?Dstring,perm:?X3?Dint?Dstring?N=!N,attrtype?:?DType"
 	struct {
-		DeeTypeObject   *decl;
-		DeeStringObject *name;
-		DeeStringObject *doc;
-		DeeObject       *perm;
-		DeeTypeObject   *attrtype;
+		DeeTypeObject *decl;
+		DeeObject *name;
+		DeeObject *doc;
+		DeeObject *perm;
+		DeeTypeObject *attrtype;
 	} args;
-	args.doc      = NULL;
-	args.perm     = Dee_None;
+	args.doc = NULL;
+	args.perm = Dee_None;
 	args.attrtype = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__decl_name_doc_perm_attrtype,
-	                          "oo|ooo:Attribute", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__decl_name_doc_perm_attrtype, "oo|ooo:Attribute", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeObject_AssertType(args.decl, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
@@ -414,19 +422,27 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	int status;
 	struct Dee_attrspec specs;
 	struct Dee_attrdesc result;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("exists", params: """
+	ob,
+	name:?Dstring,
+	perm:?X3?Dint?Dstring?N=!P{} = Dee_None,
+	permset:?X3?Dint?Dstring?N=!Aperm = Dee_None,
+	decl?
+""", docStringPrefix: "attribute");]]]*/
+#define attribute_exists_params "ob,name:?Dstring,perm:?X3?Dint?Dstring?N=!P{},permset:?X3?Dint?Dstring?N=!Aperm,decl?"
 	struct {
-		DeeObject       *ob;
-		DeeStringObject *name;
-		DeeObject       *perm;
-		DeeObject       *permset;
-		DeeObject       *decl;
+		DeeObject *ob;
+		DeeObject *name;
+		DeeObject *perm;
+		DeeObject *permset;
+		DeeObject *decl;
 	} args;
-	args.perm    = Dee_None;
+	args.perm = Dee_None;
 	args.permset = Dee_None;
-	args.decl    = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_name_perm_permset_decl,
-	                          "oo|ooo:exists", &args))
+	args.decl = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_name_perm_permset_decl, "oo|ooo:exists", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
 	specs.as_name = DeeString_STR(args.name);
@@ -467,19 +483,27 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	int status;
 	DREF Attr *result;
 	struct Dee_attrspec specs;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lookup", params: """
+	ob,
+	name:?Dstring,
+	perm:?X3?Dint?Dstring?N=!P{} = Dee_None,
+	permset:?X3?Dint?Dstring?N=!Aperm = Dee_None,
+	decl?
+""", docStringPrefix: "attribute");]]]*/
+#define attribute_lookup_params "ob,name:?Dstring,perm:?X3?Dint?Dstring?N=!P{},permset:?X3?Dint?Dstring?N=!Aperm,decl?"
 	struct {
-		DeeObject       *ob;
-		DeeStringObject *name;
-		DeeObject       *perm;
-		DeeObject       *permset;
-		DeeObject       *decl;
+		DeeObject *ob;
+		DeeObject *name;
+		DeeObject *perm;
+		DeeObject *permset;
+		DeeObject *decl;
 	} args;
-	args.perm    = Dee_None;
+	args.perm = Dee_None;
 	args.permset = Dee_None;
-	args.decl    = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_name_perm_permset_decl,
-	                          "oo|ooo:lookup", &args))
+	args.decl = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_name_perm_permset_decl, "oo|ooo:lookup", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
 	specs.as_name = DeeString_STR(args.name);
@@ -524,20 +548,30 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_callget(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *thisarg;
-	DeeArg_Unpack1(err, argc, argv, "callget", &thisarg);
-	return Dee_attrdesc_callget(&self->a_desc, thisarg);
+attribute_callget(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("callget", params: "thisarg", docStringPrefix: "attribute");]]]*/
+#define attribute_callget_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "callget", &args.thisarg);
+/*[[[end]]]*/
+	return Dee_attrdesc_callget(&self->a_desc, args.thisarg);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_callbound(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
+attribute_callbound(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
 	int result;
-	DeeObject *thisarg;
-	DeeArg_Unpack1(err, argc, argv, "callbound", &thisarg);
-	result = Dee_attrdesc_callbound(&self->a_desc, thisarg);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("callbound", params: "thisarg", docStringPrefix: "attribute");]]]*/
+#define attribute_callbound_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "callbound", &args.thisarg);
+/*[[[end]]]*/
+	result = Dee_attrdesc_callbound(&self->a_desc, args.thisarg);
 	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
 	return_bool(Dee_BOUND_ISBOUND(result));
@@ -546,10 +580,15 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_calldel(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *thisarg;
-	DeeArg_Unpack1(err, argc, argv, "calldel", &thisarg);
-	if unlikely(Dee_attrdesc_calldel(&self->a_desc, thisarg))
+attribute_calldel(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("calldel", params: "thisarg", docStringPrefix: "attribute");]]]*/
+#define attribute_calldel_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "calldel", &args.thisarg);
+/*[[[end]]]*/
+	if unlikely(Dee_attrdesc_calldel(&self->a_desc, args.thisarg))
 		goto err;
 	return_none;
 err:
@@ -557,10 +596,16 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_callset(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *thisarg, *value;
-	DeeArg_Unpack2(err, argc, argv, "callset", &thisarg, &value);
-	if unlikely(Dee_attrdesc_callset(&self->a_desc, thisarg, value))
+attribute_callset(Attr *__restrict self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("callset", params: "thisarg,value", docStringPrefix: "attribute");]]]*/
+#define attribute_callset_params "thisarg,value"
+	struct {
+		DeeObject *thisarg;
+		DeeObject *value;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "callset", &args, &args.thisarg, &args.value);
+/*[[[end]]]*/
+	if unlikely(Dee_attrdesc_callset(&self->a_desc, args.thisarg, args.value))
 		goto err;
 	return_none;
 err:
@@ -568,7 +613,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-attr_callcall(Attr *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+attribute_callcall(Attr *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if unlikely(argc == 0) {
 		err_invalid_argc_va("callcall", 0, 1);
 		return NULL;
@@ -632,27 +677,27 @@ PRIVATE struct type_member tpconst attr_members[] = {
 };
 
 PRIVATE struct type_method tpconst attr_methods[] = {
-	TYPE_METHOD_F("callget", &attr_callget, METHOD_FNOREFESCAPE,
-	              "(thisarg)->\n"
+	TYPE_METHOD_F("callget", &attribute_callget, METHOD_FNOREFESCAPE,
+	              "(" attribute_callget_params ")->\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#canget is !f}\n"
 	              "Invoke the get-operator with @this attribute"),
-	TYPE_METHOD_F("callbound", &attr_callbound, METHOD_FNOREFESCAPE,
-	              "(thisarg)->?Dbool\n"
+	TYPE_METHOD_F("callbound", &attribute_callbound, METHOD_FNOREFESCAPE,
+	              "(" attribute_callbound_params ")->?Dbool\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#canget is !f}\n"
 	              "Invoke the bound-operator with @this attribute"),
-	TYPE_METHOD_F("calldel", &attr_calldel, METHOD_FNOREFESCAPE,
-	              "(thisarg)\n"
+	TYPE_METHOD_F("calldel", &attribute_calldel, METHOD_FNOREFESCAPE,
+	              "(" attribute_calldel_params ")\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#candel is !f}\n"
 	              "Invoke the del-operator with @this attribute"),
-	TYPE_METHOD_F("callset", &attr_callset, METHOD_FNOREFESCAPE,
-	              "(thisarg,value)\n"
+	TYPE_METHOD_F("callset", &attribute_callset, METHOD_FNOREFESCAPE,
+	              "(" attribute_callset_params ")\n"
 	              "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	              "#tAttributeError{?#canset is !f}\n"
 	              "Invoke the set-operator with @this attribute"),
-	TYPE_KWMETHOD_F("callcall", &attr_callcall, METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("callcall", &attribute_callcall, METHOD_FNOREFESCAPE,
 	                "(thisarg,args!,kwds!!)\n"
 	                "#tTypeError{The given @thisarg does not implement @this attribute}\n"
 	                "#tAttributeError{?#cancall and ?#canget is !f}\n"
@@ -718,11 +763,11 @@ PRIVATE struct type_getset tpconst attr_getsets[] = {
 
 PRIVATE struct type_method tpconst attr_class_methods[] = {
 	TYPE_KWMETHOD("exists", &attribute_exists,
-	              "(ob,name:?Dstring,perm:?X2?Dint?Dstring=!P{},permset:?X2?Dint?Dstring=!Aperm,decl?)->?Dbool\n"
+	              "(" attribute_exists_params ")->?Dbool\n"
 	              "#tValueError{The given @perm or @permset contains an unrecognized flag character}"
 	              "Check if the an attribute matching the given arguments exists"),
 	TYPE_KWMETHOD("lookup", &attribute_lookup,
-	              "(ob,name:?Dstring,perm:?X2?Dint?Dstring=!P{},permset:?X2?Dint?Dstring=!Aperm,decl?)->?X2?.?N\n"
+	              "(" attribute_lookup_params ")->?X2?.?N\n"
 	              "#tValueError{The given @perm or @permset contains an unrecognized flag character}"
 	              "Lookup an attribute matching the given arguments exists"),
 	TYPE_METHOD_END
@@ -742,7 +787,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_doc      = */ DOC("The descriptor object for abstract object attributes\n"
 	                         "\n"
 
-	                         "(decl:?DType,name:?Dstring,doc?:?Dstring,perm:?X3?Dint?Dstring?N=!N,attrtype?:?DType)\n"
+	                         "(" attribute_Attribute_params ")\n"
 	                         "#pattrtype{The type of object returned by the attribute (s.a. ?#attrtype; used by ?Edoc:Doc if not defined by @doc)}"
 	                         "#tTypeError{The given @decl does not define custom attribute operators}"
 	                         "#pperm{Attribute permissions (s.a. ?#perm)}"
@@ -800,18 +845,25 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattr_init_kw(EnumAttr *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("enumattr", params: """
+	ob:?X3?DModule?DType?O,
+	perm:?X3?Dint?Dstring?N=!P{} = Dee_None,
+	permset:?X3?Dint?Dstring?N=!Aperm = Dee_None,
+	decl?:?X2?DModule?DType = NULL
+""", docStringPrefix: "enumattr");]]]*/
+#define enumattr_enumattr_params "ob:?X3?DModule?DType?O,perm:?X3?Dint?Dstring?N=!P{},permset:?X3?Dint?Dstring?N=!Aperm,decl?:?X2?DModule?DType"
 	struct {
 		DeeObject *ob;
 		DeeObject *perm;
 		DeeObject *permset;
 		DeeObject *decl;
 	} args;
-	args.perm    = Dee_None;
+	args.perm = Dee_None;
 	args.permset = Dee_None;
-	args.decl    = NULL;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_perm_permset_decl,
-	                          "o|ooo:enumattr", &args))
+	args.decl = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__ob_perm_permset_decl, "o|ooo:enumattr", &args))
 		goto err;
+/*[[[end]]]*/
 	if (DeeNone_Check(args.perm)) {
 		self->ea_hint.ah_perm_mask = 0;
 	} else if (DeeString_Check(args.perm)) {
@@ -980,7 +1032,7 @@ PRIVATE struct type_member tpconst enumattr_class_members[] = {
 PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
-	/* .tp_doc      = */ DOC("(ob:?X3?DModule?DType?O,perm:?X2?Dint?Dstring=!P{},permset:?X2?Dint?Dstring=!Aperm,decl?:?X2?DModule?DType)\n"
+	/* .tp_doc      = */ DOC("(" enumattr_enumattr_params ")\n"
 	                         "#pob{The object whose attributes to enumerate}"
 	                         "#pperm{Filter enumerated attributes based on permission flags (s.a. ?Aperm?DAttribute)}"
 	                         "#ppermset{S.a. @perm}"
@@ -1039,11 +1091,18 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 
 PRIVATE WUNUSED DREF EnumAttrIter *DCALL
 enumattriter_init(size_t argc, DeeObject *const *argv) {
-	EnumAttr *ea;
-	DeeArg_Unpack1(err, argc, argv, "_EnumAttrIterator", &ea);
-	if (DeeObject_AssertTypeExact(ea, &DeeEnumAttr_Type)) /* DeeEnumAttr_Type is final, so *Exact is OK */
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("EnumAttrIterator", params: """
+	EnumAttr *ea:?Ert:EnumAttr
+""", docStringPrefix: "enumattriter");]]]*/
+#define enumattriter_EnumAttrIterator_params "ea:?Ert:EnumAttr"
+	struct {
+		EnumAttr *ea;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "EnumAttrIterator", &args.ea);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.ea, &DeeEnumAttr_Type)) /* DeeEnumAttr_Type is final, so *Exact is OK */
 		goto err;
-	return enumattr_iter(ea);
+	return enumattr_iter(args.ea);
 err:
 	return NULL;
 }
@@ -1130,7 +1189,9 @@ PRIVATE struct type_member tpconst enumattriter_members[] = {
 PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_EnumAttrIterator",
-	/* .tp_doc      = */ DOC("next->?DAttribute"),
+	/* .tp_doc      = */ DOC("(" enumattriter_EnumAttrIterator_params ")\n"
+	                         "\n"
+	                         "next->?DAttribute"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
