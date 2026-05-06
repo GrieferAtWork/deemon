@@ -3470,18 +3470,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sso_bool(SeqEachOperator *__restrict self) {
 	Dee_ssize_t result = seo_foreach(self, &ss_foreach_bool_cb, NULL);
-	ASSERT(result == -2 ||
-	       result == -1 ||
-	       result == 0);
-	switch (result) {
-	case 0:
-		return 0;
-	case -2:
-		return 1;
-	case -1:
-		return -1;
-	default: __builtin_unreachable();
-	}
+	ASSERT(result == -2 || result == -1 || result == 0);
+	return Dee_HAS_FROM_eM1_n0_yM2((int)result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -3612,8 +3602,8 @@ ss_trycompare_eq_cb(void *arg, DeeObject *elem) {
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	if (Dee_COMPARE_ISEQ(result))
-		return -2;
-	return 0;
+		return -2; /* Some item *does* compare equal */
+	return 0; /* No items compare equal */
 err:
 	return -1;
 }
@@ -3621,18 +3611,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sso_trycompare_eq(SeqEachOperator *self, DeeObject *other) {
 	Dee_ssize_t result = seo_foreach(self, &ss_trycompare_eq_cb, other);
-	ASSERT(result == -2 ||
-	       result == -1 ||
-	       result == 0);
-	switch (result) {
-	case -2:
-		return Dee_COMPARE_EQ; /* Some item *does* compare equal */
-	case 0:
-		return Dee_COMPARE_NE; /* No items compare equal */
-	case -1:
-		return Dee_COMPARE_ERR;
-	default: __builtin_unreachable();
-	}
+	ASSERT(result == -2 || result == -1 || result == 0);
+	return Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0((int)result);
 }
 
 PRIVATE struct type_cmp sso_cmp = {

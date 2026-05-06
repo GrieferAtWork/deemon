@@ -1848,6 +1848,17 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
 
 
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0
+/* IN   OUT
+ * -1   -2   (Dee_COMPARE_ERR)
+ * -2   0    (Dee_COMPARE_EQ)
+ *  0   -1/1 (Dee_COMPARE_NE) */
+#define Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(v) (((((v) + 1) & 3) - 3) >> 1)
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 */
+#define Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(v) ((v) == -1 ? Dee_COMPARE_ERR : (v) == -2 ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
+
+
 /* Possible values returned by C-API isbound checking functions.
  * These values have been intentionally chosen so-as to be binary-
  * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()'

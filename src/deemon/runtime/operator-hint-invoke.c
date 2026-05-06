@@ -299,6 +299,11 @@ STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_EQ) == 1);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_LO) == -2);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_GR) == -2);
 
+STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(-1) == Dee_COMPARE_ERR);
+STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(-2) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_LO ||
+              Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_GR);
+
 /*Helper script to brute-force solutions to mapper macros:
 
 import * from deemon;
