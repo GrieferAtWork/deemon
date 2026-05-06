@@ -3060,6 +3060,8 @@ include("constants.def");
 gi("HASHOF_EMPTY_SEQUENCE", "Dee_HASHOF_EMPTY_SEQUENCE");
 gi("HASHOF_UNBOUND_ITEM", "Dee_HASHOF_UNBOUND_ITEM");
 gi("HASHOF_RECURSIVE_ITEM", "Dee_HASHOF_RECURSIVE_ITEM");
+
+MODULE_NAME = none;
 ]]]*/
 #include "constants.def"
 /*[[[end]]]*/

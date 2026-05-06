@@ -767,8 +767,7 @@ dockwds_print(DocKwds *__restrict self,
 INTERN DeeTypeObject DocKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DocKwds",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(text:?Dstring)"),
+	/* .tp_doc      = */ DOC("(text:?Dstring)"),
 	/* .tp_flags    = */ TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

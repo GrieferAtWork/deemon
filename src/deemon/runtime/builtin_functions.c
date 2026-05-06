@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>         /* DeeArg_UnpackStruct* */
+#include <deemon/arg.h>         /* DeeArg_UnpackStruct*, _DeeArg_AsObject */
 #include <deemon/bool.h>        /* return_bool, return_false, return_true */
 #include <deemon/bytes.h>       /* DeeBytes* */
 #include <deemon/callable.h>    /* DeeCallable_Check */
@@ -134,8 +134,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_boundattr_f(size_t argc,
 		bool allow_missing;
 	} args;
 	args.allow_missing = true;
-	if (DeeArg_UnpackStruct(argc, argv, "oo|b:boundattr", &args))
-		goto err;
+	DeeArg_UnpackStruct2XOr3X(err, argc, argv, "boundattr", &args, &args.ob, "o", _DeeArg_AsObject, &args.attr, "o", _DeeArg_AsObject, &args.allow_missing, "b", DeeObject_AsBool);
 	return builtin_functions_boundattr_f_impl(args.ob, args.attr, args.allow_missing);
 err:
 	return NULL;
@@ -179,8 +178,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions_bounditem_f(size_t argc,
 		bool allow_missing;
 	} args;
 	args.allow_missing = true;
-	if (DeeArg_UnpackStruct(argc, argv, "oo|b:bounditem", &args))
-		goto err;
+	DeeArg_UnpackStruct2XOr3X(err, argc, argv, "bounditem", &args, &args.ob, "o", _DeeArg_AsObject, &args.key, "o", _DeeArg_AsObject, &args.allow_missing, "b", DeeObject_AsBool);
 	return builtin_functions_bounditem_f_impl(args.ob, args.key, args.allow_missing);
 err:
 	return NULL;

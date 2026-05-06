@@ -656,8 +656,7 @@ err:
 INTERN DeeTypeObject StringScanIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScanIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(scanner:?Ert:StringScan)\n"
+	/* .tp_doc      = */ DOC("(scanner:?Ert:StringScan)\n"
 	                         "\n"
 	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -820,8 +819,7 @@ PRIVATE struct type_member tpconst ss_class_members[] = {
 INTERN DeeTypeObject StringScan_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScan",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)\n"
+	/* .tp_doc      = */ DOC("(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)\n"
 	                         "\n"
 	                         "[](index:?Dint)->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

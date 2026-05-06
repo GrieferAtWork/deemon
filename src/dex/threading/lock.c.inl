@@ -504,7 +504,7 @@ DECL_BEGIN
 import * from deemon;
 local names_lockapi = [];
 local names_rwlockapi = [];
-for (local line: File.open(__FILE__)) {
+for (local line: File.open("lock.c.inl")) {
 	local name_lockapi   = try line.rescanf(r"#define LOCAL_lockapi_[^ ]* +LOCAL_lockapi_func\(([^)]+)\)")[0] catch (...) none;
 	local name_rwlockapi = try line.rescanf(r"#define LOCAL_rwlockapi_[^ ]* +LOCAL_rwlockapi_func\(([^)]+)\)")[0] catch (...) none;
 	if (name_lockapi !is none)

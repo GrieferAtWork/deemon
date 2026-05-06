@@ -264,8 +264,7 @@ PRIVATE struct type_member tpconst siter_members[] = {
 INTERN DeeTypeObject HashSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_HashSetIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" siter__HashSetIterator_params ")"),
+	/* .tp_doc      = */ DOC("(" siter__HashSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2777,8 +2776,7 @@ PRIVATE struct type_member tpconst hashsetiterator_members[] = {
 INTERN DeeTypeObject HashSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ depreacted_STR__HashSetIterator,
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(set:?DHashSet)"),
+	/* .tp_doc      = */ DOC("(set:?DHashSet)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

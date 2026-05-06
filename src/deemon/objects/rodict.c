@@ -317,8 +317,7 @@ PRIVATE struct type_member tpconst rditer_members[] = {
 INTERN DeeTypeObject RoDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDictIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" rditer__RoDictIterator_params ")\n"
+	/* .tp_doc      = */ DOC("(" rditer__RoDictIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,

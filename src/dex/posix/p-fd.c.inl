@@ -72,6 +72,7 @@ for (local x: allDecls)
 	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
+MODULE_NAME = none;
 ]]]*/
 #include "p-fd-constants.def"
 #define POSIX_FD_DEFS \

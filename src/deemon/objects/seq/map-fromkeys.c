@@ -697,8 +697,7 @@ PRIVATE struct type_seq mfkc_seq = {
 INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndValue",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(keys:?DSet,value)"),
+	/* .tp_doc      = */ DOC("(keys:?DSet,value)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -747,8 +746,7 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndCallback",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(keys:?DSet,valuefor:?DCallable)"),
+	/* .tp_doc      = */ DOC("(keys:?DSet,valuefor:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -256,6 +256,7 @@ Xgi("TITLE",    "For ?#transliterate / ?#_transliterate: attempt to use ?Atitle?
 Xgi("FOLD",     "For ?#transliterate / ?#_transliterate: attempt to use ?Acasefold?Dstring");
 Xgi("TRANSLIT", "For ?#transliterate / ?#_transliterate: replace with similar-looking character(s)");
 Xgi("ALL",      "For ?#transliterate / ?#_transliterate: attempt everything");
+MODULE_NAME = none;
 ]]]*/
 #include "libiconv-constants.def"
 /*[[[end]]]*/
@@ -275,8 +276,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv__transliterate_f(size_t argc,
 		unsigned int what;
 	} args;
 	args.what = ICONV_TRANSLITERATE_F_TRANSLIT;
-	if (DeeArg_UnpackStruct(argc, argv, UNPu32 UNPuSIZ "|u:_transliterate", &args))
-		goto err;
+	DeeArg_UnpackStruct2XOr3X(err, argc, argv, "_transliterate", &args, &args.ord, UNPu32, DeeObject_AsUInt32, &args.nth, UNPuSIZ, DeeObject_AsSize, &args.what, "u", DeeObject_AsUInt);
 	return deemon_iconv__transliterate_f_impl(args.ord, args.nth, args.what);
 err:
 	return NULL;

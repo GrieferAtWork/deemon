@@ -283,8 +283,7 @@ PRIVATE struct type_member tpconst kwdsiter_members[] = {
 INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:Kwds)\n"
+	/* .tp_doc      = */ DOC("(map:?Ert:Kwds)\n"
 	                         "\n"
 	                         "next->?T2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1068,8 +1067,7 @@ PRIVATE struct type_iterator kmapiter_iterator = {
 INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMappingIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:KwdsMapping)\n"
+	/* .tp_doc      = */ DOC("(map:?Ert:KwdsMapping)\n"
 	                         "\n"
 	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1521,8 +1519,7 @@ PRIVATE struct type_member tpconst kmap_class_members[] = {
 PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMapping",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(kwds:?Ert:Kwds,args:?DTuple)"),
+	/* .tp_doc      = */ DOC("(kwds:?Ert:Kwds,args:?DTuple)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,

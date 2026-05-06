@@ -1230,15 +1230,22 @@ function print_DeeArg_Unpack(name: string = "",
 		} else {
 			local UNPFunctions = Sequence.frozen(params.each.UNPFunction);
 			if (!UNPFunctions.any(e -> e is none)) {
-				local pattern: string = "".join(
-					for (local x: params) (x.isOptional ? "|" : "") + "X");
+				local pattern: string = "";
+				local hasOptional = false;
+				for (local x: params) {
+					if (x.isOptional && !hasOptional) {
+						pattern += "|";
+						hasOptional = true;
+					}
+					pattern += "X";
+				}
 				local mapper: string | none = {
 					"X": "DeeArg_Unpack1X",
-					"XX": "DeeArg_UnpackStruct2X",
-					"XXX": "DeeArg_UnpackStruct3X",
 					"|X": "DeeArg_Unpack0Or1X",
+					"XX": "DeeArg_UnpackStruct2X",
 					"X|X": "DeeArg_UnpackStruct1XOr2X",
 					"|XX": "DeeArg_UnpackStruct0Or1XOr2X",
+					"XXX": "DeeArg_UnpackStruct3X",
 					"XX|X": "DeeArg_UnpackStruct2XOr3X",
 					"X|XX": "DeeArg_UnpackStruct1XOr2XOr3X",
 					"|XXX": "DeeArg_UnpackStruct0Or1XOr2XOr3X",

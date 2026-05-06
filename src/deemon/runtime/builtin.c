@@ -118,7 +118,7 @@ for (local hashof, ppCond, uintNN_C: {
 	(rtHash.hash32, "_Dee_HashSelect(32, 64) == 32", 32),
 	(rtHash.hash64, "_Dee_HashSelect(32, 64) == 64", 64)
 }) {
-	local hashtab: List with (string, string, string | none) = [none] * (BUILTINS_HASHMASK + 1);
+	local hashtab: List with (string, string, string | none) = List([none] * (BUILTINS_HASHMASK + 1));
 	for (local name, flags, doc: builtins) {
 		local hash = hashof(name), i, perturb;
 		perturb = i = hash & BUILTINS_HASHMASK;

@@ -263,6 +263,7 @@ for (local x: allDecls)
 	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
+MODULE_NAME = none;
 ]]]*/
 #include "p-errno-constants.def"
 #define POSIX_ERRNO_DEFS \

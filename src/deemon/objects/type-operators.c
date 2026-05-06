@@ -33,7 +33,7 @@
 #include <deemon/int.h>            /* DeeInt_NewHash */
 #include <deemon/kwds.h>           /* DeeKw_Wrap */
 #include <deemon/none.h>           /* return_none */
-#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_New, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, ITER_DONE, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutUnsupported, DeeType_GetTnoOfOperator, Dee_tno_id, usrtype__* */
 #include <deemon/string.h>         /* DeeStringObject, DeeString_Type */
 #include <deemon/super.h>          /* DeeObject_T* */
@@ -316,8 +316,7 @@ DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
 	args.writable = false;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|b" UNPuSIZ UNPxSIZ ":" OPNAME("getbuf"), &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1XOr2XOr3X(err, argc, argv, OPNAME("getbuf"), &args, &args.writable, "b", DeeObject_AsBool, &args.start, UNPuSIZ, DeeObject_AsSize, &args.end, UNPxSIZ, DeeObject_AsSizeM1);
 /*[[[end]]]*/
 	(void)p_self;
 	(void)opname;

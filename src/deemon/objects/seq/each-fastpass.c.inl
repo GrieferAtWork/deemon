@@ -33,7 +33,7 @@
 #include <deemon/map.h>                /* DeeMap_NewEmpty, Dee_EmptyMap */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
 #include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROM_eM1_mP_y0_nM2, Dee_BOUND_FROM_eM1_mP_yM2_n0, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_HAS_FROM_eM1_n0_yM2, Dee_HAS_FROM_eM1_nM2_y0, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROM_eM1_mP_y0_nM2, Dee_BOUND_FROM_eM1_mP_yM2_n0, Dee_COMPARE_FROM_eM1_eqM2_ne0, Dee_Decref, Dee_Decrefv, Dee_HAS_FROM_eM1_n0_yM2, Dee_HAS_FROM_eM1_nM2_y0, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */

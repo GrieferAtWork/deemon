@@ -30,7 +30,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Free */
-#include <deemon/arg.h>       /* DeeArg_UnpackStruct, DeeArg_UnpackStruct1XOr2X, UNPuSIZ */
+#include <deemon/arg.h>       /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct1XOr2XOr3X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bytes.h>     /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>     /* DeeError_* */
@@ -397,8 +397,7 @@ PRIVATE WUNUSED DREF CStructType *DCALL libctypes_union_f(size_t argc, DeeObject
 	} args;
 	args.packed_ = false;
 	args.alignment = 1;
-	if (DeeArg_UnpackStruct(argc, argv, "o|b" UNPuSIZ ":union", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2XOr3X(err, argc, argv, "union", &args, &args.fields, "o", _DeeArg_AsObject, &args.packed_, "b", DeeObject_AsBool, &args.alignment, UNPuSIZ, DeeObject_AsSize);
 	return libctypes_union_f_impl(args.fields, args.packed_, args.alignment);
 err:
 	return NULL;
@@ -619,6 +618,7 @@ gi("FLOAT_WORD_ORDER", "__FLOAT_WORD_ORDER__");
 gi("ORDER_LITTLE_ENDIAN", "__ORDER_LITTLE_ENDIAN__");
 gi("ORDER_BIG_ENDIAN", "__ORDER_BIG_ENDIAN__");
 gi("ORDER_PDP_ENDIAN", "__ORDER_PDP_ENDIAN__");
+MODULE_NAME = none;
 ]]]*/
 #include "constants.def"
 /*[[[end]]]*/

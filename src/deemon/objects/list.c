@@ -4526,8 +4526,7 @@ PRIVATE struct type_member tpconst list_iterator_members[] = {
 INTERN DeeTypeObject DeeListIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ListIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" li_List_params ")"),
+	/* .tp_doc      = */ DOC("(" li_List_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

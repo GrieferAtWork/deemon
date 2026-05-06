@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED */
-#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2Or3 */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf, PRFuSIZ */
@@ -3904,8 +3904,7 @@ PRIVATE struct type_callable ssw_callable = {
 INTERN DeeTypeObject SeqSomeOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSomeOperator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,op:?X2?Dstring?Dint,args=!T0)"),
+	/* .tp_doc      = */ DOC("(seq:?DSequence,op:?X2?Dstring?Dint,args=!T0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

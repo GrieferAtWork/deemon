@@ -1736,8 +1736,7 @@ PRIVATE struct type_member tpconst proxy_members[] = {
 INTERN DeeTypeObject RangeMapProxy_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapProxy",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1789,8 +1788,7 @@ PRIVATE DeeTypeObject *tpconst rmapping_keys_mro[] = {
 INTERN DeeTypeObject RangeMapKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapKeys",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1838,8 +1836,7 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 INTERN DeeTypeObject RangeMapValues_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapValues",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1883,8 +1880,7 @@ INTERN DeeTypeObject RangeMapValues_Type = {
 INTERN DeeTypeObject RangeMapItems_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapItems",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1928,8 +1924,7 @@ INTERN DeeTypeObject RangeMapItems_Type = {
 INTERN DeeTypeObject RangeMapNodes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapNodes",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1973,8 +1968,7 @@ INTERN DeeTypeObject RangeMapNodes_Type = {
 INTERN DeeTypeObject RangeMapRanges_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapRanges",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2018,8 +2012,7 @@ INTERN DeeTypeObject RangeMapRanges_Type = {
 INTERN DeeTypeObject RangeMapMapItems_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapMapItems",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2071,8 +2064,7 @@ PRIVATE DeeTypeObject *tpconst rmapping_asmap_mro[] = {
 INTERN DeeTypeObject RangeMapAsMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapAsMap",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?GRangeMap)"),
+	/* .tp_doc      = */ DOC("(map:?GRangeMap)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

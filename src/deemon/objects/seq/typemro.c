@@ -77,15 +77,23 @@ typemroiter_copy(TypeMROIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemroiter_init(TypeMROIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_TypeMROIterator", &self->tmi_mro.tp_mro_orig);
-	if (DeeObject_InstanceOfExact(self->tmi_mro.tp_mro_orig, &TypeMRO_Type)) {
-		self->tmi_mro.tp_mro_orig = ((TypeMRO *)self->tmi_mro.tp_mro_orig)->tm_type;
+	DeeTypeObject *orig;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TypeMROIterator", params: "arg");]]]*/
+	struct {
+		DeeObject *arg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_TypeMROIterator", &args.arg);
+/*[[[end]]]*/
+	if (DeeObject_InstanceOfExact(args.arg, &TypeMRO_Type)) {
+		orig = ((TypeMRO *)args.arg)->tm_type;
 	} else {
-		if (DeeObject_AssertType(self->tmi_mro.tp_mro_orig, &DeeType_Type))
+		if (DeeObject_AssertType(args.arg, &DeeType_Type))
 			goto err;
+		orig = (DeeTypeObject *)args.arg;
 	}
-	Dee_Incref((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
-	self->tmi_iter = NULL;
+	Dee_Incref(orig);
+	self->tmi_mro.tp_mro_orig = orig;
+	self->tmi_iter            = NULL;
 	Dee_atomic_lock_init(&self->tmi_lock);
 	return 0;
 err:
@@ -96,12 +104,18 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 typebasesiter_init(TypeMROIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *type;
-	DeeArg_Unpack1(err, argc, argv, "_TypeBasesIterator", &type);
-	if (DeeObject_InstanceOfExact(type, &TypeBases_Type)) {
-		type = ((TypeMRO *)type)->tm_type;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TypeBasesIterator", params: "arg");]]]*/
+	struct {
+		DeeObject *arg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_TypeBasesIterator", &args.arg);
+/*[[[end]]]*/
+	if (DeeObject_InstanceOfExact(args.arg, &TypeBases_Type)) {
+		type = ((TypeMRO *)args.arg)->tm_type;
 	} else {
-		if (DeeObject_AssertType(type, &DeeType_Type))
+		if (DeeObject_AssertType(args.arg, &DeeType_Type))
 			goto err;
+		type = (DeeTypeObject *)args.arg;
 	}
 	self->tmi_iter = DeeTypeMRO_Init(&self->tmi_mro, type);
 	Dee_Incref(type);

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryMallocc */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
@@ -117,8 +117,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_init(CachedSeq_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &self->cswi_iter);
-	Dee_Incref(self->cswi_iter);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_CachedSeqWithIter", params: """
+	DeeObject *iter:?DIterator
+""", docStringPrefix: "cswi");]]]*/
+#define cswi__CachedSeqWithIter_params "iter:?DIterator"
+	struct {
+		DeeObject *iter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &args.iter);
+/*[[[end]]]*/
+	Dee_Incref(args.iter);
+	self->cswi_iter = args.iter;
 	Dee_atomic_lock_init(&self->cswi_lock);
 	Dee_objectlist_init(&self->cswi_cache);
 	return 0;
@@ -534,12 +543,19 @@ cswi_getiter(CachedSeq_WithIter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cswi_populate(CachedSeq_WithIter *__restrict self,
               size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("populate", params: """
 	size_t count = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPxSIZ ":populate", &count))
-		goto err;
-	if likely(count) {
-		--count;
-		if unlikely(cswi_ensure_loaded(self, count) < 0)
+""", docStringPrefix: "cswi");]]]*/
+#define cswi_populate_params "count=!-1"
+	struct {
+		size_t count;
+	} args;
+	args.count = (size_t)-1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "populate", &args.count, UNPxSIZ, DeeObject_AsSizeM1);
+/*[[[end]]]*/
+	if likely(args.count) {
+		--args.count;
+		if unlikely(cswi_ensure_loaded(self, args.count) < 0)
 			goto err;
 	}
 	return_none;
@@ -550,7 +566,7 @@ err:
 
 PRIVATE struct type_method tpconst cswi_methods[] = {
 	TYPE_METHOD("populate", &cswi_populate,
-	            "(count:?Dint=!-1)\n"
+	            "(" cswi_populate_params ")\n"
 	            "Ensure that the first @count elements of ?#__seq__ have been cached"),
 	TYPE_METHOD_END
 };
@@ -580,8 +596,7 @@ PRIVATE struct type_member tpconst cswi_class_members[] = {
 INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithIter",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(iter:?DIterator)"),
+	/* .tp_doc      = */ DOC("(" cswi__CachedSeqWithIter_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -657,13 +672,23 @@ cswiiter_copy(CachedSeq_WithIter_Iterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswiiter_init(CachedSeq_WithIter_Iterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	self->cswii_index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_CachedSeqWithIterIterator",
-	                  &self->cswii_cache, &self->cswii_index))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_CachedSeqWithIterIterator", params: """
+	CachedSeq_WithIter *base:?Ert:CachedSeqWithIter,
+	size_t index = 0
+""", docStringPrefix: "cswiiter");]]]*/
+#define cswiiter__CachedSeqWithIterIterator_params "base:?Ert:CachedSeqWithIter,index=!0"
+	struct {
+		CachedSeq_WithIter *base;
+		size_t index;
+	} args;
+	args.index = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_CachedSeqWithIterIterator", &args, &args.base, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.base, &CachedSeq_WithIter_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->cswii_cache, &CachedSeq_WithIter_Type))
-		goto err;
-	Dee_Incref(self->cswii_cache);
+	Dee_Incref(args.base);
+	self->cswii_cache = args.base;
+	self->cswii_index = args.index;
 	return 0;
 err:
 	return -1;
@@ -744,8 +769,7 @@ PRIVATE struct type_member tpconst cswiiter_members[] = {
 INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithIterIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(base:?Ert:CachedSeqWithIter,index=!0)"),
+	/* .tp_doc      = */ DOC("(" cswiiter__CachedSeqWithIterIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1680,8 +1704,7 @@ PRIVATE struct type_method_hint tpconst cswgi_method_hints[] = {
 INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithGetItem",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(objWithGetItem)"),
+	/* .tp_doc      = */ DOC("(objWithGetItem)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1726,8 +1749,7 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithSizeObAndGetItem",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(objWithSizeAndGetItem)"),
+	/* .tp_doc      = */ DOC("(objWithSizeAndGetItem)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1772,8 +1794,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithSizeAndGetItemIndex",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(objWithSizeAndGetItem)"),
+	/* .tp_doc      = */ DOC("(objWithSizeAndGetItem)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1822,8 +1843,7 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CachedSeqWithGetItemIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(base:?X3"
+	/* .tp_doc      = */ DOC("(base:?X3"
 	                         /**/ "?Ert:CachedSeqWithGetItem"
 	                         /**/ "?Ert:CachedSeqWithSizeObAndGetItem"
 	                         /**/ "?Ert:CachedSeqWithSizeAndGetItem"

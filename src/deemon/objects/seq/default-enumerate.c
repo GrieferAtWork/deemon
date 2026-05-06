@@ -1279,7 +1279,7 @@ global final TYPES: {EnumType...} = {
 };
 
 local inImplBlock = false;
-for (local line: File.open(__FILE__, "rb")) {
+for (local line: File.open("default-enumerate.c", "rb")) {
 	line = line.partition("//").first.strip();
 	if (line == '/' '*[[[begin:impls]]]*' '/') {
 		inImplBlock = true;

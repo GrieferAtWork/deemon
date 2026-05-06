@@ -67,6 +67,7 @@ for (local x: allDecls)
 	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
+MODULE_NAME = none;
 ]]]*/
 #include "p-exit-constants.def"
 #define POSIX_EXIT_DEFS \

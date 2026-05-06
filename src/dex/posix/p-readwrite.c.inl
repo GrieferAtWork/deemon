@@ -74,6 +74,7 @@ for (local x: allDecls)
 	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
+MODULE_NAME = none;
 ]]]*/
 #include "p-readwrite-constants.def"
 #define POSIX_READWRITE_DEFS \

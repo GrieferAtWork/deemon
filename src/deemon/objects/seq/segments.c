@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack, UNPuSIZ */
+#include <deemon/arg.h>                /* DeeArg_UnpackStruct1XOr2X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
@@ -44,16 +44,25 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_init(SegmentsIterator *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	self->si_len = 1;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_SeqSegmentsIterator",
-	                  &self->si_iter, &self->si_len))
-		goto err;
-	if unlikely(!self->si_len) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqSegmentsIterator", params: """
+	iter:?DIterator, size_t len = 1
+""", docStringPrefix: "segiter");]]]*/
+#define segiter__SeqSegmentsIterator_params "iter:?DIterator,len=!1"
+	struct {
+		DeeObject *iter;
+		size_t len;
+	} args;
+	args.len = 1;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_SeqSegmentsIterator", &args, &args.iter, "o", _DeeArg_AsObject, &args.len, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if unlikely(!args.len) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegmentsIterator'");
 		goto err;
 	}
-	Dee_Incref(self->si_iter);
+	Dee_Incref(args.iter);
+	self->si_iter = args.iter;
+	self->si_len  = args.len;
 	return 0;
 err:
 	return -1;
@@ -160,7 +169,7 @@ STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_ob
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSegmentsIterator",
-	/* .tp_doc      = */ DOC("(iter?:?DIterator,len=!1)\n"
+	/* .tp_doc      = */ DOC("(" segiter__SeqSegmentsIterator_params ")\n"
 	                         "\n"
 	                         "next->?DSequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -228,16 +237,25 @@ seg_ctor(Segments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_init(Segments *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	self->s_len = 1;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_SeqSegments",
-	                  &self->s_seq, &self->s_len))
-		goto err;
-	if unlikely(!self->s_len) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqSegments", params: """
+	seq:?DSequence, size_t len = 1
+""", docStringPrefix: "segi");]]]*/
+#define segi__SeqSegments_params "seq:?DSequence,len=!1"
+	struct {
+		DeeObject *seq;
+		size_t len;
+	} args;
+	args.len = 1;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_SeqSegments", &args, &args.seq, "o", _DeeArg_AsObject, &args.len, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if unlikely(!args.len) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid length passed to `_SeqSegments'");
 		goto err;
 	}
-	Dee_Incref(self->s_seq);
+	Dee_Incref(args.seq);
+	self->s_seq = args.seq;
+	self->s_len = args.len;
 	return 0;
 err:
 	return -1;
@@ -408,7 +426,7 @@ PRIVATE struct type_member tpconst seg_class_members[] = {
 INTERN DeeTypeObject SeqSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSegments",
-	/* .tp_doc      = */ DOC("(seq?:?DSequence,len=!1)\n"
+	/* .tp_doc      = */ DOC("(" segi__SeqSegments_params ")\n"
 	                         "\n"
 	                         "[](index:?Dint)->?DSequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

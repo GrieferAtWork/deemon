@@ -772,8 +772,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FileReader",
-		/* .tp_doc      = */ DOC("()\n"
-		                         "(" reader__FileReader_params ")\n"
+		/* .tp_doc      = */ DOC("(" reader__FileReader_params ")\n"
 		                         "Create a file stream for reading data of the given @data as a buffer, "
 		                         /**/ "starting at its byte-offset @start and ending at @end\n"
 		                         "Note that the given indices @start and @end refer to byte "

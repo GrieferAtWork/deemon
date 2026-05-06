@@ -7563,8 +7563,7 @@ string_dedent(String *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	args.max_ = 1;
 	args.mask = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ "o:dedent", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, "dedent", &args, &args.max_, UNPuSIZ, DeeObject_AsSize, &args.mask, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if (!args.mask)
 		return DeeString_DedentSpc(self, args.max_);

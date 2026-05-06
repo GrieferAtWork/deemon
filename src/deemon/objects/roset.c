@@ -270,8 +270,7 @@ PRIVATE struct type_member tpconst rsiter_members[] = {
 INTERN DeeTypeObject RoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoSetIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" rsiter__RoSetIterator_params ")"),
+	/* .tp_doc      = */ DOC("(" rsiter__RoSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1123,8 +1122,7 @@ PRIVATE struct type_member tpconst roset_iterator_members[] = {
 INTERN DeeTypeObject RoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ deprecated_STR__RoSetIterator,
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" rosetiterator__RoSetIterator_params ")"),
+	/* .tp_doc      = */ DOC("(" rosetiterator__RoSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1637,8 +1635,7 @@ PRIVATE struct type_operator const deprecated_roset_operators[] = {
 PUBLIC DeeTypeObject DeeRoSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ deprecated_STR__RoSet,
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" roset__RoSet_params ")"),
+	/* .tp_doc      = */ DOC("(" roset__RoSet_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

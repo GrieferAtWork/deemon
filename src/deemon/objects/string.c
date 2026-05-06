@@ -1654,8 +1654,7 @@ PRIVATE struct type_member tpconst stringiter_members[] = {
 INTERN DeeTypeObject StringIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" stringiter__StringIterator_params ")"),
+	/* .tp_doc      = */ DOC("(" stringiter__StringIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

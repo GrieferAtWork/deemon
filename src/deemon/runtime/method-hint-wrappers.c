@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>          /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP* */
+#include <deemon/arg.h>          /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP*, _DeeArg_AsObject */
 #include <deemon/bool.h>         /* DeeBool_NewFalse, DeeBool_NewTrue, Dee_False, Dee_True, return_bool */
 #include <deemon/error.h>        /* DeeError_* */
 #include <deemon/format.h>       /* PCKuSIZ, PRFuSIZ */
@@ -363,8 +363,7 @@ DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "o|" UNPuSIZ UNPxSIZ ":__seq_enumerate__", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2XOr3X(err, argc, argv, "__seq_enumerate__", &args, &args.cb, "o", _DeeArg_AsObject, &args.start, UNPuSIZ, DeeObject_AsSize, &args.end, UNPxSIZ, DeeObject_AsSizeM1);
 {
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>               /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>                 /* DeeArg_Unpack1, DeeArg_Unpack2 */
+#include <deemon/arg.h>                 /* DeeArg_Unpack1, DeeArg_UnpackStruct2 */
 #include <deemon/computed-operators.h>  /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/map.h>                 /* DeeMap_Type */
@@ -76,12 +76,21 @@ err_encountered:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	DeeArg_Unpack1(err, argc, argv, "_DistinctIterator", &self->di_iter);
-	itertyp = Dee_TYPE(self->di_iter);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DistinctIterator", params: """
+	objWithNext
+""", docStringPrefix: "di");]]]*/
+#define di__DistinctIterator_params "objWithNext"
+	struct {
+		DeeObject *objWithNext;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_DistinctIterator", &args.objWithNext);
+/*[[[end]]]*/
+	itertyp = Dee_TYPE(args.objWithNext);
 	self->di_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->di_tp_next)
 		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
-	Dee_Incref(self->di_iter);
+	Dee_Incref(args.objWithNext);
+	self->di_iter = args.objWithNext;
 	Dee_simple_hashset_with_lock_init(&self->di_encountered);
 	return 0;
 err:
@@ -182,7 +191,7 @@ PRIVATE struct type_getset tpconst di_getsets[] = {
 INTERN DeeTypeObject DistinctIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DistinctIterator",
-	/* .tp_doc      = */ DOC("(objWithNext)"),
+	/* .tp_doc      = */ DOC("(" di__DistinctIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -261,14 +270,24 @@ uqiwk_copy(DistinctIteratorWithKey *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uqiwk_init(DistinctIteratorWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	DeeArg_Unpack2(err, argc, argv, "_DistinctIteratorWithKey",
-	                &self->diwk_iter, &self->diwk_key);
-	itertyp = Dee_TYPE(self->diwk_iter);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DistinctIteratorWithKey", params: """
+	objWithNext, key:?DCallable
+""", docStringPrefix: "uqiwk");]]]*/
+#define uqiwk__DistinctIteratorWithKey_params "objWithNext,key:?DCallable"
+	struct {
+		DeeObject *objWithNext;
+		DeeObject *key;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_DistinctIteratorWithKey", &args, &args.objWithNext, &args.key);
+/*[[[end]]]*/
+	itertyp = Dee_TYPE(args.objWithNext);
 	self->diwk_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!self->diwk_tp_next)
 		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
-	Dee_Incref(self->diwk_iter);
-	Dee_Incref(self->diwk_key);
+	Dee_Incref(args.objWithNext);
+	Dee_Incref(args.key);
+	self->diwk_iter = args.objWithNext;
+	self->diwk_key  = args.key;
 	Dee_simple_hashset_with_lock_init(&self->diwk_encountered);
 	return 0;
 err:
@@ -383,7 +402,7 @@ PRIVATE struct type_getset tpconst uqiwk_getsets[] = {
 INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DistinctIteratorWithKey",
-	/* .tp_doc      = */ DOC("(objWithNext,key:?DCallable)"),
+	/* .tp_doc      = */ DOC("(" uqiwk__DistinctIteratorWithKey_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -600,12 +619,21 @@ STATIC_ASSERT(offsetof(DistinctMappingIterator, dmi_iter) == offsetof(ProxyObjec
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dmi_init(DistinctMappingIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	DeeArg_Unpack1(err, argc, argv, "_DistinctMappingIterator", &self->dmi_iter);
-	itertyp = Dee_TYPE(self->dmi_iter);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DistinctMappingIterator", params: """
+	objWithNext
+""", docStringPrefix: "dmi");]]]*/
+#define dmi__DistinctMappingIterator_params "objWithNext"
+	struct {
+		DeeObject *objWithNext;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_DistinctMappingIterator", &args.objWithNext);
+/*[[[end]]]*/
+	itertyp = Dee_TYPE(args.objWithNext);
 	self->dmi_tp_nextpair = DeeType_RequireSupportedNativeOperator(itertyp, nextpair);
 	if unlikely(!self->dmi_tp_nextpair)
 		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
-	Dee_Incref(self->dmi_iter);
+	Dee_Incref(args.objWithNext);
+	self->dmi_iter = args.objWithNext;
 	Dee_simple_hashset_with_lock_init(&self->dmi_encountered);
 	return 0;
 err:
@@ -663,7 +691,7 @@ PRIVATE struct type_getset tpconst dmi_getsets[] = {
 INTERN DeeTypeObject DistinctMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DistinctMappingIterator",
-	/* .tp_doc      = */ DOC("(objWithNext)"),
+	/* .tp_doc      = */ DOC("(" dmi__DistinctMappingIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

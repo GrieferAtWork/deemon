@@ -94,14 +94,27 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SeqConcatIterator", &self->cti_cat);
-	if (DeeObject_AssertTypeExact(self->cti_cat, &SeqConcat_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqConcatIterator", params: """
+	Cat *cat:?Ert:SeqConcat
+""", docStringPrefix: "catiterator");]]]*/
+#define catiterator__SeqConcatIterator_params "cat:?Ert:SeqConcat"
+	struct {
+		Cat *cat;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqConcatIterator", &args.cat);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.cat, &SeqConcat_Type))
 		goto err;
-	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
+	self->cti_pseq = DeeTuple_ELEM(args.cat);
+/*```diff
+-self->cti_curr = DeeObject_InvokeMethodHint(seq_operator_iter, self->cti_pseq[0]);
++self->cti_purr = DeeObject_InvokeMethodHint(seq_operator_iter, self->cti_pseq[0]); // Meow
+```*/
 	self->cti_curr = DeeObject_InvokeMethodHint(seq_operator_iter, self->cti_pseq[0]);
 	if unlikely(!self->cti_curr)
 		goto err;
-	Dee_Incref(self->cti_cat);
+	Dee_Incref(args.cat);
+	self->cti_cat = args.cat;
 	Dee_atomic_rwlock_init(&self->cti_lock);
 	return 0;
 err:
@@ -350,7 +363,7 @@ PRIVATE struct type_member tpconst catiterator_members[] = {
 INTERN DeeTypeObject SeqConcatIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqConcatIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqConcat)"),
+	/* .tp_doc      = */ DOC("(" catiterator__SeqConcatIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

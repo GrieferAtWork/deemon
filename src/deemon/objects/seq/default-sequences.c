@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
@@ -103,14 +103,25 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndex",
-	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
-		goto err;
-	seqtyp = Dee_TYPE(self->dssgi_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithSizeAndGetItemIndex", params: """
+	objWithGetItem, size_t start, size_t end
+""", docStringPrefix: "ds_sgi");]]]*/
+#define ds_sgi__SeqWithSizeAndGetItemIndex_params "objWithGetItem,start:?Dint,end:?Dint"
+	struct {
+		DeeObject *objWithGetItem;
+		size_t start;
+		size_t end;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "_SeqWithSizeAndGetItemIndex", &args, &args.objWithGetItem, "o", _DeeArg_AsObject, &args.start, UNPuSIZ, DeeObject_AsSize, &args.end, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	seqtyp = Dee_TYPE(args.objWithGetItem);
 	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
 	if unlikely(!self->dssgi_tp_getitem_index)
 		goto err_no_getitem;
-	Dee_Incref(self->dssgi_seq);
+	Dee_Incref(args.objWithGetItem);
+	self->dssgi_seq   = args.objWithGetItem;
+	self->dssgi_start = args.start;
+	self->dssgi_end   = args.end;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -122,14 +133,25 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndexFast",
-	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
-		goto err;
-	seqtyp = Dee_TYPE(self->dssgi_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithSizeAndGetItemIndexFast", params: """
+	objWithGetItemIndexFast, size_t start, size_t end
+""", docStringPrefix: "ds_sgif");]]]*/
+#define ds_sgif__SeqWithSizeAndGetItemIndexFast_params "objWithGetItemIndexFast,start:?Dint,end:?Dint"
+	struct {
+		DeeObject *objWithGetItemIndexFast;
+		size_t start;
+		size_t end;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "_SeqWithSizeAndGetItemIndexFast", &args, &args.objWithGetItemIndexFast, "o", _DeeArg_AsObject, &args.start, UNPuSIZ, DeeObject_AsSize, &args.end, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	seqtyp = Dee_TYPE(args.objWithGetItemIndexFast);
 	if unlikely(!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
 		goto err_no_getitem;
 	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
-	Dee_Incref(self->dssgi_seq);
+	Dee_Incref(args.objWithGetItemIndexFast);
+	self->dssgi_seq   = args.objWithGetItemIndexFast;
+	self->dssgi_start = args.start;
+	self->dssgi_end   = args.end;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -141,14 +163,25 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_stgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndTryGetItemIndex",
-	                  &self->dssgi_seq, &self->dssgi_start, &self->dssgi_end))
-		goto err;
-	seqtyp = Dee_TYPE(self->dssgi_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithSizeAndTryGetItemIndex", params: """
+	objWithTryGetItem, size_t start, size_t end
+""", docStringPrefix: "ds_stgi");]]]*/
+#define ds_stgi__SeqWithSizeAndTryGetItemIndex_params "objWithTryGetItem,start:?Dint,end:?Dint"
+	struct {
+		DeeObject *objWithTryGetItem;
+		size_t start;
+		size_t end;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "_SeqWithSizeAndTryGetItemIndex", &args, &args.objWithTryGetItem, "o", _DeeArg_AsObject, &args.start, UNPuSIZ, DeeObject_AsSize, &args.end, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	seqtyp = Dee_TYPE(args.objWithTryGetItem);
 	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem_index);
 	if unlikely(!self->dssgi_tp_getitem_index)
 		goto err_no_getitem;
-	Dee_Incref(self->dssgi_seq);
+	Dee_Incref(args.objWithTryGetItem);
+	self->dssgi_seq   = args.objWithTryGetItem;
+	self->dssgi_start = args.start;
+	self->dssgi_end   = args.end;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -1039,7 +1072,7 @@ PRIVATE struct type_seq ds_stgi_seq = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndGetItemIndex",
-	/* .tp_doc      = */ DOC("(objWithGetItem,start:?Dint,end:?Dint)"),
+	/* .tp_doc      = */ DOC("(" ds_sgi__SeqWithSizeAndGetItemIndex_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1088,7 +1121,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndGetItemIndexFast",
-	/* .tp_doc      = */ DOC("(objWithGetItemIndexFast,start:?Dint,end:?Dint)"),
+	/* .tp_doc      = */ DOC("(" ds_sgif__SeqWithSizeAndGetItemIndexFast_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1137,7 +1170,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndTryGetItemIndex",
-	/* .tp_doc      = */ DOC("(objWithTryGetItem,start:?Dint,end:?Dint)"),
+	/* .tp_doc      = */ DOC("(" ds_stgi__SeqWithSizeAndTryGetItemIndex_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1254,15 +1287,27 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sg_init(DefaultSequence_WithSizeObAndGetItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
-	DeeArg_Unpack3(err, argc, argv, "_SeqWithSizeObAndGetItem",
-	                &self->dssg_seq, &self->dssg_start, &self->dssg_end);
-	seqtyp = Dee_TYPE(self->dssg_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithSizeObAndGetItem", params: """
+	objWithGetItem, start, end
+""", docStringPrefix: "ds_sg");]]]*/
+#define ds_sg__SeqWithSizeObAndGetItem_params "objWithGetItem,start,end"
+	struct {
+		DeeObject *objWithGetItem;
+		DeeObject *start;
+		DeeObject *end;
+	} args;
+	DeeArg_UnpackStruct3(err, argc, argv, "_SeqWithSizeObAndGetItem", &args, &args.objWithGetItem, &args.start, &args.end);
+/*[[[end]]]*/
+	seqtyp = Dee_TYPE(args.objWithGetItem);
 	self->dssg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
 	if unlikely(!self->dssg_tp_getitem)
 		goto err_no_getitem;
-	Dee_Incref(self->dssg_seq);
-	Dee_Incref(self->dssg_start);
-	Dee_Incref(self->dssg_end);
+	Dee_Incref(args.objWithGetItem);
+	Dee_Incref(args.start);
+	Dee_Incref(args.end);
+	self->dssg_seq   = args.objWithGetItem;
+	self->dssg_start = args.start;
+	self->dssg_end   = args.end;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -1804,7 +1849,7 @@ PRIVATE struct type_member tpconst ds_sg_class_members[] = {
 INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeObAndGetItem",
-	/* .tp_doc      = */ DOC("(objWithGetItem,start,end)"),
+	/* .tp_doc      = */ DOC("(" ds_sg__SeqWithSizeObAndGetItem_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1911,12 +1956,21 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_i_init(DefaultSequence_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	DeeArg_Unpack1(err, argc, argv, "_SeqWithIter", &self->dsi_seq);
-	itertyp = Dee_TYPE(self->dsi_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithIter", params: """
+	objWithIter
+""", docStringPrefix: "ds_i");]]]*/
+#define ds_i__SeqWithIter_params "objWithIter"
+	struct {
+		DeeObject *objWithIter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqWithIter", &args.objWithIter);
+/*[[[end]]]*/
+	itertyp = Dee_TYPE(args.objWithIter);
 	self->dsi_tp_iter = DeeType_RequireSupportedNativeOperator(itertyp, iter);
 	if unlikely(!self->dsi_tp_iter)
 		goto err_no_getitem;
-	Dee_Incref(self->dsi_seq);
+	Dee_Incref(args.objWithIter);
+	self->dsi_seq = args.objWithIter;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(itertyp, OPERATOR_ITER);
@@ -1928,14 +1982,25 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_ial_init(DefaultSequence_WithIterAndLimit *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithIterAndLimit",
-	                  &self->dsial_seq, &self->dsial_start, &self->dsial_limit))
-		goto err;
-	itertyp = Dee_TYPE(self->dsial_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqWithIterAndLimit", params: """
+	objWithIter, size_t start, size_t limit
+""", docStringPrefix: "ds_ial");]]]*/
+#define ds_ial__SeqWithIterAndLimit_params "objWithIter,start:?Dint,limit:?Dint"
+	struct {
+		DeeObject *objWithIter;
+		size_t start;
+		size_t limit;
+	} args;
+	DeeArg_UnpackStruct3X(err, argc, argv, "_SeqWithIterAndLimit", &args, &args.objWithIter, "o", _DeeArg_AsObject, &args.start, UNPuSIZ, DeeObject_AsSize, &args.limit, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	itertyp = Dee_TYPE(args.objWithIter);
 	self->dsial_tp_iter = DeeType_RequireSupportedNativeOperator(itertyp, iter);
 	if unlikely(!self->dsial_tp_iter)
 		goto err_no_getitem;
-	Dee_Incref(self->dsial_seq);
+	Dee_Incref(args.objWithIter);
+	self->dsial_seq   = args.objWithIter;
+	self->dsial_start = args.start;
+	self->dsial_limit = args.limit;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(itertyp, OPERATOR_ITER);
@@ -2278,7 +2343,7 @@ PRIVATE struct type_member tpconst ds_ial_class_members[] = {
 INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithIter",
-	/* .tp_doc      = */ DOC("(objWithIter)"),
+	/* .tp_doc      = */ DOC("(" ds_i__SeqWithIter_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2327,7 +2392,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithIterAndLimit",
-	/* .tp_doc      = */ DOC("(objWithIter,start:?Dint,limit:?Dint)"),
+	/* .tp_doc      = */ DOC("(" ds_ial__SeqWithIterAndLimit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

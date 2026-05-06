@@ -338,8 +338,8 @@ mu_foreach_pair(MapUnion *__restrict self, Dee_foreach_pair_t cb, void *arg) {
 	if likely(result >= 0) {
 		Dee_ssize_t temp;
 		struct map_foreach_pair_filter_keys data;
-		data.mfpfk_cb            = cb;
-		data.mfpfk_arg           = arg;
+		data.mfpfk_cb   = cb;
+		data.mfpfk_arg  = arg;
 		data.mfpfk_keys = self->mu_a;
 		temp = DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->mu_b, &map_foreach_pair_without_mapkeys_cb, &data);
 		if unlikely(temp < 0)
@@ -407,8 +407,7 @@ PRIVATE struct type_member mu_class_members[] = {
 INTERN DeeTypeObject MapUnion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapUnion",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(a:?DMapping,b:?DMapping)"),
+	/* .tp_doc      = */ DOC("(a:?DMapping,b:?DMapping)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -887,8 +886,7 @@ PRIVATE struct type_method_hint tpconst muiter_method_hints[] = {
 INTERN DeeTypeObject MapUnionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapUnionIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(mu:?Ert:MapUnion)"),
+	/* .tp_doc      = */ DOC("(mu:?Ert:MapUnion)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1136,8 +1134,7 @@ PRIVATE struct type_member tpconst mi_class_members[] = {
 INTERN DeeTypeObject MapIntersection_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapIntersection",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?DMapping,keys:?DSet)"),
+	/* .tp_doc      = */ DOC("(map:?DMapping,keys:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1322,8 +1319,7 @@ PRIVATE struct type_member tpconst miiter_members[] = {
 INTERN DeeTypeObject MapIntersectionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapIntersectionIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(mi:?Ert:MapIntersection)"),
+	/* .tp_doc      = */ DOC("(mi:?Ert:MapIntersection)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1560,8 +1556,7 @@ PRIVATE struct type_member tpconst md_class_members[] = {
 INTERN DeeTypeObject MapDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapDifference",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?DMapping,keys:?DSet)"),
+	/* .tp_doc      = */ DOC("(map:?DMapping,keys:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1689,8 +1684,7 @@ PRIVATE struct type_member tpconst mditer_members[] = {
 INTERN DeeTypeObject MapDifferenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapDifferenceIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(md:?Ert:MapDifference)"),
+	/* .tp_doc      = */ DOC("(md:?Ert:MapDifference)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2255,8 +2249,7 @@ PRIVATE struct type_member tpconst msd_class_members[] = {
 INTERN DeeTypeObject MapSymmetricDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapSymmetricDifference",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(a:?DMapping,b:?DMapping)"),
+	/* .tp_doc      = */ DOC("(a:?DMapping,b:?DMapping)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2722,8 +2715,7 @@ PRIVATE struct type_gc tpconst msditer_gc = {
 INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapSymmetricDifferenceIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(msd:?Ert:MapSymmetricDifference)"),
+	/* .tp_doc      = */ DOC("(msd:?Ert:MapSymmetricDifference)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

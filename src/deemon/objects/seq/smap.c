@@ -232,12 +232,21 @@ PRIVATE struct type_iterator smapiter_iterator = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-smapiter_ctor(SharedMapIterator *__restrict self,
+smapiter_init(SharedMapIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SharedMapIterator", &self->smi_seq);
-	if (DeeObject_AssertTypeExact(self->smi_seq, &DeeSharedMap_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SharedMapIterator", params: """
+	SharedMap *map:?Ert:SharedMap
+""", docStringPrefix: "smapiter");]]]*/
+#define smapiter__SharedMapIterator_params "map:?Ert:SharedMap"
+	struct {
+		SharedMap *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SharedMapIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &DeeSharedMap_Type))
 		goto err;
-	Dee_Incref(self->smi_seq);
+	Dee_Incref(args.map);
+	self->smi_seq   = args.map;
 	self->smi_index = 0;
 	return 0;
 err:
@@ -314,7 +323,7 @@ PRIVATE struct type_member tpconst smapiter_members[] = {
 INTERN DeeTypeObject SharedMapIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SharedMapIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" smapiter__SharedMapIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -324,7 +333,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 			/* T:              */ SharedMapIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &smapiter_copy,
-			/* tp_any_ctor:    */ &smapiter_ctor,
+			/* tp_any_ctor:    */ &smapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &smapiter_serialize
 		),

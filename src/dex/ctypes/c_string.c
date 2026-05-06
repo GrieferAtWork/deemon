@@ -1628,8 +1628,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL c_string_bzero_f(size_t argc, DeeObject *c
 	} args;
 	union pointer dst;
 	args.elem_count = 1;
-	if (DeeArg_UnpackStruct(argc, argv, "o" UNPuSIZ "|" UNPuSIZ ":bzero", &args))
-		goto err;
+	DeeArg_UnpackStruct2XOr3X(err, argc, argv, "bzero", &args, &args.raw_dst, "o", _DeeArg_AsObject, &args.num_bytes, UNPuSIZ, DeeObject_AsSize, &args.elem_count, UNPuSIZ, DeeObject_AsSize);
 	if unlikely(DeeObject_AsPointer(args.raw_dst, &CVoid_Type, &dst))
 		goto err;
 	return c_string_bzero_f_impl(dst.pvoid, args.num_bytes, args.elem_count);

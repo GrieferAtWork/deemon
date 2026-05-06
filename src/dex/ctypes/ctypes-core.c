@@ -774,8 +774,7 @@ cobject_tobytes(CObject *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	args.data = NULL;
 	args.offset = 0;
-	if (DeeArg_UnpackStruct(argc, argv, "|o" UNPuSIZ ":tobytes", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, "tobytes", &args, &args.data, "o", _DeeArg_AsObject, &args.offset, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 
 	/* When no explicit buffer was given, return a writable view for the data of `self' */

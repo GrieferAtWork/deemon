@@ -81,12 +81,19 @@ modexportsiter_copy(ModuleExportsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexportsiter_init(ModuleExportsIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	ModuleExports *exports_map;
-	DeeArg_Unpack1(err, argc, argv, "_ModuleExportsIterator", &exports_map);
-	if (DeeObject_AssertTypeExact(exports_map, &ModuleExports_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ModuleExportsIterator", params: """
+	ModuleExports *exports:?Ert:ModuleExports
+""", docStringPrefix: "modexportsiter");]]]*/
+#define modexportsiter__ModuleExportsIterator_params "exports:?Ert:ModuleExports"
+	struct {
+		ModuleExports *exports;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ModuleExportsIterator", &args.exports);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.exports, &ModuleExports_Type))
 		goto err;
 	self->mei_index  = 0;
-	self->mei_module = exports_map->me_module;
+	self->mei_module = args.exports->me_module;
 	Dee_Incref(self->mei_module);
 	return 0;
 err:
@@ -96,14 +103,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexportskeysiter_init(ModuleExportsIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
-	DefaultSequence_MapProxy *proxy;
-	DeeArg_Unpack1(err, argc, argv, "_ModuleExportsKeysIterator", &proxy);
-	if (DeeObject_AssertTypeExact(proxy, &DefaultSequence_MapKeys_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ModuleExportsKeysIterator", params: """
+	DefaultSequence_MapProxy *exportkeys:?Ert:MapKeys
+""", docStringPrefix: "modexportskeysiter");]]]*/
+#define modexportskeysiter__ModuleExportsKeysIterator_params "exportkeys:?Ert:MapKeys"
+	struct {
+		DefaultSequence_MapProxy *exportkeys;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ModuleExportsKeysIterator", &args.exportkeys);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.exportkeys, &DefaultSequence_MapKeys_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(proxy->dsmp_map, &ModuleExports_Type))
+	if (DeeObject_AssertTypeExact(args.exportkeys->dsmp_map, &ModuleExports_Type))
 		goto err;
 	self->mei_index  = 0;
-	self->mei_module = ((ModuleExports *)proxy->dsmp_map)->me_module;
+	self->mei_module = ((ModuleExports *)args.exportkeys->dsmp_map)->me_module;
 	Dee_Incref(self->mei_module);
 	return 0;
 err:
@@ -309,7 +323,9 @@ PRIVATE struct type_member tpconst modexportsiter_members[] = {
 INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExportsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" modexportsiter__ModuleExportsIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -358,7 +374,9 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 INTERN DeeTypeObject ModuleExportsKeysIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExportsKeysIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" modexportskeysiter__ModuleExportsKeysIterator_params ")\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -416,10 +434,19 @@ modexports_ctor(ModuleExports *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_init(ModuleExports *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_ModuleExports", &self->me_module);
-	if (DeeObject_AssertType(self->me_module, &DeeModule_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ModuleExports", params: """
+	DeeModuleObject *module
+""", docStringPrefix: "modexports");]]]*/
+#define modexports__ModuleExports_params "module:?DModule"
+	struct {
+		DeeModuleObject *module_;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ModuleExports", &args.module_);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.module_, &DeeModule_Type))
 		goto err;
-	Dee_Incref(self->me_module);
+	Dee_Incref(args.module_);
+	self->me_module = args.module_;
 	return 0;
 err:
 	return -1;
@@ -1332,8 +1359,7 @@ PRIVATE struct type_member tpconst modexports_class_members[] = {
 INTERN DeeTypeObject ModuleExports_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExports",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(mod:?DModule)\n"
+	/* .tp_doc      = */ DOC("(" modexports__ModuleExports_params ")\n"
 	                         "\n"
 	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
@@ -1394,10 +1420,19 @@ DeeModule_ViewExports(DeeModuleObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_init(ModuleGlobals *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_ModuleGlobals", &self->mg_module);
-	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ModuleGlobals", params: """
+	DeeModuleObject *module
+""", docStringPrefix: "modglobals");]]]*/
+#define modglobals__ModuleGlobals_params "module:?DModule"
+	struct {
+		DeeModuleObject *module_;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ModuleGlobals", &args.module_);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.module_, &DeeModule_Type))
 		goto err;
-	Dee_Incref(self->mg_module);
+	Dee_Incref(args.module_);
+	self->mg_module = args.module_;
 	return 0;
 err:
 	return -1;
@@ -1623,8 +1658,7 @@ PRIVATE struct type_seq modglobals_seq = {
 INTERN DeeTypeObject ModuleGlobals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleGlobals",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(mod:?DModule)"),
+	/* .tp_doc      = */ DOC("(" modglobals__ModuleGlobals_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1682,10 +1716,19 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modlibnames_init(ModuleLibNames *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_ModuleLibNames", &self->mln_module);
-	if (DeeObject_AssertType(self->mln_module, &DeeModule_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ModuleLibNames", params: """
+	DeeModuleObject *module
+""", docStringPrefix: "modlibnames");]]]*/
+#define modlibnames__ModuleLibNames_params "module:?DModule"
+	struct {
+		DeeModuleObject *module_;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_ModuleLibNames", &args.module_);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.module_, &DeeModule_Type))
 		goto err;
-	Dee_Incref(self->mln_module);
+	Dee_Incref(args.module_);
+	self->mln_module = args.module_;
 	return 0;
 err:
 	return -1;
@@ -1778,8 +1821,7 @@ PRIVATE struct type_seq modlibnames_seq = {
 INTERN DeeTypeObject ModuleLibNames_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleLibNames",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(mod:?DModule)"),
+	/* .tp_doc      = */ DOC("(" modlibnames__ModuleLibNames_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

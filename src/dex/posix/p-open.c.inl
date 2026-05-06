@@ -142,6 +142,7 @@ for (local x: allDecls)
 	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
+MODULE_NAME = none;
 ]]]*/
 #include "p-open-constants.def"
 #define POSIX_OPEN_BASIC_DEFS \

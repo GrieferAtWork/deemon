@@ -428,8 +428,7 @@ PRIVATE struct type_member tpconst sp_class_members[] = {
 INTERN DeeTypeObject SeqCombinations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqCombinations",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,r?:?Dint)"),
+	/* .tp_doc      = */ DOC("(seq:?DSequence,r?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -478,8 +477,7 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatCombinations",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,r?:?Dint)\n"
+	/* .tp_doc      = */ DOC("(seq:?DSequence,r?:?Dint)\n"
 	                         "\n"
 	                         "iter->?#Iterator"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -530,8 +528,7 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 INTERN DeeTypeObject SeqPermutations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqPermutations",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,r?:?Dint)"),
+	/* .tp_doc      = */ DOC("(seq:?DSequence,r?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1257,25 +1254,35 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 scv_init(SeqCombinationsView *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	size_t i, rparam, *idx_copy, *idx_other;
-	DeeArg_Unpack1(err, argc, argv, "_SeqCombinationsView", &self->scv_iter);
-	if unlikely(!DeeObject_InstanceOfExact(self->scv_iter, &SeqCombinationsIterator_Type) &&
-	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqRepeatCombinationsIterator_Type) &&
-	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqPermutationsIterator_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqCombinationsView", params: """
+	SeqCombinationsIterator *iter:
+		?X3?Ert:SeqCombinationsIterator?Ert:SeqRepeatCombinationsIterator?Ert:SeqPermutationsIterator
+""", docStringPrefix: "scv");]]]*/
+#define scv__SeqCombinationsView_params "iter:?X3?Ert:SeqCombinationsIterator?Ert:SeqRepeatCombinationsIterator?Ert:SeqPermutationsIterator"
+	struct {
+		SeqCombinationsIterator *iter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqCombinationsView", &args.iter);
+/*[[[end]]]*/
+	if unlikely(!DeeObject_InstanceOfExact(args.iter, &SeqCombinationsIterator_Type) &&
+	            !DeeObject_InstanceOfExact(args.iter, &SeqRepeatCombinationsIterator_Type) &&
+	            !DeeObject_InstanceOfExact(args.iter, &SeqPermutationsIterator_Type))
 		goto err_bad_iter_type;
-	self->scv_com = self->scv_iter->sci_com;
+	self->scv_com = args.iter->sci_com;
 	rparam = self->scv_com->sc_rparam;
 	idx_copy = (size_t *)Dee_Mallocc(rparam, sizeof(size_t));
 	if unlikely(!idx_copy)
 		goto err;
-	idx_other = self->scv_iter->sci_idx;
+	idx_other = args.iter->sci_idx;
 	for (i = 0; i < rparam; ++i)
 		idx_copy[i] = atomic_read(&idx_other[i]);
 	self->scv_idx = idx_copy;
-	Dee_Incref(self->scv_iter);
+	Dee_Incref(args.iter);
+	self->scv_iter = args.iter;
 	Dee_weakref_support_init(self);
 	return 0;
 err_bad_iter_type:
-	DeeObject_TypeAssertFailed3(Dee_AsObject(self->scv_iter),
+	DeeObject_TypeAssertFailed3(Dee_AsObject(args.iter),
 	                            &SeqCombinationsIterator_Type,
 	                            &SeqRepeatCombinationsIterator_Type,
 	                            &SeqPermutationsIterator_Type);
@@ -1509,10 +1516,7 @@ PRIVATE struct type_seq scv_seq = {
 INTERN DeeTypeObject SeqCombinationsView_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqCombinationsView",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(iter:?X3?Ert:SeqCombinationsIterator"
-	                         /*    */ "?Ert:SeqRepeatCombinationsIterator"
-	                         /*    */ "?Ert:SeqPermutationsIterator)"),
+	/* .tp_doc      = */ DOC("(" scv__SeqCombinationsView_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(SeqCombinationsView),
 	/* .tp_features = */ TF_NONE,
