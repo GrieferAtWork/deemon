@@ -3612,7 +3612,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sso_trycompare_eq(SeqEachOperator *self, DeeObject *other) {
 	Dee_ssize_t result = seo_foreach(self, &ss_trycompare_eq_cb, other);
 	ASSERT(result == -2 || result == -1 || result == 0);
-	return Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0((int)result);
+	return Dee_COMPARE_FROM_eM1_eqM2_ne0((int)result);
 }
 
 PRIVATE struct type_cmp sso_cmp = {

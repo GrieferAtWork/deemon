@@ -938,18 +938,11 @@ bytes_compare_seq(Bytes *lhs, DeeObject *rhs) {
 	foreach_status = DeeObject_Foreach(rhs, &bytes_compare_seq_cb, &data);
 	ASSERT(foreach_status == 0 || foreach_status == -1 ||
 	       foreach_status == -2 || foreach_status == -3);
-	switch (foreach_status) {
-	case 0: break;
-	case -1: goto err;
-	case -2: return Dee_COMPARE_LO; /* lhs < rhs */
-	case -3: return Dee_COMPARE_GR; /* lhs > rhs */
-	default: __builtin_unreachable();
-	}
+	if (foreach_status != 0)
+		return Dee_COMPARE_FROM_eM1_loM2_grM3((int)foreach_status);
 	if (data.bcsd_index < data.bcsd_size)
 		return Dee_COMPARE_GR; /* lhs > rhs */
 	return Dee_COMPARE_EQ;
-err:
-	return Dee_COMPARE_ERR;
 }
 
 

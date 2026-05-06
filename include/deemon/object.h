@@ -1848,15 +1848,25 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
 
 
-#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 && (Dee_COMPARE_NE == 1 || Dee_COMPARE_NE == -1)
 /* IN   OUT
  * -1   -2   (Dee_COMPARE_ERR)
  * -2   0    (Dee_COMPARE_EQ)
  *  0   -1/1 (Dee_COMPARE_NE) */
-#define Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(v) (((((v) + 1) & 3) - 3) >> 1)
-#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 */
-#define Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(v) ((v) == -1 ? Dee_COMPARE_ERR : (v) == -2 ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
-#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
+#define Dee_COMPARE_FROM_eM1_eqM2_ne0(v) (((((v) + 1) & 3) - 3) >> 1)
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 && (Dee_COMPARE_NE == 1 || Dee_COMPARE_NE == -1) */
+#define Dee_COMPARE_FROM_eM1_eqM2_ne0(v) ((v) == -1 ? Dee_COMPARE_ERR : (v) == -2 ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 || (Dee_COMPARE_NE != 1 && Dee_COMPARE_NE != -1) */
+
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
+/* IN   OUT
+ * -1   -2   (Dee_COMPARE_ERR)
+ * -2   -1   (Dee_COMPARE_LO)
+ * -3   1    (Dee_COMPARE_GR) */
+#define Dee_COMPARE_FROM_eM1_loM2_grM3(v) (((((v) + 1) * -3) >> 1) - 2)
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
+#define Dee_COMPARE_FROM_eM1_loM2_grM3(v) ((v) == -1 ? Dee_COMPARE_ERR : (v) == -2 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
 
 
 /* Possible values returned by C-API isbound checking functions.

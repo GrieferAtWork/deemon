@@ -1615,7 +1615,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(trycompare_eq)(LOCAL_SeqEach *self, DeeObject *other) {
 	Dee_ssize_t result = LOCAL_seX(foreach)(self, &ss_trycompare_eq_cb, other);
 	ASSERT(result == -2 || result == 0 || result == -1);
-	return Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0((int)result);
+	return Dee_COMPARE_FROM_eM1_eqM2_ne0((int)result);
 }
 
 PRIVATE struct type_cmp LOCAL_ssX(cmp) = {

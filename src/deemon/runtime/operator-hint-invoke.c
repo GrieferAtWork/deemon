@@ -299,10 +299,14 @@ STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_EQ) == 1);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_LO) == -2);
 STATIC_ASSERT(Dee_COMPARE_INTO_eM1_eq1_neM2(Dee_COMPARE_GR) == -2);
 
-STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(-1) == Dee_COMPARE_ERR);
-STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(-2) == Dee_COMPARE_EQ);
-STATIC_ASSERT(Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_LO ||
-              Dee_COMPARE_EQ_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_eqM2_ne0(-1) == Dee_COMPARE_ERR);
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_eqM2_ne0(-2) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_LO ||
+              Dee_COMPARE_FROM_eM1_eqM2_ne0(0) == Dee_COMPARE_GR);
+
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_loM2_grM3(-1) == Dee_COMPARE_ERR);
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_loM2_grM3(-2) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_COMPARE_FROM_eM1_loM2_grM3(-3) == Dee_COMPARE_GR);
 
 /*Helper script to brute-force solutions to mapper macros:
 
@@ -318,13 +322,12 @@ import * from deemon;
 #define Expected int
 #endif
 
-#define OPS "+-&|^*>~N"
+#define OPS "+&|^*>~N"
 
 function apply(value: int, op: (string, int)): int {
 	local what, addend = op...;
 	switch (what) {
 	case "+": return value + addend; break;
-	case "-": return value - addend; break;
 	case "*": return value * addend; break;
 	case ">": return value >> addend; break;
 	case "&": return value & addend; break;
