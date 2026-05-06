@@ -90,13 +90,22 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mfkvi_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndValueIterator", &self->mfki_base);
-	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndValue_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapFromKeysAndValueIterator", params: """
+	MapFromKeys *map:?Ert:MapFromKeysAndValue
+""", docStringPrefix: "mfkvi");]]]*/
+#define mfkvi__MapFromKeysAndValueIterator_params "map:?Ert:MapFromKeysAndValue"
+	struct {
+		MapFromKeys *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndValueIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &MapFromKeysAndValue_Type))
 		goto err;
-	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);
+	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, args.map->mfk_keys);
 	if unlikely(!self->mfki_iter)
 		goto err;
-	Dee_Incref(self->mfki_base);
+	self->mfki_base = args.map;
+	Dee_Incref(args.map);
 	return 0;
 err:
 	return -1;
@@ -104,13 +113,22 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mfkci_init(MapFromKeysIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndCallbackIterator", &self->mfki_base);
-	if (DeeObject_AssertTypeExact(self->mfki_base, &MapFromKeysAndCallback_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapFromKeysAndCallbackIterator", params: """
+	MapFromKeys *map:?Ert:MapFromKeysAndCallback
+""", docStringPrefix: "mfkci");]]]*/
+#define mfkci__MapFromKeysAndCallbackIterator_params "map:?Ert:MapFromKeysAndCallback"
+	struct {
+		MapFromKeys *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_MapFromKeysAndCallbackIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &MapFromKeysAndCallback_Type))
 		goto err;
-	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->mfki_base->mfk_keys);
+	self->mfki_iter = DeeObject_InvokeMethodHint(set_operator_iter, args.map->mfk_keys);
 	if unlikely(!self->mfki_iter)
 		goto err;
-	Dee_Incref(self->mfki_base);
+	self->mfki_base = args.map;
+	Dee_Incref(args.map);
 	return 0;
 err:
 	return -1;
@@ -214,8 +232,7 @@ PRIVATE struct type_member tpconst mfkci_members[] = {
 INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndValueIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromKeysAndValue)\n"
+	/* .tp_doc      = */ DOC("(" mfkvi__MapFromKeysAndValueIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -266,8 +283,7 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromKeysAndCallbackIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromKeysAndCallback)\n"
+	/* .tp_doc      = */ DOC("(" mfkci__MapFromKeysAndCallbackIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

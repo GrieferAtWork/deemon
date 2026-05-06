@@ -201,7 +201,7 @@ char const *DCALL re_strerror(re_errno_t error) {
 	case RE_EBRACE: /*  */ result = "Unmatched {"; break;
 	case RE_BADBR: /*   */ result = "Invalid content of {...}"; break;
 	case RE_ERANGE: /*  */ result = "Set-range start is greater than its end"; break;
-	case RE_ESPACE: /*  */ result = "Out of memory"; break;
+//	case RE_ESPACE: /*  */ result = "Out of memory"; break; /* Explicitly handled; message would never be used */
 	case RE_BADRPT: /*  */ result = "Nothing precedes +, *, ?, or {"; break;
 	case RE_EEND: /*    */ result = "Unexpected end of pattern"; break;
 	case RE_ESIZE: /*   */ result = "Regular expression violates a hard upper limit"; break;

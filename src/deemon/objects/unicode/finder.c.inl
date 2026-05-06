@@ -213,11 +213,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_init(StringFindIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	StringFind *find;
-	DeeArg_Unpack1(err, argc, argv, "_StringFindIterator", &find);
-	if (DeeObject_AssertTypeExact(find, &StringFind_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringFindIterator", params: """
+	StringFind *find:?Ert:StringFind
+""", docStringPrefix: "sfi");]]]*/
+#define sfi__StringFindIterator_params "find:?Ert:StringFind"
+	struct {
+		StringFind *find;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringFindIterator", &args.find);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &StringFind_Type))
 		goto err;
-	return sfi_setup(self, find);
+	return sfi_setup(self, args.find);
 err:
 	return -1;
 }
@@ -225,11 +232,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_init(StringFindIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	StringFind *find;
-	DeeArg_Unpack1(err, argc, argv, "_StringCaseFindIterator", &find);
-	if (DeeObject_AssertTypeExact(find, &StringCaseFind_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringFindIterator", params: """
+	StringFind *find:?Ert:StringCaseFind
+""", docStringPrefix: "scfi");]]]*/
+#define scfi__StringFindIterator_params "find:?Ert:StringCaseFind"
+	struct {
+		StringFind *find;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringFindIterator", &args.find);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &StringCaseFind_Type))
 		goto err;
-	return sfi_setup(self, find);
+	return sfi_setup(self, args.find);
 err:
 	return -1;
 }
@@ -466,7 +480,7 @@ PRIVATE struct type_cmp sfi_cmp = {
 INTERN DeeTypeObject StringFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFindIterator",
-	/* .tp_doc      = */ DOC("(find:?Ert:StringFind)\n"
+	/* .tp_doc      = */ DOC("(" sfi__StringFindIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -517,7 +531,7 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 INTERN DeeTypeObject StringCaseFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseFindIterator",
-	/* .tp_doc      = */ DOC("(find:?Ert:StringCaseFind)\n"
+	/* .tp_doc      = */ DOC("(" scfi__StringFindIterator_params ")\n"
 	                         "\n"
 	                         "next->?X2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -594,22 +608,39 @@ sf_copy(StringFind *__restrict self,
 	return 0;
 }
 
-#define scf_init sf_init
+#define scf_init               sf_init
+#define scf__StringFind_params sf__StringFind_params
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_init(StringFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	self->sf_start = 0;
-	self->sf_end   = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":_StringFind",
-	                  &self->sf_str, &self->sf_needle,
-	                  &self->sf_start, &self->sf_end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringFind", params: """
+	DeeStringObject *string,
+	DeeStringObject *needle,
+	size_t start = 0,
+	size_t end = (size_t)-1
+""", docStringPrefix: "sf");]]]*/
+#define sf__StringFind_params "string:?Dstring,needle:?Dstring,start=!0,end=!-1"
+	struct {
+		DeeStringObject *string;
+		DeeStringObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":_StringFind", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->sf_str, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.string, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->sf_needle, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.needle, &DeeString_Type))
 		goto err;
-	Dee_Incref(self->sf_str);
-	Dee_Incref(self->sf_needle);
+	Dee_Incref(args.string);
+	Dee_Incref(args.needle);
+	self->sf_str    = args.string;
+	self->sf_needle = args.needle;
+	self->sf_start  = args.start;
+	self->sf_end    = args.end;
 	return 0;
 err:
 	return -1;
@@ -788,7 +819,7 @@ PRIVATE struct type_member tpconst scf_class_members[] = {
 INTERN DeeTypeObject StringFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFind",
-	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)"),
+	/* .tp_doc      = */ DOC("(" sf__StringFind_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -837,7 +868,7 @@ INTERN DeeTypeObject StringFind_Type = {
 INTERN DeeTypeObject StringCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseFind",
-	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end=!-1)\n"
+	/* .tp_doc      = */ DOC("(" scf__StringFind_params ")\n"
 	                         "\n"
 	                         "[](index:?Dint)->?T2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
@@ -923,7 +954,6 @@ DeeString_CaseFindAll(DeeStringObject *self, DeeStringObject *other,
 done:
 	return Dee_AsObject(result);
 }
-
 
 DECL_END
 

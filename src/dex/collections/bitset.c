@@ -2001,9 +2001,6 @@ INTERN DeeTypeObject Bitset_Type = {
 
 
 
-#define robs_nsi_getsize bs_size
-#define robs_hash        bs_hash
-
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 robs_init_fromseq(DeeObject *seq) {
 	DREF Bitset *result;
@@ -2060,6 +2057,7 @@ err:
 #define robs_or  bs_or
 #define robs_xor bs_xor
 
+#define robs_hash             bs_hash
 #define robs_eq               bs_eq
 #define robs_ne               bs_ne
 #define robs_le               bs_le

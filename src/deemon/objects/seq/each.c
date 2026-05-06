@@ -2177,8 +2177,7 @@ seo_init(SeqEachOperator *__restrict self,
 		DeeTupleObject *args;
 	} args;
 	args.args = (DeeTupleObject *)Dee_EmptyTuple;
-	if (DeeArg_UnpackStruct(argc, argv, "oo|o:_SeqEachOperator", &args))
-		goto err;
+	DeeArg_UnpackStruct2Or3(err, argc, argv, "_SeqEachOperator", &args, &args.seq, &args.op, &args.args);
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.args, &DeeTuple_Type))
 		goto err;
@@ -3405,8 +3404,7 @@ PRIVATE struct type_callable sew_callable = {
 INTERN DeeTypeObject SeqEachOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEachOperator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(" seo__SeqEachOperator_params ")"),
+	/* .tp_doc      = */ DOC("(" seo__SeqEachOperator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

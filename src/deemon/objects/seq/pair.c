@@ -79,12 +79,19 @@ spi_copy(SeqPairIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 spi_init(SeqPairIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	SeqPair *sp;
-	DeeArg_Unpack1(err, argc, argv, "_SeqPairIterator", &sp);
-	if (DeeObject_AssertTypeExact(sp, &DeeSeqPair_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqPairIterator", params: """
+	SeqPair *sp:?Ert:SeqPair
+""", docStringPrefix: "spi");]]]*/
+#define spi__SeqPairIterator_params "sp:?Ert:SeqPair"
+	struct {
+		SeqPair *sp;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqPairIterator", &args.sp);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.sp, &DeeSeqPair_Type))
 		goto err;
-	Dee_Incref(sp);
-	self->spi_pair  = sp;
+	Dee_Incref(args.sp);
+	self->spi_pair  = args.sp;
 	self->spi_index = 0;
 	return 0;
 err:
@@ -141,7 +148,7 @@ PRIVATE struct type_member tpconst spi_members[] = {
 INTERN DeeTypeObject SeqPairIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqPairIterator",
-	/* .tp_doc      = */ DOC("(seq:?Ert:SeqPair)"),
+	/* .tp_doc      = */ DOC("(" spi__SeqPairIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -220,9 +227,16 @@ STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offse
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sp_init(SeqPair *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_SeqPair", &seq);
-	return DeeObject_InvokeMethodHint(seq_unpack, seq, 2, self->sp_items);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqPair", params: """
+	seq:?T2?O?O
+""", docStringPrefix: "sp");]]]*/
+#define sp__SeqPair_params "seq:?T2?O?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqPair", &args.seq);
+/*[[[end]]]*/
+	return DeeObject_InvokeMethodHint(seq_unpack, args.seq, 2, self->sp_items);
 err:
 	return -1;
 }
@@ -982,7 +996,8 @@ INTERN DeeTypeObject DeeSeqPair_Type = {
 	/* .tp_name     = */ "_SeqPair",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 2 items\n"
 	                         "\n"
-	                         "(seq:?T2?O?O)"),
+	                         "(" sp__SeqPair_params ")\n"
+	                         "#pseq{A sequence containing the two items of @this ?DSequence}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

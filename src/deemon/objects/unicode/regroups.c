@@ -185,7 +185,6 @@ rss_bool(ReSubStrings *__restrict self) {
 }
 
 #define rss_size rg_size
-#define rsb_nsi_getsize rg_size
 #define rss_size rg_size
 #define rsb_size rg_size
 

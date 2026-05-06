@@ -202,14 +202,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mappediter_init(SeqMappedIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	SeqMapped *trans;
-	DeeArg_Unpack1(err, argc, argv, "_SeqMappedIterator", &trans);
-	if (DeeObject_AssertTypeExact(trans, &SeqMapped_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqMappedIterator", params: """
+	SeqMapped *mapper:?Ert:SeqMapped
+""", docStringPrefix: "mappediter");]]]*/
+#define mappediter__SeqMappedIterator_params "mapper:?Ert:SeqMapped"
+	struct {
+		SeqMapped *mapper;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqMappedIterator", &args.mapper);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.mapper, &SeqMapped_Type))
 		goto err;
-	self->smi_iter = DeeObject_Iter(trans->sm_seq);
+	self->smi_iter = DeeObject_Iter(args.mapper->sm_seq);
 	if unlikely(!self->smi_iter)
 		goto err;
-	self->smi_mapper = trans->sm_mapper;
+	self->smi_mapper = args.mapper->sm_mapper;
 	Dee_Incref(self->smi_mapper);
 	return 0;
 err:
@@ -219,7 +226,7 @@ err:
 INTERN DeeTypeObject SeqMappedIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqMappedIterator",
-	/* .tp_doc      = */ DOC("(mapped:?Ert:SeqMapped)"),
+	/* .tp_doc      = */ DOC("(" mappediter__SeqMappedIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

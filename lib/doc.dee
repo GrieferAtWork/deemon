@@ -4081,10 +4081,13 @@ set_is_type:
 		if (!istype)
 			return;
 		local foundSections = false;
+		local sawNoArgsConstructor = false;
 		for (local sect: allsections) {
 			for (local os: sect.getopsection(opname)) {
 				yield os;
 				foundSections = true;
+				if (os.docstring == "()")
+					sawNoArgsConstructor = true;
 			}
 		}
 		if (!foundSections) {
@@ -4127,6 +4130,12 @@ set_is_type:
 				} else if (opname == "constructor") {
 					yield autogenerateNativeConstructorSections()...;
 				}
+			}
+		} else if (opname == "constructor") {
+			/* Like in `enumerateOperatorSections()': add no-args-constructor if not already seen */
+			if (!sawNoArgsConstructor && object is bound &&
+			    Type.__isnoargconstructible__(object)) {
+				yield DocSection(this, "()");
 			}
 		}
 	}
@@ -4174,8 +4183,20 @@ set_is_type:
 					}
 				}
 			} else {
-				if ("constructor" !in result)
+				local constructors: {DocSection...} | none = result.get("constructor");
+				if (constructors is none) {
 					result["constructor"] = autogenerateNativeConstructorSections().frozen;
+				} else if (Type.__isnoargconstructible__(object)) {
+					/* If the type has a no-args-constructor, as well as an explicit documentation of
+					 * available constructors, but that list doesn't contain said no-args-constructor,
+					 * manually inject this extra constructor since it was probably left would because
+					 * it wasn't worth explicitly mentioning. */
+					if (constructors.locate(e -> e.docstring == "()") is none) {
+						constructors = List(constructors);
+						constructors.append(DocSection(this, "()"));
+						result["constructor"] = constructors;
+					}
+				}
 				for (local name: Type.__operators__(object)) {
 					if (name !is string)
 						continue;

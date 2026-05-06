@@ -342,9 +342,9 @@ DeeSystem_DEFINE_strstr(dee_strstr)
 #define __LOCAL_itoa_upper_digits DeeAscii_ItoaDigits(true)
 
 #undef issymstrt
-#define issymstrt(ch) (isalpha(ch) || (ch) == '_' || (ch) == '$')
+#define issymstrt(ch) DeeAscii_IsSymStrt(ch)
 #undef issymcont
-#define issymcont(ch) (isalnum(ch) || (ch) == '_' || (ch) == '$')
+#define issymcont(ch) DeeAscii_IsSymCont(ch)
 
 #undef char16_t
 #define char16_t __UINT16_TYPE__

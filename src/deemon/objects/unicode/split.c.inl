@@ -312,14 +312,21 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 splititer_init(StringSplitIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *split_type;
-	StringSplit *split;
-	DeeArg_Unpack1(err, argc, argv, "_StringSplitIterator", &split);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringSplitIterator", params: """
+	StringSplit *split:?Ert:StringSplit
+""", docStringPrefix: "splititer");]]]*/
+#define splititer__StringSplitIterator_params "split:?Ert:StringSplit"
+	struct {
+		StringSplit *split;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringSplitIterator", &args.split);
+/*[[[end]]]*/
 	split_type = &StringSplit_Type;
 	if (Dee_TYPE(self) == &StringCaseSplitIterator_Type)
 		split_type = &StringCaseSplit_Type;
-	if (DeeObject_AssertTypeExact(split, split_type))
+	if (DeeObject_AssertTypeExact(args.split, split_type))
 		goto err;
-	return splititer_setup(self, split);
+	return splititer_setup(self, args.split);
 err:
 	return -1;
 }
@@ -327,7 +334,7 @@ err:
 INTERN DeeTypeObject StringSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplitIterator",
-	/* .tp_doc      = */ DOC("(split:?Ert:StringSplit)\n"
+	/* .tp_doc      = */ DOC("(" splititer__StringSplitIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -378,7 +385,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplitIterator",
-	/* .tp_doc      = */ DOC("(split:?Ert:StringCaseSplit)\n"
+	/* .tp_doc      = */ DOC("(" splititer__StringSplitIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -622,15 +629,27 @@ split_copy(StringSplit *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_init(StringSplit *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack2(err, argc, argv, "_StringSplit", &self->s_str, &self->s_sep);
-	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringSplit", params: """
+	DeeStringObject *string;
+	DeeStringObject *sep;
+""", docStringPrefix: "split");]]]*/
+#define split__StringSplit_params "string:?Dstring,sep:?Dstring"
+	struct {
+		DeeStringObject *string;
+		DeeStringObject *sep;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_StringSplit", &args, &args.string, &args.sep);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.string, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->s_sep, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
 		goto err;
-	if unlikely(DeeString_IsEmpty(self->s_sep))
+	if unlikely(DeeString_IsEmpty(args.sep))
 		return DeeError_Throwf(&DeeError_ValueError, "Empty split separator");
-	Dee_Incref(self->s_str);
-	Dee_Incref(self->s_sep);
+	Dee_Incref(args.string);
+	Dee_Incref(args.sep);
+	self->s_str = args.string;
+	self->s_sep = args.sep;
 	return 0;
 err:
 	return -1;
@@ -640,7 +659,7 @@ err:
 INTERN DeeTypeObject StringSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplit",
-	/* .tp_doc      = */ DOC("(s:?Dstring,sep:?Dstring)"),
+	/* .tp_doc      = */ DOC("(" split__StringSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -689,7 +708,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 INTERN DeeTypeObject StringCaseSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplit",
-	/* .tp_doc      = */ DOC("(s:?Dstring,sep:?Dstring)"),
+	/* .tp_doc      = */ DOC("(" split__StringSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -950,11 +969,18 @@ lineiter_copy(LineSplitIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lineiter_init(LineSplitIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	LineSplit *split;
-	DeeArg_Unpack1(err, argc, argv, "_StringLineSplitIterator", &split);
-	if (DeeObject_AssertTypeExact(split, &StringLineSplit_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringLineSplitIterator", params: """
+	LineSplit *split:?Ert:StringLineSplit
+""", docStringPrefix: "lineiter");]]]*/
+#define lineiter__StringLineSplitIterator_params "split:?Ert:StringLineSplit"
+	struct {
+		LineSplit *split;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringLineSplitIterator", &args.split);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.split, &StringLineSplit_Type))
 		goto err;
-	lineiter_setup(self, split);
+	lineiter_setup(self, args.split);
 	return 0;
 err:
 	return -1;
@@ -985,7 +1011,7 @@ err:
 INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplitIterator",
-	/* .tp_doc      = */ DOC("(split:?Ert:StringLineSplit)\n"
+	/* .tp_doc      = */ DOC("(" lineiter__StringLineSplitIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1136,13 +1162,23 @@ linesplit_copy(LineSplit *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 linesplit_init(LineSplit *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	self->ls_keep = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_StringLineSplit",
-	                  &self->ls_str, &self->ls_keep))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringLineSplit", params: """
+	DeeStringObject *string,
+	bool keepends = false
+""", docStringPrefix: "linesplit");]]]*/
+#define linesplit__StringLineSplit_params "string:?Dstring,keepends=!f"
+	struct {
+		DeeStringObject *string;
+		bool keepends;
+	} args;
+	args.keepends = false;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_StringLineSplit", &args, &args.string, "o", _DeeArg_AsObject, &args.keepends, "b", DeeObject_AsBool);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.string, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->ls_str, &DeeString_Type))
-		goto err;
-	Dee_Incref(self->ls_str);
+	Dee_Incref(args.string);
+	self->ls_keep = args.keepends;
+	self->ls_str = args.string;
 	return 0;
 err:
 	return -1;
@@ -1151,7 +1187,7 @@ err:
 INTERN DeeTypeObject StringLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplit",
-	/* .tp_doc      = */ DOC("(s:?Dstring,keepends=!f)"),
+	/* .tp_doc      = */ DOC("(" linesplit__StringLineSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

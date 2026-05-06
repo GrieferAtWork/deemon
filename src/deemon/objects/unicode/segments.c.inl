@@ -79,15 +79,22 @@ ssegiter_copy(StringSegmentsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	StringSegments *seg;
-	DeeArg_Unpack1(err, argc, argv, "_StringSegmentsIterator", &seg);
-	if (DeeObject_AssertTypeExact(seg, &StringSegments_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringSegmentsIterator", params: """
+	StringSegments *seg:?Ert:StringSegments
+""", docStringPrefix: "ssegiter");]]]*/
+#define ssegiter__StringSegmentsIterator_params "seg:?Ert:StringSegments"
+	struct {
+		StringSegments *seg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringSegmentsIterator", &args.seg);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.seg, &StringSegments_Type))
 		goto err;
-	self->s_str   = seg->s_str;
-	self->s_siz   = seg->s_siz;
-	self->s_ptr   = (uint8_t *)DeeString_WSTR(seg->s_str);
-	self->s_end   = (uint8_t *)DeeString_WEND(seg->s_str);
-	self->s_width = DeeString_WIDTH(seg->s_str);
+	self->s_str   = args.seg->s_str;
+	self->s_siz   = args.seg->s_siz;
+	self->s_ptr   = (uint8_t *)DeeString_WSTR(args.seg->s_str);
+	self->s_end   = (uint8_t *)DeeString_WEND(args.seg->s_str);
+	self->s_width = DeeString_WIDTH(args.seg->s_str);
 	Dee_Incref(self->s_str);
 	return 0;
 err:
@@ -184,7 +191,7 @@ PRIVATE struct type_cmp ssegiter_cmp = {
 INTERN DeeTypeObject StringSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSegmentsIterator",
-	/* .tp_doc      = */ DOC("(seg:?Ert:StringSegments)\n"
+	/* .tp_doc      = */ DOC("(" ssegiter__StringSegmentsIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -247,16 +254,26 @@ sseg_ctor(StringSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_init(StringSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_StringSegments",
-	                  &self->s_str, &self->s_siz))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringSegments", params: """
+	DeeStringObject *string:?Dstring,
+	size_t len
+""", docStringPrefix: "sseg");]]]*/
+#define sseg__StringSegments_params "string:?Dstring,len:?Dint"
+	struct {
+		DeeStringObject *string;
+		size_t len;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_StringSegments", &args, &args.string, "o", _DeeArg_AsObject, &args.len, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.string, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
-		goto err;
-	if (!self->s_siz) {
-		err_invalid_segment_size(self->s_siz);
+	if unlikely(!args.len) {
+		err_invalid_segment_size(args.len);
 		goto err;
 	}
-	Dee_Incref(self->s_str);
+	Dee_Incref(args.string);
+	self->s_str = args.string;
+	self->s_siz = args.len;
 	return 0;
 err:
 	return -1;
@@ -468,7 +485,7 @@ PRIVATE struct type_member tpconst sseg_class_members[] = {
 INTERN DeeTypeObject StringSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSegments",
-	/* .tp_doc      = */ DOC("(s:?Dstring,siz:?Dint)"),
+	/* .tp_doc      = */ DOC("(" sseg__StringSegments_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

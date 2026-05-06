@@ -73,12 +73,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinals_init(StringOrdinals *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_StringOrdinals", &self->so_str);
-	if (DeeObject_AssertTypeExact(self->so_str, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringOrdinals", params: """
+	DeeStringObject *string
+""", docStringPrefix: "stringordinals");]]]*/
+#define stringordinals__StringOrdinals_params "string:?Dstring"
+	struct {
+		DeeStringObject *string;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringOrdinals", &args.string);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.string, &DeeString_Type))
 		goto err;
-	self->so_width   = DeeString_WIDTH(self->so_str);
-	self->so_ptr.ptr = DeeString_WSTR(self->so_str);
-	Dee_Incref(self->so_str);
+	self->so_width   = DeeString_WIDTH(args.string);
+	self->so_ptr.ptr = DeeString_WSTR(args.string);
+	Dee_Incref(args.string);
+	self->so_str = args.string;
 	return 0;
 err:
 	return -1;
@@ -114,8 +123,7 @@ err_oob:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-stringordinals_contains(StringOrdinals *self,
-                        DeeObject *ord_ob) {
+stringordinals_contains(StringOrdinals *self, DeeObject *ord_ob) {
 	uint32_t ord;
 	if (DeeObject_AsUInt32(ord_ob, &ord))
 		goto err;
@@ -197,7 +205,7 @@ PRIVATE struct type_member tpconst stringordinals_class_members[] = {
 INTERN DeeTypeObject StringOrdinals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringOrdinals",
-	/* .tp_doc      = */ DOC("(s:?Dstring)"),
+	/* .tp_doc      = */ DOC("(" stringordinals__StringOrdinals_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

@@ -174,20 +174,34 @@ PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL mfaki_ctor(void) {
 
 PRIVATE WUNUSED DREF MapFromAttrIterator *DCALL
 mfaki_init(size_t argc, DeeObject *const *argv) {
-	MapFromAttr *map;
-	DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &map);
-	if (DeeObject_AssertTypeExact(map, &MapFromAttr_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapFromAttrKeysIterator", params: """
+	MapFromAttr *map:?Ert:MapFromAttr
+""", docStringPrefix: "mfaki");]]]*/
+#define mfaki__MapFromAttrKeysIterator_params "map:?Ert:MapFromAttr"
+	struct {
+		MapFromAttr *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_MapFromAttrKeysIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &MapFromAttr_Type))
 		goto err;
-	return mfaki_ofobj(map->mfa_ob);
+	return mfaki_ofobj(args.map->mfa_ob);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttrIterator *DCALL
 mfaki_class_of(DeeTypeObject *UNUSED(tp_self), size_t argc, DeeObject *const *argv) {
-	DeeObject *ob;
-	DeeArg_Unpack1(err, argc, argv, "of", &ob);
-	return mfaki_ofobj(ob);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("of", params: """
+	ob
+""", docStringPrefix: "mfaki_class");]]]*/
+#define mfaki_class_of_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "of", &args.ob);
+/*[[[end]]]*/
+	return mfaki_ofobj(args.ob);
 err:
 	return NULL;
 }
@@ -219,7 +233,7 @@ PRIVATE struct type_member tpconst mfaki_members[] = {
 
 PRIVATE struct type_method tpconst mfaki_class_methods[] = {
 	TYPE_METHOD_F("of", &mfaki_class_of, METHOD_FNOREFESCAPE,
-	              "(ob)->?.\n"
+	              "(" mfaki_class_of_params ")->?.\n"
 	              "Convenience wrapper for ${Mapping.fromattr(ob).keys.operator iter()}"),
 	TYPE_MEMBER_END
 };
@@ -227,8 +241,7 @@ PRIVATE struct type_method tpconst mfaki_class_methods[] = {
 INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFromAttrKeysIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(map:?Ert:MapFromAttr)\n"
+	/* .tp_doc      = */ DOC("(" mfaki__MapFromAttrKeysIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,

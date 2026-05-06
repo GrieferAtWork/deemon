@@ -81,18 +81,25 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_init(FilterIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	Filter *filter;
-	DeeArg_Unpack1(err, argc, argv, "_SeqFilterIterator", &filter);
-	if (Dee_TYPE(filter) != &SeqFilter_Type &&
-	    Dee_TYPE(filter) != &SeqFilterAsUnbound_Type) {
-		DeeObject_TypeAssertFailed2(filter, &SeqFilter_Type, &SeqFilterAsUnbound_Type);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqFilterIterator", params: """
+	Filter *filter:?X2?Ert:SeqFilter?Ert:SeqFilterAsUnbound
+""", docStringPrefix: "filteriterator");]]]*/
+#define filteriterator__SeqFilterIterator_params "filter:?X2?Ert:SeqFilter?Ert:SeqFilterAsUnbound"
+	struct {
+		Filter *filter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqFilterIterator", &args.filter);
+/*[[[end]]]*/
+	if (Dee_TYPE(args.filter) != &SeqFilter_Type &&
+	    Dee_TYPE(args.filter) != &SeqFilterAsUnbound_Type) {
+		DeeObject_TypeAssertFailed2(args.filter, &SeqFilter_Type, &SeqFilterAsUnbound_Type);
 		goto err;
 	}
-	self->fi_iter = DeeObject_InvokeMethodHint(seq_operator_iter, filter->f_seq);
+	self->fi_iter = DeeObject_InvokeMethodHint(seq_operator_iter, args.filter->f_seq);
 	if unlikely(!self->fi_iter)
 		goto err;
-	self->fi_func = filter->f_fun;
-	Dee_Incref(filter->f_fun);
+	self->fi_func = args.filter->f_fun;
+	Dee_Incref(args.filter->f_fun);
 	return 0;
 err:
 	return -1;
@@ -182,7 +189,7 @@ PRIVATE struct type_member tpconst filteriterator_members[] = {
 INTERN DeeTypeObject SeqFilterIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFilterIterator",
-	/* .tp_doc      = */ DOC("(seq?:?X2?Ert:SeqFilter?Ert:SeqFilterAsUnbound)"),
+	/* .tp_doc      = */ DOC("(" filteriterator__SeqFilterIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -282,9 +289,9 @@ filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
 }
 
 struct filterub_mh_seq_enumerate_data {
-	DeeObject      *faued_fun;  /* [1..1] Function used for filtering. */
+	DeeObject          *faued_fun;  /* [1..1] Function used for filtering. */
 	Dee_seq_enumerate_t faued_proc; /* [1..1] Underlying callback. */
-	void           *faued_arg;  /* [?..?] Cookie for `pfd_proc' */
+	void               *faued_arg;  /* [?..?] Cookie for `pfd_proc' */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -794,8 +801,7 @@ PRIVATE struct type_method_hint tpconst filterub_method_hints[] = {
 INTERN DeeTypeObject SeqFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFilter",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,fun:?DCallable)"),
+	/* .tp_doc      = */ DOC("(seq:?DSequence,fun:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -844,8 +850,7 @@ INTERN DeeTypeObject SeqFilter_Type = {
 INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFilterAsUnbound",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,fun:?DCallable)"),
+	/* .tp_doc      = */ DOC("(seq:?DSequence,fun:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

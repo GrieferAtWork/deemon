@@ -2114,8 +2114,7 @@ PRIVATE struct type_seq sf_seq = {
 INTERN DeeTypeObject SeqFlat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFlat",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?S?S?O)"),
+	/* .tp_doc      = */ DOC("(seq:?S?S?O)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2228,11 +2227,18 @@ err:
 PRIVATE NONNULL((1)) int DCALL
 sfi_init(SeqFlatIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	SeqFlat *flat;
-	DeeArg_Unpack1(err, argc, argv, "_SeqFlatIterator", &flat);
-	if (DeeObject_AssertTypeExact(flat, &SeqFlat_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqFlatIterator", params: """
+	SeqFlat *flat:?Ert:SeqFlat
+""", docStringPrefix: "sfi");]]]*/
+#define sfi__SeqFlatIterator_params "flat:?Ert:SeqFlat"
+	struct {
+		SeqFlat *flat;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqFlatIterator", &args.flat);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.flat, &SeqFlat_Type))
 		goto err;
-	return sfi_inititer_withseq(self, flat->sf_seq);
+	return sfi_inititer_withseq(self, args.flat->sf_seq);
 err:
 	return -1;
 }
@@ -2562,8 +2568,7 @@ PRIVATE struct type_getset sfi_getsets[] = {
 INTERN DeeTypeObject SeqFlatIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFlatIterator",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(flat:?Ert:SeqFlat)"),
+	/* .tp_doc      = */ DOC("(" sfi__SeqFlatIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

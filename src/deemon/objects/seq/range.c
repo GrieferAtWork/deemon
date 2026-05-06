@@ -105,18 +105,25 @@ INTDEF DeeTypeObject SeqRange_Type;
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	Range *range;
-	DeeArg_Unpack1(err, argc, argv, "_SeqRangeIterator", &range);
-	if (DeeObject_AssertTypeExact(range, &SeqRange_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRangeIterator", params: """
+	Range *range:?Ert:SeqRange
+""", docStringPrefix: "ri");]]]*/
+#define ri__SeqRangeIterator_params "range:?Ert:SeqRange"
+	struct {
+		Range *range;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRangeIterator", &args.range);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.range, &SeqRange_Type))
 		goto err;
-	Dee_Incref(range->r_start);
-	Dee_Incref(range->r_end);
-	Dee_XIncref(range->r_step);
-	self->ri_index = range->r_start;
-	self->ri_end   = range->r_end;
-	self->ri_step  = range->r_step;
+	Dee_Incref(args.range->r_start);
+	Dee_Incref(args.range->r_end);
+	Dee_XIncref(args.range->r_step);
+	self->ri_index = args.range->r_start;
+	self->ri_end   = args.range->r_end;
+	self->ri_step  = args.range->r_step;
 	self->ri_first = true;
-	self->ri_rev   = range->r_rev;
+	self->ri_rev   = args.range->r_rev;
 	Dee_atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
@@ -436,7 +443,7 @@ PRIVATE struct type_cmp ri_cmp = {
 INTERN DeeTypeObject SeqRangeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRangeIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRange)"),
+	/* .tp_doc      = */ DOC("(" ri__SeqRangeIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1063,22 +1070,31 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 range_init(Range *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	self->r_step = NULL;
-	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqRange",
-	                  &self->r_start,
-	                  &self->r_end,
-	                  &self->r_step))
-		goto err;
-	if (self->r_step) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRange", params: """
+	start, end, step?
+""", docStringPrefix: "range");]]]*/
+#define range__SeqRange_params "start,end,step?"
+	struct {
+		DeeObject *start;
+		DeeObject *end;
+		DeeObject *step;
+	} args;
+	args.step = NULL;
+	DeeArg_UnpackStruct2Or3(err, argc, argv, "_SeqRange", &args, &args.start, &args.end, &args.step);
+/*[[[end]]]*/
+	if (args.step) {
 		int temp;
-		temp = DeeObject_CmpLoAsBool(self->r_step, DeeInt_Zero);
+		temp = DeeObject_CmpLoAsBool(args.step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 		self->r_rev = !!temp;
-		Dee_Incref(self->r_step);
+		Dee_Incref(args.step);
 	} else {
 		self->r_rev = false;
 	}
+	self->r_start = args.start;
+	self->r_end   = args.end;
+	self->r_step  = args.step;
 	Dee_Incref(self->r_end);
 	Dee_Incref(self->r_start);
 	return 0;
@@ -1090,8 +1106,7 @@ err:
 INTERN DeeTypeObject SeqRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRange",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(start,end,step?)"),
+	/* .tp_doc      = */ DOC("(" range__SeqRange_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1171,13 +1186,20 @@ iri_serialize(IntRangeIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_init(IntRangeIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	IntRange *range;
-	DeeArg_Unpack1(err, argc, argv, "_SeqIntRangeIterator", &range);
-	if (DeeObject_AssertTypeExact(range, &SeqIntRange_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqIntRangeIterator", params: """
+	IntRange *range:?Ert:SeqIntRange
+""", docStringPrefix: "iri");]]]*/
+#define iri__SeqIntRangeIterator_params "range:?Ert:SeqIntRange"
+	struct {
+		IntRange *range;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqIntRangeIterator", &args.range);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.range, &SeqIntRange_Type))
 		goto err;
-	self->iri_end   = range->ir_end;
-	self->iri_step  = range->ir_step;
-	self->iri_index = range->ir_start;
+	self->iri_end   = args.range->ir_end;
+	self->iri_step  = args.range->ir_step;
+	self->iri_index = args.range->ir_start;
 	return 0;
 err:
 	return -1;
@@ -1261,7 +1283,7 @@ PRIVATE struct type_cmp iri_cmp = {
 INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqIntRangeIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqIntRange)"),
+	/* .tp_doc      = */ DOC("(" iri__SeqIntRangeIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1591,17 +1613,29 @@ STATIC_ASSERT(offsetof(IntRange, ir_step) == offsetof(IntRangeIterator, iri_inde
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 intrange_init(IntRange *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	self->ir_step = 1;
-	if (DeeArg_Unpack(argc, argv, UNPdSIZ UNPdSIZ "|" UNPdSIZ ":_SeqIntRange",
-	                  &self->ir_start,
-	                  &self->ir_end,
-	                  &self->ir_step))
-		goto err;
-	if unlikely(self->ir_step == 0) {
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Cannot used `0' as step for _SeqIntRange");
-	}
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqIntRange", params: """
+	Dee_ssize_t start,
+	Dee_ssize_t end,
+	Dee_ssize_t step = 1,
+""", docStringPrefix: "intrange");]]]*/
+#define intrange__SeqIntRange_params "start:?Dint,end:?Dint,step=!1"
+	struct {
+		Dee_ssize_t start;
+		Dee_ssize_t end;
+		Dee_ssize_t step;
+	} args;
+	args.step = 1;
+	DeeArg_UnpackStruct2XOr3X(err, argc, argv, "_SeqIntRange", &args, &args.start, UNPdSIZ, DeeObject_AsSSize, &args.end, UNPdSIZ, DeeObject_AsSSize, &args.step, UNPdSIZ, DeeObject_AsSSize);
+/*[[[end]]]*/
+	if unlikely(args.step == 0)
+		goto err_bad_step;
+	self->ir_start = args.start;
+	self->ir_end   = args.end;
+	self->ir_step  = args.step;
 	return 0;
+err_bad_step:
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot used `0' as step for _SeqIntRange");
 err:
 	return -1;
 }
@@ -1610,8 +1644,7 @@ err:
 INTERN DeeTypeObject SeqIntRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqIntRange",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(start:?Dint,end:?Dint,step=!1)"),
+	/* .tp_doc      = */ DOC("(" intrange__SeqIntRange_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

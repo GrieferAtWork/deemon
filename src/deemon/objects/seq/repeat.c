@@ -92,15 +92,24 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatIterator", &self->rpi_rep);
-	if (DeeObject_AssertTypeExact(self->rpi_rep, &SeqRepeat_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRepeatIterator", params: """
+	Repeat *repeat:?Ert:SeqRepeat
+""", docStringPrefix: "repeatiter");]]]*/
+#define repeatiter__SeqRepeatIterator_params "repeat:?Ert:SeqRepeat"
+	struct {
+		Repeat *repeat;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatIterator", &args.repeat);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.repeat, &SeqRepeat_Type))
 		goto err;
-	self->rpi_iter = DeeObject_Iter(self->rpi_rep->rp_seq);
+	self->rpi_iter = DeeObject_Iter(args.repeat->rp_seq);
 	if unlikely(!self->rpi_iter)
 		goto err;
-	Dee_Incref(self->rpi_rep);
+	Dee_Incref(args.repeat);
 	Dee_atomic_rwlock_init(&self->rpi_lock);
-	self->rpi_num = self->rpi_rep->rp_num - 1;
+	self->rpi_rep = args.repeat;
+	self->rpi_num = args.repeat->rp_num - 1;
 	return 0;
 err:
 	return -1;
@@ -333,7 +342,7 @@ PRIVATE struct type_member tpconst repeatiter_members[] = {
 INTERN DeeTypeObject SeqRepeatIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeat)"),
+	/* .tp_doc      = */ DOC("(" repeatiter__SeqRepeatIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -399,9 +408,19 @@ repeat_copy(Repeat *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqRepeat",
-	                  &self->rp_seq, &self->rp_num))
-		goto err;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRepeat", params: """
+	seq:?DSequence,
+	size_t num
+""", docStringPrefix: "repeat");]]]*/
+#define repeat__SeqRepeat_params "seq:?DSequence,num:?Dint"
+	struct {
+		DeeObject *seq;
+		size_t num;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_SeqRepeat", &args, &args.seq, "o", _DeeArg_AsObject, &args.num, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	self->rp_seq = args.seq;
+	self->rp_num = args.num;
 	if unlikely(!self->rp_num) {
 		self->rp_seq = Dee_EmptySeq;
 		self->rp_num = 1;
@@ -641,8 +660,7 @@ PRIVATE struct type_member tpconst repeat_class_members[] = {
 INTERN DeeTypeObject SeqRepeat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeat",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,num:?Dint)"),
+	/* .tp_doc      = */ DOC("(" repeat__SeqRepeat_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -735,12 +753,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatItemIterator", &self->rii_rep);
-	if (DeeObject_AssertTypeExact(self->rii_rep, &SeqRepeatItem_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRepeatItemIterator", params: """
+	RepeatItem *repeat:?Ert:SeqRepeatItem
+""", docStringPrefix: "repeatitemiter");]]]*/
+#define repeatitemiter__SeqRepeatItemIterator_params "repeat:?Ert:SeqRepeatItem"
+	struct {
+		RepeatItem *repeat;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRepeatItemIterator", &args.repeat);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.repeat, &SeqRepeatItem_Type))
 		goto err;
-	self->rii_obj = self->rii_rep->rpit_obj;
-	self->rii_num = self->rii_rep->rpit_num;
-	Dee_Incref(self->rii_rep);
+	Dee_Incref(args.repeat);
+	self->rii_rep = args.repeat;
+	self->rii_obj = args.repeat->rpit_obj;
+	self->rii_num = args.repeat->rpit_num;
 	return 0;
 err:
 	return -1;
@@ -803,7 +830,7 @@ PRIVATE struct type_member tpconst repeatitemiter_members[] = {
 INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatItemIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeatItem)"),
+	/* .tp_doc      = */ DOC("(" repeatitemiter__SeqRepeatItemIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -869,10 +896,19 @@ repeatitem_copy(RepeatItem *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqRepeatItem",
-	                  &self->rpit_obj, &self->rpit_num))
-		goto err;
-	Dee_Incref(self->rpit_obj);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRepeatItem", params: """
+	obj, size_t num
+""", docStringPrefix: "repeatitem");]]]*/
+#define repeatitem__SeqRepeatItem_params "obj,num:?Dint"
+	struct {
+		DeeObject *obj;
+		size_t num;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_SeqRepeatItem", &args, &args.obj, "o", _DeeArg_AsObject, &args.num, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	Dee_Incref(args.obj);
+	self->rpit_obj = args.obj;
+	self->rpit_num = args.num;
 	return 0;
 err:
 	return -1;
@@ -1079,8 +1115,7 @@ PRIVATE struct type_member tpconst repeatitem_class_members[] = {
 INTERN DeeTypeObject SeqRepeatItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatItem",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(obj,num:?Dint)"),
+	/* .tp_doc      = */ DOC("(" repeatitem__SeqRepeatItem_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

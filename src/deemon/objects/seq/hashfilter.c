@@ -58,14 +58,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filteriterator_init(HashFilterIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
-	HashFilter *filter;
-	DeeArg_Unpack1(err, argc, argv, "_SeqHashFilterIterator", &filter);
-	if (DeeObject_AssertTypeExact(filter, &SeqHashFilter_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqHashFilterIterator", params: """
+	HashFilter *filter:?Ert:SeqHashFilter
+""", docStringPrefix: "seq_filteriterator");]]]*/
+#define seq_filteriterator__SeqHashFilterIterator_params "filter:?Ert:SeqHashFilter"
+	struct {
+		HashFilter *filter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqHashFilterIterator", &args.filter);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.filter, &SeqHashFilter_Type))
 		goto err;
-	self->fi_iter = DeeObject_Iter(filter->f_seq);
+	self->fi_iter = DeeObject_Iter(args.filter->f_seq);
 	if unlikely(!self->fi_iter)
 		goto err;
-	self->fi_hash = filter->f_hash;
+	self->fi_hash = args.filter->f_hash;
 	return 0;
 err:
 	return -1;
@@ -74,14 +81,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filteriterator_init(HashFilterIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
-	HashFilter *filter;
-	DeeArg_Unpack1(err, argc, argv, "_MapHashFilterIterator", &filter);
-	if (DeeObject_AssertTypeExact(filter, &MapHashFilter_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapHashFilterIterator", params: """
+	HashFilter *filter:?Ert:MapHashFilter
+""", docStringPrefix: "map_filteriterator");]]]*/
+#define map_filteriterator__MapHashFilterIterator_params "filter:?Ert:MapHashFilter"
+	struct {
+		HashFilter *filter;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_MapHashFilterIterator", &args.filter);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.filter, &MapHashFilter_Type))
 		goto err;
-	self->fi_iter = DeeObject_Iter(filter->f_seq);
+	self->fi_iter = DeeObject_Iter(args.filter->f_seq);
 	if unlikely(!self->fi_iter)
 		goto err;
-	self->fi_hash = filter->f_hash;
+	self->fi_hash = args.filter->f_hash;
 	return 0;
 err:
 	return -1;
@@ -230,7 +244,7 @@ PRIVATE struct type_member tpconst filteriterator_members[] = {
 INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqHashFilterIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqHashFilter)"),
+	/* .tp_doc      = */ DOC("(" seq_filteriterator__SeqHashFilterIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -279,7 +293,7 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 INTERN DeeTypeObject MapHashFilterIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapHashFilterIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:MapHashFilter)"),
+	/* .tp_doc      = */ DOC("(" map_filteriterator__MapHashFilterIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -435,11 +449,20 @@ filter_copy(HashFilter *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	self->f_seq = Dee_EmptySeq;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqHashFilter",
-	                  &self->f_seq, &self->f_hash))
-		goto err;
-	Dee_Incref(self->f_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqHashFilter", params: """
+	seq:?DSequence,
+	Dee_hash_t hash
+""", docStringPrefix: "seq_filter");]]]*/
+#define seq_filter__SeqHashFilter_params "seq:?DSequence,hash:?Dint"
+	struct {
+		DeeObject *seq;
+		Dee_hash_t hash;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_SeqHashFilter", &args, &args.seq, "o", _DeeArg_AsObject, &args.hash, UNPuN(Dee_SIZEOF_HASH_T), DeeObject_MapAsXUInt(Dee_SIZEOF_HASH_T));
+/*[[[end]]]*/
+	Dee_Incref(args.seq);
+	self->f_seq  = args.seq;
+	self->f_hash = args.hash;
 	return 0;
 err:
 	return -1;
@@ -448,11 +471,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	self->f_seq = Dee_EmptySeq;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_MapHashFilter",
-	                  &self->f_seq, &self->f_hash))
-		goto err;
-	Dee_Incref(self->f_seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapHashFilter", params: """
+	map:?DMapping,
+	Dee_hash_t hash
+""", docStringPrefix: "map_filter");]]]*/
+#define map_filter__MapHashFilter_params "map:?DMapping,hash:?Dint"
+	struct {
+		DeeObject *map;
+		Dee_hash_t hash;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_MapHashFilter", &args, &args.map, "o", _DeeArg_AsObject, &args.hash, UNPuN(Dee_SIZEOF_HASH_T), DeeObject_MapAsXUInt(Dee_SIZEOF_HASH_T));
+/*[[[end]]]*/
+	Dee_Incref(args.map);
+	self->f_seq  = args.map;
+	self->f_hash = args.hash;
 	return 0;
 err:
 	return -1;
@@ -494,8 +526,7 @@ PRIVATE struct type_getset tpconst hashfilter_getsets[] = {
 INTERN DeeTypeObject SeqHashFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqHashFilter",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,hash:?Dint)"),
+	/* .tp_doc      = */ DOC("(" seq_filter__SeqHashFilter_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -544,8 +575,7 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 INTERN DeeTypeObject MapHashFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapHashFilter",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:?DSequence,hash:?Dint)"),
+	/* .tp_doc      = */ DOC("(" map_filter__MapHashFilter_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

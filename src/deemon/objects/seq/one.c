@@ -133,11 +133,18 @@ soi_serialize(SeqOneIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 soi_init(SeqOneIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	SeqOne *so;
-	DeeArg_Unpack1(err, argc, argv, "_SeqOneIterator", &so);
-	if (DeeObject_AssertTypeExact(so, &DeeSeqOne_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqOneIterator", params: """
+	SeqOne *so:?Ert:SeqOne
+""", docStringPrefix: "soi");]]]*/
+#define soi__SeqOneIterator_params "so:?Ert:SeqOne"
+	struct {
+		SeqOne *so;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqOneIterator", &args.so);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.so, &DeeSeqOne_Type))
 		goto err;
-	self->soi_item = so->so_item;
+	self->soi_item = args.so->so_item;
 	Dee_Incref(self->soi_item);
 	return 0;
 err:
@@ -242,7 +249,7 @@ PRIVATE struct type_getset tpconst soi_getsets[] = {
 INTERN DeeTypeObject SeqOneIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqOneIterator",
-	/* .tp_doc      = */ DOC("(seq:?Ert:SeqOne)"),
+	/* .tp_doc      = */ DOC("(" soi__SeqOneIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -307,9 +314,16 @@ STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 so_init(SeqOne *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_SeqOne", &seq);
-	return DeeObject_InvokeMethodHint(seq_unpack, seq, 1, &self->so_item);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqOne", params: """
+	seq:?T1?O
+""", docStringPrefix: "so");]]]*/
+#define so__SeqOne_params "seq:?T1?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqOne", &args.seq);
+/*[[[end]]]*/
+	return DeeObject_InvokeMethodHint(seq_unpack, args.seq, 1, &self->so_item);
 err:
 	return -1;
 }
@@ -1196,8 +1210,8 @@ INTERN DeeTypeObject DeeSeqOne_Type = {
 	/* .tp_name     = */ "_SeqOne",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 1 item\n"
 	                         "\n"
-	                         "(seq:?T1?O)\n"
-	                         "#pitem{The one and only item of @this ?DSequence}"),
+	                         "(" so__SeqOne_params ")\n"
+	                         "#pseq{A sequence containing the one and only item of @this ?DSequence}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

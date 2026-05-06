@@ -116,6 +116,11 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 		if (DeeArg_Unpack(argc, argv, "|oo:" function_name, p_arg0, p_arg1)) \
 			goto err;                                                        \
 	}	__WHILE0
+#define DeeArg_Unpack2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)     \
+	do {                                                                              \
+		if (DeeArg_Unpack(argc, argv, "oo|o:" function_name, p_arg0, p_arg1, p_arg2)) \
+			goto err;                                                                 \
+	}	__WHILE0
 #define DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)  \
 	do {                                                                              \
 		if (DeeArg_Unpack(argc, argv, "o|oo:" function_name, p_arg0, p_arg1, p_arg2)) \
@@ -171,6 +176,15 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 		if (DeeArg_Unpack(argc, argv, "|" UNP0 UNP1 ":" function_name, \
 		                  p_arg0, p_arg1))                             \
 			goto err;                                                  \
+	}	__WHILE0
+#define DeeArg_Unpack2XOr3X(err, argc, argv, function_name,                 \
+                            p_arg0, UNP0, Object_AsUnp0,                    \
+                            p_arg1, UNP1, Object_AsUnp1,                    \
+                            p_arg2, UNP2, Object_AsUnp2)                    \
+	do {                                                                    \
+		if (DeeArg_Unpack(argc, argv, UNP0 UNP1 "|" UNP2 ":" function_name, \
+		                  p_arg0, p_arg1, p_arg2))                          \
+			goto err;                                                       \
 	}	__WHILE0
 #define DeeArg_Unpack1XOr2XOr3X(err, argc, argv, function_name,             \
                                 p_arg0, UNP0, Object_AsUnp0,                \
@@ -248,6 +262,14 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	do {                                                                              \
 		if (DeeArg_UnpackStruct(argc, argv, "|" UNP0 UNP1 ":" function_name, p_args)) \
 			goto err;                                                                 \
+	}	__WHILE0
+#define DeeArg_UnpackStruct2XOr3X(err, argc, argv, function_name, p_args,                  \
+                                  p_arg0, UNP0, Object_AsUnp0,                             \
+                                  p_arg1, UNP1, Object_AsUnp1,                             \
+                                  p_arg2, UNP2, Object_AsUnp2)                             \
+	do {                                                                                   \
+		if (DeeArg_UnpackStruct(argc, argv, UNP0 UNP1 "|" UNP2 ":" function_name, p_args)) \
+			goto err;                                                                      \
 	}	__WHILE0
 #define DeeArg_UnpackStruct1XOr2XOr3X(err, argc, argv, function_name, p_args,              \
                                       p_arg0, UNP0, Object_AsUnp0,                         \
@@ -354,7 +376,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 			__builtin_assume(*(p_arg1));                                           \
 			ATTR_FALLTHROUGH                                                       \
 		case 1:                                                                    \
-			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                             \
 			__builtin_assume(*(p_arg0));                                           \
 			break;                                                                 \
 		case 0:                                                                    \
@@ -363,6 +385,24 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 2); \
 			goto err;                                                              \
 		}                                                                          \
+	}	__WHILE0
+#define DeeArg_Unpack2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)    \
+	do {                                                                             \
+		switch (argc) {                                                              \
+		case 3:                                                                      \
+			_Dee_PRIVATE_ArgAssign(p_arg2, (argv)[2]);                               \
+			__builtin_assume(*(p_arg2));                                             \
+			ATTR_FALLTHROUGH                                                         \
+		case 2:                                                                      \
+			_Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]);                               \
+			__builtin_assume(*(p_arg1));                                             \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                               \
+			__builtin_assume(*(p_arg0));                                             \
+			break;                                                                   \
+		default:                                                                     \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 3);   \
+			goto err;                                                                \
+		}                                                                            \
 	}	__WHILE0
 #define DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
 	do {                                                                             \
@@ -498,6 +538,27 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 			goto err;                                                              \
 		}                                                                          \
 	}	__WHILE0
+#define DeeArg_Unpack2XOr3X(err, argc, argv, function_name,                        \
+                            p_arg0, UNP0, Object_AsUnp0,                           \
+                            p_arg1, UNP1, Object_AsUnp1,                           \
+                            p_arg2, UNP2, Object_AsUnp2)                           \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 3:                                                                    \
+			if unlikely(Object_AsUnp2((argv)[2], p_arg2))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 2:                                                                    \
+			if unlikely(Object_AsUnp1((argv)[1], p_arg1))                          \
+				goto err;                                                          \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 3); \
+			goto err;                                                              \
+		}                                                                          \
+	}	__WHILE0
 #define DeeArg_Unpack1XOr2XOr3X(err, argc, argv, function_name,                    \
                                 p_arg0, UNP0, Object_AsUnp0,                       \
                                 p_arg1, UNP1, Object_AsUnp1,                       \
@@ -554,6 +615,8 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	DeeArg_Unpack1Or2(err, argc, argv, function_name, p_arg0, p_arg1)
 #define DeeArg_UnpackStruct0Or1Or2(err, argc, argv, function_name, p_args, p_arg0, p_arg1) \
 	DeeArg_Unpack0Or1Or2(err, argc, argv, function_name, p_arg0, p_arg1)
+#define DeeArg_UnpackStruct2Or3(err, argc, argv, function_name, p_args, p_arg0, p_arg1, p_arg2) \
+	DeeArg_Unpack2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)
 #define DeeArg_UnpackStruct1Or2Or3(err, argc, argv, function_name, p_args, p_arg0, p_arg1, p_arg2) \
 	DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2)
 #define DeeArg_UnpackStruct0Or1Or2Or3(err, argc, argv, function_name, p_args, p_arg0, p_arg1, p_arg2) \
@@ -566,6 +629,8 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	DeeArg_Unpack1XOr2X(err, argc, argv, function_name, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1)
 #define DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, function_name, p_args, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1) \
 	DeeArg_Unpack0Or1XOr2X(err, argc, argv, function_name, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1)
+#define DeeArg_UnpackStruct2XOr3X(err, argc, argv, function_name, p_args, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1, p_arg2, UNP2, Object_AsUnp2) \
+	DeeArg_Unpack2XOr3X(err, argc, argv, function_name, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1, p_arg2, UNP2, Object_AsUnp2)
 #define DeeArg_UnpackStruct1XOr2XOr3X(err, argc, argv, function_name, p_args, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1, p_arg2, UNP2, Object_AsUnp2) \
 	DeeArg_Unpack1XOr2XOr3X(err, argc, argv, function_name, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1, p_arg2, UNP2, Object_AsUnp2)
 #define DeeArg_UnpackStruct0Or1XOr2XOr3X(err, argc, argv, function_name, p_args, p_arg0, UNP0, Object_AsUnp0, p_arg1, UNP1, Object_AsUnp1, p_arg2, UNP2, Object_AsUnp2) \

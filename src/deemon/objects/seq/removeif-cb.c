@@ -57,9 +57,16 @@ STATIC_ASSERT(offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_key) == o
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const *argv) {
 	int equals;
-	DeeObject *item;
-	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicate", &item);
-	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRemoveWithRemoveIfPredicate.operator ()", params: """
+	item
+""", docStringPrefix: "srwrip");]]]*/
+#define srwrip__SeqRemoveWithRemoveIfPredicate_operator__call_params "item"
+	struct {
+		DeeObject *item;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicate.operator ()", &args.item);
+/*[[[end]]]*/
+	equals = DeeObject_TryCompareEq(self->srwrip_item, args.item);
 	if (Dee_COMPARE_ISERR(equals))
 		goto err;
 	return_bool(Dee_COMPARE_ISEQ(equals));
@@ -70,9 +77,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObject *const *argv) {
 	int equals;
-	DeeObject *item;
-	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicateWithKey", &item);
-	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRemoveWithRemoveIfPredicateWithKey.operator ()", params: """
+	item
+""", docStringPrefix: "srwripwk");]]]*/
+#define srwripwk__SeqRemoveWithRemoveIfPredicateWithKey_operator__call_params "item"
+	struct {
+		DeeObject *item;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveWithRemoveIfPredicateWithKey.operator ()", &args.item);
+/*[[[end]]]*/
+	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, args.item, self->srwripwk_key);
 	if (Dee_COMPARE_ISERR(equals))
 		goto err;
 	return_bool(Dee_COMPARE_ISEQ(equals));
@@ -92,7 +106,9 @@ PRIVATE struct type_member tpconst srwripwk_members[] = {
 INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicate",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(item)\n"
+	                         "\n"
+	                         "call(" srwrip__SeqRemoveWithRemoveIfPredicate_operator__call_params ")->?Dbool"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -138,7 +154,9 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
 INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicateWithKey",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(item,key:?DCallable)\n"
+	                         "\n"
+	                         "call(" srwripwk__SeqRemoveWithRemoveIfPredicateWithKey_operator__call_params ")->?Dbool"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -275,10 +293,17 @@ seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restric
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_removeif_with_removeall_key_call(SeqRemoveIfWithRemoveAllKey *__restrict self,
                                      size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveIfWithRemoveAllKey", &item);
-	if (item == &SeqRemoveIfWithRemoveAllItem_DummyInstance)
-		return_reference_(item);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqRemoveIfWithRemoveAllKey.operator ()", params: """
+	item
+""", docStringPrefix: "seq_removeif_with_removeall_key");]]]*/
+#define seq_removeif_with_removeall_key__SeqRemoveIfWithRemoveAllKey_operator__call_params "item"
+	struct {
+		DeeObject *item;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqRemoveIfWithRemoveAllKey.operator ()", &args.item);
+/*[[[end]]]*/
+	if (args.item == &SeqRemoveIfWithRemoveAllItem_DummyInstance)
+		return_reference_(args.item);
 	return DeeObject_Call(self->sriwrak_should, argc, argv);
 err:
 	return NULL;
@@ -287,7 +312,9 @@ err:
 INTERN DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRemoveIfWithRemoveAllKey",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(should:?DCallable)\n"
+	                         "\n"
+	                         "call(" seq_removeif_with_removeall_key__SeqRemoveIfWithRemoveAllKey_operator__call_params ")->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

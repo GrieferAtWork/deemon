@@ -242,15 +242,24 @@ PRIVATE DeeObject sew_stop = { OBJECT_HEAD_INIT(&DeeObject_Type) };
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sew_docall(SeqEnumerateWrapper *self, size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t result;
-	DeeObject *key, *value = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "SeqEnumerateWrapper.__call__", &key, &value);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("SeqEnumerateWrapper.operator ()", params: """
+	key, value = NULL
+""", docStringPrefix: "sew");]]]*/
+#define sew_SeqEnumerateWrapper_operator__call_params "key,value?"
+	struct {
+		DeeObject *key;
+		DeeObject *value;
+	} args;
+	args.value = NULL;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "SeqEnumerateWrapper.operator ()", &args, &args.key, &args.value);
+/*[[[end]]]*/
 	if (Dee_TYPE(self) == &SeqEnumerateWrapper_Type) {
-		result = (*self->sew_cb.cb_enumerate)(self->sew_arg, key, value);
+		result = (*self->sew_cb.cb_enumerate)(self->sew_arg, args.key, args.value);
 	} else {
 		size_t index;
-		if unlikely(DeeObject_AsSize(key, &index))
+		if unlikely(DeeObject_AsSize(args.key, &index))
 			goto err;
-		result = (*self->sew_cb.cb_enumerate_index)(self->sew_arg, index, value);
+		result = (*self->sew_cb.cb_enumerate_index)(self->sew_arg, index, args.value);
 	}
 	return result;
 err:
@@ -328,7 +337,7 @@ PRIVATE struct type_member tpconst sew_members[] = {
 INTERN DeeTypeObject SeqEnumerateWrapper_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEnumerateWrapper",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(" sew_SeqEnumerateWrapper_operator__call_params ")->?N"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -377,7 +386,7 @@ INTERN DeeTypeObject SeqEnumerateWrapper_Type = {
 INTERN DeeTypeObject SeqEnumerateIndexWrapper_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEnumerateIndexWrapper",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("call(" sew_SeqEnumerateWrapper_operator__call_params ")->?N"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
