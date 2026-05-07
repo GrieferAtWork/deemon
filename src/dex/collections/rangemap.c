@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>         /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>           /* DeeArg_Unpack* */
+#include <deemon/arg.h>           /* DeeArg_Unpack0, DeeArg_Unpack1 */
 #include <deemon/bool.h>          /* Dee_True, return_false, return_true */
 #include <deemon/error-rt.h>      /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_ErrUnknownAttrStr, DeeRT_ErrUnknownKey */
 #include <deemon/error.h>         /* DeeError_IntegerOverflow, DeeError_Throwf */
@@ -265,7 +265,9 @@ err_m1:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_popfront(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *front_key;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popfront");
+/*[[[end]]]*/
 	result = DeeObject_GetAttrStringHash(self, "first", Dee_HashStr__first);
 	if unlikely(!result)
 		goto err;
@@ -287,7 +289,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_popback(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *front_key;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popback");
+/*[[[end]]]*/
 	result = DeeObject_GetAttrStringHash(self, "last", Dee_HashStr__last);
 	if unlikely(!result)
 		goto err;
@@ -323,7 +327,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_clear(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("clear", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "clear");
+/*[[[end]]]*/
 	for (;;) {
 		int temp;
 		DREF DeeObject *elem, *iter;
@@ -355,9 +361,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_update(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	DeeArg_Unpack1(err, argc, argv, "update", &items);
-	if unlikely(DeeObject_Foreach(items, &rangemap_insert_range, self) < 0)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("update", params: """
+	items:?S?T3?O?O?O
+""", docStringPrefix: "rangemap");]]]*/
+#define rangemap_update_params "items:?S?T3?O?O?O"
+	struct {
+		DeeObject *items;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "update", &args.items);
+/*[[[end]]]*/
+	if unlikely(DeeObject_Foreach(args.items, &rangemap_insert_range, self) < 0)
 		goto err;
 	return_none;
 err:
@@ -700,7 +713,7 @@ PRIVATE struct type_method tpconst rangemap_methods[] = {
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "#r{A random pair minkey-maxkey-value pair that has been removed}"),
 	TYPE_METHOD("update", &rangemap_update,
-	            "(items:?S?T3?O?O?O)\n"
+	            "(" rangemap_update_params ")\n"
 	            DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	            "Iterate @items and unpack each element into 3 others, "
 	            /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
@@ -850,9 +863,14 @@ proxy_ctor(RangeMapProxy *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(RangeMapProxy *__restrict self, size_t argc,
            DeeObject *const *argv) {
-	self->rmp_rmap = Dee_EmptyRangeMap;
-	DeeArg_Unpack0Or1(err, argc, argv, "_RangeMapProxy", &self->rmp_rmap);
-	Dee_Incref(self->rmp_rmap);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RangeMapProxy", params: "map");]]]*/
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapProxy", &args.map);
+/*[[[end]]]*/
+	Dee_Incref(args.map);
+	self->rmp_rmap = args.map;
 	return 0;
 err:
 	return -1;
@@ -2163,11 +2181,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_init(RangeMapProxyIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_RangeMapProxyIterator", &self->rmpi_rmap);
-	self->rmpi_iter = DeeObject_Iter(self->rmpi_rmap);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RangeMapProxyIterator", params: """
+	map:?GRangeMap
+""", docStringPrefix: "proxy_iterator");]]]*/
+#define proxy_iterator__RangeMapProxyIterator_params "map:?GRangeMap"
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapProxyIterator", &args.map);
+/*[[[end]]]*/
+	self->rmpi_iter = DeeObject_Iter(args.map);
 	if unlikely(!self->rmpi_iter)
 		goto err;
-	Dee_Incref(self->rmpi_rmap);
+	self->rmpi_rmap = args.map;
+	Dee_Incref(args.map);
 	return 0;
 err:
 	return -1;
@@ -2231,11 +2258,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_items_iterator_init(RangeMapProxyItemsIterator *__restrict self,
                           size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_RangeMapItemsIterator", &self->rmpii_base.rmpi_rmap);
-	self->rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpii_base.rmpi_rmap);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RangeMapProxyIterator", params: """
+	map:?GRangeMap
+""", docStringPrefix: "proxy_items_iterator");]]]*/
+#define proxy_items_iterator__RangeMapProxyIterator_params "map:?GRangeMap"
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapProxyIterator", &args.map);
+/*[[[end]]]*/
+	self->rmpii_base.rmpi_iter = DeeObject_Iter(args.map);
 	if unlikely(!self->rmpii_base.rmpi_iter)
 		goto err;
-	Dee_Incref(self->rmpii_base.rmpi_rmap);
+	Dee_Incref(args.map);
+	self->rmpii_base.rmpi_rmap = args.map;
 	return 0;
 err:
 	return -1;
@@ -2362,7 +2398,7 @@ PRIVATE struct type_getset tpconst proxy_iterator_asmap_getsets[] = {
 INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapProxyIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" proxy_iterator__RangeMapProxyIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2406,7 +2442,7 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapValuesIterator",
-	/* .tp_doc      = */ NULL, /* Value */
+	/* .tp_doc      = */ DOC("(" proxy_items_iterator__RangeMapProxyIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2450,7 +2486,9 @@ INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapItemsIterator",
-	/* .tp_doc      = */ DOC("next->?T3?O?O?O"), /* (MinKey, MaxKey, Value) */
+	/* .tp_doc      = */ DOC("(" proxy_items_iterator__RangeMapProxyIterator_params ")\n"
+	                         "\n"
+	                         "next->?T3?O?O?O"), /* (MinKey, MaxKey, Value) */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2494,7 +2532,9 @@ INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapRangesIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"), /* (MinKey, MaxKey) */
+	/* .tp_doc      = */ DOC("(" proxy_items_iterator__RangeMapProxyIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?O?O"), /* (MinKey, MaxKey) */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2538,7 +2578,9 @@ INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapNodesIterator",
-	/* .tp_doc      = */ DOC("next->?AIterator?GRangeMap"),
+	/* .tp_doc      = */ DOC("(" proxy_iterator__RangeMapProxyIterator_params ")\n"
+	                         "\n"
+	                         "next->?AIterator?GRangeMap"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2600,15 +2642,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_keys_iterator_init(RangeMapProxyKeysIterator *__restrict self,
                          size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_RangeMapKeysIterator",
-	                  &self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RangeMapKeysIterator", params: """
+	map:?GRangeMap
+""", docStringPrefix: "proxy_keys_iterator");]]]*/
+#define proxy_keys_iterator__RangeMapKeysIterator_params "map:?GRangeMap"
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapKeysIterator", &args.map);
+/*[[[end]]]*/
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(args.map);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
-	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
+	Dee_Incref(args.map);
+	self->rmpki_base.rmpii_base.rmpi_rmap = args.map;
 	Dee_Incref_n(_DeeInt_Zero, 2);
-	self->rmpki_prvkey = (DeeObject *)_DeeInt_Zero;
-	self->rmpki_maxkey = (DeeObject *)_DeeInt_Zero;
+	self->rmpki_prvkey = Dee_AsObject(_DeeInt_Zero);
+	self->rmpki_maxkey = Dee_AsObject(_DeeInt_Zero);
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = false;
 	return 0;
@@ -2705,12 +2755,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_mapitems_iterator_init(RangeMapProxyKeysIterator *__restrict self,
                              size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_RangeMapMapItemsIterator",
-	                  &self->rmpki_base.rmpii_base.rmpi_rmap);
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RangeMapMapItemsIterator", params: """
+	map:?GRangeMap
+""", docStringPrefix: "proxy_mapitems_iterator");]]]*/
+#define proxy_mapitems_iterator__RangeMapMapItemsIterator_params "map:?GRangeMap"
+	struct {
+		DeeObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RangeMapMapItemsIterator", &args.map);
+/*[[[end]]]*/
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(args.map);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
-	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
+	Dee_Incref(args.map);
+	self->rmpki_base.rmpii_base.rmpi_rmap = args.map;
 	Dee_Incref_n(_DeeInt_Zero, 3);
 	self->rmpki_base.rmpii_value = (DeeObject *)_DeeInt_Zero;
 	self->rmpki_prvkey           = (DeeObject *)_DeeInt_Zero;
@@ -3136,7 +3194,7 @@ PRIVATE struct type_iterator proxy_mapitems_iterator_iterator = {
 INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapKeysIterator",
-	/* .tp_doc      = */ NULL, /* Key... */
+	/* .tp_doc      = */ DOC("(" proxy_keys_iterator__RangeMapKeysIterator_params ")"), /* Key... */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3180,7 +3238,9 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapMapItemsIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"), /* (Key, Value) */
+	/* .tp_doc      = */ DOC("(" proxy_mapitems_iterator__RangeMapMapItemsIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?O?O"), /* (Key, Value) */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3224,7 +3284,9 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 INTERN DeeTypeObject RangeMapAsMapIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RangeMapAsMapIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"), /* (Key, Value) */
+	/* .tp_doc      = */ DOC("(" proxy_mapitems_iterator__RangeMapMapItemsIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?O?O"), /* (Key, Value) */
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

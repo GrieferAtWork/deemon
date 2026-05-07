@@ -408,27 +408,37 @@ done:
 PRIVATE WUNUSED DREF Function *DCALL
 function_init(size_t argc, DeeObject *const *argv) {
 	DREF Function *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Function", params: """
 	DeeCodeObject *code = &DeeCode_Empty;
 	DeeObject *refs     = Dee_EmptyTuple;
-	DeeArg_Unpack0Or1Or2(err, argc, argv, "Function", &code, &refs);
-	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
+""", docStringPrefix: "function");]]]*/
+#define function_Function_params "code:?Ert:Code=!Ert:Code_empty,refs=!T0"
+	struct {
+		DeeCodeObject *code;
+		DeeObject *refs;
+	} args;
+	args.code = &DeeCode_Empty;
+	args.refs = Dee_EmptyTuple;
+	DeeArg_UnpackStruct0Or1Or2(err, argc, argv, "Function", &args, &args.code, &args.refs);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.code, &DeeCode_Type))
 		goto err;
-	ASSERT(code->co_refc <= code->co_refstaticc);
-	if likely(code->co_refc == code->co_refstaticc) {
+	ASSERT(args.code->co_refc <= args.code->co_refstaticc);
+	if likely(args.code->co_refc == args.code->co_refstaticc) {
 		result = (DREF Function *)DeeGCObject_Mallocc(offsetof(Function, fo_refv),
-		                                              code->co_refc, sizeof(DREF DeeObject *));
+		                                              args.code->co_refc, sizeof(DREF DeeObject *));
 	} else {
 		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
-		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
+		                                              args.code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto err;
-	if (DeeSeq_Unpack(refs, code->co_refc, result->fo_refv))
+	if (DeeSeq_Unpack(args.refs, args.code->co_refc, result->fo_refv))
 		goto err_r;
-	result->fo_code = code;
-	Dee_Incref(code);
+	result->fo_code = args.code;
+	Dee_Incref(args.code);
 #ifdef CONFIG_HAVE_CODE_METRICS
-	atomic_inc(&code->co_metrics.com_functions);
+	atomic_inc(&args.code->co_metrics.com_functions);
 #endif /* CONFIG_HAVE_CODE_METRICS */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
@@ -1275,14 +1285,14 @@ PRIVATE struct type_callable function_callable = {
 PUBLIC DeeTypeObject DeeFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Function),
-	/* .tp_doc      = */ DOC("(code=!Ert:Code_empty,refs=!T0)"),
+	/* .tp_doc      = */ DOC("(" function_Function_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FVARIABLE | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
-			/* tp_ctor:        */ NULL,
+			/* tp_ctor:        */ NULL, /* TODO */
 			/* tp_copy_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &function_init,
 			/* tp_any_ctor_kw: */ NULL,
@@ -2074,11 +2084,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_new(YFIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	YFunction *func;
-	DeeArg_Unpack1(err, argc, argv, "_YieldFunctionIterator", &func);
-	if (DeeObject_AssertType(func, &DeeYieldFunction_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_YieldFunctionIterator", params: """
+	YFunction *func:?Ert:YieldFunction;
+""", docStringPrefix: "yfi");]]]*/
+#define yfi__YieldFunctionIterator_params "func:?Ert:YieldFunction"
+	struct {
+		YFunction *func;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_YieldFunctionIterator", &args.func);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.func, &DeeYieldFunction_Type))
 		goto err;
-	return yfi_init(self, func);
+	return yfi_init(self, args.func);
 err:
 	return -1;
 }
@@ -3041,7 +3058,7 @@ PRIVATE struct type_gc tpconst yfi_gc = {
 PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_YieldFunctionIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" yfi__YieldFunctionIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

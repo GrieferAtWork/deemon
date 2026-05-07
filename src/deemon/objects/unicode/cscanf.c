@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack2 */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2 */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
@@ -603,11 +603,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssi_init(StringScanIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	StringScanner *scanner;
-	DeeArg_Unpack1(err, argc, argv, "_StringScanIterator", &scanner);
-	if (DeeObject_AssertTypeExact(scanner, &StringScan_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringScanIterator", params: """
+	StringScanner *scanner:?Ert:StringScan
+""", docStringPrefix: "ssi");]]]*/
+#define ssi__StringScanIterator_params "scanner:?Ert:StringScan"
+	struct {
+		StringScanner *scanner;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringScanIterator", &args.scanner);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.scanner, &StringScan_Type))
 		goto err;
-	return ssi_setup(self, scanner);
+	return ssi_setup(self, args.scanner);
 err:
 	return -1;
 }
@@ -656,7 +663,7 @@ err:
 INTERN DeeTypeObject StringScanIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScanIterator",
-	/* .tp_doc      = */ DOC("(scanner:?Ert:StringScan)\n"
+	/* .tp_doc      = */ DOC("(" ssi__StringScanIterator_params ")\n"
 	                         "\n"
 	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -728,17 +735,28 @@ ss_ctor(StringScanner *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ss_init(StringScanner *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack2(err, argc, argv, "_StringScan", &self->ss_data, &self->ss_format);
-	if unlikely(!DeeString_Check(self->ss_data) && !DeeBytes_Check(self->ss_data)) {
-		DeeObject_TypeAssertFailed2(self->ss_data, &DeeString_Type, &DeeBytes_Type);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringScan", params: """
+	data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes
+""", docStringPrefix: "ss");]]]*/
+#define ss__StringScan_params "data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes"
+	struct {
+		DeeObject *data;
+		DeeObject *format;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_StringScan", &args, &args.data, &args.format);
+/*[[[end]]]*/
+	if unlikely(!DeeString_Check(args.data) && !DeeBytes_Check(args.data)) {
+		DeeObject_TypeAssertFailed2(args.data, &DeeString_Type, &DeeBytes_Type);
 		goto err;
 	}
-	if unlikely(!DeeString_Check(self->ss_format) && !DeeBytes_Check(self->ss_format)) {
-		DeeObject_TypeAssertFailed2(self->ss_format, &DeeString_Type, &DeeBytes_Type);
+	if unlikely(!DeeString_Check(args.format) && !DeeBytes_Check(args.format)) {
+		DeeObject_TypeAssertFailed2(args.format, &DeeString_Type, &DeeBytes_Type);
 		goto err;
 	}
-	Dee_Incref(self->ss_data);
-	Dee_Incref(self->ss_format);
+	Dee_Incref(args.data);
+	Dee_Incref(args.format);
+	self->ss_data   = args.data;
+	self->ss_format = args.format;
 	return 0;
 err:
 	return -1;
@@ -819,7 +837,7 @@ PRIVATE struct type_member tpconst ss_class_members[] = {
 INTERN DeeTypeObject StringScan_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScan",
-	/* .tp_doc      = */ DOC("(data:?X2?Dstring?DBytes,format:?X2?Dstring?DBytes)\n"
+	/* .tp_doc      = */ DOC("(" ss__StringScan_params ")\n"
 	                         "\n"
 	                         "[](index:?Dint)->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

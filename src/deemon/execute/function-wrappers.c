@@ -66,9 +66,6 @@
 
 DECL_BEGIN
 
-#define FIELDS_ADJACENT(T, a, b) \
-	(COMPILER_OFFSETAFTER(T, a) /*CEIL_ALIGN:COMPILER_ALIGNOF(((T *)0)->b)*/ == offsetof(T, b))
-
 #ifndef CONFIG_HAVE_strcmpz
 #define CONFIG_HAVE_strcmpz
 #undef strcmpz
@@ -146,11 +143,22 @@ funcstaticsiter_copy(FunctionStaticsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_init(FunctionStaticsIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "FunctionStaticsIterator", &self->fsi_func);
-	if (!DeeFunction_Check(self->fsi_func)) {
-		if (DeeObject_AssertTypeExact(self->fsi_func, &FunctionStatics_Type))
-			goto err;
-		self->fsi_func = ((FunctionStatics *)self->fsi_func)->fs_func;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FunctionStaticsIterator", params: """
+	func:?X2?Ert:FunctionStatics?DFunction
+""", docStringPrefix: "funcstaticsiter");]]]*/
+#define funcstaticsiter__FunctionStaticsIterator_params "func:?X2?Ert:FunctionStatics?DFunction"
+	struct {
+		DeeObject *func;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FunctionStaticsIterator", &args.func);
+/*[[[end]]]*/
+	if (DeeFunction_Check(args.func)) {
+		self->fsi_func = (DeeFunctionObject *)args.func;
+	} else if (DeeObject_InstanceOfExact(args.func, &FunctionStatics_Type)) {
+		self->fsi_func = ((FunctionStatics *)args.func)->fs_func;
+	} else {
+		DeeObject_TypeAssertFailed2(args.func, &DeeFunction_Type, &FunctionStatics_Type);
+		goto err;
 	}
 	Dee_Incref(self->fsi_func);
 	self->fsi_sid = self->fsi_func->fo_code->co_refc;
@@ -243,7 +251,7 @@ PRIVATE struct type_member tpconst funcstaticsiter_members[] = {
 INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionStaticsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" funcstaticsiter__FunctionStaticsIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -445,10 +453,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstatics_init(FunctionStatics *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "FunctionStatics", &self->fs_func);
-	if (DeeObject_AssertTypeExact(self->fs_func, &DeeFunction_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FunctionStatics", params: """
+	DeeFunctionObject *func
+""", docStringPrefix: "funcstatics");]]]*/
+#define funcstatics__FunctionStatics_params "func:?DFunction"
+	struct {
+		DeeFunctionObject *func;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FunctionStatics", &args.func);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.func, &DeeFunction_Type))
 		goto err;
-	Dee_Incref(self->fs_func);
+	self->fs_func = args.func;
+	Dee_Incref(args.func);
 	return 0;
 err:
 	return -1;
@@ -556,7 +573,7 @@ PRIVATE struct type_member tpconst funcstatics_members[] = {
 INTERN DeeTypeObject FunctionStatics_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionStatics",
-	/* .tp_doc      = */ DOC("(func:?DFunction)"),
+	/* .tp_doc      = */ DOC("(" funcstatics__FunctionStatics_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -681,13 +698,22 @@ funcsymbolsbynameiter_copy(FunctionSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbynameiter_init(FunctionSymbolsByNameIterator *__restrict self,
                            size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "FunctionSymbolsByNameIterator", &self->fsbni_seq);
-	if (DeeObject_AssertTypeExact(self->fsbni_seq, &FunctionSymbolsByName_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FunctionSymbolsByNameIterator", params: """
+	FunctionSymbolsByName *symbols:?Ert:FunctionSymbolsByName
+""", docStringPrefix: "funcsymbolsbynameiter");]]]*/
+#define funcsymbolsbynameiter__FunctionSymbolsByNameIterator_params "symbols:?Ert:FunctionSymbolsByName"
+	struct {
+		FunctionSymbolsByName *symbols;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FunctionSymbolsByNameIterator", &args.symbols);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.symbols, &FunctionSymbolsByName_Type))
 		goto err;
-	Dee_Incref(self->fsbni_seq);
-	self->fsbni_func = self->fsbni_seq->fsbn_func;
-	self->fsbni_rid  = self->fsbni_seq->fsbn_rid_start;
-	self->fsbni_end  = self->fsbni_seq->fsbn_rid_end;
+	Dee_Incref(args.symbols);
+	self->fsbni_seq  = args.symbols;
+	self->fsbni_func = args.symbols->fsbn_func;
+	self->fsbni_rid  = args.symbols->fsbn_rid_start;
+	self->fsbni_end  = args.symbols->fsbn_rid_end;
 	return 0;
 err:
 	return -1;
@@ -846,7 +872,9 @@ PRIVATE struct type_member tpconst funcsymbolsbynameiter_members[] = {
 INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionSymbolsByNameIterator",
-	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
+	/* .tp_doc      = */ DOC("(" funcsymbolsbynameiter__FunctionSymbolsByNameIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1514,22 +1542,33 @@ funcsymbolsbyname_init_kw(FunctionSymbolsByName *__restrict self,
                           size_t argc, DeeObject *const *argv,
                           DeeObject *kw) {
 	DeeCodeObject *code;
-	STATIC_ASSERT(FIELDS_ADJACENT(FunctionSymbolsByName, fsbn_func, fsbn_rid_start));
-	STATIC_ASSERT(FIELDS_ADJACENT(FunctionSymbolsByName, fsbn_rid_start, fsbn_rid_end));
-	self->fsbn_rid_start = 0;
-	self->fsbn_rid_end   = (uint16_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__func_ridstart_ridend,
-	                          "o|" UNPu16 UNPu16 ":_FunctionSymbolsByName",
-	                          &self->fsbn_func))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FunctionSymbolsByName", params: """
+	DeeFunctionObject *func,
+	uint16_t ridstart = 0,
+	uint16_t ridend = (uint16_t)-1,
+""", docStringPrefix: "funcsymbolsbyname");]]]*/
+#define funcsymbolsbyname__FunctionSymbolsByName_params "func:?DFunction,ridstart=!0,ridend=!-1"
+	struct {
+		DeeFunctionObject *func;
+		uint16_t ridstart;
+		uint16_t ridend;
+	} args;
+	args.ridstart = 0;
+	args.ridend = (uint16_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__func_ridstart_ridend, "o|" UNPu16 UNPx16 ":_FunctionSymbolsByName", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->fsbn_func, &DeeFunction_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.func, &DeeFunction_Type))
 		goto err;
-	code = self->fsbn_func->fo_code;
-	if (self->fsbn_rid_end > code->co_refstaticc)
-		self->fsbn_rid_end = code->co_refstaticc;
-	if (self->fsbn_rid_start < self->fsbn_rid_end)
-		self->fsbn_rid_start = self->fsbn_rid_end;
-	Dee_Incref(self->fsbn_func);
+	code = args.func->fo_code;
+	if (args.ridend > code->co_refstaticc)
+		args.ridend = code->co_refstaticc;
+	if (args.ridstart < args.ridend)
+		args.ridstart = args.ridend;
+	Dee_Incref(args.func);
+	self->fsbn_func      = args.func;
+	self->fsbn_rid_start = args.ridstart;
+	self->fsbn_rid_end   = args.ridend;
 	return 0;
 err:
 	return -1;
@@ -1625,7 +1664,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	                         /**/ "doesn't have a name for some reason, its merged RID/SID can be used "
 	                         /**/ "instead (depending on which ID-range is being referenced).\n"
 	                         "\n"
-	                         "(func:?DFunction,ridstart=!0,ridend?:?Dint)\n"
+	                         "(" funcsymbolsbyname__FunctionSymbolsByName_params ")\n"
 	                         "\n"
 	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1813,12 +1852,21 @@ yfuncsymbolsbynameiter_copy(YieldFunctionSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbynameiter_init(YieldFunctionSymbolsByNameIterator *__restrict self,
                             size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "YieldFunctionSymbolsByNameIterator", &self->yfsbni_seq);
-	if (Dee_TYPE(self->yfsbni_seq) == &DefaultSequence_MapKeys_Type)
-		self->yfsbni_seq = (YieldFunctionSymbolsByName *)((DefaultSequence_MapProxy *)self->yfsbni_seq)->dsmp_map;
-	if (DeeObject_AssertTypeExact(self->yfsbni_seq, &YieldFunctionSymbolsByName_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_YieldFunctionSymbolsByNameIterator", params: """
+	symbols:?X2?Ert:YieldFunctionSymbolsByName?C?Ert:MapKeys?Ert:YieldFunctionSymbolsByName
+""", docStringPrefix: "yfuncsymbolsbynameiter");]]]*/
+#define yfuncsymbolsbynameiter__YieldFunctionSymbolsByNameIterator_params "symbols:?X2?Ert:YieldFunctionSymbolsByName?C?Ert:MapKeys?Ert:YieldFunctionSymbolsByName"
+	struct {
+		DeeObject *symbols;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_YieldFunctionSymbolsByNameIterator", &args.symbols);
+/*[[[end]]]*/
+	if (DeeObject_InstanceOfExact(args.symbols, &DefaultSequence_MapKeys_Type))
+		args.symbols = ((DefaultSequence_MapProxy *)args.symbols)->dsmp_map;
+	if (DeeObject_AssertTypeExact(args.symbols, &YieldFunctionSymbolsByName_Type))
 		goto err;
-	Dee_Incref(self->yfsbni_seq);
+	Dee_Incref(args.symbols);
+	self->yfsbni_seq = (YieldFunctionSymbolsByName *)args.symbols;
 	self->yfsbni_idx.yfsbnii_idx.i_aid = 0;
 	self->yfsbni_idx.yfsbnii_idx.i_rid = self->yfsbni_seq->yfsbn_rid_start;
 	return 0;
@@ -2049,7 +2097,7 @@ PRIVATE struct type_getset tpconst yfuncsymbolsbynamekeysiter_getsets[] = {
 INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_YieldFunctionSymbolsByNameIterator",
-	/* .tp_doc      = */ DOC("(symbols:?X2?Ert:YieldFunctionSymbolsByName?C?Ert:MapKeys?Ert:YieldFunctionSymbolsByName)\n"
+	/* .tp_doc      = */ DOC("(" yfuncsymbolsbynameiter__YieldFunctionSymbolsByNameIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -2553,26 +2601,40 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbyname_init_kw(YieldFunctionSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
                            DeeObject *kw) {
-	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_yfunc, yfsbn_nargs));
-	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_nargs, yfsbn_rid_start));
-	STATIC_ASSERT(FIELDS_ADJACENT(YieldFunctionSymbolsByName, yfsbn_rid_start, yfsbn_rid_end));
 	DeeCodeObject *code;
-	self->yfsbn_nargs     = (uint16_t)-1;
-	self->yfsbn_rid_start = 0;
-	self->yfsbn_rid_end   = (uint16_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__yfunc_argc_ridstart_ridend,
-	                          "o|" UNPu16 UNPu16 UNPu16 ":_YieldFunctionSymbolsByName",
-	                          &self->yfsbn_yfunc))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_YieldFunctionSymbolsByName", params: """
+	DeeYieldFunctionObject *yfunc,
+	uint16_t argc = (uint16_t)-1,
+	uint16_t ridstart = 0,
+	uint16_t ridend = (uint16_t)-1
+""", docStringPrefix: "yfuncsymbolsbyname");]]]*/
+#define yfuncsymbolsbyname__YieldFunctionSymbolsByName_params "yfunc:?Ert:YieldFunction,argc=!-1,ridstart=!0,ridend=!-1"
+	struct {
+		DeeYieldFunctionObject *yfunc;
+		uint16_t argc;
+		uint16_t ridstart;
+		uint16_t ridend;
+	} args;
+	args.argc = (uint16_t)-1;
+	args.ridstart = 0;
+	args.ridend = (uint16_t)-1;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__yfunc_argc_ridstart_ridend, "o|" UNPx16 UNPu16 UNPx16 ":_YieldFunctionSymbolsByName", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->yfsbn_yfunc, &DeeYieldFunction_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.yfunc, &DeeYieldFunction_Type))
 		goto err;
-	code = self->yfsbn_yfunc->yf_func->fo_code;
-	if (self->yfsbn_nargs > code->co_argc_max)
-		self->yfsbn_nargs = code->co_argc_max;
-	if (self->yfsbn_rid_end > code->co_refstaticc)
-		self->yfsbn_rid_end = code->co_refstaticc;
-	if (self->yfsbn_rid_start > self->yfsbn_rid_end)
-		self->yfsbn_rid_start = self->yfsbn_rid_end;
+	code = args.yfunc->yf_func->fo_code;
+	if (args.argc > code->co_argc_max)
+		args.argc = code->co_argc_max;
+	if (args.ridend > code->co_refstaticc)
+		args.ridend = code->co_refstaticc;
+	if (args.ridstart > args.ridend)
+		args.ridstart = args.ridend;
+	Dee_Incref(args.yfunc);
+	self->yfsbn_yfunc     = args.yfunc;
+	self->yfsbn_nargs     = args.argc;
+	self->yfsbn_rid_start = args.ridstart;
+	self->yfsbn_rid_end   = args.ridend;
 	return 0;
 err:
 	return -1;
@@ -2671,7 +2733,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_name     = */ "_YieldFunctionSymbolsByName",
 	/* .tp_doc      = */ DOC("A ${{(int | string): Object}}-like mapping for references, statics, and arguments.\n"
 	                         "\n"
-	                         "(yfunc:?Ert:YieldFunction,argc?:?Dint,ridstart=!0,ridend?:?Dint)\n"
+	                         "(" yfuncsymbolsbyname__YieldFunctionSymbolsByName_params ")\n"
 	                         "\n"
 	                         "[](key:?X2?Dstring?Dint)->"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -2849,19 +2911,27 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-frameargs_init(FrameArgs *__restrict self,
-                 size_t argc, DeeObject *const *argv) {
+frameargs_init(FrameArgs *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct Dee_code_frame const *frame;
-	DeeArg_Unpack1(err, argc, argv, "FrameArgs", &self->fa_frame);
-	if (DeeObject_AssertTypeExact(self->fa_frame, &DeeFrame_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FrameArgs", params: """
+	DeeFrameObject *frame
+""", docStringPrefix: "frameargs");]]]*/
+#define frameargs__FrameArgs_params "frame:?DFrame"
+	struct {
+		DeeFrameObject *frame;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FrameArgs", &args.frame);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.frame, &DeeFrame_Type))
 		goto err;
-	frame = DeeFrame_LockRead(Dee_AsObject(self->fa_frame));
+	frame = DeeFrame_LockRead(Dee_AsObject(args.frame));
 	if unlikely(!frame)
 		goto err;
 	self->fa_code = frame->cf_func->fo_code;
 	Dee_Incref(self->fa_code);
-	DeeFrame_LockEndRead(Dee_AsObject(self->fa_frame));
-	Dee_Incref(self->fa_frame);
+	DeeFrame_LockEndRead(Dee_AsObject(args.frame));
+	Dee_Incref(args.frame);
+	self->fa_frame = args.frame;
 	return 0;
 err:
 	return -1;
@@ -2935,7 +3005,7 @@ PRIVATE struct type_member tpconst frameargs_members[] = {
 INTERN DeeTypeObject FrameArgs_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameArgs",
-	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_doc      = */ DOC("(" frameargs__FrameArgs_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3182,15 +3252,24 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_init(FrameLocals *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	struct Dee_code_frame const *frame;
-	DeeArg_Unpack1(err, argc, argv, "FrameLocals", &self->fl_frame);
-	if (DeeObject_AssertTypeExact(self->fl_frame, &DeeFrame_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FrameLocals", params: """
+	DeeFrameObject *frame
+""", docStringPrefix: "framelocals");]]]*/
+#define framelocals__FrameLocals_params "frame:?DFrame"
+	struct {
+		DeeFrameObject *frame;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FrameLocals", &args.frame);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.frame, &DeeFrame_Type))
 		goto err;
-	frame = DeeFrame_LockRead(Dee_AsObject(self->fl_frame));
+	frame = DeeFrame_LockRead(Dee_AsObject(args.frame));
 	if unlikely(!frame)
 		goto err;
 	self->fl_localc = frame->cf_func->fo_code->co_localc;
-	DeeFrame_LockEndRead(Dee_AsObject(self->fl_frame));
-	Dee_Incref(self->fl_frame);
+	DeeFrame_LockEndRead(Dee_AsObject(args.frame));
+	Dee_Incref(args.frame);
+	self->fl_frame = args.frame;
 	return 0;
 err:
 	return -1;
@@ -3271,7 +3350,7 @@ PRIVATE struct type_member tpconst framelocals_members[] = {
 INTERN DeeTypeObject FrameLocals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameLocals",
-	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_doc      = */ DOC("(" framelocals__FrameLocals_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3458,10 +3537,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framestack_init(FrameStack *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "FrameStack", &self->fs_frame);
-	if (DeeObject_AssertTypeExact(self->fs_frame, &DeeFrame_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FrameStack", params: """
+	DeeFrameObject *frame
+""", docStringPrefix: "framestack");]]]*/
+#define framestack__FrameStack_params "frame:?DFrame"
+	struct {
+		DeeFrameObject *frame;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FrameStack", &args.frame);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.frame, &DeeFrame_Type))
 		goto err;
-	Dee_Incref(self->fs_frame);
+	Dee_Incref(args.frame);
+	self->fs_frame = args.frame;
 	return 0;
 err:
 	return -1;
@@ -3695,7 +3783,7 @@ PRIVATE struct type_member tpconst framestack_class_members[] = {
 INTERN DeeTypeObject FrameStack_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameStack",
-	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_doc      = */ DOC("(" framestack__FrameStack_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3873,13 +3961,22 @@ framesymbolsbynameiter_copy(FrameSymbolsByNameIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbynameiter_init(FrameSymbolsByNameIterator *__restrict self,
                             size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "FrameSymbolsByNameIterator", &self->frsbni_seq);
-	if (DeeObject_AssertTypeExact(self->frsbni_seq, &FrameSymbolsByName_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FrameSymbolsByNameIterator", params: """
+	FrameSymbolsByName *symbols:?Ert:FrameSymbolsByName
+""", docStringPrefix: "framesymbolsbynameiter");]]]*/
+#define framesymbolsbynameiter__FrameSymbolsByNameIterator_params "symbols:?Ert:FrameSymbolsByName"
+	struct {
+		FrameSymbolsByName *symbols;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_FrameSymbolsByNameIterator", &args.symbols);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.symbols, &FrameSymbolsByName_Type))
 		goto err;
-	Dee_Incref(self->frsbni_seq);
+	Dee_Incref(args.symbols);
+	self->frsbni_seq = args.symbols;
 	Dee_atomic_lock_init(&self->frsbni_lock);
 	self->frsbni_idx.frsbnii_aid = 0;
-	self->frsbni_idx.frsbnii_rid = self->frsbni_seq->frsbn_rid_start;
+	self->frsbni_idx.frsbnii_rid = args.symbols->frsbn_rid_start;
 	self->frsbni_idx.frsbnii_lid = 0;
 	self->frsbni_idx.frsbnii_nsp = 0;
 	return 0;
@@ -4384,7 +4481,9 @@ PRIVATE struct type_member tpconst framesymbolsbynameiter_members[] = {
 INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameSymbolsByNameIterator",
-	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
+	/* .tp_doc      = */ DOC("(" framesymbolsbynameiter__FrameSymbolsByNameIterator_params ")\n"
+	                         "\n"
+	                         "next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

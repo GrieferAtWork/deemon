@@ -682,15 +682,15 @@ typedef struct Dee_code_object {
 	;
 #else /* Dee_WANT_CODE_OBJECT__co_next */
 	DREF struct Dee_module_object *co_module;/* [1..1] The module in which this code object was defined.
-		                                      * NOTE: Running code may assume that this field is always non-NULL,
-		                                      *       yet during compilation it is NULL or some other object until
-		                                      *       the module object surrounding some code object has been defined.
-		                                      * HINT: At some point during compilation, this field may also point
-		                                      *       to another code object, forming a linked list to track all
-		                                      *       code objects of a given module before that module has actually
-		                                      *       been created.
-		                                      * TODO: This field should be [0..1] and allowed to be NULL if "co_code"
-		                                      *       doesn't need the current module in order to run. */
+	                                          * NOTE: Running code may assume that this field is always non-NULL,
+	                                          *       yet during compilation it is NULL or some other object until
+	                                          *       the module object surrounding some code object has been defined.
+	                                          * HINT: At some point during compilation, this field may also point
+	                                          *       to another code object, forming a linked list to track all
+	                                          *       code objects of a given module before that module has actually
+	                                          *       been created.
+	                                          * TODO: This field should be [0..1] and allowed to be NULL if "co_code"
+	                                          *       doesn't need the current module in order to run. */
 #endif /* !Dee_WANT_CODE_OBJECT__co_next */
 	DREF struct Dee_string_object      *const *co_keywords; /* [1..1][const][0..co_argc_max || NULL][owned][const] Argument keywords (or NULL if not known). */
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned][const] Vector of default argument values.

@@ -40,6 +40,8 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeListObject*": "?DList",
 	"DeeCodeObject*": "?Ert:Code",
 	"DeeKwdsObject*": "?Ert:Kwds",
+	"DeeFunctionObject*": "?DFunction",
+	"DeeYieldFunctionObject*": "?Ert:YieldFunction",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -99,6 +101,8 @@ global final CTYPE_BY_DTYPE: {string: string} = {
 	"?DList": "DeeListObject*",
 //	"?Dstring": "DeeStringObject*",
 	"?Dbool": "bool",
+	"?DFunction": "DeeFunctionObject*",
+	"?Ert:YieldFunction": "DeeYieldFunctionObject*",
 };
 
 global final DTYPE_BY_DINIT: {string: string} = {
@@ -131,6 +135,9 @@ global final CINIT_BY_DINIT: {string: string | {string: string}} = {
 	},
 	"!A!Dint!PSIZE_MAX": "(size_t)-1",
 	"!T0": "Dee_EmptyTuple",
+	"!Ert:Code_empty": {
+		"DeeCodeObject*": "&DeeCode_Empty",
+	},
 };
 
 global final DINIT_BY_CINIT: {string: string} = Dict.Frozen(() -> {

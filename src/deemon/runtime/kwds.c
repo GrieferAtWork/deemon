@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack2 */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2 */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
 #include <deemon/cached-dict.h>        /* DeeCachedDict_New, DeeCachedDict_NewInheritedOnSuccess */
 #include <deemon/code.h>               /* Dee_code_object */
@@ -94,12 +94,21 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_KwdsIterator", &self->ki_map);
-	if (DeeObject_AssertTypeExact(self->ki_map, &DeeKwds_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_KwdsIterator", params: """
+	DeeKwdsObject *map:?Ert:Kwds
+""", docStringPrefix: "kwdsiter");]]]*/
+#define kwdsiter__KwdsIterator_params "map:?Ert:Kwds"
+	struct {
+		DeeKwdsObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_KwdsIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &DeeKwds_Type))
 		goto err;
-	Dee_Incref(self->ki_map);
-	self->ki_iter = self->ki_map->kw_map;
-	self->ki_end  = self->ki_map->kw_map + self->ki_map->kw_mask + 1;
+	Dee_Incref(args.map);
+	self->ki_map  = args.map;
+	self->ki_iter = args.map->kw_map;
+	self->ki_end  = args.map->kw_map + args.map->kw_mask + 1;
 	return 0;
 err:
 	return -1;
@@ -283,7 +292,7 @@ PRIVATE struct type_member tpconst kwdsiter_members[] = {
 INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsIterator",
-	/* .tp_doc      = */ DOC("(map:?Ert:Kwds)\n"
+	/* .tp_doc      = */ DOC("(" kwdsiter__KwdsIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -487,12 +496,19 @@ done:
 PRIVATE WUNUSED DREF Kwds *DCALL
 kwds_init(size_t argc, DeeObject *const *argv) {
 	DREF Kwds *result;
-	DeeObject *init;
-	DeeArg_Unpack1(err, argc, argv, "Kwds", &init);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_Kwds", params: """
+	names:?S?Dstring
+""", docStringPrefix: "kwds");]]]*/
+#define kwds__Kwds_params "names:?S?Dstring"
+	struct {
+		DeeObject *names;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_Kwds", &args.names);
+/*[[[end]]]*/
 	result = kwds_ctor();
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeObject_Foreach(init, &DeeKwds_Append, &result))
+	if unlikely(DeeObject_Foreach(args.names, &DeeKwds_Append, &result))
 		goto err_r;
 	return result;
 err_r:
@@ -806,7 +822,7 @@ PRIVATE struct type_operator const kwds_operators[] = {
 PUBLIC DeeTypeObject DeeKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Kwds",
-	/* .tp_doc      = */ DOC("(names:?S?Dstring)"),
+	/* .tp_doc      = */ DOC("(" kwds__Kwds_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING | TF_KW, /* Instances of this type are allowed in "kw" arguments. */
@@ -948,12 +964,21 @@ err:
 #define kmapiter_serialize kwdsiter_serialize
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_KwdsMappingIterator", &self->ki_map);
-	if (DeeObject_AssertTypeExact(self->ki_map, &DeeKwdsMapping_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_KwdsMappingIterator", params: """
+	DeeKwdsMappingObject *map:?Ert:KwdsMapping
+""", docStringPrefix: "kmapiter");]]]*/
+#define kmapiter__KwdsMappingIterator_params "map:?Ert:KwdsMapping"
+	struct {
+		DeeKwdsMappingObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_KwdsMappingIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &DeeKwdsMapping_Type))
 		goto err;
-	Dee_Incref(self->ki_map);
-	self->ki_iter = self->ki_map->kmo_kwds->kw_map;
-	self->ki_end  = self->ki_map->kmo_kwds->kw_map + self->ki_map->kmo_kwds->kw_mask + 1;
+	Dee_Incref(args.map);
+	self->ki_map  = args.map;
+	self->ki_iter = args.map->kmo_kwds->kw_map;
+	self->ki_end  = args.map->kmo_kwds->kw_map + args.map->kmo_kwds->kw_mask + 1;
 	return 0;
 err:
 	return -1;
@@ -1067,7 +1092,7 @@ PRIVATE struct type_iterator kmapiter_iterator = {
 INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMappingIterator",
-	/* .tp_doc      = */ DOC("(map:?Ert:KwdsMapping)\n"
+	/* .tp_doc      = */ DOC("(" kmapiter__KwdsMappingIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -1187,28 +1212,36 @@ err:
 PRIVATE WUNUSED DREF KwdsMapping *DCALL
 kmap_init(size_t argc, DeeObject *const *argv) {
 	DREF KwdsMapping *result;
-	DeeKwdsObject *kwds;
-	DeeTupleObject *args;
 	size_t kw_argc;
-	DeeArg_Unpack2(err, argc, argv, "_KwdsMapping", &kwds, &args);
-	if (DeeObject_AssertTypeExact(kwds, &DeeKwds_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_KwdsMapping", params: """
+	DeeKwdsObject *kwds:?Ert:Kwds;
+	DeeTupleObject *args;
+""", docStringPrefix: "kmap");]]]*/
+#define kmap__KwdsMapping_params "kwds:?Ert:Kwds,args:?DTuple"
+	struct {
+		DeeKwdsObject *kwds;
+		DeeTupleObject *args;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_KwdsMapping", &args, &args.kwds, &args.args);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.kwds, &DeeKwds_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
+	if (DeeObject_AssertTypeExact(args.args, &DeeTuple_Type))
 		goto err;
-	kw_argc = kwds->kw_size;
-	if (DeeTuple_SIZE(args) != kw_argc) {
-		err_keywords_bad_for_argc((DeeKwdsObject *)kwds,
-		                          DeeTuple_SIZE(args),
-		                          DeeTuple_ELEM(args));
+	kw_argc = args.kwds->kw_size;
+	if (DeeTuple_SIZE(args.args) != kw_argc) {
+		err_keywords_bad_for_argc(args.kwds,
+		                          DeeTuple_SIZE(args.args),
+		                          DeeTuple_ELEM(args.args));
 		goto err;
 	}
 	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
 	                                               kw_argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
-	result->kmo_argv = Dee_Movrefv(result->kmo_args, DeeTuple_ELEM(args), kw_argc);
-	result->kmo_kwds = kwds;
-	Dee_Incref(kwds);
+	result->kmo_argv = Dee_Movrefv(result->kmo_args, DeeTuple_ELEM(args.args), kw_argc);
+	result->kmo_kwds = args.kwds;
+	Dee_Incref(args.kwds);
 	Dee_atomic_rwlock_init(&result->kmo_lock);
 	DeeObject_InitStatic(result, &DeeKwdsMapping_Type);
 	return result;
@@ -1519,7 +1552,7 @@ PRIVATE struct type_member tpconst kmap_class_members[] = {
 PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMapping",
-	/* .tp_doc      = */ DOC("(kwds:?Ert:Kwds,args:?DTuple)"),
+	/* .tp_doc      = */ DOC("(" kmap__KwdsMapping_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,

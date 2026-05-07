@@ -396,19 +396,19 @@ LOCAL_string_format_wstr_foreach_cb(void *arg, DeeObject *elem);
 
 
 #ifdef DEFINE_DeeString_FormatPrinter
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeString_FormatPrinter(char const *pattern, size_t pattern_length, DeeObject *args,
                         Dee_formatprinter_t pattern_printer,
                         Dee_formatprinter_t data_printer, void *arg)
 #define LOCAL_pattern        pattern
 #define LOCAL_pattern_length pattern_length
 #elif defined(DEFINE_DeeString_FormatWStr)
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
 DeeString_FormatWStr(/*utf-8*/ char const *pattern_wstr, DeeObject *args)
 #define LOCAL_pattern        pattern_wstr
 #define LOCAL_pattern_length WSTR_LENGTH(pattern_wstr)
 #else /* DEFINE_DeeString_Format */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
 DeeString_Format(DeeObject *pattern, DeeObject *args)
 #define LOCAL_pattern        pattern_wstr
 #define LOCAL_pattern_length WSTR_LENGTH(pattern_wstr)

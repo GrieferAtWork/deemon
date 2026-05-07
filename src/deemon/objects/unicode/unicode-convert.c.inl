@@ -93,8 +93,6 @@ LOCAL_DeeString_Convert(String *__restrict self,
 	width   = DeeString_WIDTH(self);
 	str.ptr = DeeString_WSTR(self);
 	length  = WSTR_LENGTH(str.ptr);
-	if (start > length)
-		start = length;
 	if (end > length)
 		end = length;
 	if (start >= end)
