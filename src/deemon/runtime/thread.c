@@ -4166,7 +4166,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_start(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("start", params: """
+""", docStringPrefix: "thread");]]]*/
+#define thread_start_params ""
 	DeeArg_Unpack0(err, argc, argv, "start");
+/*[[[end]]]*/
 	error = DeeThread_Start(self);
 	if unlikely(error < 0)
 		goto err;
@@ -4178,7 +4182,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detach(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("detach", params: """
+""", docStringPrefix: "thread");]]]*/
+#define thread_detach_params ""
 	DeeArg_Unpack0(err, argc, argv, "detach");
+/*[[[end]]]*/
 	error = DeeThread_Detach(self);
 	if unlikely(error < 0)
 		goto err;
@@ -4190,7 +4198,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_join(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "join");
+/*[[[end]]]*/
 	result = DeeThread_Join(self, (uint64_t)-1);
 	ASSERT(result != ITER_DONE);
 	return result;
@@ -4203,7 +4213,9 @@ PRIVATE DEFINE_TUPLE(thread_tryjoin_failure, 2, { Dee_False, Dee_None });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tryjoin", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "tryjoin");
+/*[[[end]]]*/
 	result = DeeThread_Join(self, 0);
 	if unlikely(result == NULL)
 		goto err;
@@ -4241,7 +4253,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_waitfor(DeeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	if (DeeThread_WaitFor(self, (uint64_t)-1) < 0)
 		goto err;
 	return_none;
@@ -4274,15 +4288,25 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_interrupt_impl(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("interrupt", params: """
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
-	int error;
-	DeeArg_Unpack0Or1Or2(err, argc, argv, "interrupt", &sig, &args);
-	if (args) {
-		if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
+""", docStringPrefix: "thread");]]]*/
+#define thread_interrupt_params "sig=!Ert:Interrupt_instance,args?"
+	struct {
+		DeeObject *sig;
+		DeeObject *args;
+	} args;
+	args.sig = &DeeError_Interrupt_instance;
+	args.args = NULL;
+	DeeArg_UnpackStruct0Or1Or2(err, argc, argv, "interrupt", &args, &args.sig, &args.args);
+/*[[[end]]]*/
+	if (args.args) {
+		if (DeeObject_AssertTypeExact(args.args, &DeeTuple_Type))
 			goto err;
 	}
-	error = DeeThread_Interrupt(self, sig, args);
+	error = DeeThread_Interrupt(self, args.sig, args.args);
 	if unlikely(error < 0)
 		goto err;
 	return_bool(error == 0);
@@ -4292,7 +4316,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_started(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("started", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "started");
+/*[[[end]]]*/
 	(void)self;
 	return_bool(DeeThread_HasStarted(self));
 err:
@@ -4301,7 +4327,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_detached(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("detached", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "detached");
+/*[[[end]]]*/
 	(void)self;
 	return_bool(DeeThread_WasDetached(self));
 err:
@@ -4310,7 +4338,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_terminated(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("terminated", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "terminated");
+/*[[[end]]]*/
 	(void)self;
 #ifdef DeeThread_USE_SINGLE_THREADED
 	return_false;
@@ -4323,7 +4353,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_interrupted(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("interrupted", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "interrupted");
+/*[[[end]]]*/
 	(void)self;
 	return_bool(DeeThread_WasInterrupted(self));
 err:
@@ -4332,7 +4364,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashed(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("crashed", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "crashed");
+/*[[[end]]]*/
 	(void)self;
 	return_bool(DeeThread_HasCrashed(self));
 err:
@@ -4351,7 +4385,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *caller = DeeThread_Self();
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("crash_error", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "crash_error");
+/*[[[end]]]*/
 	if (self != caller) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 		err_not_terminated(self);
@@ -4391,7 +4427,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *caller = DeeThread_Self();
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("crash_traceback", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "crash_traceback");
+/*[[[end]]]*/
 	if (self != caller) {
 #ifdef DeeThread_USE_SINGLE_THREADED
 		err_not_terminated(self);
@@ -4538,7 +4576,9 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("self", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "self");
+/*[[[end]]]*/
 	return_reference(DeeThread_Self());
 err:
 	return NULL;
@@ -4548,7 +4588,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_selfid(DeeObject *UNUSED(self),
               size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("selfid", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "selfid");
+/*[[[end]]]*/
 #ifdef DeeThread_GetCurrentTid
 	{
 		Dee_pid_t pid;
@@ -4567,7 +4609,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_yield(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("yield", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "yield");
+/*[[[end]]]*/
 	SCHED_YIELD();
 	return_none;
 err:
@@ -4577,7 +4621,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *UNUSED(self),
                        size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("check_interrupt", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "check_interrupt");
+/*[[[end]]]*/
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	return_none;
@@ -4610,14 +4656,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_exit(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
-	DeeObject *result = Dee_None;
 	DREF struct Dee_threadexit_object *error;
-	DeeArg_Unpack0Or1(err, argc, argv, "exit", &result);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("exit", params: """
+	DeeObject *result = Dee_None;
+""", docStringPrefix: "thread");]]]*/
+#define thread_exit_params "result=!N"
+	struct {
+		DeeObject *result;
+	} args;
+	args.result = Dee_None;
+	DeeArg_Unpack0Or1(err, argc, argv, "exit", &args.result);
+/*[[[end]]]*/
 	error = DeeObject_MALLOC(struct Dee_threadexit_object);
 	if unlikely(!error)
 		goto err;
-	error->te_result = result;
-	Dee_Incref(result);
+	Dee_Incref(args.result);
+	error->te_result = args.result;
 	DeeObject_InitStatic(error, &DeeError_ThreadExit);
 	DeeError_ThrowInherited(error);
 err:
@@ -4690,7 +4744,7 @@ PRIVATE struct type_method tpconst thread_class_methods[] = {
 	            "#t{:Interrupt}"
 	            "Suspending execution for a total of @timeout_nanoseconds"),
 	TYPE_METHOD("exit", &thread_exit,
-	            "(result=!N)\n"
+	            "(" thread_exit_params ")\n"
 	            "#tThreadExit{Always thrown to exit the current thread}"
 	            "Throw a :ThreadExit error object in order to terminate execution "
 	            /**/ "within the current thread. This function does not return normally"),

@@ -1894,14 +1894,21 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 toi_init(TypeOperatorsIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	TypeOperators *ops;
-	DeeArg_Unpack1(err, argc, argv, "_TypeOperatorsIterator", &ops);
-	if (DeeObject_AssertTypeExact(ops, &TypeOperators_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TypeOperatorsIterator", params: """
+	TypeOperators *ops:?Ert:TypeOperators
+""", docStringPrefix: "toi");]]]*/
+#define toi__TypeOperatorsIterator_params "ops:?Ert:TypeOperators"
+	struct {
+		TypeOperators *ops;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_TypeOperatorsIterator", &args.ops);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.ops, &TypeOperators_Type))
 		goto err;
-	self->toi_type = ops->to_type;
+	Dee_Incref(args.ops->to_type);
+	self->toi_type = args.ops->to_type;
 	self->toi_opid = 0;
-	self->toi_name = ops->to_name;
-	Dee_Incref(ops->to_type);
+	self->toi_name = args.ops->to_name;
 	return 0;
 err:
 	return -1;
@@ -2004,7 +2011,7 @@ PRIVATE struct type_getset tpconst toi_getset[] = {
 INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_TypeOperatorsIterator",
-	/* .tp_doc      = */ DOC("(ops:?Ert:TypeOperators)\n"
+	/* .tp_doc      = */ DOC("(" toi__TypeOperatorsIterator_params ")\n"
 	                         "\n"
 	                         "next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL,

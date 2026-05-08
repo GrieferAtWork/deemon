@@ -520,13 +520,17 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call(DeeTypeObject *cls_type,
                  struct type_getset const *desc,
                  size_t argc, DeeObject *const *argv) {
-	DeeObject *thisarg;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "thisarg");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "get", &args.thisarg);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, cls_type))
+		goto err;
 	if unlikely(!desc->gs_get)
 		goto err_unbound;
-	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
-	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
-		goto err;
-	return (*desc->gs_get)(thisarg);
+	return (*desc->gs_get)(args.thisarg);
 err_unbound:
 	DeeRT_ErrRestrictedGetSet(cls_type, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
@@ -538,14 +542,18 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
                     struct type_getset const *desc,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
-	DeeObject *thisarg;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: "thisarg");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
+		goto err;
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, cls_type))
+		goto err;
 	if unlikely(!desc->gs_get)
 		goto err_unbound;
-	if unlikely(DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
-		goto err;
-	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
-		goto err;
-	return (*desc->gs_get)(thisarg);
+	return (*desc->gs_get)(args.thisarg);
 err_unbound:
 	DeeRT_ErrRestrictedGetSet(cls_type, desc, DeeRT_ATTRIBUTE_ACCESS_GET);
 err:
@@ -581,12 +589,16 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call(DeeTypeObject *cls_type,
                  struct type_member const *desc,
                  size_t argc, DeeObject *const *argv) {
-	DeeObject *thisarg;
-	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "thisarg");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "get", &args.thisarg);
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, cls_type))
 		goto err;
-	return type_member_get(desc, thisarg);
+	return type_member_get(desc, args.thisarg);
 err:
 	return NULL;
 }
@@ -596,13 +608,17 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
                     struct type_member const *desc,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
-	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: "thisarg");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, cls_type))
 		goto err;
-	return type_member_get(desc, thisarg);
+	return type_member_get(desc, args.thisarg);
 err:
 	return NULL;
 }

@@ -2708,18 +2708,28 @@ sysfile_init_kw(SystemFile *__restrict self,
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
-	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(inherit), K(duplicate), KEND });
+	HANDLE hHandle;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_SystemFile", params: """
+	DeeObject *fd:?X3?Dint?DFile?Ewin32:HANDLE;
 	bool inherit = false;
 	bool duplicate = false;
-	HANDLE hHandle;
-	DeeObject *fd_obj;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bb:_SystemFile",
-	                    &fd_obj, &inherit, &duplicate))
+""", docStringPrefix: "sysfile", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(_SystemFile_kwlist, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("inherit", 0x5d0a719f, 0x89d7ec99b9f50d7c), KEX("duplicate", 0xe4fab956, 0xb0b2d92626c2de2a), KEND });
+#define sysfile__SystemFile_params "fd:?X3?Dint?DFile?Ewin32:HANDLE,inherit=!f,duplicate=!f"
+	struct {
+		DeeObject *fd;
+		bool inherit;
+		bool duplicate;
+	} args;
+	args.inherit = false;
+	args.duplicate = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, _SystemFile_kwlist, "o|bb:_SystemFile", &args))
 		goto err;
-	hHandle = (HANDLE)DeeNTSystem_GetHandle(fd_obj);
+/*[[[end]]]*/
+	hHandle = (HANDLE)DeeNTSystem_GetHandle(args.fd);
 	if unlikely(hHandle == INVALID_HANDLE_VALUE)
 		goto err;
-	if (duplicate) {
+	if (args.duplicate) {
 		HANDLE hDuplicatedHandle;
 		HANDLE hMyProcess = GetCurrentProcess();
 again_duplicate:
@@ -2741,7 +2751,7 @@ again_duplicate:
 	} else {
 		self->sf_handle    = (void *)hHandle;
 		self->sf_ownhandle = INVALID_HANDLE_VALUE;
-		if (inherit)
+		if (args.inherit)
 			self->sf_ownhandle = (void *)hHandle;
 	}
 	self->sf_filename = NULL;
@@ -2753,18 +2763,28 @@ err:
 #endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 #ifdef DeeSystem_FILE_USE_unix_fd
-	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(inherit), K(duplicate), KEND });
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_SystemFile", params: """
+	DeeObject *fd:?X2?Dint?DFile;
 	bool inherit = false;
 	bool duplicate = false;
+""", docStringPrefix: "sysfile", defineKwList: true);]]]*/
 	int fd;
-	DeeObject *fdobj;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bb:_SystemFile",
-	                    &fdobj, &inherit, &duplicate))
+	static DEFINE_KWLIST(_SystemFile_kwlist, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("inherit", 0x5d0a719f, 0x89d7ec99b9f50d7c), KEX("duplicate", 0xe4fab956, 0xb0b2d92626c2de2a), KEND });
+#define sysfile__SystemFile_params "fd:?X2?Dint?DFile,inherit=!f,duplicate=!f"
+	struct {
+		DeeObject *fd;
+		bool inherit;
+		bool duplicate;
+	} args;
+	args.inherit = false;
+	args.duplicate = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, _SystemFile_kwlist, "o|bb:_SystemFile", &args))
 		goto err;
-	fd = DeeUnixSystem_GetFD(fdobj);
+/*[[[end]]]*/
+	fd = DeeUnixSystem_GetFD(args.fd);
 	if unlikely(fd == -1)
 		goto err;
-	if (duplicate) {
+	if (args.duplicate) {
 #ifdef CONFIG_HAVE_dup
 		int dupfd;
 again_dup:
@@ -2800,7 +2820,7 @@ again_dup:
 	} else {
 		self->sf_handle    = (Dee_fd_t)fd;
 		self->sf_ownhandle = (Dee_fd_t)-1;
-		if (inherit)
+		if (args.inherit)
 			self->sf_ownhandle = (Dee_fd_t)fd;
 	}
 	self->sf_filename = NULL;
@@ -3126,13 +3146,7 @@ PRIVATE char const sysfile_doc[] =
 "\n"
 
 #ifdef deemon_file_HAVE_sysfile_init_kw
-"(fd:"
-#ifdef DeeSystem_FILE_USE_nt_HANDLE
-"?X3?Dint?DFile?Ewin32:HANDLE"
-#else  /* DeeSystem_FILE_USE_nt_HANDLE */
-"?X2?Dint?DFile"
-#endif /* !DeeSystem_FILE_USE_nt_HANDLE */
-",inherit=!f,duplicate=!f)\n"
+"(" sysfile__SystemFile_params ")\n"
 "Construct a new SystemFile wrapper for @handle. When @inherit is "
 /**/ "?t, the given @handle is inherited (and automatically closed "
 /**/ "once the returned :File is destroyed or ?#{close}ed. When @duplicate "

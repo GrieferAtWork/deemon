@@ -259,13 +259,14 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 	((v) ? Dee_variant_init_object_inherited(self, v) : Dee_variant_init_unbound(self))
 
 #ifdef __INTELLISENSE__
-#define Dee_variant_fini(self) (void)((self)->var_type)
+#define Dee_variant_fini(self)    (void)((self)->var_type)
+#define Dee_variant_gettype(self) (self)->var_type
 #else /* __INTELLISENSE__ */
 #define Dee_variant_fini(self)                       \
 	(void)((self)->var_type != Dee_VARIANT_OBJECT || \
 	       (Dee_Decref((self)->var_data.d_object), 0))
+#define Dee_variant_gettype(self) ((enum Dee_variant_type)Dee_atomic_read((int *)&(self)->var_type))
 #endif /* !__INTELLISENSE__ */
-#define Dee_variant_gettype(self)           ((enum Dee_variant_type)Dee_atomic_read((int *)&(self)->var_type))
 #define Dee_variant_isbound(self)           (Dee_variant_gettype(self) != Dee_VARIANT_UNBOUND)
 #define Dee_variant_gettype_nonatomic(self) (self)->var_type
 #define Dee_variant_isbound_nonatomic(self) (Dee_variant_gettype_nonatomic(self) != Dee_VARIANT_UNBOUND)

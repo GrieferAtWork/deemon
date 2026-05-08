@@ -138,6 +138,7 @@ global final CINIT_BY_DINIT: {string: string | {string: string}} = {
 	"!Ert:Code_empty": {
 		"DeeCodeObject*": "&DeeCode_Empty",
 	},
+	"!Ert:Interrupt_instance": "&DeeError_Interrupt_instance",
 };
 
 global final DINIT_BY_CINIT: {string: string} = Dict.Frozen(() -> {
