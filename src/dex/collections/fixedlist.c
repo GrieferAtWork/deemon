@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_Freea, Dee_Mallocac, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocac, _Dee_MallococBufsize */
-#include <deemon/arg.h>             /* DeeArg_Unpack, DeeArg_Unpack1Or2, UNPuSIZ */
+#include <deemon/arg.h>             /* DeeArg_Unpack1Or2, DeeArg_UnpackStruct1XOr2X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrUnboundIndex */
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_UnpackError */
@@ -1476,13 +1476,23 @@ fli_serialize(FixedListIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	self->li_iter = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":FixedListIterator",
-	                  &self->li_list, &self->li_iter))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("FixedListIterator", params: "
+	FixedList *list:?GFixedList,
+	size_t index = 0
+", docStringPrefix: "fli");]]]*/
+#define fli_FixedListIterator_params "list:?GFixedList,index=!0"
+	struct {
+		FixedList *list;
+		size_t index;
+	} args;
+	args.index = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "FixedListIterator", &args, &args.list, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.list, &FixedList_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->li_list, &FixedList_Type))
-		goto err;
-	Dee_Incref(self->li_list);
+	Dee_Incref(args.list);
+	self->li_list = args.list;
+	self->li_iter = args.index;
 	return 0;
 err:
 	return -1;
@@ -1606,7 +1616,7 @@ PRIVATE struct type_member tpconst fli_members[] = {
 INTERN DeeTypeObject FixedListIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "FixedListIterator",
-	/* .tp_doc      = */ DOC("(seq?:?GFixedList)"),
+	/* .tp_doc      = */ DOC("(" fli_FixedListIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

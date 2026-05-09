@@ -27,8 +27,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DeeArg_*, UNP* */
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero */
@@ -3100,19 +3100,25 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
 time_class_from_time_t(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF DeeTimeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("from_time_t", params: """
+	Dee_int128_t time_t
+""", docStringPrefix: "time_class");]]]*/
+#define time_class_from_time_t_params "time_t:?Dint"
+	struct {
+		Dee_int128_t time_t_;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "from_time_t", &args.time_t_, UNPd128, DeeObject_AsInt128);
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
-		goto done;
-	if (DeeArg_UnpackStruct(argc, argv, UNPd128 ":from_time_t", &result->t_nanos))
-		goto err_r;
+		goto err;
+	result->t_nanos = args.time_t_;
 	__hybrid_int128_add64(result->t_nanos, SECONDS_01_01_1970);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_InitStatic(result, &DeeTime_Type);
-done:
 	return result;
-err_r:
-	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -3130,7 +3136,7 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 	            "->?Dint\n"
 	            "Deprecated. Always returns $1000000"),
 	TYPE_METHOD("from_time_t", &time_class_from_time_t,
-	            "(time_t_value:?Dint)->?.\n"
+	            "(" time_class_from_time_t_params ")->?.\n"
 	            "Deprecated (use ${Time(time_t: time_t_value)} instead)"),
 	TYPE_METHOD_END,
 };

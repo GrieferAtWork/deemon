@@ -27,11 +27,11 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack* */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, _DeeArg_AsObject */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AsUIntX, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
@@ -1009,13 +1009,23 @@ bls_copy(BytesLineSplit *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject *const *argv) {
-	self->bls_keepends = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit",
-	                  &self->bls_bytes, &self->bls_keepends))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesLineSplit", params: "
+	DeeBytesObject *bytes,
+	bool keepends = false
+", docStringPrefix: "bls");]]]*/
+#define bls__BytesLineSplit_params "bytes:?DBytes,keepends=!f"
+	struct {
+		DeeBytesObject *bytes;
+		bool keepends;
+	} args;
+	args.keepends = false;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_BytesLineSplit", &args, &args.bytes, "o", _DeeArg_AsObject, &args.keepends, "b", DeeObject_AsBool);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.bytes, &DeeBytes_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->bls_bytes, &DeeBytes_Type))
-		goto err;
-	Dee_Incref(self->bls_bytes);
+	Dee_Incref(args.bytes);
+	self->bls_bytes    = args.bytes;
+	self->bls_keepends = args.keepends;
 	return 0;
 err:
 	return -1;
@@ -1106,7 +1116,7 @@ PRIVATE struct type_member tpconst bls_class_members[] = {
 INTERN DeeTypeObject BytesLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplit",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,keepends=!f)"),
+	/* .tp_doc      = */ DOC("(" bls__BytesLineSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

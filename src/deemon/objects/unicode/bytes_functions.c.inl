@@ -3838,8 +3838,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	args.max_ = 1;
 	args.mask = NULL;
-	if (DeeArg_UnpackStruct(argc, argv, "|" UNPuSIZ "o:dedent", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, "dedent", &args, &args.max_, UNPuSIZ, DeeObject_AsSize, &args.mask, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
 	if unlikely(!args.max_)
 		goto retself;

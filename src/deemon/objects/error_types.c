@@ -608,16 +608,22 @@ INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("NoSymlink",
 #define EXIT_SUCCESS 0
 #endif /* !EXIT_SUCCESS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 appexit_init(struct Dee_appexit_object *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	int result;
-	self->ae_exitcode = EXIT_SUCCESS;
-	/* Read the exitcode from arguments. */
-	result = DeeArg_UnpackStruct(argc, argv,
-	                             "|d:appexit",
-	                             &self->ae_exitcode);
-	return result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("AppExit", params: """
+	int exitcode;
+""", docStringPrefix: "appexit");]]]*/
+#define appexit_AppExit_params "exitcode:?Dint"
+	struct {
+		int exitcode;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "AppExit", &args.exitcode, "d", DeeObject_AsInt);
+/*[[[end]]]*/
+	self->ae_exitcode = args.exitcode;
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -702,14 +708,19 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_class_exit(DeeTypeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("exit", params: """
+	int exitcode? = EXIT_SUCCESS;
+	bool run_atexit = true;
+""", docStringPrefix: "appexit_class");]]]*/
+#define appexit_class_exit_params "exitcode?:?Dint,run_atexit=!t"
 	struct {
 		int exitcode;
 		bool run_atexit;
 	} args;
-	args.exitcode   = EXIT_SUCCESS;
+	args.exitcode = EXIT_SUCCESS;
 	args.run_atexit = true;
-	if (DeeArg_UnpackStruct(argc, argv, "|db:exit", &args))
-		goto err;
+	DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, "exit", &args, &args.exitcode, "d", DeeObject_AsInt, &args.run_atexit, "b", DeeObject_AsBool);
+/*[[[end]]]*/
 	Dee_Exit(args.exitcode, args.run_atexit);
 err:
 	return NULL;
@@ -717,8 +728,7 @@ err:
 
 PRIVATE struct type_method tpconst appexit_class_methods[] = {
 	TYPE_METHOD("exit", &appexit_class_exit,
-	            "()\n"
-	            "(exitcode:?Dint,run_atexit=!t)\n"
+	            "(" appexit_class_exit_params ")\n"
 	            "Terminate execution of deemon after invoking ?#atexit callbacks when @run_atexit is ?t\n"
 	            "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
 	            /**/ "functions are not provided by the host, an :AppExit error is thrown instead\n"
@@ -762,7 +772,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "\n"
 
 	                         "()\n"
-	                         "(exitcode:?Dint)\n"
+	                         "(" appexit_AppExit_params ")\n"
 	                         "Construct a new AppExit object using the given @exitcode "
 	                         /**/ "or the host's default value for #CEXIT_SUCCESS, or $0"),
 	/* .tp_flags    = */ TP_FFINAL | TP_FINTERRUPT,

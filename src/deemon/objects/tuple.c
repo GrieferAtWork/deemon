@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_Newf, DeeString_STR, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bzeroc, memcpy*, mempcpyc, memset */
-#include <deemon/tuple.h>              /* DeeNullableTuple_NewEmpty, DeeTuple*, Dee_EmptyTuple, Dee_empty_tuple_struct, Dee_nullable_tuple_builder, Dee_nullable_tuple_builder_alloc, Dee_tuple_builder* */
+#include <deemon/tuple.h>              /* DeeNullableTuple_NewEmpty, DeeTuple*, Dee_empty_tuple_struct, Dee_nullable_tuple_builder, Dee_nullable_tuple_builder_alloc, Dee_tuple_builder* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, Dee_XVisitv, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
@@ -890,21 +890,30 @@ tuple_iterator_copy(TupleIterator *__restrict self,
 PRIVATE NONNULL((1, 3)) int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
-	self->ti_index = 0;
-	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ ":_TupleIterator",
-	                  &self->ti_tuple, &self->ti_index))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TupleIterator", params: "
+	DeeTupleObject *tuple,
+	size_t index = 0
+", docStringPrefix: "tuple_iterator");]]]*/
+#define tuple_iterator__TupleIterator_params "tuple:?DTuple,index=!0"
+	struct {
+		DeeTupleObject *tuple;
+		size_t index;
+	} args;
+	args.index = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_TupleIterator", &args, &args.tuple, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.tuple, &DeeTuple_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->ti_tuple, &DeeTuple_Type))
-		goto err;
-	if (self->ti_index >= DeeTuple_SIZE(self->ti_tuple))
+	if unlikely(args.index >= DeeTuple_SIZE(args.tuple))
 		goto err_bounds;
-	Dee_Incref(self->ti_tuple);
+	Dee_Incref(args.tuple);
+	self->ti_tuple = args.tuple;
+	self->ti_index = args.index;
 	return 0;
 err_bounds:
-	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self->ti_tuple),
-	                          self->ti_index,
-	                          DeeTuple_SIZE(self->ti_tuple));
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(args.tuple),
+	                          args.index,
+	                          DeeTuple_SIZE(args.tuple));
 err:
 	return -1;
 }
@@ -1017,7 +1026,7 @@ PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 INTERN DeeTypeObject DeeTupleIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_TupleIterator",
-	/* .tp_doc      = */ DOC("(seq=!T0,index=!0)"),
+	/* .tp_doc      = */ DOC("(" tuple_iterator__TupleIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

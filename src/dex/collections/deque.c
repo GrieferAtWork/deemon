@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryMallocac */
-#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
+#include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* Dee_True, return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence, DeeRT_ErrIndexOutOfBounds */
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
@@ -36,7 +36,7 @@
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
-#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* bzero, memcpy */
 #include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -925,28 +925,37 @@ deque_push_back(void *self, DeeObject *__restrict ob) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_init(Deque *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *init   = Dee_EmptySeq;
-	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
-	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ ":Deque", &init, &self->d_bucket_sz))
-		goto err;
-	if unlikely(!self->d_bucket_sz) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Deque", params: "
+	DeeObject *seq:?S?O,
+	size_t bucketsize? = DEQUE_BUCKET_DEFAULT_SIZE
+", docStringPrefix: "deq");]]]*/
+#define deq_Deque_params "seq:?S?O,bucketsize?:?Dint"
+	struct {
+		DeeObject *seq;
+		size_t bucketsize;
+	} args;
+	args.bucketsize = DEQUE_BUCKET_DEFAULT_SIZE;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "Deque", &args, &args.seq, "o", _DeeArg_AsObject, &args.bucketsize, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if unlikely(!args.bucketsize) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid bucket size: 0");
 		goto err;
 	}
 	Dee_atomic_rwlock_init(&self->d_lock);
-	self->d_head     = NULL;
-	self->d_tail     = NULL;
-	self->d_size     = 0;
-	self->d_head_idx = 0;
-	self->d_head_use = 0;
-	self->d_tail_sz  = 0;
-	self->d_version  = 0;
+	self->d_head      = NULL;
+	self->d_tail      = NULL;
+	self->d_size      = 0;
+	self->d_head_idx  = 0;
+	self->d_head_use  = 0;
+	self->d_tail_sz   = 0;
+	self->d_bucket_sz = args.bucketsize;
+	self->d_version   = 0;
 	Dee_weakref_support_init(self);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-	if (DeeObject_Foreach(init, (Dee_foreach_t)&Deque_PushBack, self) < 0)
+	if (DeeObject_Foreach(args.seq, (Dee_foreach_t)&Deque_PushBack, self) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
-	if (DeeObject_Foreach(init, &deque_push_back, self) < 0)
+	if (DeeObject_Foreach(args.seq, &deque_push_back, self) < 0)
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 	{
 		deq_fini(self);
@@ -1511,8 +1520,7 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "Construct an empty Deque\n"
 	                         "\n"
 
-	                         "(seq:?S?O)\n"
-	                         "(seq:?S?O,bucketsize:?Dint)\n"
+	                         "(" deq_Deque_params ")\n"
 	                         "Construct a Deque pre-initialized with items from "
 	                         /**/ "@seq, and set the Deque's bucket size to @bucketsize\n"
 	                         "When @bucketsize is omitted, an implementation-specific "
@@ -1665,22 +1673,32 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	size_t index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":DequeIterator", &self->di_deq, &index))
-		goto err;
-	if (DeeObject_AssertType(self->di_deq, &Deque_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("DequeIterator", params: "
+	Deque *deq:?GDeque,
+	size_t index = 0
+", docStringPrefix: "deqiter");]]]*/
+#define deqiter_DequeIterator_params "deq:?GDeque,index=!0"
+	struct {
+		Deque *deq;
+		size_t index;
+	} args;
+	args.index = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "DequeIterator", &args, &args.deq, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.deq, &Deque_Type))
 		goto err;
 	Dee_atomic_rwlock_init(&self->di_lock);
-	Dee_Incref(self->di_deq);
-	Deque_LockRead(self->di_deq);
-	self->di_ver = self->di_deq->d_version;
+	Dee_Incref(args.deq);
+	self->di_deq = args.deq;
+	Deque_LockRead(args.deq);
+	self->di_ver = args.deq->d_version;
 	COMPILER_READ_BARRIER();
-	if unlikely(index >= self->di_deq->d_size) {
+	if unlikely(args.index >= args.deq->d_size) {
 		--self->di_ver;
 	} else {
-		DequeIterator_InitAt(&self->di_iter, self->di_deq, index);
+		DequeIterator_InitAt(&self->di_iter, args.deq, args.index);
 	}
-	Deque_LockEndRead(self->di_deq);
+	Deque_LockEndRead(args.deq);
 	return 0;
 err:
 	return -1;
@@ -1794,7 +1812,7 @@ PRIVATE struct type_member tpconst deqiter_members[] = {
 INTERN DeeTypeObject DequeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "DequeIterator",
-	/* .tp_doc      = */ DOC("(seq?:?GDeque)"),
+	/* .tp_doc      = */ DOC("(" deqiter_DequeIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

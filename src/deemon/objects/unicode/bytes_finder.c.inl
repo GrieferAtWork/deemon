@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ, UNPxSIZ */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct, UNPuSIZ, UNPxSIZ */
 #include <deemon/bytes.h>              /* DeeBytes*, Dee_EmptyBytes */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* PCKuSIZ */
@@ -436,23 +436,38 @@ bf_copy(BytesFind *__restrict self, BytesFind *__restrict other) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bf_init(BytesFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":_BytesFind",
-	                  &self->bf_bytes, &self->bf_other,
-	                  &start, &end))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesFind", params: "
+	DeeBytesObject *bytes,
+	needle:?X3?DBytes?Dstring?Dint,
+	size_t start = 0,
+	size_t end = (size_t)-1
+", docStringPrefix: "bf");]]]*/
+#define bf__BytesFind_params "bytes:?DBytes,needle:?X3?DBytes?Dstring?Dint,start=!0,end=!-1"
+	struct {
+		DeeBytesObject *bytes;
+		DeeObject *needle;
+		size_t start;
+		size_t end;
+	} args;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "oo|" UNPuSIZ UNPxSIZ ":_BytesFind", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->bf_bytes, &DeeBytes_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.bytes, &DeeBytes_Type))
 		goto err;
-	if (acquire_needle(&self->bf_needle, self->bf_other))
+	if (acquire_needle(&self->bf_needle, args.needle))
 		goto err;
-	if (end > DeeBytes_SIZE(self->bf_bytes))
-		end = DeeBytes_SIZE(self->bf_bytes);
-	if (start > end)
-		start = end;
-	self->bf_start = DeeBytes_DATA(self->bf_bytes) + start;
-	self->bf_end   = DeeBytes_DATA(self->bf_bytes) + end;
-	Dee_Incref(self->bf_bytes);
-	Dee_Incref(self->bf_other);
+	if (args.end > DeeBytes_SIZE(args.bytes))
+		args.end = DeeBytes_SIZE(args.bytes);
+	if (args.start > args.end)
+		args.start = args.end;
+	self->bf_start = DeeBytes_DATA(args.bytes) + args.start;
+	self->bf_end   = DeeBytes_DATA(args.bytes) + args.end;
+	Dee_Incref(args.bytes);
+	Dee_Incref(args.needle);
+	self->bf_bytes = args.bytes;
+	self->bf_other = args.needle;
 	return 0;
 err:
 	return -1;
@@ -628,7 +643,7 @@ PRIVATE struct type_member tpconst bcf_class_members[] = {
 INTERN DeeTypeObject BytesFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFind",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)\n"
+	/* .tp_doc      = */ DOC("(" bf__BytesFind_params ")\n"
 	                         "\n"
 	                         "size->\n"
 	                         "Same as ${this.__str__.count(this.__needle__, this.__start__, this.__end__)}\n"

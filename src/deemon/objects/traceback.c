@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct1XOr2X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttrCStr */
@@ -31,7 +31,7 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AsSize, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
@@ -247,17 +247,26 @@ traceiter_copy(TraceIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	size_t index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_TracebackIterator",
-	                  &self->ti_trace, &index))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TracebackIterator", params: "
+	DeeTracebackObject *trace,
+	size_t index = 0
+", docStringPrefix: "traceiter");]]]*/
+#define traceiter__TracebackIterator_params "trace:?DTraceback,index=!0"
+	struct {
+		DeeTracebackObject *trace;
+		size_t index;
+	} args;
+	args.index = 0;
+	DeeArg_UnpackStruct1XOr2X(err, argc, argv, "_TracebackIterator", &args, &args.trace, "o", _DeeArg_AsObject, &args.index, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.trace, &DeeTraceback_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->ti_trace, &DeeTraceback_Type))
-		goto err;
-	if (index > self->ti_trace->tb_numframes)
-		index = self->ti_trace->tb_numframes;
-	self->ti_next = self->ti_trace->tb_frames +
-	                (self->ti_trace->tb_numframes - (index + 1));
-	Dee_Incref(self->ti_trace);
+	if (args.index > args.trace->tb_numframes)
+		args.index = args.trace->tb_numframes;
+	self->ti_next = args.trace->tb_frames +
+	                (args.trace->tb_numframes - (args.index + 1));
+	Dee_Incref(args.trace);
+	self->ti_trace = args.trace;
 	return 0;
 err:
 	return -1;
@@ -427,7 +436,7 @@ PRIVATE struct type_method_hint tpconst traceiter_method_hints[] = {
 INTERN DeeTypeObject DeeTracebackIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_TracebackIterator",
-	/* .tp_doc      = */ DOC("(traceback?:?DTraceback,index=!0)\n"
+	/* .tp_doc      = */ DOC("(" traceiter__TracebackIterator_params ")\n"
 	                         "\n"
 	                         "next->?Ert:Frame"),
 	/* .tp_flags    = */ TP_FNORMAL,

@@ -28,12 +28,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_TypeAssertFailed, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_foreach_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_foreach_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
@@ -217,15 +217,26 @@ bseg_ctor(BytesSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_init(BytesSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_BytesSegments", &self->b_str, &self->b_siz))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSegments", params: "
+	DeeBytesObject *bytes,
+	size_t size
+", docStringPrefix: "bseg");]]]*/
+#define bseg__BytesSegments_params "bytes:?DBytes,size:?Dint"
+	struct {
+		DeeBytesObject *bytes;
+		size_t size;
+	} args;
+	DeeArg_UnpackStruct2X(err, argc, argv, "_BytesSegments", &args, &args.bytes, "o", _DeeArg_AsObject, &args.size, UNPuSIZ, DeeObject_AsSize);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.bytes, &DeeBytes_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->b_str, &DeeBytes_Type))
-		goto err;
-	if (!self->b_siz) {
-		err_invalid_segment_size(self->b_siz);
+	if (!args.size) {
+		err_invalid_segment_size(args.size);
 		goto err;
 	}
-	Dee_Incref(self->b_str);
+	Dee_Incref(args.bytes);
+	self->b_str = args.bytes;
+	self->b_siz = args.size;
 	return 0;
 err:
 	return -1;
@@ -412,7 +423,7 @@ PRIVATE struct type_member tpconst bseg_class_members[] = {
 INTERN DeeTypeObject BytesSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSegments",
-	/* .tp_doc      = */ DOC("(s:?DBytes,siz:?Dint)"),
+	/* .tp_doc      = */ DOC("(" bseg__BytesSegments_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

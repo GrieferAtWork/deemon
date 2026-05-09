@@ -42,6 +42,8 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeKwdsObject*": "?Ert:Kwds",
 	"DeeFunctionObject*": "?DFunction",
 	"DeeYieldFunctionObject*": "?Ert:YieldFunction",
+	"DeeTracebackObject*": "?DTraceback",
+	"DeeFileObject*": "?DFile",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -103,6 +105,7 @@ global final CTYPE_BY_DTYPE: {string: string} = {
 	"?Dbool": "bool",
 	"?DFunction": "DeeFunctionObject*",
 	"?Ert:YieldFunction": "DeeYieldFunctionObject*",
+	"?DTraceback": "DeeTracebackObject*",
 };
 
 global final DTYPE_BY_DINIT: {string: string} = {
@@ -262,6 +265,10 @@ global final UNPFUN_BY_UNP: {string: string} = {
 	'" UNPdN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSSize",
 	'" UNPuN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSize",
 	'" UNPxN(__SIZEOF_SIZE_T__) "': "DeeObject_AsSizeM1",
+
+	'" UNPdB "': "DeeObject_AsSByte",
+	'" UNPuB "': "DeeObject_AsByte",
+	'" UNPxB "': "DeeObject_AsByteM1",
 
 	'I8d': "DeeObject_AsInt8",
 	'I8u': "DeeObject_AsUInt8",
@@ -1078,6 +1085,7 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 	case "set":      docstring = docstring.replace("?DSet", "?."); break;
 	case "type":     docstring = docstring.replace("?DType", "?."); break;
 	case "callable": docstring = docstring.replace("?DCallable", "?."); break;
+	case "float":    docstring = docstring.replace("?Dfloat", "?."); break;
 	default: break;
 	}
 	print("#define ", prefix, "_", makeIdentifier(name), '_params "', docstring, '"');

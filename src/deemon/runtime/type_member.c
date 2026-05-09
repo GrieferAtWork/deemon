@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackKw */
+#include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>            /* DeeBool_Type, return_bool */
 #include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_TypeError */

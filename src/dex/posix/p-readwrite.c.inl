@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DeeArg_*, UNP* */
+#include <deemon/arg.h>             /* DeeArg_*, UNP*, _DeeArg_AsObject */
 #include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
@@ -290,8 +290,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 	} args;
 	args.buf_or_count = DeeInt_MinusOne;
 	args.count = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "o|o" UNPxSIZ ":read", &args))
-		goto err;
+	DeeArg_UnpackStruct1XOr2XOr3X(err, argc, argv, "read", &args, &args.fd, "o", _DeeArg_AsObject, &args.buf_or_count, "o", _DeeArg_AsObject, &args.count, UNPxSIZ, DeeObject_AsSizeM1);
 /*[[[end]]]*/
 	fd_fd = DeeUnixSystem_GetFD(args.fd);
 	if unlikely(fd_fd == -1)

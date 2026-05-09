@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack* */
+#include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack1X */
 #include <deemon/bool.h>               /* DeeBool*, Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
@@ -749,48 +749,119 @@ PRIVATE struct type_getset tpconst float_getsets[] = {
 };
 
 
-#define DEFINE_FLOAT_COMPARE_FUNCTION(name)                          \
-	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL                \
-	float_##name(Float *self, size_t argc, DeeObject *const *argv) { \
-		double y;                                                    \
-		if (DeeArg_UnpackStruct(argc, argv, "D:" #name, &y))         \
-			goto err;                                                \
-		return_bool(name(self->f_value, y));                         \
-	err:                                                             \
-		return NULL;                                                 \
-	}
 #ifdef CONFIG_HAVE_isgreater
 #define HAVE_float_isgreater
-DEFINE_FLOAT_COMPARE_FUNCTION(isgreater)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because shared with "./numeric.c" */
+float_isgreater(Float *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isgreater", params: """
+	double y;
+""", docStringPrefix: "float");]]]*/
+#define float_isgreater_params "y:?."
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "isgreater", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
+	return_bool(isgreater(self->f_value, args.y));
+err:
+	return NULL;
+}
 #endif /* CONFIG_HAVE_isgreater */
+
 #ifdef CONFIG_HAVE_isgreaterequal
 #define HAVE_float_isgreaterequal
-DEFINE_FLOAT_COMPARE_FUNCTION(isgreaterequal)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because shared with "./numeric.c" */
+float_isgreaterequal(Float *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isgreater", params: """
+	double y;
+""", docStringPrefix: "float");]]]*/
+#define float_isgreaterequal_params "y:?."
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "isgreaterequal", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
+	return_bool(isgreaterequal(self->f_value, args.y));
+err:
+	return NULL;
+}
 #endif /* CONFIG_HAVE_isgreaterequal */
+
 #ifdef CONFIG_HAVE_isless
 #define HAVE_float_isless
-DEFINE_FLOAT_COMPARE_FUNCTION(isless)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because shared with "./numeric.c" */
+float_isless(Float *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isgreater", params: """
+	double y;
+""", docStringPrefix: "float");]]]*/
+#define float_isless_params "y:?."
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "isless", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
+	return_bool(isless(self->f_value, args.y));
+err:
+	return NULL;
+}
 #endif /* CONFIG_HAVE_isless */
+
 #ifdef CONFIG_HAVE_islessequal
 #define HAVE_float_islessequal
-DEFINE_FLOAT_COMPARE_FUNCTION(islessequal)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because shared with "./numeric.c" */
+float_islessequal(Float *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isgreater", params: """
+	double y;
+""", docStringPrefix: "float");]]]*/
+#define float_islessequal_params "y:?."
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "islessequal", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
+	return_bool(islessequal(self->f_value, args.y));
+err:
+	return NULL;
+}
 #endif /* CONFIG_HAVE_islessequal */
+
 #ifdef CONFIG_HAVE_islessgreater
 #define HAVE_float_islessgreater
-DEFINE_FLOAT_COMPARE_FUNCTION(islessgreater)
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because shared with "./numeric.c" */
+float_islessgreater(Float *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isgreater", params: """
+	double y;
+""", docStringPrefix: "float");]]]*/
+#define float_islessgreater_params "y:?."
+	struct {
+		double y;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "islessgreater", &args.y, "D", DeeObject_AsDouble);
+/*[[[end]]]*/
+	return_bool(islessgreater(self->f_value, args.y));
+err:
+	return NULL;
+}
 #endif /* CONFIG_HAVE_islessgreater */
-#undef DEFINE_FLOAT_COMPARE_FUNCTION
+
 
 #ifdef HAVE_float_get_isnan
 #define HAVE_float_isunordered
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *y_obj;
 	double y;
-	DeeArg_Unpack1(err, argc, argv, "isunordered", &y_obj);
-	if (DeeInt_Check(y_obj))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isunordered", params: """
+	y:?X2?Dfloat?Dint
+""", docStringPrefix: "float");]]]*/
+#define float_isunordered_params "y:?X2?.?Dint"
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "isunordered", &args.y);
+/*[[[end]]]*/
+	if (DeeInt_Check(args.y))
 		return float_get_isnan(self);
-	if (DeeObject_AsDouble(y_obj, &y))
+	if (DeeObject_AsDouble(args.y, &y))
 		goto err;
 #ifdef CONFIG_HAVE_isunordered
 	return_bool(isunordered(self->f_value, y));
@@ -814,13 +885,20 @@ err:
 #define HAVE_float_isunordered
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *y_obj;
 	double y;
-	DeeArg_Unpack1(err, argc, argv, "isunordered", &y_obj);
-	if (DeeInt_Check(y_obj)) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isunordered", params: """
+	y:?X2?Dfloat?Dint
+""", docStringPrefix: "float");]]]*/
+#define float_isunordered_params "y:?X2?.?Dint"
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "isunordered", &args.y);
+/*[[[end]]]*/
+	if (DeeInt_Check(args.y)) {
 		y = 0.0;
 	} else {
-		if (DeeObject_AsDouble(y_obj, &y))
+		if (DeeObject_AsDouble(args.y, &y))
 			goto err;
 	}
 	return_bool(isunordered(self->f_value, y));
@@ -833,7 +911,10 @@ err:
 #define HAVE_float_nextafter
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_nextafter(Float *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextafter", params: "double y");]]]*/
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextafter", params: """
+	double y
+""", docStringPrefix: "float");]]]*/
+#define float_nextafter_params "y:?."
 	struct {
 		double y;
 	} args;
@@ -852,25 +933,32 @@ err:
 
 PRIVATE struct type_method tpconst float_methods[] = {
 #ifdef HAVE_float_nextafter
-	TYPE_METHOD_F("nextafter", &float_nextafter, METHOD_FNOREFESCAPE, "(y:?.)->?."),
+	TYPE_METHOD_F("nextafter", &float_nextafter, METHOD_FNOREFESCAPE,
+	              "(" float_nextafter_params ")->?."),
 #endif /* HAVE_float_nextafter */
 #ifdef HAVE_float_isgreater
-	TYPE_METHOD_F("isgreater", &float_isgreater, METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isgreater", &float_isgreater, METHOD_FNOREFESCAPE,
+	              "(" float_isgreater_params ")->?Dbool"),
 #endif /* HAVE_float_isgreater */
 #ifdef HAVE_float_isgreaterequal
-	TYPE_METHOD_F("isgreaterequal", &float_isgreaterequal, METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isgreaterequal", &float_isgreaterequal, METHOD_FNOREFESCAPE,
+	              "(" float_isgreaterequal_params ")->?Dbool"),
 #endif /* HAVE_float_isgreaterequal */
 #ifdef HAVE_float_isless
-	TYPE_METHOD_F("isless", &float_isless, METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isless", &float_isless, METHOD_FNOREFESCAPE,
+	              "(" float_isless_params ")->?Dbool"),
 #endif /* HAVE_float_isless */
 #ifdef HAVE_float_islessequal
-	TYPE_METHOD_F("islessequal", &float_islessequal, METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("islessequal", &float_islessequal, METHOD_FNOREFESCAPE,
+	              "(" float_islessequal_params ")->?Dbool"),
 #endif /* HAVE_float_islessequal */
 #ifdef HAVE_float_islessgreater
-	TYPE_METHOD_F("islessgreater", &float_islessgreater, METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("islessgreater", &float_islessgreater, METHOD_FNOREFESCAPE,
+	              "(" float_islessgreater_params ")->?Dbool"),
 #endif /* HAVE_float_islessgreater */
 #ifdef HAVE_float_isunordered
-	TYPE_METHOD_F("isunordered", &float_isunordered, METHOD_FNOREFESCAPE, "(y:?X2?.?Dint)->?Dbool"),
+	TYPE_METHOD_F("isunordered", &float_isunordered, METHOD_FNOREFESCAPE,
+	              "(" float_isunordered_params ")->?Dbool"),
 #endif /* HAVE_float_isunordered */
 	TYPE_METHOD_END
 };

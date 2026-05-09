@@ -2315,15 +2315,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("putc", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("putc", params: """
 	byte_t byte;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_putc_params "byte:?Dint"
 	struct {
 		byte_t byte;
 	} args;
-	if (DeeArg_UnpackStruct(argc, argv, UNPuB ":putc", &args))
-		goto err;
+	DeeArg_Unpack1X(err, argc, argv, "putc", &args.byte, UNPuB, DeeObject_AsByte);
 /*[[[end]]]*/
 	result = DeeFile_Putc(self, (int)(unsigned int)args.byte);
 	if unlikely(result == Dee_GETC_ERR)
