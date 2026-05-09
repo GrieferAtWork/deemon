@@ -44,6 +44,7 @@ global final DTYPE_BY_CTYPE: {string: string} = {
 	"DeeYieldFunctionObject*": "?Ert:YieldFunction",
 	"DeeTracebackObject*": "?DTraceback",
 	"DeeFileObject*": "?DFile",
+	"DeeIntObject*": "?Dint",
 	"bool": "?Dbool",
 	"__BOOL": "?Dbool",
 	"int": "?Dint",
@@ -1086,6 +1087,8 @@ local function printDocStringWithPrefix(prefix: string, name: string, params: {U
 	case "type":     docstring = docstring.replace("?DType", "?."); break;
 	case "callable": docstring = docstring.replace("?DCallable", "?."); break;
 	case "float":    docstring = docstring.replace("?Dfloat", "?."); break;
+	case "int":      docstring = docstring.replace("?Dint", "?."); break;
+	case "numeric":  docstring = docstring.replace("?DNumeric", "?."); break;
 	default: break;
 	}
 	print("#define ", prefix, "_", makeIdentifier(name), '_params "', docstring, '"');

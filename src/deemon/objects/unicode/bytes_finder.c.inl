@@ -168,11 +168,18 @@ bfi_setup(BytesFindIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	BytesFind *find;
-	DeeArg_Unpack1(err, argc, argv, "_BytesFindIterator", &find);
-	if (DeeObject_AssertTypeExact(find, &BytesFind_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesFindIterator", params: """
+	BytesFind *find:?Ert:BytesFind
+""", docStringPrefix: "bfi");]]]*/
+#define bfi__BytesFindIterator_params "find:?Ert:BytesFind"
+	struct {
+		BytesFind *find;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesFindIterator", &args.find);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &BytesFind_Type))
 		goto err;
-	bfi_setup(self, find);
+	bfi_setup(self, args.find);
 	return 0;
 err:
 	return -1;
@@ -181,11 +188,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	BytesFind *find;
-	DeeArg_Unpack1(err, argc, argv, "_BytesCaseFindIterator", &find);
-	if (DeeObject_AssertTypeExact(find, &BytesCaseFind_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesCaseFindIterator", params: """
+	BytesFind *find:?Ert:BytesCaseFind
+""", docStringPrefix: "bcfi");]]]*/
+#define bcfi__BytesCaseFindIterator_params "find:?Ert:BytesCaseFind"
+	struct {
+		BytesFind *find;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesCaseFindIterator", &args.find);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.find, &BytesCaseFind_Type))
 		goto err;
-	bfi_setup(self, find);
+	bfi_setup(self, args.find);
 	return 0;
 err:
 	return -1;
@@ -308,7 +322,7 @@ PRIVATE struct type_cmp bfi_cmp = {
 INTERN DeeTypeObject BytesFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFindIterator",
-	/* .tp_doc      = */ DOC("(find:?Ert:BytesFind)\n"
+	/* .tp_doc      = */ DOC("(" bfi__BytesFindIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
@@ -359,7 +373,7 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFindIterator",
-	/* .tp_doc      = */ DOC("(find:?Ert:BytesCaseFind)\n"
+	/* .tp_doc      = */ DOC("(" bcfi__BytesCaseFindIterator_params ")\n"
 	                         "\n"
 	                         "next->?T2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

@@ -1581,19 +1581,6 @@ PRIVATE struct type_getset tpconst numeric_class_getsets[] = {
 
 
 
-DOC_DEF(numeric_hex_doc,
-        "(precision=!0)->?Dstring\n"
-        "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
-DOC_DEF(numeric_bin_doc,
-        "(precision=!0)->?Dstring\n"
-        "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
-DOC_DEF(numeric_oct_doc,
-        "(precision=!0)->?Dstring\n"
-        "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
-DOC_DEF(numeric_divmod_doc,
-        "(y:?.)->?T2?.?.\n"
-        "Divide+modulo. Alias for ${(this / y, this % y)}");
-
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw);
@@ -1741,15 +1728,22 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeSeqPairObject *result;
 	DREF DeeObject *d, *m;
-	DeeObject *y;
-	DeeArg_Unpack1(err, argc, argv, "divmod", &y);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("divmod", params: """
+	y:?DNumeric
+""", docStringPrefix: "numeric");]]]*/
+#define numeric_divmod_params "y:?."
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "divmod", &args.y);
+/*[[[end]]]*/
 	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	d = DeeObject_Div(self, y);
+	d = DeeObject_Div(self, args.y);
 	if unlikely(!d)
 		goto err_r;
-	m = DeeObject_Mod(self, y);
+	m = DeeObject_Mod(self, args.y);
 	if unlikely(!m)
 		goto err_r_d;
 	return DeeSeq_InitPairInherited(result, d, m);
@@ -1823,10 +1817,17 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL float_nextafter(DeeFloatObject
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *y;
 	DREF DeeObject *result;
 	int error;
-	DeeArg_Unpack1(err, argc, argv, "nextafter", &y);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextafter", params: """
+	y:?DNumeric
+""", docStringPrefix: "numeric");]]]*/
+#define numeric_nextafter_params "y:?."
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "nextafter", &args.y);
+/*[[[end]]]*/
 
 	/* >> if (this.isfloat)
 	 * >>     return this.operator float().nextafter(y); */
@@ -1838,14 +1839,14 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		asflt = (DREF DeeFloatObject *)DeeObject_Float(self);
 		if unlikely(!asflt)
 			goto err;
-		result = float_nextafter(asflt, 1, &y);
+		result = float_nextafter(asflt, 1, &args.y);
 		Dee_Decref(asflt);
 		return result;
 	}
 
 	/* >> if (this > y)
 	 * >>     return this - 1; */
-	error = DeeObject_CmpGrAsBool(self, y);
+	error = DeeObject_CmpGrAsBool(self, args.y);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -1853,7 +1854,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 
 	/* >> if (this < y)
 	 * >>     return this + 1; */
-	error = DeeObject_CmpLoAsBool(self, y);
+	error = DeeObject_CmpLoAsBool(self, args.y);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -1899,9 +1900,16 @@ DEFINE_NUMERIC_ISCMP(islessgreater, DeeObject_CmpNe)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_isunordered(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *y;
 	int error;
-	DeeArg_Unpack1(err, argc, argv, "isunordered", &y);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isunordered", params: """
+	y:?DNumeric
+""", docStringPrefix: "numeric");]]]*/
+#define numeric_isunordered_params "y:?."
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "isunordered", &args.y);
+/*[[[end]]]*/
 
 	/* >> if (this.isfloat)
 	 * >>     return this.operator float().isunordered(y); */
@@ -1914,16 +1922,31 @@ numeric_isunordered(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		asflt = (DREF DeeFloatObject *)DeeObject_Float(self);
 		if unlikely(!asflt)
 			goto err;
-		result = float_isunordered(asflt, 1, &y);
+		result = float_isunordered(asflt, 1, &args.y);
 		Dee_Decref(asflt);
 		return result;
 	}
 
 	/* >> return y.isnan; */
-	return DeeObject_GetAttrString(y, "isnan");
+	return DeeObject_GetAttrString(args.y, "isnan");
 err:
 	return NULL;
 }
+
+
+DOC_DEF(numeric_hex_doc,
+        "(precision=!0)->?Dstring\n"
+        "Short-hand alias for ${this.tostr(radix: 16, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
+DOC_DEF(numeric_bin_doc,
+        "(precision=!0)->?Dstring\n"
+        "Short-hand alias for ${this.tostr(radix: 2, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
+DOC_DEF(numeric_oct_doc,
+        "(precision=!0)->?Dstring\n"
+        "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
+DOC_DEF(numeric_divmod_doc,
+        "(" numeric_divmod_params ")->?T2?.?.\n"
+        "Divide+modulo. Alias for ${(this / y, this % y)}");
+
 
 PRIVATE struct type_method tpconst numeric_methods[] = {
 	/* TODO: function gcd(other: Numeric): Numeric (GreatestCommonDivisor)
@@ -1963,7 +1986,7 @@ PRIVATE struct type_method tpconst numeric_methods[] = {
 	            "Convert @this number into an integer and call ?Apdep?Dint\n"),
 	TYPE_METHOD("divmod", &numeric_divmod, numeric_divmod_doc),
 	TYPE_METHOD("nextafter", &numeric_nextafter,
-	            "(y:?.)->?.\n"
+	            "(" numeric_nextafter_params ")->?.\n"
 	            "Implemented as:\n"
 	            "${"
 	            /**/ "function nextafter(y: Numeric): Numeric {\n"
@@ -2027,7 +2050,7 @@ PRIVATE struct type_method tpconst numeric_methods[] = {
 	            /**/ "}"
 	            "}"),
 	TYPE_METHOD("isunordered", &numeric_isunordered,
-	            "(y:?X2?.?Dfloat)->?Dbool\n"
+	            "(" numeric_isunordered_params ")->?Dbool\n"
 	            "Implemented as:\n"
 	            "${"
 	            /**/ "function isunordered(y: Numeric): bool {\n"

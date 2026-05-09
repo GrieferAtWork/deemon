@@ -521,11 +521,20 @@ dockwdsiter_copy(DocKwdsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwdsiter_init(DocKwdsIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_DocKwdsIterator", &self->dki_kwds);
-	if (DeeObject_AssertTypeExact(self->dki_kwds, &DocKwds_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DocKwdsIterator", params: """
+	DocKwds *kwds:?Ert:DocKwds
+""", docStringPrefix: "dockwdsiter");]]]*/
+#define dockwdsiter__DocKwdsIterator_params "kwds:?Ert:DocKwds"
+	struct {
+		DocKwds *kwds;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_DocKwdsIterator", &args.kwds);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.kwds, &DocKwds_Type))
 		goto err;
-	Dee_Incref(self->dki_kwds);
-	self->dki_iter = self->dki_kwds->dk_start + 1;
+	Dee_Incref(args.kwds);
+	self->dki_kwds = args.kwds;
+	self->dki_iter = args.kwds->dk_start + 1;
 	return 0;
 err:
 	return -1;
@@ -588,7 +597,7 @@ PRIVATE struct type_member tpconst dockwdsiter_members[] = {
 INTERN DeeTypeObject DocKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DocKwdsIterator",
-	/* .tp_doc      = */ DOC("(kwds:?Ert:DocKwds)\n"
+	/* .tp_doc      = */ DOC("(" dockwdsiter__DocKwdsIterator_params ")\n"
 	                         "\n"
 	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FFINAL,
@@ -740,18 +749,25 @@ dockwds_copy(DocKwds *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwds_init(DocKwds *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	DeeObject *text;
-	DeeArg_Unpack1(err, argc, argv, "_DocKwds", &text);
-	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DocKwds", params: """
+	DeeStringObject *text
+""", docStringPrefix: "dockwds");]]]*/
+#define dockwds__DocKwds_params "text:?Dstring"
+	struct {
+		DeeStringObject *text;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_DocKwds", &args.text);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.text, &DeeString_Type))
 		goto err;
-	if (DeeString_STR(text)[0] != '(') {
+	if (DeeString_STR(args.text)[0] != '(') {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "The given string %r does not start with `('");
 		goto err;
 	}
-	Dee_Incref(text);
-	self->dk_owner = text;
-	self->dk_start = DeeString_STR(text);
+	Dee_Incref(args.text);
+	self->dk_owner = Dee_AsObject(args.text);
+	self->dk_start = DeeString_STR(args.text);
 	return 0;
 err:
 	return -1;
@@ -767,7 +783,7 @@ dockwds_print(DocKwds *__restrict self,
 INTERN DeeTypeObject DocKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DocKwds",
-	/* .tp_doc      = */ DOC("(text:?Dstring)"),
+	/* .tp_doc      = */ DOC("(" dockwds__DocKwds_params ")"),
 	/* .tp_flags    = */ TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1523,14 +1539,21 @@ PRIVATE struct type_cmp clsproperty_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get(DeeClsPropertyObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: """
 	DeeObject *thisarg;
+""", docStringPrefix: "clsproperty");]]]*/
+#define clsproperty_get_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "get", &args.thisarg);
+/*[[[end]]]*/
 	if unlikely(!self->cp_get)
 		goto err_unbound;
-	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cp_type))
 		goto err;
-	return (*self->cp_get)(thisarg);
+	return (*self->cp_get)(args.thisarg);
 err_unbound:
 	DeeRT_ErrRestrictedAttrCStr(self, "get", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
@@ -1541,15 +1564,21 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_kw(DeeClsPropertyObject *__restrict self,
                    size_t argc, DeeObject *const *argv,
                    DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: """
 	DeeObject *thisarg;
+""");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
+		goto err;
+/*[[[end]]]*/
 	if unlikely(!self->cp_get)
 		goto err_unbound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
-		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cp_type))
 		goto err;
-	return (*self->cp_get)(thisarg);
+	return (*self->cp_get)(args.thisarg);
 err_unbound:
 	DeeRT_ErrRestrictedAttrCStr(self, "get", DeeRT_ATTRIBUTE_ACCESS_CALL);
 err:
@@ -1561,21 +1590,29 @@ clsproperty_isbound_kw(DeeClsPropertyObject *__restrict self,
                        size_t argc, DeeObject *const *argv,
                        DeeObject *kw) {
 	int isbound;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("isbound", params: """
 	DeeObject *thisarg;
+""", docStringPrefix: "clsproperty");]]]*/
+#define clsproperty_isbound_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &args))
+		goto err;
+/*[[[end]]]*/
 	if unlikely(!self->cp_get)
 		goto err_unbound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
-		goto err;
+
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cp_type))
 		goto err;
 	if (self->cp_bound) {
-		isbound = (*self->cp_bound)(thisarg);
+		isbound = (*self->cp_bound)(args.thisarg);
 		if (Dee_BOUND_ISERR(isbound))
 			goto err;
 	} else {
 		DREF DeeObject *value;
-		value = (*self->cp_get)(thisarg);
+		value = (*self->cp_get)(args.thisarg);
 		if (value) {
 			Dee_Decref(value);
 			isbound = Dee_BOUND_YES;
@@ -1596,15 +1633,22 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_delete(DeeClsPropertyObject *__restrict self,
                    size_t argc, DeeObject *const *argv,
                    DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delete", params: """
 	DeeObject *thisarg;
+""", docStringPrefix: "clsproperty");]]]*/
+#define clsproperty_delete_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:delete", &args))
+		goto err;
+/*[[[end]]]*/
 	if unlikely(!self->cp_del)
 		goto err_unbound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
-		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cp_type))
 		goto err;
-	if unlikely((*self->cp_del)(thisarg))
+	if unlikely((*self->cp_del)(args.thisarg))
 		goto err;
 	return_none;
 err_unbound:
@@ -1617,15 +1661,24 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_set(DeeClsPropertyObject *__restrict self,
                 size_t argc, DeeObject *const *argv,
                 DeeObject *kw) {
-	DeeObject *thisarg, *value;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("set", params: """
+	DeeObject *thisarg;
+	DeeObject *value;
+""", docStringPrefix: "clsproperty");]]]*/
+#define clsproperty_set_params "thisarg,value"
+	struct {
+		DeeObject *thisarg;
+		DeeObject *value;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &args))
+		goto err;
+/*[[[end]]]*/
 	if unlikely(!self->cp_set)
 		goto err_unbound;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &thisarg, &value))
-		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cp_type))
 		goto err;
-	if unlikely((*self->cp_set)(thisarg, value))
+	if unlikely((*self->cp_set)(args.thisarg, args.value))
 		goto err;
 	return_none;
 err_unbound:
@@ -1637,16 +1690,21 @@ err:
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
 	TYPE_KWMETHOD_F(STR_get, &clsproperty_get_kw,
 	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
-	                "(thisarg)->"),
-	TYPE_KWMETHOD_F("delete", &clsproperty_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
-	TYPE_KWMETHOD_F(STR_set, &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
+	                "(" clsproperty_get_params ")->"),
+	TYPE_KWMETHOD_F("delete", &clsproperty_delete, METHOD_FNOREFESCAPE,
+	                "(" clsproperty_delete_params ")"),
+	TYPE_KWMETHOD_F(STR_set, &clsproperty_set, METHOD_FNOREFESCAPE,
+	                "(" clsproperty_set_params ")"),
 	TYPE_KWMETHOD_F("getter", &clsproperty_get_kw,
 	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
-	                "(thisarg)->\nAlias for ?#get"),
-	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
+	                "(" clsproperty_get_params ")->\n"
+	                "Alias for ?#get"),
+	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE,
+	                "(" clsproperty_set_params ")\n"
+	                "Alias for ?#set"),
 	TYPE_KWMETHOD_F("isbound", &clsproperty_isbound_kw,
 	                METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL,
-	                "(thisarg)->?Dbool\n"
+	                "(" clsproperty_isbound_params ")->?Dbool\n"
 	                "Check if the attribute is bound"),
 	TYPE_METHOD_END
 };
@@ -1916,12 +1974,19 @@ clsmember_printrepr(DeeClsMemberObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: """
 	DeeObject *thisarg;
-	DeeArg_Unpack1(err, argc, argv, "get", &thisarg);
+""", docStringPrefix: "clsmember");]]]*/
+#define clsmember_get_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "get", &args.thisarg);
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cmb_type))
 		goto err;
-	return type_member_get(&self->cmb_memb, thisarg);
+	return type_member_get(&self->cmb_memb, args.thisarg);
 err:
 	return NULL;
 }
@@ -1929,13 +1994,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get_kw(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("get", params: """
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
+""");]]]*/
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:get", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cmb_type))
 		goto err;
-	return type_member_get(&self->cmb_memb, thisarg);
+	return type_member_get(&self->cmb_memb, args.thisarg);
 err:
 	return NULL;
 }
@@ -1944,13 +2015,20 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_isbound(DeeClsMemberObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	bool isbound;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("isbound", params: """
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &thisarg))
+""", docStringPrefix: "clsmember");]]]*/
+#define clsmember_isbound_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:isbound", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cmb_type))
 		goto err;
-	isbound = type_member_bound(&self->cmb_memb, thisarg);
+	isbound = type_member_bound(&self->cmb_memb, args.thisarg);
 	return_bool(isbound);
 err:
 	return NULL;
@@ -1959,13 +2037,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_delete(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delete", params: """
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
+""", docStringPrefix: "clsmember");]]]*/
+#define clsmember_delete_params "thisarg"
+	struct {
+		DeeObject *thisarg;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg, "o:delete", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cmb_type))
 		goto err;
-	if (type_member_del(&self->cmb_memb, thisarg))
+	if (type_member_del(&self->cmb_memb, args.thisarg))
 		goto err;
 	return_none;
 err:
@@ -1975,13 +2060,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_set(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *thisarg, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "oo:set", &thisarg, &value))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("set", params: """
+	DeeObject *thisarg;
+	DeeObject *value;
+""", docStringPrefix: "clsmember");]]]*/
+#define clsmember_set_params "thisarg,value"
+	struct {
+		DeeObject *thisarg;
+		DeeObject *value;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &args))
 		goto err;
+/*[[[end]]]*/
 	/* Allow non-instance objects for generic types. */
-	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cmb_type))
+	if (DeeObject_AssertTypeOrAbstract(args.thisarg, self->cmb_type))
 		goto err;
-	if (type_member_set(&self->cmb_memb, thisarg, value))
+	if (type_member_set(&self->cmb_memb, args.thisarg, args.value))
 		goto err;
 	return_none;
 err:
@@ -1989,10 +2083,14 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsmember_methods[] = {
-	TYPE_KWMETHOD_F(STR_get, &clsmember_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->"),
-	TYPE_KWMETHOD_F("delete", &clsmember_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
-	TYPE_KWMETHOD_F(STR_set, &clsmember_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
-	TYPE_KWMETHOD_F("isbound", &clsmember_isbound, METHOD_FNOREFESCAPE, "(thisarg)->?Dbool"),
+	TYPE_KWMETHOD_F(STR_get, &clsmember_get_kw, METHOD_FNOREFESCAPE,
+	                "(" clsmember_get_params ")->"),
+	TYPE_KWMETHOD_F("delete", &clsmember_delete, METHOD_FNOREFESCAPE,
+	                "(" clsmember_delete_params ")"),
+	TYPE_KWMETHOD_F(STR_set, &clsmember_set, METHOD_FNOREFESCAPE,
+	                "(" clsmember_set_params ")"),
+	TYPE_KWMETHOD_F("isbound", &clsmember_isbound, METHOD_FNOREFESCAPE,
+	                "(" clsmember_isbound_params ")->?Dbool"),
 	TYPE_METHOD_END
 };
 

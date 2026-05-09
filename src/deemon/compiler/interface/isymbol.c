@@ -330,7 +330,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("getalias", params: "", docStringPrefix: "symbol", err: "done");]]]*/
+#define symbol_getalias_params ""
 	DeeArg_Unpack0(done, argc, argv, "getalias");
+/*[[[end]]]*/
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
@@ -356,18 +359,25 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	DeeCompilerSymbolObject *other;
 	struct symbol *other_sym;
-	DeeArg_Unpack1(done, argc, argv, "setalias", &other);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setalias", params: """
+	DeeCompilerSymbolObject *other:?.;
+""", docStringPrefix: "symbol", err: "done");]]]*/
+#define symbol_setalias_params "other:?."
+	struct {
+		DeeCompilerSymbolObject *other;
+	} args;
+	DeeArg_Unpack1(done, argc, argv, "setalias", &args.other);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.other, &DeeCompilerSymbol_Type))
+		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	if (DeeObject_AssertTypeExact(other, &DeeCompilerSymbol_Type))
-		goto done_compiler_end;
-	if unlikely(other->ci_compiler != DeeCompiler_Current) {
-		err_invalid_symbol_compiler(other);
+	if unlikely(args.other->ci_compiler != DeeCompiler_Current) {
+		err_invalid_symbol_compiler(args.other);
 		goto done_compiler_end;
 	}
-	other_sym = DeeCompilerItem_VALUE(other, struct symbol);
+	other_sym = DeeCompilerItem_VALUE(args.other, struct symbol);
 	if unlikely(!other_sym)
 		goto done_compiler_end;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
@@ -408,7 +418,10 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setnone", params: "", docStringPrefix: "symbol");]]]*/
+#define symbol_setnone_params ""
 	DeeArg_Unpack0(err, argc, argv, "setnone");
+/*[[[end]]]*/
 	if (symbol_delkind(self))
 		goto err;
 	return_reference_(Dee_AsObject(self));
@@ -423,7 +436,7 @@ PRIVATE struct type_method tpconst symbol_methods[] = {
 	            "Either re-returns @this symbol, or unwinds it to return "
 	            /**/ "the effective symbol that is being aliased by it"),
 	TYPE_METHOD("setalias", &symbol_setalias,
-	            "(other:?.)->?.\n"
+	            "(" symbol_setalias_params ")->?.\n"
 	            "#tReferenceError{Either @other is the same symbol as @this, or "
 	            /*                 */ "it is another alias eventually leading to @this}"
 	            "#tTypeError{Attempted to modify the typing of an $\"arg\" symbol}"

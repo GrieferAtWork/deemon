@@ -2841,11 +2841,18 @@ module_class_open(DeeObject *UNUSED(self),
 	/* This is pretty much the same as the builtin `import()' function.
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */
-	DeeObject *module_name;
-	DeeArg_Unpack1(err, argc, argv, "open", &module_name);
-	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("open", params: """
+	DeeStringObject *name;
+""", docStringPrefix: "module_class");]]]*/
+#define module_class_open_params "name:?Dstring"
+	struct {
+		DeeStringObject *name;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "open", &args.name);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	return module_import_with_frame_base(module_name);
+	return module_import_with_frame_base(Dee_AsObject(args.name));
 err:
 	return NULL;
 }
@@ -2854,7 +2861,7 @@ err:
 PRIVATE struct type_method tpconst module_class_methods[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	TYPE_METHOD("open", &module_class_open,
-	            "(name:?Dstring)->?DModule\n"
+	            "(" module_class_open_params ")->?DModule\n"
 	            "Deprecated alias for ?D__import__ and the $import statement"),
 	TYPE_METHOD_END
 };

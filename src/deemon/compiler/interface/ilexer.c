@@ -2845,22 +2845,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	DeeObject *path;
 	char *copy;
 	char const *utf8;
-	DeeArg_Unpack1(err, argc, argv, "insert", &path);
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("insert", params: """
+	DeeStringObject *path;
+""", docStringPrefix: "lexer_syspaths");]]]*/
+#define lexer_syspaths_insert_params "path:?Dstring"
+	struct {
+		DeeStringObject *path;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "insert", &args.path);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.path, &DeeString_Type))
 		goto err;
-	utf8 = DeeString_AsUtf8(path);
+	utf8 = DeeString_AsUtf8(args.path);
 	if unlikely(!utf8)
 		goto err;
-	copy = (char *)Dee_Mallocc(WSTR_LENGTH(path), sizeof(char));
+	copy = (char *)Dee_Mallocc(WSTR_LENGTH(utf8), sizeof(char));
 	if unlikely(!copy)
 		goto err;
-	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
+	memcpyc(copy, utf8, WSTR_LENGTH(utf8), sizeof(char));
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	result = TPPLexer_AddIncludePath(copy, WSTR_LENGTH(path));
+	result = TPPLexer_AddIncludePath(copy, WSTR_LENGTH(utf8));
 	COMPILER_END();
 	Dee_Free(copy);
 	if unlikely(!result)
@@ -2873,22 +2880,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-	DeeObject *path;
 	char const *utf8;
 	char *copy;
-	DeeArg_Unpack1(err, argc, argv, "remove", &path);
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("remove", params: """
+	DeeStringObject *path;
+""", docStringPrefix: "lexer_syspaths");]]]*/
+#define lexer_syspaths_remove_params "path:?Dstring"
+	struct {
+		DeeStringObject *path;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "remove", &args.path);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.path, &DeeString_Type))
 		goto err;
-	utf8 = DeeString_AsUtf8(path);
+	utf8 = DeeString_AsUtf8(args.path);
 	if unlikely(!utf8)
 		goto err;
-	copy = (char *)Dee_Mallocc(WSTR_LENGTH(path), sizeof(char));
+	copy = (char *)Dee_Mallocc(WSTR_LENGTH(utf8), sizeof(char));
 	if unlikely(!copy)
 		goto err;
-	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
+	memcpyc(copy, utf8, WSTR_LENGTH(utf8), sizeof(char));
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	result = TPPLexer_DelIncludePath(copy, WSTR_LENGTH(path));
+	result = TPPLexer_DelIncludePath(copy, WSTR_LENGTH(utf8));
 	COMPILER_END();
 	Dee_Free(copy);
 	return_bool(result != 0);
@@ -2906,10 +2920,10 @@ PRIVATE struct type_method tpconst lexer_syspaths_methods[] = {
 	            "Pop (restore) a previously pushed system include path state\n"
 	            "This is the same as using ${##pragma TPP include_path(pop)}"),
 	TYPE_METHOD(STR_insert, &lexer_syspaths_insert,
-	            "(path:?Dstring)->?Dbool\n"
+	            "(" lexer_syspaths_insert_params ")->?Dbool\n"
 	            "Append the given @path at the end of the list of system include paths"),
 	TYPE_METHOD(STR_remove, &lexer_syspaths_remove,
-	            "(path:?Dstring)->?Dbool\n"
+	            "(" lexer_syspaths_remove_params ")->?Dbool\n"
 	            "Remove the given @path from the list of system include paths"),
 	TYPE_METHOD_END
 };

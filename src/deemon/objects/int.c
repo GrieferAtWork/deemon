@@ -4873,7 +4873,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *result;
 	size_t int_size;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__forcecopy__", params: """
+""", docStringPrefix: "int");]]]*/
+#define int___forcecopy___params ""
 	DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
+/*[[[end]]]*/
 	int_size = (size_t)self->ob_size;
 	if ((Dee_ssize_t)int_size < 0)
 		int_size = (size_t)(-(Dee_ssize_t)int_size);
@@ -4893,14 +4897,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *div, *rem;
-	DREF DeeIntObject *y;
 	int error;
-	DeeArg_Unpack1(err, argc, argv, "o:divmod", &y);
-	y = (DeeIntObject *)DeeObject_Int(Dee_AsObject(y));
-	if unlikely(!y)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("divmod", params: """
+	DeeIntObject *y;
+""", docStringPrefix: "int");]]]*/
+#define int_divmod_params "y:?."
+	struct {
+		DeeIntObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "divmod", &args.y);
+/*[[[end]]]*/
+	args.y = (DeeIntObject *)DeeObject_Int(Dee_AsObject(args.y));
+	if unlikely(!args.y)
 		goto err;
-	error = int_divmod(self, y, &div, &rem);
-	Dee_Decref(y);
+	error = int_divmod(self, args.y, &div, &rem);
+	Dee_Decref(args.y);
 	if unlikely(error)
 		goto err;
 	return DeeSeq_OfPairInherited(Dee_AsObject(div),
@@ -4911,14 +4922,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_nextafter(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeIntObject *y;
 	Dee_ssize_t diff;
-	DeeArg_Unpack1(err, argc, argv, "o:nextafter", &y);
-	y = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(y));
-	if unlikely(!y)
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextafter", params: """
+	DeeIntObject *y;
+""", docStringPrefix: "int");]]]*/
+#define int_nextafter_params "y:?."
+	struct {
+		DeeIntObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "nextafter", &args.y);
+/*[[[end]]]*/
+	args.y = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(args.y));
+	if unlikely(!args.y)
 		goto err;
-	diff = int_compareint(self, y);
-	Dee_Decref(y);
+	diff = int_compareint(self, args.y);
+	Dee_Decref(args.y);
 	Dee_Incref(self);
 	if (diff < 0) {
 		if unlikely(int_inc(&self))
@@ -4958,27 +4976,46 @@ DEFINE_INT_COMPARE_FUNCTION(islessgreater, !=)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_isunordered(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *y;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isunordered", params: """
+	y:?X2?Dint?Dfloat
+""", docStringPrefix: "int");]]]*/
+#define int_isunordered_params "y:?X2?.?Dfloat"
+	struct {
+		DeeObject *y;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "isunordered", &args.y);
+/*[[[end]]]*/
 	(void)self;
-	DeeArg_Unpack1(err, argc, argv, "isunordered", &y);
-	return DeeObject_GetAttrString(y, "isnan");
+	return DeeObject_GetAttrString(args.y, "isnan");
 err:
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_pext_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeIntObject *result, *mask;
-	DeeArg_Unpack1(err, argc, argv, "pext", &mask);
+	DREF DeeIntObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pext", params: """
+	DeeIntObject *mask;
+""", docStringPrefix: "int");]]]*/
+#define int_pext_params "mask:?."
+	struct {
+		DeeIntObject *mask;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "pext", &args.mask);
+/*[[[end]]]*/
 #ifndef __OPTIMIZE_SIZE__
-	if likely(DeeInt_Check(mask))
-		return int_pext(self, mask);
+	if likely(DeeInt_Check(args.mask))
+		return int_pext(self, args.mask);
 #endif /* !__OPTIMIZE_SIZE__ */
-	mask = (DeeIntObject *)DeeObject_Int((DeeObject *)mask);
-	if unlikely(!mask)
+	args.mask = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(args.mask));
+	if unlikely(!args.mask)
 		goto err;
-	result = int_pext(self, mask);
-	Dee_Decref_unlikely(mask);
+	result = int_pext(self, args.mask);
+#ifdef __OPTIMIZE_SIZE__
+	Dee_Decref(args.mask);
+#else /* __OPTIMIZE_SIZE__ */
+	Dee_Decref_likely(args.mask);
+#endif /* !__OPTIMIZE_SIZE__ */
 	return result;
 err:
 	return NULL;
@@ -4986,17 +5023,29 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_pdep_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeIntObject *result, *mask;
-	DeeArg_Unpack1(err, argc, argv, "pdep", &mask);
+	DREF DeeIntObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pdep", params: """
+	DeeIntObject *mask;
+""", docStringPrefix: "int");]]]*/
+#define int_pdep_params "mask:?."
+	struct {
+		DeeIntObject *mask;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "pdep", &args.mask);
+/*[[[end]]]*/
 #ifndef __OPTIMIZE_SIZE__
-	if likely(DeeInt_Check(mask))
-		return int_pdep(self, mask);
+	if likely(DeeInt_Check(args.mask))
+		return int_pdep(self, args.mask);
 #endif /* !__OPTIMIZE_SIZE__ */
-	mask = (DeeIntObject *)DeeObject_Int((DeeObject *)mask);
-	if unlikely(!mask)
+	args.mask = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(args.mask));
+	if unlikely(!args.mask)
 		goto err;
-	result = int_pdep(self, mask);
-	Dee_Decref_unlikely(mask);
+	result = int_pdep(self, args.mask);
+#ifdef __OPTIMIZE_SIZE__
+	Dee_Decref(args.mask);
+#else /* __OPTIMIZE_SIZE__ */
+	Dee_Decref_likely(args.mask);
+#endif /* !__OPTIMIZE_SIZE__ */
 	return result;
 err:
 	return NULL;
@@ -5056,7 +5105,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              numeric_divmod_doc),
 	TYPE_METHOD_F("nextafter", &int_nextafter,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(y:?.)->?.\n"
+	              "(" int_nextafter_params ")->?.\n"
 	              "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
 	TYPE_METHOD_F("isgreater", &int_isgreater,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
@@ -5080,7 +5129,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "Same as ${this != y}"),
 	TYPE_METHOD_F("isunordered", &int_isunordered,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(y:?X2?.?Dfloat)->?Dbool\n"
+	              "(" int_isunordered_params ")->?Dbool\n"
 	              "Same as ${y is float && y.isnan}"),
 	TYPE_METHOD_F("__forcecopy__", &int_forcecopy,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -5093,7 +5142,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 
 	TYPE_METHOD_F("pext", &int_pext_f,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "(mask:?.)->?.\n"
+	              "(" int_pext_params ")->?.\n"
 	              "Parallel extract bits specified by @mask, compress them, and return the result\n"
 	              "${"
 	              /**/ "assert 0x00001357 == (0x12345678).pext(0xf0f0f0f0);\n"
@@ -5101,7 +5150,7 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("pdep", &int_pdep_f,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "(mask:?.)->?.\n"
+	              "(" int_pdep_params ")->?.\n"
 	              "Parallel deposit bits specified by @mask, decompressing them in the process, and return the result\n"
 	              "${"
 	              /**/ "assert 0x10305070 == (0x00001357).pdep(0xf0f0f0f0);\n"

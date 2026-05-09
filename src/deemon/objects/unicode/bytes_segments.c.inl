@@ -82,14 +82,21 @@ bsegiter_copy(BytesSegmentsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_init(BytesSegmentsIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	BytesSegments *seg;
-	DeeArg_Unpack1(err, argc, argv, "_BytesSegmentsIterator", &seg);
-	if (DeeObject_AssertTypeExact(seg, &BytesSegments_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSegmentsIterator", params: """
+	BytesSegments *seg:?Ert:BytesSegments
+""", docStringPrefix: "bsegiter");]]]*/
+#define bsegiter__BytesSegmentsIterator_params "seg:?Ert:BytesSegments"
+	struct {
+		BytesSegments *seg;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesSegmentsIterator", &args.seg);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.seg, &BytesSegments_Type))
 		goto err;
-	self->b_str = seg->b_str;
-	self->b_siz = seg->b_siz;
-	self->b_ptr = DeeBytes_DATA(seg->b_str);
-	self->b_end = self->b_ptr + DeeBytes_SIZE(seg->b_str);
+	self->b_str = args.seg->b_str;
+	self->b_siz = args.seg->b_siz;
+	self->b_ptr = DeeBytes_DATA(args.seg->b_str);
+	self->b_end = self->b_ptr + DeeBytes_SIZE(args.seg->b_str);
 	Dee_Incref(self->b_str);
 	return 0;
 err:
@@ -156,7 +163,7 @@ PRIVATE struct type_getset tpconst bsegiter_getsets[] = {
 INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSegmentsIterator",
-	/* .tp_doc      = */ DOC("(seg:?Ert:BytesSegments)\n"
+	/* .tp_doc      = */ DOC("(" bsegiter__BytesSegmentsIterator_params ")\n"
 	                         "\n"
 	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

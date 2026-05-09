@@ -321,7 +321,8 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define Dee_STRING_ERROR_FIGNORE 0x0002 /* Ignore (truncate or drop) bad characters. */
 
 /* Returns the length of a width-string (which is any string obtained from a `string' object) */
-#define Dee_WSTR_LENGTH(x) (((size_t *)(x))[-1])
+#define Dee_WSTR_LENGTH(x)  ((size_t const *)(x))[-1]
+#define _Dee_WSTR_LENGTH(x) ((size_t *)(x))[-1]
 
 /* Given the character-width `width', the base address `base', and the
  * index `index', return the unicode character found at that location */
@@ -1467,8 +1468,8 @@ LOCAL WUNUSED uint16_t *
 	result = (size_t *)Dee_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars));
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
-		Dee_WSTR_LENGTH(buffer) = num_chars;
+	} else if (buffer && num_chars < _Dee_WSTR_LENGTH(buffer)) {
+		_Dee_WSTR_LENGTH(buffer) = num_chars;
 		result = (size_t *)buffer;
 	}
 	return (uint16_t *)result;
@@ -1481,8 +1482,8 @@ LOCAL WUNUSED uint32_t *
 	result = (size_t *)Dee_TryRealloc(result, sizeof(size_t) + (num_chars + 1) * 4);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
-		Dee_WSTR_LENGTH(buffer) = num_chars;
+	} else if (buffer && num_chars < _Dee_WSTR_LENGTH(buffer)) {
+		_Dee_WSTR_LENGTH(buffer) = num_chars;
 		result = (size_t *)buffer;
 	}
 	return (uint32_t *)result;
@@ -1691,8 +1692,8 @@ LOCAL WUNUSED uint16_t *
 	result = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf2ByteBuffer(num_chars), file, line);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
-		Dee_WSTR_LENGTH(buffer) = num_chars;
+	} else if (buffer && num_chars < _Dee_WSTR_LENGTH(buffer)) {
+		_Dee_WSTR_LENGTH(buffer) = num_chars;
 		result = (size_t *)buffer;
 	}
 	return (uint16_t *)result;
@@ -1706,8 +1707,8 @@ LOCAL WUNUSED uint32_t *
 	result = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOf4ByteBuffer(num_chars), file, line);
 	if likely(result) {
 		*result++ = num_chars;
-	} else if (buffer && num_chars < Dee_WSTR_LENGTH(buffer)) {
-		Dee_WSTR_LENGTH(buffer) = num_chars;
+	} else if (buffer && num_chars < _Dee_WSTR_LENGTH(buffer)) {
+		_Dee_WSTR_LENGTH(buffer) = num_chars;
 		result = (size_t *)buffer;
 	}
 	return (uint32_t *)result;
@@ -2750,7 +2751,7 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 
 #define Dee_UNICODE_PRINTER_ISEMPTY(x)       ((x)->up_length == 0)
 #define Dee_UNICODE_PRINTER_LENGTH(x)        ((x)->up_length) /* Used length */
-#define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
+#define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? _Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
 #define Dee_UNICODE_PRINTER_WIDTH(x)         ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
 #define Dee_UNICODE_PRINTER_GETCHAR(x, i)    Dee_STRING_WIDTH_GETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i)    /* Get a character */
 #define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */

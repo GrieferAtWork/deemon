@@ -716,9 +716,13 @@ PRIVATE WUNUSED DREF LOCAL_RoDict *DCALL LOCAL_rodict_ctor(void) {
 
 PRIVATE WUNUSED DREF LOCAL_RoDict *DCALL
 LOCAL_rodict_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_" PP_STR(LOCAL_RoDict), &seq);
-	return (DREF LOCAL_RoDict *)LOCAL_DeeRoDict_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_\" PP_STR(LOCAL_RoDict) \"", params: "seq");]]]*/
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_" PP_STR(LOCAL_RoDict), &args.seq);
+/*[[[end]]]*/
+	return (DREF LOCAL_RoDict *)LOCAL_DeeRoDict_FromSequence(args.seq);
 err:
 	return NULL;
 }
