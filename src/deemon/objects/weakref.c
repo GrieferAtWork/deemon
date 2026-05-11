@@ -117,22 +117,29 @@ ob_weakref_invoke_callback(struct Dee_weakref *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeObject *obj;
-	self->wr_del = NULL;
-	DeeArg_Unpack1Or2(err, argc, argv, "WeakRef", &obj, &self->wr_del);
-	if (self->wr_del) {
-		Dee_Incref(self->wr_del);
-		if unlikely(!Dee_weakref_init(&self->wr_ref, obj, &ob_weakref_invoke_callback))
-			goto err_nosupport_del;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("WeakRef", params: """
+	obj, callback?:?DCallable
+""", docStringPrefix: "ob_weakref");]]]*/
+#define ob_weakref_WeakRef_params "obj,callback?:?DCallable"
+	struct {
+		DeeObject *obj;
+		DeeObject *callback;
+	} args;
+	args.callback = NULL;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "WeakRef", &args, &args.obj, &args.callback);
+/*[[[end]]]*/
+	if (args.callback) {
+		if unlikely(!Dee_weakref_init(&self->wr_ref, args.obj, &ob_weakref_invoke_callback))
+			goto err_nosupport;
+		Dee_Incref(args.callback);
 	} else {
-		if unlikely(!Dee_weakref_init(&self->wr_ref, obj, NULL))
+		if unlikely(!Dee_weakref_init(&self->wr_ref, args.obj, NULL))
 			goto err_nosupport;
 	}
+	self->wr_del = args.callback;
 	return 0;
-err_nosupport_del:
-	Dee_Decref(self->wr_del);
 err_nosupport:
-	DeeRT_ErrCannotWeakReference(obj);
+	DeeRT_ErrCannotWeakReference(args.obj);
 err:
 	return -1;
 }
@@ -140,24 +147,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *obj;
-	self->wr_del = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__obj_callback,
-	                    "o|o:WeakRef", &obj, &self->wr_del))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("WeakRef", params: """
+	obj, callback?:?DCallable
+""");]]]*/
+	struct {
+		DeeObject *obj;
+		DeeObject *callback;
+	} args;
+	args.callback = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__obj_callback, "o|o:WeakRef", &args))
 		goto err;
-	if (self->wr_del) {
-		Dee_Incref(self->wr_del);
-		if unlikely(!Dee_weakref_init(&self->wr_ref, obj, &ob_weakref_invoke_callback))
-			goto err_nosupport_del;
+/*[[[end]]]*/
+	if (args.callback) {
+		if unlikely(!Dee_weakref_init(&self->wr_ref, args.obj, &ob_weakref_invoke_callback))
+			goto err_nosupport;
+		Dee_Incref(args.callback);
 	} else {
-		if unlikely(!Dee_weakref_init(&self->wr_ref, obj, NULL))
+		if unlikely(!Dee_weakref_init(&self->wr_ref, args.obj, NULL))
 			goto err_nosupport;
 	}
+	self->wr_del = args.callback;
 	return 0;
-err_nosupport_del:
-	Dee_Decref(self->wr_del);
 err_nosupport:
-	DeeRT_ErrCannotWeakReference(obj);
+	DeeRT_ErrCannotWeakReference(args.obj);
 err:
 	return -1;
 }
@@ -296,11 +308,19 @@ ob_weakref_set(WeakRef *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-	DeeObject *alt = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "lock", &alt);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lock", params: """
+	def?
+""", docStringPrefix: "ob_weakref");]]]*/
+#define ob_weakref_lock_params "def?"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "lock", &args.def);
+/*[[[end]]]*/
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
-		if ((result = alt) == NULL) {
+		if ((result = args.def) == NULL) {
 			DeeRT_ErrEmptyWeakReference();
 		} else {
 			Dee_Incref(result);
@@ -320,7 +340,11 @@ ob_weakref_alive(WeakRef *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("try_lock", params: """
+""", docStringPrefix: "ob_weakref");]]]*/
+#define ob_weakref_try_lock_params ""
 	DeeArg_Unpack0(err, argc, argv, "try_lock");
+/*[[[end]]]*/
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result)
 		result = DeeNone_NewRef();
@@ -332,14 +356,12 @@ err:
 
 PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 	TYPE_METHOD_F("lock", &ob_weakref_lock, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "(def)->\n"
+	              "(" ob_weakref_lock_params ")->\n"
 	              "#tReferenceError{The weak reference is no longer bound and no @def was given}"
 	              "Lock the weak reference and return the pointed-to object"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD_F("try_lock", &ob_weakref_try_lock, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "->\n"
+	              "->?X2?O?N\n"
 	              "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
@@ -378,7 +400,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         "Construct an unbound weak reference\n"
 	                         "\n"
 
-	                         "(obj,callback?:?DCallable)\n"
+	                         "(" ob_weakref_WeakRef_params ")\n"
 	                         "#tTypeError{The given object @obj does not implement weak referencing support}"
 	                         "Construct a weak reference bound to @obj, that will be notified once said "
 	                         /**/ "object is supposed to be destroyed. With that in mind, weak references don't "

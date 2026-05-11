@@ -3717,19 +3717,28 @@ DeeCodec_GetErrorMode(char const *__restrict errors);
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *codec;
-	char const *errors      = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__codec_errors, "o|s:decode", &codec, &errors))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("decode", params: """
+	DeeStringObject *codec;
+	char const *errors=!Pstrict = NULL;
+""", docStringPrefix: "string");]]]*/
+#define string_decode_params "codec:?.,errors=!Pstrict"
+	struct {
+		DeeStringObject *codec;
+		char const *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_errors, "o|s:decode", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(codec, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.codec, &DeeString_Type))
 		goto err;
-	if (errors) {
-		error_mode = DeeCodec_GetErrorMode(errors);
+	if (args.errors) {
+		error_mode = DeeCodec_GetErrorMode(args.errors);
 		if unlikely(error_mode == (unsigned int)-1)
 			goto err;
 	}
-	return DeeCodec_Decode(self, codec, error_mode);
+	return DeeCodec_Decode(self, Dee_AsObject(args.codec), error_mode);
 err:
 	return NULL;
 }
@@ -3739,19 +3748,28 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *codec;
-	char const *errors      = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__codec_errors, "o|s:encode", &codec, &errors))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("encode", params: """
+	DeeStringObject *codec;
+	char const *errors=!Pstrict = NULL;
+""", docStringPrefix: "string");]]]*/
+#define string_encode_params "codec:?.,errors=!Pstrict"
+	struct {
+		DeeStringObject *codec;
+		char const *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__codec_errors, "o|s:encode", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(codec, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.codec, &DeeString_Type))
 		goto err;
-	if (errors) {
-		error_mode = DeeCodec_GetErrorMode(errors);
+	if (args.errors) {
+		error_mode = DeeCodec_GetErrorMode(args.errors);
 		if unlikely(error_mode == (unsigned int)-1)
 			goto err;
 	}
-	return DeeCodec_Encode(self, codec, error_mode);
+	return DeeCodec_Encode(self, Dee_AsObject(args.codec), error_mode);
 err:
 	return NULL;
 }
@@ -9130,6 +9148,7 @@ string_bytecnt2charcnt_v(String const *self, char const *utf8,
 }
 
 #define GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ "o:" name
+#define generic_regex_params "pattern:?.,start=!0,end=!-1,rules=!P{}"
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 generic_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
                       DeeObject *kw, char const *__restrict fmt,
@@ -9167,6 +9186,7 @@ err:
 
 
 #define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:" name
+#define search_regex_params "pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{}"
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
                      DeeObject *kw, char const *__restrict fmt,
@@ -9230,6 +9250,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rematch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+#define string_rematch_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rematch"), &exec))
 		goto err;
 	result = DeeRegex_Match(&exec);
@@ -9248,6 +9269,7 @@ string_regmatch(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	DREF ReGroups *result;
 	Dee_ssize_t status;
 	struct DeeRegexExec exec;
+#define string_regmatch_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("regmatch"), &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
@@ -9279,6 +9301,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rematches(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t status;
 	struct DeeRegexExec exec;
+#define string_rematches_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rematches"), &exec))
 		goto err;
 	status = DeeRegex_Match(&exec);
@@ -9298,6 +9321,7 @@ string_refind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_refind_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("refind"), &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9318,6 +9342,7 @@ string_rerfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_rerfind_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerfind"), &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9338,6 +9363,7 @@ string_rescanf(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	DREF ReSubStrings *result;
 	Dee_ssize_t status;
 	struct DeeRegexExec exec;
+#define string_rescanf_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rescanf"), &exec))
 		goto err;
 	result = ReSubStrings_Malloc(exec.rx_code->rc_ngrps);
@@ -9368,6 +9394,7 @@ string_regfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_regfind_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regfind"), &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9404,6 +9431,7 @@ string_regrfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_regrfind_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrfind"), &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9440,6 +9468,7 @@ string_reglocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_reglocate_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("reglocate"), &exec))
 		goto err;
 	result = ReSubStrings_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9472,6 +9501,7 @@ string_regrlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_regrlocate_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrlocate"), &exec))
 		goto err;
 	result = ReSubStrings_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9518,6 +9548,7 @@ string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_reindex_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("reindex"), &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9540,6 +9571,7 @@ string_rerindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_rerindex_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerindex"), &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9563,6 +9595,7 @@ string_regindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_regindex_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regindex"), &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9599,6 +9632,7 @@ string_regrindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_regrindex_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("regrindex"), &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
@@ -9634,6 +9668,7 @@ string_relocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_relocate_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("relocate"), &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9652,6 +9687,7 @@ string_rerlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	Dee_ssize_t status;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_rerlocate_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerlocate"), &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9739,6 +9775,7 @@ string_repartition(String *self, size_t argc, DeeObject *const *argv, DeeObject 
 	Dee_ssize_t result;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_repartition_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("repartition"), &exec))
 		goto err;
 	result = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9766,6 +9803,7 @@ string_rerpartition(String *self, size_t argc, DeeObject *const *argv, DeeObject
 	Dee_ssize_t result;
 	size_t match_size;
 	struct DeeRegexExecWithRange exec;
+#define string_rerpartition_params search_regex_params
 	if unlikely(search_regex_getargs(self, argc, argv, kw, SEARCH_REGEX_GETARGS_FMT("rerpartition"), &exec))
 		goto err;
 	result = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
@@ -9798,25 +9836,38 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rereplace(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
-	DeeObject *pattern, *replace, *rules = NULL;
 	struct DeeRegexMatch groups[9];
-	size_t maxreplace = (size_t)-1;
 	char const *replace_start, *replace_end;
 	struct DeeRegexExec exec;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__pattern_replace_max_rules,
-	                    "oo|" UNPuSIZ "o:rereplace",
-	                    &pattern, &replace, &maxreplace, &rules))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rereplace", params: """
+	DeeStringObject *pattern;
+	DeeStringObject *replace;
+	size_t max = (size_t)-1;
+	DeeStringObject *rules=!P{} = NULL;
+""", docStringPrefix: "string");]]]*/
+#define string_rereplace_params "pattern:?.,replace:?.,max=!-1,rules=!P{}"
+	struct {
+		DeeStringObject *pattern;
+		DeeStringObject *replace;
+		size_t max_;
+		DeeStringObject *rules;
+	} args;
+	args.max_ = (size_t)-1;
+	args.rules = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__pattern_replace_max_rules, "oo|" UNPxSIZ "o:rereplace", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.pattern, &DeeString_Type))
 		goto err;
-	if (DeeObject_AssertTypeExact(replace, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(args.replace, &DeeString_Type))
 		goto err;
-	replace_start = DeeString_AsUtf8(replace);
+	replace_start = DeeString_AsUtf8(args.replace);
 	if unlikely(!replace_start)
 		goto err;
 	replace_end = replace_start + WSTR_LENGTH(replace_start);
 	exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
-	exec.rx_code = DeeString_GetRegex(pattern, Dee_RE_COMPILE_NORMAL, rules);
+	exec.rx_code = DeeString_GetRegex(Dee_AsObject(args.pattern), Dee_RE_COMPILE_NORMAL,
+	                                  Dee_AsObject(args.rules));
 	if unlikely(!exec.rx_code)
 		goto err;
 	exec.rx_nmatch = COMPILER_LENOF(groups);
@@ -9827,7 +9878,7 @@ string_rereplace(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	exec.rx_insize   = WSTR_LENGTH(exec.rx_inbase);
 	exec.rx_startoff = 0;
 	exec.rx_endoff   = exec.rx_insize;
-	while (exec.rx_startoff < exec.rx_endoff && maxreplace) {
+	while (exec.rx_startoff < exec.rx_endoff && args.max_) {
 		char const *replace_iter, *replace_flush;
 		Dee_ssize_t match_offset;
 		size_t match_size;
@@ -9904,7 +9955,7 @@ do_insert_match:
 
 		/* Keep on scanning after the matched area. */
 		exec.rx_startoff = (size_t)match_offset + match_size;
-		--maxreplace;
+		--args.max_;
 	}
 
 	/* Flush remainder */
@@ -9924,6 +9975,7 @@ err:
 	return NULL;
 }
 
+#define base_regex_params      "pattern:?.,start=!0,end=!-1,rules=!P{}"
 #define BASE_REGEX_GETARGS_FMT GENERIC_REGEX_GETARGS_FMT
 #define base_regex_kwlist      kwlist__pattern_start_end_rules
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
@@ -9966,6 +10018,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_refindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#define string_refindall_params base_regex_params
 	struct DeeRegexBaseExec exec;
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("refindall"), &exec))
 		goto err;
@@ -9976,6 +10029,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_regfindall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#define string_regfindall_params base_regex_params
 	struct DeeRegexBaseExec exec;
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("regfindall"), &exec))
 		goto err;
@@ -9986,6 +10040,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_reglocateall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#define string_reglocateall_params base_regex_params
 	struct DeeRegexBaseExec exec;
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("reglocateall"), &exec))
 		goto err;
@@ -9996,6 +10051,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_relocateall(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#define string_relocateall_params base_regex_params
 	struct DeeRegexBaseExec exec;
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("relocateall"), &exec))
 		goto err;
@@ -10006,6 +10062,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_resplit(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+#define string_resplit_params base_regex_params
 	struct DeeRegexBaseExec exec;
 	if unlikely(base_regex_getargs(self, argc, argv, kw, BASE_REGEX_GETARGS_FMT("resplit"), &exec))
 		goto err;
@@ -10018,6 +10075,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_restartswith(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+#define string_restartswith_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("restartswith"), &exec))
 		goto err;
 	result = DeeRegex_Match(&exec);
@@ -10033,6 +10091,7 @@ string_reendswith(String *self, size_t argc, DeeObject *const *argv, DeeObject *
 	size_t match_size;
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+#define string_reendswith_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("reendswith"), &exec))
 		goto err;
 	result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
@@ -10049,6 +10108,7 @@ err:
 PRIVATE WUNUSED DREF String *DCALL
 string_relstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct DeeRegexExec exec;
+#define string_relstrip_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("relstrip"), &exec))
 		goto err;
 	for (;;) {
@@ -10078,6 +10138,7 @@ err:
 PRIVATE WUNUSED DREF String *DCALL
 string_rerstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct DeeRegexExec exec;
+#define string_rerstrip_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("rerstrip"), &exec))
 		goto err;
 	for (;;) {
@@ -10111,6 +10172,7 @@ err:
 PRIVATE WUNUSED DREF String *DCALL
 string_restrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	struct DeeRegexExec exec;
+#define string_restrip_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("restrip"), &exec))
 		goto err;
 	/* lstrip */
@@ -10161,6 +10223,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_recontains(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t result;
 	struct DeeRegexExec exec;
+#define string_recontains_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("recontains"), &exec))
 		goto err;
 	result = DeeRegex_Search(&exec, (size_t)-1, NULL);
@@ -10175,6 +10238,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_recount(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t count;
 	struct DeeRegexExec exec;
+#define string_recount_params generic_regex_params
 	if unlikely(generic_regex_getargs(self, argc, argv, kw, GENERIC_REGEX_GETARGS_FMT("recount"), &exec))
 		goto err;
 	count = 0;
@@ -10201,7 +10265,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_forcecopy(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const wstr;
 	size_t wlen;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__forcecopy__", params: """
+""", docStringPrefix: "string");]]]*/
+#define string___forcecopy___params ""
 	DeeArg_Unpack0(err, argc, argv, "__forcecopy__");
+/*[[[end]]]*/
 	wstr.ptr = DeeString_WSTR(self);
 	wlen     = WSTR_LENGTH(wstr.ptr);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -10222,7 +10290,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* String encode/decode functions */
 	TYPE_KWMETHOD("decode", &string_decode,
 	              /* TODO: constexpr if "codec" is one of the built-ins */
-	              "(codec:?.,errors=!Pstrict)->?X2?.?O\n"
+	              "(" string_decode_params ")->?X2?.?O\n"
 	              "#tValueError{The given @codec or @errors wasn't recognized}"
 	              "#tUnicodeDecodeError{@this ?. could not be decoded as @codec and @errors was set to $\"strict\"}"
 	              "#perrors{The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"}"
@@ -10252,7 +10320,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character}\n"
 	              "If the given @codec is not apart of this list, a call is made to ?Eiconv:decode"),
 	TYPE_KWMETHOD("encode", &string_encode,
-	              "(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
+	              "(" string_encode_params ")->?X3?DBytes?.?O\n"
 	              "#tValueError{The given @codec or @errors wasn't recognized}"
 	              "#tUnicodeEncodeError{@this ?. could not be decoded as @codec and @errors was set to $\"strict\"}"
 	              "#perrors{The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"}"
@@ -10709,7 +10777,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "and return a boolean indicative of that"),
 	TYPE_KWMETHOD_F("substr", &string_substr,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(" string_substr_params ")->?.\n"
 	                "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	                /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
 	                /**/ "passing #C{-1} for @end will cause ?#length to be used instead:\n"
@@ -11285,7 +11353,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions. */
 	TYPE_KWMETHOD_F("rematch", &string_rematch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
+	                "(" string_rematch_params ")->?X2?Dint?N\n"
 	                "#tValueError{The given @pattern is malformed}"
 	                "#r{The number of leading characters in ${this.substr(start, end)} "
 	                /*    */ "matched by @pattern, or ?N if @pattern doesn't match}"
@@ -11411,7 +11479,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("rematches", &string_rematches,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(" string_rematches_params ")->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11419,7 +11487,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function behaves identical to ${this.rematch(...) == ?#this}"),
 	TYPE_KWMETHOD_F("refind", &string_refind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(" string_refind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11428,7 +11496,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that using ?N in an expand expression will expand to the all ?N-values"),
 	TYPE_KWMETHOD_F("rerfind", &string_rerfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(" string_rerfind_params ")->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11437,7 +11505,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "or ?N if no match exists (s.a. #refind)"),
 	TYPE_KWMETHOD_F("reindex", &string_reindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T2?Dint?Dint\n"
+	                "(" string_reindex_params ")->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11446,7 +11514,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#refind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("rerindex", &string_rerindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T2?Dint?Dint\n"
+	                "(" string_rerindex_params ")->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11455,7 +11523,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#rerfind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("relocate", &string_relocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?.?N\n"
+	                "(" string_relocate_params ")->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11466,7 +11534,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
 	TYPE_KWMETHOD_F("rerlocate", &string_rerlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?X2?.?N\n"
+	                "(" string_rerlocate_params ")->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11476,7 +11544,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "given regular expression, or ?N if not found"),
 	TYPE_KWMETHOD_F("repartition", &string_repartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T3?.?.?.\n"
+	                "(" string_repartition_params ")->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11494,7 +11562,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rerpartition", &string_rerpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?T3?.?.?.\n"
+	                "(" string_rerpartition_params ")->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11512,7 +11580,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rereplace", &string_rereplace,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,replace:?.,max=!-1,rules=!P{})->?.\n"
+	                "(" string_rereplace_params ")->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11529,7 +11597,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("refindall", &string_refindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	                "(" string_refindall_params ")->?S?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11538,7 +11606,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that the matches returned are ordered ascendingly"),
 	TYPE_KWMETHOD_F("relocateall", &string_relocateall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(" string_relocateall_params ")->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11549,7 +11617,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
 	TYPE_KWMETHOD_F("resplit", &string_resplit,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(" string_resplit_params ")->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11568,7 +11636,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "as a sequence"),
 	TYPE_KWMETHOD_F("restartswith", &string_restartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(" string_restartswith_params "})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11580,7 +11648,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("reendswith", &string_reendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(" string_reendswith_params "})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11593,28 +11661,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("restrip", &string_restrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(" string_restrip_params "})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
 	TYPE_KWMETHOD_F("relstrip", &string_relstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(" string_relstrip_params "})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("rerstrip", &string_rerstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(" string_rerstrip_params ")->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("recount", &string_recount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
+	                "(" string_recount_params ")->?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11623,7 +11691,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Instances where @pattern matches epsilon are not counted"),
 	TYPE_KWMETHOD_F("recontains", &string_recontains,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(" string_recontains_params ")->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11631,7 +11699,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	TYPE_KWMETHOD_F("rescanf", &string_rescanf,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	                "(" string_rescanf_params ")->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11643,7 +11711,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	TYPE_KWMETHOD_F("regmatch", &string_regmatch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(" string_regmatch_params ")->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rematch, but rather than only return the number of characters that were "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11667,7 +11735,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "all of the matched groups, you should use ?#regfind instead."),
 	TYPE_KWMETHOD_F("regfind", &string_regfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(" string_regfind_params ")->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11675,7 +11743,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regrfind", &string_regrfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(" string_regrfind_params ")->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rerfind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11683,7 +11751,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regfindall", &string_regfindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
+	                "(" base_regex_params ")->?S?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refindall, but rather than only return the character-ranges "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return.each[0]}), as well as the "
@@ -11691,7 +11759,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regindex", &string_regindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(" string_regindex_params ")->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11700,7 +11768,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#regfind, but throw :RegexNotFound when no match can be found"),
 	TYPE_KWMETHOD_F("regrindex", &string_regrindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(" string_regrindex_params ")->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11710,7 +11778,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	TYPE_KWMETHOD_F("reglocate", &string_reglocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?.?N\n"
+	                "(" string_reglocate_params ")->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11721,7 +11789,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Behaves the same as ${this.rescanf(f\".*({pattern})\", ...)}"),
 	TYPE_KWMETHOD_F("regrlocate", &string_regrlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?X2?.?N\n"
+	                "(" string_regrlocate_params ")->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11731,7 +11799,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "groups, and an empty sequence if @pattern isn't matched at all)"),
 	TYPE_KWMETHOD_F("reglocateall", &string_reglocateall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,range=!-1,rules=!P{})->?S?S?X2?.?N\n"
+	                "(" string_reglocateall_params ")->?S?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11749,24 +11817,24 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Deprecated functions. */
 	TYPE_KWMETHOD_F("reverse", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(" string_reversed_params ")->?.\n"
 	                "Deprecated alias for ?#reversed"),
 
 	/* Override specific sequence functions whilst retaining original behavior.
 	 * s.a. "string_method_hints" */
 	TYPE_METHOD_HINTREF_DOC(Sequence_any,
-	                        "(start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
+	                        DeeMA_Sequence_any_doc "\n"
 	                        "When @key isn't given, always true if the effective index-range is "
 	                        /**/ "non-empty (since elements of ${string as Sequence} as always "
-	                        /**/ "1-characters strings, which are non-empty and thus !t). "
+	                        /**/ "1-characters strings, which are non-empty and thus ?t). "
 	                        /**/ "S.a. ?Aany?DSequence"),
 	TYPE_METHOD_HINTREF_DOC(Sequence_all,
-	                        "(start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
+	                        DeeMA_Sequence_all_doc "\n"
 	                        "When @key isn't given, always return true (because elements of "
 	                        /**/ "${string as Sequence} as always 1-characters strings, which "
-	                        /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
+	                        /**/ "are non-empty and thus ?t). S.a. ?Aall?DSequence"),
 	TYPE_METHOD_HINTREF_DOC(Sequence_sum,
-	                        "(start=!0,end=!-1)->?X2?.?N\n"
+	                        DeeMA_Sequence_sum_doc "\n"
 	                        "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
 	                        /**/ "S.a. ?Asum?DSequence"),
 
@@ -11784,9 +11852,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_HINTREF(__seq_le__),
 	TYPE_METHOD_HINTREF(__seq_gr__),
 	TYPE_METHOD_HINTREF(__seq_ge__),
-	TYPE_METHOD_HINTREF(__seq_sum__),
-	TYPE_METHOD_HINTREF(__seq_any__),
-	TYPE_METHOD_HINTREF(__seq_all__),
+//	TYPE_METHOD_HINTREF(__seq_sum__),
+//	TYPE_METHOD_HINTREF(__seq_any__),
+//	TYPE_METHOD_HINTREF(__seq_all__),
 	TYPE_METHOD_HINTREF(__seq_count__),
 	TYPE_METHOD_HINTREF(__seq_contains__),
 	TYPE_METHOD_HINTREF(__seq_startswith__),
