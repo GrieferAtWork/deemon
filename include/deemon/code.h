@@ -1248,16 +1248,20 @@ typedef uint16_t Dee_operator_t; /*!export-*/
 
 struct Dee_function_info {
 	DREF DeeTypeObject            *fi_type;   /* [0..1] The type as part of which a function is implemented. */
+	DREF struct Dee_module_object *fi_mod;    /* [0..1] the module that is declaring this function. */
 	DREF struct Dee_string_object *fi_name;   /* [0..1] The name of the function. */
 	DREF struct Dee_string_object *fi_doc;    /* [0..1] A documentation string for the function. */
-	Dee_operator_t                 fi_opname; /* When the function is implementing an operator, the name of that operator.
-	                                           * Otherwise, this field is set to `(Dee_operator_t)-1'
+	struct Dee_module_symbol      *fi_modsym; /* [0..1] Symbol in `fi_mod' referencing the function */
+	struct Dee_class_attribute    *fi_attr;   /* [0..1] Class attribute in `fi_type' referencing the function */
+	struct Dee_class_operator     *fi_clsop;  /* [0..1] When the function is implementing an operator, the name of that operator.
+	                                           * Otherwise, this field is set to `NULL'
 	                                           * NOTE: When this field is set, `fi_name' is usually set to `NULL' */
 	uint16_t                       fi_getset; /* When the function is a getset callback, one of `CLASS_GETSET_*'.
 	                                           * Otherwise, this field is set to `(uint16_t)-1' */
 };
 #define Dee_function_info_fini(x) \
 	(Dee_XDecref((x)->fi_type),   \
+	 Dee_XDecref((x)->fi_mod),    \
 	 Dee_XDecref((x)->fi_name),   \
 	 Dee_XDecref((x)->fi_doc))
 

@@ -25,6 +25,8 @@
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackKw */
 #include <deemon/bool.h>               /* return_bool */
+#include <deemon/class.h>               /* return_bool */
+#include <deemon/attribute.h>               /* return_bool */
 #include <deemon/code.h>               /* DeeFunctionObject, DeeFunction_Check, DeeFunction_GetInfo, Dee_function_info, Dee_function_info_fini */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
@@ -237,9 +239,12 @@ property_info(Property *__restrict self,
 
 	/* No information available :( */
 	info->fi_type   = NULL;
+	info->fi_mod    = NULL;
 	info->fi_name   = NULL;
 	info->fi_doc    = NULL;
-	info->fi_opname = (Dee_operator_t)-1;
+	info->fi_modsym = NULL;
+	info->fi_attr   = NULL;
+	info->fi_clsop  = NULL;
 	info->fi_getset = (uint16_t)-1;
 	result = 1;
 done:
@@ -286,6 +291,7 @@ property_get_name(Property *__restrict self) {
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_name)
@@ -300,15 +306,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_name(Property *__restrict self) {
+	bool has_name;
 	int error;
 	struct Dee_function_info info;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	if (info.fi_name)
+	has_name = info.fi_name != NULL;
+	Dee_function_info_fini(&info);
+	if (has_name)
 		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___name__);
 err:
@@ -323,6 +329,7 @@ property_get_doc(Property *__restrict self) {
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_doc)
@@ -337,15 +344,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_doc(Property *__restrict self) {
+	bool has_doc;
 	struct Dee_function_info info;
 	int error;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_doc);
-	if (info.fi_doc)
+	has_doc = info.fi_doc;
+	Dee_function_info_fini(&info);
+	if (has_doc)
 		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___doc__);
 err:
@@ -360,6 +367,7 @@ property_get_type(Property *__restrict self) {
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_type)
@@ -374,17 +382,112 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_type(Property *__restrict self) {
+	bool has_type;
 	struct Dee_function_info info;
 	int error;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	if (info.fi_type)
+	has_type = info.fi_type != NULL;
+	Dee_function_info_fini(&info);
+	if (has_type)
 		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___type__);
+err:
+	return Dee_BOUND_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+property_get_attr(Property *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_function_info info;
+	if (property_info(self, &info) < 0)
+		goto err;
+	if unlikely(!info.fi_name)
+		goto err_unbound_info;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err_info;
+	if (info.fi_modsym) {
+		ASSERT(info.fi_mod);
+		Dee_Incref(info.fi_mod);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(info.fi_mod);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+		result->a_desc.ad_info.ai_value.v_modsym = info.fi_modsym;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY;
+	} else if (info.fi_attr) {
+		DeeClassDescriptorObject *desc;
+		ASSERT(info.fi_type);
+		Dee_Incref(info.fi_type);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(info.fi_type);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR;
+		result->a_desc.ad_info.ai_value.v_attr = info.fi_attr;
+		ASSERT(DeeType_IsClass(info.fi_type));
+		desc = DeeClass_DESC(info.fi_type)->cd_desc;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_PROPERTY;
+		if (info.fi_attr >= (desc->cd_iattr_list) &&
+		    info.fi_attr <= (desc->cd_iattr_list + desc->cd_iattr_mask)) {
+			result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER;
+		} else {
+			result->a_desc.ad_perm = Dee_ATTRPERM_F_CMEMBER;
+		}
+	} else if (info.fi_clsop) {
+		/* XXX: How should this be represented? */
+		goto err_unbound_info_r;
+	} else {
+		goto err_unbound_info_r;
+	}
+
+	DeeObject_Init(result, &DeeAttribute_Type);
+	if (self->p_get)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
+	if (self->p_del)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
+	if (self->p_set)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
+	result->a_desc.ad_type = NULL;
+	Dee_Incref(info.fi_name);
+	result->a_desc.ad_name = DeeString_STR(info.fi_name);
+	result->a_desc.ad_perm |= Dee_ATTRPERM_F_NAMEOBJ;
+	result->a_desc.ad_doc = NULL;
+	if (info.fi_doc) {
+		Dee_Incref(info.fi_doc);
+		result->a_desc.ad_doc = DeeString_STR(info.fi_doc);
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+	}
+	Dee_function_info_fini(&info);
+	return result;
+err_unbound_info_r:
+	DeeObject_FREE(result);
+err_unbound_info:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err_info:
+	Dee_function_info_fini(&info);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_bound_attr(Property *__restrict self) {
+	struct Dee_function_info info;
+	if (property_info(self, &info) < 0)
+		goto err;
+	if (info.fi_modsym) {
+		/* ... */
+	} else if (info.fi_attr) {
+		/* ... */
+	} else if (info.fi_clsop) {
+		/* XXX: How should this be represented? */
+		goto unbound_info;
+	} else {
+		goto unbound_info;
+	}
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_YES;
+unbound_info:
+	Dee_function_info_fini(&info);
+/*unbound:*/
+	return Dee_BOUND_NO;
 err:
 	return Dee_BOUND_ERR;
 }
@@ -434,34 +537,39 @@ PRIVATE struct type_getset tpconst property_getsets[] = {
 	TYPE_GETTER_AB_F("canget", &property_canget,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dbool\n"
-	                 "Returns ?t if @this Property has a getter callback"),
+	                 "Returns ?t if @this ?. has a getter callback"),
 	TYPE_GETTER_AB_F("candel", &property_candel,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dbool\n"
-	                 "Returns ?t if @this Property has a delete callback"),
+	                 "Returns ?t if @this ?. has a delete callback"),
 	TYPE_GETTER_AB_F("canset", &property_canset,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?Dbool\n"
-	                 "Returns ?t if @this Property has a setter callback"),
+	                 "Returns ?t if @this ?. has a setter callback"),
 	TYPE_GETTER_BOUND_F(STR___name__, &property_get_name, &property_bound_name,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns the name of @this Property"),
+	                    "Returns the name of @this ?."),
 	TYPE_GETTER_BOUND_F(STR___doc__, &property_get_doc, &property_bound_doc,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
-	                    "Returns the documentation string of @this Property"),
+	                    "Returns the documentation string of @this ?."),
 	TYPE_GETTER_BOUND_F(STR___type__, &property_get_type, &property_bound_type,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns the type implementing @this Property, or ?N if unknown"),
+	                    "Returns the type implementing @this ?., or ?N if unknown"),
 	TYPE_GETTER_BOUND_F(STR___module__, &property_get_module, &property_bound_module,
 	                    METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns the module within which @this Property is declared"),
+	                    "Returns the module within which @this ?. is declared"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &property_get_attr, &property_bound_attr,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the attribute described by @this ?."),
 	TYPE_GETSET_END
 };
 
@@ -496,15 +604,8 @@ property_printrepr(Property *__restrict self,
 
 	/* Special handling for when this is an unbound class property. */
 	if (info.fi_type) {
-		DeeModuleObject *mod = NULL;
-		if (self->p_get && DeeFunction_Check(self->p_get))
-			mod = ((DeeFunctionObject *)self->p_get)->fo_code->co_module;
-		if (self->p_del && DeeFunction_Check(self->p_del) && !mod)
-			mod = ((DeeFunctionObject *)self->p_del)->fo_code->co_module;
-		if (self->p_set && DeeFunction_Check(self->p_set) && !mod)
-			mod = ((DeeFunctionObject *)self->p_set)->fo_code->co_module;
-		result = mod ? DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)mod)
-		             : DeeFormat_PRINT(printer, arg, "<unknown module>");
+		result = info.fi_mod ? DeeFormat_PrintObjectRepr(printer, arg, Dee_AsObject(info.fi_mod))
+		                     : DeeFormat_PRINT(printer, arg, "<unknown module>");
 		if likely(result >= 0) {
 			if (info.fi_name) {
 				temp = DeeFormat_Printf(printer, arg, ".%k.%k",

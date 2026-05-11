@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>              /* DeeMem_ClearCaches, Dee_*alloc*, Dee_BadAlloc, Dee_Free */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw, UNPu16, UNPuN */
 #include <deemon/asm.h>                /* ASM_RET_NONE, INSTRLEN_MAX, instruction_t */
+#include <deemon/class.h>                /* ASM_RET_NONE, INSTRLEN_MAX, instruction_t */
 #include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_EXEC_ALTSTACK, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_SIZE, Dee_SIZEOF_CODE_ADDR_T, Dee_TRIGGER_BREAKPOINT_CONTINUE, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_function_info, Dee_hostasm_code_init, code_size_t, instruction_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -1350,6 +1351,7 @@ code_get_name(DeeCodeObject *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_name)
@@ -1361,13 +1363,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_name(DeeCodeObject *__restrict self) {
+	bool has_name;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	return Dee_BOUND_FROMBOOL(info.fi_name);
+	has_name = info.fi_name != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(has_name);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -1377,6 +1379,7 @@ code_get_doc(DeeCodeObject *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	if likely(info.fi_doc)
@@ -1391,6 +1394,7 @@ code_get_type(DeeCodeObject *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if likely(info.fi_type)
@@ -1402,27 +1406,30 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_type(DeeCodeObject *__restrict self) {
+	bool has_type;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	return Dee_BOUND_FROMBOOL(info.fi_type);
+	has_type = info.fi_type != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(has_type);
 err:
 	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operator(DeeCodeObject *__restrict self) {
+	Dee_operator_t opname = (Dee_operator_t)-1;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (Dee_operator_t)-1)
-		return DeeInt_NewUInt16(info.fi_opname);
+	if (info.fi_clsop) {
+		struct Dee_class_operator *op = info.fi_clsop;
+		opname = op->co_name;
+	}
+	Dee_function_info_fini(&info);
+	if (opname != (Dee_operator_t)-1)
+		return DeeInt_NewUInt16(opname);
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operator__");
 err:
 	return NULL;
@@ -1430,13 +1437,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_operator(DeeCodeObject *__restrict self) {
+	bool has_opname;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	return Dee_BOUND_FROMBOOL(info.fi_opname != (Dee_operator_t)-1);
+	has_opname = info.fi_clsop != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(has_opname);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -1444,19 +1451,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operatorname(DeeCodeObject *__restrict self) {
 	struct Dee_function_info info;
-	struct Dee_opinfo const *op;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (Dee_operator_t)-1) {
+	if (info.fi_clsop) {
+		DREF DeeObject *result;
+		struct Dee_opinfo const *op;
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
-		                                 info.fi_opname);
+		                                 info.fi_clsop->co_name);
+		result = op ? DeeString_New(op->oi_sname)
+		            : DeeInt_NewUInt16(info.fi_clsop->co_name);
 		Dee_XDecref(info.fi_type);
-		if (!op)
-			return DeeInt_NewUInt16(info.fi_opname);
-		return DeeString_New(op->oi_sname);
+		return result;
 	}
 	Dee_XDecref(info.fi_type);
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operatorname__");
@@ -1466,14 +1475,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_property(DeeCodeObject *__restrict self) {
+	uint16_t getset;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	if (info.fi_getset != (uint16_t)-1)
-		return DeeInt_NewUInt16(info.fi_getset);
+	getset = info.fi_getset;
+	Dee_function_info_fini(&info);
+	if (getset != (uint16_t)-1)
+		return DeeInt_NewUInt16(getset);
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__property__");
 err:
 	return NULL;
@@ -1481,13 +1490,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_property(DeeCodeObject *__restrict self) {
+	bool has_getset;
 	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	return Dee_BOUND_FROMBOOL(info.fi_getset != (uint16_t)-1);
+	has_getset = info.fi_getset != (uint16_t)-1;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(has_getset);
 err:
 	return Dee_BOUND_ERR;
 }

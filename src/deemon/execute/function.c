@@ -29,6 +29,7 @@
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_class_operator */
 #include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/attribute.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/deepcopy.h>           /* DeeDeepCopyContext, DeeDeepCopy_* */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
@@ -121,6 +122,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 				info->fi_type = type;
 				info->fi_name = attr->ca_name;
 				info->fi_doc  = attr->ca_doc;
+				info->fi_attr = attr;
 				Dee_Incref(type);
 				Dee_Incref(attr->ca_name);
 				Dee_XIncref(attr->ca_doc);
@@ -145,6 +147,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 				info->fi_type = type;
 				info->fi_name = attr->ca_name;
 				info->fi_doc  = attr->ca_doc;
+				info->fi_attr = attr;
 				Dee_Incref(type);
 				Dee_Incref(attr->ca_name);
 				Dee_XIncref(attr->ca_doc);
@@ -159,8 +162,8 @@ lookup_code_info_in_class(DeeTypeObject *type,
 				if (op->co_addr != addr)
 					continue;
 				/* Found it! */
-				info->fi_type   = type;
-				info->fi_opname = op->co_name;
+				info->fi_type  = type;
+				info->fi_clsop = op;
 				Dee_Incref(type);
 				return 0;
 			}
@@ -178,20 +181,32 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	DeeModuleObject *mod;
 	uint16_t addr;
 	int result;
+	info->fi_mod    = NULL;
+	info->fi_modsym = NULL;
 	info->fi_type   = NULL;
 	info->fi_name   = NULL;
 	info->fi_doc    = NULL;
-	info->fi_opname = (uint16_t)-1;
+	info->fi_clsop  = NULL;
 	info->fi_getset = (uint16_t)-1;
 
 	/* Step #1: Search the code object's module for the given `function' */
 	mod = code->co_module;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if unlikely(!mod) {
+		mod = DeeModule_OfPointer(code);
+		if (!mod)
+			goto without_module;
+	} else {
+		Dee_Incref(mod);
+	}
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!mod)
 		goto without_module;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if unlikely(DeeInteractiveModule_Check(mod))
 		goto without_module;
+	Dee_Incref(mod);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	info->fi_mod = mod; /* Inherit reference */
 	DeeModule_LockRead(mod);
 	for (addr = 0; addr < mod->mo_globalc; ++addr) {
 		if (!mod->mo_globalv[addr])
@@ -204,13 +219,14 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 			function_symbol = DeeModule_GetSymbolID(mod, addr);
 			if (function_symbol) {
 				/* Found it! (it's a global) */
+				info->fi_modsym = function_symbol;
 				info->fi_name = Dee_module_symbol_getnameobj(function_symbol);
 				if unlikely(!info->fi_name)
-					goto err;
+					goto err_mod;
 				if (function_symbol->ss_doc) {
 					info->fi_doc = Dee_module_symbol_getdocobj(function_symbol);
 					if unlikely(!info->fi_doc)
-						goto err_name;
+						goto err_mod_name;
 				}
 				return 0;
 			}
@@ -232,8 +248,11 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 		DeeModule_LockEndRead(mod);
 		result = lookup_code_info_in_class((DeeTypeObject *)glob, code, function, info);
 		Dee_Decref(glob);
-		if (result <= 0)
+		if (result <= 0) {
+			if (result < 0)
+				Dee_Decref(mod);
 			return result;
+		}
 		DeeModule_LockRead(mod);
 	}
 	DeeModule_LockEndRead(mod);
@@ -251,8 +270,11 @@ without_module:
 			if (!DeeType_IsClass(ref))
 				continue;
 			result = lookup_code_info_in_class((DeeTypeObject *)ref, code, function, info);
-			if (result <= 0)
+			if (result <= 0) {
+				if (result < 0)
+					Dee_XDecref(info->fi_mod);
 				return result;
+			}
 		}
 	}
 
@@ -269,14 +291,17 @@ without_module:
 			/* Well... At least we got the name. - That's something. */
 			info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
 			if unlikely(!info->fi_name)
-				goto err;
+				goto err_mod;
 			return 0;
 		}
 	}
+	Dee_XDecref(info->fi_mod);
 	return 1;
-err_name:
+err_mod_name:
 	Dee_Decref(info->fi_name);
-err:
+err_mod:
+	Dee_XDecref(info->fi_mod);
+/*err:*/
 	return -1;
 }
 
@@ -490,6 +515,7 @@ function_get_name(Function *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_name)
@@ -501,13 +527,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_name(Function *__restrict self) {
+	bool result;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_name);
-	return Dee_BOUND_FROMBOOL(info.fi_name);
+	result = info.fi_name != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(result);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -517,6 +543,7 @@ function_get_doc(Function *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	if (info.fi_doc)
@@ -531,6 +558,7 @@ function_get_type(Function *__restrict self) {
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_type)
@@ -542,16 +570,106 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_type(Function *__restrict self) {
+	bool result;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	return Dee_BOUND_FROMBOOL(info.fi_type);
+	result = info.fi_type != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(result);
 err:
 	return Dee_BOUND_ERR;
 }
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+function_get_attr(Function *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_function_info info;
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
+		goto err;
+	if unlikely(!info.fi_name)
+		goto err_unbound_info;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err_info;
+	if (info.fi_modsym) {
+		ASSERT(info.fi_mod);
+		Dee_Incref(info.fi_mod);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(info.fi_mod);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+		result->a_desc.ad_info.ai_value.v_modsym = info.fi_modsym;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
+	} else if (info.fi_attr) {
+		DeeClassDescriptorObject *desc;
+		ASSERT(info.fi_type);
+		Dee_Incref(info.fi_type);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(info.fi_type);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR;
+		result->a_desc.ad_info.ai_value.v_attr = info.fi_attr;
+		ASSERT(DeeType_IsClass(info.fi_type));
+		desc = DeeClass_DESC(info.fi_type)->cd_desc;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
+		if (info.fi_attr >= (desc->cd_iattr_list) &&
+		    info.fi_attr <= (desc->cd_iattr_list + desc->cd_iattr_mask)) {
+			result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER;
+		} else {
+			result->a_desc.ad_perm = Dee_ATTRPERM_F_CMEMBER;
+		}
+	} else if (info.fi_clsop) {
+		/* XXX: How should this be represented? */
+		goto err_unbound_info_r;
+	} else {
+		goto err_unbound_info_r;
+	}
+
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_type = NULL;
+	Dee_Incref(info.fi_name);
+	result->a_desc.ad_name = DeeString_STR(info.fi_name);
+	result->a_desc.ad_perm |= Dee_ATTRPERM_F_NAMEOBJ;
+	result->a_desc.ad_doc = NULL;
+	if (info.fi_doc) {
+		Dee_Incref(info.fi_doc);
+		result->a_desc.ad_doc = DeeString_STR(info.fi_doc);
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+	}
+	Dee_function_info_fini(&info);
+	return result;
+err_unbound_info_r:
+	DeeObject_FREE(result);
+err_unbound_info:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err_info:
+	Dee_function_info_fini(&info);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_attr(Function *__restrict self) {
+	struct Dee_function_info info;
+	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
+		goto err;
+	if (info.fi_modsym) {
+		/* ... */
+	} else if (info.fi_attr) {
+		/* ... */
+	} else if (info.fi_clsop) {
+		/* XXX: How should this be represented? */
+		goto unbound_info;
+	} else {
+		goto unbound_info;
+	}
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_YES;
+unbound_info:
+	Dee_function_info_fini(&info);
+/*unbound:*/
+	return Dee_BOUND_NO;
+err:
+	return Dee_BOUND_ERR;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_module(Function *__restrict self) {
@@ -568,14 +686,15 @@ function_bound_module(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operator(Function *__restrict self) {
+	Dee_operator_t opname = (Dee_operator_t)-1;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (Dee_operator_t)-1)
-		return DeeInt_NewUInt16(info.fi_opname);
+	if (info.fi_clsop)
+		opname = info.fi_clsop->co_name;
+	Dee_function_info_fini(&info);
+	if (opname != (Dee_operator_t)-1)
+		return DeeInt_NewUInt16(opname);
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operator__");
 err:
 	return NULL;
@@ -583,13 +702,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_operator(Function *__restrict self) {
+	bool result;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_type);
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	return Dee_BOUND_FROMBOOL(info.fi_opname != (Dee_operator_t)-1);
+	result = info.fi_clsop != NULL;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(result);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -597,19 +716,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operatorname(Function *__restrict self) {
 	struct Dee_function_info info;
-	struct Dee_opinfo const *op;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
+	Dee_XDecref(info.fi_mod);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (Dee_operator_t)-1) {
+	if (info.fi_clsop != NULL) {
+		DREF DeeObject *result;
+		struct Dee_opinfo const *op;
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
-		                                 info.fi_opname);
+		                                 info.fi_clsop->co_name);
+		result = op ? DeeString_New(op->oi_sname)
+		            : DeeInt_NewUInt16(info.fi_clsop->co_name);
 		Dee_XDecref(info.fi_type);
-		if (!op)
-			return DeeInt_NewUInt16(info.fi_opname);
-		return DeeString_New(op->oi_sname);
+		return result;
 	}
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__operatorname__");
 err:
@@ -618,14 +739,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_property(Function *__restrict self) {
+	uint16_t getset;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	if (info.fi_getset != (uint16_t)-1)
-		return DeeInt_NewUInt16(info.fi_getset);
+	getset = info.fi_getset;
+	Dee_function_info_fini(&info);
+	if (getset != (uint16_t)-1)
+		return DeeInt_NewUInt16(getset);
 	DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__property__");
 err:
 	return NULL;
@@ -633,13 +754,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_property(Function *__restrict self) {
+	bool result;
 	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
-	Dee_XDecref(info.fi_name);
-	Dee_XDecref(info.fi_doc);
-	Dee_XDecref(info.fi_type);
-	return Dee_BOUND_FROMBOOL(info.fi_getset != (uint16_t)-1);
+	result = info.fi_getset != (uint16_t)-1;
+	Dee_function_info_fini(&info);
+	return Dee_BOUND_FROMBOOL(result);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -778,6 +899,11 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    "Try to determine if @this ?. is defined as part of a user-defined class, "
 	                    /**/ "and if it is, return that class type, or throw :UnboundAttribute if that "
 	                    /**/ "class couldn't be found, or if @this ?. is defined as stand-alone"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &function_get_attr, &function_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "Return an attribute descriptor for @this ?."),
 	TYPE_GETTER_BOUND_F(STR___module__, &function_get_module, &function_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"

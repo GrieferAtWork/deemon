@@ -26,6 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPx16 */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
+#include <deemon/attribute.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
@@ -3171,6 +3172,40 @@ instancemember_get_doc(DeeInstanceMemberObject *__restrict self) {
 	return_reference(self->im_attribute->ca_doc);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+instancemember_get_attr(DeeInstanceMemberObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_class_attribute const *attr;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeAttribute_Type);
+	attr = self->im_attribute;
+	ASSERT(attr->ca_name);
+	Dee_Incref(attr->ca_name);
+	result->a_desc.ad_name = DeeString_STR(attr->ca_name);
+	result->a_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_CANGET |
+	                         Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_PRIVATE;
+	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+	Dee_Incref(self->im_type);
+	result->a_desc.ad_info.ai_decl = Dee_AsObject(self->im_type);
+	result->a_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_ATTR;
+	result->a_desc.ad_info.ai_value.v_instance_attr = attr;
+	result->a_desc.ad_doc = NULL;
+	if (attr->ca_doc) {
+		Dee_Incref(attr->ca_doc);
+		result->a_desc.ad_doc = DeeString_STR(attr->ca_doc);
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+	}
+	result->a_desc.ad_type = NULL;
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
 	if ((self->im_attribute->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -3225,6 +3260,9 @@ PRIVATE struct type_getset tpconst instancemember_getsets[] = {
 	                 "->?DModule\n"
 	                 "#t{UnboundAttribute}"
 	                 "Returns the module that is defining @this instance member"),
+	TYPE_GETTER_AB_F(STR___attr__, &instancemember_get_attr, METHOD_FNOREFESCAPE,
+	                 "->?DAttribute\n"
+	                 "The attribute described by @this instance member"),
 	TYPE_GETSET_END
 };
 

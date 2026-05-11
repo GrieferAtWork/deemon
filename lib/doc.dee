@@ -3377,9 +3377,20 @@ class Doc: WeakRefAble {
 				if (isoperator || parent is none || name is none) {
 					m_attr = none;
 				} else {
-					m_attr = Attribute(parent.object, name);
+					if (object is bound) {
+						try {
+							m_attr = object.__attr__;
+							goto got_attr;
+						} catch (AttributeError) {
+						}
+					}
+					local parentObj = parent.object;
+					m_attr = Attribute.lookup(parentObj, name);
+					if (m_attr is none)
+						m_attr = Attribute(parentObj, name);
 				}
 			}
+got_attr:
 			return m_attr;
 		}
 	}
@@ -3440,7 +3451,7 @@ load_type_input:
 				docstring = Type.__doc__(docParentOrPath).rstrip();
 				istype = true;
 				name = try Type.__name__(docParentOrPath) catch (UnboundAttribute) none;
-				if (type_module is none) {
+				if (type_module is none || name is none) {
 					m_attr = none;
 					m_path = none;
 				} else {
@@ -3484,15 +3495,17 @@ load_type_input:
 					docParentOrPath = tp;
 					goto load_type_input;
 				}
-				name = try docParentOrPath.__name__ catch (UnboundAttribute) none;
-				local ds = docParentOrPath.__doc__ ?? "";
-				docstring = ds.rstrip();
 				object = docParentOrPath;
+				local attr: Attribute;
 				try {
-					m_parent = docParentOrPath.__type__;
-				} catch (AttributeError) {
-					m_parent = docParentOrPath.__module__;
+					attr = docParentOrPath.__attr__;
+				} catch (UnboundAttribute as e) {
+					throw ValueError("No documentation available", cause: e);
 				}
+				m_attr = attr;
+				name = attr.name;
+				docstring = (attr.doc ?? "").rstrip();
+				m_parent = attr.decl;
 				return;
 			}
 			local head, none, tail = docParentOrPath.strip("/ ").rpartition("/")...;
@@ -4283,8 +4296,7 @@ set_is_type:
 		}
 		print fp: "-" * 80;
 		if (ismodule || istype) {
-			local children = List(this);
-			children.sort();
+			local children: {Doc...} = Sequence.sorted(this);
 			for (local child: children) {
 				if (child.isprivate)
 					continue; /* Don't enumerate private members. */

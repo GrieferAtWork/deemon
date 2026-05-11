@@ -133,6 +133,7 @@ local STRINGS = List {
 	"__type__",
 	"__kwds__",
 	"__module__",
+	"__attr__",
 
 	"size",
 	"filename",
@@ -471,6 +472,9 @@ DEF_STRING(str___kwds__, "__kwds__", 0xd3926a14, 0xa90825b224a7262b)
 #define Dee_HashStr____module__ _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)
 DEF_STRING(str___module__, "__module__", 0x3bea6c9f, 0x183a20d7d6c28dbb)
 #define STR___module__ DeeString_STR(&str___module__)
+#define Dee_HashStr____attr__ _Dee_HashSelectC(0xc03a2cb6, 0x3e9ab3c7117c3dd6)
+DEF_STRING(str___attr__, "__attr__", 0xc03a2cb6, 0x3e9ab3c7117c3dd6)
+#define STR___attr__ DeeString_STR(&str___attr__)
 #define Dee_HashStr__size _Dee_HashSelectC(0xed8917fa, 0x3fe8023bdf261c0f)
 DEF_STRING(str_size, "size", 0xed8917fa, 0x3fe8023bdf261c0f)
 #define STR_size DeeString_STR(&str_size)

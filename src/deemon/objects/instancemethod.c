@@ -298,6 +298,16 @@ instancemethod_bound_module(InstanceMethod *__restrict self) {
 	return DeeObject_BoundAttr(self->im_func, Dee_AsObject(&str___module__));
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instancemethod_get_attr(InstanceMethod *__restrict self) {
+	return DeeObject_GetAttr(self->im_func, Dee_AsObject(&str___attr__));
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+instancemethod_bound_attr(InstanceMethod *__restrict self) {
+	return DeeObject_BoundAttr(self->im_func, Dee_AsObject(&str___attr__));
+}
+
 PRIVATE struct type_callable im_callable = {
 	/* .tp_call_kw           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_call_kw,
 	/* .tp_thiscall          = */ DEFIMPL(&default__thiscall__with__call),
@@ -340,6 +350,11 @@ PRIVATE struct type_getset tpconst im_getsets[] = {
 	                    "If something other than a user-level function was set for ?#__func__, "
 	                    /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
 	                    /**/ "then forwarded"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &instancemethod_get_attr, &instancemethod_bound_attr,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "The attribute that is being described by ?#__func__"),
 	TYPE_GETSET_END
 };
 

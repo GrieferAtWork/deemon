@@ -28,7 +28,9 @@
 #include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
+#include <deemon/class.h>              /* DeeError_* */
 #include <deemon/float.h>              /* DeeFloat_Type */
+#include <deemon/callable.h>              /* DeeFloat_Type */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
@@ -1511,6 +1513,334 @@ err:
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+struct type_find_visited {
+	struct type_find_visited *tfv_next; /* [0..1] Next visited-chain entry */
+	DeeTypeObject const      *tfv_type; /* [1..1] The already-visited type */
+};
+
+PRIVATE WUNUSED NONNULL((2)) bool DCALL
+type_find_visited_contains(struct type_find_visited *self,
+                           DeeTypeObject const *type) {
+	for (; self; self = self->tfv_next) {
+		DeeTypeMRO mro;
+		DeeTypeObject *iter = DeeTypeMRO_Init(&mro, self->tfv_type);
+		do {
+			if (iter == type)
+				return true;
+		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+	}
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+type_find_object(DeeTypeObject *self, DeeObject *obj,
+                 struct Dee_attrdesc *__restrict result,
+                 struct type_find_visited *visited);
+
+PRIVATE WUNUSED NONNULL((1)) struct Dee_class_attribute *DCALL
+DeeClassDescriptor_QueryClassAttributeId(DeeClassDescriptorObject *self, uint16_t cid) {
+	size_t i;
+	for (i = 0; i <= self->cd_cattr_mask; ++i) {
+		struct Dee_class_attribute *attr = &self->cd_cattr_list[i];
+		if (attr->ca_addr == cid && attr->ca_name)
+			return attr;
+	}
+	for (i = 0; i <= self->cd_iattr_mask; ++i) {
+		struct Dee_class_attribute *attr = &self->cd_iattr_list[i];
+		if (attr->ca_addr == cid && attr->ca_name && (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM))
+			return attr;
+	}
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+class_find_object(DeeTypeObject *self, DeeObject *obj,
+                  struct Dee_attrdesc *__restrict result,
+                  struct type_find_visited *visited) {
+	uint16_t cid, n_cid;
+	struct Dee_class_desc *cls = DeeClass_DESC(self);
+	DeeClassDescriptorObject *desc = cls->cd_desc;
+	n_cid = desc->cd_cmemb_size;
+	Dee_class_desc_lock_read(cls);
+
+	/* First pass: check if "obj" appears in the class's object table. */
+	for (cid = 0; cid < n_cid; ++cid) {
+		DeeObject *memb = cls->cd_members[cid];
+		if (memb == obj) {
+			struct Dee_class_attribute *attr;
+			Dee_class_desc_lock_endread(cls);
+			attr = DeeClassDescriptor_QueryClassAttributeId(desc, cid);
+			if unlikely(!attr) {
+				attr = DeeClassDescriptor_QueryClassAttributeId(desc, cid - Dee_CLASS_GETSET_SET);
+				if (attr && ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY)) != Dee_CLASS_ATTRIBUTE_FGETSET))
+					break;
+				if unlikely(!attr)
+					attr = DeeClassDescriptor_QueryClassAttributeId(desc, cid - Dee_CLASS_GETSET_DEL);
+				if (attr && ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY)) != Dee_CLASS_ATTRIBUTE_FGETSET))
+					break;
+				if unlikely(!attr)
+					break;
+			}
+			if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FGETSET)) != Dee_CLASS_ATTRIBUTE_FREADONLY)
+				return false; /* Only objects bound to final- or property symbols can be traced */
+
+			ASSERT(attr->ca_name);
+			Dee_Incref(attr->ca_name);
+			result->ad_name = DeeString_STR(attr->ca_name);
+
+			Dee_Incref(self);
+			result->ad_info.ai_decl = Dee_AsObject(self);
+			result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
+			result->ad_info.ai_value.v_attr = attr;
+			if (attr >= (desc->cd_iattr_list) &&
+				attr <= (desc->cd_iattr_list + desc->cd_iattr_mask)) {
+				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_NAMEOBJ;
+			} else {
+				result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_NAMEOBJ;
+			}
+			if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)) {
+				result->ad_perm |= Dee_ATTRPERM_F_CANGET;
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+				if (DeeObject_Implements(obj, &DeeCallable_Type))
+					result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
+				result->ad_perm |= Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CANGET;
+			} else {
+				cid = attr->ca_addr;
+				Dee_class_desc_lock_read(cls);
+				if (cls->cd_members[cid + Dee_CLASS_GETSET_GET])
+					result->ad_perm |= Dee_ATTRPERM_F_CANGET;
+				if (cls->cd_members[cid + Dee_CLASS_GETSET_DEL])
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL;
+				if (cls->cd_members[cid + Dee_CLASS_GETSET_SET])
+					result->ad_perm |= Dee_ATTRPERM_F_CANSET;
+				Dee_class_desc_lock_endread(cls);
+			}
+			result->ad_doc = NULL;
+			if (attr->ca_doc) {
+				Dee_Incref(attr->ca_doc);
+				result->ad_doc = DeeString_STR(attr->ca_doc);
+				result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+			}
+			result->ad_type = NULL;
+			return true;
+		}
+	}
+
+	/* Second pass: search for type objects and recursively scan their members */
+	for (cid = 0; cid < n_cid; ++cid) {
+		bool ok;
+		DeeObject *g = cls->cd_members[cid];
+		if (!g || !DeeType_Check(g))
+			continue;
+		Dee_Incref(g);
+		Dee_class_desc_lock_endread(cls);
+		ok = type_find_object((DeeTypeObject *)g, obj, result, visited);
+		Dee_Decref_unlikely(g);
+		if (ok)
+			return true;
+		Dee_class_desc_lock_read(cls);
+	}
+
+	Dee_class_desc_lock_endread(cls);
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_type_member const *DCALL
+type_members_find_object(struct Dee_type_member const *self, DeeObject *obj) {
+	for (; self->m_name; ++self) {
+		if (Dee_TYPE_MEMBER_ISCONST(self) && self->m_desc.md_const == obj)
+			return self;
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+type_find_object(DeeTypeObject *self, DeeObject *obj,
+                 struct Dee_attrdesc *__restrict result,
+                 struct type_find_visited *visited) {
+	DeeTypeMRO mro;
+	DeeTypeObject *iter;
+	struct type_find_visited next_visited;
+	if (type_find_visited_contains(visited, self))
+		return false; /* Already searched... */
+	next_visited.tfv_next = visited;
+	next_visited.tfv_type = self;
+	iter = DeeTypeMRO_Init(&mro, self);
+	do {
+		if (DeeType_IsClass(iter)) {
+			/* Search user-defined attribute objects... */
+			if (class_find_object(iter, obj, result, &next_visited))
+				return true;
+		} else if (iter->tp_class_members) {
+			struct Dee_type_member const *member;
+
+			/* First pass: check if "obj" appears in the class's object table. */
+			member = type_members_find_object(iter->tp_class_members, obj);
+			if (member) {
+				result->ad_name = member->m_name;
+				result->ad_doc  = member->m_doc;
+				result->ad_perm = Dee_ATTRPERM_F_CANGET; /* Never writable, since it's always ISCONST */
+				result->ad_type = NULL;
+				result->ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+				Dee_Incref(iter);
+				result->ad_info.ai_decl = Dee_AsObject(iter);
+				result->ad_info.ai_value.v_member = member;
+				return true;
+			}
+
+			/* Second pass: search for type objects and recursively scan their members */
+			for (member = iter->tp_class_members; member->m_name; ++member) {
+				DeeObject *g;
+				if (!Dee_TYPE_MEMBER_ISCONST(member))
+					continue;
+				g = member->m_desc.md_const;
+				if (!DeeType_Check(g))
+					continue;
+				if (type_find_object((DeeTypeObject *)g, obj, result, &next_visited))
+					return true;
+			}
+		} /*else if (iter->tp_members) {
+			// Not search since constants don't normally appear here (except for custom optimizations)
+		}*/
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+	return false;
+}
+
+/* NOTE: On success, this function puts a reference into "result->ad_info.ai_decl" */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+module_find_object(DeeModuleObject *self, DeeObject *obj,
+                   struct Dee_attrdesc *__restrict result) {
+	uint16_t gid;
+	DeeModule_LockRead(self);
+
+	/* First pass: check if "obj" appears in the module's global object table. */
+	for (gid = 0; gid < self->mo_globalc; ++gid) {
+		if (self->mo_globalv[gid] == obj) {
+			struct Dee_module_symbol *sym;
+			DeeModule_LockEndRead(self);
+			sym = DeeModule_GetSymbolID(self, gid);
+			if unlikely(!sym) {
+				/* Check if this is the del/set callback of a getset */
+				sym = DeeModule_GetSymbolID(self, gid - Dee_MODULE_PROPERTY_SET);
+				if (sym && ((sym->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FPROPERTY)) != Dee_MODSYM_FPROPERTY))
+					sym = NULL;
+				if (!sym) {
+					sym = DeeModule_GetSymbolID(self, gid - Dee_MODULE_PROPERTY_DEL);
+					if (sym && ((sym->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FPROPERTY)) != Dee_MODSYM_FPROPERTY))
+						sym = NULL;
+				}
+				if (!sym)
+					return false;
+			}
+			if ((sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) != Dee_MODSYM_FREADONLY)
+				return false; /* Only objects bound to final- or property symbols can be traced */
+			Dee_Incref(self);
+			result->ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+			result->ad_info.ai_decl = Dee_AsObject(self);
+			result->ad_info.ai_value.v_modsym = sym;
+			if (!(sym->ss_flags & Dee_MODSYM_FPROPERTY)) {
+				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
+				if (!(sym->ss_flags & Dee_MODSYM_FREADONLY))
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+				if (DeeObject_Implements(obj, &DeeCallable_Type))
+					result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
+			} else if (sym->ss_flags & Dee_MODSYM_FREADONLY) {
+				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CANGET;
+			} else {
+				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY;
+				gid = sym->ss_index;
+				DeeModule_LockRead(self);
+				if (self->mo_globalv[gid + Dee_MODULE_PROPERTY_GET])
+					result->ad_perm |= Dee_ATTRPERM_F_CANGET;
+				if (self->mo_globalv[gid + Dee_MODULE_PROPERTY_DEL])
+					result->ad_perm |= Dee_ATTRPERM_F_CANDEL;
+				if (self->mo_globalv[gid + Dee_MODULE_PROPERTY_SET])
+					result->ad_perm |= Dee_ATTRPERM_F_CANSET;
+				DeeModule_LockEndRead(self);
+			}
+			result->ad_name = sym->ss_name;
+			result->ad_doc  = sym->ss_doc;
+			result->ad_type = NULL;
+			if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ) {
+				Dee_Incref(container_of(sym->ss_name, DeeStringObject, s_str));
+				result->ad_perm |= Dee_ATTRPERM_F_NAMEOBJ;
+			}
+			if (sym->ss_flags & Dee_MODSYM_FDOCOBJ) {
+				Dee_Incref(container_of(sym->ss_doc, DeeStringObject, s_str));
+				result->ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
+			}
+			return true;
+		}
+	}
+
+	/* Second pass: search for type objects and recursively scan their members */
+	for (gid = 0; gid < self->mo_globalc; ++gid) {
+		bool ok;
+		DeeObject *g = self->mo_globalv[gid];
+		if (!g || !DeeType_Check(g))
+			continue;
+		Dee_Incref(g);
+		DeeModule_LockEndRead(self);
+		ok = type_find_object((DeeTypeObject *)g, obj, result, NULL);
+		Dee_Decref_unlikely(g);
+		if (ok)
+			return true;
+		DeeModule_LockRead(self);
+	}
+	DeeModule_LockEndRead(self);
+
+	/* Not found :( */
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+object_attr_get(DeeObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	DREF DeeModuleObject *mod = DeeModule_OfPointer(self);
+	if unlikely(!mod)
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	if (!module_find_object(mod, self, &result->a_desc))
+		goto err_unbound_mod_r;
+	Dee_Decref_unlikely(mod);
+	DeeObject_Init(result, &DeeAttribute_Type);
+	return result;
+err_unbound_mod_r:
+	DeeObject_FREE(result);
+	Dee_Decref_unlikely(mod);
+err_unbound:
+	DeeRT_ErrTUnboundAttr(&DeeObject_Type, self, &str___attr__);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+object_attr_bound(DeeObject *__restrict self) {
+	struct Dee_attrdesc desc;
+	DREF DeeModuleObject *mod = DeeModule_OfPointer(self);
+	if unlikely(!mod)
+		goto unbound;
+	if (!module_find_object(mod, self, &desc))
+		goto unbound_mod;
+	Dee_Decref_unlikely(mod);
+	Dee_Decref(desc.ad_info.ai_decl);
+	Dee_attrdesc_fini(&desc);
+	return Dee_BOUND_YES;
+unbound_mod:
+	Dee_Decref_unlikely(mod);
+unbound:
+	return Dee_BOUND_NO;
+}
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
+
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
 	TYPE_GETTER_AB_F(STR_this, &DeeObject_NewRef,
@@ -1613,6 +1943,24 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	               /**/ "return the number of nanoseconds that this object describes when "
 	               /**/ "treated as a #Ctimeout argument in various APIs\n"
 	               "Types (such as ?Dint or ?Etime:Time) overwrite this attribute"),
+
+	/* Declaration description */
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	TYPE_GETTER_BOUND("__attr__", &object_attr_get, &object_attr_bound,
+	                  "->?DAttribute\n"
+	                  "#t{UnboundAttribute}"
+	                  "Try to determine where @this object is declared in ?#__true_module__. "
+	                  /**/ "This is a rather expensive operation, as it needs to search the "
+	                  /**/ "vector of global variables of the linked module, as well as "
+	                  /**/ "recursively search the member tables of types exported by the "
+	                  /**/ "module. If the object cannot be found (or if it doesn't have an "
+	                  /**/ "associated module, as would be expected of a statically allocated "
+	                  /**/ "-and thus: potentially named- object), :UnboundAttribute is thrown\n"
+	                  "This attribute is overwritten by various wrapper types in order to allow "
+	                  /**/ "searching for attributes that don't come with statically allocated "
+	                  /**/ "objects describing them."),
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 	TYPE_GETSET_END
 };
 

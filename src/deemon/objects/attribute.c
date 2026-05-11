@@ -371,7 +371,7 @@ attr_init_kw(DeeAttributeObject *__restrict self,
 	if unlikely(!args.decl->tp_attr) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Type %k does not implement attribute operators",
-		                args.decl->tp_attr);
+		                args.decl);
 		goto err;
 	}
 

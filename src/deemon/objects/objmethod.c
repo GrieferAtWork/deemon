@@ -29,6 +29,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_CALL, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
+#include <deemon/attribute.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/module.h>             /* DeeModule*, Dee_module_symbol */
 #include <deemon/mro.h>                /* type_member_* */
@@ -279,6 +280,34 @@ objmethod_bound_module(DeeObjMethodObject *__restrict self) {
 	return Dee_BOUND_NO;
 }
 
+#define objmethod_bound_attr objmethod_bound_origin
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+objmethod_get_attr(DeeObjMethodObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_objmethod_origin origin;
+	if unlikely(!DeeObjMethod_GetOrigin(Dee_AsObject(self), &origin))
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_name = origin.omo_decl->m_name;
+	result->a_desc.ad_doc  = origin.omo_decl->m_doc;
+	result->a_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD;
+	Dee_Incref(origin.omo_type);
+	result->a_desc.ad_info.ai_decl = Dee_AsObject(origin.omo_type);
+	result->a_desc.ad_info.ai_value.v_method = origin.omo_decl;
+	result->a_desc.ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL |
+	                         Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
+	result->a_desc.ad_type = NULL;
+	return result;
+err_unbound:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err:
+	return NULL;
+}
+
+
 DOC_DEF(objmethod_get_func_doc,
         "->?DCallable\n"
         "#t{UnboundAttribute}"
@@ -303,6 +332,10 @@ DOC_DEF(objmethod_get_module_doc,
         "->?DModule\n"
         "#t{UnboundAttribute}"
         "The module implementing the function that is being bound");
+DOC_DEF(objmethod_get_attr_doc,
+        "->?DAttribute\n"
+        "#t{UnboundAttribute}"
+        "The attribute bound by this object method");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F("__func__", &objmethod_get_func, &objmethod_bound_func,
@@ -320,6 +353,9 @@ PRIVATE struct type_getset tpconst objmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F(STR___module__, &objmethod_get_module, &objmethod_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(objmethod_get_module_doc)),
+	TYPE_GETTER_BOUND_F(STR___attr__, &objmethod_get_attr, &objmethod_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_attr_doc)),
 	TYPE_GETSET_END
 };
 
@@ -893,12 +929,15 @@ kwobjmethod_get_kwds(DeeObjMethodObject *__restrict self) {
 #define kwobjmethod_bound_type     objmethod_bound_type
 #define kwobjmethod_get_module     objmethod_get_module
 #define kwobjmethod_bound_module   objmethod_bound_module
+#define kwobjmethod_get_attr       objmethod_get_attr
+#define kwobjmethod_bound_attr     objmethod_bound_attr
 #define kwobjmethod_get_func_doc   objmethod_get_func_doc
 #define kwobjmethod_get_name_doc   objmethod_get_name_doc
 #define kwobjmethod_get_doc_doc    objmethod_get_doc_doc
 #define kwobjmethod_get_kwds_doc   objmethod_get_kwds_doc
 #define kwobjmethod_get_type_doc   objmethod_get_type_doc
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
+#define kwobjmethod_get_attr_doc   objmethod_get_attr_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F("__func__", &kwobjmethod_get_func, &kwobjmethod_bound_func,
@@ -919,6 +958,9 @@ PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F(STR___module__, &kwobjmethod_get_module, &kwobjmethod_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(kwobjmethod_get_module_doc)),
+	TYPE_GETTER_BOUND_F(STR___attr__, &kwobjmethod_get_attr, &kwobjmethod_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_attr_doc)),
 	TYPE_GETSET_END
 };
 #define kwobjmethod_members   objmethod_members
@@ -1164,6 +1206,33 @@ clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
 	return Dee_BOUND_NO;
 }
 
+#define clsmethod_bound_attr clsmethod_bound_origin
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+clsmethod_get_attr(DeeClsMethodObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_objmethod_origin origin;
+	if unlikely(!DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin))
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_name = origin.omo_decl->m_name;
+	result->a_desc.ad_doc  = origin.omo_decl->m_doc;
+	result->a_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
+	Dee_Incref(origin.omo_type);
+	result->a_desc.ad_info.ai_decl = Dee_AsObject(origin.omo_type);
+	result->a_desc.ad_info.ai_value.v_instance_method = origin.omo_decl;
+	result->a_desc.ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL |
+	                         Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
+	result->a_desc.ad_type = NULL;
+	return result;
+err_unbound:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err:
+	return NULL;
+}
+
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F(STR___kwds__, &kwclsmethod_get_kwds, &kwclsmethod_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -1183,6 +1252,9 @@ PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
 	                    "The module implementing @this method"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &clsmethod_get_attr, &clsmethod_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_attr_doc)),
 	TYPE_GETSET_END
 };
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
@@ -1350,7 +1422,7 @@ err:
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_func) == offsetof(DeeClsMethodObject, clm_func));
 STATIC_ASSERT(offsetof(DeeClsMethodObject, clm_type) == offsetof(DeeClsMethodObject, clm_type));
 #define kwclsmethod_fini      clsmethod_fini
-#define kwclsmethod_serialize  clsmethod_serialize
+#define kwclsmethod_serialize clsmethod_serialize
 #define kwclsmethod_print     clsmethod_print
 #define kwclsmethod_printrepr clsmethod_printrepr
 #define kwclsmethod_visit     clsmethod_visit
@@ -1787,6 +1859,38 @@ clsproperty_bound_module(DeeClsPropertyObject *__restrict self) {
 	return Dee_BOUND_NO;
 }
 
+#define clsproperty_bound_attr clsproperty_bound_origin
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+clsproperty_get_attr(DeeClsPropertyObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_clsproperty_origin origin;
+	if unlikely(!DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin))
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_name = origin.cpo_decl->gs_name;
+	result->a_desc.ad_doc  = origin.cpo_decl->gs_doc;
+	result->a_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
+	Dee_Incref(origin.cpo_type);
+	result->a_desc.ad_info.ai_decl = Dee_AsObject(origin.cpo_type);
+	result->a_desc.ad_info.ai_value.v_instance_getset = origin.cpo_decl;
+	result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
+	if (self->cp_get)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
+	if (self->cp_del)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
+	if (self->cp_set)
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
+	result->a_desc.ad_type = NULL;
+	return result;
+err_unbound:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_canget(DeeClsPropertyObject *__restrict self) {
 	return_bool(self->cp_get != NULL);
@@ -1829,6 +1933,11 @@ PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
 	                    "The module implementing @this property"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &clsproperty_get_attr, &clsproperty_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "The attribute of @this property"),
 	TYPE_GETSET_END
 };
 
@@ -2171,6 +2280,59 @@ clsmember_bound_module(DeeClsMemberObject *__restrict self) {
 	return Dee_BOUND_NO;
 }
 
+PRIVATE WUNUSED NONNULL((1)) struct Dee_type_member const *DCALL
+DeeClsMember_GetOrigin(DeeClsMemberObject const *__restrict self) {
+	char const *name;
+	struct type_member const *iter;
+	ASSERT_OBJECT(self);
+	name = self->cmb_memb.m_name;
+	iter = self->cmb_type->tp_members;
+	if (iter) {
+		for (; iter->m_name; ++iter) {
+			if (iter->m_name == name)
+				return iter;
+		}
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmember_bound_attr(DeeClsMemberObject *__restrict self) {
+	struct Dee_type_member const *origin;
+	origin = DeeClsMember_GetOrigin(self);
+	return Dee_BOUND_FROMBOOL(origin != NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+clsmember_get_attr(DeeClsMemberObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_type_member const *origin;
+	origin = DeeClsMember_GetOrigin(self);
+	if unlikely(!origin)
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_name = origin->m_name;
+	result->a_desc.ad_doc  = origin->m_doc;
+	result->a_desc.ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
+	Dee_Incref(self->cmb_type);
+	result->a_desc.ad_info.ai_decl = Dee_AsObject(self->cmb_type);
+	result->a_desc.ad_info.ai_value.v_instance_member = origin;
+	result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER |
+	                         Dee_ATTRPERM_F_CANGET;
+	if (!Dee_TYPE_MEMBER_ISCONST(origin) && !(origin->m_desc.md_field.mdf_type & STRUCT_CONST))
+		result->a_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
+	result->a_desc.ad_type = NULL;
+	return result;
+err_unbound:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+err:
+	return NULL;
+}
+
+
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	TYPE_GETTER_AB_F("candel", &clsmember_canset,
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -2185,6 +2347,11 @@ PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
 	                    "The module implementing @this member"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &clsmember_get_attr, &clsmember_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "The attribute described by @this member"),
 	TYPE_GETSET_END
 };
 
@@ -2499,6 +2666,54 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 	return_none;
 }
 
+#define cmethod_bound_attr cmethod_bound_origin
+PRIVATE WUNUSED NONNULL((1)) DREF DeeAttributeObject *DCALL
+cmethod_get_attr(DeeCMethodObject *__restrict self) {
+	DREF DeeAttributeObject *result;
+	struct Dee_cmethod_origin origin;
+	if unlikely(!DeeCMethod_GetOrigin(self, &origin))
+		goto err_unbound;
+	result = DeeObject_MALLOC(DeeAttributeObject);
+	if unlikely(!result)
+		goto err_origin;
+	if (origin.cmo_member) {
+		ASSERT(origin.cmo_type);
+		Dee_Incref(origin.cmo_type);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(origin.cmo_type);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_MEMBER;
+		result->a_desc.ad_info.ai_value.v_member = origin.cmo_member;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_CANGET |
+		                         Dee_ATTRPERM_F_CANCALL | Dee_ATTRPERM_F_WRAPPER;
+	} else if (origin.cmo_modsym) {
+		ASSERT(origin.cmo_module);
+		Dee_Incref(origin.cmo_module);
+		result->a_desc.ad_info.ai_decl = Dee_AsObject(origin.cmo_module);
+		result->a_desc.ad_info.ai_type = Dee_ATTRINFO_MODSYM;
+		result->a_desc.ad_info.ai_value.v_modsym = origin.cmo_modsym;
+		result->a_desc.ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET |
+		                         Dee_ATTRPERM_F_CANCALL;
+	} else {
+		/* Shouldn't get here... */
+		goto err_unbound_origin_r;
+	}
+	DeeObject_Init(result, &DeeAttribute_Type);
+	result->a_desc.ad_name = origin.cmo_name;
+	result->a_desc.ad_doc  = origin.cmo_doc;
+	result->a_desc.ad_type = NULL;
+	Dee_cmethod_origin_fini(&origin);
+	return result;
+err_unbound_origin_r:
+	DeeObject_FREE(result);
+	Dee_cmethod_origin_fini(&origin);
+err_unbound:
+	DeeRT_ErrUnboundAttr(self, &str___attr__);
+	return NULL;
+err_origin:
+	Dee_cmethod_origin_fini(&origin);
+	return NULL;
+}
+
+
 #define cmethod_get_kwds_doc objmethod_get_kwds_doc
 
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
@@ -2526,6 +2741,11 @@ PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                 "->?X2?Dstring?N\n"
 	                 "Returns the documentation string of @this method, or ?N if unknown"),
+	TYPE_GETTER_BOUND_F(STR___attr__, &cmethod_get_attr, &cmethod_bound_attr,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DAttribute\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the attribute described by @this method"),
 	TYPE_GETSET_END
 };
 
@@ -2670,8 +2890,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth0) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_meth1) == offsetof(DeeCMethodObject, cm_func.cmf_meth));
-#define cmethod0_serialize  cmethod_serialize
-#define cmethod1_serialize  cmethod_serialize
+#define cmethod0_serialize cmethod_serialize
+#define cmethod1_serialize cmethod_serialize
 #define cmethod0_print     cmethod_print
 #define cmethod1_print     cmethod_print
 #define cmethod0_printrepr cmethod_printrepr

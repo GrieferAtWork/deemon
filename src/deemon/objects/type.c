@@ -2722,6 +2722,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	                 "->?Dbool\n"
 	                 "Allow constant propagation when instances of this type as used as arguments "
 	                 /**/ "to functions marked as #C{METHOD_FCONSTCALL_IF_ARGS_CONSTCAST}."),
+	/* TODO: __attr__ */
 	TYPE_GETSET_END
 };
 
