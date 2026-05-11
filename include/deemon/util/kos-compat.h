@@ -614,9 +614,9 @@ DeeSystem_DEFINE_strstr(dee_strstr)
 #undef format_vprintf
 #define format_vprintf DeeFormat_VPrintf
 #undef sprintf
-#define sprintf(buf, ...) ((Dee_ssize_t)(Dee_sprintf(buf, __VA_ARGS__) - (buf)))
+#define sprintf(buf, ...) ((Dee_ssize_t)(Dee_snprintf(buf, sizeof(buf), __VA_ARGS__) - (buf)))
 #undef vsprintf
-#define vsprintf(buf, format, args) ((Dee_ssize_t)(Dee_vsprintf(buf, format, args) - (buf)))
+#define vsprintf(buf, format, args) ((Dee_ssize_t)(Dee_vsnprintf(buf, sizeof(buf), format, args) - (buf)))
 #undef snprintf
 #define snprintf(buf, bufsize, ...) ((Dee_ssize_t)(Dee_snprintf(buf, bufsize, __VA_ARGS__) - (buf)))
 #undef vsnprintf
