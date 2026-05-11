@@ -1753,7 +1753,7 @@ module_find_object(DeeModuleObject *self, DeeObject *obj,
 				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CANGET;
 			} else {
 				result->ad_perm = Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY;
-				gid = sym->ss_index;
+				gid = (uint16_t)sym->ss_index;
 				DeeModule_LockRead(self);
 				if (self->mo_globalv[gid + Dee_MODULE_PROPERTY_GET])
 					result->ad_perm |= Dee_ATTRPERM_F_CANGET;

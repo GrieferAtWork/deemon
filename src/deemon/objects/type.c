@@ -1677,7 +1677,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_is_ctypes_ctype(DeeTypeObject *__restrict self) {
 	/* XXX: This isn't really a definitive characteristic... */
 	return DeeObject_HasAttrString(Dee_AsObject(self), "alignof");
