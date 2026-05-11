@@ -321,7 +321,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	            "Should a sub-class implement its own Iterator, this attribute should be overwritten"),
 	TYPE_GETTER(STR_Frozen, &seq_Frozen_get,
 	            "->?DType\n"
-	            "Returns the type of Sequence returned by the #i:frozen property"),
+	            "Returns the type of Sequence returned by the ?#frozen property"),
 	TYPE_GETTER("__seq_getitem_always_bound__", &seq_get___seq_getitem_always_bound__,
 	            "->?Dbool\n"
 	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem\n"
@@ -3300,11 +3300,11 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER(STR_cached, &default__seq_cached,
 	            "->?.\n"
 	            "Returns a sequence that is a lazily-populated, read-only proxy of @this ?..\n"
-	            "The returned proxy will ensure that any indirect side-effects\xC2\xB9 of accessing elements, "
+	            "The returned proxy will ensure that any observable side-effects\xC2\xB9 of accessing elements, "
 	            /**/ "or iterating the sequence will only happen once upon initial access/iteration. "
 	            /**/ "E.g. a yield-function is only executed one time, and only up the point that "
 	            /**/ "elements have been requested for.\n"
-	            "Sequence types where element access/iteration has no indirect side-effects\xC2\xB9, meaning "
+	            "Sequence types where element access/iteration has no observable side-effects\xC2\xB9, meaning "
 	            /**/ "essentially every materialized ?. type (e.g. ?DList, ?DTuple, ?DDict, ...), can "
 	            /**/ "implement this property as a no-op: ${property cached = { . -\\> this; }}\n"
 	            "As such, ?#cached behaves similar to ?#frozen, except that rather than evaluating "
@@ -3314,7 +3314,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "sequence (even after the cache may have been populated).\n"
 	            "The difference between some $seq and ${seq.cached} is that the later "
 	            /**/ "will allow for #B{O(1)} access to elements after an initial access, and "
-	            /**/ "that any indirect side-effects\xC2\xB9 of accessing some element will happen "
+	            /**/ "that any observable side-effects\xC2\xB9 of accessing some element will happen "
 	            /**/ "exactly once.\n"
 	            "${"
 	            /**/ "/* \"lines\" will lazily populate itself from the contents of \"data.txt\" */\n"
@@ -3345,7 +3345,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "print repr items; /* { 10, 20, 30 } */"
 	            "}\n"
 	            "#L{"
-	            /**/ "{\xC2\xB9}An indirect side-effect is a change to the program's global state, usually caused "
+	            /**/ "{\xC2\xB9}An observable side-effect is a change to the program's global state, usually caused "
 	            /**/ /**/ "by the invocation of user-code. Examples include: changes to global variables, "
 	            /**/ /**/ "output being written to a file, or text being printed to stdout."
 	            "}"),

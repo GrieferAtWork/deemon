@@ -2013,7 +2013,18 @@ ds_i_iter(DefaultSequence_WithIter *__restrict self) {
 	return (*self->dsi_tp_iter)(self->dsi_seq);
 }
 
-#define ds_i_size default__seq_operator_size__with__seq_operator_foreach
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+ds_i_size(DefaultSequence_WithIter *__restrict self) {
+	size_t iter_status;
+	DREF DeeObject *iter = (*self->dsi_tp_iter)(self->dsi_seq);
+	if unlikely(!iter)
+		goto err;
+	iter_status = DeeObject_InvokeMethodHint(iter_advance, iter, (size_t)-2);
+	Dee_Decref_likely(iter);
+	return iter_status;
+err:
+	return (size_t)-1;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_i_getrange_index(DefaultSequence_WithIter *self, Dee_ssize_t start, Dee_ssize_t end) {
@@ -2023,7 +2034,7 @@ ds_i_getrange_index(DefaultSequence_WithIter *self, Dee_ssize_t start, Dee_ssize
 		range.sr_start = (size_t)start;
 		range.sr_end   = (size_t)end;
 	} else {
-		size_t size = ds_i_size(Dee_AsObject(self));
+		size_t size = ds_i_size(self);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		DeeSeqRange_Clamp(&range, start, end, size);
@@ -2053,7 +2064,7 @@ ds_i_getrange_index_n(DefaultSequence_WithIter *self, Dee_ssize_t start) {
 	if (start >= 0) {
 		used_start = (size_t)start;
 	} else {
-		size_t size = ds_i_size(Dee_AsObject(self));
+		size_t size = ds_i_size(self);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		used_start = DeeSeqRange_Clamp_n(start, size);
