@@ -235,14 +235,23 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	self->t_factory = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "TLS", &self->t_factory);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("TLS", params: """
+	factory?:?DCallable
+""", docStringPrefix: "tls");]]]*/
+#define tls_TLS_params "factory?:?DCallable"
+	struct {
+		DeeObject *factory;
+	} args;
+	args.factory = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "TLS", &args.factory);
+/*[[[end]]]*/
 	self->t_index = tls_alloc();
 	if unlikely(self->t_index == (size_t)-1)
 		goto err;
 
 	/* Save a reference for the factory. */
-	Dee_XIncref(self->t_factory);
+	Dee_XIncref(args.factory);
+	self->t_factory = args.factory;
 	return 0;
 err:
 	return -1;
@@ -449,11 +458,20 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(TLS *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	self->t_value   = NULL;
-	self->t_factory = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "TLS", &self->t_factory);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("TLS", params: """
+	factory?:?DCallable
+""", docStringPrefix: "tls");]]]*/
+#define tls_TLS_params "factory?:?DCallable"
+	struct {
+		DeeObject *factory;
+	} args;
+	args.factory = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "TLS", &args.factory);
+/*[[[end]]]*/
 	/* Save a reference for the factory. */
-	Dee_XIncref(self->t_factory);
+	Dee_XIncref(args.factory);
+	self->t_factory = args.factory;
+	self->t_value   = NULL;
 	return 0;
 err:
 	return -1;
@@ -652,16 +670,26 @@ PRIVATE struct type_getset tpconst tls_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_xch(TLS *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *newval;
-	DeeArg_Unpack1(err, argc, argv, "xch", &newval);
-	return tls_xchitem(self, newval);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("xch", params: """
+	ob
+""", docStringPrefix: "tls");]]]*/
+#define tls_xch_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "xch", &args.ob);
+/*[[[end]]]*/
+	return tls_xchitem(self, args.ob);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_pop(TLS *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pop", params: "", docStringPrefix: "tls");]]]*/
+#define tls_pop_params ""
 	DeeArg_Unpack0(err, argc, argv, "pop");
+/*[[[end]]]*/
 	return tls_xchitem(self, ITER_DONE);
 err:
 	return NULL;
@@ -669,7 +697,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_get(TLS *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "", docStringPrefix: "tls");]]]*/
+#define tls_get_params ""
 	DeeArg_Unpack0(err, argc, argv, "get");
+/*[[[end]]]*/
 	return tls_getvalue(self);
 err:
 	return NULL;
@@ -678,7 +709,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_delete(TLS *self, size_t argc, DeeObject *const *argv) {
 	int result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("delete", params: "", docStringPrefix: "tls");]]]*/
+#define tls_delete_params ""
 	DeeArg_Unpack0(err, argc, argv, "delete");
+/*[[[end]]]*/
 	result = tls_dodelitem(self);
 	if unlikely(result < 0)
 		goto err;
@@ -689,9 +723,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_set(TLS *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *ob;
-	DeeArg_Unpack1(err, argc, argv, "set", &ob);
-	if (tls_setvalue(self, ob))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("set", params: """
+	ob
+""", docStringPrefix: "tls");]]]*/
+#define tls_set_params "ob"
+	struct {
+		DeeObject *ob;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "set", &args.ob);
+/*[[[end]]]*/
+	if (tls_setvalue(self, args.ob))
 		goto err;
 	return_none;
 err:
@@ -708,10 +749,10 @@ PRIVATE struct type_method tpconst tls_methods[] = {
 	              "Unbind the TLS variable slot, returning ?f if "
 	              /**/ "it had already been unbound and ?t otherwise"),
 	TYPE_METHOD_F("set", &tls_set, METHOD_FNOREFESCAPE,
-	              "(ob)\n"
+	              "(" tls_set_params ")\n"
 	              "Set the TLS variable. Same as ${this.item = ob}"),
 	TYPE_METHOD_F("xch", &tls_xch, METHOD_FNOREFESCAPE,
-	              "(ob)->\n"
+	              "(" tls_xch_params ")->\n"
 	              "#tAttributeError{The TLS variable had already been unbound}"
 	              "Exchange the stored TLS value with @ob and return the old value"),
 	TYPE_METHOD_F("pop", &tls_pop, METHOD_FNOREFESCAPE,
@@ -721,7 +762,7 @@ PRIVATE struct type_method tpconst tls_methods[] = {
 
 	/* Deprecated functions. */
 	TYPE_METHOD_F("exchange", &tls_xch, METHOD_FNOREFESCAPE,
-	              "(ob)->\n"
+	              "(" tls_xch_params ")->\n"
 	              "Deprecated alias for ?#xch"),
 	TYPE_METHOD_END
 };
@@ -734,8 +775,7 @@ INTERN DeeTypeObject DeeTLS_Type = {
 	                         /**/ "You can also specify a $factory function in the constructor that will be "
 	                         /**/ "used in order to produce the initially bound ?#value in new threads.\n"
 	                         "\n"
-	                         "()\n"
-	                         "(factory:?DCallable)\n"
+	                         "(" tls_TLS_params ")\n"
 	                         "Construct a new tls descriptor using an optional @factory that "
 	                         /**/ "is used to construct the default values of per-thread variables\n"
 	                         "You may pass ?N for @factory to pre-initialize the TLS value to ?N\n"

@@ -1454,15 +1454,22 @@ found:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasattribute(DeeTypeObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *name;
 	char const *name_str;
 	Dee_hash_t name_hash;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr, "o:hasattribute", &name))
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hasattribute", params: """
+	DeeStringObject *attr
+""", docStringPrefix: "type");]]]*/
+#define type_hasattribute_params "attr:?Dstring"
+	struct {
+		DeeStringObject *attr;
+	} args;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__attr, "o:hasattribute", &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	name_str  = DeeString_STR(name);
-	name_hash = DeeString_Hash(name);
+	name_str  = DeeString_STR(args.attr);
+	name_hash = DeeString_Hash(args.attr);
 	if (!self->tp_attr) {
 		DeeTypeMRO mro;
 		DeeTypeObject *iter;
@@ -1472,7 +1479,7 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 		DeeTypeMRO_Init(&mro, iter);
 		for (;;) {
 			if (DeeType_IsClass(iter)) {
-				if (DeeType_QueryInstanceAttributeHash(self, iter, name, name_hash) != NULL)
+				if (DeeType_QueryInstanceAttributeHash(self, iter, Dee_AsObject(args.attr), name_hash) != NULL)
 					goto found;
 			} else {
 				if (iter->tp_methods &&
@@ -1578,11 +1585,17 @@ err:
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_extends_not_same(DeeTypeObject *self, size_t argc,
-                          DeeObject *const *argv) {
+type_extends_not_same(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("derived_from", params: "
 	DeeTypeObject *other;
-	DeeArg_Unpack1(err, argc, argv, "derived_from", &other);
-	return_bool(self != other && DeeType_Extends(self, other));
+", docStringPrefix: "type");]]]*/
+#define type_derived_from_params "other:?."
+	struct {
+		DeeTypeObject *other;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "derived_from", &args.other);
+/*[[[end]]]*/
+	return_bool(self != args.other && DeeType_Extends(self, args.other));
 err:
 	return NULL;
 }
@@ -1590,7 +1603,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_vartype(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_vartype", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_vartype");
+/*[[[end]]]*/
 	return_bool(DeeType_IsVariable(self));
 err:
 	return NULL;
@@ -1599,7 +1614,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_heaptype", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_heaptype");
+/*[[[end]]]*/
 	return_bool(DeeType_IsHeapType(self));
 err:
 	return NULL;
@@ -1608,7 +1625,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_gctype(DeeTypeObject *self, size_t argc,
                DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_gctype", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_gctype");
+/*[[[end]]]*/
 	return_bool(DeeType_IsGC(self));
 err:
 	return NULL;
@@ -1617,7 +1636,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_final(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_final", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_final");
+/*[[[end]]]*/
 	return_bool(DeeType_IsFinal(self));
 err:
 	return NULL;
@@ -1626,7 +1647,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_class(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_class", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_class");
+/*[[[end]]]*/
 	return_bool(DeeType_IsClass(self));
 err:
 	return NULL;
@@ -1635,7 +1658,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_complete(DeeTypeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_complete", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_complete");
+/*[[[end]]]*/
 	return_true;
 err:
 	return NULL;
@@ -1644,21 +1669,25 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_class_type", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_class_type");
+/*[[[end]]]*/
 	return_false;
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_is_ctypes_ctype(DeeTypeObject *__restrict self) {
+	/* XXX: This isn't really a definitive characteristic... */
+	return DeeObject_HasAttrString(Dee_AsObject(self), "alignof");
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_is_ctypes_class(DeeTypeObject *__restrict self,
                      char const *__restrict name) {
 	DREF DeeObject *temp;
-	int error;
-	temp = DeeObject_GetAttrString(Dee_AsObject(self), "isstructured");
-	if unlikely(!temp)
-		goto err;
-	error = DeeObject_BoolInherited(temp);
+	int error = type_is_ctypes_ctype(self);
 	if (Dee_HAS_ISNO_OR_ERR(error)) {
 		if (Dee_HAS_ISERR(error))
 			goto err;
@@ -1683,7 +1712,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_pointer(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_pointer", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_pointer");
+/*[[[end]]]*/
 	return type_is_ctypes_class(self, "ispointer");
 err:
 	return NULL;
@@ -1691,7 +1722,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_lvalue(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_pointer", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_pointer");
+/*[[[end]]]*/
 	return type_is_ctypes_class(self, "islvalue");
 err:
 	return NULL;
@@ -1699,15 +1732,23 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_structured(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+	int error;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_structured", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_structured");
-	return DeeObject_GetAttrString(Dee_AsObject(self), "isstructured");
+/*[[[end]]]*/
+	error = type_is_ctypes_ctype(self);
+	if (Dee_HAS_ISERR(error))
+		goto err;
+	return_bool(Dee_HAS_ISYES_NO_ERR(error));
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_struct(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_struct", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_struct");
+/*[[[end]]]*/
 	return type_is_ctypes_class(self, "isstruct");
 err:
 	return NULL;
@@ -1715,7 +1756,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_array(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_array", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_array");
+/*[[[end]]]*/
 	return type_is_ctypes_class(self, "isarray");
 err:
 	return NULL;
@@ -1723,7 +1766,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_foreign_function", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_foreign_function");
+/*[[[end]]]*/
 	return type_is_ctypes_class(self, "isfunction");
 err:
 	return NULL;
@@ -1732,7 +1777,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_filetype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_file", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_file");
+/*[[[end]]]*/
 	return_bool(Dee_TYPE(self) == &DeeFileType_Type);
 err:
 	return NULL;
@@ -1741,7 +1788,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_superbase(DeeTypeObject *self, size_t argc,
                   DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("is_super_base", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "is_super_base");
+/*[[[end]]]*/
 	return_bool(DeeType_Base(self) == NULL);
 err:
 	return NULL;
@@ -1812,14 +1861,14 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
 	              "}"),
 	TYPE_KWMETHOD_F("hasattribute", &type_hasattribute, METHOD_FNOREFESCAPE,
-	                "(name:?Dstring)->?Dbool\n"
+	                "(" type_hasattribute_params ")->?Dbool\n"
 	                "Returns ?t if this type, or one of its super-classes defines an "
 	                /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
 	                /**/ "Otherwise, return ?f:\n"
 	                "${"
 	                /**/ "function hasattribute(name: string): bool {\n"
-	                /**/ "	import attribute from deemon;\n"
-	                /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
+	                /**/ "	import Attribute from deemon;\n"
+	                /**/ "	return Attribute.exists(this, name, \"ic\", \"ic\")\n"
 	                /**/ "}"
 	                "}\n"
 	                "Note that this function only searches instance-attributes, meaning that class/static "
@@ -1834,8 +1883,8 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                /**/ "by @this ?., excluding any defined by a super-class.\n"
 	                "${"
 	                /**/ "function hasprivateattribute(name: string): bool {\n"
-	                /**/ "	import attribute from deemon;\n"
-	                /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
+	                /**/ "	import Attribute from deemon;\n"
+	                /**/ "	return Attribute.exists(this, name, \"ic\", \"ic\", this)\n"
 	                /**/ "}"
 	                "}"),
 	TYPE_KWMETHOD_F("hasoperator", &type_hasoperator, METHOD_FNOREFESCAPE,
@@ -1969,13 +2018,13 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "s.a. ?#getinstanceattr (always re-returns @value)"),
 
 	TYPE_KWMETHOD_F("derivedfrom", &type_extends, METHOD_FNOREFESCAPE,
-	                "(other:?.)->?Dbool\n"
+	                "(" type_extends_params ")->?Dbool\n"
 	                "Deprecated alias for ?#extends"),
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	TYPE_KWMETHOD_F("same_or_derived_from", &type_extends, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
-	TYPE_METHOD_F("derived_from", &type_extends_not_same, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_KWMETHOD_F("same_or_derived_from", &type_extends, METHOD_FNOREFESCAPE, "(" type_extends_params ")->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD_F("derived_from", &type_extends_not_same, METHOD_FNOREFESCAPE, "(" type_derived_from_params ")->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
 	TYPE_METHOD_F("is_vartype", &type_is_vartype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
 	TYPE_METHOD_F("is_heaptype", &type_is_heaptype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
 	TYPE_METHOD_F("is_gctype", &type_is_gctype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isgc__"),
@@ -1983,12 +2032,12 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_METHOD_F("is_class", &type_is_class, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isclass__"),
 	TYPE_METHOD_F("is_complete", &type_is_complete, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?t)"),
 	TYPE_METHOD_F("is_classtype", &type_is_classtype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?f)"),
-	TYPE_METHOD("is_pointer", &type_is_pointer, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_lvalue", &type_is_lvalue, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_structured", &type_is_structured, "->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_struct", &type_is_struct, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_pointer", &type_is_pointer, "->?Dbool\nDeprecated alias for ${try this.is_structured() && this.ispointer catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_lvalue", &type_is_lvalue, "->?Dbool\nDeprecated alias for ${try this.is_structured() && this.islvalue catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_structured", &type_is_structured, "->?Dbool\nDeprecated alias for ${hasattr(this, \"alignof\")} (s.a. ?Aalignof?Ectypes:CType)"),
+	TYPE_METHOD("is_struct", &type_is_struct, "->?Dbool\nDeprecated alias for ${try this.is_structured() && this.isstruct catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.is_structured() && this.isarray catch ((Error from deemon).AttributeError) false}"),
+	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.is_structured() && this.isfunction catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD_F("is_file", &type_is_filetype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
 	TYPE_METHOD_F("is_super_base", &type_is_superbase, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ is none}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

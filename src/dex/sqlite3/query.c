@@ -736,7 +736,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_exec(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	uint64_t rows;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("exec", params: "", docStringPrefix: "query");]]]*/
+#define query_exec_params ""
 	DeeArg_Unpack0(err, argc, argv, "exec");
+/*[[[end]]]*/
 	rows = Query_Exec(self);
 	if unlikely(rows == (uint64_t)-1)
 		goto err;
@@ -748,7 +751,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_step(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("step", params: "", docStringPrefix: "query");]]]*/
+#define query_step_params ""
 	DeeArg_Unpack0(err, argc, argv, "step");
+/*[[[end]]]*/
 	result = Dee_AsObject(Query_Step(self));
 	if (result == ITER_DONE)
 		result = DeeNone_NewRef();
@@ -802,8 +808,8 @@ PRIVATE struct type_seq query_seq = {
 };
 
 PRIVATE struct type_method tpconst query_methods[] = {
-	TYPE_METHOD("exec", &query_exec, "()->?Dint\nExecute query until there are no more rows, returning the number of affected rows"),
-	TYPE_METHOD("step", &query_step, "()->?X2?GRow?N\nReturn the next row that hasn't already been read (returns ?N when there are no more rows)"),
+	TYPE_METHOD("exec", &query_exec, "->?Dint\nExecute query until there are no more rows, returning the number of affected rows"),
+	TYPE_METHOD("step", &query_step, "->?X2?GRow?N\nReturn the next row that hasn't already been read (returns ?N when there are no more rows)"),
 	TYPE_METHOD("skip", &query_skip, "(count:?Dint)->?Dint\nSkip at most @count rows, returning how many rows were actually skipped"),
 	/* TODO: fetchone()->?GRow                 (read 1 row, assert that there are no other rows, then return that row as a record)  */
 	/* TODO: fetchall()->?S?GRow               (same as "this.frozen") */

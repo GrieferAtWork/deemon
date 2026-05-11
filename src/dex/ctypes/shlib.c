@@ -251,7 +251,10 @@ PRIVATE struct type_attr shlib_attr = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
 shlib_base(ShLib *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("base", params: "", docStringPrefix: "shlib");]]]*/
+#define shlib_base_params ""
 	DeeArg_Unpack0(err, argc, argv, "base");
+/*[[[end]]]*/
 	return CPointer_NewVoid((void *)self->sh_lib);
 err:
 	return NULL;

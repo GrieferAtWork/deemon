@@ -2138,7 +2138,10 @@ event_printrepr(DeeEventObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 event_waitfor(DeeEventObject *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("waitfor", params: "", docStringPrefix: "event");]]]*/
+#define event_waitfor_params ""
 	DeeArg_Unpack0(err, argc, argv, "waitfor");
+/*[[[end]]]*/
 	if unlikely(Dee_event_waitfor(&self->e_event))
 		goto err;
 	return_none;
@@ -2215,7 +2218,7 @@ err:
 
 PRIVATE struct type_method tpconst event_methods[] = {
 	TYPE_METHOD_F(STR_waitfor, &event_waitfor, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" event_waitfor_params ")\n"
 	              "Wait until the event becomes set"),
 	TYPE_METHOD_F(STR_timedwaitfor, &event_timedwaitfor, METHOD_FNOREFESCAPE,
 	              "(" event_timedwaitfor_params ")->?Dbool\n"
@@ -3160,12 +3163,12 @@ DECL_END
 /* NOTE: Under `CONFIG_NO_THREADS', shared types _must_ come first! */
 #define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
 #include "lock.c.inl"
-#define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
+#define DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type
 #include "lock.c.inl"
 
 #define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 #include "lock.c.inl"
-#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
+#define DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type
 #include "lock.c.inl"
 #endif /* !__INTELLISENSE__ */
 

@@ -22,8 +22,8 @@
 #define DEE_SOURCE
 //#define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 //#define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
-//#define DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
-#define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
+//#define DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type
+#define DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type
 #endif /* __INTELLISENSE__ */
 
 #include "libthreading.h"
@@ -52,8 +52,8 @@
 
 #if (defined(DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type) +   \
      defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type) +   \
-     defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type) + \
-     defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)) != 1
+     defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type) + \
+     defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type)) != 1
 #error "Must #define exactly one of these macros."
 #endif /* ... */
 
@@ -63,9 +63,9 @@ DECL_BEGIN
 /* ... */
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 #define LOCAL_IS_SHARED
-#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+#elif defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
 #define LOCAL_IS_RECURSIVE
-#else /* #elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type) */
+#else /* #elif defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type) */
 #define LOCAL_IS_SHARED
 #define LOCAL_IS_RECURSIVE
 #endif /* ... */
@@ -683,19 +683,27 @@ LOCAL_lockapi_ctor(LOCAL_DeeLockObject *__restrict self) {
 #endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
 #ifdef LOCAL_lock_init_acquired
-#ifndef DEFINED_lock_init_acquired_kwlist
-#define DEFINED_lock_init_acquired_kwlist
-PRIVATE DEFINE_KWLIST(lock_init_acquired_kwlist, { K(acquired), KEND });
-#endif /* !DEFINED_lock_init_acquired_kwlist */
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "acquired" });]]]*/
+#ifndef DEFINED_kwlist__acquired
+#define DEFINED_kwlist__acquired
+PRIVATE DEFINE_KWLIST(kwlist__acquired, { KEX("acquired", 0xe789fa25, 0x4e0e81b1ea53d7e3), KEND });
+#endif /* !DEFINED_kwlist__acquired */
+/*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_lockapi_init_kw(LOCAL_DeeLockObject *__restrict self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("\" LOCAL_S_Lock \"", params: """
 	bool acquired = false;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, lock_init_acquired_kwlist,
-	                          "|b:" LOCAL_S_Lock, &acquired))
+""");]]]*/
+	struct {
+		bool acquired;
+	} args;
+	args.acquired = false;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__acquired, "|b:" LOCAL_S_Lock, &args))
 		goto err;
-	if (acquired) {
+/*[[[end]]]*/
+	if (args.acquired) {
 		LOCAL_lock_init_acquired(&self->l_lock);
 	} else {
 		LOCAL_lock_init(&self->l_lock);
@@ -917,10 +925,10 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	                     "Shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
 	                     /**/ "The recursive version of this lock is ?GRSharedLock, and the atomic version is ?GAtomicLock.\n"
-#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+#elif defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
 	                     "Recursive, atomic (spin) lock using ?Ayield?DThread to block until the lock becomes available. "
 	                     /**/ "The non-recursive version of this lock is ?GAtomicLock, and the preemptive version is ?GRSharedLock.\n"
-#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+#elif defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type)
 	                     "Recursive, shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
 	                     /**/ "The non-recursive version of this lock is ?GSharedLock, and the atomic version is ?GRAtomicLock.\n"
 #endif /* ... */
@@ -937,9 +945,9 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 	/* .tp_base     = */ &DeeLock_Type,
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	/* .tp_base     = */ &DeeAtomicLock_Type,
-#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+#elif defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
 	/* .tp_base     = */ &DeeLock_Type,
-#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+#elif defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type)
 	/* .tp_base     = */ &DeeRAtomicLock_Type,
 #else /* ... */
 	/* .tp_base     = */ &DeeLock_Type,
@@ -1009,26 +1017,32 @@ LOCAL_rwlockapi_ctor(LOCAL_DeeRWLockObject *__restrict self) {
 }
 #endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
 
-#ifndef DEFINED_rwlock_init_readers_writing_kwlist
-#define DEFINED_rwlock_init_readers_writing_kwlist
-PRIVATE DEFINE_KWLIST(rwlock_init_readers_writing_kwlist, { K(readers), K(writing), KEND });
-#endif /* !DEFINED_rwlock_init_readers_writing_kwlist */
-
 #if !defined(LOCAL_rwlock_init_write) || !defined(LOCAL_rwlock_init_read)
 #undef LOCAL_rwlockapi_init_kw
 #else /* !LOCAL_rwlock_init_write || !LOCAL_rwlock_init_read */
+/*[[[deemon (print_DEFINE_KWLIST from rt.gen.unpack)({ "readers", "writing" });]]]*/
+#ifndef DEFINED_kwlist__readers_writing
+#define DEFINED_kwlist__readers_writing
+PRIVATE DEFINE_KWLIST(kwlist__readers_writing, { KEX("readers", 0x89401f87, 0xd4fdfff94210c5a9), KEX("writing", 0x4b0a2f5f, 0x6ee13ac60d55f503), KEND });
+#endif /* !DEFINED_kwlist__readers_writing */
+/*[[[end]]]*/
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_init_kw(LOCAL_DeeRWLockObject *__restrict self,
                         size_t argc, DeeObject *const *argv, DeeObject *kw) {
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("\" LOCAL_S_RWLock \"", params: """
+	uintptr_t readers = 0;
+	bool writing = false;
+""");]]]*/
 	struct {
 		uintptr_t readers;
 		bool writing;
 	} args;
 	args.readers = 0;
 	args.writing = false;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, rwlock_init_readers_writing_kwlist,
-	                          "|" UNPuPTR "b:" LOCAL_S_RWLock, &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__readers_writing, "|" UNPuPTR "b:" LOCAL_S_RWLock, &args))
 		goto err;
+/*[[[end]]]*/
 	if (args.writing) {
 		if unlikely(args.readers != 0)
 			goto err_cannot_initialize_readers_with_writers;
@@ -1401,10 +1415,10 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	                     "Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
 	                     /**/ "The recursive version of this lock is ?GRSharedRWLock, and the atomic version is ?GAtomicRWLock.\n"
-#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+#elif defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
 	                     "Recursive, Atomic (spin) read/write lock using ?Ayield?DThread to block until the lock becomes available. "
 	                     /**/ "The non-recursive version of this lock is ?GAtomicRWLock, and the preemptive version is ?GRSharedRWLock.\n"
-#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+#elif defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type)
 	                     "Recursive, Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
 	                     /**/ "The non-recursive version of this lock is ?GSharedRWLock, and the atomic version is ?GRAtomicRWLock.\n"
 #endif /* ... */
@@ -1421,9 +1435,9 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 	/* .tp_base     = */ &DeeRWLock_Type,
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	/* .tp_base     = */ &DeeAtomicRWLock_Type,
-#elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
+#elif defined(DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
 	/* .tp_base     = */ &DeeRWLock_Type,
-#elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
+#elif defined(DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type)
 	/* .tp_base     = */ &DeeRAtomicRWLock_Type,
 #else /* ... */
 	/* .tp_base     = */ &DeeRWLock_Type,
@@ -1475,10 +1489,16 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_readlock_init(DeeGenericRWLockProxyObject *__restrict self,
                               size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockReadLock, &self->grwl_lock);
-	if (DeeObject_AssertType(self->grwl_lock, &LOCAL_DeeRWLock_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("\" LOCAL_S_RWLockReadLock \"", params: "lock");]]]*/
+	struct {
+		DeeObject *lock;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockReadLock, &args.lock);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.lock, &LOCAL_DeeRWLock_Type))
 		goto err;
-	Dee_Incref(self->grwl_lock);
+	Dee_Incref(args.lock);
+	self->grwl_lock = args.lock;
 	return 0;
 err:
 	return -1;
@@ -1487,10 +1507,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_rwlockapi_writelock_init(DeeGenericRWLockProxyObject *__restrict self,
                                size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockWriteLock, &self->grwl_lock);
-	if (DeeObject_AssertType(self->grwl_lock, &LOCAL_DeeRWLock_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("\" LOCAL_S_RWLockWriteLock \"", params: "lock");]]]*/
+	struct {
+		DeeObject *lock;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, LOCAL_S_RWLockWriteLock, &args.lock);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.lock, &LOCAL_DeeRWLock_Type))
 		goto err;
-	Dee_Incref(self->grwl_lock);
+	Dee_Incref(args.lock);
+	self->grwl_lock = args.lock;
 	return 0;
 err:
 	return -1;
@@ -1938,5 +1964,5 @@ DECL_END
 
 #undef DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 #undef DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
-#undef DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type
-#undef DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
+#undef DEFINE_DeeRAtomicLock_Type__AND__DeeRAtomicRWLock_Type
+#undef DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type

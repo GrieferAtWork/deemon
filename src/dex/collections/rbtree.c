@@ -851,7 +851,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtreeiter_removenode(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	RBTree *tree = self->rbti_tree;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("removenode", params: "", docStringPrefix: "rbtreeiter");]]]*/
+#define rbtreeiter_removenode_params ""
 	DeeArg_Unpack0(err, argc, argv, "removenode");
+/*[[[end]]]*/
 	RBTree_LockWrite(tree);
 	if unlikely(!RBTreeIterator_VersionOK(self, tree))
 		goto err_changed_unlock;
@@ -1034,20 +1037,27 @@ rbtreeiter_copy(RBTreeIterator *self, RBTreeIterator *other) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtreeiter_init(RBTreeIterator *self, size_t argc, DeeObject *const *argv) {
-	RBTree *tree;
-	DeeArg_Unpack1(err, argc, argv, "_RBTreeIterator", &tree);
-	if (DeeObject_AssertType(tree, &RBTree_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RBTreeIterator", params: """
+	RBTree *tree:?GRBTree
+""", docStringPrefix: "rbtreeiter");]]]*/
+#define rbtreeiter__RBTreeIterator_params "tree:?GRBTree"
+	struct {
+		RBTree *tree;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_RBTreeIterator", &args.tree);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.tree, &RBTree_Type))
 		goto err;
-	self->rbti_tree = tree;
-	Dee_Incref(tree);
-	RBTree_LockRead(tree);
-	self->rbti_version = tree->rbt_version;
-	self->rbti_next    = tree->rbt_root;
+	Dee_Incref(args.tree);
+	self->rbti_tree = args.tree;
+	RBTree_LockRead(args.tree);
+	self->rbti_version = args.tree->rbt_version;
+	self->rbti_next    = args.tree->rbt_root;
 	if (self->rbti_next) {
 		while (self->rbti_next->rbtn_lhs)
 			self->rbti_next = self->rbti_next->rbtn_lhs;
 	}
-	RBTree_LockEndRead(tree);
+	RBTree_LockEndRead(args.tree);
 	return 0;
 err:
 	return -1;
@@ -1173,7 +1183,7 @@ PRIVATE struct type_member tpconst rbtreeiter_members[] = {
 INTERN DeeTypeObject RBTreeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RBTreeIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" rbtreeiter__RBTreeIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2401,12 +2411,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_locate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "locate", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("locate", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_locate_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "locate", &args.key);
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2425,9 +2442,19 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 rbtree_rlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *minkey, *maxkey;
-	DeeArg_Unpack2(err, argc, argv, "rlocate", &minkey, &maxkey);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rlocate", params: """
+	minkey, maxkey
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_rlocate_params "minkey,maxkey"
+	struct {
+		DeeObject *minkey;
+		DeeObject *maxkey;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "rlocate", &args, &args.minkey, &args.maxkey);
+/*[[[end]]]*/
 	(void)self;
+	(void)args.minkey;
+	(void)args.maxkey;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
 err:
@@ -2438,12 +2465,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_itlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "itlocate", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("itlocate", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_itlocate_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "itlocate", &args.key);
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2465,13 +2499,20 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_remove(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "locate", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("remove", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_remove_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "remove", &args.key);
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
 again_locate_node:
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2503,9 +2544,19 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_rremove(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *minkey, *maxkey;
-	DeeArg_Unpack2(err, argc, argv, "rremove", &minkey, &maxkey);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rremove", params: """
+	minkey, maxkey
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_rremove_params "minkey,maxkey"
+	struct {
+		DeeObject *minkey;
+		DeeObject *maxkey;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "rremove", &args, &args.minkey, &args.maxkey);
+/*[[[end]]]*/
 	(void)self;
+	(void)args.minkey;
+	(void)args.maxkey;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
 err:
@@ -2516,12 +2567,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_prevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "prevnode", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("prevnode", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_prevnode_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "prevnode", &args.key);
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2548,12 +2606,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_nextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "nextnode", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextnode", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_nextnode_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "nextnode", &args.key);
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2580,12 +2645,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_itprevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "itprevnode", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("itprevnode", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_itprevnode_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "itprevnode", &args.key);
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2613,12 +2685,19 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_itnextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF RBTreeIterator *result;
-	DeeObject *key;
-	DeeArg_Unpack1(err, argc, argv, "itnextnode", &key);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("itnextnode", params: """
+	key
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_itnextnode_params "key"
+	struct {
+		DeeObject *key;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "itnextnode", &args.key);
+/*[[[end]]]*/
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_trygetitem_node(self, key);
+	node = rbtree_trygetitem_node(self, args.key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2646,7 +2725,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_popfront(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront", params: """
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_popfront_params ""
 	DeeArg_Unpack0(err, argc, argv, "popfront");
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2676,7 +2759,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_popback(RBTree *self, size_t argc, DeeObject *const *argv) {
 	struct rbtree_node *node;
 	DREF DeeTupleObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback", params: """
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_popback_params ""
 	DeeArg_Unpack0(err, argc, argv, "popback");
+/*[[[end]]]*/
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
@@ -2840,7 +2927,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_optimize(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack0(err, argc, argv, "clear");
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("optimize", params: """
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_optimize_params ""
+	DeeArg_Unpack0(err, argc, argv, "optimize");
+/*[[[end]]]*/
 	if unlikely(rbtree_optimize_impl(self))
 		goto err;
 	return_none;
@@ -2850,7 +2941,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_doclear(RBTree *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("clear", params: """
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_clear_params ""
 	DeeArg_Unpack0(err, argc, argv, "clear");
+/*[[[end]]]*/
 	rbtree_clear(self);
 	return_none;
 err:
@@ -2859,8 +2954,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_pop(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = ITER_DONE;
-	DeeArg_Unpack1Or2(err, argc, argv, "pop", &key, &def);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pop", params: """
+	key, def? = ITER_DONE
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_pop_params "key,def?"
+	struct {
+		DeeObject *key;
+		DeeObject *def;
+	} args;
+	args.def = ITER_DONE;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "pop", &args, &args.key, &args.def);
+/*[[[end]]]*/
 	(void)self;
 	/* TODO */
 	DeeError_NOTIMPLEMENTED();
@@ -2933,9 +3037,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_update(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	DeeArg_Unpack1(err, argc, argv, "update", &items);
-	if unlikely(rbtree_insert_sequence(self, items))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("update", params: """
+	items:?S?T3?O?O?O
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_update_params "items:?S?T3?O?O?O"
+	struct {
+		DeeObject *items;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "update", &args.items);
+/*[[[end]]]*/
+	if unlikely(rbtree_insert_sequence(self, args.items))
 		goto err;
 	return_none;
 err:
@@ -3227,12 +3338,19 @@ rbtree_visit(RBTree *__restrict self, Dee_visit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtree_init(RBTree *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "RBTree", &seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("RBTree", params: """
+	seq:?S?X2?T3?O?O?O?T2?Ert:SeqRange?O
+""", docStringPrefix: "rbtree");]]]*/
+#define rbtree_RBTree_params "seq:?S?X2?T3?O?O?O?T2?Ert:SeqRange?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "RBTree", &args.seq);
+/*[[[end]]]*/
 	self->rbt_root    = NULL;
 	self->rbt_version = 0;
 	Dee_atomic_rwlock_init(&self->rbt_lock);
-	if unlikely(rbtree_insert_sequence(self, seq))
+	if unlikely(rbtree_insert_sequence(self, args.seq))
 		goto err_self;
 	return 0;
 err_self:
@@ -3509,38 +3627,38 @@ PRIVATE struct type_gc tpconst rbtree_gc = {
 PRIVATE struct type_method tpconst rbtree_methods[] = {
 	/* RBTree-specific methods */
 	TYPE_METHOD_F("locate", &rbtree_locate, METHOD_FNOREFESCAPE,
-	              "(key)->?X2?T3?O?O?O?N\n"
+	              "(" rbtree_locate_params ")->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple where @key is located within $minkey and $maxkey, "
 	              /**/ "or ?N when no node contains @key}"),
 	TYPE_METHOD_F("rlocate", &rbtree_rlocate, METHOD_FNOREFESCAPE,
-	              "(minkey,maxkey)->?S?T3?O?O?O\n"
+	              "(" rbtree_rlocate_params ")->?S?T3?O?O?O\n"
 	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlap with the given key-range}"),
 	TYPE_METHOD("itlocate", &rbtree_itlocate,
-	            "(key)->?X2?#Iterator?N\n"
+	            "(" rbtree_itlocate_params ")->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node containing @key, or ?N when no node contains @key}"),
 	TYPE_METHOD_F("remove", &rbtree_remove, METHOD_FNOREFESCAPE,
-	              "(key)->?X2?T3?O?O?O?N\n"
+	              "(" rbtree_remove_params ")->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple where @key was located within $minkey and $maxkey, "
 	              /**/ "or ?N when no node contained @key}"
 	              "Like ?#locate, but also remove the node"),
 	TYPE_METHOD_F("rremove", &rbtree_rremove, METHOD_FNOREFESCAPE,
-	              "(minkey,maxkey)->?S?T3?O?O?O\n"
+	              "(" rbtree_rremove_params ")->?S?T3?O?O?O\n"
 	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlapped with the given key-range}"
 	              "Like ?#rlocate, but also remove the nodes"),
 	TYPE_METHOD_F("prevnode", &rbtree_prevnode, METHOD_FNOREFESCAPE,
-	              "(key)->?X2?T3?O?O?O?N\n"
+	              "(" rbtree_prevnode_params ")->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple of the node that comes before "
 	              /**/ "the one containing @key, or ?N when no such node exists}"),
 	TYPE_METHOD_F("nextnode", &rbtree_nextnode, METHOD_FNOREFESCAPE,
-	              "(key)->?X2?T3?O?O?O?N\n"
+	              "(" rbtree_nextnode_params ")->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple of the node that comes after "
 	              /**/ "the one containing @key, or ?N when no such node exists}"),
 	TYPE_METHOD("itprevnode", &rbtree_itprevnode,
-	            "(key)->?X2?#Iterator?N\n"
+	            "(" rbtree_itprevnode_params ")->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node that comes before "
 	            /**/ "the one containing @key, or ?N when no such node exists}"),
 	TYPE_METHOD("itnextnode", &rbtree_itnextnode,
-	            "(key)->?X2?#Iterator?N\n"
+	            "(" rbtree_itnextnode_params ")->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node that comes after "
 	            /**/ "the one containing @key, or ?N when no such node exists}"),
 
@@ -3553,7 +3671,7 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"),
 	TYPE_METHOD_F("optimize", &rbtree_optimize, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" rbtree_optimize_params ")\n"
 	              "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
 	              /**/ "values, as well as consecutive key-ranges. By default, this sort of optimization "
 	              /**/ "is only done when using ?Dint as key type, though if custom key types are used, "
@@ -3576,11 +3694,10 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 
 	/* Generic methods */
 	TYPE_METHOD_F("clear", &rbtree_doclear, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" rbtree_clear_params ")\n"
 	              "Clear all values from @this ?."),
 	TYPE_METHOD_F("pop", &rbtree_pop, METHOD_FNOREFESCAPE,
-	              "(key)->\n"
-	              "(key,def)->\n"
+	              "(" rbtree_pop_params ")->\n"
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "#tKeyError{No @def was given and @key was not found}"
 	              "Delete @key from @this and return its previously assigned "
@@ -3590,7 +3707,7 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{A random pair minkey-maxkey-value pair that has been removed}"),
 	TYPE_METHOD_F("update", &rbtree_update, METHOD_FNOREFESCAPE,
-	              "(items:?S?T3?O?O?O)\n"
+	              "(" rbtree_update_params ")\n"
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "Iterate @items and unpack each element into 3 others, "
 	              /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
@@ -3661,7 +3778,7 @@ INTERN DeeTypeObject RBTree_Type = {
 	                         "Construct an empty ?.\n"
 	                         "\n"
 
-	                         "(seq:?S?X2?T3?O?O?O?T2?Ert:SeqRange?O)\n"
+	                         "(" rbtree_RBTree_params ")\n"
 	                         "Construct an ?. from a sequence of ${(minkey,maxkey,value)} or ${([minkey:maxkey],value)}\n"
 	                         "\n"
 

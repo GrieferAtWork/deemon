@@ -4565,7 +4565,10 @@ PRIVATE struct type_getset tpconst clvalue_getsets[] = {
 #else /* CONFIG_NO_DEEMON_100_COMPAT */
 PRIVATE WUNUSED NONNULL((1)) DREF CPointer *DCALL
 clvalue_legacy_ref_func(CLValue *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("__ref__", params: "", docStringPrefix: "clvalue_legacy");]]]*/
+#define clvalue_legacy___ref___params ""
 	DeeArg_Unpack0(err, argc, argv, "__ref__");
+/*[[[end]]]*/
 	return CLValue_Ptr(self);
 err:
 	return NULL;

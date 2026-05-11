@@ -3126,7 +3126,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_class_freq(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("freq");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "freq");
+/*[[[end]]]*/
 	return DeeInt_NewInt(NANOSECONDS_PER_SECOND);
 err:
 	return NULL;

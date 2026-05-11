@@ -2763,12 +2763,12 @@ err:
 #endif /* DeeSystem_FILE_USE_nt_HANDLE */
 
 #ifdef DeeSystem_FILE_USE_unix_fd
+	int fd;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_SystemFile", params: """
 	DeeObject *fd:?X2?Dint?DFile;
 	bool inherit = false;
 	bool duplicate = false;
 """, docStringPrefix: "sysfile", defineKwList: true);]]]*/
-	int fd;
 	static DEFINE_KWLIST(_SystemFile_kwlist, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("inherit", 0x5d0a719f, 0x89d7ec99b9f50d7c), KEX("duplicate", 0xe4fab956, 0xb0b2d92626c2de2a), KEND });
 #define sysfile__SystemFile_params "fd:?X2?Dint?DFile,inherit=!f,duplicate=!f"
 	struct {
@@ -2894,7 +2894,11 @@ sysfile_visit(SystemFile *__restrict self, Dee_visit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sync", params: """
+""", docStringPrefix: "sysfile");]]]*/
+#define sysfile_sync_params ""
 	DeeArg_Unpack0(err, argc, argv, "sync");
+/*[[[end]]]*/
 #ifdef CONFIG_HAVE_sync
 	DBG_ALIGNMENT_DISABLE();
 	(void)sync();
@@ -2980,16 +2984,25 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject *const *argv) {
 #ifdef HAVE_USABLE_setvbuf
 	int mode;
 	char const *mode_iter;
-	char const *mode_str;
-	size_t size = 0;
 	unsigned int i;
 	union {
 		char chrs[4];
 		uint32_t id;
 	} buf;
-	if (DeeArg_Unpack(argc, argv, "s|d:setbuf", &mode_str, &size))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("setbuf", params: """
+	char const *mode_str;
+	size_t size = 0;
+""", docStringPrefix: "sysfile");]]]*/
+#define sysfile_setbuf_params "mode_str:?Dstring,size=!0"
+	struct {
+		char const *mode_str;
+		size_t size;
+	} args;
+	args.size = 0;
+	if (DeeArg_UnpackStruct(argc, argv, "s|" UNPuSIZ ":setbuf", &args))
 		goto err;
-	mode_iter = mode_str;
+/*[[[end]]]*/
+	mode_iter = args.mode_str;
 	/* Interpret the given mode string. */
 	for (;;) {
 		if (CASEEQ(*mode_iter, 'n')) {
@@ -3036,7 +3049,7 @@ again_setbuf:
 	}
 	/* Apply the buffer */
 	DBG_ALIGNMENT_DISABLE();
-	if (setvbuf((FILE *)self->sf_handle, NULL, mode, size)) {
+	if (setvbuf((FILE *)self->sf_handle, NULL, mode, args.size)) {
 		DBG_ALIGNMENT_ENABLE();
 		if (Dee_ReleaseSystemMemory())
 			goto again_setbuf;
@@ -3048,7 +3061,7 @@ done:
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Unrecognized buffer mode `%s'",
-	                mode_str);
+	                args.mode_str);
 err:
 	return NULL;
 #else /* HAVE_USABLE_setvbuf */
@@ -3060,7 +3073,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_flush(SystemFile *self, size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("flush", params: """
+""", docStringPrefix: "sysfile");]]]*/
+#define sysfile_flush_params ""
 	DeeArg_Unpack0(err, argc, argv, "flush");
+/*[[[end]]]*/
 	if unlikely(sysfile_sync(self))
 		goto err;
 	return_none;
@@ -3071,10 +3088,10 @@ err:
 #define deemon_file_HAVE_sysfile_methods
 PRIVATE struct type_method tpconst sysfile_methods[] = {
 	TYPE_METHOD_F("flush", &sysfile_flush, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "(" sysfile_flush_params ")\n"
 	              "An alias for #sync used for compatibility with ?ABuffer?DFile"),
 	TYPE_METHOD_F("setbuf", &sysfile_setbuf, METHOD_FNOREFESCAPE,
-	              "(string mode,size=!0)\n"
+	              "(" sysfile_setbuf_params ")\n"
 	              "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile"),
 	TYPE_METHOD_END
 };

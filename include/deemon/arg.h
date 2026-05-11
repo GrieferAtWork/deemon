@@ -696,11 +696,13 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 /* Same as the non-*Struct functions, but rather than taking 1 pointer per argument,
  * these take a single pointer to an aligned struct-blob (where each element is always
  * properly aligned, such that "uint32_t a; uint8_t b; uint32_t c;" has 3 padding bytes
- * before the "c" element).
+ * around the "b" element).
+ *
  * Instead of:
  * >> size_t a, b, c;
  * >> if (DeeArg_Unpack(argc, argv, UNPuSIZ UNPuSIZ UNPuSIZ ":foo", &a, &b, &c))
  * >>     goto err;
+ *
  * You can do this, which will execute faster at runtime:
  * >> struct {
  * >>     size_t a;
