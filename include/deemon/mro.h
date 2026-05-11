@@ -292,13 +292,13 @@ typedef uint16_t Dee_attrperm_t;
 
 
 struct Dee_attrdesc {
-	char const         *ad_name; /* [if(a_perm & Dee_ATTRPERM_F_NAMEOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
-	                              * [1..1] Name of the attribute. */
-	char const         *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
-	                              * [0..1] The documentation string of the attribute (when known). */
-	struct Dee_attrinfo ad_info; /* Info about this attribute in particular */
-	Dee_attrperm_t      ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
-	DREF DeeTypeObject *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()' */
+	/*ascii*/ char const *ad_name; /* [if(a_perm & Dee_ATTRPERM_F_NAMEOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
+	                                * [1..1] Name of the attribute. */
+	/*utf-8*/ char const *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
+	                                * [0..1] The documentation string of the attribute (when known). */
+	struct Dee_attrinfo   ad_info; /* Info about this attribute in particular */
+	Dee_attrperm_t        ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
+	DREF DeeTypeObject   *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()' */
 };
 #define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
 #define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)

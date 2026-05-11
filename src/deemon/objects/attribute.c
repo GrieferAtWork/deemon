@@ -212,7 +212,7 @@ attr_getdoc(Attr *__restrict self) {
 		Dee_Incref(result);
 		return result;
 	}
-	return (DREF DeeStringObject *)DeeString_New(docstr);
+	return (DREF DeeStringObject *)DeeString_NewAutoUtf8(docstr);
 }
 
 
