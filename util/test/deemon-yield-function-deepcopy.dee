@@ -1,0 +1,51 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import .common.test;
+
+@[copyable]
+function foo(a, b = 30) {
+	yield a;
+	yield b;
+}
+
+local c0 = foo(10, 20);
+local c1 = foo(11, b: 21);
+local c2 = foo(a: 12, b: 22);
+local c3 = foo(13);
+local c4 = foo(a: 14);
+
+#if 1 // TODO: "Cannot serialize instance of `_YieldFunctionIterator'"
+#define assertSequence assertEquals
+#endif
+
+test.assertSequence(c0, {10,20});
+test.assertSequence(c1, {11,21});
+test.assertSequence(c2, {12,22});
+test.assertSequence(c3, {13,30});
+test.assertSequence(c4, {14,30});
+
+test.assertSequence(deepcopy c0, {10,20});
+test.assertSequence(deepcopy c1, {11,21});
+test.assertSequence(deepcopy c2, {12,22});
+test.assertSequence(deepcopy c3, {13,30});
+test.assertSequence(deepcopy c4, {14,30});
+
