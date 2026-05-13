@@ -116,8 +116,10 @@ DeeTraceback_New(struct Dee_thread_object *__restrict thread) {
 		ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(dst->cf_func->fo_code, &DeeCode_Type);
 		Dee_Incref(dst->cf_func);
-		code          = dst->cf_func->fo_code;
+		code = dst->cf_func->fo_code;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 		dst->cf_flags = code->co_flags;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		if (code->co_flags & Dee_CODE_FTHISCALL) {
 			ASSERT_OBJECT(dst->cf_this);
 			if (!(code->co_flags & Dee_CODE_FCONSTRUCTOR)) {

@@ -686,7 +686,7 @@ function_get_module(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_module(Function *__restrict self) {
-	return Dee_BOUND_FROMBOOL(self->fo_code->co_module);
+	return Dee_BOUND_FROMBOOL(self->fo_code->co_module != NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1523,7 +1523,7 @@ yf_copy(YFunction *__restrict self) {
 		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
 		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
 		kw = (struct Dee_code_frame_kwds *)Dee_Mallococ(offsetof(struct Dee_code_frame_kwds, fk_kargv),
-		                                            count, sizeof(DeeObject *));
+		                                                count, sizeof(DeeObject *));
 		if unlikely(!kw)
 			goto err_r;
 		result->yf_kw = kw;
@@ -1554,10 +1554,12 @@ yfi_init(YFIterator *__restrict self,
 	DeeCodeObject *code;
 	DBG_memset(&self->yi_frame, 0xcc, sizeof(struct Dee_code_frame));
 	/* Setup the frame for the iterator. */
+	Dee_Incref(yield_function); /* Reference stored in `self->yi_func' */
 	self->yi_func          = yield_function;
 	self->yi_frame.cf_func = yield_function->yf_func;
-	Dee_Incref(yield_function);         /* Reference stored in `self->yi_func' */
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	Dee_Incref(self->yi_frame.cf_func); /* Reference stored in here. */
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	code = self->yi_frame.cf_func->fo_code;
 	/* Allocate memory for frame data. */
 	self->yi_frame.cf_prev  = Dee_CODE_FRAME_NOT_EXECUTING;
@@ -1568,12 +1570,16 @@ yfi_init(YFIterator *__restrict self,
 	self->yi_frame.cf_sp    = self->yi_frame.cf_stack;
 	self->yi_frame.cf_ip    = code->co_code;
 	self->yi_frame.cf_kw    = yield_function->yf_kw;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	self->yi_frame.cf_flags = code->co_flags;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	self->yi_frame.cf_vargs = NULL;
 	self->yi_frame.cf_argc  = yield_function->yf_pargc;
 	self->yi_frame.cf_argv  = yield_function->yf_argv;
 	self->yi_frame.cf_this  = yield_function->yf_this;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	Dee_XIncref(self->yi_frame.cf_this);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	self->yi_frame.cf_stacksz = 0;
 	Dee_rshared_rwlock_init(&self->yi_lock);
 	return 0;
@@ -1983,8 +1989,10 @@ yfi_run_finally(YFIterator *__restrict self) {
 	DeeCodeObject *code;
 	code_addr_t ip_addr;
 	struct Dee_except_handler *iter, *begin;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	if unlikely(!self->yi_func)
 		return;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 	/* Recursively execute all finally-handlers that
 	 * protect the current PC until none are left. */
@@ -2037,7 +2045,12 @@ exec_finally:
 		 * Normally, this is done when the return value has been
 		 * assigned, so we simply fake that by pre-assigning `none'. */
 		self->yi_frame.cf_result = DeeNone_NewRef();
-		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY) {
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+		if unlikely(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FASSEMBLY)
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY)
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+		{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -2062,15 +2075,27 @@ yfi_dtor(YFIterator *__restrict self) {
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
 	ASSERT(self->yi_frame.cf_prev == Dee_CODE_FRAME_NOT_EXECUTING);
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	ASSERT_OBJECT_TYPE(self->yi_func, &DeeYieldFunction_Type);
+	ASSERT(self->yi_frame.cf_func == self->yi_func->yf_func);
+	ASSERT(self->yi_frame.cf_this == self->yi_func->yf_this);
+	ASSERT(self->yi_frame.cf_argc == self->yi_func->yf_pargc);
+	ASSERT(self->yi_frame.cf_argv == self->yi_func->yf_argv);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	ASSERT_OBJECT_TYPE_OPT(self->yi_func, &DeeYieldFunction_Type);
 	ASSERT_OBJECT_TYPE_OPT(self->yi_frame.cf_func, &DeeFunction_Type);
-	ASSERT_OBJECT_TYPE_OPT(self->yi_frame.cf_vargs, &DeeTuple_Type);
 	ASSERT_OBJECT_OPT(self->yi_frame.cf_this);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+	ASSERT_OBJECT_TYPE_OPT(self->yi_frame.cf_vargs, &DeeTuple_Type);
 	if (self->yi_frame.cf_func)
 		numlocals = self->yi_frame.cf_func->fo_code->co_localc;
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	Dee_Decref(self->yi_func);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	Dee_XDecref(self->yi_func);
 	Dee_XDecref(self->yi_frame.cf_func);
 	Dee_XDecref(self->yi_frame.cf_this);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	Dee_XDecref(self->yi_frame.cf_vargs);
 
 	/* Clear local objects. */
@@ -2094,6 +2119,18 @@ yfi_visit(YFIterator *__restrict self,
 
 	/* NOTE: This won't dead-lock if the caller is inside
 	 *       the function because the lock is recursive! */
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	Dee_Visit(self->yi_func);
+	DeeYieldFunctionIterator_LockReadNoInt(self);
+#ifndef CONFIG_NO_THREADS
+	COMPILER_READ_BARRIER();
+	if (self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING) {
+		DeeYieldFunctionIterator_LockEndRead(self);
+		return; /* See above... */
+	}
+#endif /* !CONFIG_NO_THREADS */
+	Dee_XVisit(self->yi_frame.cf_vargs);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	DeeYieldFunctionIterator_LockReadNoInt(self);
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
@@ -2105,13 +2142,19 @@ yfi_visit(YFIterator *__restrict self,
 	Dee_XVisit(self->yi_func);
 	Dee_XVisit(self->yi_frame.cf_this);
 	Dee_XVisit(self->yi_frame.cf_vargs);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 	/* Visit local variables. */
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	Dee_XVisitv(self->yi_frame.cf_frame,
+	            self->yi_frame.cf_func->fo_code->co_localc);
+#else /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	if (self->yi_frame.cf_func) {
 		Dee_Visit(self->yi_frame.cf_func);
 		Dee_XVisitv(self->yi_frame.cf_frame,
 		            self->yi_frame.cf_func->fo_code->co_localc);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 	/* Visit stack objects. */
 	Dee_Visitv(self->yi_frame.cf_stack,
@@ -2122,6 +2165,45 @@ yfi_visit(YFIterator *__restrict self,
 
 PRIVATE NONNULL((1)) void DCALL
 yfi_clear(YFIterator *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	uint16_t i, nlid;
+	DeeCodeObject *code;
+	DREF DeeObject **fram;
+
+	/* NOTE: This won't dead-lock if the caller is inside
+	 *       the function because the lock is recursive! */
+	DeeYieldFunctionIterator_LockWriteNoInt(self);
+	ASSERT(self->yi_frame.cf_prev == Dee_CODE_FRAME_NOT_EXECUTING);
+
+	/* Execute established finally handlers. */
+	yfi_run_finally(self);
+
+	/* Clear the stack */
+	while (self->yi_frame.cf_sp > self->yi_frame.cf_stack) {
+		--self->yi_frame.cf_sp;
+		Dee_Decref(*self->yi_frame.cf_sp);
+	}
+
+	/* Clear local variables */
+	code = self->yi_frame.cf_func->fo_code;
+	nlid = code->co_localc;
+	fram = self->yi_frame.cf_frame;
+	for (i = 0; i < nlid; ++i) {
+		DREF DeeObject *ob = fram[i];
+		fram[i] = NULL;
+		Dee_XDecref(ob);
+	}
+
+	/* Reset the program counter to the start of code, since that
+	 * position is known to *always* accept an empty stack/locals
+	 *
+	 * Generally, the iterator should not be re-used after it was
+	 * cleared, but for the sake of consistency, we have to leave
+	 * it in a well-defined state here */
+	self->yi_frame.cf_ip = code->co_code;
+	ASSERT(self->yi_frame.cf_sp == self->yi_frame.cf_stack);
+	DeeYieldFunctionIterator_LockEndWrite(self);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	DeeObject *obj[4], **stack;
 	size_t stacksize;
 	DeeObject **locals;
@@ -2179,6 +2261,7 @@ yfi_clear(YFIterator *__restrict self) {
 	if (heap_stack)
 		Dee_Free(stack);
 	Dee_Free(locals);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 }
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
@@ -2186,16 +2269,33 @@ yfi_iter_next(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	if unlikely(DeeYieldFunctionIterator_LockWrite(self))
 		goto err;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	if unlikely(!self->yi_func) {
 		/* Special case: Always be indicative of an exhausted iterator
 		 * when default-constructed, or after being cleared. */
 		result = ITER_DONE;
-	} else {
+	} else
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+	{
 		ASSERT_OBJECT_TYPE(self->yi_func, &DeeYieldFunction_Type);
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+		ASSERT(self->yi_frame.cf_func == self->yi_func->yf_func);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func->fo_code, &DeeCode_Type);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		ASSERTF(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FYIELDING,
 		        "Code is not assembled as a yield-function");
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+		ASSERTF(self->yi_frame.cf_ip >= self->yi_frame.cf_func->fo_code->co_code &&
+		        self->yi_frame.cf_ip < (self->yi_frame.cf_func->fo_code->co_code +
+		                                self->yi_frame.cf_func->fo_code->co_codebytes),
+		        "Illegal PC: %p is not in [%p,%p)",
+		        self->yi_frame.cf_ip,
+		        self->yi_frame.cf_func->fo_code->co_code,
+		        self->yi_frame.cf_func->fo_code->co_code +
+		        self->yi_frame.cf_func->fo_code->co_codebytes);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		ASSERTF(self->yi_frame.cf_ip >= self->yi_frame.cf_func->fo_code->co_code &&
 		        self->yi_frame.cf_ip <= self->yi_frame.cf_func->fo_code->co_code +
 		                                self->yi_frame.cf_func->fo_code->co_codebytes,
@@ -2204,13 +2304,19 @@ yfi_iter_next(YFIterator *__restrict self) {
 		        self->yi_frame.cf_func->fo_code->co_code,
 		        self->yi_frame.cf_func->fo_code->co_code +
 		        self->yi_frame.cf_func->fo_code->co_codebytes);
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		if unlikely(self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING) {
 			DeeError_Throwf(&DeeError_SegFault, "Stack frame is already being executed");
 			result = NULL;
 			goto done;
 		}
 		self->yi_frame.cf_result = NULL;
-		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY) {
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+		if unlikely(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FASSEMBLY)
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY)
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+		{
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -2258,6 +2364,44 @@ err:
 	return -1;
 }
 
+
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+struct yfi_deepcopy_hook {
+	struct Dee_deepcopy_hook        ydch_hook; /* Underlying hook */
+	DeeYieldFunctionIteratorObject *ydch_iter; /* [1..1] Target iterator */
+};
+
+PRIVATE NONNULL((1, 2)) void DFCALL
+yfi_deepcopy_hook_cb(struct Dee_deepcopy_hook *__restrict self,
+                     struct Dee_deepcopy_vars *__restrict vars) {
+	size_t i;
+	struct yfi_deepcopy_hook *me = container_of(self, struct yfi_deepcopy_hook, ydch_hook);
+	DeeObject *ob = vars->dcv_obj;
+	DeeYieldFunctionIteratorObject *iter = me->ydch_iter;
+	DeeFunctionObject *func;
+
+	/* Objects found in the original argv/refv vectors must be copied by-reference! */
+	if (ob == iter->yi_frame.cf_this)
+		goto copy_by_ref;
+	if (ob == Dee_AsObject(iter->yi_frame.cf_vargs))
+		goto copy_by_ref;
+	for (i = 0; i < iter->yi_frame.cf_argc; ++i) {
+		if (ob == iter->yi_frame.cf_argv[i])
+			goto copy_by_ref;
+	}
+
+	func = iter->yi_frame.cf_func;
+	for (i = 0; i < func->fo_code->co_refc; ++i) {
+		if (ob == func->fo_refv[i])
+			goto copy_by_ref;
+	}
+	return;
+copy_by_ref:
+	vars->dcv_mode = Dee_DEEPCOPY_V_MODE_REF;
+}
+
+
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 inplace_deepcopy_noarg(DREF DeeObject **__restrict p_ob,
                        size_t argc1, DeeObject *const *argv1,
@@ -2304,10 +2448,169 @@ inplace_deepcopy_noarg(DREF DeeObject **__restrict p_ob,
 	/* Create an inplace deep-copy of this object. */
 	return DeeObject_InplaceDeepCopy(p_ob);
 }
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfi_copy(YFIterator *__restrict self,
          YFIterator *__restrict other) {
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	DeeCodeObject *code;
+	size_t i, stacksize;
+	DeeDeepCopyContext deep_ctx;
+	DREF DeeObject **shallow_objv, **iter;
+	size_t shallow_objc;
+	struct yfi_deepcopy_hook hook;
+
+	/* Make sure that the function is actually copyable. */
+	code = other->yi_frame.cf_func->fo_code;
+	if unlikely(!(code->co_flags & Dee_CODE_FCOPYABLE)) {
+		char const *function_name = DeeCode_NAME(code);
+		if (function_name == NULL)
+			function_name = "?";
+		return DeeError_Throwf(&DeeError_ValueError, "Function `%s' is not copyable", function_name);
+	}
+
+	/* Copy over [const] frame data. */
+	self->yi_func          = other->yi_func; /* This gets incref'd at the very end... */
+	self->yi_frame.cf_prev = Dee_CODE_FRAME_NOT_EXECUTING;
+	self->yi_frame.cf_func = other->yi_frame.cf_func;
+	ASSERT(self->yi_frame.cf_func == other->yi_func->yf_func);
+	self->yi_frame.cf_argc = other->yi_frame.cf_argc;
+	ASSERT(self->yi_frame.cf_argc == other->yi_func->yf_pargc);
+	self->yi_frame.cf_argv = other->yi_frame.cf_argv;
+	ASSERT(self->yi_frame.cf_argv == other->yi_func->yf_argv);
+	self->yi_frame.cf_kw = other->yi_frame.cf_kw;
+	ASSERT(self->yi_frame.cf_kw == other->yi_func->yf_kw);
+	self->yi_frame.cf_this = other->yi_frame.cf_this;
+	ASSERT(self->yi_frame.cf_this == other->yi_func->yf_this);
+	self->yi_frame.cf_result = NULL;
+	self->yi_frame.cf_frame = (DREF DeeObject **)Dee_Calloc(code->co_framesize);
+	if unlikely(!self->yi_frame.cf_frame)
+		goto err;
+again_lock_other:
+	if unlikely(DeeYieldFunctionIterator_LockRead(other))
+		goto err_frame;
+
+	/* Mirror heap-allocated stack (if used by "other") */
+	self->yi_frame.cf_stacksz = other->yi_frame.cf_stacksz;
+	if (self->yi_frame.cf_stacksz) {
+		self->yi_frame.cf_stack = (DREF DeeObject **)Dee_TryMallocc(self->yi_frame.cf_stacksz,
+		                                                            sizeof(DREF DeeObject *));
+		if unlikely(!self->yi_frame.cf_stack) {
+			DeeYieldFunctionIterator_LockEndRead(other);
+			self->yi_frame.cf_stack = (DREF DeeObject **)Dee_Mallocc(self->yi_frame.cf_stacksz,
+			                                                         sizeof(DREF DeeObject *));
+			if unlikely(!self->yi_frame.cf_stack)
+				goto err_frame;
+			if unlikely(DeeYieldFunctionIterator_LockRead(other))
+				goto err_frame_stack;
+			if unlikely(self->yi_frame.cf_stacksz != other->yi_frame.cf_stacksz) {
+				DeeYieldFunctionIterator_LockEndRead(other);
+				Dee_Free(self->yi_frame.cf_stack);
+				goto again_lock_other;
+			}
+		}
+	} else {
+		ASSERT(other->yi_frame.cf_stack ==
+		       other->yi_frame.cf_frame + code->co_localc);
+		self->yi_frame.cf_stack = self->yi_frame.cf_frame + code->co_localc;
+	}
+
+	/* Figure out how much stack space is currently in use */
+	stacksize = (size_t)(other->yi_frame.cf_sp - other->yi_frame.cf_stack);
+
+	/* Create by-reference copies of locals and stack-variables.
+	 * These must be stored in a secondary storage, since we must
+	 * create deep copies of these objects (with special rules)
+	 * before they can be written to the output iterator. */
+	shallow_objc = code->co_localc + stacksize;
+	shallow_objv = (DREF DeeObject **)Dee_TryMallocac(shallow_objc, sizeof(DREF DeeObject *));
+	if unlikely(!shallow_objv) {
+		DeeYieldFunctionIterator_LockEndRead(other);
+		shallow_objv = (DREF DeeObject **)Dee_MallocaHeap(shallow_objc * sizeof(DREF DeeObject *));
+		if unlikely(!shallow_objv)
+			goto err_frame_stack;
+		if unlikely(DeeYieldFunctionIterator_LockRead(other))
+			goto err_frame_stack_shallow_objv;
+		if unlikely(stacksize != (size_t)(other->yi_frame.cf_sp - other->yi_frame.cf_stack)) {
+/*free_shallow_objv_and_stack_and_again_lock_other:*/
+			Dee_Freea(shallow_objv);
+			if (self->yi_frame.cf_stacksz)
+				Dee_Free(self->yi_frame.cf_stack);
+			goto again_lock_other;
+		}
+	}
+
+	/* Copy current (relative) stack and code positions. */
+	self->yi_frame.cf_sp = self->yi_frame.cf_stack + stacksize;
+	self->yi_frame.cf_ip = other->yi_frame.cf_ip;
+
+	/* Copy references... */
+	iter = Dee_Movprefv(shallow_objv, other->yi_frame.cf_frame, code->co_localc);
+	Dee_Movrefv(iter, other->yi_frame.cf_stack, stacksize);
+
+	/* Re-use pre-generated varargs buffer */
+	self->yi_frame.cf_vargs = other->yi_frame.cf_vargs;
+	Dee_XIncref(self->yi_frame.cf_vargs);
+
+	/* Release lock from "other" */
+	DeeYieldFunctionIterator_LockEndRead(other);
+
+	/* Setup deepcopy context */
+	DeeDeepCopy_Init(&deep_ctx);
+	hook.ydch_hook.dch_hook = &yfi_deepcopy_hook_cb;
+	hook.ydch_iter          = self;
+	DeeDeepCopyContext_AddHook(&deep_ctx, &hook.ydch_hook);
+
+	/* Initialize locals/stack of the new iterator by creating deep copies */
+	for (i = 0; i < code->co_localc; ++i) {
+		DREF DeeObject *dst;
+		DREF DeeObject *src = shallow_objv[i];
+		if (src) {
+			dst = DeeDeepCopy_CopyObject(&deep_ctx, src);
+			if unlikely(!dst)
+				goto err_frame_stack_shallow_objv_refs_deep;
+		} else {
+			dst = NULL;
+		}
+		self->yi_frame.cf_frame[i] = dst;
+	}
+	for (i = 0; i < stacksize; ++i) {
+		DREF DeeObject *src = shallow_objv[code->co_localc + i];
+		DREF DeeObject *dst = DeeDeepCopy_CopyObject(&deep_ctx, src);
+		if unlikely(!dst)
+			goto err_frame_stack_shallow_objv_refs_deep;
+		self->yi_frame.cf_stack[i] = dst;
+	}
+
+	/* Realize deep copies that were made of local/stack variables */
+	DeeDeepCopy_Pack(&deep_ctx);
+
+	/* Cleanup shadow object buffer */
+	Dee_XDecrefv(shallow_objv, code->co_localc);
+	Dee_Decrefv(shallow_objv + code->co_localc, stacksize);
+	Dee_Freea(shallow_objv);
+
+	/* Create the (thus-far omitted) reference to the linked yield-function */
+	Dee_rshared_rwlock_init(&self->yi_lock);
+	Dee_Incref(self->yi_func);
+	return 0;
+err_frame_stack_shallow_objv_refs_deep:
+	DeeDeepCopy_Fini(&deep_ctx);
+/*err_frame_stack_shallow_objv_refs:*/
+	Dee_XDecrefv(shallow_objv, code->co_localc);
+	Dee_Decrefv(shallow_objv + code->co_localc, stacksize);
+err_frame_stack_shallow_objv:
+	Dee_Freea(shallow_objv);
+err_frame_stack:
+	if (self->yi_frame.cf_stacksz)
+		Dee_Free(self->yi_frame.cf_stack);
+err_frame:
+	Dee_Free(self->yi_frame.cf_frame);
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	DeeCodeObject *code;
 	size_t stack_size;
 again:
@@ -2405,7 +2708,7 @@ again:
 
 		DeeDeepCopy_Init(&deep_ctx);
 
-		/* TODO: Must also (somehow) register "argv" with "deep_ctx" such that it will treat
+		/* TO-DO: Must also (somehow) register "argv" with "deep_ctx" such that it will treat
 		 *       those objects as though they were "DeeObject_IsDeepImmutable" (meaning that
 		 *       no matter which way they're nested, they won't get copied, such that the
 		 *       copy of the iterator will continue to reference the same argument objects
@@ -2417,7 +2720,7 @@ again:
 			DeeObject *elem;
 			elem = self->yi_frame.cf_stack[i];
 			if (elem != this_arg && elem != varargs) {
-				/* TODO: Must create deep copies of stack/locals using the same deepcopy context! */
+				/* TO-DO: Must create deep copies of stack/locals using the same deepcopy context! */
 				if (inplace_deepcopy_noarg(&self->yi_frame.cf_stack[i],
 				                           argc, argv, refc, refv)) {
 err_self_deep_ctx:
@@ -2461,8 +2764,10 @@ nomem:
 	if (Dee_CollectMemory(1))
 		goto again;
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 #ifndef CONFIG_NO_THREADS
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yfi_get_yfunc(YFIterator *__restrict self) {
@@ -2491,9 +2796,20 @@ yfi_bound_yfunc(YFIterator *__restrict self) {
 err:
 	return Dee_BOUND_ERR;
 }
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_get_this(YFIterator *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	DREF DeeObject *thisarg;
+	if unlikely(!(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL))
+		goto err_unbound;
+	thisarg = self->yi_frame.cf_this;
+	Dee_Incref(thisarg);
+	return thisarg;
+err_unbound:
+	return DeeRT_ErrUnboundAttrCStr(Dee_AsObject(self), "__this__");
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	DREF DeeObject *thisarg;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
@@ -2507,20 +2823,25 @@ yfi_get_this(YFIterator *__restrict self) {
 	return thisarg;
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_bound_this(YFIterator *__restrict self) {
-	DeeObject *thisarg;
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	bool result = (self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL) != 0;
+	return Dee_BOUND_FROMBOOL(result);
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+	bool result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
-	thisarg = self->yi_frame.cf_this;
-	if (!(self->yi_frame.cf_flags & Dee_CODE_FTHISCALL))
-		thisarg = NULL;
+	result = self->yi_frame.cf_this != NULL &&
+	         (self->yi_frame.cf_flags & Dee_CODE_FTHISCALL) != 0;
 	DeeYieldFunctionIterator_LockEndRead(self);
-	return Dee_BOUND_FROMBOOL(thisarg);
+	return Dee_BOUND_FROMBOOL(result);
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
@@ -2548,6 +2869,39 @@ yfi_get_frame(YFIterator *__restrict self) {
 	                                                            FLAGS, &self->yi_lock);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
+yfi_get_code(YFIterator *__restrict self) {
+	return_reference_(self->yi_frame.cf_func->fo_code);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_refs(YFIterator *__restrict self) {
+	return function_get_refs(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_statics(YFIterator *__restrict self) {
+	return DeeFunction_GetStaticsWrapper(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_refsbyname(YFIterator *__restrict self) {
+	return DeeFunction_GetRefsByNameWrapper(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_staticsbyname(YFIterator *__restrict self) {
+	return DeeFunction_GetStaticsByNameWrapper(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_argsbyname(YFIterator *__restrict self) {
+	return DeeYieldFunction_GetArgsByNameWrapper(self->yi_func);
+}
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
 yfi_get_func(YFIterator *__restrict self) {
 	DREF Function *result;
@@ -2566,7 +2920,6 @@ err:
 	return NULL;
 }
 #define yfi_bound_func yfi_bound_yfunc
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 yfi_get_code(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
@@ -2695,6 +3048,8 @@ err:
 	return NULL;
 }
 #define yfi_bound_argsbyname yfi_bound_yfunc
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_get_frame_locals(YFIterator *__restrict self) {
@@ -2702,7 +3057,7 @@ yfi_get_frame_locals(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetLocalsWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetLocalsWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2715,7 +3070,7 @@ yfi_get_frame_stack(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetStackWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetStackWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2728,7 +3083,7 @@ yfi_get_frame_localsbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetLocalsByNameWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetLocalsByNameWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2741,7 +3096,7 @@ yfi_get_frame_stackbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetStackByNameWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetStackByNameWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2754,7 +3109,7 @@ yfi_get_frame_variablesbyname(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetVariablesByNameWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetVariablesByNameWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -2767,13 +3122,100 @@ yfi_get_frame_symbols(YFIterator *__restrict self) {
 	DREF DeeFrameObject *frame = yfi_get_frame(self);
 	if unlikely(!frame)
 		goto err;
-	result = DeeFrame_GetSymbolsByNameWrapper(frame); /* TODO: Inherited */
+	result = DeeFrame_GetSymbolsByNameWrapper(frame); /* XXX: Inherited */
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_kwds(YFIterator *__restrict self) {
+	return function_get_kwds(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_kwds(YFIterator *__restrict self) {
+	return function_bound_kwds(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_args(YFIterator *__restrict self) {
+	return yf_get_args(self->yi_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_name(YFIterator *__restrict self) {
+	return function_get_name(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_name(YFIterator *__restrict self) {
+	return function_bound_name(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_doc(YFIterator *__restrict self) {
+	return function_get_doc(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+yfi_get_type(YFIterator *__restrict self) {
+	return function_get_type(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_type(YFIterator *__restrict self) {
+	return function_bound_type(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_module(YFIterator *__restrict self) {
+	return function_get_module(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_module(YFIterator *__restrict self) {
+	return function_bound_module(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_operator(YFIterator *__restrict self) {
+	return function_get_operator(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_operator(YFIterator *__restrict self) {
+	return function_bound_operator(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_operatorname(YFIterator *__restrict self) {
+	return function_get_operatorname(self->yi_frame.cf_func);
+}
+#define yfi_bound_operatorname yfi_bound_operator
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_property(YFIterator *__restrict self) {
+	return function_get_property(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_property(YFIterator *__restrict self) {
+	return function_bound_property(self->yi_frame.cf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_code_defaults(YFIterator *__restrict self) {
+	return code_getdefaults(self->yi_frame.cf_func->fo_code);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_code_constants(YFIterator *__restrict self) {
+	return code_getconstants(self->yi_frame.cf_func->fo_code);
+}
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_get_kwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -2828,6 +3270,7 @@ err:
 	return NULL;
 }
 #define yfi_bound_args yfi_bound_yfunc
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF YFunction *DCALL
 yfi_get_func_reference(YFIterator *__restrict self,
@@ -3061,15 +3504,18 @@ err:
 	return NULL;
 }
 #define yfi_bound_code_constants yfi_bound_yfunc
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 
 PRIVATE struct type_getset tpconst yfi_getsets[] = {
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 #ifndef CONFIG_NO_THREADS
 	TYPE_GETTER_BOUND_F(STR_seq, &yfi_get_yfunc, &yfi_bound_yfunc,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "Alias for ?#__yfunc__"),
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETTER_AB_F("__frame__", &yfi_get_frame,
 	                 METHOD_FCONSTCALL,
 	                 "->?Dframe\n"
@@ -3078,6 +3524,7 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "#tUnboundAttribute{No $this-argument available}"
 	                    "The $this-argument used during execution"),
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 #ifndef CONFIG_NO_THREADS
 	TYPE_GETTER_BOUND_F("__yfunc__", &yfi_get_yfunc, &yfi_bound_yfunc,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -3089,6 +3536,34 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dfunction\n"
 	                    "The function that is being executed"),
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	TYPE_GETTER_AB_F("__code__", &yfi_get_code,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?Ert:Code\n"
+	                 "The code object that is being executed"),
+	TYPE_GETTER_AB_F("__refs__", &yfi_get_refs,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Returns a sequence of all of the references used by the function"),
+	TYPE_GETTER_AB_F("__statics__", &yfi_get_statics,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Returns a writable sequence of all of the static variables that appear in the function"),
+	TYPE_GETTER_AB_F("__refsbyname__", &yfi_get_refsbyname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__refsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+	TYPE_GETTER_AB_F("__staticsbyname__", &yfi_get_staticsbyname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__staticsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+	TYPE_GETTER_AB_F("__argsbyname__", &yfi_get_argsbyname,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?M?X2?Dstring?Dint?O\n"
+	                 "Alias for ?A__argsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETTER_BOUND_F("__code__", &yfi_get_code, &yfi_bound_code,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Ert:Code\n"
@@ -3113,6 +3588,8 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?M?X2?Dstring?Dint?O\n"
 	                    "Alias for ?A__argsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
 	TYPE_GETTER_AB_F("__locals__", &yfi_get_frame_locals,
 	                 METHOD_FCONSTCALL,
 	                 "->?S?O\n"
@@ -3137,15 +3614,69 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                 METHOD_FCONSTCALL,
 	                 "->?M?X2?Dstring?Dint?O\n"
 	                 "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
+
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	TYPE_GETTER_AB_F("__args__", &yfi_get_args,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "Returns a sequence representing the positional arguments passed to the function"),
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "Returns a sequence representing the positional arguments passed to the function"),
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETTER_BOUND_F(STR___name__, &yfi_get_name, &yfi_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for ?A__name__?DFunction though ?#__func__"),
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	TYPE_GETTER_AB_F(STR___doc__, &yfi_get_doc,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?N\n"
+	                 "Alias for ?A__doc__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &yfi_get_kwds, &yfi_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__kwds__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___type__, &yfi_get_type, &yfi_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__type__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___module__, &yfi_get_module, &yfi_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__module__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operator__", &yfi_get_operator, &yfi_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__operator__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operatorname__", &yfi_get_operatorname, &yfi_bound_operatorname,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__operatorname__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__property__", &yfi_get_property, &yfi_bound_property,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__property__?DFunction though ?#__func__"),
+	TYPE_GETTER_AB_F("__defaults__", &yfi_get_code_defaults,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "#t{UnboundAttribute}"
+	                 "Alias for ?A__defaults__?DFunction though ?#__func__"),
+	TYPE_GETTER_AB_F("__constants__", &yfi_get_code_constants,
+	                 METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                 "->?S?O\n"
+	                 "#t{UnboundAttribute}"
+	                 "Alias for ?A__constants__?DFunction though ?#__func__"),
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETTER_BOUND_F(STR___doc__, &yfi_get_doc, &yfi_bound_doc,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?X2?Dstring?N\n"
@@ -3190,10 +3721,11 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    "->?S?O\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for ?A__constants__?DFunction though ?#__func__"),
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_GETSET_END
 };
 
-#ifdef CONFIG_NO_THREADS
+#if defined(CONFIG_NO_THREADS) || defined(CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS)
 PRIVATE struct type_member tpconst yfi_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
@@ -3202,11 +3734,16 @@ PRIVATE struct type_member tpconst yfi_members[] = {
 	                      "->?Ert:YieldFunction\n"
 	                      "The underlying yield-function, describing the ?DFunction "
 	                      /**/ "and arguments that are being executed"),
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFIterator, yi_frame.cf_func),
+	                      "->?Dfunction\n"
+	                      "The function that is being executed"),
+#endif /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	TYPE_MEMBER_END
 };
-#else /* CONFIG_NO_THREADS */
+#else /* CONFIG_NO_THREADS || CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 #define yfi_members NULL
-#endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_NO_THREADS && !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 PRIVATE struct type_gc tpconst yfi_gc = {
 	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&yfi_clear

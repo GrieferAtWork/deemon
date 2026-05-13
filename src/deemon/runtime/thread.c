@@ -5354,7 +5354,9 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
 		dst->cf_result = iter->cf_result;
 		if (ITER_ISOK(dst->cf_result))
 			INCREF_IF_NONZERO(dst->cf_result);
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 		dst->cf_flags = code->co_flags;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		/* Copy arguments and locals */
 		if (dst->cf_argv) {
 			for (i = 0; i < dst->cf_argc; ++i) {

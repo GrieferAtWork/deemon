@@ -1165,7 +1165,9 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_frame.cf_this    = NULL;
 	self->im_frame.cf_result  = NULL;
 	self->im_frame.cf_stacksz = 0;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	self->im_frame.cf_flags   = INTERACTIVE_MODULE_CODE_FLAGS;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	Dee_Incref(argv);
 
 	/* Allocate the function object for the initial code frame. */
@@ -1850,7 +1852,9 @@ imod_clear(InteractiveModule *__restrict self) {
 	self->im_frame.cf_this    = NULL;
 	self->im_frame.cf_result  = NULL;
 	self->im_frame.cf_stacksz = 0;
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 	self->im_frame.cf_flags   = 0;
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	localc = self->im_module.mo_root ? self->im_module.mo_root->co_localc : 0;
 	ASSERT(!(self->im_module.mo_flags & Dee_MODULE_FDIDLOAD));
 	old_globalc = self->im_module.mo_globalc;

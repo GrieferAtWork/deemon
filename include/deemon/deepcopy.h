@@ -148,8 +148,9 @@ struct Dee_deepcopy_vars {
 
 struct Dee_deepcopy_hook {
 	struct Dee_deepcopy_hook *dch_next; /* [0..1] Next hook */
-	void (DCALL *dch_hook)(struct Dee_deepcopy_hook *__restrict self,
-	                       struct Dee_deepcopy_vars *__restrict vars);
+	NONNULL_T((1, 2))
+	void (DFCALL *dch_hook)(struct Dee_deepcopy_hook *__restrict self,
+	                        struct Dee_deepcopy_vars *__restrict vars);
 };
 
 /*
@@ -204,6 +205,9 @@ typedef struct {
 	                                              * objects, which are then replaced with their serialized equivalents as necessary. */
 	size_t                       dcc_weakrefc;   /* # of elements in `dcc_weakrefv' */
 } DeeDeepCopyContext;
+
+#define DeeDeepCopyContext_AddHook(self, hook) \
+	(void)((hook)->dch_next = (self)->dcc_hooks, (self)->dcc_hooks = (hook))
 
 /* Initialize/finalize a deepcopy context. */
 DFUNDEF NONNULL((1)) void DCALL

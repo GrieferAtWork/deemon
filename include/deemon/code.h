@@ -887,6 +887,12 @@ struct Dee_code_frame_kwds {
 };
 
 
+/* Simplify internal implementation contracts of `DeeYieldFunctionIteratorObject' */
+#undef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+#if 1
+#define CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+#endif
+
 struct Dee_tuple_object;
 struct Dee_function_object;
 
@@ -919,10 +925,16 @@ struct Dee_code_frame {
 	uint16_t                    cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
 	                                         * HINT: This field is not used by code running in fast mode
 	                                         *       (aka. Code without the `Dee_CODE_FASSEMBLY' flag set). */
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+#if __SIZEOF_POINTER__ > 2
+	uint16_t                    cf_padding[(__SIZEOF_POINTER__ / 2) - 1]; /* ... */
+#endif /* __SIZEOF_POINTER__ > 2 */
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	uint16_t                    cf_flags;   /* Frame flags (Only used by yield-function-iterators; set of `CODE_F*') */
 #if __SIZEOF_POINTER__ > 4
 	uint16_t                    cf_padding[2]; /* ... */
 #endif /* __SIZEOF_POINTER__ > 4 */
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 };
 
 #define Dee_code_frame_getipaddr(self)       (Dee_code_addr_t)((self)->cf_ip - (self)->cf_func->fo_code->co_code)
@@ -1185,8 +1197,22 @@ typedef struct Dee_yield_function_object {
 
 typedef struct Dee_yield_function_iterator_object {
 	Dee_OBJECT_HEAD /* GC Object. */
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+	DREF DeeYieldFunctionObject *yi_func;  /* [1..1][const] The yield function instance that created us. */
+	struct Dee_code_frame        yi_frame; /* [lock(yi_lock)]
+	                                        * [owned(.cf_frame)]
+	                                        * [owned_if(.cf_stack, .cf_stacksz)]
+	                                        * [.cf_kw    == yi_func->yf_kw]
+	                                        * [.cf_flags == code->co_flags]
+	                                        * [.cf_func  == yi_func->yf_func]
+	                                        * [.cf_argc  == yi_func->yf_argc]
+	                                        * [.cf_argv  == yi_func->yf_argv]
+	                                        * [.cf_this  == yi_func->yf_this]
+	                                        * Execution frame of this iterator. */
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 	DREF DeeYieldFunctionObject *yi_func;  /* [0..1][lock(yi_lock)] The yield function instance that created us.
-	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
+	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC.
+	                                        * TODO: There's no reason for this set-to-NULL behavior! */
 	struct Dee_code_frame        yi_frame; /* [lock(yi_lock)]
 	                                        * [owned(.cf_frame)]
 	                                        * [owned_if(.cf_stack, .cf_stacksz)]
@@ -1198,6 +1224,7 @@ typedef struct Dee_yield_function_iterator_object {
 	                                        * [.cf_argv == yi_func->yf_argv || NULL]
 	                                        * [.cf_this == yi_func->yf_this || NULL]
 	                                        * Execution frame of this iterator. */
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 #ifndef CONFIG_NO_THREADS
 	Dee_rshared_rwlock_t         yi_lock;  /* Lock held while executing the frame of this iterator.
 	                                        * NOTE: This lock needs to be recursive to allow for
