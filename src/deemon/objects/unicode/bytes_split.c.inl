@@ -61,21 +61,29 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_BytesSplitIterator",
-	                  &self->bsi_split);
-	if (DeeObject_AssertTypeExact(self->bsi_split,
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSplitIterator", params: """
+	BytesSplit *split:?Ert:BytesSplit
+""", docStringPrefix: "bsi");]]]*/
+#define bsi__BytesSplitIterator_params "split:?Ert:BytesSplit"
+	struct {
+		BytesSplit *split;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesSplitIterator", &args.split);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.split,
 	                              Dee_TYPE(self) == &BytesSplitIterator_Type
 	                              ? &BytesSplit_Type
 	                              : &BytesCaseSplit_Type))
 		goto err;
-	self->bsi_bytes = self->bsi_split->bs_bytes;
+	Dee_Incref(args.split);
+	self->bsi_split = args.split;
+	self->bsi_bytes = args.split->bs_bytes;
 	self->bsi_iter  = DeeBytes_DATA(self->bsi_bytes);
 	self->bsi_end   = self->bsi_iter + DeeBytes_SIZE(self->bsi_bytes);
 	if (self->bsi_iter == self->bsi_end)
 		self->bsi_iter = NULL;
-	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
-	self->bsi_sep_len = self->bsi_split->bs_sep_len;
-	Dee_Incref(self->bsi_split);
+	self->bsi_sep_ptr = args.split->bs_sep_ptr;
+	self->bsi_sep_len = args.split->bs_sep_len;
 	return 0;
 err:
 	return -1;
@@ -237,7 +245,7 @@ PRIVATE struct type_member tpconst bcsi_members[] = {
 INTERN DeeTypeObject BytesSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSplitIterator",
-	/* .tp_doc      = */ DOC("(split:?Ert:BytesSplit)\n"
+	/* .tp_doc      = */ DOC("(" bsi__BytesSplitIterator_params ")\n"
 	                         "\n"
 	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
@@ -382,31 +390,44 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bs_init(BytesSplit *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack2(err, argc, argv, "_BytesSplit", &self->bs_bytes, &self->bs_sep_owner);
-	if (DeeObject_AssertTypeExact(self->bs_bytes, &DeeBytes_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSplit", params: """
+	DeeBytesObject *bytes,
+	sep:?X3?DBytes?Dstring?Dint
+""", docStringPrefix: "bs");]]]*/
+#define bs__BytesSplit_params "bytes:?DBytes,sep:?X3?DBytes?Dstring?Dint"
+	struct {
+		DeeBytesObject *bytes;
+		DeeObject *sep;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_BytesSplit", &args, &args.bytes, &args.sep);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.bytes, &DeeBytes_Type))
 		goto err;
-	if (DeeBytes_Check(self->bs_sep_owner)) {
-		self->bs_sep_ptr = DeeBytes_DATA(self->bs_sep_owner);
-		self->bs_sep_len = DeeBytes_SIZE(self->bs_sep_owner);
+	if (DeeBytes_Check(args.sep)) {
+		self->bs_sep_ptr = DeeBytes_DATA(args.sep);
+		self->bs_sep_len = DeeBytes_SIZE(args.sep);
 		if unlikely(!self->bs_sep_len)
 			goto err_empty_sep;
-		Dee_Incref(self->bs_sep_owner);
-	} else if (DeeString_Check(self->bs_sep_owner)) {
-		self->bs_sep_ptr = DeeString_AsBytes(self->bs_sep_owner, false);
+		Dee_Incref(args.sep);
+		self->bs_sep_owner = args.sep;
+	} else if (DeeString_Check(args.sep)) {
+		self->bs_sep_ptr = DeeString_AsBytes(args.sep, false);
 		if unlikely(!self->bs_sep_ptr)
 			goto err;
 		self->bs_sep_len = WSTR_LENGTH(self->bs_sep_ptr);
 		if unlikely(!self->bs_sep_len)
 			goto err_empty_sep;
-		Dee_Incref(self->bs_sep_owner);
+		Dee_Incref(args.sep);
+		self->bs_sep_owner = args.sep;
 	} else {
-		if (DeeObject_AsUIntX(self->bs_sep_owner, &self->bs_sep_buf[0]))
+		if (DeeObject_AsUIntX(args.sep, &self->bs_sep_buf[0]))
 			goto err;
-		self->bs_sep_owner = NULL;
 		self->bs_sep_ptr   = self->bs_sep_buf;
 		self->bs_sep_len   = 1;
+		self->bs_sep_owner = NULL;
 	}
-	Dee_Incref(self->bs_bytes);
+	Dee_Incref(args.bytes);
+	self->bs_bytes = args.bytes;
 	return 0;
 err_empty_sep:
 	DeeError_Throwf(&DeeError_ValueError, "Empty split separator");
@@ -593,7 +614,7 @@ PRIVATE struct type_member tpconst bcs_class_members[] = {
 INTERN DeeTypeObject BytesSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSplit",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,sep:?X3?DBytes?Dstring?Dint)"),
+	/* .tp_doc      = */ DOC("(" bs__BytesSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -642,7 +663,7 @@ INTERN DeeTypeObject BytesSplit_Type = {
 INTERN DeeTypeObject BytesCaseSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseSplit",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,sep:?X3?DBytes?Dstring?Dint)"),
+	/* .tp_doc      = */ DOC("(" bs__BytesSplit_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -816,14 +837,21 @@ STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_iter) == offsetof(BytesLineSplitI
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	BytesLineSplit *ls;
-	DeeArg_Unpack1(err, argc, argv, "_BytesLineSplitIterator", &ls);
-	if (DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesLineSplitIterator", params: """
+	BytesLineSplit *linesplit:?Ert:BytesLineSplit
+""", docStringPrefix: "bsi");]]]*/
+#define bsi__BytesLineSplitIterator_params "linesplit:?Ert:BytesLineSplit"
+	struct {
+		BytesLineSplit *linesplit;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_BytesLineSplitIterator", &args.linesplit);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.linesplit, &BytesLineSplit_Type))
 		goto err;
-	self->blsi_bytes    = ls->bls_bytes;
+	self->blsi_bytes    = args.linesplit->bls_bytes;
 	self->blsi_iter     = DeeBytes_DATA(self->blsi_bytes);
 	self->blsi_end      = self->blsi_iter + DeeBytes_SIZE(self->blsi_bytes);
-	self->blsi_keepends = ls->bls_keepends;
+	self->blsi_keepends = args.linesplit->bls_keepends;
 	if (self->blsi_iter == self->blsi_end)
 		self->blsi_iter = NULL;
 	Dee_Incref(self->blsi_bytes);
@@ -941,7 +969,7 @@ PRIVATE struct type_member tpconst blsi_members[] = {
 INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplitIterator",
-	/* .tp_doc      = */ DOC("(split:?Ert:BytesLineSplit)\n"
+	/* .tp_doc      = */ DOC("(" bsi__BytesLineSplitIterator_params ")\n"
 	                         "\n"
 	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,

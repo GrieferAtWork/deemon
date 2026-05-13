@@ -652,14 +652,21 @@ PRIVATE int db_sqlite_progress_handler(void *UNUSED(ignored)) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 db_init(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	int rc;
-	DeeObject *filename;
 	char const *utf8_filename;
 	DREF struct db_string_fini_hook *sf_hook;
 	DREF struct db_thread_interrupt_hook *ti_hook;
-	DeeArg_Unpack1(err, argc, argv, "DB", &filename);
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("DB", params: """
+	DeeStringObject *filename
+""", docStringPrefix: "db");]]]*/
+#define db_DB_params "filename:?Dstring"
+	struct {
+		DeeStringObject *filename;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "DB", &args.filename);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.filename, &DeeString_Type))
 		goto err;
-	utf8_filename = DeeString_AsUtf8(filename);
+	utf8_filename = DeeString_AsUtf8(args.filename);
 	if unlikely(!utf8_filename)
 		goto err;
 	sf_hook = db_string_fini_hook_alloc();
@@ -1179,7 +1186,7 @@ PRIVATE struct type_gc tpconst db_gc = {
 INTERN DeeTypeObject DB_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "DB",
-	/* .tp_doc      = */ DOC("(filename:?Dstring)"),
+	/* .tp_doc      = */ DOC("(" db_DB_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DB),
 	/* .tp_features = */ TF_NONE,

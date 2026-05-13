@@ -125,13 +125,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udictiterator_init(UDictIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
-	UDict *dict;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueDictIterator", &dict);
-	if (DeeObject_AssertType(dict, &UDict_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueDictIterator", params: """
+	UDict *dict:?GUniqueDict
+""", docStringPrefix: "udictiterator");]]]*/
+#define udictiterator__UniqueDictIterator_params "dict:?GUniqueDict"
+	struct {
+		UDict *dict;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueDictIterator", &args.dict);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.dict, &UDict_Type))
 		goto err;
-	self->udi_dict = dict;
-	Dee_Incref(dict);
-	self->udi_next = dict->ud_elem;
+	self->udi_dict = args.dict;
+	Dee_Incref(args.dict);
+	self->udi_next = args.dict->ud_elem;
 	return 0;
 err:
 	return -1;
@@ -287,7 +294,7 @@ PRIVATE struct type_member tpconst udictiterator_members[] = {
 INTERN DeeTypeObject UDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueDictIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" udictiterator__UniqueDictIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -535,9 +542,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udict_init(UDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "UniqueDict", &seq);
-	return udict_init_sequence(self, seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("UniqueDict", params: """
+	seq:?X2?DMapping?M?O?O
+""", docStringPrefix: "udict");]]]*/
+#define udict_UniqueDict_params "seq:?X2?DMapping?M?O?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "UniqueDict", &args.seq);
+/*[[[end]]]*/
+	return udict_init_sequence(self, args.seq);
 err:
 	return -1;
 }
@@ -1321,7 +1335,9 @@ INTERN DeeTypeObject UDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "UniqueDict",
 	/* .tp_doc      = */ DOC("A mutable mapping-like container that uses ?Aid?O "
-	                         /**/ "and ${x === y} to detect/prevent duplicates\n"),
+	                         /**/ "and ${x === y} to detect/prevent duplicates\n"
+	                         "\n"
+	                         "(" udict_UniqueDict_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(UDict),
 	/* .tp_features = */ TF_NONE,
@@ -1433,13 +1449,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 urodictiterator_init(URoDictIterator *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	URoDict *dict;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDictIterator", &dict);
-	if (DeeObject_AssertTypeExact(dict, &URoDict_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueRoDictIterator", params: """
+	URoDict *dict:?AFrozen?GUniqueDict;
+""", docStringPrefix: "urodictiterator");]]]*/
+#define urodictiterator__UniqueRoDictIterator_params "dict:?AFrozen?GUniqueDict"
+	struct {
+		URoDict *dict;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDictIterator", &args.dict);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.dict, &URoDict_Type))
 		goto err;
-	self->urdi_dict = dict;
-	Dee_Incref(dict);
-	self->urdi_next = dict->urd_elem;
+	self->urdi_dict = args.dict;
+	Dee_Incref(args.dict);
+	self->urdi_next = args.dict->urd_elem;
 	return 0;
 err:
 	return -1;
@@ -1516,7 +1539,7 @@ PRIVATE struct type_member tpconst urodictiterator_members[] = {
 INTERN DeeTypeObject URoDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueRoDictIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" urodictiterator__UniqueRoDictIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1781,9 +1804,16 @@ err:
 
 PRIVATE WUNUSED DREF URoDict *DCALL
 urodict_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDict", &seq);
-	return URoDict_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueRoDict", params: """
+	seq:?X2?DMapping?M?O?O
+""", docStringPrefix: "urodict");]]]*/
+#define urodict__UniqueRoDict_params "seq:?X2?DMapping?M?O?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoDict", &args.seq);
+/*[[[end]]]*/
+	return URoDict_FromSequence(args.seq);
 err:
 	return NULL;
 }
@@ -2021,7 +2051,7 @@ PRIVATE struct type_member tpconst urodict_class_members[] = {
 INTERN DeeTypeObject URoDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueRoDict",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" urodict__UniqueRoDict_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

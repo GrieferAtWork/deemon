@@ -183,13 +183,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
-	USet *set;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueSetIterator", &set);
-	if (DeeObject_AssertType(set, &USet_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueSetIterator", params: """
+	USet *set:?GUniqueSet;
+""", docStringPrefix: "usetiterator");]]]*/
+#define usetiterator__UniqueSetIterator_params "set:?GUniqueSet"
+	struct {
+		USet *set;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueSetIterator", &args.set);
+/*[[[end]]]*/
+	if (DeeObject_AssertType(args.set, &USet_Type))
 		goto err;
-	self->usi_set = set;
-	Dee_Incref(set);
-	self->usi_next = set->us_elem;
+	self->usi_set = args.set;
+	Dee_Incref(args.set);
+	self->usi_next = args.set->us_elem;
 	return 0;
 err:
 	return -1;
@@ -235,7 +242,7 @@ PRIVATE struct type_member tpconst usetiterator_members[] = {
 INTERN DeeTypeObject USetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueSetIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" usetiterator__UniqueSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -982,9 +989,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "UniqueSet", &seq);
-	return udict_init_sequence(self, seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("UniqueSet", params: """
+	seq:?X2?DSet?S?O
+""", docStringPrefix: "uset");]]]*/
+#define uset_UniqueSet_params "seq:?X2?DSet?S?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "UniqueSet", &args.seq);
+/*[[[end]]]*/
+	return udict_init_sequence(self, args.seq);
 err:
 	return -1;
 }
@@ -1171,8 +1185,8 @@ INTERN DeeTypeObject USet_Type = {
 	                         "Create an empty set\n"
 	                         "\n"
 
-	                         "(items:?S?O)\n"
-	                         "Create a new set populated with elements from @items\n"
+	                         "(" uset_UniqueSet_params ")\n"
+	                         "Create a new set populated with elements from @seq\n"
 	                         "\n"
 
 	                         "copy->\n"
@@ -1328,13 +1342,20 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	URoSet *set;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueRoSetIterator", &set);
-	if (DeeObject_AssertTypeExact(set, &URoSet_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueRoSetIterator", params: """
+	URoSet *set:?AFrozen?GUniqueSet
+""", docStringPrefix: "urosetiterator");]]]*/
+#define urosetiterator__UniqueRoSetIterator_params "set:?AFrozen?GUniqueSet"
+	struct {
+		URoSet *set;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoSetIterator", &args.set);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.set, &URoSet_Type))
 		goto err;
-	self->ursi_set = set;
-	Dee_Incref(set);
-	self->ursi_next = set->urs_elem;
+	Dee_Incref(args.set);
+	self->ursi_set  = args.set;
+	self->ursi_next = args.set->urs_elem;
 	return 0;
 err:
 	return -1;
@@ -1354,7 +1375,7 @@ urosetiterator_bool(URoSetIterator *__restrict self) {
 INTERN DeeTypeObject URoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueRoSetIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" urosetiterator__UniqueRoSetIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1802,9 +1823,16 @@ err:
 
 PRIVATE WUNUSED DREF URoSet *DCALL
 uroset_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_UniqueRoSet", &seq);
-	return URoSet_FromSequence(seq);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_UniqueRoSet", params: """
+	seq:?X2?DSet?S?O
+""", docStringPrefix: "uroset");]]]*/
+#define uroset__UniqueRoSet_params "seq:?X2?DSet?S?O"
+	struct {
+		DeeObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_UniqueRoSet", &args.seq);
+/*[[[end]]]*/
+	return URoSet_FromSequence(args.seq);
 err:
 	return NULL;
 }
@@ -1851,7 +1879,7 @@ PRIVATE struct type_member tpconst uroset_class_members[] = {
 INTERN DeeTypeObject URoSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_UniqueRoSet",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" uroset__UniqueRoSet_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

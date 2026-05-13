@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/arg.h>         /* DEFINE_KWLIST, DeeArg_Unpack0Or1, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>         /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>        /* return_bool */
 #include <deemon/callable.h>    /* DeeCallable_Type */
 #include <deemon/error-rt.h>    /* DeeRT_ErrTUnboundAttrCStr */
@@ -65,6 +65,7 @@ typedef struct {
 	                          * represents the result of a once-callback, but [lock(o_once)]
 	                          * when the once-operation hasn't been executed, yet. */
 #ifndef CONFIG_NO_THREADS
+	/* TODO: This should be an RCU lock */
 	size_t          o_inuse; /* [lock(ATOMIC)] Non-zero if someone is reading from `o_value' */
 #endif /* !CONFIG_NO_THREADS */
 } DeeOnceObject;
@@ -141,13 +142,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_init(DeeOnceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Once", params: """
+	callback:?DCallable
+""", docStringPrefix: "once");]]]*/
+#define once_Once_params "callback:?DCallable"
+	struct {
+		DeeObject *callback;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "Once", &args.callback);
+/*[[[end]]]*/
 	Dee_once_init(&self->o_once);
-	self->o_value = NULL;
+	Dee_Incref(args.callback);
+	self->o_value = args.callback;
 #ifndef CONFIG_NO_THREADS
 	self->o_inuse = 0;
 #endif /* !CONFIG_NO_THREADS */
-	DeeArg_Unpack0Or1(err, argc, argv, "Once", &self->o_value);
-	Dee_XIncref(self->o_value);
 	return 0;
 err:
 	return -1;

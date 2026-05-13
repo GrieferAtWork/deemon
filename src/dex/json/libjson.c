@@ -175,15 +175,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseqiter_init(DeeJsonIteratorObject *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	DeeJsonSequenceObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_JsonSequenceIterator", &seq);
-	if (DeeObject_AssertTypeExact(seq, &DeeJsonSequence_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_JsonSequenceIterator", params: """
+	DeeJsonSequenceObject *seq:?GSequence;
+""", docStringPrefix: "jseqiter");]]]*/
+#define jseqiter__JsonSequenceIterator_params "seq:?GSequence"
+	struct {
+		DeeJsonSequenceObject *seq;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_JsonSequenceIterator", &args.seq);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.seq, &DeeJsonSequence_Type))
 		goto err;
-	self->ji_owner = seq->js_owner;
+	self->ji_owner = args.seq->js_owner;
 	Dee_Incref(self->ji_owner);
-	DeeJsonSequence_LockRead(seq);
-	self->ji_parser = seq->js_parser;
-	DeeJsonSequence_LockEndRead(seq);
+	DeeJsonSequence_LockRead(args.seq);
+	self->ji_parser = args.seq->js_parser;
+	DeeJsonSequence_LockEndRead(args.seq);
 	if unlikely(libjson_parser_rewind(&self->ji_parser) != JSON_PARSER_ARRAY)
 		goto err_syntax;
 	return 0;
@@ -196,15 +203,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmapiter_init(DeeJsonIteratorObject *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	DeeJsonMappingObject *seq;
-	DeeArg_Unpack1(err, argc, argv, "_JsonMappingIterator", &seq);
-	if (DeeObject_AssertTypeExact(seq, &DeeJsonMapping_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_JsonMappingIterator", params: """
+	DeeJsonMappingObject *map:?GMapping;
+""", docStringPrefix: "jmapiter");]]]*/
+#define jmapiter__JsonMappingIterator_params "map:?GMapping"
+	struct {
+		DeeJsonMappingObject *map;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_JsonMappingIterator", &args.map);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.map, &DeeJsonMapping_Type))
 		goto err;
-	self->ji_owner = seq->jm_owner;
+	self->ji_owner = args.map->jm_owner;
 	Dee_Incref(self->ji_owner);
-	DeeJsonMapping_LockRead(seq);
-	self->ji_parser = seq->jm_parser;
-	DeeJsonMapping_LockEndRead(seq);
+	DeeJsonMapping_LockRead(args.map);
+	self->ji_parser = args.map->jm_parser;
+	DeeJsonMapping_LockEndRead(args.map);
 	if unlikely(libjson_parser_rewind(&self->ji_parser) != JSON_PARSER_OBJECT)
 		goto err_syntax;
 	return 0;
@@ -802,9 +816,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseq_init(DeeJsonSequenceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeObject *data;
-	DeeArg_Unpack1(err, argc, argv, "_JsonSequence", &data);
-	if unlikely(jseq_or_map_init_parser(self, data))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_JsonSequence", params: """
+	data:?X3?DFile?DBytes?Dstring
+""", docStringPrefix: "jseq");]]]*/
+#define jseq__JsonSequence_params "data:?X3?DFile?DBytes?Dstring"
+	struct {
+		DeeObject *data;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_JsonSequence", &args.data);
+/*[[[end]]]*/
+	if unlikely(jseq_or_map_init_parser(self, args.data))
 		goto err;
 
 	/* Parse the leading '['-token */
@@ -825,9 +846,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 jmap_init(DeeJsonMappingObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeObject *data;
-	DeeArg_Unpack1(err, argc, argv, "_JsonMapping", &data);
-	if unlikely(jseq_or_map_init_parser((DeeJsonSequenceObject *)self, data))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_JsonMapping", params: """
+	data:?X3?DFile?DBytes?Dstring
+""", docStringPrefix: "jmap");]]]*/
+#define jmap__JsonMapping_params "data:?X3?DFile?DBytes?Dstring"
+	struct {
+		DeeObject *data;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_JsonMapping", &args.data);
+/*[[[end]]]*/
+	if unlikely(jseq_or_map_init_parser((DeeJsonSequenceObject *)self, args.data))
 		goto err;
 
 	/* Parse the leading '{'-token */
@@ -1325,7 +1353,7 @@ PRIVATE struct type_member tpconst jmap_class_members[] = {
 INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_JsonSequenceIterator",
-	/* .tp_doc      = */ DOC("(seq?:?GSequence)"),
+	/* .tp_doc      = */ DOC("(" jseqiter__JsonSequenceIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1370,7 +1398,7 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_JsonMappingIterator",
-	/* .tp_doc      = */ DOC("(seq?:?GMapping)"),
+	/* .tp_doc      = */ DOC("(" jmapiter__JsonMappingIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1418,8 +1446,7 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 	/* .tp_doc      = */ DOC("An optimized sequence type for JIT-parsing of JSON arrays.\n"
 	                         "\n"
 
-	                         "()\n"
-	                         "(data:?X3?DFile?DBytes?Dstring)"),
+	                         "(" jseq__JsonSequence_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1464,8 +1491,7 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 	/* .tp_doc      = */ DOC("An optimized mapping type for JIT-parsing of JSON mappings.\n"
 	                         "\n"
 
-	                         "()\n"
-	                         "(data:?X3?DFile?DBytes?Dstring)"),
+	                         "(" jmap__JsonMapping_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

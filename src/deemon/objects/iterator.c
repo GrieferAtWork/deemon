@@ -172,12 +172,21 @@ PRIVATE struct type_cmp iterator_cmp = {
 
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_next(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "next", &def);
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("next", params: """
+	def?
+""", docStringPrefix: "iterator");]]]*/
+#define iterator_next_params "def?"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "next", &args.def);
+/*[[[end]]]*/
 	result = DeeObject_IterNext(self);
 	if (result == ITER_DONE) {
-		if (def)
-			return_reference_(def);
+		if (args.def)
+			return_reference_(args.def);
 		DeeError_Throw(&DeeError_StopIteration_instance);
 		result = NULL;
 	}
@@ -188,12 +197,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_nextkey(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "nextkey", &def);
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextkey", params: """
+	def?
+""", docStringPrefix: "iterator");]]]*/
+#define iterator_nextkey_params "def?"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "nextkey", &args.def);
+/*[[[end]]]*/
 	result = DeeObject_IterNextKey(self);
 	if (result == ITER_DONE) {
-		if (def)
-			return_reference_(def);
+		if (args.def)
+			return_reference_(args.def);
 		DeeError_Throw(&DeeError_StopIteration_instance);
 		result = NULL;
 	}
@@ -204,12 +222,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_nextvalue(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "nextvalue", &def);
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("nextvalue", params: """
+	def?
+""", docStringPrefix: "iterator");]]]*/
+#define iterator_nextvalue_params "def?"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "nextvalue", &args.def);
+/*[[[end]]]*/
 	result = DeeObject_IterNextValue(self);
 	if (result == ITER_DONE) {
-		if (def)
-			return_reference_(def);
+		if (args.def)
+			return_reference_(args.def);
 		DeeError_Throw(&DeeError_StopIteration_instance);
 		result = NULL;
 	}
@@ -254,13 +281,13 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	              DeeMA_Iterator_rewind_doc "\n"
 	              "Same as ${del this.index} (s.a. ?#index)"),
 	TYPE_METHOD("next", &iterator_next,
-	            "(def?)->\n"
+	            "(" iterator_next_params ")->\n"
 	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
 	            "Same as ${this.operator next()}\n"
 	            "When given, @def is returned when the Iterator has been "
 	            /**/ "exhausted, rather than throwing a :StopIteration error"),
 	TYPE_METHOD("nextkey", &iterator_nextkey,
-	            "(def?)->\n"
+	            "(" iterator_nextkey_params ")->\n"
 	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
 	            "Consume the next item, unpack it into a 2-element "
 	            /**/ "sequence, and return that sequence's first item\n"
@@ -276,7 +303,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "}"
 	            "}"),
 	TYPE_METHOD("nextvalue", &iterator_nextvalue,
-	            "(def?)->\n"
+	            "(" iterator_nextvalue_params ")->\n"
 	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
 	            "Consume the next item, unpack it into a 2-element "
 	            /**/ "sequence, and return that sequence's second item\n"

@@ -58,6 +58,15 @@ DECL_BEGIN
 
 typedef DeeSocketObject Socket;
 
+/*[[[deemon
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_rw", "rw");
+(PRIVATE_DEFINE_STRING from rt.gen.string)("str_DEEMON_MAXBACKLOG", "DEEMON_MAXBACKLOG");
+]]]*/
+PRIVATE DEFINE_STRING_EX(str_rw, "rw", 0xde9c6d88, 0x72723d39b4f71b96);
+PRIVATE DEFINE_STRING_EX(str_DEEMON_MAXBACKLOG, "DEEMON_MAXBACKLOG", 0x6e07a278, 0x7a0d4f211929d412);
+/*[[[end]]]*/
+
+
 PRIVATE ATTR_COLD int DCALL
 err_no_af_support(neterrno_t error, sa_family_t af) {
 	return DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
@@ -65,7 +74,7 @@ err_no_af_support(neterrno_t error, sa_family_t af) {
 	                          sock_getafnameorid(af));
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_ctor(Socket *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	int af, type, proto;
@@ -312,8 +321,6 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_STRING(shutdown_all, "rw");
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_do_shutdown(Socket *__restrict self, int how) {
 	int error;
@@ -332,7 +339,7 @@ err_invalid_shutdown_how(neterrno_t error, int how) {
 	                          "Invalid shutdown mode %x", how);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_shutdown_failed(Socket *__restrict self, neterrno_t error) {
 	return DeeNet_ThrowErrorf(&DeeError_NetError, error,
 	                          "Failed to shutdown socket %k",
@@ -342,13 +349,21 @@ err_shutdown_failed(Socket *__restrict self, neterrno_t error) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_close(Socket *self, size_t argc, DeeObject *const *argv) {
 	sock_t socket_handle;
-	DeeObject *shutdown_mode = Dee_AsObject(&shutdown_all);
-	DeeArg_Unpack0Or1(err, argc, argv, "close", &shutdown_mode);
-	if (!DeeString_Check(shutdown_mode) ||
-	    !DeeString_IsEmpty(shutdown_mode)) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("close", params: """
+	DeeStringObject *how:?X2?Dint?Dstring = (DeeStringObject *)&str_rw =!Prw
+""", docStringPrefix: "socket");]]]*/
+#define socket_close_params "how:?X2?Dint?Dstring=!Prw"
+	struct {
+		DeeStringObject *how;
+	} args;
+	args.how = (DeeStringObject *)&str_rw;
+	DeeArg_Unpack0Or1(err, argc, argv, "close", &args.how);
+/*[[[end]]]*/
+	if (!DeeString_Check(args.how) ||
+	    !DeeString_IsEmpty(args.how)) {
 		int error, mode;
 		uint16_t new_state;
-		if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+		if unlikely(get_shutdown_modeof(Dee_AsObject(args.how), &mode))
 			goto err;
 		/* First of: acquire read-access and call shutdown(). */
 		if (mode == SHUT_RD) {
@@ -410,13 +425,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_shutdown(Socket *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *shutdown_mode = Dee_AsObject(&shutdown_all);
-	DeeArg_Unpack0Or1(err, argc, argv, "shutdown", &shutdown_mode);
-	if (!DeeString_Check(shutdown_mode) ||
-	    !DeeString_IsEmpty(shutdown_mode)) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("shutdown", params: """
+	DeeStringObject *how:?X2?Dint?Dstring = (DeeStringObject *)&str_rw =!Prw
+""", docStringPrefix: "socket");]]]*/
+#define socket_shutdown_params "how:?X2?Dint?Dstring=!Prw"
+	struct {
+		DeeStringObject *how;
+	} args;
+	args.how = (DeeStringObject *)&str_rw;
+	DeeArg_Unpack0Or1(err, argc, argv, "shutdown", &args.how);
+/*[[[end]]]*/
+	if (!DeeString_Check(args.how) ||
+	    !DeeString_IsEmpty(args.how)) {
 		int error, mode;
 		uint16_t new_state;
-		if unlikely(get_shutdown_modeof(shutdown_mode, &mode))
+		if unlikely(get_shutdown_modeof(Dee_AsObject(args.how), &mode))
 			goto err;
 		/* First of: acquire read-access and call shutdown(). */
 		if (mode == SHUT_RD) {
@@ -735,8 +758,7 @@ err:
 	return -1;
 }
 
-PRIVATE DEFINE_STRING(str_DEEMON_MAXBACKLOG, "DEEMON_MAXBACKLOG");
-PRIVATE int DCALL get_default_backlog(void) {
+PRIVATE WUNUSED int DCALL get_default_backlog(void) {
 	int status;
 	uint16_t result;
 	DREF DeeObject *value;
@@ -2454,18 +2476,19 @@ socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	int mode;
 	uint16_t state = self->s_state;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("wasshutdown", params: """
-	DeeObject *shutdown_mode=!Prw = Dee_AsObject(&shutdown_all);
-""");]]]*/
+	DeeStringObject *how=!Prw = (DeeStringObject *)&str_rw;
+""", docStringPrefix: "socket");]]]*/
+#define socket_wasshutdown_params "how=!Prw"
 	struct {
-		DeeObject *shutdown_mode;
+		DeeStringObject *how;
 	} args;
-	args.shutdown_mode = Dee_AsObject(&shutdown_all);
-	DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &args.shutdown_mode);
+	args.how = (DeeStringObject *)&str_rw;
+	DeeArg_Unpack0Or1(err, argc, argv, "wasshutdown", &args.how);
 /*[[[end]]]*/
-	if (DeeString_Check(args.shutdown_mode) &&
-	    DeeString_IsEmpty(args.shutdown_mode))
+	if (DeeString_Check(args.how) &&
+	    DeeString_IsEmpty(args.how))
 		return_bool(!(state & SOCKET_FOPENED));
-	if unlikely(get_shutdown_modeof(args.shutdown_mode, &mode))
+	if unlikely(get_shutdown_modeof(Dee_AsObject(args.how), &mode))
 		goto err;
 	if (mode == SHUT_RD) {
 		mode = state & SOCKET_FSHUTDOWN_R;
@@ -2500,8 +2523,7 @@ socket_wasclosed(Socket *__restrict self) {
 
 PRIVATE struct type_method tpconst socket_methods[] = {
 	TYPE_METHOD_F("close", &socket_close, METHOD_FNOREFESCAPE,
-	              "(shutdown_mode:?Dint)\n"
-	              "(shutdown_mode=!Prw)\n"
+	              "(" socket_close_params ")\n"
 	              "#t{:Interrupt}"
 	              "#tValueError{Invalid shutdown mode}"
 	              "#tNetError{Failed to shutdown @this socket}"
@@ -2510,8 +2532,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "?#shutdown will automatically be invoked on @this socket if it hasn't before\n"
 	              "Note that in the event that ?#shutdown has already been called, "),
 	TYPE_METHOD_F("shutdown", &socket_shutdown, METHOD_FNOREFESCAPE,
-	              "(how:?Dint)\n"
-	              "(how=!Prw)\n"
+	              "(" socket_shutdown_params ")\n"
 	              "#t{:Interrupt}"
 	              "#tValueError{Invalid shutdown mode}"
 	              "#tNetError{Failed to shutdown @this socket}"
@@ -2689,8 +2710,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#r{The total number of bytes that was sent}"
 	              "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected."),
 	TYPE_METHOD_F("wasshutdown", &socket_wasshutdown, METHOD_FNOREFESCAPE,
-	              "(how:?Dint)->?Dbool\n"
-	              "(how=!?rw)->?Dbool\n"
+	              "(" socket_wasshutdown_params ")->?Dbool\n"
 	              "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
 	              "See ?#shutdown for possible values that may be passed to @how"),
 	TYPE_METHOD_END

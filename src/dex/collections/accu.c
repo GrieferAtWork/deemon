@@ -136,10 +136,17 @@ accu_ctor(AccuObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 accu_init(AccuObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeObject *init;
-	DeeArg_Unpack1(err, argc, argv, "Accu", &init);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Accu", params: """
+	init
+""", docStringPrefix: "accu");]]]*/
+#define accu_Accu_params "init"
+	struct {
+		DeeObject *init;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "Accu", &args.init);
+/*[[[end]]]*/
 	Dee_nrshared_lock_init(&self->a_lock);
-	Dee_accu_init_with_first(&self->a_accu, init);
+	Dee_accu_init_with_first(&self->a_accu, args.init);
 	return 0;
 err:
 	return -1;
@@ -209,12 +216,19 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF AccuObject *DCALL
 accu_add(AccuObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *value;
 	Dee_ssize_t status;
-	DeeArg_Unpack1(err, argc, argv, "add", &value);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("add", params: """
+	value
+""", docStringPrefix: "accu");]]]*/
+#define accu_add_params "value"
+	struct {
+		DeeObject *value;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "add", &args.value);
+/*[[[end]]]*/
 	if unlikely(accu_acquire(self))
 		goto err;
-	status = Dee_accu_add(&self->a_accu, value);
+	status = Dee_accu_add(&self->a_accu, args.value);
 	accu_release(self);
 	if unlikely(status < 0)
 		goto err;
@@ -225,12 +239,19 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF AccuObject *DCALL
 accu_addall(AccuObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	DeeObject *values;
 	Dee_ssize_t status;
-	DeeArg_Unpack1(err, argc, argv, "add", &values);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("addall", params: """
+	values:?S?O
+""", docStringPrefix: "accu");]]]*/
+#define accu_addall_params "values:?S?O"
+	struct {
+		DeeObject *values;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "addall", &args.values);
+/*[[[end]]]*/
 	if unlikely(accu_acquire(self))
 		goto err;
-	status = Dee_accu_addall(&self->a_accu, values);
+	status = Dee_accu_addall(&self->a_accu, args.values);
 	accu_release(self);
 	if unlikely(status < 0)
 		goto err;
@@ -314,24 +335,24 @@ PRIVATE struct type_cmp accu_cmp = {
 
 PRIVATE struct type_method tpconst accu_methods[] = {
 	TYPE_METHOD("add", &accu_add,
-	            "(ob)->?.\n"
-	            "Add @ob to the accumulator before re-returning it.\n"
+	            "(" accu_add_params ")->?.\n"
+	            "Add @value to the accumulator before re-returning it.\n"
 	            "${"
-	            /**/ "function add(item: Object): Accu {\n"
+	            /**/ "function add(value: Object): Accu {\n"
 	            /**/ "	// Not the actual implementation (actual impl is atomic in regards\n"
 	            /**/ "	// to other threads also adding items, prevents reentrant calls, and\n"
 	            /**/ "	// has various optimizations for different objects being accumulated\n"
-	            /**/ "	this.value = this.value is bound ? (this.value + item) : item;\n"
+	            /**/ "	this.value = this.value is bound ? (this.value + value) : value;\n"
 	            /**/ "	return this;\n"
 	            /**/ "}"
 	            "}"),
 	TYPE_METHOD("addall", &accu_addall,
-	            "(objs:?S?O)->?.\n"
-	            "Iterate @objs and add its elements to the accumulator before re-returning it.\n"
+	            "(" accu_addall_params ")->?.\n"
+	            "Iterate @values and add its elements to the accumulator before re-returning it.\n"
 	            "${"
-	            /**/ "function addall(objs: {Object...}): Accu {\n"
-	            /**/ "	for (local ob: objs)\n"
-	            /**/ "		this.add(ob);\n"
+	            /**/ "function addall(values: {Object...}): Accu {\n"
+	            /**/ "	for (local value: values)\n"
+	            /**/ "		this.add(value);\n"
 	            /**/ "	return this;\n"
 	            /**/ "}"
 	            "}"),
@@ -374,7 +395,7 @@ INTERN DeeTypeObject Accu_Type = {
 	                         /**/ "|All other types are accumulated by directly invoking their ${operator +}"
 	                         "}\n"
 	                         "\n"
-	                         "(init?)\n"
+	                         "(" accu_Accu_params ")\n"
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns true if ?#value is bound (at least "

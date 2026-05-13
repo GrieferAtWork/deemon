@@ -268,14 +268,23 @@ STATIC_ASSERT(offsetof(GCCollectionIterator, gcci_coll) == offsetof(ProxyObject,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gccolliter_init(GCCollectionIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_GCCollectionIterator", &self->gcci_coll);
-	if (DeeObject_AssertTypeExact(self->gcci_coll, &GCCollection_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_GCCollectionIterator", params: """
+	GCCollection *coll:?Ert:GCCollection
+""", docStringPrefix: "gccolliter");]]]*/
+#define gccolliter__GCCollectionIterator_params "coll:?Ert:GCCollection"
+	struct {
+		GCCollection *coll;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_GCCollectionIterator", &args.coll);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.coll, &GCCollection_Type))
 		goto err;
-	if (gccoll_loadcache(self->gcci_coll))
+	if (gccoll_loadcache(args.coll))
 		goto err;
-	Dee_Incref(self->gcci_coll);
-	self->gcci_iter = self->gcci_coll->gcc_cache.gs_map;
-	self->gcci_end  = self->gcci_iter + self->gcci_coll->gcc_cache.gs_msk + 1;
+	Dee_Incref(args.coll);
+	self->gcci_iter = args.coll->gcc_cache.gs_map;
+	self->gcci_end  = self->gcci_iter + args.coll->gcc_cache.gs_msk + 1;
+	self->gcci_coll = args.coll;
 	return 0;
 err:
 	return -1;
@@ -325,7 +334,7 @@ gccolliter_next(GCCollectionIterator *__restrict self) {
 INTERN DeeTypeObject GCCollectionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_GCCollectionIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(" gccolliter__GCCollectionIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

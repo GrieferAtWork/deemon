@@ -410,9 +410,16 @@ PRIVATE DREF DeeObject *DCALL
 shlib_addr2name(DeeTypeObject *UNUSED(tp_self),
                 size_t argc, DeeObject *const *argv) {
 	union pointer addr;
-	DeeObject *addrob;
-	DeeArg_Unpack1(err, argc, argv, "addr2name", &addrob);
-	if (DeeObject_AsPointer(addrob, &CVoid_Type, &addr))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("addr2name", params: """
+	addr:?Aptr?Gvoid
+""", docStringPrefix: "shlib");]]]*/
+#define shlib_addr2name_params "addr:?Aptr?Gvoid"
+	struct {
+		DeeObject *addr;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "addr2name", &args.addr);
+/*[[[end]]]*/
+	if (DeeObject_AsPointer(args.addr, &CVoid_Type, &addr))
 		goto err;
 	return shlib_addr2name_impl(addr.ptr);
 err:
@@ -426,21 +433,28 @@ PRIVATE DREF ShLib *DCALL
 shlib_ofmodule(DeeTypeObject *UNUSED(tp_self),
                size_t argc, DeeObject *const *argv) {
 	DREF ShLib *result;
-	DeeModuleObject *mod;
 	struct Dee_module_dexdata *dexdata;
-	DeeArg_Unpack1(err, argc, argv, "ofmodule", &mod);
-	if (DeeObject_AssertTypeExact(mod, &DeeModuleDex_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ofmodule", params: """
+	DeeModuleObject *mod:?Ert:ModuleDex
+""", docStringPrefix: "shlib");]]]*/
+#define shlib_ofmodule_params "mod:?Ert:ModuleDex"
+	struct {
+		DeeModuleObject *mod;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "ofmodule", &args.mod);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.mod, &DeeModuleDex_Type))
 		goto err;
-	dexdata = mod->mo_moddata.mo_dexdata;
+	dexdata = args.mod->mo_moddata.mo_dexdata;
 	if (dexdata->mdx_handle == DeeSystem_DlOpen_FAILED) {
 		/* This can happen if "mod" is the deemon core itself, and
 		 * the core hadn't had a chance to initialize itself, yet. */
-		COMPILER_UNUSED(DeeModule_GetNativeSymbol(mod, "DeeObject_Type"));
+		COMPILER_UNUSED(DeeModule_GetNativeSymbol(args.mod, "DeeObject_Type"));
 		if unlikely(dexdata->mdx_handle == DeeSystem_DlOpen_FAILED) {
 			/* Weird... Throw an error */
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unable to determine native library handle of dex module %k",
-			                mod);
+			                args.mod);
 			goto err;
 		}
 	}
@@ -448,8 +462,8 @@ shlib_ofmodule(DeeTypeObject *UNUSED(tp_self),
 	result = DeeObject_MALLOC(ShLib);
 	if unlikely(!result)
 		goto err;
-	Dee_Incref(mod);
-	result->sh_lib_owner = Dee_AsObject(mod);
+	Dee_Incref(args.mod);
+	result->sh_lib_owner = Dee_AsObject(args.mod);
 #ifndef CONFIG_NO_CFUNCTION
 	result->sh_vfunptr = NULL;
 #if defined(__i386__) && !defined(__x86_64__)
@@ -482,13 +496,13 @@ PRIVATE struct type_method tpconst shlib_methods[] = {
 
 PRIVATE struct type_method tpconst shlib_class_methods[] = {
 	TYPE_METHOD_F("addr2name", &shlib_addr2name, METHOD_FNOREFESCAPE,
-	              "(addr:?Aptr?Gvoid)->?X2?T2?Dstring?Dint?N\n"
+	              "(" shlib_addr2name_params ")->?X2?T2?Dstring?Dint?N\n"
 	              "Using system-specific debug/export information, try to "
 	              /**/ "convert a symbol address into that symbol's name.\n"
 	              "On success, returns ${(symbolName, offsetFromSymbol)}"),
 #ifndef CONFIG_NO_DEX
 	TYPE_METHOD_F("ofmodule", &shlib_ofmodule, METHOD_FNOREFESCAPE,
-	              "(mod:?DModule)->?.\n"
+	              "(" shlib_ofmodule_params ")->?.\n"
 	              "#tValueError{Given @mod isn't the deemon core, or a ?Ert:DexModule}"
 	              "Return a shared library descriptor for the underlying system library "
 	              /**/ "descriptor of the deemon core, or a DEX module."),

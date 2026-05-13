@@ -1159,12 +1159,21 @@ LOCAL_seX(copy)(LOCAL_SeqEach *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack2(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME,
-	                &self->se_seq, &self->sg_attr);
-	if (DeeObject_AssertTypeExact(self->sg_attr, &DeeString_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_\" LOCAL_SeqEach_Type_NAME \"", params: """
+	seq:?DSequence, DeeStringObject *attr
+""");]]]*/
+	struct {
+		DeeObject *seq;
+		DeeStringObject *attr;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME, &args, &args.seq, &args.attr);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	Dee_Incref(self->se_seq);
-	Dee_Incref(self->sg_attr);
+	Dee_Incref(args.seq);
+	Dee_Incref(args.attr);
+	self->se_seq  = args.seq;
+	self->sg_attr = args.attr;
 	return 0;
 err:
 	return -1;
@@ -1446,13 +1455,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seXi(init)(SeqEachIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each);
-	if (DeeObject_AssertTypeExact(self->ei_each, &LOCAL_SeqEach_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_\" LOCAL_SeqEach_Type_NAME \"Iterator", params: """
+	SeqEachBase *each:?O
+""");]]]*/
+	struct {
+		SeqEachBase *each;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_" LOCAL_SeqEach_Type_NAME "Iterator", &args.each);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.each, &LOCAL_SeqEach_Type))
 		goto err;
-	self->ei_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->ei_each->se_seq);
+	self->ei_iter = DeeObject_InvokeMethodHint(seq_operator_iter, args.each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err;
-	Dee_Incref(self->ei_each);
+	Dee_Incref(args.each);
+	self->ei_each = args.each;
 	return 0;
 err:
 	return -1;

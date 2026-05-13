@@ -3972,13 +3972,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seoi_init(SeqEachIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SeqEachOperatorIterator", &self->ei_each);
-	if (DeeObject_AssertTypeExact(self->ei_each, &SeqEachOperator_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_SeqEachOperatorIterator", params: """
+	SeqEachOperator *each:?Ert:SeqEachOperator
+""", docStringPrefix: "seoi");]]]*/
+#define seoi__SeqEachOperatorIterator_params "each:?Ert:SeqEachOperator"
+	struct {
+		SeqEachOperator *each;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_SeqEachOperatorIterator", &args.each);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.each, &SeqEachOperator_Type))
 		goto err;
-	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
+	self->ei_iter = DeeObject_Iter(args.each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err;
-	Dee_Incref(self->ei_each);
+	Dee_Incref(args.each);
+	self->ei_each = (SeqEachBase *)args.each;
 	return 0;
 err:
 	return -1;
@@ -4079,7 +4088,7 @@ PRIVATE struct type_member tpconst seoi_members[] = {
 INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEachOperatorIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachOperator)"),
+	/* .tp_doc      = */ DOC("(" seoi__SeqEachOperatorIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

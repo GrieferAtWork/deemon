@@ -2403,6 +2403,7 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(M
 #define msditer_serialize muiter_serialize
 #define msditer_ctor      muiter_ctor
 #define msditer_init      muiter_init
+#define msditer__MapSymmetricDifferenceIterator_params "msd:?Ert:MapSymmetricDifference"
 #else
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 msditer_copy(MapSymmetricDifferenceIterator *__restrict self,
@@ -2467,12 +2468,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msditer_init(MapSymmetricDifferenceIterator *__restrict self,
              size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_MapSymmetricDifferenceIterator", &self->msdi_symdiff);
-	if (DeeObject_AssertTypeExact(self->msdi_symdiff, &MapSymmetricDifference_Type))
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_MapSymmetricDifferenceIterator", params: """
+	MapSymmetricDifference *msd:?Ert:MapSymmetricDifference
+""", docStringPrefix: "msditer");]]]*/
+#define msditer__MapSymmetricDifferenceIterator_params "msd:?Ert:MapSymmetricDifference"
+	struct {
+		MapSymmetricDifference *msd;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_MapSymmetricDifferenceIterator", &args.msd);
+/*[[[end]]]*/
+	if (DeeObject_AssertTypeExact(args.msd, &MapSymmetricDifference_Type))
 		goto err;
-	if ((self->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, self->msdi_symdiff->msd_a)) == NULL)
+	if ((self->msdi_iter = DeeObject_InvokeMethodHint(map_operator_iter, args.msd->msd_a)) == NULL)
 		goto err;
-	Dee_Incref(self->msdi_symdiff);
+	Dee_Incref(args.msd);
+	self->msdi_symdiff = args.msd;
 	Dee_atomic_rwlock_init(&self->msdi_lock);
 	self->msdi_in2nd = false;
 	return 0;
@@ -2715,7 +2725,7 @@ PRIVATE struct type_gc tpconst msditer_gc = {
 INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapSymmetricDifferenceIterator",
-	/* .tp_doc      = */ DOC("(msd:?Ert:MapSymmetricDifference)"),
+	/* .tp_doc      = */ DOC("(" msditer__MapSymmetricDifferenceIterator_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -111,7 +111,15 @@ user_string_fini_hook_onfini(struct Dee_string_fini_hook *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	DREF struct user_string_fini_hook *hook;
-	DeeArg_Unpack1(err, argc, argv, "_StringFiniHook", &self->sfh_cb);
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringFiniHook", params: """
+	cb:?DCallable
+""", docStringPrefix: "sfh");]]]*/
+#define sfh__StringFiniHook_params "cb:?DCallable"
+	struct {
+		DeeObject *cb;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "_StringFiniHook", &args.cb);
+/*[[[end]]]*/
 	hook = user_string_fini_hook_alloc();
 	if unlikely(!hook)
 		goto err;
@@ -121,7 +129,8 @@ sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	hook->usfh_hook.sfh_destroy = &user_string_fini_hook_destroy;
 	hook->usfh_hook.sfh_onfini  = &user_string_fini_hook_onfini;
 	self->sfh_hook = hook; /* Inherit reference */
-	Dee_Incref(self->sfh_cb);
+	Dee_Incref(args.cb);
+	self->sfh_cb = args.cb;
 	if unlikely(DeeString_AddFiniHook(&hook->usfh_hook))
 		goto err_self_hook;
 	return 0;
@@ -214,7 +223,7 @@ INTERN DeeTypeObject StringFiniHook_Type = {
 	                         "The ?#__cb__ is invoked as ${__cb__(Object.id(<destroyed-string>))}\n"
 	                         "Finalization hooks for strings are enabled using ?A__enable_fini_hooks__?Dstring\n"
 
-	                         "(cb:?DCallable)"),
+	                         "(" sfh__StringFiniHook_params ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(StringFiniHook),
 	/* .tp_features = */ TF_NONE,
