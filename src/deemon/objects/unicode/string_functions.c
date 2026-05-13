@@ -31,7 +31,7 @@
 #include <deemon/float.h>           /* DeeFloat_New */
 #include <deemon/format.h>          /* PCKuSIZ */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
+#include <deemon/method-hints.h>    /* DeeMA_*, TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_Incref_n, Dee_ssize_t, return_reference, return_reference_ */
 #include <deemon/pair.h>            /* DeeSeq_OfPairInherited */

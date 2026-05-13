@@ -22,23 +22,24 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackKw */
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type */
 #include <deemon/bool.h>               /* return_bool */
-#include <deemon/class.h>               /* return_bool */
-#include <deemon/attribute.h>               /* return_bool */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC */
 #include <deemon/code.h>               /* DeeFunctionObject, DeeFunction_Check, DeeFunction_GetInfo, Dee_function_info, Dee_function_info_fini */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_AttributeError, DeeError_Catch */
 #include <deemon/format.h>             /* DeeFormat_* */
 #include <deemon/module.h>             /* DeeModuleObject */
+#include <deemon/mro.h>                /* Dee_ATTRINFO_ATTR, Dee_ATTRINFO_MODSYM, Dee_ATTRPERM_F_* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/property.h>           /* DeePropertyObject */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_operator_t, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../runtime/kwlist.h"

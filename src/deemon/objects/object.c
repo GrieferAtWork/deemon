@@ -22,19 +22,21 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC */
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack* */
-#include <deemon/attribute.h>          /* DeeEnumAttr_Type */
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type, DeeEnumAttr_Type */
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool */
+#include <deemon/callable.h>           /* DeeCallable_Type */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read */
 #include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/class.h>              /* DeeError_* */
 #include <deemon/float.h>              /* DeeFloat_Type */
-#include <deemon/callable.h>              /* DeeFloat_Type */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
-#include <deemon/module.h>             /* DeeModule* */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol */
+#include <deemon/mro.h>                /* Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_fini */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -42,7 +44,7 @@
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_IsDeepImmutable, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsDeepImmutable, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_MEMBER_ISCONST, Dee_type_member, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_Id */
 
 #include "../runtime/method-hint-defaults.h"

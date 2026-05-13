@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DEFINE_KWLIST, DeeArg_Unpack* */
+#include <deemon/arg.h>                /* DEFINE_KWLIST, DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr */

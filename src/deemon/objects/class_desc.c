@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Callocc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPx16 */
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
-#include <deemon/attribute.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
@@ -48,7 +48,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_InitStatic, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitStatic, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_atomic_read, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */
@@ -4243,9 +4243,9 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 		if unlikely(!args_tuple)
 			goto err;
 		DeeArg_Unpack1(err_args_tuple,
-		                DeeTuple_SIZE(args_tuple),
-		                DeeTuple_ELEM(args_tuple),
-		                "get", &thisarg);
+		               DeeTuple_SIZE(args_tuple),
+		               DeeTuple_ELEM(args_tuple),
+		               "get", &thisarg);
 		if (DeeObject_AssertTypeOrAbstract(thisarg, class_type))
 			goto err_args_tuple;
 		result = DeeInstance_GetAttribute(my_class,

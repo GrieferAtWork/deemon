@@ -31,7 +31,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_MISSING, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_MISSING, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
