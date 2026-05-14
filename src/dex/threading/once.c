@@ -39,10 +39,9 @@
 #include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/tuple.h>       /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
-#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/util/atomic.h> /* atomic_read, atomic_xch */
 #include <deemon/util/once.h>   /* Dee_once_* */
-
-#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <deemon/util/rcu.h>    /* DeeRCU_*, Dee_DECLARE_RCU_LOCK, Dee_rcu_lock_init */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
@@ -64,25 +63,12 @@ typedef struct {
 	                          * Note that this field is [lock(o_inuse && ATOMIC)] when it
 	                          * represents the result of a once-callback, but [lock(o_once)]
 	                          * when the once-operation hasn't been executed, yet. */
-#ifndef CONFIG_NO_THREADS
-	/* TODO: This should be an RCU lock */
-	size_t          o_inuse; /* [lock(ATOMIC)] Non-zero if someone is reading from `o_value' */
-#endif /* !CONFIG_NO_THREADS */
+	Dee_DECLARE_RCU_LOCK(o_inuse); /* RCU Lock for `o_value' */
 } DeeOnceObject;
 
-#ifndef CONFIG_NO_THREADS
-#define DeeOnce_InUseInc(self)     atomic_inc(&(self)->o_inuse)
-#define DeeOnce_InUseDec(self)     atomic_dec(&(self)->o_inuse)
-#define DeeOnce_InUseWaitFor(self)                 \
-	do {                                           \
-		while (atomic_read(&(self)->o_inuse) != 0) \
-			SCHED_YIELD();                         \
-	}	__WHILE0
-#else /* !CONFIG_NO_THREADS */
-#define DeeOnce_InUseInc(self)     (void)0
-#define DeeOnce_InUseDec(self)     (void)0
-#define DeeOnce_InUseWaitFor(self) (void)0
-#endif /* CONFIG_NO_THREADS */
+#define DeeOnce_LockRead(self)        DeeRCU_Lock(&(self)->o_inuse)
+#define DeeOnce_LockEndRead(self)     DeeRCU_Unlock(&(self)->o_inuse)
+#define DeeOnce_LockSynchronize(self) DeeRCU_Synchronize(&(self)->o_inuse)
 
 PRIVATE ATTR_COLD NONNULL((1)) DeeObject *DCALL
 err_unbound_once_callback(DeeOnceObject *__restrict self) {
@@ -106,9 +92,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_ctor(DeeOnceObject *__restrict self) {
 	Dee_once_init(&self->o_once);
 	self->o_value = NULL;
-#ifndef CONFIG_NO_THREADS
-	self->o_inuse = 0;
-#endif /* !CONFIG_NO_THREADS */
+	Dee_rcu_lock_init(&self->o_inuse);
 	return 0;
 }
 
@@ -125,15 +109,13 @@ once_copy(DeeOnceObject *__restrict self,
 		Dee_once_abort(&other->o_once);
 		Dee_once_init(&self->o_once);
 	} else {
-		DeeOnce_InUseInc(other);
+		DeeOnce_LockRead(other);
 		self->o_value = atomic_read(&other->o_value);
 		Dee_XIncref(self->o_value);
-		DeeOnce_InUseDec(other);
+		DeeOnce_LockEndRead(other);
 		Dee_once_init_didrun(&self->o_once);
 	}
-#ifndef CONFIG_NO_THREADS
-	self->o_inuse = 0;
-#endif /* !CONFIG_NO_THREADS */
+	Dee_rcu_lock_init(&self->o_inuse);
 	return 0;
 err:
 	return -1;
@@ -154,9 +136,7 @@ once_init(DeeOnceObject *__restrict self,
 	Dee_once_init(&self->o_once);
 	Dee_Incref(args.callback);
 	self->o_value = args.callback;
-#ifndef CONFIG_NO_THREADS
-	self->o_inuse = 0;
-#endif /* !CONFIG_NO_THREADS */
+	Dee_rcu_lock_init(&self->o_inuse);
 	return 0;
 err:
 	return -1;
@@ -169,9 +149,7 @@ once_init_kw(DeeOnceObject *__restrict self, size_t argc,
 	int error;
 	Dee_once_init(&self->o_once);
 	self->o_value = NULL;
-#ifndef CONFIG_NO_THREADS
-	self->o_inuse = 0;
-#endif /* !CONFIG_NO_THREADS */
+	Dee_rcu_lock_init(&self->o_inuse);
 	error = DeeArg_UnpackStructKw(argc, argv, kw, kwlist, "|o:Once", &self->o_value);
 	if likely(error == 0)
 		Dee_XIncref(self->o_value);
@@ -190,10 +168,10 @@ once_visit(DeeOnceObject *__restrict self, Dee_visit_t proc, void *arg) {
 	case 0: {
 		DeeObject *value;
 		/* Once already run. */
-		DeeOnce_InUseInc(self);
+		DeeOnce_LockRead(self);
 		value = atomic_read(&self->o_value);
 		Dee_XVisit(value);
-		DeeOnce_InUseDec(self);
+		DeeOnce_LockEndRead(self);
 	}	break;
 
 	case 1:
@@ -219,7 +197,7 @@ once_clear(DeeOnceObject *__restrict self) {
 		/* Once already run. */
 		value = atomic_xch(&self->o_value, NULL);
 		if (value)
-			DeeOnce_InUseWaitFor(self);
+			DeeOnce_LockSynchronize(self);
 		break;
 
 	case 1:
@@ -253,10 +231,10 @@ once_call_kw(DeeOnceObject *self, size_t argc, DeeObject *const *argv, DeeObject
 	/* Check for simple case: already run */
 	if (Dee_once_hasrun(&self->o_once)) {
 already_run:
-		DeeOnce_InUseInc(self);
+		DeeOnce_LockRead(self);
 		result = atomic_read(&self->o_value);
 		Dee_XIncref(result);
-		DeeOnce_InUseDec(self);
+		DeeOnce_LockEndRead(self);
 		if unlikely(!result)
 			goto err_unbound_result;
 		return result;
@@ -352,7 +330,7 @@ once_finish(DeeOnceObject *self, size_t argc,
 			goto err_already_finished;
 		Dee_Incref(args.result);
 		args.result = atomic_xch(&self->o_value, args.result);
-		DeeOnce_InUseWaitFor(self);
+		DeeOnce_LockSynchronize(self);
 		Dee_XDecref(args.result);
 	} else {
 		/* Complete the once-objct with the given value */
@@ -437,14 +415,14 @@ once_result_get(DeeOnceObject *__restrict self) {
 	if (!Dee_once_hasrun(&self->o_once))
 		goto err_not_finished;
 
-	DeeOnce_InUseInc(self);
+	DeeOnce_LockRead(self);
 	result = self->o_value;
 	if unlikely(!result) {
-		DeeOnce_InUseDec(self);
+		DeeOnce_LockEndRead(self);
 		return err_unbound_once_result(self);
 	}
 	Dee_Incref(result);
-	DeeOnce_InUseDec(self);
+	DeeOnce_LockEndRead(self);
 	return result;
 err_not_finished:
 	err_once_not_finished();
@@ -458,7 +436,7 @@ once_result_del(DeeOnceObject *__restrict self) {
 		goto err_not_finished;
 	value = self->o_value;
 	self->o_value = NULL;
-	DeeOnce_InUseWaitFor(self);
+	DeeOnce_LockSynchronize(self);
 	Dee_XDecref(value);
 	return 0;
 err_not_finished:
@@ -473,7 +451,7 @@ once_result_set(DeeOnceObject *self, DeeObject *new_value) {
 	Dee_Incref(new_value);
 	old_value = self->o_value;
 	self->o_value = new_value;
-	DeeOnce_InUseWaitFor(self);
+	DeeOnce_LockSynchronize(self);
 	Dee_XDecref(old_value);
 	return 0;
 err_not_finished:
@@ -508,10 +486,10 @@ once_print(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void *ar
 
 	case 0:
 		/* Once already run. */
-		DeeOnce_InUseInc(self);
+		DeeOnce_LockRead(self);
 		value = atomic_read(&self->o_value);
 		Dee_XIncref(value);
-		DeeOnce_InUseDec(self);
+		DeeOnce_LockEndRead(self);
 		if likely(value) {
 			result = DeeFormat_Printf(printer, arg, "<Once with result %k>", value);
 			Dee_Decref(value);
@@ -551,10 +529,10 @@ once_printrepr(DeeOnceObject *__restrict self, Dee_formatprinter_t printer, void
 
 	case 0:
 		/* Once already run. */
-		DeeOnce_InUseInc(self);
+		DeeOnce_LockRead(self);
 		value = atomic_read(&self->o_value);
 		Dee_XIncref(value);
-		DeeOnce_InUseDec(self);
+		DeeOnce_LockEndRead(self);
 		if likely(value) {
 			result = DeeFormat_Printf(printer, arg, "Once(() -> %r)<.hasrun>", value);
 			Dee_Decref(value);
