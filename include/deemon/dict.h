@@ -76,10 +76,6 @@ DECL_BEGIN
  *       >>     ("x", int),
  *       >>     ("y", int),
  *       >> };
- *
- * #ifndef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
- * TODO: Also implement this for HashSet
- * #endif // !CONFIG_EXPERIMENTAL_ORDERED_HASHSET
  */
 struct Dee_dict_item {
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key' (undefined, but readable when "di_key == NULL") */

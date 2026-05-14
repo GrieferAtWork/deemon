@@ -36,7 +36,7 @@
 #include <deemon/callable.h>          /* DeeCallable_Type, DeeFunctionComposition_Of */
 #include <deemon/cell.h>              /* DeeCell_Type */
 #include <deemon/class.h>             /* DeeClassDescriptor_Type, DeeClass_New, DeeInstanceMember_Type */
-#include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
+#include <deemon/code.h>              /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Type */
 #include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
 #include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_ITEM_INIT, Dee_dict_item */
@@ -62,7 +62,7 @@
 #include <deemon/pair.h>              /* DeeSeq_OfOne, DeeSeq_OfPair */
 #include <deemon/property.h>          /* DeeProperty_Type */
 #include <deemon/rodict.h>            /* DeeRoDictObject, DeeRoDict_Type, Dee_EmptyRoDict */
-#include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_EmptyRoSet, Dee_roset_item */
+#include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_EmptyRoSet */
 #include <deemon/seq.h>               /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeRefVector_NewReadonly, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_Type, DeeSharedVector_Type, Dee_EmptySeq */
 #include <deemon/set.h>               /* DeeSet_Type, Dee_EmptySet, Dee_UniversalSet */
 #include <deemon/string.h>            /* DeeStringObject, DeeString_Type, Dee_EmptyString */
@@ -436,7 +436,6 @@ get_ItemType_of(DREF DeeObject *ob) {
 	return result;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE struct nonempty_roset_instance_struct {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
 	/*real*/Dee_hash_vidx_t rs_vsize;        /* # of keys in the set. */
@@ -460,23 +459,6 @@ STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_hmask) == offse
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_hidxget) == offsetof(DeeRoSetObject, rs_hidxget));
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_htab) == offsetof(DeeRoSetObject, rs_htab));
 STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_vtab) == offsetof(DeeRoSetObject, rs_vtab));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-PRIVATE struct nonempty_roset_instance_struct {
-	Dee_OBJECT_HEAD
-	size_t                rs_mask;    /* [>= rs_size] Allocated set size. */
-	size_t                rs_size;    /* [<= rs_mask] Amount of non-NULL keys. */
-	struct Dee_roset_item rs_elem[2]; /* [1..rs_mask+1] Set key hash-vector. */
-} nonempty_roset_instance = {
-	OBJECT_HEAD_INIT(&DeeRoSet_Type),
-	/* .rs_mask = */ 1,
-	/* .rs_size = */ 1,
-	/* .rs_elem = */ { { DeeInt_Zero, 0 } } /* hash(int(0)) == 0 */
-};
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_mask) == offsetof(DeeRoSetObject, rs_mask));
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_size) == offsetof(DeeRoSetObject, rs_size));
-STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offsetof(DeeRoSetObject, rs_elem));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-
 #define nonempty_stub_set (Dee_AsObject(&nonempty_roset_instance))
 
 
@@ -3564,10 +3546,8 @@ DEX_MEMBER_F("Mapping_empty", Dee_EmptyMap, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "A general-purpose, empty mapping singleton"),
 DEX_MEMBER_F("RoDict_empty", Dee_EmptyRoDict, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "An empty instance of ?GRoDict"),
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 DEX_MEMBER_F("RoSet_empty", Dee_EmptyRoSet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "An empty instance of ?GRoSet"),
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 DEX_MEMBER_F("Tuple_empty", Dee_EmptyTuple, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "The empty tuple singleton ${()}"),
 DEX_MEMBER_F("String_empty", Dee_EmptyString, DEXSYM_READONLY | DEXSYM_CONSTEXPR,

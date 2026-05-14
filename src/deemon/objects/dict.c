@@ -908,10 +908,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_fromcopy_keysonly(Dict *__restrict self, Dict *__restrict other);
 #define HAVE_dict_init_fromcopy_keysonly
 #endif /* !__OPTIMIZE_SIZE__ */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_fromhashset_keysonly(Dict *__restrict self, DeeHashSetObject *__restrict other);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -921,10 +919,8 @@ DECL_END
 #define DEFINE_dict_init_fromcopy_keysonly
 #include "dict-init-copyfrom.c.inl"
 #endif /* !__OPTIMIZE_SIZE__ */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #define DEFINE_dict_init_fromhashset_keysonly
 #include "dict-init-copyfrom.c.inl"
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
@@ -939,10 +935,8 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict(Dict *__restrict self, DeeRoDictObject *__restrict other);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromrodict_keysonly(Dict *__restrict self, DeeRoDictObject *__restrict other);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromroset_noincref(Dict *__restrict self, DeeRoSetObject *__restrict other);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_init_fromroset_keysonly(Dict *__restrict self, DeeRoSetObject *__restrict other);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL dict_new_copy(Dict *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
@@ -1961,7 +1955,6 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
 dict_from_hashset_keys(DeeHashSetObject *keys, DeeObject *value, DeeObject *valuefor) {
 	DREF Dict *result;
@@ -2008,7 +2001,6 @@ err_r:
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
 dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
@@ -2027,14 +2019,12 @@ dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 			return dict_from_dict_keys((Dict *)mapping_of_keys, value, valuefor);
 		if (tp_mapping_of_keys == &DeeRoDict_Type)
 			return dict_from_rodict_keys((DeeRoDictObject *)mapping_of_keys, value, valuefor);
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	} else if (tp_keys == &DeeHashSet_Type) {
 		/* Special optimization when "keys" is a HashSet: Duplicate its control structures */
 		return dict_from_hashset_keys((DeeHashSetObject *)keys, value, valuefor);
 	} else if (tp_keys == &DeeRoSet_Type) {
 		/* Special optimization when "keys" is a RoSet: Duplicate its control structures */
 		return dict_from_roset_keys((DeeRoSetObject *)keys, value, valuefor);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 	}
 
 	hint = DeeObject_SizeFast(keys);

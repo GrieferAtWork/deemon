@@ -1285,7 +1285,6 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE WUNUSED NONNULL((1, 2)) DREF RoDict *DCALL
 rodict_from_hashset(DeeHashSetObject *set, DeeObject *value, DeeObject *valuefor) {
 	DREF RoDict *result;
@@ -1386,7 +1385,6 @@ err_r:
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 
 
@@ -1395,12 +1393,10 @@ rodict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 	DeeTypeObject *tp_keys = Dee_TYPE(keys);
 
 	/* Optimizations for special, known keys types. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	if (tp_keys == &DeeHashSet_Type) /* Special optimization when "keys" is a HashSet: Duplicate its control structures */
 		return rodict_from_hashset((DeeHashSetObject *)keys, value, valuefor);
 	if (tp_keys == &DeeRoSet_Type) /* Special optimization when "keys" is a RoSet: Duplicate its control structures */
 		return rodict_from_roset((DeeRoSetObject *)keys, value, valuefor);
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 	if (tp_keys == &DefaultSequence_MapKeys_Type) {
 		/* Special optimization when "keys" are the keys of another Dict/RoDict */

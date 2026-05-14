@@ -383,7 +383,6 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 /************************************************************************/
 /* HASHSET HELPERS                                                      */
 /************************************************************************/
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #define _DeeHashSet_ShouldGrowHTab(self)            _DeeDict_ShouldGrowHTab2((self)->hs_vused, (self)->hs_hmask)
 #define _DeeHashSet_MustGrowHTab(self)              _DeeDict_MustGrowHTab2((self)->hs_valloc, (self)->hs_hmask)
 #define _DeeHashSet_ShouldOptimizeVTab(self)        _DeeDict_ShouldOptimizeVTab2((self)->hs_vsize, (self)->hs_vused)
@@ -446,7 +445,6 @@ DeeHashSet_LockReadAndOptimize(DeeHashSetObject *__restrict self) {
 		DeeHashSet_LockDowngrade(self);
 	}
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 
 
@@ -529,7 +527,6 @@ hmask_memmovedown_and_maybe_downcast(union Dee_hash_htab *dst, Dee_hash_hidxio_t
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 /************************************************************************/
 /* ROSET HELPERS                                                        */
 /************************************************************************/
@@ -568,7 +565,6 @@ _RoSet_SafeSizeOf3(Dee_hash_vidx_t valloc, Dee_hash_t hmask, Dee_hash_hidxio_t h
 toobig:
 	return (size_t)-1; /* Force down-stream allocation failure */
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 DECL_END
 

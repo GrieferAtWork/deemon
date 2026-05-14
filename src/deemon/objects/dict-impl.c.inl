@@ -104,10 +104,8 @@
 #define LOCAL_dict_init_fromrodict_noincref                     dict_init_fromrodict_noincref
 #define LOCAL_dict_init_fromrodict                              dict_init_fromrodict
 #define LOCAL_dict_init_fromrodict_keysonly                     dict_init_fromrodict_keysonly
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #define LOCAL_dict_init_fromroset_noincref                      dict_init_fromroset_noincref
 #define LOCAL_dict_init_fromroset_keysonly                      dict_init_fromroset_keysonly
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 #define LOCAL_dict_new_copy                                     dict_new_copy
 #define LOCAL_DeeDict_FromSequence                              DeeDict_FromSequence
 #define LOCAL_DeeDict_FromSequenceInheritedOnSuccess            DeeDict_FromSequenceInheritedOnSuccess
@@ -1176,7 +1174,6 @@ LOCAL_dict_init_fromrodict_keysonly(LOCAL_Dict *__restrict self,
 	return result;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_dict_init_fromroset_noincref(LOCAL_Dict *__restrict self,
                                    DeeRoSetObject *__restrict other) {
@@ -1237,7 +1234,6 @@ LOCAL_dict_init_fromroset_keysonly(LOCAL_Dict *__restrict self,
 	}
 	return result;
 }
-#endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 #endif /* DEFINE_DeeDict */
 
 PRIVATE WUNUSED NONNULL((1)) DREF LOCAL_Dict *DCALL

@@ -1508,7 +1508,6 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeDictObject, ob_weakrefs))); /* instance */
 		return 1;
 	} else if (tp_ctor == DeeHashSet_Type.tp_init.tp_alloc.tp_ctor) {
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_valloc))); /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                                /* instance, 0 */
@@ -1529,22 +1528,6 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 #endif /* !CONFIG_NO_THREADS */
 		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs))); /* instance */
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_mask))); /* instance */
-		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_size))); /* instance */
-		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_used))); /* instance */
-		DO(fg_vpush_addr(self, DeeHashSet_EmptyItems));            /* instance, DeeHashSet_EmptyItems */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_elem))); /* instance */
-#ifndef CONFIG_NO_THREADS
-		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                     /* instance, ATOMIC_RWLOCK_INIT */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_lock))); /* instance */
-#endif /* !CONFIG_NO_THREADS */
-		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                       /* instance, Dee_WEAKREF_SUPPORT_INIT */
-		DO(fg_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs))); /* instance */
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return 1;
 	} else if (tp_ctor == DeeList_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_NULL(self));                                        /* instance, NULL */
@@ -5425,7 +5408,6 @@ fg_vpackseq(struct fungen *__restrict self,
 			}
 			cseq = Dee_AsObject(Dee_rodict_builder_pack(&cseq_map_builder));
 		} else if (DeeType_Extends(seq_type, &DeeSet_Type)) {
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 			struct Dee_roset_builder cseq_set_builder;
 			Dee_roset_builder_init_with_hint(&cseq_set_builder, elemc);
 			for (i = 0; i < elemc; ++i) {
@@ -5437,19 +5419,6 @@ fg_vpackseq(struct fungen *__restrict self,
 				}
 			}
 			cseq = Dee_AsObject(Dee_roset_builder_pack(&cseq_set_builder));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-			cseq = Dee_AsObject(DeeRoSet_NewWithHint(elemc));
-			if unlikely(!cseq)
-				goto err;
-			for (i = 0; i < elemc; ++i) {
-				DeeObject *key = memval_const_getobj(&elemv[i]);
-				if unlikely(DeeRoSet_Insert((DeeRoSetObject **)&cseq, key)) {
-/*err_cseq:*/
-					Dee_Decref_likely(cseq);
-					goto err;
-				}
-			}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		} else {
 			cseq = Dee_AsObject(DeeTuple_NewUninitialized(elemc));
 			if unlikely(!cseq)

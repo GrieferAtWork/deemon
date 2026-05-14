@@ -3316,7 +3316,7 @@ DECL_END
 #include <deemon/none.h>    /* DeeNone_NewRef, DeeNone_Type */
 #include <deemon/numeric.h> /* DeeNumeric_Type */
 #include <deemon/rodict.h>  /* Dee_rodict_builder* */
-#include <deemon/roset.h>   /* DeeRoSet* */
+#include <deemon/roset.h>   /* DeeRoSetObject */
 #include <deemon/seq.h>     /* DeeIterator_Type, DeeSeq_EmptyInstance, DeeSeq_Type */
 #include <deemon/set.h>     /* DeeSet_EmptyInstance */
 #include <deemon/string.h>

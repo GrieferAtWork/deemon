@@ -62,7 +62,6 @@ DECL_BEGIN
  *
  * NOTE: `_RoSet' is exported as `deemon.HashSet.Frozen'. */
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 typedef struct Dee_roset_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
 	/*real*/Dee_hash_vidx_t                          rs_vsize;      /* # of keys in the set. */
@@ -171,47 +170,6 @@ Dee_roset_builder_insert_inherited(/*struct Dee_roset_builder*/ void *__restrict
 #define _DeeRoSet_GetVirtVTab(self) _DeeHash_REAL_GetVirtVTab((self)->rs_vtab)
 #define _DeeRoSet_GetRealVTab(self) _DeeHash_REAL_GetRealVTab((self)->rs_vtab)
 #endif /* DEE_SOURCE */
-
-
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-struct Dee_roset_item {
-	DREF DeeObject *rsi_key;  /* [0..1][const] Set item key. */
-	Dee_hash_t      rsi_hash; /* [valis_if(rsi_key)][const] Hash of `rsi_key'. */
-};
-
-typedef struct Dee_roset_object {
-	Dee_OBJECT_HEAD
-	size_t                                         rs_mask;  /* [>= rs_size] Allocated set size. */
-	size_t                                         rs_size;  /* [<= rs_mask] Amount of non-NULL keys. */
-	COMPILER_FLEXIBLE_ARRAY(struct Dee_roset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
-} DeeRoSetObject;
-
-#define DeeRoSet_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoSetObject, self)->rs_size == 0)
-
-/* The main `_RoSet' container class. */
-DDATDEF DeeTypeObject DeeRoSet_Type;
-#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet' is final */
-#define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
-
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoSet_FromSequence(DeeObject *__restrict self);
-
-/* Internal functions for constructing a read-only set object. */
-DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_New(void);
-DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
-
-/* @return: 0:  Successfully inserted.
- * @return: 1:  Already exists.
- * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(/*in|out*/ DREF DeeRoSetObject **__restrict p_self,
-                DeeObject *__restrict key);
-
-/* Hash-iteration control. */
-#define DeeRoSet_HashSt(self, ro)    ((ro) & (self)->rs_mask)
-#define DeeRoSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define DeeRoSet_HashIt(self, i)     ((self)->rs_elem + ((i) & (self)->rs_mask))
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 DECL_END
 

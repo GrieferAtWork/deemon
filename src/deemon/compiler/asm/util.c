@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_TryCalloc, DeeObject_TryMalloc, Dee_CollectMemory */
+#include <deemon/alloc.h>              /* DeeObject_TryMalloc, Dee_CollectMemory */
 #include <deemon/asm.h>                /* ASM_* */
 #include <deemon/bool.h>               /* DeeBool* */
 #include <deemon/class.h>              /* Dee_CLASS_*, Dee_class_attribute */
@@ -38,9 +38,9 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/module.h>             /* DeeModule_GetDeemon, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_* */
 #include <deemon/none.h>               /* DeeNoneObject, DeeNone_Check */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
-#include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item, _DeeRoSet_GetRealVTab */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, _DeeRoSet_GetRealVTab */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, Dee_seq_range */
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/super.h>              /* DeeSuper* */
@@ -55,7 +55,7 @@
 #include "../../runtime/builtin.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 #undef shift_t
@@ -235,7 +235,6 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	return result;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 /* NOTE: Caller must ensure that "self" is optimized
  * @return: * :        read-lock to "self" is still held; success
  * @return: NULL:      read-lock to "self" was released; error was thrown
@@ -283,31 +282,6 @@ roset_fromset_locked_or_unlock(DeeHashSetObject *__restrict self) {
 	DeeObject_InitStatic(result, &DeeRoSet_Type);
 	return result;
 }
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-/* NOTE: _Always_ inherits references to `key' */
-PRIVATE NONNULL((1, 3)) void DCALL
-roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
-                     /*inherit(always)*/ DREF DeeObject *key) {
-	Dee_hash_t i, perturb;
-	struct Dee_roset_item *item;
-	perturb = i = DeeRoSet_HashSt(self, hash);
-	for (;; DeeRoSet_HashNx(i, perturb)) {
-		item = DeeRoSet_HashIt(self, i);
-		if (!item->rsi_key)
-			break;
-	}
-
-	/* Fill in the item. */
-	item->rsi_hash = hash;
-	item->rsi_key  = key; /* Inherit reference. */
-}
-
-#define dummy (&DeeDict_Dummy)
-#define SIZEOF_ROSET(mask) \
-	(offsetof(DeeRoSetObject, rs_elem) + (((mask) + 1) * sizeof(struct Dee_roset_item)))
-#define ROSET_INITIAL_MASK 0x1f
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_index(DeeTupleObject *__restrict self,
@@ -650,7 +624,6 @@ PRIVATE WUNUSED NONNULL((1)) int
 	 *       set.
 	 *   #2: Otherwise, push all set keys manually, before
 	 *       packing everything together as a set. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	int32_t cid;
 	size_t i, num_items;
 	DREF DeeRoSetObject *roset;
@@ -739,103 +712,6 @@ err_value:
 	Dee_Decref(value);
 err:
 	return -1;
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	int32_t cid;
-	size_t i, mask, ro_mask, num_items;
-	struct Dee_hashset_item *elem;
-	DREF DeeRoSetObject *roset;
-check_set_again:
-	DeeHashSet_LockRead(value);
-	if (!value->hs_used) {
-		/* Simple case: The set is empty, so we can just pack an empty HashSet at runtime. */
-		DeeHashSet_LockRead(value);
-		Dee_Decref(value);
-		return asm_gpack_hashset(0);
-	}
-	mask = value->hs_mask;
-	elem = value->hs_elem;
-	for (i = 0; i <= mask; ++i) {
-		if (!elem[i].hsi_key)
-			continue;
-		if (elem[i].hsi_key == dummy)
-			continue;
-		if (!asm_allowconst(elem[i].hsi_key)) {
-			DeeHashSet_LockEndRead(value);
-			goto push_set_parts;
-		}
-	}
-	num_items = value->hs_used;
-	ro_mask   = ROSET_INITIAL_MASK;
-	while (ro_mask <= num_items)
-		ro_mask = (ro_mask << 1) | 1;
-	ro_mask = (ro_mask << 1) | 1;
-	roset   = (DREF DeeRoSetObject *)DeeObject_TryCalloc(SIZEOF_ROSET(ro_mask));
-	if unlikely(!roset) {
-		DeeHashSet_LockEndRead(value);
-		if (Dee_CollectMemory(SIZEOF_ROSET(ro_mask)))
-			goto check_set_again;
-		goto err_value;
-	}
-	roset->rs_size = num_items;
-	roset->rs_mask = ro_mask;
-
-	/* Pack all values into the ro-set. */
-	for (i = 0; i <= mask; ++i) {
-		if (!elem[i].hsi_key)
-			continue;
-		if (elem[i].hsi_key == dummy)
-			continue;
-		Dee_Incref(elem[i].hsi_key); /* Inherited by `roset_insert_nocheck()' */
-		roset_insert_nocheck(roset,
-		                     elem[i].hsi_hash,
-		                     elem[i].hsi_key);
-	}
-	DeeHashSet_LockEndRead(value);
-	Dee_Decref(value);
-	DeeObject_InitStatic(roset, &DeeRoSet_Type);
-
-	/* All right! we've got the ro-set all packed together!
-	 * -> Register it as a constant. */
-	cid = asm_newconst_inherited(roset);
-	if unlikely(cid < 0)
-		goto err;
-
-	/* Now push the ro-set, then cast it to a regular one. */
-	if (asm_gpush_const((uint16_t)cid))
-		goto err;
-	if (asm_gcast_hashset())
-		goto err;
-	return 0;
-
-push_set_parts:
-	/* Construct a set by pushing its individual parts. */
-	num_items = 0;
-	DeeHashSet_LockRead(value);
-	for (i = 0; i <= value->hs_mask; ++i) {
-		struct Dee_hashset_item *item;
-		DREF DeeObject *item_key;
-		item     = &value->hs_elem[i];
-		item_key = item->hsi_key;
-		if (!item_key || item_key == dummy)
-			continue;
-		Dee_Incref(item_key);
-		DeeHashSet_LockEndRead(value);
-		/* Push the key & item. */
-		if unlikely(asm_gpush_constexpr_inherited(item_key))
-			goto err_value;
-		++num_items;
-		DeeHashSet_LockRead(value);
-	}
-	DeeHashSet_LockEndRead(value);
-	Dee_Decref(value);
-
-	/* With everything pushed, pack together the set. */
-	return asm_gpack_hashset((uint16_t)num_items);
-err_value:
-	Dee_Decref(value);
-err:
-	return -1;
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 INTERN WUNUSED NONNULL((1)) int

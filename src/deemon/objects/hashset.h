@@ -22,28 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/hashset.h>      /* DeeHashSetObject, Dee_hashset_item */
+#include <deemon/hashset.h>      /* DeeHashSetObject */
 #include <deemon/object.h>       /* DeeTypeObject */
 #include <deemon/util/hash-io.h> /* Dee_hash_vidx_t */
 
 #include "generic-proxy.h"
 
-
 DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeHashSetObject, hsi_set)  /* [1..1][const] The set that is being iterated. */
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	/*virt*/ Dee_hash_vidx_t               hsi_vidx; /* [!0][lock(ATOMIC)] Lower bound for next item to read from "hs_vtab" (starts at 1 because "hs_vtab" is offset by -1) */
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	struct Dee_hashset_item               *hsi_next; /* [?..1][MAYBE(in(hsi_set->hs_elem))][atomic]
-	                                                  * The first candidate for the next item.
-	                                                  * NOTE: Before being dereferenced, this pointer is checked
-	                                                  *       for being located inside the set's element vector.
-	                                                  *       In the event that it is located at its end, `ITER_DONE'
-	                                                  *       is returned, though in the event that it is located
-	                                                  *       outside, an error is thrown (`err_changed_sequence()'). */
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 } HashSetIterator;
 
 INTDEF DeeTypeObject HashSetIterator_Type;

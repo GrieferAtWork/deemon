@@ -691,22 +691,14 @@ PRIVATE struct ccall_optimization tpconst cco_Tuple[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_HashSet_bool(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	return vbool_field_nonzero(self, offsetof(DeeHashSetObject, hs_vused));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	return vbool_field_nonzero(self, offsetof(DeeHashSetObject, hs_used));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 /* this -> size */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_HashSet_size(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	return vsize_field_uint(self, offsetof(DeeHashSetObject, hs_vused));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	return vsize_field_uint(self, offsetof(DeeHashSetObject, hs_used));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 PRIVATE struct ccall_optimization tpconst cco_HashSet[] = {
@@ -726,22 +718,14 @@ PRIVATE struct ccall_optimization tpconst cco_HashSet[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_RoSet_bool(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	return vbool_field_nonzero(self, offsetof(DeeRoSetObject, rs_vsize));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	return vbool_field_nonzero(self, offsetof(DeeRoSetObject, rs_size));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 /* this -> size */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_RoSet_size(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 	return vsize_field_uint(self, offsetof(DeeRoSetObject, rs_vsize));
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-	return vsize_field_uint(self, offsetof(DeeRoSetObject, rs_size));
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 }
 
 PRIVATE struct ccall_optimization tpconst cco_RoSet[] = {

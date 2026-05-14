@@ -47,7 +47,7 @@
 #include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator, DeeType_GetNativeOperatorWithoutUnsupported, Dee_tno_id */
 #include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type */
-#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
+#include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
@@ -2409,7 +2409,6 @@ again:
 		return true;
 	} else if (tp == &DeeRoSet_Type) {
 		DeeRoSetObject *me = (DeeRoSetObject *)self;
-#ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 		Dee_hash_vidx_t i;
 		for (i = 0; i < me->rs_vsize; ++i) {
 			struct Dee_hashset_item *it = &me->rs_vtab[i];
@@ -2418,14 +2417,6 @@ again:
 					return false;
 			}
 		}
-#else /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-		size_t i;
-		for (i = 0; i <= me->rs_mask; ++i) {
-			struct Dee_roset_item *it = &me->rs_elem[i];
-			if (it->rsi_key && !DeeObject_IsDeepImmutable(it->rsi_key))
-				return false;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 		return true;
 #if 0
 	} else if (tp == &DeeSeqOne_Type) { /* Already handled by "ProxyObject" below */
