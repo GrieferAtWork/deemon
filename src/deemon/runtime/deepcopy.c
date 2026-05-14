@@ -505,7 +505,6 @@ deepcopy_putweakref_ex(DeeDeepCopyContext *__restrict self,
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 PRIVATE WUNUSED NONNULL((2)) void *DCALL
 slab_do_gcmalloc(size_t n, void (DCALL **p_free)(void *__restrict ob), bool do_try) {
@@ -777,7 +776,6 @@ deepcopy_slab_gcobject_trycalloc(DeeDeepCopyContext *__restrict self,
 	return result;
 }
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 	/* .set_addr2mem                = */ (void *(DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&deepcopy_addr2mem,
@@ -796,7 +794,6 @@ PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 	/* .set_gcobject_trymalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trymalloc,
 	/* .set_gcobject_trycalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trycalloc,
 	/* .set_gcobject_free           = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_gcobject_free,
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_malloc,
 	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_calloc,
@@ -830,7 +827,6 @@ PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
 	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	/* .set_putaddr                 = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&deepcopy_putaddr,
 	/* .set_putobject               = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_putobject,
 	/* .set_putobject_ex            = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&deepcopy_putobject_ex,
@@ -848,9 +844,7 @@ DeeDeepCopy_Init(DeeDeepCopyContext *__restrict self) {
 	self->dcc_obheap     = NULL;
 	self->dcc_gcheap     = NULL;
 	self->dcc_uheap      = NULL;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	self->dcc_sheap      = NULL;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	self->dcc_ptrmapv    = NULL;
 	self->dcc_ptrmapc    = 0;
 	self->dcc_ptrmapa    = 0;
@@ -894,7 +888,6 @@ destroy_uheap_ob(struct Dee_deepcopy_uheap *heap) {
 	}
 }
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 PRIVATE void DCALL
 destroy_uheap(struct Dee_deepcopy_uheap *heap) {
 	while (heap) {
@@ -904,7 +897,6 @@ destroy_uheap(struct Dee_deepcopy_uheap *heap) {
 		heap = next;
 	}
 }
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
@@ -929,9 +921,7 @@ DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
 	destroy_obheap(self->dcc_obheap, 0);
 	destroy_obheap(self->dcc_gcheap, Dee_GC_OBJECT_OFFSET);
 	destroy_uheap_ob(self->dcc_uheap);
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	destroy_uheap(self->dcc_sheap);
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* For safety... */
 	DBG_memset(self, 0xcc, sizeof(*self));
@@ -1080,16 +1070,10 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 			goto err;
 	} else {
 		int status;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 		/* Don't use `DeeType_GetInstanceSize()' here -- if the type uses slab
 		 * allocators, then we have to call **those** and can't just use default
 		 * allocators instead! */
-		if unlikely(tp->tp_init.tp_alloc.tp_free)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-		size_t instance_size = DeeType_GetInstanceSize(tp);
-		if unlikely(!instance_size)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-		{
+		if (tp->tp_init.tp_alloc.tp_free) {
 			GenericObject *object_buffer;
 			struct Dee_deepcopy_uheap *uheap;
 			if (!tp->tp_init.tp_alloc.tp_free) {
@@ -1146,9 +1130,7 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 			out_addr = deepcopy_ptr2ser(self, object_buffer);
 		} else {
 			/* Allocate buffer for object. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 			size_t instance_size = tp->tp_init.tp_alloc.tp_instance_size;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 			out_addr = DeeType_IsGC(tp)
 			           ? deepcopy_gcobject_malloc(self, instance_size, ob)
 			           : deepcopy_object_malloc(self, instance_size, ob);
@@ -1210,9 +1192,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 	cleanup_heap(self->dcc_gcheap);
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	cleanup_uheap(self->dcc_uheap);
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	cleanup_uheap(self->dcc_sheap);
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Free map tables. */
 	Dee_Free(self->dcc_ptrmapv);

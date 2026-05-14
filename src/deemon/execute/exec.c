@@ -767,14 +767,6 @@ PRIVATE bool DCALL shutdown_globals(void) {
 INTDEF void DCALL gc_dump_all_except_dex(void);
 #endif /* !NDEBUG */
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#ifndef CONFIG_NO_OBJECT_SLABS
-INTDEF void DCALL DeeSlab_Initialize(void);
-INTDEF void DCALL DeeSlab_Finalize(void);
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
-
 /* Initialize the deemon runtime.
  * This does very little, as most components are designed for lazy initialization,
  * or are simply initialized statically (i.e. already come pre-initialized).
@@ -785,13 +777,6 @@ PUBLIC void DCALL Dee_Initialize(void) {
 
 	/* Initialize the thread sub-system */
 	DeeThread_SubSystemInit();
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-	/* Reserve system memory for slab allocators. */
-#ifndef CONFIG_NO_OBJECT_SLABS
-	DeeSlab_Initialize();
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Install the keyboard interrupt handler. */
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
@@ -918,13 +903,6 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 #ifndef NDEBUG
 	DeeMem_ClearCaches((size_t)-1);
 #endif /* !NDEBUG */
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-	/* Deallocate slab caches. */
-#ifndef CONFIG_NO_OBJECT_SLABS
-	DeeSlab_Finalize();
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Instruct our version of dlmalloc to release all heap segments still in-cache */
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP

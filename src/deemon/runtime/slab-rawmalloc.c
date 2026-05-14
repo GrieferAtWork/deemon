@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
 #include <deemon/alloc.h>            /* Dee_Free, Dee_Malloc, Dee_Memalign, Dee_ReleaseSystemMemory, Dee_TryMalloc, Dee_TryMemalign, Dee_TryReleaseSystemMemory, Dee_UntrackAlloc */
 #include <deemon/system-features.h>  /* CONFIG_HAVE_*, MAP_ANONYMOUS, getpagesize, mmap64, munmap, sysconf */
 #include <deemon/util/atomic.h>      /* atomic_cmpxch, atomic_read */
@@ -767,7 +766,6 @@ Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page) {
 }
 
 
-
 /* Clear caches kept by the raw slab page allocator.
  * This function is automatically called by `DeeHeap_Trim()'
  * @param: pad: Try to keep at least this many bytes within the cache
@@ -786,10 +784,7 @@ INTERN size_t DCALL Dee_slab_page_rawtrim(size_t pad) {
 	return result;
 }
 
-
 DECL_END
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_RAWMALLOC_C */

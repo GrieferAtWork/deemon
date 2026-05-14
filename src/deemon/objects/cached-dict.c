@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryCallocc, Dee_TryMallocc */
+#include <deemon/alloc.h>              /* Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TryCallocc, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/cached-dict.h>        /* DeeCachedDict*, Dee_cached_dict_item */

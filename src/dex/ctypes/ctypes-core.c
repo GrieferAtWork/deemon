@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>              /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>             /* Dee_False, Dee_True */
 #include <deemon/bytes.h>            /* DeeBytes* */
@@ -3037,13 +3037,8 @@ INTERN struct empty_cfunction_type_object AbstractCFunction_Type = {
 					/* tp_any_ctor_kw: */ cfunction_init_kw_PTR,
 					/* tp_serialize:   */ NULL
 				),
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define PTR_cfunction_tp_alloc DeeSlab_GetMalloc(sizeof(CFunction), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CFunction))
 #define PTR_cfunction_tp_free  DeeSlab_GetFree(sizeof(CFunction), NULL)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define PTR_cfunction_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CFunction)
-#define PTR_cfunction_tp_free  NULL
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #else /* CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES */
 				Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 					/* tp_ctor:        */ NULL,
@@ -3416,13 +3411,8 @@ done:
 /* POINTER TYPE                                                         */
 /************************************************************************/
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define PTR_pointer_tp_alloc DeeSlab_GetMalloc(sizeof(CPointer), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CPointer))
 #define PTR_pointer_tp_free  DeeSlab_GetFree(sizeof(CPointer), NULL)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define PTR_pointer_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CPointer)
-#define PTR_pointer_tp_free  NULL
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PRIVATE NONNULL((1)) void DCALL
 cpointertype_fini(CPointerType *__restrict self) {
@@ -4246,13 +4236,8 @@ CPointerType_Of(CType *__restrict self) {
 /* LVALUE TYPE                                                          */
 /************************************************************************/
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define PTR_lvalue_tp_alloc DeeSlab_GetMalloc(sizeof(CLValue), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CLValue))
 #define PTR_lvalue_tp_free  DeeSlab_GetFree(sizeof(CLValue), NULL)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define PTR_lvalue_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(CLValue)
-#define PTR_lvalue_tp_free  NULL
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PRIVATE NONNULL((1)) void DCALL
 clvaluetype_fini(CLValueType *__restrict self) {

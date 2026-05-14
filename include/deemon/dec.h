@@ -504,7 +504,6 @@ typedef struct Dee_dec_writer {
 	Dee_seraddr_t           dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
 	size_t                  dw_align;  /* Minimum alignment requirements for the resulting dec file */
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	Dee_seraddr_t           dw_slabb;   /* [<= dw_alloc][valid_if(dw_slabs != 0)] Address of the `struct Dee_heapchunk' preceding
 	                                     * the properly aligned base of the most-recently allocated section of slab pages. When
 	                                     * valid, this value is `IS_ALIGNED(. + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE)'
@@ -518,7 +517,6 @@ typedef struct Dee_dec_writer {
 	                                     * plus a multiple of `Dee_SLAB_PAGESIZE'). When more slab pages are needed, check if `dw_used'
 	                                     * has grown beyond the last slab page, and if so: start a new chunk of slab pages. Otherwise,
 	                                     * extend the previous slab segment by one more page. */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */
 	struct Dee_dec_rreltab  dw_drrel;  /* Table of incref-relocations against deemon-core objects (increfs already happened here) */

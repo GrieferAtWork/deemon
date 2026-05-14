@@ -24,8 +24,6 @@
 
 #include "../api.h"
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 /* Host-specific slab configuration:
@@ -128,8 +126,6 @@ for (local s: typesBySize.keys.sorted()) {
 #define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    /* nothing */
 #define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) /* nothing */
 #endif /* __SIZEOF_POINTER__ != ... */
-
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 

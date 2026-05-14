@@ -22,32 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* DeeSlabInfo, DeeSlabStat */
-#include <deemon/object.h> /* DREF, DeeTypeObject, OBJECT_HEAD */
+#include <deemon/object.h> /* DeeTypeObject */
 
 DECL_BEGIN
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 /* TODO: New introspection API for:
  * - The reworked slab allocator (does not even have a C API for this, yet)
  * - The new "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" heap: DeeHeap_MallInfo() */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-/* Types for accessing slab allocator statistics. */
-
-typedef struct {
-	OBJECT_HEAD
-	DeeSlabStat st_stat; /* [const] Slab statistics. */
-} SlabStatObject;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF SlabStatObject *si_stat; /* [1..1][const] Slab statistics. */
-	DeeSlabInfo         *si_info; /* [1..1][const] Slab information. */
-} SlabInfoObject;
-
-INTDEF DeeTypeObject SlabStat_Type;
-INTDEF DeeTypeObject SlabInfo_Type;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 INTDEF DeeTypeObject StringFiniHook_Type;
 

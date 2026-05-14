@@ -1175,8 +1175,6 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
                      Dee_seraddr_t addrof_pointer,
                      void const *pointer);
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-
 /* Free a singular, stand-alone dec slab page */
 #if 1
 #define decslab_free1 (Dee_Free)
@@ -1347,7 +1345,6 @@ decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 err:
 	return -1;
 }
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Pack the dec file into a format where it can easily be written to a file:
  * >> DeeDec_Ehdr *ehdr = DeeDecWriter_PackEhdr(&writer);
@@ -1395,7 +1392,6 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	}
 #endif /* !NDEBUG */
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	/* Update `dw_used' to include memory reserved for the currently-allocated page */
 	if (self->dw_slabs) {
 		ASSERT(self->dw_slabs > sizeof(struct Dee_heapchunk));
@@ -1434,7 +1430,6 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
 		self->dw_slabs = 0;
 	}
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Space for the heap tail is always pre-allocated! */
 	{
@@ -1773,10 +1768,8 @@ output_image:
 	self->dw_ehdr  = NULL;
 	self->dw_used  = 0;
 	self->dw_alloc = 0;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
 	self->dw_slabs = 0;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Finish initialization of "ehdr" by setting it up as a HEAP mapping */
 	DeeMapFile_SETADDR(&ehdr->e_mapping, ehdr);
@@ -2116,7 +2109,6 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	unused = CEIL_ALIGN(num_bytes, Dee_HEAPCHUNK_ALIGN) - num_bytes;
 	num_bytes += unused;
 	nb = sizeof(struct Dee_heapchunk) + num_bytes;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	if (self->dw_slabs) {
 		ASSERT(self->dw_alloc >= (self->dw_slabb + self->dw_slabs + sizeof(struct Dee_heaptail)));
 		if (self->dw_used <= self->dw_slabb) {
@@ -2153,7 +2145,6 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 		}
 		ASSERT(self->dw_used >= (self->dw_slabb + self->dw_slabs));
 	}
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Ensure that enough space has been allocated.
 	 * Always include space for the eventual `struct Dee_heaptail'! */
@@ -2181,9 +2172,7 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	}
 
 	/* Initialize the heap chunk for the newly made allocation */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 do_allocate:
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result = self->dw_used;
 	ASSERT(IS_ALIGNED(result, Dee_HEAPCHUNK_ALIGN));
 	ASSERT(IS_ALIGNED(nb, Dee_HEAPCHUNK_ALIGN));
@@ -2452,7 +2441,6 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 
 /* Allocate a new slab-page and return its base-address, or `Dee_SERADDR_INVALID' on error.
@@ -2846,7 +2834,6 @@ decwriter_slab_gcobject_trycalloc(DeeDecWriter *__restrict self,
 	return result;
 }
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 
@@ -2874,7 +2861,6 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 		out_addr = (*(Dee_tp_serialize_var_t)tp_serialize)(obj, (DeeSerial *)self);
 		if (!Dee_SERADDR_ISOK(out_addr))
 			goto err;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	} else if (tp->tp_init.tp_alloc.tp_free != NULL) {
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 		int status;
@@ -2921,15 +2907,10 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 #else /* Dee_SLAB_CHUNKSIZE_MAX */
 		goto cannot_serialize;
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	} else {
 		/* Figure out instance size (with support for slab allocators). */
 		int status;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 		size_t instance_size = tp->tp_init.tp_alloc.tp_instance_size;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-		size_t instance_size = DeeType_GetInstanceSize(tp);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 		if unlikely(!instance_size)
 			goto cannot_serialize;
 
@@ -3181,7 +3162,6 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_gcobject_trymalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_trymalloc,
 	/* .set_gcobject_trycalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_trycalloc,
 	/* .set_gcobject_free           = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_gcobject_free,
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_slab_malloc,
 	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_slab_calloc,
@@ -3215,7 +3195,6 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
 	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	/* .set_putaddr                 = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&decwriter_putaddr,
 	/* .set_putobject               = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_putobject,
 	/* .set_putobject_ex            = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&decwriter_putobject_ex,
@@ -3246,10 +3225,8 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	self->dw_used  = offsetof(Dec_Ehdr, e_heap.hr_first);
 	self->dw_hlast = 0;
 	self->dw_align = Dee_HEAPCHUNK_ALIGN;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
 	self->dw_slabs = 0;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	Dee_dec_reltab_init(&self->dw_srel);
 	Dee_dec_reltab_init(&self->dw_drel);
 	Dee_dec_rreltab_init(&self->dw_drrel);

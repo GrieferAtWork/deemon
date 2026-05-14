@@ -25,7 +25,6 @@
 
 #include "../api.h"
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include <hybrid/host.h>          /* __ARCH_PAGESIZE */
 #include <hybrid/limitcore.h>     /* __INT_FAST16_MAX__, __INT_MAX__ */
 #include <hybrid/sequence/list.h> /* LIST_ENTRY */
@@ -463,7 +462,5 @@ INTDEF size_t DCALL Dee_slab_page_rawtrim(size_t pad);
 
 DECL_END
 #endif /* __CC__ */
-
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_UTIL_SLAB_H */

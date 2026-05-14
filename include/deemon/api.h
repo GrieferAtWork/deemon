@@ -489,29 +489,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 
-/* A re-work of the slab allocator to:
- * - Not require slab memory to be pre-allocated
- * - Be serializable
- * - Be just as fast as before (i.e. O(1) alloc and O(1) free)
- *
- * Unlike the old slab system, this one only works because:
- * - The new GC makes it so `tp_free' is **always** called for the
- *   original type, and never for one of that type's base-classes
- *   (meaning the slab chunk's size is *always* known at compile-
- *   time during a free operation)
- */
-#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR))
-/* TODO: When this becomes mandatory, also remove "CONFIG_NO_OBJECT_SLABS"
- *       (replaced with "#ifdef Dee_SLAB_CHUNKSIZE_MIN") */
-#if 1
-#define CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#else
-#define CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
-
 
 /* Experimental feature switch:
  * Remove (inefficient) special-purpose operators:
@@ -537,16 +514,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 /************************************************************************/
-
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#if ((!defined(__i386__) && !defined(__x86_64__)) || \
-     (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
-#undef CONFIG_NO_OBJECT_SLABS
-#define CONFIG_NO_OBJECT_SLABS /* Unrecognized environment (disable slabs) */
-#endif /* ... */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
 
 #ifdef CONFIG_HOST_WINDOWS
 #ifndef _WIN32_WINNT

@@ -27,7 +27,7 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeObject_*alloc*, DeeSlab_*, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/alloc.h>            /* DeeObject_*alloc*, DeeSlab_Calloc, DeeSlab_Malloc, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
 #include <deemon/asm.h>              /* Dee_instruction_t */
 #include <deemon/bool.h>             /* DeeBool_Check, DeeBool_For, Dee_False, Dee_True */
 #include <deemon/class.h>            /* DeeClassDescriptorObject, DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endwrite, Dee_class_desc_lock_write, Dee_instance_desc */
@@ -48,7 +48,6 @@
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH */
 
-#include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bitset.h>   /* BITSET_SIZEOF, bitset_* */
 #include <hybrid/compiler.h>
 
@@ -4218,7 +4217,6 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_MALLOC(struct fungen *__restrict self,
                           size_t alloc_size, bool do_calloc) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	void const *api_function = NULL;
 #define LOCAL_checkfit(N, _)                                         \
 	if (N >= alloc_size) {                                           \
@@ -4230,24 +4228,7 @@ fg_vcall_DeeObject_MALLOC(struct fungen *__restrict self,
 	{}
 	if (api_function != NULL) {
 		DO(fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 0));
-	} else
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#ifndef CONFIG_NO_OBJECT_SLABS
-	void const *api_function = NULL;
-	size_t alloc_pointers = CEILDIV(alloc_size, sizeof(void *));
-#define LOCAL_checkfit(_, num_pointers)                                               \
-	if (alloc_pointers <= (num_pointers))                                             \
-		api_function = do_calloc ? (void const *)&DeeObject_SlabCalloc##num_pointers  \
-		                         : (void const *)&DeeObject_SlabMalloc##num_pointers; \
-	else
-	DeeSlab_ENUMERATE(LOCAL_checkfit);
-#undef LOCAL_checkfit
-	if (api_function != NULL) {
-		DO(fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 0));
-	} else
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-	{
+	} else {
 		DO(fg_vpush_immSIZ(self, alloc_size));
 		DO(fg_vcallapi(self,
 		               do_calloc ? (void const *)&DeeObject_Calloc

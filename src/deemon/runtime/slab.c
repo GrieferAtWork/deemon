@@ -29,8 +29,6 @@ ClCompile.BasicRuntimeChecks = Default
 
 #include <deemon/api.h>
 
-#if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
-
 /* Implementation configuration */
 #if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
 #define SLAB_DEBUG_INTERNAL 1
@@ -1260,11 +1258,7 @@ Dee_SLAB_CHUNKSIZE_FOREACH(ASSERT_SLAB_SIZES_UNCHANGED, ~)
 #undef ASSERT_SLAB_SIZES_UNCHANGED
 #endif /* __INTELLISENSE__ */
 
-
-
 DECL_END
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_C */

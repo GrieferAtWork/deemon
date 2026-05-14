@@ -1541,18 +1541,12 @@ target_endcatch_n:
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
 	/* Dee_except_frame_free() */
-#ifndef CONFIG_NO_OBJECT_SLABS
-	/* WARNING: This assumes that sizeof(struct Dee_except_frame) >= 12 */
-#if DeeSlab_HasSize(3)
-	call   fSYM(DeeSlab_Free3,4) /* Free the frame */
-#elif DeeSlab_HasSize(4)
-	call   fSYM(DeeSlab_Free4,4) /* Free the frame */
-#else /* ... */
-	call   fSYM(DeeSlab_Free,4)  /* Free the frame */
-#endif /* !... */
-#else /* !CONFIG_NO_OBJECT_SLABS */
-	call   fSYM(Dee_Free,4)     /* Free the frame */
-#endif /* CONFIG_NO_OBJECT_SLABS */
+#ifndef Dee_SLAB_CHUNKSIZE_MIN
+	/* WARNING: This assumes that sizeof(struct Dee_except_frame) == 12 */
+	call   fSYM(DeeSlab_Free12,4) /* Free the frame */
+#else /* !Dee_SLAB_CHUNKSIZE_MIN */
+	call   fSYM(Dee_Free,4)       /* Free the frame */
+#endif /* Dee_SLAB_CHUNKSIZE_MIN */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 

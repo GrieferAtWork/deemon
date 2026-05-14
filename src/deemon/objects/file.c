@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>               /* DeeBool_Check, DeeBool_IsTrue, return_bool */
 #include <deemon/bytes.h>              /* DeeBytes_NewView, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */

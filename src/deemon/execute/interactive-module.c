@@ -25,7 +25,7 @@
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define Dee_WANT_CODE_OBJECT__co_next
 
-#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_CollectMemoryoc, Dee_Free */
 #include <deemon/asm.h>                /* ASM_JMP, ASM_UD, instruction_t */
 #include <deemon/code.h>               /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeFunctionObject, DeeFunction_NewNoRefs, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_*, code_size_t, instruction_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_*, asm_*, assembler*, ast_genasm, current_assembler */

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* DeeBool_NewTrue, Dee_CONFIG_BOOL_TLS, Dee_False, Dee_FalseTrue, Dee_True, _DeeBool_Pair, return_bool, return_false */
 #include <deemon/code.h>               /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, DeeCodeObject, DeeCode_NAME, DeeFunctionObject, DeeFunction_Check, Dee_CODE_FRAME_NOT_EXECUTING, Dee_CODE_FTHISCALL, Dee_code_frame */

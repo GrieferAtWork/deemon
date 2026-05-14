@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED */
+#include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2Or3 */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
@@ -56,7 +56,7 @@ default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, v
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL
 seqeach_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(0);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto done;
 	result->se_seq    = seq;
@@ -72,7 +72,7 @@ PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 seqeach_makeop1(DeeObject *seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *arg_0) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(1);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto err;
 	result->se_seq       = seq;
@@ -92,7 +92,7 @@ seqeach_makeop2(DeeObject *seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *arg_0,
                 /*inherit(always)*/ DREF DeeObject *arg_1) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(2);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto err;
 	result->se_seq       = seq;
@@ -1362,7 +1362,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL
 seqsome_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(0);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto done;
 	result->se_seq    = seq;
@@ -1378,7 +1378,7 @@ PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 seqsome_makeop1(DeeObject *seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *arg_0) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(1);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto err;
 	result->se_seq       = seq;
@@ -1398,7 +1398,7 @@ seqsome_makeop2(DeeObject *seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *arg_0,
                 /*inherit(always)*/ DREF DeeObject *arg_1) {
 	DREF SeqEachOperator *result;
-	result = SeqEachOperator_MALLOC(2);
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto err;
 	result->se_seq       = seq;
@@ -3089,12 +3089,7 @@ seo_mh_seq_operator_trygetitem_index(SeqEachOperator *self, size_t index) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF SeqEachOperator *DCALL
 seo_wraprange(SeqEachOperator *self, /*inherit(always)*/ DREF DeeObject *base) {
 	DREF SeqEachOperator *result;
-	switch (self->so_opargc) {
-	case 0: result = SeqEachOperator_MALLOC(0); break;
-	case 1: result = SeqEachOperator_MALLOC(1); break;
-	case 2: result = SeqEachOperator_MALLOC(2); break;
-	default: __builtin_unreachable();
-	}
+	result = SeqEachOperator_MALLOC();
 	if unlikely(!result)
 		goto err_base;
 	result->se_seq    = base; /* Inherit reference. */
@@ -3384,23 +3379,6 @@ PRIVATE struct type_callable sew_callable = {
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-/* Backwards compat (remove once 'CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR' becomes mandatory) */
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size_, \
-                                          max_tp_instance_size_, \
-                                          tp_ctor_,              \
-                                          tp_copy_ctor_,         \
-                                          tp_any_ctor_,          \
-                                          tp_any_ctor_kw_,       \
-                                          tp_serialize_)         \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(max_tp_instance_size_,       \
-	                                tp_ctor_,                    \
-	                                tp_copy_ctor_,               \
-	                                tp_any_ctor_,                \
-	                                tp_any_ctor_kw_,             \
-	                                tp_serialize_)
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
 INTERN DeeTypeObject SeqEachOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEachOperator",
@@ -3410,14 +3388,13 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(
-			/* min_tp_instance_size: */ offsetof(SeqEachOperator, so_opargv),
-			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
-			/* tp_ctor:              */ &seo_ctor,
-			/* tp_copy_ctor:         */ &seo_copy,
-			/* tp_any_ctor:          */ &seo_init,
-			/* tp_any_ctor_kw:       */ NULL,
-			/* tp_serialize:         */ NULL
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachOperator,
+			/* tp_ctor:        */ &seo_ctor,
+			/* tp_copy_ctor:   */ &seo_copy,
+			/* tp_any_ctor:    */ &seo_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_assign,
@@ -3910,14 +3887,13 @@ INTERN DeeTypeObject SeqSomeOperator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! */
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(
-			/* min_tp_instance_size: */ offsetof(SeqEachOperator, so_opargv),
-			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
-			/* tp_ctor:              */ &seo_ctor,
-			/* tp_copy_ctor:         */ &seo_copy,
-			/* tp_any_ctor:          */ &seo_init,
-			/* tp_any_ctor_kw:       */ NULL,
-			/* tp_serialize:         */ NULL
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqEachOperator,
+			/* tp_ctor:        */ &seo_ctor,
+			/* tp_copy_ctor:   */ &seo_copy,
+			/* tp_any_ctor:    */ &seo_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_assign,

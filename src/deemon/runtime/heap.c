@@ -43,12 +43,6 @@ ClCompile.BasicRuntimeChecks = Default
 #undef ATTR_ALLOC_ALIGN
 #define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
-#ifndef __INTELLISENSE__
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#include "old-slab.c.inl"
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#endif /* !__INTELLISENSE__ */
-
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <deemon/alloc.h>            /* Dee_CollectMemory */
 #include <deemon/format.h>           /* PRFuSIZ */
@@ -527,14 +521,12 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 #define dlmalloc_trim_RETURNS_SIZE_T 1
 #endif /* !NO_MALLOC_TRIM */
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 /* Trim the slab page cache (do this first, in case said cache has
  * been implemented in terms of the fallback `Dee_Memalign()' impl) */
 #define dlmalloc_trim_PREHOOK(p_result, pad) \
 	*(p_result) += Dee_slab_page_rawtrim(pad)
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Integrate assert checks */
 #define DL_ASSERT  Dee_ASSERT
@@ -2698,11 +2690,9 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC_locked(void) {
 	/* #1: Convert "leaks" into a by-address R/B-tree "gcleak_byaddr_tree" */
 	gcmove__leaks__into__gcleak_byaddr_tree();
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 	/* TODO: Move allocated slab pages into "gcleak_byaddr_tree" */
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* #2: Scan static memory locations of the deemon core and all dex modules for
 	 *     stuff that looks like pointers. Every pointer found is checked for being
@@ -3781,12 +3771,6 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) voi
  * - If `ptr' is `NULL' or a heap pointer that does not belong
  *   to a custom heap region, `NULL' is returned instead.
  * - If `ptr' isn't a heap pointer, behavior is undefined.
- * #ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
- * - Unlike `Dee_MallocUsableSize()', this function has another special
- *   case where behavior is also well-defined: if deemon was built with
- *   object slabs enabled (!CONFIG_NO_OBJECT_SLABS), and the given `ptr'
- *   points into the special slab-heap, then `NULL' is always returned.
- * #endif // !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
  *
  * @return: * :   The heap region belonging to `ptr'
  * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
@@ -3794,37 +3778,30 @@ PUBLIC ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr) {
 #if FLAG4_BIT_HEAP_REGION
 	struct Dee_heapregion *result = NULL;
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#ifdef IS_SLAB_POINTER
-	if (!IS_SLAB_POINTER(ptr))
-#endif /* IS_SLAB_POINTER */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-	{
-		mchunkptr p = mem2chunk(ptr);
-		if (flag4inuse(p)) {
-			/* Traverse the chain of chunks until we find one
-			 * with "prev_foot" (aka. "hc_prevsize") == 0 */
-			while (p->prev_foot) {
-				ext_assert(IS_ALIGNED(p->prev_foot, Dee_HEAPCHUNK_ALIGN));
-				p = chunk_minus_offset(p, p->prev_foot);
-			}
-			result = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
-			                               struct Dee_heapregion, hr_first);
-			ext_assert(result->hr_size >= (size_t)((byte_t *)mem2chunk(ptr) - (byte_t *)result));
-		} else {
+	mchunkptr p = mem2chunk(ptr);
+	if (flag4inuse(p)) {
+		/* Traverse the chain of chunks until we find one
+		 * with "prev_foot" (aka. "hc_prevsize") == 0 */
+		while (p->prev_foot) {
+			ext_assert(IS_ALIGNED(p->prev_foot, Dee_HEAPCHUNK_ALIGN));
+			p = chunk_minus_offset(p, p->prev_foot);
+		}
+		result = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
+		                               struct Dee_heapregion, hr_first);
+		ext_assert(result->hr_size >= (size_t)((byte_t *)mem2chunk(ptr) - (byte_t *)result));
+	} else {
 #if DL_DEBUG_INTERNAL
 #if FOOTERS && !GM_ONLY
-			mstate fm = get_mstate_for(p);
-			ext_assert__ok_magic(fm);
+		mstate fm = get_mstate_for(p);
+		ext_assert__ok_magic(fm);
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* !FOOTERS || GM_ONLY */
-			PREACTION(fm);
-			check_inuse_chunk(fm, p);
-			POSTACTION(fm);
+		PREACTION(fm);
+		check_inuse_chunk(fm, p);
+		POSTACTION(fm);
 #undef fm
 #endif /* DL_DEBUG_INTERNAL */
-		}
 	}
 	return result;
 #else /* FLAG4_BIT_HEAP_REGION */

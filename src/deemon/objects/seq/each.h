@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* DeeObject_* */
+#include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_hash_t */
 #include <deemon/string.h> /*  */
 #include <deemon/type.h>   /* Dee_operator_t */
@@ -31,7 +31,7 @@
 
 #include "../generic-proxy.h"
 
-#include <stddef.h> /* offsetof, size_t */
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
@@ -91,16 +91,8 @@ typedef struct {
 	DREF DeeObject *so_opargv[2]; /* [1..1][const][0..so_opargc] Vector of arguments passed to the operator. */
 } SeqEachOperator;
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-/* TODO: Once "CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR" becomes mandatory, remove "argc" parameter of "SeqEachOperator_MALLOC()" */
-#define SeqEachOperator_MALLOC(argc) DeeObject_MALLOC(SeqEachOperator)
-#define SeqEachOperator_FREE(p)      DeeObject_FREE(Dee_REQUIRES_TYPE(SeqEachOperator *, p))
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define SeqEachOperator_MALLOC(argc)                                                  \
-	((DREF SeqEachOperator *)DeeObject_FMalloc(offsetof(SeqEachOperator, so_opargv) + \
-	                                           (argc) * sizeof(DREF DeeObject *)))
-#define SeqEachOperator_FREE(p) DeeObject_Free(Dee_REQUIRES_TYPE(SeqEachOperator *, p))
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#define SeqEachOperator_MALLOC() DeeObject_MALLOC(SeqEachOperator)
+#define SeqEachOperator_FREE(p)  DeeObject_FREE(Dee_REQUIRES_TYPE(SeqEachOperator *, p))
 
 
 #if 0

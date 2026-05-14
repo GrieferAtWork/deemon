@@ -183,9 +183,7 @@ typedef struct {
 	Dee_deepcopy_heap_t         *dcc_obheap;     /* [0..N][owned] Deepcopy heap for objects */
 	Dee_deepcopy_heap_t         *dcc_gcheap;     /* [0..N][owned] Deepcopy heap for gc objects */
 	struct Dee_deepcopy_uheap   *dcc_uheap;      /* [0..N][owned] Deepcopy heap for objects with custom allocators */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	struct Dee_deepcopy_uheap   *dcc_sheap;      /* [0..N][owned] Deepcopy heap for slab allocations */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	struct Dee_deepcopy_mapitem *dcc_ptrmapv;    /* [0..dcc_ptrmapc][owned][SORT(dcmi_old_minaddr ASC)] mapping of source range to target ranges. */
 	size_t                       dcc_ptrmapc;    /* # of used elements in `dcc_ptrmapv' */
 	size_t                       dcc_ptrmapa;    /* # of allocated elements in `dcc_ptrmapv' */

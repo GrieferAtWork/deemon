@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
 #include <deemon/types.h>            /* Dee_ssize_t */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_t */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX */
@@ -157,6 +156,5 @@ INTDEF void DCALL DeeSlab_CheckMemory(void);
 DECL_END
 
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_H */

@@ -181,7 +181,6 @@ struct Dee_serial_type {
 	/* Free generic heap memory (as per "DeeGCObject_Free()") */
 	NONNULL_T((1, 3)) void (DCALL *set_gcobject_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, DeeObject *__restrict ref);
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	/* Slab object management -- caller must ensure that:
 	 * - set_slab_malloc:           DeeSlab_EXISTS(n)
 	 * - set_slab_object_malloc:    DeeSlab_EXISTS(n)
@@ -201,7 +200,6 @@ struct Dee_serial_type {
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_slab_gcobject_trymalloc)(DeeSerial *__restrict self, size_t n, DeeObject *__restrict ref);
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_slab_gcobject_trycalloc)(DeeSerial *__restrict self, size_t n, DeeObject *__restrict ref);
 	NONNULL_T((1, 4)) void (DCALL *set_slab_gcobject_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, size_t n, DeeObject *__restrict ref);
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Serialize a `void *' field at `addrof_pointer' as being populated with the
 	 * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)'
@@ -336,7 +334,6 @@ struct Dee_serial {
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 /* Slab object management -- caller must ensure that:
  * - set_slab_malloc:           DeeSlab_EXISTS(n)
  * - set_slab_object_malloc:    DeeSlab_EXISTS(n)
@@ -356,25 +353,7 @@ struct Dee_serial {
 #define DeeSerial_Slab_GCObject_TryMalloc(self, n, ref)  (*(self)->ser_type->set_slab_gcobject_trymalloc)(self, n, Dee_AsObject(ref))
 #define DeeSerial_Slab_GCObject_TryCalloc(self, n, ref)  (*(self)->ser_type->set_slab_gcobject_trycalloc)(self, n, Dee_AsObject(ref))
 #define DeeSerial_Slab_GCObject_Free(self, addr, n, ref) (*(self)->ser_type->set_slab_gcobject_free)(self, addr, n, Dee_AsObject(ref))
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define DeeSerial_Slab_Malloc(self, n, ref)              DeeSerial_Malloc(self, n, ref)
-#define DeeSerial_Slab_Calloc(self, n, ref)              DeeSerial_Calloc(self, n, ref)
-#define DeeSerial_Slab_TryMalloc(self, n, ref)           DeeSerial_TryMalloc(self, n, ref)
-#define DeeSerial_Slab_TryCalloc(self, n, ref)           DeeSerial_TryCalloc(self, n, ref)
-#define DeeSerial_Slab_Free(self, addr, n, ref)          DeeSerial_Free(self, addr, ref)
-#define DeeSerial_Slab_Object_Malloc(self, n, ref)       DeeSerial_Object_Malloc(self, n, ref)
-#define DeeSerial_Slab_Object_Calloc(self, n, ref)       DeeSerial_Object_Calloc(self, n, ref)
-#define DeeSerial_Slab_Object_TryMalloc(self, n, ref)    DeeSerial_Object_TryMalloc(self, n, ref)
-#define DeeSerial_Slab_Object_TryCalloc(self, n, ref)    DeeSerial_Object_TryCalloc(self, n, ref)
-#define DeeSerial_Slab_Object_Free(self, addr, n, ref)   DeeSerial_Object_Free(self, addr, ref)
-#define DeeSerial_Slab_GCObject_Malloc(self, n, ref)     DeeSerial_GCObject_Malloc(self, n, ref)
-#define DeeSerial_Slab_GCObject_Calloc(self, n, ref)     DeeSerial_GCObject_Calloc(self, n, ref)
-#define DeeSerial_Slab_GCObject_TryMalloc(self, n, ref)  DeeSerial_GCObject_TryMalloc(self, n, ref)
-#define DeeSerial_Slab_GCObject_TryCalloc(self, n, ref)  DeeSerial_GCObject_TryCalloc(self, n, ref)
-#define DeeSerial_Slab_GCObject_Free(self, addr, n, ref) DeeSerial_GCObject_Free(self, addr, ref)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifndef _DeeSlab_EXISTS_CB
 #define _DeeSlab_EXISTS_CB(n, N) || n == (N) /*!export-*/
 #endif /* !_DeeSlab_EXISTS_CB */
@@ -395,23 +374,7 @@ struct Dee_serial {
 #define DeeSerial_GCObject_FTryMalloc(self, n, ref)  (_DeeGCSlab_EXISTS(n) ? DeeSerial_Slab_GCObject_TryMalloc(self, n, ref) : DeeSerial_GCObject_TryMalloc(self, n, ref))
 #define DeeSerial_GCObject_FTryCalloc(self, n, ref)  (_DeeGCSlab_EXISTS(n) ? DeeSerial_Slab_GCObject_TryCalloc(self, n, ref) : DeeSerial_GCObject_TryCalloc(self, n, ref))
 #define DeeSerial_GCObject_FFree(self, addr, n, ref) (_DeeGCSlab_EXISTS(n) ? DeeSerial_Slab_GCObject_Free(self, addr, ref) : DeeSerial_GCObject_Free(self, addr, ref))
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#define DeeSerial_FMalloc(self, n, ref)              DeeSerial_Malloc(self, n, ref)
-#define DeeSerial_FCalloc(self, n, ref)              DeeSerial_Calloc(self, n, ref)
-#define DeeSerial_FTryMalloc(self, n, ref)           DeeSerial_TryMalloc(self, n, ref)
-#define DeeSerial_FTryCalloc(self, n, ref)           DeeSerial_TryCalloc(self, n, ref)
-#define DeeSerial_FFree(self, addr, n, ref)          DeeSerial_Free(self, addr, ref)
-#define DeeSerial_Object_FMalloc(self, n, ref)       DeeSerial_Object_Malloc(self, n, ref)
-#define DeeSerial_Object_FCalloc(self, n, ref)       DeeSerial_Object_Calloc(self, n, ref)
-#define DeeSerial_Object_FTryMalloc(self, n, ref)    DeeSerial_Object_TryMalloc(self, n, ref)
-#define DeeSerial_Object_FTryCalloc(self, n, ref)    DeeSerial_Object_TryCalloc(self, n, ref)
-#define DeeSerial_Object_FFree(self, addr, n, ref)   DeeSerial_Object_Free(self, addr, ref)
-#define DeeSerial_GCObject_FMalloc(self, n, ref)     DeeSerial_GCObject_Malloc(self, n, ref)
-#define DeeSerial_GCObject_FCalloc(self, n, ref)     DeeSerial_GCObject_Calloc(self, n, ref)
-#define DeeSerial_GCObject_FTryMalloc(self, n, ref)  DeeSerial_GCObject_TryMalloc(self, n, ref)
-#define DeeSerial_GCObject_FTryCalloc(self, n, ref)  DeeSerial_GCObject_TryCalloc(self, n, ref)
-#define DeeSerial_GCObject_FFree(self, addr, n, ref) DeeSerial_GCObject_Free(self, addr, ref)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 #define DeeSerial_MALLOC(self, T, ref)              DeeSerial_FMalloc(self, sizeof(T), ref)
 #define DeeSerial_CALLOC(self, T, ref)              DeeSerial_FCalloc(self, sizeof(T), ref)
 #define DeeSerial_TRYMALLOC(self, T, ref)           DeeSerial_FTryMalloc(self, sizeof(T), ref)

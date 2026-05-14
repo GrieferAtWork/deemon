@@ -1563,12 +1563,6 @@
 		<ClInclude Include="..\src\deemon\runtime\new-new.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\old-slab-impl.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\old-slab.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

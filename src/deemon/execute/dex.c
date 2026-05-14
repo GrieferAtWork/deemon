@@ -30,7 +30,7 @@
 #include <deemon/util/hash.h> /* Dee_HashStr */
 
 #ifndef CONFIG_NO_DEX
-#include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free, Dee_Freea */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/format.h>             /* Dee_sprintf, PRFuSIZ */

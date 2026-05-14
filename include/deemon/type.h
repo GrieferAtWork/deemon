@@ -78,7 +78,7 @@
 #include <stdint.h>  /* UINTn_C, int32_t, int64_t, uint16_t, uint32_t, uint64_t, uintptr_t */
 
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
-/*!fixincludes fake_include "alloc.h"  // DeeObject_Free, DeeObject_Malloc, DeeSlab_* */
+/*!fixincludes fake_include "alloc.h"  // DeeObject_Free, DeeObject_Malloc, DeeSlab_GetFree, DeeSlab_GetMalloc */
 /*!fixincludes fake_include "gc.h"     // DeeGCObject_Free, DeeGCObject_Malloc, DeeGCSlab_GetFree, DeeGCSlab_GetMalloc */
 /*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref */
 /*!fixincludes fake_include "string.h" // DeeString_Hash, DeeString_STR */
@@ -360,7 +360,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef GUARD_DEEMON_ALLOC_H
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_SIZED(include("alloc.h"))*/
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_FIXED(include("alloc.h"))*/
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)            \
@@ -369,35 +368,8 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 	                                DeeSlab_GetFree(tp_instance_size, (void (DCALL *)(void *))(Dee_funptr_t)NULL))
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#ifdef CONFIG_NO_OBJECT_SLABS
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("alloc.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("alloc.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("alloc.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
-#else /* CONFIG_NO_OBJECT_SLABS */
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)              \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                                \
-	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)), \
-	                                DeeSlab_Invoke(&DeeObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                        \
-	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(tp_instance_size)), \
-	                                DeeSlab_Invoke(&DeeObject_SlabFree, tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                          \
-	                                DeeSlab_Invoke(&DeeGCObject_SlabMalloc, tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(tp_instance_size)), \
-	                                DeeSlab_Invoke(&DeeGCObject_SlabFree, tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #endif /* GUARD_DEEMON_ALLOC_H */
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef GUARD_DEEMON_GC_H
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(include("gc.h"))*/
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(include("gc.h"))*/
@@ -408,7 +380,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #endif /* GUARD_DEEMON_GC_H */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 

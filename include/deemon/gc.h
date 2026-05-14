@@ -48,7 +48,7 @@
 /*!fixincludes fake_include "type.h" // Dee_TYPE_CONSTRUCTOR_INIT_ALLOC */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* DeeSlab_ENUMERATE, DeeSlab_Invoke */
+#include "alloc.h" /*  */
 #else /* !__INTELLISENSE__ */
 DECL_BEGIN
 #define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))                             /*!export-*/
@@ -488,7 +488,6 @@ DFUNDEF void *(DCALL DeeDbgGCObject_UntrackAlloc)(void *p, char const *file, int
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define _Dee_PRIVATE_DeeGCObject_API(n, _)                                                         \
 	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_Malloc##n(void);                             \
 	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_Calloc##n(void);                             \
@@ -599,41 +598,6 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #endif /* GUARD_DEEMON_TYPE_H */
 
-
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-/* Allocate fixed-size, gc-object-purposed slab memory.
- * NOTE: This memory must be freed by one of:
- *   - DeeGCObject_FFree(return, size2)    | size2 <= size
- *   - DeeGCObject_SlabFree<size2>(return) | size2 <= size
- *   - DeeGCObject_Free(return) */
-#ifdef CONFIG_NO_OBJECT_SLABS
-#define DeeGCObject_FMalloc(size)    DeeGCObject_Malloc(size)
-#define DeeGCObject_FCalloc(size)    DeeGCObject_Calloc(size)
-#define DeeGCObject_FTryMalloc(size) DeeGCObject_TryMalloc(size)
-#define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
-#define DeeGCObject_FFree(ptr, size) DeeGCObject_Free(ptr)
-#elif defined(__INTELLISENSE__)
-#define DeeGCObject_FMalloc(size)    DeeGCObject_Malloc(size)
-#define DeeGCObject_FCalloc(size)    DeeGCObject_Calloc(size)
-#define DeeGCObject_FTryMalloc(size) DeeGCObject_TryMalloc(size)
-#define DeeGCObject_FTryCalloc(size) DeeGCObject_TryCalloc(size)
-#define DeeGCObject_FFree(ptr, size) (DeeGCObject_Free(ptr), (void)(size))
-#else /* CONFIG_NO_OBJECT_SLABS */
-#define _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size)                              \
-	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabMalloc##size)(void);    \
-	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabCalloc##size)(void);    \
-	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryMalloc##size)(void); \
-	DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_SlabTryCalloc##size)(void); \
-	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
-DeeSlab_ENUMERATE(_Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS)
-#undef _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS
-#define DeeGCObject_FMalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabMalloc, size, (), DeeGCObject_Malloc(size))
-#define DeeGCObject_FCalloc(size)    DeeSlab_Invoke(DeeGCObject_SlabCalloc, size, (), DeeGCObject_Calloc(size))
-#define DeeGCObject_FTryMalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryMalloc, size, (), DeeGCObject_TryMalloc(size))
-#define DeeGCObject_FTryCalloc(size) DeeSlab_Invoke(DeeGCObject_SlabTryCalloc, size, (), DeeGCObject_TryCalloc(size))
-#define DeeGCObject_FFree(ptr, size) DeeSlab_Invoke(DeeGCObject_SlabFree, size, (ptr), DeeGCObject_Free(ptr))
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Same as the regular malloc functions, but use the same allocation methods
  * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC', meaning that

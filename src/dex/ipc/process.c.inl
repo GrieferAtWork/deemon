@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_UntrackAlloc */
+#include <deemon/alloc.h>           /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_UntrackAlloc */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/bytes.h>           /* DeeBytes_DATA, DeeBytes_SIZE */

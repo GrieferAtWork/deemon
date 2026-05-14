@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeSlab_ENUMERATE, DeeSlab_Free, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeSlab_Free, Dee_Free */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>               /* return_bool, return_bool01, return_false, return_true */
 #include <deemon/callable.h>           /* DeeCallable_Type */
@@ -2321,7 +2321,6 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 	 * The only solution I can see here is to just always disable slab-based alloc
 	 * functions in DEX modules, but then the deemon core should be able to lazily
 	 * assign slab allocators for DEX types, as those types are used. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	if (DeeType_IsGC(self)) {
 #define CHECK_ALLOCATOR(N, _)                \
 		if (tp_free == &DeeGCSlab_Free##N) { \
@@ -2339,27 +2338,6 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 #undef CHECK_ALLOCATOR
 		{}
 	}
-#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-#ifndef CONFIG_NO_OBJECT_SLABS
-	if (DeeType_IsGC(self)) {
-#define CHECK_ALLOCATOR(index, size)                  \
-		if (tp_free == &DeeGCObject_SlabFree##size) { \
-			return size * sizeof(void *);             \
-		} else
-		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-		{}
-	} else {
-#define CHECK_ALLOCATOR(index, size)                \
-		if (tp_free == &DeeObject_SlabFree##size) { \
-			return size * sizeof(void *);           \
-		} else
-		DeeSlab_ENUMERATE(CHECK_ALLOCATOR)
-#undef CHECK_ALLOCATOR
-		{}
-	}
-#endif /* !CONFIG_NO_OBJECT_SLABS */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	return 0;
 }
 
