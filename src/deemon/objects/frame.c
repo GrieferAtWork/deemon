@@ -1228,7 +1228,7 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst frame_members[] = {
-	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(Frame, f_owner)),
+	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT_AB, offsetof(Frame, f_owner)),
 	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, Dee_FRAME_FWRITABLE,
 	                         "Evaluates to ?t if @this Frame is writable"),
 	TYPE_MEMBER_END

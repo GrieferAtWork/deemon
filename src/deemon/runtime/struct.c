@@ -465,12 +465,14 @@ struct_fini_cb(void *arg, DeeTypeObject *declaring_type,
 	byte_t *dst = (byte_t *)me + field->m_desc.md_field.mdf_offset;
 	(void)declaring_type;
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+#ifndef __OPTIMIZE_SIZE__
+		Dee_Decref(*(DREF DeeObject **)dst);
+		break;
+#endif /* !__OPTIMIZE_SIZE__ */
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST:
 		Dee_XDecref(*(DREF DeeObject **)dst);
-		break;
-	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
-		Dee_Decref(*(DREF DeeObject **)dst);
 		break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
@@ -504,16 +506,19 @@ struct_copy_cb(void *arg, DeeTypeObject *declaring_type,
 	ASSERT(TYPE_MEMBER_ISFIELD(field));
 	(void)declaring_type;
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+#ifndef __OPTIMIZE_SIZE__
+	{
+		DeeObject *obj = *(DeeObject *const *)src;
+		*(DeeObject **)dst = obj;
+		Dee_Incref(obj);
+	}	break;
+#endif /* !__OPTIMIZE_SIZE__ */
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		*(DeeObject **)dst = obj;
 		Dee_XIncref(obj);
-	}	break;
-	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
-		DeeObject *obj = *(DeeObject *const *)src;
-		*(DeeObject **)dst = obj;
-		Dee_Incref(obj);
 	}	break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
@@ -643,7 +648,7 @@ Dee_type_member_init_unbound(struct type_member const *desc, DeeObject *self) {
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST:
-	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+/*	case STRUCT_OBJECT_AB & ~STRUCT_CONST: /* Mustn't be unbound! */
 		*(DeeObject **)dst = NULL;
 		break;
 	case STRUCT_WOBJECT_OPT:
@@ -721,9 +726,9 @@ DeeStructObject_Init(DeeObject *__restrict self,
 }
 
 struct struct_serialize_data {
-	DeeObject    *scd_src;
-	DeeSerial    *scd_dst_writer;
-	Dee_seraddr_t scd_dst_addr;
+	DeeObject    *scd_src;        /* [1..1][const] Object being serialized */
+	DeeSerial    *scd_dst_writer; /* [1..1][const] Serialization writer */
+	Dee_seraddr_t scd_dst_addr;   /* [const] Address of output object in `scd_dst_writer' */
 };
 
 
@@ -737,9 +742,15 @@ struct_serialize_cb(void *arg, DeeTypeObject *declaring_type,
 	ASSERT(TYPE_MEMBER_ISFIELD(field));
 	(void)declaring_type;
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+#ifndef __OPTIMIZE_SIZE__
+	{
+		DeeObject *obj = *(DeeObject *const *)src;
+		return DeeSerial_PutObject(data->scd_dst_writer, dst_addr, obj);
+	}	break;
+#endif /* !__OPTIMIZE_SIZE__ */
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST:
-	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
+	case STRUCT_OBJECT & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		return DeeSerial_XPutObject(data->scd_dst_writer, dst_addr, obj);
 	}	break;
@@ -838,12 +849,14 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 		while ((member = *fields++) != NULL) {
 			byte_t *dst = (byte_t *)self + member->m_desc.md_field.mdf_offset;
 			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+			case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+#ifndef __OPTIMIZE_SIZE__
+				Dee_Visit(*(DREF DeeObject **)dst);
+				break;
+#endif /* !__OPTIMIZE_SIZE__ */
 			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 			case STRUCT_OBJECT & ~STRUCT_CONST:
 				Dee_XVisit(*(DREF DeeObject **)dst);
-				break;
-			case STRUCT_OBJECT_AB & ~STRUCT_CONST:
-				Dee_Visit(*(DREF DeeObject **)dst);
 				break;
 			case STRUCT_VARIANT:
 				Dee_variant_visit((struct Dee_variant *)dst, proc, arg);
@@ -1222,9 +1235,15 @@ struct_hashof_field(DeeObject *self, struct type_member const *field) {
 	byte_t *src = (byte_t *)self + field->m_desc.md_field.mdf_offset;
 	ASSERT(TYPE_MEMBER_ISFIELD(field));
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+#ifndef __OPTIMIZE_SIZE__
+	{
+		DeeObject *obj = *(DeeObject *const *)src;
+		return DeeObject_Hash(obj);
+	}	break;
+#endif /* !__OPTIMIZE_SIZE__ */
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST:
-	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
+	case STRUCT_OBJECT & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		if (obj == NULL)
 			return Dee_HASHOF_UNBOUND_ITEM;

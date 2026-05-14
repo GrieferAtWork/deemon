@@ -103,7 +103,7 @@ DECL_BEGIN
  * >> ...
  *
  * Constructor/repr parameters are ordered the same as struct members are, with
- * members from base classes coming first, but being allowed to be skipped if
+ * members from super classes coming first, but being allowed to be skipped if
  * a relevant sub-class defines a different name:
  * - the name used for the attribute at some offset is always the first attribute
  *   name encountered during MRO resolution.
@@ -112,13 +112,15 @@ DECL_BEGIN
  * WARNING: The following struct types CANNOT be used (since they require initialization
  *          which isn't supported by `DeeStructObject_*' which requires that all fields
  *          be optional):
- * - "STRUCT_OBJECT"      (use "STRUCT_OBJECT_OPT" instead)
- * - "STRUCT_OBJECT_AB"   (use "STRUCT_OBJECT_OPT" instead)
- * - "STRUCT_WOBJECT"     (use "STRUCT_WOBJECT_OPT" instead)
  * - "STRUCT_CSTR"        (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
  * - "STRUCT_CSTR_OPT"    (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
  * - "STRUCT_CSTR_EMPTY"  (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
  * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT_OPT" instead)
+ *
+ * The following can be used, but have a hard pre-defined initializer when not specified:
+ * - "STRUCT_OBJECT"      (Initialized to `Dee_None' when not specified)
+ * - "STRUCT_OBJECT_AB"   (Initialized to `Dee_None' when not specified)
+ * - "STRUCT_WOBJECT"     (Initialized to `Dee_None' when not specified)
  */
 
 #ifndef Dee_seraddr_t_DEFINED

@@ -616,7 +616,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 
 #ifdef Dee_CONFIG_BOOL_TLS
 #ifdef __NO_ATTR_ALIGNED
-#error "Need 'ATTR_ALIGNED' when 'Dee_CONFIG_BOOL_TLS' is enabled"
+#error "Need 'ATTR_ALIGNED' when 'Dee_CONFIG_BOOL_TLS' is enabled. Try rebuilding with -DDee_CONFIG_NO_BOOL_TLS"
 #endif /* __NO_ATTR_ALIGNED */
 PUBLIC ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue =
 #else /* Dee_CONFIG_BOOL_TLS */

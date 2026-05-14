@@ -932,7 +932,7 @@ INIT_CUSTOM_SIGNAL("Interrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt ty
 /* Signal.Interrupt.ThreadExit                                          */
 /************************************************************************/
 PRIVATE struct type_member tpconst threadexit_members[] = {
-	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct Dee_threadexit_object, te_result)),
+	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT_AB, offsetof(struct Dee_threadexit_object, te_result)),
 	TYPE_MEMBER_END
 };
 PUBLIC DeeTypeObject DeeError_ThreadExit =

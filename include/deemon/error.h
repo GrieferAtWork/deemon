@@ -198,7 +198,7 @@ struct Dee_appexit_object {
 
 struct Dee_threadexit_object {
 	Dee_OBJECT_HEAD
-	DREF DeeObject *te_result;
+	DREF DeeObject *te_result; /* [1..1][const] */
 };
 #define DeeThreadExit_Check(ob)  DeeObject_InstanceOfExact(ob, &DeeError_ThreadExit)
 #define DeeThreadExit_Result(ob) Dee_REQUIRES_OBJECT(struct Dee_threadexit_object, ob)->te_result

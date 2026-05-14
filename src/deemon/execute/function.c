@@ -3854,15 +3854,15 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 
 #if defined(CONFIG_NO_THREADS) || defined(CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS)
 PRIVATE struct type_member tpconst yfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(YFIterator, yi_func),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
 	                      "Alias for ?#__yfunc__"),
-	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
+	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT_AB, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
 	                      "The underlying yield-function, describing the ?DFunction "
 	                      /**/ "and arguments that are being executed"),
 #ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFIterator, yi_frame.cf_func),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(YFIterator, yi_frame.cf_func),
 	                      "->?Dfunction\n"
 	                      "The function that is being executed"),
 #endif /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */

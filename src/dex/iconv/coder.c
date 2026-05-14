@@ -1237,7 +1237,7 @@ PRIVATE struct type_getset tpconst ivd_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst ivd_members[] = {
-	TYPE_MEMBER_FIELD_DOC("input", STRUCT_OBJECT, offsetof(IconvDecoder, ivd_in), "->?DFile"),
+	TYPE_MEMBER_FIELD_DOC("input", STRUCT_OBJECT_AB, offsetof(IconvDecoder, ivd_in), "->?DFile"),
 	TYPE_MEMBER_FIELD("closeinput", STRUCT_ATOMIC | STRUCT_BOOL(__SIZEOF_BOOL__),
 	                  offsetof(IconvDecoder, ivd_closein)),
 	TYPE_MEMBER_FIELD("chunksize", STRUCT_ATOMIC | STRUCT_SIZE_T,
