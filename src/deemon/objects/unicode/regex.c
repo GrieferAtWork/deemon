@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_MallocUsableSize, Dee_TryCallocc, Dee_UntrackAlloc */
+#include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_TryCallocc, Dee_UntrackAlloc */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_hash_t, Dee_ssize_t */
 #include <deemon/regex.h>           /* DeeRegex*, Dee_RE_* */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_UTF_FFINIHOOK, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE__msize, CONFIG_HAVE_malloc_usable_size, _msize, memcpy, memset */
+#include <deemon/system-features.h> /* memcpy, memset */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
@@ -48,23 +48,7 @@ DECL_BEGIN
 
 /* Configure libregex */
 #undef LIBREGEX_WANT_PROTOTYPES
-
-/* Tell the library if we're unable to provide it with a working `malloc_usable_size(3)' function */
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
-#undef malloc_usable_size
-#define malloc_usable_size(m) Dee_MallocUsableSize(m)
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-#ifdef CONFIG_HAVE_malloc_usable_size
-#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
-#elif defined(CONFIG_HAVE__msize)
-#undef LIBREGEX_NO_MALLOC_USABLE_SIZE
-#undef malloc_usable_size
-#define malloc_usable_size(ptr) (likely(ptr) ? _msize(ptr) : 0)
-#else /* ... */
-#define LIBREGEX_NO_MALLOC_USABLE_SIZE
-#endif /* !... */
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#undef LIBREGEX_NO_MALLOC_USABLE_SIZE /* Always available via `Dee_MallocUsableSize()' */
 
 #define LIBREGEX_NO_RE_CODE_DISASM             /* Don't need debug functions to disassemble regex byte code. */
 #define LIBREGEX_NO_SYSTEM_INCLUDES            /* We're providing all of the system includes (so don't try to include any KOS headers) */

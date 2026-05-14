@@ -27,7 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FREE, Dee_CollectMemory, Dee_MallocUsableSizeNonNull, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>           /* DeeObject_FREE, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_Unpack1Or2 */
 #include <deemon/error.h>           /* DeeError_SyntaxError, DeeError_Throwf */
 #include <deemon/format.h>          /* DeeFormat_PRINT */
@@ -68,13 +68,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 
 
 
-INTERN_CONST struct query_cache_empty_list_struct const
-query_cache_empty_list_ = {
-	0
-#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	, 0
-#endif /* !Dee_MallocUsableSizeNonNull */
-};
+INTERN_CONST struct query_cache_empty_list_struct const query_cache_empty_list_ = { 0 };
 
 /* Returns an index into `self->qcl_queries' of some query compiled against `string'
  * If no such query exists, `self->qcl_count' is returned. */
@@ -506,7 +500,6 @@ use_existing_result:
 				query_cache_list_free(list);
 				list = new_list;
 			}
-			query_cache_list_setalloc(list, min_alloc);
 			self->db_querycache[hash_index] = list;
 		}
 use_list:

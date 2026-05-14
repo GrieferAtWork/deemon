@@ -2091,16 +2091,14 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
 	} else
 #endif /* ... */
 	{
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 		if (Dee_TryReallocInPlace(self->dmf_addr, newsize)) {
-			size_t new_usable = Dee_MallocUsableSize(self->dmf_addr);
+			size_t new_usable = Dee_MallocUsableSizeNonNull(self->dmf_addr);
 			ASSERT(new_usable >= newsize);
 			if (self->dmf_size > new_usable) {
 				self->dmf_size = new_usable;
 				return true;
 			}
 		}
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	}
 	(void)self;
 	(void)newsize;

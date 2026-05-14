@@ -63,7 +63,6 @@
 #include <deemon/type.h>            /* ASSERT_OBJECT_TYPE_A, DeeMethodFlags_VerifyConstCallCondition, DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_*method_t, Dee_STRUCT_*, Dee_TYPE_METHOD_FKWDS, Dee_operator_t, Dee_opinfo, Dee_type_member, METHOD_F*, OPCC_*, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, STRUCT_*, TP_FABSTRACT, TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/util/hash-io.h>    /* Dee_hash_hidxio */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE */
-#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/util/weakref.h>    /* Dee_weakref_bound */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 
@@ -1534,10 +1533,6 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elemv))); /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                                   /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elemc))); /* instance */
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-		DO(fg_vpush_immSIZ(self, 0));                                   /* instance, 0 */
-		DO(fg_vpopind(self, offsetof(DeeListObject, l_list.ol_elema))); /* instance */
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 #ifndef CONFIG_NO_THREADS
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                          /* instance, ATOMIC_RWLOCK_INIT */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_lock)));          /* instance */

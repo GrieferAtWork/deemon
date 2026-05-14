@@ -28,7 +28,6 @@
 
 #include "api.h"
 
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stddef.h> /* size_t */
@@ -274,6 +273,5 @@ DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region);
 #endif /* __CC__ */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 #endif /* !GUARD_DEEMON_HEAP_H */

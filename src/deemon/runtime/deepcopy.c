@@ -156,12 +156,7 @@ deepcopy_unmappointer(DeeDeepCopyContext *__restrict self, void const *optr) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deepcopy_addweakref(DeeDeepCopyContext *__restrict self,
                     struct Dee_weakref *__restrict wref) {
-	size_t old_alloc;
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	old_alloc = Dee_MallocUsableSize(self->dcc_weakrefv) / sizeof(struct Dee_weakref *);
-#else /* Dee_MallocUsableSize */
-	old_alloc = self->dcc_weakrefc;
-#endif /* !Dee_MallocUsableSize */
+	size_t old_alloc = Dee_MallocUsableSize(self->dcc_weakrefv) / sizeof(struct Dee_weakref *);
 	ASSERT(old_alloc >= self->dcc_weakrefc);
 	if (old_alloc <= self->dcc_weakrefc) {
 		size_t new_alloc = self->dcc_weakrefc + 1;
@@ -188,27 +183,12 @@ LOCAL WUNUSED NONNULL((1)) void *DCALL
 deepcopy_heap_malloc(Dee_deepcopy_heap_t **__restrict p_heap,
                      size_t num_bytes, bool do_try, bool do_bzero) {
 	void *result;
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	num_bytes += sizeof(void *);
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	result = do_bzero ? (do_try ? Dee_TryCalloc(num_bytes) : Dee_Calloc(num_bytes))
 	                  : (do_try ? Dee_TryMalloc(num_bytes) : Dee_Malloc(num_bytes));
 	if likely(result) {
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 		Dee_deepcopy_heap_setnext(result, *p_heap);
 		*p_heap = result;
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-		Dee_deepcopy_heap_t *chunk;
-		chunk = (do_try ? Dee_deepcopy_heap_tryallocchunk()
-		                : Dee_deepcopy_heap_allocchunk());
-		if unlikely(!chunk) {
-			Dee_Free(result);
-			return NULL;
-		}
-		chunk->ddch_base = result;
-		chunk->ddch_next = *p_heap;
-		*p_heap = chunk;
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	}
 	return result;
 }
@@ -941,12 +921,7 @@ DeeDeepCopy_AddImmutable(DeeDeepCopyContext *__restrict self, DeeObject *ob) {
 		self->dcc_immutablev = vec;
 		self->dcc_immutablec = 2;
 	} else {
-		size_t old_alloc;
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-		old_alloc = Dee_MallocUsableSize(self->dcc_immutablev) / sizeof(DREF DeeObject *);
-#else /* Dee_MallocUsableSize */
-		old_alloc = self->dcc_immutablec;
-#endif /* !Dee_MallocUsableSize */
+		size_t old_alloc = Dee_MallocUsableSizeNonNull(self->dcc_immutablev) / sizeof(DREF DeeObject *);
 		ASSERT(old_alloc >= self->dcc_immutablec);
 		if (old_alloc <= self->dcc_immutablec) {
 			size_t new_alloc = self->dcc_immutablec + 1;
@@ -1151,18 +1126,6 @@ err:
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-PRIVATE void DCALL
-cleanup_heap(Dee_deepcopy_heap_t *heap) {
-	while (heap) {
-		Dee_deepcopy_heap_t *next;
-		next = Dee_deepcopy_heap_getnext(heap);
-		Dee_Free(heap);
-		heap = next;
-	}
-}
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-
 PRIVATE void DCALL
 cleanup_uheap(struct Dee_deepcopy_uheap *heap) {
 	while (heap) {
@@ -1186,11 +1149,6 @@ cleanup_uheap(struct Dee_deepcopy_uheap *heap) {
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 	/* Destroy heap links (if used) */
-#ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-	cleanup_heap(self->dcc_heap);
-	cleanup_heap(self->dcc_obheap);
-	cleanup_heap(self->dcc_gcheap);
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	cleanup_uheap(self->dcc_uheap);
 	cleanup_uheap(self->dcc_sheap);
 

@@ -1196,11 +1196,7 @@ int main(int argc, char *argv[]) {
 
 	DBG_ALIGNMENT_ENABLE();
 
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	/*DeeHeap_SetAllocBreakpoint(280);*/
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	/*_CrtSetBreakAlloc(280);*/
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 	/* TODO: Using type caches, add the ability for volatile extensions
 	 *       to available attributes, allowing user-code to extend the
@@ -1514,32 +1510,9 @@ done:
 #ifdef CONFIG_TRACE_REFCHANGES
 		Dee_DumpReferenceLeaks();
 #endif /* CONFIG_TRACE_REFCHANGES */
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 		DeeHeap_CheckMemory();
 		if (DeeHeap_DumpMemoryLeaks(DeeHeap_DumpMemoryLeaks_ALL))
 			_DeeAssert_Fail("!DeeHeap_DumpMemoryLeaks()", __FILE__, __LINE__);
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-		DBG_ALIGNMENT_DISABLE();
-#if (defined(_CRTDBG_MAP_ALLOC) && \
-     defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
-#ifdef _DEBUG
-#ifdef CONFIG_HOST_WINDOWS
-		if (!IsDebuggerPresent())
-#endif /* CONFIG_HOST_WINDOWS */
-		{
-			_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-			_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-			_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-			_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-			_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-			_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-		}
-		Dee_CHECKMEMORY();
-		if ((_CrtDumpMemoryLeaks)())
-			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
-#endif /* _DEBUG */
-#endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	}
 
 	/* Dump static refcnt changes if that feature is enabled. */

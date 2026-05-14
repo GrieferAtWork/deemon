@@ -520,8 +520,7 @@ EXPORTS
 	DeeList_NewUninitialized@4=_DeeList_NewUninitialized@4
 	DeeList_NewVector@8=_DeeList_NewVector@8
 	DeeList_NewVectorInherited@8=_DeeList_NewVectorInherited@8
-	DeeList_NewVectorInheritedHeap2@8=_DeeList_NewVectorInheritedHeap2@8
-	DeeList_NewVectorInheritedHeap@12=_DeeList_NewVectorInheritedHeap@12
+	DeeList_NewVectorInheritedHeap@8=_DeeList_NewVectorInheritedHeap@8
 	DeeList_NewWithHint@4=_DeeList_NewWithHint@4
 	DeeList_Pop@8=_DeeList_Pop@8
 	DeeList_RemoveIf@20=_DeeList_RemoveIf@20
@@ -1301,12 +1300,9 @@ EXPORTS
 	DeeSeq_All@4=_DeeSeq_All@4
 	DeeSeq_Any@4=_DeeSeq_Any@4
 	DeeSeq_AsHeapVector@8=_DeeSeq_AsHeapVector@8
-	DeeSeq_AsHeapVectorWithAlloc2@8=_DeeSeq_AsHeapVectorWithAlloc2@8
-	DeeSeq_AsHeapVectorWithAlloc@12=_DeeSeq_AsHeapVectorWithAlloc@12
-	DeeSeq_AsHeapVectorWithAllocReuse2@8=_DeeSeq_AsHeapVectorWithAllocReuse2@8
-	DeeSeq_AsHeapVectorWithAllocReuse@12=_DeeSeq_AsHeapVectorWithAllocReuse@12
-	DeeSeq_AsHeapVectorWithAllocReuseOffset2@12=_DeeSeq_AsHeapVectorWithAllocReuseOffset2@12
-	DeeSeq_AsHeapVectorWithAllocReuseOffset@16=_DeeSeq_AsHeapVectorWithAllocReuseOffset@16
+	DeeSeq_AsHeapVectorWithAlloc@8=_DeeSeq_AsHeapVectorWithAlloc@8
+	DeeSeq_AsHeapVectorWithAllocReuse@8=_DeeSeq_AsHeapVectorWithAllocReuse@8
+	DeeSeq_AsHeapVectorWithAllocReuseOffset@12=_DeeSeq_AsHeapVectorWithAllocReuseOffset@12
 	DeeSeq_FreeOneUninitialized@4=_DeeSeq_FreeOneUninitialized@4
 	DeeSeq_FreePairUninitialized@4=_DeeSeq_FreePairUninitialized@4
 	DeeSeq_InitOne@8=_DeeSeq_InitOne@8
@@ -1468,6 +1464,7 @@ EXPORTS
 	DeeThread_FromTid@4=_DeeThread_FromTid@4
 	DeeThread_GetTid@4=_DeeThread_GetTid@4
 	DeeThread_GetTimeMicroSeconds@0=_DeeThread_GetTimeMicroSeconds@0
+	DeeThread_GetTimeNanoSeconds@0=_DeeThread_GetTimeNanoSeconds@0
 	DeeThread_Interrupt@12=_DeeThread_Interrupt@12
 	DeeThread_Join@12=_DeeThread_Join@12
 	DeeThread_RemoveInterruptHook@4=_DeeThread_RemoveInterruptHook@4
@@ -1599,6 +1596,7 @@ EXPORTS
 	Dee_Initialize@0=_Dee_Initialize@0
 	Dee_Malloc@4=_Dee_Malloc@4
 	Dee_MallocUsableSize@4=_Dee_MallocUsableSize@4
+	Dee_MallocUsableSizeNonNull@4=_Dee_MallocUsableSizeNonNull@4
 	Dee_Memalign@8=_Dee_Memalign@8
 	Dee_Movrefv@12=_Dee_Movrefv@12
 	Dee_Movrefv_traced@20=_Dee_Movrefv_traced@20

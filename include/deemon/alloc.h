@@ -61,7 +61,7 @@
 #include <hybrid/host.h>              /* __linux__, __unix__ */
 #include <hybrid/typecore.h>          /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-/*!fixincludes fake_include "system-features.h" // _alloca, _msize, malloc, malloc_usable_size */
+/*!fixincludes fake_include "system-features.h" // _alloca, malloc */
 /*!fixincludes fake_include "type.h"            // Dee_TYPE_CONSTRUCTOR_INIT_ALLOC */
 
 #include <stdbool.h> /* bool */
@@ -146,25 +146,6 @@
 #define CONFIG_HAVE__alloca
 #endif
 
-#ifndef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#ifdef CONFIG_NO__msize
-#undef CONFIG_HAVE__msize
-#elif !defined(CONFIG_HAVE__msize) && \
-      (defined(_msize) || defined(___msize_defined) || (defined(CONFIG_HAVE_MALLOC_H) && \
-       defined(_MSC_VER)))
-#define CONFIG_HAVE__msize
-#endif
-
-#ifdef CONFIG_NO_malloc_usable_size
-#undef CONFIG_HAVE_malloc_usable_size
-#elif !defined(CONFIG_HAVE_malloc_usable_size) && \
-      (defined(malloc_usable_size) || defined(__malloc_usable_size_defined) || \
-       (defined(CONFIG_HAVE_MALLOC_H) && (defined(__linux__) || defined(__linux) || \
-       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
-#define CONFIG_HAVE_malloc_usable_size
-#endif
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-
 /* Try to substitute alloca() with alternatives */
 #ifndef CONFIG_HAVE_alloca
 #ifdef CONFIG_HAVE__alloca
@@ -224,7 +205,6 @@ DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
  * @return: * : Always re-returns "ptr" */
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 /* Try to change the size of a memory block, without changing its position in memory.
  * Just like `Dee_TryRealloc()', this function can be used to both shrink a block of
  * memory, as well as grow one (though this function has a high likelihood of failing
@@ -240,6 +220,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
  *                         fail for any number of reasons, including the heap system
  *                         simply not wanting to shrink "ptr". */
 DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
+#define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
 
 /* Same as `Dee_Malloc()', but the returned pointer is guaranted to be aligned by
  * at least some multiple of `min_alignment'. For this purpose, `min_alignment'
@@ -268,21 +249,7 @@ DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCAL
  * @return: 0 : Given "ptr" is either "NULL" or doesn't have any writable bytes
  * @return: * : The amount of memory (in bytes) that the caller is free to use, starting at "ptr" */
 DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
-
-#define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
-#define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr) /* TODO: remove "#ifdef Dee_MallocUsableSize" after CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-#define Dee_MallocUsableSizeNonNull(ptr) Dee_MallocUsableSize(ptr)
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-/* If supported by the OS, provide a way to determine the allocated size of an malloc-pointer. */
-#undef Dee_MallocUsableSize
-#ifdef CONFIG_HAVE_malloc_usable_size
-#define Dee_MallocUsableSize(ptr)        malloc_usable_size(ptr)
-#define Dee_MallocUsableSizeNonNull(ptr) malloc_usable_size(ptr)
-#elif defined(CONFIG_HAVE__msize)
-#define Dee_MallocUsableSize(ptr)        (likely(ptr) ? _msize(ptr) : 0)
-#define Dee_MallocUsableSizeNonNull(ptr) _msize(ptr)
-#endif /* ... */
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) size_t (DCALL Dee_MallocUsableSizeNonNull)(void *ptr);
 
 #ifndef NDEBUG
 #define Dee_Malloc(n_bytes)          DeeDbg_Malloc(n_bytes, __FILE__, __LINE__)
@@ -293,10 +260,8 @@ DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
 #define Dee_TryRealloc(ptr, n_bytes) DeeDbg_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
 #define Dee_Free(ptr)                DeeDbg_Free(ptr, __FILE__, __LINE__)
 #define Dee_UntrackAlloc(ptr)        DeeDbg_UntrackAlloc(ptr, __FILE__, __LINE__)
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #define Dee_Memalign(min_alignment, n_bytes)    DeeDbg_Memalign(min_alignment, n_bytes, __FILE__, __LINE__)
 #define Dee_TryMemalign(min_alignment, n_bytes) DeeDbg_TryMemalign(min_alignment, n_bytes, __FILE__, __LINE__)
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #else /* !NDEBUG */
 #define DeeDbg_Malloc(n_bytes, file, line)          Dee_Malloc(n_bytes)
 #define DeeDbg_Calloc(n_bytes, file, line)          Dee_Calloc(n_bytes)
@@ -306,10 +271,8 @@ DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
 #define DeeDbg_TryRealloc(ptr, n_bytes, file, line) Dee_TryRealloc(ptr, n_bytes)
 #define DeeDbg_Free(ptr, file, line)                Dee_Free(ptr)
 #define Dee_UntrackAlloc(ptr)                       (ptr)
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #define DeeDbg_Memalign(min_alignment, n_bytes, file, line)    Dee_Memalign(min_alignment, n_bytes)
 #define DeeDbg_TryMemalign(min_alignment, n_bytes, file, line) Dee_TryMemalign(min_alignment, n_bytes)
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #endif /* NDEBUG */
 
 /* Debug version of malloc buffer size calculation functions.

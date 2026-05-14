@@ -28,7 +28,7 @@
 #include "types.h"           /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_ssize_t */
 #include "util/atomic.h"     /* Dee_atomic_read */
 #include "util/lock.h"       /* Dee_atomic_rwlock_* */
-#include "util/objectlist.h" /* Dee_OBJECTLIST_HAVE_ELEMA, Dee_objectlist, Dee_objectlist_getalloc, _Dee_objectlist_setalloc */
+#include "util/objectlist.h" /* Dee_objectlist, Dee_objectlist_getalloc */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
@@ -42,11 +42,6 @@ DECL_BEGIN
 typedef struct Dee_list_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	struct Dee_objectlist l_list; /* [owned][lock(l_lock)] Object list. */
-#define DeeList_GetAlloc(self)     Dee_objectlist_getalloc(&(self)->l_list)
-#define _DeeList_SetAlloc(self, v) _Dee_objectlist_setalloc(&(self)->l_list, v)
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-#define DeeList_GetAlloc_ATOMIC(ob) Dee_atomic_read(&(ob)->l_list.ol_elema)
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
@@ -70,6 +65,7 @@ typedef struct Dee_list_object {
 #define DeeList_IsEmpty(ob)     ((ob)->l_list.ol_elemc == 0)
 #define DeeList_SIZE(ob)        (ob)->l_list.ol_elemc
 #define DeeList_SIZE_ATOMIC(ob) Dee_atomic_read(&(ob)->l_list.ol_elemc)
+#define DeeList_GetAlloc(self)  Dee_objectlist_getalloc(&(self)->l_list)
 #define DeeList_ELEM(ob)        (ob)->l_list.ol_elemv
 #define DeeList_GET(ob, i)      (ob)->l_list.ol_elemv[i]
 #define DeeList_SET(ob, i, v)   (void)((ob)->l_list.ol_elemv[i] = (v))
@@ -89,12 +85,7 @@ DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
-                               size_t objc, size_t obja);
-#ifndef Dee_OBJECTLIST_HAVE_ELEMA
-DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
-                                size_t objc);
-#endif /* !Dee_OBJECTLIST_HAVE_ELEMA */
+                               size_t objc);
 
 /* Create a new List object. */
 #define DeeList_New() DeeObject_NewDefault(&DeeList_Type)
@@ -188,13 +179,10 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, siz
 #ifdef __INTELLISENSE__
 extern WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);
-#elif defined(Dee_OBJECTLIST_HAVE_ELEMA)
+#else /* __INTELLISENSE__ */
 #define Dee_objectlist_packlist(self) \
-	DeeList_NewVectorInheritedHeap((self)->ol_elemv, (self)->ol_elemc, (self)->ol_elema)
-#else /* ... */
-#define Dee_objectlist_packlist(self) \
-	DeeList_NewVectorInheritedHeap2((self)->ol_elemv, (self)->ol_elemc)
-#endif /* !... */
+	DeeList_NewVectorInheritedHeap((self)->ol_elemv, (self)->ol_elemc)
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

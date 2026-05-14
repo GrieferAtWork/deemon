@@ -395,9 +395,7 @@ typedef struct Dee_thread_object {
 	} t_context; /* Contextual data */
 
 #ifndef CONFIG_NO_THREADS
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	void *t_heap; /* [0..1][lock(WRITE_ONCE && PRIVATE(DeeThread_Self()))] Thread-local heap (for faster Dee_Malloc()) */
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #endif /* !CONFIG_NO_THREADS */
 
 	/* OS-specific thread data goes here. */

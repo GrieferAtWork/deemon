@@ -2167,7 +2167,7 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 				goto err;
 		}
 		self->dw_base  = new_base;
-		self->dw_alloc = Dee_MallocUsableSize(new_base);
+		self->dw_alloc = Dee_MallocUsableSizeNonNull(new_base);
 		ASSERT(self->dw_alloc >= new_alloc);
 	}
 
@@ -2479,7 +2479,7 @@ decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
 						goto err;
 				}
 				self->dw_base  = new_base;
-				self->dw_alloc = Dee_MallocUsableSize(new_base);
+				self->dw_alloc = Dee_MallocUsableSizeNonNull(new_base);
 				ASSERT(self->dw_alloc >= new_alloc);
 			}
 			result = self->dw_slabb + self->dw_slabs;
@@ -2516,7 +2516,7 @@ decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
 				goto err;
 		}
 		self->dw_base  = new_base;
-		self->dw_alloc = Dee_MallocUsableSize(new_base);
+		self->dw_alloc = Dee_MallocUsableSizeNonNull(new_base);
 		ASSERT(self->dw_alloc >= new_alloc);
 	}
 
@@ -3220,7 +3220,7 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 		if unlikely(!self->dw_ehdr)
 			goto err;
 	}
-	self->dw_alloc = Dee_MallocUsableSize(self->dw_ehdr);
+	self->dw_alloc = Dee_MallocUsableSizeNonNull(self->dw_ehdr);
 	/* The header struct ends at the start of the first heap chunk's user-area */
 	self->dw_used  = offsetof(Dec_Ehdr, e_heap.hr_first);
 	self->dw_hlast = 0;

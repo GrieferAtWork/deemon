@@ -112,21 +112,6 @@
 #define __has_include(x) 0
 #endif /* !__has_include */
 
-#if 1 /* TODO: Remove this block once "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" becomes mandatory */
-#ifdef CONFIG_NO_CRTDBG_H
-#undef CONFIG_HAVE_CRTDBG_H
-#elif (!defined(CONFIG_HAVE_CRTDBG_H) && \
-       (__has_include(<crtdbg.h>) ||     \
-        (defined(__NO_has_include) &&    \
-         (defined(_MSC_VER) || defined(__KOS_SYSTEM_HEADERS__)))))
-#define CONFIG_HAVE_CRTDBG_H
-#endif /* ... */
-
-#if defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG)
-#define _CRTDBG_MAP_ALLOC 1 /* Enable debug-malloc */
-#endif /* CONFIG_HAVE_CRTDBG_H && !NDEBUG */
-#endif
-
 #define DEE_VERSION_API      200
 #define DEE_VERSION_COMPILER 200
 #define DEE_VERSION_REVISION 0
@@ -140,13 +125,6 @@
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
 #include <stdarg.h> /* va_list */
-
-#if 1 /* TODO: Remove this block once "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" becomes mandatory */
-#if (defined(_CRTDBG_MAP_ALLOC) && \
-     defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
-#include <crtdbg.h>
-#endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
-#endif
 #endif /* __CC__ && !__INTELLISENSE__ */
 #endif /* !__DEEMON__ */
 
@@ -393,19 +371,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MY_FEATURE */
 #endif
 
-/* Experimental feature switch: Use custom heap implementation based on
- * dlmalloc, rather than the host system's native malloc(3). (needed in
- * order to support `DeeHeap_RegionOf()', which is needed for the new
- * dec file format, ~ala `CONFIG_EXPERIMENTAL_MMAP_DEC') */
-#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
-#if 1
-#define CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#else
-#define CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_CUSTOM_HEAP */
-
 /* Experimental feature switch: ST_ISDIR can be imported as a module, and modules
  * whose names match an equally named directory within the same containing directory
  * also expose all the files from that directory as symbols:
@@ -440,8 +405,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Experimental feature switch: Use a new (mmap-able) file format for dec files */
-#if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) || \
-     !defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES))
+#if (!defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES))
 #undef CONFIG_EXPERIMENTAL_MMAP_DEC
 #undef CONFIG_NO_EXPERIMENTAL_MMAP_DEC
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
@@ -651,32 +615,13 @@ DECL_END
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */
 
-#if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 DECL_BEGIN
+
+#if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY)
 DFUNDEF void DCALL DeeHeap_CheckMemory(void);
 #define Dee_CHECKMEMORY() DeeHeap_CheckMemory()
-DECL_END
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-#if defined(CONFIG_HOST_WINDOWS) && defined(_MSC_VER)
-#ifdef __INTELLISENSE__
-#define Dee_CHECKMEMORY() Dee_ASSERT((_CrtCheckMemory)())
-#else /* __INTELLISENSE__ */
-#include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
-#define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), Dee_ASSERT((_CrtCheckMemory)()), DBG_ALIGNMENT_ENABLE())
-#endif /* !__INTELLISENSE__ */
-DECL_BEGIN
-#if !defined(_MSC_VER) || defined(_DLL)
-extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void); /*!export-*/
-#else /* !_MSC_VER || _DLL */
-extern int (ATTR_CDECL _CrtCheckMemory)(void);
-#endif /* _MSC_VER && !_DLL */
-DECL_END
-#endif /* CONFIG_HOST_WINDOWS && _MSC_VER */
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-#endif /* !NDEBUG */
+#endif /* !NDEBUG && !CONFIG_NO_CHECKMEMORY */
 
-DECL_BEGIN
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x); /*!export-*/
 #define Dee_REQUIRES_TYPE(T, x) ____INTELLISENSE_req_type<T>(x)

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeObject_MALLOC, Dee_*alloc*, Dee_BadAlloc, Dee_CollectMemory*, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XFreea */
+#include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeObject_MALLOC, Dee_BadAlloc, Dee_CollectMemory*, Dee_Freea, Dee_Mallocac, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocac, Dee_XFreea */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStruct*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -31,7 +31,7 @@
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_NewSize */
-#include <deemon/list.h>               /* DeeListObject, DeeList_*, _DeeList_SetAlloc */
+#include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISYES_OR_ERR, Dee_Incref*, Dee_Movrefv, Dee_Setrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
@@ -44,7 +44,7 @@
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
-#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist, Dee_objectlist_* */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_MINALLOC, Dee_OBJECTLIST_MOREALLOC, Dee_objectlist, Dee_objectlist_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_* */
@@ -93,11 +93,7 @@ list_assign(List *me, DeeObject *other) {
 
 	/* Delete all of the old list elements. */
 	Dee_Decrefv(newlist.ol_elemv, newlist.ol_elemc);
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-	newlist.ol_elemc = DeeSeq_AsHeapVectorWithAllocReuse(other, &newlist.ol_elemv, &newlist.ol_elema);
-#else /* Dee_OBJECTLIST_HAVE_ELEMA */
-	newlist.ol_elemc = DeeSeq_AsHeapVectorWithAllocReuse2(other, &newlist.ol_elemv);
-#endif /* !Dee_OBJECTLIST_HAVE_ELEMA */
+	newlist.ol_elemc = DeeSeq_AsHeapVectorWithAllocReuse(other, &newlist.ol_elemv);
 
 	/* Save the new list buffer. */
 	DeeList_LockWrite(me);
@@ -176,7 +172,6 @@ again:
 	/* Copy references */
 	me->l_list.ol_elemv = Dee_Movrefv(new_elemv, DeeList_ELEM(other), count);
 	me->l_list.ol_elemc = count;
-	_DeeList_SetAlloc(me, count);
 	DeeList_LockEndRead(other);
 	return 0;
 err:
@@ -190,14 +185,11 @@ DeeList_NewWithHint(size_t n_prealloc) {
 	if unlikely(!result)
 		goto err;
 	DeeObject_InitStatic(result, &DeeList_Type);
-	_DeeList_SetAlloc(result, n_prealloc);
 	result->l_list.ol_elemc  = 0;
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	if likely(n_prealloc) {
 		result->l_list.ol_elemv = Dee_objectlist_elemv_trymalloc_safe(n_prealloc);
-		if unlikely(!result->l_list.ol_elemv)
-			_DeeList_SetAlloc(result, 0);
 	} else {
 		result->l_list.ol_elemv = NULL;
 	}
@@ -216,8 +208,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 	if unlikely(!result->l_list.ol_elemv)
 		goto err_r;
 	DeeObject_InitStatic(result, &DeeList_Type);
-	_DeeList_SetAlloc(result, n_elem);
-	result->l_list.ol_elemc  = n_elem;
+	result->l_list.ol_elemc = n_elem;
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	/*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
@@ -285,7 +276,6 @@ DeeList_FromTuple(DeeObject *__restrict self) {
 	elemv = Dee_Movrefv(elemv, DeeTuple_ELEM(self), elemc);
 	result->l_list.ol_elemv = elemv;
 	result->l_list.ol_elemc = elemc;
-	_DeeList_SetAlloc(result, elemc);
 	DeeObject_InitStatic(result, &DeeList_Type);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
@@ -314,51 +304,16 @@ done:
 }
 
 /* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
-#ifndef Dee_OBJECTLIST_HAVE_ELEMA
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
-                               size_t objc, size_t obja) {
-	ASSERT(obja <= Dee_objectlist_elemv_usable_size(objv));
-	(void)obja;
-	return DeeList_NewVectorInheritedHeap2(objv, objc);
-}
-
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv, size_t objc)
-#else /* !Dee_OBJECTLIST_HAVE_ELEMA */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv, size_t objc) {
-	/* For binary compatibility... */
-	return DeeList_NewVectorInheritedHeap(objv, objc, objc);
-}
-
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
-                               size_t objc, size_t obja)
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
-{
+DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv, size_t objc) {
 	DREF List *result;
-#ifndef Dee_OBJECTLIST_HAVE_ELEMA
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	ASSERT(objc <= Dee_objectlist_elemv_usable_size(objv));
-#endif /* Dee_MallocUsableSize */
 	ASSERT(objv || !objc);
-#else /* !Dee_OBJECTLIST_HAVE_ELEMA */
-	ASSERT(objc <= obja);
-	ASSERT(objv || (!obja && !objc));
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
 		goto err;
 	result->l_list.ol_elemv = objv; /* Inherit */
 	result->l_list.ol_elemc = objc;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-	_DeeList_SetAlloc(result, obja);
-#elif defined(Dee_MallocUsableSize) /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	_DeeList_SetAlloc(result, Dee_objectlist_elemv_usable_size(objv));
-#else /* ... */
-	_DeeList_SetAlloc(result, objc);
-#endif /* !... */
 	DeeObject_InitStatic(result, &DeeList_Type);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
@@ -465,8 +420,7 @@ do_realloc_vector:
 					goto do_realloc_vector;
 				goto err_me_argv;
 			}
-			result->l_list.ol_elemv  = new_elemv;
-			_DeeList_SetAlloc(result, new_elema);
+			result->l_list.ol_elemv = new_elemv;
 		}
 		memcpyc(result->l_list.ol_elemv + result->l_list.ol_elemc,
 		        argv, argc, sizeof(DREF DeeObject *));
@@ -501,7 +455,6 @@ allocate_new_vector:
 		DeeObject_InitStatic(result, &DeeList_Type);
 		result->l_list.ol_elemv = new_elemv;
 		result->l_list.ol_elemc = list_size + argc;
-		_DeeList_SetAlloc(result, list_size + argc);
 		Dee_weakref_support_init(result);
 		Dee_atomic_rwlock_init(&result->l_lock);
 		result = DeeGC_TRACK(List, result);
@@ -608,7 +561,6 @@ again:
 				goto err;
 			}
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, newsize);
 		}
 
 		/* Fill in the new items. */
@@ -623,16 +575,10 @@ again:
 		/* Clear the list of all items. */
 		DREF DeeObject **old_elemv;
 		size_t old_elemc;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-		size_t old_elema;
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 
 		/* Remove everything */
 		old_elemv = me->l_list.ol_elemv;
 		old_elemc = me->l_list.ol_elemc;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-		old_elema = DeeList_GetAlloc(me);
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 		Dee_objectlist_init(&me->l_list);
 		DeeList_LockEndWrite(me);
 		Dee_Decrefv(old_elemv, old_elemc);
@@ -642,9 +588,6 @@ again:
 
 			/* Allow the list to re-use its old vector. */
 			me->l_list.ol_elemv = old_elemv;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-			_DeeList_SetAlloc(me, old_elema);
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 			old_elemv = NULL; /* Inherit the old vector. */
 		}
 		DeeList_LockEndWrite(me);
@@ -786,7 +729,6 @@ retry:
 				goto err;
 			}
 		}
-		_DeeList_SetAlloc(me, new_elema);
 		me->l_list.ol_elemv = new_elemv;
 	}
 	me->l_list.ol_elemv[me->l_list.ol_elemc++] = elem;
@@ -832,7 +774,6 @@ retry:
 			}
 		}
 		me->l_list.ol_elemv = new_elemv;
-		_DeeList_SetAlloc(me, new_elema);
 	}
 
 	/* Copy references */
@@ -875,7 +816,6 @@ do_realloc:
 			goto err;
 		}
 		me->l_list.ol_elemv = new_elemv;
-		_DeeList_SetAlloc(me, new_elema);
 	}
 
 	/* Move objects above the point of insertion. */
@@ -926,7 +866,6 @@ do_realloc:
 			goto err;
 		}
 		me->l_list.ol_elemv = new_elemv;
-		_DeeList_SetAlloc(me, new_elema);
 	}
 
 	/* Move objects above the point of insertion. */
@@ -975,7 +914,6 @@ list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
 			Dee_Setrefv(self->l_list.ol_elemv, args.filler, list_size);
 		}
 		self->l_list.ol_elemc = list_size;
-		_DeeList_SetAlloc(self, list_size);
 		return 0;
 	}
 
@@ -1000,9 +938,6 @@ again:
 	Dee_weakref_support_init(out);
 	DeeList_LockRead(self);
 	out->l_list.ol_elemc = self->l_list.ol_elemc;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-	out->l_list.ol_elema = out->l_list.ol_elemc;
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 	Dee_atomic_rwlock_init(&out->l_lock);
 	if (self->l_list.ol_elemv == NULL) {
 		DeeList_LockEndRead(self);
@@ -1200,7 +1135,6 @@ again:
 	/* Fill in the descriptor. */
 	DeeObject_InitStatic(result, &DeeList_Type);
 	result->l_list.ol_elemc = range_size;
-	_DeeList_SetAlloc(result, range_size);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
@@ -1253,7 +1187,6 @@ again:
 	/* Fill in the descriptor. */
 	DeeObject_InitStatic(result, &DeeList_Type);
 	result->l_list.ol_elemc = range_size;
-	_DeeList_SetAlloc(result, range_size);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
@@ -1520,7 +1453,6 @@ again_with_tp_asvector_nothrow:
 						}
 					}
 					me->l_list.ol_elemv = new_listv;
-					_DeeList_SetAlloc(me, new_elema);
 				}
 	
 				/* If elements should be removed, remember their references now */
@@ -1610,7 +1542,6 @@ again:
 		old_elemc = me->l_list.ol_elemc;
 		me->l_list.ol_elemv = insert_v; /* Inherit */
 		me->l_list.ol_elemc = insert_c;
-		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
 		old_elemv = Dee_Decrefv(old_elemv, old_elemc);
 		Dee_objectlist_elemv_free(old_elemv);
@@ -1641,7 +1572,6 @@ again:
 				}
 			}
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
 	if (!delete_c) {
@@ -1774,7 +1704,6 @@ again_with_tp_asvector_nothrow:
 						}
 					}
 					me->l_list.ol_elemv = new_listv;
-					_DeeList_SetAlloc(me, new_elema);
 				}
 	
 				/* Shift trailing objects such that they appear at their final positions. */
@@ -1827,7 +1756,6 @@ again:
 		old_elemv = me->l_list.ol_elemv;
 		me->l_list.ol_elemv = insert_v; /* Inherit */
 		me->l_list.ol_elemc = insert_c;
-		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
 		Dee_objectlist_elemv_free(old_elemv);
 		goto done;
@@ -1858,7 +1786,6 @@ again:
 				}
 			}
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
 
@@ -1953,7 +1880,6 @@ again_with_tp_asvector_nothrow:
 						}
 					}
 					me->l_list.ol_elemv = new_listv;
-					_DeeList_SetAlloc(me, new_elema);
 				}
 	
 				/* If trailing elements should be removed, remember their references now */
@@ -2025,7 +1951,6 @@ again:
 		old_elemc = me->l_list.ol_elemc;
 		me->l_list.ol_elemv = insert_v; /* Inherit */
 		me->l_list.ol_elemc = insert_c;
-		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
 		old_elemv = Dee_Decrefv(old_elemv, old_elemc);
 		Dee_objectlist_elemv_free(old_elemv);
@@ -2058,7 +1983,6 @@ again:
 				}
 			}
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
 	if (!delete_c) {
@@ -2181,7 +2105,6 @@ again_with_tp_asvector_nothrow:
 						}
 					}
 					me->l_list.ol_elemv = new_listv;
-					_DeeList_SetAlloc(me, new_elema);
 				}
 	
 				/* Buffer should have sufficient size now. */
@@ -2218,7 +2141,6 @@ again:
 		old_elemv = me->l_list.ol_elemv;
 		me->l_list.ol_elemv = insert_v; /* Inherit */
 		me->l_list.ol_elemc = insert_c;
-		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
 		Dee_objectlist_elemv_free(old_elemv);
 		goto done;
@@ -2249,7 +2171,6 @@ again:
 				}
 			}
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
 
@@ -3262,7 +3183,6 @@ list_do_shrink(List *__restrict me) {
 		new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
 		if likely(new_elemv) {
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
 			result = true;
 		}
 	}
@@ -3302,8 +3222,7 @@ list_setallocated(List *me, DeeObject *value) {
 		new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
 		if unlikely(!new_elemv)
 			goto done_unlock;
-		me->l_list.ol_elemv  = new_elemv;
-		_DeeList_SetAlloc(me, new_elema);
+		me->l_list.ol_elemv = new_elemv;
 	}
 	ASSERT(DeeList_GetAlloc(me) >= DeeList_SIZE(me));
 done_unlock:
@@ -3343,7 +3262,6 @@ list_reserve(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		new_elemv = Dee_objectlist_elemv_tryrealloc_safe(me->l_list.ol_elemv, args.total);
 		if likely(new_elemv) {
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, args.total);
 			result = true;
 		}
 	}
@@ -3451,7 +3369,6 @@ again:
 		oldc = me->l_list.ol_elemc;
 		me->l_list.ol_elemc = objc;
 		me->l_list.ol_elemv = newv;
-		_DeeList_SetAlloc(me, objc);
 		DeeList_LockEndWrite(me);
 		Dee_Decrefv(oldv, oldc);
 		Dee_objectlist_elemv_free(oldv);
@@ -3874,7 +3791,6 @@ again:
 			goto err;
 		}
 		me->l_list.ol_elemv = elemv;
-		_DeeList_SetAlloc(me, result_length);
 	}
 
 	/* Create new references. */
@@ -3967,7 +3883,6 @@ again:
 		goto err_elem;
 	result->l_list.ol_elemv = res_elemv;
 	result->l_list.ol_elemc = res_elemc;
-	_DeeList_SetAlloc(result, res_elemc);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_InitStatic(result, &DeeList_Type);

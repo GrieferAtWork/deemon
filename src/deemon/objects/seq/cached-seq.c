@@ -37,7 +37,7 @@
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
-#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_MINALLOC, Dee_OBJECTLIST_MOREALLOC, Dee_objectlist_* */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -85,7 +85,6 @@ again:
 		}
 	}
 	cache_copy = Dee_Movrefv(cache_copy, other->cswi_cache.ol_elemv, cache_size);
-	_Dee_objectlist_setalloc(&self->cswi_cache, cache_size);
 	self->cswi_iter = other->cswi_iter;
 	Dee_XIncref(self->cswi_iter);
 	CachedSeq_WithIter_LockRelease(other);
@@ -149,9 +148,6 @@ again:
 	out = DeeSerial_Addr2Mem(writer, addr, CachedSeq_WithIter);
 	CachedSeq_WithIter_LockAcquire(self);
 	out->cswi_cache.ol_elemc = self->cswi_cache.ol_elemc;
-#ifdef Dee_OBJECTLIST_HAVE_ELEMA
-	out->cswi_cache.ol_elema = out->cswi_cache.ol_elemc;
-#endif /* Dee_OBJECTLIST_HAVE_ELEMA */
 	Dee_atomic_lock_init(&out->cswi_lock);
 	if (self->cswi_cache.ol_elemv == NULL) {
 		CachedSeq_WithIter_LockRelease(self);
@@ -218,7 +214,6 @@ cswi_clear(CachedSeq_WithIter *__restrict self) {
 	old_elemv = self->cswi_cache.ol_elemv;
 	self->cswi_cache.ol_elemc = 0;
 	self->cswi_cache.ol_elemv = NULL;
-	_Dee_objectlist_setalloc(&self->cswi_cache, 0);
 	CachedSeq_WithIter_LockRelease(self);
 	Dee_Decrefv(old_elemv, old_elemc);
 	Dee_objectlist_elemv_free(old_elemv);
@@ -301,11 +296,9 @@ lock_and_append_to_cache:
 					                                       sizeof(DREF DeeObject *));
 					Dee_objectlist_elemv_free(self->cswi_cache.ol_elemv);
 					self->cswi_cache.ol_elemv = new_elemv;
-					_Dee_objectlist_setalloc(&self->cswi_cache, new_alloc);
 				}
 			}
 			self->cswi_cache.ol_elemv = new_elemv;
-			_Dee_objectlist_setalloc(&self->cswi_cache, new_alloc);
 		}
 		self->cswi_cache.ol_elemv[self->cswi_cache.ol_elemc] = nextitem; /* Inherit reference */
 		++self->cswi_cache.ol_elemc;
@@ -1049,7 +1042,6 @@ again_copy_indexbtab_locked:
 	vector_copy = Dee_XMovrefv(vector_copy, other->cswgi_vector.ol_elemv, vector_size);
 	self->cswgi_vector.ol_elemc = vector_size;
 	self->cswgi_vector.ol_elemv = vector_copy;
-	_Dee_objectlist_setalloc(&self->cswgi_vector, vector_size);
 
 	/* Copy other caches/fields. */
 	cachedseq_index_copy(&self->cswgi_size, &other->cswgi_size);

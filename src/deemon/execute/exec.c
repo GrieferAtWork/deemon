@@ -905,9 +905,7 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 #endif /* !NDEBUG */
 
 	/* Instruct our version of dlmalloc to release all heap segments still in-cache */
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	DeeHeap_Trim(0);
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
 

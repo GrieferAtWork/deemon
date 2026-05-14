@@ -74,19 +74,12 @@ INTDEF DeeTypeObject DB_Type;
 
 struct query_cache_list {
 	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0' for `query_cache_empty_list_PTR') */
-#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	size_t                           qcl_alloc;    /* [const] Allocated space */
-#define query_cache_list_getalloc(self)    ((self)->qcl_alloc)
-#define query_cache_list_setalloc(self, v) ((self)->qcl_alloc = (v))
-#else /* !Dee_MallocUsableSizeNonNull */
-#define query_cache_list_getalloc(self) \
-	((self) == query_cache_empty_list_PTR ? 0 : ((Dee_MallocUsableSizeNonNull(self) - offsetof(struct query_cache_list, qcl_queries)) / sizeof(Query *)))
-#define query_cache_list_setalloc(self, v) (void)0
-#endif /* Dee_MallocUsableSizeNonNull */
 	COMPILER_FLEXIBLE_ARRAY(Query *, qcl_queries); /* [1..1][lock(:db_querycache_lock)]
 	                                                * Similarly-hashed queries (sorted by "addrof(q_sql) ASC")
 	                                                * NOTE: There may be multiple queries for the same string! */
 };
+#define query_cache_list_getalloc(self) \
+	((self) == query_cache_empty_list_PTR ? 0 : ((Dee_MallocUsableSizeNonNull(self) - offsetof(struct query_cache_list, qcl_queries)) / sizeof(Query *)))
 
 #define query_cache_list_sizeof(count)                                   \
 	_Dee_MallococBufsize(offsetof(struct query_cache_list, qcl_queries), \
@@ -108,9 +101,6 @@ struct query_cache_list {
 
 struct query_cache_empty_list_struct {
 	size_t qcl_count;
-#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	size_t qcl_alloc;
-#endif /* !Dee_MallocUsableSizeNonNull */
 };
 INTDEF struct query_cache_empty_list_struct const query_cache_empty_list_;
 #define query_cache_empty_list_PTR ((struct query_cache_list *)&query_cache_empty_list_)

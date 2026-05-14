@@ -25,7 +25,7 @@
 #include <hybrid/__alloca.h> /* __hybrid_alloca */
 #include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_BIT__ */
 
-#include "../alloc.h"           /* Dee_Free, Dee_Try*alloc* */
+#include "../alloc.h"           /* Dee_Free, Dee_MallocUsableSize, Dee_Try*alloc* */
 #include "../format.h"          /* DeeFormat_Printf, DeeFormat_VPrintf, Dee_*s*printf*, PRF* */
 #include "../string.h"          /* DeeAscii_*, DeeUni_*, Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_IS*, Dee_unitraits, _DeeAscii_Itoa */
 #include "../stringutils.h"     /* Dee_UNICODE_UTF8_*LEN, Dee_unicode_* */
@@ -307,17 +307,19 @@ DeeSystem_DEFINE_strstr(dee_strstr)
 #undef __libc_calloc
 #undef __libc_realloc
 #undef __libc_free
-#define malloc(s)            Dee_TryMalloc(s)
-#define mallocv(c, n)        Dee_TryMallocc(c, n)
-#define calloc(c, n)         Dee_TryCallocc(c, n)
-#define realloc(p, s)        Dee_TryRealloc(p, s)
-#define reallocv(p, c, n)    Dee_TryReallocc(p, c, n)
-#define free(p)              Dee_Free(p)
-#define __libc_malloc(s)     Dee_TryMalloc(s)
-#define __libc_mallocv(c, n) Dee_TryMallocc(c, n)
-#define __libc_calloc(c, n)  Dee_TryCallocc(c, n)
-#define __libc_realloc(p, s) Dee_TryRealloc(p, s)
-#define __libc_free(p)       Dee_Free(p)
+#undef malloc_usable_size
+#define malloc(s)             Dee_TryMalloc(s)
+#define mallocv(c, n)         Dee_TryMallocc(c, n)
+#define calloc(c, n)          Dee_TryCallocc(c, n)
+#define realloc(p, s)         Dee_TryRealloc(p, s)
+#define reallocv(p, c, n)     Dee_TryReallocc(p, c, n)
+#define free(p)               Dee_Free(p)
+#define __libc_malloc(s)      Dee_TryMalloc(s)
+#define __libc_mallocv(c, n)  Dee_TryMallocc(c, n)
+#define __libc_calloc(c, n)   Dee_TryCallocc(c, n)
+#define __libc_realloc(p, s)  Dee_TryRealloc(p, s)
+#define __libc_free(p)        Dee_Free(p)
+#define malloc_usable_size(m) Dee_MallocUsableSize(m)
 
 /* Hook extended ctype functions */
 #undef _itoa_digits

@@ -29,11 +29,8 @@
 #ifndef GUARD_DEEMON_SEQ_H
 #define GUARD_DEEMON_SEQ_H 1 /*!export-*/
 
-/* TODO: CONFIG_EXPERIMENTAL_CUSTOM_HEAP -- once mandatory, can remove `#include "alloc.h"' */
-
 #include "api.h"
 
-#include "alloc.h"     /* Dee_MallocUsableSize */
 #include "types.h"     /* DREF, DeeObject, DeeObject_Implements, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_ssize_t */
 #include "util/lock.h" /* Dee_atomic_rwlock_t */
 
@@ -299,15 +296,9 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     /*[out]*/ size_t *__restrict p_length);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
-DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
-                             /*[out]*/ size_t *__restrict p_length,
-                             /*[out]*/ size_t *__restrict p_allocated);
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
-DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
-                              /*[out]*/ size_t *__restrict p_length);
-#endif /* Dee_MallocUsableSize */
+DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
+                             /*[out]*/ size_t *__restrict p_length);
 
 /* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
  * a pre-allocated heap-vector `*p_vector' with an allocated size
@@ -327,15 +318,9 @@ DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
  * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
-DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
-                                  /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
-                                  /*in-out*/ size_t *__restrict p_allocated);
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
-                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector);
-#endif /* Dee_MallocUsableSize */
+DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
+                                  /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector);
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
  * that `IN(*p_allocated) >= offset', while also leaving the first
@@ -343,17 +328,10 @@ DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
  * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
-                                        /*in-out*/ size_t *__restrict p_allocated,
                                         /*in*/ size_t offset);
-#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
-                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
-                                         /*in*/ size_t offset);
-#endif /* Dee_MallocUsableSize */
 
 
 

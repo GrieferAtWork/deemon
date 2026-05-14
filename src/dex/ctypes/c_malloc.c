@@ -34,7 +34,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeObject_AsSizeM1, Dee_DecrefDokill */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, bzero, calloc, free, malloc, malloc_usable_size, memcpyc, realloc */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, bzero, calloc, free, malloc, memcpyc */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
@@ -545,7 +545,6 @@ err_r:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 /*[[[deemon (print_CMethod from rt.gen.unpack)("malloc_usable_size", """
 	ptr:ctypes:void*
 """, visi: "INTERN");]]]*/
@@ -567,7 +566,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL c_malloc_malloc_usable_size_f_impl(void
 	CTYPES_FAULTPROTECT(result = c_malloc_usable_size(ptr), return NULL);
 	return DeeInt_NewSize(result);
 }
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 DECL_END
 

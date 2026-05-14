@@ -221,23 +221,18 @@ err:
  * @return: * : Amount of memory that was released back to the system.
  * @return: 0 : No memory could be released back to the system (no error was thrown) */
 PUBLIC ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void) {
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	size_t trim = DeeHeap_Trim(0);
 	if (trim == 0) {
 		DeeMem_ClearCaches((size_t)-1);
 		trim = DeeHeap_Trim(0);
 	}
 	return trim;
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	return DeeMem_ClearCaches((size_t)-1);
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
 /* Same as `Dee_TryReleaseSystemMemory()', but also tries to free
  * @return: * : Amount of memory that was released back to the system.
  * @return: 0 : No memory could be released back to the system (an error was thrown) */
 PUBLIC ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void) {
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	size_t trim = DeeHeap_Trim(0);
 	if unlikely(trim == 0) {
 		if (Dee_TryCollectMemory((size_t)-1) < 0)
@@ -250,9 +245,6 @@ PUBLIC ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void) {
 		}
 	}
 	return trim;
-#else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	return Dee_CollectMemory((size_t)-1) ? 1 : 0;
-#endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
 

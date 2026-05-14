@@ -28,7 +28,7 @@ DECL_BEGIN
 
 /* TODO: New introspection API for:
  * - The reworked slab allocator (does not even have a C API for this, yet)
- * - The new "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" heap: DeeHeap_MallInfo() */
+ * - The new heap: DeeHeap_MallInfo() */
 
 INTDEF DeeTypeObject StringFiniHook_Type;
 

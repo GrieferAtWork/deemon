@@ -39,9 +39,7 @@ INTDEF DeeCMethodObject c_malloc_trymalloc;
 INTDEF DeeCMethodObject c_malloc_tryrealloc;
 INTDEF DeeCMethodObject c_malloc_trycalloc;
 INTDEF DeeCMethodObject c_malloc_trystrdup;
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 INTDEF DeeCMethodObject c_malloc_malloc_usable_size;
-#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 /* c_string (memory) */
 INTDEF DeeCMethodObject c_string_memcpy;
