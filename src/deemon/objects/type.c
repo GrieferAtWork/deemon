@@ -2216,16 +2216,12 @@ again:
 			Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
 		return result;
 	}
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-	if (!DeeType_IsHeapType(self))
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
-	{
-		/* Lookup the originating module of a statically allocated C-type. */
-		result = DeeModule_OfPointer(self);
-		if (result) {
-			Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
-			return result;
-		}
+
+	/* Lookup the originating module of a statically allocated C-type. */
+	result = DeeModule_OfPointer(self);
+	if (result) {
+		Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
+		return result;
 	}
 
 	/* Special case for custom type-types (such

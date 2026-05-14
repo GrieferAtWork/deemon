@@ -1956,11 +1956,9 @@ module_dee_visit(DeeModuleObject *__restrict self,
 	DeeModule_LockEndRead(self);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 /* Unbind from `module_byaddr_tree' */
 INTDEF NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 PRIVATE NONNULL((1)) void DCALL
 module_dee_destroy(DeeModuleObject *__restrict self) {
@@ -1971,9 +1969,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	self = (DeeModuleObject *)DeeGC_Untrack(Dee_AsObject(self));
 
 	/* Unbind from `module_byaddr_tree' */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	module_dee_unbind(self);
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 	/* Destroy Dee-specific data */
 	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);

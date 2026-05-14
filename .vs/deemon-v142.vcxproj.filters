@@ -147,9 +147,6 @@
 		<ClInclude Include="..\include\deemon\compiler\compiler.h">
 			<Filter>include\compiler</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\dec.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
 		<ClInclude Include="..\include\deemon\compiler\doctext.h">
 			<Filter>include\compiler</Filter>
 		</ClInclude>
@@ -1691,13 +1688,7 @@
 		<ClCompile Include="..\src\deemon\compiler\ddi.c">
 			<Filter>src\compiler</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\dec.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\error.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\gendec.c">
 			<Filter>src\compiler</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\instrlen.c">

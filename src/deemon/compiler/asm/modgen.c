@@ -23,28 +23,25 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TryReallocc */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type */
 #include <deemon/compiler/assembler.h> /*  */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_LockWriting */
 #include <deemon/compiler/symbol.h>    /* DeeRootScope_Type, current_rootscope */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Malloc, DeeGC_TRACK */
-#include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_module_object, Dee_module_symbol */
+#include <deemon/gc.h>                 /* DeeGCObject_Malloc, DeeGC_TRACK */
+#include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_module_symbol */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/system.h>             /* DeeSystem_GetWalltime */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
 
-#include <hybrid/int128.h> /* __hybrid_uint128_set64 */
 
 #ifndef CONFIG_NO_DEC
 #endif /* !CONFIG_NO_DEC */
 /**/
 
 #include <stddef.h> /* NULL, offsetof, size_t */
-#include <stdint.h> /* uint16_t, uint64_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -53,15 +50,6 @@ DECL_BEGIN
 
 INTDEF struct Dee_module_symbol empty_module_buckets[];
 
-/* Compile a new module, using `current_rootscope' for module information,
- * and the given code object as root code executed when the module is loaded.
- * WARNING: During this process a lot of data is directly inherited from
- *         `current_rootscope' by the returned module object, meaning that the
- *          root scope will have been reset to an empty (or near empty) state.
- * #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
- * @param: flags: Set of `ASM_F*' (Assembly flags; see above)
- * #endif // !CONFIG_EXPERIMENTAL_MMAP_DEC */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 typedef struct {
 	OBJECT_HEAD
 } ModuleCurrent;
@@ -146,6 +134,11 @@ err:
 	return NULL;
 }
 
+/* Compile a new module, using `current_rootscope' for module information,
+ * and the given code object as root code executed when the module is loaded.
+ * WARNING: During this process a lot of data is directly inherited from
+ *         `current_rootscope' by the returned module object, meaning that the
+ *          root scope will have been reset to an empty (or near empty) state. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,
                /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code) {
@@ -287,78 +280,6 @@ err:
 	Dee_Decref(root_code);
 	return -1;
 }
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code) {
-	DREF DeeModuleObject *mod;
-	ASSERT(DeeCompiler_LockWriting());
-	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
-	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
-	ASSERT(current_rootscope->rs_code == root_code);
-	ASSERT(root_code->ob_refcnt == 2);
-
-	/* Truncate some vectors before we'll be inheriting them. */
-	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
-	if (current_rootscope->rs_importa > current_rootscope->rs_importc) {
-		DREF DeeModuleObject **new_vector;
-		new_vector = (DREF DeeModuleObject **)Dee_TryReallocc(current_rootscope->rs_importv,
-		                                                      current_rootscope->rs_importc,
-		                                                      sizeof(DREF DeeModuleObject *));
-		if likely(new_vector)
-			current_rootscope->rs_importv = new_vector;
-	}
-
-	/* Start filling in members of the module. */
-	mod = (DREF DeeModuleObject *)DeeGCObject_Callocc(offsetof(DeeModuleObject, mo_globalv),
-	                                                  current_rootscope->rs_globalc,
-	                                                  sizeof(DREF DeeObject *));
-	if unlikely(!mod)
-		goto err;
-	DeeObject_InitStatic(mod, &DeeModuleDee_Type);
-	mod->mo_globalc = current_rootscope->rs_globalc;
-	mod->mo_importc = current_rootscope->rs_importc;
-	mod->mo_bucketm = current_rootscope->rs_bucketm;
-	mod->mo_bucketv = current_rootscope->rs_bucketv;
-	mod->mo_importv = current_rootscope->rs_importv;
-	mod->mo_moddata.mo_rootcode = root_code; /* Inherit reference */
-	mod->mo_flags = current_rootscope->rs_flags | Dee_MODULE_FHASBUILDID;
-	{
-		uint64_t ts = DeeSystem_GetWalltime();
-		__hybrid_uint128_set64(mod->mo_buildid, ts);
-	}
-
-	/* Yes, we're just stealing all of these. */
-	current_rootscope->rs_importv = NULL;
-	current_rootscope->rs_importc = 0;
-	current_rootscope->rs_importa = 0;
-	current_rootscope->rs_bucketv = empty_module_buckets;
-	current_rootscope->rs_bucketm = 0;
-
-	{
-		DREF DeeCodeObject *iter, *next;
-		iter = current_rootscope->rs_code;
-		current_rootscope->rs_code = NULL;
-		while (iter) {
-			next = iter->co_next;
-			iter->co_module = mod;
-			Dee_Incref(mod);  /* Create the new module-reference now stored in `iter->co_module'. */
-			Dee_Decref(iter); /* This reference was owned by the chain before. */
-			iter = next;
-		}
-	}
-
-	/* Since we're now updated all code objects ever created with the
-	 * current module, the given root-code had to have been one of them. */
-	ASSERTF(root_code->co_module == mod,
-	        "The given root-code was not generated for this module");
-
-	return mod;
-err:
-	Dee_DecrefNokill(root_code); /* *Nokill because "current_rootscope->rs_code == root_code" */
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
-
 
 DECL_END
 

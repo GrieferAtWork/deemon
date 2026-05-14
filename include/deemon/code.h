@@ -522,9 +522,6 @@ DDATDEF DeeDDIObject DeeDDI_Empty;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 #define Dee_CODE_FNOOPTIMIZE     0x0400          /* Code object cannot be optimized by `_hostasm' */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#define Dee_CODE_FDEC_8BIT       0x8000          /* Used by DEC. - Does not actually appear in runtime code object, but must remain reserved */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 /* Threshold of `co_framesize' for `Dee_CODE_FHEAPFRAME' */
 #define Dee_CODE_LARGEFRAME_THRESHOLD 0x100 /* When `co_framesize' turns out to be larger than this,

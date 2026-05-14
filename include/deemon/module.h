@@ -418,16 +418,6 @@ struct Dee_compiler_options {
 	uint16_t                      co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
 	                                                     * a constant loop may be unwound. (Set to ZERO(0) to disable) */
 	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/assembler.h>' */
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-	uint16_t                      co_decwriter;         /* Set of `DEC_WRITE_F*' from `<deemon/compiler/dec.h>' (unused when deemon was built with `CONFIG_NO_DEC') */
-	DeeObject                    *co_decoutput;         /* [0..1] Dec output location (ignored when `ASM_FNODEC' is set)
-	                                                     *  - Filename (string) of the generated `.dec' file.
-	                                                     *  - Stream (any other object) into which to write the contents of the dec file.
-	                                                     *  - When `NULL', the filename is selected such that it will be used to
-	                                                     *    quickly load module object when one of the dec-enabled `DeeModule_OpenGlobal*'
-	                                                     *    functions is used (aka. `<source_path>/.<source_file>.dec')
-	                                                     * Note that when passing a string, that file will be overwritten, should it already exists. */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 };
 
 
@@ -524,11 +514,11 @@ union Dee_module_moddata {
 	 *       loaded even if no-longer used, because importing a module invokes user-code, which may
 	 *       have side effects that shouldn't be repeated if the module is imported multiple times.
 	 *
-	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with NULL
-	 * being allowed if the code running inside doesn't make use of the module; though the module
-	 * can still be determined using `DeeModule_OfObject()' after CONFIG_EXPERIMENTAL_MMAP_DEC),
-	 * and `mo_rootcode' of a user-code module may be set to `DeeCode_Empty' if all initialization
-	 * can be done statically (iow: the module's global function doesn't have any side-effects).
+	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with
+	 * NULL being allowed if the code running inside doesn't make use of the module; though
+	 * the module can still be determined using `DeeModule_OfObject()'), and `mo_rootcode'
+	 * of a user-code module may be set to `DeeCode_Empty' if all initialization can be done
+	 * statically (iow: the module's global function doesn't have any side-effects).
 	 *
 	 * Once all that is done, we're automatically at the point where modules that *can* be unloaded
 	 * as soon as they aren't used anymore, *will* automatically unload once that happens, too! */
@@ -1106,7 +1096,7 @@ DeeModule_GetNativeSymbol(DeeModuleObject *__restrict self,
  * (as in: a pointer to some statically allocated structure), or is part of some user
  * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
  * that is a constant in user-code), try to return a reference for the module that
- * contains this pointer (only when CONFIG_EXPERIMENTAL_MMAP_DEC).
+ * contains this pointer.
  *
  * @return: * :   A pointer to the module that 'ptr' belongs to.
  * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part

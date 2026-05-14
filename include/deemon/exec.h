@@ -208,18 +208,11 @@ DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
  * JIT-like execution of simple expressions such as `10 + 20' */
 struct Dee_module_object;
 #ifdef CONFIG_BUILDING_DEEMON
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 struct Dee_serial;
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
                                  struct Dee_compiler_options *options, DeeObject *default_symbols);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
-DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
-                                 int start_line, int start_col, unsigned int mode,
-                                 struct Dee_compiler_options *options, DeeObject *default_symbols);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */
 DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,

@@ -332,14 +332,13 @@ DECL_END
 
 /* Handler special flag: we need to be able to detect if a statically allocated
  * object from a heap region has been destroyed via its "ob_refcnt" in order to
- * safely handle (technically illegal) references to static, non-final, constant
- * objects within another module under "CONFIG_EXPERIMENTAL_MMAP_DEC". If during
- * object destruction, it is found that a "Dee_refcnt_t"-sized word at one of
- * the following offsets into a heap block's user-area is "0", then this "0"
- * must **NOT** be overwritten by "DL_DEBUG_MEMSET_FREE_PATTERN":
+ * safely handle (technically illegal) references to static, non-final,
+ * constant objects within another module. If during object destruction, it is
+ * found that a "Dee_refcnt_t"-sized word at one of the following offsets into
+ * a heap block's user-area is "0", then this "0" must **NOT** be overwritten
+ * by "DL_DEBUG_MEMSET_FREE_PATTERN":
  * - offsetof(DeeObject, ob_refcnt)
  * - offsetof(struct Dee_gc_head, gc_object.ob_refcnt) */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
 STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
 #define FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 1
@@ -348,7 +347,6 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 	(!((chunk_offset) == offsetof(DeeObject, ob_refcnt) ||                          \
 	   (chunk_offset) == (Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt)) || \
 	   (atomic_read(iter) == 0)))
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE: Make provisioning for:
  * - DeeDbgHeap_AddHeapRegion

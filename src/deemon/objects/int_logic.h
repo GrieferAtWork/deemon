@@ -32,7 +32,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_Free */
-#include <deemon/int.h>             /* DeeIntObject, Dee_DIGIT_BITS, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
+#include <deemon/int.h>             /* DeeIntObject, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
 #include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, memset, memsetl, memsetq, memsetw */
 
@@ -59,56 +59,13 @@ DECL_BEGIN
 #endif /* Dee_SIZEOF_DIGIT != ... */
 
 
-
-#if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_INT_CACHES)
-#undef CONFIG_INT_CACHE_MAXSIZE
-#define CONFIG_INT_CACHE_MAXSIZE  0
-#undef CONFIG_INT_CACHE_MAXCOUNT
-#define CONFIG_INT_CACHE_MAXCOUNT 0
-#endif
-
-/* The max amount of integers per cache */
-#ifndef CONFIG_INT_CACHE_MAXSIZE
-#define CONFIG_INT_CACHE_MAXSIZE   64
-#endif
-
-/* The max number of digits for which a cache is kept */
-#ifndef CONFIG_INT_CACHE_MAXCOUNT
-/* The max number of integer bits for which a dedicated cache must exist */
-#ifndef CONFIG_INT_CACHE_BITCOUNT
-#define CONFIG_INT_CACHE_BITCOUNT    64
-#endif /* !CONFIG_INT_CACHE_BITCOUNT */
-#define CONFIG_INT_CACHE_MAXCOUNT  ((CONFIG_INT_CACHE_BITCOUNT + (Dee_DIGIT_BITS-1)) / Dee_DIGIT_BITS)
-#endif /* !CONFIG_INT_CACHE_MAXCOUNT */
-
-#if !CONFIG_INT_CACHE_MAXSIZE
-#undef CONFIG_INT_CACHE_MAXCOUNT
-#define CONFIG_INT_CACHE_MAXCOUNT 0
-#endif /* !CONFIG_INT_CACHE_MAXSIZE */
-
-/* In order for it to be possible to write "int" to a dec file,
- * there mustn't be a custom "tp_free" operator. Since the whole
- * point of mmap-able .dec files is to use pointers into a file
- * mapping of the .dec file as the actual DeeObject, that object
- * must not use a custom allocation mechanism (since it _needs_
- * to be able to live within a `struct Dee_heapregion') */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#undef CONFIG_INT_CACHE_MAXCOUNT
-#define CONFIG_INT_CACHE_MAXCOUNT 0
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-
-
 #ifdef NDEBUG
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
 #else /* NDEBUG */
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc_d(size_t n_digits, char const *file, int line);
 #define DeeInt_Alloc(n_digits) DeeInt_Alloc_d(n_digits, __FILE__, __LINE__)
 #endif /* !NDEBUG */
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
-#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
-#define DeeInt_Free(self) DeeObject_Free(self)
-#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
+#define DeeInt_Free(self)    DeeObject_Free(self)
 #define DeeInt_Destroy(self) DeeInt_Free(self)
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **p_div, DeeIntObject **p_rem);

@@ -1420,7 +1420,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 			/* tp_any_ctor:    */ &function_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &function_serialize,
-			/* tp_free:        */ NULL /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&function_fini,
 		/* .tp_assign      = */ NULL,
@@ -1941,7 +1941,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &yf_serialize,
-			/* tp_free:        */ NULL /* XXX: Use the tuple-allocator? (if somehow still possible with "CONFIG_EXPERIMENTAL_MMAP_DEC") */
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yf_fini,
 		/* .tp_assign      = */ NULL,

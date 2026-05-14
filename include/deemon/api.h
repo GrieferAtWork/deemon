@@ -211,6 +211,22 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_THREADS
 #endif
 
+/* Disable support for loading- and writing `.dec' files */
+
+/* Experimental feature switch: Use a new (mmap-able) file format for dec files */
+#if 0
+/* TODO: Once this becomes mandatory, re-work `CONFIG_NO_DEC' such that it means that:
+ * - .dec files aren't searched-for during module import
+ * - DeeDecWriter always operates under "DeeDecWriter_F_NRELOC" and "Dee_DEC_TYPE_RELOC" doesn't exist
+ */
+#define CONFIG_NO_DEC /* TODO: Properly configure after "CONFIG_EXPERIMENTAL_MMAP_DEC" */
+#endif
+
+/* Disable support for loading- native system libraries as deemon modules */
+#if 0
+#define CONFIG_NO_DEX /* TODO: Properly configure after "CONFIG_EXPERIMENTAL_MMAP_DEC" */
+#endif
+
 
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
  *          happen to an object over the course of its lifetime.
@@ -370,20 +386,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MY_FEATURE */
 #endif
-
-/* Experimental feature switch: Use a new (mmap-able) file format for dec files */
-#if (!defined(CONFIG_EXPERIMENTAL_MMAP_DEC) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_MMAP_DEC))
-#if 1
-/* TODO: Once this becomes mandatory, re-work `CONFIG_NO_DEC' such that it means that:
- * - .dec files aren't searched-for during module import
- * - DeeDecWriter always operates under "DeeDecWriter_F_NRELOC" and "Dee_DEC_TYPE_RELOC" doesn't exist
- */
-#define CONFIG_EXPERIMENTAL_MMAP_DEC
-#else
-#define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
 
 
 /* Remove/re-define some of the members of "Numeric":

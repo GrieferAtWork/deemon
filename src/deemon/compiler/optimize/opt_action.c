@@ -27,11 +27,10 @@
 #include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_ALL, AST_CONTAINS_GOTO_CONSIDER_NONE, CONSTEXPR_*, OPTIMIZE_F*, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, SYMBOL_*, symbol, symbol_set_haseffect */
 #include <deemon/compiler/tpp.h>
-#include <deemon/dec.h>               /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>              /* DeeFile_Type */
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_OfPointer */
-#include <deemon/none.h>              /* DeeNone_Check, DeeNone_NewRef, Dee_None */
+#include <deemon/none.h>              /* DeeNone_Check, DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref_unlikely */
 #include <deemon/seq.h>               /* DeeSeq_* */
 #include <deemon/string.h>            /* DeeString_Check, DeeString_EQUALS_ASCII */
@@ -52,18 +51,9 @@ DECL_BEGIN
 #define is_builtin_object is_builtin_object
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_builtin_object(DeeObject *__restrict ob) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	DREF DeeModuleObject *mod = DeeModule_OfPointer(ob);
 	Dee_XDecref_unlikely(mod);
 	return mod != NULL;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	if (Dec_BuiltinID(ob) != DEC_BUILTINID_UNKNOWN)
-		return true;
-	if (ob == Dee_None)
-		return true;
-	/* XXX: What about all the other builtin objects? */
-	return false;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

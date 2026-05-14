@@ -57,13 +57,6 @@ INTDEF NONNULL((1)) void DCALL tuple_fini(DeeTupleObject *__restrict self);
 #define composition_visit tuple_visit
 INTERN NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, Dee_visit_t proc, void *arg);
 
-#if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_TUPLE_CACHES) || defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
-#define composition_tp_free_PTR NULL
-#else /* CONFIG_NO_CACHES || CONFIG_NO_TUPLE_CACHES || CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
-#define composition_tp_free_PTR &tuple_tp_free
-#endif /* !CONFIG_NO_CACHES && !CONFIG_NO_TUPLE_CACHES && !CONFIG_EXPERIMENTAL_MMAP_DEC */
-
 #define composition_hash tuple_hash
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL tuple_hash(DeeTupleObject *__restrict self);
 
@@ -286,7 +279,7 @@ INTERN DeeTypeObject FunctionComposition_Type = {
 			/* tp_any_ctor:    */ &composition_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &composition_serialize,
-			/* tp_free:        */ composition_tp_free_PTR
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&composition_fini,
 		/* .tp_assign      = */ NULL,

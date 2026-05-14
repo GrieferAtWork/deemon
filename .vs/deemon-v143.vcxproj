@@ -57,7 +57,6 @@
 		<ClInclude Include="..\include\deemon\compiler\assembler.h" />
 		<ClInclude Include="..\include\deemon\compiler\ast.h" />
 		<ClInclude Include="..\include\deemon\compiler\compiler.h" />
-		<ClInclude Include="..\include\deemon\compiler\dec.h" />
 		<ClInclude Include="..\include\deemon\compiler\doctext.h" />
 		<ClInclude Include="..\include\deemon\compiler\error.h" />
 		<ClInclude Include="..\include\deemon\compiler\interface.h" />
@@ -573,9 +572,7 @@
 		<ClCompile Include="..\src\deemon\compiler\ast.c" />
 		<ClCompile Include="..\src\deemon\compiler\compiler.c" />
 		<ClCompile Include="..\src\deemon\compiler\ddi.c" />
-		<ClCompile Include="..\src\deemon\compiler\dec.c" />
 		<ClCompile Include="..\src\deemon\compiler\error.c" />
-		<ClCompile Include="..\src\deemon\compiler\gendec.c" />
 		<ClCompile Include="..\src\deemon\compiler\instrlen.c" />
 		<ClCompile Include="..\src\deemon\compiler\interface\core.c" />
 		<ClCompile Include="..\src\deemon\compiler\interface\iast.c" />

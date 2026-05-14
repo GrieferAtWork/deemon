@@ -1189,13 +1189,10 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 INTDEF DeeTypeObject DeeModuleCurrent_Type;
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	ASSERTF((self->co_module == NULL) ||
 	        (Dee_TYPE(self->co_module) == &DeeModuleCurrent_Type) ||
 	        !DeeModule_Check(self->co_module) ||
@@ -1203,14 +1200,6 @@ code_fini(DeeCodeObject *__restrict self) {
 	        self->co_module->ob_refcnt == 0,
 	        "Cannot destroy the root code object of a module, "
 	        /**/ "before the module has been destroyed");
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	ASSERTF(!self->co_module ||
-	        !DeeModule_Check(self->co_module) ||
-	        self != atomic_read(&self->co_module->mo_moddata.mo_rootcode) ||
-	        self->co_module->ob_refcnt == 0,
-	        "Cannot destroy the root code object of a module, "
-	        /**/ "before the module has been destroyed");
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	if (self->co_hostasm.haco_data)
 		Dee_hostasm_code_data_destroy(self->co_hostasm.haco_data);

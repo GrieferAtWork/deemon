@@ -708,13 +708,6 @@ PRIVATE struct type_seq cat_seq = {
 };
 
 
-#if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_TUPLE_CACHES) || defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
-#define cat_tp_free_PTR NULL
-#else /* CONFIG_NO_CACHES || CONFIG_NO_TUPLE_CACHES || CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
-#define cat_tp_free_PTR &tuple_tp_free
-#endif /* !CONFIG_NO_CACHES && !CONFIG_NO_TUPLE_CACHES && !CONFIG_EXPERIMENTAL_MMAP_DEC */
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_bool(Cat *__restrict self) {
 	size_t i;
@@ -744,7 +737,7 @@ INTERN DeeTypeObject SeqConcat_Type = {
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cat_serialize,
-			/* tp_free:        */ cat_tp_free_PTR
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cat_fini,
 		/* .tp_assign      = */ NULL,

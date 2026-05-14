@@ -23,41 +23,37 @@
 #include <deemon/api.h>
 
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_False, Dee_True */
+#include <deemon/callable.h>           /* DeeCallable_Type */
+#include <deemon/cell.h>               /* DeeCell_Type */
 #include <deemon/class.h>              /* DeeClassDescriptor_Type */
 #include <deemon/code.h>               /* DeeCode_Type */
 #include <deemon/compiler/assembler.h> /* DeeRelInt_Type */
 #include <deemon/compiler/optimize.h>  /* CONSTEXPR_* */
-#include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
+#include <deemon/error.h>              /* DeeError_* */
 #include <deemon/float.h>              /* DeeFloat_Type */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item, _DeeHashSet_GetVirtVTab */
 #include <deemon/int.h>                /* DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeKwds_Type */
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
+#include <deemon/map.h>                /* DeeMap_Type, Dee_EmptyMap */
 #include <deemon/module.h>             /* DeeModule_Type */
 #include <deemon/none.h>               /* DeeNone_Type */
+#include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_TYPE */
 #include <deemon/objmethod.h>          /* DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, _DeeRoSet_GetRealVTab */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/set.h>                /* Dee_EmptySet */
 #include <deemon/string.h>             /* DeeString_Type */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/thread.h>             /* DeeThread_Type */
+#include <deemon/traceback.h>          /* DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeType_Type */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
-
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/callable.h>  /* DeeCallable_Type */
-#include <deemon/cell.h>      /* DeeCell_Type */
-#include <deemon/error.h>     /* DeeError_* */
-#include <deemon/map.h>       /* DeeMap_Type, Dee_EmptyMap */
-#include <deemon/numeric.h>   /* DeeNumeric_Type */
-#include <deemon/seq.h>       /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
-#include <deemon/set.h>       /* Dee_EmptySet */
-#include <deemon/traceback.h> /* DeeTraceback_Type */
-#include <deemon/weakref.h>   /* DeeWeakRefAble_Type, DeeWeakRef_Type */
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#include <deemon/weakref.h>            /* DeeWeakRefAble_Type, DeeWeakRef_Type */
 /**/
 
 #include <stdbool.h> /* bool, false, true */
@@ -82,10 +78,8 @@ PRIVATE DeeTypeObject *tpconst constant_types[] = {
 
 /* Expectations regarding what is- and isn't allowed to be a constant seem way too abstruse
  * and overcomplicated, with systems upon systems built upon legacy code. Since the entire
- * compiler needs to be re-written to properly use CONFIG_EXPERIMENTAL_MMAP_DEC anyways,
- * rather than figuring out what was meant to happen here, just emulate legacy behavior
- * for now... */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+ * compiler needs to be re-written to properly use the new dec file format anyways, rather
+ * than figuring out what was meant to happen here, just emulate legacy behavior for now... */
 PRIVATE DeeObject *tpconst legacy_Dec_BuiltinID[] = {
 	Dee_AsObject(&DeeError_Signal),
 	Dee_AsObject(&DeeError_Interrupt),
@@ -162,9 +156,6 @@ legacy_has_Dec_BuiltinID(DeeObject *__restrict obj) {
 	}
 	return false;
 }
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#define legacy_has_Dec_BuiltinID(obj) (Dec_BuiltinID(obj) != DEC_BUILTINID_UNKNOWN)
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 struct constexpr_frame {
@@ -276,13 +267,8 @@ again0:
 
 	/* Check for special wrapper objects. */
 	if (type == &DeeObjMethod_Type || type == &DeeKwObjMethod_Type) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		self = ((DeeObjMethodObject *)self)->om_this;
 		goto again0;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		/* ObjMethod objects cannot be encoded in in DEC files. */
-		goto illegal;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	}
 
 	if (type == &DeeSuper_Type) {

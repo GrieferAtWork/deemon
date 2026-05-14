@@ -22,34 +22,33 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea */
-#include <deemon/code.h>              /* DeeCodeObject, DeeCode_Type */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_LockEndWrite, DeeCompiler_LockWrite */
-#include <deemon/dec.h>               /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, DeeModule_OpenDec, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */
-#include <deemon/error-rt.h>          /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
-#include <deemon/error.h>             /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE */
-#include <deemon/format.h>            /* DeeFormat_Repeat, Dee_sprintf, PRFuSIZ */
-#include <deemon/gc.h>                /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head */
-#include <deemon/heap.h>              /* DeeDbgHeap_AddHeapRegion, DeeHeap_GetRegionOf, Dee_heapregion */
-#include <deemon/method-hints.h>      /* type_method_hint */
-#include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
-#include <deemon/none.h>              /* DeeNone_Check */
-#include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_*, DeeObject_*, Dee_BOUND_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_XDecref*, Dee_XIncrefv, return_reference, return_reference_ */
-#include <deemon/objmethod.h>         /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
-#include <deemon/serial.h>            /* DeeSerial */
-#include <deemon/string.h>            /* DeeString*, DeeUni_IsSpace, DeeUni_ToLower, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
-#include <deemon/stringutils.h>       /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
-#include <deemon/system-features.h>   /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_(LOCK|UNLOCK), RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bzero, dl*, environ, getenv, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, strchr, strcpy, strend, strlen, to(lower|upper), wenviron, wgetenv */
-#include <deemon/system.h>            /* DeeNTSystem_HandleGenericError, DeeNTSystem_IsBufferTooSmall, DeeSystem_*, DeeUnixSystem_PrintLinkString */
-#include <deemon/thread.h>            /* DeeThreadObject, DeeThread_Self, Dee_import_frame */
-#include <deemon/tuple.h>             /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
-#include <deemon/type.h>              /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
-#include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK */
-#include <deemon/util/atomic-ref.h>   /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
-#include <deemon/util/atomic.h>       /* atomic_* */
-#include <deemon/util/hash.h>         /* Dee_HashStr */
-#include <deemon/util/lock.h>         /* Dee_atomic_rwlock_* */
-#include <deemon/util/nrlock.h>       /* Dee_NRLOCK_OK, Dee_nrshared_lock_* */
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type */
+#include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */
+#include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE */
+#include <deemon/format.h>          /* DeeFormat_Repeat, Dee_sprintf, PRFuSIZ */
+#include <deemon/gc.h>              /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head */
+#include <deemon/heap.h>            /* DeeDbgHeap_AddHeapRegion, DeeHeap_GetRegionOf, Dee_heapregion */
+#include <deemon/method-hints.h>    /* type_method_hint */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
+#include <deemon/none.h>            /* DeeNone_Check */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_*, DeeObject_*, Dee_BOUND_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_XDecref_likely, Dee_XDecref_unlikely, Dee_XIncrefv, return_reference, return_reference_ */
+#include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
+#include <deemon/serial.h>          /* DeeSerial */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToLower, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
+#include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_(LOCK|UNLOCK), RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bzero, dl*, environ, getenv, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, strchr, strcpy, strend, strlen, to(lower|upper), wenviron, wgetenv */
+#include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_IsBufferTooSmall, DeeSystem_*, DeeUnixSystem_PrintLinkString */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_import_frame */
+#include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK */
+#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/hash.h>       /* Dee_HashStr */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
+#include <deemon/util/nrlock.h>     /* Dee_NRLOCK_OK, Dee_nrshared_lock_* */
 
 #include <hybrid/align.h>           /* IS_POWER_OF_TWO */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -107,10 +106,6 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/compiler/dec.h> /* dec_create */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 DECL_BEGIN
 
@@ -1846,7 +1841,6 @@ INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 }
 
 
-#if !defined(CONFIG_NO_DEC) && defined(CONFIG_EXPERIMENTAL_MMAP_DEC)
 /* Unbind from `module_byaddr_tree' */
 INTERN NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self) {
@@ -1855,7 +1849,6 @@ module_dee_unbind(DeeModuleObject *__restrict self) {
 		module_byaddr_removenode(&module_byaddr_tree, self);
 	module_byaddr_lock_endwrite();
 }
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 
 
@@ -2128,7 +2121,6 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
                            /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
                            struct Dee_compiler_options *options, uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	struct DeeMapFile fmap;
 	int fmap_status;
 
@@ -2148,12 +2140,6 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 	/* Cleanup on error */
 	if unlikely(!ITER_ISOK(result))
 		DeeMapFile_Fini(&fmap);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	while (dec_dirname_len && dec_dirname[dec_dirname_len - 1] == DeeSystem_SEP)
-		--dec_dirname_len;
-	result = DeeModule_OpenDec(dec_stream, options, dec_dirname, dec_dirname_len, dee_file_last_modified);
-	Dee_Decref_likely(dec_stream);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return result;
 }
 #endif /* !CONFIG_NO_DEC */
@@ -2213,18 +2199,7 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 #endif /* !CONFIG_NO_DEX */
 	ASSERT(self->mo_absname == NULL);
 	if (Dee_TYPE(self) == &DeeModuleDee_Type) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		DeeDec_DestroyUntracked(self);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		DREF DeeCodeObject *root;
-		ASSERT(self->mo_dir == NULL);
-		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
-		root = self->mo_moddata.mo_rootcode;
-		self->mo_moddata.mo_rootcode = NULL;
-		Dee_Decref(root);
-		Dee_Decrefv(self->mo_importv, self->mo_importc);
-		Dee_Free((void *)self->mo_importv);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	} else {
 		ASSERT(self->mo_dir == NULL);
 		ASSERT(Dee_TYPE(self) == &DeeModuleDir_Type);
@@ -2237,7 +2212,6 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 	DeeGCObject_Free(self);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 INTDEF NONNULL((1)) void DCALL
 DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
 
@@ -2313,7 +2287,6 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	module_byaddr_lock_endwrite();
 	return self;
 }
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 #define DeeModule_DestroyAnonymousDirectory(self) DeeGCObject_Free(self)
 
@@ -2344,7 +2317,6 @@ done:
 }
 
 #ifndef CONFIG_NO_DEC
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeFile_WriteDecEhdr(DeeObject *__restrict stream,
                      Dec_Ehdr *__restrict ehdr) {
@@ -2366,7 +2338,6 @@ DeeFile_WriteDecEhdr(DeeObject *__restrict stream,
 	ehdr->e_mapping = saved_e_mapping;
 	return result;
 }
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #endif /* !CONFIG_NO_DEC */
 
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
@@ -2379,9 +2350,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 	struct Dee_import_frame frame;
 
 #ifndef CONFIG_NO_DEC
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	bool has_broken_dec_file = false;
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOLDEC)) ==
 	    /*    */ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
 		size_t pathsize, basesize;
@@ -2466,9 +2435,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 //		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		has_broken_dec_file = true;
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	}
 no_dec_file:
 #endif /* !CONFIG_NO_DEC */
@@ -2515,7 +2482,6 @@ no_dec_file:
 	 *      also be done here every 2-3 nested imports (or maybe even: every time,
 	 *      starting with the 2nd nested import; iow: when "frame.if_prev != NULL") */
 
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	/* Can only generate .dec files for .dee files */
 	if (!(flags & _DeeModule_IMPORT_F_IS_DEE_FILE))
 		flags |= DeeModule_IMPORT_F_NOGDEC;
@@ -2635,11 +2601,6 @@ err_compile:
 			result = DeeModule_IMPORT_ERROR;
 		}
 	}
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	result = DeeExec_CompileModuleStream_impl(source_stream, 0, 0,
-	                                          DeeExec_RUNMODE_DEFAULT,
-	                                          &used_options, NULL);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	caller->t_import_curr = frame.if_prev;
 	Dee_Decref_likely(source_stream);
 
@@ -2653,58 +2614,6 @@ err_compile:
 		}
 		goto err;
 	}
-
-#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#ifndef CONFIG_NO_DEC
-	if ((flags & (_DeeModule_IMPORT_F_IS_DEE_FILE | DeeModule_IMPORT_F_NOGDEC)) ==
-	    /*....*/ (_DeeModule_IMPORT_F_IS_DEE_FILE)) {
-		/* generate a .dec file */
-		int status;
-		size_t basesize;
-		char *basename;
-		ASSERT(abs_filename_length >= 4);
-		ASSERT(abs_filename[abs_filename_length - 4] == '.');
-		ASSERT(abs_filename[abs_filename_length - 3] == 'd');
-		ASSERT(abs_filename[abs_filename_length - 2] == 'e');
-		ASSERT(abs_filename[abs_filename_length - 1] == 'e');
-
-		basename = (char *)memrchr(abs_filename, DeeSystem_SEP, abs_filename_length);
-		if likely(basename) {
-			++basename;
-		} else {
-			/* Probably shouldn't ever get here... */
-			basename = abs_filename;
-		}
-
-		/* Form the filename for a .dec file */
-		basesize = (size_t)((abs_filename + abs_filename_length) - basename);
-
-		/* Move up "module_name.de" by 1 (don't move the
-		 * trailing "e\0", which'll be replaced with "c\0") */
-		memmoveupc(basename + 1, basename, basesize - 1, sizeof(char));
-		basename[0] = '.';
-		basename[basesize + 0] = 'c';
-		basename[basesize + 1] = '\0';
-
-		/* Open file */
-		status = DeeCompiler_LockWrite();
-		if likely(status == 0) {
-			status = dec_create(result, abs_filename);
-			DeeCompiler_LockEndWrite();
-		}
-
-		/* Restore the normal ".dee" file extension. */
-		memmovedownc(basename, basename + 1, basesize - 1, sizeof(char));
-		basename[basesize - 1] = 'e';
-		basename[basesize - 0] = '\0';
-
-		if unlikely(status) {
-			module_destroy_untracked(result);
-			result = DeeModule_IMPORT_ERROR;
-		}
-	}
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	return result;
 err:
 	return DeeModule_IMPORT_ERROR;
@@ -2854,11 +2763,7 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 			    (flags & (DeeModule_IMPORT_F_FILNAM | _DeeModule_IMPORT_F_IS_DEE_FILE)) ==
 			    /*....*/ (DeeModule_IMPORT_F_FILNAM))
 				result->mo_flags |= Dee_MODULE_FABSFILE;
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 			result = DeeDec_Track(result);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-			result = DeeGC_TRACK(DeeModuleObject, result);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 		}
 		goto free_abs_filename_and_return_result;
 	}
@@ -2928,7 +2833,6 @@ remember_dir_module:
 			existing->mo_absnode.rb_par = DeeModule_IMPORT_ENOENT;
 		}
 		module_abstree_insert(&module_abstree_root, result);
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		if (Dee_TYPE(result) == &DeeModuleDee_Type) {
 			/* TODO: This call blocking-acquires a lock to "module_byaddr_lock_write()"
 			 *       while we're already holding "module_abstree_lock_write()". Instead,
@@ -2937,9 +2841,7 @@ remember_dir_module:
 			 *       no other piece of code exists that acquires these locks in reverse
 			 *       order while also blocking) */
 			result = DeeDec_Track(result);
-		} else
-#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-		{
+		} else {
 			result = DeeGC_TRACK_EX(DeeModuleObject, result, DeeGC_TRACK_F_NOCOLLECT);
 		}
 		module_abstree_lock_endwrite();
@@ -6072,7 +5974,7 @@ err:
  * (as in: a pointer to some statically allocated structure), or is part of some user
  * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
  * that is a constant in user-code), try to return a reference for the module that
- * contains this pointer (only when CONFIG_EXPERIMENTAL_MMAP_DEC).
+ * contains this pointer.
  *
  * @return: * :   A pointer to the module that 'ptr' belongs to.
  * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part
@@ -6309,11 +6211,7 @@ PUBLIC NONNULL((1)) Dee_ssize_t DCALL
 DeeModule_EnumerateAdrTree(Dee_module_enumerate_cb_t cb, void *arg,
                            DeeModuleObject *start_after,
                            DeeTypeObject *opt_type_filter) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #define module_type_hasaddr(t) ((t) == &DeeModuleDee_Type || (t) == &DeeModuleDex_Type)
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#define module_type_hasaddr(t) ((t) == &DeeModuleDex_Type)
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	Dee_ssize_t result;
 	DREF DeeModuleObject *prev_module;
 	if (opt_type_filter) {

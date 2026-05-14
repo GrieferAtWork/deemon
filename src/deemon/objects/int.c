@@ -31,7 +31,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Free, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP*, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
 #include <deemon/bytes.h>              /* DeeBytes* */
@@ -71,13 +71,6 @@
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, intN_t, uintN_t */
-
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-#include <deemon/util/atomic.h> /* atomic_read */
-#include <deemon/util/lock.h>   /* Dee_atomic_lock_* */
-
-#include <hybrid/sched/yield.h> /* SCHED_YIELD */
-#endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -254,175 +247,6 @@ STATIC_ASSERT(Dee_CompareNe(INT_MAX, INT_MIN) == Dee_COMPARE_GR);
 DeeSystem_DEFINE_memend(dee_memend)
 #endif /* !CONFIG_HAVE_memend */
 
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-struct free_int {
-	struct free_int *fi_next; /* [0..1] Next free integer. */
-};
-struct free_int_set {
-	struct free_int  *fis_head; /* [0..1][lock(fis_lock)] First free integer object. */
-	size_t            fis_size; /* [lock(fis_lock)][<= CONFIG_INT_CACHE_MAXSIZE]
-	                             * Amount of free integer objects in this set. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t fis_lock; /* Lock for this free integer set. */
-#endif  /* !CONFIG_NO_THREADS */
-};
-
-#define free_int_set_available(self)  Dee_atomic_lock_available(&(self)->fis_lock)
-#define free_int_set_acquired(self)   Dee_atomic_lock_acquired(&(self)->fis_lock)
-#define free_int_set_tryacquire(self) Dee_atomic_lock_tryacquire(&(self)->fis_lock)
-#define free_int_set_acquire(self)    Dee_atomic_lock_acquire(&(self)->fis_lock)
-#define free_int_set_waitfor(self)    Dee_atomic_lock_waitfor(&(self)->fis_lock)
-#define free_int_set_release(self)    Dee_atomic_lock_release(&(self)->fis_lock)
-
-PRIVATE struct free_int_set free_ints[CONFIG_INT_CACHE_MAXCOUNT];
-
-INTERN size_t DCALL
-Dee_intcache_clearall(size_t max_clear) {
-	size_t i, result = 0;
-	struct free_int_set *set;
-	for (i = 0; i < COMPILER_LENOF(free_ints); ++i) {
-		struct free_int *chain;
-		struct free_int *chain_end;
-		size_t total_free;
-		set = &free_ints[i];
-#ifndef CONFIG_NO_THREADS
-		while (!free_int_set_tryacquire(set)) {
-			if (!set->fis_size)
-				goto next_set;
-			SCHED_YIELD();
-		}
-#endif  /* !CONFIG_NO_THREADS */
-		total_free = set->fis_size * _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), i, sizeof(digit));
-		chain      = set->fis_head;
-		if (max_clear >= result + total_free) {
-			result += total_free;
-			set->fis_size = 0;
-			set->fis_head = NULL;
-		} else {
-			size_t single_item;
-			single_item = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), i, sizeof(digit));
-			total_free  = max_clear - result;
-			total_free += single_item - 1;
-			total_free /= single_item;
-			ASSERT(total_free < set->fis_size);
-			chain_end = chain;
-			set->fis_size -= total_free;
-			result += total_free * single_item;
-			--total_free;
-			while (total_free--)
-				chain_end = chain_end->fi_next;
-			ASSERT(chain_end);
-			set->fis_head = chain_end->fi_next;
-			chain_end->fi_next = NULL;
-		}
-		ASSERT((set->fis_head != NULL) == (set->fis_size != 0));
-		free_int_set_release(set);
-		/* Free all of the extracted chain elements. */
-		while (chain) {
-			chain_end = chain->fi_next;
-			DeeObject_Free(chain);
-			chain = chain_end;
-		}
-		if (result >= max_clear)
-			break;
-#ifndef CONFIG_NO_THREADS
-next_set:
-		;
-#endif /* !CONFIG_NO_THREADS */
-	}
-	return result;
-}
-
-INTERN NONNULL((1)) void DCALL
-DeeInt_Free(DeeIntObject *__restrict self) {
-	size_t n_digits;
-	n_digits = (size_t)self->ob_size;
-	if (self->ob_size < 0)
-		n_digits = (size_t)-self->ob_size;
-	if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
-		struct free_int_set *set;
-		set = &free_ints[n_digits];
-#ifndef CONFIG_NO_THREADS
-		while (!free_int_set_tryacquire(set)) {
-			if (atomic_read(&set->fis_size) >= CONFIG_INT_CACHE_MAXSIZE)
-				goto do_free;
-			SCHED_YIELD();
-		}
-#endif  /* !CONFIG_NO_THREADS */
-		COMPILER_READ_BARRIER();
-		if (set->fis_size < CONFIG_INT_CACHE_MAXSIZE) {
-			((struct free_int *)self)->fi_next = set->fis_head;
-			set->fis_head = (struct free_int *)self;
-			++set->fis_size;
-			free_int_set_release(set);
-			return;
-		}
-		free_int_set_release(set);
-	}
-#ifndef CONFIG_NO_THREADS
-do_free:
-#endif /* !CONFIG_NO_THREADS */
-	DeeObject_Free(self);
-}
-
-#ifdef NDEBUG
-INTERN WUNUSED DREF DeeIntObject *DCALL
-DeeInt_Alloc(size_t n_digits)
-#else /* NDEBUG */
-INTERN WUNUSED DREF DeeIntObject *DCALL
-DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
-#endif /* !NDEBUG */
-{
-	DREF DeeIntObject *result;
-	/* Search the cache for free integers. */
-	if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
-		struct free_int_set *set;
-		set = &free_ints[n_digits];
-#ifndef CONFIG_NO_THREADS
-		while (!free_int_set_tryacquire(set)) {
-			if (!set->fis_size)
-				goto do_alloc;
-			SCHED_YIELD();
-		}
-#endif  /* !CONFIG_NO_THREADS */
-		ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
-		if (set->fis_size) {
-			result        = (DREF DeeIntObject *)set->fis_head;
-			set->fis_head = ((struct free_int *)result)->fi_next;
-			--set->fis_size;
-			ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
-			free_int_set_release(set);
-			goto init_result;
-		}
-		free_int_set_release(set);
-	}
-#ifndef CONFIG_NO_THREADS
-do_alloc:
-#endif /* !CONFIG_NO_THREADS */
-#ifdef NDEBUG
-	result = (DREF DeeIntObject *)DeeObject_Mallocc(offsetof(DeeIntObject, ob_digit),
-	                                                n_digits, sizeof(digit));
-#else /* NDEBUG */
-	result = (DREF DeeIntObject *)DeeDbgObject_Mallocc(offsetof(DeeIntObject, ob_digit),
-	                                                   n_digits, sizeof(digit), file, line);
-#endif /* !NDEBUG */
-	if unlikely(!result)
-		goto done;
-init_result:
-	DeeObject_InitStatic(result, &DeeInt_Type);
-	result->ob_size = n_digits;
-done:
-	return result;
-}
-
-#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
-
-INTERN size_t DCALL
-Dee_intcache_clearall(size_t UNUSED(max_clear)) {
-	return 0;
-}
-
-
 #ifdef NDEBUG
 INTERN WUNUSED DREF DeeIntObject *DCALL
 DeeInt_Alloc(size_t n_digits)
@@ -445,7 +269,6 @@ DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
 	}
 	return result;
 }
-#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 #if defined(CONFIG_STRING_8BIT_STATIC) || defined(__DEEMON__)
 /*[[[deemon
@@ -5705,12 +5528,6 @@ PRIVATE struct type_operator const int_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
-#if CONFIG_INT_CACHE_MAXCOUNT != 0
-#define int_free_PTR &DeeInt_Free
-#else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
-#define int_free_PTR NULL
-#endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
-
 PUBLIC DeeTypeObject DeeInt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_int),
@@ -5828,7 +5645,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 			/* tp_any_ctor:    */ &int_new,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &int_serialize,
-			/* tp_free:        */ int_free_PTR
+			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,

@@ -35,7 +35,6 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
-#include <deemon/gc.h>                 /* DeeGC_TRACK */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_IMPORT_F_NOGDEC, Dee_compiler_options, Dee_module_object */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
@@ -428,27 +427,15 @@ err:
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
-                                 struct Dee_compiler_options *options, DeeObject *default_symbols)
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
-DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
-                                 int start_line, int start_col, unsigned int mode,
-                                 struct Dee_compiler_options *options, DeeObject *default_symbols)
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
-{
+                                 struct Dee_compiler_options *options, DeeObject *default_symbols) {
 	struct TPPFile *base_file;
 	DREF DeeCodeObject *root_code;
 	DREF DeeCompilerObject *compiler;
 	DREF struct ast *code;
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	int result;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	DREF DeeModuleObject *result;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	uint16_t assembler_flags;
 
 	compiler = DeeCompiler_New(options ? options->co_compiler : COMPILER_FNORMAL);
@@ -633,11 +620,7 @@ pack_code_in_return:
 		goto err_compiler;
 
 	/* Finally, put together the module itself. */
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	result = module_compile(writer, root_code);
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	result = module_compile(root_code);
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 #if 0 /* Doesn't throw any new compiler errors... */
 	/* Rethrow all errors that may have occurred during module linkage. */
@@ -656,18 +639,13 @@ err_compiler:
 err_compiler_not_locked:
 	Dee_Decref(compiler);
 err:
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	return -1;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             int start_line, int start_col, unsigned int mode,
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	DREF DeeModuleObject *result;
 	DeeDecWriter writer;
 	DeeDec_Ehdr *ehdr;
@@ -703,14 +681,6 @@ err_writer:
 	DeeDecWriter_Fini(&writer);
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-	DREF DeeModuleObject *result;
-	result = DeeExec_CompileModuleStream_impl(source_stream, start_line, start_col,
-	                                          mode, options, default_symbols);
-	if likely(result)
-		result = DeeGC_TRACK(DeeModuleObject, result);
-	return result;
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
 
 DECL_END
