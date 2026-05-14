@@ -978,9 +978,7 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 	/* .ot_thread = */ {
 		OBJECT_HEAD_INIT(&DeeThread_Type),
 		/* .t_inthookon  = */ 0,
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		/* .t_import_curr= */ NULL,
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .t_str_curr   = */ NULL,
 		/* .t_repr_curr  = */ NULL,
 		/* .t_hash_curr  = */ NULL,
@@ -2085,9 +2083,7 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 #endif /* DeeThread_HAVE_GetCurrentXThread && !DeeThread_USE_CreateThread */
 	ASSERTF(self->t_inout.io_result == NULL, "Calling thread was created by deemon");
 	ASSERTF(self->t_exec == NULL && self->t_execsz == 0, "Calling thread is still executing deemon code");
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERTF(self->t_import_curr == NULL, "Calling thread still has active calls to `DeeModule_Import'");
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
 	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
@@ -2674,9 +2670,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 			DBG_ALIGNMENT_DISABLE();
 			DeeThread_SetName(exec_name);
 			DBG_ALIGNMENT_ENABLE();
-		}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		else if (exec_code == exec_code->co_module->mo_moddata.mo_rootcode) {
+		} else if (exec_code == exec_code->co_module->mo_moddata.mo_rootcode) {
 			char const *short_name;
 			short_name = DeeModule_GetShortName(exec_code->co_module);
 			if (short_name) {
@@ -2685,13 +2679,6 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 				DBG_ALIGNMENT_ENABLE();
 			}
 		}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		else if (exec_code == exec_code->co_module->mo_root) {
-			DBG_ALIGNMENT_DISABLE();
-			DeeThread_SetName(DeeString_STR(exec_code->co_module->mo_name));
-			DBG_ALIGNMENT_ENABLE();
-		}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 #endif /* DeeThread_SetName */
 
@@ -3751,9 +3738,7 @@ PRIVATE NONNULL((1)) void DCALL
 thread_fini(DeeThreadObject *__restrict self) {
 	ASSERT(!self->t_exec);
 	ASSERT(!self->t_execsz);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT(!self->t_import_curr);
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT(!self->t_str_curr);
 	ASSERT(!self->t_repr_curr);
 	ASSERT(!self->t_hash_curr);
@@ -3947,13 +3932,8 @@ thread_print_impl(DeeThreadObject *__restrict self,
 			exec_function = (DeeFunctionObject *)thread_main;
 			exec_code     = exec_function->fo_code;
 			exec_name     = DeeCode_NAME(exec_code);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			if (exec_name == NULL && exec_code == exec_code->co_module->mo_moddata.mo_rootcode)
 				exec_name = DeeModule_GetShortName(exec_code->co_module);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			if (exec_name == NULL && exec_code == exec_code->co_module->mo_root)
-				exec_name = DeeString_STR(exec_code->co_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			DO(err, DeeFormat_Printf(printer, arg, " %s", exec_name ? exec_name : "<anonymous>"));
 		}
 #endif /* !DeeThread_USE_SINGLE_THREADED */
@@ -4028,18 +4008,16 @@ thread_init(DeeThreadObject *__restrict self,
 	if (argc == 1 && DeeInt_Check(argv[0])) {
 		/* Construct unmanaged thread from TID */
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
-		me->ot_thread.t_inthookon = 0;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		me->ot_thread.t_inthookon   = 0;
 		me->ot_thread.t_import_curr = NULL;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		me->ot_thread.t_str_curr  = NULL;
-		me->ot_thread.t_repr_curr = NULL;
-		me->ot_thread.t_hash_curr = NULL;
-		me->ot_thread.t_exec      = NULL;
-		me->ot_thread.t_except    = NULL;
-		me->ot_thread.t_execsz    = 0;
-		me->ot_thread.t_exceptsz  = 0;
-		me->ot_thread.t_state     = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
+		me->ot_thread.t_str_curr    = NULL;
+		me->ot_thread.t_repr_curr   = NULL;
+		me->ot_thread.t_hash_curr   = NULL;
+		me->ot_thread.t_exec        = NULL;
+		me->ot_thread.t_except      = NULL;
+		me->ot_thread.t_execsz      = 0;
+		me->ot_thread.t_exceptsz    = 0;
+		me->ot_thread.t_state       = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
 		me->ot_thread.t_interrupt.ti_next = NULL;
 		me->ot_thread.t_interrupt.ti_intr = NULL;
 		me->ot_thread.t_interrupt.ti_args = NULL;
@@ -4116,9 +4094,7 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_exceptsz          = 0;
 	self->t_execsz            = 0;
 	self->t_inthookon         = 0;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	self->t_import_curr       = NULL;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	self->t_str_curr          = NULL;
 	self->t_repr_curr         = NULL;
 	self->t_hash_curr         = NULL;

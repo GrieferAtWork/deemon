@@ -626,11 +626,9 @@
 		<ClCompile Include="..\src\deemon\execute\code.c" />
 		<ClCompile Include="..\src\deemon\execute\ddi.c" />
 		<ClCompile Include="..\src\deemon\execute\dec.c" />
-		<ClCompile Include="..\src\deemon\execute\dex.c" />
 		<ClCompile Include="..\src\deemon\execute\exec.c" />
 		<ClCompile Include="..\src\deemon\execute\function-wrappers.c" />
 		<ClCompile Include="..\src\deemon\execute\function.c" />
-		<ClCompile Include="..\src\deemon\execute\interactive-module.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath-directory.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath.c" />
 		<ClCompile Include="..\src\deemon\execute\module-globals.c" />

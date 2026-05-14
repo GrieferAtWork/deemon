@@ -37,7 +37,6 @@
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/map.h>                /* DeeMap_Type */
-#include <deemon/module.h>             /* DeeModuleObject, DeeModule_New */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init */
 #include <deemon/seq.h>                /* DeeSeq_* */
@@ -62,41 +61,12 @@ compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
 	/* TODO: All those other arguments, like compiler options, etc. */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Compiler", params: """
-	DeeObject *module:?X2?N?Dstring?DModule = Dee_None;
-");]]]*/
-	struct {
-		DeeObject *module_;
-	} args;
-	args.module_ = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__module, "|o:Compiler", &args))
-		goto err;
-/*[[[end]]]*/
-	if (DeeNone_Check(args.module_)) {
-		args.module_ = (DeeObject *)DeeModule_New(Dee_EmptyString);
-		if unlikely(!args.module_)
-			goto err;
-	} else if (DeeString_Check(args.module_)) {
-		args.module_ = (DeeObject *)DeeModule_New(args.module_);
-		if unlikely(!args.module_)
-			goto err;
-	} else {
-		Dee_Incref(args.module_);
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Create the new root scope object. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	(void)argc; /* XXX: Arguments? */
 	(void)argv;
 	(void)kw;
 	self->cp_scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	self->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
-	                                                      (DeeObject **)&args.module_);
-	Dee_Decref(args.module_);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!self->cp_scope)
 		goto err;
 	Dee_weakref_support_init(self);
@@ -224,21 +194,6 @@ err:
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-compiler_get_module(DeeCompilerObject *__restrict self) {
-	DREF DeeModuleObject *result;
-	if (COMPILER_BEGIN(self))
-		goto err;
-	result = current_rootscope->rs_module;
-	Dee_Incref(result);
-	COMPILER_END();
-	return Dee_AsObject(result);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 
 INTDEF struct type_getset tpconst compiler_getsets[];
 INTERN_TPCONST struct type_getset tpconst compiler_getsets[] = {
@@ -263,13 +218,6 @@ INTERN_TPCONST struct type_getset tpconst compiler_getsets[] = {
 	            "->?#RootScope\n"
 	            "Get the root-scope active within @this compiler\n"
 	            "Note that this scope is fixed and cannot be changed"),
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	TYPE_GETTER(STR_module, &compiler_get_module,
-	            "->?DModule\n"
-	            "Returns the module being constructed by @this compiler\n"
-	            "Warning: The returned module is incomplete and uninitialized, "
-	            "and can't actually be used, yet"),
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
 

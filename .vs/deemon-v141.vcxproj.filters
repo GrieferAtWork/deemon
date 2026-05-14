@@ -1850,9 +1850,6 @@
 		<ClCompile Include="..\src\deemon\execute\dec.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\dex.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\exec.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
@@ -1860,9 +1857,6 @@
 			<Filter>src\execute</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\function.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\interactive-module.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\modpath-directory.c">

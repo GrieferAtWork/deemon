@@ -26,7 +26,7 @@
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/cell.h>            /* DeeCell_TryGet, DeeCell_Type */
 #include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Type, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FMASK, Dee_class_attribute */
-#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler */
 #include <deemon/compiler/dec.h>    /* DECREL_*, DEC_SECTION_*, DEC_WRITE_F*, current_dec, dec_* */
 #include <deemon/dec.h>             /* DECMAG*, DEC_BUILTINID_IDOF, DEC_BUILTINID_SETOF, DEC_BUILTINID_UNKNOWN, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_* */
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
@@ -37,15 +37,15 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKwdsObject, DeeKwds_Type */
 #include <deemon/list.h>            /* DeeListObject, DeeList_* */
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FHASCTIME, Dee_MODULE_SYMBOL_GETDOCLEN, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_SYMBOL_GETDOCLEN, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE */
 #include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqOne*, DeeSeqPair* */
 #include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
-#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
-#include <deemon/system-features.h> /* memcpy, memmovedownc, memmoveup, memset, strlen */
-#include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE, DeeSystem_SEP */
+#include <deemon/string.h>          /* DeeString*, WSTR_LENGTH */
+#include <deemon/system-features.h> /* memcpy, memmoveup, strlen */
+#include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* Dee_operator_t */
 #include <deemon/util/hash-io.h>    /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
@@ -81,9 +81,6 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
 	DeeModuleObject *const *iter, *const *end;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	char const *module_pathstr, *module_pathend;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (!self->mo_importc)
 		goto done;
 	dec_curr = SC_IMPORTS;
@@ -91,16 +88,12 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		goto err; /* Dec_Strmap.i_len */
 	iter = self->mo_importv;
 	end  = iter + self->mo_importc;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	module_pathstr = module_pathend = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	for (; iter < end; ++iter) {
 		DeeModuleObject *mod = *iter;
 		uint8_t *data;
 		uint32_t addr;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 		dec_curr = SC_STRING;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		/* Always encode module names using their absolute names.
 		 *
 		 * In theory, we could also encode using relative-, or libpath-
@@ -132,142 +125,6 @@ decgen_imports(DeeModuleObject *__restrict self) {
 		}
 		if unlikely(!data)
 			goto err;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		if (DeeModule_IsGlobal(mod)) {
-			/* Globally available module (loadable as part of the library path). */
-			char const *global_name;
-import_module_by_name:
-			global_name = DeeString_AsUtf8(mod->mo_name);
-			if unlikely(!global_name)
-				goto err;
-			data = dec_allocstr(global_name,
-			                    (WSTR_LENGTH(global_name) + 1) *
-			                    sizeof(char));
-			if unlikely(!data)
-				goto err;
-		} else {
-			char const *self_pathstr, *other_pathstr;
-			char const *self_pathend, *other_pathend;
-			char const *self_pathpart, *other_pathpart;
-			size_t num_dots;
-			uint8_t *buffer;
-			bool is_dec_file;
-			/* NOTE: The builtin `deemon' module, as well as
-			 *       the empty module don't have a path assigned. */
-			if (!mod->mo_path)
-				goto import_module_by_name;
-			other_pathstr = DeeString_AsUtf8(mod->mo_path);
-			if unlikely(!other_pathstr)
-				goto err;
-			other_pathend = other_pathstr + WSTR_LENGTH(other_pathstr);
-			if (!module_pathstr) {
-				/* Lazily calculate the module's path when it's start being used. */
-				module_pathstr = DeeString_AsUtf8(self->mo_path);
-				if unlikely(!module_pathstr)
-					goto err;
-				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
-				/* NOTE: No need to check for alternative separators
-				 *       because the path has been sanitized. */
-				while (module_pathstr < module_pathend && module_pathend[-1] != DeeSystem_SEP)
-					--module_pathend;
-			}
-			self_pathstr = module_pathstr;
-			self_pathend = module_pathend;
-			/* NOTE: No need to check for spaces surrounding
-			 *       slashes, because the path has been sanitized. */
-			self_pathpart  = self_pathstr;
-			other_pathpart = other_pathstr;
-			while (self_pathpart < self_pathend &&
-			       other_pathpart < other_pathend) {
-#ifdef DeeSystem_HAVE_FS_ICASE
-				/* Do a case-insensitive match on windows. */
-				if (DeeUni_ToLower(*self_pathpart) !=
-				    DeeUni_ToLower(*other_pathpart))
-					break;
-#else /* DeeSystem_HAVE_FS_ICASE */
-				if (*self_pathpart != *other_pathpart)
-					break;
-#endif /* !DeeSystem_HAVE_FS_ICASE */
-				++self_pathpart;
-				++other_pathpart;
-				if (self_pathpart[-1] == DeeSystem_SEP) {
-					/* Save the first character after the last matching separator. */
-					self_pathstr  = self_pathpart;
-					other_pathstr = other_pathpart;
-				}
-			}
-
-			/* All right! we've gotten rid of the common path portion.
-			 * Now to handle the portion that isn't common.
-			 * For this, we need to write 1+self_pathstr.count(DeeSystem_SEP) `.'
-			 * characters to deal with up-path reference, which is then
-			 * followed by `other_pathstr.replace(DeeSystem_SEP, ".")' */
-			num_dots = 1; /* +1 leading dot to identify the use of a local dependency name. */
-			while (self_pathstr < self_pathend) {
-				if (*self_pathstr == DeeSystem_SEP)
-					++num_dots;
-				++self_pathstr;
-			}
-
-			/* Rewind to exclude the extension. */
-			if (other_pathend - 4 <= other_pathstr)
-				goto import_module_by_name;
-			if (other_pathend[-4] != '.')
-				goto import_module_by_name;
-			if (!PATH_CASECMP(other_pathend[-3], 'd'))
-				goto import_module_by_name;
-			if (!PATH_CASECMP(other_pathend[-2], 'e'))
-				goto import_module_by_name;
-			if (!PATH_CASECMP(other_pathend[-1], 'c') &&
-			    !PATH_CASECMP(other_pathend[-1], 'e'))
-				goto import_module_by_name;
-			is_dec_file = PATH_CASECMP(other_pathend[-1], 'c');
-			other_pathend -= 4;
-
-			/* Write all of the dots. */
-			buffer = dec_alloc(num_dots);
-			if unlikely(!buffer)
-				goto err;
-			memset(buffer, '.', num_dots);
-
-			/* Now write the other pathname with all SEPs replaced with `.' */
-			buffer = dec_alloc(1 + (size_t)(other_pathend - other_pathstr));
-			if unlikely(!buffer)
-				goto err;
-			other_pathpart = other_pathstr;
-			if (is_dec_file) {
-				/* In dec files, we must erase the first `.' character of the filename. */
-				char *last_dot = (char *)buffer;
-				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
-					if ((*buffer = *other_pathpart) == DeeSystem_SEP)
-						*(char *)buffer = '.', last_dot = (char *)buffer + 1;
-				}
-				if (*last_dot != '.') {
-					/* Shouldn't happen: The leading dot is missing from the pathname of the module. */
-					dec_curr->ds_iter -= 1 + (size_t)(other_pathend - other_pathstr);
-					goto import_module_by_name;
-				}
-				memmovedownc(last_dot, last_dot + 1,
-				             (size_t)((char *)buffer - last_dot),
-				             sizeof(char));
-
-				/* Release one character from the buffer. */
-				--buffer, --other_pathend;
-				--dec_curr->ds_iter;
-			} else {
-				for (; other_pathpart < other_pathend; ++other_pathpart, ++buffer) {
-					if ((*buffer = *other_pathpart) == DeeSystem_SEP)
-						*buffer = '.';
-				}
-			}
-			*buffer = '\0'; /* Add the ZERO-terminator. */
-
-			/* Package the newly written relative module
-			 * name and retrieve its base pointer. */
-			data = dec_reuselocal(num_dots + 1 + (size_t)(other_pathend - other_pathstr));
-			/*ASSERT(data);*/ /* `dec_reuselocal()' never returns NULL */
-		}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		addr = dec_ptr2addr(data);
 		dec_curr = SC_IMPORTS;
 
@@ -1915,11 +1772,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int
 (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 	Dec_Ehdr *header;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeModuleDee_Type);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	dec_curr = SC_HEADER;
 	header   = (Dec_Ehdr *)dec_alloc(sizeof(Dec_Ehdr));
 	if unlikely(!header)
@@ -1942,14 +1795,8 @@ INTERN WUNUSED NONNULL((1)) int
 
 	{
 		uint64_t comtm;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		ASSERT(self->mo_flags & Dee_MODULE_FHASCTIME);
 		comtm = self->mo_ctime;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		comtm = DeeModule_GetCTime(self);
-		if unlikely(comtm == (uint64_t)-1)
-			goto err;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 		/* Fill in the original timestamp of when the module was compiled. */
 		header->e_timestamp_lo = (uint32_t)HTOLE32((uint32_t)comtm);
@@ -1982,7 +1829,6 @@ INTERN WUNUSED NONNULL((1)) int
 
 	/* Emit the root code object. */
 	dec_curr = SC_ROOT;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{
 		int temp;
 		DREF /*Code*/ DeeCodeObject *code;
@@ -1992,16 +1838,6 @@ INTERN WUNUSED NONNULL((1)) int
 		if unlikely(temp)
 			goto err;
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if likely(self->mo_root) {
-		if unlikely(dec_putcode(self->mo_root))
-			goto err;
-	} else {
-		/* Shouldn't happen, but the specs allow `mo_root' to be NULL. */
-		if unlikely(dec_putcode(&DeeCode_Empty))
-			goto err;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return 0;
 err:
 	return -1;

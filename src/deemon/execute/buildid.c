@@ -23,8 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/dex.h>             /* Dee_module_dexdata */
-#include <deemon/exec.h>            /*  */
-#include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_buildid */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FHASBUILDID, Dee_module_buildid */
 #include <deemon/object.h>          /* Dee_Decref_likely */
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpy, strlen */
 #include <deemon/system.h>          /* DeeSystem_DlOpen_FAILED, DeeSystem_GetLastModified */
@@ -48,7 +47,6 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* @return: 0 : File not found?
  * @return: (uint64_t)-1: Error */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
@@ -391,149 +389,6 @@ DeeModule_GetBuildId(DeeModuleObject *__restrict self) {
 	}
 	return &self->mo_buildid;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifdef CONFIG_NO_DEC
-PRIVATE uint64_t exec_timestamp = (uint64_t)-1;
-#define HAS_EXEC_TIMESTAMP    (exec_timestamp != (uint64_t)-1)
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x))
-#else /* CONFIG_NO_DEC */
-#define exec_timestamp        DeeModule_Deemon.mo_ctime
-#define HAS_EXEC_TIMESTAMP    (DeeModule_Deemon.mo_flags & Dee_MODULE_FHASCTIME)
-#define SET_EXEC_TIMESTAMP(x) (exec_timestamp = (x), atomic_or(&DeeModule_Deemon.mo_flags, Dee_MODULE_FHASCTIME))
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-/* A couple of helper macros taken from the libtime DEX. */
-#define time_year2day(value) ((146097 * (value)) / 400) /* Not exact, but go enough for our purpose */
-#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
-#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
-#define SECONDS_PER_MINUTE           UINT64_C(60)
-#define MINUTES_PER_HOUR             UINT64_C(60)
-#define HOURS_PER_DAY                UINT64_C(24)
-#define MICROSECONDS_PER_SECOND      (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
-#define MICROSECONDS_PER_MINUTE      (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
-#define MICROSECONDS_PER_HOUR        (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
-#define MICROSECONDS_PER_DAY         (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
-
-
-#if defined(_MSC_VER) && !defined(__clang__) && defined(__PE__)
-extern /*IMAGE_DOS_HEADER*/ __BYTE_TYPE__ const __ImageBase[];
-LOCAL uint64_t parse_timestamp(void) {
-	uint32_t e_lfanew      = *(uint32_t const *)(__ImageBase + 60);
-	uint32_t TimeDateStamp = *(uint32_t const *)(__ImageBase + e_lfanew + 8); /* Problem: this is 32-bit... */
-	return (uint64_t)TimeDateStamp * MICROSECONDS_PER_SECOND;
-}
-#else /* ... */
-/* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__'
- * CAUTION (and why we try not to use this variant):
- *    this timestamp string is LOCALTIME! (but we'd need it to be UTC)
- * That's why we only use this variant as the last-case fallback! */
-PRIVATE char const exec_timestamp_str[] = __DATE__ "|" __TIME__;
-
-#define TIMESTAMP_MON  (exec_timestamp_str)
-#define TIMESTAMP_MDAY (exec_timestamp_str + 4)
-#define TIMESTAMP_YEAR (exec_timestamp_str + 7)
-#define TIMESTAMP_HOUR (exec_timestamp_str + 12)
-#define TIMESTAMP_MIN  (exec_timestamp_str + 15)
-#define TIMESTAMP_SEC  (exec_timestamp_str + 18)
-
-
-LOCAL uint64_t parse_timestamp(void) {
-	unsigned int monthday;
-	unsigned int monthstart;
-	unsigned int year;
-	unsigned int is_leap_year;
-	unsigned int hour;
-	unsigned int minute;
-	unsigned int second;
-
-#define MONTHSTART_JAN is_leap_year ? 0 : 0
-#define MONTHSTART_FEB is_leap_year ? 31 : 31
-#define MONTHSTART_MAR is_leap_year ? 60 : 59
-#define MONTHSTART_APR is_leap_year ? 91 : 90
-#define MONTHSTART_MAY is_leap_year ? 121 : 120
-#define MONTHSTART_JUN is_leap_year ? 152 : 151
-#define MONTHSTART_JUL is_leap_year ? 182 : 181
-#define MONTHSTART_AUG is_leap_year ? 213 : 212
-#define MONTHSTART_SEP is_leap_year ? 244 : 243
-#define MONTHSTART_OCT is_leap_year ? 274 : 273
-#define MONTHSTART_NOV is_leap_year ? 305 : 304
-#define MONTHSTART_DEC is_leap_year ? 335 : 334
-	/* With any luck, any decent optimizer will get rid of most of this stuff...
-	 * NOTE: That's also the reason why everything is written without
-	 *       loops, or the use of api functions such as sscanf().
-	 *       Additionally, every variable is assigned to once (potentially
-	 *       in different branches of the same if-statement who's condition
-	 *       should already be known at compile-time), meaning that constant
-	 *       propagation should be fairly easy to achieve. */
-	monthday = (((TIMESTAMP_MDAY[0] - '0') * 10) + (TIMESTAMP_MDAY[1] - '0')) - 1;
-	year = (((TIMESTAMP_YEAR[0] - '0') * 1000) +
-	        ((TIMESTAMP_YEAR[1] - '0') * 100) +
-	        ((TIMESTAMP_YEAR[2] - '0') * 10) +
-	        (TIMESTAMP_YEAR[3] - '0'));
-	is_leap_year = !(year % 400) || ((year % 100) && !(year % 4));
-	if (TIMESTAMP_MON[0] == 'J') {
-		if (TIMESTAMP_MON[1] == 'a') {
-			monthstart = MONTHSTART_JAN;
-		} else if (TIMESTAMP_MON[2] == 'n') {
-			monthstart = MONTHSTART_JUN;
-		} else {
-			monthstart = MONTHSTART_JUL;
-		}
-	} else if (TIMESTAMP_MON[0] == 'F') {
-		monthstart = MONTHSTART_FEB;
-	} else if (TIMESTAMP_MON[0] == 'M') {
-		if (TIMESTAMP_MON[2] == 'r') {
-			monthstart = MONTHSTART_MAR;
-		} else {
-			monthstart = MONTHSTART_MAY;
-		}
-	} else if (TIMESTAMP_MON[0] == 'A') {
-		if (TIMESTAMP_MON[1] == 'p') {
-			monthstart = MONTHSTART_APR;
-		} else {
-			monthstart = MONTHSTART_AUG;
-		}
-	} else if (TIMESTAMP_MON[0] == 'S') {
-		monthstart = MONTHSTART_SEP;
-	} else if (TIMESTAMP_MON[0] == 'O') {
-		monthstart = MONTHSTART_OCT;
-	} else if (TIMESTAMP_MON[0] == 'N') {
-		monthstart = MONTHSTART_NOV;
-	} else {
-		monthstart = MONTHSTART_DEC;
-	}
-
-	/* Figure out the time. */
-	hour   = ((TIMESTAMP_HOUR[0] - '0') * 10 + (TIMESTAMP_HOUR[1] - '0'));
-	minute = ((TIMESTAMP_MIN[0] - '0') * 10 + (TIMESTAMP_MIN[1] - '0'));
-	second = ((TIMESTAMP_SEC[0] - '0') * 10 + (TIMESTAMP_SEC[1] - '0'));
-
-	/* Pack everything together and return the result. */
-	return (((uint64_t)((time_year2day(year) + monthstart + monthday) -
-	                    /* Subtract the year 1970 from the result. */
-	                    time_year2day(1970)) *
-	         MICROSECONDS_PER_DAY) +
-	        /* Add the hour, minute and second to the calculation. */
-	        ((uint64_t)hour * MICROSECONDS_PER_HOUR) +
-	        ((uint64_t)minute * MICROSECONDS_PER_MINUTE) +
-	        ((uint64_t)second * MICROSECONDS_PER_SECOND));
-}
-#endif /* !... */
-
-
-PUBLIC uint64_t DCALL DeeExec_GetTimestamp(void) {
-	uint64_t result = exec_timestamp;
-	if (!HAS_EXEC_TIMESTAMP) {
-		result = parse_timestamp();
-		SET_EXEC_TIMESTAMP(result);
-	}
-	return result;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

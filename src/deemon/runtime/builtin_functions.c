@@ -267,47 +267,6 @@ err:
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/*[[[deemon (print_KwCMethod from rt.gen.unpack)("__import__", """
-	DeeObject *base:?X4?DModule?Dstring?DType?N;
-	DeeStringObject *name;
-""", visi: "PUBLIC", cMethodSymbolName: "DeeBuiltin_Import", defineKwList: false);]]]*/
-#define builtin_functions___import___params "base:?X4?DModule?Dstring?DType?N,name:?Dstring"
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeObject *base, DeeStringObject *name);
-PRIVATE WUNUSED DREF DeeObject *DCALL builtin_functions___import___f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	struct {
-		DeeObject *base;
-		DeeStringObject *name;
-	} args;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__base_name, "oo:__import__", &args))
-		goto err;
-	return builtin_functions___import___f_impl(args.base, args.name);
-err:
-	return NULL;
-}
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &builtin_functions___import___f, METHOD_FNORMAL);
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions___import___f_impl(DeeObject *base, DeeStringObject *name)
-/*[[[end]]]*/
-{
-	DREF DeeModuleObject *result;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
-		goto err;
-	result = DeeModule_Import(Dee_AsObject(name), base, DeeModule_IMPORT_F_NORMAL);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if (DeeObject_AssertType(base, &DeeModule_Type))
-		goto err;
-	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
-		goto err;
-	result = DeeModule_ImportRel((DeeModuleObject *)base,
-	                             Dee_AsObject(name));
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return Dee_AsObject(result);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 builtin_functions_f_builtin_hash(size_t argc, DeeObject *const *argv);
 PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &builtin_functions_f_builtin_hash, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_ARGS_CONSTHASH */
@@ -354,22 +313,8 @@ builtin_exec_fallback(size_t argc,
 		usertext = (char const *)DeeBytes_DATA(args.expr);
 		usersize = DeeBytes_SIZE(args.expr);
 	}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = DeeExec_RunMemory(usertext, usersize, 0, NULL, 0, 0,
 	                           DeeExec_RUNMODE_EXPR, NULL, args.globals);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DeeExec_RunMemory(usertext,
-	                           usersize,
-	                           DeeExec_RUNMODE_EXPR,
-	                           0,
-	                           NULL,
-	                           0,
-	                           0,
-	                           NULL,
-	                           args.globals,
-	                           NULL,
-	                           NULL);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_Decref_unlikely(args.expr);
 	return result;
 err:
@@ -379,19 +324,9 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL get_exec_uncached(void) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod = DeeModule_Import(Dee_AsObject(&str__strexec), NULL, DeeModule_IMPORT_F_ENOENT);
 	if unlikely(!ITER_ISOK(mod))
 		return Dee_AsObject(mod);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	mod = DeeModule_OpenGlobal(Dee_AsObject(&str__strexec), NULL, false);
-	if unlikely(!ITER_ISOK(mod))
-		return Dee_AsObject(mod);
-	if unlikely(DeeModule_RunInit(mod) < 0) {
-		Dee_Decref(mod);
-		return NULL;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DeeObject_GetAttr(Dee_AsObject(mod), Dee_AsObject(&str_exec));
 	Dee_Decref_unlikely(mod);
 	return result;

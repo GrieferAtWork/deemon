@@ -25,8 +25,7 @@
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_False, Dee_True */
 #include <deemon/class.h>              /* DeeClassDescriptor_Type */
 #include <deemon/code.h>               /* DeeCode_Type */
-#include <deemon/compiler/assembler.h> /* ASM_FNODEC, DeeRelInt_Type */
-#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
+#include <deemon/compiler/assembler.h> /* DeeRelInt_Type */
 #include <deemon/compiler/optimize.h>  /* CONSTEXPR_* */
 #include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
@@ -280,17 +279,10 @@ again0:
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 		self = ((DeeObjMethodObject *)self)->om_this;
 		goto again0;
-#elif defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 		/* ObjMethod objects cannot be encoded in in DEC files. */
 		goto illegal;
-#else /* ... */
-		if (!DeeCompiler_Current->cp_options ||
-		    !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC))
-			goto illegal;
-		/* ObjMethod objects cannot be encoded in in DEC files. */
-		self = ((DeeObjMethodObject *)self)->om_this;
-		goto again0;
-#endif /* !... */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 	}
 
 	if (type == &DeeSuper_Type) {

@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
-#include <deemon/dex.h>             /* DEX, DEXSYM_READONLY, DEX_MEMBER_F, Dee_dex_symbol */
+#include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F, Dee_dex_symbol */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt */
@@ -559,15 +559,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
 		struct Dee_dex_symbol *iter;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		INTDEF struct Dee_dex_symbol _dex_symbols[];
 		for (iter = _dex_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		for (iter = DEX.d_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		{
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
 			int eval;
 			if (!DeeInt_Check(iter->ds_obj))
 				break;
@@ -658,15 +652,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum)
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
 		struct Dee_dex_symbol *iter;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		INTDEF struct Dee_dex_symbol _dex_symbols[];
 		for (iter = _dex_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		for (iter = DEX.d_symbols;
-		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		{
+		     iter->ds_name && SYMBOL_NAME_IS_ERRNO(iter->ds_name); ++iter) {
 			int eval;
 			if (!DeeInt_Check(iter->ds_obj))
 				break;

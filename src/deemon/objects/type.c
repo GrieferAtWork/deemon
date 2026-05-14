@@ -218,30 +218,18 @@ DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_repr(DeeObject *__restrict self) {
 	DeeTypeObject *me = (DeeTypeObject *)self;
 	DREF DeeModuleObject *mod;
-	DREF DeeStringObject *result;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	DeeStringObject *modname;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	char const *name;
 	mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
 	name = DeeType_GetName(me);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	result  = (DREF DeeStringObject *)DeeString_Newf("%r.%s", mod, name);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	modname = mod->mo_name;
-	result  = (DREF DeeStringObject *)DeeString_Newf("%k.%s", modname, name);
-	Dee_Decref(mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return Dee_AsObject(result);
+	return DeeString_Newf("%r.%s", mod, name);
 fallback:
 	return type_str(self);
 }
 
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	char const *name;
 	DeeTypeObject *me = (DeeTypeObject *)self;
 	DREF DeeModuleObject *mod = DeeType_GetModule(me);
@@ -251,29 +239,6 @@ type_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *ar
 	return DeeFormat_Printf(printer, arg, "%R.%s", mod, name);
 fallback:
 	return type_print(self, printer, arg);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	Dee_ssize_t result, temp;
-	char const *name;
-	DeeTypeObject *me = (DeeTypeObject *)self;
-	DREF DeeModuleObject *mod = DeeType_GetModule(me);
-	if (!mod)
-		goto fallback;
-	result = DeeString_PrintUtf8(Dee_AsObject(mod->mo_name), printer, arg);
-	Dee_Decref(mod);
-	if unlikely(result < 0)
-		goto done;
-	name = DeeType_GetName(me);
-	temp = DeeFormat_Printf(printer, arg, ".%s", name);
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
-done:
-	return result;
-err:
-	return temp;
-fallback:
-	return type_print(self, printer, arg);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 

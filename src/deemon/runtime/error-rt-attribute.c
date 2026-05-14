@@ -31,7 +31,7 @@
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_OBJECT_HEAD */
 #include <deemon/format.h>             /* DeeFormat_* */
 #include <deemon/kwds.h>               /* DeeKwArgs* */
-#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/mro.h>                /* DeeObject_FindAttrInfoStringLenHash, DeeObject_TFindPrivateAttrInfoStringLenHash, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_*, Dee_attrinfo */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_ISERR, Dee_HAS_ISYES_OR_ERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/objmethod.h>          /* DeeClsMemberObject, DeeClsMember_Type, DeeClsMethodObject, DeeClsMethod_Type, DeeClsPropertyObject, DeeClsProperty_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
@@ -902,7 +902,6 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		}
 		mod = (DeeModuleObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 			DeeModule_LockRead(mod);
 			/* Check which property operations have been bound. */
@@ -917,24 +916,6 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 			}
 			DeeModule_LockEndRead(mod);
 		}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		if (mod->mo_flags & Dee_MODULE_FDIDINIT) {
-			DeeModule_LockRead(mod);
-			if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
-				/* Check which property operations have been bound. */
-				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_GET])
-					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
-				if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
-					/* These callbacks are only allocated if the READONLY flag isn't set. */
-					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL])
-						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
-					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_SET])
-						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
-				}
-			}
-			DeeModule_LockEndRead(mod);
-		}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}	break;
 
 	case Dee_ATTRINFO_METHOD: {

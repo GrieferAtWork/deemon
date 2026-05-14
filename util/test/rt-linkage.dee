@@ -26,8 +26,6 @@ import rt;
 import deemon;
 import .common.test;
 
-local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
-
 function assertRtTypeName(gName: string, tNames: {string...} | string | none = none) {
 	if (tNames is none)
 		tNames = "_" + gName;
@@ -265,8 +263,7 @@ assertRtTypeName("ModuleExports");
 assertRtTypeName("ModuleExportsIterator");
 assertRtTypeName("ModuleExportsKeysIterator");
 assertRtTypeName("ModuleGlobals");
-if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
-	assertRtTypeName("ModuleLibNames");
+assertRtTypeName("ModuleLibNames");
 
 assertRtTypeName("ClassOperatorTable");
 assertRtTypeName("ClassOperatorTableIterator");
@@ -295,15 +292,10 @@ assertRtTypeName("CachedDict", "CachedDict");
 assertRtTypeName("DocKwds");
 assertRtTypeName("DocKwdsIterator");
 
-if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) {
-	assertRtTypeName("ModuleDee");
-	assertRtTypeName("ModuleDir");
-	if (hasattr(rt, "ModuleDex"))
-		assertRtTypeName("ModuleDex");
-} else {
-	assertRtTypeName("InteractiveModule");
-	assertRtTypeName("DexModule");
-}
+assertRtTypeName("ModuleDee");
+assertRtTypeName("ModuleDir");
+if (hasattr(rt, "ModuleDex"))
+	assertRtTypeName("ModuleDex");
 assertRtTypeName("Compiler");
 assertRtTypeName("ClassDescriptor");
 assertRtTypeName("InstanceMember");
@@ -368,8 +360,7 @@ test.assertSame(rt.ModuleExports().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleExportsIterator().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleExportsKeysIterator().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleGlobals().__module__, rt.Module_empty);
-if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
-	test.assertSame(rt.ModuleLibNames().__module__, rt.Module_empty);
+test.assertSame(rt.ModuleLibNames().__module__, rt.Module_empty);
 
 //DEX_GETTER_F("Module_empty", &librt_get_Module_empty, DEXSYM_CONSTEXPR,
 //             "->?GModule\n"
@@ -404,8 +395,7 @@ test.assertSame(deemon.equals, rt.equals);
 test.assertSame(deemon.hash, rt.hash);
 test.assertSame(deemon.exec, rt.exec);
 test.assertSame(deemon.__import__, rt.operator . ("import"));
-if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
-	assertRtTypeName("ImportType", "import");
+assertRtTypeName("ImportType", "import");
 
 test.assertSame(type(deemon.gc), rt.GCEnum);
 test.assertSame(type(deemon.gc.operator iter()), rt.GCIter);

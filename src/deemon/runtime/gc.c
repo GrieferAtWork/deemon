@@ -28,7 +28,7 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_*, Dee_gc_head */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_list_clear, OBJECT_HEAD */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_list_clear, OBJECT_HEAD */
 #include <deemon/system-features.h> /* memset, remove */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_CheckInterruptNoInt, DeeThread_IsMultiThreaded, DeeThread_ResumeAll, DeeThread_Self, DeeThread_SuspendAll, DeeThread_TrySuspendAll, DeeThread_WasInterrupted, Dee_THREAD_STATE_SHUTDOWNINTR */
@@ -46,12 +46,6 @@
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uintptr_t */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEX
-#include <deemon/dex.h> /* DeeDex_Check, DeeDex_Type */
-#endif /* !CONFIG_NO_DEX */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -84,12 +78,9 @@ gc_dprint_object_info(DeeTypeObject *tp, DeeObject *ob) {
 	if (tp == &DeeType_Type) {
 		Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
 	} else if (tp == &DeeCode_Type) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		DeeCodeObject *me;
 		DeeModuleObject *mod;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 print_code:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		me  = (DeeCodeObject *)ob;
 		mod = me->co_module;
 		if (mod && (Dee_TYPE(mod) == &DeeModuleDee_Type ||
@@ -98,24 +89,17 @@ print_code:
 			Dee_DPRINTF(" {co_module:%q, co_name:%q}",
 			            DeeModule_GetShortName(mod),
 			            DeeCode_NAME(ob));
-		} else
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		{
+		} else {
 			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
 		}
 	} else if (tp == &DeeFunction_Type) {
 		ob = Dee_AsObject(DeeFunction_CODE(ob));
 		if (ob && Dee_TYPE(ob) == &DeeCode_Type)
 			goto print_code;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	} else if (tp == &DeeModuleDee_Type ||
 	           tp == &DeeModuleDex_Type ||
 	           tp == &DeeModuleDir_Type) {
 		Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
-#else  /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	} else if (tp == &DeeModule_Type) {
-		Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 }
 #endif /* !NDEBUG */
@@ -1485,13 +1469,8 @@ INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
 			if (!iter->ob_refcnt)
 				continue;
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			if (Dee_TYPE(iter) == &DeeModuleDex_Type)
 				continue;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			if (DeeDex_Check(iter))
-				continue;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 			goto no;
 		}
@@ -1786,13 +1765,8 @@ INTERN void DCALL gc_dump_all_except_dex(void) {
 			if (ob->ob_refcnt == 0)
 				continue; /* Internal-only */
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			if (ob_type == &DeeModuleDex_Type)
 				continue;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			if (DeeType_Extends(ob_type, &DeeDex_Type))
-				continue;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 			Dee_DPRINTF("%p: %q [%" PRFuSIZ " unaccounted refs]",
 			            ob, ob_type->tp_name, ob->ob_refcnt);
@@ -1819,13 +1793,8 @@ INTERN void DCALL gc_dump_all_except_dex(void) {
 			Dee_DPRINTF("%p: %q", ob, ob_type->tp_name);
 #else /* DBG_PRINT_EXTERNAL_ROOTS_FIRST */
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			if (ob_type == &DeeModuleDex_Type)
 				continue;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			if (DeeType_Extends(ob_type, &DeeDex_Type))
-				continue;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 			Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
 			            ob, ob_type->tp_name, ob->ob_refcnt);

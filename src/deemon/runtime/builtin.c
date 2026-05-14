@@ -22,17 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>      /* DeeCode_Empty */
-#include <deemon/dex.h>       /* Dee_module_dexdata, _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS */
-#include <deemon/gc.h>        /* Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
-#include <deemon/module.h>    /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_STRUCT, Dee_module_symbol, Dee_static_module_struct, _Dee_MODULE_FLIBALL, _Dee_MODULE_INIT_mo_lock */
-#include <deemon/object.h>    /* DREF, DeeObject, Dee_WEAKREF_SUPPORT_INIT, OBJECT_HEAD_INIT, _Dee_HashSelect */
-#include <deemon/string.h>    /* DeeStringObject, DeeString_STR */
-#include <deemon/system.h>    /* DeeSystem_HAVE_FS_ICASE */
-#include <deemon/tuple.h>     /* DeeTupleObject, Dee_EmptyTuple */
-#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
-
-#include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */
+#include <deemon/code.h>   /* DeeCode_Empty */
+#include <deemon/dex.h>    /* Dee_module_dexdata, _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS */
+#include <deemon/gc.h>     /* Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/module.h> /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_STRUCT, Dee_module_symbol, _Dee_MODULE_FLIBALL, _Dee_MODULE_INIT_mo_lock */
+#include <deemon/object.h> /* DeeObject, Dee_WEAKREF_SUPPORT_INIT, OBJECT_HEAD_INIT, _Dee_HashSelect */
+#include <deemon/string.h> /* DeeStringObject, DeeString_STR */
+#include <deemon/tuple.h>  /* DeeTupleObject, Dee_EmptyTuple */
 
 #include "builtin.h"
 #include "strings.h"
@@ -49,15 +45,6 @@ enum {
 #undef BUILTIN_NO_INCLUDES
 	_NUM_BUILTINS_SYM
 };
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE DREF DeeObject *builtin_object_vector[num_builtins_obj] = {
-#define BUILTIN(name, object, flags) (DeeObject *)object,
-#define BUILTIN_NO_INCLUDES
-#include "builtins.def"
-#undef BUILTIN_NO_INCLUDES
-};
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Define a second time here since the deemon script below needs it.
  * We internally don't wrap with `#ifndef' since the C standard says
@@ -437,7 +424,6 @@ PRIVATE struct Dee_module_symbol deemon_symbols[128] = {
 /*[[[end]]]*/
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 struct Dee_deemon_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
 	struct Dee_gc_head                        m_head;
@@ -491,46 +477,6 @@ PUBLIC struct Dee_deemon_module_struct DeeModule_Deemon = {
 		}
 	}
 };
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#ifdef __INTELLISENSE__
-PUBLIC struct Dee_static_module_struct DeeModule_Deemon_real =
-#else /* __INTELLISENSE__ */
-#undef DeeModule_Deemon
-PUBLIC struct Dee_static_module_struct DeeModule_Deemon =
-#endif /* !__INTELLISENSE__ */
-{
-	{
-		/* ... */
-		NULL,
-		NULL
-	}, {
-		OBJECT_HEAD_INIT(&DeeModule_Type),
-		/* .mo_name      = */ (DREF DeeStringObject *)&str_deemon,
-		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
-		/* .mo_path      = */ NULL,
-#ifdef DeeSystem_HAVE_FS_ICASE
-		/* .mo_pathihash = */ 0,
-#endif /* DeeSystem_HAVE_FS_ICASE */
-		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
-		/* .mo_importc   = */ 0,
-		/* .mo_globalc   = */ num_builtins_obj,
-		/* .mo_flags     = */ Dee_MODULE_FLOADING | Dee_MODULE_FDIDLOAD | Dee_MODULE_FINITIALIZING | Dee_MODULE_FDIDINIT,
-		/* .mo_bucketm   = */ BUILTINS_HASHMASK,
-		/* .mo_bucketv   = */ deemon_symbols,
-		/* .mo_importv   = */ NULL,
-		/* .mo_globalv   = */ builtin_object_vector,
-		/* .mo_root      = */ &DeeCode_Empty,
-#ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ Dee_ATOMIC_RWLOCK_INIT,
-		/* .mo_loader    = */ NULL,
-#endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_NO_DEC
-		/* .mo_ctime     = */ 0,
-#endif /* !CONFIG_NO_DEC */
-		Dee_WEAKREF_SUPPORT_INIT
-	}
-};
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

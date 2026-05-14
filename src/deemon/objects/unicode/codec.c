@@ -26,7 +26,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFuSIZ */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, DeeObject_TypeAssertFailed2, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref, Dee_ssize_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, DeeObject_TypeAssertFailed2, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
@@ -727,13 +727,7 @@ again:
 	Dee_atomic_xref_get(&g_libiconv, &result);
 	if (result)
 		return result;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = DeeModule_Import(Dee_AsObject(&str_iconv), NULL, DeeModule_IMPORT_F_NORMAL);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DeeModule_OpenGlobal(Dee_AsObject(&str_iconv), NULL, true);
-	if (result && unlikely(DeeModule_RunInit(result) < 0))
-		Dee_Clear(result);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if likely(result) {
 		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&g_libiconv, result)) {
 			Dee_Decref_unlikely(result);

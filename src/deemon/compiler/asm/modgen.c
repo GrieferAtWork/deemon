@@ -23,26 +23,23 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Callocc, Dee_Free, Dee_TryReallocc */
+#include <deemon/alloc.h>              /* Dee_TryReallocc */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type */
-#include <deemon/compiler/assembler.h> /* ASM_FNODEC */
+#include <deemon/compiler/assembler.h> /*  */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_LockWriting */
 #include <deemon/compiler/symbol.h>    /* DeeRootScope_Type, current_rootscope */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK */
-#include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_object, Dee_module_symbol */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Malloc, DeeGC_TRACK */
+#include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_module_object, Dee_module_symbol */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/system.h>             /* DeeSystem_GetWalltime */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
-#include <deemon/util/atomic.h>        /* atomic_or */
 
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/compiler/dec.h> /* dec_create */
-#include <deemon/error.h>        /* DeeError_Catch, DeeError_NotImplemented */
 #endif /* !CONFIG_NO_DEC */
 /**/
 
@@ -291,26 +288,14 @@ err:
 	return -1;
 }
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-module_compile(DeeModuleObject *__restrict mod,
-               DeeCodeObject *__restrict root_code,
-               uint16_t flags)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-{
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code) {
 	DREF DeeModuleObject *mod;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
 	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT(current_rootscope->rs_code == root_code);
 	ASSERT(root_code->ob_refcnt == 2);
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Truncate some vectors before we'll be inheriting them. */
 	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
@@ -324,36 +309,23 @@ module_compile(DeeModuleObject *__restrict mod,
 	}
 
 	/* Start filling in members of the module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod = (DREF DeeModuleObject *)DeeGCObject_Callocc(offsetof(DeeModuleObject, mo_globalv),
 	                                                  current_rootscope->rs_globalc,
 	                                                  sizeof(DREF DeeObject *));
 	if unlikely(!mod)
 		goto err;
 	DeeObject_InitStatic(mod, &DeeModuleDee_Type);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	mod->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
-	                                                 sizeof(DREF DeeObject *));
-	if unlikely(!mod->mo_globalv)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalc = current_rootscope->rs_globalc;
 	mod->mo_importc = current_rootscope->rs_importc;
 	mod->mo_bucketm = current_rootscope->rs_bucketm;
 	mod->mo_bucketv = current_rootscope->rs_bucketv;
 	mod->mo_importv = current_rootscope->rs_importv;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod->mo_moddata.mo_rootcode = root_code; /* Inherit reference */
 	mod->mo_flags = current_rootscope->rs_flags | Dee_MODULE_FHASBUILDID;
 	{
 		uint64_t ts = DeeSystem_GetWalltime();
 		__hybrid_uint128_set64(mod->mo_buildid, ts);
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	atomic_or(&mod->mo_flags, current_rootscope->rs_flags);
-	mod->mo_root = root_code;
-	Dee_Incref(root_code);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Yes, we're just stealing all of these. */
 	current_rootscope->rs_importv = NULL;
@@ -380,66 +352,10 @@ module_compile(DeeModuleObject *__restrict mod,
 	ASSERTF(root_code->co_module == mod,
 	        "The given root-code was not generated for this module");
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEC
-	/* Save the time when compilation of the module started. */
-	mod->mo_ctime = DeeSystem_GetWalltime();
-	atomic_or(&mod->mo_flags, Dee_MODULE_FHASCTIME);
-#endif /* !CONFIG_NO_DEC */
-
-#ifndef CONFIG_NO_DEC
-	/* With the module fully initialized, package it into a compiled DEC file.
-	 * NOTE: if the `ASM_FNODEC' flag has been set, don't create a DEC file. */
-	if (!(flags & ASM_FNODEC) && dec_create(mod)) {
-#if 1
-		/* If creation of a DEC file failed because of an illegal
-		 * constant, don't fail the entire compilation process. */
-		if (!DeeError_Catch(&DeeError_NotImplemented))
-			goto err_module;
-#else
-		goto err_module;
-#endif
-	}
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	return mod;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return 0;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEC
-err_module:
-	/* Transfer ownership back to the compiler. */
-	current_rootscope->rs_importv = (DREF DeeModuleObject **)mod->mo_importv;
-	current_rootscope->rs_importc = mod->mo_importc;
-	current_rootscope->rs_importa = mod->mo_importc;
-	current_rootscope->rs_bucketv = mod->mo_bucketv;
-	current_rootscope->rs_bucketm = mod->mo_bucketm;
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	DeeGCObject_Free(mod);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	mod->mo_importv = NULL;
-	mod->mo_importc = 0;
-	mod->mo_bucketv = empty_module_buckets;
-	mod->mo_bucketm = 0;
-
-	/* Free the previously allocated global object vector. */
-	mod->mo_globalc = 0;
-	Dee_Free((void *)mod->mo_globalv);
-	mod->mo_globalv = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	Dee_DecrefNokill(root_code); /* *Nokill because "current_rootscope->rs_code == root_code" */
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return -1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 

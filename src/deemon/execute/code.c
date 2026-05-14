@@ -483,10 +483,6 @@ typedef NONNULL_T((1)) void (DCALL *LPHOSTASM_HOSTFUNC_DESTROY)(struct hostfunc 
 PRIVATE LPHOSTASM_HOSTFUNC_NEW pdyn_hostasm_hostfunc_new = NULL;
 PRIVATE LPHOSTASM_HOSTFUNC_DESTROY pdyn_hostasm_hostfunc_destroy = NULL;
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE DEFINE_STRING(str__hostasm, "_hostasm");
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 /* Load the _hostasm API
  * @return: 1 : Unable to load API. In this case, `DeeCode_OptimizeCallThreshold'
  *              has automatically been set to `(size_t)-1'.
@@ -500,23 +496,12 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 	if (pdyn_hostasm_hostfunc_new)
 		return 0;
 	COMPILER_READ_BARRIER();
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	mod_hostasm = DeeModule_ImportEx("_hostasm", 8, NULL, 0, DeeModule_IMPORT_F_ENOENT, NULL);
 	if unlikely(!ITER_ISOK(mod_hostasm)) {
 		if unlikely(mod_hostasm == NULL)
 			goto err;
 		goto not_available;
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	mod_hostasm = DeeModule_OpenGlobal(Dee_AsObject(&str__hostasm), NULL, false);
-	if unlikely(!ITER_ISOK(mod_hostasm)) {
-		if unlikely(mod_hostasm == NULL)
-			goto err;
-		goto not_available;
-	}
-	if unlikely(DeeModule_RunInit(mod_hostasm) < 0)
-		goto err_mod_hostasm;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	*(void **)&sym_hostasm_hostfunc_new     = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_new");
 	*(void **)&sym_hostasm_hostfunc_destroy = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_destroy");
 	Dee_Decref(mod_hostasm);
@@ -530,10 +515,6 @@ PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
 	pdyn_hostasm_hostfunc_new = sym_hostasm_hostfunc_new;
 	COMPILER_WRITE_BARRIER();
 	return 0;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-err_mod_hostasm:
-	Dee_Decref(mod_hostasm);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 	return -1;
 not_available:
@@ -1214,7 +1195,6 @@ INTDEF DeeTypeObject DeeModuleCurrent_Type;
 
 PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	ASSERTF((self->co_module == NULL) ||
 	        (Dee_TYPE(self->co_module) == &DeeModuleCurrent_Type) ||
@@ -1231,14 +1211,6 @@ code_fini(DeeCodeObject *__restrict self) {
 	        "Cannot destroy the root code object of a module, "
 	        /**/ "before the module has been destroyed");
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	ASSERTF(!self->co_module ||
-	        !DeeModule_Check(self->co_module) ||
-	        self != self->co_module->mo_root ||
-	        self->co_module->ob_refcnt == 0,
-	        "Cannot destroy the root code object of a module, "
-	        /**/ "before the module has been destroyed");
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	if (self->co_hostasm.haco_data)
 		Dee_hostasm_code_data_destroy(self->co_hostasm.haco_data);
@@ -2277,15 +2249,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		ASSERT(ts->t_exec->cf_func->fo_code->co_module);
 		args.module_ = ts->t_exec->cf_func->fo_code->co_module;
 	}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (DeeObject_AssertTypeExact(args.module_, &DeeModuleDee_Type))
 		goto err_r_constv;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	/* NOTE: Always check this, to prevent stuff like interactive
-	 *       modules from leaking into generic code objects. */
-	if (DeeObject_AssertTypeExact(args.module_, &DeeModule_Type))
-		goto err_r_constv;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Generate exception handlers. */
 	result->co_exceptc = 0;

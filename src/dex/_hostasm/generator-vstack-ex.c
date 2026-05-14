@@ -485,20 +485,10 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 
 		case 'E': {
 			DREF DeeObject *mod_export;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			result = Dee_AsObject(DeeModule_ImportString(name.ten_start,
 			                                             (size_t)(name.ten_end - name.ten_start),
 			                                             Dee_AsObject(self->txp_info->di_typ),
 			                                             DeeModule_IMPORT_F_ENOENT));
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			if (name.ten_str) {
-				result = Dee_AsObject(DeeModule_OpenGlobal(Dee_AsObject(name.ten_str), NULL, false));
-			} else {
-				result = Dee_AsObject(DeeModule_OpenGlobalString(name.ten_start,
-				                                                 (size_t)(name.ten_end - name.ten_start),
-				                                                 NULL, false));
-			}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			type_expression_name_fini(&name);
 			if (result == ITER_DONE)
 				goto unknown;
@@ -1439,12 +1429,6 @@ vcall_kwcmethod(struct fungen *__restrict self,
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopcompare(self);*/
 	}
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	else if (func == DeeBuiltin_Import.cm_func.cmf_kwmeth) {
-		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
-			return fg_vopimport(self);*/
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	DO(fg_vnotoneref(self, argc + 1));                               /* [args...], kw */
 	DO(fg_vrrot(self, argc + 1));                                    /* kw, [args...] */

@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_CollectMemoryc, Dee_Free, Dee_TryReallocc */
 #include <deemon/code.h>            /* DeeFunctionObject, DeeFunction_Call */
-#include <deemon/dex.h>             /* DeeDex_Cleanup, DeeDex_Finalize, DeeModule_ClearDexModuleCaches, DeeModule_UnloadAllDexModules */
+#include <deemon/dex.h>             /* DeeModule_ClearDexModuleCaches, DeeModule_UnloadAllDexModules */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/exec.h>            /* DeeExec_CompileModuleStream, DeeExec_SetHome, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
 #include <deemon/file.h>            /* DeeFile_ResetStd */
@@ -33,8 +33,7 @@
 #include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/notify.h>          /* DeeNotify_Shutdown */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Call, DeeObject_CallInherited, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref */
-#include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FSTRICT */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Call, Dee_AsObject, Dee_Decref*, Dee_Incref */
 #include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit */
 #include <deemon/thread.h>          /* DeeThread_ClearTls, DeeThread_InterruptAndJoinAll, DeeThread_SubSystemFini, DeeThread_SubSystemInit */
 #include <deemon/tuple.h>           /* DeeTuple* */
@@ -44,13 +43,11 @@
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
@@ -154,386 +151,6 @@ DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
 err:
 	return NULL;
 }
-
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-/* Execute source code from `source_stream' and return the result of invoking it.
- * @param: source_stream:   The input stream from which to take input arguments.
- * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
- * @param: argv:            Variable arguments passed to user-code
- * @param: start_line:      The starting line number when compiling code. (zero-based)
- * @param: start_col:       The starting column number when compiling code. (zero-based)
- * @param: options:         A set of compiler options applicable for compiled code.
- *                          Note however that certain options have no effect, such
- *                          as the fact that peephole and other optimizations are
- *                          forced to be disabled, or DEC files are never generated,
- *                          all for reasons that should be quite obvious.
- * @param: default_symbols: A mapping-like object of type `{string: Object}', that
- *                          contains a set of pre-defined variables that should be made
- *                          available to the interactive source code by use of global
- *                          variables.
- *                          These are either provided as constants, or as globals,
- *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS'
- * @param: source_pathname: The name for the source file (the path of which is
- *                          then used for relative import()s and #include's)
- * @param: module_name:     The name of the internal module, or NULL to determine automatically.
- *                          Note that the internal module is never registered globally, and
- *                          only exists as an anonymous module. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunStream(DeeObject *source_stream,
-                  unsigned int mode,
-                  size_t argc, DeeObject *const *argv,
-                  int start_line, int start_col,
-                  struct Dee_compiler_options *options,
-                  DeeObject *default_symbols,
-                  DeeObject *source_pathname,
-                  DeeObject *module_name) {
-	DREF DeeObject *function;
-	function = DeeExec_CompileFunctionStream(source_stream,
-	                                         mode,
-	                                         start_line,
-	                                         start_col,
-	                                         options,
-	                                         default_symbols,
-	                                         source_pathname,
-	                                         module_name);
-	if unlikely(!function)
-		goto err;
-	return DeeObject_CallInherited(function, argc, argv);
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunStreamString(DeeObject *source_stream,
-                        unsigned int mode,
-                        size_t argc, DeeObject *const *argv,
-                        int start_line, int start_col,
-                        struct Dee_compiler_options *options,
-                        DeeObject *default_symbols,
-                        /*utf-8*/ char const *source_pathname,
-                        size_t source_pathsize,
-                        /*utf-8*/ char const *module_name,
-                        size_t module_namesize) {
-	DREF DeeObject *result;
-	DREF DeeObject *source_pathname_ob = NULL;
-	DREF DeeObject *module_name_ob     = NULL;
-	if (source_pathname) {
-		source_pathname_ob = DeeString_NewUtf8(source_pathname,
-		                                       source_pathsize,
-		                                       STRING_ERROR_FSTRICT);
-		if unlikely(!source_pathname_ob)
-			goto err;
-	}
-	if (module_name) {
-		module_name_ob = DeeString_NewUtf8(module_name,
-		                                   module_namesize,
-		                                   STRING_ERROR_FSTRICT);
-		if unlikely(!module_name_ob)
-			goto err_source_pathname_ob;
-	}
-	result = DeeExec_RunStream(source_stream,
-	                           mode,
-	                           argc,
-	                           argv,
-	                           start_line,
-	                           start_col,
-	                           options,
-	                           default_symbols,
-	                           source_pathname_ob,
-	                           module_name_ob);
-	Dee_XDecref(module_name_ob);
-	Dee_XDecref(source_pathname_ob);
-	return result;
-err_source_pathname_ob:
-	Dee_XDecref(source_pathname_ob);
-err:
-	return NULL;
-}
-
-
-/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
- * return the module or the module's root function used to describe the code
- * that is being executed. */
-PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStream(DeeObject *source_stream,
-                              unsigned int mode,
-                              int start_line, int start_col,
-                              struct Dee_compiler_options *options,
-                              DeeObject *default_symbols,
-                              DeeObject *source_pathname,
-                              DeeObject *module_name) {
-	DREF DeeObject *result;
-	DREF DeeModuleObject *mod;
-	mod = DeeExec_CompileModuleStream(source_stream,
-	                                  mode,
-	                                  start_line,
-	                                  start_col,
-	                                  options,
-	                                  default_symbols,
-	                                  source_pathname,
-	                                  module_name);
-	if unlikely(!mod)
-		goto err;
-	result = DeeModule_GetRoot(mod, true);
-	Dee_Decref(mod);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleStreamString(DeeObject *source_stream,
-                                  unsigned int mode,
-                                  int start_line, int start_col,
-                                  struct Dee_compiler_options *options,
-                                  DeeObject *default_symbols,
-                                  /*utf-8*/ char const *source_pathname,
-                                  size_t source_pathsize,
-                                  /*utf-8*/ char const *module_name,
-                                  size_t module_namesize) {
-	DREF DeeModuleObject *result;
-	DREF DeeObject *source_pathname_ob = NULL;
-	DREF DeeObject *module_name_ob     = NULL;
-	if (source_pathname) {
-		source_pathname_ob = DeeString_NewUtf8(source_pathname,
-		                                       source_pathsize,
-		                                       STRING_ERROR_FSTRICT);
-		if unlikely(!source_pathname_ob)
-			goto err;
-	}
-	if (module_name) {
-		module_name_ob = DeeString_NewUtf8(module_name,
-		                                   module_namesize,
-		                                   STRING_ERROR_FSTRICT);
-		if unlikely(!module_name_ob)
-			goto err_source_pathname_ob;
-	}
-	result = DeeExec_CompileModuleStream(source_stream,
-	                                     mode,
-	                                     start_line,
-	                                     start_col,
-	                                     options,
-	                                     default_symbols,
-	                                     source_pathname_ob,
-	                                     module_name_ob);
-	Dee_XDecref(module_name_ob);
-	Dee_XDecref(source_pathname_ob);
-	return result;
-err_source_pathname_ob:
-	Dee_XDecref(source_pathname_ob);
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
-                                    unsigned int mode,
-                                    int start_line, int start_col,
-                                    struct Dee_compiler_options *options,
-                                    DeeObject *default_symbols,
-                                    /*utf-8*/ char const *source_pathname,
-                                    size_t source_pathsize,
-                                    /*utf-8*/ char const *module_name,
-                                    size_t module_namesize) {
-	DREF DeeObject *result;
-	DREF DeeModuleObject *mod;
-	mod = DeeExec_CompileModuleStreamString(source_stream,
-	                                        mode,
-	                                        start_line,
-	                                        start_col,
-	                                        options,
-	                                        default_symbols,
-	                                        source_pathname,
-	                                        source_pathsize,
-	                                        module_name,
-	                                        module_namesize);
-	if unlikely(!mod)
-		goto err;
-	result = DeeModule_GetRoot(mod, true);
-	Dee_Decref(mod);
-	return result;
-err:
-	return NULL;
-}
-
-
-/* Same as the functions above, but instead take a raw memory block as input */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                  unsigned int mode, size_t argc, DeeObject *const *argv,
-                  int start_line, int start_col,
-                  struct Dee_compiler_options *options,
-                  DeeObject *default_symbols,
-                  DeeObject *source_pathname,
-                  DeeObject *module_name) {
-	DREF DeeObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_RunStream(stream,
-	                           mode,
-	                           argc,
-	                           argv,
-	                           start_line,
-	                           start_col,
-	                           options,
-	                           default_symbols,
-	                           source_pathname,
-	                           module_name);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                        unsigned int mode, size_t argc, DeeObject *const *argv,
-                        int start_line, int start_col,
-                        struct Dee_compiler_options *options,
-                        DeeObject *default_symbols,
-                        /*utf-8*/ char const *source_pathname,
-                        size_t source_pathsize,
-                        /*utf-8*/ char const *module_name,
-                        size_t module_namesize) {
-	DREF DeeObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_RunStreamString(stream,
-	                                 mode,
-	                                 argc,
-	                                 argv,
-	                                 start_line,
-	                                 start_col,
-	                                 options,
-	                                 default_symbols,
-	                                 source_pathname,
-	                                 source_pathsize,
-	                                 module_name,
-	                                 module_namesize);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                            unsigned int mode, int start_line, int start_col,
-                            struct Dee_compiler_options *options,
-                            DeeObject *default_symbols,
-                            DeeObject *source_pathname,
-                            DeeObject *module_name) {
-	DREF DeeModuleObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_CompileModuleStream(stream,
-	                                     mode,
-	                                     start_line,
-	                                     start_col,
-	                                     options,
-	                                     default_symbols,
-	                                     source_pathname,
-	                                     module_name);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                              unsigned int mode, int start_line, int start_col,
-                              struct Dee_compiler_options *options,
-                              DeeObject *default_symbols,
-                              DeeObject *source_pathname,
-                              DeeObject *module_name) {
-	DREF DeeObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_CompileFunctionStream(stream,
-	                                       mode,
-	                                       start_line,
-	                                       start_col,
-	                                       options,
-	                                       default_symbols,
-	                                       source_pathname,
-	                                       module_name);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                  unsigned int mode, int start_line, int start_col,
-                                  struct Dee_compiler_options *options,
-                                  DeeObject *default_symbols,
-                                  /*utf-8*/ char const *source_pathname,
-                                  size_t source_pathsize,
-                                  /*utf-8*/ char const *module_name,
-                                  size_t module_namesize) {
-	DREF DeeModuleObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_CompileModuleStreamString(stream,
-	                                           mode,
-	                                           start_line,
-	                                           start_col,
-	                                           options,
-	                                           default_symbols,
-	                                           source_pathname,
-	                                           source_pathsize,
-	                                           module_name,
-	                                           module_namesize);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                    unsigned int mode, int start_line, int start_col,
-                                    struct Dee_compiler_options *options,
-                                    DeeObject *default_symbols,
-                                    /*utf-8*/ char const *source_pathname,
-                                    size_t source_pathsize,
-                                    /*utf-8*/ char const *module_name,
-                                    size_t module_namesize) {
-	DREF DeeObject *result;
-	DREF DeeObject *stream;
-	stream = DeeMemoryFile_New(data, data_size);
-	if unlikely(!stream)
-		goto err;
-	result = DeeExec_CompileFunctionStreamString(stream,
-	                                             mode,
-	                                             start_line,
-	                                             start_col,
-	                                             options,
-	                                             default_symbols,
-	                                             source_pathname,
-	                                             source_pathsize,
-	                                             module_name,
-	                                             module_namesize);
-	DeeMemoryFile_Close(stream);
-	return result;
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
 
 
 #ifndef CONFIG_NO_THREADS
@@ -745,11 +362,7 @@ PRIVATE bool DCALL shutdown_globals(void) {
 	result |= DeeThread_InterruptAndJoinAll();
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result |= DeeModule_ClearDexModuleCaches();
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result |= DeeDex_Cleanup();
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 #ifndef CONFIG_NO_NOTIFICATIONS
 	result |= DeeNotify_Shutdown();
@@ -850,11 +463,7 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeModule_UnloadAllDexModules();
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	DeeDex_Finalize();
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 
 	/* If the caller indicates a fast shutdown, then we don't have to bother

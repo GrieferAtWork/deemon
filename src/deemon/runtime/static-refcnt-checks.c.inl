@@ -37,7 +37,6 @@
 #include <deemon/compiler/compiler.h>  /* DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DeeCompiler* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
-#include <deemon/dex.h>                /* DeeDex_Type */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_*_instance */
 #include <deemon/file.h>               /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
@@ -52,7 +51,7 @@
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/map.h>                /* DeeMap_EmptyInstance, DeeMap_Type, DeeSharedMap_Type */
 #include <deemon/mapfile.h>            /* DeeMapFile_Type */
-#include <deemon/module.h>             /* DeeBuiltin_*, DeeInteractiveModule_Type, DeeModule* */
+#include <deemon/module.h>             /* DeeBuiltin_*, DeeModule* */
 #include <deemon/none.h>               /* DeeNone_Singleton, DeeNone_Type */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DeeObject_Type */
@@ -423,9 +422,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(ModuleExportsIterator_Type),
 	O(ModuleExportsKeysIterator_Type),
 	O(ModuleGlobals_Type),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	O(ModuleLibNames_Type),
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Internal types used to drive user-defined classes */
 	O(ClassOperatorTable_Type),
@@ -459,18 +456,11 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(DocKwdsIterator_Type),
 
 	/* Special types exposed by the C API, but not normally visible to user-code. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	O(DeeModuleDee_Type),
 	O(DeeModuleDir_Type),
 #ifndef CONFIG_NO_DEX
 	O(DeeModuleDex_Type),
 #endif /* !CONFIG_NO_DEX */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	O(DeeInteractiveModule_Type),
-#ifndef CONFIG_NO_DEX
-	O(DeeDex_Type),
-#endif /* !CONFIG_NO_DEX */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	O(DeeCompiler_Type),
 
 	/* All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes: */
@@ -628,9 +618,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(DeeBuiltin_Hash),
 	O(DeeBuiltin_Exec),
 	O(DeeBuiltin_Import),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	O(DeeBuiltin_ImportType),
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #undef O
 
 	/* Builtin strings */

@@ -48,7 +48,6 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DECL_BEGIN
 
 /* Allocate+return the uncached contents of the directory represented by `self'.
@@ -696,6 +695,5 @@ PUBLIC DeeObject DeeBuiltin_Import = {
 };
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #endif /* !GUARD_DEEMON_EXECUTE_MODPATH_DIRECTORY_C */

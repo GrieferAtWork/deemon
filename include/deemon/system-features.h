@@ -1064,8 +1064,6 @@ func("dladdr", "defined(CONFIG_HAVE_DLFCN_H) && (defined(__USE_GNU) || defined(_
 feature("dlinfo__dli_fname__is_size_ptr", "0", test: 'extern int my_symbol; Dl_info dli; extern char *my_dli_fname[(sizeof(dli.dli_fname) == sizeof(void *)) ? 1 : -1]; return dladdr(&my_symbol, &dli) && (my_dli_fname[0] = dli.dli_fname) != 0;');
 feature("dlinfo__RTLD_DI_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DI_LINKMAP) && (defined(__USE_GNU) || defined(__USE_NETBSD) || defined(__USE_SOLARIS))", test: 'extern void *handle; void *lm; return dlinfo(handle, RTLD_DI_LINKMAP, (void *)&lm);');
 feature("dladdr1__RTLD_DL_LINKMAP", "defined(CONFIG_HAVE_DLFCN_H) && defined(RTLD_DL_LINKMAP) && defined(__USE_GNU)", test: 'extern void *handle; Dl_info dli; void *lm; return dladdr1(handle, &dli, (void **)&lm, RTLD_DI_LINKMAP);');
-// TODO: Get rid of "struct__link_map__l_name" after "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"
-feature("struct__link_map__l_name", "defined(CONFIG_HAVE_LINK_H)", test: 'extern struct link_map *lm; char const *s = lm->l_name; return !!s;');
 feature("struct__link_map__l_addr", "defined(CONFIG_HAVE_LINK_H) && defined(__ELF__)", test: 'extern struct link_map *lm; return !!lm->l_addr;');
 constant("RTLD_GLOBAL");
 constant("RTLD_LOCAL");

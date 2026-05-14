@@ -213,7 +213,6 @@ DECL_BEGIN
  * it allows one to check for memory leaks in a running system, as opposed to only at
  * the very end, just before exiting. */
 #if (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL && \
-     defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) && \
      !defined(CONFIG_NO_DEX) && 0) /* TODO */
 #define LEAK_DETECTION_GC 1
 #endif /* ... */

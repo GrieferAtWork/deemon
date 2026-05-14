@@ -23,15 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* DeeObject_CALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>               /* DeeArg_Unpack1 */
 #include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
 #include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref, loc_here */
 #include <deemon/compiler/compiler.h> /* DeeCompiler* */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>            /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
-#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/module.h>            /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
+#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/string.h>            /* DeeStringObject */
 #include <deemon/system-features.h>   /* bzero, memcpy, memset */
 #include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
@@ -803,7 +802,6 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 
 
 /* -------- DeeRootScopeObject Implementation -------- */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self) {
 	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
@@ -820,39 +818,9 @@ root_scope_ctor(DeeRootScopeObject *__restrict self) {
 #endif /* Dee_MODULE_FNORMAL != 0 */
 	return 0;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-root_scope_init(DeeRootScopeObject *__restrict self,
-                size_t argc, DeeObject *const *argv) {
-	DeeModuleObject *module;
-	DeeArg_Unpack1(err, argc, argv, "root_scope", &module);
-	if (DeeObject_AssertType(module, &DeeModule_Type))
-		goto err;
-	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
-	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
-	Dee_weakref_support_init((DeeScopeObject *)self);
-	Dee_Incref(module);
-	self->rs_scope.bs_scope.s_base = &self->rs_scope;
-	self->rs_scope.bs_root         = self;
-	self->rs_module                = module;
-	self->rs_bucketv               = empty_module_buckets;
-#if Dee_CODE_FNORMAL != 0
-	self->rs_scope.bs_flags = Dee_CODE_FNORMAL;
-#endif /* Dee_CODE_FNORMAL != 0 */
-#if Dee_MODULE_FNORMAL != 0
-	self->rs_flags = Dee_MODULE_FNORMAL;
-#endif /* Dee_MODULE_FNORMAL != 0 */
-	return 0;
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE NONNULL((1)) void DCALL
 root_scope_fini(DeeRootScopeObject *__restrict self) {
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	Dee_Decref(self->rs_module);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_XDecref(self->rs_code);
 	Dee_Decrefv(self->rs_importv, self->rs_importc);
 	Dee_Free(self->rs_importv);
@@ -871,34 +839,16 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
 	}
 }
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-root_scope_str(DeeRootScopeObject *__restrict self) {
-	return_reference(self->rs_module->mo_name);
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 PRIVATE NONNULL((1, 2)) void DCALL
 root_scope_visit(DeeRootScopeObject *__restrict self,
                  Dee_visit_t proc, void *arg) {
 	size_t i;
 	DeeCompiler_LockReadNoInt();
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	Dee_Visit(self->rs_module);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_XVisit(self->rs_code);
 	for (i = 0; i < self->rs_importc; ++i)
 		Dee_Visit(self->rs_importv[i]);
 	DeeCompiler_LockEndRead();
 }
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define PTR_root_scope_ctor &root_scope_ctor
-#define PTR_root_scope_init NULL
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define PTR_root_scope_ctor NULL
-#define PTR_root_scope_init &root_scope_init
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 INTERN DeeTypeObject DeeRootScope_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -911,9 +861,9 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeRootScopeObject,
-			/* tp_ctor:        */ PTR_root_scope_ctor,
+			/* tp_ctor:        */ &root_scope_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_any_ctor:    */ PTR_root_scope_init,
+			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
 		),
@@ -922,11 +872,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		/* .tp_str  = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&root_scope_str,
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},

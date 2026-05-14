@@ -24,7 +24,7 @@
 
 #include <deemon/bool.h>             /* DeeBool*, Dee_CONFIG_BOOL_TLS, Dee_FalseTrue */
 #include <deemon/dec.h>              /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
-#include <deemon/object.h>           /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_funptr_t, Dee_hash_t, Dee_uint128_t, Dee_weakref_support_cinit, ITER_DONE, ITER_ISOK */
+#include <deemon/object.h>           /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_funptr_t, Dee_hash_t, Dee_uint128_t, Dee_weakref_support_cinit, ITER_DONE, ITER_ISOK */
 #include <deemon/serial.h>           /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
 #include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_*, Dee_operator_t */
 #include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
@@ -37,15 +37,14 @@
 #include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, DeeSlab_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_Memalign, _Dee_MallococBufsize */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/format.h>          /* PRF* */
 #include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGCSlab_Free, DeeGC_Head, DeeGC_Track, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
-#include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FHASBUILDID, Dee_MODULE_FNOSERIAL, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, bcmp, bzero, link, memcmp, memcpy*, memmoveupc, mempcpy*, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_* */
-#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/atomic.h>     /* atomic_inc, atomic_read */
 #include <deemon/util/md5.h>        /* DeeMD5_* */
 
 #include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED, IS_POWER_OF_TWO */
@@ -3271,7 +3270,7 @@ DECL_END
 
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 #include <deemon/alloc.h>
-#include <deemon/asm.h> /* ASM_RET_NONE, DDI_INSTRLEN_MAX, DDI_STOP, INSTRLEN_MAX, instruction_t */
+#include <deemon/asm.h> /* DDI_INSTRLEN_MAX, DDI_STOP, instruction_t */
 #include <deemon/bool.h>     /* DeeBool_Type, Dee_FalseTrue */
 #include <deemon/callable.h> /* DeeCallable_Type */
 #include <deemon/cell.h>     /* DeeCell* */
@@ -3279,7 +3278,6 @@ DECL_END
 #include <deemon/code.h>     /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_Malloc, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_MAXSIZE, Dee_DDI_REGS_FMASK, Dee_EXCEPTION_HANDLER_FMASK, Dee_code_metrics_init, Dee_ddi_exdat, Dee_except_handler, Dee_hostasm_code_init, Dee_hostasm_function_init, code_addr_t, instruction_t */
 #include <deemon/dict.h>     /* DeeDict_New, DeeDict_Type */
 #include <deemon/error.h>
-#include <deemon/exec.h>
 #include <deemon/float.h> /* DeeFloat_New, DeeFloat_Type */
 #include <deemon/format.h>
 #include <deemon/gc.h>
@@ -3304,7 +3302,7 @@ DECL_END
 #include <deemon/traceback.h> /* DeeTraceback_Type */
 #include <deemon/tuple.h>     /* DeeTuple* */
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h> /* Dee_atomic_lock_*, Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/weakref.h>   /* DeeWeakRefAble_Type, DeeWeakRef_Type */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
@@ -3949,9 +3947,6 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              struct DeeMapFile *__restrict input,
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-             struct Dee_module_object *__restrict module,
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
              struct Dee_string_object *__restrict dec_pathname,
              struct Dee_compiler_options *options);
 PRIVATE NONNULL((1)) void DCALL
@@ -3963,34 +3958,12 @@ DecFile_Fini(DecFile *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 DecFile_Strtab(DecFile *__restrict self);
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Check if a given DEC file is up to date, or if it must not be loaded.
- * because it a dependency has changed since it was created.
- * @return:  0: The file is up-to-date.
- * @return:  1: The file is not up-to-date.
- * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DecFile_IsUpToDate(DecFile *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 /* Load a given DEC file and fill in the given `module'.
  * @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file has been corrupted or is out of date.
  * @return: -1: An error occurred. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self);
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Return the last-modified time (in microseconds since 01-01-1970).
- * For this purpose, an internal cache is kept that is consulted
- * before and populated after making an attempt at contacting the
- * host operating system for the required information.
- * @return: * :           Last-modified time (in microseconds since 01-01-1970).
- * @return: 0 :           The given file could not be found.
- * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
-DecTime_Lookup(DeeObject *__restrict filename);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* DEC loader implementation. */
 
@@ -4099,15 +4072,9 @@ corrupt_heref(DecFile *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              struct DeeMapFile *__restrict input,
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-             DeeModuleObject *__restrict module,
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
              DeeStringObject *__restrict dec_pathname,
              struct Dee_compiler_options *options) {
 	Dec_Ehdr *hdr;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT_OBJECT_TYPE_EXACT(dec_pathname, &DeeString_Type);
 
 	/* Quick check: If the file is larger than the allowed limit,
@@ -4172,12 +4139,7 @@ DecFile_Init(DecFile *__restrict self,
 	      offsetof(DecFile, df_strtab));
 
 	/* Save the module and filename of the DEC input file. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	self->df_module = NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	self->df_module = module;
-	Dee_Incref(module);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	self->df_name = dec_pathname;
 	Dee_Incref(dec_pathname);
 	return 0;
@@ -4188,9 +4150,6 @@ end_not_a_dec:
 PRIVATE NONNULL((1)) void DCALL
 DecFile_Fini(DecFile *__restrict self) {
 	Dee_XDecref(self->df_strtab);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	Dee_Decref(self->df_module);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dee_Decref(self->df_name);
 }
 
@@ -4208,77 +4167,6 @@ DecFile_Strtab(DecFile *__restrict self) {
 	}
 	return Dee_AsObject(result);
 }
-
-
-
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Check if a given DEC file is up to date, or if it must not be loaded.
- * because it a dependency has changed since it was created.
- * @return:  0: The file is up-to-date.
- * @return:  1: The file is not up-to-date.
- * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DecFile_IsUpToDate(DecFile *__restrict self) {
-	Dec_Ehdr const *hdr = self->df_ehdr;
-	uint64_t timestamp, other;
-	other = DecTime_Lookup(Dee_AsObject(self->df_name));
-	if unlikely(other == (uint64_t)-1)
-		goto err;
-	timestamp = (((uint64_t)LETOH32(hdr->e_timestamp_hi) << 32) |
-	             ((uint64_t)LETOH32(hdr->e_timestamp_lo)));
-	if (other > timestamp)
-		goto changed; /* Base source file has changed. */
-#if 0 /* TO-DO Will never be implemented */
-	/* Check additional dependencies. */
-	if (hdr->e_depoff != 0) {
-		Dec_Strmap *depmap;
-		char *strtab, *filend;
-		uint16_t count;
-		uint8_t *reader;
-		depmap = (Dec_Strmap *)(self->df_base + LETOH32(hdr->e_depoff));
-		if unlikely((count = UNALIGNED_GETLE16(&depmap->i_len)) == 0)
-			goto done; /* Unlikely, but allowed. */
-		reader = depmap->i_map;
-		while (module_pathlen &&
-		       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1])) {
-			--module_pathlen;
-		}
-		strtab = (char *)(self->df_base + LETOH32(hdr->e_stroff));
-		filend = (char *)(self->df_base + self->df_size);
-		while (count--) {
-			size_t name_len;
-			char *p, *name = strtab + Dec_DecodePointer(&reader);
-			if unlikely(name >= filend)
-				goto changed; /* Corrupted */
-			name_len = strlen(name);
-			/* Create a string buffer for the filename to-be checked.
-			 * NOTE: The `module_pathstr+=module_pathlen' already has a trailing slash! */
-			filename = DeeString_NewBuffer(module_pathlen + name_len);
-			if unlikely(!filename)
-				goto err;
-			p = (char *)mempcpyc(DeeString_STR(filename), module_pathstr,
-			                     module_pathlen, sizeof(char));
-			memcpyc(p, filename, name_len, sizeof(char));
-			other = DecTime_Lookup(filename);
-			Dee_Decref(filename);
-			if unlikely(other == (uint64_t)-1)
-				goto err;
-			/* Check if this dependency has changed since. */
-			if (other > timestamp)
-				goto changed;
-		}
-	}
-done:
-#endif
-	return 0;
-changed:
-	return 1;
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 
 
 
@@ -4330,18 +4218,11 @@ DecFile_LoadImports(DecFile *__restrict self) {
 			GOTO_CORRUPTED(reader, stop_imports);
 		module_name = strtab + off;
 		/* Load the imported module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		/* Important: don't set "DeeModule_IMPORT_F_CTXDIR" flag since "module_pathstr" still ends with a trailing slash! */
 		module = DeeModule_OpenEx(module_name, strlen(module_name),
 		                          module_pathstr, module_pathlen,
 		                          DeeModule_IMPORT_F_ENOENT /*| DeeModule_IMPORT_F_CTXDIR*/,
 		                          self->df_options ? self->df_options->co_inner : NULL);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		module = DeeModule_OpenRelativeString(module_name, strlen(module_name),
-		                                      module_pathstr, module_pathlen,
-		                                      self->df_options ? self->df_options->co_inner : NULL,
-		                                      false);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if unlikely(!ITER_ISOK(module)) {
 			if (!module)
 				goto err_imports;
@@ -4374,9 +4255,6 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		}
 
 		/* Check if the module has changed. */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		if (!self->df_options || !(self->df_options->co_decloader & Dee_DEC_FLOADOUTDATED))
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		{
 			uint64_t modtime = DeeModule_GetCTime(module);
 			if unlikely(modtime == (uint64_t)-1)
@@ -4395,10 +4273,8 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	/* Write the module import table. */
 	self->df_module->mo_importc = importc;
 	self->df_module->mo_importv = importv; /* Inherit. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	self->df_module->mo_ctime = timestamp;
 	self->df_module->mo_flags |= Dee_MODULE_FHASCTIME;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = 0;
 stop:
 	return result;
@@ -4423,7 +4299,6 @@ err:
 
 INTDEF struct Dee_module_symbol empty_module_buckets[];
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DecFile_CreateModule(uint16_t num_globals) {
 	DREF DeeModuleObject *result;
@@ -4451,21 +4326,9 @@ DecFile_CreateEmptyModule(void) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
-DecFile_LoadGlobals(DecFile *__restrict self)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DecFile_LoadGlobals(DecFile *__restrict self)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-{
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	int result = 1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+DecFile_LoadGlobals(DecFile *__restrict self) {
 	Dec_Glbmap const *glbmap;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF DeeModuleObject *module = (DREF DeeModuleObject *)ITER_DONE;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	DeeModuleObject *module = self->df_module;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	Dec_Ehdr const *hdr = self->df_ehdr;
 	uint16_t i, globalc, symbolc;
 	uint8_t const *end = self->df_base + self->df_size;
@@ -4474,13 +4337,8 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	struct Dee_module_symbol *bucketv;
 	char const *strtab;
 	/* Quick check: Without a global variable table, nothing needs to be loaded. */
-	if (!hdr->e_globoff) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	if (!hdr->e_globoff)
 		return DecFile_CreateEmptyModule();
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		return 0;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	}
 
 	/* Load the global object table. */
 	glbmap  = (Dec_Glbmap const *)(self->df_base + LETOH32(hdr->e_globoff));
@@ -4490,11 +4348,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 		GOTO_CORRUPTED(&glbmap->g_cnt, stop);
 	if unlikely(!symbolc) {
 		/* Unlikely, but allowed. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		return DecFile_CreateEmptyModule();
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		return 0;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	strtab = (char const *)(self->df_base + LETOH32(hdr->e_stroff));
 	reader = (uint8_t const *)glbmap + 4;
@@ -4535,16 +4389,10 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 				addr2 = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
 				if (!(flags & Dee_MODSYM_FPROPERTY)) {
 					/* Validate module index. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 					Dec_Strmap const *impmap  = (Dec_Strmap const *)(self->df_base + LETOH32(hdr->e_impoff));
 					uint16_t importc = UNALIGNED_GETLE16(&impmap->i_len);
 					if (addr2 >= importc)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-					if (addr2 >= self->df_module->mo_importc)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-					{
 						GOTO_CORRUPTED(reader, stop_symbolv);
-					}
 				}
 			} else {
 				if unlikely(addr >= globalc)
@@ -4598,36 +4446,18 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	}
 
 	/* Allocate and setup the global variable vector. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = DecFile_CreateModule(globalc);
 	if unlikely(!module)
 		goto err_symbolv;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	module->mo_globalv = (DREF DeeObject **)Dee_Callocc(globalc, sizeof(DREF DeeObject *));
-	if unlikely(!module->mo_globalv)
-		goto err_symbolv;
-	module->mo_globalc = globalc;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Install the symbol mask and hash-table. */
 	module->mo_bucketm = bucket_mask;
 	module->mo_bucketv = bucketv;
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	result = 0;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 stop:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	return module;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return result;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err_symbolv:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = -1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 stop_symbolv:
 	do {
 		if (bucketv[bucket_mask].ss_name)
@@ -4638,11 +4468,7 @@ stop_symbolv:
 	Dee_Free(bucketv);
 	goto stop;
 err:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = -1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	goto stop;
 }
 
@@ -5784,29 +5610,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 	            header.co_textoff + header.co_textsiz >= self->df_size)
 		GOTO_CORRUPTED(reader, done);
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (self->df_options &&
-	    (self->df_options->co_decloader & Dee_DEC_FUNTRUSTED)) {
-		/* The origin of the code cannot be trusted and we must append
-		 * a couple of trailing instruction bytes to the code object. */
-
-		/* Allocate the resulting code object, as well as set the Dee_CODE_FASSEMBLY flag. */
-		header.co_flags |= Dee_CODE_FASSEMBLY;
-		result = DeeCode_Malloc(header.co_textsiz + INSTRLEN_MAX);
-		if likely(result) {
-			/* Initialize trailing bytes as `ret none' instructions. */
-#if ASM_RET_NONE == 0
-			bzero(result->co_code + header.co_textsiz, INSTRLEN_MAX);
-#else /* ASM_RET_NONE == 0 */
-			memset(result->co_code + header.co_textsiz, ASM_RET_NONE, INSTRLEN_MAX);
-#endif /* ASM_RET_NONE != 0 */
-		}
-	} else
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	{
-		/* Allocate the resulting code object. */
-		result = (DREF DeeCodeObject *)DeeCode_Malloc(header.co_textsiz);
-	}
+	/* Allocate the resulting code object. */
+	result = (DREF DeeCodeObject *)DeeCode_Malloc(header.co_textsiz);
 
 	/* Check for errors during code allocation. */
 	if unlikely(!result)
@@ -6128,21 +5933,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
 	/*untracked*/ DeeModuleObject *module;
 	int result;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	module = self->df_module;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Load global variables related to this module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	module = DecFile_LoadGlobals(self);
 	if (!ITER_ISOK(module))
 		return module ? 1 : -1;
 	self->df_module = module;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DecFile_LoadGlobals(self);
-	if (result != 0)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Load the module import table and all collect all dependency modules. */
 	result = DecFile_LoadImports(self);
@@ -6159,35 +5955,20 @@ DecFile_Load(DecFile *__restrict self) {
 			result = root_code ? 1 : -1;
 			goto err;
 		}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		module->mo_moddata.mo_rootcode = root_code; /* Inherit. */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		module->mo_root = root_code; /* Inherit. */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 
 	return 0;
 err:
 	{
 		DREF DeeCodeObject *root;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		root = module->mo_moddata.mo_rootcode;
 		module->mo_moddata.mo_rootcode = NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		root = module->mo_root;
-		module->mo_root = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		Dee_XDecref(root);
 	}
 
 	/* Free the module's global variable vector.
 	 * NOTE: At this point, we can still assume that it was filled with all NULLs. */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT((module->mo_globalv != NULL) ==
-	       (module->mo_globalc != 0));
-	Dee_Free(module->mo_globalv);
-	module->mo_globalv = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	module->mo_globalc = 0;
 
 	/* Free the module's symbol table. */
@@ -6213,14 +5994,11 @@ err:
 	Dee_Decrefv(module->mo_importv, module->mo_importc);
 	Dee_Free((void *)module->mo_importv);
 	module->mo_importv = NULL;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DeeGCObject_Free(module);
 	self->df_module = NULL;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return result;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* @param: dec_dirname:     Absolute filename of the corresponding ".dee" file (ZERO-terminated)
  * @param: dec_dirname_len: Offset (in bytes) from "dec_dirname" where the filename portion begins
  * @return:  * :       Successfully loaded the given DEC file. The caller must still initialize:
@@ -6233,36 +6011,18 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
                   /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
-                  uint64_t dee_file_last_modified)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-/* @return:  0: Successfully loaded the given DEC file.
- * @return:  1: The DEC file was out of date or had been corrupted.
- * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
-                  DeeObject *__restrict input_stream,
-                  struct Dee_compiler_options *options)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-{
+                  uint64_t dee_file_last_modified) {
 	DecFile file;
 	struct DeeMapFile filemap;
 	int result;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT(mod->mo_path);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Initialize the file */
 	if unlikely(DeeMapFile_InitFile(&filemap, input_stream,
 	                                0, 0, DFILE_LIMIT + 1, DECFILE_PADDING,
 	                                DeeMapFile_F_READALL | DeeMapFile_F_ATSTART)) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		return NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		return -1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{
 		DREF DeeObject *path;
 		(void)dec_dirname_len;
@@ -6277,16 +6037,12 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 		if (result != 0)
 			file.df_module = NULL; /* Hack -- needed for cleanup path below */
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result = DecFile_Init(&file, &filemap, mod, mod->mo_path, options);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	if unlikely(result != 0)
 		goto done_map;
 	Dee_DPRINTF("[LD] Opened dec file for %r\n", file.df_name);
 
 	/* Check if the file is up-to-date (unless this check is being suppressed). */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	{
 		uint64_t timestamp;
 		timestamp = (((uint64_t)LETOH32(file.df_ehdr->e_timestamp_hi) << 32) |
@@ -6297,15 +6053,6 @@ DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
 			goto done_map_file;
 		}
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if (!options || !(options->co_decloader & Dee_DEC_FLOADOUTDATED)) {
-		result = DecFile_IsUpToDate(&file);
-		if (result != 0) {
-			Dee_DPRINTF("[LD] Dec file for %r is out-of-date\n", file.df_name);
-			goto done_map_file;
-		}
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* With all that out of the way, actually load the file. */
 	result = DecFile_Load(&file);
@@ -6323,7 +6070,6 @@ done_map_file:
 	DecFile_Fini(&file);
 done_map:
 	DeeMapFile_Fini(&filemap);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (result == 0) {
 		ASSERT(ITER_ISOK(file.df_module));
 		return file.df_module;
@@ -6332,289 +6078,7 @@ done_map:
 	if (result > 0)
 		return (DREF struct Dee_module_object *)ITER_DONE;
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return result;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
-DeeModule_GetCTime(DeeModuleObject *__restrict self) {
-	uint64_t result;
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (self->mo_flags & Dee_MODULE_FHASCTIME) {
-		result = self->mo_ctime;
-		ASSERT(result != (uint64_t)-1);
-	} else if (self == &DeeModule_Deemon) {
-		/* `DeeExec_GetTimestamp()' already uses the `mo_ctime' field
-		 *  of `DeeModule_Deemon' as cache if that field is available. */
-		result = DeeExec_GetTimestamp();
-	} else {
-		/* Lookup the last-modified time of the module's path file. */
-		DeeStringObject *path = self->mo_path;
-		if unlikely(!path) {
-			result = 0;
-		} else {
-			result = DecTime_Lookup(Dee_AsObject(path));
-			if unlikely(result == (uint64_t)-1)
-				goto done;
-		}
-		/* Cache the result value in the module itself. */
-		self->mo_ctime = result;
-		atomic_or(&self->mo_flags, Dee_MODULE_FHASCTIME);
-	}
-done:
-	return result;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-struct mtime_entry {
-	DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
-	                                *  NOTE: When NULL, then this entry is unused. */
-#ifdef DeeSystem_HAVE_FS_ICASE
-	Dee_hash_t               me_casehash; /* Case-insensitive hash for `me_file' */
-#endif /* DeeSystem_HAVE_FS_ICASE */
-	uint64_t              me_mtim; /* Last-modified time of `me_file' */
-};
-
-#ifdef DeeSystem_HAVE_FS_ICASE
-#define MTIME_ENTRY_HASH(x) ((x)->me_casehash)
-#else /* DeeSystem_HAVE_FS_ICASE */
-#define MTIME_ENTRY_HASH(x) DeeString_HASH((x)->me_file)
-#endif /* !DeeSystem_HAVE_FS_ICASE */
-
-struct mtime_cache {
-	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entries currently in use. */
-	size_t              mc_mask; /* [lock(mc_lock)] Allocated hash-vector size -1 / hash-mask. */
-	struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
-	                              * [owned_if(!= empty_mtime_items)]
-	                              * Filename -> last-modified mappings. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t mc_lock; /* Lock for synchronizing access to the cache. */
-#endif /* !CONFIG_NO_THREADS */
-};
-
-#define MCACHE_HASHST(hash)        ((hash) & mtime_cache.mc_mask)
-#define MCACHE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define MCACHE_HASHIT(i)           (mtime_cache.mc_list + ((i) & mtime_cache.mc_mask))
-
-PRIVATE struct mtime_entry empty_mtime_items[1] = { { NULL, 0 } };
-
-PRIVATE struct mtime_cache mtime_cache = {
-	/* .mc_size = */ 0,
-	/* .mc_mask = */ 0,
-	/* .mc_list = */ empty_mtime_items
-#ifndef CONFIG_NO_THREADS
-	,
-	/* .mc_lock = */ Dee_ATOMIC_RWLOCK_INIT
-#endif /* !CONFIG_NO_THREADS */
-};
-
-#define mtime_cache_lock_reading()    Dee_atomic_rwlock_reading(&mtime_cache.mc_lock)
-#define mtime_cache_lock_writing()    Dee_atomic_rwlock_writing(&mtime_cache.mc_lock)
-#define mtime_cache_lock_tryread()    Dee_atomic_rwlock_tryread(&mtime_cache.mc_lock)
-#define mtime_cache_lock_trywrite()   Dee_atomic_rwlock_trywrite(&mtime_cache.mc_lock)
-#define mtime_cache_lock_canread()    Dee_atomic_rwlock_canread(&mtime_cache.mc_lock)
-#define mtime_cache_lock_canwrite()   Dee_atomic_rwlock_canwrite(&mtime_cache.mc_lock)
-#define mtime_cache_lock_waitread()   Dee_atomic_rwlock_waitread(&mtime_cache.mc_lock)
-#define mtime_cache_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&mtime_cache.mc_lock)
-#define mtime_cache_lock_read()       Dee_atomic_rwlock_read(&mtime_cache.mc_lock)
-#define mtime_cache_lock_write()      Dee_atomic_rwlock_write(&mtime_cache.mc_lock)
-#define mtime_cache_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&mtime_cache.mc_lock)
-#define mtime_cache_lock_upgrade()    Dee_atomic_rwlock_upgrade(&mtime_cache.mc_lock)
-#define mtime_cache_lock_downgrade()  Dee_atomic_rwlock_downgrade(&mtime_cache.mc_lock)
-#define mtime_cache_lock_endwrite()   Dee_atomic_rwlock_endwrite(&mtime_cache.mc_lock)
-#define mtime_cache_lock_endread()    Dee_atomic_rwlock_endread(&mtime_cache.mc_lock)
-#define mtime_cache_lock_end()        Dee_atomic_rwlock_end(&mtime_cache.mc_lock)
-
-
-/* Try to free up memory from the dec time-cache. */
-INTERN size_t DCALL
-DecTime_ClearCache(size_t UNUSED(max_clear)) {
-	size_t result, old_mask;
-	struct mtime_entry *old_list;
-	mtime_cache_lock_write();
-	ASSERT((mtime_cache.mc_mask == 0) ==
-	       (mtime_cache.mc_list == empty_mtime_items));
-	old_mask            = mtime_cache.mc_mask;
-	old_list            = mtime_cache.mc_list;
-	mtime_cache.mc_size = 0;
-	mtime_cache.mc_mask = 0;
-	mtime_cache.mc_list = empty_mtime_items;
-	mtime_cache_lock_endwrite();
-
-	/* Check for special case: no mask was allocated. */
-	if (!old_mask)
-		return 0;
-
-	/* Figure out how much memory will be released. */
-	result = (old_mask + 1) * sizeof(struct mtime_entry);
-
-	/* Clear the old hash-map. */
-	for (;;) {
-		Dee_XDecref(old_list[old_mask].me_file);
-		if (!old_mask)
-			break;
-		--old_mask;
-	}
-
-	/* Free the map descriptor. */
-	Dee_Free(old_list);
-	return result;
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-mtime_cache_lookup(DeeObject *__restrict path,
-                   uint64_t *__restrict p_result) {
-	bool result = false;
-	Dee_hash_t i, perturb;
-	Dee_hash_t hash = fs_hashobj(path);
-	mtime_cache_lock_read();
-	perturb = i = MCACHE_HASHST(hash);
-	for (;; MCACHE_HASHNX(i, perturb)) {
-		struct mtime_entry *item = MCACHE_HASHIT(i);
-		if (!item->me_file)
-			break; /* Entry not found. */
-		if (MTIME_ENTRY_HASH(item) != hash)
-			continue; /* Differing hashes. */
-		if (!DeeString_EqualsSTR(item->me_file, path))
-			continue; /* Differing strings. */
-		/* Found it! */
-		*p_result = item->me_mtim;
-		result   = true;
-		break;
-	}
-	mtime_cache_lock_endread();
-	return result;
-}
-
-
-/* Rehash the mtime cache. */
-PRIVATE bool DCALL
-mtime_cache_rehash(void) {
-	struct mtime_entry *new_vector, *iter, *end;
-	size_t new_mask = mtime_cache.mc_mask;
-	new_mask        = (new_mask << 1) | 1;
-	if unlikely(new_mask == 1)
-		new_mask = 64 - 1; /* Start out bigger than 2. */
-	ASSERT(mtime_cache.mc_size < new_mask);
-	new_vector = (struct mtime_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct mtime_entry));
-	if unlikely(!new_vector)
-		return false;
-	ASSERT((mtime_cache.mc_list == empty_mtime_items) == (mtime_cache.mc_size == 0));
-	ASSERT((mtime_cache.mc_list == empty_mtime_items) == (mtime_cache.mc_mask == 0));
-	if (mtime_cache.mc_list != empty_mtime_items) {
-		/* Re-insert all existing items into the new table vector. */
-		end = (iter = mtime_cache.mc_list) + (mtime_cache.mc_mask + 1);
-		for (; iter < end; ++iter) {
-			struct mtime_entry *item;
-			Dee_hash_t i, perturb;
-
-			/* Skip NULL entries. */
-			if (!iter->me_file)
-				continue;
-			perturb = i = MTIME_ENTRY_HASH(iter) & new_mask;
-			for (;; MCACHE_HASHNX(i, perturb)) {
-				item = &new_vector[i & new_mask];
-				if (!item->me_file)
-					break; /* Empty slot found. */
-			}
-
-			/* Transfer this object. */
-			memcpy(item, iter, sizeof(struct mtime_entry));
-		}
-		Dee_Free(mtime_cache.mc_list);
-	}
-	mtime_cache.mc_mask = new_mask;
-	mtime_cache.mc_list = new_vector;
-	return true;
-}
-
-
-PRIVATE NONNULL((1)) void DCALL
-mtime_cache_insert(DeeObject *__restrict path,
-                   uint64_t value) {
-	size_t mask;
-	Dee_hash_t i, perturb, hash;
-	hash = fs_hashobj(path);
-	mtime_cache_lock_write();
-again:
-	mask    = mtime_cache.mc_mask;
-	perturb = i = hash & mask;
-	for (;; MCACHE_HASHNX(i, perturb)) {
-		struct mtime_entry *item = &mtime_cache.mc_list[i & mask];
-		if (!item->me_file) {
-			if (mtime_cache.mc_size + 1 >= mtime_cache.mc_mask)
-				break; /* Rehash the table and try again. */
-
-			/* Not found. - Use this empty slot. */
-			item->me_file = (DREF DeeStringObject *)path;
-#ifdef DeeSystem_HAVE_FS_ICASE
-			item->me_casehash = hash;
-#endif /* DeeSystem_HAVE_FS_ICASE */
-			item->me_mtim = value;
-			Dee_Incref(path);
-			++mtime_cache.mc_size;
-
-			/* Try to keep the table vector big at least twice as big as the element count. */
-			if (mtime_cache.mc_size * 2 > mtime_cache.mc_mask)
-				mtime_cache_rehash();
-			goto done;
-		}
-		if (MTIME_ENTRY_HASH(item) != hash)
-			continue; /* Non-matching hash */
-		if (!DeeString_EqualsSTR(item->me_file, path))
-			continue; /* Differing strings. */
-
-		/* The item already exists. (Can happen due to race conditions) */
-		goto done;
-	}
-
-	/* Rehash the table and try again. */
-	if (mtime_cache_rehash())
-		goto again;
-done:
-	mtime_cache_lock_endwrite();
-}
-
-
-
-/* Return the last-modified time (in microseconds since 01-01-1970).
- * For this purpose, an internal cache is kept that is consulted
- * before and populated after making an attempt at contacting the
- * host operating system for the required information.
- * @return: * :           Last-modified time (in microseconds since 01-01-1970).
- * @return: 0 :           The given file could not be found.
- * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
-DecTime_Lookup(DeeObject *__restrict filename) {
-	uint64_t result;
-	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
-
-	/* Ensure that we are using an absolute, fixed path. */
-	filename = DeeSystem_MakeNormalAndAbsolute(filename);
-	if unlikely(!filename)
-		return (uint64_t)-1;
-
-	/* Consult the cache before asking the OS. */
-	if (!mtime_cache_lookup(filename, &result)) {
-		result = DeeSystem_GetLastModified(filename);
-		/* Add the new information to the cache. */
-		if likely(result != (uint64_t)-1)
-			mtime_cache_insert(filename, result);
-	}
-	Dee_Decref(filename);
-#if 0
-	if (result != (uint64_t)-1)
-		result = (uint64_t)-2;
-#endif
-	return result;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */

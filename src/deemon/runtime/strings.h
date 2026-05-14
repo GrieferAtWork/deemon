@@ -93,7 +93,7 @@ local STRINGS = List {
 	"false",
 	"deemon",
 	"seq",
-	"operators", // TODO: Remove after "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"
+	"operators",
 	"files",
 	"_strexec",
 	"strict",
@@ -155,7 +155,7 @@ local STRINGS = List {
 	"__assert",
 	"__badcall",
 
-	"rt.d200", // TODO: Remove after "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"
+	"rt.d200",
 
 	("str_lt_anonymous_gr", "<anonymous>"),
 	("str_nomemory", "allocation failed"),

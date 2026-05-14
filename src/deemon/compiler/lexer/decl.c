@@ -486,30 +486,17 @@ switch_symbol_type:
 			if (sym->s_extern.e_module != &DeeModule_Deemon) {
 				char const *module_name;
 				/* External symbol reference. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				/* TODO: Don't unconditionally use "mo_absname" --
 				 *       if possible, use the module's first libname */
 				module_name = sym->s_extern.e_module->mo_absname;
 				if unlikely(!module_name)
 					goto print_object;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				module_name = DeeString_AsUtf8(sym->s_extern.e_module->mo_name);
-				if unlikely(!module_name)
-					goto err;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if (Dee_UNICODE_PRINTER_PRINT(printer, "?E") < 0)
 					goto err;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				if (decl_ast_escapename(module_name,
 				                        strlen(module_name),
 				                        printer) < 0)
 					goto err;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				if (decl_ast_escapename(module_name,
-				                        WSTR_LENGTH(module_name),
-				                        printer) < 0)
-					goto err;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				if unlikely(Dee_unicode_printer_putc(printer, ':'))
 					goto err;
 				if (decl_ast_escapename(Dee_MODULE_SYMBOL_GETNAMESTR(msym),

@@ -31,7 +31,7 @@
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunction_CheckExact, Dee_CODE_FYIELDING, Dee_DDI_STATE_DO, Dee_DDI_STATE_WHILE, Dee_ddi_state, Dee_ddi_xregs, code_addr_t, instruction_t */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRF* */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT, Dee_INT_PRINT_FNUMSYS */
-#include <deemon/module.h>          /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_ISOK */
 #include <deemon/string.h>          /* DeeString_PrintUtf8, DeeString_STR */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, strchr */
@@ -278,7 +278,6 @@ print_generic:
 	return DeeFormat_Printf(printer, arg, "global %u", (unsigned int)gid);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_module_name(Dee_formatprinter_t printer, void *arg,
                   DeeModuleObject *__restrict mod) {
@@ -296,10 +295,6 @@ print_module_name(Dee_formatprinter_t printer, void *arg,
 	}
 	return result;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define print_module_name(printer, arg, mod) \
-	DeeString_PrintUtf8((DeeObject *)(mod)->mo_name, printer, arg)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 libdisasm_printmodule(Dee_formatprinter_t printer, void *arg,
@@ -484,86 +479,48 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 		class_name = DeeCode_GetRSymbolName(Dee_AsObject(code), rid);
 		if (class_name) {
 			DeeModuleObject *mod = code->co_module;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			if (!DeeInteractiveModule_Check(code->co_module))
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			{
-				struct Dee_module_symbol *class_sym;
-				class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
-				if (!class_sym)
-					goto search_module_root_constants;
-				if (Dee_module_symbol_getindex(class_sym) < mod->mo_globalc &&
-				    !(class_sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN))) {
-					DREF DeeObject *class_type;
-					DeeClassDescriptorObject *desc;
-					DeeModule_LockRead(mod);
-					class_type = mod->mo_globalv[Dee_module_symbol_getindex(class_sym)];
-					Dee_XIncref(class_type);
-					DeeModule_LockEndRead(mod);
-					if (!class_type) {
-						DREF DeeCodeObject *root;
+			struct Dee_module_symbol *class_sym;
+			class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
+			if (!class_sym)
+				goto search_module_root_constants;
+			if (Dee_module_symbol_getindex(class_sym) < mod->mo_globalc &&
+			    !(class_sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN))) {
+				DREF DeeObject *class_type;
+				DeeClassDescriptorObject *desc;
+				DeeModule_LockRead(mod);
+				class_type = mod->mo_globalv[Dee_module_symbol_getindex(class_sym)];
+				Dee_XIncref(class_type);
+				DeeModule_LockEndRead(mod);
+				if (!class_type) {
+					DREF DeeCodeObject *root;
 search_module_root_constants:
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-						root = DeeModule_GetRootCode(mod);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						DeeModule_LockRead(mod);
-						root = mod->mo_root;
-						Dee_XIncref(root);
-						DeeModule_LockEndRead(mod);
-						if (root)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						{
-							desc = find_class_descriptor_in_constants(root, class_name);
-							Dee_Decref(root);
-							if (desc) {
-								Dee_Incref(desc);
-								class_type = Dee_AsObject(desc); /* Inherit reference. (will be dropped later) */
-								goto do_search_desc;
-							}
-						}
-					} else {
-						if (DeeType_Check(class_type) &&
-						    DeeType_IsClass(class_type)) {
-							struct Dee_class_attribute *attr;
-							desc = DeeClass_DESC(class_type)->cd_desc;
+					root = DeeModule_GetRootCode(mod);
+					desc = find_class_descriptor_in_constants(root, class_name);
+					Dee_Decref(root);
+					if (desc) {
+						Dee_Incref(desc);
+						class_type = Dee_AsObject(desc); /* Inherit reference. (will be dropped later) */
+						goto do_search_desc;
+					}
+				} else {
+					if (DeeType_Check(class_type) &&
+					    DeeType_IsClass(class_type)) {
+						struct Dee_class_attribute *attr;
+						desc = DeeClass_DESC(class_type)->cd_desc;
 do_search_desc:
-							if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
-								size_t i;
-								Dee_ssize_t result;
-								if (desc->cd_name) {
-									class_name = DeeString_STR(desc->cd_name);
-								} else if (DeeType_Check(class_type) &&
-								           ((DeeTypeObject *)class_type)->tp_name) {
-									class_name = ((DeeTypeObject *)class_type)->tp_name;
-								}
-								if (is_cmember) {
-									for (i = 0; i <= desc->cd_cattr_mask; ++i) {
-										attr = &desc->cd_cattr_list[i];
-										if (!attr->ca_name)
-											continue;
-										if (mid < attr->ca_addr)
-											continue;
-										if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
-											if (mid > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
-											           ? attr->ca_addr
-											           : attr->ca_addr + 2))
-												continue;
-											/* Found it! */
-											goto found_it_property;
-										} else {
-											if (mid > attr->ca_addr)
-												continue;
-											goto found_it_member;
-										}
-									}
-								}
-								for (i = 0; i <= desc->cd_iattr_mask; ++i) {
-									attr = &desc->cd_iattr_list[i];
+						if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
+							size_t i;
+							Dee_ssize_t result;
+							if (desc->cd_name) {
+								class_name = DeeString_STR(desc->cd_name);
+							} else if (DeeType_Check(class_type) &&
+							           ((DeeTypeObject *)class_type)->tp_name) {
+								class_name = ((DeeTypeObject *)class_type)->tp_name;
+							}
+							if (is_cmember) {
+								for (i = 0; i <= desc->cd_cattr_mask; ++i) {
+									attr = &desc->cd_cattr_list[i];
 									if (!attr->ca_name)
-										continue;
-									if (is_cmember
-									    ? (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) == 0
-									    : (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) != 0)
 										continue;
 									if (mid < attr->ca_addr)
 										continue;
@@ -573,24 +530,47 @@ do_search_desc:
 										           : attr->ca_addr + 2))
 											continue;
 										/* Found it! */
-found_it_property:
-										result = DeeFormat_Printf(printer, arg, "%s.%k.%s",
-										                          class_name, attr->ca_name,
-										                          mid == attr->ca_addr + Dee_CLASS_GETSET_GET ? "getter" : mid == attr->ca_addr + Dee_CLASS_GETSET_DEL ? "delete" : "setter");
+										goto found_it_property;
 									} else {
 										if (mid > attr->ca_addr)
 											continue;
-found_it_member:
-										result = DeeFormat_Printf(printer, arg, "%s.%k",
-										                          class_name, attr->ca_name);
+										goto found_it_member;
 									}
-									Dee_Decref(class_type);
-									return result;
 								}
 							}
+							for (i = 0; i <= desc->cd_iattr_mask; ++i) {
+								attr = &desc->cd_iattr_list[i];
+								if (!attr->ca_name)
+									continue;
+								if (is_cmember
+								    ? (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) == 0
+								    : (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) != 0)
+									continue;
+								if (mid < attr->ca_addr)
+									continue;
+								if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+									if (mid > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
+									           ? attr->ca_addr
+									           : attr->ca_addr + 2))
+										continue;
+									/* Found it! */
+found_it_property:
+									result = DeeFormat_Printf(printer, arg, "%s.%k.%s",
+									                          class_name, attr->ca_name,
+									                          mid == attr->ca_addr + Dee_CLASS_GETSET_GET ? "getter" : mid == attr->ca_addr + Dee_CLASS_GETSET_DEL ? "delete" : "setter");
+								} else {
+									if (mid > attr->ca_addr)
+										continue;
+found_it_member:
+									result = DeeFormat_Printf(printer, arg, "%s.%k",
+									                          class_name, attr->ca_name);
+								}
+								Dee_Decref(class_type);
+								return result;
+							}
 						}
-						Dee_Decref(class_type);
 					}
+					Dee_Decref(class_type);
 				}
 			}
 		}

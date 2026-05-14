@@ -77,8 +77,7 @@
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_HAVE_FS_ICASE */
 #include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST, TF_NONE, TP_F*, TYPE_*, type_* */
 
-#include <stdbool.h> /* true */
-#include <stddef.h>  /* size_t */
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
@@ -86,14 +85,9 @@ DECL_BEGIN
 /* Timestamp creation */
 #if defined(NEED_DeeTime_NewUnix) || defined(NEED_DeeTime_NewFILETIME)
 PRIVATE DREF DeeModuleObject *dee_time_module = NULL;
-PRIVATE WUNUSED DREF DeeModuleObject *DCALL get_time_module(void) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+PRIVATE WUNUSED DeeModuleObject *DCALL get_time_module(void) {
 	if (dee_time_module == NULL)
 		dee_time_module = DeeModule_ImportString("time", 4, NULL, DeeModule_IMPORT_F_NORMAL);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if (dee_time_module == NULL)
-		dee_time_module = DeeModule_OpenGlobalString("time", 4, NULL, true);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	return dee_time_module;
 }
 

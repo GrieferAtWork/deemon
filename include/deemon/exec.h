@@ -29,15 +29,11 @@
 
 #include "api.h"
 
-#include "types.h" /* DREF, DeeObject, Dee_AsObject */
+#include "types.h" /* DREF, DeeObject */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uint16_t, uint64_t */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include "list.h" /* DeeList_Clear, Dee_list_object */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 
@@ -93,7 +89,6 @@ DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
  * >>         if (x is string)
  * >>             yield f"{x.rstrip("/")}/include";
  * >> } */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 /* Return the current module path, which is a tuple of absolute,
  * normalized directory names describing where deemon system
@@ -124,23 +119,6 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RemoveLibPathStringLen(/*utf-8*
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF bool DCALL DeeModule_ClearLibPath(void);
 #endif /* CONFIG_BUILDING_DEEMON */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-DDATDEF struct Dee_list_object DeeModule_Path;
-DFUNDEF void DCALL DeeModule_InitPath(void);
-#define DeeModule_ClearLibPath() DeeList_Clear(Dee_AsObject(&DeeModule_Path))
-
-/* Initialize the module path sub-system and return its global list of path. */
-#define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Return the time (in UTC milliseconds since 01-01-1970) when deemon was compiled.
- * This value is also used to initialize the `mo_ctime' value of the builtin
- * `deemon' module, automatically forcing user-code to be recompiled if the
- * associated deemon core has changed, and if they are using the `deemon' module. */
-DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* High-level functionality for registering at-exit hooks.
@@ -213,32 +191,11 @@ struct Dee_compiler_options;
  *                          available to the interactive source code by use of global
  *                          variables.
  *                          These are either provided as constants, or as globals,
- *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS'
- * #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
- * @param: source_pathname: The name for the source file (the path of which is
- *                          then used for relative import()s and #include's)
- * @param: module_name:     The name of the internal module, or NULL to determine automatically.
- *                          Note that the internal module is never registered globally, and
- *                          only exists as an anonymous module.
- * #endif // !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+ *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS' */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col, unsigned int mode,
                   struct Dee_compiler_options *options, DeeObject *default_symbols);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunStream(DeeObject *source_stream, unsigned int mode,
-                  size_t argc, DeeObject *const *argv, int start_line, int start_col,
-                  struct Dee_compiler_options *options, DeeObject *default_symbols,
-                  DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
-                        size_t argc, DeeObject *const *argv, int start_line, int start_col,
-                        struct Dee_compiler_options *options, DeeObject *default_symbols,
-                        /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                        /*utf-8*/ char const *module_name, size_t module_namesize);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
@@ -250,7 +207,6 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
 struct Dee_module_object;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 struct Dee_serial;
@@ -273,34 +229,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               int start_line, int start_col, unsigned int mode,
                               struct Dee_compiler_options *options, DeeObject *default_symbols);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleStream(DeeObject *source_stream,
-                            unsigned int mode, int start_line, int start_col,
-                            struct Dee_compiler_options *options, DeeObject *default_symbols,
-                            DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
-DeeExec_CompileFunctionStream(DeeObject *source_stream,
-                              unsigned int mode, int start_line, int start_col,
-                              struct Dee_compiler_options *options, DeeObject *default_symbols,
-                              DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleStreamString(DeeObject *source_stream,
-                                  unsigned int mode, int start_line, int start_col,
-                                  struct Dee_compiler_options *options, DeeObject *default_symbols,
-                                  /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                                  /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
-DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
-                                    unsigned int mode, int start_line, int start_col,
-                                    struct Dee_compiler_options *options, DeeObject *default_symbols,
-                                    /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                                    /*utf-8*/ char const *module_name, size_t module_namesize);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Same as the functions above, but instead take a raw memory block as input */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   size_t argc, DeeObject *const *argv,
@@ -314,43 +245,6 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               int start_line, int start_col, unsigned int mode,
                               struct Dee_compiler_options *options, DeeObject *default_symbols);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                  unsigned int mode, size_t argc, DeeObject *const *argv,
-                  int start_line, int start_col,
-                  struct Dee_compiler_options *options, DeeObject *default_symbols,
-                  DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                        unsigned int mode, size_t argc, DeeObject *const *argv,
-                        int start_line, int start_col,
-                        struct Dee_compiler_options *options, DeeObject *default_symbols,
-                        /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                        /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                            unsigned int mode, int start_line, int start_col,
-                            struct Dee_compiler_options *options, DeeObject *default_symbols,
-                            DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
-DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                              unsigned int mode, int start_line, int start_col,
-                              struct Dee_compiler_options *options, DeeObject *default_symbols,
-                              DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
-DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                  unsigned int mode, int start_line, int start_col,
-                                  struct Dee_compiler_options *options, DeeObject *default_symbols,
-                                  /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                                  /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
-DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                    unsigned int mode, int start_line, int start_col,
-                                    struct Dee_compiler_options *options, DeeObject *default_symbols,
-                                    /*utf-8*/ char const *source_pathname, size_t source_pathsize,
-                                    /*utf-8*/ char const *module_name, size_t module_namesize);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Initialize the deemon runtime.

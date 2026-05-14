@@ -45,7 +45,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/seq.h>                /* DeeSeq_AsHeapVector, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h>    /* bcmpc, strlen */
+#include <deemon/system-features.h>    /* strlen */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
 #include <deemon/util/atomic.h>        /* atomic_read */
@@ -3232,52 +3232,22 @@ print_enter_scope(DeeScopeObject *caller_scope,
 					if (Dee_MODULE_SYMBOL_EQUALS(sym->s_extern.e_symbol,
 					                             sym->s_name->k_name,
 					                             sym->s_name->k_size)) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 						printf("import %s from %q",
 						       sym->s_extern.e_symbol->ss_name,
 						       sym->s_extern.e_module->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						printf("import %s from %k",
-						       sym->s_extern.e_symbol->ss_name,
-						       sym->s_extern.e_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					} else {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 						printf("import %$s = %s from %q",
 						       sym->s_name->k_size,
 						       sym->s_name->k_name,
 						       sym->s_extern.e_symbol->ss_name,
 						       sym->s_extern.e_module->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						printf("import %$s = %s from %k",
-						       sym->s_name->k_size,
-						       sym->s_name->k_name,
-						       sym->s_extern.e_symbol->ss_name,
-						       sym->s_extern.e_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 					}
 					break;
 				case SYMBOL_TYPE_MODULE:
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-					if (sym->s_name->k_size == DeeString_SIZE(sym->s_module->mo_name) &&
-					    bcmpc(sym->s_name->k_name, DeeString_STR(sym->s_module->mo_name),
-					          sym->s_name->k_size, sizeof(char)) == 0) {
-						printf("import %k", sym->s_module->mo_name);
-					} else
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-					{
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-						printf("import %$s = %q",
-						       sym->s_name->k_size,
-						       sym->s_name->k_name,
-						       sym->s_module->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						printf("import %$s = %k",
-						       sym->s_name->k_size,
-						       sym->s_name->k_name,
-						       sym->s_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-					}
+					printf("import %$s = %q",
+					       sym->s_name->k_size,
+					       sym->s_name->k_name,
+					       sym->s_module->mo_absname);
 					break;
 				case SYMBOL_TYPE_MYMOD:
 					printf("import %$s = .",
@@ -3363,21 +3333,12 @@ print_symbol(struct symbol *__restrict sym,
 			PRINT("(");
 			DO((*printer)(arg, sym->s_extern.e_symbol->ss_name,
 			              strlen(sym->s_extern.e_symbol->ss_name)));
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			printf(" from %q)", sym->s_extern.e_module->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			printf(" from %k)", sym->s_extern.e_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			goto done;
 		}
 		if (sym->s_type == SYMBOL_TYPE_MODULE) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			printf("({ import _sym = %q; _sym; })",
 			       sym->s_module->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			printf("({ import _sym = %k; _sym; })",
-			       sym->s_module->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			goto done;
 		}
 		if (sym->s_type == SYMBOL_TYPE_MYMOD) {

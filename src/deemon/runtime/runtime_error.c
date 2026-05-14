@@ -589,27 +589,6 @@ PRIVATE char const access_names[4][4] = {
 	/* [?]               = */ "",
 };
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_not_loaded_attr_string)(DeeModuleObject *__restrict self,
-                                          char const *__restrict name, int access) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s global variable `%s' of module `%k' that hasn't been loaded yet",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       name, self);
-}
-
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_not_loaded_attr_string_len)(DeeModuleObject *__restrict self,
-                                              char const *__restrict name,
-                                              size_t namelen, int access) {
-	return DeeError_Throwf(&DeeError_AttributeError,
-	                       "Cannot %s global variable `%$s' of module `%k' that hasn't been loaded yet",
-	                       access_names[access & ATTR_ACCESS_MASK],
-	                       namelen, name, self);
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_module_no_such_global)(struct Dee_module_object *self,
                                   DeeObject *name, int access) {

@@ -25,11 +25,11 @@
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/ast.h>    /* ast, ast_*, loc_here */
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
-#include <deemon/compiler/symbol.h> /* SYMBOL_*, ast_loc, current_rootscope, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_addambig, symbol_fini */
+#include <deemon/compiler/symbol.h> /* SYMBOL_*, ast_loc, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_addambig, symbol_fini */
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t, ITER_ISOK, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */
 #include <deemon/string.h>          /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, memcpy, strlen */
@@ -39,10 +39,6 @@
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t, uint32_t */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/system.h> /* DeeSystem_BaseName */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 
@@ -66,7 +62,6 @@ LOCAL unsigned int DCALL dot_count(tok_t tk) {
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 import_module_by_name(DeeStringObject *__restrict module_name,
                       struct ast_loc *loc) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF DeeModuleObject *result;
 	char const *filename;
 	size_t name_size;
@@ -100,54 +95,6 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	return result;
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	DREF DeeModuleObject *result;
-	if (module_name->s_str[0] == '.') {
-		char const *filename;
-		size_t name_size;
-		if (module_name->s_len == 1) {
-			/* Special case: Import your own module. */
-			return_reference_(MODULE_CURRENT);
-		}
-		filename = TPPFile_RealFilename(token.t_file, &name_size);
-		if likely(filename) {
-			char const *name_base; /* Relative module import. */
-			name_base = DeeSystem_BaseName(filename, name_size);
-			name_size = (size_t)(name_base - filename);
-
-			/* Interpret the module name relative to the path of the current source file. */
-			result = DeeModule_OpenRelative(Dee_AsObject(module_name),
-			                                filename, name_size,
-			                                inner_compiler_options,
-			                                false);
-			goto module_opened;
-		}
-	}
-	result = DeeModule_OpenGlobal(Dee_AsObject(module_name),
-	                              inner_compiler_options,
-	                              false);
-module_opened:
-	if unlikely(!ITER_ISOK(result)) {
-		if unlikely(!result)
-			goto err;
-		if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
-			goto err;
-		result = &DeeModule_Empty;
-		Dee_Incref(result);
-	} else {
-		/* Check for recursive dependency. */
-		if (!(result->mo_flags & Dee_MODULE_FDIDLOAD) &&
-		    result != current_rootscope->rs_module) {
-			PERRAT(loc, W_RECURSIVE_MODULE_DEPENDENCY,
-			       result->mo_name, current_rootscope->rs_module->mo_name);
-			Dee_Decref(result);
-			goto err;
-		}
-	}
-	return result;
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
@@ -310,9 +257,6 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 		if (WARN(W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		Dee_Decref(mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	} else {
 		modsym = import_module_symbol(mod, import_name);
 		if unlikely(!modsym) {
@@ -664,20 +608,11 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 						/* Both symbols are non-varying (allowing value inlining).
 						 * -> Make sure both modules have been loaded, and compare the values that have been bound.
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
-						int error;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-						error = DeeModule_Initialize(mod);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-						error = DeeModule_RunInit(mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+						int error = DeeModule_Initialize(mod);
 						if unlikely(error < 0)
 							goto err;
 						if (error == 0) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 							error = DeeModule_Initialize(sym->s_extern.e_module);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-							error = DeeModule_RunInit(sym->s_extern.e_module);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 							if unlikely(error < 0)
 								goto err;
 							if (error == 0) {
@@ -1313,7 +1248,6 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			result = ast_parse_postexpr(result);
 			goto done;
 		}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		if (tok == '.') {
 			/* FIXME: Ambiguity:
 			 * >> import .foo.bar.baz;  // same as: local bar = import(".foo.bar");
@@ -1332,7 +1266,6 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			 * between "import" and "." to differentiate between the two meanings...
 			 */
 		}
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 		result = ast_constexpr(Dee_None);
 		result = ast_setddi(result, &import_loc);

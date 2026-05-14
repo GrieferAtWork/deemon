@@ -135,12 +135,10 @@ INTDEF WUNUSED NONNULL((1)) struct Dee_traceback_object *DCALL
 except_frame_gettb(struct Dee_except_frame *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 struct Dee_import_frame {
 	struct Dee_import_frame *if_prev;    /* [0..1][lock(PRIVATE(DeeThread_Self()))] Previous frame. */
 	/*utf-8*/ char const    *if_absfile; /* [1..1][const] Absolute, normalized filename of module being compiled */
 };
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 struct Dee_repr_frame {
 	struct Dee_repr_frame *rf_prev; /* [0..1][lock(PRIVATE(DeeThread_Self()))] Previous frame. */
@@ -293,11 +291,9 @@ typedef struct Dee_thread_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
 	Dee_refcnt_t                   t_inthookon;  /* [lock(ATOMIC)] Are interrupt hooks enabled? */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	struct Dee_import_frame       *t_import_curr;/* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Currently in-progress import module operations. */
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	struct Dee_repr_frame         *t_str_curr;   /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Chain of GC objects currently invoking the `__str__' operator. */

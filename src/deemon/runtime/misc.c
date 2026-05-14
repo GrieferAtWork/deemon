@@ -69,12 +69,6 @@
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !NDEBUG */
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEC
-#include <deemon/dec.h> /* DecTime_ClearCache */
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 DECL_BEGIN
 
 #undef byte_t
@@ -102,11 +96,6 @@ PRIVATE pcacheclr caches[] = {
 	&Dee_latincache_clearall,
 #endif /* CONFIG_STRING_LATIN1_CACHED */
 	&Dee_membercache_clearall,
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#ifndef CONFIG_NO_DEC
-	&DecTime_ClearCache,
-#endif /* !CONFIG_NO_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #ifndef CONFIG_NO_THREADS
 	&Dee_futex_clearall,
 #endif /* !CONFIG_NO_THREADS */

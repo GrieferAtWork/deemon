@@ -428,7 +428,6 @@ err:
 
 
 #ifndef CONFIG_NO_DEX
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE DREF ShLib *DCALL
 shlib_ofmodule(DeeTypeObject *UNUSED(tp_self),
                size_t argc, DeeObject *const *argv) {
@@ -480,9 +479,6 @@ shlib_ofmodule(DeeTypeObject *UNUSED(tp_self),
 err:
 	return NULL;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-/* Could also be implemented without 'CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES', but don't bother */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_NO_DEX */
 
 

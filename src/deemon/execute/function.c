@@ -37,7 +37,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/kwds.h>               /* DeeKwBlackList_Decref */
-#include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_module_* */
+#include <deemon/module.h>             /* DeeModule*, Dee_module_* */
 #include <deemon/mro.h>                /* Dee_ATTRINFO_ATTR, Dee_ATTRINFO_MODSYM, Dee_ATTRPERM_F_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decprefv, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovprefv, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -196,7 +196,6 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 
 	/* Step #1: Search the code object's module for the given `function' */
 	mod = code->co_module;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if unlikely(!mod) {
 		mod = DeeModule_OfPointer(code);
 		if (!mod)
@@ -204,13 +203,6 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	} else {
 		Dee_Incref(mod);
 	}
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if unlikely(!mod)
-		goto without_module;
-	if unlikely(DeeInteractiveModule_Check(mod))
-		goto without_module;
-	Dee_Incref(mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	info->fi_mod = mod; /* Inherit reference */
 	DeeModule_LockRead(mod);
 	for (addr = 0; addr < mod->mo_globalc; ++addr) {

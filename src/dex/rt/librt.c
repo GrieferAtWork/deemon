@@ -38,7 +38,7 @@
 #include <deemon/class.h>             /* DeeClassDescriptor_Type, DeeClass_New, DeeInstanceMember_Type */
 #include <deemon/code.h>              /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Type */
-#include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
+#include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_* */
 #include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_ITEM_INIT, Dee_dict_item */
 #include <deemon/error.h>             /* DeeError_*_instance */
 #include <deemon/exec.h>              /* Dee_GetArgv, Dee_SetArgv */
@@ -54,7 +54,7 @@
 #include <deemon/map.h>               /* DeeMap_Type, DeeSharedMap_Type, Dee_EmptyMap */
 #include <deemon/mapfile.h>           /* DeeMapFile_Type */
 #include <deemon/method-hints.h>      /* DeeMA___seq_enumerate___name, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/module.h>            /* DeeBuiltin_*, DeeInteractiveModule_Type, DeeModule* */
+#include <deemon/module.h>            /* DeeBuiltin_*, DeeModule* */
 #include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/numeric.h>           /* DeeNumeric_Type */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD, Dee_STATIC_REFCOUNT_INIT, Dee_TYPE, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference, return_reference_ */
@@ -2089,12 +2089,10 @@ librt_get_ModuleGlobals_f(void) {
 	return_cached(get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__globals__))));
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ModuleLibNames_f(void) {
 	return_cached(get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__libnames__))));
 }
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE Dee_DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
 
@@ -2943,9 +2941,7 @@ PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExports, &librt_get_ModuleExports_f, MET
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExportsIterator, &librt_get_ModuleExportsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExportsKeysIterator, &librt_get_ModuleExportsKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleGlobals, &librt_get_ModuleGlobals_f, METHOD_FCONSTCALL);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleLibNames, &librt_get_ModuleLibNames_f, METHOD_FCONSTCALL);
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesFind, &librt_get_BytesFind_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesFindIterator, &librt_get_BytesFindIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BytesCaseFind, &librt_get_BytesCaseFind_f, METHOD_FCONSTCALL);
@@ -3382,9 +3378,7 @@ DEX_GETTER_F_NODOC("ModuleExports", &librt_get_ModuleExports, DEXSYM_CONSTEXPR),
 DEX_GETTER_F_NODOC("ModuleExportsIterator", &librt_get_ModuleExportsIterator, DEXSYM_CONSTEXPR),         /* ModuleExportsIterator_Type */
 DEX_GETTER_F_NODOC("ModuleExportsKeysIterator", &librt_get_ModuleExportsKeysIterator, DEXSYM_CONSTEXPR), /* ModuleExportsKeysIterator_Type */
 DEX_GETTER_F_NODOC("ModuleGlobals", &librt_get_ModuleGlobals, DEXSYM_CONSTEXPR),                         /* ModuleGlobals_Type */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DEX_GETTER_F_NODOC("ModuleLibNames", &librt_get_ModuleLibNames, DEXSYM_CONSTEXPR),                       /* ModuleLibNames_Type */
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Internal types used to drive user-defined classes */
 DEX_GETTER_F_NODOC("ClassOperatorTable", &librt_get_ClassOperatorTable, DEXSYM_CONSTEXPR),                   /* ClassOperatorTable_Type */
@@ -3431,20 +3425,11 @@ DEX_GETTER_F("DocKwds", &librt_get_DocKwds, DEXSYM_CONSTEXPR, /* DocKwds_Type */
 DEX_GETTER_F_NODOC("DocKwdsIterator", &librt_get_DocKwdsIterator, DEXSYM_CONSTEXPR), /* DocKwdsIterator_Type */
 
 /* Special types exposed by the C API, but not normally visible to user-code. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DEX_MEMBER_F_NODOC("ModuleDee", &DeeModuleDee_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("ModuleDir", &DeeModuleDir_Type, DEXSYM_READONLY),
 #ifndef CONFIG_NO_DEX
 DEX_MEMBER_F_NODOC("ModuleDex", &DeeModuleDex_Type, DEXSYM_READONLY),
 #endif /* !CONFIG_NO_DEX */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-DEX_MEMBER_F("InteractiveModule", &DeeInteractiveModule_Type, DEXSYM_READONLY,
-             "The type used to implement an interactive module, as available by #C{deemon -i}"),
-#ifndef CONFIG_NO_DEX
-DEX_MEMBER_F("DexModule", &DeeDex_Type, DEXSYM_READONLY,
-             "The type of a module that has been loaded from a machine-level shared library."),
-#endif /* !CONFIG_NO_DEX */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DEX_MEMBER_F("Compiler", &DeeCompiler_Type, DEXSYM_READONLY,
              "A user-code interface for the compiler used by this implementation"),
 /* TODO: All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes:
@@ -3664,9 +3649,7 @@ DEX_MEMBER_F_NODOC("equals", &DeeBuiltin_Equals, DEXSYM_READONLY | DEXSYM_CONSTE
 DEX_MEMBER_F_NODOC("hash", &DeeBuiltin_Hash, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
 DEX_MEMBER_F_NODOC("exec", &DeeBuiltin_Exec, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
 DEX_MEMBER_F_NODOC("import", &DeeBuiltin_Import, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DEX_MEMBER_F_NODOC("ImportType", &DeeBuiltin_ImportType, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Special constants */
 RT_HASHOF_EMPTY_SEQUENCE_DEF

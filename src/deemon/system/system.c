@@ -3059,25 +3059,6 @@ err_2big:
 	return Dee_BadAlloc((size_t)-1);
 }
 
-
-
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Returns "true" if "ptr" points into statically allocated memory.
- * If "ptr" is heap-allocated, or it being statically allocated can't
- * be determined for some other reason, return "false".
- *
- * If the given "ptr" is "NULL" or otherwise not at least readable,
- * behavior is undefined (meaning this function may SEGFAULT is given
- * a faulty pointer) */
-PUBLIC ATTR_CONST WUNUSED NONNULL((1)) bool DCALL
-DeeSystem_IsStaticPointer(void const *ptr) {
-	(void)ptr;
-	return false;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
 DECL_END
 
 #ifndef __INTELLISENSE__

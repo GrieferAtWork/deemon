@@ -1225,7 +1225,6 @@ INTDEF WUNUSED NONNULL((1)) uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict o
 struct Dee_module_object;
 struct Dee_compiler_options;
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* @param: dec_dirname:     Absolute filename of the corresponding ".dee" file (ZERO-terminated)
  * @param: dec_dirname_len: Offset (in bytes) from "dec_dirname" where the filename portion begins
  * @return:  * :       Successfully loaded the given DEC file. The caller must still initialize:
@@ -1239,20 +1238,6 @@ INTDEF WUNUSED NONNULL((1)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeModule_OpenDec(DeeObject *__restrict input_stream, struct Dee_compiler_options *options,
                   /*utf-8*/ char const *__restrict dec_dirname, size_t dec_dirname_len,
                   uint64_t dee_file_last_modified);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-/* @return:  0: Successfully loaded the given DEC file.
- * @return:  1: The DEC file was out of date or had been corrupted.
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_OpenDec(struct Dee_module_object *__restrict mod,
-                  DeeObject *__restrict input_stream,
-                  struct Dee_compiler_options *options);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-/* Try to free up memory from the dec time-cache. */
-INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #endif /* !CONFIG_NO_DEC */
 #endif /* CONFIG_BUILDING_DEEMON */

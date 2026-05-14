@@ -36,8 +36,8 @@
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
 #include <deemon/gc.h>                 /* DeeGC_TRACK */
-#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/module.h>             /* DeeModuleObject, DeeModule_IMPORT_F_NOGDEC, Dee_compiler_options, Dee_module_object */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
 #include <deemon/system-features.h>    /* bzero, memcpy, memset */
@@ -234,29 +234,15 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 /* -------- Compiler Object Implementation -------- */
 /* Construct a new compiler for generating the source for the given `mod'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PUBLIC WUNUSED DREF DeeCompilerObject *DCALL
-DeeCompiler_New(uint16_t flags)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict mod, uint16_t flags)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-{
+DeeCompiler_New(uint16_t flags) {
 	DREF DeeCompilerObject *result;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(!(flags & ~COMPILER_FMASK), "Invalid compiler flags in %x", flags);
 	result = DeeObject_MALLOC(DeeCompilerObject);
 	if unlikely(!result)
 		goto done;
 	/* Create the new root scope object. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result->cp_scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	result->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
-	                                                        (DeeObject **)&mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!result->cp_scope)
 		goto err_r;
 	Dee_weakref_support_init(result);
@@ -350,16 +336,10 @@ compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw);
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define compiler__tp_doc NULL
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define compiler__tp_doc "(module:?X3?N?Dstring?DModule)"
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 PUBLIC DeeTypeObject DeeCompiler_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Compiler",
-	/* .tp_doc      = */ DOC(compiler__tp_doc),
+	/* .tp_doc      = */ NULL,
 	/* TODO: This must be a GC object, because user-code may create const-symbols
 	 *       that re-reference the compiler, creating a reference loop:
 	 * >> import Compiler from rt;
@@ -413,7 +393,6 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
                                  int start_line, int start_col) {
@@ -659,9 +638,6 @@ pack_code_in_return:
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 	result = module_compile(root_code);
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	Dee_Decref(root_code);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #if 0 /* Doesn't throw any new compiler errors... */
 	/* Rethrow all errors that may have occurred during module linkage. */
@@ -736,8 +712,6 @@ err:
 	return result;
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 }
-
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

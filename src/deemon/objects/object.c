@@ -1460,7 +1460,6 @@ PRIVATE struct type_member tpconst object_class_members[] = {
 };
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 object_get_module(DeeObject *__restrict self) {
 	DREF DeeModuleObject *result = DeeModule_OfObject(self);
@@ -1494,7 +1493,6 @@ object_bound_true_module(DeeObject *__restrict self) {
 	Dee_Decref_unlikely(result);
 	return Dee_BOUND_YES;
 }
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1514,8 +1512,6 @@ object_timeout_nanoseconds(DeeObject *__restrict self) {
 err:
 	return NULL;
 }
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 struct type_find_visited {
 	struct type_find_visited *tfv_next; /* [0..1] Next visited-chain entry */
@@ -1840,7 +1836,6 @@ unbound_mod:
 unbound:
 	return Dee_BOUND_NO;
 }
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
@@ -1872,7 +1867,6 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                 "->?Dbool\n"
 	                 "True if this object is deep immutable (meaning "
 	                 /**/ "that $deepcopy would return re-return $this)"),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_BOUND_F(STR___module__, &object_get_module, &object_bound_module,
 	                    METHOD_FCONSTCALL,
 	                    "->?DModule\n"
@@ -1918,7 +1912,6 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                    /**/ "try and return the module whose address space this object resides within. "
 	                    /**/ "If @this is dynamically allocated, :UnboundAttribute is thrown\n"
 	                    "For more information, see ?#__module__"),
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	TYPE_GETTER_AB_F("id", &object_id_get,
@@ -1947,7 +1940,6 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	               "Types (such as ?Dint or ?Etime:Time) overwrite this attribute"),
 
 	/* Declaration description */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_BOUND("__attr__", &object_attr_get, &object_attr_bound,
 	                  "->?DAttribute\n"
 	                  "#t{UnboundAttribute}"
@@ -1961,7 +1953,6 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                  "This attribute is overwritten by various wrapper types in order to allow "
 	                  /**/ "searching for attributes that don't come with statically allocated "
 	                  /**/ "objects describing them."),
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	TYPE_GETSET_END
 };

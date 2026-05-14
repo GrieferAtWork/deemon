@@ -22,17 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Free, Dee_Mallocc */
-#include <deemon/bool.h>               /* DeeBool_For, DeeBool_Type */
-#include <deemon/compiler/assembler.h> /* ASM_FNODEC */
-#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, asm_operand, ast, ast_constexpr, ast_decref_likely */
-#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
-#include <deemon/compiler/optimize.h>  /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
-#include <deemon/compiler/symbol.h>    /* DeeScopeObject, DeeScope_Type, symbol */
+#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
+#include <deemon/bool.h>              /* DeeBool_For, DeeBool_Type */
+#include <deemon/compiler/ast.h>      /* ASSERT_AST, AST_*, asm_operand, ast, ast_constexpr, ast_decref_likely */
+#include <deemon/compiler/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
+#include <deemon/compiler/symbol.h>   /* DeeScopeObject, DeeScope_Type, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, Dee_Decref, Dee_Incref */
-#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/none.h>              /* DeeNone_NewRef */
+#include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
+#include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -261,10 +259,7 @@ again:
 			if (ast_optimize(stack, self->a_function.f_code, false))
 				goto err;
 		}
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		if (!DeeCompiler_Current->cp_options ||
-		    !(DeeCompiler_Current->cp_options->co_assembler & ASM_FNODEC))
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 		{
 			/* TODO: Replace initializers of function default-arguments that
 			 *       are never actually used by the function with `none'

@@ -47,7 +47,7 @@
 #include "../type.h"            /* Dee_operator_t */
 #include "../types.h"           /* DREF, DeeObject, ITER_DONE */
 #include "ast.h"                /* ast */
-#include "symbol.h"             /* LOOKUP_SYM_NORMAL, ast_loc, current_rootscope, decl_ast, symbol */
+#include "symbol.h"             /* LOOKUP_SYM_NORMAL, ast_loc, decl_ast, symbol */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool, false */
@@ -512,13 +512,8 @@ ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 struct Dee_module_object;
 
 /* Special return value to the module currently being compiled. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define MODULE_CURRENT ((struct Dee_module_object *)ITER_DONE)
 #define decref_parse_module_byname(x) ((x) == MODULE_CURRENT ? (void)0 : Dee_Decref(x))
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define MODULE_CURRENT current_rootscope->rs_module
-#define decref_parse_module_byname(x) Dee_Decref(x)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Parse a module name and return the associated module object.
  * @param: for_alias: Should be `true' if the name is used in `foo = <name>',

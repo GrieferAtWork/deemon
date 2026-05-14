@@ -806,9 +806,6 @@ struct assembler {
                                         * >>    jmp      2b
                                         * >>1: */
 #define ASM_FNOASSERT      0x0020      /* Replace all assert statements with a compile-time constant `true'. */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define ASM_FNODEC         0x0040      /* Do not create a `*.dec' file once the module has been compiled. */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define ASM_FNOREUSECONST  0x0080      /* Do not re-use constants. */
 #define ASM_FREDUCEREFS    0x0100      /* Try to minimize use of references when accessing class/instance members.
                                         * Enabling this isn't a good idea, as it slows down access to members inside
@@ -1975,15 +1972,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,
                /*inherit(always)*/ DREF DeeCodeObject *__restrict root_code);
 #else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-module_compile(DREF struct Dee_module_object *__restrict module,
-               DeeCodeObject *__restrict root_code,
-               uint16_t flags);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 

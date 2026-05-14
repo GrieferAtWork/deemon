@@ -27,16 +27,15 @@
 #include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/object.h>             /* DREF, Dee_AsObject, Dee_Decref, ITER_ISOK */
+#include <deemon/object.h>             /* DREF, Dee_Decref, ITER_ISOK */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
 #include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo */
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"
 
-#include <stdbool.h> /* false */
-#include <stddef.h>  /* NULL */
-#include <stdint.h>  /* int32_t, uint16_t */
+#include <stddef.h> /* NULL */
+#include <stdint.h> /* int32_t, uint16_t */
 
 DECL_BEGIN
 
@@ -99,15 +98,9 @@ ast_gen_operator_func(struct ast *binding,
 		}
 	}
 	/* Import the operators module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	operators_module = DeeModule_OpenEx("operators", COMPILER_STRLEN("operators"),
 	                                    NULL, 0, DeeModule_IMPORT_F_ENOENT,
 	                                    inner_compiler_options);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	operators_module = DeeModule_OpenGlobal(Dee_AsObject(&str_operators),
-	                                        inner_compiler_options,
-	                                        false);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
 			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators));

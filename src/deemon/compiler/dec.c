@@ -24,21 +24,18 @@
 
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
-#include <deemon/compiler/dec.h>      /* DECREL_*, DEC_FOREACH_SECTION, DEC_FOREACH_SECTION_VARS, DEC_SECTION_COUNT, DEC_SYM_DEFINED, DEC_WRITE_FBIGFILE, DEC_WRITE_FREUSE_GLOBAL, dec_* */
-#include <deemon/error.h>             /* DeeError_*, ERROR_HANDLED_NORMAL, ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>              /* DeeFile_*, OPEN_F* */
-#include <deemon/format.h>            /* PRFuSIZ */
-#include <deemon/module.h>            /* DeeModuleObject */
-#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref, Dee_Incref */
-#include <deemon/string.h>            /* DeeString* */
-#include <deemon/system-features.h>   /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, mempcpyc, memset, strlen */
-#include <deemon/system.h>            /* DeeSystem_* */
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free */
+#include <deemon/compiler/dec.h>    /* DECREL_*, DEC_FOREACH_SECTION, DEC_FOREACH_SECTION_VARS, DEC_SECTION_COUNT, DEC_SYM_DEFINED, DEC_WRITE_FBIGFILE, DEC_WRITE_FREUSE_GLOBAL, dec_* */
+#include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_NORMAL, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>            /* DeeFile_*, OPEN_F* */
+#include <deemon/format.h>          /* PRFuSIZ */
+#include <deemon/module.h>          /* DeeModuleObject */
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref */
+#include <deemon/system-features.h> /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, memset */
+#include <deemon/system.h>          /* DeeSystem_UnlinkString */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
-#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SET32, UNALIGNED_SETLE* */
-#include <hybrid/wordbits.h>  /* ENCODE_INT32 */
+#include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -684,7 +681,6 @@ done:
 
 
 /* Create and emit a DEC file for the given module. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTERN WUNUSED NONNULL((1)) int
 (DCALL dec_create)(DeeModuleObject *__restrict module, char const *dec_filename) {
 	int result;
@@ -734,144 +730,6 @@ err:
 	result = -1;
 	goto done;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-INTERN WUNUSED NONNULL((1)) int
-(DCALL dec_create)(DeeModuleObject *__restrict module) {
-	int result;
-	struct dec_writer old_dec;
-	DREF DeeObject *dec_filename;
-	DeeObject *config_filename;
-
-	/* Save the previously active DEC context. */
-	memcpy(&old_dec, &current_dec, sizeof(struct dec_writer));
-
-	/* Initialize a new DEC context. */
-	dec_writer_init();
-
-	/* Load dec writer options from active compiler options. */
-	config_filename = NULL;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT(DeeCompiler_Current != NULL);
-	if (DeeCompiler_Current->cp_options) {
-		current_dec.dw_flags = DeeCompiler_Current->cp_options->co_decwriter;
-		config_filename      = DeeCompiler_Current->cp_options->co_decoutput;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-	/* Generate and link DEC data for the given module. */
-	result = dec_generate_and_link(module);
-	if unlikely(result)
-		goto done;
-
-	/* Create the DEC output file only after we've generated
-	 * all dec data, so we don't have to concern ourselves
-	 * with deletion of the output file is generation fails. */
-	if ((dec_filename = config_filename) == NULL) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		size_t dec_filelen, dec_pathlen;
-		char const *dec_filestr = module->mo_absname;
-		char *dst;
-		if unlikely(!dec_filestr)
-			goto cannot_create;
-		/* Generate the filename of the DEC file to-be created. */
-		dec_filelen = strlen(dec_filestr);
-		dec_pathlen = dec_filelen;
-		for (;;) {
-			if (!dec_pathlen)
-				goto cannot_create;
-			if (dec_filestr[dec_pathlen - 1] == DeeSystem_SEP)
-				break;
-			--dec_pathlen;
-		}
-		dec_filename = DeeString_NewBuffer(dec_filelen + 5);
-		if unlikely(!dec_filename)
-			goto err;
-		dst = DeeString_GetBuffer(dec_filename);
-		dst = (char *)mempcpyc(dst, dec_filestr, dec_pathlen, sizeof(char));
-		*dst++ = '.';
-		dst = (char *)mempcpyc(dst, dec_filestr + dec_pathlen,
-		                       dec_filelen - dec_pathlen, sizeof(char));
-		*dst++ = '.';
-		*dst++ = 'd';
-		*dst++ = 'e';
-		*dst++ = 'c';
-		*dst++ = '\0';
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		char const *dec_filestr = DeeString_STR(module->mo_path);
-		size_t dec_filelen      = DeeString_SIZE(module->mo_path);
-		/* Generate the filename of the DEC file to-be created. */
-		for (;;) {
-			if (!dec_filelen)
-				goto cannot_create;
-			if (dec_filestr[dec_filelen - 1] == '.')
-				break;
-			if (dec_filestr[dec_filelen - 1] == DeeSystem_SEP)
-				goto cannot_create;
-			--dec_filelen;
-		}
-		dec_filename = DeeString_NewBuffer(dec_filelen + 4);
-		if unlikely(!dec_filename)
-			goto err;
-		{
-			size_t pathlen;
-			char *dst;
-			char const *dec_filestart;
-			dec_filestart = DeeSystem_BaseName(dec_filestr, dec_filelen);
-			pathlen = (size_t)(dec_filestart - dec_filestr);
-			dst     = DeeString_GetBuffer(dec_filename);
-			dst     = (char *)mempcpyc(dst, dec_filestr, pathlen, sizeof(char));
-			*dst++  = '.';
-			pathlen = (size_t)((dec_filestr + dec_filelen) - dec_filestart);
-			dst     = (char *)mempcpyc(dst, dec_filestart, pathlen, sizeof(char));
-			UNALIGNED_SET32(dst, ENCODE_INT32('d', 'e', 'c', 0));
-		}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	} else {
-		Dee_Incref(dec_filename);
-	}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	Dee_DPRINTF("DECGEN: %q -> %r\n", module->mo_absname, dec_filename);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	Dee_DPRINTF("DECGEN: %r -> %r\n", module->mo_path, dec_filename);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-	{
-		DREF DeeObject *output_fp;
-		output_fp = DeeFile_Open(dec_filename,
-		                         OPEN_FWRONLY | OPEN_FCREAT |
-		                         OPEN_FTRUNC | OPEN_FHIDDEN |
-		                         OPEN_FCLOEXEC,
-		                         0644);
-		if unlikely(!output_fp)
-			goto err_filename;
-		/* Write all DEC data to the provided file stream. */
-		result = dec_write(output_fp);
-		Dee_Decref(output_fp);
-		if (result) {
-			/* Delete the DEC file, considering that we've failed to do write to it. */
-			if (DeeSystem_Unlink(dec_filename, false) < 0) {
-				if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
-					goto err_filename;
-			}
-		}
-	}
-	Dee_Decref(dec_filename);
-
-done:
-	/* Cleanup... */
-	dec_writer_fini();
-	memcpy(&current_dec, &old_dec, sizeof(struct dec_writer));
-	return result;
-err_filename:
-	Dee_Decref(dec_filename);
-err:
-	result = -1;
-	goto done;
-cannot_create:
-	result = 0;
-	goto done;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

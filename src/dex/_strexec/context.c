@@ -1262,13 +1262,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 				Dee_Decref(args[0]);
 			}
 		} else {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 			goto do_import_module;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			source_module = Dee_AsObject(DeeModule_ImportRelString(self->jc_impbase,
-			                                                       source_name,
-			                                                       source_size));
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		}
 	} else if (self->jc_import) {
 		/* Absolute module import with user-defined import hook. */
@@ -1283,14 +1277,10 @@ JITContext_DoImportModule(JITContext *__restrict self,
 			Dee_Decref(import_name);
 		}
 	} else {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 do_import_module:
 		source_module = Dee_AsObject(DeeModule_ImportString(source_name, source_size,
 		                                                    Dee_AsObject(self->jc_impbase),
 		                                                    DeeModule_IMPORT_F_NORMAL));
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		source_module = Dee_AsObject(DeeModule_ImportGlobalString(source_name, source_size));
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	if unlikely(!source_module)
 		goto err;

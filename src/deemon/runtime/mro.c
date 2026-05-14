@@ -1234,7 +1234,6 @@ Dee_membercache_fini(struct Dee_membercache *__restrict self) {
 	DBG_memset(self, 0xcc, sizeof(*self));
 }
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Called during finalization of a dee / dex module "mod"
  * -> used to finalize+remove all statically allocated type member
  *    caches whose address indicates that they are part of "mod". */
@@ -1269,7 +1268,6 @@ Dee_membercache_clearall_of_module(DeeModuleObject *__restrict mod) {
 		bzero(cache, sizeof(*cache));
 	}
 }
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 INTERN size_t DCALL
 Dee_membercache_clearall(size_t max_clear) {

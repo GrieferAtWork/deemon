@@ -68,7 +68,7 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mln_module); /* [1..1] The module who's libnames are being viewed. */
 } ModuleLibNames;
@@ -80,8 +80,6 @@ INTDEF DeeTypeObject ModuleLibNames_Type;
 
 INTDEF WUNUSED NONNULL((1)) DREF ModuleLibNames *DCALL
 DeeModule_LibNames(DeeModuleObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 
 DECL_END
 

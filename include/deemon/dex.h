@@ -34,11 +34,10 @@
 
 #include "gc.h"     /* Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include "module.h" /* DeeModuleDex_Type, DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_module_object, Dee_module_symbol, _Dee_MODULE_INIT_mo_lock */
-#include "object.h" /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_REFTRACKER_UNTRACKED, Dee_WEAKREF_SUPPORT_INIT */
+#include "object.h" /* DREF, DeeObject, Dee_AsObject, Dee_REFTRACKER_UNTRACKED, Dee_WEAKREF_SUPPORT_INIT */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
-#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 
@@ -76,7 +75,6 @@ DECL_BEGIN
 #define Dee_DEXSYM_HIDDEN    Dee_MODSYM_FHIDDEN
 #define Dee_DEXSYM_PROPERTY  Dee_MODSYM_FPROPERTY
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 struct Dee_dex_symbol {
 	char const               *ds_name;   /* [1..1][SENTINEL(NULL)] Name of this symbol. */
 	/*utf-8*/ char const     *ds_doc;    /* [0..1] An optional documentation string. */
@@ -296,121 +294,6 @@ INTDEF bool DCALL DeeModule_ClearDexModuleCaches(void);
 /* Unload all loaded DEX modules. */
 INTDEF void DCALL DeeModule_UnloadAllDexModules(void);
 #endif /* CONFIG_BUILDING_DEEMON */
-
-
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-struct Dee_dex_symbol {
-	char const           *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
-	DeeObject            *ds_obj;   /* [0..1] The initial value of this symbol. */
-	uintptr_t             ds_flags; /* Set of `Dee_DEXSYM_*'. */
-	/*utf-8*/ char const *ds_doc;   /* [0..1] An optional documentation string. */
-};
-
-
-
-/* Helpers for defining DEX exports from C */
-#ifndef CONFIG_BUILDING_DEEMON
-#define Dee_DEX_BEGIN \
-	PRIVATE struct Dee_dex_symbol _dex_symbols[] = {
-#define Dee_DEX_MEMBER(name, obj, doc)           Dee_DEX_MEMBER_F(name, obj, Dee_DEXSYM_NORMAL, doc)
-#define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_AsObject(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
-#define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
-#define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
-#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                          \
-	{ name, Dee_AsObject(get), Dee_DEXSYM_PROPERTY | ((flags) & ~Dee_DEXSYM_READONLY), DOC(doc) }, \
-	{ NULL, Dee_AsObject(del), Dee_DEXSYM_NORMAL, NULL },                                          \
-	{ NULL, Dee_AsObject(set), Dee_DEXSYM_NORMAL, NULL }
-#define Dee_DEX_GETTER_F(name, get, flags, doc) \
-	{ name, Dee_AsObject(get), Dee_DEXSYM_READONLY | Dee_DEXSYM_PROPERTY | (flags), DOC(doc) }
-#define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
-#define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
-#define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)
-#define Dee_DEX_GETTER_F_NODOC(name, get, flags)           Dee_DEX_GETTER_F(name, get, flags, NULL)
-#define Dee_DEX_GETSET_NODOC(name, get, del, set)          Dee_DEX_GETSET(name, get, del, set, NULL)
-#define Dee_DEX_GETTER_NODOC(name, get)                    Dee_DEX_GETTER(name, get, NULL)
-#define Dee_DEX_END(init, fini, clear)   \
-		{ NULL, NULL, 0, NULL }          \
-	};                                   \
-	STATIC_ASSERT_MSG(COMPILER_LENOF(_dex_symbols) > 0,            \
-	                  "A dex module must have at least 1 export"); \
-	PUBLIC struct Dee_dex DEX = {        \
-		/* .d_symbols = */ _dex_symbols, \
-		/* .d_init    = */ init,         \
-		/* .d_fini    = */ fini,         \
-		/* .d_clear   = */ clear         \
-	}
-#endif /* !CONFIG_BUILDING_DEEMON */
-
-
-
-struct Dee_dex {
-	/* The extension descriptor structure that must be
-	 * exported by the extension module under the name `DEX'. */
-	struct Dee_dex_symbol *d_symbols; /* [0..1] The vector of exported symbols.
-	                                   * NOTE: Indices in this vector are re-used as global variable numbers. */
-	/* Optional initializer/finalizer callbacks.
-	 * When non-NULL, `d_init()' is invoked after globals have been.
-	 * Extension modules are only unloaded before deemon itself terminates.
-	 * NOTE: When executed, the `Dee_MODULE_FDIDINIT' hasn't been set yet,
-	 *       but will be as soon as the function returns a value of ZERO(0).
-	 *       Any other return value can be used to indicate an error having
-	 *       been thrown, which in turn will cause the caller to propagate
-	 *       said error. */
-	WUNUSED_T int (DCALL *d_init)(void);
-	/* WARNING: `d_fini()' must not attempt to add more references to `self'.
-	 *           When an extension module is supposed to get unloaded, it _has_
-	 *           to be unloaded and there is no way around that! */
-	void (DCALL *d_fini)(void);
-
-	/* Called during the GC-cleanup phase near the end of deemon's execution cycle.
-	 * This function should be implemented to clear global caches or object hooks.
-	 * @return: true:  Something was cleared.
-	 * @return: false: Nothing was cleared. (Same as not implementing this callback) */
-	bool (DCALL *d_clear)(void);
-};
-
-typedef struct Dee_dex_object {
-	DeeModuleObject             d_module; /* The underlying module. */
-	struct Dee_dex             *d_dex;    /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
-	                                       * NOTE: This pointer is apart of the extension's static address space. */
-	void                       *d_handle; /* [?..?][const_if(Dee_MODULE_FDIDLOAD)] System-specific library handle. */
-	struct Dee_dex_object     **d_pself;  /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
-	DREF struct Dee_dex_object *d_next;   /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
-	                                       * During finalization, extensions are unloaded in reverse order. */
-} DeeDexObject;
-
-DDATDEF DeeTypeObject DeeDex_Type;
-#define DeeDex_Check(ob)      DeeObject_InstanceOf(ob, &DeeDex_Type)
-#define DeeDex_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDex_Type)
-
-#ifndef CONFIG_BUILDING_DEEMON
-/* Implemented by the extension:
- * >> PUBLIC struct Dee_dex DEX = { ... }; */
-EXPDEF struct Dee_dex DEX;
-#endif /* CONFIG_BUILDING_DEEMON */
-
-#ifdef CONFIG_BUILDING_DEEMON
-/* Try to load an extension file.
- * NOTE: This isn't where the dex gets initialized!
- * @return:  0: The extension was successfully loaded.
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-dex_load_handle(DeeDexObject *__restrict self,
-                /*inherited(always)*/ void *handle,
-                DeeObject *__restrict input_file);
-
-/* Initialize the given dex module. */
-INTDEF WUNUSED NONNULL((1)) int DCALL dex_initialize(DeeDexObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDex_New(DeeObject *__restrict name);
-
-/* Clear global data caches of all loaded dex modules. */
-INTDEF bool DCALL DeeDex_Cleanup(void);
-
-/* Unload all loaded dex modules. */
-INTDEF void DCALL DeeDex_Finalize(void);
-#endif /* CONFIG_BUILDING_DEEMON */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 #endif /* !CONFIG_NO_DEX */

@@ -24,29 +24,29 @@
 
 #include <deemon/alloc.h>              /* Dee_Free */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_code_frame, Dee_code_object, Dee_hostasm_function_init */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_code_frame, Dee_code_object */
 #include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_*, Dee_GetArgv */
+#include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_GetLibPath, DeeModule_SetLibPath */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/gc.h>                 /* DeeGCObject_Free, DeeGC_Untrack, Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/int.h>                /* DeeInt_NewUInt128 */
-#include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, Dee_static_module_struct, _Dee_MODULE_* */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, _Dee_MODULE_* */
 #include <deemon/mro.h>                /* DeeObject_GenericFindAttrInfoStringLenHash, DeeObject_TGenericFindAttr, DeeObject_TGenericIterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRINFO_MODSYM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrperm_t, Dee_attrspec */
-#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_uint128_t, Dee_weakref_support_fini, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_uint128_t, Dee_weakref_support_fini, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bcmpc, memcpy*, memset, strlen */
-#include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE, DeeSystem_IsSep */
+#include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisitv, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_init */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
@@ -59,16 +59,8 @@
 #include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifndef CONFIG_NO_DEX
-#include <deemon/dex.h> /* DeeDexObject, DeeDex_Check, Dee_module_dexdata, dex_initialize */
+#include <deemon/dex.h> /* Dee_module_dexdata */
 #endif /* !CONFIG_NO_DEX */
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/bool.h> /* return_bool */
-#include <deemon/list.h> /* DeeListObject */
-
-#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
-#include <hybrid/sequence/list.h> /* LIST_ENTRY_UNBOUND_INITIALIZER */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -153,8 +145,6 @@ done:
 
 
 
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 /* Ensure that imports of "self" have been initialized.
  * @return: 0 : Success.
@@ -292,87 +282,10 @@ DeeModule_GetRootFunction(DeeModuleObject *__restrict self) {
 	return rootfunc;
 }
 
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-/* Initialize all modules imported by the given one.
- * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
- * @return: -1: An error occurred during initialization.
- * @return:  0: All modules imported by the given one are now initialized. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeModule_InitImports(DeeModuleObject *__restrict self);
-
-
-/* Create a new function object for the root code-object of a given module.
- * NOTE: This function will also ensure that all modules
- *       imported by this one have been fully initialized.
- * @param: set_initialized: When true, also set the `Dee_MODULE_FDIDINIT' flag if
- *                          it, or `Dee_MODULE_FINITIALIZING' hasn't been set already
- * @return: * : A callable object which, when invoked, will execute the module's root code,
- *              while passing any arguments given to it to the module's root where they
- *              are available as `...' (3 dots using in an expression)
- *              my_module.dee:
- *              >> print [...];  // [10, 20, 30]
- *              DeeObject_Callf(DeeModule_GetRoot(my_module, true), "ddd", 10, 20, 30);
- * @return: NULL: Failed to create a function object for the module's root code object. */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
-DeeModule_GetRoot(DeeModuleObject *__restrict self,
-                  bool set_initialized) {
-	DREF DeeFunctionObject *result;
-	DREF DeeCodeObject *code;
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-
-	/* Check if this module has been loaded. */
-	if unlikely(DeeModule_InitImports(self))
-		goto err;
-
-	/* Load the code object of the module initializer. */
-	DeeModule_LockRead(self);
-	code = self->mo_root;
-	if unlikely(!code)
-		code = &DeeCode_Empty;
-	Dee_Incref(code);
-	DeeModule_LockEndRead(self);
-
-	/* Wrap the module's code object in a Function. */
-	ASSERT(code->co_refc == 0);
-	if likely(code->co_refstaticc == 0) {
-		result = (DREF DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
-	} else {
-		result = (DREF DeeFunctionObject *)DeeGCObject_Callocc(offsetof(DeeFunctionObject, fo_refv),
-		                                                       code->co_refstaticc, sizeof(DREF DeeObject *));
-	}
-	if unlikely(!result)
-		goto err;
-	result->fo_code = code; /* Inherit reference */
-	DeeObject_InitStatic(result, &DeeFunction_Type);
-#ifdef CONFIG_HAVE_CODE_METRICS
-	atomic_inc(&result->fo_code->co_metrics.com_functions);
-#endif /* CONFIG_HAVE_CODE_METRICS */
-#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-	Dee_hostasm_function_init(&result->fo_hostasm);
-#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-	Dee_atomic_rwlock_init(&result->fo_reflock);
-	result = DeeGC_TRACK(DeeFunctionObject, result);
-	if (set_initialized) {
-		uint16_t flags;
-		/* Try to set the `Dee_MODULE_FDIDINIT' flag */
-		do {
-			flags = atomic_read(&self->mo_flags);
-			if (flags & Dee_MODULE_FINITIALIZING)
-				break; /* Don't interfere with an on-going initialization. */
-		} while (!atomic_cmpxch_weak(&self->mo_flags, flags, flags | Dee_MODULE_FDIDINIT));
-	}
-	return Dee_AsObject(result);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 
 INTERN struct Dee_module_symbol empty_module_buckets[] = {
 	{ NULL, 0, 0 }
 };
-
 
 
 PUBLIC WUNUSED NONNULL((1)) struct Dee_module_symbol *DCALL
@@ -380,14 +293,6 @@ DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 	struct Dee_module_symbol *iter, *end;
 	struct Dee_module_symbol *result = NULL;
 
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	/* Check if the module has actually been loaded yet.
-	 * This needs to be done to prevent a race condition
-	 * when reading the bucket fields below, as they only
-	 * become immutable once this flag has been set. */
-	if unlikely(!(self->mo_flags & Dee_MODULE_FDIDLOAD))
-		return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	end = (iter = self->mo_bucketv) + (self->mo_bucketm + 1);
 	for (; iter < end; ++iter) {
 		if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
@@ -646,7 +551,6 @@ err_is_readonly:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef DeeSystem_HAVE_FS_ICASE
 #define FS_strcmp  strcasecmp
 #define FS_strcmpz strcasecmpz
@@ -1320,660 +1224,6 @@ DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
 	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
 }
 
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_getattr_impl(DeeModuleObject *__restrict self,
-                    char const *__restrict attr_name, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	DREF DeeObject *result;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (strcmp(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
-			return DeeModule_GetAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	result = DeeObject_GenericGetAttrStringHash(Dee_AsObject(self), attr_name, hash);
-	if (result != ITER_DONE)
-		return result;
-	err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_GET);
-	return NULL;
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_getattr_len_impl(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name,
-                        size_t attrlen, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	DREF DeeObject *result;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (Dee_MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
-			continue; /* Non-matching length */
-		if (bcmpc(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
-			return DeeModule_GetAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	result = DeeObject_GenericGetAttrStringLenHash(Dee_AsObject(self), attr_name, attrlen, hash);
-	if (result != ITER_DONE)
-		return result;
-	err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_GET);
-	return NULL;
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-module_boundattr_impl(DeeModuleObject *__restrict self,
-                      char const *__restrict attr_name, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (strcmp(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
-			return DeeModule_BoundAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericBoundAttrStringHash(Dee_AsObject(self), attr_name, hash);
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-module_boundattr_len_impl(DeeModuleObject *__restrict self,
-                          char const *__restrict attr_name,
-                          size_t attrlen, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (Dee_MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
-			continue; /* Non-matching length */
-		if (bcmpc(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
-			return DeeModule_BoundAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericBoundAttrStringLenHash(Dee_AsObject(self), attr_name, attrlen, hash);
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
-module_hasattr_impl(DeeModuleObject *__restrict self,
-                    char const *__restrict attr_name, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (strcmp(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
-			return true;
-	}
-	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericHasAttrStringHash(Dee_AsObject(self), attr_name, hash);
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
-module_hasattr_len_impl(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name,
-                        size_t attrlen, Dee_hash_t hash) {
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (Dee_MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
-			continue; /* Non-matching length */
-		if (bcmpc(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
-			return true;
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	return DeeObject_GenericHasAttrStringLenHash(Dee_AsObject(self), attr_name, attrlen, hash);
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-module_delattr_impl(DeeModuleObject *__restrict self,
-                    char const *__restrict attr_name,
-                    Dee_hash_t hash) {
-	int error;
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (strcmp(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
-			return DeeModule_DelAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericDelAttrStringHash(Dee_AsObject(self), attr_name, hash);
-	if unlikely(error <= 0)
-		return error;
-	return err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_DEL);
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-module_delattr_len_impl(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name,
-                        size_t attrlen, Dee_hash_t hash) {
-	int error;
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (Dee_MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
-			continue; /* Non-matching length */
-		if (bcmpc(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
-			return DeeModule_DelAttrSymbol(self, item);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericDelAttrStringLenHash(Dee_AsObject(self), attr_name, attrlen, hash);
-	if unlikely(error <= 0)
-		return error;
-	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
-}
-
-LOCAL WUNUSED NONNULL((1, 2, 4)) int DCALL
-module_setattr_impl(DeeModuleObject *__restrict self,
-                    char const *__restrict attr_name, Dee_hash_t hash,
-                    DeeObject *__restrict value) {
-	int error;
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (strcmp(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name) == 0)
-			return DeeModule_SetAttrSymbol(self, item, value);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericSetAttrStringHash(Dee_AsObject(self), attr_name, hash, value);
-	if unlikely(error <= 0)
-		return error;
-	return err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_SET);
-}
-
-LOCAL int DCALL
-module_setattr_len_impl(DeeModuleObject *__restrict self,
-                        char const *__restrict attr_name,
-                        size_t attrlen, Dee_hash_t hash,
-                        DeeObject *__restrict value) {
-	int error;
-	Dee_hash_t i, perturb;
-	perturb = i = Dee_MODULE_HASHST(self, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (Dee_MODULE_SYMBOL_GETNAMELEN(item) != attrlen)
-			continue; /* Non-matching length */
-		if (bcmpc(Dee_MODULE_SYMBOL_GETNAMESTR(item), attr_name, attrlen, sizeof(char)) == 0)
-			return DeeModule_SetAttrSymbol(self, item, value);
-	}
-
-	/* Fallback: Do a generic attribute lookup on the module. */
-	error = DeeObject_GenericSetAttrStringLenHash(Dee_AsObject(self), attr_name, attrlen, hash, value);
-	if unlikely(error <= 0)
-		return error;
-	return err_module_no_such_global_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
-}
-
-
-#ifndef CONFIG_NO_THREADS
-INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
-INTDEF NONNULL((1)) void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
-INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
-#else /* !CONFIG_NO_THREADS */
-#define interactivemodule_lockread(self)     0
-#define interactivemodule_lockwrite(self)    0
-#define interactivemodule_lockendread(self)  (void)0
-#define interactivemodule_lockendwrite(self) (void)0
-#endif /* CONFIG_NO_THREADS */
-
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetAttrStringHash(DeeModuleObject *__restrict self,
-                            char const *__restrict attr_name, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			DREF DeeObject *result;
-			if unlikely(interactivemodule_lockread(self))
-				return NULL;
-			result = module_getattr_impl(self, attr_name, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_GET);
-		return NULL;
-	}
-	return module_getattr_impl(self, attr_name, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeModule_GetAttrStringLenHash(DeeModuleObject *__restrict self,
-                               char const *__restrict attr_name,
-                               size_t attrlen, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			DREF DeeObject *result;
-			if unlikely(interactivemodule_lockread(self))
-				return NULL;
-			result = module_getattr_len_impl(self, attr_name, attrlen, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_GET);
-		return NULL;
-	}
-	return module_getattr_len_impl(self, attr_name, attrlen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
-                              char const *__restrict attr_name, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			if unlikely(interactivemodule_lockread(self))
-				return Dee_BOUND_ERR;
-			result = module_boundattr_impl(self, attr_name, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		return Dee_BOUND_MISSING;
-	}
-	return module_boundattr_impl(self, attr_name, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
-                                 char const *__restrict attr_name,
-                                 size_t attrlen, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			if unlikely(interactivemodule_lockread(self))
-				return Dee_BOUND_ERR;
-			result = module_boundattr_len_impl(self, attr_name, attrlen, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		return Dee_BOUND_MISSING;
-	}
-	return module_boundattr_len_impl(self, attr_name, attrlen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self,
-                            char const *__restrict attr_name, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			bool result;
-			if (interactivemodule_lockread(self))
-				return -1;
-			result = module_hasattr_impl(self, attr_name, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		return 0;
-	}
-	return module_hasattr_impl(self, attr_name, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_HasAttrStringLenHash(DeeModuleObject *__restrict self,
-                               char const *__restrict attr_name,
-                               size_t attrlen, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			bool result;
-			if (interactivemodule_lockread(self))
-				return -1;
-			result = module_hasattr_len_impl(self, attr_name, attrlen, hash);
-			interactivemodule_lockendread(self);
-			return result;
-		}
-		return false;
-	}
-	return module_hasattr_len_impl(self, attr_name, attrlen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_DelAttrStringHash(DeeModuleObject *__restrict self,
-                            char const *__restrict attr_name, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			result = interactivemodule_lockwrite(self);
-			if (result == 0) {
-				result = module_delattr_impl(self, attr_name, hash);
-				interactivemodule_lockendwrite(self);
-			}
-			return result;
-		}
-		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_DEL);
-	}
-	return module_delattr_impl(self, attr_name, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeModule_DelAttrStringLenHash(DeeModuleObject *__restrict self,
-                               char const *__restrict attr_name,
-                               size_t attrlen, Dee_hash_t hash) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			result = interactivemodule_lockwrite(self);
-			if (result == 0) {
-				result = module_delattr_len_impl(self, attr_name, attrlen, hash);
-				interactivemodule_lockendwrite(self);
-			}
-			return result;
-		}
-		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_DEL);
-	}
-	return module_delattr_len_impl(self, attr_name, attrlen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
-DeeModule_SetAttrStringHash(DeeModuleObject *self,
-                            char const *__restrict attr_name, Dee_hash_t hash,
-                            DeeObject *value) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			result = interactivemodule_lockwrite(self);
-			if (result == 0) {
-				result = module_setattr_impl(self, attr_name, hash, value);
-				interactivemodule_lockendwrite(self);
-			}
-			return result;
-		}
-		return err_module_not_loaded_attr_string(self, attr_name, ATTR_ACCESS_SET);
-	}
-	return module_setattr_impl(self, attr_name, hash, value);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
-                               char const *__restrict attr_name,
-                               size_t attrlen, Dee_hash_t hash,
-                               DeeObject *value) {
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			int result;
-			result = interactivemodule_lockwrite(self);
-			if (result == 0) {
-				result = module_setattr_len_impl(self, attr_name, attrlen, hash, value);
-				interactivemodule_lockendwrite(self);
-			}
-			return result;
-		}
-		return err_module_not_loaded_attr_string_len(self, attr_name, attrlen, ATTR_ACCESS_SET);
-	}
-	return module_setattr_len_impl(self, attr_name, attrlen, hash, value);
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-PRIVATE ATTR_COLD NONNULL((1)) int DCALL
-err_module_not_loaded(DeeModuleObject *__restrict self) {
-	return DeeError_Throwf(&DeeError_RuntimeError,
-	                       "Cannot initialized Module `%k' that hasn't been loaded yet",
-	                       self->mo_name);
-}
-
-
-/* Try to run the initializer of a module, should it not have been run yet.
- * This function will atomically ensure that the initializer
- * is only run once, and only so in a single thread.
- * Additionally, this function will also call itself recursively on
- * all other modules imported by the given one before actually invoking
- * the module's own initializer.
- * NOTE: When `DeeModule_GetRoot()' is called with `set_initialized' set to `true', the
- *       module was-initialized flag is set the same way it would be by this function.
- * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
- * @return: -1: An error occurred during initialization.
- * @return:  0: Successfully initialized the module/the module was already initialized.
- * @return:  1: You are already in the process of initializing this module (not an error). */
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeModule_RunInit)(DeeModuleObject *__restrict self) {
-	uint16_t flags;
-	DeeThreadObject *caller;
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-
-	/* Quick check: Don't do anything else if the module has already been loaded. */
-	if (self->mo_flags & Dee_MODULE_FDIDINIT)
-		return 0;
-
-	/* Make sure not to tinker with an interactive module's root code object. */
-	if ((self->mo_flags & Dee_MODULE_FINITIALIZING) &&
-	    DeeInteractiveModule_Check(self))
-		return 0;
-
-	COMPILER_READ_BARRIER();
-	caller = DeeThread_Self();
-begin_init:
-	do {
-		flags = atomic_read(&self->mo_flags);
-		if (flags & Dee_MODULE_FDIDINIT)
-			return 0;
-
-		/* Check if the module has been loaded yet. */
-		if (!(flags & Dee_MODULE_FDIDLOAD)) {
-			if (flags & Dee_MODULE_FLOADING) {
-#ifdef CONFIG_HOST_WINDOWS
-				/* Sleep a bit longer than usually. */
-				__NAMESPACE_INT_SYM SleepEx(1000, 0);
-#else /* CONFIG_HOST_WINDOWS */
-				SCHED_YIELD();
-#endif /* !CONFIG_HOST_WINDOWS */
-				goto begin_init;
-			}
-			return err_module_not_loaded(self); /* Not loaded yet. */
-		}
-	} while (!atomic_cmpxch_weak(&self->mo_flags, flags,
-	                             flags | Dee_MODULE_FINITIALIZING));
-
-	if (flags & Dee_MODULE_FINITIALIZING) {
-		/* Module is already being loaded. */
-#ifdef CONFIG_NO_THREADS
-		return 1;
-#else /* CONFIG_NO_THREADS */
-		while ((flags = atomic_read(&self->mo_flags),
-		        (flags & (Dee_MODULE_FINITIALIZING | Dee_MODULE_FDIDINIT)) ==
-		        Dee_MODULE_FINITIALIZING)) {
-			/* Check if the module is being loaded in the current thread. */
-			if (self->mo_loader == caller)
-				return 1;
-
-#ifdef CONFIG_HOST_WINDOWS
-			/* Sleep a bit longer than usually. */
-			__NAMESPACE_INT_SYM SleepEx(1000, 0);
-#else /* CONFIG_HOST_WINDOWS */
-			SCHED_YIELD();
-#endif /* !CONFIG_HOST_WINDOWS */
-		}
-
-		/* If the module has now been marked as having finished loading,
-		 * then simply act as though it was us that did it. */
-		if (flags & Dee_MODULE_FDIDINIT)
-			return 0;
-		goto begin_init;
-#endif /* !CONFIG_NO_THREADS */
-	}
-
-	/* Setup the module to indicate that we're the ones loading it. */
-#ifndef CONFIG_NO_THREADS
-	self->mo_loader = caller;
-#endif /* !CONFIG_NO_THREADS */
-
-	/* FIX-ME: Technically, we'd need to acquire a global lock at this point
-	 *        and only call `init_function' while hold it in a non-sharing
-	 *        manner. Otherwise, there is a slim chance for a deadlock:
-	 *        thread_1:
-	 *           initialize_module("module_a"):
-	 *              >> import("module_b"); // Dynamic import to prevent compiler error due to recursion.
-	 *        thread_2:
-	 *           initialize_module("module_b"):
-	 *              >> import("module_a"); // see above...
-	 *        #1: `thread_1' gets here first and starts to
-	 *            run the initialization code of `module_a'
-	 *        #2: `thread_2' gets here second and start to
-	 *            run the initialization code of `module_b'
-	 *        #3: `thread_1' executing `module_a' starts to import `module_b'
-	 *            It succeeds as the module is already in-cache and calls
-	 *            `DeeModule_RunInit()' to make sure that the module has been
-	 *            initialized, entering the idle-wait loop above that is
-	 *            designed to wait when another thread is already initializing
-	 *            the same module.
-	 *        #4: `thread_2' does the same as `thread_1', and enters the wait
-	 *            loop, idly waiting for `thread_1' to finish initializing
-	 *            `module_a', which it never will because of the obvious DEADLOCK!
-	 * NOTE:  This problem can also happen when loading a module, but is just much
-	 *        more difficult to invoke as it requires execution of multi-threaded
-	 *        user-code while the compiler is running, but is possible through
-	 *        GC-callbacks that may be invoked when memory allocation fails during
-	 *        the compilation process.
-	 *  >> One sollution would be to put a global, re-en lock around this part,
-	 *     but I really don't like the idea of that, especially considering how
-	 *     it would make it impossible to load different modules concurrently
-	 *     just on the off-chance that they might be importing each other.
-	 *     However, I also don't wish get rid of dynamic import mechanics, not
-	 *     only because any exposure to them at any point would lead back to
-	 *     the problem of this deadlock, but also because it would greatly
-	 *     hinder efficiency when there was no way of dynamically importing
-	 *     modules, allowing for runtime checks on the presence of symbols.
-	 * ... Python could get away with something like that thanks to
-	 *     its GIL, but I would never stoop so low as to simply say:
-	 *        "Yeah. We've got threads... Only one of them can ever be
-	 *        executed at the same time, but it's still multi-threading..."
-	 *     me: "NO!!! THAT'S NOT TREADING! THATS JUST MADNESS AND DEFEATS THE POINT!!!"
-	 * T0D0: Stop going off-topic...
-	 */
-#ifndef CONFIG_NO_DEX
-	if (DeeDex_Check(self)) {
-		if (dex_initialize((DeeDexObject *)self))
-			goto err;
-	} else
-#endif /* !CONFIG_NO_DEX */
-	{
-		/* Create and run the module's initializer function. */
-		DREF DeeObject *init_function, *init_result;
-		DREF DeeObject *argv;
-		init_function = DeeModule_GetRoot(self, false);
-		if unlikely(!init_function)
-			goto err;
-
-		/* Call the module's main function with globally registered argv. */
-		argv = Dee_GetArgv();
-		init_result = DeeObject_CallTupleInherited(init_function, argv);
-		Dee_Decref(argv);
-		if unlikely(!init_result)
-			goto err;
-		Dee_Decref(init_result);
-	}
-
-	/* Set the did-init flag when we're done now. */
-	atomic_or(&self->mo_flags, Dee_MODULE_FDIDINIT);
-	return 0;
-err:
-	atomic_and(&self->mo_flags, ~(Dee_MODULE_FINITIALIZING));
-	return -1;
-}
-
-
-/* Initialize all modules imported by the given one.
- * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
- * @return: -1: An error occurred during initialization.
- * @return:  0: All modules imported by the given one are now initialized. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeModule_InitImports(DeeModuleObject *__restrict self) {
-	size_t i;
-	uint16_t flags;
-	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
-	flags = atomic_read(&self->mo_flags);
-
-	/* Quick check: When the did-init flag has been set, we can
-	 *              assume that all other modules imported by
-	 *              this one have also been initialized. */
-	if (flags & Dee_MODULE_FDIDINIT)
-		goto done;
-
-	/* Make sure not to tinker with the imports of an interactive module. */
-	if (flags & Dee_MODULE_FINITIALIZING &&
-	    DeeInteractiveModule_Check(self))
-		goto done;
-
-	/* Make sure the module has been loaded. */
-	if unlikely(!(flags & Dee_MODULE_FDIDLOAD))
-		goto err_not_loaded; /* The module hasn't been loaded yet. */
-
-	/* Go though and run initializers for all imported modules. */
-	for (i = 0; i < self->mo_importc; ++i) {
-		DeeModuleObject *mod = self->mo_importv[i];
-		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
-		if unlikely(DeeModule_RunInit(mod) < 0)
-			goto err;
-	}
-
-done:
-	return 0;
-err_not_loaded:
-	err_module_not_loaded(self);
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 /* Return the name of a global variable in the given module.
@@ -1993,7 +1243,6 @@ DeeModule_GlobalName(DeeModuleObject *__restrict self, uint16_t gid) {
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 	DeeModuleObject *me = (DeeModuleObject *)self;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	char const *name;
 	DREF DeeObject *libname = DeeModule_GetLibName(me, 0);
 	if (libname != ITER_DONE)
@@ -2004,16 +1253,12 @@ module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 	if (!*name)
 		return DeeString_New("<Filesystem root module>");
 	return DeeString_Newf("<Module %q>", name);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return_reference_((DeeObject *)me->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 module_printrepr(DeeObject *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
 	DeeModuleObject *me = (DeeModuleObject *)self;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	DREF DeeObject *libname = DeeModule_GetLibName(me, 0);
 	if (ITER_ISOK(libname))
 		return DeeFormat_Printf(printer, arg, "import.%K", libname);
@@ -2029,51 +1274,19 @@ module_printrepr(DeeObject *__restrict self,
 		return DeeFormat_Printf(printer, arg, "import(%q)", me->mo_absname);
 	}
 	return DeeFormat_PRINT(printer, arg, "Module()");
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	return DeeFormat_Printf(printer, arg, "import(%r)", me->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define module_getattr   DeeModule_GetAttr
 #define module_delattr   DeeModule_DelAttr
 #define module_setattr   DeeModule_SetAttr
 #define module_hasattr   DeeModule_HasAttr
 #define module_boundattr DeeModule_BoundAttr
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_getattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
-	return DeeModule_GetAttr(self, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_delattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
-	return DeeModule_DelAttr(self, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-module_setattr(DeeModuleObject *self, /*String*/ DeeObject *name, DeeObject *value) {
-	return DeeModule_SetAttr(self, name, value);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_hasattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
-	return DeeModule_HasAttr(self, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_boundattr(DeeModuleObject *self, /*String*/ DeeObject *name) {
-	return DeeModule_BoundAttr(self, name);
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 struct module_attriter {
 	Dee_ATTRITER_HEAD
 	DeeModuleObject *mai_mod;  /* [1..1][const] The module whose attributes to enumerate. */
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	size_t           mai_didx; /* [lock(ATOMIC)] Index into `mai_mod->mo_dir->md_files' */
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	uint16_t         mai_hidx; /* [lock(ATOMIC)] Index into `mai_mod->mo_bucketv' */
 };
 
@@ -2091,7 +1304,6 @@ module_attriter_next(struct module_attriter *__restrict self,
 		new_hidx = old_hidx;
 		do {
 			if unlikely(new_hidx > mod->mo_bucketm) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				size_t didx;
 				DeeTupleObject *dir;
 				DeeStringObject *file;
@@ -2116,9 +1328,6 @@ module_attriter_next(struct module_attriter *__restrict self,
 				Dee_Incref(&DeeModule_Type);
 				desc->ad_type = &DeeModule_Type;
 				return 0;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				return 1;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			}
 			sym = &mod->mo_bucketv[new_hidx];
 			++new_hidx;
@@ -2142,17 +1351,10 @@ module_attriter_next(struct module_attriter *__restrict self,
 	if (sym->ss_flags & Dee_MODSYM_FCONSTEXPR)
 #endif
 	{
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		int init_state = DeeModule_Initialize(mod);
 		if unlikely(init_state < 0)
 			goto err;
-		if likely(init_state == 0)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		if unlikely(DeeModule_RunInit(mod) < 0)
-			goto err;
-		if (mod->mo_flags & Dee_MODULE_FDIDINIT)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		{
+		if likely(init_state == 0) {
 			DeeModule_LockRead(mod);
 			if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
@@ -2207,23 +1409,13 @@ module_iterattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
 	size_t temp;
 	struct Dee_attriterchain_builder builder;
 	ASSERT_OBJECT(self);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			/* TODO: Special handling for enumerating the globals of an interactive module. */
-		}
-		return 0;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 	Dee_attriterchain_builder_init(&builder, iterbuf, bufsize);
 	if (Dee_attriterchain_builder_getbufsize(&builder) >= sizeof(struct module_attriter)) {
 		struct module_attriter *iter;
 		iter = (struct module_attriter *)Dee_attriterchain_builder_getiterbuf(&builder);
 		Dee_attriter_init(iter, &module_attriter_type);
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		iter->mai_didx = 0;
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		iter->mai_hidx = 0;
 		iter->mai_mod  = self;
 	}
@@ -2245,14 +1437,6 @@ module_findattr_impl(DeeModuleObject *__restrict self,
                      struct Dee_attrspec const *__restrict specs,
                      struct Dee_attrdesc *__restrict result) {
 	ASSERT_OBJECT(self);
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		if (DeeInteractiveModule_Check(self)) {
-			/* TODO: Special handling for enumerating the globals of an interactive module. */
-		}
-		return 1;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if (!specs->as_decl || specs->as_decl == Dee_AsObject(self)) {
 		struct Dee_module_symbol *sym;
 		sym = DeeModule_GetSymbolStringHash(self,
@@ -2275,17 +1459,10 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 			if (sym->ss_flags & Dee_MODSYM_FCONSTEXPR)
 #endif
 			{
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				int init_state = DeeModule_Initialize(self);
 				if unlikely(init_state < 0)
 					goto err;
-				if likely(init_state == 0)
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				if unlikely(DeeModule_RunInit(self) < 0)
-					goto err;
-				if (self->mo_flags & Dee_MODULE_FDIDINIT)
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				{
+				if likely(init_state == 0) {
 					DeeModule_LockRead(self);
 					if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 						/* Check which property operations have been bound. */
@@ -2327,7 +1504,6 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 				return 0;
 			}
 		}
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define DIRATTR_perm (Dee_ATTRPERM_F_NAMEOBJ | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_PROPERTY | Dee_ATTRPERM_F_CANGET)
 		if ((DIRATTR_perm & specs->as_perm_mask) == specs->as_perm_value) {
 			DeeStringObject *dir_status;
@@ -2349,7 +1525,6 @@ module_findattr_impl(DeeModuleObject *__restrict self,
 			}
 		}
 #undef DIRATTR_perm
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	return DeeObject_TGenericFindAttr(&DeeModule_Type,
 	                                  Dee_AsObject(self),
@@ -2416,7 +1591,6 @@ INTERN struct type_attr module_attr = {
 	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&module_findattr_info_string_len_hash,
 };
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #define module_get_code DeeModule_GetRootCode
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2531,45 +1705,6 @@ err:
 	return NULL;
 }
 
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PRIVATE NONNULL((1)) int DCALL
-err_module_not_fully_loaded(DeeModuleObject *__restrict self) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Module %k has not been fully loaded, yet",
-	                       self->mo_name);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_get_code(DeeModuleObject *__restrict self) {
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		err_module_not_fully_loaded(self);
-		return NULL;
-	}
-	return_reference(self->mo_root);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_get_path(DeeModuleObject *__restrict self) {
-	if (!(self->mo_flags & Dee_MODULE_FDIDLOAD)) {
-		err_module_not_fully_loaded(self);
-		return NULL;
-	}
-	if (!self->mo_path)
-		return_none;
-	return_reference(self->mo_path);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_get_isglobal(DeeModuleObject *__restrict self) {
-	return_bool(DeeModule_IsGlobal(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_get_haspath(DeeModuleObject *__restrict self) {
-	return_bool(DeeModule_HasPath(self));
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_imports(DeeModuleObject *__restrict self) {
 	return DeeRefVector_NewReadonly(self, self->mo_importc,
@@ -2577,17 +1712,11 @@ module_get_imports(DeeModuleObject *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst module_members[] = {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_MEMBER_FIELD_DOC("__absname__", STRUCT_CSTR, offsetof(DeeModuleObject, mo_absname),
 	                      "The absolute name of this module (as can be passed to "
 	                      /**/ "$import to access this module from any context)"),
 	TYPE_MEMBER_FIELD_DOC("__haspath__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeModuleObject, mo_absname),
 	                      "Deprecated alias for ${this.__filename__ is bound}"),
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT, offsetof(DeeModuleObject, mo_name),
-	                      "->?Dstring\n"
-	                      "The name of @this Module"),
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_MEMBER_END
 };
 
@@ -2596,7 +1725,6 @@ DeeModule_ViewExports(DeeModuleObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_LibNames(DeeModuleObject *__restrict self);
 
@@ -2612,9 +1740,6 @@ PRIVATE struct type_method tpconst module_methods[] = {
 	                "When @libname is true, try to return ${__libnames__.first} instead (s.a. ?#__libnames__)"),
 	TYPE_METHOD_END
 };
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define module_methods NULL
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER_AB("__exports__", &DeeModule_ViewExports,
@@ -2639,7 +1764,6 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	               "Similar to ?#__exports__, however global variables are addressed using their "
 	               /**/ "internal index. Using this, anonymous global variables (such as property "
 	               /**/ "callbacks) can be accessed and modified"),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETTER_AB_F("__directory__", &module_get_directory, METHOD_FNOREFESCAPE,
 	                 "->?S?Dstring\n"
 	                 "Returns the names of all child-modules located "
@@ -2673,27 +1797,9 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	                 "->?S?Dstring\n"
 	                 "Returns a sequence of all lib names assigned to this "
 	                 /**/ "module. These come in no particular order"),
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
-	              "->?Ert:Code\n"
-	              "#tValueError{The Module hasn't been fully loaded}"
-	              "Returns the code object for the Module's root initializer"),
-	TYPE_GETTER_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "#tValueError{The Module hasn't been fully loaded}"
-	              "Returns the absolute filesystem path of the Module's source file, or ?N "
-	              /**/ "if the Module wasn't created from a file accessible via the filesystem"),
-	TYPE_GETTER_AB_F("__isglobal__", &module_get_isglobal, METHOD_FNOREFESCAPE,
-	                 "->?Dbool\n"
-	                 "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})"),
-	TYPE_GETTER_AB_F("__haspath__", &module_get_haspath, METHOD_FNOREFESCAPE,
-	                 "->?Dbool\n"
-	                 "Returns ?t if @this Module has a path found within the filesystem"),
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE struct type_getset tpconst module_dee_getsets[] = {
 	TYPE_GETTER_AB_F("__code__", &module_get_code, METHOD_FCONSTCALL | METHOD_FNOTHROW,
 	                 "->?Ert:Code\n"
@@ -2709,9 +1815,7 @@ PRIVATE struct type_member tpconst module_addr_members[] = {
 	TYPE_MEMBER_FIELD("__maxaddr__", STRUCT_UINTPTR_T | STRUCT_CONST, offsetof(DeeModuleObject, mo_maxaddr)),
 	TYPE_MEMBER_END
 };
-#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_getpath(DeeObject *__restrict UNUSED(self)) {
 	return DeeModule_GetLibPath();
@@ -2726,20 +1830,6 @@ module_class_setpath(DeeObject *UNUSED(self),
 err:
 	return -1;
 }
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-module_class_getpath(DeeObject *__restrict UNUSED(self)) {
-	DeeListObject *result = DeeModule_GetPath();
-	return_reference_((DeeObject *)result);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-module_class_setpath(DeeObject *UNUSED(self),
-                     DeeObject *value) {
-	DeeListObject *paths = DeeModule_GetPath();
-	return DeeObject_Assign((DeeObject *)paths, value);
-}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_gethome(DeeObject *__restrict UNUSED(self)) {
@@ -2750,7 +1840,6 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	TYPE_GETTER_AB("home", &module_class_gethome,
 	               "->?Dstring\n"
 	               "The deemon home path (usually the path where the deemon executable resides)"),
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	TYPE_GETSET_AB("path", &module_class_getpath, NULL, &module_class_setpath,
 	               "->?DTuple\n"
 	               "A tuple of strings describing the search path for system libraries"),
@@ -2766,18 +1855,6 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	               "->?DTuple\n"
 	               "Deprecated alias for ?#path"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	TYPE_GETSET_AB("path", &module_class_getpath, NULL, &module_class_setpath,
-	               "->?DList\n"
-	               "A list of strings describing the search path for system libraries"),
-
-#ifndef CONFIG_NO_DEEMON_100_COMPAT
-	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
-	TYPE_GETSET_AB("search_path", &module_class_getpath, NULL, &module_class_setpath,
-	               "->?DList\n"
-	               "Deprecated alias for ?#path"),
-#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	TYPE_GETSET_END
 };
 
@@ -2786,7 +1863,6 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 module_import_with_frame_base(DeeObject *__restrict module_name) {
 	DREF DeeModuleObject *result;
 	struct Dee_code_frame *frame = DeeThread_Self()->t_exec;
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (frame) {
 		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
@@ -2796,43 +1872,6 @@ module_import_with_frame_base(DeeObject *__restrict module_name) {
 		result = DeeModule_Import(module_name, NULL, DeeModule_IMPORT_F_NORMAL);
 	}
 	return result;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-	if (frame) {
-		DeeStringObject *path;
-		char const *begin, *end;
-
-		/* Load the path of the currently executing code (for relative imports). */
-		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
-		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
-		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module, &DeeModule_Type);
-		path = frame->cf_func->fo_code->co_module->mo_path;
-		if unlikely(!path)
-			goto open_normal;
-		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8(path);
-		if unlikely(!begin)
-			goto err;
-		end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
-
-		/* Find the end of the current path. */
-		while (end > begin && !DeeSystem_IsSep(end[-1]))
-			--end;
-		result = DeeModule_OpenRelative(module_name, begin, (size_t)(end - begin), NULL, true);
-	} else {
-open_normal:
-		/* Without an execution frame, dismiss the relative import() code handling. */
-		result = DeeModule_OpenGlobal(module_name, NULL, true);
-	}
-	if likely(result) {
-		if unlikely(DeeModule_RunInit(result) < 0)
-			goto err_r;
-	}
-	return result;
-err_r:
-	Dee_Decref(result);
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
@@ -2866,103 +1905,6 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 	TYPE_METHOD_END
 };
 
-
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTDEF NONNULL((1)) void DCALL
-module_unbind(DeeModuleObject *__restrict self);
-
-PRIVATE NONNULL((1)) void DCALL
-module_fini(DeeModuleObject *__restrict self) {
-	Dee_weakref_support_fini(self);
-	module_unbind(self);
-	Dee_Decref(self->mo_name);
-	Dee_XDecref(self->mo_root);
-	Dee_XDecref(self->mo_path);
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
-		Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
-		Dee_Free(self->mo_globalv);
-	}
-	if (self->mo_bucketv != empty_module_buckets) {
-		struct Dee_module_symbol *iter, *end;
-		iter = self->mo_bucketv;
-		end  = iter + self->mo_bucketm + 1;
-		for (; iter < end; ++iter) {
-			if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
-				continue;
-			if (iter->ss_flags & Dee_MODSYM_FNAMEOBJ)
-				Dee_Decref(COMPILER_CONTAINER_OF(Dee_MODULE_SYMBOL_GETNAMESTR(iter), DeeStringObject, s_str));
-			if (iter->ss_flags & Dee_MODSYM_FDOCOBJ)
-				Dee_Decref(COMPILER_CONTAINER_OF(iter->ss_doc, DeeStringObject, s_str));
-		}
-		Dee_Free((void *)self->mo_bucketv);
-	}
-	Dee_Decrefv(self->mo_importv, self->mo_importc);
-	Dee_Free((void *)self->mo_importv);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-module_visit(DeeModuleObject *__restrict self,
-             Dee_visit_t proc, void *arg) {
-	DeeModule_LockRead(self);
-	/* Visit the root-code object. */
-	Dee_XVisit(self->mo_root);
-
-	Dee_Visit(self->mo_name);
-	Dee_XVisit(self->mo_path);
-
-	/* Visit global variables. */
-	if (self->mo_flags & Dee_MODULE_FDIDLOAD) {
-		Dee_XVisitv(self->mo_globalv, self->mo_globalc);
-	}
-
-	DeeModule_LockEndRead(self);
-
-	/* Visit imported modules. */
-	Dee_XVisitv(self->mo_importv, self->mo_importc);
-}
-
-PRIVATE NONNULL((1)) void DCALL
-module_clear(DeeModuleObject *__restrict self) {
-	DREF DeeObject *buffer[16];
-	DREF DeeCodeObject *root_code;
-	size_t i, bufi = 0;
-	DeeModule_LockWrite(self);
-	root_code     = self->mo_root;
-	self->mo_root = NULL;
-restart:
-	i = self->mo_globalc;
-	while (i--) {
-		/* Operate in reverse order, better mirrors the
-		 * (likely) order in which stuff was initialized in. */
-		DREF DeeObject *ob = self->mo_globalv[i];
-		if (ob == NULL)
-			continue;
-		self->mo_globalv[i] = NULL;
-		if (!Dee_DecrefIfNotOne(ob)) {
-			buffer[bufi] = ob;
-			++bufi;
-			if (bufi >= COMPILER_LENOF(buffer)) {
-				DeeModule_LockEndWrite(self);
-				Dee_Decrefv(buffer, bufi);
-				bufi = 0;
-				DeeModule_LockWrite(self);
-				goto restart;
-			}
-		}
-	}
-	DeeModule_LockEndWrite(self);
-	Dee_Decrefv(buffer, bufi);
-	Dee_XDecref(root_code);
-}
-
-PRIVATE struct type_gc tpconst module_gc = {
-	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&module_clear,
-};
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 
 /* Unbind "self" from relevant trees.
  * Caller must ensure that `self->mo_absname != NULL' */
@@ -3670,102 +2612,6 @@ INTERN struct Dee_empty_module_struct DeeModule_Empty = {
 		/* .mo_adrnode = */ { NULL, NULL, NULL },
 	}
 };
-
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-PUBLIC DeeTypeObject DeeModule_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ DeeString_STR(&str_Module),
-	/* .tp_doc      = */ DOC("str->\n"
-	                         "Returns the name of the module"),
-	/* Same as with DeeType_Type: Modules may not be immutable, but still shouldn't be replicated during deepcopy */
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
-	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeModuleObject),
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
-	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
-			/* T:              */ DeeModuleObject,
-			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_any_ctor:    */ NULL,
-			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* Legacy; unsupported */
-		),
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&module_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&module_str,
-		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&module_printrepr,
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_visit,
-	/* .tp_gc            = */ &module_gc,
-	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
-	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
-	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
-	/* .tp_attr          = */ &module_attr,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ module_getsets,
-	/* .tp_members       = */ module_members,
-	/* .tp_class_methods = */ module_class_methods,
-	/* .tp_class_getsets = */ module_class_getsets,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
-};
-
-#ifdef __INTELLISENSE__
-INTERN struct Dee_static_module_struct DeeModule_Empty_real =
-#else /* __INTELLISENSE__ */
-#undef DeeModule_Empty
-INTERN struct Dee_static_module_struct DeeModule_Empty =
-#endif /* !__INTELLISENSE__ */
-{
-	{
-		/* ... */
-		NULL,
-		NULL
-	}, {
-		OBJECT_HEAD_INIT(&DeeModule_Type),
-		/* .mo_name      = */ (DeeStringObject *)Dee_EmptyString,
-		/* .mo_link      = */ LIST_ENTRY_UNBOUND_INITIALIZER,
-		/* .mo_path      = */ NULL,
-#ifdef DeeSystem_HAVE_FS_ICASE
-		/* .mo_pathihash  = */ 0,
-#endif /* DeeSystem_HAVE_FS_ICASE */
-		/* .mo_globlink  = */ LIST_ENTRY_UNBOUND_INITIALIZER,
-		/* .mo_importc   = */ 0,
-		/* .mo_globalc   = */ 0,
-#ifndef CONFIG_NO_DEC
-		/* .mo_flags     = */ Dee_MODULE_FDIDINIT | Dee_MODULE_FDIDLOAD | Dee_MODULE_FHASCTIME,
-#else /* !CONFIG_NO_DEC */
-		/* .mo_flags     = */ Dee_MODULE_FDIDINIT | Dee_MODULE_FDIDLOAD,
-#endif /* CONFIG_NO_DEC */
-		/* .mo_bucketm   = */ 0,
-		/* .mo_bucketv   = */ empty_module_buckets,
-		/* .mo_importv   = */ NULL,
-		/* .mo_globalv   = */ NULL,
-		/* .mo_root      = */ &DeeCode_Empty,
-#ifndef CONFIG_NO_THREADS
-		/* .mo_lock      = */ Dee_ATOMIC_RWLOCK_INIT,
-		/* .mo_loader    = */ NULL,
-#endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_NO_DEC
-		/* .mo_ctime     = */ 0,
-#endif /* !CONFIG_NO_DEC */
-		Dee_WEAKREF_SUPPORT_INIT
-	}
-};
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_END
 

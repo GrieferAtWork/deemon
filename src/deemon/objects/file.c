@@ -1694,17 +1694,9 @@ get_files_object(DeeObject *__restrict name) {
 again:
 	Dee_atomic_xref_get(&files_module, &mod);
 	if unlikely(!mod) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		mod = DeeModule_Import(Dee_AsObject(&str_files), NULL, DeeModule_IMPORT_F_NORMAL);
 		if unlikely(!mod)
 			goto err;
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		mod = DeeModule_OpenGlobal(Dee_AsObject(&str_files), NULL, true);
-		if unlikely(!mod)
-			goto err;
-		if unlikely(DeeModule_RunInit(mod) < 0)
-			goto err_mod;
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&files_module, mod)) {
 			Dee_Decref(mod);
 			goto again;
@@ -1713,10 +1705,6 @@ again:
 	result = DeeObject_GetAttr(Dee_AsObject(mod), name);
 	Dee_Decref_unlikely(mod);
 	return result;
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-err_mod:
-	Dee_Decref(mod);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 err:
 	return NULL;
 }
