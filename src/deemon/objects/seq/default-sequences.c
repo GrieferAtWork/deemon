@@ -2347,7 +2347,7 @@ PRIVATE struct type_member tpconst ds_ial_members[] = {
 
 PRIVATE struct type_member tpconst ds_ial_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndLimit_Type),
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

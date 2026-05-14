@@ -322,7 +322,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	TYPE_GETTER(STR_Frozen, &seq_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of Sequence returned by the ?#frozen property"),
-	TYPE_GETTER("__seq_getitem_always_bound__", &seq_get___seq_getitem_always_bound__,
+	TYPE_GETTER(STR___seq_getitem_always_bound__, &seq_get___seq_getitem_always_bound__,
 	            "->?Dbool\n"
 	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem\n"
 	            "\n"

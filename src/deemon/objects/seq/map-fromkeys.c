@@ -396,7 +396,7 @@ PRIVATE struct type_member tpconst mfkv_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
 	TYPE_MEMBER_CONST(STR_Values, &SeqRepeatItem_Type),
 	TYPE_MEMBER_CONST(STR_IterValues, &SeqRepeatItemIterator_Type),
-	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___map_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 
@@ -412,7 +412,7 @@ PRIVATE struct type_member tpconst mfkc_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Keys, &DeeSet_Type),
 	TYPE_MEMBER_CONST(STR_Values, &SeqMapped_Type),
 	TYPE_MEMBER_CONST(STR_IterValues, &SeqMappedIterator_Type),
-	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___map_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

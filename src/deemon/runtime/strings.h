@@ -1372,6 +1372,12 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #ifndef STR_IterValues
 #define STR_IterValues "IterValues"
 #endif /* !STR_IterValues */
+#ifndef STR___seq_getitem_always_bound__
+#define STR___seq_getitem_always_bound__ "__seq_getitem_always_bound__"
+#endif /* !STR___seq_getitem_always_bound__ */
+#ifndef STR___map_getitem_always_bound__
+#define STR___map_getitem_always_bound__ "__map_getitem_always_bound__"
+#endif /* !STR___map_getitem_always_bound__ */
 
 /* Some versions of GCC think that using DeeString_STR() on a static
  * string object will result in us reading from out-of-bounds memory,

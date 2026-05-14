@@ -2310,6 +2310,7 @@
 		<None Include="..\.gitattributes" />
 		<None Include="..\.gitignore" />
 		<None Include="..\.gitmodules" />
+		<None Include="..\CONTRIBUTING.md" />
 		<None Include="..\README.md" />
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def">

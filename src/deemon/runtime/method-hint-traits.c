@@ -35,6 +35,7 @@
 
 #include "method-hint-defaults.h"
 #include "method-hints.h"
+#include "strings.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -72,10 +73,10 @@ DeeType_HasExplicitTrait_uncached(DeeTypeObject *__restrict self,
 	struct Dee_attrinfo attr;
 	struct trait_name const *name;
 	switch (trait) {
-#define CASE(t)                                                      \
-	case DeeType_TRAIT_##t: {                                        \
-		PRIVATE DEFINE_TRAIT_NAME(nameof_##t, #t, Dee_HashStr__##t); \
-		name = (struct trait_name const *)&nameof_##t;               \
+#define CASE(t)                                                           \
+	case DeeType_TRAIT_##t: {                                             \
+		PRIVATE DEFINE_TRAIT_NAME(nameof_##t, STR_##t, Dee_HashStr__##t); \
+		name = (struct trait_name const *)&nameof_##t;                    \
 	}	break
 	CASE(__seq_getitem_always_bound__);
 	CASE(__map_getitem_always_bound__);

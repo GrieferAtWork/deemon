@@ -432,8 +432,8 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 
 PRIVATE int __LIBCCALL
 compare_strings_by_utf8(void const *lhs_ptr, void const *rhs_ptr) {
-	DeeStringObject *lhs = *(DeeStringObject **)lhs_ptr;
-	DeeStringObject *rhs = *(DeeStringObject **)rhs_ptr;
+	DeeStringObject *lhs = *(DeeStringObject *const *)lhs_ptr;
+	DeeStringObject *rhs = *(DeeStringObject *const *)rhs_ptr;
 	char const *lhs_utf8 = DeeString_AsUtf8(lhs);
 	char const *rhs_utf8 = DeeString_AsUtf8(rhs);
 	ASSERT(lhs_utf8);
@@ -529,7 +529,7 @@ again:
 			goto again;
 		}
 	}
-	return (DeeObject *)result;
+	return Dee_AsObject(result);
 }
 
 

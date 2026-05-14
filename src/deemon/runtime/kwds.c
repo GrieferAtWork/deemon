@@ -795,7 +795,7 @@ PRIVATE struct type_member tpconst kwds_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeKwdsIterator_Type),
 	TYPE_MEMBER_CONST(STR_KeyType, &DeeString_Type),
 	TYPE_MEMBER_CONST(STR_ValueType, &DeeInt_Type),
-	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___map_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 
@@ -1544,7 +1544,7 @@ PRIVATE struct type_member tpconst kmap_members[] = {
 PRIVATE struct type_member tpconst kmap_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeKwdsMappingIterator_Type),
 	TYPE_MEMBER_CONST(STR_KeyType, &DeeString_Type),
-	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___map_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

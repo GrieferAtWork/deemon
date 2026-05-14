@@ -586,7 +586,7 @@ PRIVATE struct type_member tpconst cswi_members[] = {
 
 PRIVATE struct type_member tpconst cswi_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &CachedSeq_WithIter_Iterator_Type),
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

@@ -701,7 +701,7 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	TYPE_GETTER(STR_IterValues, &map_IterValues_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#itervalues property"),
-	TYPE_GETTER("__map_getitem_always_bound__", &map_get___map_getitem_always_bound__,
+	TYPE_GETTER(STR___map_getitem_always_bound__, &map_get___map_getitem_always_bound__,
 	            "->?Dbool\n"
 	            "Evaluates to ?t if ?#{op:getitem} never throws :UnboundItem\n"
 	            "\n"

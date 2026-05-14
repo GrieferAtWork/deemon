@@ -419,7 +419,7 @@ PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &SeqSegments_Type),
 	TYPE_MEMBER_CONST(STR_ItemType, &DeeTuple_Type), /* s.a. `DeeTuple_NewUninitialized()' calls above */
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

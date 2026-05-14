@@ -1108,7 +1108,7 @@ PRIVATE struct type_getset tpconst repeatitem_getsets[] = {
 PRIVATE struct type_member tpconst repeatitem_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatItemIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &SeqRepeatItem_Type),
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

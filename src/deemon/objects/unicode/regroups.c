@@ -36,6 +36,7 @@
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_member, type_seq */
 
+#include "../../runtime/strings.h"
 #include "regroups.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -317,7 +318,7 @@ PRIVATE struct type_member tpconst rsb_members[] = {
 PRIVATE struct type_member tpconst rg_class_members[] = {
 #define rss_class_members rg_class_members
 #define rsb_class_members rg_class_members
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

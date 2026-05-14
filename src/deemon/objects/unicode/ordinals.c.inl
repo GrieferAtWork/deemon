@@ -35,6 +35,7 @@
 #include <deemon/system-features.h>    /* memchr* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
 
+#include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "ordinals.h"
 #include "string_functions.h"
@@ -198,7 +199,7 @@ PRIVATE struct type_member tpconst stringordinals_members[] = {
 };
 
 PRIVATE struct type_member tpconst stringordinals_class_members[] = {
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

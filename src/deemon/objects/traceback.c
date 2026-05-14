@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct1XOr2X, UNPuSIZ, _DeeArg_AsObject */
-#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, code_addr_t */
+#include <deemon/code.h>               /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttrCStr */
 #include <deemon/gc.h>                 /* DeeGCObject_TryMallocc, DeeGC_TRACK */

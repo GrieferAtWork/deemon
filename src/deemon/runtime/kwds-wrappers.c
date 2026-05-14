@@ -792,7 +792,7 @@ PRIVATE struct type_member tpconst blv_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeBlackListKwdsIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeBlackListKwds_Type),
 	TYPE_MEMBER_CONST(STR_KeyType, &DeeString_Type),
-	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_CONST(STR___map_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };
 

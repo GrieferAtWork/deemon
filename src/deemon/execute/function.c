@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct0Or1Or2 */
 #include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type */
 #include <deemon/bool.h>               /* DeeBool_Check, return_bool */
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_class_operator */
-#include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_function_info_fini, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, code_addr_t */
+#include <deemon/code.h>               /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS, CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_function_info_fini, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, Dee_instruction_t, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/deepcopy.h>           /* DeeDeepCopyContext, DeeDeepCopy_* */
+#include <deemon/deepcopy.h>           /* DeeDeepCopyContext, DeeDeepCopyContext_AddHook, DeeDeepCopy_*, Dee_DEEPCOPY_V_MODE_REF, Dee_deepcopy_hook, Dee_deepcopy_vars */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
@@ -40,7 +40,7 @@
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_module_* */
 #include <deemon/mro.h>                /* Dee_ATTRINFO_ATTR, Dee_ATTRINFO_MODSYM, Dee_ATTRPERM_F_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decprefv, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decprefv, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovprefv, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeRefVector_NewReadonly, DeeSeq_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
@@ -48,12 +48,12 @@
 #include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_NewReferenceWithLock, Dee_FRAME_F* */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/serial.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_F*, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_inc */
-#include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
-#include <deemon/util/hash.h>          /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
-#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
-#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_init */
+#include <deemon/type.h>        /* DeeObject_Init, DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_F*, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/util/atomic.h> /* atomic_inc */
+#include <deemon/util/futex.h>  /* DeeFutex_WakeAll */
+#include <deemon/util/hash.h>   /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
+#include <deemon/util/lock.h>   /* Dee_atomic_rwlock_init */
+#include <deemon/util/rlock.h>  /* Dee_rshared_rwlock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

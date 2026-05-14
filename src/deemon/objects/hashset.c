@@ -1356,7 +1356,7 @@ INTDEF struct type_member tpconst dict_members[];
 PRIVATE struct type_member tpconst hashset_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &HashSetIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeRoSet_Type),
-	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True), /* Must be specified because we also define "__seq_getitem__" */
+	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True), /* Must be specified because we also define "__seq_getitem__" */
 	TYPE_MEMBER_END
 };
 
