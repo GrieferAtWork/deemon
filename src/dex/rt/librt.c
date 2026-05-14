@@ -2558,7 +2558,9 @@ PRIVATE struct {
 			/* .cf_this    = */ NULL,
 			/* .cf_result  = */ NULL,
 			/* .cf_stacksz = */ 0,
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 			/* .cf_flags   = */ Dee_CODE_FCOPYABLE | Dee_CODE_FYIELDING,
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 		},
 #ifndef CONFIG_NO_THREADS
 		/* .yi_lock = */ Dee_RSHARED_RWLOCK_INIT,

@@ -1660,7 +1660,6 @@ yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 			if (DeeSerial_XPutPointer(writer, KW_ADDROF(fk_kargv) + (i * sizeof(DeeObject *)), ob))
 				goto err;
 		}
-		memcpyc(kw->fk_kargv, kw->fk_kargv, count, sizeof(DeeObject *));
 #undef KW_ADDROF
 		if (DeeSerial_PutAddr(writer, ADDROF(yf_kw), out_kw_addr))
 			goto err;

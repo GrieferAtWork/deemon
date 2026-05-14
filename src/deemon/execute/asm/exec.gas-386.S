@@ -493,7 +493,9 @@ END(_impl_assert_failed)
 #define cf_this      40 /* DeeObject *cf_this; */
 #define cf_result    44 /* DeeObject *cf_result; */
 #define cf_stacksz   46 /* uint16_t cf_stacksz; */
+#ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 #define cf_flags     50 /* uint16_t cf_flags; */
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 /* }; */
 
 /* struct Dee_function_object { */
