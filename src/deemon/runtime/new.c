@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#ifdef CONFIG_EXPERIMENTAL_USE_TP_NEW
 #include <deemon/kwds.h>   /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/object.h> /* DREF, DeeObject, DeeObject_Size, DeeTypeObject, Dee_Decref, Dee_TYPE */
 #include <deemon/tuple.h>  /* DeeTuple* */
@@ -2684,6 +2683,5 @@ DeeObject_Newf(DeeTypeObject *object_type,
 }
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_USE_TP_NEW */
 
 #endif /* !GUARD_DEEMON_RUNTIME_NEW_C */

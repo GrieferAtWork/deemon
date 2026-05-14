@@ -2708,12 +2708,10 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeO
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self);
 
-#ifdef CONFIG_EXPERIMENTAL_USE_TP_NEW
 /* Return the relevant implementations of DeeObject_New() / DeeObject_NewKw() / DeeObject_Copy() */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_t DCALL DeeType_RequireNew(DeeTypeObject *__restrict self);
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_kw_t DCALL DeeType_RequireNewKw(DeeTypeObject *__restrict self);
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_copy_t DCALL DeeType_RequireNewCopy(DeeTypeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_USE_TP_NEW */
 
 
 /* Returns the "instance-size" of a given object "self",

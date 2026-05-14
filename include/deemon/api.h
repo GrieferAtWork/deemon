@@ -536,22 +536,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
-
-
-/* Experimental feature switch: Define some new function pointers
- * "tp_new", "tp_new_kw" and "tp_new_copy" that are used to implement
- * `DeeObject_New()', `DeeObject_NewKw()' and `DeeObject_Copy()'
- *
- * When not defined by some type, these pointers are lazily filled in
- * such that they match the expected, traditional behavior. */
-#if (!defined(CONFIG_EXPERIMENTAL_USE_TP_NEW) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_USE_TP_NEW))
-#if 1
-#define CONFIG_EXPERIMENTAL_USE_TP_NEW
-#else
-#define CONFIG_NO_EXPERIMENTAL_USE_TP_NEW
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TP_NEW */
 /************************************************************************/
 
 
