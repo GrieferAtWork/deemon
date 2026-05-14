@@ -2547,7 +2547,7 @@ again_lock_other:
 	self->yi_frame.cf_ip = other->yi_frame.cf_ip;
 
 	/* Copy references... */
-	iter = Dee_Movprefv(shallow_objv, other->yi_frame.cf_frame, code->co_localc);
+	iter = Dee_XMovprefv(shallow_objv, other->yi_frame.cf_frame, code->co_localc);
 	Dee_Movrefv(iter, other->yi_frame.cf_stack, stacksize);
 
 	/* Re-use pre-generated varargs buffer */
@@ -2766,6 +2766,134 @@ nomem:
 	return -1;
 #endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 }
+
+
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+yfi_serialize(YFIterator *__restrict self,
+              DeeSerial *__restrict writer,
+              Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(YFIterator, field))
+	YFIterator *out;
+	DeeCodeObject *code = self->yi_frame.cf_func->fo_code;
+	size_t stacksize;
+	Dee_instruction_t *pc;
+	Dee_seraddr_t out__cf_frame_addr;
+	Dee_seraddr_t out__cf_stack_addr;
+	DREF DeeObject **out_objv;
+
+	/* Copy [const] fields... */
+	if (DeeSerial_PutObject(writer, ADDROF(yi_func), self->yi_func))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(yi_frame.cf_func), self->yi_frame.cf_func))
+		goto err;
+	if (DeeSerial_PutPointer(writer, ADDROF(yi_frame.cf_argv), self->yi_frame.cf_argv))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(yi_frame.cf_kw), self->yi_frame.cf_kw))
+		goto err;
+	if (DeeSerial_XPutPointer(writer, ADDROF(yi_frame.cf_this), self->yi_frame.cf_this))
+		goto err;
+	/* Allocate frame buffer */
+	out__cf_frame_addr = DeeSerial_Malloc(writer, code->co_framesize, self->yi_frame.cf_frame);
+	if (!Dee_SERADDR_ISOK(out__cf_frame_addr))
+		goto err;
+
+	/* Fill in basic fields... */
+again_lock_self:
+	out = DeeSerial_Addr2Mem(writer, addr, YFIterator);
+	Dee_rshared_rwlock_init(&out->yi_lock);
+	out->yi_frame.cf_prev   = Dee_CODE_FRAME_NOT_EXECUTING;
+	out->yi_frame.cf_argc   = self->yi_frame.cf_argc;
+	out->yi_frame.cf_result = NULL;
+
+	/* Lock iterator */
+	if (DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+
+	/* Copy locals/stack (as a shallow reference copies that can
+	 * then be serialized via `DeeSerial_*InplacePutObjectv') */
+	stacksize = self->yi_frame.cf_stacksz;
+	out->yi_frame.cf_stacksz = (uint16_t)stacksize;
+	if (stacksize) {
+		size_t sizeof_stack = stacksize * sizeof(DREF DeeObject *);
+		out__cf_stack_addr = DeeSerial_TryMalloc(writer, sizeof_stack, self->yi_frame.cf_stack);
+		if (!Dee_SERADDR_ISOK(out__cf_stack_addr)) {
+			DeeYieldFunctionIterator_LockEndRead(self);
+			out__cf_stack_addr = DeeSerial_Malloc(writer, sizeof_stack, self->yi_frame.cf_stack);
+			if (!Dee_SERADDR_ISOK(out__cf_stack_addr))
+				goto err;
+			if unlikely(DeeYieldFunctionIterator_LockRead(self))
+				goto err;
+			if unlikely(self->yi_frame.cf_stacksz != stacksize) {
+				DeeYieldFunctionIterator_LockEndRead(self);
+				DeeSerial_Free(writer, out__cf_stack_addr, self->yi_frame.cf_stack);
+				goto again_lock_self;
+			}
+		}
+	} else {
+		ASSERT(self->yi_frame.cf_stack ==
+		       self->yi_frame.cf_frame + code->co_localc);
+		out__cf_stack_addr = out__cf_frame_addr + (code->co_localc * sizeof(DREF DeeObject *));
+	}
+
+	/* Figure out how much stack space is currently in use */
+	stacksize = (size_t)(self->yi_frame.cf_sp - self->yi_frame.cf_stack);
+
+	/* Copy object references */
+	out_objv = DeeSerial_Addr2Mem(writer, out__cf_frame_addr, DREF DeeObject *);
+	Dee_XMovrefv(out_objv, self->yi_frame.cf_frame, code->co_localc);
+	out_objv = DeeSerial_Addr2Mem(writer, out__cf_stack_addr, DREF DeeObject *);
+	Dee_Movrefv(out_objv, self->yi_frame.cf_stack, stacksize);
+
+	/* Copy PC + varargs */
+	pc  = self->yi_frame.cf_ip;
+	out = DeeSerial_Addr2Mem(writer, addr, YFIterator);
+	out->yi_frame.cf_vargs = self->yi_frame.cf_vargs;
+	Dee_XIncref(out->yi_frame.cf_vargs);
+	DeeYieldFunctionIterator_LockEndRead(self);
+
+	/* Inplace-serialize varargs cache */
+	if (DeeSerial_XInplacePutObject(writer, ADDROF(yi_frame.cf_vargs)))
+		goto err_frame_copy_stack_copy;
+
+	/* Inplace-serialize objects from stack-copy */
+	if (DeeSerial_InplacePutObjectv(writer, out__cf_stack_addr, stacksize))
+		goto err_frame_copy;
+
+	/* Inplace-serialize objects from frame-copy */
+	if (DeeSerial_XInplacePutObjectv(writer, out__cf_frame_addr, code->co_localc))
+		goto err;
+
+	/* Store address of program counter. */
+	if (DeeSerial_PutPointer(writer, ADDROF(yi_frame.cf_ip), pc))
+		goto err;
+
+	/* Store address of frame-copy in ADDROF(yi_frame.cf_frame) */
+	if (DeeSerial_PutAddr(writer, ADDROF(yi_frame.cf_frame), out__cf_frame_addr))
+		goto err;
+
+	/* Store address of stack-copy in ADDROF(yi_frame.cf_stack) */
+	if (DeeSerial_PutAddr(writer, ADDROF(yi_frame.cf_stack), out__cf_stack_addr))
+		goto err;
+
+	/* Store relative SP-address in ADDROF(yi_frame.cf_sp) */
+	return DeeSerial_PutAddr(writer, ADDROF(yi_frame.cf_sp),
+	                         out__cf_stack_addr + (stacksize * sizeof(DREF DeeObject *)));
+err_frame_copy_stack_copy:
+	Dee_Decrefv(DeeSerial_Addr2Mem(writer, out__cf_stack_addr, DREF DeeObject *), stacksize);
+err_frame_copy:
+	Dee_XDecrefv(DeeSerial_Addr2Mem(writer, out__cf_frame_addr, DREF DeeObject *), code->co_localc);
+err:
+	return -1;
+#undef ADDROF
+}
+#endif /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+
+#ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
+#define PTR_yfi_serialize &yfi_serialize /* TODO: Inline once "CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS" becomes mandatory */
+#else /* CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
+#define PTR_yfi_serialize NULL
+#endif /* !CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS */
 
 #ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 #ifndef CONFIG_NO_THREADS
@@ -3765,7 +3893,7 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 			/* tp_copy_ctor:   */ &yfi_copy,
 			/* tp_any_ctor:    */ &yfi_new,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ PTR_yfi_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfi_dtor,
 		/* .tp_assign      = */ NULL,

@@ -909,7 +909,7 @@ struct Dee_code_frame {
 	size_t                      cf_argc;    /* [const] Amount of input arguments. */
 	DREF DeeObject      *const *cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
 	struct Dee_code_frame_kwds *cf_kw;      /* [0..1][const] Keyword argument extension data. */
-	DREF DeeObject            **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
+	DREF DeeObject            **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned][const] Frame-local work-memory used during execution. */
 	DREF DeeObject            **cf_stack;   /* [?..1][(cf_func->fo_code->co_framesize - cf_func->fo_code->co_localc * sizeof(DeeObject *)) / sizeof(DeeObject *)] Base address for the stack.
 	                                         * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
 	DeeObject                 **cf_sp;      /* [?..1][1..1] Pointer to the location where the next-to-be pushed object is stored.

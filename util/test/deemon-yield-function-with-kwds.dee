@@ -19,6 +19,7 @@
  */
 
 import * from deemon;
+import .common.test;
 
 function _hide(x) {
 	local result = x;
@@ -34,8 +35,15 @@ function foo(**kwds) {
 
 @[copyable]
 function bar(a, b) {
-	yield a;
-	yield b;
+	/* Test copyable when __stack variables are used... */
+	__stack local _a = a;
+	_hide(_a);
+	yield _a;
+	/* Test copyable when local variables are used... */
+	local _b = b;
+	_hide(_b);
+	yield _b;
+	_hide(_a); /* Prevent _a from being deallocated early */
 }
 
 function getKwds() {
@@ -47,25 +55,44 @@ function getKwds() {
 
 function assertCorrectSequence(call) {
 	/* Assert that enumerating the yield functions works (even when copied) */
-	assert (call as Sequence) == {(10,), (20,)};
-	assert (copy(call) as Sequence) == {(10,), (20,)};
-	assert (deepcopy(call) as Sequence) == {(10,), (20,)};
-	assert call == {(10,), (20,)};
-	assert copy(call) == {(10,), (20,)};
-	assert deepcopy(call) == {(10,), (20,)};
+	test.assertSequence(call as Sequence, {(10,), (20,)});
+	test.assertSequence(copy(call) as Sequence, {(10,), (20,)});
+	test.assertSequence(deepcopy(call) as Sequence, {(10,), (20,)});
+	test.assertSequence(call, {(10,), (20,)});
+	test.assertSequence(copy(call), {(10,), (20,)});
+	test.assertSequence(deepcopy(call), {(10,), (20,)});
 
 	/* Assert that operating directly with the iterators also works (including
 	 * the case where we make copies of the iterators half-way through the call) */
-	local it = call.operator iter();
-	assert it.pending == {(10,), (20,)};
-	assert it.pending == {};
-	local it = call.operator iter();
-	assert it.operator next() == (10,);
-	local it2 = copy it;
-	assert it.pending == {(20,)};
-	assert it.pending == {};
+	local it1 = call.operator iter();
+	local it2 = copy it1;
+	local it3 = deepcopy it1;
+	assert it1.pending == {(10,), (20,)};
+	assert it1.pending == {};
+	assert it2.pending == {(10,), (20,)};
+	assert it2.pending == {};
+	assert it3.pending == {(10,), (20,)};
+	assert it3.pending == {};
+
+	local it1 = call.operator iter();
+	assert it1.operator next() == (10,);
+	local it2 = copy it1;
+	local it3 = deepcopy it1;
+	assert it1.pending == {(20,)};
+	assert it1.pending == {};
 	assert it2.pending == {(20,)};
 	assert it2.pending == {};
+	assert it3.pending == {(20,)};
+	assert it3.pending == {};
+
+	local it1 = call.operator iter();
+	assert it1.operator next() == (10,);
+	assert it1.operator next() == (20,);
+	local it2 = copy it1;
+	local it3 = deepcopy it1;
+	assert it1.pending == {};
+	assert it2.pending == {};
+	assert it3.pending == {};
 }
 
 /* Invoke both keyword-taking yield functions
