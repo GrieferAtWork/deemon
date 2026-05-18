@@ -312,7 +312,7 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 /* Use our hacky `static_if' to emulate `__builtin_choose_expr' */
 #define __builtin_choose_expr(c, tt, ff) (__STATIC_IF(c){tt} __STATIC_ELSE(c){ff})
 #if 0 /* This (kind-of) works, but isn't actually useful since it can
-       * only detect immediate constants (but not inlined constants) */
+       * only  detect immediate constants (but not inlined constants) */
 #define __builtin_constant_p(x) \
 	(0 __if_exists(::__intern::__msvc_static_if<!!(x) || !(x)>::__is_true__){+1})
 #endif
@@ -398,9 +398,9 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
  * Why do we want this, and why do we care?
  *
  * The reason here is simple: msvc's definition of `offsetof' under
- * c++ SUCKS! - It works (technically), and we don't do this so-as
+ * c++ SUCKS! - It works (technically), and we don't do this  so-as
  * to support some kind of warning. The way in which msvc's version
- * sucks is in that it causes additional code to be generated when
+ * sucks is in that it causes additional code to be generated  when
  * `offsetof' is used in static initializers:
  * >> // Under c++, this initialization happens via a runtime
  * >> // constructor, rather than via proper static initialization
