@@ -485,8 +485,7 @@ function generateUnicodeDatabase() {
 	print("struct unifold {");
 	print("	", cTypeForInteger(effectiveMaxFoldOrd), " uf_repl[", effectiveMaxFoldLen, "];");
 	print("};");
-	print("PRIVATE ATTR_SECTION(\".rodata.crt.unicode.UTF\")");
-	print("struct unifold const unicode_fold_descriptors[", #index2Fold, "] = {");
+	print("PRIVATE struct unifold const unicode_fold_descriptors[", #index2Fold, "] = {");
 	for (local foldSeq: index2Fold) {
 		print("	{ { ", ", ".join(
 			for (local b: foldSeq)
@@ -516,8 +515,7 @@ function generateUnicodeDatabase() {
 		}
 	}
 	print("#define UNICODE_DIGIT_COUNT ", #index2Digit);
-	print("PRIVATE ATTR_SECTION(\".rodata.crt.unicode.UTF\")");
-	print("unidigit_t const unicode_digits[", #index2Digit, "] = {");
+	print("PRIVATE unidigit_t const unicode_digits[", #index2Digit, "] = {");
 	for (local digit: index2Digit) {
 		print("	", digit !is int ? digit : f"D_INT({digit})", ",");
 	}
@@ -560,8 +558,7 @@ function generateUnicodeDatabase() {
 	print("	{ flags, foldSeq, digit, lowerDelta, upperDelta, titleDelta }");
 	print("#endif /* !UNITRAIT */");
 	print("#define UNICODE_DESCRIPTOR_COUNT ", #index2Desc);
-	print("PRIVATE ATTR_SECTION(\".rodata.crt.unicode.UTF\")");
-	print("struct __unitraits const unicode_descriptors[", #index2Desc, "] = {");
+	print("PRIVATE struct Dee_unitraits const unicode_descriptors[", #index2Desc, "] = {");
 	for (local flags, foldSeq, digit, lowerDelta, upperDelta, titleDelta: index2Desc) {
 		print("	UNITRAIT(", ),;
 		if (!flags) {
@@ -583,7 +580,7 @@ function generateUnicodeDatabase() {
 	local unicode_tab1, unicode_tab2, shift =
 		splitTables(ord2DescIndex, desc2Index[NULL_DESCRIPTOR])...;
 	function printTable(name: string, tab: {int...}) {
-		print("PRIVATE ATTR_SECTION(\".rodata.crt.unicode.UTF\") ",
+		print("PRIVATE ",
 			cTypeForSizeof(sizeofGreatestIntegerInBytes(tab)),
 			" const ", name, "[", #tab, "] = {");
 		for (local line: tab.segments(16)) {

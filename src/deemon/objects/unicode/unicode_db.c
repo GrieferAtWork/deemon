@@ -130,10 +130,6 @@ PRIVATE struct Dee_unitraits const unicode_descriptors[UNICODE_DESCRIPTOR_COUNT]
 PRIVATE uint16_t const unicode_tab1[42];
 PRIVATE uint16_t const unicode_tab2[42];
 #else /* __INTELLISENSE__ */
-#undef __unitraits
-#define __unitraits Dee_unitraits
-#undef ATTR_SECTION
-#define ATTR_SECTION(x) /* nothing */
 #include "db/db.dat"
 #endif /* !__INTELLISENSE__ */
 
