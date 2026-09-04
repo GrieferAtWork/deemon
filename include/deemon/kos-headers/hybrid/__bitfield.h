@@ -24,7 +24,7 @@
 #include "../__stdinc.h"
 
 
-/* Helpers for portably declarations of bitfields */
+/* Helpers for portable declarations of bitfields */
 #ifdef __clang__
 #include "typecore.h"
 #define __HYBRID_BITFIELD8_T  __UINT8_TYPE__

@@ -778,7 +778,7 @@ INTERN size_t DCALL Dee_slab_page_rawtrim(size_t pad) {
 #endif /* USE_fslab */
 #ifdef USE_psegment
 #ifdef cslab_malloc_CAN_COALESCE
-	/* TODO: Split/truncate "psegment"s to get cut out unused pages */
+	/* TODO: Split/truncate "psegment"s to cut out unused pages */
 #endif /* cslab_malloc_CAN_COALESCE */
 #endif /* USE_psegment */
 	return result;

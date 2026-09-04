@@ -144,8 +144,8 @@ DECL_BEGIN
  *     the calling thread's tls_mspace() is used (if available)
  *   - Since FOOTERS=1 + MSPACES=1 stores the originating mspace
  *     within the returned heap pointer, dlfree() is able to
- *     free memory from a thread-local mspace, even when free'd
- *     from another thread!
+ *     free memory to the original a thread-local mspace, even
+ *     when free'd from another thread!
  *   This extension provides an **EXTREMELY** significant boost
  *   in performance when API consumers make heavy use of threads,
  *   as it solves the problem of atomic contention and the fact
@@ -155,7 +155,7 @@ DECL_BEGIN
  *   When enabled, the user must define some additional macros
  *   that are needed for managing the live-time / lazy-
  *   initialization of the thread-local mspace/heap:
- *   >> PRIVATE _Thread_local void *tls_heap = NULL
+ *   >> static _Thread_local void *tls_heap = NULL
  *   >>     __attribute__((cleanup(tls_mspace_destroy)));
  *   >> #define DL_TLS_GETHEAP(p) (void)(*(p) = tls_heap)
  *   >> #define DL_TLS_SETHEAP(v) (void)(tls_heap = (v))
@@ -234,7 +234,7 @@ DECL_BEGIN
  * - DETECT_USE_AFTER_FREE -------------------------------------
  *   When memory is allocated that was previously free'd, check
  *   that its contents still reflect `DL_DEBUG_MEMSET_FREE_PATTERN'.
- *   This feature requires `DL_DEBUG_MEMSET_FREE_PATTERN' to work.
+ *   This feature requires `DL_DEBUG_MEMSET_FREE' to work.
  * -------------------------------------------------------------
  */
 #ifndef DL_DEBUG_INTERNAL
@@ -615,10 +615,10 @@ struct mallinfo {
 #error "'struct freelist' is only used when the relevant mstate can't be locked, but 'USE_LOCKS=0' means that is never the case"
 #endif /* USE_PENDING_FREE_LIST && !USE_LOCKS */
 #if USE_PER_THREAD_MSTATE && !USE_LOCKS
-#error "'tls_mspace()' is used when 'gm' can't be locked, but USE_LOCKS=0 means 'gm' has no locks (and could thus always be locked)"
+#error "'tls_mspace()' is used when 'gm' can't be locked, but 'USE_LOCKS=0' means 'gm' has no locks (and could thus could never block)"
 #endif /* USE_PER_THREAD_MSTATE && !USE_LOCKS */
 #if USE_MSPACE_MALLOC_LOCKLESS && !USE_LOCKS
-#error "'mspace_malloc_lockless()' with 'USE_LOCKS=0' doesn't make sense: mspace_malloc() already is lock-less in this case!"
+#error "'mspace_malloc_lockless()' with 'USE_LOCKS=0' doesn't make sense: 'mspace_malloc()' already is lock-less in this case!"
 #endif /* USE_MSPACE_MALLOC_LOCKLESS && !USE_LOCKS */
 
 #if !MSPACES && USE_PER_THREAD_MSTATE

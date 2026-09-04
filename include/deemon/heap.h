@@ -252,8 +252,8 @@ DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
  * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
  *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
  *          not be freed by another thread during the call to this function. (iow: it may only
- *          be called when there is chance that `hr_destroy' has been- or will be called before
- *          the call has a chance to return)
+ *          be called when there is no chance that `hr_destroy' has been- or will be called
+ *          before the call has a chance to return)
  *
  * @param: file:   A filename that should appear when memory leaks are dumped.
  *                 Note that unlike other debug-heap functions, this string is actually

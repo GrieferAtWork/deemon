@@ -896,7 +896,7 @@ struct page_format const *DCALL get_page_format(size_t n) {
  * NOTE: These function intentionally do *NOT* assert alignment of "self",
  *       meaning you can use these functions to build a custom slab page
  *       in unaligned memory, before simply memcpy-ing the page into a new
- *       memory location (that is probably) aligned, and keep working with
+ *       memory location that is (hopefully) aligned, and keep working with
  *       it without any other relocation-work needed (assuming that payload
  *       area being moved don't require relocations).
  *
@@ -908,7 +908,7 @@ struct page_format const *DCALL get_page_format(size_t n) {
  * @return: * :   Pointer into `self->sp_data' to an n-byte payload area
  * @return: NULL: Insufficient memory -- given slab page "self" does not
  *                have space for another "n"-byte large slab. (you should
- *                probably allocate another ) */
+ *                probably allocate another page) */
 PUBLIC WUNUSED NONNULL((1)) void *DCALL
 Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	struct page_format const *fmt = get_page_format(n);

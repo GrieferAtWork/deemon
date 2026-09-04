@@ -906,6 +906,7 @@ list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
 		if (!list_size) {
 			self->l_list.ol_elemv = NULL;
 		} else {
+			/* TODO: If "filler" is "NULL", then "list_size" should be a preallocation hint! */
 			if (args.filler == NULL)
 				args.filler = Dee_None;
 			self->l_list.ol_elemv = Dee_objectlist_elemv_malloc_safe(list_size);
