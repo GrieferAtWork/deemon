@@ -33,10 +33,10 @@
 #include <deemon/cell.h>               /* DeeCell_Type */
 #include <deemon/class.h>              /* DeeClassDescriptor_Type, DeeInstanceMember_Type */
 #include <deemon/code.h>               /* DeeCode_Empty, DeeCode_Type, DeeDDI_Type, DeeFunction_Type, DeeYieldFunctionIterator_Type, DeeYieldFunction_Type */
-#include <deemon/compiler/ast.h>       /* DeeAst_Type */
-#include <deemon/compiler/compiler.h>  /* DeeCompiler* */
-#include <deemon/compiler/interface.h> /* DeeCompiler* */
-#include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
+#include <deemon/compiler/old/ast.h>       /* DeeAst_Type */
+#include <deemon/compiler/old/compiler.h>  /* DeeCompiler* */
+#include <deemon/compiler/old/interface.h> /* DeeCompiler* */
+#include <deemon/compiler/old/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_*_instance */
 #include <deemon/file.h>               /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */

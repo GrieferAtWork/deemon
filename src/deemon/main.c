@@ -30,12 +30,12 @@
 #include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
-#include <deemon/compiler/assembler.h> /* ASM_* */
-#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt */
-#include <deemon/compiler/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
-#include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
-#include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/old/assembler.h> /* ASM_* */
+#include <deemon/compiler/old/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt */
+#include <deemon/compiler/old/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
+#include <deemon/compiler/old/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
+#include <deemon/compiler/old/optimize.h>  /* OPTIMIZE_F* */
+#include <deemon/compiler/old/tpp.h>
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error_types.h>        /* Dee_compiler_error_object */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */

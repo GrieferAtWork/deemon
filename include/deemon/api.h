@@ -429,6 +429,20 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
+
+/* Experimental feature switch:
+ * Use TPP3 as the compiler backend. This also controls the new compiler
+ * (re-)implementation built on-top of TPP3 (iow: when this is enabled,
+ * deemon uses a different compiler that with it is disabled) */
+#if (!defined(CONFIG_EXPERIMENTAL_USE_TPP3) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_USE_TPP3))
+#if 0
+#define CONFIG_EXPERIMENTAL_USE_TPP3
+#else
+#define CONFIG_NO_EXPERIMENTAL_USE_TPP3
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TPP3 */
 /************************************************************************/
 
 #ifdef CONFIG_HOST_WINDOWS

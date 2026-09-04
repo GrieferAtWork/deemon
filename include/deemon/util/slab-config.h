@@ -104,8 +104,8 @@ for (local s: typesBySize.keys.sorted()) {
  * - 408: _Compiler (Compilation only happens once)
  *
  * Some other internal types that *would* like to use slabs:
- * - 56: "struct ast"     (<deemon/compiler/ast.h>)
- * - 92: "struct symbol"  (<deemon/compiler/symbol.h>)
+ * - 56: "struct ast"     (<deemon/compiler/old/ast.h>)
+ * - 92: "struct symbol"  (<deemon/compiler/old/symbol.h>)
  */
 #undef Dee_SLAB_CHUNKSIZE_MIN
 #undef Dee_SLAB_CHUNKSIZE_MAX

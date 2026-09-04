@@ -669,7 +669,7 @@ DeeString_IsTitle(String *__restrict self,
 	return true;
 }
 
-/* NOTE: `INTERN', because also used in `/src/deemon/compiler/interface/iast.c' */
+/* NOTE: `INTERN', because also used in `/src/deemon/compiler/old/interface/iast.c' */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(String *__restrict self,
                    size_t start_index,
@@ -3712,7 +3712,7 @@ INTDEF WUNUSED NONNULL((1)) unsigned int DCALL
 DeeCodec_GetErrorMode(char const *__restrict errors);
 
 
-/* INTERN, because also used in `/src/deemon/compiler/optimize/opt_operators.c' */
+/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c' */
 /* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl' */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
@@ -3743,7 +3743,7 @@ err:
 	return NULL;
 }
 
-/* INTERN, because also used in `/src/deemon/compiler/optimize/opt_operators.c' */
+/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c' */
 /* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl' */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,

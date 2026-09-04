@@ -35,7 +35,7 @@
  * Or the 1-line variant (read: for copy-n-pasting into your terminal):
  * $ deemon -F include/deemon/asm-table.h src/deemon/execute/asm/exec.gas-386.S lib/rt/bytecode.dee
  * Also: Don't forget to add new instructions to
- *       `/src/deemon/compiler/asm/userdb.def'
+ *       `/src/deemon/compiler/old/asm/userdb.def'
  */
 
 
@@ -1035,7 +1035,7 @@
 
 /* Working storage class modifiers.
  * NOTE: When making any changes to these, you must also update `prefix_length'
- *       and `prefix_length_f0' in `/deemon/src/deemon/compiler/instrlen.c' */
+ *       and `prefix_length_f0' in `/deemon/src/deemon/compiler/old/instrlen.c' */
 /*      ASM_                  0xf8  *      --------                            - ------------------ */
 /*      ASM_                  0xf9  *      --------                            - ------------------ */
 #define ASM_STACK             0xfa /* [2] `stack #<imm8>'                      - Use an Object located on the stack as storage class.

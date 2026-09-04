@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_Free, Dee_TryMalloc */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_code_frame, code_addr_t */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/old/tpp.h>
 #include <deemon/error.h>           /* DeeError_Handled, DeeError_UninstallKeyboardInterrupt, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>            /* DeeFile_* */
 #include <deemon/format.h>          /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */

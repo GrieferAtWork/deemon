@@ -44,7 +44,7 @@ global final FILES_AND_PATHS = {
 	"../../src/deemon/objects/seq/*.c",
 	"../../src/deemon/objects/unicode/*.c",
 	"../../src/deemon/objects/unicode/*.c.inl",
-	"../../src/deemon/compiler/*.c",
+	"../../src/deemon/compiler/old/*.c",
 	"../../src/deemon/execute/*.c",
 	"../../src/deemon/system/*.c",
 };

@@ -1,0 +1,339 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_COMPILER_OLD_LEXER_WITH_C
+#define GUARD_DEEMON_COMPILER_OLD_LEXER_WITH_C 1
+
+#include <deemon/api.h>
+
+#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
+#include <deemon/compiler/old/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/old/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_COMMA_NORMAL, ast_parse_* */
+#include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_STACK, ast_loc, new_unnamed_symbol, scope_pop, scope_push, symbol */
+#include <deemon/compiler/old/tpp.h>
+#include <deemon/object.h>          /* DREF */
+#include <deemon/type.h>            /* OPERATOR_ENTER, OPERATOR_LEAVE */
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
+#include <stdint.h>  /* uint32_t */
+
+DECL_BEGIN
+
+/* The with-statement:
+ * >> with (<foo>) {
+ * >>     <bar>
+ * >> }
+ *
+ * `with' doesn't have its own AST, but instead is equivalent
+ * (and actually encoded as) the following replacement:
+ * >> {
+ * >>     __stack local __hidden = <foo>;
+ * >>     __hidden.operator enter();
+ * >>     try {
+ * >>         <bar>
+ * >>     } finally {
+ * >>         __hidden.operator leave();
+ * >>     }
+ * >> }
+ *
+ * It's main purpose is to be useful for automatic, scope-based
+ * resource management, specifically synchronization primitives
+ * such as locks and read/write locks, but it can also be used
+ * in other places, such as to automatically close files:
+ * >> with (local fp = File.open("foo")) {
+ * >>     print fp.read();
+ * >> }   // `fp.operator leave()' here will invoke `fp.close()'
+ */
+
+/* Parse a with-statement/expression.
+ * NOTE: This function expects the current token to be `with' */
+INTERN WUNUSED DREF struct ast *DFCALL
+ast_parse_with(bool is_statement, bool allow_nonblock) {
+	struct ast_loc loc;
+	struct symbol *expression_sym;
+	DREF struct ast *result, *other, *merge;
+	DREF struct ast **result_v;
+	uint32_t old_flags;
+	bool has_paren;
+	ASSERT(tok == KWD_with);
+	loc_here(&loc);
+	if unlikely(yield() < 0)
+		goto err;
+	if (scope_push())
+		goto err;
+	old_flags = TPPLexer_Current->l_flags;
+	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+		goto err_scope_flags;
+
+	/* Parse the expression for the with.
+	 * NOTE: We always allow the user to declare variables in here,
+	 *       so-as to make it easier to make use of with-statements
+	 *       where the with-expression is re-used inside the block. */
+	result = ast_parse_comma(AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
+	                         AST_FMULTIPLE_TUPLE,
+	                         NULL);
+	if unlikely(!result)
+		goto err_scope_flags;
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+		goto err_scope_r;
+
+	/* Create the symbol that's going to contain the with-expression. */
+	expression_sym = new_unnamed_symbol();
+	if unlikely(!expression_sym)
+		goto err_scope_r;
+
+	/* Use a stack variable. */
+	expression_sym->s_type = SYMBOL_TYPE_STACK;
+
+	/* Generate the store expression. */
+	other = ast_sym(expression_sym);
+	other = ast_setddi(other, &loc);
+	if unlikely(!other)
+		goto err_scope_r;
+	merge = ast_action2(AST_FACTION_STORE, other, result);
+	merge = ast_setddi(merge, &loc);
+	ast_decref(other);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_scope;
+	result = merge;
+
+	/* At this point, we've written the expression into a
+	 * symbol, which we can access normally from now on. */
+
+	/* Create a vector that's going to be used for the AST_MULTIPLE:
+	 * [0] -- __hidden_symbol = with_expression;
+	 * [1] -- __hidden_symbol.operator enter();
+	 * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
+	result_v = (DREF struct ast **)Dee_Mallocc(3, sizeof(DREF struct ast *));
+	if unlikely(!result_v)
+		goto err_scope_r;
+	result_v[0] = result; /* Inherit */
+	result      = ast_sym(expression_sym);
+	result      = ast_setddi(result, &loc);
+	if unlikely(!result)
+		goto err_result_v_0;
+	merge = ast_operator1(OPERATOR_ENTER, AST_OPERATOR_FNORMAL, result);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_result_v_0;
+	result_v[1] = merge; /* Inherit. */
+
+	/* Finally, parse the content of the wrapped try-statement. */
+	result = is_statement ? ast_parse_statement(allow_nonblock)
+	                      : ast_parse_expr(LOOKUP_SYM_NORMAL);
+	if unlikely(!result)
+		goto err_result_v_1;
+
+	/* Create the leave-expression for the finally block. */
+	merge = ast_sym(expression_sym);
+	merge = ast_setddi(merge, &loc);
+	if unlikely(!merge)
+		goto err_result_v_1_r;
+
+	/* Invoke the leave operator on the symbol. */
+	other = ast_operator1(OPERATOR_LEAVE, AST_OPERATOR_FNORMAL, merge);
+	ast_decref(merge);
+	if unlikely(!other)
+		goto err_result_v_1_r;
+
+	/* Wrap the with-block in a try-finally AST with the leave-statement. */
+	merge = ast_tryfinally(result, other);
+	merge = ast_setddi(merge, &loc);
+	ast_decref(other);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_result_v_1;
+	result_v[2] = merge; /* Inherit */
+
+	/* At this point, we've created all the necessary expression and it
+	 * is time to pack everything together in a multiple-ast.
+	 * HINT: as it happens, the try-statement is the last expression in
+	 *       this ast, which is exactly what we want the with-statement
+	 *       to evaluate to when used in an expression (aka. whatever
+	 *       the user writes as the last expression of the try-block). */
+	result = ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v);
+	result = ast_setddi(result, &loc);
+	if unlikely(!result)
+		goto err_result_v_2;
+	scope_pop();
+	return result;
+err_result_v_2:
+	ast_decref(result_v[2]);
+err_result_v_1:
+	ast_decref(result_v[1]);
+err_result_v_0:
+	ast_decref(result_v[0]);
+	Dee_Free(result_v);
+err_scope:
+	scope_pop();
+err:
+	return NULL;
+err_scope_flags:
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	goto err_scope;
+err_result_v_1_r:
+	ast_decref(result);
+	goto err_result_v_1;
+err_scope_r:
+	ast_decref(result);
+	goto err_scope;
+}
+
+
+/* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
+INTERN WUNUSED DREF struct ast *DFCALL
+ast_parse_with_hybrid(unsigned int *p_was_expression) {
+	struct ast_loc loc;
+	struct symbol *expression_sym;
+	DREF struct ast *result, *other, *merge;
+	DREF struct ast **result_v;
+	uint32_t old_flags;
+	bool has_paren;
+	ASSERT(tok == KWD_with);
+	loc_here(&loc);
+	if unlikely(yield() < 0)
+		goto err;
+	if (scope_push())
+		goto err;
+	old_flags = TPPLexer_Current->l_flags;
+	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+		goto err_scope_flags;
+
+	/* Parse the expression for the with.
+	 * NOTE: We always allow the user to declare variables in here,
+	 *       so-as to make it easier to make use of with-statements
+	 *       where the with-expression is re-used inside the block. */
+	result = ast_parse_comma(AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
+	                         AST_FMULTIPLE_TUPLE,
+	                         NULL);
+	if unlikely(!result)
+		goto err_scope_flags;
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+		goto err_scope_r;
+
+	/* Create the symbol that's going to contain the with-expression. */
+	expression_sym = new_unnamed_symbol();
+	if unlikely(!expression_sym)
+		goto err_scope_r;
+
+	/* Use a stack variable. */
+	expression_sym->s_type = SYMBOL_TYPE_STACK;
+
+	/* Generate the store expression. */
+	other = ast_sym(expression_sym);
+	other = ast_setddi(other, &loc);
+	if unlikely(!other)
+		goto err_scope_r;
+	merge = ast_action2(AST_FACTION_STORE, other, result);
+	merge = ast_setddi(merge, &loc);
+	ast_decref(other);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_scope;
+	result = merge;
+
+	/* At this point, we've written the expression into a
+	 * symbol, which we can access normally from now on. */
+	/* Create a vector that's going to be used for the AST_MULTIPLE:
+	 * [0] -- __hidden_symbol = with_expression;
+	 * [1] -- __hidden_symbol.operator enter();
+	 * [2] -- try ... finally { __hidden_symbol.operator leave(); } */
+	result_v = (DREF struct ast **)Dee_Mallocc(3, sizeof(DREF struct ast *));
+	if unlikely(!result_v)
+		goto err_scope_r;
+	result_v[0] = result; /* Inherit */
+	result      = ast_sym(expression_sym);
+	result      = ast_setddi(result, &loc);
+	if unlikely(!result)
+		goto err_result_v_0;
+	merge = ast_operator1(OPERATOR_ENTER, AST_OPERATOR_FNORMAL, result);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_result_v_0;
+	result_v[1] = merge; /* Inherit. */
+
+	/* Finally, parse the content of the wrapped try-statement. */
+	result = ast_parse_statement_or_expression(p_was_expression);
+	if unlikely(!result)
+		goto err_result_v_1;
+
+	/* Create the leave-expression for the finally block. */
+	merge = ast_sym(expression_sym);
+	merge = ast_setddi(merge, &loc);
+	if unlikely(!merge)
+		goto err_result_v_1_r;
+
+	/* Invoke the leave operator on the symbol. */
+	other = ast_operator1(OPERATOR_LEAVE, AST_OPERATOR_FNORMAL, merge);
+	ast_decref(merge);
+	if unlikely(!other)
+		goto err_result_v_1_r;
+
+	/* Wrap the with-block in a try-finally AST with the leave-statement. */
+	merge = ast_tryfinally(result, other);
+	merge = ast_setddi(merge, &loc);
+	ast_decref(other);
+	ast_decref(result);
+	if unlikely(!merge)
+		goto err_result_v_1;
+	result_v[2] = merge; /* Inherit */
+
+	/* At this point, we've created all the necessary expression and it
+	 * is time to pack everything together in a multiple-ast.
+	 * HINT: as it happens, the try-statement is the last expression in
+	 *       this ast, which is exactly what we want the with-statement
+	 *       to evaluate to when used in an expression (aka. whatever
+	 *       the user writes as the last expression of the try-block). */
+	result = ast_multiple(AST_FMULTIPLE_KEEPLAST, 3, result_v);
+	result = ast_setddi(result, &loc);
+	if unlikely(!result)
+		goto err_result_v_2;
+	scope_pop();
+	return result;
+err_result_v_2:
+	ast_decref(result_v[2]);
+err_result_v_1:
+	ast_decref(result_v[1]);
+err_result_v_0:
+	ast_decref(result_v[0]);
+	Dee_Free(result_v);
+err_scope:
+	scope_pop();
+err:
+	return NULL;
+err_scope_flags:
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	goto err_scope;
+err_result_v_1_r:
+	ast_decref(result);
+	goto err_result_v_1;
+err_scope_r:
+	ast_decref(result);
+	goto err_scope;
+}
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_COMPILER_OLD_LEXER_WITH_C */

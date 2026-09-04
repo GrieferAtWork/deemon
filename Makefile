@@ -100,10 +100,11 @@ LD_deemon$(EXE)   = $(CC_src_deemon)
 SRC_deemon$(EXE)  = \
 	src/deemon/*.c \
 	src/deemon/compiler/*.c \
-	src/deemon/compiler/asm/*.c \
-	src/deemon/compiler/lexer/*.c \
-	src/deemon/compiler/interface/*.c \
-	src/deemon/compiler/optimize/*.c \
+	src/deemon/compiler/old/*.c \
+	src/deemon/compiler/old/asm/*.c \
+	src/deemon/compiler/old/lexer/*.c \
+	src/deemon/compiler/old/interface/*.c \
+	src/deemon/compiler/old/optimize/*.c \
 	src/deemon/execute/*.c \
 	src/deemon/system/*.c \
 	src/deemon/objects/*.c \

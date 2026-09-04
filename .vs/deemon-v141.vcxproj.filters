@@ -10,6 +10,9 @@
 		<Filter Include="include\compiler">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-E54B7E739EFF}</UniqueIdentifier>
 		</Filter>
+		<Filter Include="include\compiler\old">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-A853D33BD461}</UniqueIdentifier>
+		</Filter>
 		<Filter Include="include\cxx">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F378}</UniqueIdentifier>
 		</Filter>
@@ -43,17 +46,20 @@
 		<Filter Include="src\compiler">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00F9C9ED4A5A}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="src\compiler\asm">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-855739EF538E}</UniqueIdentifier>
+		<Filter Include="src\compiler\old">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-855739EF50C8}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="src\compiler\interface">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-B665F278FC77}</UniqueIdentifier>
+		<Filter Include="src\compiler\old\asm">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-BD7DBD46B3B9}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="src\compiler\lexer">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-09363B73029E}</UniqueIdentifier>
+		<Filter Include="src\compiler\old\interface">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-79EADD8EBACD}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="src\compiler\optimize">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-F89298B3D49A}</UniqueIdentifier>
+		<Filter Include="src\compiler\old\lexer">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-B665F59B606D}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="src\compiler\old\optimize">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-D9D1E60A52A2}</UniqueIdentifier>
 		</Filter>
 		<Filter Include="src\execute">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-001F392E8885}</UniqueIdentifier>
@@ -138,38 +144,38 @@
 		<ClInclude Include="..\include\deemon\code.h">
 			<Filter>include</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\assembler.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\assembler.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\ast.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\ast.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\compiler.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\compiler.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\doctext.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\doctext.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\error.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\error.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\interface.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\interface.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\lexer.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\lexer.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\optimize.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\optimize.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\symbol.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\symbol.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\tpp.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\tpp.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\traits.h">
-			<Filter>include\compiler</Filter>
+		<ClInclude Include="..\include\deemon\compiler\old\traits.h">
+			<Filter>include\compiler\old</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\computed-operators.h">
 			<Filter>include</Filter>
@@ -723,14 +729,14 @@
 		<ClInclude Include="..\src\deemon\cmdline.h">
 			<Filter>src</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\asm\genasm-yield.c.inl">
-			<Filter>src\compiler\asm</Filter>
+		<ClInclude Include="..\src\deemon\compiler\old\asm\genasm-yield.c.inl">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\asm\genstore-setup.c.inl">
-			<Filter>src\compiler\asm</Filter>
+		<ClInclude Include="..\src\deemon\compiler\old\asm\genstore-setup.c.inl">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
-			<Filter>src\compiler\lexer</Filter>
+		<ClInclude Include="..\src\deemon\compiler\old\lexer\decl-escape-text-impl.c.inl">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl">
 			<Filter>src\execute</Filter>
@@ -1613,221 +1619,221 @@
 		<ClCompile Include="..\src\deemon\cmdline.c">
 			<Filter>src</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\assembler.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\assembler.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\directives.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\directives.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genasm.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genasm.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genassert.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genassert.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\gencall.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\gencall.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genclass.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genclass.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genfaster.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genfaster.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genfunction.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genfunction.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\geninplace.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\geninplace.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genloop.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genloop.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genoperator_func.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genprint.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genprint.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genstore.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genstore.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genswitch.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\genswitch.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\gentry.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\gentry.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\modgen.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\modgen.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\parseasm.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\parseasm.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\peephole.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\peephole.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\scope.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\scope.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\userasm.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\userasm.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\userdb.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\userdb.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\util.c">
-			<Filter>src\compiler\asm</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\asm\util.c">
+			<Filter>src\compiler\old\asm</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\ast.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\ast.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\compiler.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\compiler.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\ddi.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\ddi.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\error.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\error.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\instrlen.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\instrlen.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\core.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\core.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iast.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\iast.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\icompiler.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\icompiler.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\ilexer.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\ilexer.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\iparser.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iscope.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\iscope.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\isymbol.c">
-			<Filter>src\compiler\interface</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\interface\isymbol.c">
+			<Filter>src\compiler\old\interface</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\asm.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\asm.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\assert.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\assert.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\brace.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\brace.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\cast.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\cast.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\class.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\class.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\comma.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\comma.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\decl.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\del.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\del.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\doctext.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\doctext.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\expression.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\expression.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\function.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\function.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\hybrid.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\import.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\import.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\kwlabel.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\kwlabel.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\loopexpr.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\loopexpr.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\operator.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\operator.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\statement.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\statement.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\tag.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\tag.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\template-string.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\template-string.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\try.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\try.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\with.c">
-			<Filter>src\compiler\lexer</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\lexer\with.c">
+			<Filter>src\compiler\old\lexer</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\assign.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\assign.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\assumes.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\assumes.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\constant_traits.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_action.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_action.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_class.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_class.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_conditional.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_loop.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_multiple.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_multiple.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_operator.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_operator.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_switch.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_symbol.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_symbol.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\opt_try.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\optimize.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\optimize.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\traits.c">
-			<Filter>src\compiler\optimize</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\optimize\traits.c">
+			<Filter>src\compiler\old\optimize</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\symbol.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\symbol.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\tpp.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\tpp.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\traits.c">
-			<Filter>src\compiler</Filter>
+		<ClCompile Include="..\src\deemon\compiler\old\traits.c">
+			<Filter>src\compiler\old</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\buildid.c">
 			<Filter>src\execute</Filter>
@@ -2292,8 +2298,8 @@
 		<None Include="..\CONTRIBUTING.md" />
 		<None Include="..\README.md" />
 		<None Include="..\cpp.hint" />
-		<None Include="..\include\deemon\compiler\lexer.def">
-			<Filter>include\compiler</Filter>
+		<None Include="..\include\deemon\compiler\old\lexer.def">
+			<Filter>include\compiler\old</Filter>
 		</None>
 		<None Include="..\include\deemon\dec.md">
 			<Filter>include</Filter>
@@ -2304,8 +2310,8 @@
 		<None Include="..\include\deemon\object.md">
 			<Filter>include</Filter>
 		</None>
-		<None Include="..\src\deemon\compiler\asm\userdb.def">
-			<Filter>src\compiler\asm</Filter>
+		<None Include="..\src\deemon\compiler\old\asm\userdb.def">
+			<Filter>src\compiler\old\asm</Filter>
 		</None>
 		<None Include="..\src\deemon\linker-scripts\dex-build-id.ld">
 			<Filter>src\linker-scripts</Filter>

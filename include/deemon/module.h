@@ -412,12 +412,12 @@ struct Dee_compiler_options {
 	                                                     * to put a twist on how errors are actually processed. */
 	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler' */
 	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0' to use the hard-coded default. */
-	uint16_t                      co_compiler;          /* Set of `COMPILER_F*' from `<deemon/compiler/compiler.h>'. */
-	uint16_t                      co_parser;            /* Set of `PARSE_F*'    from `<deemon/compiler/lexer.h>' */
-	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*' from `<deemon/compiler/ast.h>' */
+	uint16_t                      co_compiler;          /* Set of `COMPILER_F*' from `<deemon/compiler/old/compiler.h>'. */
+	uint16_t                      co_parser;            /* Set of `PARSE_F*'    from `<deemon/compiler/old/lexer.h>' */
+	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*' from `<deemon/compiler/old/ast.h>' */
 	uint16_t                      co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
 	                                                     * a constant loop may be unwound. (Set to ZERO(0) to disable) */
-	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/assembler.h>' */
+	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/old/assembler.h>' */
 };
 
 
