@@ -13,3 +13,6 @@
 [submodule "src/libiconv"]
 	path = src/libiconv
 	url = https://github.com/GrieferAtWork/kos-libiconv.git
+[submodule "src/external/tpp3"]
+	path = src/external/tpp3
+	url = https://github.com/GrieferAtWork/tpp3.git
