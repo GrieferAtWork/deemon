@@ -208,6 +208,8 @@ printProxyObjectMethodHintWrapper("set_boundfirst");
 printProxyObjectMethodHintWrapper("set_delfirst");
 printProxyObjectMethodHintWrapper("set_boundlast");
 printProxyObjectMethodHintWrapper("set_dellast");
+printProxyObjectMethodHintWrapper("map_operator_iter");
+printProxyObjectMethodHintWrapper("map_operator_foreach_pair");
 printProxyObjectMethodHintWrapper("map_operator_getitem");
 printProxyObjectMethodHintWrapper("map_operator_delitem");
 printProxyObjectMethodHintWrapper("map_operator_setitem");
@@ -226,6 +228,14 @@ printProxyObjectMethodHintWrapper("map_operator_bounditem_string_len_hash");
 printProxyObjectMethodHintWrapper("map_operator_contains");
 printProxyObjectMethodHintWrapper("map_operator_size");
 printProxyObjectMethodHintWrapper("map_operator_sizeob");
+printProxyObjectMethodHintWrapper("map_operator_compare_eq");
+printProxyObjectMethodHintWrapper("map_operator_trycompare_eq");
+printProxyObjectMethodHintWrapper("map_operator_eq");
+printProxyObjectMethodHintWrapper("map_operator_ne");
+printProxyObjectMethodHintWrapper("map_operator_lo");
+printProxyObjectMethodHintWrapper("map_operator_le");
+printProxyObjectMethodHintWrapper("map_operator_gr");
+printProxyObjectMethodHintWrapper("map_operator_ge");
 printProxyObjectMethodHintWrapper("map_iterkeys");
 printProxyObjectMethodHintWrapper("map_itervalues");
 printProxyObjectMethodHintWrapper("map_remove");
@@ -270,6 +280,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__set_boundfirst(ProxyObject 
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__set_delfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_delfirst, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__set_boundlast(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_boundlast, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__set_dellast(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(set_dellast, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__map_operator_iter(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(map_operator_iter, self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL generic_proxy__map_operator_foreach_pair(ProxyObject *__restrict self, Dee_foreach_pair_t cb, void *arg); /* DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->po_obj, cb, arg) */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_getitem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_getitem, self->po_obj, key) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_delitem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_delitem, self->po_obj, key) */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__map_operator_setitem(ProxyObject *self, DeeObject *key, DeeObject *value); /* DeeObject_InvokeMethodHint(map_operator_setitem, self->po_obj, key, value) */
@@ -288,6 +300,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__map_operator_bounditem_stri
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_contains(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_contains, self->po_obj, key) */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__map_operator_size(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(map_operator_size, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__map_operator_sizeob(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(map_operator_sizeob, self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_compare_eq(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_compare_eq, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_trycompare_eq(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_trycompare_eq, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_eq(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_eq, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_ne(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_ne, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_lo(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_lo, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_le(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_le, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_gr(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_gr, lhs->po_obj, rhs) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_ge(ProxyObject *lhs, DeeObject *rhs); /* DeeObject_InvokeMethodHint(map_operator_ge, lhs->po_obj, rhs) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__map_iterkeys(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(map_iterkeys, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__map_itervalues(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(map_itervalues, self->po_obj) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_remove(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_remove, self->po_obj, key) */

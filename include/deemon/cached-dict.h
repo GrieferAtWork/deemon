@@ -40,9 +40,9 @@ struct Dee_cached_dict_item {
 
 typedef struct Dee_cached_dict_object {
 	Dee_OBJECT_HEAD
+	DREF DeeObject              *cd_map;  /* [1..1][const] Underlying mapping used to populate `cd_elem', as they are accessed. */
 	size_t                       cd_mask; /* [lock(cd_lock)][> cd_size || cd_mask == 0] Allocated dictionary size. */
 	size_t                       cd_size; /* [lock(cd_lock)][< cd_mask || cd_mask == 0] Amount of non-NULL key-item pairs. */
-	DREF DeeObject              *cd_map;  /* [1..1][const] Underlying mapping used to populate `cd_elem', as they are accessed. */
 	struct Dee_cached_dict_item *cd_elem; /* [1..cd_size|ALLOC(cd_mask+1)][lock(cd_lock)]
 	                                       * [owned_if(!= INTERNAL(DeeCachedDict_EmptyItems))] Dict key-item pairs (items). */
 #ifndef CONFIG_NO_THREADS

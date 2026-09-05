@@ -44,6 +44,8 @@
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 
+#include "generic-proxy.h"
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp
@@ -64,9 +66,9 @@ typedef DeeCachedDictObject CachedDict;
 /************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_ctor(CachedDict *__restrict self) {
+	self->cd_map  = DeeMap_NewEmpty();
 	self->cd_mask = 0;
 	self->cd_size = 0;
-	self->cd_map  = DeeMap_NewEmpty();
 	self->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&self->cd_lock);
 	return 0;
@@ -737,11 +739,6 @@ cdict_iscached_string_len_hash(DeeCachedDictObject *self, char const *key,
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_sizeob(CachedDict *__restrict self) {
-	return DeeObject_SizeOb(self->cd_map);
-}
-
 /* This one's basically your hasitem operator. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cdict_contains(CachedDict *self, DeeObject *key) {
@@ -753,86 +750,27 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cdict_size(CachedDict *__restrict self) {
-	return DeeObject_Size(self->cd_map);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cdict_size_fast(CachedDict *__restrict self) {
-	return DeeObject_SizeFast(self->cd_map);
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cdict_printrepr(CachedDict *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "CachedDict(%r)", self->cd_map);
 }
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-cdict_hash(CachedDict *__restrict self) {
-	return DeeObject_Hash(self->cd_map);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdict_compare_eq(CachedDict *self, DeeObject *other) {
-	return DeeObject_CompareEq(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdict_compare(CachedDict *self, DeeObject *other) {
-	return DeeObject_Compare(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdict_trycompare_eq(CachedDict *self, DeeObject *other) {
-	return DeeObject_TryCompareEq(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_eq(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpEq(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_ne(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpNe(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_lo(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpLo(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_le(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpLe(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_gr(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpGr(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_ge(CachedDict *self, DeeObject *other) {
-	return DeeObject_CmpGe(self->cd_map, other);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_iter(CachedDict *__restrict self) {
-	return DeeObject_Iter(self->cd_map);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cdict_foreach(CachedDict *self, Dee_foreach_t proc, void *arg) {
-	return DeeObject_Foreach(self->cd_map, proc, arg);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cdict_foreach_pair(CachedDict *self, Dee_foreach_pair_t proc, void *arg) {
-	return DeeObject_ForeachPair(self->cd_map, proc, arg);
-}
+STATIC_ASSERT(offsetof(CachedDict, cd_map) == offsetof(ProxyObject, po_obj));
+#define cdict_sizeob        generic_proxy__map_operator_sizeob
+#define cdict_size          generic_proxy__map_operator_size
+#define cdict_size_fast     generic_proxy__size_fast
+#define cdict_hash          generic_proxy__hash_recursive
+#define cdict_compare_eq    generic_proxy__map_operator_compare_eq
+#define cdict_trycompare_eq generic_proxy__map_operator_trycompare_eq
+#define cdict_eq            generic_proxy__map_operator_eq
+#define cdict_ne            generic_proxy__map_operator_ne
+#define cdict_lo            generic_proxy__map_operator_lo
+#define cdict_le            generic_proxy__map_operator_le
+#define cdict_gr            generic_proxy__map_operator_gr
+#define cdict_ge            generic_proxy__map_operator_ge
+#define cdict_iter          generic_proxy__map_operator_iter
+#define cdict_foreach_pair  generic_proxy__map_operator_foreach_pair
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cdict_getitem(CachedDict *self, DeeObject *key) {
@@ -962,7 +900,7 @@ err:
 PRIVATE struct type_cmp cdict_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&cdict_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_compare_eq,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_compare,
+	/* .tp_compare       = */ DEFIMPL(&default__compare__with__eq__and__lo),
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_trycompare_eq,
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_ne,
@@ -982,7 +920,7 @@ PRIVATE struct type_seq cdict_seq = {
 	/* .tp_getrange                     = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
 	/* .tp_delrange                     = */ DEFIMPL_UNSUPPORTED(&default__delrange__unsupported),
 	/* .tp_setrange                     = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
-	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
+	/* .tp_foreach                      = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
 	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_bounditem,
 	/* .tp_hasitem                      = */ DEFIMPL(&default__hasitem__with__bounditem),
