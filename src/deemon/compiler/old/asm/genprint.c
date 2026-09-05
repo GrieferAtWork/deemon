@@ -22,19 +22,19 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc */
-#include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
-#include <deemon/bytes.h>              /* DeeBytes_Check, DeeBytes_IsEmpty */
+#include <deemon/alloc.h>                  /* Dee_Free, Dee_Reallocc */
+#include <deemon/asm.h>                    /* ASM16_*, ASM_*, instruction_t */
+#include <deemon/bytes.h>                  /* DeeBytes_Check, DeeBytes_IsEmpty */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, PRINT_MODE_*, asm_*, ast_genasm, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* AST_*, DeeAst_Type, ast */
 #include <deemon/compiler/old/optimize.h>  /* ast_predict_type */
-#include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
-#include <deemon/objmethod.h>          /* DeeObjMethod* */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
-#include <deemon/system-features.h>    /* memcpyc, memset */
-#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* Dee_objmethod_t, OPERATOR_* */
+#include <deemon/error.h>                  /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/object.h>                 /* DREF, DeeObject, Dee_Decref */
+#include <deemon/objmethod.h>              /* DeeObjMethod* */
+#include <deemon/string.h>                 /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h>        /* memcpyc, memset */
+#include <deemon/tuple.h>                  /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>                   /* Dee_objmethod_t, OPERATOR_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

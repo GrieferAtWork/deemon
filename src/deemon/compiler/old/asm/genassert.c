@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM_*, instruction_t */
+#include <deemon/asm.h>                    /* ASM_*, instruction_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_FNOASSERT, ASM_G_FPUSHRES, SECTION_COLD, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/old/optimize.h>  /* ast_predict_type_noanno */
-#include <deemon/kwds.h>               /* DeeType_IsKw */
-#include <deemon/module.h>             /* DeeModule_GetDeemon */
-#include <deemon/object.h>             /* DeeTypeObject */
-#include <deemon/type.h>               /* Dee_operator_t, FAKE_OPERATOR_*, OPERATOR_* */
+#include <deemon/kwds.h>                   /* DeeType_IsKw */
+#include <deemon/module.h>                 /* DeeModule_GetDeemon */
+#include <deemon/object.h>                 /* DeeTypeObject */
+#include <deemon/type.h>                   /* Dee_operator_t, FAKE_OPERATOR_*, OPERATOR_* */
 
 #include "../../../runtime/builtin.h"
 

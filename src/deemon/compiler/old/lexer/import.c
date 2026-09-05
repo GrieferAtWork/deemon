@@ -22,19 +22,19 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
+#include <deemon/alloc.h>               /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/old/ast.h>    /* ast, ast_*, loc_here */
 #include <deemon/compiler/old/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
 #include <deemon/compiler/old/symbol.h> /* SYMBOL_*, ast_loc, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_addambig, symbol_fini */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */
-#include <deemon/string.h>          /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
-#include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, memcpy, strlen */
-#include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
-#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
+#include <deemon/module.h>              /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>                /* Dee_None */
+#include <deemon/object.h>              /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */
+#include <deemon/string.h>              /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/stringutils.h>         /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h>     /* DeeSystem_DEFINE_memrend, memcpy, strlen */
+#include <deemon/thread.h>              /* DeeThread_Self, Dee_import_frame */
+#include <deemon/util/hash.h>           /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */

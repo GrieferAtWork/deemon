@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
+#include <deemon/code.h>                  /* Dee_EXCEPTION_HANDLER_FFINALLY */
 #include <deemon/compiler/old/ast.h>      /* AST_CONSTEXPR, AST_TRY, CATCH_EXPR_FSECOND, ast, ast_decref, catch_expr */
 #include <deemon/compiler/old/optimize.h> /* OPTIMIZE_FASSUME, OPTIMIZE_VERBOSE, ast_*, optimizer_count, optimizer_flags */
-#include <deemon/object.h>            /* DeeObject_Type, Dee_AsObject */
+#include <deemon/object.h>                /* DeeObject_Type, Dee_AsObject */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

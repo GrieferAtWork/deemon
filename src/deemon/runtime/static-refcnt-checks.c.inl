@@ -25,51 +25,51 @@
 #include "static-refcnt-checks.h"
 
 #ifdef HAVE_DEBUG_STATIC_REFS
-#include <deemon/attribute.h>          /* DeeAttribute_Type, DeeEnumAttrIterator_Type, DeeEnumAttr_Type */
-#include <deemon/bool.h>               /* DeeBool_Type */
-#include <deemon/bytes.h>              /* DeeBytes_Empty, DeeBytes_Type */
-#include <deemon/cached-dict.h>        /* DeeCachedDict_Type */
-#include <deemon/callable.h>           /* DeeCallable_Type */
-#include <deemon/cell.h>               /* DeeCell_Type */
-#include <deemon/class.h>              /* DeeClassDescriptor_Type, DeeInstanceMember_Type */
-#include <deemon/code.h>               /* DeeCode_Empty, DeeCode_Type, DeeDDI_Type, DeeFunction_Type, DeeYieldFunctionIterator_Type, DeeYieldFunction_Type */
+#include <deemon/attribute.h>              /* DeeAttribute_Type, DeeEnumAttrIterator_Type, DeeEnumAttr_Type */
+#include <deemon/bool.h>                   /* DeeBool_Type */
+#include <deemon/bytes.h>                  /* DeeBytes_Empty, DeeBytes_Type */
+#include <deemon/cached-dict.h>            /* DeeCachedDict_Type */
+#include <deemon/callable.h>               /* DeeCallable_Type */
+#include <deemon/cell.h>                   /* DeeCell_Type */
+#include <deemon/class.h>                  /* DeeClassDescriptor_Type, DeeInstanceMember_Type */
+#include <deemon/code.h>                   /* DeeCode_Empty, DeeCode_Type, DeeDDI_Type, DeeFunction_Type, DeeYieldFunctionIterator_Type, DeeYieldFunction_Type */
 #include <deemon/compiler/old/ast.h>       /* DeeAst_Type */
 #include <deemon/compiler/old/compiler.h>  /* DeeCompiler* */
 #include <deemon/compiler/old/interface.h> /* DeeCompiler* */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error.h>              /* DeeError_*_instance */
-#include <deemon/file.h>               /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
-#include <deemon/filetypes.h>          /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
-#include <deemon/float.h>              /* DeeFloat_Type */
-#include <deemon/format.h>             /* PRF* */
-#include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/instancemethod.h>     /* DeeInstanceMethod_Type */
-#include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/kwds.h>               /* DeeBlackListKw_Type, DeeBlackListKwds_Type, DeeKwdsMapping_Type, DeeKwds_Type */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMap_EmptyInstance, DeeMap_Type, DeeSharedMap_Type */
-#include <deemon/mapfile.h>            /* DeeMapFile_Type */
-#include <deemon/module.h>             /* DeeBuiltin_*, DeeModule* */
-#include <deemon/none.h>               /* DeeNone_Singleton, DeeNone_Type */
-#include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>             /* DeeObject_Type */
-#include <deemon/objmethod.h>          /* DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
-#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqOne_Type, DeeSeqPair_Type */
-#include <deemon/property.h>           /* DeeProperty_Type */
-#include <deemon/rodict.h>             /* DeeRoDict_EmptyInstance, DeeRoDict_Type */
-#include <deemon/roset.h>              /* DeeRoSet_Type */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSome_Type, DeeSeq_EmptyInstance, DeeSeq_Type, DeeSharedVector_Type */
-#include <deemon/set.h>                /* DeeSet_* */
-#include <deemon/string.h>             /* DeeString* */
-#include <deemon/super.h>              /* DeeSuper_Type */
-#include <deemon/thread.h>             /* DeeThread_Type */
-#include <deemon/traceback.h>          /* DeeFrame_Type, DeeTraceback_Empty, DeeTraceback_Type */
-#include <deemon/tuple.h>              /* DeeNullableTuple_Empty, DeeNullableTuple_Type, DeeTuple_Empty, DeeTuple_Type */
-#include <deemon/type.h>               /* DeeType_* */
-#include <deemon/types.h>              /* DeeObject, DeeTypeObject, Dee_AsObject, Dee_STATIC_REFCOUNT_INIT, Dee_TYPE */
-#include <deemon/weakref.h>            /* DeeWeakRef_Type */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/error.h>                  /* DeeError_*_instance */
+#include <deemon/file.h>                   /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
+#include <deemon/filetypes.h>              /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
+#include <deemon/float.h>                  /* DeeFloat_Type */
+#include <deemon/format.h>                 /* PRF* */
+#include <deemon/gc.h>                     /* DeeGCEnumTracked_Singleton */
+#include <deemon/hashset.h>                /* DeeHashSet_Type */
+#include <deemon/instancemethod.h>         /* DeeInstanceMethod_Type */
+#include <deemon/int.h>                    /* DeeInt_* */
+#include <deemon/kwds.h>                   /* DeeBlackListKw_Type, DeeBlackListKwds_Type, DeeKwdsMapping_Type, DeeKwds_Type */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/map.h>                    /* DeeMap_EmptyInstance, DeeMap_Type, DeeSharedMap_Type */
+#include <deemon/mapfile.h>                /* DeeMapFile_Type */
+#include <deemon/module.h>                 /* DeeBuiltin_*, DeeModule* */
+#include <deemon/none.h>                   /* DeeNone_Singleton, DeeNone_Type */
+#include <deemon/numeric.h>                /* DeeNumeric_Type */
+#include <deemon/object.h>                 /* DeeObject_Type */
+#include <deemon/objmethod.h>              /* DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
+#include <deemon/pair.h>                   /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqOne_Type, DeeSeqPair_Type */
+#include <deemon/property.h>               /* DeeProperty_Type */
+#include <deemon/rodict.h>                 /* DeeRoDict_EmptyInstance, DeeRoDict_Type */
+#include <deemon/roset.h>                  /* DeeRoSet_Type */
+#include <deemon/seq.h>                    /* DeeIterator_Type, DeeSeqSome_Type, DeeSeq_EmptyInstance, DeeSeq_Type, DeeSharedVector_Type */
+#include <deemon/set.h>                    /* DeeSet_* */
+#include <deemon/string.h>                 /* DeeString* */
+#include <deemon/super.h>                  /* DeeSuper_Type */
+#include <deemon/thread.h>                 /* DeeThread_Type */
+#include <deemon/traceback.h>              /* DeeFrame_Type, DeeTraceback_Empty, DeeTraceback_Type */
+#include <deemon/tuple.h>                  /* DeeNullableTuple_Empty, DeeNullableTuple_Type, DeeTuple_Empty, DeeTuple_Type */
+#include <deemon/type.h>                   /* DeeType_* */
+#include <deemon/types.h>                  /* DeeObject, DeeTypeObject, Dee_AsObject, Dee_STATIC_REFCOUNT_INIT, Dee_TYPE */
+#include <deemon/weakref.h>                /* DeeWeakRef_Type */
 
 #include "../execute/function-wrappers.h"
 #include "../execute/module-globals.h"

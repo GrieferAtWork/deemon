@@ -27,32 +27,32 @@
 #endif /* CONFIG_HOST_WINDOWS */
 /**/
 
-#include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
-#include <deemon/bytes.h>              /* DeeBytes* */
-#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
+#include <deemon/alloc.h>                  /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
+#include <deemon/bytes.h>                  /* DeeBytes* */
+#include <deemon/code.h>                   /* DeeCodeObject, DeeFunctionObject */
 #include <deemon/compiler/old/assembler.h> /* ASM_* */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt */
 #include <deemon/compiler/old/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
 #include <deemon/compiler/old/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
 #include <deemon/compiler/old/optimize.h>  /* OPTIMIZE_F* */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/error_types.h>        /* Dee_compiler_error_object */
-#include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
-#include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
-#include <deemon/filetypes.h>          /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
-#include <deemon/format.h>             /* DeeFormat_Printf, DeeFormat_Repeat */
-#include <deemon/heap.h>               /* DeeHeap_* */
-#include <deemon/int.h>                /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
-#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options */
-#include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref*, Dee_XDecref, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
-#include <deemon/string.h>             /* DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
-#include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
-#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* Dee_DumpReferenceLeaks */
+#include <deemon/error.h>                  /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/error_types.h>            /* Dee_compiler_error_object */
+#include <deemon/exec.h>                   /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
+#include <deemon/file.h>                   /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
+#include <deemon/filetypes.h>              /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
+#include <deemon/format.h>                 /* DeeFormat_Printf, DeeFormat_Repeat */
+#include <deemon/heap.h>                   /* DeeHeap_* */
+#include <deemon/int.h>                    /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
+#include <deemon/module.h>                 /* DeeModule*, Dee_compiler_options */
+#include <deemon/none.h>                   /* DeeNone_Check */
+#include <deemon/notify.h>                 /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref*, Dee_XDecref, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
+#include <deemon/string.h>                 /* DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>        /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
+#include <deemon/system.h>                 /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
+#include <deemon/tuple.h>                  /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>                   /* Dee_DumpReferenceLeaks */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

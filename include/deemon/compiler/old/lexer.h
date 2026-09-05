@@ -46,8 +46,8 @@
 #include "../../system-features.h" /* bzero, memcpy */
 #include "../../type.h"            /* Dee_operator_t */
 #include "../../types.h"           /* DREF, DeeObject, ITER_DONE */
-#include "ast.h"                /* ast */
-#include "symbol.h"             /* LOOKUP_SYM_NORMAL, ast_loc, decl_ast, symbol */
+#include "ast.h"                   /* ast */
+#include "symbol.h"                /* LOOKUP_SYM_NORMAL, ast_loc, decl_ast, symbol */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool, false */

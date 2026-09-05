@@ -22,28 +22,28 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
-#include <deemon/bool.h>               /* DeeBool_Type */
-#include <deemon/code.h>               /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, instruction_t */
+#include <deemon/asm.h>                    /* ASM16_*, ASM_*, instruction_t */
+#include <deemon/bool.h>                   /* DeeBool_Type */
+#include <deemon/code.h>                   /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, instruction_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, DeeRoSet_FromSequenceOrMappingForContains, PRINT_MODE_*, R_DMN_DISP8, SECTION_COLD, asm_*, ast_gen_*, ast_genasm*, ast_genprint, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* ASSERT_AST, AST_*, ast, ast_isconstexpr */
 #include <deemon/compiler/old/optimize.h>  /* ast_* */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope*, SYMBOL_*, current_basescope, current_rootscope, symbol, symbol_bnd_haseffect, symbol_get_haseffect, text_label, text_label_name */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* Dee_EmptyMap */
-#include <deemon/module.h>             /* DeeModule_GetDeemon */
-#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref_likely, Dee_Incref */
-#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
-#include <deemon/seq.h>                /* DeeSeq_Check, Dee_EmptySeq */
-#include <deemon/set.h>                /* Dee_EmptySet */
-#include <deemon/tuple.h>              /* DeeTuple_Type */
-#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_*, Dee_operator_t, Dee_opinfo, OPCC_FINPLACE, OPERATOR_* */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/error.h>                  /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>                /* DeeHashSet_Type */
+#include <deemon/int.h>                    /* DeeInt_* */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/map.h>                    /* Dee_EmptyMap */
+#include <deemon/module.h>                 /* DeeModule_GetDeemon */
+#include <deemon/none.h>                   /* DeeNone_Check, DeeNone_Type, Dee_None */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref_likely, Dee_Incref */
+#include <deemon/pair.h>                   /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
+#include <deemon/seq.h>                    /* DeeSeq_Check, Dee_EmptySeq */
+#include <deemon/set.h>                    /* Dee_EmptySet */
+#include <deemon/tuple.h>                  /* DeeTuple_Type */
+#include <deemon/type.h>                   /* DeeTypeType_GetOperatorById, DeeType_*, Dee_operator_t, Dee_opinfo, OPCC_FINPLACE, OPERATOR_* */
 
 #include "../../../runtime/builtin.h"
 

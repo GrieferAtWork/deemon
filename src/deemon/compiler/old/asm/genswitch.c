@@ -22,18 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM_*, instruction_t */
-#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_FHANDLED, code_addr_t, instruction_t */
+#include <deemon/asm.h>                    /* ASM_*, instruction_t */
+#include <deemon/code.h>                   /* Dee_EXCEPTION_HANDLER_FHANDLED, code_addr_t, instruction_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, DeeRelInt*, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/old/symbol.h>    /* text_label */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/dict.h>               /* Dee_dict_item */
-#include <deemon/error.h>              /* DeeError_NotImplemented, DeeError_TypeError */
-#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsUInt32 */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_InstanceOfExact, Dee_AsObject, Dee_DecrefDokill, Dee_Decref_likely, Dee_Incref */
-#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, Dee_rodict_builder*, _DeeRoDict_GetRealVTab */
-#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/dict.h>                   /* Dee_dict_item */
+#include <deemon/error.h>                  /* DeeError_NotImplemented, DeeError_TypeError */
+#include <deemon/int.h>                    /* DeeInt_Check, DeeInt_TryAsUInt32 */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_InstanceOfExact, Dee_AsObject, Dee_DecrefDokill, Dee_Decref_likely, Dee_Incref */
+#include <deemon/rodict.h>                 /* DeeRoDictObject, DeeRoDict_Check, Dee_rodict_builder*, _DeeRoDict_GetRealVTab */
+#include <deemon/tuple.h>                  /* DeeTuple* */
 
 #include "../../../runtime/strings.h"
 

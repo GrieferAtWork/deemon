@@ -22,21 +22,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_*alloc*, Dee_Free */
+#include <deemon/alloc.h>                 /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/old/ast.h>      /* AST_CONSTEXPR, ast, ast_decref */
 #include <deemon/compiler/old/lexer.h>    /* PARSE_UNARY_DISALLOW_CASTS, ast_parse_*, current_tags */
 #include <deemon/compiler/old/optimize.h> /* OPTIMIZE_FNOPREDICT, ast_optimize_all, ast_predict_type, optimizer_flags */
 #include <deemon/compiler/old/symbol.h>   /* BASESCOPE_FRETURN, DAST_*, DeeBaseScopeObject, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_TYPE_*, SYMBOL_UNWIND_ALIAS, decl_ast*, get_local_symbol_in_scope, lookup_nth, lookup_symbol, new_unnamed_symbol_in_scope, symbol, symbol_decref, symbol_incref */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/format.h>            /* PRFuSIZ */
-#include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE */
-#include <deemon/string.h>            /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
-#include <deemon/system-features.h>   /* memcpy, strlen */
-#include <deemon/type.h>              /* DeeType_Check */
-#include <deemon/util/weakref.h>      /* Dee_weakref_copy, Dee_weakref_fini */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/format.h>                /* PRFuSIZ */
+#include <deemon/module.h>                /* DeeModule*, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>                  /* DeeNone_Check, DeeNone_Type */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE */
+#include <deemon/string.h>                /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/system-features.h>       /* memcpy, strlen */
+#include <deemon/type.h>                  /* DeeType_Check */
+#include <deemon/util/weakref.h>          /* Dee_weakref_copy, Dee_weakref_fini */
 
 #include "../../../runtime/builtin.h"
 

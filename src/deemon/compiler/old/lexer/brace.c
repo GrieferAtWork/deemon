@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
+#include <deemon/alloc.h>               /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/compiler/old/ast.h>    /* AST_FMULTIPLE_GENERIC, AST_FMULTIPLE_GENERIC_MAP, ast, ast_* */
 #include <deemon/compiler/old/lexer.h>  /* ast_parse_expr, maybe_expression_begin */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref */
-#include <deemon/string.h>          /* DeeString_NewSized */
+#include <deemon/none.h>                /* Dee_None */
+#include <deemon/object.h>              /* DREF, DeeObject, Dee_Decref */
+#include <deemon/string.h>              /* DeeString_NewSized */
 
 #include <stddef.h> /* NULL, size_t */
 

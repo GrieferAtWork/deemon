@@ -26,7 +26,7 @@
 #include <deemon/compiler/old/lexer.h>  /* AST_PARSE_WASEXPR_MAYBE, AST_PARSE_WASEXPR_NO, ast_parse_* */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/types.h>           /* DREF */
+#include <deemon/types.h>               /* DREF */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

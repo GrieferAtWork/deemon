@@ -22,21 +22,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* DeeAsm_IsNoreturn */
-#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F* */
+#include <deemon/asm.h>                    /* DeeAsm_IsNoreturn */
+#include <deemon/code.h>                   /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, REL_HASSYM, R_DMN_*, UASM_INTEXPR_FHASSP, UASM_INTEXPR_FNORMAL, USER_ASM_FSTKINV, asm_*, current_assembler, ddi_checkpoint, ddi_newfile, uasm_*, user_assembler */
 #include <deemon/compiler/old/ast.h>       /* AST_CONSTEXPR, ast, ast_decref */
 #include <deemon/compiler/old/lexer.h>     /* ast_parse_expr */
 #include <deemon/compiler/old/optimize.h>  /* ast_optimize_all */
 #include <deemon/compiler/old/symbol.h>    /* LOOKUP_SYM_NORMAL, current_basescope, scope_pop, scope_push */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
-#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
-#include <deemon/object.h>             /* DeeObject_*, Dee_Decref, Dee_Incref, Dee_XDecref */
-#include <deemon/string.h>             /* DeeString*, DeeUni_ToLower */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bcmpc, memcasecmp, strcasecmp, strlen */
-#include <deemon/type.h>               /* DeeType_Type */
-#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject */
+#include <deemon/error.h>                  /* DeeError_CompilerError, DeeError_Throwf */
+#include <deemon/none.h>                   /* DeeNone_Check, DeeNone_Type, Dee_None */
+#include <deemon/object.h>                 /* DeeObject_*, Dee_Decref, Dee_Incref, Dee_XDecref */
+#include <deemon/string.h>                 /* DeeString*, DeeUni_ToLower */
+#include <deemon/system-features.h>        /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bcmpc, memcasecmp, strcasecmp, strlen */
+#include <deemon/type.h>                   /* DeeType_Type */
+#include <deemon/types.h>                  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject */
 
 #include "../../../runtime/strings.h"
 

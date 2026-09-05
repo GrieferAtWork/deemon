@@ -22,16 +22,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_*alloc*, Dee_Free, Dee_Freea */
-#include <deemon/class.h>             /* DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Check, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR, Dee_class_operator */
-#include <deemon/code.h>              /* Dee_CODE_FTHISCALL, Dee_CODE_FYIELDING */
+#include <deemon/alloc.h>                 /* Dee_*alloc*, Dee_Free, Dee_Freea */
+#include <deemon/class.h>                 /* DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Check, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR, Dee_class_operator */
+#include <deemon/code.h>                  /* Dee_CODE_FTHISCALL, Dee_CODE_FYIELDING */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast, ast_*, class_member */
 #include <deemon/compiler/old/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_VERBOSEAT, ast_*, optimizer_count */
 #include <deemon/compiler/old/symbol.h>   /* BASESCOPE_FRETURN, DeeBaseScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, new_unnamed_symbol_in_scope, symbol */
-#include <deemon/object.h>            /* DREF */
-#include <deemon/string.h>            /* DeeString_STR */
-#include <deemon/system-features.h>   /* memcpy*, memset */
-#include <deemon/type.h>              /* Dee_operator_t, OPERATOR_REPR, OPERATOR_STR */
+#include <deemon/object.h>                /* DREF */
+#include <deemon/string.h>                /* DeeString_STR */
+#include <deemon/system-features.h>       /* memcpy*, memset */
+#include <deemon/type.h>                  /* Dee_operator_t, OPERATOR_REPR, OPERATOR_STR */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

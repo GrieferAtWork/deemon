@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
-#include <deemon/bool.h>              /* DeeBool_For, DeeBool_Type */
+#include <deemon/alloc.h>                 /* Dee_Free, Dee_Mallocc */
+#include <deemon/bool.h>                  /* DeeBool_For, DeeBool_Type */
 #include <deemon/compiler/old/ast.h>      /* ASSERT_AST, AST_*, asm_operand, ast, ast_constexpr, ast_decref_likely */
 #include <deemon/compiler/old/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
 #include <deemon/compiler/old/symbol.h>   /* DeeScopeObject, DeeScope_Type, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
-#include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
+#include <deemon/none.h>                  /* DeeNone_NewRef */
+#include <deemon/object.h>                /* DREF, Dee_Decref, Dee_Incref */
+#include <deemon/thread.h>                /* DeeThread_CheckInterrupt */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

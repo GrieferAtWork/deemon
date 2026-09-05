@@ -22,18 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* DeeObject_CALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
-#include <deemon/code.h>              /* Dee_CODE_F* */
+#include <deemon/alloc.h>                 /* DeeObject_CALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/class.h>                 /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
+#include <deemon/code.h>                  /* Dee_CODE_F* */
 #include <deemon/compiler/old/ast.h>      /* ASSERT_AST, ast, ast_incref, loc_here */
 #include <deemon/compiler/old/compiler.h> /* DeeCompiler* */
 #include <deemon/compiler/old/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/module.h>            /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
-#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
-#include <deemon/string.h>            /* DeeStringObject */
-#include <deemon/system-features.h>   /* bzero, memcpy, memset */
-#include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
+#include <deemon/module.h>                /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
+#include <deemon/object.h>                /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/string.h>                /* DeeStringObject */
+#include <deemon/system-features.h>       /* bzero, memcpy, memset */
+#include <deemon/type.h>                  /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
 
 #include "../../runtime/strings.h"
 

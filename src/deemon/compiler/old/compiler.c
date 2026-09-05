@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/code.h>               /* DeeCodeObject, Dee_CODE_FVARARGS */
+#include <deemon/alloc.h>                  /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/code.h>                   /* DeeCodeObject, Dee_CODE_FVARARGS */
 #include <deemon/compiler/old/assembler.h> /* ASM_FNORMAL, asm_symbol_ref, code_compile, module_compile */
 #include <deemon/compiler/old/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_* */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_*, DeeCompiler* */
@@ -32,17 +32,17 @@
 #include <deemon/compiler/old/optimize.h>  /* OPTIMIZE_FENABLED, OPTIMIZE_FNORMAL, ast_optimize_all, optimizer_flags, optimizer_unwind_limit */
 #include <deemon/compiler/old/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeRootScope_Type, DeeScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, current_basescope, current_rootscope, current_scope, new_unnamed_symbol, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
-#include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
-#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
-#include <deemon/serial.h>             /* DeeSerial, Dee_serial */
-#include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
-#include <deemon/system-features.h>    /* bzero, memcpy, memset */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, type_* */
-#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
-#include <deemon/util/weakref.h>       /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */
+#include <deemon/computed-operators.h>     /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/dec.h>                    /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
+#include <deemon/exec.h>                   /* DeeExec_RUNMODE_* */
+#include <deemon/module.h>                 /* DeeModule*, Dee_compiler_options, Dee_module_object */
+#include <deemon/object.h>                 /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/serial.h>                 /* DeeSerial, Dee_serial */
+#include <deemon/string.h>                 /* DeeString*, Dee_unicode_printer_fini */
+#include <deemon/system-features.h>        /* bzero, memcpy, memset */
+#include <deemon/type.h>                   /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, type_* */
+#include <deemon/util/rlock.h>             /* Dee_rshared_rwlock_t */
+#include <deemon/util/weakref.h>           /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */
 
 #include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
 

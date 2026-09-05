@@ -22,17 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_Unpack1 */
+#include <deemon/alloc.h>                  /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>                    /* DeeArg_Unpack0, DeeArg_Unpack1 */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompilerItem*, DeeCompiler_Current */
 #include <deemon/compiler/old/interface.h> /* DR_CAst, DR_Compiler, DeeCompilerSymbolObject, DeeCompiler_GetSymbol, err_invalid_symbol_compiler */
 #include <deemon/compiler/old/symbol.h>    /* SYMBOL_ADD_N*, SYMBOL_TYPE_*, symbol, symbol_fini, symbol_incref */
-#include <deemon/error.h>              /* DeeError_* */
-#include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Printf */
-#include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/error.h>                  /* DeeError_* */
+#include <deemon/format.h>                 /* DeeFormat_Print, DeeFormat_Printf */
+#include <deemon/none.h>                   /* DeeNone_NewRef */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/string.h>                 /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/type.h>                   /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_getset, type_method */
 
 #include "../../../runtime/strings.h"
 

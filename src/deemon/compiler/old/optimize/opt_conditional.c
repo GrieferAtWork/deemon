@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
-#include <deemon/bool.h>              /* DeeBool_Check, DeeBool_IsTrue */
+#include <deemon/alloc.h>                 /* Dee_Free, Dee_Mallocc */
+#include <deemon/bool.h>                  /* DeeBool_Check, DeeBool_IsTrue */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/optimize.h> /* AST_DOESNT_RETURN_FNORMAL, OPTIMIZE_*, ast_*, optimizer_count, optimizer_flags */
-#include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>            /* DREF, DeeObject, Dee_Decref */
-#include <deemon/tuple.h>             /* DeeTuple_Pack */
-#include <deemon/type.h>              /* OPERATOR_GETITEM */
+#include <deemon/none.h>                  /* DeeNone_NewRef */
+#include <deemon/object.h>                /* DREF, DeeObject, Dee_Decref */
+#include <deemon/tuple.h>                 /* DeeTuple_Pack */
+#include <deemon/type.h>                  /* OPERATOR_GETITEM */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

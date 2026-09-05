@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
-#include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
-#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F* */
+#include <deemon/alloc.h>                  /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
+#include <deemon/arg.h>                    /* DeeArg_UnpackStructKw */
+#include <deemon/code.h>                   /* Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/old/ast.h>       /* AST_*, CATCH_EXPR_FNORMAL, DeeAst_Type, ast, ast_*, catch_expr */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_*, DeeCompiler* */
 #include <deemon/compiler/old/error.h>     /* PARSE_FNORMAL, parser_errors_init */
@@ -32,19 +32,19 @@
 #include <deemon/compiler/old/lexer.h>     /* AST_OPERATOR_*, PARSE_FNORMAL */
 #include <deemon/compiler/old/optimize.h>  /* OPTIMIZE_FNORMAL */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_INC_N*, current_basescope, current_rootscope, current_scope */
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error.h>              /* DeeError_* */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMap_Type */
-#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init */
-#include <deemon/seq.h>                /* DeeSeq_* */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
-#include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, strchr, strend */
-#include <deemon/tuple.h>              /* DeeTuple_Type */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
-#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/error.h>                  /* DeeError_* */
+#include <deemon/hashset.h>                /* DeeHashSet_Type */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/map.h>                    /* DeeMap_Type */
+#include <deemon/none.h>                   /* DeeNone_Check, Dee_None */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init */
+#include <deemon/seq.h>                    /* DeeSeq_* */
+#include <deemon/string.h>                 /* DeeString*, Dee_EmptyString */
+#include <deemon/system-features.h>        /* bcmp, bcmpc, bzero, strchr, strend */
+#include <deemon/tuple.h>                  /* DeeTuple_Type */
+#include <deemon/type.h>                   /* DeeObject_InitStatic, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
+#include <deemon/util/lock.h>              /* Dee_atomic_rwlock_cinit */
 
 #include "../../../runtime/kwlist.h"
 #include "../../../runtime/runtime_error.h"

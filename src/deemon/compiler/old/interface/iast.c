@@ -22,33 +22,33 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/bool.h>               /* DeeBool_For */
-#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT */
+#include <deemon/alloc.h>                  /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/bool.h>                   /* DeeBool_For */
+#include <deemon/class.h>                  /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
+#include <deemon/code.h>                   /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT */
 #include <deemon/compiler/old/ast.h>       /* AST_*, asm_operand, ast, ast_*, catch_expr, class_member */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/old/interface.h> /* DR_*, DeeCompiler*, check_function_code_scope, get_action_by_name, get_action_name, get_ast_multiple_typing, get_operator_id, parse_conditional_flags, parse_loop_flags, parse_operator_flags, unpack_catch_expressions */
 #include <deemon/compiler/old/lexer.h>     /* AST_OPERATOR_* */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_*, base_scope_object, scope_object, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttrCStr, DeeRT_ErrUnboundAttrCStr */
-#include <deemon/error.h>              /* DeeError_* */
-#include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/int.h>                /* DeeInt_NewUInt16 */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMap_Type */
-#include <deemon/module.h>             /* Dee_MODULE_SYMBOL_EQUALS */
-#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
-#include <deemon/seq.h>                /* DeeSeq_AsHeapVector, DeeSeq_Type */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h>    /* strlen */
-#include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
-#include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/error-rt.h>               /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttrCStr, DeeRT_ErrUnboundAttrCStr */
+#include <deemon/error.h>                  /* DeeError_* */
+#include <deemon/format.h>                 /* DeeFormat_*, PRFu16 */
+#include <deemon/hashset.h>                /* DeeHashSet_Type */
+#include <deemon/int.h>                    /* DeeInt_NewUInt16 */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/map.h>                    /* DeeMap_Type */
+#include <deemon/module.h>                 /* Dee_MODULE_SYMBOL_EQUALS */
+#include <deemon/none.h>                   /* DeeNone_Check, Dee_None */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/seq.h>                    /* DeeSeq_AsHeapVector, DeeSeq_Type */
+#include <deemon/string.h>                 /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
+#include <deemon/system-features.h>        /* strlen */
+#include <deemon/tuple.h>                  /* DeeTuple* */
+#include <deemon/type.h>                   /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
+#include <deemon/util/atomic.h>            /* atomic_read */
 
 #include "../../../runtime/strings.h"
 

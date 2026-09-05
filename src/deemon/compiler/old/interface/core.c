@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
+#include <deemon/alloc.h>                  /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_BEGIN_NOINT, COMPILER_END, DeeCompiler*, Dee_COMPILER_ITEM_HASH, Dee_compiler_items* */
 #include <deemon/compiler/old/interface.h> /* DR_Compiler, DeeCompilerWrapper_Members, DeeCompilerWrapper_Visit */
-#include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, OBJECT_HEAD_INIT */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
-#include <deemon/util/atomic.h>        /* atomic_read */
-#include <deemon/util/hash.h>          /* Dee_HashPointer */
+#include <deemon/error.h>                  /* DeeError_ReferenceError, DeeError_Throwf */
+#include <deemon/object.h>                 /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, OBJECT_HEAD_INIT */
+#include <deemon/type.h>                   /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
+#include <deemon/util/atomic.h>            /* atomic_read */
+#include <deemon/util/hash.h>              /* Dee_HashPointer */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 

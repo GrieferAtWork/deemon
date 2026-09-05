@@ -22,22 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>              /* DeeBool* */
+#include <deemon/bool.h>                  /* DeeBool* */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_ALL, AST_CONTAINS_GOTO_CONSIDER_NONE, CONSTEXPR_*, OPTIMIZE_F*, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/compiler/old/symbol.h>   /* DeeScopeObject, SYMBOL_*, symbol, symbol_set_haseffect */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>              /* DeeFile_Type */
-#include <deemon/module.h>            /* DeeModuleObject, DeeModule_OfPointer */
-#include <deemon/none.h>              /* DeeNone_Check, DeeNone_NewRef */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref_unlikely */
-#include <deemon/seq.h>               /* DeeSeq_* */
-#include <deemon/string.h>            /* DeeString_Check, DeeString_EQUALS_ASCII */
-#include <deemon/super.h>             /* DeeSuper_New */
-#include <deemon/system-features.h>   /* memmovedownc */
-#include <deemon/tuple.h>             /* DeeTuple* */
-#include <deemon/type.h>              /* DeeObject_IsShared, DeeType_Check, OPERATOR_ITER */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>                  /* DeeFile_Type */
+#include <deemon/module.h>                /* DeeModuleObject, DeeModule_OfPointer */
+#include <deemon/none.h>                  /* DeeNone_Check, DeeNone_NewRef */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref_unlikely */
+#include <deemon/seq.h>                   /* DeeSeq_* */
+#include <deemon/string.h>                /* DeeString_Check, DeeString_EQUALS_ASCII */
+#include <deemon/super.h>                 /* DeeSuper_New */
+#include <deemon/system-features.h>       /* memmovedownc */
+#include <deemon/tuple.h>                 /* DeeTuple* */
+#include <deemon/type.h>                  /* DeeObject_IsShared, DeeType_Check, OPERATOR_ITER */
 
 #include "../../../runtime/builtin.h"
 

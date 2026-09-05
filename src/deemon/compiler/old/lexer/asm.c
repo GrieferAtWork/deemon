@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_CollectMemoryoc, Dee_Free, Dee_Try*alloc* */
+#include <deemon/alloc.h>               /* Dee_CollectMemoryc, Dee_CollectMemoryoc, Dee_Free, Dee_Try*alloc* */
 #include <deemon/compiler/old/ast.h>    /* AST_FASSEMBLY_*, asm_operand, ast, ast_*, loc_here */
 #include <deemon/compiler/old/lexer.h>  /* ast_parse_expr */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc, lookup_label, text_label */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/format.h>          /* DeeFormat_Printf */
-#include <deemon/string.h>          /* DeeUni_IsSpace */
-#include <deemon/system-features.h> /* bcmpc, bzero, memcpyc, memset */
-#include <deemon/types.h>           /* DREF, Dee_ssize_t */
+#include <deemon/format.h>              /* DeeFormat_Printf */
+#include <deemon/string.h>              /* DeeUni_IsSpace */
+#include <deemon/system-features.h>     /* bcmpc, bzero, memcpyc, memset */
+#include <deemon/types.h>               /* DREF, Dee_ssize_t */
 
 #include "../../../runtime/strings.h"
 

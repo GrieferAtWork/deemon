@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Reallocc, Dee_TryReallocc */
+#include <deemon/alloc.h>               /* Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/compiler/old/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/lexer.h>  /* AST_COMMA_*, ast_parse_comma, ast_parse_expr */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
-#include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */
-#include <deemon/string.h>          /* DeeUni_IsSymCont */
-#include <deemon/tuple.h>           /* DeeTuple_Empty, Dee_EmptyTuple */
+#include <deemon/kwds.h>                /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
+#include <deemon/object.h>              /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */
+#include <deemon/string.h>              /* DeeUni_IsSymCont */
+#include <deemon/tuple.h>               /* DeeTuple_Empty, Dee_EmptyTuple */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

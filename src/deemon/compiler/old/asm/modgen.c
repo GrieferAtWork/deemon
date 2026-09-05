@@ -23,17 +23,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type */
+#include <deemon/code.h>                   /* DeeCodeObject, DeeCode_Type */
 #include <deemon/compiler/old/assembler.h> /*  */
 #include <deemon/compiler/old/compiler.h>  /* DeeCompiler_LockWriting */
 #include <deemon/compiler/old/symbol.h>    /* DeeRootScope_Type, current_rootscope */
-#include <deemon/gc.h>                 /* DeeGCObject_Malloc, DeeGC_TRACK */
-#include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_module_symbol */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD, OBJECT_HEAD_INIT */
-#include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
-#include <deemon/string.h>             /* DeeStringObject */
-#include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
+#include <deemon/gc.h>                     /* DeeGCObject_Malloc, DeeGC_TRACK */
+#include <deemon/module.h>                 /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_module_symbol */
+#include <deemon/object.h>                 /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/serial.h>                 /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
+#include <deemon/string.h>                 /* DeeStringObject */
+#include <deemon/system-features.h>        /* memcpyc */
+#include <deemon/type.h>                   /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t */

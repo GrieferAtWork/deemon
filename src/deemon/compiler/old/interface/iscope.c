@@ -22,23 +22,23 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>               /* return_bool */
+#include <deemon/alloc.h>                  /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>                    /* DeeArg_Unpack0, DeeArg_UnpackStructKw */
+#include <deemon/bool.h>                   /* return_bool */
 #include <deemon/compiler/old/ast.h>       /* ast, loc_here */
 #include <deemon/compiler/old/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/old/interface.h> /* DR_*, DeeCompiler*, err_compiler_item_deleted, err_invalid_file_compiler */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, DeeScope_IsClassScope, DeeScope_Type, SYMBOL_TYPE_NONE, ast_loc, del_local_symbol, get_local_symbol_in_scope, new_local_symbol_in_scope, new_unnamed_symbol_in_scope, scope_lookup_str, scope_object, symbol */
-#include <deemon/error-rt.h>           /* DeeRT_ErrItemNotFound */
-#include <deemon/error.h>              /* DeeError_* */
-#include <deemon/format.h>             /* DeeFormat_Printf */
-#include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/map.h>                /* DeeMap_Type */
-#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
-#include <deemon/seq.h>                /* DeeSeq_Unpack */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, WSTR_LENGTH */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/error-rt.h>               /* DeeRT_ErrItemNotFound */
+#include <deemon/error.h>                  /* DeeError_* */
+#include <deemon/format.h>                 /* DeeFormat_Printf */
+#include <deemon/int.h>                    /* DeeInt_NewSize */
+#include <deemon/map.h>                    /* DeeMap_Type */
+#include <deemon/none.h>                   /* DeeNone_Check, Dee_None */
+#include <deemon/object.h>                 /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/seq.h>                    /* DeeSeq_Unpack */
+#include <deemon/string.h>                 /* DeeString*, Dee_EmptyString, WSTR_LENGTH */
+#include <deemon/type.h>                   /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../../runtime/kwlist.h"
 #include "../../../runtime/strings.h"

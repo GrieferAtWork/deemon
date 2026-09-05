@@ -22,21 +22,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeObject_*, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/class.h>            /* DeeClassDescriptorObject, DeeClassDescriptor_*, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>             /* Dee_CODE_F* */
+#include <deemon/alloc.h>                /* DeeObject_*, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
+#include <deemon/class.h>                /* DeeClassDescriptorObject, DeeClassDescriptor_*, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_operator */
+#include <deemon/code.h>                 /* Dee_CODE_F* */
 #include <deemon/compiler/old/ast.h>     /* ASSERT_AST, AST_*, ast, ast_*, class_member, loc_here */
 #include <deemon/compiler/old/doctext.h> /* doctext_compile */
 #include <deemon/compiler/old/lexer.h>   /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, PARSE_FLFSTMT, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags, parser_flags */
 #include <deemon/compiler/old/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, ast_loc, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/module.h>           /* DeeModule*, Dee_module_symbol */
-#include <deemon/none.h>             /* Dee_None */
-#include <deemon/object.h>           /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */
-#include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
-#include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
-#include <deemon/tuple.h>            /* Dee_EmptyTuple */
-#include <deemon/type.h>             /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
+#include <deemon/module.h>               /* DeeModule*, Dee_module_symbol */
+#include <deemon/none.h>                 /* Dee_None */
+#include <deemon/object.h>               /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */
+#include <deemon/string.h>               /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
+#include <deemon/system-features.h>      /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
+#include <deemon/tuple.h>                /* Dee_EmptyTuple */
+#include <deemon/type.h>                 /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
 
 #include "../../../runtime/strings.h"
 

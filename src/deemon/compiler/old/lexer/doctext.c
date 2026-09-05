@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* Dee_Free, Dee_Mallocc */
+#include <deemon/alloc.h>                /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/old/doctext.h>
-#include <deemon/object.h>           /* DREF, Dee_Decref_likely */
-#include <deemon/string.h>           /* DeeStringObject, DeeString_AsUtf8, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_WIDTH_1BYTE, WSTR_LENGTH */
-#include <deemon/stringutils.h>      /* Dee_unicode_* */
-#include <deemon/system-features.h>  /* bcmpc, memcpy */
+#include <deemon/object.h>               /* DREF, Dee_Decref_likely */
+#include <deemon/string.h>               /* DeeStringObject, DeeString_AsUtf8, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_WIDTH_1BYTE, WSTR_LENGTH */
+#include <deemon/stringutils.h>          /* Dee_unicode_* */
+#include <deemon/system-features.h>      /* bcmpc, memcpy */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

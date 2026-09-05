@@ -25,10 +25,10 @@
 #include <deemon/compiler/old/ast.h>      /* AST_CONSTEXPR, AST_SYM, ast */
 #include <deemon/compiler/old/optimize.h> /* CONSTEXPR_ALLOWED, CONSTEXPR_USECOPY, OPTIMIZE_FASSUME, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/compiler/old/symbol.h>   /* CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT, SYMBOL_*, symbol, symbol_get_haseffect, symbol_set_haseffect */
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FCONSTEXPR, Dee_MODSYM_FPROPERTY, Dee_module_symbol_getindex */
-#include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_InplaceDeepCopy, Dee_Incref, Dee_XDecref, Dee_XIncref */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/module.h>                /* DeeModule*, Dee_MODSYM_FCONSTEXPR, Dee_MODSYM_FPROPERTY, Dee_module_symbol_getindex */
+#include <deemon/none.h>                  /* DeeNone_NewRef */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_InplaceDeepCopy, Dee_Incref, Dee_XDecref, Dee_XIncref */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

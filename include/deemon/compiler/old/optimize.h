@@ -34,8 +34,8 @@
 #include "../../api.h"
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_refcnt_t */
-#include "ast.h"      /* ast */
-#include "symbol.h"   /* symbol */
+#include "ast.h"         /* ast */
+#include "symbol.h"      /* symbol */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

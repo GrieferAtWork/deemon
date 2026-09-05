@@ -22,17 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_Free, Dee_TryMalloc */
-#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_code_frame, code_addr_t */
+#include <deemon/alloc.h>            /* Dee_BadAlloc, Dee_Free, Dee_TryMalloc */
+#include <deemon/code.h>             /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_code_frame, code_addr_t */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>           /* DeeError_Handled, DeeError_UninstallKeyboardInterrupt, ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>            /* DeeFile_* */
-#include <deemon/format.h>          /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */
-#include <deemon/gc.h>              /* DeeGC_Collect */
-#include <deemon/heap.h>            /* DeeHeap_Trim */
-#include <deemon/object.h>          /* DeeObject_Check, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, getenv, mempcpy, strlen */
-#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
+#include <deemon/error.h>            /* DeeError_Handled, DeeError_UninstallKeyboardInterrupt, ERROR_HANDLED_RESTORE */
+#include <deemon/file.h>             /* DeeFile_* */
+#include <deemon/format.h>           /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */
+#include <deemon/gc.h>               /* DeeGC_Collect */
+#include <deemon/heap.h>             /* DeeHeap_Trim */
+#include <deemon/object.h>           /* DeeObject_Check, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/system-features.h>  /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, getenv, mempcpy, strlen */
+#include <deemon/thread.h>           /* DeeThreadObject, DeeThread_Self */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/overflow.h>        /* OVERFLOW_UADD, OVERFLOW_UMUL */

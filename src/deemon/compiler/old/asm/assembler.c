@@ -23,28 +23,28 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeDbgObject_MALLOC, DeeObject_*, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, instruction_t */
-#include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
+#include <deemon/alloc.h>                  /* DeeDbgObject_MALLOC, DeeObject_*, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/asm.h>                    /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, instruction_t */
+#include <deemon/code.h>                   /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER, DeeRelIntObject, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, REL_HASSYM, R_DMN_*, SECTION_*, asm_*, assembler, ast_genasm, ast_genasm_one, ddi_*, handler_frame, userassembler_fini, userassembler_init */
 #include <deemon/compiler/old/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, new_unnamed_symbol_in_scope, symbol, text_label */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/dict.h>               /* Dee_dict_item */
-#include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
-#include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
-#include <deemon/int.h>                /* DeeInt_NewInt64 */
-#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
-#include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
-#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
-#include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_*, DeeType_Check, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
-#include <deemon/util/hash.h>          /* Dee_HashPtr */
+#include <deemon/dict.h>                   /* Dee_dict_item */
+#include <deemon/error.h>                  /* DeeError_*, ERROR_HANDLED_RESTORE */
+#include <deemon/gc.h>                     /* DeeGCEnumTracked_Singleton */
+#include <deemon/int.h>                    /* DeeInt_NewInt64 */
+#include <deemon/module.h>                 /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>                   /* DeeNone_Check, Dee_None */
+#include <deemon/object.h>                 /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
+#include <deemon/objmethod.h>              /* DeeCMethod_Check, DeeKwCMethod_Check */
+#include <deemon/rodict.h>                 /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
+#include <deemon/string.h>                 /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>        /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
+#include <deemon/thread.h>                 /* DeeThread_CheckInterrupt */
+#include <deemon/tuple.h>                  /* DeeTuple* */
+#include <deemon/type.h>                   /* DeeObject_*, DeeType_Check, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
+#include <deemon/util/hash.h>              /* Dee_HashPtr */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_* */

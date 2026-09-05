@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
+#include <deemon/alloc.h>               /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/old/ast.h>    /* ASSERT_AST, AST_*, ast, ast_*, loc_here */
 #include <deemon/compiler/old/lexer.h>  /* AST_COMMA_FORCEMULTIPLE, ast_parse_argument_list, ast_parse_unary, maybe_expression_begin */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/object.h>          /* DREF */
-#include <deemon/tuple.h>           /* Dee_EmptyTuple */
-#include <deemon/type.h>            /* OPERATOR_CALL */
+#include <deemon/object.h>              /* DREF */
+#include <deemon/tuple.h>               /* Dee_EmptyTuple */
+#include <deemon/type.h>                /* OPERATOR_CALL */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

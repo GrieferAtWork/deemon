@@ -22,24 +22,24 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
-#include <deemon/bool.h>              /* Dee_False, Dee_True */
+#include <deemon/alloc.h>                 /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
+#include <deemon/bool.h>                  /* Dee_False, Dee_True */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast, ast_*, loc_here */
 #include <deemon/compiler/old/lexer.h>    /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
 #include <deemon/compiler/old/optimize.h> /* ast_optimize_all */
 #include <deemon/compiler/old/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, ast_loc, current_basescope, current_scope, decl_ast_skip, get_current_this, is_reserved_symbol_name, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/float.h>             /* DeeFloat_New */
-#include <deemon/int.h>               /* DeeInt_FromString, DeeInt_NewInt64, Dee_INT_STRING* */
-#include <deemon/module.h>            /* DeeModule* */
-#include <deemon/none.h>              /* Dee_None */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_AsUInt, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_DONE */
-#include <deemon/string.h>            /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
-#include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memchr, memmoveupc */
-#include <deemon/tuple.h>             /* Dee_EmptyTuple */
-#include <deemon/type.h>              /* Dee_operator_t, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/float.h>                 /* DeeFloat_New */
+#include <deemon/int.h>                   /* DeeInt_FromString, DeeInt_NewInt64, Dee_INT_STRING* */
+#include <deemon/module.h>                /* DeeModule* */
+#include <deemon/none.h>                  /* Dee_None */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_AsUInt, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_DONE */
+#include <deemon/string.h>                /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
+#include <deemon/stringutils.h>           /* Dee_unicode_readutf8_n */
+#include <deemon/system-features.h>       /* DeeSystem_DEFINE_memrchr, memchr, memmoveupc */
+#include <deemon/tuple.h>                 /* Dee_EmptyTuple */
+#include <deemon/type.h>                  /* Dee_operator_t, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
 
 #include "../../../runtime/strings.h"
 

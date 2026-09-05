@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>              /* DeeClassDescriptor_Check */
+#include <deemon/class.h>                  /* DeeClassDescriptor_Check */
 #include <deemon/compiler/old/assembler.h> /* ASM_G_FNORMAL, ASM_G_FPUSHRES, asm_*, ast_genasm, ast_genasm_one */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast, class_member */
 #include <deemon/compiler/old/symbol.h>    /* SYMBOL_INPLACE_UNWIND_ALIAS, symbol */

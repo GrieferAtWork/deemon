@@ -22,27 +22,27 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Free */
-#include <deemon/bool.h>               /* DeeBool_Type */
-#include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_GET, Dee_class_attribute */
-#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs, Dee_CODE_FTHISCALL */
+#include <deemon/alloc.h>                  /* Dee_Free */
+#include <deemon/bool.h>                   /* DeeBool_Type */
+#include <deemon/class.h>                  /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_GET, Dee_class_attribute */
+#include <deemon/code.h>                   /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs, Dee_CODE_FTHISCALL */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_one, code_compile_argrefs, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/old/compiler.h>  /* DeeCompiler_Current */
 #include <deemon/compiler/old/optimize.h>  /* ast_predict_type, ast_predict_type_noanno */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope*, DeeClassScopeObject, DeeClassScope_Prev, DeeScopeObject, DeeScope_Type, SYMBOL_*, current_basescope, current_rootscope, current_scope, scope_lookup_str, symbol */
 #include <deemon/compiler/old/traits.h>    /* ast_chk_multiple_hasexpand */
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/kwds.h>               /* DeeObject_IsKw, DeeType_IsKw */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/module.h>             /* DeeModule_GetDeemon, DeeModule_GetSymbol, Dee_MODSYM_FEXTERN, Dee_MODSYM_FPROPERTY, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref */
-#include <deemon/objmethod.h>          /* DeeKwObjMethod_Check, DeeObjMethod*, Dee_objmethod_origin */
-#include <deemon/string.h>             /* DeeString* */
-#include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* OPERATOR_GETATTR */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/hashset.h>                /* DeeHashSet_Type */
+#include <deemon/kwds.h>                   /* DeeObject_IsKw, DeeType_IsKw */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/module.h>                 /* DeeModule_GetDeemon, DeeModule_GetSymbol, Dee_MODSYM_FEXTERN, Dee_MODSYM_FPROPERTY, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/numeric.h>                /* DeeNumeric_Type */
+#include <deemon/object.h>                 /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref */
+#include <deemon/objmethod.h>              /* DeeKwObjMethod_Check, DeeObjMethod*, Dee_objmethod_origin */
+#include <deemon/string.h>                 /* DeeString* */
+#include <deemon/tuple.h>                  /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>                   /* OPERATOR_GETATTR */
 
 #include "../../../runtime/builtin.h"
 

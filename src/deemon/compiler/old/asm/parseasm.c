@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_Callocc, Dee_CollectMemory, Dee_Free, Dee_TryCallocc */
-#include <deemon/asm.h>                /* ASM_* */
+#include <deemon/alloc.h>                  /* Dee_Callocc, Dee_CollectMemory, Dee_Free, Dee_TryCallocc */
+#include <deemon/asm.h>                    /* ASM_* */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, INVOKE_FPREFIX, INVOKE_FPUSH, OPERAND_CLASS_*, UASM_INTEXPR_FHASSP, UASM_INTEXPR_FNORMAL, USERLABEL_PREFIX, USER_ASM_FSTKINV, asm_*, current_assembler, current_userasm, uasm_* */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast, ast_decref */
 #include <deemon/compiler/old/compiler.h>  /* DeeCompiler_Current */
@@ -31,12 +31,12 @@
 #include <deemon/compiler/old/optimize.h>  /* ast_optimize_all */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_*, current_basescope, current_rootscope, current_scope, scope_*, symbol, text_label */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
-#include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref, Dee_Incref, Dee_XDecref */
-#include <deemon/string.h>             /* DeeUni_* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, memcasecmp, memchr, strcasecmp */
+#include <deemon/error.h>                  /* DeeError_CompilerError, DeeError_Throwf */
+#include <deemon/module.h>                 /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>                   /* Dee_None */
+#include <deemon/object.h>                 /* DREF, DeeObject, Dee_Decref, Dee_Incref, Dee_XDecref */
+#include <deemon/string.h>                 /* DeeUni_* */
+#include <deemon/system-features.h>        /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, memcasecmp, memchr, strcasecmp */
 
 #include <hybrid/sequence/list.h> /* SLIST_EMPTY, SLIST_FIRST */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */

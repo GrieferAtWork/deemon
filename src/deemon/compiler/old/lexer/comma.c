@@ -22,17 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
+#include <deemon/alloc.h>                /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/compiler/old/ast.h>     /* AST_*, ast, ast_*, loc_here */
 #include <deemon/compiler/old/doctext.h> /* doctext_compile */
 #include <deemon/compiler/old/lexer.h>   /* ASTLIST_INIT, AST_COMMA_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, ast_*, astlist, current_tags, maybe_expression_begin, maybe_expression_begin_peek */
 #include <deemon/compiler/old/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, ast_loc, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, lookup_symbol, new_local_symbol, symbol, symbol_incref */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/object.h>           /* DREF, Dee_Incref */
-#include <deemon/string.h>           /* DeeStringObject */
-#include <deemon/system-features.h>  /* memcpyc */
-#include <deemon/tuple.h>            /* Dee_EmptyTuple */
-#include <deemon/type.h>             /* OPERATOR_CALL, TP_FFINAL */
+#include <deemon/object.h>               /* DREF, Dee_Incref */
+#include <deemon/string.h>               /* DeeStringObject */
+#include <deemon/system-features.h>      /* memcpyc */
+#include <deemon/tuple.h>                /* Dee_EmptyTuple */
+#include <deemon/type.h>                 /* OPERATOR_CALL, TP_FFINAL */
 
 #include "../../../runtime/strings.h"
 

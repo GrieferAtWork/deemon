@@ -22,22 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
+#include <deemon/alloc.h>                 /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/compiler/old/ast.h>      /* ast */
 #include <deemon/compiler/old/compiler.h> /* DeeCompiler_Current */
 #include <deemon/compiler/old/error.h>    /* parser_errors */
 #include <deemon/compiler/old/symbol.h>   /* SYMBOL_NAME, ast_loc, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>             /* DeeError_*, ERROR_PRINT_DOHANDLE */
-#include <deemon/error_types.h>       /* DeeCompilerErrorObject, Dee_compiler_error_loc, Dee_compiler_error_object */
-#include <deemon/file.h>              /* DeeFile_DefaultStddbg, DeeFile_PrintObjectNl */
-#include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_* */
-#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_InstanceOf, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init, ITER_ISOK */
-#include <deemon/string.h>            /* Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
-#include <deemon/thread.h>            /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_except_frame_free, except_frame_gettb */
-#include <deemon/traceback.h>         /* DeeTracebackObject */
-#include <deemon/type.h>              /* DeeObject_InitStatic, DeeObject_IsInterrupt */
-#include <deemon/util/weakref.h>      /* Dee_weakref_initempty, Dee_weakref_set */
+#include <deemon/error.h>                 /* DeeError_*, ERROR_PRINT_DOHANDLE */
+#include <deemon/error_types.h>           /* DeeCompilerErrorObject, Dee_compiler_error_loc, Dee_compiler_error_object */
+#include <deemon/file.h>                  /* DeeFile_DefaultStddbg, DeeFile_PrintObjectNl */
+#include <deemon/module.h>                /* Dee_COMPILER_ERROR_FATALITY_* */
+#include <deemon/object.h>                /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_InstanceOf, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init, ITER_ISOK */
+#include <deemon/string.h>                /* Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
+#include <deemon/thread.h>                /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_except_frame_free, except_frame_gettb */
+#include <deemon/traceback.h>             /* DeeTracebackObject */
+#include <deemon/type.h>                  /* DeeObject_InitStatic, DeeObject_IsInterrupt */
+#include <deemon/util/weakref.h>          /* Dee_weakref_initempty, Dee_weakref_set */
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */

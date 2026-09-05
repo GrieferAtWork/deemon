@@ -22,24 +22,24 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Reallocc */
+#include <deemon/alloc.h>                 /* Dee_Free, Dee_Reallocc */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/optimize.h> /* AST_DOESNT_RETURN_FNORMAL, OPTIMIZE_VERBOSE, OPTIMIZE_VERBOSEAT, ast_*, optimizer_count */
 #include <deemon/compiler/old/symbol.h>   /* ast_loc */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/dict.h>              /* DeeDict_New */
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/hashset.h>           /* DeeHashSet_Insert, DeeHashSet_New */
-#include <deemon/list.h>              /* DeeListObject, DeeList_* */
-#include <deemon/map.h>               /* DeeMap_NewEmpty */
-#include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_SetItem, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref */
-#include <deemon/pair.h>              /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOne, DeeSeq_OfPair */
-#include <deemon/rodict.h>            /* Dee_rodict_builder* */
-#include <deemon/seq.h>               /* DeeSeq_* */
-#include <deemon/set.h>               /* DeeSet_NewEmpty, DeeSet_Type */
-#include <deemon/system-features.h>   /* memcpy*, memmovedownc, memmoveupc */
-#include <deemon/tuple.h>             /* DeeTuple* */
+#include <deemon/dict.h>                  /* DeeDict_New */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>               /* DeeHashSet_Insert, DeeHashSet_New */
+#include <deemon/list.h>                  /* DeeListObject, DeeList_* */
+#include <deemon/map.h>                   /* DeeMap_NewEmpty */
+#include <deemon/none.h>                  /* DeeNone_NewRef */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_SetItem, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref */
+#include <deemon/pair.h>                  /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOne, DeeSeq_OfPair */
+#include <deemon/rodict.h>                /* Dee_rodict_builder* */
+#include <deemon/seq.h>                   /* DeeSeq_* */
+#include <deemon/set.h>                   /* DeeSet_NewEmpty, DeeSet_Type */
+#include <deemon/system-features.h>       /* memcpy*, memmovedownc, memmoveupc */
+#include <deemon/tuple.h>                 /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

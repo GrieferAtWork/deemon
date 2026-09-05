@@ -28,8 +28,8 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../../type.h"  /* Dee_visit_t, type_member */
 #include "../../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
-#include "compiler.h" /* DeeCompiler*, Dee_COMPILER_ITEM_OBJECT_HEAD */
-#include "symbol.h"   /* DeeBaseScopeObject, ast_loc */
+#include "compiler.h"    /* DeeCompiler*, Dee_COMPILER_ITEM_OBJECT_HEAD */
+#include "symbol.h"      /* DeeBaseScopeObject, ast_loc */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool */

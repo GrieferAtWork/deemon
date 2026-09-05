@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
-#include <deemon/code.h>            /* Dee_EXCEPTION_HANDLER_F* */
+#include <deemon/alloc.h>               /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
+#include <deemon/code.h>                /* Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/old/ast.h>    /* AST_FMULTIPLE_TUPLE, CATCH_EXPR_FNORMAL, ast, ast_*, catch_expr, loc_here */
 #include <deemon/compiler/old/lexer.h>  /* ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_EXCEPT, ast_loc, has_local_symbol, new_local_symbol, scope_pop, scope_push, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/object.h>          /* DREF */
-#include <deemon/type.h>            /* TP_FINTERRUPT */
+#include <deemon/object.h>              /* DREF */
+#include <deemon/type.h>                /* TP_FINTERRUPT */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

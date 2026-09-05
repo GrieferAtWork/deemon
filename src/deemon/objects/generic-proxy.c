@@ -25,7 +25,7 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, return_reference */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_hash_t, Dee_ssize_t, return_reference */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
 #include <deemon/set.h>             /* DeeSet_Type */

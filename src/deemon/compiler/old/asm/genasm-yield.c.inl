@@ -25,8 +25,8 @@
 #include <deemon/compiler/old/assembler.h> /* ASM_FOPTIMIZE_SIZE, ASM_G_FPUSHRES, asm_*, ast_genasm, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/old/symbol.h>    /* symbol */
-#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
-#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/object.h>                 /* DREF, DeeObject, Dee_Decref */
+#include <deemon/tuple.h>                  /* DeeTuple* */
 
 #include <stddef.h> /* size_t */
 

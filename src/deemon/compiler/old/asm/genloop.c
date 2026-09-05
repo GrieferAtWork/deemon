@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM_* */
+#include <deemon/asm.h>                    /* ASM_* */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, SECTION_COLD, asm_*, ast_genasm, ast_genasm_asp, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* ASSERT_AST, AST_*, ast */
-#include <deemon/type.h>               /* OPERATOR_ITER */
+#include <deemon/type.h>                   /* OPERATOR_ITER */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */

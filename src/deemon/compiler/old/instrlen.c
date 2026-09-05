@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, Dee_instruction_t, instruction_t */
-#include <deemon/code.h>               /* Dee_CODE_FYIELDING, Dee_instruction_t, instruction_t */
+#include <deemon/asm.h>                    /* ASM16_*, ASM32_JMP, ASM_*, Dee_instruction_t, instruction_t */
+#include <deemon/code.h>                   /* Dee_CODE_FYIELDING, Dee_instruction_t, instruction_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_USING_READ */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE8, UNALIGNED_GETLE16 */

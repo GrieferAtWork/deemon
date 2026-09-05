@@ -22,16 +22,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/code.h>            /* Dee_CODE_F* */
+#include <deemon/alloc.h>               /* Dee_*alloc*, Dee_Free */
+#include <deemon/code.h>                /* Dee_CODE_F* */
 #include <deemon/compiler/old/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/lexer.h>  /* AST_ANNOTATION_FNOFUNC, AST_ANNOTATION_FNORMAL, ast_* */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/object.h>          /* DREF */
-#include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc */
-#include <deemon/type.h>            /* DeeObject_IsShared, OPERATOR_CALL, TP_F* */
+#include <deemon/object.h>              /* DREF */
+#include <deemon/string.h>              /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
+#include <deemon/system-features.h>     /* bcmpc, bzero, memcpy, memmoveupc */
+#include <deemon/type.h>                /* DeeObject_IsShared, OPERATOR_CALL, TP_F* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

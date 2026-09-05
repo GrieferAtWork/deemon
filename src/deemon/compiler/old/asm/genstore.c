@@ -22,22 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/asm.h>                /* ASM_* */
-#include <deemon/bool.h>               /* DeeBool_Check, DeeBool_IsTrue */
-#include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_SET, Dee_class_attribute */
-#include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FFINALLY, code_addr_t */
+#include <deemon/asm.h>                    /* ASM_* */
+#include <deemon/bool.h>                   /* DeeBool_Check, DeeBool_IsTrue */
+#include <deemon/class.h>                  /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_SET, Dee_class_attribute */
+#include <deemon/code.h>                   /* Dee_CODE_FFINALLY, Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FFINALLY, code_addr_t */
 #include <deemon/compiler/old/assembler.h> /* ASM_*, SECTION_COLD, SECTION_TEXTCOUNT, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/old/optimize.h>  /* ast_* */
 #include <deemon/compiler/old/symbol.h>    /* DeeBaseScope*, DeeClassScopeObject, DeeClassScope_Prev, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, get_local_symbol_in_scope, scope_lookup_str, symbol */
 #include <deemon/compiler/old/tpp.h>
 #include <deemon/compiler/old/traits.h>    /* ast_chk_multiple_hasexpand */
-#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt16 */
-#include <deemon/module.h>             /* DeeModule_GetSymbol, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>             /* DeeObject, Dee_AsObject */
-#include <deemon/string.h>             /* DeeString* */
-#include <deemon/type.h>               /* OPERATOR_* */
+#include <deemon/int.h>                    /* DeeInt_Check, DeeInt_TryAsInt16 */
+#include <deemon/module.h>                 /* DeeModule_GetSymbol, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/none.h>                   /* DeeNone_Check */
+#include <deemon/object.h>                 /* DeeObject, Dee_AsObject */
+#include <deemon/string.h>                 /* DeeString* */
+#include <deemon/type.h>                   /* OPERATOR_* */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

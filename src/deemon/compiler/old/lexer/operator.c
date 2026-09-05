@@ -22,18 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/class.h>           /* Dee_CLASS_OPERATOR_SUPERARGS */
+#include <deemon/alloc.h>               /* Dee_Free, Dee_Mallocc */
+#include <deemon/class.h>               /* Dee_CLASS_OPERATOR_SUPERARGS */
 #include <deemon/compiler/old/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/old/lexer.h>  /* AST_OPERATOR_*, P_OPERATOR_FCLASS */
 #include <deemon/compiler/old/symbol.h> /* SYMBOL_TYPE_EXTERN, new_unnamed_symbol, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
-#include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */
-#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Incref */
-#include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
-#include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeTypeType_GetOperatorByNameLen, Dee_operator_t, Dee_opinfo, OPERATOR_* */
+#include <deemon/file.h>                /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
+#include <deemon/module.h>              /* DeeModule_GetDeemon, DeeModule_GetSymbol */
+#include <deemon/object.h>              /* DREF, DeeObject, Dee_AsObject, Dee_Incref */
+#include <deemon/string.h>              /* DeeStringObject, DeeString_STR */
+#include <deemon/tuple.h>               /* DeeTuple* */
+#include <deemon/type.h>                /* DeeTypeType_GetOperatorByNameLen, Dee_operator_t, Dee_opinfo, OPERATOR_* */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

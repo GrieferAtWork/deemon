@@ -29,7 +29,7 @@ function _hide(x) {
 	return result;
 }
 
-class MyHackyItemProvider {
+class MyHackyItemProvider: Mapping {
 	operator # () -> 1;
 	operator [](key) {
 		assert key == "argName";

@@ -24,18 +24,18 @@
 
 #include <deemon/compiler/old/assembler.h> /* asm_allowconst, asm_gpush_constexpr_inherited, ast_genasm */
 #include <deemon/compiler/old/ast.h>       /* AST_*, ast */
-#include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/hashset.h>            /* DeeHashSet_FromSequence, DeeHashSet_Type */
-#include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMap_Check */
-#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>             /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely */
-#include <deemon/rodict.h>             /* DeeRoDict_Type */
-#include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
-#include <deemon/seq.h>                /* DeeSeq_Check */
-#include <deemon/tuple.h>              /* DeeTuple_Type */
-#include <deemon/type.h>               /* OPERATOR_CALL */
+#include <deemon/dict.h>                   /* DeeDict_Type */
+#include <deemon/error.h>                  /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/hashset.h>                /* DeeHashSet_FromSequence, DeeHashSet_Type */
+#include <deemon/list.h>                   /* DeeList_Type */
+#include <deemon/map.h>                    /* DeeMap_Check */
+#include <deemon/method-hints.h>           /* DeeObject_InvokeMethodHint */
+#include <deemon/object.h>                 /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely */
+#include <deemon/rodict.h>                 /* DeeRoDict_Type */
+#include <deemon/roset.h>                  /* DeeRoSet_FromSequence, DeeRoSet_Type */
+#include <deemon/seq.h>                    /* DeeSeq_Check */
+#include <deemon/tuple.h>                  /* DeeTuple_Type */
+#include <deemon/type.h>                   /* OPERATOR_CALL */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

@@ -22,15 +22,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/code.h>            /* Dee_CODE_FYIELDING */
+#include <deemon/alloc.h>               /* Dee_Free, Dee_Mallocc */
+#include <deemon/code.h>                /* Dee_CODE_FYIELDING */
 #include <deemon/compiler/old/ast.h>    /* AST_*, ast, ast_*, loc_here */
 #include <deemon/compiler/old/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_PARSE_WASEXPR_NO, ast_parse_*, current_tags */
 #include <deemon/compiler/old/symbol.h> /* LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, ast_loc, basescope_pop, basescope_push, current_basescope, current_scope */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/object.h>          /* DREF, Dee_Decref, Dee_Incref */
-#include <deemon/tuple.h>           /* Dee_EmptyTuple */
-#include <deemon/type.h>            /* OPERATOR_CALL, OPERATOR_ITER */
+#include <deemon/object.h>              /* DREF, Dee_Decref, Dee_Incref */
+#include <deemon/tuple.h>               /* Dee_EmptyTuple */
+#include <deemon/type.h>                /* OPERATOR_CALL, OPERATOR_ITER */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */

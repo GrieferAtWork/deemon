@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Callocc, Dee_Free */
+#include <deemon/alloc.h>                 /* Dee_Callocc, Dee_Free */
 #include <deemon/compiler/old/ast.h>      /* AST_*, ast */
 #include <deemon/compiler/old/optimize.h> /* AST_ASSUMES_FFUNCTION, AST_ASSUMES_FNORMAL, AST_SYMBOL_ASSUMES_HASHIT, AST_SYMBOL_ASSUMES_HASHNX, AST_SYMBOL_ASSUME_HASH, OPTIMIZE_FASSUME, ast_* */
 #include <deemon/compiler/old/symbol.h>   /* SYMBOL_TYPE_LOCAL, SYMBOL_TYPE_STACK, symbol */
 #include <deemon/compiler/old/tpp.h>
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Clear, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
-#include <deemon/system-features.h>   /* bzero, memcpy */
+#include <deemon/error.h>                 /* DeeError_Handled, ERROR_HANDLED_RESTORE */
+#include <deemon/object.h>                /* DREF, DeeObject, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Clear, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
+#include <deemon/system-features.h>       /* bzero, memcpy */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
