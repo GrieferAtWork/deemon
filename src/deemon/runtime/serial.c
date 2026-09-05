@@ -67,10 +67,13 @@ PUBLIC WUNUSED NONNULL((1)) int
 }
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of a static
- * object at `static_addr' ("static" here meaning that `DeeModule_OfPointer()' will
- * return a non-NULL pointer for `static_addr'). Behavior is undefined if `static_addr' does
- * cannot be resolved using `DeeModule_OfPointer()'.
+/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
+ * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
+ * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+ * another object or heap block that had already been serialized (iow: "pointer" points
+ * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
+ * still recognized and linked) of a prior `DeeSerial_Object_Malloc', `DeeSerial_GCObject_Malloc',
+ * ...). If neither is the case, an error is thrown.
  * @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int

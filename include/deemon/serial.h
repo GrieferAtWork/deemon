@@ -65,6 +65,7 @@ struct Dee_serial;
 typedef struct Dee_serial DeeSerial;
 
 #if 0
+/* Template for a non-TP_FVARIABLE types */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myobject_serialize(MyObject *__restrict self,
                    DeeSerial *__restrict writer,
@@ -78,6 +79,7 @@ err:
 #undef ADDROF
 }
 
+/* Template for a TP_FVARIABLE types */
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 myobject_serialize(MyObject *__restrict self,
                    DeeSerial *__restrict writer) {
@@ -122,7 +124,7 @@ struct Dee_serial_type {
 
 	/* Convert address into serialization buffer. The returned pointer may
 	 * only be accessed until the next call to this, or any other operators below,
-	 * and is only valid for [return,return+SIZEOF_REMAINING_ALLOCATION_OF(addr)]:
+	 * and is only valid for [return,return+SIZEOF_REMAINING_ALLOCATION_OF(addr)):
 	 * >> Dee_seraddr_t addr = DeeSerial_Malloc(self, 42);
 	 * >> void *ptr = DeeSerial_Addr2Mem(self, addr + 10, void);
 	 * >> // Memory may now be written for range [ptr,ptr+32)

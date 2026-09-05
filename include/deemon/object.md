@@ -6,7 +6,7 @@ For object creation, see `DeeObject_New()`
 
 An object can be destroyed in 1 of 2 ways:
 - When it's `ob_refcnt` drops to `0`
-- When the garbage collector determines that the object is part of a (potentially larger) set of objects all referencing each other in a cyclic manner, which none of those objects being referenced from the outside
+- When the garbage collector determines that the object is part of a (potentially larger) set of objects all referencing each other in a cyclic manner, with none of those objects being referenced from the outside
 	- Here _referenced from the outside_ means "has an `ob_refcnt` that can't be explained by other objects from the same set"
 	- The process of determining and handling unreachable GC objects with reference loops is described below, but sufficed to say: it ends with calling `DeeObject_Destroy()` just as happens when a regular object's `ob_refcnt` hits 0
 
@@ -52,7 +52,8 @@ void default__destroy(DeeObject *self) {
 	} else {
 		DeeObject_Free(self);
 	}
-	Dee_Decref(tp);
+	if (DeeType_IsHeapType(tp))
+		Dee_Decref(tp);
 }
 ```
 
@@ -79,8 +80,4 @@ In order to resolve/fix reference loops of GC objects once a set of unreachable 
 7. Invoke the internal `tp_clear` operator on every unreachable GC object  
    This operator then unbinds all `member`-style attributes of the object, which is always enough to kill all possible forms of cyclic dependencies between GC objects
 8. Decref the references acquired during step **4.**  
-   At this point, the objects should actually end up being destroyed, as per the usual `DeeObject_Destroy` path
-
-
-
-
+   At this point, the objects should actually end up being destroyed, as per the usual `DeeObject_Destroy` path should hit `0` references and be destroyed

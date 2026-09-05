@@ -3248,11 +3248,12 @@ use_absolute_filename:
 	/* Deal with case where the effective "normal_filename" would have ended
 	 * with a trailing slash: in this case, assert that the directory exists,
 	 * and open it as a `DeeModuleDir_Type' */
-	if (must_be_directory)
-		return do_DeeModule_OpenDirectory(normal_filename, normal_filename_size, flags);
-
-	/* Use the normalized filename to open a module */
-	result = DeeModule_OpenFile_impl2(normal_filename, normal_filename_size, flags, options);
+	if (must_be_directory) {
+		result = do_DeeModule_OpenDirectory(normal_filename, normal_filename_size, flags);
+	} else {
+		/* Use the normalized filename to open a module */
+		result = DeeModule_OpenFile_impl2(normal_filename, normal_filename_size, flags, options);
+	}
 	Dee_XDecref_likely(context_absname_ob);
 	return result;
 err_xcontext_absname_ob:

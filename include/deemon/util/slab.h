@@ -36,74 +36,12 @@
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
 
-/* ==== Discussion on slabs
- *
- * The new garbage collector now means that:
- * - "tp_free" is **always** called on an object's original type
- * - Previously "tp_free" always had to be able to also free objects of sub-classes,
- *   where there was a possibility that those objects were larger than the object
- *   some "tp_free" was actually designed for.
- * - This put a **HUGE** dampener on our slab allocator, since free functions still
- *   had to check the actual object size, and forward to a different free function
- *   if the size doesn't match
- * --> This is no longer necessary now, meaning that:
- *
- * The new garbage collector has just (inadvertently) opened the
- * floodgates for a new slab allocator implementation, and more importantly:
- * - one that doesn't need to be able to safely handle non-slab memory...
- * - ... or slab memory from slabs of greater size
- * - And thinking this a bit further: that also means there's no NO REASON
- *   AT ALL to needing to be able to detect slab memory!
- *
- * XXX: Nope nope nope... Yes, there *should* be a new slab allocator, and
- *      slab-free functions don't have to work with slabs of larger sizes,
- *      but they **DO** have to work with `DeeHeap_GetRegionOf()', since
- *      objects allocated by slabs should probably stay serializable as
- *      they are right now (iow: they need to be able to live in a DEC
- *      file mapping, meaning they have to be able to forward pointers to
- *      `Dee_Free()' (at least) when those pointers are FLAG4 heap blocks)
- *      Alternatively, dec writers need special handling for objects using
- *      slab allocators, and lay out the produced file such that offsets
- *      will line up with expected slab offset, and on-top of that, file
- *      mappings loaded via heap would also need to fulfill some minimum
- *      alignment requirements... (Ugh: none of that sounds good, though)
- * But I really want the new slab allocator to **NOT** require a function
- * like `IS_SLAB_POINTER()', which is what's preventing the current slab
- * allocator from growing beyond a specific memory region pre-defined when
- * deemon starts.
- *
- * Hmm. The more I think about it, the only real possibility here is to
- * have a slab allocation system that is also serializable, because:
- * - the only other way to have free function that would also work on
- *   a dec file mapping would be to use out-of-band data to determine
- *   if a pointer belongs to a slab, or a dec file, which would imply
- *   a new `IS_SLAB_POINTER()' function (which I don't want).
- * - However: by serializing slabs into dec files, those slabs would
- *   need to be written as whole pages, which would also imply:
- *   1. Lots of wasted space (since at least 4096 bytes for every distinct
- *      slab size used by an object written to a dec file)
- *   2. The fallback malloc()+read() impl of DeeMapFile would need to
- *      enforce proper alignment of the loaded dec file instead of being
- *      able to just use the heap's natural alignment, and the internal
- *      buffer of `DeeDecWriter' would have to do the same.
- *   - The second point isn't that big of a deal
- *   - The first point *maybe* could be resolved if the this new slab
- *     format could support mixed-size slabs (should be doable so-long
- *     the slab doesn't get a free/usable_size function, by simply always
- *     allocating (e.g.) pointer-sized slab pages, and only marking the
- *     first word of any larger allocation as in-use, even though the
- *     other words are actually also in-use)
- */
-
-
-
-
 /* =========== General-purpose, serializable slab implementation ===========
  *
  * The following describes how this slab allocator is implemented, and
  * how it is able to interface with serializability, and dec files.
  *
- * >> #define SLAB_PAGESIZE 4096 // Any number-of-2 is fine, but value must be known at compile-time
+ * >> #define SLAB_PAGESIZE 4096 // Any power-of-2 is fine, but value must be known at compile-time
  * >>
  * >> template<size_t CHUNK_SIZE> alignas(SLAB_PAGESIZE) struct slab_page {
  * >>     // Bitset of allocated chunk base addresses
@@ -126,7 +64,7 @@
  * >>                                          // Must be holding "slab_lock<CHUNK_SIZE>" to change to/from 0/MAX_CHUNK_COUNT
  * >>         LIST_ENTRY(slab_page) sm_link;   // [0..1][lock(slab_lock<CHUNK_SIZE>)] Next page with free chunks,
  * >>                                          // or ITER_DONE if some custom free mechanism must be used because
- * >>                                          // this page exists within a dec file mapping.
+ * >>                                          // (e.g.) this page exists within a dec file mapping.
  * >>     } sp_meta;
  * >> };
  * >>
@@ -134,7 +72,8 @@
  * >>
  * >> // Pages containing at least 1 free, and at least 1 allocated chunk.
  * >> // - fully allocated pages aren't tracked anywhere
- * >> // - fully free pages are stored in a global free-list (so they can be used by all slab allocators)
+ * >> // - fully free pages are stored in a global free-list (so they can be
+ * >> //   re-used by any slab allocator, see `Dee_slab_page_rawmalloc()`)
  * >> template<size_t CHUNK_SIZE> static struct slab_page_list slab_pages = LIST_HEAD_INITIALIZER(slab_pages);
  * >> template<size_t CHUNK_SIZE> struct Dee_atomic_rwlock_t slab_lock = Dee_ATOMIC_RWLOCK_INIT;
  * >>

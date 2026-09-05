@@ -449,7 +449,7 @@ struct Dee_compiler_options {
  *
  * The actual file where the module was loaded from then depends on the module type:
  * - DeeModule_Type:     File wasn't loaded from anywhere (is anonymous, or the "deemon" module)
- * - DeeModuleDee_Type:  f"{mo_absname}.dee"  (and/or f"{fs.headof(mo_absname)}/.{fs.tailof(mo_absname)}.dec"; or f"{mo_absname}" if )
+ * - DeeModuleDee_Type:  f"{mo_absname}.dee"  (and/or f"{fs.headof(mo_absname)}/.{fs.tailof(mo_absname)}.dec"; or f"{mo_absname}" in the import("./foo.txt") case)
  * - DeeModuleDex_Type:  f"{mo_absname}.so"   (or f"{mo_absname}.dll")
  * - DeeModuleDir_Type:  mo_absname           (it's a directory)
  */
@@ -860,7 +860,7 @@ DFUNDEF WUNUSED NONNULL((1)) /*Tuple*/ DeeObject *DCALL
 DeeModule_GetDirectory(DeeModuleObject *__restrict self);
 
 /* Return the unique, absolute name used to identify "self" within the filesystem.
- * - This string is "NULL" if the module was loaded with `DeeModule_IMPORT_F_ANONYM'
+ * - This returns "NULL" if the module was loaded with `DeeModule_IMPORT_F_ANONYM'
  *   or was returned by `DeeExec_CompileModuleStream()' (or a related function).
  * - This string (if non-NULL) can be used as-is with `DeeModule_Open' to open
  *   the module by-name.
