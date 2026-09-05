@@ -444,6 +444,10 @@ function _Type_getNativeOperatorName(typ: Type, op: string): string | none {
 	local hintAddr = DeeType_GetNativeOperatorWithoutUnsupported(
 			typAddr, TNO_BYNAME[op]);
 	local result = _addr2name(hintAddr);
+	result = {
+		/* Special cases needed under `DCALL_CALLER_CLEANUP` */
+		("enter", "_DeeNone_rets0"): "_DeeNone_rets0_1",
+	}.get((op, result), result);
 	if (result !is none && result != "NULL")
 		USED_SYMBOL_OPERATORS.setdefault(result, HashSet()).insert(op);
 	return result;
