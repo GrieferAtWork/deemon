@@ -1368,9 +1368,9 @@ decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 			c_free = num_pages == 1 ? (slab_page_free_t)&decslab_free1
 			                        : &decslab_freeN_first;
 		} else if (i == (num_pages - 1)) {
-			c_free = &decslab_freeN_middle;
-		} else {
 			c_free = &decslab_freeN_last;
+		} else {
+			c_free = &decslab_freeN_middle;
 		}
 		addrof_page = addrof_first_page + i * Dee_SLAB_PAGESIZE;
 		page = DeeDecWriter_Addr2Mem(self, addrof_page, struct Dee_slab_page);
