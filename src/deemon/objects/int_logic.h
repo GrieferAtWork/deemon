@@ -69,7 +69,7 @@ DECL_BEGIN
 #define Dee_INT_SLAB_MAXDIGITS ((Dee_SLAB_CHUNKSIZE_MAX - Dee_SIZEOF_INT_OBJECT(0)) / Dee_SIZEOF_DIGIT)
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
 
-	/* Config: use slab allocators for (small) integers */
+/* Config: use slab allocators for (small) integers */
 #undef CONFIG_USE_SLABS_FOR_INTEGERS
 #if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2 && 1
 #define CONFIG_USE_SLABS_FOR_INTEGERS

@@ -138,13 +138,15 @@ DECL_BEGIN
 #define Dee_CompareEqFromDiff(diff) ((diff) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_NE == 0 */
 
-#if 1 /* TODO: Bit magic */
+#if (Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 && \
+     (Dee_COMPARE_LO == -1 || Dee_COMPARE_LO == 1) && \
+     (Dee_COMPARE_GR == -1 || Dee_COMPARE_GR == 1))
+#define Dee_COMPARE_INTO_eM1_eqM2_ne0(cmp) ((((((cmp) ^ 1) + 1) ^ 1) * -3) >> 3)
+#define Dee_COMPARE_INTO_eM1_eq1_neM2(cmp) ((((((cmp) + 1) | 2) - 3) >> 1) ^ 1)
+#else /* ... */
 #define Dee_COMPARE_INTO_eM1_eqM2_ne0(cmp) (Dee_COMPARE_ISERR(cmp) ? -1 : Dee_COMPARE_ISEQ(cmp) ? -2 : 0)
 #define Dee_COMPARE_INTO_eM1_eq1_neM2(cmp) (Dee_COMPARE_ISERR(cmp) ? -1 : Dee_COMPARE_ISEQ(cmp) ? 1 : -2)
-#else
-#define Dee_COMPARE_INTO_eM1_eqM2_ne0(cmp) (Dee_COMPARE_ISERR(cmp) ? -1 : Dee_COMPARE_ISEQ(cmp) ? -2 : 0)
-#define Dee_COMPARE_INTO_eM1_eq1_neM2(cmp) (Dee_COMPARE_ISERR(cmp) ? -1 : Dee_COMPARE_ISEQ(cmp) ? 1 : -2)
-#endif
+#endif /* !... */
 
 
 #define Dee_return_compare_if_ne(a, b)  \
@@ -1665,7 +1667,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     1     >0
  *  1     0     ==0 */
 #define Dee_HAS_FROM_COMPARE_EQ(cmp)        (((cmp) + 1) & ~2)
-#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) (((cmp) + 1) & 1)
+#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) (((cmp) + 1) & 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1673,7 +1675,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     1     >0 */
 #define Dee_HAS_FROM_COMPARE_NE(cmp)        (((cmp) + 1) ^ 1)
-#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) ((cmp) & 1)
+#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) ((cmp) & 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1681,7 +1683,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     0     ==0 */
 #define Dee_HAS_FROM_COMPARE_LO(cmp)        (((((cmp) + 1) & -5) + 3) & -6)
-#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) ((cmp) & 2)
+#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) ((cmp) & 2) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1697,7 +1699,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     1     >0 */
 #define Dee_HAS_FROM_COMPARE_GR(cmp)        (((cmp) + 1) & -2)
-#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) (((cmp) + 1) & 2)
+#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) (((cmp) + 1) & 2) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1708,12 +1710,12 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) ((cmp) + 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 
 #else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
-#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISEQ(cmp))
-#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISNE(cmp))
-#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLO(cmp))
-#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLE(cmp))
-#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGR(cmp))
-#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGE(cmp))
+#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISEQ(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISNE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLO(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGR(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
 #define Dee_HAS_FROM_COMPARE_EQ(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp))
 #define Dee_HAS_FROM_COMPARE_NE(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp))
 #define Dee_HAS_FROM_COMPARE_LO(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp))
@@ -1879,7 +1881,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to be accepted by `Dee_HAS_ISERR' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
 #define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to be accepted by `Dee_HAS_ISNO'  to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
 #define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to be accepted by `Dee_HAS_ISYES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_NO       2
+#define Dee_BOUND_NO       2           /* Guarantied to be accepted by `Dee_HAS_ISYES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
 
 /* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
 #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES)
