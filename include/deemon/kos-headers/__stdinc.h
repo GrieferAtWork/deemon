@@ -299,7 +299,7 @@
 #define __ATTR_RETNONNULL_T     __ATTR_RETNONNULL
 #define __ATTR_NONNULL_T        __ATTR_NONNULL
 #define __ATTR_NORETURN_T       __ATTR_NORETURN
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || 1 /* TODO: Only accepted by newer versions of GCC -- find out which ones... */
 #define __ATTR_MALLOC_T         /* nothing */
 #else /* _MSC_VER */
 #define __ATTR_MALLOC_T         __ATTR_MALLOC
