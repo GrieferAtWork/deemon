@@ -2553,7 +2553,8 @@ decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
 	}
 
 	/* Create a new slab segment at the next properly-aligned address */
-	result = CEIL_ALIGN(self->dw_used, Dee_SLAB_PAGESIZE);
+	result = CEIL_ALIGN(self->dw_used + sizeof(struct Dee_heapchunk),
+	                    Dee_SLAB_PAGESIZE);
 
 	/* Ensure that the output buffer is large enough */
 	min_alloc = result + Dee_SLAB_PAGESIZE + sizeof(struct Dee_heaptail);
@@ -2580,6 +2581,7 @@ decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
 	/* Remember the new slab segment */
 	self->dw_slabb = result - sizeof(struct Dee_heapchunk);
 	self->dw_slabs = sizeof(struct Dee_heapchunk) + Dee_SLAB_PAGESIZE;
+	ASSERT(self->dw_used <= self->dw_slabb);
 
 	/* Ensure that the resulting dec file will be properly aligned */
 	if (self->dw_align < Dee_SLAB_PAGESIZE)
