@@ -16,13 +16,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
-#include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
-#include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_DIGIT_* */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeObject_Int, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_ssize_t, return_reference_ */
-#include <deemon/system-features.h> /* bzeroc, memcpyc, memset */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_IsShared */
+#include <deemon/alloc.h>            /* DeeDbgSlab_GetMalloc, DeeObject_Free, DeeSlab_GetFree, DeeSlab_GetMalloc */
+#include <deemon/error-rt.h>         /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
+#include <deemon/error.h>            /* DeeError_NOTIMPLEMENTED */
+#include <deemon/int.h>              /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_DIGIT_* */
+#include <deemon/object.h>           /* DREF, DeeObject, DeeObject_AsSize, DeeObject_Int, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_ssize_t, return_reference_ */
+#include <deemon/system-features.h>  /* bzeroc, memcpy*, memset */
+#include <deemon/thread.h>           /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>             /* DeeObject_IsShared */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bit.h>      /* PDEP, PEXT, POPCOUNT */
@@ -32,13 +34,471 @@
 #include "int_logic.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* int64_t, uint32_t, uint64_t */
 
 #undef shift_t
 #define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
+
+#if defined(CONFIG_USE_SLABS_FOR_INTEGERS) || defined(__DEEMON__)
+#ifdef NDEBUG
+#define INT_SLAB_ALLOC_INIT(n_digits) DeeSlab_GetMalloc(Dee_SIZEOF_INT_OBJECT(n_digits), (Dee_int_slab_alloc_t)-1)
+#else /* NDEBUG */
+#define INT_SLAB_ALLOC_INIT(n_digits) DeeDbgSlab_GetMalloc(Dee_SIZEOF_INT_OBJECT(n_digits), (Dee_int_slab_alloc_t)-1)
+#endif /* !NDEBUG */
+#define INT_SLAB_FREE_INIT(n_digits)  DeeSlab_GetFree(Dee_SIZEOF_INT_OBJECT(n_digits), (Dee_int_slab_free_t)-1)
+
+#define _Dee_SLAB_CHUNKSIZE_CEIL_CB(s, n) s >= (n) ? s :
+#define Dee_SLAB_CHUNKSIZE_CEIL(n, else)  (Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_SLAB_CHUNKSIZE_CEIL_CB, n) else)
+#define INT_SLAB_SIZE_INIT(n_digits)      Dee_SLAB_CHUNKSIZE_CEIL(Dee_SIZEOF_INT_OBJECT(n_digits), (size_t)-1)
+
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (0 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(0));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (1 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(1));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (2 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(2));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (3 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(3));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (4 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(4));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (5 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(5));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (6 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(6));
+STATIC_ASSERT((offsetof(DeeIntObject, ob_digit) + (7 * sizeof(Dee_digit_t))) == Dee_SIZEOF_INT_OBJECT(7));
+
+/*[[[deemon
+local MAX_DIGITS = 40;
+print("#if Dee_INT_SLAB_MAXDIGITS >= ", MAX_DIGITS);
+print("#error \"Configured `Dee_INT_SLAB_MAXDIGITS` is larger than ", MAX_DIGITS, ". Please include limit\"");
+print("#endif /" "* Dee_INT_SLAB_MAXDIGITS >= ", MAX_DIGITS, " *" "/");
+function initTable(T, name, NAME) {
+	print("INTERN_CONST ", T, " const int_slab_", name, "[Dee_INT_SLAB_MAXDIGITS + 1] = {");
+	for (local n: [:MAX_DIGITS]) {
+		if (n >= 1)
+			print("#if Dee_INT_SLAB_MAXDIGITS >= ", n);
+		print("	INT_SLAB_", NAME, "_INIT(", n, "),");
+		if (n >= 1)
+			print("#endif /" "* Dee_INT_SLAB_MAXDIGITS >= ", n, " *" "/");
+	}
+	print("};");
+}
+initTable("size_t", "size", "SIZE");
+initTable("Dee_int_slab_alloc_t", "alloc", "ALLOC");
+initTable("Dee_int_slab_free_t", "free", "FREE");
+]]]*/
+#if Dee_INT_SLAB_MAXDIGITS >= 40
+#error "Configured `Dee_INT_SLAB_MAXDIGITS` is larger than 40. Please include limit"
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 40 */
+INTERN_CONST size_t const int_slab_size[Dee_INT_SLAB_MAXDIGITS + 1] = {
+	INT_SLAB_SIZE_INIT(0),
+#if Dee_INT_SLAB_MAXDIGITS >= 1
+	INT_SLAB_SIZE_INIT(1),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 1 */
+#if Dee_INT_SLAB_MAXDIGITS >= 2
+	INT_SLAB_SIZE_INIT(2),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 2 */
+#if Dee_INT_SLAB_MAXDIGITS >= 3
+	INT_SLAB_SIZE_INIT(3),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 3 */
+#if Dee_INT_SLAB_MAXDIGITS >= 4
+	INT_SLAB_SIZE_INIT(4),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 4 */
+#if Dee_INT_SLAB_MAXDIGITS >= 5
+	INT_SLAB_SIZE_INIT(5),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 5 */
+#if Dee_INT_SLAB_MAXDIGITS >= 6
+	INT_SLAB_SIZE_INIT(6),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 6 */
+#if Dee_INT_SLAB_MAXDIGITS >= 7
+	INT_SLAB_SIZE_INIT(7),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 7 */
+#if Dee_INT_SLAB_MAXDIGITS >= 8
+	INT_SLAB_SIZE_INIT(8),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 8 */
+#if Dee_INT_SLAB_MAXDIGITS >= 9
+	INT_SLAB_SIZE_INIT(9),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 9 */
+#if Dee_INT_SLAB_MAXDIGITS >= 10
+	INT_SLAB_SIZE_INIT(10),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 10 */
+#if Dee_INT_SLAB_MAXDIGITS >= 11
+	INT_SLAB_SIZE_INIT(11),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 11 */
+#if Dee_INT_SLAB_MAXDIGITS >= 12
+	INT_SLAB_SIZE_INIT(12),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 12 */
+#if Dee_INT_SLAB_MAXDIGITS >= 13
+	INT_SLAB_SIZE_INIT(13),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 13 */
+#if Dee_INT_SLAB_MAXDIGITS >= 14
+	INT_SLAB_SIZE_INIT(14),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 14 */
+#if Dee_INT_SLAB_MAXDIGITS >= 15
+	INT_SLAB_SIZE_INIT(15),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 15 */
+#if Dee_INT_SLAB_MAXDIGITS >= 16
+	INT_SLAB_SIZE_INIT(16),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 16 */
+#if Dee_INT_SLAB_MAXDIGITS >= 17
+	INT_SLAB_SIZE_INIT(17),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 17 */
+#if Dee_INT_SLAB_MAXDIGITS >= 18
+	INT_SLAB_SIZE_INIT(18),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 18 */
+#if Dee_INT_SLAB_MAXDIGITS >= 19
+	INT_SLAB_SIZE_INIT(19),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 19 */
+#if Dee_INT_SLAB_MAXDIGITS >= 20
+	INT_SLAB_SIZE_INIT(20),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 20 */
+#if Dee_INT_SLAB_MAXDIGITS >= 21
+	INT_SLAB_SIZE_INIT(21),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 21 */
+#if Dee_INT_SLAB_MAXDIGITS >= 22
+	INT_SLAB_SIZE_INIT(22),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 22 */
+#if Dee_INT_SLAB_MAXDIGITS >= 23
+	INT_SLAB_SIZE_INIT(23),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 23 */
+#if Dee_INT_SLAB_MAXDIGITS >= 24
+	INT_SLAB_SIZE_INIT(24),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 24 */
+#if Dee_INT_SLAB_MAXDIGITS >= 25
+	INT_SLAB_SIZE_INIT(25),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 25 */
+#if Dee_INT_SLAB_MAXDIGITS >= 26
+	INT_SLAB_SIZE_INIT(26),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 26 */
+#if Dee_INT_SLAB_MAXDIGITS >= 27
+	INT_SLAB_SIZE_INIT(27),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 27 */
+#if Dee_INT_SLAB_MAXDIGITS >= 28
+	INT_SLAB_SIZE_INIT(28),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 28 */
+#if Dee_INT_SLAB_MAXDIGITS >= 29
+	INT_SLAB_SIZE_INIT(29),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 29 */
+#if Dee_INT_SLAB_MAXDIGITS >= 30
+	INT_SLAB_SIZE_INIT(30),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 30 */
+#if Dee_INT_SLAB_MAXDIGITS >= 31
+	INT_SLAB_SIZE_INIT(31),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 31 */
+#if Dee_INT_SLAB_MAXDIGITS >= 32
+	INT_SLAB_SIZE_INIT(32),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 32 */
+#if Dee_INT_SLAB_MAXDIGITS >= 33
+	INT_SLAB_SIZE_INIT(33),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 33 */
+#if Dee_INT_SLAB_MAXDIGITS >= 34
+	INT_SLAB_SIZE_INIT(34),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 34 */
+#if Dee_INT_SLAB_MAXDIGITS >= 35
+	INT_SLAB_SIZE_INIT(35),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 35 */
+#if Dee_INT_SLAB_MAXDIGITS >= 36
+	INT_SLAB_SIZE_INIT(36),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 36 */
+#if Dee_INT_SLAB_MAXDIGITS >= 37
+	INT_SLAB_SIZE_INIT(37),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 37 */
+#if Dee_INT_SLAB_MAXDIGITS >= 38
+	INT_SLAB_SIZE_INIT(38),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 38 */
+#if Dee_INT_SLAB_MAXDIGITS >= 39
+	INT_SLAB_SIZE_INIT(39),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 39 */
+};
+INTERN_CONST Dee_int_slab_alloc_t const int_slab_alloc[Dee_INT_SLAB_MAXDIGITS + 1] = {
+	INT_SLAB_ALLOC_INIT(0),
+#if Dee_INT_SLAB_MAXDIGITS >= 1
+	INT_SLAB_ALLOC_INIT(1),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 1 */
+#if Dee_INT_SLAB_MAXDIGITS >= 2
+	INT_SLAB_ALLOC_INIT(2),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 2 */
+#if Dee_INT_SLAB_MAXDIGITS >= 3
+	INT_SLAB_ALLOC_INIT(3),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 3 */
+#if Dee_INT_SLAB_MAXDIGITS >= 4
+	INT_SLAB_ALLOC_INIT(4),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 4 */
+#if Dee_INT_SLAB_MAXDIGITS >= 5
+	INT_SLAB_ALLOC_INIT(5),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 5 */
+#if Dee_INT_SLAB_MAXDIGITS >= 6
+	INT_SLAB_ALLOC_INIT(6),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 6 */
+#if Dee_INT_SLAB_MAXDIGITS >= 7
+	INT_SLAB_ALLOC_INIT(7),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 7 */
+#if Dee_INT_SLAB_MAXDIGITS >= 8
+	INT_SLAB_ALLOC_INIT(8),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 8 */
+#if Dee_INT_SLAB_MAXDIGITS >= 9
+	INT_SLAB_ALLOC_INIT(9),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 9 */
+#if Dee_INT_SLAB_MAXDIGITS >= 10
+	INT_SLAB_ALLOC_INIT(10),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 10 */
+#if Dee_INT_SLAB_MAXDIGITS >= 11
+	INT_SLAB_ALLOC_INIT(11),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 11 */
+#if Dee_INT_SLAB_MAXDIGITS >= 12
+	INT_SLAB_ALLOC_INIT(12),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 12 */
+#if Dee_INT_SLAB_MAXDIGITS >= 13
+	INT_SLAB_ALLOC_INIT(13),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 13 */
+#if Dee_INT_SLAB_MAXDIGITS >= 14
+	INT_SLAB_ALLOC_INIT(14),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 14 */
+#if Dee_INT_SLAB_MAXDIGITS >= 15
+	INT_SLAB_ALLOC_INIT(15),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 15 */
+#if Dee_INT_SLAB_MAXDIGITS >= 16
+	INT_SLAB_ALLOC_INIT(16),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 16 */
+#if Dee_INT_SLAB_MAXDIGITS >= 17
+	INT_SLAB_ALLOC_INIT(17),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 17 */
+#if Dee_INT_SLAB_MAXDIGITS >= 18
+	INT_SLAB_ALLOC_INIT(18),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 18 */
+#if Dee_INT_SLAB_MAXDIGITS >= 19
+	INT_SLAB_ALLOC_INIT(19),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 19 */
+#if Dee_INT_SLAB_MAXDIGITS >= 20
+	INT_SLAB_ALLOC_INIT(20),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 20 */
+#if Dee_INT_SLAB_MAXDIGITS >= 21
+	INT_SLAB_ALLOC_INIT(21),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 21 */
+#if Dee_INT_SLAB_MAXDIGITS >= 22
+	INT_SLAB_ALLOC_INIT(22),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 22 */
+#if Dee_INT_SLAB_MAXDIGITS >= 23
+	INT_SLAB_ALLOC_INIT(23),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 23 */
+#if Dee_INT_SLAB_MAXDIGITS >= 24
+	INT_SLAB_ALLOC_INIT(24),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 24 */
+#if Dee_INT_SLAB_MAXDIGITS >= 25
+	INT_SLAB_ALLOC_INIT(25),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 25 */
+#if Dee_INT_SLAB_MAXDIGITS >= 26
+	INT_SLAB_ALLOC_INIT(26),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 26 */
+#if Dee_INT_SLAB_MAXDIGITS >= 27
+	INT_SLAB_ALLOC_INIT(27),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 27 */
+#if Dee_INT_SLAB_MAXDIGITS >= 28
+	INT_SLAB_ALLOC_INIT(28),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 28 */
+#if Dee_INT_SLAB_MAXDIGITS >= 29
+	INT_SLAB_ALLOC_INIT(29),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 29 */
+#if Dee_INT_SLAB_MAXDIGITS >= 30
+	INT_SLAB_ALLOC_INIT(30),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 30 */
+#if Dee_INT_SLAB_MAXDIGITS >= 31
+	INT_SLAB_ALLOC_INIT(31),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 31 */
+#if Dee_INT_SLAB_MAXDIGITS >= 32
+	INT_SLAB_ALLOC_INIT(32),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 32 */
+#if Dee_INT_SLAB_MAXDIGITS >= 33
+	INT_SLAB_ALLOC_INIT(33),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 33 */
+#if Dee_INT_SLAB_MAXDIGITS >= 34
+	INT_SLAB_ALLOC_INIT(34),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 34 */
+#if Dee_INT_SLAB_MAXDIGITS >= 35
+	INT_SLAB_ALLOC_INIT(35),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 35 */
+#if Dee_INT_SLAB_MAXDIGITS >= 36
+	INT_SLAB_ALLOC_INIT(36),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 36 */
+#if Dee_INT_SLAB_MAXDIGITS >= 37
+	INT_SLAB_ALLOC_INIT(37),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 37 */
+#if Dee_INT_SLAB_MAXDIGITS >= 38
+	INT_SLAB_ALLOC_INIT(38),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 38 */
+#if Dee_INT_SLAB_MAXDIGITS >= 39
+	INT_SLAB_ALLOC_INIT(39),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 39 */
+};
+INTERN_CONST Dee_int_slab_free_t const int_slab_free[Dee_INT_SLAB_MAXDIGITS + 1] = {
+	INT_SLAB_FREE_INIT(0),
+#if Dee_INT_SLAB_MAXDIGITS >= 1
+	INT_SLAB_FREE_INIT(1),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 1 */
+#if Dee_INT_SLAB_MAXDIGITS >= 2
+	INT_SLAB_FREE_INIT(2),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 2 */
+#if Dee_INT_SLAB_MAXDIGITS >= 3
+	INT_SLAB_FREE_INIT(3),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 3 */
+#if Dee_INT_SLAB_MAXDIGITS >= 4
+	INT_SLAB_FREE_INIT(4),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 4 */
+#if Dee_INT_SLAB_MAXDIGITS >= 5
+	INT_SLAB_FREE_INIT(5),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 5 */
+#if Dee_INT_SLAB_MAXDIGITS >= 6
+	INT_SLAB_FREE_INIT(6),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 6 */
+#if Dee_INT_SLAB_MAXDIGITS >= 7
+	INT_SLAB_FREE_INIT(7),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 7 */
+#if Dee_INT_SLAB_MAXDIGITS >= 8
+	INT_SLAB_FREE_INIT(8),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 8 */
+#if Dee_INT_SLAB_MAXDIGITS >= 9
+	INT_SLAB_FREE_INIT(9),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 9 */
+#if Dee_INT_SLAB_MAXDIGITS >= 10
+	INT_SLAB_FREE_INIT(10),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 10 */
+#if Dee_INT_SLAB_MAXDIGITS >= 11
+	INT_SLAB_FREE_INIT(11),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 11 */
+#if Dee_INT_SLAB_MAXDIGITS >= 12
+	INT_SLAB_FREE_INIT(12),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 12 */
+#if Dee_INT_SLAB_MAXDIGITS >= 13
+	INT_SLAB_FREE_INIT(13),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 13 */
+#if Dee_INT_SLAB_MAXDIGITS >= 14
+	INT_SLAB_FREE_INIT(14),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 14 */
+#if Dee_INT_SLAB_MAXDIGITS >= 15
+	INT_SLAB_FREE_INIT(15),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 15 */
+#if Dee_INT_SLAB_MAXDIGITS >= 16
+	INT_SLAB_FREE_INIT(16),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 16 */
+#if Dee_INT_SLAB_MAXDIGITS >= 17
+	INT_SLAB_FREE_INIT(17),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 17 */
+#if Dee_INT_SLAB_MAXDIGITS >= 18
+	INT_SLAB_FREE_INIT(18),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 18 */
+#if Dee_INT_SLAB_MAXDIGITS >= 19
+	INT_SLAB_FREE_INIT(19),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 19 */
+#if Dee_INT_SLAB_MAXDIGITS >= 20
+	INT_SLAB_FREE_INIT(20),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 20 */
+#if Dee_INT_SLAB_MAXDIGITS >= 21
+	INT_SLAB_FREE_INIT(21),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 21 */
+#if Dee_INT_SLAB_MAXDIGITS >= 22
+	INT_SLAB_FREE_INIT(22),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 22 */
+#if Dee_INT_SLAB_MAXDIGITS >= 23
+	INT_SLAB_FREE_INIT(23),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 23 */
+#if Dee_INT_SLAB_MAXDIGITS >= 24
+	INT_SLAB_FREE_INIT(24),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 24 */
+#if Dee_INT_SLAB_MAXDIGITS >= 25
+	INT_SLAB_FREE_INIT(25),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 25 */
+#if Dee_INT_SLAB_MAXDIGITS >= 26
+	INT_SLAB_FREE_INIT(26),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 26 */
+#if Dee_INT_SLAB_MAXDIGITS >= 27
+	INT_SLAB_FREE_INIT(27),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 27 */
+#if Dee_INT_SLAB_MAXDIGITS >= 28
+	INT_SLAB_FREE_INIT(28),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 28 */
+#if Dee_INT_SLAB_MAXDIGITS >= 29
+	INT_SLAB_FREE_INIT(29),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 29 */
+#if Dee_INT_SLAB_MAXDIGITS >= 30
+	INT_SLAB_FREE_INIT(30),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 30 */
+#if Dee_INT_SLAB_MAXDIGITS >= 31
+	INT_SLAB_FREE_INIT(31),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 31 */
+#if Dee_INT_SLAB_MAXDIGITS >= 32
+	INT_SLAB_FREE_INIT(32),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 32 */
+#if Dee_INT_SLAB_MAXDIGITS >= 33
+	INT_SLAB_FREE_INIT(33),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 33 */
+#if Dee_INT_SLAB_MAXDIGITS >= 34
+	INT_SLAB_FREE_INIT(34),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 34 */
+#if Dee_INT_SLAB_MAXDIGITS >= 35
+	INT_SLAB_FREE_INIT(35),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 35 */
+#if Dee_INT_SLAB_MAXDIGITS >= 36
+	INT_SLAB_FREE_INIT(36),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 36 */
+#if Dee_INT_SLAB_MAXDIGITS >= 37
+	INT_SLAB_FREE_INIT(37),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 37 */
+#if Dee_INT_SLAB_MAXDIGITS >= 38
+	INT_SLAB_FREE_INIT(38),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 38 */
+#if Dee_INT_SLAB_MAXDIGITS >= 39
+	INT_SLAB_FREE_INIT(39),
+#endif /* Dee_INT_SLAB_MAXDIGITS >= 39 */
+};
+/*[[[end]]]*/
+
+#undef INT_SLAB_ALLOC_INIT
+#undef INT_SLAB_FREE_INIT
+#undef INT_SLAB_SIZE_INIT
+
+
+#ifdef NDEBUG
+INTERN NONNULL((1)) DREF DeeIntObject *DCALL
+DeeInt_PTruncate_impl(/*inherit(always)*/ DREF DeeIntObject *__restrict self,
+                      size_t old_n_digits, size_t new_n_digits)
+#else /* NDEBUG */
+INTERN NONNULL((1)) DREF DeeIntObject *DCALL
+DeeDbgInt_PTruncate_impl(/*inherit(always)*/ DREF DeeIntObject *__restrict self,
+                         size_t old_n_digits, size_t new_n_digits,
+                         char const *file, int line)
+#endif /* !NDEBUG */
+{
+	ASSERT(new_n_digits < old_n_digits);
+	ASSERT(self->ob_size == (Dee_ssize_t)new_n_digits ||
+	       self->ob_size == -(Dee_ssize_t)new_n_digits);
+	if (new_n_digits < COMPILER_LENOF(int_slab_alloc)) {
+		Dee_int_slab_alloc_t new_alloc = int_slab_alloc[new_n_digits];
+#ifdef NDEBUG
+#define LOCAL_call_new_alloc() (DREF DeeIntObject *)((*new_alloc)())
+#else /* NDEBUG */
+#define LOCAL_call_new_alloc() (DREF DeeIntObject *)((*new_alloc)(file, line))
+#endif /* !NDEBUG */
+		if (old_n_digits >= COMPILER_LENOF(int_slab_alloc)) {
+			/* Migrate HEAP -> SLAB */
+			DREF DeeIntObject *result = LOCAL_call_new_alloc();
+			if likely(result)
+				memcpy(result, self, Dee_SIZEOF_INT_OBJECT(new_n_digits));
+			DeeObject_Free(self);
+			self = result;
+		} else {
+			Dee_int_slab_alloc_t old_alloc = int_slab_alloc[old_n_digits];
+			if (new_alloc != old_alloc) {
+				/* Migrate SLAB -> SLAB */
+				DREF DeeIntObject *result = LOCAL_call_new_alloc();
+				if likely(result)
+					memcpy(result, self, Dee_SIZEOF_INT_OBJECT(new_n_digits));
+				(*int_slab_free[old_n_digits])(self);
+				self = result;
+			}
+		}
+#undef LOCAL_call_new_alloc
+	}
+	return self;
+}
+
+#endif /* CONFIG_USE_SLABS_FOR_INTEGERS */
+
 
 /* Give shorter names to frequently used symbols */
 #define DIGIT_BITS Dee_DIGIT_BITS
@@ -97,8 +557,10 @@ int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
 	Dee_ssize_t i = j;
 	while (i > 0 && v->ob_digit[i - 1] == 0)
 		--i;
-	if (i != j)
+	if (i != j) {
 		v->ob_size = (v->ob_size < 0) ? -i : i;
+		DeeInt_PTruncate(&v, (size_t)j, (size_t)i);
+	}
 	return v;
 }
 
@@ -1143,8 +1605,16 @@ kmul_split(DeeIntObject *n, Dee_ssize_t size,
 		goto err_hi;
 	memcpyc(lo->ob_digit, n->ob_digit, size_lo, sizeof(digit));
 	memcpyc(hi->ob_digit, n->ob_digit + size_lo, size_hi, sizeof(digit));
+	*plow = int_normalize(lo);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!*plow)
+		goto err_hi;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	*phigh = int_normalize(hi);
-	*plow  = int_normalize(lo);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!*phigh)
+		goto err;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	return 0;
 err_hi:
 	Dee_Decref(hi);
@@ -1287,7 +1757,12 @@ k_lopsided_mul(DeeIntObject *a, DeeIntObject *b) {
 		        b->ob_digit + nbdone,
 		        nbtouse, sizeof(digit));
 		bslice->ob_size = nbtouse;
-		product         = k_mul(a, bslice);
+		DeeInt_PTruncate(&bslice, asize, nbtouse);
+#ifndef DeeInt_PTruncate_IS_NOOP
+		if unlikely(!bslice)
+			goto err_bslice_fail;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
+		product = k_mul(a, bslice);
 		if unlikely(!product)
 			goto err_bslice_fail;
 		(void)v_iadd(ret->ob_digit + nbdone, ret->ob_size - nbdone,
@@ -1474,6 +1949,12 @@ x_divrem(DeeIntObject *v1, DeeIntObject *w1,
 	ASSERT(carry == 0);
 	Dee_Decref(v);
 	*p_rem = int_normalize(w);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!*p_rem) {
+		DeeInt_Free(a);
+		goto err;
+	}
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	return int_normalize(a);
 err_v_w_a:
 	Dee_Decref(a);
@@ -1645,13 +2126,17 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		if unlikely(!z)
 			goto err;
 		if (a->ob_size < 0)
-			z->ob_size = -(z->ob_size);
+			z->ob_size = -z->ob_size;
 		for (i = 0, j = wordshift; i < newsize; i++, j++) {
 			z->ob_digit[i] = (a->ob_digit[j] >> loshift) & lomask;
 			if (i + 1 < newsize)
 				z->ob_digit[i] |= (a->ob_digit[j + 1] << hishift) & himask;
 		}
 		z = int_normalize(z);
+#ifndef DeeInt_PTruncate_IS_NOOP
+		if unlikely(!z)
+			goto err;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	}
 	return maybe_small_int(z);
 err_maybe_negative_shift:
@@ -1694,6 +2179,10 @@ int_shl(DeeIntObject *a, DeeObject *b) {
 		ASSERT(!accum);
 	}
 	result = int_normalize(result);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!result)
+		goto err;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	return maybe_small_int(result);
 err_maybe_negative_shift:
 	DeeRT_ErrNegativeShiftOverflow(a, true);
@@ -1799,13 +2288,17 @@ int_bitwise(DeeIntObject *__restrict a, unsigned int op,
 		        sizeof(digit));
 	}
 	if (negz) {
-		z->ob_size = -(z->ob_size);
+		z->ob_size = -z->ob_size;
 		z->ob_digit[size_z] = DIGIT_MASK;
 		v_complement(z->ob_digit, z->ob_digit, size_z + 1);
 	}
 	Dee_Decref(a);
 	Dee_Decref(b);
 	z = int_normalize(z);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!z)
+		goto err;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	return maybe_small_int(z);
 err_a_b:
 	Dee_Decref(b);
@@ -2011,8 +2504,7 @@ int_pext_impl(digit const *self, digit const *mask, size_t common_size) {
 			v >>= n_copy;
 		}
 	}
-	result = int_normalize(result);
-	return result;
+	return int_normalize(result);
 err:
 	return NULL;
 }
@@ -2212,8 +2704,7 @@ int_pext_ex_impl(DeeIntObject *self, DeeIntObject *mask) {
 		}
 	}
 done:
-	result = int_normalize(result);
-	return result;
+	return int_normalize(result);
 err:
 	return NULL;
 }
@@ -2279,11 +2770,15 @@ int_pdep_impl(digit const *self, size_t common_size,
 	}
 #if 1
 	result->ob_size = (Dee_ssize_t)i;
+	DeeInt_PTruncate(&result, mask_size, i);
+#ifndef DeeInt_PTruncate_IS_NOOP
+	if unlikely(!result)
+		goto err;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 #else
 	bzeroc(result->ob_digit + i, mask_size - i, sizeof(Dee_digit_t));
 #endif
-	result = int_normalize(result);
-	return result;
+	return int_normalize(result);
 err:
 	return NULL;
 }

@@ -31,10 +31,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_Free */
-#include <deemon/int.h>             /* DeeIntObject, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
-#include <deemon/object.h>          /* DREF, DeeObject */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, memset, memsetl, memsetq, memsetw */
+#include <deemon/alloc.h>            /* DeeObject_Free */
+#include <deemon/int.h>              /* DeeIntObject, Dee_SIZEOF_DIGIT, Dee_sdigit_t */
+#include <deemon/object.h>           /* DREF, DeeObject, Dee_OBJECT_OFFSETOF_DATA */
+#include <deemon/system-features.h>  /* CONFIG_HAVE_*, memset, memsetl, memsetq, memsetw */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX */
+
+#include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint32_t */
@@ -58,6 +61,34 @@ DECL_BEGIN
 	}	__WHILE0
 #endif /* Dee_SIZEOF_DIGIT != ... */
 
+#define Dee_SIZEOF_INT_OBJECT(n_digits) \
+	(Dee_OBJECT_OFFSETOF_DATA + __SIZEOF_SIZE_T__ + (Dee_SIZEOF_DIGIT * (n_digits)))
+
+#undef Dee_INT_SLAB_MAXDIGITS
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+#define Dee_INT_SLAB_MAXDIGITS ((Dee_SLAB_CHUNKSIZE_MAX - Dee_SIZEOF_INT_OBJECT(0)) / Dee_SIZEOF_DIGIT)
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+
+	/* Config: use slab allocators for (small) integers */
+#undef CONFIG_USE_SLABS_FOR_INTEGERS
+#if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2 && 1
+#define CONFIG_USE_SLABS_FOR_INTEGERS
+#endif /* ... */
+
+
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+#ifdef NDEBUG
+typedef ATTR_MALLOC_T WUNUSED_T void *(DCALL *Dee_int_slab_alloc_t)(void);
+#else /* NDEBUG */
+typedef ATTR_MALLOC_T WUNUSED_T void *(DCALL *Dee_int_slab_alloc_t)(char const *file, int line);
+#endif /* !NDEBUG */
+typedef NONNULL_T((1)) void (DCALL *Dee_int_slab_free_t)(void *__restrict p);
+
+INTDEF size_t const int_slab_size[Dee_INT_SLAB_MAXDIGITS + 1];
+INTDEF Dee_int_slab_alloc_t const int_slab_alloc[Dee_INT_SLAB_MAXDIGITS + 1];
+INTDEF Dee_int_slab_free_t const int_slab_free[Dee_INT_SLAB_MAXDIGITS + 1];
+#endif /* CONFIG_USE_SLABS_FOR_INTEGERS */
+
 
 #ifdef NDEBUG
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
@@ -65,8 +96,48 @@ INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
 INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc_d(size_t n_digits, char const *file, int line);
 #define DeeInt_Alloc(n_digits) DeeInt_Alloc_d(n_digits, __FILE__, __LINE__)
 #endif /* !NDEBUG */
-#define DeeInt_Free(self)    DeeObject_Free(self)
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+INTDEF NONNULL((1)) void DCALL int_free(void *__restrict ob);
+#define DeeInt_Free(self) int_free(Dee_REQUIRES_TYPE(DeeIntObject *, self))
+#else /* CONFIG_USE_SLABS_FOR_INTEGERS */
+#define DeeInt_Free(self) DeeObject_Free(self)
+#endif /* !CONFIG_USE_SLABS_FOR_INTEGERS */
+
 #define DeeInt_Destroy(self) DeeInt_Free(self)
+
+/* Must be called **after** `(*p_self)->ob_size` may have been set to a value
+ * that may be less than what was originally specified to `DeeInt_Alloc()`
+ *
+ * When small integers use slab allocations, this is needed to realloc
+ * `*p_self` into a different slab class (or onto a slab in the first place)
+ * when `old_n_digits` (value passed to `DeeInt_Alloc()`) has a different
+ * allocator than `new_n_digits` (the ABS of the current `(*p_self)->ob_size`)
+ *
+ * @param: DeeIntObject **p_self: Self-pointer (may be set to NULL on error)
+ * @param: size_t old_n_digits:   Original integer allocation
+ * @param: size_t new_n_digits:   Final integer allocation */
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+#define DeeInt_PTruncate(p_self, old_n_digits, new_n_digits)                            \
+	(ASSERT((new_n_digits) <= (old_n_digits)),                                          \
+	 (new_n_digits) < (old_n_digits)                                                    \
+	 ? (void)(*(p_self) = DeeInt_PTruncate_impl(*(p_self), old_n_digits, new_n_digits)) \
+	 : (void)0)
+#ifdef NDEBUG
+INTDEF NONNULL((1)) DREF DeeIntObject *DCALL
+DeeInt_PTruncate_impl(/*inherit(always)*/ DREF DeeIntObject *__restrict self,
+                      size_t old_n_digits, size_t new_n_digits);
+#else /* NDEBUG */
+#define DeeInt_PTruncate_impl(self, old_n_digits, new_n_digits) \
+	DeeDbgInt_PTruncate_impl(self, old_n_digits, new_n_digits, __FILE__, __LINE__)
+INTDEF NONNULL((1)) DREF DeeIntObject *DCALL
+DeeDbgInt_PTruncate_impl(/*inherit(always)*/ DREF DeeIntObject *__restrict self,
+                         size_t old_n_digits, size_t new_n_digits,
+                         char const *file, int line);
+#endif /* !NDEBUG */
+#else /* CONFIG_USE_SLABS_FOR_INTEGERS */
+#define DeeInt_PTruncate(p_self, old_n_digits, new_n_digits) (void)0
+#define DeeInt_PTruncate_IS_NOOP 1
+#endif /* !CONFIG_USE_SLABS_FOR_INTEGERS */
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **p_div, DeeIntObject **p_rem);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_add(DeeIntObject *a, DeeObject *b);

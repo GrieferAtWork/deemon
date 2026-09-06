@@ -299,7 +299,11 @@
 #define __ATTR_RETNONNULL_T     __ATTR_RETNONNULL
 #define __ATTR_NONNULL_T        __ATTR_NONNULL
 #define __ATTR_NORETURN_T       __ATTR_NORETURN
+#ifdef _MSC_VER
+#define __ATTR_MALLOC_T         /* nothing */
+#else /* _MSC_VER */
 #define __ATTR_MALLOC_T         __ATTR_MALLOC
+#endif /* !_MSC_VER */
 #define __ATTR_ALLOC_SIZE_T     __ATTR_ALLOC_SIZE
 #define __ATTR_ASSUME_ALIGNED_T __ATTR_ASSUME_ALIGNED
 #define __ATTR_ALLOC_ALIGN_T    __ATTR_ALLOC_ALIGN

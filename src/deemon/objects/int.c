@@ -31,7 +31,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/alloc.h>              /* DeeDbgObject_Mallocc, DeeObject_Free, DeeObject_Mallocc, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP*, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
 #include <deemon/bytes.h>              /* DeeBytes* */
@@ -256,13 +256,24 @@ DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
 #endif /* !NDEBUG */
 {
 	DREF DeeIntObject *result;
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+	if (n_digits < COMPILER_LENOF(int_slab_alloc)) {
 #ifdef NDEBUG
-	result = (DREF DeeIntObject *)DeeObject_Mallocc(offsetof(DeeIntObject, ob_digit),
-	                                                n_digits, sizeof(digit));
+		result = (DREF DeeIntObject *)(*int_slab_alloc[n_digits])();
 #else /* NDEBUG */
-	result = (DREF DeeIntObject *)DeeDbgObject_Mallocc(offsetof(DeeIntObject, ob_digit),
-	                                                   n_digits, sizeof(digit), file, line);
+		result = (DREF DeeIntObject *)(*int_slab_alloc[n_digits])(file, line);
 #endif /* !NDEBUG */
+	} else
+#endif /* CONFIG_USE_SLABS_FOR_INTEGERS */
+	{
+#ifdef NDEBUG
+		result = (DREF DeeIntObject *)DeeObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+		                                                n_digits, sizeof(digit));
+#else /* NDEBUG */
+		result = (DREF DeeIntObject *)DeeDbgObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+		                                                   n_digits, sizeof(digit), file, line);
+#endif /* !NDEBUG */
+	}
 	if (result) {
 		DeeObject_InitStatic(result, &DeeInt_Type);
 		result->ob_size = n_digits;
@@ -689,6 +700,7 @@ DeeInt_NewSleb(byte_t const **__restrict p_reader) {
 	twodigits temp;
 	uint8_t num_bits;
 	size_t num_digits = 1;
+	size_t final_digits;
 	/* Figure out a worst-case for how many digits we'll be needing. */
 	while (*reader++ & 0x80)
 		++num_digits;
@@ -753,10 +765,12 @@ DeeInt_NewSleb(byte_t const **__restrict p_reader) {
 			break;
 		}
 	}
-	result->ob_size = (size_t)(dst - result->ob_digit);
+	final_digits = (size_t)(dst - result->ob_digit);
+	result->ob_size = final_digits;
 	/* Check the sign bit. */
 	if (**p_reader & 0x40)
 		result->ob_size = -result->ob_size;
+	DeeInt_PTruncate(&result, num_digits, final_digits);
 done2:
 	/* Save the new read position. */
 	*p_reader = reader;
@@ -772,6 +786,7 @@ DeeInt_NewUleb(byte_t const **__restrict p_reader) {
 	twodigits temp;
 	uint8_t num_bits;
 	size_t num_digits = 1;
+	size_t final_digits;
 	/* Figure out a worst-case for how many digits we'll be needing. */
 	while (*reader++ & 0x80)
 		++num_digits;
@@ -834,7 +849,9 @@ DeeInt_NewUleb(byte_t const **__restrict p_reader) {
 			break;
 		}
 	}
-	result->ob_size = (size_t)(dst - result->ob_digit);
+	final_digits = (size_t)(dst - result->ob_digit);
+	result->ob_size = final_digits;
+	DeeInt_PTruncate(&result, num_digits, final_digits);
 done2:
 	/* Save the new read position. */
 	*p_reader = reader;
@@ -1085,7 +1102,6 @@ DeeInt_NewUInt32(uint32_t val) {
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
 		if likely(result) {
-			result->ob_size = req_digits;
 			for (req_digits = 0; val;
 			     val >>= DIGIT_BITS, ++req_digits)
 				result->ob_digit[req_digits] = val & DIGIT_MASK;
@@ -1132,7 +1148,6 @@ DeeInt_NewUInt64(uint64_t val) {
 		ASSERT(req_digits > 0);
 		result = DeeInt_Alloc(req_digits);
 		if likely(result) {
-			result->ob_size = req_digits;
 			for (req_digits = 0; val;
 			     val >>= DIGIT_BITS, ++req_digits)
 				result->ob_digit[req_digits] = val & DIGIT_MASK;
@@ -1306,7 +1321,6 @@ DeeInt_NewUInt128(Dee_uint128_t val) {
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
 	if likely(result) {
-		result->ob_size = req_digits;
 		for (req_digits = 0; !__hybrid_uint128_iszero(val);
 		     __hybrid_uint128_shr_DIGIT_BITS(val), ++req_digits) {
 			result->ob_digit[req_digits] = __hybrid_uint128_least_significant_DIGIT_BITS(val);
@@ -1491,7 +1505,7 @@ int_from_nonbinary_string(char const *__restrict start,
 #endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 	size_z = (size_t)((end - start) * log_base_BASE[radix]) + 1;
 	result = DeeInt_Alloc(size_z);
-	if (result == NULL)
+	if unlikely(result == NULL)
 		goto err;
 	result->ob_size = 0;
 	convwidth   = convwidth_base[radix];
@@ -1588,6 +1602,7 @@ handle_backslash_in_text:
 			}
 		}
 	}
+	DeeInt_PTruncate(&result, size_z, (size_t)result->ob_size);
 	return result;
 invalid_r:
 	Dee_DecrefDokill(result);
@@ -1685,18 +1700,15 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			goto done;
 		}
 	} else {
+		size_t num_digits;
 		bits_per_digit = 0; /* bits_per_digit = ceil(sqrt(radix)) */
 		while ((unsigned int)(1 << bits_per_digit) < radix)
 			++bits_per_digit;
-		{
-			size_t num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
-			result            = DeeInt_Alloc(num_digits);
-			if unlikely(!result)
-				goto done;
-			bzeroc(result->ob_digit,
-			       num_digits,
-			       sizeof(digit));
-		}
+		num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
+		result = DeeInt_Alloc(num_digits);
+		if unlikely(!result)
+			goto done;
+		bzeroc(result->ob_digit, num_digits, sizeof(digit));
 		dst      = result->ob_digit;
 		number   = 0;
 		num_bits = 0;
@@ -1751,9 +1763,13 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			ASSERT(num_bits < DIGIT_BITS);
 			*dst = (digit)number;
 		}
-		while (result->ob_size &&
-		       !result->ob_digit[result->ob_size - 1])
+		while (result->ob_size && !result->ob_digit[result->ob_size - 1])
 			--result->ob_size;
+		DeeInt_PTruncate(&result, num_digits, (size_t)result->ob_size);
+#ifndef DeeInt_PTruncate_IS_NOOP
+		if unlikely(!result)
+			goto done;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	}
 
 	/* Negate the integer if it was prefixed by `-' */
@@ -1848,18 +1864,15 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			goto done;
 		}
 	} else {
+		size_t num_digits;
 		bits_per_digit = 0; /* bits_per_digit = ceil(sqrt(radix)) */
 		while ((unsigned int)(1 << bits_per_digit) < radix)
 			++bits_per_digit;
-		{
-			size_t num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
-			result            = DeeInt_Alloc(num_digits);
-			if unlikely(!result)
-				goto done;
-			bzeroc(result->ob_digit,
-			       num_digits,
-			       sizeof(digit));
-		}
+		num_digits = 1 + ((len * bits_per_digit) / DIGIT_BITS);
+		result = DeeInt_Alloc(num_digits);
+		if unlikely(!result)
+			goto done;
+		bzeroc(result->ob_digit, num_digits, sizeof(digit));
 		dst    = result->ob_digit;
 		number = 0, num_bits = 0;
 		/* Parse the integer starting with the least significant bits. */
@@ -1927,9 +1940,13 @@ handle_linefeed_in_text:
 			ASSERT(num_bits < DIGIT_BITS);
 			*dst = (digit)number;
 		}
-		while (result->ob_size &&
-		       !result->ob_digit[result->ob_size - 1])
+		while (result->ob_size && !result->ob_digit[result->ob_size - 1])
 			--result->ob_size;
+		DeeInt_PTruncate(&result, num_digits, (size_t)result->ob_size);
+#ifndef DeeInt_PTruncate_IS_NOOP
+		if unlikely(!result)
+			goto done;
+#endif /* !DeeInt_PTruncate_IS_NOOP */
 	}
 	/* Negate the integer if it was prefixed by `-' */
 	if (negative)
@@ -3805,7 +3822,7 @@ done_decr:
 
 	/* Finally, fill in the integer size field. */
 	ASSERT(result->ob_digit[total_digits - 1] != 0);
-	result->ob_size = (Dee_ssize_t)total_digits;
+	ASSERT(result->ob_size == (Dee_ssize_t)total_digits);
 	if (is_negative)
 		result->ob_size = -result->ob_size;
 done:
@@ -3863,20 +3880,24 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-int_bool(DeeIntObject *__restrict self) {
-	return self->ob_size != 0;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 int_serialize(DeeIntObject *__restrict self, DeeSerial *__restrict writer) {
 	Dee_seraddr_t result;
-	size_t int_size, obj_size;
-	int_size = (size_t)self->ob_size;
-	if ((Dee_ssize_t)int_size < 0)
-		int_size = (size_t)(-(Dee_ssize_t)int_size);
-	obj_size = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), int_size, sizeof(digit));
-	result = DeeSerial_Object_Malloc(writer, obj_size, self);
+	size_t n_digits, obj_size;
+	n_digits = (size_t)self->ob_size;
+	if ((Dee_ssize_t)n_digits < 0)
+		n_digits = (size_t)(-(Dee_ssize_t)n_digits);
+	obj_size = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), n_digits, sizeof(digit));
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+	if (n_digits < COMPILER_LENOF(int_slab_size)) {
+		size_t slab_size = int_slab_size[n_digits];
+		ASSERT(slab_size >= obj_size);
+		result = DeeSerial_Slab_Object_Malloc(writer, slab_size, self);
+	} else
+#endif /* CONFIG_USE_SLABS_FOR_INTEGERS */
+	{
+		result = DeeSerial_Object_Malloc(writer, obj_size, self);
+	}
 	if likely(Dee_SERADDR_ISOK(result)) {
 		DeeIntObject *ret = DeeSerial_Addr2Mem(writer, result, DeeIntObject);
 		memcpy(DeeObject_DATA(ret), DeeObject_DATA(self), obj_size - sizeof(DeeObject));
@@ -3884,6 +3905,25 @@ int_serialize(DeeIntObject *__restrict self, DeeSerial *__restrict writer) {
 	return result;
 }
 
+#ifdef CONFIG_USE_SLABS_FOR_INTEGERS
+#define PTR_int_free &int_free
+INTDEF NONNULL((1)) void DCALL int_free(void *__restrict ob) {
+	DeeIntObject *self = (DeeIntObject *)ob;
+	size_t size = self->ob_size < 0 ? (size_t)(-self->ob_size) : (size_t)self->ob_size;
+	if (size < COMPILER_LENOF(int_slab_free)) {
+		(*int_slab_free[size])(ob);
+	} else {
+		DeeObject_Free(self);
+	}
+}
+#else /* CONFIG_USE_SLABS_FOR_INTEGERS */
+#define PTR_int_free NULL
+#endif /* !CONFIG_USE_SLABS_FOR_INTEGERS */
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+int_bool(DeeIntObject *__restrict self) {
+	return self->ob_size != 0;
+}
 
 
 
@@ -4708,10 +4748,8 @@ int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	result->ob_size = self->ob_size; /* Also copy the sign */
-	memcpyc(result->ob_digit,
-	        self->ob_digit,
-	        int_size,
-	        sizeof(digit));
+	memcpyc(result->ob_digit, self->ob_digit,
+	        int_size, sizeof(digit));
 	return result;
 err:
 	return NULL;
@@ -5645,7 +5683,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 			/* tp_any_ctor:    */ &int_new,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &int_serialize,
-			/* tp_free:        */ NULL
+			/* tp_free:        */ PTR_int_free
 		),
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
