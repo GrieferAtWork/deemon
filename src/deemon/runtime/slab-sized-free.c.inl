@@ -93,7 +93,11 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 again_read__spm_used:
 		old__spm_used = atomic_read(&page->sp_meta.spm_used);
 		slab_assert(old__spm_used >= 1);
-		slab_assert(old__spm_used <= LOCAL_MAX_CHUNK_COUNT);
+		slab_assertf(old__spm_used <= LOCAL_MAX_CHUNK_COUNT ||
+		             Dee_slab_page_iscustom(page),
+		             "custom slabs may be mixed-size (in which case a 'old__spm_used' may "
+		             "be greater than the maximum possible for a page of our slab's size), "
+		             "but for regular slabs, the max mustn't be exceeded");
 		if (old__spm_used == 1) {
 			/* Last chunk of page is being deleted. */
 			if (Dee_slab_page_iscustom(page)) {

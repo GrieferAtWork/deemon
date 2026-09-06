@@ -915,21 +915,22 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
 	Dee_slab_page_builder_offset_t lo_offset = self->sp_meta.spm_type.t_builder.spb_unused_lo;
 	Dee_slab_page_builder_offset_t hi_offset = self->sp_meta.spm_type.t_builder.spb_unused_hi;
+	slab_assert(lo_offset <= hi_offset);
 	if (lo_offset < fmt->pf__sizeof__sp_used)
 		lo_offset = fmt->pf__sizeof__sp_used;
 
-	/* Align "hi_offset" */
+	/* floor-align to nearest, valid slab-chunk */
 	if (OVERFLOW_USUB(hi_offset, fmt->pf__sizeof__sp_used, &hi_offset))
 		goto fail;
-	lo_offset -= fmt->pf__sizeof__sp_used;
-	/* floor-align to nearest, valid slab-chunk */
 	hi_offset = (hi_offset / (Dee_slab_page_builder_offset_t)n) * (Dee_slab_page_builder_offset_t)n;
 	for (;;) {
 		size_t bitno, bit_indx;
 		slab_bitword_t bit_mask;
+		/* Allocate memory top-down */
+		if (OVERFLOW_USUB(hi_offset, (Dee_slab_page_builder_offset_t)n, &hi_offset))
+			goto fail;
 		if (hi_offset <= lo_offset)
 			goto fail;
-		hi_offset -= (Dee_slab_page_builder_offset_t)n; /* Allocate memory */
 		bitno = hi_offset / (Dee_slab_page_builder_offset_t)n;
 		slab_assert(bitno < fmt->pf__max_chunk_count);
 		bit_indx = slab_bitword_indx(bitno);
@@ -941,14 +942,22 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 		self__sp_used[bit_indx] |= bit_mask;
 		break;
 	}
-
-	/* Adjust offsets to be independent of "sizeof(sp_used)" */
-	lo_offset += fmt->pf__sizeof__sp_used;
+	slab_assert((hi_offset % (Dee_slab_page_builder_offset_t)n) == 0);
 	hi_offset += fmt->pf__sizeof__sp_used;
 
 	/* Remember offsets of new unused-area (the unused-area can only ever shrink btw) */
 	slab_assert(self->sp_meta.spm_type.t_builder.spb_unused_lo <= lo_offset);
 	slab_assert(self->sp_meta.spm_type.t_builder.spb_unused_hi >= hi_offset);
+	slab_assert(lo_offset <= hi_offset);
+
+	/* Debug-initialize unused memory caused by chunk-alignment. */
+	{
+		Dee_slab_page_builder_offset_t ex_offset = hi_offset + (Dee_slab_page_builder_offset_t)n;
+		slab_assert(ex_offset <= self->sp_meta.spm_type.t_builder.spb_unused_hi);
+		memset((byte_t *)self + ex_offset, 0xfe,
+		       self->sp_meta.spm_type.t_builder.spb_unused_hi - ex_offset);
+	}
+
 	self->sp_meta.spm_type.t_builder.spb_unused_lo = lo_offset;
 	self->sp_meta.spm_type.t_builder.spb_unused_hi = hi_offset;
 	++self->sp_meta.spm_used;
