@@ -63,7 +63,7 @@ LOCAL_MY_DeeSlab_Malloc(LOCAL_DeeSlab_Malloc_DBG_PARAMS) {
 	void *result;
 	struct LOCAL_slab_page *page;
 again:
-	LOCAL_slab_lock_read();
+	LOCAL_slab_lock_read(); /* TODO: This lock is a MAJOR bottleneck in heavily parallel programs (10%) */
 again_locked:
 	page = LIST_FIRST(&LOCAL_slab_pages);
 	if (page) {
@@ -77,7 +77,7 @@ again_locked:
 				/* About to allocate last free chunk of page */
 				LOCAL_slab_lock_endread();
 				while unlikely(!LOCAL_slab_lock_trywrite()) {
-					SCHED_YIELD();
+					SCHED_YIELD(); /* TODO: This lock is a MAJOR bottleneck in heavily parallel programs (7%) */
 					if (page != atomic_read(&LOCAL_slab_pages.lh_first))
 						goto again;
 				}

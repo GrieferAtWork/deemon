@@ -129,7 +129,7 @@ again_read__spm_used:
 			 * be the case when this is a dec chunk, but in that case, we simply
 			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
 			 * anything with it below) */
-			LOCAL_slab_lock_write();
+			LOCAL_slab_lock_write(); /* TODO: This lock is a MAJOR bottleneck in heavily parallel programs (15%) */
 			if unlikely(!atomic_cmpxch(&page->sp_meta.spm_used,
 			                           LOCAL_MAX_CHUNK_COUNT,
 			                           LOCAL_MAX_CHUNK_COUNT - 1)) {

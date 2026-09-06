@@ -71,7 +71,7 @@ DECL_BEGIN
 
 /* Config: use slab allocators for (small) integers */
 #undef CONFIG_USE_SLABS_FOR_INTEGERS
-#if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2 && 1
+#if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2 && 0 /* TODO: Disabled until the "LOCAL_slab_lock" bottleneck is fixed */
 #define CONFIG_USE_SLABS_FOR_INTEGERS
 #endif /* ... */
 
