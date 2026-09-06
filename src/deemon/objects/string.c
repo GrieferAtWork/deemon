@@ -1384,10 +1384,6 @@ string_mh_seq_compare(String *lhs, DeeObject *rhs) {
 	return string_compare_seq(lhs, rhs);
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
-string_eq_bytes(String *__restrict self,
-                DeeBytesObject *__restrict other);
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_mh_seq_compare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);

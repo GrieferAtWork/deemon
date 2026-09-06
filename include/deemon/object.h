@@ -118,15 +118,21 @@ DECL_BEGIN
 #define Dee_COMPARE_EQ_FROMBOOL(is_equal)     ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
 #define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_ERR >= 0 */
+#define Dee_CompareFromBCmp(status) Dee_COMPARE_EQ_FROMBOOL(!(status))
 
 /* Helper macros for implementing compare operators. */
 #if Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1
-#define Dee_Compare(a, b)           (+((a) > (b)) - +((a) < (b)))
-#define Dee_CompareFromDiff(diff)   (+((diff) > 0) - +((diff) < 0))
+#define Dee_Compare(a, b)         (+((a) > (b)) - +((a) < (b)))
+#define Dee_CompareFromDiff(diff) (+((diff) > 0) - +((diff) < 0))
 #else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
-#define Dee_Compare(a, b)           ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
-#define Dee_CompareFromDiff(diff)   ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#define Dee_Compare(a, b)         ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
+#define Dee_CompareFromDiff(diff) ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
 #endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 || Dee_COMPARE_GR != 1 */
+#if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
+#define Dee_CompareFromDiffNe(diff) ((+((diff) > 0) << 1) - 1)
+#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
+#define Dee_CompareFromDiffNe(diff) ((diff) > 0 ? Dee_COMPARE_GR : Dee_COMPARE_LO)
+#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
 #if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
 #define Dee_CompareNe(a, b)         ((+((a) > (b)) << 1) - 1)
 #else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
@@ -138,7 +144,7 @@ DECL_BEGIN
 #define Dee_CompareEqFromDiff(diff) ((diff) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_NE == 0 */
 
-#if (Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 && \
+#if (Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 &&  \
      (Dee_COMPARE_LO == -1 || Dee_COMPARE_LO == 1) && \
      (Dee_COMPARE_GR == -1 || Dee_COMPARE_GR == 1))
 #define Dee_COMPARE_INTO_eM1_eqM2_ne0(cmp) ((((((cmp) ^ 1) + 1) ^ 1) * -3) >> 3)

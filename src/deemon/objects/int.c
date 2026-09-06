@@ -210,6 +210,10 @@ STATIC_ASSERT(Dee_CompareFromDiff(-1) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiff(10) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareFromDiff(1) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareFromDiff(0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_CompareFromDiffNe(-10) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiffNe(-1) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiffNe(1) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiffNe(10) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == Dee_COMPARE_LO ||
               Dee_CompareEqFromDiff(-10) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareEqFromDiff(10) == Dee_COMPARE_LO ||

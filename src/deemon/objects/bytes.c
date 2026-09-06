@@ -33,7 +33,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_*, Dee_Compare, Dee_CompareFromDiff, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_AsDigit, DeeUni_IsSpace, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
@@ -949,25 +949,23 @@ bytes_compare_seq(Bytes *lhs, DeeObject *rhs) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_compare_eq(Bytes *lhs, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
-		return !string_eq_bytes((DeeStringObject *)rhs, lhs);
+		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes((DeeStringObject *)rhs, lhs));
 	if (DeeBytes_Check(rhs)) {
 		void *rhs_data = DeeBytes_DATA(rhs);
 		size_t rhs_size = DeeBytes_SIZE(rhs);
 		if (DeeBytes_SIZE(lhs) != rhs_size)
 			return Dee_COMPARE_NE;
-		return !!bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size);
+		return Dee_CompareFromBCmp(bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size));
 	}
 	return bytes_compare_seq(lhs, rhs);
 }
 
-#undef memxcmp
-#define memxcmp Dee_libc_memxcmp
 LOCAL WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
-Dee_libc_memxcmp(void const *a, size_t asiz,
-                 void const *b, size_t bsiz) {
+Dee_memxcmp(void const *a, size_t asiz,
+            void const *b, size_t bsiz) {
 	int result = memcmp(a, b, MIN(asiz, bsiz));
-	if (result)
-		return Dee_CompareFromDiff(result);
+	if (result != 0)
+		return Dee_CompareFromDiffNe(result);
 	return Dee_Compare(asiz, bsiz);
 }
 
@@ -976,8 +974,8 @@ bytes_compare(Bytes *lhs, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
 		return -compare_string_bytes((DeeStringObject *)rhs, lhs);
 	if (DeeBytes_Check(rhs)) {
-		return memxcmp(DeeBytes_DATA(lhs), DeeBytes_SIZE(lhs),
-		               DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs));
+		return Dee_memxcmp(DeeBytes_DATA(lhs), DeeBytes_SIZE(lhs),
+		                   DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs));
 	}
 	return bytes_compare_seq(lhs, rhs);
 }
