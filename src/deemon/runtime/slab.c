@@ -426,10 +426,34 @@ again:
 		next->sp_meta.spm_type.t_link.le_prev = p_prev; /* PREV_OF(NEXT) = PREV */
 		slab_assertf(atomic_read(p_prev) == page, "See same assertion above");
 		atomic_write(p_prev, next); /* NEXT_OF(PREV) = NEXT */
+		slab_assertf(atomic_read(&page->sp_meta.spm_type.t_link.le_next) == next,
+		             "Nothing should have been able to insert another page between "
+		             "`page` and `next` because we've already checked if the 2 pages "
+		             "are still adjacent and because `Dee_SLAB_PAGE_ACT_REMOVE` is "
+		             "set for both pages.");
 
 		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
 		slab_act_remove_abort(slab, list, next);
+
+		/* Because `page` is visible until RCU sync below, another thread may still be
+		 * using `page` to enumerate the pages that (used to) follow it. To make it
+		 * clear to such code that the page (no longer) has a successor, clear its
+		 * NEXT pointer now. Otherwise, someone might enumerate pages and hit one that
+		 * has since been free'd since the RCU sync below... */
+		slab_assertf(atomic_read(&page->sp_meta.spm_type.t_link.le_next) == next,
+		             "We've just made `page` invisible as far as page listings are "
+		             "concerned, so nothing should have been able to alter its next-"
+		             "pointer (changing that pointer to `NULL` is *our* job)");
+		atomic_write(&page->sp_meta.spm_type.t_link.le_next, NULL);
 	}
+
+	/* Now that `page` has been unlinked from its list, its "prev" pointer becomes
+	 * invalid. To make that more clear (when debugging), clobber that pointer! */
+	DBG_memset(&page->sp_meta.spm_type.t_link.le_prev, 0xcc,
+	           sizeof(page->sp_meta.spm_type.t_link.le_prev));
+	slab_assertf(atomic_read(&page->sp_meta.spm_type.t_link.le_next) == NULL,
+	             "Nothing else should have modified this because the REMOVE "
+	             "action hasn't completed, yet");
 
 	/* Synchronize with RCU to wait for anyone trying to read the page-list.
 	 *
@@ -507,8 +531,7 @@ again:
 	DeeRCU_LockDefault(); /* To prevent pages from being free'd */
 	next = atomic_read(p_prev);
 	if (!next) {
-append_at_end:
-		/* Simple case: append at end (or: first page) */
+		/* Simple case: first page */
 		DeeRCU_UnlockDefault();
 		page->sp_meta.spm_type.t_link.le_prev = p_prev;
 		atomic_write(&page->sp_meta.spm_type.t_link.le_next, NULL);
@@ -526,11 +549,26 @@ append_at_end:
 			next_old_status.sps_word = atomic_read(&next->sp_meta.spm_status.sps_word);
 			next_new_status.sps_word = next_old_status.sps_word;
 			if (next_new_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE) {
-				/* Find another successor that (hopefully) doesn't have an on-going operation */
+				/* Find another successor that (hopefully) doesn't have an on-going operation.
+				 * -> Pages won't be destroyed because we're holding an RCU lock! */
 				p_prev = &next->sp_meta.spm_type.t_link.le_next;
 				next   = atomic_read(p_prev);
-				if (next == NULL)
-					goto append_at_end; /* Simply append at the end */
+				if (next == NULL) {
+					/* All pages have active actions, so have to wait a bit and try again :(
+					 *
+					 * You might think we'd be able to simply append `page` to the end of the
+					 * list (as is done in the "first page" case above), but that would cause
+					 * problems:
+					 * - Because the second-to-last page is currently being removed, *it* may
+					 *   have already noticed that its `t_link.le_next == NULL`, and entered
+					 *   the associated branch in `slab_act_remove()`
+					 * - If we then came along and appended another page onto it, everything
+					 *   might break because that's something that can't be handled in that
+					 *   branch! */
+					DeeRCU_UnlockDefault();
+					SCHED_YIELD();
+					goto again;
+				}
 				continue;
 			}
 			next_new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
@@ -556,7 +594,7 @@ unlock_rcu_and_abort_remove_in_next:
 		page->sp_meta.spm_type.t_link.le_prev = p_prev;
 		next->sp_meta.spm_type.t_link.le_prev = &page->sp_meta.spm_type.t_link.le_next;
 		atomic_write(&page->sp_meta.spm_type.t_link.le_next, next);
-		if (!atomic_cmpxch_weak(p_prev, next, page)) { /* <<< This makes `page` visible (on success) */
+		if unlikely(!atomic_cmpxch_weak(p_prev, next, page)) { /* <<< This makes `page` visible (on success) */
 			/* Another thread may have been faster at inserting :(
 			 * -> Undo everything and try again */
 			next->sp_meta.spm_type.t_link.le_prev = p_prev;
