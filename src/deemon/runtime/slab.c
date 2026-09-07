@@ -30,7 +30,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/api.h>
 
 /* Implementation configuration */
-#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 1
 #define SLAB_DEBUG_INTERNAL 1
 #else
 #define SLAB_DEBUG_INTERNAL 0
@@ -87,13 +87,15 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/gc.h>               /* DeeDbgGCSlab_*, DeeGCSlab_*, DeeGC_Head, DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/system-features.h>  /* memset */
 #include <deemon/types.h>            /* DeeObject, Dee_ssize_t */
-#include <deemon/util/atomic.h>      /* atomic_read */
+#include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
+#include <deemon/util/rcu.h>         /* DeeRCU_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_*, _Dee_PRIVATE_SLAB_SELECT */
-#include <deemon/util/slab.h>        /* Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_* */
+#include <deemon/util/slab.h>        /* Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_*, Dee_slab_page, Dee_slab_page_* */
 
 #include <hybrid/align.h>         /* CEILDIV, IS_ALIGNED, IS_POWER_OF_TWO */
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */
+#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SHIFT_TYPE__, __SIZEOF_POINTER__ */
 
@@ -293,6 +295,337 @@ dbg_slab__detach(struct Dee_slab_page *page, void *p,
 	return p;
 }
 #endif /* SLAB_DEBUG_LEAKS */
+
+
+LIST_HEAD(Dee_slab_page_list, Dee_slab_page);
+
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+struct Dee_slab {
+	/* [0..n][lock([RCU, ATOMIC])] Pages containing at least 1 free, and at least 1 allocated chunk.
+	 * - fully allocated pages are only tracked when 'SLAB_TRACK_FULL_PAGES' is enabled
+	 * - fully free pages are stored in a global free-list (so they can be used by all slab allocators)
+	 * - The next-pointer (including the head) is always maintained atomically, but the prev-pointer
+	 *   requires some `Dee_SLAB_PAGE_ACT_*` to be set for that particular page.
+	 * - Pages are only free'd after RCU sync. */
+	struct Dee_slab_page_list s_pages; /* TODO: Config where this is an array (with each element 64-byte aligned, and threads pick page lists based on their thread ID) */
+#if SLAB_TRACK_FULL_PAGES
+	/* [0..n][lock([RCU, ATOMIC])] Same as `s_pages`, but fully allocated pages. If you find a page
+	 * in here that isn't fully allocated, that means that some thread is currently working to move
+	 * it to its proper location. */
+	struct Dee_slab_page_list s_fullpages;
+#endif /* SLAB_TRACK_FULL_PAGES */
+	struct pagespecs s_specs; /* [const] Slab specs */
+};
+
+/* TODO: Simplification under CONFIG_NO_THREADS */
+
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+slab_act_remove(struct Dee_slab *slab,
+                struct Dee_slab_page_list *list,
+                struct Dee_slab_page *__restrict page);
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+slab_act_insert(struct Dee_slab *slab,
+                struct Dee_slab_page_list *list,
+                struct Dee_slab_page *__restrict page);
+
+/* Abort a (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation on `page` that was found in `list`. */
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+slab_act_remove_abort(struct Dee_slab *slab,
+                      struct Dee_slab_page_list *list,
+                      struct Dee_slab_page *__restrict page) {
+	union Dee_slab_page_status old_status;
+	union Dee_slab_page_status new_status;
+	do {
+		old_status.sps_word = atomic_read(&page->sp_meta.spm_status.sps_word);
+		slab_assert(old_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_REMOVE);
+		slab_assert(old_status.sps_data.spsd_used <= slab->s_specs.ps_chunkcount);
+		if (old_status.sps_data.spsd_used == 0) {
+			/* Nothing in-use -> must remove proper from *any* list */
+			goto do_remove_proper;
+		}
+#if SLAB_TRACK_FULL_PAGES
+		else if (old_status.sps_data.spsd_used == slab->s_specs.ps_chunkcount) {
+			if (list != &slab->s_fullpages)
+				goto do_remove_proper;
+		} else {
+			if (list == &slab->s_fullpages)
+				goto do_remove_proper;
+		}
+#endif /* SLAB_TRACK_FULL_PAGES */
+		new_status.sps_data.spsd_used = old_status.sps_data.spsd_used;
+		new_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_NONE;
+	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+	                             old_status.sps_word, new_status.sps_word));
+	return;
+do_remove_proper:
+	slab_act_remove(slab, list, page); /* Compiler should tail-call this one */
+}
+
+/* Complete `Dee_SLAB_PAGE_ACT_REMOVE` by removing `page` from `list`, and
+ * either adding it to a different list, or freeing it (if its in-use counter
+ * is (still) `0` after it was removed) */
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+slab_act_remove(struct Dee_slab *slab,
+                struct Dee_slab_page_list *list,
+                struct Dee_slab_page *__restrict page) {
+	union Dee_slab_page_status old_status;
+	union Dee_slab_page_status new_status;
+	struct Dee_slab_page **p_prev;
+	struct Dee_slab_page *next;
+	p_prev = page->sp_meta.spm_type.t_link.le_prev;
+again:
+	slab_assertf(atomic_read(p_prev) == page,
+	             "In order for this assumption to break, another thread would "
+	             "have needed to insert another page before our own `page`, which "
+	             "it would have needed to use `slab_act_insert()` for, "
+	             "which would have needed to start a (fake) `Dee_SLAB_PAGE_ACT_REMOVE` "
+	             "operation on our own `page`. But that's not possible, because we've "
+	             "been the ones to start that operation!");
+	DeeRCU_LockDefault(); /* To prevent pages from being free'd */
+	next = atomic_read(&page->sp_meta.spm_type.t_link.le_next);
+	if (next == NULL) {
+		/* Simple case: no successor (so no need to lock `next` in any way). */
+		DeeRCU_UnlockDefault();
+		atomic_write(p_prev, NULL);
+	} else {
+		union Dee_slab_page_status next_old_status;
+		union Dee_slab_page_status next_new_status;
+		slab_assert(next != page);
+
+		/* Complicated case: because there is a successor, we (necessarily) have
+		 * to update its `t_link.le_prev` field in order to complete the REMOVE
+		 * operation. But in order to do that, we must start a (fake) REMOVE
+		 * operation on `next` so-as to gain read/write-access to that field. */
+		do {
+			next_old_status.sps_word = atomic_read(&next->sp_meta.spm_status.sps_word);
+			if (next_old_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE) {
+				/* Someone is either trying to remove `next`, or insert another page
+				 * between our `page` and `next`. In either case, we can't proceed
+				 * like this and have no other choice but to wait a little :( */
+				DeeRCU_UnlockDefault();
+				SCHED_YIELD();
+				goto again;
+			}
+			next_new_status.sps_data.spsd_used = next_old_status.sps_data.spsd_used;
+			next_new_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_REMOVE;
+		} while (!atomic_cmpxch_weak(&next->sp_meta.spm_status.sps_word,
+		                             next_old_status.sps_word,
+		                             next_new_status.sps_word));
+
+		/* Don't need RCU lock for the remainder below:
+		 * - both `page` and `next` will remain valid because
+		 *   `Dee_SLAB_PAGE_ACT_REMOVE` is set for both. */
+		DeeRCU_UnlockDefault();
+
+		/* Read/write access to `t_link.le_prev` of `next` gained -> proceed */
+		if unlikely(next->sp_meta.spm_type.t_link.le_prev !=
+		            &page->sp_meta.spm_type.t_link.le_next) {
+			slab_act_remove_abort(slab, list, next);
+			goto again;
+		}
+		next->sp_meta.spm_type.t_link.le_prev = p_prev; /* PREV_OF(NEXT) = PREV */
+		slab_assertf(atomic_read(p_prev) == page, "See same assertion above");
+		atomic_write(p_prev, next); /* NEXT_OF(PREV) = NEXT */
+
+		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
+		slab_act_remove_abort(slab, list, next);
+	}
+
+	/* Synchronize with RCU to wait for anyone trying to read the page-list.
+	 *
+	 * This also ensures that anyone trying to allocate from `page` will have
+	 * finished doing so, meaning that us freeing the page below after reading
+	 * that `spsd_used == 0` does not run into a race with another thread that
+	 * found our page before we removed it, and is currently trying to allocate
+	 * a chunk from it. */
+	DeeRCU_SynchronizeDefault();
+
+	/* Given `page` has been removed from `list`. Now have to
+	 * complete the `Dee_SLAB_PAGE_ACT_REMOVE` operation as:
+	 * - `Dee_SLAB_PAGE_ACT_NONE`: (status not actually set)
+	 *   by freeing the page via `dbg_slab_page_rawfree()`
+	 * #if SLAB_TRACK_FULL_PAGES
+	 * - `Dee_SLAB_PAGE_ACT_INSERT`: into `&slab->s_fullpages` (if `spsd_used == slab->s_specs.ps_chunkcount`)
+	 * #endif // SLAB_TRACK_FULL_PAGES
+	 * - `Dee_SLAB_PAGE_ACT_INSERT`: into `&slab->s_pages` (if `spsd_used != 0`) */
+	do {
+		old_status.sps_word = atomic_read(&page->sp_meta.spm_status.sps_word);
+		slab_assertf(old_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_REMOVE,
+		             "This action code should have been set before our caller "
+		             "made the call to this function (current code: %u)",
+		             (unsigned int)old_status.sps_data.spsd_act);
+		slab_assert(old_status.sps_data.spsd_used <= slab->s_specs.ps_chunkcount);
+		if (old_status.sps_data.spsd_used == 0) {
+			/* Page is still (fully) unused after being removed
+			 * -> can actually free now (since we know that the
+			 *    page isn't visible anymore after we removed it) */
+			dbg_slab_page_rawfree((struct Dee_slab_page *)page,
+			                      slab->s_specs.ps_chunksize,
+			                      slab->s_specs.ps_chunkcount);
+			return;
+		}
+
+		/* The page's in-use counter is non-zero -> must insert into some list */
+		new_status.sps_data.spsd_used = old_status.sps_data.spsd_used;
+		new_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_INSERT;
+#if !SLAB_TRACK_FULL_PAGES
+		if unlikely(new_status.sps_data.spsd_used == slab->s_specs.ps_chunkcount)
+			new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_NONE;
+#endif /* !SLAB_TRACK_FULL_PAGES */
+
+		/* Apply new status (and action) */
+	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+	                             old_status.sps_word, new_status.sps_word));
+
+#if SLAB_TRACK_FULL_PAGES
+	/* We only get here after setting `Dee_SLAB_PAGE_ACT_INSERT`, so proceed with that */
+	slab_assert(new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_INSERT);
+	list = old_status.sps_data.spsd_used >= slab->s_specs.ps_chunkcount
+	       ? &slab->s_fullpages /* All chunks in-use -> insert into "fullpages" list */
+	       : &slab->s_pages;    /* There are still some unused chunks -> insert into "pages" list */
+#else /* SLAB_TRACK_FULL_PAGES */
+	slab_assert(new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE ||
+	            new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_INSERT);
+	if (new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE)
+		return;
+	slab_assert(list == &slab->s_pages);
+#endif /* !SLAB_TRACK_FULL_PAGES */
+	slab_act_insert(slab, list, page); /* Compiler should tail-call this one */
+}
+
+/* Complete `Dee_SLAB_PAGE_ACT_INSERT` by inserting `page` into `list` */
+PRIVATE NONNULL((1, 2)) void DCALL
+slab_act_insert(struct Dee_slab *slab,
+                struct Dee_slab_page_list *list,
+                struct Dee_slab_page *__restrict page) {
+	union Dee_slab_page_status old_status;
+	union Dee_slab_page_status new_status;
+	struct Dee_slab_page *next;
+	struct Dee_slab_page **p_prev;
+again:
+	p_prev = &list->lh_first;
+	DeeRCU_LockDefault(); /* To prevent pages from being free'd */
+	next = atomic_read(p_prev);
+	if (!next) {
+append_at_end:
+		/* Simple case: append at end (or: first page) */
+		DeeRCU_UnlockDefault();
+		page->sp_meta.spm_type.t_link.le_prev = p_prev;
+		atomic_write(&page->sp_meta.spm_type.t_link.le_next, NULL);
+		if (!atomic_cmpxch_weak(p_prev, NULL, page))
+			goto again;
+	} else {
+		union Dee_slab_page_status next_old_status;
+		union Dee_slab_page_status next_new_status;
+
+		/* Start a (fake) REMOVE operation on `next` to prevent anything from
+		 * starting another (that might read its `t_link.le_prev` at an inopportune
+		 * time) while we're trying to modify that field. */
+		for (;;) {
+			slab_assert(next != page);
+			next_old_status.sps_word = atomic_read(&next->sp_meta.spm_status.sps_word);
+			next_new_status.sps_word = next_old_status.sps_word;
+			if (next_new_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE) {
+				/* Find another successor that (hopefully) doesn't have an on-going operation */
+				p_prev = &next->sp_meta.spm_type.t_link.le_next;
+				next   = atomic_read(p_prev);
+				if (next == NULL)
+					goto append_at_end; /* Simply append at the end */
+				continue;
+			}
+			next_new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
+			if (atomic_cmpxch_weak(&next->sp_meta.spm_status.sps_word,
+			                       next_old_status.sps_word,
+			                       next_new_status.sps_word))
+				break;
+		}
+
+		/* Still need RCU lock since `*p_prev` might point at the `t_link.le_next`
+		 * of a preceding page that must NOT be free'd until *AFTER* we've updated
+		 * its next-pointer! */
+
+		/* (fake) REMOVE operation started on "next" -> as such, we can
+		 * now safely read/write its `t_link.le_prev` field such that
+		 * we can (safely) insert `page` before it. */
+		if unlikely(next->sp_meta.spm_type.t_link.le_prev != p_prev) {
+unlock_rcu_and_abort_remove_in_next:
+			DeeRCU_UnlockDefault(); /* Don't need RCU since `Dee_SLAB_PAGE_ACT_REMOVE` keeps `next` alive! */
+			slab_act_remove_abort(slab, list, next);
+			goto again;
+		}
+		page->sp_meta.spm_type.t_link.le_prev = p_prev;
+		next->sp_meta.spm_type.t_link.le_prev = &page->sp_meta.spm_type.t_link.le_next;
+		atomic_write(&page->sp_meta.spm_type.t_link.le_next, next);
+		if (!atomic_cmpxch_weak(p_prev, next, page)) { /* <<< This makes `page` visible (on success) */
+			/* Another thread may have been faster at inserting :(
+			 * -> Undo everything and try again */
+			next->sp_meta.spm_type.t_link.le_prev = p_prev;
+			goto unlock_rcu_and_abort_remove_in_next;
+		}
+
+		/* Success! the given `page` has been inserted before `next` */
+		DeeRCU_UnlockDefault();
+
+		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
+		slab_act_remove_abort(slab, list, next);
+	}
+
+	/* Now that the caller's `page` was inserted, we must try to change its current
+	 * action code from `Dee_SLAB_PAGE_ACT_INSERT` to `Dee_SLAB_PAGE_ACT_NONE`, thus
+	 * releasing our thread's responsibility for the page.
+	 *
+	 * We don't need an RCU lock for this part, since the `Dee_SLAB_PAGE_ACT_INSERT`
+	 * that was set by our caller (and which we're about to clear) prevents any other
+	 * action from being started (including any that could destroy `page`) */
+	do {
+		old_status.sps_word = atomic_read(&page->sp_meta.spm_status.sps_word);
+		slab_assertf(old_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_INSERT,
+		             "This action code should have been set before our caller "
+		             "made the call to this function (current code: %u)",
+		             (unsigned int)old_status.sps_data.spsd_act);
+		new_status.sps_data.spsd_used = old_status.sps_data.spsd_used;
+		new_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_NONE;
+		slab_assert(new_status.sps_data.spsd_used <= slab->s_specs.ps_chunkcount);
+		if (new_status.sps_data.spsd_used == 0) {
+			/* No more chunks in-use -> must actually remove+free page */
+			new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
+		} else if (new_status.sps_data.spsd_used == slab->s_specs.ps_chunkcount) {
+#if SLAB_TRACK_FULL_PAGES
+			if (list == &slab->s_fullpages) {
+				/* This is actually what we want in this case! */
+			} else
+#endif /* SLAB_TRACK_FULL_PAGES */
+			{
+				/* All chunks are in-use -> must actually remove + (in the case
+				 * of `SLAB_TRACK_FULL_PAGES`): add to `slab->s_fullpages`. */
+				new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
+			}
+		} else {
+#if SLAB_TRACK_FULL_PAGES
+			if (list != &slab->s_fullpages) {
+				/* This is actually what we want in this case! */
+			} else {
+				/* Page was added to `slab->s_fullpages`, but isn't actually
+				 * fully allocated -> must remove (again) and add to the proper
+				 * list afterwards! */
+				new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
+			}
+#endif /* SLAB_TRACK_FULL_PAGES */
+		}
+
+		/* Apply new status (and action) */
+	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+	                             old_status.sps_word, new_status.sps_word));
+
+	/* We may still have more work to do if another thread forced us to
+	 * transition to another action before the INSERT we just performed
+	 * could be completed. */
+	slab_assert(new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE ||
+	            new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_REMOVE);
+	if (new_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE)
+		slab_act_remove(slab, list, page); /* Compiler should tail-call this one */
+}
+#endif /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 
 /* Define slab GC allocators (use "Dee_SLAB_CHUNKSIZE_GC_FOREACH()" to
@@ -856,6 +1189,21 @@ for (local n: [minsize:maxsize+1]) {
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+PRIVATE ATTR_RETNONNULL ATTR_CONST WUNUSED
+struct Dee_slab *DCALL get_slab(size_t n) {
+	ASSERTF(DeeSlab_EXISTS(n), "Invalid size slab: %" PRFuSIZ, n);
+	switch (n) {
+#define RETURN_SLAB(n, _) case n: return &slab##n;
+#ifndef __INTELLISENSE__
+	Dee_SLAB_CHUNKSIZE_FOREACH(RETURN_SLAB, ~)
+#endif /* !__INTELLISENSE__ */
+#undef RETURN_SLAB
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 struct page_format {
 	Dee_slab_page_builder_offset_t pf__max_chunk_count; /* max # of chunks that may exist in the page */
 	Dee_slab_page_builder_offset_t pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_slab_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_slab_bitword_t)]
@@ -884,6 +1232,7 @@ struct page_format const *DCALL get_page_format(size_t n) {
 	}
 	__builtin_unreachable();
 }
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 
 /* Allocate/free custom chunks within a custom slab-page.
@@ -911,17 +1260,30 @@ struct page_format const *DCALL get_page_format(size_t n) {
  *                probably allocate another page) */
 PUBLIC WUNUSED NONNULL((1)) void *DCALL
 Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	struct Dee_slab const *slab = get_slab(n);
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	struct page_format const *fmt = get_page_format(n);
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
 	Dee_slab_page_builder_offset_t lo_offset = self->sp_meta.spm_type.t_builder.spb_unused_lo;
 	Dee_slab_page_builder_offset_t hi_offset = self->sp_meta.spm_type.t_builder.spb_unused_hi;
 	slab_assert(lo_offset <= hi_offset);
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	if (lo_offset < slab->s_specs.ps_sizeof__sp_used)
+		lo_offset = slab->s_specs.ps_sizeof__sp_used;
+
+	/* floor-align to nearest, valid slab-chunk */
+	if (OVERFLOW_USUB(hi_offset, slab->s_specs.ps_sizeof__sp_used, &hi_offset))
+		goto fail;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	if (lo_offset < fmt->pf__sizeof__sp_used)
 		lo_offset = fmt->pf__sizeof__sp_used;
 
 	/* floor-align to nearest, valid slab-chunk */
 	if (OVERFLOW_USUB(hi_offset, fmt->pf__sizeof__sp_used, &hi_offset))
 		goto fail;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	hi_offset = (hi_offset / (Dee_slab_page_builder_offset_t)n) * (Dee_slab_page_builder_offset_t)n;
 	for (;;) {
 		size_t bitno, bit_indx;
@@ -932,7 +1294,11 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 		if (hi_offset <= lo_offset)
 			goto fail;
 		bitno = hi_offset / (Dee_slab_page_builder_offset_t)n;
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+		slab_assert(bitno < slab->s_specs.ps_chunkcount);
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 		slab_assert(bitno < fmt->pf__max_chunk_count);
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 		bit_indx = slab_bitword_indx(bitno);
 		bit_mask = slab_bitword_mask(bitno);
 		if (self__sp_used[bit_indx] & bit_mask)
@@ -943,7 +1309,11 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 		break;
 	}
 	slab_assert((hi_offset % (Dee_slab_page_builder_offset_t)n) == 0);
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	hi_offset += slab->s_specs.ps_sizeof__sp_used;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	hi_offset += fmt->pf__sizeof__sp_used;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	/* Remember offsets of new unused-area (the unused-area can only ever shrink btw) */
 	slab_assert(self->sp_meta.spm_type.t_builder.spb_unused_lo <= lo_offset);
@@ -960,7 +1330,11 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 
 	self->sp_meta.spm_type.t_builder.spb_unused_lo = lo_offset;
 	self->sp_meta.spm_type.t_builder.spb_unused_hi = hi_offset;
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	++self->sp_meta.spm_status.sps_data.spsd_used;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	++self->sp_meta.spm_used;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	/* Freshly allocated location is at the far end of the (now smaller) free-area. */
 	return (byte_t *)self + hi_offset;
@@ -970,31 +1344,58 @@ fail:
 
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
-	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	struct Dee_slab const *slab = get_slab(n);
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	struct page_format const *fmt = get_page_format(n);
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
+	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
 	Dee_slab_page_builder_offset_t offsetof__p_from_self    = (Dee_slab_page_builder_offset_t)((byte_t *)p - (byte_t *)self);
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	Dee_slab_page_builder_offset_t offsetof__p_from_sp_data = offsetof__p_from_self - slab->s_specs.ps_sizeof__sp_used;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	Dee_slab_page_builder_offset_t offsetof__p_from_sp_data = offsetof__p_from_self - fmt->pf__sizeof__sp_used;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	size_t bitno_of__p_in_sp_used = offsetof__p_from_sp_data / (Dee_slab_page_builder_offset_t)n;
 	size_t indx_of__p_in_sp_used;
 	slab_bitword_t word_of__p_in_sp_used;
+
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	ASSERTF(offsetof__p_from_self >= slab->s_specs.ps_sizeof__sp_used,
+	        "Given 'p' is too close to the start of the page for this chunk-size");
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	ASSERTF(offsetof__p_from_self >= fmt->pf__sizeof__sp_used,
 	        "Given 'p' is too close to the start of the page for this chunk-size");
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	ASSERTF(offsetof__p_from_self >= self->sp_meta.spm_type.t_builder.spb_unused_hi,
 	        "Given 'p' is not in allocated area of page");
 	ASSERTF((offsetof__p_from_sp_data % (Dee_slab_page_builder_offset_t)n) == 0,
 	        "Given 'p' is incorrectly aligned for this chunk-size");
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	ASSERTF(bitno_of__p_in_sp_used < slab->s_specs.ps_chunkcount,
+	        "Given 'p' is too close to the end of the page for this chunk-size");
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	ASSERTF(bitno_of__p_in_sp_used < fmt->pf__max_chunk_count,
 	        "Given 'p' is too close to the end of the page for this chunk-size");
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	indx_of__p_in_sp_used = slab_bitword_indx(bitno_of__p_in_sp_used);
 	word_of__p_in_sp_used = slab_bitword_mask(bitno_of__p_in_sp_used);
 	ASSERTF(self__sp_used[indx_of__p_in_sp_used] & word_of__p_in_sp_used,
 	        "Given 'p' is not marked as allocated within this page");
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	ASSERTF(self->sp_meta.spm_status.sps_data.spsd_used, "Nothing marked as allocated");
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	ASSERTF(self->sp_meta.spm_used, "Nothing marked as allocated");
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	/* Mark the location as not-allocated within the slab's in-use bitset. */
 	self__sp_used[indx_of__p_in_sp_used] &= ~word_of__p_in_sp_used;
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	--self->sp_meta.spm_status.sps_data.spsd_used;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	--self->sp_meta.spm_used;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	/* If the given 'p' was most-recently allocated from 'self',
 	 * we can give back memory to the page's unused area. */
@@ -1011,7 +1412,22 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 #define _SLAB_COUNT_CB(n, _) +1
 #define SLAB_COUNT (0 Dee_SLAB_CHUNKSIZE_FOREACH(_SLAB_COUNT_CB, ~))
 
-LIST_HEAD(Dee_slab_page_list, Dee_slab_page);
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+PRIVATE struct Dee_slab *tpconst slabs[SLAB_COUNT] = {
+#define SLABS_INIT_CB(n, _) &slab##n,
+#ifndef __INTELLISENSE__
+	Dee_SLAB_CHUNKSIZE_FOREACH(SLABS_INIT_CB, ~)
+#endif /* !__INTELLISENSE__ */
+#undef SLABS_INIT_CB
+};
+
+
+PRIVATE NONNULL((1)) void DCALL
+check_slab(struct Dee_slab const *__restrict slab) {
+	/* TODO */
+	(void)slab;
+}
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 struct slab_spec {
 	struct pagespecs           const ss_specs;     /* Slab page specs */
 	struct Dee_slab_page_list *const ss_pages;     /* [1..1] LOCAL_slab_pages */
@@ -1054,7 +1470,7 @@ check_slab_page(struct slab_spec const *__restrict spec,
                 struct Dee_slab_page *__restrict self) {
 	size_t bitno, orig_used, real_used;
 	slab_bitword_t const *self__sp_used = (slab_bitword_t const *)self->sp_used_and_data;
-	byte_t const *self__sp_data    = (byte_t const *)self + spec->ss_specs.ps_sizeof__sp_used;
+	byte_t const *self__sp_data = (byte_t const *)self + spec->ss_specs.ps_sizeof__sp_used;
 again:
 	orig_used = atomic_read(&self->sp_meta.spm_used);
 	for (real_used = bitno = 0; bitno < spec->ss_specs.ps_chunkcount; ++bitno) {
@@ -1136,6 +1552,7 @@ check_slab(struct slab_spec const *__restrict spec) {
 	}
 	Dee_atomic_rwlock_endwrite(spec->ss_lock);
 }
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #endif /* SLAB_DEBUG_EXTERNAL */
 
 
@@ -1178,6 +1595,37 @@ INTERN void DCALL Dee_slab_leaks_release(void) {
  * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb' */
 #ifdef HAVE_Dee_slab_leaks_foreach_page
 #if SLAB_DEBUG_EXTERNAL
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+PRIVATE NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+Dee_slab_leaks_foreach_page__list(struct Dee_slab *slab,
+                                  struct Dee_slab_page_list *pages,
+                                  Dee_slab_leaks_page_cb_t cb, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	struct Dee_slab_page *page;
+	LIST_FOREACH (page, pages, sp_meta.spm_type.t_link) {
+		temp = (*cb)(arg, page, &slab->s_specs);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+Dee_slab_leaks_foreach_page__spec(struct Dee_slab *slab,
+                                  Dee_slab_leaks_page_cb_t cb, void *arg) {
+#if SLAB_TRACK_FULL_PAGES
+	Dee_ssize_t result = Dee_slab_leaks_foreach_page__list(slab, &slab->s_pages, cb, arg);
+	if likely(result >= 0) {
+		Dee_ssize_t temp = Dee_slab_leaks_foreach_page__list(slab, &slab->s_fullpages, cb, arg);
+		result = temp < 0 ? temp : (result + temp);
+	}
+	return result;
+#else /* SLAB_TRACK_FULL_PAGES */
+	return Dee_slab_leaks_foreach_page__list(slab, &slab->s_pages, cb, arg);
+#endif /* !SLAB_TRACK_FULL_PAGES */
+}
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 PRIVATE NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 Dee_slab_leaks_foreach_page__list(struct slab_spec const *spec,
                                   struct Dee_slab_page_list *pages,
@@ -1207,6 +1655,7 @@ Dee_slab_leaks_foreach_page__spec(struct slab_spec const *spec,
 	return Dee_slab_leaks_foreach_page__list(spec, spec->ss_pages, cb, arg);
 #endif /* !SLAB_TRACK_FULL_PAGES */
 }
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #endif /* SLAB_DEBUG_EXTERNAL */
 
 INTERN NONNULL((1)) Dee_ssize_t DCALL
@@ -1215,7 +1664,11 @@ Dee_slab_leaks_foreach_page(Dee_slab_leaks_page_cb_t cb, void *arg) {
 #if SLAB_DEBUG_EXTERNAL
 	size_t i;
 	for (i = 0; i < SLAB_COUNT; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+		Dee_ssize_t temp = Dee_slab_leaks_foreach_page__spec(slabs[i], cb, arg);
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 		Dee_ssize_t temp = Dee_slab_leaks_foreach_page__spec(&slab_specs[i], cb, arg);
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 		if unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -1233,8 +1686,13 @@ Dee_slab_leaks_foreach_page(Dee_slab_leaks_page_cb_t cb, void *arg) {
 INTERN void DCALL DeeSlab_CheckMemory(void) {
 #if SLAB_DEBUG_EXTERNAL
 	size_t i;
-	for (i = 0; i < SLAB_COUNT; ++i)
+	for (i = 0; i < SLAB_COUNT; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+		check_slab(slabs[i]);
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 		check_slab(&slab_specs[i]);
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
+	}
 #endif /* SLAB_DEBUG_EXTERNAL */
 }
 #endif /* HAVE_DeeSlab_CheckMemory */

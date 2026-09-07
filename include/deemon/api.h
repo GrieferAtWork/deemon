@@ -432,6 +432,18 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 
 /* Experimental feature switch:
+ * Use a different (lock-less) mechanism in slab allocators, that is  */
+#if (!defined(CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR))
+#if 0 /* TODO: Not fully tested (yet) */
+#define CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#else
+#define CONFIG_NO_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
+
+
+/* Experimental feature switch:
  * Use TPP3 as the compiler backend. This also controls the new compiler
  * (re-)implementation built on-top of TPP3 (iow: when this is enabled,
  * deemon uses a different compiler that with it is disabled) */

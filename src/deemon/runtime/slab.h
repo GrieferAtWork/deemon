@@ -99,7 +99,7 @@ struct chunkleak {
  * When `spm_leak == NULL || Dee_slab_page_iscustom()', no leak debug info is attached to
  * the slab page. */
 struct pageleaks {
-	/* XXX: "pl_chnksiz" and "pl_chnkcnt" are only never used by assertions -- maybe get rid of them? */
+	/* XXX: "pl_chnksiz" and "pl_chnkcnt" are only used by assertions -- maybe get rid of them? */
 	size_t pl_chnksiz; /* [const] Size of individual chunks within this leak page */
 	size_t pl_chnkcnt; /* [const] # of chunks in this page */
 	/* [lock(CALLER_IS_OWNER_OF_RELEVANT_CHUNK)]
@@ -114,6 +114,7 @@ struct pagespecs {
 	Dee_slab_page_builder_offset_t ps_sizeof__sp_used; /* Size of "sp_used" / offset of "sp_data" */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 #define PAGESPECS_INIT(n)                                                                \
 	{                                                                                    \
 		/* .ps_chunksize       = */ n,                                                   \
@@ -121,11 +122,13 @@ struct pagespecs {
 		/* .ps_sizeof__sp_used = */ CEILDIV(MAX_CHUNK_COUNT(n), BITSOF_slab_bitword_t) * \
 		/*                       */ SIZEOF_slab_bitword_t,                               \
 	}
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 
 /* Helper functions needed by "heap.c" to debug slab leaks */
 #ifndef NDEBUG
 
+#ifndef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 /* Try acquire write-locks to the locks of all slab allocators.
  * If at least one of those locks can't be acquired, release all
  * locks already acquired and return the blocking lock. */
@@ -134,6 +137,7 @@ INTDEF WUNUSED Dee_atomic_rwlock_t *DCALL Dee_slab_leaks_tryacquire(void);
 INTDEF void DCALL Dee_slab_leaks_release(void);
 #define HAVE_Dee_slab_leaks_tryacquire
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 /* Callback prototype for `Dee_slab_leaks_foreach_page()' */
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t

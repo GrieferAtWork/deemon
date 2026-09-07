@@ -269,6 +269,49 @@ struct Dee_slab_page_builder {
 	Dee_slab_page_builder_offset_t spb_unused_hi; /* byte-offset into page to end of unused memory */
 };
 
+
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+
+/* Slab page action codes.
+ * NOTE: to read/write `t_link.le_prev`, the calling thread must
+ *       have set one of these actions first. That field must be
+ *       considered as [lock(spsd_act != Dee_SLAB_PAGE_ACT_NONE)].
+ *       However, `t_link.le_next` must be treated as atomic, and
+ *       when a page is removed, its `le_next` may ONLY be changed
+ *       *AFTER* `DeeRCU_SynchronizeDefault()`, meaning any thread
+ *       can simply (forward-)enumerate pages of any list whilst
+ *       holding the RCU lock. */
+#define Dee_SLAB_PAGE_ACT_NONE   0x0000 /* No action */
+#define Dee_SLAB_PAGE_ACT_INSERT 0x0001 /* Page is being inserted into some list */
+#define Dee_SLAB_PAGE_ACT_REMOVE 0x0002 /* Page is being removed from some list */
+
+union Dee_slab_page_status {
+	uintptr_t sps_word; /* Status word (atomic) */
+	struct {
+		__UINTPTR_HALF_TYPE__ spsd_used; /* [<= LOCAL__MAX_CHUNK_COUNT] # of 1-bits in "sp_used" */
+		__UINTPTR_HALF_TYPE__ spsd_act;  /* Action currently being performed by some thread (one of `Dee_SLAB_PAGE_ACT_*`) */
+	} sps_data;
+};
+#define Dee_SLAB_PAGE_META_FIELDS(page_type)                                                                              \
+	void                      *spm_leak;   /* [0..1][const] Used internally for tracking memory leaks. The presence of    \
+	                                        * this field doesn't actually change the effective # of chunks fitting into   \
+	                                        * any given page for any of the defined slab sizes (in both 32- and 64-bit    \
+	                                        * mode), when compared to this field missing and metadata being 3 words.      \
+	                                        * Only valid/used in `Dee_slab_page_isnormal()' pages */                      \
+	union Dee_slab_page_status spm_status; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
+	                                        * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
+	union {                                                                                                               \
+		LIST_ENTRY(page_type)        t_link;   /* [0..1][lock(INTERNAL(LOCAL_slab_lock))]                                 \
+		                                        * [valid_if(Dee_slab_page_isnormal(:self))]                               \
+		                                        * Link in list of pages with free chunks. */                              \
+		struct {                                                                                                          \
+			/* [1..1][const] Custom callback to free this page once `spm_status.sps_data.spsd_used' hits `0' */           \
+			NONNULL_T((1)) void (DCALL *c_free)(struct page_type *__restrict self);                                       \
+			void                       *c_marker; /* [== Dee_SLAB_PAGE_META_CUSTOM_MARKER][const] */                      \
+		}                            t_custom;  /* [valid_if(Dee_slab_page_iscustom(:self))] */                           \
+		struct Dee_slab_page_builder t_builder; /* For when you're building a custom page */                              \
+	}       spm_type; /* Link/type of page */
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #define Dee_SLAB_PAGE_META_FIELDS(page_type)                                                         \
 	void   *spm_leak; /* [0..1][const] Used internally for tracking memory leaks. The presence of    \
 	                   * this field doesn't actually change the effective # of chunks fitting into   \
@@ -288,6 +331,7 @@ struct Dee_slab_page_builder {
 		}                            t_custom;  /* [valid_if(Dee_slab_page_iscustom(:self))] */      \
 		struct Dee_slab_page_builder t_builder; /* For when you're building a custom page */         \
 	}       spm_type; /* Link/type of page */
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 struct Dee_slab_page {
 	/* Slab page in-use bitset, followed by slab payload data.

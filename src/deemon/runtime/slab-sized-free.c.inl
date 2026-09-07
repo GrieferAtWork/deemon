@@ -24,7 +24,7 @@
 #include <deemon/api.h>
 
 #include <deemon/util/atomic.h> /* atomic_* */
-#include <deemon/util/slab.h>   /* Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_iscustom, Dee_slab_page_isnormal */
+#include <deemon/util/slab.h>   /* Dee_SLAB_*, Dee_slab_page, Dee_slab_page_* */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 
@@ -39,7 +39,12 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	size_t index;
 	size_t bit_indx;
 	slab_bitword_t bit_mask;
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+	union Dee_slab_page_status old_status;
+	union Dee_slab_page_status new_status;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	size_t old__spm_used;
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 	/* Figure out the slab-context of "p" */
 	page     = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
@@ -88,6 +93,60 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
 
 	/* Update the page's `spm_used' counter. */
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+again_read_status: /* TODO: Simplification under CONFIG_NO_THREADS */
+	old_status.sps_word = atomic_read(&page->sp_meta.spm_status.sps_word);
+	ASSERT(old_status.sps_data.spsd_used >= 1);
+	if (old_status.sps_data.spsd_used == 1) {
+		/* Last chunk of page is being deleted -> must remove from list of pages with free chunks */
+		if (Dee_slab_page_iscustom(page)) {
+			/* Invoke custom page-free callback */
+			(*page->sp_meta.spm_type.t_custom.c_free)(page);
+			return;
+		}
+
+		/* Only start a REMOVE operation if no other operation is happening */
+		if (old_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE) {
+			new_status.sps_data.spsd_used = 0;
+			new_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_REMOVE;
+			if (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+			                        old_status.sps_word, new_status.sps_word))
+				goto again_read_status;
+			/* Given `page` *must* be part of `s_pages` (as opposed to `s_fullpages`)
+			 * because its old action was `Dee_SLAB_PAGE_ACT_NONE`, which could have
+			 * only been the case if it's part of the correct list. */
+			slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page);
+			return;
+		}
+	} else if (old_status.sps_data.spsd_used == LOCAL_MAX_CHUNK_COUNT &&
+	           old_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE &&
+	           Dee_slab_page_isnormal(page)) {
+		/* Either INSERT into `s_pages`, or REMOVE from `s_fullpages` (and then INSERT into `s_pages`) */
+		new_status.sps_data.spsd_used = LOCAL_MAX_CHUNK_COUNT - 1;
+#if SLAB_TRACK_FULL_PAGES
+		new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE; /* Remove from `s_fullpages` */
+#else /* SLAB_TRACK_FULL_PAGES */
+		new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_INSERT; /* Insert into `s_pages` */
+#endif /* !SLAB_TRACK_FULL_PAGES */
+		if (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+		                        old_status.sps_word, new_status.sps_word))
+			goto again_read_status;
+#if SLAB_TRACK_FULL_PAGES
+		slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_fullpages, (struct Dee_slab_page *)page);
+#else /* SLAB_TRACK_FULL_PAGES */
+		slab_act_insert(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page);
+#endif /* !SLAB_TRACK_FULL_PAGES */
+		return;
+	}
+
+	/* Update "used" counter, but don't have to do
+	 * anything else (no action needs to be started) */
+	new_status.sps_data.spsd_used = old_status.sps_data.spsd_used - 1;
+	new_status.sps_data.spsd_act  = old_status.sps_data.spsd_act; /* Keep current action (or `Dee_SLAB_PAGE_ACT_NONE`) going */
+	if (!atomic_cmpxch_weak(&page->sp_meta.spm_status.sps_word,
+	                        old_status.sps_word, new_status.sps_word))
+		goto again_read_status;
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	slab_assert(page->sp_meta.spm_type.t_link.le_next != page);
 	do {
 again_read__spm_used:
@@ -129,7 +188,7 @@ again_read__spm_used:
 			 * be the case when this is a dec chunk, but in that case, we simply
 			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
 			 * anything with it below) */
-			LOCAL_slab_lock_write(); /* TODO: This lock is a MAJOR bottleneck in heavily parallel programs (15%) */
+			LOCAL_slab_lock_write(); /* XXX: This lock is a MAJOR bottleneck in heavily parallel programs (15%) */
 			if unlikely(!atomic_cmpxch(&page->sp_meta.spm_used,
 			                           LOCAL_MAX_CHUNK_COUNT,
 			                           LOCAL_MAX_CHUNK_COUNT - 1)) {
@@ -145,6 +204,7 @@ again_read__spm_used:
 			break;
 		}
 	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_used, old__spm_used, old__spm_used - 1));
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 }
 
 DECL_END

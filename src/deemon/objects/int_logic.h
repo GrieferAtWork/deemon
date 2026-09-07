@@ -71,8 +71,10 @@ DECL_BEGIN
 
 /* Config: use slab allocators for (small) integers */
 #undef CONFIG_USE_SLABS_FOR_INTEGERS
-#if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2 && 0 /* TODO: Disabled until the "LOCAL_slab_lock" bottleneck is fixed */
+#if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR /* Also works without, but the old (locking) slab allocators are actually *slower* than using HEAP in heavy SMP */
 #define CONFIG_USE_SLABS_FOR_INTEGERS
+#endif /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #endif /* ... */
 
 

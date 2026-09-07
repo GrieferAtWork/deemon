@@ -51,9 +51,13 @@
 /* Local symbol names */
 #define LOCAL_slab_page               LOCAL_SYM(slab_page)
 #define LOCAL_slab_page_list          LOCAL_SYM(slab_page_list)
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#define LOCAL_slab                    LOCAL_SYM(slab)
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #define LOCAL_slab_pages              LOCAL_SYM(slab_pages)
 #define LOCAL_slab_fullpages          LOCAL_SYM(slab_fullpages)
 #define LOCAL_slab_lock               LOCAL_SYM(slab_lock)
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #define LOCAL_slab_malloc_in_page     LOCAL_SYM(slab_malloc_in_page)
 #define LOCAL__DeeSlab_Malloc         LOCAL_SYM(DeeSlab_Malloc)
 #define LOCAL__DeeSlab_Calloc         LOCAL_SYM(DeeSlab_Calloc)
@@ -108,6 +112,11 @@ DECL_BEGIN
 #define LOCAL_BITSOF__sp_used (LOCAL_ELEMOF__sp_used * BITSOF_slab_bitword_t)
 #define LOCAL_SIZEOF__sp_pad  (Dee_SLAB_PAGESIZE - (Dee_SIZEOF_SLAB_PAGE_META + LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data))
 
+/* Calculate the last-word mask for "sp_used" */
+#define LOCAL_sp_used__UNUSED_TRAILING_BITS (LOCAL_BITSOF__sp_used - LOCAL_MAX_CHUNK_COUNT)
+#define LOCAL_sp_used__USED_TRAILING_BITS   (BITSOF_slab_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
+#define LOCAL_sp_used__LAST_USED_MASK       ((SLAB_BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
+
 /* Sanity check the calculation above */
 STATIC_ASSERT(LOCAL_BITSOF__sp_used == (LOCAL_SIZEOF__sp_used * __CHAR_BIT__));
 STATIC_ASSERT(LOCAL_SIZEOF__sp_data == (LOCAL_MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE));
@@ -138,47 +147,6 @@ STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_meta) == Dee_OFFSET_SLAB_PAGE_
 STATIC_ASSERT(sizeof(((struct LOCAL_slab_page *)0)->sp_meta) == Dee_SIZEOF_SLAB_PAGE_META);
 
 LIST_HEAD(LOCAL_slab_page_list, LOCAL_slab_page);
-
-/* Lock for this specific slab-size */
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t LOCAL_slab_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-
-#define LOCAL_slab_lock_reading()    Dee_atomic_rwlock_reading(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_writing()    Dee_atomic_rwlock_writing(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_tryread()    Dee_atomic_rwlock_tryread(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_trywrite()   Dee_atomic_rwlock_trywrite(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_canread()    Dee_atomic_rwlock_canread(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_canwrite()   Dee_atomic_rwlock_canwrite(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_waitread()   Dee_atomic_rwlock_waitread(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_read()       Dee_atomic_rwlock_read(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_write()      Dee_atomic_rwlock_write(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_upgrade()    Dee_atomic_rwlock_upgrade(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_downgrade()  Dee_atomic_rwlock_downgrade(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_endwrite()   Dee_atomic_rwlock_endwrite(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_endread()    Dee_atomic_rwlock_endread(&LOCAL_slab_lock)
-#define LOCAL_slab_lock_end()        Dee_atomic_rwlock_end(&LOCAL_slab_lock)
-
-
-/* [0..n][lock(LOCAL_slab_lock)] Pages containing at least 1 free, and at least 1 allocated chunk.
- * - fully allocated pages are only tracked when 'SLAB_TRACK_FULL_PAGES' is enabled
- * - fully free pages are stored in a global free-list (so they can be used by all slab allocators) */
-PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOCAL_slab_pages);
-
-#if SLAB_TRACK_FULL_PAGES
-/* [0..n][lock(LOCAL_slab_lock)] Pages that are fully allocated (`spm_used == LOCAL_MAX_CHUNK_COUNT') */
-PRIVATE struct LOCAL_slab_page_list LOCAL_slab_fullpages = LIST_HEAD_INITIALIZER(LOCAL_slab_fullpages);
-#endif /* SLAB_TRACK_FULL_PAGES */
-
-
-/* Calculate the last-word mask for "sp_used" */
-#define LOCAL_sp_used__UNUSED_TRAILING_BITS (LOCAL_BITSOF__sp_used - LOCAL_MAX_CHUNK_COUNT)
-#define LOCAL_sp_used__USED_TRAILING_BITS   (BITSOF_slab_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
-#define LOCAL_sp_used__LAST_USED_MASK       ((SLAB_BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
-
-
 
 /* Helper function to find+allocate a previously reserved chunk within a given slab page. */
 PRIVATE WUNUSED NONNULL((1)) void *DCALL
@@ -298,6 +266,86 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 #undef LOCAL_alloc_in_word
 #undef LOCAL_maskfor
 }
+
+LOCAL_DECL void *DCALL
+LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
+	(void)file;
+	(void)line;
+#if SLAB_DEBUG_LEAKS
+	if likely(p != NULL) {
+		struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
+		size_t offset = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
+		size_t index = offset / DEFINE_CHUNK_SIZE;
+#if SLAB_DEBUG_EXTERNAL
+		size_t bit_indx = index / BITSOF_slab_bitword_t;
+		slab_bitword_t bit_mask = (slab_bitword_t)1 << (index % BITSOF_slab_bitword_t);
+		if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {
+			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
+			                  "Badly aligned slab pointer: %p", p);
+		}
+		if unlikely((atomic_read(&page->sp_used[bit_indx]) & bit_mask) == 0) {
+			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
+			                  "Pointer not allocated: %p", p);
+		}
+#endif /* SLAB_DEBUG_EXTERNAL */
+		/* Detach debug info from normal slab pages. */
+		if (Dee_slab_page_isnormal(page)) {
+			p = dbg_slab__detach((struct Dee_slab_page *)page, p,
+			                     DEFINE_CHUNK_SIZE, index, file, line);
+		}
+	}
+#endif /* SLAB_DEBUG_LEAKS */
+	return p;
+}
+
+
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+PRIVATE struct Dee_slab LOCAL_slab = {
+	/* .s_pages     = */ LIST_HEAD_INITIALIZER(&LOCAL_slab.s_pages),
+#if SLAB_TRACK_FULL_PAGES
+	/* .s_fullpages = */ LIST_HEAD_INITIALIZER(&LOCAL_slab.s_fullpages),
+#endif /* SLAB_TRACK_FULL_PAGES */
+	/* .s_specs     = */ {
+		/* .ps_chunksize       = */ DEFINE_CHUNK_SIZE,
+		/* .ps_chunkcount      = */ LOCAL_MAX_CHUNK_COUNT,
+		/* .ps_sizeof__sp_used = */ LOCAL_SIZEOF__sp_used,
+	}
+};
+
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
+/* Lock for this specific slab-size */
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_rwlock_t LOCAL_slab_lock = Dee_ATOMIC_RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+
+#define LOCAL_slab_lock_reading()    Dee_atomic_rwlock_reading(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_writing()    Dee_atomic_rwlock_writing(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_tryread()    Dee_atomic_rwlock_tryread(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_trywrite()   Dee_atomic_rwlock_trywrite(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_canread()    Dee_atomic_rwlock_canread(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_canwrite()   Dee_atomic_rwlock_canwrite(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_waitread()   Dee_atomic_rwlock_waitread(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_read()       Dee_atomic_rwlock_read(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_write()      Dee_atomic_rwlock_write(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_upgrade()    Dee_atomic_rwlock_upgrade(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_downgrade()  Dee_atomic_rwlock_downgrade(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_endwrite()   Dee_atomic_rwlock_endwrite(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_endread()    Dee_atomic_rwlock_endread(&LOCAL_slab_lock)
+#define LOCAL_slab_lock_end()        Dee_atomic_rwlock_end(&LOCAL_slab_lock)
+
+/* [0..n][lock(LOCAL_slab_lock)] Pages containing at least 1 free, and at least 1 allocated chunk.
+ * - fully allocated pages are only tracked when 'SLAB_TRACK_FULL_PAGES' is enabled
+ * - fully free pages are stored in a global free-list (so they can be used by all slab allocators) */
+PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOCAL_slab_pages);
+
+#if SLAB_TRACK_FULL_PAGES
+/* [0..n][lock(LOCAL_slab_lock)] Pages that are fully allocated (`spm_used == LOCAL_MAX_CHUNK_COUNT') */
+PRIVATE struct LOCAL_slab_page_list LOCAL_slab_fullpages = LIST_HEAD_INITIALIZER(LOCAL_slab_fullpages);
+#endif /* SLAB_TRACK_FULL_PAGES */
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
+
 
 
 /* Select primary malloc implementation */
@@ -456,38 +504,6 @@ DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 
-
-LOCAL_DECL void *DCALL
-LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
-	(void)file;
-	(void)line;
-#if SLAB_DEBUG_LEAKS
-	if likely(p != NULL) {
-		struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
-		size_t offset = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
-		size_t index = offset / DEFINE_CHUNK_SIZE;
-#if SLAB_DEBUG_EXTERNAL
-		size_t bit_indx = index / BITSOF_slab_bitword_t;
-		slab_bitword_t bit_mask = (slab_bitword_t)1 << (index % BITSOF_slab_bitword_t);
-		if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {
-			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
-			                  "Badly aligned slab pointer: %p", p);
-		}
-		if unlikely((atomic_read(&page->sp_used[bit_indx]) & bit_mask) == 0) {
-			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
-			                  "Pointer not allocated: %p", p);
-		}
-#endif /* SLAB_DEBUG_EXTERNAL */
-		/* Detach debug info from normal slab pages. */
-		if (Dee_slab_page_isnormal(page)) {
-			p = dbg_slab__detach((struct Dee_slab_page *)page, p,
-			                     DEFINE_CHUNK_SIZE, index, file, line);
-		}
-	}
-#endif /* SLAB_DEBUG_LEAKS */
-	return p;
-}
-
 #ifndef __INTELLISENSE__
 #undef LOCAL_MAX_CHUNK_COUNT
 #undef LOCAL_ELEMOF__sp_used
@@ -496,6 +512,7 @@ LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
 #undef LOCAL_BITSOF__sp_used
 #undef LOCAL_SIZEOF__sp_pad
 
+#ifndef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 #undef LOCAL_slab_lock_reading
 #undef LOCAL_slab_lock_writing
 #undef LOCAL_slab_lock_tryread
@@ -512,6 +529,7 @@ LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
 #undef LOCAL_slab_lock_endwrite
 #undef LOCAL_slab_lock_endread
 #undef LOCAL_slab_lock_end
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #endif /* !__INTELLISENSE__ */
 
 DECL_END
@@ -519,9 +537,13 @@ DECL_END
 #ifndef __INTELLISENSE__
 #undef LOCAL_slab_page
 #undef LOCAL_slab_page_list
+#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#undef LOCAL_slab
+#else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #undef LOCAL_slab_pages
 #undef LOCAL_slab_fullpages
 #undef LOCAL_slab_lock
+#endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #undef LOCAL_slab_malloc_in_page
 #undef LOCAL__DeeSlab_Malloc
 #undef LOCAL__DeeSlab_Calloc
