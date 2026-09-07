@@ -432,7 +432,9 @@ again:
 		             "are still adjacent and because `Dee_SLAB_PAGE_ACT_REMOVE` is "
 		             "set for both pages.");
 
-		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
+		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next`
+		 * This can't dead-lock because `page` still has an on-going action, because
+		 * we've just made it so `page` isn't visible from `list` anymore! */
 		slab_act_remove_abort(slab, list, next);
 
 		/* Because `page` is visible until RCU sync below, another thread may still be
@@ -557,8 +559,8 @@ again:
 					/* All pages have active actions, so have to wait a bit and try again :(
 					 *
 					 * You might think we'd be able to simply append `page` to the end of the
-					 * list (as is done in the "first page" case above), but that would cause
-					 * problems:
+					 * list (iow: `p_prev`, as is done in the "first page" case above), but
+					 * that would cause problems:
 					 * - Because the second-to-last page is currently being removed, *it* may
 					 *   have already noticed that its `t_link.le_next == NULL`, and entered
 					 *   the associated branch in `slab_act_remove()`
@@ -605,6 +607,26 @@ unlock_rcu_and_abort_remove_in_next:
 		DeeRCU_UnlockDefault();
 
 		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
+		/* FIXME: If this recurses like in:
+		 * >> slab_act_remove_abort()
+		 * >> slab_act_remove()
+		 * >> slab_act_insert()
+		 *
+		 * And discover our own `page` as the only successor-candidate in `slab_act_insert()`
+		 * (meaning that `page` is the only page in `slab->s_pages`), it will notice that our
+		 * `page` still has an on-going action (the `Dee_SLAB_PAGE_ACT_INSERT` originally
+		 * started by our caller).
+		 *
+		 * When that happens, the system enters a dead-lock state, because we will start
+		 * waiting for ourselves to finish said `Dee_SLAB_PAGE_ACT_INSERT` action, which
+		 * all other threads are going to join us in waiting for soon after:
+		 * - Everything will then wait in one of the `SCHED_YIELD()` loops in `slab_act_insert()`
+		 *
+		 * NOTE: nothing will dead-lock in `slab_act_remove()`, because:
+		 * - the only thread that could dead-lock there would be the one trying to remove the
+		 *   predecessor of `page`. But: `page` can't have a predecessor, since that would mean
+		 *   that there are other successor candidates, which would solve the dead-lock.
+		 */
 		slab_act_remove_abort(slab, list, next);
 	}
 
