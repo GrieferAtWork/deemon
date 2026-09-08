@@ -5142,7 +5142,7 @@ PRIVATE char const thread_doc[] =
 "(name:?Dstring)\n"
 "(main:?DCallable,args:?DTuple=!N)\n"
 "(name:?Dstring,main:?DCallable,args:?DTuple=!N)\n"
-"Construct a new thread that that has yet to be started.\n"
+"Construct a new thread that has yet to be started.\n"
 "When no @main callable has been provided, invoke a $run "
 /**/ "member which must be implemented by a sub-class:\n"
 "${"

@@ -95,7 +95,7 @@ again_read_page_status:
 				slab_assert(new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_REMOVE);
 				slab_act_remove(&LOCAL_slab,
 				                (struct Dee_slab_page_list *)list,
-				                (struct Dee_slab_page *)page);
+				                (struct Dee_slab_page *)page, NULL);
 			}
 
 			/* Since we were able to increment "spm_used", that also means that the page
@@ -186,7 +186,7 @@ again_locked:
 #ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 	page->sp_meta.spm_status.sps_data.spsd_used = 1;
 	page->sp_meta.spm_status.sps_data.spsd_act  = Dee_SLAB_PAGE_ACT_INSERT;
-	slab_act_insert(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page);
+	slab_act_insert(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page, NULL);
 #else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	page->sp_meta.spm_used = 1;
 	/* In theory, this lock acquire could be made non-blocking

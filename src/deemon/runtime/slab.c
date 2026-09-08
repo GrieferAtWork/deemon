@@ -319,20 +319,65 @@ struct Dee_slab {
 
 /* TODO: Simplification under CONFIG_NO_THREADS */
 
+/* Parameters:
+ *
+ * =========== `implicitly_locked` ===========
+ * An optional page which is implicitly locked under very special
+ * circumstances, where it is required to prevent a deadlock scenario:
+ *
+ * Consider the `slab_act_remove_abort()` call in `slab_act_insert()`.
+ * If this call like this:
+ * >> slab_act_remove_abort()
+ * >> slab_act_remove()
+ * >> slab_act_insert()
+ *
+ * And discover our own `page` as the only successor-candidate in `slab_act_insert()`
+ * (meaning that `page` is the only page in `slab->s_pages`), it will notice that our
+ * `page` still has an on-going action (the `Dee_SLAB_PAGE_ACT_INSERT` originally
+ * started by our caller).
+ *
+ * When that happens, the system enters a dead-lock state, because we will start
+ * waiting for ourselves to finish said `Dee_SLAB_PAGE_ACT_INSERT` action, which
+ * all other threads are going to join us in waiting for soon after:
+ * - Everything will then wait in one of the `SCHED_YIELD()` loops in `slab_act_insert()`
+ *
+ * NOTE: nothing will dead-lock in `slab_act_remove()`, because:
+ * - the only thread that could dead-lock there would be the one trying to remove the
+ *   predecessor of `page`. But: `page` can't have a predecessor, since that would mean
+ *   that there are other successor candidates, which would solve the dead-lock.
+ *
+ * To prevent that dead-lock, `implicitly_locked` is passed along those calls, and
+ * if the nested `slab_act_insert()` detects the original `slab_act_insert()`s `page`
+ * as a successor-candidate, it will just insert its before that page, without trying
+ * to start an(other) `Dee_SLAB_PAGE_ACT_REMOVE` action (which would dead-lock)
+ *
+ * HINT: The same thing can't happen when `slab_act_remove()` because:
+ * - The deadlock only happens when there is only a single page in the slab's page-list
+ *   (and when removing a page from said list, that page being the last page is already
+ *   a special case which doesn't require any extra locking)
+ * - When needing to abort a remove operation after having removing the requested page,
+ *   the nested `slab_act_remove_abort()` in `slab_act_remove()` will never be able to
+ *   meet the still-locked `page` of that `slab_act_remove()`, since that page is no
+ *   longer reachable from the slab's list of pages (as is the entire purpose of the
+ *   `slab_act_remove()` operation in the first place) */
+
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 slab_act_remove(struct Dee_slab *slab,
                 struct Dee_slab_page_list *list,
-                struct Dee_slab_page *__restrict page);
+                struct Dee_slab_page *__restrict page,
+                struct Dee_slab_page *implicitly_locked);
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 slab_act_insert(struct Dee_slab *slab,
                 struct Dee_slab_page_list *list,
-                struct Dee_slab_page *__restrict page);
+                struct Dee_slab_page *__restrict page,
+                struct Dee_slab_page *implicitly_locked);
 
 /* Abort a (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation on `page` that was found in `list`. */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 slab_act_remove_abort(struct Dee_slab *slab,
                       struct Dee_slab_page_list *list,
-                      struct Dee_slab_page *__restrict page) {
+                      struct Dee_slab_page *__restrict page,
+                      struct Dee_slab_page *implicitly_locked) {
 	union Dee_slab_page_status old_status;
 	union Dee_slab_page_status new_status;
 	do {
@@ -358,7 +403,7 @@ slab_act_remove_abort(struct Dee_slab *slab,
 	                             old_status.sps_word, new_status.sps_word));
 	return;
 do_remove_proper:
-	slab_act_remove(slab, list, page); /* Compiler should tail-call this one */
+	slab_act_remove(slab, list, page, implicitly_locked); /* Compiler should tail-call this one */
 }
 
 /* Complete `Dee_SLAB_PAGE_ACT_REMOVE` by removing `page` from `list`, and
@@ -367,7 +412,8 @@ do_remove_proper:
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 slab_act_remove(struct Dee_slab *slab,
                 struct Dee_slab_page_list *list,
-                struct Dee_slab_page *__restrict page) {
+                struct Dee_slab_page *__restrict page,
+                struct Dee_slab_page *implicitly_locked) {
 	union Dee_slab_page_status old_status;
 	union Dee_slab_page_status new_status;
 	struct Dee_slab_page **p_prev;
@@ -420,7 +466,7 @@ again:
 		/* Read/write access to `t_link.le_prev` of `next` gained -> proceed */
 		if unlikely(next->sp_meta.spm_type.t_link.le_prev !=
 		            &page->sp_meta.spm_type.t_link.le_next) {
-			slab_act_remove_abort(slab, list, next);
+			slab_act_remove_abort(slab, list, next, implicitly_locked);
 			goto again;
 		}
 		next->sp_meta.spm_type.t_link.le_prev = p_prev; /* PREV_OF(NEXT) = PREV */
@@ -435,7 +481,7 @@ again:
 		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next`
 		 * This can't dead-lock because `page` still has an on-going action, because
 		 * we've just made it so `page` isn't visible from `list` anymore! */
-		slab_act_remove_abort(slab, list, next);
+		slab_act_remove_abort(slab, list, next, implicitly_locked);
 
 		/* Because `page` is visible until RCU sync below, another thread may still be
 		 * using `page` to enumerate the pages that (used to) follow it. To make it
@@ -516,14 +562,15 @@ again:
 		return;
 	slab_assert(list == &slab->s_pages);
 #endif /* !SLAB_TRACK_FULL_PAGES */
-	slab_act_insert(slab, list, page); /* Compiler should tail-call this one */
+	slab_act_insert(slab, list, page, implicitly_locked); /* Compiler should tail-call this one */
 }
 
 /* Complete `Dee_SLAB_PAGE_ACT_INSERT` by inserting `page` into `list` */
-PRIVATE NONNULL((1, 2)) void DCALL
+PRIVATE NONNULL((1, 2, 3)) void DCALL
 slab_act_insert(struct Dee_slab *slab,
                 struct Dee_slab_page_list *list,
-                struct Dee_slab_page *__restrict page) {
+                struct Dee_slab_page *__restrict page,
+                struct Dee_slab_page *implicitly_locked) {
 	union Dee_slab_page_status old_status;
 	union Dee_slab_page_status new_status;
 	struct Dee_slab_page *next;
@@ -551,11 +598,30 @@ again:
 			next_old_status.sps_word = atomic_read(&next->sp_meta.spm_status.sps_word);
 			next_new_status.sps_word = next_old_status.sps_word;
 			if (next_new_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE) {
+				struct Dee_slab_page **next_p_prev;
+
 				/* Find another successor that (hopefully) doesn't have an on-going operation.
 				 * -> Pages won't be destroyed because we're holding an RCU lock! */
-				p_prev = &next->sp_meta.spm_type.t_link.le_next;
-				next   = atomic_read(p_prev);
+				next_p_prev = &next->sp_meta.spm_type.t_link.le_next;
+				next = atomic_read(next_p_prev);
 				if (next == NULL) {
+					next = container_of(next_p_prev, struct Dee_slab_page, sp_meta.spm_type.t_link.le_next);
+					if unlikely(next == implicitly_locked) {
+						/* Special case: this page is "implicitly_locked" */
+						if likely(next->sp_meta.spm_type.t_link.le_prev == p_prev) {
+							page->sp_meta.spm_type.t_link.le_prev = p_prev;
+							next->sp_meta.spm_type.t_link.le_prev = &page->sp_meta.spm_type.t_link.le_next;
+							atomic_write(&page->sp_meta.spm_type.t_link.le_next, next);
+							if likely(atomic_cmpxch_weak(p_prev, next, page)) { /* <<< This makes `page` visible (on success) */
+								DeeRCU_UnlockDefault();
+								goto do_complete_action;
+							}
+
+							/* Another thread may have been faster at inserting :( */
+							next->sp_meta.spm_type.t_link.le_prev = p_prev;
+						}
+					}
+
 					/* All pages have active actions, so have to wait a bit and try again :(
 					 *
 					 * You might think we'd be able to simply append `page` to the end of the
@@ -571,6 +637,7 @@ again:
 					SCHED_YIELD();
 					goto again;
 				}
+				p_prev = next_p_prev;
 				continue;
 			}
 			next_new_status.sps_data.spsd_act = Dee_SLAB_PAGE_ACT_REMOVE;
@@ -590,7 +657,7 @@ again:
 		if unlikely(next->sp_meta.spm_type.t_link.le_prev != p_prev) {
 unlock_rcu_and_abort_remove_in_next:
 			DeeRCU_UnlockDefault(); /* Don't need RCU since `Dee_SLAB_PAGE_ACT_REMOVE` keeps `next` alive! */
-			slab_act_remove_abort(slab, list, next);
+			slab_act_remove_abort(slab, list, next, implicitly_locked);
 			goto again;
 		}
 		page->sp_meta.spm_type.t_link.le_prev = p_prev;
@@ -606,8 +673,9 @@ unlock_rcu_and_abort_remove_in_next:
 		/* Success! the given `page` has been inserted before `next` */
 		DeeRCU_UnlockDefault();
 
-		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next` */
-		/* FIXME: If this recurses like in:
+		/* Complete the (fake) `Dee_SLAB_PAGE_ACT_REMOVE` operation started on `next`
+		 *
+		 * WARNING: If this recurses like in:
 		 * >> slab_act_remove_abort()
 		 * >> slab_act_remove()
 		 * >> slab_act_insert()
@@ -626,9 +694,13 @@ unlock_rcu_and_abort_remove_in_next:
 		 * - the only thread that could dead-lock there would be the one trying to remove the
 		 *   predecessor of `page`. But: `page` can't have a predecessor, since that would mean
 		 *   that there are other successor candidates, which would solve the dead-lock.
+		 *
+		 * Solve this problem by remembering that `page` is "implicitly_locked"
 		 */
-		slab_act_remove_abort(slab, list, next);
+		slab_act_remove_abort(slab, list, next, page);
 	}
+
+do_complete_action:
 
 	/* Now that the caller's `page` was inserted, we must try to change its current
 	 * action code from `Dee_SLAB_PAGE_ACT_INSERT` to `Dee_SLAB_PAGE_ACT_NONE`, thus
@@ -683,7 +755,7 @@ unlock_rcu_and_abort_remove_in_next:
 	slab_assert(new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_NONE ||
 	            new_status.sps_data.spsd_act == Dee_SLAB_PAGE_ACT_REMOVE);
 	if (new_status.sps_data.spsd_act != Dee_SLAB_PAGE_ACT_NONE)
-		slab_act_remove(slab, list, page); /* Compiler should tail-call this one */
+		slab_act_remove(slab, list, page, implicitly_locked); /* Compiler should tail-call this one */
 }
 #endif /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 

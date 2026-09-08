@@ -189,8 +189,7 @@ class Header {
 	@@Filename of this header (for forming relative/system include strings)
 	public member filename: string | none = none;
 
-	@@Raw #include-string that must be written after `#include ...`
-	@@When set to @none, the #include string is determined automatically
+	@@Raw #include-strings that must be written after `#include ...`
 	public member includes: Set with string = HashSet();
 
 	@@Disable use-comments for keywords from @exports from this @Header and included by source files

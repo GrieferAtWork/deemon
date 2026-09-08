@@ -231,7 +231,7 @@ print barfoo;
 }
 
 
-/* You may have already noticed that that both
+/* You may have already noticed that both
  * global and local variables can be unbound: */
 {
 	local x;

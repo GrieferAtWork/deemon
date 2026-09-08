@@ -115,7 +115,7 @@ again_read_status: /* TODO: Simplification under CONFIG_NO_THREADS */
 			/* Given `page` *must* be part of `s_pages` (as opposed to `s_fullpages`)
 			 * because its old action was `Dee_SLAB_PAGE_ACT_NONE`, which could have
 			 * only been the case if it's part of the correct list. */
-			slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page);
+			slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page, NULL);
 			return;
 		}
 	} else if (old_status.sps_data.spsd_used == LOCAL_MAX_CHUNK_COUNT &&
@@ -132,9 +132,9 @@ again_read_status: /* TODO: Simplification under CONFIG_NO_THREADS */
 		                        old_status.sps_word, new_status.sps_word))
 			goto again_read_status;
 #if SLAB_TRACK_FULL_PAGES
-		slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_fullpages, (struct Dee_slab_page *)page);
+		slab_act_remove(&LOCAL_slab, &LOCAL_slab.s_fullpages, (struct Dee_slab_page *)page, NULL);
 #else /* SLAB_TRACK_FULL_PAGES */
-		slab_act_insert(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page);
+		slab_act_insert(&LOCAL_slab, &LOCAL_slab.s_pages, (struct Dee_slab_page *)page, NULL);
 #endif /* !SLAB_TRACK_FULL_PAGES */
 		return;
 	}
