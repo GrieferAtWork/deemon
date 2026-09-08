@@ -72,7 +72,13 @@ DECL_BEGIN
 /* Config: use slab allocators for (small) integers */
 #undef CONFIG_USE_SLABS_FOR_INTEGERS
 #if defined(Dee_INT_SLAB_MAXDIGITS) && Dee_INT_SLAB_MAXDIGITS >= 2
-#ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR /* Also works without, but the old (locking) slab allocators are actually *slower* than using HEAP in heavy SMP */
+/* TODO: Even with the new `CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR` slab allocator,
+ *       integer allocation using slab allocators is a *tiny* bit slower than simply
+ *       using heap memory for all sizes of integers... Do some further investigation
+ *       as to why that might be the case... */
+#if defined(CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR) && 0
+/* Also works without, but the old (locking) slab allocators
+ * are actually *slower* than using HEAP in heavy SMP */
 #define CONFIG_USE_SLABS_FOR_INTEGERS
 #endif /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 #endif /* ... */

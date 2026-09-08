@@ -432,10 +432,15 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 
 /* Experimental feature switch:
- * Use a different (lock-less) mechanism in slab allocators, that is  */
+ * Use a different (lock-less) mechanism in slab allocators, that is
+ * far better at dealing with lots of different threads making alloc
+ * and free operations, constantly causing pages to be filled/freed.
+ *
+ * TODO: Before enabling this permanently, implement `check_slab()`,
+ *       as needed for `DeeSlab_CheckMemory()` */
 #if (!defined(CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR) && \
      !defined(CONFIG_NO_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR))
-#if 0 /* TODO: Not fully tested (yet) */
+#if 0 /* TODO: Enable me once feature-parity is reached */
 #define CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 #else
 #define CONFIG_NO_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
