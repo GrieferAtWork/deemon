@@ -1698,6 +1698,33 @@ next_keyword:;
 					throw Error(f"Bad value for 'missingIncludeFormat': {repr config.missingIncludeFormat}");
 				}
 			}
+#if 0 /* TODO: randomly triggers */
+			if (missingIncludeString.startswith('"kos-headers/')) {
+				import SharedLock from threading;
+				static local lock = SharedLock();
+				with (lock) {
+					with (local fp = File.open("out.txt")) {
+						local oldOut = File.stdout;
+						try {
+							File.stdout = fp;
+							print "config:", repr config;
+							print "systemIncludeString:", repr systemIncludeString;
+							print "relativeIncludePath:", repr relativeIncludePath;
+							for (local inc: missingHeader.includes)
+								print "missingHeader.includes:", repr inc;
+							print "missingHeader:", repr missingHeader;
+							fixIncludes.dumpHeaders();
+						} finally {
+							File.stdout = oldOut;
+						}
+					}
+					for (;;) {
+						import Thread from deemon;
+						Thread.sleep(99999999);
+					}
+				}
+			}
+#endif
 			local comment: string | none = none;
 			if (!missingHeader.noIncludeComments) {
 				local usedKwds = HashSet();

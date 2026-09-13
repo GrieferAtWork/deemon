@@ -1419,6 +1419,7 @@ done:
 
 #ifndef NDEBUG
 #ifndef CONFIG_ALWAYS_LOG_LEAKS
+//	_Dee_dprint_enabled = 1;
 	_Dee_dprint("");
 #ifdef CONFIG_HOST_WINDOWS
 	if (_Dee_dprint_enabled != 0 || IsDebuggerPresent())

@@ -327,9 +327,9 @@ typedef struct Dee_thread_object {
 	                                              * to-be executed in the context of this thread. */
 #ifndef CONFIG_NO_THREADS
 #ifdef GUARD_DEEMON_RUNTIME_THREAD_C
-	union _Dee_bool_pair          *t_bools;      /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	union _Dee_bool_pair          *t_bools;      /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true` constants (see `Dee_CONFIG_BOOL_TLS`) */
 #else /* GUARD_DEEMON_RUNTIME_THREAD_C */
-	union _Dee_bool_pair    *const t_bools;   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	union _Dee_bool_pair    *const t_bools;   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true` constants (see `Dee_CONFIG_BOOL_TLS`) */
 #endif /* !GUARD_DEEMON_RUNTIME_THREAD_C */
 #define Dee_thread_rcuvers_t __UINT_FAST32_TYPE__
 #define Dee_thread_intvers_t __UINT_FAST32_TYPE__

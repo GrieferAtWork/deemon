@@ -301,13 +301,45 @@ LIST_HEAD(Dee_slab_page_list, Dee_slab_page);
 
 #ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 struct Dee_slab {
+	/* TODO: Slab page caches can't be global!
+	 *
+	 * When lots of threads all allocate/free slab chunks at the same time
+	 * for use by temporary objects, they'll all constantly perform atomic
+	 * operations on the same (very small) set of pages. Specifically:
+	 * - `page->sp_meta.spm_status.sps_word`  (because `spsd_used` needs to be kept up-to-date)
+	 * - `page->sp_used`                      (because allocated chunks need to be marked as such)
+	 *
+	 * None of those operations can be omitted (they're all vital for slab
+	 * allocators for the purpose of housekeeping). However: this could be
+	 * ratified if every thread (or CPU) had its own (very small) set of
+	 * slab pages (possibly only 1 page) that it tries to allocate from
+	 * first, **before** trying to find a free chunk in the global `s_pages`
+	 *
+	 * When that per-thread page can no longer supply any chunks, it must
+	 * be replaced by a page from the global pool, and only if that pool
+	 * is empty, should a new page be allocated from the raw allocator.
+	 *
+	 * TODO: Per-thread pages should always be used if already present
+	 * TODO: Per-thread pages must be cleared when fully allocated
+	 * TODO: Per-thread pages should only be allocated if an initial
+	 *       attempt to allocate from a global page failed (iow: when
+	 *       the atomic_cmpxch() used to change its in-use counter
+	 *       doesn't succeed on the first attempt; this way, globals
+	 *       are still preferred, and per-thread is only used when
+	 *       atomic contention is actually happening)
+	 * TODO: Every thread needs to have 1 pointer per slab size
+	 * TODO: When a thread exits, any (partially used) slab pages it
+	 *       still has are added to the global page list of the resp.
+	 *       slab.
+	 */
+
 	/* [0..n][lock([RCU, ATOMIC])] Pages containing at least 1 free, and at least 1 allocated chunk.
 	 * - fully allocated pages are only tracked when 'SLAB_TRACK_FULL_PAGES' is enabled
 	 * - fully free pages are stored in a global free-list (so they can be used by all slab allocators)
 	 * - The next-pointer (including the head) is always maintained atomically, but the prev-pointer
 	 *   requires some `Dee_SLAB_PAGE_ACT_*` to be set for that particular page.
 	 * - Pages are only free'd after RCU sync. */
-	struct Dee_slab_page_list s_pages; /* TODO: Config where this is an array (with each element 64-byte aligned, and threads pick page lists based on their thread ID) */
+	struct Dee_slab_page_list s_pages;
 #if SLAB_TRACK_FULL_PAGES
 	/* [0..n][lock([RCU, ATOMIC])] Same as `s_pages`, but fully allocated pages. If you find a page
 	 * in here that isn't fully allocated, that means that some thread is currently working to move

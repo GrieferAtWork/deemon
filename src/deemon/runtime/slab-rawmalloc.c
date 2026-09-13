@@ -71,7 +71,6 @@
 
 #ifdef __ARCH_PAGESIZE
 #define malloc_getpagesize __ARCH_PAGESIZE
-#define MALLOC_PAGESIZE    __ARCH_PAGESIZE
 #elif defined(CONFIG_HAVE_getpagesize)
 #define malloc_getpagesize getpagesize()
 #else /* __ARCH_PAGESIZE */
