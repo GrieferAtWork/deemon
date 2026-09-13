@@ -61,4 +61,3 @@ class c: b {
 
 ob = c();
 ob.call_foo();
-

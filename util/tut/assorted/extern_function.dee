@@ -23,4 +23,3 @@ import * from ctypes;
 
 local User32 = ShLib("User32.dll", "stdcall");
 User32.MessageBoxA(none, "Messagebox Text!", "This is the caption!", 0);
-

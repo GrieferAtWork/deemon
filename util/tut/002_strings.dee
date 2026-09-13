@@ -38,14 +38,3 @@ print "\u255a\u2550\u2550\u2550\u255d";
  * strings, known as raw string literals exists,
  * which doesn't process backslash-escape sequences. */
 print r"A linefeed is written as \n";
-
-
-
-
-
-
-
-
-
-
-

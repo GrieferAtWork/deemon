@@ -47,26 +47,3 @@ x = __destructor_callback {
 print "a";
 del x;
 print "b";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

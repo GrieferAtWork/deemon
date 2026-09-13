@@ -174,8 +174,3 @@ print items > ...;  /* Return the largest element of a sequence (30); `none` if 
 print items + ...;  /* Return the sum of all element in a sequence (88); `none` if empty */
 print items || ...; /* Return true if any sequence element is true (true); `false` if empty */
 print items && ...; /* Return true if all sequence elements are true (false); `true` if empty */
-
-
-
-
-

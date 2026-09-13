@@ -45,9 +45,3 @@ cpy = copy iterator;
  *   - Finally is execute twice, yet entered only once */
 del cpy;
 del iterator;
-
-
-
-
-
-

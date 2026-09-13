@@ -63,7 +63,7 @@ local class LinkedListNode {
 @@lists represent when it comes to cleaning up after the user.
 @@Also: Don't forget that deemon's main method of destroying objects is reference counting,
 @@so this isn't just any ordinary GC (and neither did I copy python, like I did for `int`)
-global class LinkedList: Sequence from deemon {
+global class LinkedList: Sequence {
 	private m_front = none;
 	private m_back = none;
 
@@ -193,6 +193,3 @@ assert gc.collect() != 0;
 
 print "DONE";
 #endif
-
-
-

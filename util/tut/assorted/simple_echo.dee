@@ -25,12 +25,10 @@ import File from deemon;
 
 print "Type an empty line to stop";
 /* Iterating a File yields its data line-wise */
-for (l: File.stdin) {
+for (local l: File.stdin) {
 	if (l.islf())
 		break;
 	/* Print without linefeed (readline()
 	 * returns a string ending with '\n') */
 	print "ECHO:", l,;
 }
-
-

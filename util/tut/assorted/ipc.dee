@@ -19,7 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import Pipe, process from ipc;
+import Pipe, Process from ipc;
 import File from deemon;
 
 /* Create pipes for stdin, stdout and stderr */
@@ -28,7 +28,7 @@ or, ow = Pipe.new()...;
 er, ew = Pipe.new()...;
 
 /* Create a process for 'cmd' */
-p = process("cmd");
+p = Process("cmd");
 
 /* Redirect std files */
 p.stdin = ir;
@@ -52,28 +52,17 @@ print iw: r"tree C:\foobar";
  * writing commands (signals end-of-input) */
 iw.close();
 
-print p.terminated();
+print p.hasterminated;
 
 /* Capture output from 'cmd'
  * NOTE: This is done live, meaning that
  *       output is read as soon as it arrives.
  *       >> You proove yourself that it works by
  *          commenting out the 'iw.close()` */
-for (l: File.Buffer(or))
+for (local l: File.Buffer(or))
 	print ">>", l.rstrip().center(100);
-for (l: File.Buffer(er))
+for (local l: File.Buffer(er))
 	print "ERR>>", l.rstrip();
 
 /* Finally join the process (though it should already have terminated) */
 print "RETURN:", p.join();
-
-
-
-
-
-
-
-
-
-
-

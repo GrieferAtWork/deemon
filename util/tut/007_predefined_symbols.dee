@@ -87,16 +87,3 @@ print opadd(x, "1234"); /* foobar1234 */
 
 /* When it comes to what operators exist, as well as what their names
  * are, look at the tutorial for classes. */
-
-
-
-
-
-
-
-
-
-
-
-
-

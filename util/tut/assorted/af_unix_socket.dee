@@ -28,7 +28,7 @@ local sa = sockaddr("AF_UNIX", sockfile);
 
 if (stat.exists(sockfile)) {
 	/* Client */
-	sock = socket("AF_UNIX");
+	local sock = socket("AF_UNIX");
 	sock.connect(sa);
 	sock.send("Hello!");
 	print repr sock;
@@ -36,10 +36,10 @@ if (stat.exists(sockfile)) {
 } else {
 	/* Server */
 	try remove(sockfile); catch (...);
-	sock = socket("AF_UNIX");
+	local sock = socket("AF_UNIX");
 	sock.bind(sa);
 	sock.listen();
-	ac_thread = Thread(() -> {
+	local ac_thread = Thread(() -> {
 		for (;;) {
 			Thread((client) -> {
 				print "New connection:", client;
@@ -51,23 +51,9 @@ if (stat.exists(sockfile)) {
 	});
 	ac_thread.start();
 	print "Server up. Press [RETURN] to exit:", repr sock;
-	file.stdin.readline();
+	File.stdin.readline();
 	ac_thread.interrupt();
 	sock.close();
 	ac_thread.join();
 	remove(sockfile);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -37,5 +37,3 @@ for (local name, value: environ) {
 
 for (local p: environ["PATH"].split(DELIM))
 	print p;
-
-

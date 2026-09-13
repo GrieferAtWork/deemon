@@ -39,10 +39,3 @@ a, b = data.scanf("%[^0-9]%d")...;
 
 print "a:", repr a;
 print "b:", repr b;
-
-
-
-
-
-
-

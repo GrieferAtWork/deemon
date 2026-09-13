@@ -51,6 +51,3 @@ for (local attr: enumattr(mod)) {
 	});
 	//print "DOC:", repr attr.doc; /* Too much spam for this demo... */
 }
-
-
-

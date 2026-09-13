@@ -190,7 +190,7 @@ public:
 		print "In destructor for MyList";
 	}
 
-	@@Lastly, the copy- and deepcopy operators.
+	@@Lastly, the copy operator.
 	@@When omitted, the copy-operator is default-implemented
 	@@to create a duplicate of the original classes instance
 	@@member members, using by-ref duplicates:
@@ -206,24 +206,6 @@ public:
 	@@of the type's base class, forwarding the same origin object.
 	copy(other) {
 		print "MyList.copy()";
-	}
-	@@When omitted, the deepcopy-operator is default-implemented
-	@@to first invoke the regular copy-operator, before replacing
-	@@every bound instance member with a deep copy of itself:
-	@@>class MyClass {
-	@@>	member foo;
-	@@>	copy(other) {
-	@@>		if (other.foo is bound)
-	@@>			this.foo = other.foo;
-	@@>	}
-	@@>	deepcopy(other) {
-	@@>		this.CALL_COPY_OPERATOR(other);
-	@@>		if (this.foo is bound)
-	@@>			this.foo = deepcopy this.foo;
-	@@>	}
-	@@>}
-	deepcopy(other) {
-		print "MyList.deepcopy()";
 	}
 
 
@@ -316,7 +298,6 @@ public:
 	 *   .       setattr 3    `operator . (name: string, value)`      `this.name_as_keyword = value`    no
 	 *   .=      setattr 3    `operator .= (name: string, value)`     `this.name_as_keyword = value`    no
 	 *           enumattr 1   `operator enumattr(): {Attribute...}`   `enumattr(this)`                  no
-	 *           deepcopy 2   `operator deepcopy(other)`              `deepcopy this`                   no
 	 *           copy    2    `operator copy(other)`                  `copy this`                       no
 	 *   ""      str     1    `operator str(other): string`           `str this`                        no
 	 *           repr    1    `operator repr(other): string`          `repr this`                       no
@@ -422,23 +403,3 @@ print repr Point(y: 16);      /* Point(y: 16, z: 7) */
 print repr Point(x: 0, y: 0); /* Point(x: 0, y: 0, z: 7) */
 print repr Point(z: 0);       /* Point(z: 0) */
 print repr Point(0, 0, 0);    /* Point(x: 0, y: 0, z: 0) */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

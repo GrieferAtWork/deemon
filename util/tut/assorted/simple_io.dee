@@ -37,8 +37,3 @@ fp << "And this is the third line of text.\n";  /* Same as `print fp: "...",;' *
  *       'fp' would have left its scope normally
  *       (aka. At the end of this file) */
 del fp;
-
-
-
-
-

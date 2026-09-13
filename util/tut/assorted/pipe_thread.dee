@@ -54,5 +54,3 @@ print food_data;
 
 // Join the food thread (although it should already be finished)
 food.join();
-
-

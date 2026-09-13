@@ -42,7 +42,3 @@ deemon thread_punishment.dee || exit $?
 deemon walk_path.dee . || exit $?
 deemon yield_awesomeness.dee || exit $?
 deemon yield_iter_copy.dee || exit $?
-
-
-
-

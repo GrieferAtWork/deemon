@@ -58,8 +58,3 @@ print 10 >= 20; /* false -- greater than or equal to */
 print 0xff;     /* 255  -- hexadecimal */
 print 077;      /* 63   -- octal */
 print 0b1011;   /* 11   -- binary */
-
-
-
-
-

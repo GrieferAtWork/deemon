@@ -47,12 +47,3 @@ print type "foo";  /* string */
 print type str 10; /* string */
 
 /* The `type` expression simply returns the type of the expression it is handed */
-
-
-
-
-
-
-
-
-

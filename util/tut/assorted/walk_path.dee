@@ -43,28 +43,3 @@ if (#args == 1) {
 }
 for (local x: walk(args[1]))
 	print x;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

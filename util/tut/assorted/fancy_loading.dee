@@ -53,33 +53,3 @@ wait_for_nothing("Interpreting bytes");
 wait_for_nothing("Analyzing layout");
 wait_for_nothing("Performing transmutations");
 wait_for_nothing("Entering credentials");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

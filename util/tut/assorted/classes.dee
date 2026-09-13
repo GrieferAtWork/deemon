@@ -29,10 +29,10 @@ x = 42;
 
 // Also note how we extend a type that's neither ''
 class foo: List {
-	// A class function
-	class function new() -> foo();
+	// A static function
+	static function new() -> foo();
 
-	private variable;
+	private member variable;
 
 	// Note how the constructor uses a runtime-only
 	// variable from a surrounding strong scope
@@ -318,16 +318,3 @@ print "done";
 //     Only thing is, that the function would always have priority.
 //   - The shortest (and most obscure) way of simulating a class constant is:
 //     class foo { class property MY_CONST = { . -> 42; } };
-
-
-
-
-
-
-
-
-
-
-
-
-

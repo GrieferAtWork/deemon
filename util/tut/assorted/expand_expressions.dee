@@ -81,7 +81,7 @@ print a, b, c, d;
 
 /* You can use 'none' in the list of arguments that
  * gets expanded to ignore that specific value */
-function get_args() -> pack 10, 20, 30;
+function get_args() -> (10, 20, 30);
 a, none, b = get_args()...;
 print a, b; /* 10, 30 */
 
@@ -111,10 +111,3 @@ args = (10, 20, 30);
 /* Call a function with an expanded argument list */
 foo(args...);
 foo(7, args[1:]...);
-
-
-
-
-
-
-

@@ -26,4 +26,3 @@ class my_class {
 }
 
 print 10 + my_class(); /* guess what this does... */
-

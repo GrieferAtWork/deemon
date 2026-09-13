@@ -25,6 +25,3 @@ im_another_export = "Me too";
 local but_im_not = "awww";
 
 print "I'm printed during module initialization";
-
-
-

@@ -34,6 +34,3 @@ print " - http://localhost:8080/modules/deemon        -- Exports of the builtin 
 print " - http://localhost:8080/modules/deemon/string -- String documentation";
 print " - http://localhost:8080/modules/deemon/file   -- File / STDIO documentation";
 print;
-
-
-

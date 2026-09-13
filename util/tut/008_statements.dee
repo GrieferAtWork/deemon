@@ -157,4 +157,3 @@ for (local elem: item_pairs) {
 /* Some more statements exist, such a `return` and `yield` statement,
  * as well as `function` and `class` however those are handled in
  * the tutorials on functions and classes. */
-

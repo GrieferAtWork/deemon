@@ -53,4 +53,3 @@ iterator2 = generator.operator iter();
 print "Received:", iterator2.operator next();
 del iterator2; /* Will print the finally message */
 del iterator;  /* Will print a second finally message */
-

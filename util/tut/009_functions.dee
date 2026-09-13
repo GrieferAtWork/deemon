@@ -124,8 +124,3 @@ mygen = () -> {
 }(); /* NOTE: The yield function of a generator must be
       *       invoked to construct the sequence instance */
 print repr mygen;
-
-
-
-
-

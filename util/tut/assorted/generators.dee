@@ -40,9 +40,3 @@ i = 13;
 print (while (i--) i)...;
 i = 37;
 print (do i*2 while (i--))...;
-
-
-
-
-
-
