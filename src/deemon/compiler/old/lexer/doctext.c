@@ -87,9 +87,9 @@ done:
 	return iter;
 }
 
-/* Erase up to `count' white-space characters starting at `i'
+/* Erase up to `count` white-space characters starting at `i`
  * NOTE: Less characters may be erased if a non-whitespace character
- *       is countered before `count' characters have been erased.
+ *       is countered before `count` characters have been erased.
  *       This function is used for the removal of common leading space
  *       characters in documentation text, where blind erasing of characters
  *       cannot be done safely due to the implicit line-feeds that are
@@ -111,7 +111,7 @@ unicode_printer_erase_whitespace(struct Dee_unicode_printer *__restrict self,
 }
 
 
-/* Returns a new pointer for `start' */
+/* Returns a new pointer for `start` */
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 lstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
@@ -128,7 +128,7 @@ lstrip_whitespace(/*utf-8*/ char const *start,
 	return start;
 }
 
-/* Returns a new pointer for `end' */
+/* Returns a new pointer for `end` */
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 rstrip_whitespace(/*utf-8*/ char const *start,
                   /*utf-8*/ char const *end) {
@@ -201,7 +201,7 @@ find_first_unmatched_closing_parenthesis(/*utf-8*/ char const *start,
 }
 
 /* Skip a single symbol-string, or until the end of a recursive pair of '(' ... ')'
- * Simply re-returns `start' when neither of these constructs could be parsed. */
+ * Simply re-returns `start` when neither of these constructs could be parsed. */
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 skip_symbol_or_recursive_parenthesis(/*utf-8*/ char const *start,
                                      /*utf-8*/ char const *end) {
@@ -253,7 +253,7 @@ no:
 }
 
 
-/* Strip trailing characters from `printer' until its length <= stop_at,
+/* Strip trailing characters from `printer` until its length <= stop_at,
  * or until its last character no longer is a whitespace character. */
 PRIVATE NONNULL((1)) void DCALL
 strip_trailing_whitespace_until(struct Dee_unicode_printer *__restrict printer,
@@ -329,8 +329,8 @@ no:
 }
 
 
-/* Find the first non-matching, non-escaped `find_close' character that
- * isn't balanced by another non-escaped `find_open'. If no such character
+/* Find the first non-matching, non-escaped `find_close` character that
+ * isn't balanced by another non-escaped `find_open`. If no such character
  * exists between text...end, return NULL instead. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
 find_nonescaped_match(/*utf-8*/ char const *text,
@@ -363,7 +363,7 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 }
 
 
-/* Print the given string `text ... end' to `printer', but unescape
+/* Print the given string `text ... end` to `printer`, but unescape
  * all \|-sequences into |-characters. - This function is used by the
  * line-printer functions used by tables. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -461,7 +461,7 @@ err:
 	return -1;
 }
 
-/* Same as `print_escaped()', but skip the first `num_characters'
+/* Same as `print_escaped()`, but skip the first `num_characters`
  * at the start, and after every line-feed not followed by another
  * linefeed after less than that many characters.
  * All lines are also right-stripped of trailing space characters.
@@ -497,7 +497,7 @@ do_reset_on_newline:
 			if (DeeUni_IsLF(ch))
 				goto do_reset_on_newline;
 
-			/* Print the current line starting with `text' and until the trailing line-feed.
+			/* Print the current line starting with `text` and until the trailing line-feed.
 			 * Do so only if there is more than only whitespace within the actual line. */
 			{
 				char const *current_line_start;
@@ -531,7 +531,7 @@ err:
 }
 
 /* Find # of leading whitespace characters of the line containing the
- * least of them, and return that number while also updating `*p_text'
+ * least of them, and return that number while also updating `*p_text`
  * to point to the start (before potential leading whitespace) of the
  * first line that contains anything other than only whitespace. */
 PRIVATE NONNULL((1, 2)) size_t DCALL
@@ -632,8 +632,8 @@ do_compile(/*utf-8*/ char const *text,
            /*nullable*/ struct Dee_unicode_printer *source_printer,
            unsigned int flags);
 
-/* Compile the string from `source_printer' and write the result to `result_printer'
- * NOTE: This function is allowed to modify `source_printer' */
+/* Compile the string from `source_printer` and write the result to `result_printer`
+ * NOTE: This function is allowed to modify `source_printer` */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 do_compile_printer_to_printer(struct Dee_unicode_printer *__restrict result_printer,
                               struct Dee_unicode_printer *__restrict source_printer,
@@ -768,7 +768,7 @@ do_switch_ch:
 			break;
 
 		/* Escape special characters when they are used in user-defined doc strings.
-		 * Escaping is done by inserting an additional `#' character */
+		 * Escaping is done by inserting an additional `#` character */
 		case '$': case '%': case '&': case '#':
 		case '^': case '{': case '}': case '+':
 		case ']': case '|': case '?': case '-': case ':':
@@ -832,7 +832,7 @@ check_ch_after_lf:
 				}
 				if (!ch && (iter >= end))
 					goto done_dontflush; /* Shouldn't happen (trailing space/line-feeds are stripped above) */
-				/* Don't re-wind, so below code can simply `do_switch_ch' */
+				/* Don't re-wind, so below code can simply `do_switch_ch` */
 				break;
 			}
 
@@ -861,7 +861,7 @@ check_ch_after_lf:
 					 *                                                current_line_leading_spaces)
 					 * If that character position descbides a non-whitespace character,
 					 * and is preceded by the following sequence:
-					 *     (`.', <space> or <issymcont>) : <optional_space>
+					 *     (`.`, <space> or <issymcont>) : <optional_space>
 					 * Then we mustn't insert a line-feed here, but join the two lines with a space. */
 					char const *prev_line_start;
 					char const *prev_line_end, *temp;
@@ -877,22 +877,22 @@ check_ch_after_lf:
 							goto do_join_with_linefeed;
 					} while (--count);
 
-					/* Check if `prev_line_end' points to a non-whitespace character. */
+					/* Check if `prev_line_end` points to a non-whitespace character. */
 					temp = prev_line_end;
 					temp_ch = Dee_unicode_readutf8_n(&prev_line_end, next_line_start);
 					if (DeeUni_IsSpace(temp_ch))
 						goto do_join_with_linefeed;
 					prev_line_end = temp;
 
-					/* Skip whitespace found prior to `prev_line_end' */
+					/* Skip whitespace found prior to `prev_line_end` */
 					prev_line_end = rstrip_whitespace(prev_line_start, prev_line_end);
 
-					/* Check if there's a :-character before `prev_line_end' */
+					/* Check if there's a :-character before `prev_line_end` */
 					temp_ch = Dee_unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (temp_ch != ':')
 						goto do_join_with_linefeed;
 
-					/* Check if the :-character is preceded by `.', <space> or <issymcont>
+					/* Check if the :-character is preceded by `.`, <space> or <issymcont>
 					 * If it is, then we must join the two lines via space */
 					temp_ch = Dee_unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (DeeUni_IsSymCont(temp_ch) || DeeUni_IsSpace(temp_ch) || temp_ch == '.')
@@ -961,9 +961,9 @@ do_switch_ch_at_start_of_line:
 						horizontal_ch = (char)(unsigned char)ch;
 
 						/* A top-border is present.
-						 * Ensure that the current line contains only `corner_ch',
-						 * `-', `=' and space characters, as well as count the #
-						 * of remaining `corner_ch'-characters as `column_count' */
+						 * Ensure that the current line contains only `corner_ch`,
+						 * `-`, `=` and space characters, as well as count the #
+						 * of remaining `corner_ch`-characters as `column_count` */
 						column_count = 0;
 						for (;;) {
 							ch = Dee_unicode_readutf8_n(&iter, end);
@@ -1019,7 +1019,7 @@ do_switch_ch_at_start_of_line:
 							goto not_a_table; /* +-corners require the top-border be present */
 
 						/* Without a top-border, and | as (premature) corner character, the actual
-						 * corner character of the table may still change to `+' once a thick line
+						 * corner character of the table may still change to `+` once a thick line
 						 * is encountered. */
 						corner_ch_is_known = false;
 						column_count = 0;
@@ -1045,7 +1045,7 @@ do_switch_ch_at_start_of_line:
 							}
 							/* TODO: Try to recognize special control blocks and skip over them:
 							 *       A |-character inside of @(foo | bar) should automatically
-							 *       be escaped, and similar should happen for `foo | bar' (i.e.
+							 *       be escaped, and similar should happen for `foo | bar` (i.e.
 							 *       inlined code) */
 							scan_ch = Dee_unicode_readutf8_n(&scan_iter, end);
 						}
@@ -1299,7 +1299,7 @@ not_a_table2_or_done_table:
 
 								/* TODO: Try to recognize special control blocks and skip over them:
 								 *       A |-character inside of @(foo | bar) should automatically
-								 *       be escaped, and similar should happen for `foo | bar' (i.e.
+								 *       be escaped, and similar should happen for `foo | bar` (i.e.
 								 *       inlined code) */
 								ch_start = iter;
 								ch = Dee_unicode_readutf8_n(&iter, end);
@@ -1393,10 +1393,10 @@ extend_table_row_or_insert_thin_separator:
 								 * of a row that can either be a thick separator, or a continuation of the
 								 * current row.
 								 * We can differentiate the two by checking if the first cell contains only
-								 * whitespace, and at least 1 instance of `horizontal_ch'. If this is the case,
+								 * whitespace, and at least 1 instance of `horizontal_ch`. If this is the case,
 								 * then it's a thick separator. - Otherwise, it is a normal row that might possibly
-								 * be entirely empty (if the later is the case, then the next time `got_table_line'
-								 * is jumped to, `has_nonempty_cell' will be `false', and the line will be checked
+								 * be entirely empty (if the later is the case, then the next time `got_table_line`
+								 * is jumped to, `has_nonempty_cell` will be `false`, and the line will be checked
 								 * accordingly) */
 								nextline_firstcell_start = ch_start;
 								did_encounter_horizontal_character = false;
@@ -1473,8 +1473,8 @@ continue_row_at_nextline_firstcell_start:
 								/* NOTE: ch/ch_start point at the first character of the line that followed
 								 *       after the thick row. Next, skip some optional whitespace and update
 								 *       ch/ch_start to point at the first character of the left-most cell.
-								 *       If the next line doesn't continue the table, set `iter' to `nextline_start'
-								 *       and `row_separator' to 0 */
+								 *       If the next line doesn't continue the table, set `iter` to `nextline_start`
+								 *       and `row_separator` to 0 */
 								for (;;) {
 									if (DeeUni_IsLF(ch)) {
 thick_border_is_actually_table_end:
@@ -1596,7 +1596,7 @@ table_has_nonempty_column:
 										goto err_table;
 								}
 
-								/* compile and write output to `table_output' */
+								/* compile and write output to `table_output` */
 								if unlikely(do_compile_printer_to_printer(&table_output,
 								                                          &columns[column_index].tc_body,
 								                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT))
@@ -1622,7 +1622,7 @@ done_table:
 					if (Dee_UNICODE_PRINTER_ISEMPTY(&table_output))
 						goto not_a_table2;
 
-					/* NOTE: At this point, `iter' points at the start of
+					/* NOTE: At this point, `iter` points at the start of
 					 *       line immediately following the table. */
 
 #ifndef NDEBUG
@@ -1713,7 +1713,7 @@ check_for_list:
 				if (is_ordered_list) {
 					item_prefix_start = list_firstline_start;
 
-					/* Scan ahead until the first `:', or a `.' followed by whitespace */
+					/* Scan ahead until the first `:`, or a `.` followed by whitespace */
 					list_element_indent = current_line_leading_spaces + 3;
 					for (;;) {
 						if (ch == ':') {
@@ -1760,9 +1760,9 @@ not_a_list:
 				}
 
 				/* Figure out the common indentation of list elements.
-				 * Right now we're `current_line_leading_spaces + 2' characters
-				 * into our current line (+1 for `list_prefix_ch'; +1 for the 1
-				 * mandatory space character after `list_prefix_ch')
+				 * Right now we're `current_line_leading_spaces + 2` characters
+				 * into our current line (+1 for `list_prefix_ch`; +1 for the 1
+				 * mandatory space character after `list_prefix_ch`)
 				 * Onto this number, we must now add any additional whitespace
 				 * that may still appear before the first non-space character
 				 * is countered.
@@ -1804,10 +1804,10 @@ list_begin_next_line:
 				}
 
 				/* At this point, we've reached the start of the first list item, which
-				 * begins at `ch_start' (which points to the first character of the list
+				 * begins at `ch_start` (which points to the first character of the list
 				 * element (where that character is some non-space character))
 				 * The list item ends with the first non-empty line that contains some
-				 * non-whitespace character within its initial `list_element_indent'
+				 * non-whitespace character within its initial `list_element_indent`
 				 * characters:
 				 *        ch_start points here
 				 *        v
@@ -1820,7 +1820,7 @@ list_begin_next_line:
 				 *      ^
 				 *      non-whitespace character here; body of the first element is:
 				 *          "element 1\nelement 1 line 2\nelement 1 line 3\n\nelement 1 line 4"
-				 * HINT: In this example, `list_element_indent == 3' */
+				 * HINT: In this example, `list_element_indent == 3` */
 				{
 					struct Dee_unicode_printer item_printer = Dee_UNICODE_PRINTER_INIT;
 					bool has_next_item;
@@ -1836,29 +1836,29 @@ list_continue_current_line:
 
 						/* At this point, ch is the line-feed at the end of the current list element
 						 * line (and iter points after the line-feed). - As such, we commit everything
-						 * from `list_line_start' up until `list_line_end' (so-as to include the line-feed) to
-						 * `item_printer', so-as to be re-parsed once the entirety of the current list
+						 * from `list_line_start` up until `list_line_end` (so-as to include the line-feed) to
+						 * `item_printer`, so-as to be re-parsed once the entirety of the current list
 						 * item has been gathered. */
 						if unlikely(Dee_unicode_printer_print(&item_printer, list_line_start,
 						                                      (size_t)(list_line_end - list_line_start)) < 0)
 							goto err_item_printer;
 						list_line_start = iter;
 
-						/* Check if current line (where `iter' points to its first character) is:
+						/* Check if current line (where `iter` points to its first character) is:
 						 *    - A continuation of the same list item (as indicative of having a whitespace
-						 *      indentation of at least `list_element_indent' characters).
-						 *      In this case, set `ch_start' to the `list_element_indent'th character
-						 *      of the line and jump to `list_continue_current_line'
+						 *      indentation of at least `list_element_indent` characters).
+						 *      In this case, set `ch_start` to the `list_element_indent`th character
+						 *      of the line and jump to `list_continue_current_line`
 						 *    - A new list item (as indicated by having a white-space indentation that
-						 *      is equal to `list_prefix_indent', followed by a prefix appropriate for
-						 *      the requirements set by `is_ordered_list' and `list_prefix_ch')
-						 *      In this case, update `item_prefix_start' and `item_prefix_end' (when
-						 *      `is_ordered_list' is true), have ch/ch_start point at the first character
-						 *      of the next list item's body, set `has_next_item' to `true' and jump to
-						 *      `do_append_list_item'
+						 *      is equal to `list_prefix_indent`, followed by a prefix appropriate for
+						 *      the requirements set by `is_ordered_list` and `list_prefix_ch`)
+						 *      In this case, update `item_prefix_start` and `item_prefix_end` (when
+						 *      `is_ordered_list` is true), have ch/ch_start point at the first character
+						 *      of the next list item's body, set `has_next_item` to `true` and jump to
+						 *      `do_append_list_item`
 						 *    - Something else, indicative of the list being terminated.
-						 *      In this case, set `has_next_item' to `false', restore `iter = list_line_start',
-						 *      and jump to `do_append_list_item' (or jump to `end_of_list', which does the same) */
+						 *      In this case, set `has_next_item` to `false`, restore `iter = list_line_start`,
+						 *      and jump to `do_append_list_item` (or jump to `end_of_list`, which does the same) */
 						nextline_indentation = 0;
 						for (;;) {
 							ch_start = iter;
@@ -1926,15 +1926,15 @@ end_of_list:
 							goto do_append_list_item;
 						}
 						if (!is_ordered_list) {
-							/* Simple case: The list continues if `ch == list_prefix_ch' */
+							/* Simple case: The list continues if `ch == list_prefix_ch` */
 							if (ch != list_prefix_ch)
 								goto end_of_list;
 						} else {
 							/* Complicated case: ordered list.
-							 * In this case, make sure that the range beginning at `ch_start',
-							 * and spanning exactly `list_element_indent - list_prefix_indent',
+							 * In this case, make sure that the range beginning at `ch_start`,
+							 * and spanning exactly `list_element_indent - list_prefix_indent`,
 							 * characters after being stripped or trailing whitespace, and a
-							 * mandatory trailing `list_prefix_ch'-character, contains only
+							 * mandatory trailing `list_prefix_ch`-character, contains only
 							 * Decimal and '.' characters, and doesn't begin with '.' */
 							item_prefix_start = ch_start;
 							if (!DeeUni_IsDigit(ch))
@@ -1949,8 +1949,8 @@ continue_scan_order_list_prefix:
 									continue;
 								}
 								if (ch == '.') {
-									/* A .-character can appear in the middle, even when `list_prefix_ch'
-									 * is equal to `.', so-long as that .-character isn't followed by a
+									/* A .-character can appear in the middle, even when `list_prefix_ch`
+									 * is equal to `.`, so-long as that .-character isn't followed by a
 									 * non-decimal and non-. character */
 									if (ch != list_prefix_ch) {
 										/* Handle like any other allowed character in this case! */
@@ -2052,7 +2052,7 @@ err_item_printer:
 						anno_start = lstrip_whitespacenolf(anno_start, end);
 						ch = Dee_unicode_readutf8_n(&anno_start, end);
 						if (DeeUni_IsLF(ch) || (ch == 0 && anno_start >= end)) {
-							/* Special case: `@interrupt' annotation */
+							/* Special case: `@interrupt` annotation */
 							FLUSHTO(ch_start);
 							strip_all_trailing_whitespace_until(result_printer, result_printer_origlen);
 							PRINTASCII("#t{:Interrupt}", 14);
@@ -2117,7 +2117,7 @@ err_item_printer:
 								iter = lstrip_whitespacenolf_and_one_optional_colon(iter, end);
 							}
 	
-							/* Calculate the indentation of our current `iter' */
+							/* Calculate the indentation of our current `iter` */
 							anno_description_indent = current_line_leading_spaces + 1; /* +1: for the '@' character */
 							description_start       = iter;
 							iter = anno_after_at;
@@ -2127,8 +2127,8 @@ err_item_printer:
 							}
 	
 							/* At this point, we're at the start of the annotation description body.
-							 * The body itself starts at `description_start' and encompasses all
-							 * following lines that have at least `anno_description_indent' leading
+							 * The body itself starts at `description_start` and encompasses all
+							 * following lines that have at least `anno_description_indent` leading
 							 * whitespace characters. */
 							PUTASCII('{');
 							{
@@ -2218,7 +2218,7 @@ err_tag_body_printer:
 							} /* Scope... */
 							PUTASCII('}');
 
-							/* NOTE: At this point, `iter' points at the start of
+							/* NOTE: At this point, `iter` points at the start of
 							 *       the first line after the tag annotation body. */
 
 							/* Continue parsing with the explicit line-feed in mind */
@@ -2300,7 +2300,7 @@ err_tag_body_printer:
 				 * In this case, the raw string would look like:
 				 *    "First line \\\n@@Second line"
 				 * Try to work around this quirk, and hide this fact by scanning ahead to check for the
-				 * double-@@, setting the `flush_start' pointer after it to act as through that's where
+				 * double-@@, setting the `flush_start` pointer after it to act as through that's where
 				 * the line actually began. */
 				iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
 				flush_start = iter;
@@ -2483,7 +2483,7 @@ check_ordered_list_digit:
 					}
 					if (nextch == ch) {
 						if (ch == '_') {
-							/* Special case: `_' must be followed by a non-symcont character to count here!
+							/* Special case: `_` must be followed by a non-symcont character to count here!
 							 *   We don't want to get an early exit for something like _this_and_that_,
 							 *   which should be encoded as #Bthis_and_that and not #B{this}and_that_ */
 							char const *followup;
@@ -2949,8 +2949,8 @@ done_dontflush:
 	/* Strip all trailing whitespace from the printer. */
 	strip_trailing_whitespace(result_printer, result_printer_origlen);
 	if (min_line_leading_spaces != 0) {
-		/* Take everything after `result_printer_origlen' and
-		 * delete the first `min_line_leading_spaces' characters
+		/* Take everything after `result_printer_origlen` and
+		 * delete the first `min_line_leading_spaces` characters
 		 * at the start, and after every line-feed found thereafter. */
 		size_t i = result_printer_origlen;
 		if (should_strip_leading_space)
@@ -2991,7 +2991,7 @@ done_dontflush:
 						 * As such, we must also strip common whitespace following
 						 * the end of one of these constructs!
 						 *
-						 * The same also goes for `@param', `@return' and `@throws' */
+						 * The same also goes for `@param`, `@return` and `@throws` */
 						++i;
 						if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now; /* Shouldn't happen... */
@@ -3067,10 +3067,10 @@ err:
 #undef PRINTASCII
 }
 
-/* Compile documentation text in `doctext' into itself.
- * This function scans `doctext' according to `FORMAT',
- * then re-writes `doctext' to contain the equivalent
- * as described by `ENCODING'.
+/* Compile documentation text in `doctext` into itself.
+ * This function scans `doctext` according to `FORMAT`,
+ * then re-writes `doctext` to contain the equivalent
+ * as described by `ENCODING`.
  * NOTE: This function should be called by the compiler
  *       in the context of the declaration being annotated,
  *       such that in the case of a function being annotated,

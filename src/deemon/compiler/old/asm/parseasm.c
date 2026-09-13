@@ -100,7 +100,7 @@ LOCAL WUNUSED NONNULL((1, 2)) bool Dee_libc_strcaseeq(char *a, char *b) {
 INTERN void DCALL
 userassembler_init(void) {
 	/* HINT: The caller will have already zero-initialized
-	 *      `current_userasm' and `symtab' */
+	 *      `current_userasm` and `symtab` */
 	current_userasm.ua_lasti  = ASM_DELOP;
 	current_userasm.ua_asmuid = DeeCompiler_Current->cp_uasm_unique;
 }
@@ -261,7 +261,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 		/* If the symbol doesn't already exist,
 		 * backward referencing is illegal. */
 		DeeError_Throwf(&DeeError_CompilerError,
-		                "Cannot cast backward reference to undefined symbol `%$s'",
+		                "Cannot cast backward reference to undefined symbol `%$s`",
 		                name->k_size, name->k_name);
 		goto err;
 	}
@@ -434,7 +434,7 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 		if (!result)
 			goto yield_done;
 		{
-			/* Check for a token like this: `1f.SP' */
+			/* Check for a token like this: `1f.SP` */
 			char *int_end = (char *)memchr(token.t_begin, '.',
 			                               (size_t)(token.t_end - token.t_begin));
 			if (int_end) {
@@ -464,7 +464,7 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 		ATTR_FALLTHROUGH
 	case TOK_CHAR:
 		/* NOTE: Here, we always interpret character tokens as literals,
-		 *       regardless of what may `EXT_CHARACTER_LITERALS' may be set to. */
+		 *       regardless of what may `EXT_CHARACTER_LITERALS` may be set to. */
 		if (!result)
 			goto yield_done;
 
@@ -736,11 +736,11 @@ uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
 				other.ie_sym   = NULL;
 			}
 			if (!other.ie_sym && other.ie_rel == (uint16_t)-1) {
-				/* `... - 42' */
+				/* `... - 42` */
 			} else if (!result->ie_sym &&
 			           result->ie_rel == ASM_OVERLOAD_FSTKABS &&
 			           other.ie_rel == ASM_OVERLOAD_FSTKABS) {
-				/* `SP - other.SP' */
+				/* `SP - other.SP` */
 				result->ie_rel = ASM_OVERLOAD_FSTKDSP;
 				result->ie_sym = other.ie_sym;
 			} else if ((!result->ie_sym || !other.ie_sym) &&
@@ -749,13 +749,13 @@ uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
 			            (result->ie_rel == ASM_OVERLOAD_FSTKDSP && other.ie_rel == ASM_OVERLOAD_FSTKDSP))) {
 				if (other.ie_rel == ASM_OVERLOAD_FSTKDSP &&
 				    result->ie_rel == ASM_OVERLOAD_FSTKDSP) {
-					/* `(SP - other.SP) - (SP - other.SP)' */
+					/* `(SP - other.SP) - (SP - other.SP)` */
 					result->ie_rel = (uint16_t)-1;
 				} else if (other.ie_rel == ASM_OVERLOAD_FSTKABS) {
-					/* `SP - (SP - other.SP)' */
+					/* `SP - (SP - other.SP)` */
 					result->ie_rel = ASM_OVERLOAD_FSTKABS;
 				} else {
-					/* `(SP - other.SP) - SP' */
+					/* `(SP - other.SP) - SP` */
 					result->ie_rel = ASM_OVERLOAD_FSTKDSP;
 				}
 				if (other.ie_sym)
@@ -905,7 +905,7 @@ err:
 PRIVATE ATTR_COLD int DFCALL
 err_unknown_symbol(struct TPPKeyword *__restrict name) {
 	return DeeError_Throwf(&DeeError_CompilerError,
-	                       "Unknown symbol `%s'",
+	                       "Unknown symbol `%s`",
 	                       name->k_name);
 }
 
@@ -930,7 +930,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
 		SYMBOL_INPLACE_UNWIND_ALIAS(sym);
 		if (sym->s_type != SYMBOL_TYPE_GLOBAL) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Symbol `%s' is not a global symbol",
+			                "Symbol `%s` is not a global symbol",
 			                symbol_name->k_name);
 			goto err;
 		}
@@ -987,7 +987,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 		if (sym->s_type != SYMBOL_TYPE_LOCAL ||
 		    SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Symbol `%s' is not a local symbol",
+			                "Symbol `%s` is not a local symbol",
 			                symbol_name->k_name);
 			goto err;
 		}
@@ -1068,13 +1068,13 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
 		SYMBOL_INPLACE_UNWIND_ALIAS(sym);
 		if (sym->s_type != SYMBOL_TYPE_ARG) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Symbol `%s' is not an argument symbol",
+			                "Symbol `%s` is not an argument symbol",
 			                symbol_name->k_name);
 			goto err;
 		}
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Argument `%s' cannot be addressed as a regular argument",
+			                "Argument `%s` cannot be addressed as a regular argument",
 			                symbol_name->k_name);
 			goto err;
 		}
@@ -1162,7 +1162,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 		if (sym->s_type != SYMBOL_TYPE_STATIC ||
 		    SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Symbol `%s' is not a static symbol",
+			                "Symbol `%s` is not a static symbol",
 			                symbol_name->k_name);
 			goto err;
 		}
@@ -1255,8 +1255,8 @@ do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
 		constval = expr->a_constexpr;
 		if unlikely(!asm_allowconst(constval))
 			goto unsupported_expression;
-#if 0 /* Don't do this. - Otherwise something like `print @20, nl' wouldn't work because \
-       * it would get interpreted as `print $20, nl' rather than `print const @20, nl' */
+#if 0 /* Don't do this. - Otherwise something like `print @20, nl` wouldn't work because \
+       * it would get interpreted as `print $20, nl` rather than `print const @20, nl` */
 		if (!DeeInt_Check(constval))
 			goto allocate_constant;
 		/* Special handling for integer constant expressions. */
@@ -1393,7 +1393,7 @@ err:
 	return -1;
 }
 
-/* Parse a deemon-level expression following `@' and
+/* Parse a deemon-level expression following `@` and
  * try to convert it into an assembly invocation operand.
  * In order words: accept pretty much all symbols, as well as constants. */
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
@@ -1420,8 +1420,8 @@ err:
 }
 
 
-/* @param: recognize_sp: When true, recognize `sp', as seen as operand of `print'.
- *                       Otherwise, `sp' is recognized as representative of the
+/* @param: recognize_sp: When true, recognize `sp`, as seen as operand of `print`.
+ *                       Otherwise, `sp` is recognized as representative of the
  *                       current stack depth. */
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 do_parse_operand(struct asm_invoke_operand *__restrict result,
@@ -1889,7 +1889,7 @@ read_mnemonic_name:
 			uasm_defsym(sym);
 		}
 
-		/* Yield the `:' token. */
+		/* Yield the `:` token. */
 		if (yield() < 0)
 			goto err;
 		goto done_continue;
@@ -2085,7 +2085,7 @@ continue_line:
 				goto err;
 		}
 
-		/* Consume the `;' or `\n' token. */
+		/* Consume the `;` or `\n' token. */
 		if likely(tok == ';' || tok == '\n') {
 			if unlikely(yield() < 0)
 				goto err;

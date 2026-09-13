@@ -780,7 +780,7 @@ PRIVATE struct type_operator const attr_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 };
 
-/* `Attribute from deemon' */
+/* `Attribute from deemon` */
 PUBLIC DeeTypeObject DeeAttribute_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Attribute),
@@ -1028,7 +1028,7 @@ PRIVATE struct type_member tpconst enumattr_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-/* `enumattr from deemon' */
+/* `enumattr from deemon` */
 PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
@@ -1131,7 +1131,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 enumattriter_fini(EnumAttrIter *__restrict self) {
 	/* !!! Iterator must be finalized while still holding
-	 *     (transitive) reference to `self->ei_seq->ea_obj' */
+	 *     (transitive) reference to `self->ei_seq->ea_obj` */
 	Dee_attriter_fini(&self->ei_iter);
 	Dee_Decref(self->ei_seq);
 }
@@ -1185,7 +1185,7 @@ PRIVATE struct type_member tpconst enumattriter_members[] = {
 	TYPE_MEMBER_END
 };
 
-/* `(enumattr from deemon).Iterator' */
+/* `(enumattr from deemon).Iterator` */
 PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_EnumAttrIterator",
@@ -1202,7 +1202,7 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 			/* tp_copy_ctor:   */ &enumattriter_copy,
 			/* tp_any_ctor:    */ &enumattriter_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type') */
+			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type`) */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&enumattriter_fini,

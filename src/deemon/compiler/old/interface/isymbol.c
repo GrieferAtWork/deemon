@@ -120,7 +120,7 @@ symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 			result = err_symbol_readonly(sym);
 		} else {
-			/* Set the symbol type to `none' */
+			/* Set the symbol type to `none` */
 			symbol_fini(sym);
 			sym->s_type = SYMBOL_TYPE_NONE;
 			result      = 0;
@@ -162,7 +162,7 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 		if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 			result = err_symbol_readonly(sym);
 		} else {
-			/* Set the symbol type to `none' */
+			/* Set the symbol type to `none` */
 			symbol_fini(sym);
 			sym->s_type = new_kind;
 			switch (new_kind) {
@@ -386,7 +386,7 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 	if unlikely(SYMBOL_TYPE_IS_IMMUTABLE(sym->s_type)) {
 		err_symbol_readonly(sym);
 	} else {
-		/* Check that `self' isn't reachable from `other_sym' */
+		/* Check that `self` isn't reachable from `other_sym` */
 		struct symbol *iter = other_sym;
 		for (;; iter = iter->s_alias) {
 			if unlikely(iter == sym) {

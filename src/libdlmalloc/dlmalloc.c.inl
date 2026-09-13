@@ -166,7 +166,7 @@ DECL_BEGIN
  *   Define a new method "mspace_malloc_lockless" (same as
  *   "mspace_malloc", but caller must do "PREACTION") This is a
  *   minor optimization on-top of "USE_PER_THREAD_MSTATE", since
- *   it allows `dlmalloc()' to select either the "tls" or "gm"
+ *   it allows `dlmalloc()` to select either the "tls" or "gm"
  *   allocator, based on whichever becomes available first,
  *   rather than having to unconditionally rely on "tls" as soon
  *   as "gm" cannot be locked even once.
@@ -233,8 +233,8 @@ DECL_BEGIN
  *
  * - DETECT_USE_AFTER_FREE -------------------------------------
  *   When memory is allocated that was previously free'd, check
- *   that its contents still reflect `DL_DEBUG_MEMSET_FREE_PATTERN'.
- *   This feature requires `DL_DEBUG_MEMSET_FREE' to work.
+ *   that its contents still reflect `DL_DEBUG_MEMSET_FREE_PATTERN`.
+ *   This feature requires `DL_DEBUG_MEMSET_FREE` to work.
  * -------------------------------------------------------------
  */
 #ifndef DL_DEBUG_INTERNAL
@@ -289,8 +289,8 @@ DECL_BEGIN
 #define MALLOC_ALIGNMENT __ALIGNOF_MAX_ALIGN_T__
 #endif /* !MALLOC_ALIGNMENT */
 
-/* The whole idea is to implement `dlmalloc()', so we'll need
- * more than MSPACES (but see `USE_PER_THREAD_MSTATE') */
+/* The whole idea is to implement `dlmalloc()`, so we'll need
+ * more than MSPACES (but see `USE_PER_THREAD_MSTATE`) */
 #ifndef ONLY_MSPACES
 #define ONLY_MSPACES 0
 #endif /* ONLY_MSPACES */
@@ -300,12 +300,12 @@ DECL_BEGIN
 #define PROCEED_ON_ERROR 0
 #endif /* PROCEED_ON_ERROR */
 
-/* Enable support for `dlmalloc_inspect_all()' */
+/* Enable support for `dlmalloc_inspect_all()` */
 #ifndef MALLOC_INSPECT_ALL
 #define MALLOC_INSPECT_ALL 0
 #endif /* MALLOC_INSPECT_ALL */
 
-/* Need to enable MSPACES support for `tls_mspace()' */
+/* Need to enable MSPACES support for `tls_mspace()` */
 #ifndef MSPACES
 #define MSPACES (ONLY_MSPACES || USE_PER_THREAD_MSTATE)
 #endif /* MSPACES */
@@ -315,8 +315,8 @@ DECL_BEGIN
 #define GM_ONLY (!MSPACES)
 #endif /* GM_ONLY */
 
-/* Set to `1' to disable some asserts/assumptions that were originally used
- * to implement `RTCHECK'. These were turned into assertions/__builtin_assume,
+/* Set to `1` to disable some asserts/assumptions that were originally used
+ * to implement `RTCHECK`. These were turned into assertions/__builtin_assume,
  * so this option kind-of does the opposite now... */
 #ifndef INSECURE
 #define INSECURE 0
@@ -328,7 +328,7 @@ DECL_BEGIN
 #endif /* XOR_MASK_MCHUNK_FOOT */
 
 #ifndef FOOTERS
-#define FOOTERS USE_PER_THREAD_MSTATE /* Needed for `dlfree()' to detect source mspace! */
+#define FOOTERS USE_PER_THREAD_MSTATE /* Needed for `dlfree()` to detect source mspace! */
 #endif /* !FOOTERS */
 
 /* Custom dlmalloc extension:
@@ -338,7 +338,7 @@ DECL_BEGIN
 #endif /* !FLAG4_BIT_HEAP_REGION */
 
 /* Extension to "FLAG4_BIT_HEAP_REGION" and "DL_DEBUG_MEMSET_FREE":
- * - When inside of `dlfree()' with a chunk that is part of a heap
+ * - When inside of `dlfree()` with a chunk that is part of a heap
  *   region, only apply "DL_DEBUG_MEMSET_FREE_PATTERN" to selective words:
  * >> size_t i, n_words = CHUNK_SIZE / sizeof(HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T);
  * >> HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *iter = (HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *)CHUNK_BASE;
@@ -358,11 +358,11 @@ DECL_BEGIN
 #endif /* !FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
 
 /* Extension to 'FLAG4_BIT_HEAP_REGION':
- * - Allow `STRUCT_dlheaptail::ht_zero' to be non-zero and point at some
+ * - Allow `STRUCT_dlheaptail::ht_zero` to be non-zero and point at some
  *   extra, custom debug information / metadata that should be associated
  *   with the heap region.
  * - When this field is non-zero, an additional callback is invoked before
- *   the region's actual `hr_destroy' function pointer is called:
+ *   the region's actual `hr_destroy` function pointer is called:
  *
  *   >> static ATTR_RETNONNULL NONNULL((1)) STRUCT_dlheapregion *DCALL
  *   >> dl_dbg_heapregion_dispose(STRUCT_dlheapregion *__restrict region);
@@ -615,14 +615,14 @@ struct mallinfo {
 #error "'struct freelist' is only used when the relevant mstate can't be locked, but 'USE_LOCKS=0' means that is never the case"
 #endif /* USE_PENDING_FREE_LIST && !USE_LOCKS */
 #if USE_PER_THREAD_MSTATE && !USE_LOCKS
-#error "'tls_mspace()' is used when 'gm' can't be locked, but 'USE_LOCKS=0' means 'gm' has no locks (and could thus could never block)"
+#error "'tls_mspace()` is used when 'gm' can't be locked, but 'USE_LOCKS=0' means 'gm' has no locks (and could thus could never block)"
 #endif /* USE_PER_THREAD_MSTATE && !USE_LOCKS */
 #if USE_MSPACE_MALLOC_LOCKLESS && !USE_LOCKS
-#error "'mspace_malloc_lockless()' with 'USE_LOCKS=0' doesn't make sense: 'mspace_malloc()' already is lock-less in this case!"
+#error "'mspace_malloc_lockless()` with 'USE_LOCKS=0' doesn't make sense: 'mspace_malloc()` already is lock-less in this case!"
 #endif /* USE_MSPACE_MALLOC_LOCKLESS && !USE_LOCKS */
 
 #if !MSPACES && USE_PER_THREAD_MSTATE
-#error "'tls_mspace()' (as enabled by 'USE_PER_THREAD_MSTATE=1') requires that 'MSPACES=1' be enabled"
+#error "'tls_mspace()` (as enabled by 'USE_PER_THREAD_MSTATE=1') requires that 'MSPACES=1' be enabled"
 #endif /* !MSPACES && USE_PER_THREAD_MSTATE */
 
 #if FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
@@ -1322,11 +1322,11 @@ DL_API_DECL(, dlmalloc_trim_RETURN_TYPE, mspace_trim, (mspace msp, size_t pad));
 DL_API_DECL(, mspace, tls_mspace, (void));
 
 /* Destroy a lazily-allocated TLS mspace. This function must be called by the
- * per-thread finalize for the TLS variable returned by `DL_TLS_GETHEAP()',
+ * per-thread finalize for the TLS variable returned by `DL_TLS_GETHEAP()`,
  * when said variable is non-NULL and the relevant thread has/is exiting. */
 DL_API_DECL(NONNULL((1)), void, tls_mspace_destroy, (mspace ms));
 
-/* Invoke `cb' for every existing `tls_mspace()' ("cb" must still PREACTION()-
+/* Invoke `cb` for every existing `tls_mspace()` ("cb" must still PREACTION()-
  * lock said space if doing so is necessary) -- this function is used by some
  * of the other dlmalloc APIs to apply configurations / trim heaps for all TLS
  * heaps when the relevant action is being performed for the "gm" heap. */
@@ -1364,14 +1364,14 @@ struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheapchunk {
 #define STRUCT_dlheaptail struct dlheaptail
 struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheaptail {
 	size_t ht_lastsize; /* Size of the last *real* chunk within the region (in bytes); must be multiple of "MALLOC_ALIGNMENT" */
-	size_t ht_zero;     /* Always zero (but see `FLAG4_BIT_HEAP_REGION_DBG_DISPOSE') */
+	size_t ht_zero;     /* Always zero (but see `FLAG4_BIT_HEAP_REGION_DBG_DISPOSE`) */
 };
 
 #define STRUCT_dlheapregion struct dlheapregion
 struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheapregion {
 	size_t             hr_size;  /* [const][== offsetafter(dlheapregion, hr_tail)]
 	                              * Total region size (in bytes, including this header, and the tail) */
-	/* [1..1][const] Destructor invoked once the region's last chunk is dlfree()'d */
+	/* [1..1][const] Destructor invoked once the region's last chunk is dlfree()`d */
 	void (DCALL       *hr_destroy)(STRUCT_dlheapregion *__restrict self);
 	STRUCT_dlheapchunk hr_first;                                /* First chunk of region */
 //	byte_t             hr_data[hr_size - (6 * sizeof(void *))]; /* Region payload (containing more chunks...) */
@@ -4423,7 +4423,7 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 			ext_assert(region->hr_first.hc_prevsize == 0);
 			ext_assert(region->hr_first.hc_head == (psize | PINUSE_BIT));
 			if (next->head != 0) {
-				/* Free dynamically allocated debug info from `DeeDbgHeap_AddHeapRegion()',
+				/* Free dynamically allocated debug info from `DeeDbgHeap_AddHeapRegion()`,
 				 * and remove "region" (or its debug info) from the global list of known,
 				 * custom heap regions */
 				region = dl_dbg_heapregion_dispose(region);
@@ -4657,7 +4657,7 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 	dl_assert(get_mstate_for(p) == m);
 #endif /* FOOTERS && !GM_ONLY */
 
-	/* BEGIN: Copy-paste from `dlfree()' above */
+	/* BEGIN: Copy-paste from `dlfree()` above */
 	check_inuse_chunk(m, p);
 	ext_assert__ok_address(m, p);
 	ext_assert__ok_inuse(p);
@@ -4741,7 +4741,7 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 			release_unused_segments(ARG_mstate_m);
 	}
 postaction:
-	/* END: Copy-paste from `dlfree()' above */
+	/* END: Copy-paste from `dlfree()` above */
 	;
 }
 
@@ -4911,7 +4911,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 #endif /* !... */
 			/* Must re-acquire lock to relevant mstate. This shouldn't normally
 			 * block, since our thread just had that lock a few moments ago when
-			 * we were in `internal_malloc()'.
+			 * we were in `internal_malloc()`.
 			 *
 			 * Also: this part **must** happen while holding the lock, since we
 			 *       can only modify our "p->head" with the lock, as another
@@ -5760,8 +5760,8 @@ DL_API_IMPL(, mspace, tls_mspace, (void)) {
 #define DL_REENTRANT_LOCK_RELEASE     DL_LOCK_RELEASE
 #endif /* !DL_REENTRANT_LOCK_T */
 
-/* Try to use a recursive lock here because the callback of `tls_mspace_foreach()'
- * may call back into `tls_mspace_foreach()' in some situations. */
+/* Try to use a recursive lock here because the callback of `tls_mspace_foreach()`
+ * may call back into `tls_mspace_foreach()` in some situations. */
 static DL_REENTRANT_LOCK_T tls_foreach_lock = DL_REENTRANT_LOCK_INIT_STATIC;
 #define tls_foreach_lock_acquire_noint() DL_REENTRANT_LOCK_ACQUIRE(&tls_foreach_lock)
 #define tls_foreach_lock_release()       DL_REENTRANT_LOCK_RELEASE(&tls_foreach_lock)

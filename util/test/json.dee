@@ -109,10 +109,10 @@ assert json.parse(r'{"z":{"foo":[42,"foo"]}}', into: MyDTO) == myDTOInstance;
 assert json.parse(r'{"z":{"foo":[true]}}', into: MyDTO) == MyDTO(z: MyDTO3(foo: [true])),
 	"Type annotations should function transitively, such that the first "
 	"set of annotations that can fully satisfy all input is used. Because "
-	"the `z->foo' array contains bool elements, that means that `z' must be "
+	"the `z->foo` array contains bool elements, that means that `z` must be "
 	"instantiated as an instance of MyDTO3 rather than MyDTO2";
 assert json.parse(r'{"z":{"foo":[]}}', into: MyDTO) == MyDTO(z: MyDTO2(foo: [])),
-	"In this case it would also be acceptable to instantiate `z' as MyDTO3, "
+	"In this case it would also be acceptable to instantiate `z` as MyDTO3, "
 	"but the JSON DTO engine always picks the first type in multiple-choice "
 	"type annotations that is able to satisfy all input.";
 

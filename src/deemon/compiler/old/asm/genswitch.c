@@ -46,8 +46,8 @@ DECL_BEGIN
 #define DO(expr) if unlikely(expr) goto err
 
 /* Assuming that the switch-expression is located ontop of the stack,
- * generate code to jump to `target' after popping said expression
- * when if equals `case_expr'. However if it doesn't, leave the stack
+ * generate code to jump to `target` after popping said expression
+ * when if equals `case_expr`. However if it doesn't, leave the stack
  * as it was upon entry. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 emit_runtime_check(struct ast *__restrict ddi_ast,
@@ -77,9 +77,9 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 	asm_defsym(guard_end);
 	DO(asm_gjmp(ASM_JF, temp)); /* if (!(expr == case)) goto temp; */
 	asm_decsp();  /* Adjust for ASM_JF */
-	DO(asm_gpop()); /* Pop `expr' before jumping to `target' */
+	DO(asm_gpop()); /* Pop `expr` before jumping to `target` */
 	DO(asm_gjmp(ASM_JMP, target));
-	asm_incsp();      /* Revert the popping of `expr' after the jump. */
+	asm_incsp();      /* Revert the popping of `expr` after the jump. */
 	asm_defsym(temp); /* Jump here when the expressions didn't match. */
 
 	/* Create a primary exception handler for NOT_IMPLEMENTED errors. */
@@ -122,7 +122,7 @@ err:
 }
 
 
-/* Construct a tuple `(sym.PC, sym.SP)' for the given `sym' */
+/* Construct a tuple `(sym.PC, sym.SP)` for the given `sym` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pack_target_tuple(struct asm_sym *__restrict sym) {
 	DREF DeeObject *ri_ip;
@@ -133,7 +133,7 @@ pack_target_tuple(struct asm_sym *__restrict sym) {
 	ri_sp = DeeRelInt_New(sym, 0, RELINT_MODE_FSTCK);
 	if unlikely(!ri_sp)
 		goto err_ip;
-	/* TODO: Add support for using `DeeSeq_OfPairInherited()' here */
+	/* TODO: Add support for using `DeeSeq_OfPairInherited()` here */
 	return DeeTuple_PackInherited(2, ri_ip, ri_sp); /* Inherit references. */
 err_ip:
 	Dee_DecrefDokill(ri_ip);
@@ -188,7 +188,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 	ASSERT_AST(self);
 	ASSERT(self->a_type == AST_SWITCH);
 
-	/* Allocate a new symbol for `break' being used
+	/* Allocate a new symbol for `break` being used
 	 * inside of a switch and set up contextual flags. */
 	switch_break = asm_newsym();
 	if unlikely(!switch_break)
@@ -396,7 +396,7 @@ do_generate_block:
 	DO(ast_genasm(self->a_switch.s_block, ASM_G_FNORMAL));
 
 	/* If the user didn't define a default symbol,
-	 * it will jump where `break' is located at. */
+	 * it will jump where `break` is located at. */
 	if (!ASM_SYM_DEFINED(default_sym))
 		asm_defsym(default_sym);
 

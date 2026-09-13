@@ -28,8 +28,8 @@
 
 DECL_BEGIN
 
-/* Format a given `format' string subject to printf-style formatting rules.
- * NOTE: This is the function called by `operator %' for strings. */
+/* Format a given `format` string subject to printf-style formatting rules.
+ * NOTE: This is the function called by `operator %` for strings. */
 INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 DeeString_CFormat(Dee_formatprinter_t printer,
                   Dee_formatprinter_t format_printer, void *arg,

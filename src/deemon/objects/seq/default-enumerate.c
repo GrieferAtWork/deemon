@@ -371,7 +371,7 @@ printPrefixAliases("members");
 /*[[[end]]]*/
 
 
-/* Type names (NOTE: Run `deemon -F src/deemon/objects/seq/default-enumerate.c' after changing these) */
+/* Type names (NOTE: Run `deemon -F src/deemon/objects/seq/default-enumerate.c` after changing these) */
 #define de_sos_gif__name      "_SeqEnumWithSeqOperatorSizeAndGetItemIndexFast"
 #define dewif_sos_gif__name   "_SeqEnumWithIntFilterAndSeqOperatorSizeAndGetItemIndexFast"
 #define de_sos_sotgi__name    "_SeqEnumWithSeqOperatorSizeAndSeqOperatorTryGetItemIndex"
@@ -1009,7 +1009,7 @@ err:
 /* WithFilter: $with__map_iterkeys__and__map_operator_getitem */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dewf_mik_mog__iter(DefaultEnumerationWithFilter *__restrict self) {
-	/* TODO: Custom iterator type: `DefaultIterator_WithIterKeysAndGetItemAndUnpackFilter' */
+	/* TODO: Custom iterator type: `DefaultIterator_WithIterKeysAndGetItemAndUnpackFilter` */
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;

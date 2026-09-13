@@ -293,7 +293,7 @@ class Code {
 		} else if (usedBody && (usedBody[0] in "\'\"" || usedBody.isdigit(0))) {
 			p.append(usedBody);
 		} else {
-			p.append(f"`{usedBody}'");
+			p.append(f"`{usedBody}`");
 		}
 	}
 
@@ -896,7 +896,7 @@ use_first_candy:
 		/* If there are multiple candidates, check if the described
 		 * objects match. - If they do, then simply use any one of
 		 * of them as path!
-		 * This is important for something like `:Error', which can
+		 * This is important for something like `:Error`, which can
 		 * be resolved both by the deemon- and errors-module, and
 		 * it wouldn't matter which module actually gets resolved! */
 		local obj, isFirst = true;

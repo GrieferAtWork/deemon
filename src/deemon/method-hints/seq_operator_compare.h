@@ -53,7 +53,7 @@ err:
 /* NOTE: In compare (and possibly some other) method hints, we must not
  *       explicitly require stuff like seq_operator_foreach of the rhs-
  *       object. -- THAT WOULD BE WRONG!
- * Instead, we need to keep on using `DeeObject_Foreach(rhs)', and that
+ * Instead, we need to keep on using `DeeObject_Foreach(rhs)`, and that
  * is good and correct here:
  * >> assert {10} == ({10, 10} as Set);
  * ^ Calling "Sequence.__foreach__({10, 10} as Set)" will by-pass the

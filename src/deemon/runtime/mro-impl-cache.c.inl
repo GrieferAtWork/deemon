@@ -1977,7 +1977,7 @@ err_no_keywords:
 #else /* LOCAL_HAS_len */
 	err_keywords_func_not_accepted_string(tp_self, LOCAL_attr, kw);
 #endif /* !LOCAL_HAS_len */
-	/* Fallthru to `err' below. */
+	/* Fallthru to `err` below. */
 #define NEED_err
 #endif /* LOCAL_HAS_kw */
 

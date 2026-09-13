@@ -274,7 +274,7 @@ err_bad_size:
 	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
 		data_size = 0;
 	DeeError_Throwf(&DeeError_ValueError,
-	                //"Invalid bytes size: structued type `%r' has an "
+	                //"Invalid bytes size: structued type `%r` has an "
 	                "instance size of `%" PRFuSIZ "', but the given "
 	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
 	                "provides at most `%" PRFuSIZ " bytes'",
@@ -411,7 +411,7 @@ ctype_call(CType *self, size_t argc, DeeObject *const *argv) {
 			goto create_inst;
 	}
 
-	/* Special case: `xxx(void)' constructs a function prototype with no arguments. */
+	/* Special case: `xxx(void)` constructs a function prototype with no arguments. */
 	if (argc == 1 && Object_AsCType(argv[0]) == &CVoid_Type)
 		argc = 0;
 
@@ -777,13 +777,13 @@ cobject_tobytes(CObject *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_UnpackStruct0Or1XOr2X(err, argc, argv, "tobytes", &args, &args.data, "o", _DeeArg_AsObject, &args.offset, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 
-	/* When no explicit buffer was given, return a writable view for the data of `self' */
+	/* When no explicit buffer was given, return a writable view for the data of `self` */
 	if (args.data == NULL) {
 		return (DREF DeeBytesObject *)DeeBytes_NewView(Dee_AsObject(self), CObject_Data(self),
 		                                               type_size, Dee_BUFFER_FREADONLY);
 	}
 
-	/* Otherwise, copy bytes of `self' into the provided bytes-buffer at the specified offset. */
+	/* Otherwise, copy bytes of `self` into the provided bytes-buffer at the specified offset. */
 	if (DeeObject_AssertTypeExact(args.data, &DeeBytes_Type))
 		goto err;
 	if unlikely(!DeeBytes_IsWritable(args.data))
@@ -802,7 +802,7 @@ err_bad_size:
 	if (OVERFLOW_USUB(data_size, args.offset, &data_size))
 		data_size = 0;
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Invalid bytes size: structured type `%r' has an "
+	                "Invalid bytes size: structured type `%r` has an "
 	                "instance size of `%" PRFuSIZ "', but the given "
 	                "`%" PRFuSIZ "'-large buffer at offset `%" PRFuSIZ "' "
 	                "provides at most `%" PRFuSIZ " bytes'",
@@ -893,7 +893,7 @@ INTERN CType AbstractCObject_Type = {
 /* ARRAY TYPE                                                           */
 /************************************************************************/
 
-/* Return a pointer to the `index' element (no bounds checking done) */
+/* Return a pointer to the `index` element (no bounds checking done) */
 INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index) {
 	DREF CPointerType *item_pointer_type;
@@ -913,7 +913,7 @@ err:
 	return NULL;
 }
 
-/* Return an LValue to the `index' element (no bounds checking done) */
+/* Return an LValue to the `index` element (no bounds checking done) */
 INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CArray_GetItem(CArray *__restrict self, ptrdiff_t index) {
 	DREF CLValue *result;
@@ -1354,7 +1354,7 @@ again:
 	return true;
 }
 
-/* Construct a new array-type `item_type[item_count]' */
+/* Construct a new array-type `item_type[item_count]` */
 INTERN WUNUSED NONNULL((1)) DREF CArrayType *DCALL
 CArrayType_Of(CType *__restrict item_type, size_t item_count) {
 	DREF CArrayType *result;
@@ -1584,7 +1584,7 @@ cstructtype_class_of(DeeTypeObject *__restrict UNUSED(tp_self),
 	/* Extended constructor to allow custom struct types:
 	 * - allowing you to manually specify offsets of fields
 	 * - allowing you to set a custom alignment
-	 * Can just use `struct cstruct_builder' to implement this! */
+	 * Can just use `struct cstruct_builder` to implement this! */
 	return CStructType_OfExtended(args.fields, args.alignment);
 err:
 	return NULL;
@@ -1602,7 +1602,7 @@ PRIVATE struct type_method tpconst cstructtype_class_methods[] = {
 	                /**/ "});\n"
 	                /**/ "local instance = WeirdStruct();\n"
 	                /**/ "instance.x = 0x11223344;\n"
-	                /**/ "/* HINT: With `be32', this'd be `0x22334400' */\n"
+	                /**/ "/* HINT: With `be32`, this'd be `0x22334400` */\n"
 	                /**/ "assert instance.y == 0x112233;"
 	                "}"),
 	TYPE_METHOD_END
@@ -2090,7 +2090,7 @@ CStructType_FieldByNameStringLenHash(CStructType const *self, char const *name,
 
 struct cstruct_builder {
 	CStructType           *csb_result;    /* [0..1] Struct built thus far ("cst_size" is the allocated size) */
-	size_t                 csb__cst_size; /* Used size (after packing, this becomes `csb_result->cst_size') */
+	size_t                 csb__cst_size; /* Used size (after packing, this becomes `csb_result->cst_size`) */
 	size_t                 csb_msk_used;  /* # of named fields used */
 	struct cstruct_field **csb_p_last;    /* [0..0][0..1][valid_if(csb_result)] Pointer to next-field of last-added field */
 };
@@ -2367,7 +2367,7 @@ err:
 
 struct cstruct_of_data {
 	struct cstruct_builder csod_builder; /* Struct builder */
-	unsigned int           csod_flags;   /* Set of `CSTRUCTTYPE_F_*' */
+	unsigned int           csod_flags;   /* Set of `CSTRUCTTYPE_F_*` */
 	ptrdiff_t              csod_offset;  /* Offset of next field to add */
 };
 
@@ -2431,7 +2431,7 @@ cstruct_of_cb(void *arg, DeeObject *elem) {
 		CType *field_type;
 		DREF CLValueType *field_type_lvalue;
 
-		/* Given "elem" must be a pair `{ fieldName: string, fieldType: CType }' */
+		/* Given "elem" must be a pair `{ fieldName: string, fieldType: CType }` */
 		if (DeeObject_InvokeMethodHint(seq_unpack, elem, 2, name_and_type))
 			goto err;
 		if (DeeObject_AssertType(name_and_type[0], &DeeString_Type))
@@ -2468,9 +2468,9 @@ err:
 }
 
 
-/* Construct a new struct-type from `initializer', which
- * should be `{((string, CType) | CStructType)...}'
- * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+/* Construct a new struct-type from `initializer`, which
+ * should be `{((string, CType) | CStructType)...}`
+ * @param: flags: Set of `CSTRUCTTYPE_F_*` */
 INTERN WUNUSED NONNULL((1)) DREF CStructType *DCALL
 CStructType_Of(DeeObject *__restrict initializer,
                unsigned int flags, size_t min_alignment) {
@@ -2568,9 +2568,9 @@ err:
 	return -1;
 }
 
-/* Construct a new struct-type from `initializer', which
- * should be `{((int, string, CType) | (int, CStructType))...}'
- * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+/* Construct a new struct-type from `initializer`, which
+ * should be `{((int, string, CType) | (int, CStructType))...}`
+ * @param: flags: Set of `CSTRUCTTYPE_F_*` */
 INTERN WUNUSED NONNULL((1)) DREF CStructType *DCALL
 CStructType_OfExtended(DeeObject *__restrict initializer,
                        size_t min_alignment) {
@@ -3214,7 +3214,7 @@ CFunctionType_New(CType *__restrict return_type,
 	Dee_Incref(CFunctionType_AsType(&AbstractCFunction_Type));
 	result->cft_base.ct_base.tp_base  = CFunctionType_AsType(&AbstractCFunction_Type); /* Inherit reference. */
 	result->cft_base.ct_base.tp_mro   = cfunction_subclass_mro;
-	result->cft_base.ct_sizeof        = (size_t)-1; /* Really high value to cause error in `ctype_frombytes()' */
+	result->cft_base.ct_sizeof        = (size_t)-1; /* Really high value to cause error in `ctype_frombytes()` */
 	result->cft_hash                  = function_hash;
 	result->cft_argc                  = argc;
 	result->cft_cc                    = calling_convention;
@@ -3513,7 +3513,7 @@ cpointer_visit(CPointer *__restrict self, Dee_visit_t proc, void *arg) {
 
 
 
-/* Return a new pointer offset by `index' */
+/* Return a new pointer offset by `index` */
 INTERN WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CPointer_PlusOffset(CPointer *__restrict self, ptrdiff_t index) {
 	CPointerType *tp_self = Dee_TYPE(self);
@@ -3525,7 +3525,7 @@ CPointer_PlusOffset(CPointer *__restrict self, ptrdiff_t index) {
 	return CPointer_NewExInherited(tp_self, res_cvalue.ptr, self->cp_owner);
 }
 
-/* Return an L-Value after `index' as an offset to "self"  */
+/* Return an L-Value after `index` as an offset to "self"  */
 INTERN WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CPointer_GetItem(CPointer *__restrict self, ptrdiff_t index) {
 	DREF CLValue *result;

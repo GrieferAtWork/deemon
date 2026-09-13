@@ -133,7 +133,7 @@ socket_ctor(Socket *__restrict self, size_t argc,
 			                   sock_getprotonameorid(proto));
 		} else {
 			DeeNet_ThrowErrorf(&DeeError_NetError, err,
-			                   "Failed to create `socket(%R, %R, %R)'",
+			                   "Failed to create `socket(%R, %R, %R)`",
 			                   sock_getafnameorid((sa_family_t)af),
 			                   sock_gettypenameorid(type),
 			                   sock_getprotonameorid(proto));
@@ -581,9 +581,9 @@ err:
 
 
 #ifdef CONFIG_HOST_WINDOWS
-/* On windows, accept() isn't interruptible (and neither is `select()')
+/* On windows, accept() isn't interruptible (and neither is `select()`)
  * But to still ensure that this blocking call can be interrupted by
- * `Thread.interrupt()', we need to use this system call right here: */
+ * `Thread.interrupt()`, we need to use this system call right here: */
 PRIVATE DWORD DCALL
 select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 	DWORD dwResult;
@@ -1001,7 +1001,7 @@ do_timed_select:
 			if (now >= end_time)
 				return 1; /* Timeout */
 			/* Update the remaining time.
-			 * NOTE: Never ZERO because `end_time > now' right now. */
+			 * NOTE: Never ZERO because `end_time > now` right now. */
 			timeout_microseconds = end_time - now;
 			goto do_timed_select;
 		}
@@ -1034,7 +1034,7 @@ do_timed_select:
 			if (now >= end_time)
 				return 1; /* Timeout */
 			/* Update the remaining time.
-			 * NOTE: Never ZERO because `end_time > now' right now. */
+			 * NOTE: Never ZERO because `end_time > now` right now. */
 			timeout_microseconds = end_time - now;
 			goto do_timed_select;
 		}
@@ -1146,7 +1146,7 @@ socket_configure_send(Socket *__restrict self) {
 
 PRIVATE ATTR_COLD int DCALL
 err_configure_recv(Socket *__restrict self) {
-	/* Handle errors that may have occurred during `socket_configure_recv()' */
+	/* Handle errors that may have occurred during `socket_configure_recv()` */
 	int error;
 	DBG_ALIGNMENT_DISABLE();
 	error = GET_NET_ERROR();
@@ -1158,7 +1158,7 @@ err_configure_recv(Socket *__restrict self) {
 
 PRIVATE ATTR_COLD int DCALL
 err_configure_send(Socket *__restrict self) {
-	/* Handle errors that may have occurred during `socket_configure_send()' */
+	/* Handle errors that may have occurred during `socket_configure_send()` */
 	int error;
 	DBG_ALIGNMENT_DISABLE();
 	error = GET_NET_ERROR();
@@ -1400,7 +1400,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_send(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-	 *      `wait_for_send()' will have unlocked the socket. */
+	 *      `wait_for_send()` will have unlocked the socket. */
 	if unlikely(result)
 		goto done;
 	DBG_ALIGNMENT_DISABLE();
@@ -1506,7 +1506,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_recv(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-	 *      `wait_for_recv()' will have unlocked the socket. */
+	 *      `wait_for_recv()` will have unlocked the socket. */
 	if unlikely(result)
 		goto done;
 	DBG_ALIGNMENT_DISABLE();
@@ -1611,7 +1611,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_send(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-	 *      `wait_for_send()' will have unlocked the socket. */
+	 *      `wait_for_send()` will have unlocked the socket. */
 	if unlikely(result)
 		goto done;
 	DBG_ALIGNMENT_DISABLE();
@@ -1733,7 +1733,7 @@ again:
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
 	result = wait_for_recv(self, end_time);
 	/* NOTE: in the event of a timeout or error,
-	 *      `wait_for_recv()' will have unlocked the socket. */
+	 *      `wait_for_recv()` will have unlocked the socket. */
 	if unlikely(result)
 		goto done;
 	DBG_ALIGNMENT_DISABLE();

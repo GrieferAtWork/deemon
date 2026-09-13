@@ -54,13 +54,13 @@ DECL_BEGIN
  * >> 1:
  *
  * As the name implies, this type of set is read-only, in a sense being
- * for `HashSet' what `Tuple' is for `List'.
+ * for `HashSet` what `Tuple` is for `List`.
  *
  * Because read-only sets cannot be modified, this allows them to operate
  * using an inline hash-vector, as well as not requiring the use of any
  * sort of lock.
  *
- * NOTE: `_RoSet' is exported as `deemon.HashSet.Frozen'. */
+ * NOTE: `_RoSet` is exported as `deemon.HashSet.Frozen`. */
 
 typedef struct Dee_roset_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
@@ -74,9 +74,9 @@ typedef struct Dee_roset_object {
 
 #define DeeRoSet_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoSetObject, self)->rs_vsize == 0)
 
-/* The main `_RoSet' container class. */
+/* The main `_RoSet` container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;
-#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet' is final */
+#define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet` is final */
 #define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL
@@ -85,7 +85,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*RoSet*/ DeeObject *DCALL
 DeeRoSet_FromHashSet(/*HashSet*/ DeeObject *__restrict self);
 
 
-/* Special empty instance of `DeeRoSet_Type'
+/* Special empty instance of `DeeRoSet_Type`
  * NOTE: This is _NOT_ a singleton! */
 struct Dee_empty_roset_object {
 	Dee_OBJECT_HEAD
@@ -117,8 +117,8 @@ struct Dee_roset_builder {
 	 * - rsb_set->rs_htab:    [== _DeeRoSet_GetRealVTab(rsb_set) + rsb_valloc]
 	 * - rsb_set->rs_hidxget: [== Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(rsb_valloc)].hxio_get] */
 	DeeRoSetObject    *rsb_set;    /* [0..1][owned] The set being built. */
-	size_t             rsb_valloc;  /* Allocated size of `rsb_set' (or 0 when `rsb_set' is `NULL') */
-	Dee_hash_sethidx_t rsb_hidxset; /* [?..1][valid_if(rsb_set)] Setter for `rsb_set->rs_htab' */
+	size_t             rsb_valloc;  /* Allocated size of `rsb_set` (or 0 when `rsb_set` is `NULL`) */
+	Dee_hash_sethidx_t rsb_hidxset; /* [?..1][valid_if(rsb_set)] Setter for `rsb_set->rs_htab` */
 };
 
 #define Dee_ROSET_BUILDER_INIT { NULL, 0, NULL }

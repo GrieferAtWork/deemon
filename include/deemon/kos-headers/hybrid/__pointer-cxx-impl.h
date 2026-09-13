@@ -144,7 +144,7 @@ public:
 
 #ifdef __POINTER_CXX_IS_VOID
 #ifdef __COMPILER_HAVE_VOID_ARITHMETIC
-	/* Emulate a size of 1 for `void' when the compiler support pointer arithmetic */
+	/* Emulate a size of 1 for `void` when the compiler support pointer arithmetic */
 	__CXX_CLASSMEMBER __PTR_T __POINTER_CXX_CV_QUAL *operator+(__PTRDIFF_TYPE__ __index) const __CXX_NOEXCEPT { return (__PTR_T __POINTER_CXX_CV_QUAL *)((__UINTPTR_TYPE__)__m_ptr + __index); }
 	__CXX_CLASSMEMBER __PTR_T __POINTER_CXX_CV_QUAL *operator+(__PTRDIFF_TYPE__ __index) const volatile __CXX_NOEXCEPT { return (__PTR_T __POINTER_CXX_CV_QUAL *)((__UINTPTR_TYPE__)__m_ptr + __index); }
 	__CXX_CLASSMEMBER __PTR_T __POINTER_CXX_CV_QUAL *operator-(__PTRDIFF_TYPE__ __index) const __CXX_NOEXCEPT { return (__PTR_T __POINTER_CXX_CV_QUAL *)((__UINTPTR_TYPE__)__m_ptr - __index); }

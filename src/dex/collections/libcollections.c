@@ -46,7 +46,7 @@ INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_changed_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,
-	                       "A sequence `%k' has changed while being iterated: `%k'",
+	                       "A sequence `%k` has changed while being iterated: `%k`",
 	                       Dee_TYPE(seq), seq);
 }
 

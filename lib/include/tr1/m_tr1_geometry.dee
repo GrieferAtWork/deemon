@@ -41,7 +41,7 @@ global class point {
 		y = other.y;
 	}
 
-	/* `x || y' would have made more sense, but
+	/* `x || y` would have made more sense, but
 	 * this is only for backwards compatibility */
 	operator bool(): bool {
 		return x && y;

@@ -83,7 +83,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `access()' */
+/* Figure out how to implement `access()` */
 #undef posix_access_USE_waccess
 #undef posix_access_USE_access
 #undef posix_access_USE_STUB
@@ -99,7 +99,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `euidaccess()' */
+/* Figure out how to implement `euidaccess()` */
 #undef posix_euidaccess_USE_euidaccess
 #undef posix_euidaccess_USE_STUB
 #if defined(CONFIG_HAVE_euidaccess)
@@ -110,7 +110,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `faccessat()' */
+/* Figure out how to implement `faccessat()` */
 #undef posix_faccessat_USE_faccessat
 #undef posix_faccessat_USE_access
 #undef posix_faccessat_USE_STUB

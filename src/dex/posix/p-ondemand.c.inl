@@ -296,7 +296,7 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
  * @param: path: Only used for error messages
  * @return: * :        Symlink contents
  * @return: NULL:      Error
- * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false') */
+ * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false`) */
 INTERN WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
              bool throw_error_if_not_a_link) {
@@ -338,7 +338,7 @@ again:
 			    /* First check: Cygwin's symbolic links always have the SYSTEM flag set. */
 			    (hfInfo.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0 &&
 			    /* Second check: Let's impose a limit on how long a symlink can be.
-			     * The `4 * 65536' used here can also be found within cygwin's source code. */
+			     * The `4 * 65536` used here can also be found within cygwin's source code. */
 			    (hfInfo.nFileSizeHigh == 0 && hfInfo.nFileSizeLow <= 4 * 65536)) {
 				/* Try to load the file into memory. */
 				void *pFileBuffer = buffer;
@@ -513,12 +513,12 @@ err:
 	return -1;
 }
 
-/* Helper wrapper around `SetFileTime()' that automatically
+/* Helper wrapper around `SetFileTime()` that automatically
  * does all of the necessary conversion of time arguments
  * from nanoseconds-since-01-01-0000 into NT's FILETIME format.
  * @return:  0: Success
  * @return: -1: An error was thrown
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((2, 3, 4)) int DCALL
 nt_SetFileTime(HANDLE hFile, DeeObject *atime,
                DeeObject *mtime, DeeObject *birthtime) {
@@ -552,7 +552,7 @@ again_SetFileTime:
 		/* Handle some common system errors. */
 		DeeNTSystem_HandleGenericError(dwError, err, again_SetFileTime);
 
-		/* Check for special case: the given `hFile' isn't opened with enough permissions.
+		/* Check for special case: the given `hFile` isn't opened with enough permissions.
 		 * In this case, try to re-open the underlying file with extra more permissions. */
 		if (dwError == ERROR_ACCESS_DENIED) {
 			HANDLE hProcess;
@@ -615,10 +615,10 @@ err:
 
 #ifdef NEED_nt_QuerySid
 #undef NEED_nt_QuerySid
-/* Similar to `nt_DecodeSid()', but accept more than just strings.
- * @param: argument_is_gid: When false, decode `uid_or_gid' as a UID; else, decode as a GID
- * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
- * @return: NULL:      Argument was `Dee_None' (NOT AN ERROR)
+/* Similar to `nt_DecodeSid()`, but accept more than just strings.
+ * @param: argument_is_gid: When false, decode `uid_or_gid` as a UID; else, decode as a GID
+ * @return: * :        Success (The caller must `Dee_Free()` the returned pointer)
+ * @return: NULL:      Argument was `Dee_None` (NOT AN ERROR)
  * @return: ITER_DONE: An error was thrown */
 INTERN WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_QuerySid(DeeObject *__restrict uid_or_gid, bool argument_is_gid) {
@@ -650,7 +650,7 @@ err:
 #ifdef NEED_nt_DecodeSid
 #undef NEED_nt_DecodeSid
 /* Decode a deemon integer into an SID
- * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: * :        Success (The caller must `Dee_Free()` the returned pointer)
  * @return: ITER_DONE: An error was thrown */
 INTERN WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
@@ -672,10 +672,10 @@ nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
 		goto err;
 	}
 
-	/* Figure out what's going to be the value of `SubAuthorityCount'
+	/* Figure out what's going to be the value of `SubAuthorityCount`
 	 *
 	 * Since we always use little-endian for encoding SIDs, and since
-	 * the `SubAuthorityCount' is only a single byte large, its final
+	 * the `SubAuthorityCount` is only a single byte large, its final
 	 * value will always be located in the same spot. */
 #if Dee_DIGIT_BITS >= 16
 	SubAuthorityCount = (me->ob_digit[0] >> 8) & 0xff;
@@ -787,7 +787,7 @@ throw_system_error:
 
 
 #if defined(NEED_nt_SetNamedSecurityInfo) || defined(NEED_nt_SetSecurityInfo)
-/* Set to true if we've acquired the `SeRestorePrivilege' privilege */
+/* Set to true if we've acquired the `SeRestorePrivilege` privilege */
 PRIVATE BOOL nt_chown_bHoldingSeRestorePrivilege = FALSE;
 PRIVATE WCHAR const str_SeRestorePrivilege[] = {
 	'S', 'e', 'R', 'e', 's', 't', 'o', 'r', 'e',
@@ -814,7 +814,7 @@ posix_EqualSid(NT_SID const *pSid1, NT_SID const *pSid2) {
 #endif /* !ERROR_CALL_NOT_IMPLEMENTED */
 
 /* Internal wrapper.
- * @return: 0 : Success or System error (`*p_dwError' was populated with the error, or ERROR_SUCCESS)
+ * @return: 0 : Success or System error (`*p_dwError` was populated with the error, or ERROR_SUCCESS)
  * @return: -1: An error was thrown */
 INTERN WUNUSED NONNULL((8)) int DCALL
 nt_SetSecurityInfo_impl(HANDLE Handle,
@@ -842,10 +842,10 @@ again:
 				goto again;
 		}
 
-		/* Need the `WRITE_OWNER' attribute on the handle. */
+		/* Need the `WRITE_OWNER` attribute on the handle. */
 		DBG_ALIGNMENT_DISABLE();
 
-		/* Try to re-open the handle with `WRITE_OWNER' permissions. */
+		/* Try to re-open the handle with `WRITE_OWNER` permissions. */
 		hProcess = GetCurrentProcess();
 		if (DuplicateHandle(hProcess, Handle, hProcess, &hWriteOwner, WRITE_OWNER, FALSE, 0)) {
 			dwError = (*pdyn_SetSecurityInfo)(hWriteOwner, ObjectType, SecurityInfo,
@@ -913,8 +913,8 @@ err:
 	return -1;
 }
 
-/* Wrapper around the system function `SetSecurityInfo()'
- * @return: 1 : System error (`*p_dwError' was populated with the error)
+/* Wrapper around the system function `SetSecurityInfo()`
+ * @return: 1 : System error (`*p_dwError` was populated with the error)
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTERN WUNUSED NONNULL((8)) int DCALL
@@ -942,7 +942,7 @@ again_SetSecurityInfo:
 	if (dwError == ERROR_INVALID_OWNER && !nt_chown_bHoldingSeRestorePrivilege) {
 		/* This error is produced when trying to assign a non-existing SID.
 		 * However, this is a thing that we want to allow, and something
-		 * that can be done if the caller is holding the `SeRestorePrivilege' */
+		 * that can be done if the caller is holding the `SeRestorePrivilege` */
 		if (nt_AcquirePrivilege(str_SeRestorePrivilege)) {
 #define NEED_nt_AcquirePrivilege
 			nt_chown_bHoldingSeRestorePrivilege = TRUE;
@@ -1026,8 +1026,8 @@ again:
 	return dwError;
 }
 
-/* Wrapper around the system function `SetNamedSecurityInfo()'
- * @return: 1 : System error (`*p_dwError' was populated with the error)
+/* Wrapper around the system function `SetNamedSecurityInfo()`
+ * @return: 1 : System error (`*p_dwError` was populated with the error)
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTERN WUNUSED NONNULL((1, 8)) int DCALL
@@ -1072,7 +1072,7 @@ again_SetNamedSecurityInfoW:
 	if (dwError == ERROR_INVALID_OWNER && !nt_chown_bHoldingSeRestorePrivilege) {
 		/* This error is produced when trying to assign a non-existing SID.
 		 * However, this is a thing that we want to allow, and something
-		 * that can be done if the caller is holding the `SeRestorePrivilege' */
+		 * that can be done if the caller is holding the `SeRestorePrivilege` */
 		if (nt_AcquirePrivilege(str_SeRestorePrivilege)) {
 #define NEED_nt_AcquirePrivilege
 			nt_chown_bHoldingSeRestorePrivilege = TRUE;
@@ -1096,7 +1096,7 @@ err:
 
 
 
-/* Parse a `chmod(1)'-style mode-string, or convert `mode' into an integer
+/* Parse a `chmod(1)`-style mode-string, or convert `mode` into an integer
  * @return: * : The new st_mode to-be used for the file.
  * @return: (unsigned int)-1: An error was thrown. */
 #ifdef NEED_posix_chmod_getmode
@@ -1173,7 +1173,7 @@ err:
 /* Parse a chmod(1)-style mode-string
  * @return: * : The new file-mode
  * @return: (unsigned int)-1: Error
- * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1', but would be needed. */
+ * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1`, but would be needed. */
 #ifdef NEED_posix_chmod_parsemode
 #undef NEED_posix_chmod_parsemode
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
@@ -1410,7 +1410,7 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
 
 
 
-/* For utime() implementations using `utime(2)' */
+/* For utime() implementations using `utime(2)` */
 #ifdef NEED_posix_utime_unix_parse_utimbuf
 #undef NEED_posix_utime_unix_parse_utimbuf
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) int DCALL
@@ -2248,7 +2248,7 @@ err_unix_rmdir(int errno_value, DeeObject *__restrict path) {
 #endif /* EROFS */
 #ifdef EPERM
 	if (errno_value == EPERM) {
-		/* Posix states that `EPERM' may be returned because of the sticky bit.
+		/* Posix states that `EPERM` may be returned because of the sticky bit.
 		 * However in that event, we want to throw an access error, not an
 		 * unsupported-api error. */
 #ifdef posix_stat_USED_STRUCT_STAT
@@ -3958,7 +3958,7 @@ err_stat_no_info(char const *__restrict level) {
 #ifdef NEED_err_integer_overflow
 #undef NEED_err_integer_overflow
 INTERN ATTR_COLD int DCALL err_integer_overflow(void) {
-	/* TODO: Use `DeeRT_ErrIntegerOverflow()' */
+	/* TODO: Use `DeeRT_ErrIntegerOverflow()` */
 	return DeeError_Throwf(&DeeError_IntegerOverflow, "Integer overflow");
 }
 #endif /* NEED_err_integer_overflow */
@@ -4051,7 +4051,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_SetCurrentDirectory(DeeObject *__restrict lpPathName) {
 	LPWSTR lpwName;
@@ -4103,7 +4103,7 @@ err:
 PRIVATE DWORD nt_symlink_dwSymlinkAdditionalFlags = SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE;
 PRIVATE BOOL nt_symlink_bHoldingSymlinkPriv       = FALSE;
 
-/* Used to determined `SYMBOLIC_LINK_FLAG_DIRECTORY':
+/* Used to determined `SYMBOLIC_LINK_FLAG_DIRECTORY`:
  * >> local abs_lpTargetFileName = lpTargetFileName;
  * >> if (!posix.isabs(lpTargetFileName))
  * >>     abs_lpTargetFileName = posix.abspath(lpTargetFileName, posix.headof(lpSymlinkFileName));
@@ -4147,10 +4147,10 @@ PRIVATE WCHAR const str_SeCreateSymbolicLinkPrivilege[] = {
 	'c', 'L', 'i', 'n', 'k', 'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
 };
 
-/* Same as `nt_CreateSymbolicLink()', but automatically determine proper `dwFlags'
+/* Same as `nt_CreateSymbolicLink()`, but automatically determine proper `dwFlags`
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
                           DeeObject *lpTargetFileName) {
@@ -4249,7 +4249,7 @@ fail:
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
                        GET_FILEEX_INFO_LEVELS fInfoLevelId,
@@ -4292,7 +4292,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD *__restrict p_result) {
@@ -4334,7 +4334,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_SetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD dwFileAttributes) {
@@ -4378,7 +4378,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the new directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_CreateDirectory(DeeObject *__restrict lpPathName,
                    LPSECURITY_ATTRIBUTES lpSecurityAttributes) {
@@ -4421,7 +4421,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_RemoveDirectory(DeeObject *__restrict lpPathName) {
 	LPWSTR lpwName;
@@ -4463,7 +4463,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 nt_DeleteFile(DeeObject *__restrict lpFileName) {
 	LPWSTR lpwName;
@@ -4505,7 +4505,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully moved the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 nt_MoveFileEx(DeeObject *lpExistingFileName,
               DeeObject *lpNewFileName,
@@ -4563,7 +4563,7 @@ err:
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the hardlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 nt_CreateHardLink(DeeObject *lpFileName,
                   DeeObject *lpExistingFileName,
@@ -4632,7 +4632,7 @@ PRIVATE WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTERN NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLink(DeeObject *lpSymlinkFileName,
                       DeeObject *lpTargetFileName,
@@ -4714,7 +4714,7 @@ err:
 
 #ifdef NEED_posix_fd_openfile
 #undef NEED_posix_fd_openfile
-/* Open a HANDLE/fd-compatible object as a `File' */
+/* Open a HANDLE/fd-compatible object as a `File` */
 INTERN WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
 posix_fd_openfile(DeeObject *__restrict fd, int oflags) {
 	DREF DeeObject *result;
@@ -4759,20 +4759,20 @@ err:
 #ifdef NEED_posix_copyfile_fileio
 #undef NEED_posix_copyfile_fileio
 
-/* Figure out if we want to support `sendfile(2)' in `posix_copyfile_fileio()' */
+/* Figure out if we want to support `sendfile(2)` in `posix_copyfile_fileio()` */
 #undef HAVE_posix_copyfile_fileio_sendfile
 #if defined(CONFIG_HAVE_sendfile) && defined(Dee_fd_t_IS_int)
 #define HAVE_posix_copyfile_fileio_sendfile
 #endif /* CONFIG_HAVE_sendfile && Dee_fd_t_IS_int */
 
-/* Figure out if we want to skip `sendfile(2)' if it ever indicates ENOSYS */
+/* Figure out if we want to skip `sendfile(2)` if it ever indicates ENOSYS */
 #undef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
 #if defined(HAVE_posix_copyfile_fileio_sendfile) && defined(ENOSYS) && !defined(__OPTIMIZE_SIZE__)
 #define HAVE_posix_copyfile_fileio_sendfile_ENOSYS
 #endif /* HAVE_posix_copyfile_fileio_sendfile && ENOSYS && !__OPTIMIZE_SIZE__ */
 
 #ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
-/* When set to true, don't attempt to use `sendfile(2)' in `posix_copyfile_fileio()' */
+/* When set to true, don't attempt to use `sendfile(2)` in `posix_copyfile_fileio()` */
 PRIVATE bool host_sendfile_is_ENOSYS = false;
 #endif /* HAVE_posix_copyfile_fileio_sendfile_ENOSYS */
 
@@ -4782,8 +4782,8 @@ PRIVATE bool host_sendfile_is_ENOSYS = false;
 #define LINUX_SENDFILE_MAXCOUNT 0x7ffff000
 #endif /* !LINUX_SENDFILE_MAXCOUNT */
 
-/* Copy all data from `src' to `dst', both of with are deemon File objects.
- * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART'
+/* Copy all data from `src` to `dst`, both of with are deemon File objects.
+ * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART`
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -4811,7 +4811,7 @@ err_bad_used_bufsize:
 		}
 	}
 
-	/* Try to use `sendfile()' */
+	/* Try to use `sendfile()` */
 #ifdef HAVE_posix_copyfile_fileio_sendfile
 	if (DeeSystemFile_Check(src) && DeeSystemFile_Check(dst) &&
 #ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
@@ -4829,13 +4829,13 @@ err_bad_used_bufsize:
 		sendfile_status = sendfile(dst_fd, src_fd, NULL, sendfile_iosize);
 		if (sendfile_status < 0) {
 #ifdef HAVE_posix_copyfile_fileio_sendfile_ENOSYS
-			/* If `sendfile(2)' indicates that it isn't implemented
+			/* If `sendfile(2)` indicates that it isn't implemented
 			 * by the kernel, then don't *ever* try to use it again. */
 			if (DeeSystem_GetErrno() == ENOSYS)
 				host_sendfile_is_ENOSYS = true;
 #endif /* HAVE_posix_copyfile_fileio_sendfile_ENOSYS */
 		} else {
-			/* Keep copying data using `sendfile' until we're done. */
+			/* Keep copying data using `sendfile` until we're done. */
 			transfer_total = (size_t)sendfile_status;
 			if (sendfile_status == 0)
 				goto done; /* Input file was empty. */
@@ -4844,7 +4844,7 @@ err_bad_used_bufsize:
 				if (DeeThread_CheckInterrupt())
 					goto err_progress_info;
 
-				/* If given (and not `none'), invoke the progress-callback with copy status information. */
+				/* If given (and not `none`), invoke the progress-callback with copy status information. */
 				if (!DeeNone_Check(progress)) {
 					DREF DeeObject *progress_status;
 					if (progress_info == NULL) {
@@ -4906,11 +4906,11 @@ err_bad_used_bufsize:
 	if (src_mmap_hints & DeeMapFile_F_ATSTART) {
 		/* Special handling needed for when the caller originally indicated
 		 * that the source-file was located at its beginning, yet due to us
-		 * possibly having been able to copy *some* file data using `sendfile',
+		 * possibly having been able to copy *some* file data using `sendfile`,
 		 * that might no longer be the case.
 		 *
 		 * Instead, in this situation we can assume that the source-file's
-		 * file pointer is currently located at `transfer_total' bytes, so
+		 * file pointer is currently located at `transfer_total` bytes, so
 		 * we only have to map all of the file's contents starting from that
 		 * byte-offset. */
 		mf_status = DeeMapFile_InitFile(&mf, src, transfer_total,
@@ -4920,7 +4920,7 @@ err_bad_used_bufsize:
 	} else
 #endif /* HAVE_posix_copyfile_fileio_sendfile */
 	{
-		/* Map the remainder of the given `src' file into memory. */
+		/* Map the remainder of the given `src` file into memory. */
 		mf_status = DeeMapFile_InitFile(&mf, src, (Dee_pos_t)-1,
 		                                0, (size_t)-1, 0,
 		                                DeeMapFile_F_MUSTMMAP |
@@ -4968,7 +4968,7 @@ err_progress_info_mapfile:
 				goto err_progress_info;
 			}
 
-			/* If given (and not `none'), invoke the progress-callback with copy status information. */
+			/* If given (and not `none`), invoke the progress-callback with copy status information. */
 			if (!DeeNone_Check(progress)) {
 				DREF DeeObject *progress_status;
 				if (iter >= end)
@@ -5031,7 +5031,7 @@ err_progress_info_transfer_buffer:
 				goto err_progress_info;
 			}
 
-			/* If given (and not `none'), invoke the progress-callback with copy status information. */
+			/* If given (and not `none`), invoke the progress-callback with copy status information. */
 			if (!DeeNone_Check(progress)) {
 				DREF DeeObject *progress_status;
 				if (progress_info == NULL) {
@@ -5097,9 +5097,9 @@ err:
 
 #ifdef NEED_posix_dfd_makepath
 #undef NEED_posix_dfd_makepath
-/* Construct a path from `dfd:path'
- * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
- * @param: path: Must be a `string' */
+/* Construct a path from `dfd:path`
+ * @param: dfd:  Can be a `File`, `int`, `string`, or [nt:`HANDLE`]
+ * @param: path: Must be a `string` */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 	struct Dee_unicode_printer printer;
@@ -5111,7 +5111,7 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 		goto err;
 	}
 
-	/* Check if `path' is absolute. - If it is, then we must use _it_ */
+	/* Check if `path` is absolute. - If it is, then we must use _it_ */
 	if (DeeString_IsAbsPath(path))
 		return_reference_(path);
 
@@ -5122,13 +5122,13 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 		return_reference_(path);
 #endif /* CONFIG_HOST_WINDOWS */
 
-	/* Must combine `dfd' with `path' */
+	/* Must combine `dfd` with `path` */
 	Dee_unicode_printer_init(&printer);
 	if (DeeString_Check(dfd)) {
 		if unlikely(Dee_unicode_printer_printstring(&printer, dfd) < 0)
 			goto err_printer;
 	} else {
-		/* Special handling for `deemon.File' */
+		/* Special handling for `deemon.File` */
 		if (DeeFile_Check(dfd)) {
 			DREF DeeObject *dfd_filename;
 			dfd_filename = DeeFile_Filename(dfd);
@@ -5144,7 +5144,7 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 		}
 
 #ifndef CONFIG_HAVE_AT_FDCWD
-		/* OS doesn't support AT_FDCWD --> check if `dfd' is our custom replacement. */
+		/* OS doesn't support AT_FDCWD --> check if `dfd` is our custom replacement. */
 		if (DeeInt_Check(dfd)) {
 			int dfd_intval;
 			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
@@ -5216,7 +5216,7 @@ got_dfd_path:
 
 #ifndef DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 	if (DeeSystem_IsSep(DeeString_STR(path)[0])) {
-		/* Must skip leading slashes in `path' */
+		/* Must skip leading slashes in `path` */
 		char const *utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err_printer;
@@ -5247,8 +5247,8 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 #endif /* __INTELLISENSE__ */
 
-/* Construct a path that refers to the file described by `fd'
- * @param: fd: Can be a `File', `int', or [nt:`HANDLE'] */
+/* Construct a path that refers to the file described by `fd`
+ * @param: fd: Can be a `File`, `int`, or [nt:`HANDLE`] */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_makepath(DeeObject *__restrict fd) {
 	if (DeeFile_Check(fd)) {
@@ -5262,7 +5262,7 @@ posix_fd_makepath(DeeObject *__restrict fd) {
 	}
 
 #ifndef CONFIG_HAVE_AT_FDCWD
-	/* OS doesn't support AT_FDCWD --> check if `fd' is our custom replacement. */
+	/* OS doesn't support AT_FDCWD --> check if `fd` is our custom replacement. */
 	if (DeeInt_Check(fd)) {
 		int fd_intval;
 		if (DeeInt_TryAsInt(fd, &fd_intval)) {
@@ -5296,7 +5296,7 @@ err:
 
 #ifdef NEED_posix_fd_makepath_fd
 #undef NEED_posix_fd_makepath_fd
-/* Construct a path that refers to the file described by `os_fd' */
+/* Construct a path that refers to the file described by `os_fd` */
 INTERN WUNUSED DREF DeeObject *DCALL
 posix_fd_makepath_fd(int os_fd) {
 #ifndef CONFIG_HAVE_AT_FDCWD
@@ -5327,7 +5327,7 @@ err_bad_atflags(unsigned int atflags) {
 INTERN ATTR_COLD int DCALL
 err_bad_copyfile_bufsize_is_zero(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid argument: `bufsize' cannot be zero");
+	                       "Invalid argument: `bufsize` cannot be zero");
 }
 #endif /* NEED_err_bad_copyfile_bufsize_is_zero */
 
@@ -5336,14 +5336,14 @@ err_bad_copyfile_bufsize_is_zero(void) {
 INTERN ATTR_NOINLINE ATTR_UNUSED ATTR_COLD NONNULL((1)) int DCALL
 posix_err_unsupported(char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "Unsupported function `%s'",
+	                       "Unsupported function `%s`",
 	                       name);
 }
 #endif /* NEED_posix_err_unsupported */
 
 
 
-/* Dynamically loaded functions from `ADVAPI32.dll' */
+/* Dynamically loaded functions from `ADVAPI32.dll` */
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 /*[[[deemon
 local libs = {

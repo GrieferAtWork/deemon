@@ -596,7 +596,7 @@ PRIVATE char const set_doc[] =
 "}";
 #endif /* !CONFIG_NO_DOC */
 
-/* `Set from deemon' */
+/* `Set from deemon` */
 PUBLIC DeeTypeObject DeeSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Set),

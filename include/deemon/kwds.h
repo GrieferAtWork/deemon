@@ -50,7 +50,7 @@ DECL_BEGIN
  *   - Helper for implementing dynamic (but still fixed) keyword arguments in C.
  *   - >> DeeKwArgs kwargs;
  *     >> DO(DeeKwArgs_Init(&kwargs, &argc, argv, kw));
- *     >> HANDLE_POSITION_ARGS(argc, argv); // "argc" was updated to exclude kw-through-argv (s.a. `DeeKwdsObject')
+ *     >> HANDLE_POSITION_ARGS(argc, argv); // "argc" was updated to exclude kw-through-argv (s.a. `DeeKwdsObject`)
  *     >> DeeObject *a = DeeKwArgs_TryGetItemNRString(&kwargs, "arg1");
  *     >> DeeObject *b = DeeKwArgs_TryGetItemNRString(&kwargs, "arg2");
  *     >> DeeObject *c = DeeKwArgs_TryGetItemNRString(&kwargs, "arg3");
@@ -66,19 +66,19 @@ DECL_BEGIN
  * DeeKw_Wrap
  * - Usage:
  *   - Must be called to wrap a generic mapping-like object for the purpose of using
- *     that object as a "kw" argument in a call to (e.g.) `DeeObject_CallKw()'
- *   - In user-code, the `ASM_CAST_VARKWDS' instruction calls this function
+ *     that object as a "kw" argument in a call to (e.g.) `DeeObject_CallKw()`
+ *   - In user-code, the `ASM_CAST_VARKWDS` instruction calls this function
  *   - This function checks if the given "kwds" is kw-capable (DeeObject_IsKw),
  *     and if it isn't, it returns "DeeCachedDict_New(kwds)".
- *   - kw-capable means that the object supports `DeeKw_TryGetItemNR*', which
+ *   - kw-capable means that the object supports `DeeKw_TryGetItemNR*`, which
  *     is the set of low-level functions used for loading keyword arguments.
  *
  * DeeKw_TryGetItemNR
  * - Usage:
  *   - Don't use unless you know what you're doing.
  *   - Used to load keyword arguments from kw-capable kw-objects, but does *NOT*
- *     support `DeeKwdsObject' (which must be handled by the caller explicitly)
- *   - The passed "kw" must be `DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'
+ *     support `DeeKwdsObject` (which must be handled by the caller explicitly)
+ *   - The passed "kw" must be `DeeObject_IsKw(kw) && !DeeKwds_Check(kw)`
  *
  * DeeKwBlackList_New
  * - Usage:
@@ -86,7 +86,7 @@ DECL_BEGIN
  *   - This function figures out how to correctly package argc/argv/kw into
  *     a deemon object that user-code is able to understand, whilst also
  *     filtering and keyword arguments that were loaded into positional args.
- *   - The returned object must be decref'd using `DeeKwBlackList_Decref()'
+ *   - The returned object must be decref'd using `DeeKwBlackList_Decref()`
  *     before "argc/argv/kw" go out-of-scope. After that call, the object
  *     was either destroyed, or shared caches were unshared (which is the
  *     case when varkwds live longer than the function's score; i.e. when
@@ -128,7 +128,7 @@ DECL_BEGIN
  * - Behavior:
  *   - Same as "DeeKwdsMappingObject", but apply an extra filter to deny the
  *     existence of keyword arguments that were loaded into positional args.
- *   - Semantically the same as using `DeeBlackListKwObject' to wrap `DeeKwdsMappingObject'
+ *   - Semantically the same as using `DeeBlackListKwObject` to wrap `DeeKwdsMappingObject`
  * - Usage:
  *   - >> function foo(a, **kwds) -> kwds;
  *     >> print repr foo(a: 10, b: 20);
@@ -139,7 +139,7 @@ DECL_BEGIN
  * DeeBlackListKwObject extends Mapping {string: Object}
  * - Behavior:
  *   - Same as "DeeBlackListKwdsObject", but used when the internal "kw" passed
- *     to the user-function wasn't `DeeKwdsObject', but some other kw-capable
+ *     to the user-function wasn't `DeeKwdsObject`, but some other kw-capable
  *     mapping object.
  * - Usage:
  *   - >> function foo(a, **kwds) -> kwds;
@@ -157,8 +157,8 @@ struct Dee_kwds_entry {
 	size_t                         ke_index; /* [< kw_size:][valid_if(ke_name)]
 	                                          * Argument vector index of this keyword.
 	                                          * NOTE: This index is applied as an offset _after_ positional
-	                                          *       arguments, meaning that `0' is the first non-positional
-	                                          *       argument, aka. `(argc - :kw_size) + 0' */
+	                                          *       arguments, meaning that `0` is the first non-positional
+	                                          *       argument, aka. `(argc - :kw_size) + 0` */
 };
 
 typedef struct Dee_kwds_object {
@@ -188,7 +188,7 @@ typedef struct Dee_kwds_object {
 	 * >>     return -1;
 	 * >> }
 	 * With that in mind, indices of a Kwds object refer to the
-	 * last `kw_size' arguments of the associated argument list,
+	 * last `kw_size` arguments of the associated argument list,
 	 * thus meaning that calling a function with keyword arguments
 	 * has no performance down-sides, since a regular, invocation
 	 * (regardless of the presence of keyword labels) results
@@ -198,9 +198,9 @@ typedef struct Dee_kwds_object {
 	 *          but rather for the non-positional argument indices used by
 	 *          those keywords. - It's actually {(string, int)...}-like
 	 *          However, you can easily construct a {(string, Object)...}-like
-	 *          mapping by calling `DeeKwdsMapping_New()' (see below) */
+	 *          mapping by calling `DeeKwdsMapping_New()` (see below) */
 	Dee_OBJECT_HEAD
-	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map'. */
+	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map`. */
 	Dee_hash_t                                     kw_mask; /* [const] Mask for keyword names. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_kwds_entry, kw_map); /* [kw_mask+1][const] Keyword name->index map. */
 } DeeKwdsObject;
@@ -226,8 +226,8 @@ DDATDEF DeeTypeObject DeeKwds_Type;
 #define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwds_Type) /* _Kwds is final */
 #define DeeKwds_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwds_Type)
 
-/* Translate an argument keyword name into its index within at given `DeeKwdsObject *self'.
- * When `self' doesn't contain a descriptor for `name', no error is thrown, and `(size_t)-1'
+/* Translate an argument keyword name into its index within at given `DeeKwdsObject *self`.
+ * When `self` doesn't contain a descriptor for `name`, no error is thrown, and `(size_t)-1`
  * is returned instead. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL DeeKwds_IndexOf(DeeObject const *self, /*string*/ DeeObject *name);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL DeeKwds_IndexOfStringHash(DeeObject const *__restrict self, char const *__restrict name, Dee_hash_t hash);
@@ -238,7 +238,7 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL DeeKwds_IndexOfStringLenH
 INTDEF WUNUSED DREF DeeObject *DCALL
 DeeKwds_NewWithHint(size_t num_items);
 
-/* Append a new entry for `name'.
+/* Append a new entry for `name`.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTDEF WUNUSED NONNULL((1, 2)) int
@@ -252,8 +252,8 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* Dee_foreach_t-compatible! */
 (DCALL DeeKwds_Append)(/*DREF DeeObject **p_self */ void *arg,
                        DeeObject *__restrict name);
 
-/* Return the keyword-entry associated with `keyword_index'
- * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
+/* Return the keyword-entry associated with `keyword_index`
+ * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)` */
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index);
 
@@ -290,7 +290,7 @@ typedef struct {
 	 * >>			if unlikely(!kw)
 	 * >>				return NULL;
 	 * >>		} else {
-	 * >>			// The given `kw' already is a mapping-
+	 * >>			// The given `kw` already is a mapping-
 	 * >>			// like object for named arguments.
 	 * >>			Dee_Incref(kw);
 	 * >>		}
@@ -309,8 +309,8 @@ typedef struct {
 	 * >>	return result;
 	 * >> }
 	 * NOTE: The construction of a wrapper as used above can be automated
-	 *       by calling `DREF DeeObject *kw = DeeKwMapping_New(&argc, argv, kw)',
-	 *       with the cleanup then being implemented by `DeeKwMapping_Decref(argc, argv, kw)'
+	 *       by calling `DREF DeeObject *kw = DeeKwMapping_New(&argc, argv, kw)`,
+	 *       with the cleanup then being implemented by `DeeKwMapping_Decref(argc, argv, kw)`
 	 * >> DREF DeeObject *DCALL
 	 * >> foo(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	 * >> 	DREF DeeObject *result;
@@ -331,7 +331,7 @@ typedef struct {
 	                                                      *       gets incref'd, meaning that before that point, this
 	                                                      *       field doesn't actually carry a reference. */
 	DREF DeeObject                          **kmo_argv;  /* [1..1][kmo_kwds->kw_size][lock(kmo_lock)] The Keyword arguments. */
-	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, kmo_args); /* [1..1][kmo_kwds->kw_size][const] Backup storage for `kmo_argv' */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, kmo_args); /* [1..1][kmo_kwds->kw_size][const] Backup storage for `kmo_argv` */
 } DeeKwdsMappingObject;
 
 #define DeeKwdsMapping_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->kmo_lock)
@@ -352,24 +352,24 @@ typedef struct {
 #define DeeKwdsMapping_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->kmo_lock)
 
 DDATDEF DeeTypeObject DeeKwdsMapping_Type;
-#define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type) /* `_KwdsMapping' is final */
+#define DeeKwdsMapping_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type) /* `_KwdsMapping` is final */
 #define DeeKwdsMapping_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwdsMapping_Type)
 #define DeeKwdsMapping_KWDS(ob)       Dee_REQUIRES_OBJECT(DeeKwdsMappingObject, ob)->kmo_kwds
 #define DeeKwdsMapping_ARGV(ob)       Dee_REQUIRES_OBJECT(DeeKwdsMappingObject, ob)->kmo_argv
 
-/* Construct a keywords-mapping object from a given `kwds' object,
+/* Construct a keywords-mapping object from a given `kwds` object,
  * as well as an argument vector that will be shared with the mapping.
  * The returned object then a mapping {(string, Object)...} for the
  * actual argument values passed to the function.
- * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
+ * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()` in order
  *       to clean up the returned object. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
                    DeeObject *const *kw_argv);
 
 /* Unshare the argument vector from a keywords-mapping object, automatically
- * constructing a copy if all contained objects if `self' is being shared,
- * or destroying `self' without touching the argument vector if not. */
+ * constructing a copy if all contained objects if `self` is being shared,
+ * or destroying `self` without touching the argument vector if not. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeKwdsMapping_Decref(DREF /*KwdsMapping*/ DeeObject *__restrict self);
 
@@ -385,26 +385,26 @@ DeeKwMapping_Decref(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
 typedef struct Dee_kwargs {
 	size_t            kwa_kwused; /* # of used keyword arguments (assuming that any argument is loaded 1 time at most) */
-	DeeObject *const *kwa_kwargv; /* [0..1] Positional arguments to supplement `kwa_kw' (or NULL if unused). */
-	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping (supports `DeeObject_IsKw()') */
+	DeeObject *const *kwa_kwargv; /* [0..1] Positional arguments to supplement `kwa_kw` (or NULL if unused). */
+	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping (supports `DeeObject_IsKw()`) */
 } DeeKwArgs;
 
-/* Check if there *may* still be more keyword arguments available in `self'. */
+/* Check if there *may* still be more keyword arguments available in `self`. */
 #define DeeKwArgs_MaybeHaveMoreArgs(self) \
 	((self)->kwa_kw && (!DeeKwds_Check((self)->kwa_kw) || ((self)->kwa_kwused < DeeKwds_SIZE((self)->kwa_kw))))
 
-/* Initialize `self' to load keyword arguments.
+/* Initialize `self` to load keyword arguments.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeKwArgs_Init)(DeeKwArgs *__restrict self, size_t *__restrict p_argc,
                        DeeObject *const *argv, DeeObject *kw);
 
-/* Indicate that you're doing loading arguments from `self'.
- * This function asserts that `kwa_kwused == #kwa_kw' so-as
- * to ensure that `kwa_kw' doesn't contain any unused keyword
+/* Indicate that you're doing loading arguments from `self`.
+ * This function asserts that `kwa_kwused == #kwa_kw` so-as
+ * to ensure that `kwa_kw` doesn't contain any unused keyword
  * arguments.
- * @param: positional_argc: The value of `*p_argc' after `DeeKwArgs_Init()' returned.
+ * @param: positional_argc: The value of `*p_argc` after `DeeKwArgs_Init()` returned.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) int
@@ -412,7 +412,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
                        size_t positional_argc,
                        char const *function_name);
 
-/* Lookup a named keyword argument from `self'
+/* Lookup a named keyword argument from `self`
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKwArgs_TryGetItemNR(DeeKwArgs *self, /*string*/ DeeObject *name);
@@ -455,11 +455,11 @@ DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__re
 
 
 /* In a keyword-enabled function, return the argument associated with a given
- * `name', or throw a TypeError exception or return `def' if not provided.
+ * `name`, or throw a TypeError exception or return `def` if not provided.
  *
  * Use these functions when you're uncertain if "kw" is non-NULL or might be
- * `DeeKwds_Check()'. If you're certain that `kw != NULL && !DeeKwds_Check(kw)',
- * you can also use the set of `DeeKw_TryGetItemNR*' functions below.
+ * `DeeKwds_Check()`. If you`re certain that `kw != NULL && !DeeKwds_Check(kw)`,
+ * you can also use the set of `DeeKw_TryGetItemNR*` functions below.
  *
  * IMPORTANT: These functions do *NOT* return references! */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw, /*string*/ DeeObject *__restrict name);
@@ -471,27 +471,27 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL DeeArg_TryGetKwNRSt
 
 /* Interface for working with generic keyword argument mappings.
  *
- * The `DeeObject *kw' argument of functions is special, in that it essentially
+ * The `DeeObject *kw` argument of functions is special, in that it essentially
  * implements "DeeObject_GetItem()" in such a way that the returned object doesn't
  * need to be a reference. This is important because it means that DeeArg_UnpackKw
  * can extract objects from keyword arguments, without the caller needing to store
  * those references somewhere to decref them later.
  *
- * When calling (e.g.) `DeeObject_CallKw()', you have to be sure that the object you
- * pass as "kw" is either NULL, or fulfills `DeeObject_IsKw(kw)'. On the other side,
+ * When calling (e.g.) `DeeObject_CallKw()`, you have to be sure that the object you
+ * pass as "kw" is either NULL, or fulfills `DeeObject_IsKw(kw)`. On the other side,
  * if you're given an object through "kw", you can be certain that it fulfills the
- * requirement of `DeeObject_IsKw(kw)'. If you are uncertain if some given object
- * fulfils the requirement of `DeeObject_IsKw()', and want to make sure that it does
- * by replacing it with a wrapper that *does* fulfil `DeeObject_IsKw()', you can use
- * `DeeKw_Wrap()' to wrap that object.
+ * requirement of `DeeObject_IsKw(kw)`. If you are uncertain if some given object
+ * fulfils the requirement of `DeeObject_IsKw()`, and want to make sure that it does
+ * by replacing it with a wrapper that *does* fulfil `DeeObject_IsKw()`, you can use
+ * `DeeKw_Wrap()` to wrap that object.
  *
- * When an object fulfills `DeeObject_IsKw(ob)', the `DeeKw_*' API of functions can
+ * When an object fulfills `DeeObject_IsKw(ob)`, the `DeeKw_*` API of functions can
  * be used with that object. */
 #define DeeType_IsKw(tp)   ((tp)->tp_features & Dee_TF_KW)
 #define DeeObject_IsKw(ob) DeeType_IsKw(Dee_TYPE(ob))
 
-/* Check if `kwds' fulfills `DeeObject_IsKw()', and if not, wrap it as a generic
- * kw-capable wrapper that calls forward to `DeeObject_GetItem(kwds)' when keywords
+/* Check if `kwds` fulfills `DeeObject_IsKw()`, and if not, wrap it as a generic
+ * kw-capable wrapper that calls forward to `DeeObject_GetItem(kwds)` when keywords
  * are queried, but then caches returned references such that the keyword consumer
  * doesn't need to keep track of them. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_Wrap(DeeObject *__restrict kwds);
@@ -499,7 +499,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_WrapInheritedOnSuccess(
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_ForceWrap(DeeObject *__restrict kwds);
 
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments
- * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
+ * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)`.
  *
  * IMPORTANT: These functions do *NOT* return references! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_TryGetItemNR(DeeObject *kw, /*string*/ DeeObject *name);
@@ -526,7 +526,7 @@ struct Dee_code_object;
  * - DeeBlackListKw_New
  * - DeeKwdsMapping_New
  *
- * IMPORTANT: The returned object must be decref'd using `DeeKwBlackList_Decref()'
+ * IMPORTANT: The returned object must be decref'd using `DeeKwBlackList_Decref()`
  *            once the function that created it returns. */
 DFUNDEF WUNUSED NONNULL((1, 3)) ATTR_INS(4, 2) DREF DeeObject *DCALL
 DeeKwBlackList_New(struct Dee_code_object *__restrict code,
@@ -556,10 +556,10 @@ DeeKwBlackList_Decref(DREF DeeObject *__restrict self);
 
 typedef struct {
 	struct Dee_string_object *blve_str; /* [0..1] The keyword name that is being blacklisted.
-	                                     * `NULL' is used to identify unused/sentinel entries.
+	                                     * `NULL` is used to identify unused/sentinel entries.
 	                                     * NOTE: Even when non-NULL, this field does not hold
 	                                     *       a reference, as all possible strings are already
-	                                     *       referenced via `:blkd_code->co_keywords' */
+	                                     *       referenced via `:blkd_code->co_keywords` */
 } DeeBlackListKwdsEntry;
 
 
@@ -574,8 +574,8 @@ typedef struct {
 	                                                            *               be blacklisted from the the resulting mapping.
 	                                                            * NOTE: This code doesn't always takes at least 1 argument, and
 	                                                            *       always specifies its keywords. When constructing an
-	                                                            *      `DeeBlackListKwdsObject' object with code not doing this, a
-	                                                            *      `DeeKwdsMappingObject' object will be returned instead,
+	                                                            *      `DeeBlackListKwdsObject` object with code not doing this, a
+	                                                            *      `DeeKwdsMappingObject` object will be returned instead,
 	                                                            *       which maps keywords to arguments without including a
 	                                                            *       blacklist of arguments which are not to be mapped.
 	                                                            * NOTE: If revived during unsharing, the object in this field
@@ -584,19 +584,19 @@ typedef struct {
 	size_t                                         blkd_ckwc;  /* [const][!0] Number of black-listed keywords */
 	struct Dee_string_object *const               *blkd_ckwv;  /* [1..1][const][1..blkd_ckwc][const] Vector of black-listed keywords. */
 	DREF DeeKwdsObject                            *blkd_kwds;  /* [1..1][const] The mapping for kwds-to-argument-index.
-	                                                            * NOTE: This kwds object always has a `kw_size' that is
-	                                                            *       non-ZERO. - When trying to construct a `DeeBlackListKwdsObject'
+	                                                            * NOTE: This kwds object always has a `kw_size` that is
+	                                                            *       non-ZERO. - When trying to construct a `DeeBlackListKwdsObject`
 	                                                            *       object from an empty keyword list, an empty mapping
 	                                                            *       will be returned instead.
 	                                                            * NOTE: If revived during unsharing, the object in this field
 	                                                            *       gets incref'd, meaning that before that point, this
 	                                                            *       field doesn't actually carry a reference. */
 	DREF DeeObject                               **blkd_argv;  /* [1..1][const][0..blkd_kwds->kw_size][lock(blkd_lock)]
-	                                                            * Shared argument list to which indices from `blkd_kwds' map.*/
+	                                                            * Shared argument list to which indices from `blkd_kwds` map.*/
 	size_t                                         blkd_load;  /* [lock(blkd_lock, INCREMENT_ONLY)][<= blkd_ckwc]
 	                                                            * Index of the next keyword which has yet to be loaded into
-	                                                            * the `blkd_blck' hash-set for blacklisted identifiers. */
-	size_t                                         blkd_mask;  /* [!0][const] Hash-mask for `blkd_blck' */
+	                                                            * the `blkd_blck` hash-set for blacklisted identifiers. */
+	size_t                                         blkd_mask;  /* [!0][const] Hash-mask for `blkd_blck` */
 	COMPILER_FLEXIBLE_ARRAY(DeeBlackListKwdsEntry, blkd_blck); /* [lock(blkd_lock)][0..blkd_mask+1]
 	                                                            * Hash-vector of loaded, black-listed keywords. */
 //	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *,      blkd_args); /* Storage space for "blkd_argv" */
@@ -622,7 +622,7 @@ typedef struct {
 #define DeeBlackListKwds_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->blkd_lock)
 
 DFUNDEF DeeTypeObject DeeBlackListKwds_Type;
-#define DeeBlackListKwds_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type) /* `_BlackListKwds' is final */
+#define DeeBlackListKwds_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type) /* `_BlackListKwds` is final */
 #define DeeBlackListKwds_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type)
 
 
@@ -637,7 +637,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKwds_IsBlackListedStringLe
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
- * The caller must decref the returned object using `DeeBlackListKwds_Decref()'
+ * The caller must decref the returned object using `DeeBlackListKwds_Decref()`
  * -> This function is used to filter keyword arguments from varkwds when
  *    kwargs argument protocol is used:
  *    >> function foo(x, y?, **kwds) {
@@ -651,8 +651,8 @@ DeeBlackListKwds_New(struct Dee_code_object *__restrict code,
                      DeeKwdsObject *__restrict kwds);
 
 /* Unshare the argument vector from a blacklist-varkwds object, automatically
- * constructing a copy if all contained objects if `self' is being shared,
- * or destroying `self' without touching the argument vector if not. */
+ * constructing a copy if all contained objects if `self` is being shared,
+ * or destroying `self` without touching the argument vector if not. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeBlackListKwds_Decref(DREF DeeObject *__restrict self);
 
@@ -669,8 +669,8 @@ typedef struct {
 	                                                            *               be blacklisted from the the resulting mapping.
 	                                                            * NOTE: This code doesn't always takes at least 1 argument, and
 	                                                            *       always specifies its keywords. When constructing a
-	                                                            *       `DeeBlackListKwdsObject' object with code not doing this, a
-	                                                            *       `DeeKwdsMappingObject' object will be returned instead,
+	                                                            *       `DeeBlackListKwdsObject` object with code not doing this, a
+	                                                            *       `DeeKwdsMappingObject` object will be returned instead,
 	                                                            *       which maps keywords to arguments without including a
 	                                                            *       blacklist of arguments which are not to be mapped.
 	                                                            * NOTE: If revived during unsharing, the object in this field
@@ -683,8 +683,8 @@ typedef struct {
 	struct Dee_string_object               *const *blkw_ckwv;  /* [1..1][const][1..blkw_ckwc][const] Vector of black-listed keywords. */
 	size_t                                         blkw_load;  /* [lock(blkw_lock, INCREMENT_ONLY)][<= blkw_ckwc]
 	                                                            * Index of the next keyword which has yet to be loaded into
-	                                                            * the `blkw_blck' hash-set for blacklisted identifiers. */
-	size_t                                         blkw_mask;  /* [!0][const] Hash-mask for `blkw_blck' */
+	                                                            * the `blkw_blck` hash-set for blacklisted identifiers. */
+	size_t                                         blkw_mask;  /* [!0][const] Hash-mask for `blkw_blck` */
 	COMPILER_FLEXIBLE_ARRAY(DeeBlackListKwdsEntry, blkw_blck); /* [lock(blkw_lock)][0..blkw_mask+1]
 	                                                            * Hash-vector of loaded, black-listed keywords. */
 } DeeBlackListKwObject;
@@ -709,7 +709,7 @@ typedef struct {
 #define DeeBlackListKw_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->blkw_lock)
 
 DDATDEF DeeTypeObject DeeBlackListKw_Type;
-#define DeeBlackListKw_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type) /* `_BlackListKw' is final */
+#define DeeBlackListKw_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type) /* `_BlackListKw` is final */
 #define DeeBlackListKw_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type)
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -723,8 +723,8 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKw_IsBlackListedStringLenH
 
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
  * -> The returned objects can be used for any kind of mapping, such that in the
- *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))'
- *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)'
+ *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))`
+ *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)`
  * -> This function is used to filter keyword arguments from varkwds when the general
  *    purpose keyword argument protocol is used:
  *    >> function foo(x, y?, **kwds) {

@@ -18,13 +18,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* NOTE: Deemon's integer object implementation is
- *       heavily based on python's `long' data type.
+ *       heavily based on python's `long` data type.
  *       With that in mind, licensing of deemon's integer
  *       implementation must be GPL-compatible, GPL being
  *       the license that python is restricted by.
  *    >> So to simplify this whole deal: I make no claim of having invented the
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
- *       with all algorithms found in `int_logic.c' originating from phython
+ *       with all algorithms found in `int_logic.c` originating from phython
  *       before being adjusted to fit deemon's runtime. */
 /*!export **/
 /*!export DEFINE_*INT**/
@@ -125,10 +125,10 @@ typedef int64_t Dee_stwodigits_t;
 typedef struct Dee_int_object {
 	Dee_OBJECT_HEAD
 	Dee_ssize_t                          ob_size;   /* Number of used digits (negative of that number for negative integers) */
-	COMPILER_FLEXIBLE_ARRAY(Dee_digit_t, ob_digit); /* Bit-vector of the integer, split in digits of `Dee_DIGIT_BITS' bits each.
+	COMPILER_FLEXIBLE_ARRAY(Dee_digit_t, ob_digit); /* Bit-vector of the integer, split in digits of `Dee_DIGIT_BITS` bits each.
 	                                                 * Least significant bits come first with individual digits being encoded
 	                                                 * in host-endian.
-	                                                 * The total number of digits is the absolute value of `ob_size',
+	                                                 * The total number of digits is the absolute value of `ob_size`,
 	                                                 * which is negative if the value of the integer is too. */
 } DeeIntObject;
 
@@ -433,8 +433,8 @@ typedef struct Dee_int_object {
 #endif /* DEE_SOURCE */
 
 
-/* Check if a given object is an `int'-object */
-#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x, &DeeInt_Type) /* `int' is final */
+/* Check if a given object is an `int`-object */
+#define DeeInt_Check(x)      DeeObject_InstanceOfExact(x, &DeeInt_Type) /* `int` is final */
 #define DeeInt_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeInt_Type)
 DDATDEF DeeTypeObject DeeInt_Type;
 
@@ -459,7 +459,7 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 #define DeeInt_Zero          ((DeeObject *)_DeeInt_Zero)
 #define DeeInt_One           ((DeeObject *)_DeeInt_One)
 
-/* Return an integer object for the values `-1', `0' and `1' */
+/* Return an integer object for the values `-1`, `0` and `1` */
 #define DeeInt_FromSign(sign)                                                         \
 	(Dee_ASSERTF((sign) >= -1 && (sign) <= 1, "Invalid sign value: %d", (int)(sign)), \
 	 (DeeObject *)((DeeInt_MinusOne_Zero_One + 1) + (sign)))
@@ -497,7 +497,7 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 
 
 
-/* Helpers for performing operations in a (theoretical) `DeeInt_NewSSize()' / `DeeInt_NewSize()' object. */
+/* Helpers for performing operations in a (theoretical) `DeeInt_NewSSize()` / `DeeInt_NewSize()` object. */
 #define DeeInt_SSize_Hash(lhs) ((Dee_hash_t)(size_t)(lhs))
 DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_SSize_Compare(Dee_ssize_t lhs, DeeObject *rhs);
 DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_SSize_CompareEq(Dee_ssize_t lhs, DeeObject *rhs);
@@ -530,7 +530,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
 DeeInt_NewUleb(__BYTE_TYPE__ const **__restrict p_reader);
 
 /* Write the value of an integer as signed/unsigned LEB data.
- * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
+ * NOTE: When writing ULEB data, the caller is responsible to ensure that `self` is positive. */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) __BYTE_TYPE__ *DCALL
 DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
                __BYTE_TYPE__ *__restrict writer);
@@ -555,7 +555,7 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 #define DeeInt_IsMinusOne(self) (Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size == -1 && ((DeeIntObject *)(self))->ob_digit[0] == 1)
 
 
-/* Return values for `DeeInt_TryAs*' */
+/* Return values for `DeeInt_TryAs*` */
 #ifndef Dee_INT_SIGNED
 #define Dee_INT_SIGNED         0  /* The returned integer value is signed. */
 #define Dee_INT_UNSIGNED       1  /* The returned integer value is unsigned. */
@@ -577,7 +577,7 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
  * NOTE: In theory, deemon integers can have arbitrarily large values,
  *       however in deemon's C api, we must limit ourself to only a set
  *       number of bits.
- * @return: One of `INT_*' (See above) */
+ * @return: One of `INT_*` (See above) */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_TryGet8Bit)(/*Int*/ DeeObject *__restrict self, int8_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_TryGet16Bit)(/*Int*/ DeeObject *__restrict self, int16_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_TryGet32Bit)(/*Int*/ DeeObject *__restrict self, int32_t *__restrict result);
@@ -596,8 +596,8 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool (DCALL DeeInt_TryAsUInt32)(/*Int*/
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool (DCALL DeeInt_TryAsUInt64)(/*Int*/ DeeObject *__restrict self, uint64_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool (DCALL DeeInt_TryAsUInt128)(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 
-/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
- * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and return `-1'. */
+/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow`
+ * for `INT_POS_OVERFLOW` and `INT_NEG_OVERFLOW` and return `-1`. */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_Get8Bit)(/*Int*/ DeeObject *__restrict self, int8_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_Get16Bit)(/*Int*/ DeeObject *__restrict self, int16_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_Get32Bit)(/*Int*/ DeeObject *__restrict self, int32_t *__restrict result);
@@ -619,7 +619,7 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt64)(/*Int*/ Dee
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt128)(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsDouble)(/*Int*/ DeeObject *__restrict self, double *__restrict result);
 
-/* Same as the functions above, but these also accept `-1' as an alias for `UINTn_MAX' */
+/* Same as the functions above, but these also accept `-1` as an alias for `UINTn_MAX` */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt8M1(/*Int*/ DeeObject *__restrict self, uint8_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt16M1(/*Int*/ DeeObject *__restrict self, uint16_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt32M1(/*Int*/ DeeObject *__restrict self, uint32_t *__restrict result);
@@ -798,8 +798,8 @@ DFUNDEF WUNUSED ATTR_INS(1, 2) DREF /*Int*/ DeeObject *
 
 
 /* Convert an integer to/from a string.
- * WARNING: The caller is responsible not to pass a radix equal to `1'.
- *          When a radix equal to `0', it is automatically determined from the passed string. */
+ * WARNING: The caller is responsible not to pass a radix equal to `1`.
+ *          When a radix equal to `0`, it is automatically determined from the passed string. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags);
@@ -813,10 +813,10 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 #define Dee_INT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
 #define Dee_INT_STRING_FNOSEPS  0x0004 /* Error out if _-characters are encountered during parsing. */
 
-/* @param: radix_and_flags: Set of `Dee_INT_STRING_F* | Dee_ATOI_STRING_F*',
+/* @param: radix_and_flags: Set of `Dee_INT_STRING_F* | Dee_ATOI_STRING_F*`,
  * @return:  0: Successfully parsed an integer.
- * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY' is set)
- * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY' is set) */
+ * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY` is set)
+ * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY` is set) */
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
@@ -875,8 +875,8 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 
 
 /* Print an integer to a given format-printer.
- * Radix must be one of `2', `4', `8', `10' or `16' and
- * if it isn't, a `NotImplemented' error is thrown.
+ * Radix must be one of `2`, `4`, `8`, `10` or `16` and
+ * if it isn't, a `NotImplemented` error is thrown.
  * This list of supported radices may be extended in the future.
  * @param: precision: The minimum number of digits (excluding numsys/sign
  *                    prefixes) to print. Padding is done using '0'-chars */
@@ -886,8 +886,8 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 #define Dee_INT_PRINT(radix, flags) ((radix) << Dee_INT_PRINT_RSHIFT | (flags))
 #define Dee_INT_PRINT_RSHIFT  16
 #define Dee_INT_PRINT_FNORMAL 0x0000
-#define Dee_INT_PRINT_FUPPER  0x0001 /* Use uppercase characters for printing digits above `9' */
-#define Dee_INT_PRINT_FNUMSYS 0x0002 /* Prepend the number system prefix before the integer itself (e.g.: `0x').
+#define Dee_INT_PRINT_FUPPER  0x0001 /* Use uppercase characters for printing digits above `9` */
+#define Dee_INT_PRINT_FNUMSYS 0x0002 /* Prepend the number system prefix before the integer itself (e.g.: `0x`).
                                       * NOTE: If the radix cannot be represented as a prefix, this flag is ignored. */
 #define Dee_INT_PRINT_FSIGN   0x0004 /* Always prepend a sign, even before for positive numbers. */
 #define Dee_INT_PRINT_FSEPS   0x0008 /* Include _-characters to denote thousands/group-separators */
@@ -941,7 +941,7 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 
 
 
-/* Create a new integer object with an input integral value `val' of `size' bytes. */
+/* Create a new integer object with an input integral value `val` of `size` bytes. */
 #define _DeeInt_NewS(size, val) _Dee_PRIVATE_NEWINT(size)(val)
 #define _DeeInt_NewU(size, val) _Dee_PRIVATE_NEWUINT(size)(val)
 

@@ -263,7 +263,7 @@ serialize_copy_after(DeeObject *__restrict self,
 }
 
 
-/* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or
+/* Same as `generic_proxy__serialize()`, but look at "tp_instance_size" (or
  * "tp_alloc") and memcpy all memory that is located after "ProxyObject". */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__serialize_and_memcpy(ProxyObject *__restrict self,
@@ -290,7 +290,7 @@ generic_proxy__serialize_and_wordcopy_atomic16(ProxyObject *__restrict self,
 	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 2",
 	        instance_size, Dee_TYPE(self));
 	ASSERTF(instance_size != 0,
-	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()`?",
 	        Dee_TYPE(self));
 	instance_size >>= 1;
 	in = (uint16_t const *)(self + 1);
@@ -319,7 +319,7 @@ generic_proxy__serialize_and_wordcopy_atomic32(ProxyObject *__restrict self,
 	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 4",
 	        instance_size, Dee_TYPE(self));
 	ASSERTF(instance_size != 0,
-	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()`?",
 	        Dee_TYPE(self));
 	instance_size >>= 2;
 	in = (uint32_t const *)(self + 1);
@@ -349,7 +349,7 @@ generic_proxy__serialize_and_wordcopy_atomic64(ProxyObject *__restrict self,
 	        "Remaining instance size %" PRFuSIZ " of %r is not a multiple of 8",
 	        instance_size, Dee_TYPE(self));
 	ASSERTF(instance_size != 0,
-	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()'?",
+	        "Remaining instance size is 0; why is %r not using 'generic_proxy__serialize()`?",
 	        Dee_TYPE(self));
 	instance_size >>= 3;
 	in = (uint64_t const *)(self + 1);

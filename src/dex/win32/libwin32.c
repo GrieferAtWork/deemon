@@ -858,9 +858,9 @@ PRIVATE DeeHandleObject Dee_INVALID_HANDLE_VALUE = {
 };
 
 
-/* Create an object wrapper for the given `hHandle'
- * The returned object implements an attribute `osfhandle_np',
- * thus allowing it to be used APIs using `DeeNTSystem_GetHandle()'
+/* Create an object wrapper for the given `hHandle`
+ * The returned object implements an attribute `osfhandle_np`,
+ * thus allowing it to be used APIs using `DeeNTSystem_GetHandle()`
  * in order to access an underlying Windows HANDLE.
  * NOTE: The returned object does _NOT_ automatically close the bound
  *       handle. - This wrapper is only used for binary compatibility
@@ -1760,7 +1760,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
 	if (pGetDllDirectoryW == (LPGETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
 		RETURN_ERROR(ERROR_INVALID_FUNCTION,
-		             "Unsupported function `GetDllDirectoryW()'");
+		             "Unsupported function `GetDllDirectoryW()`");
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
@@ -1836,7 +1836,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR
 	if (pSetDllDirectoryW == (LPSETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
 		RETURN_ERROR(ERROR_INVALID_FUNCTION,
-		             "Unsupported function `SetDllDirectoryW()'");
+		             "Unsupported function `SetDllDirectoryW()`");
 	}
 again:
 	DBG_ALIGNMENT_DISABLE();
@@ -2252,7 +2252,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(vo
 	if (pGetSystemWow64DirectoryW == (PGET_SYSTEM_WOW64_DIRECTORY_W)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
 		RETURN_ERROR(ERROR_INVALID_FUNCTION,
-		             "Unsupported function: `GetSystemWow64DirectoryW()'");
+		             "Unsupported function: `GetSystemWow64DirectoryW()`");
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
@@ -2295,7 +2295,7 @@ err:
 PRIVATE DEFINE_STRING_EX(str_nul, "\0", 0x514e28b7, 0x0);
 /*[[[end]]]*/
 
-/* Split a given `str' at each instance of a NUL-character,
+/* Split a given `str` at each instance of a NUL-character,
  * returning the sequence of resulting strings. */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 split_nul_string(/*inherit(always)*/ DREF DeeObject *str) {
@@ -5728,8 +5728,8 @@ DEX_BEGIN
 
 DEX_MEMBER_F_NODOC("HANDLE", &DeeHandle_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("INVALID_HANDLE_VALUE", &Dee_INVALID_HANDLE_VALUE, DEXSYM_READONLY),
-/* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
-/* TODO: Wrapper types for `WIN32_FIND_DATA' */
+/* TODO: Wrapper types for `SECURITY_ATTRIBUTES` and `OVERLAPPED` */
+/* TODO: Wrapper types for `WIN32_FIND_DATA` */
 
 /* Deemon-specific helpers */
 LIBWIN32_FIXUNCPATH_DEF_DOC("#t{:Interrupt}"

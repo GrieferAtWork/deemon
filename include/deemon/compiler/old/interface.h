@@ -71,8 +71,8 @@ INTDEF DeeTypeObject DeeCompilerLexerToken_Type;      /* wrapper */
 INTDEF DeeTypeObject DeeCompilerParser_Type;          /* wrapper */
 INTDEF DeeTypeObject DeeCompilerAst_Type;             /* objitem */
 INTDEF DeeTypeObject DeeCompilerScope_Type;           /* objitem */
-INTDEF DeeTypeObject DeeCompilerBaseScope_Type;       /* objitem (extends `DeeCompilerScope_Type') */
-INTDEF DeeTypeObject DeeCompilerRootScope_Type;       /* objitem (extends `DeeCompilerBaseScope_Type') */
+INTDEF DeeTypeObject DeeCompilerBaseScope_Type;       /* objitem (extends `DeeCompilerScope_Type`) */
+INTDEF DeeTypeObject DeeCompilerRootScope_Type;       /* objitem (extends `DeeCompilerBaseScope_Type`) */
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetScope(struct scope_object *__restrict scope);
@@ -148,31 +148,31 @@ struct Dee_unicode_printer;
 INTDEF WUNUSED NONNULL((2)) int DCALL
 get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result);
 
-/* Helper functions for setting the DDI location of a given ast `dst'
+/* Helper functions for setting the DDI location of a given ast `dst`
  * WARNING: Previously set DDI information is overwritten,
  *          and the old DDI file will _NOT_ be decref'ed! */
 INTDEF WUNUSED NONNULL((2)) int DCALL
 set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
 
-/* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)' */
+/* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)` */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 print_ast_loc_repr(struct ast_loc *__restrict self,
                    struct Dee_unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
- * @return: -2:      A keyword wasn't found (and `create_missing' was false) */
+ * @return: -2:      A keyword wasn't found (and `create_missing` was false) */
 INTDEF WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_str(char const *__restrict name, bool create_missing);
 INTDEF WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
 
 /* @return: NULL:      An error occurred (and was thrown)
- * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
+ * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
 INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
 INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
-/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
- * NOTE: `typing' doesn't necessarily need to be a type object!
+/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing`
+ * NOTE: `typing` doesn't necessarily need to be a type object!
  * @return: (uint16_t)-1: Error. */
 INTDEF WUNUSED NONNULL((1)) uint16_t DCALL
 get_ast_multiple_typing(DeeTypeObject *__restrict typing);
@@ -180,7 +180,7 @@ get_ast_multiple_typing(DeeTypeObject *__restrict typing);
 struct catch_expr;
 struct base_scope_object;
 
-/* Unpack and validate a sequence `{(string, ast, ast)...} handlers'.
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers`.
  * @return: NULL: Error (*p_catch_c != 0), or no catch handlers (*p_catch_c == 0) */
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,

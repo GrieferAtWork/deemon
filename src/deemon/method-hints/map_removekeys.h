@@ -46,8 +46,8 @@ map_removekeys_foreach_cb(void *arg, DeeObject *elem) {
 )]
 
 
-/* Delete all keys that appear in `keys'.
- * Same as `for (local key: keys) del self[key];'
+/* Delete all keys that appear in `keys`.
+ * Same as `for (local key: keys) del self[key];`
  * @return: 0 : Success
  * @return: -1: Error */
 [[wunused]] int

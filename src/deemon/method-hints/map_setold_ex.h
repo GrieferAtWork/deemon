@@ -143,8 +143,8 @@ err:
 
 
 
-/* @return: * :        The value of `key' was set to `value' (returned object is the old value)
- * @return: ITER_DONE: The given `key' doesn't exist (nothing was updated)
+/* @return: * :        The value of `key` was set to `value` (returned object is the old value)
+ * @return: ITER_DONE: The given `key` doesn't exist (nothing was updated)
  * @return: NULL:      Error */
 [[wunused]] DREF DeeObject *
 __map_setold_ex__.map_setold_ex([[nonnull]] DeeObject *self,
@@ -228,7 +228,7 @@ err:
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;

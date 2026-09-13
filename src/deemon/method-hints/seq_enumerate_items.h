@@ -22,8 +22,8 @@
 /* deemon.Sequence.__seq_enumerate_items__()                            */
 /************************************************************************/
 
-/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects.
- * Together with `__seq_enumerate__', this API is used to implement `Sequence.enumerate()' */
+/* Operators for the purpose of constructing `DefaultEnumeration_With*` objects.
+ * Together with `__seq_enumerate__`, this API is used to implement `Sequence.enumerate()` */
 
 __seq_enumerate_items__(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint?O {
 	size_t start_index, end_index;

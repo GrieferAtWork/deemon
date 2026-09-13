@@ -118,7 +118,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 	(void)dfd;
 	(void)filename;
 	(void)atflags;
-	/* TODO: Don't try to use this function (it's gonna get removed) -- use `posix_dfd_makepath()' instead! */
+	/* TODO: Don't try to use this function (it's gonna get removed) -- use `posix_dfd_makepath()` instead! */
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }
@@ -2038,7 +2038,7 @@ D(POSIX_CPU_COUNT_DEF_DOC("Returns the ## of available processors on the host ma
 
 /* Higher-level wrapper functions */
 /* TODO: popen() */
-/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd`) */
 
 
 /* Directory access */
@@ -2212,7 +2212,7 @@ D(POSIX_FMKDIRAT_DEF_DOC("#t{:Interrupt}"
                          "#tFileClosed{The given @dfd was closed}"
                          "Create a new directory named @dfd:@path"))
 
-/* TODO: mkdir_p() -- Same as `mkdir()', but:
+/* TODO: mkdir_p() -- Same as `mkdir()`, but:
 	 * - Also create missing parent directories
 	 * - Ignore directory-already-exists errors (but only if the already-existing thing *actually* is a directory) */
 
@@ -2678,7 +2678,7 @@ D(POSIX_READWRITE_DEFS)
 /* EXIT_* values */
 D(POSIX_EXIT_DEFS)
 
-/* *_OK codes for `access()' and friends */
+/* *_OK codes for `access()` and friends */
 D(POSIX_ACCESS_DEFS)
 
 D(DEX_GETSET("errno", &posix_errno_get, &posix_errno_del, &posix_errno_set,
@@ -2813,7 +2813,7 @@ D(DEX_MEMBER_F("DEV_STDERR", &posix_DEV_STDERR, DEXSYM_READONLY | DEXSYM_CONSTEX
                "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astderr?DFile"),)
 
 /* Allow user-code to dynamically determine if the host has a case-insensitive file-system.
-	 * We mark this global variable a a CONSTEXPR (in user-code: `final'), so that the compiler
+	 * We mark this global variable a a CONSTEXPR (in user-code: `final`), so that the compiler
 	 * is allowed to substitute it with a constant expression at compile-time. */
 #ifdef DeeSystem_HAVE_FS_ICASE
 #define OBJ_posix_FS_ICASE Dee_True

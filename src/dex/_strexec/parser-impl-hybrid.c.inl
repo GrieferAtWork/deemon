@@ -198,7 +198,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				result = FUNC(FromImport)(self);
 				if (ISERR(result))
 					goto err;
-				/* Same as `assert': `import' requires a trailing `;' */
+				/* Same as `assert`: `import` requires a trailing `;` */
 				goto parse_remainder_after_semicolon_hybrid_popscope;
 			}
 			break;
@@ -237,7 +237,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 parse_remainder_after_semicolon_hybrid_popscope:
 				if (ISERR(result))
 					goto err;
-				/* Special case: `assert' statements require a trailing `;' token.
+				/* Special case: `assert` statements require a trailing `;` token.
 				 *                If that token exists, we know for sure that this is a statement! */
 				if (self->jl_tok == ';') {
 					was_expression = JIT_AST_PARSE_WASEXPR_NO;
@@ -252,7 +252,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 				result = FUNC(ImportHybrid)(self, &was_expression);
 				if (ISERR(result))
 					goto err;
-				/* Same as `assert': `import' requires a trailing `;' */
+				/* Same as `assert`: `import` requires a trailing `;` */
 				goto parse_remainder_after_semicolon_hybrid_popscope;
 			}
 			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
@@ -382,7 +382,7 @@ parse_remainder_after_colon_popscope:
 		}
 		/* Statement expression. */
 		if (comma_mode & JIT_AST_COMMA_OUT_FNEEDSEMI) {
-			/* Consume a `;' token as part of the expression. */
+			/* Consume a `;` token as part of the expression. */
 			if likely(self->jl_tok == ';') {
 #ifdef JIT_EVAL
 				if (comma_mode & JIT_AST_COMMA_OUT_FMULTIPLE) {
@@ -441,8 +441,8 @@ err:
 }
 
 #if defined(JIT_SKIP)/* || 1*/
-/* Same as `JITLexer_SkipHybrid()', but the current token
- * is `{', and a trailing `;' should _NOT_ be consumed */
+/* Same as `JITLexer_SkipHybrid()`, but the current token
+ * is `{`, and a trailing `;` should _NOT_ be consumed */
 INTERN RETURN_TYPE DFCALL
 FUNC(HybridAtBrace)(JITLexer *__restrict self,
                     unsigned int *p_was_expression) {
@@ -526,10 +526,10 @@ is_a_statement:
 
 		case 2:
 			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
-				/* Expression:           `if (foo) bar else baz'   (may also be written as `(if (foo) bar else baz)') */
-				/* Expression-Statement: `if (foo) bar else baz;'  (may also be written as `(if (foo) bar else baz);') */
-				/* Pure Statement:       `if (foo) bar; else baz;' (this would be a syntax error: `(if (foo) bar; else baz);') */
-				/* Pure Statement:       `if (foo) { bar; } else { baz; }' */
+				/* Expression:           `if (foo) bar else baz`   (may also be written as `(if (foo) bar else baz)`) */
+				/* Expression-Statement: `if (foo) bar else baz;`  (may also be written as `(if (foo) bar else baz);`) */
+				/* Pure Statement:       `if (foo) bar; else baz;` (this would be a syntax error: `(if (foo) bar; else baz);`) */
+				/* Pure Statement:       `if (foo) { bar; } else { baz; }` */
 				result = FUNC(IfHybrid)(self, &was_expression);
 				goto check_semi_after_expression;
 			}

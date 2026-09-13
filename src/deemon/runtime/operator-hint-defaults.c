@@ -55,7 +55,7 @@
 DECL_BEGIN
 
 #define Dee_Decref_probably_none(x) \
-	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None` */
 
 #ifdef __OPTIMIZE_SIZE__
 #define return_DeeClass_CallOperator(tp_self, self, operator, argc, argv) \
@@ -358,7 +358,7 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 		if unlikely(!status)
 			goto err;
 		Dee_Decref(status);
-		/* XXX: Returning `0' here is technically wrong; we'd need to
+		/* XXX: Returning `0` here is technically wrong; we'd need to
 		 *      return the total sum of bytes written to file, but then
 		 *      again: this should also be good enough (and the specs
 		 *      require us to pass along the original file in this case)
@@ -1840,7 +1840,7 @@ tusrtype__hash__with__HASH(DeeTypeObject *tp_self, DeeObject *self) {
 		goto fallback_handled;
 	return result_value;
 fallback_handled:
-	DeeError_Print("Unhandled error in `operator hash'",
+	DeeError_Print("Unhandled error in `operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 fallback:
 	return DeeObject_HashGeneric(self);
@@ -1892,7 +1892,7 @@ usrtype__hash__with__HASH(DeeObject *__restrict self) {
 		goto fallback_handled;
 	return result_value;
 fallback_handled:
-	DeeError_Print("Unhandled error in `operator hash'",
+	DeeError_Print("Unhandled error in `operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 fallback:
 	return DeeObject_HashGeneric(self);
@@ -3225,7 +3225,7 @@ err:
 #define DEFINED_default_foreach_with_foreach_pair_cb
 struct default_foreach_with_foreach_pair_data {
 	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
-	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
+	void         *dfwfp_arg; /* Cookie for `dfwfp_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -3291,7 +3291,7 @@ default__foreach__with__foreach_pair(DeeObject *__restrict self, Dee_foreach_t c
 #define DEFINED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
-	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
+	void              *dfpwf_arg; /* Cookie for `dfpwf_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -30,13 +30,13 @@
 
 DECL_BEGIN
 
-/* `Callable from deemon'
+/* `Callable from deemon`
  *
  * Base class for callable wrapper types, such as ObjMethod, CMethod,
  * InstanceMethod or just a plain old function. There is no particular
  * reason why this exists, other than to allow user-code to query
  * for a type for that particular set of objects by simply writing
- * `x is Callable from deemon' */
+ * `x is Callable from deemon` */
 DDATDEF DeeTypeObject DeeCallable_Type;
 #define DeeCallable_Check(ob) DeeObject_Implements(ob, &DeeCallable_Type)
 
@@ -44,7 +44,7 @@ DDATDEF DeeTypeObject DeeCallable_Type;
  * argument and returning the result of:
  * >> argv[0](argv[1](argv[2](...(argv[argc-2](argv[argc-1](IN)))))
  *
- * This function is used to implement `Callable.compose()' */
+ * This function is used to implement `Callable.compose()` */
 DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeFunctionComposition_Of(size_t argc, DeeObject *const *argv);
 

@@ -643,9 +643,9 @@ read_from_iter:
 	ASSERT(!self->sui_in2nd);
 	self->sui_iter  = result; /* Inherit reference (x2) */
 	self->sui_in2nd = true;
-	Dee_Incref(result); /* Reference stored in `sui_iter' */
+	Dee_Incref(result); /* Reference stored in `sui_iter` */
 	SetUnionIterator_LockEndWrite(self);
-	Dee_Decref(iter); /* Reference inherited from `sui_iter' */
+	Dee_Decref(iter); /* Reference inherited from `sui_iter` */
 	iter      = result;
 	is_second = true;
 	if (DeeThread_CheckInterrupt()) {
@@ -866,7 +866,7 @@ err_r:
 struct su_foreach_if_contained_in_data {
 	DeeObject    *feicid_seq;  /* [1..1] Sequence that mustn't contain elements. */
 	Dee_foreach_t feicid_proc; /* [1..1] Wrapper callback. */
-	void         *feicid_arg;  /* [?..?] Cookie for `feicid_proc' */
+	void         *feicid_arg;  /* [?..?] Cookie for `feicid_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1108,9 +1108,9 @@ read_from_iter:
 	ASSERT(!self->ssd_in2nd);
 	self->ssd_iter  = result; /* Inherit reference (x2) */
 	self->ssd_in2nd = true;
-	Dee_Incref(result); /* Reference stored in `ssd_iter' */
+	Dee_Incref(result); /* Reference stored in `ssd_iter` */
 	SetSymmetricDifferenceIterator_LockEndWrite(self);
-	Dee_Decref(iter); /* Reference inherited from `ssd_iter' */
+	Dee_Decref(iter); /* Reference inherited from `ssd_iter` */
 	iter      = result;
 	is_second = true;
 	if (DeeThread_CheckInterrupt()) {
@@ -1254,7 +1254,7 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssd_bool(SetSymmetricDifference *__restrict self) {
-	/* `(a ^ b) != {}'    <=>    `a != b' */
+	/* `(a ^ b) != {}`    <=>    `a != b` */
 	int result = DeeObject_InvokeMethodHint(set_operator_compare_eq, self->ssd_a, self->ssd_b);
 	return Dee_HAS_FROM_COMPARE_EQ(result);
 }
@@ -2038,11 +2038,11 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 SetIntersection_NonEmpty(DeeObject *a, DeeObject *b) {
 	if (SetInversion_CheckExact(a)) {
 		SetInversion *xa = (SetInversion *)a;
-		/* `(~a & b) != {}'   <=>   `(b - a) != {}' */
+		/* `(~a & b) != {}`   <=>   `(b - a) != {}` */
 		return SetDifference_NonEmpty(b, xa->si_set);
 	} else if (SetInversion_CheckExact(b)) {
 		SetInversion *xb = (SetInversion *)b;
-		/* `(a & ~b) != {}'   <=>   `(a - b) != {}' */
+		/* `(a & ~b) != {}`   <=>   `(a - b) != {}` */
 		return SetDifference_NonEmpty(a, xb->si_set);
 	} else {
 		size_t size_a, size_b;
@@ -2069,12 +2069,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 SetDifference_NonEmpty(DeeObject *a, DeeObject *b) {
 	if (SetInversion_CheckExact(a)) {
-		/* `(~a - b) != {}'   <=>   `true'
+		/* `(~a - b) != {}`   <=>   `true`
 		 * Reason: There is always an imaginary object
 		 *         in "a" that does not exist in "b" */
 		return 1;
 	} else if (SetInversion_CheckExact(b)) {
-		/* `(a - ~b) != {}'   <=>   `(a & b) != {}' */
+		/* `(a - ~b) != {}`   <=>   `(a & b) != {}` */
 		SetInversion *xb = (SetInversion *)b;
 		return SetIntersection_NonEmpty(a, xb->si_set);
 	} else {

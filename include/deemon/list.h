@@ -82,7 +82,7 @@ DeeList_NewVector(size_t objc, DeeObject *const *objv);
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInherited(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *objv);
 
-/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
+/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()` and friends. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
                                size_t objc);
@@ -98,7 +98,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromTuple(DeeObject *
 DFUNDEF WUNUSED DREF DeeListObject *DCALL DeeList_NewUninitialized(size_t n_elem);
 DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DREF DeeListObject *__restrict self);
 
-/* Finalize an List object originally created with `DeeList_NewUninitialized()' */
+/* Finalize an List object originally created with `DeeList_NewUninitialized()` */
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeList_FinalizeUninitialized(/*inherit(always)*/ DREF DeeListObject *__restrict self);
@@ -108,7 +108,7 @@ DeeList_FinalizeUninitialized(/*inherit(always)*/ DREF DeeListObject *__restrict
 
 
 /* Concat a list and some generic sequence,
- * inheriting a reference from `self' in the process. */
+ * inheriting a reference from `self` in the process. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -125,28 +125,28 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index);
 
 /* Clear the given list.
- * Returns `true' if the list wasn't empty before. */
+ * Returns `true` if the list wasn't empty before. */
 DFUNDEF NONNULL((1)) bool DCALL
 DeeList_Clear(DeeObject *__restrict self);
 
-/* Sort the given list ascendingly, or according to `key'
- * To use default sorting, pass `Dee_None' for `key' */
+/* Sort the given list ascendingly, or according to `key`
+ * To use default sorting, pass `Dee_None` for `key` */
 DFUNDEF WUNUSED NONNULL((1, 4)) int DCALL
 DeeList_Sort(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
-/* Reverse the order of the elements of `self' */
+/* Reverse the order of the elements of `self` */
 DFUNDEF NONNULL((1)) void DCALL
 DeeList_Reverse(DeeObject *__restrict self, size_t start, size_t end);
 
-/* Remove all items matching `!!should(item)'
+/* Remove all items matching `!!should(item)`
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeList_RemoveIf(DeeObject *self, DeeObject *should,
                  size_t start, size_t end, size_t max);
 
-/* Resize `self' to have a length of `newsize'.
- * If the size increases, use `filler' for new items.
+/* Resize `self` to have a length of `newsize`.
+ * If the size increases, use `filler` for new items.
  * @return: 0 : Success.
  * @return: -1: Error. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL
@@ -175,7 +175,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, siz
 #endif /* !__INTELLISENSE__ */
 
 /* Pack the given Dee_objectlist into a List.
- * Upon success, `self' will have been finalized. */
+ * Upon success, `self` will have been finalized. */
 #ifdef __INTELLISENSE__
 extern WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);

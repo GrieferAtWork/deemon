@@ -115,7 +115,7 @@ INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict sel
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy3__getobj3(ProxyObject3 *__restrict self);
 
 
-/* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or
+/* Same as `generic_proxy__serialize()`, but look at "tp_instance_size" (or
  * "tp_alloc") and memcpy all memory that is located after "ProxyObject". */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize_and_memcpy(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__serialize_and_memcpy(ProxyObject2 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
@@ -159,8 +159,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_with_xpointer__serialize_
 
 
 STATIC_ASSERT_MSG(offsetof(ProxyObject2, po_obj1) == offsetof(ProxyObject, po_obj),
-                  "You're allowed to use everything below with `ProxyObject2', "
-                  /**/ "and have the runtime only make use of `po_obj1'");
+                  "You're allowed to use everything below with `ProxyObject2`, "
+                  /**/ "and have the runtime only make use of `po_obj1`");
 
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__bool(ProxyObject *__restrict self);                         /* DeeObject_Bool(self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__iter_next(ProxyObject *__restrict self);        /* DeeObject_IterNext(self->po_obj) */

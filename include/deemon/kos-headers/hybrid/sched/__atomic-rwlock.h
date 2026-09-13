@@ -104,7 +104,7 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_rwlo
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_rwlock_waitwrite_nx)(struct __hybrid_atomic_rwlock *__restrict __self);
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 
-/* Try to upgrade a read-lock to a write-lock. Return `FALSE' upon failure. */
+/* Try to upgrade a read-lock to a write-lock. Return `FALSE` upon failure. */
 #ifdef __OPTIMIZE_SIZE__
 #define __hybrid_atomic_rwlock_tryupgrade(self) ___hybrid_atomic_rwlock_tryupgrade_Os(self)
 #else /* __OPTIMIZE_SIZE__ */
@@ -115,7 +115,7 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_rwlo
 #define ___hybrid_atomic_rwlock_tryupgrade_Os(self) \
 	__likely(__hybrid_atomic_cmpxch(&(self)->arw_lock, 1, (__UINTPTR_TYPE__)-1, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
 
-/* NOTE: The lock is always upgraded, but when `FALSE' is returned, no lock
+/* NOTE: The lock is always upgraded, but when `FALSE` is returned, no lock
  *       may  have been  held temporarily,  meaning that  the caller should
  *       re-load local copies of affected resources. */
 #define __hybrid_atomic_rwlock_upgrade(self)    \
@@ -124,10 +124,10 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_rwlo
 	  __hybrid_atomic_rwlock_write(self), 0))
 
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
-/* NOTE: The lock is always upgraded for `return != 0', but when `2' is returned,
+/* NOTE: The lock is always upgraded for `return != 0`, but when `2` is returned,
  *       no lock may have been held  temporarily, meaning that the caller  should
  *       re-load local copies of affected resources.
- * NOTE: When `0' is returned, the original read-lock created by the caller has
+ * NOTE: When `0` is returned, the original read-lock created by the caller has
  *       already been released. */
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) unsigned int
 __NOTHROW(__hybrid_atomic_rwlock_upgrade_nx)(struct __hybrid_atomic_rwlock *__restrict __self);
@@ -194,7 +194,7 @@ __NOTHROW(__hybrid_atomic_rwlock_upgrade_nx)(struct __hybrid_atomic_rwlock *__re
 #endif /* !NDEBUG || !NDEBUG_SYNC */
 
 
-/* End writing. (returns `void') */
+/* End writing. (returns `void`) */
 #define ___hybrid_atomic_rwlock_endwrite_NDEBUG(self) \
 	__hybrid_atomic_store(&(self)->arw_lock, 0, __ATOMIC_RELEASE)
 #if defined(NDEBUG) || defined(NDEBUG_SYNC)

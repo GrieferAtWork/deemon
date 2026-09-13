@@ -86,11 +86,11 @@ PRIVATE NONNULL((1)) void DCALL buffer_deltty(Buffer *__restrict self);
 
 PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 
-/* Special return values for `buffer_read_or_unlock' and `buffer_write_or_unlock' */
+/* Special return values for `buffer_read_or_unlock` and `buffer_write_or_unlock` */
 #define BUFFER_IO_EOF        (0)  /* End-of-file */
 #define BUFFER_IO_ERROR      (-1) /* Error (an exception was thrown) */
 #define BUFFER_IO_DID_UNLOCK (-2) /* The buffer had to be unlocked (try again) */
-#define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock') */
+#define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock`) */
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, byte_t *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, byte_t const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
 PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, Dee_off_t off, int whence);
@@ -102,7 +102,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict sel
 #define BUFFER_SYNC_FNORMAL          0x0000
 #define BUFFER_SYNC_FERROR_IF_CLOSED 0x0001 /* Throw an error if the buffer was closed. */
 #define BUFFER_SYNC_FNOSYNC_FILE     0x0002 /* Don't synchronize the underlying file, regardless of whether
-                                             * or not the `Dee_FILE_BUFFER_FSYNC' flag has been set. */
+                                             * or not the `Dee_FILE_BUFFER_FSYNC` flag has been set. */
 
 
 #ifdef CONFIG_HAVE_atexit
@@ -175,7 +175,7 @@ buffer_init(Buffer *__restrict self,
             DeeObject *__restrict file,
             uint16_t mode, size_t size) {
 	ASSERT_OBJECT(file);
-	/* Validate that the given `mode' is an accepted buffer mode. */
+	/* Validate that the given `mode` is an accepted buffer mode. */
 	ASSERT((mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_NONE ||
 	       (mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_FULL ||
 	       (mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_LINE ||
@@ -300,9 +300,9 @@ err:
  * @param: file: The file that is meant to be buffered.
  *               NOTE: If this is another file buffer, its pointed-to
  *                     file is unwound, so-long at it hasn't been closed.
- * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with
- *                      `Dee_FILE_BUFFER_FREADONLY', `Dee_FILE_BUFFER_FSYNC' and
- *                      `Dee_FILE_BUFFER_FCLOFILE'
+ * @param: mode: One of `Dee_FILE_BUFFER_MODE_*`, optionally or'd with
+ *                      `Dee_FILE_BUFFER_FREADONLY`, `Dee_FILE_BUFFER_FSYNC` and
+ *                      `Dee_FILE_BUFFER_FCLOFILE`
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
@@ -323,7 +323,7 @@ err_r:
 }
 
 /* Change the operations mode of a given buffer.
- * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
+ * @param: mode: One of `Dee_FILE_BUFFER_MODE_*`, optionally or'd with `Dee_FILE_BUFFER_FSYNC`
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -404,9 +404,9 @@ err:
 
 /* Synchronize unwritten data of all interactive TTY devices.
  * NOTE: The first time a buffered TTY device is written to,
- *       this function is registered with `Dee_AtExit()'.
- * NOTE: This function can be called as `import.deemon.File.Buffer.sync()'
- * @return: 1 : `or_unlock_me' was non-NULL, and had to be unlocked
+ *       this function is registered with `Dee_AtExit()`.
+ * NOTE: This function can be called as `import.deemon.File.Buffer.sync()`
+ * @return: 1 : `or_unlock_me` was non-NULL, and had to be unlocked
  * @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED int DCALL
@@ -426,18 +426,18 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 
 		/* Important check: if there's nothing to sync, don't even try to lock the file!
 		 * This is required to prevent a soft-lock when many threads are locking & un-
-		 * locking the same set of buffers all at once, using the `BUFFER_IO_DID_UNLOCK'
+		 * locking the same set of buffers all at once, using the `BUFFER_IO_DID_UNLOCK`
 		 * path to prevent dead-locks. In this case, we want to prevent any sort of file
 		 * locking in the case where we don't actually have to sync anything. */
 		if (atomic_read(&buffer->fb_chsz) != 0) {
 			/* Special handling is needed here because:
-			 * - A normal write-lock would dead-lock with `buffer_write()', because we're
+			 * - A normal write-lock would dead-lock with `buffer_write()`, because we`re
 			 *   trying to acquire the same object-semantic lock twice here. If 2 threads
 			 *   try to do this at the same time, 2 buffers locks will already be held,
 			 *   and neither thread will be able to acquire the other thread's lock here! */
 			if (!DeeFileBuffer_LockTryWrite(buffer)) {
 				if (or_unlock_me) {
-					/* Unlock the caller-given `or_unlock_me' */
+					/* Unlock the caller-given `or_unlock_me` */
 					DeeFileBuffer_LockEndWrite(or_unlock_me);
 					Dee_Decref(buffer);
 	
@@ -1613,7 +1613,7 @@ buffer_init_operator(Buffer *__restrict self,
 	return buffer_init(self, Dee_AsObject(args.fp), mode, args.size);
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Unrecognized buffer mode `%s'",
+	                "Unrecognized buffer mode `%s`",
 	                args.mode);
 err:
 	return -1;
@@ -1917,7 +1917,7 @@ buffer_setbuf(Buffer *self, size_t argc,
 	return_none;
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Unrecognized buffer mode `%s'",
+	                "Unrecognized buffer mode `%s`",
 	                args.mode);
 err:
 	return NULL;

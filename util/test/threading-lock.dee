@@ -460,9 +460,9 @@ testRWLock(RSharedRWLock(), isRecursive: true);
 
 local lock = AtomicLock();
 assert all(lock) === lock,
-	"When given a single argument, `threading.all' should re-return that argument";
+	"When given a single argument, `threading.all` should re-return that argument";
 
-/* Test `LockUnion()' with multiple locks (and
+/* Test `LockUnion()` with multiple locks (and
  * assert that it correctly affects referenced
  * locks) */
 for (local locks: {

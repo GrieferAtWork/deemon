@@ -201,7 +201,7 @@ Dee_libc_memcmp(void const *s1, void const *s2, size_t n) { /*!export-*/
  *
  *  - 1-byte string: 100% the same as LATIN-1
  *    Only able to encode the unicode character range U+00-U+FF
- *    Generated and returned by `DeeString_Bytes()', which
+ *    Generated and returned by `DeeString_Bytes()`, which
  *    will encode characters outside that range as '?'
  *  - UTF-8 string:
  *    A multi-byte / variable-character-width string capable
@@ -217,7 +217,7 @@ Dee_libc_memcmp(void const *s1, void const *s2, size_t n) { /*!export-*/
  *    could easily be added as an afterthought)
  *    Strings may indicate their width to be 2-bytes, even if
  *    all contained characters fit into the 1-byte range.
- *    In this case, `DeeString_Bytes()' still functions normally,
+ *    In this case, `DeeString_Bytes()` still functions normally,
  *    and will succeed.
  *  - UTF-16 string:
  *    A 1/2-word / variable-character-width string that can encode
@@ -229,7 +229,7 @@ Dee_libc_memcmp(void const *s1, void const *s2, size_t n) { /*!export-*/
  *    All characters are encoded in the address range U+00000000-U+FFFFFFFF.
  *    Strings may indicate their width to be 4-bytes, even if
  *    all contained characters fit into the 2-, or 1-byte range.
- *    In this case, `DeeString_Bytes()' still functions normally,
+ *    In this case, `DeeString_Bytes()` still functions normally,
  *    and will succeed for 1-byte ranges.
  *  - UTF-32 string:
  *    Literally the same as a 4-byte string.
@@ -316,16 +316,16 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 
 /* Encoding error flags. */
 #define Dee_STRING_ERROR_FNORMAL 0x0000 /* Normal string decoding. */
-#define Dee_STRING_ERROR_FSTRICT 0x0000 /* Throw `Error.UnicodeError.UnicodeDecodeError' when something goes wrong. */
-#define Dee_STRING_ERROR_FREPLAC 0x0001 /* Replace bad characters with `?'. */
+#define Dee_STRING_ERROR_FSTRICT 0x0000 /* Throw `Error.UnicodeError.UnicodeDecodeError` when something goes wrong. */
+#define Dee_STRING_ERROR_FREPLAC 0x0001 /* Replace bad characters with `?`. */
 #define Dee_STRING_ERROR_FIGNORE 0x0002 /* Ignore (truncate or drop) bad characters. */
 
-/* Returns the length of a width-string (which is any string obtained from a `string' object) */
+/* Returns the length of a width-string (which is any string obtained from a `string` object) */
 #define Dee_WSTR_LENGTH(x)  ((size_t const *)(x))[-1]
 #define _Dee_WSTR_LENGTH(x) ((size_t *)(x))[-1]
 
-/* Given the character-width `width', the base address `base', and the
- * index `index', return the unicode character found at that location */
+/* Given the character-width `width`, the base address `base`, and the
+ * index `index`, return the unicode character found at that location */
 #define Dee_STRING_WIDTH_GETCHAR(width, base, index) \
 	(likely((width) == Dee_STRING_WIDTH_1BYTE)       \
 	 ? (uint32_t)((uint8_t const *)(base))[index]    \
@@ -333,8 +333,8 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 	   ? (uint32_t)((uint16_t const *)(base))[index] \
 	   : ((uint32_t const *)(base))[index])
 
-/* Given the character-width `width', the base address `base', and the
- * index `index', set the unicode character found at that location to `value' */
+/* Given the character-width `width`, the base address `base`, and the
+ * index `index`, set the unicode character found at that location to `value` */
 #define Dee_STRING_WIDTH_SETCHAR(width, base, index, value)      \
 	(likely((width) == Dee_STRING_WIDTH_1BYTE)                   \
 	 ? (void)(((uint8_t *)(base))[index] = (uint8_t)(value))     \
@@ -342,10 +342,10 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 	   ? (void)(((uint16_t *)(base))[index] = (uint16_t)(value)) \
 	   : (void)(((uint32_t *)(base))[index] = (uint32_t)(value)))
 
-/* Return the width (in bytes) of a string width `width' */
+/* Return the width (in bytes) of a string width `width` */
 #define Dee_STRING_SIZEOF_WIDTH(width) ((size_t)1 << (width))
 
-/* Return the result of `x * Dee_STRING_SIZEOF_WIDTH(width)' */
+/* Return the result of `x * Dee_STRING_SIZEOF_WIDTH(width)` */
 #define Dee_STRING_MUL_SIZEOF_WIDTH(x, width) ((size_t)(x) << (width))
 #define Dee_STRING_DIV_SIZEOF_WIDTH(x, width) ((size_t)(x) >> (width))
 
@@ -369,7 +369,7 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define Dee_STRING_UTF_FNORMAL 0x0000 /* Normal UTF flags */
 #define Dee_STRING_UTF_FASCII  0x0001 /* FLAG: The string contains no character outside the ASCII range.
                                        * NOTE: This flag isn't required to be set, even if there are only ASCII characters. */
-#define Dee_STRING_UTF_FINVBYT 0x0002 /* FLAG: The string in `u_data[Dee_STRING_WIDTH_1BYTE]' contains truncated characters (represented as `?') */
+#define Dee_STRING_UTF_FINVBYT 0x0002 /* FLAG: The string in `u_data[Dee_STRING_WIDTH_1BYTE]` contains truncated characters (represented as `?`) */
 #define Dee_STRING_UTF_FFINIHOOK  0x0004 /* FLAG: The string appears in the regex cache */
 
 
@@ -396,18 +396,18 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #endif /* DEE_SOURCE */
 
 struct Dee_string_utf {
-	__UINTPTR_HALF_TYPE__ u_width; /* [const] The minimum encoding size (One of `STRING_WIDTH_*').
+	__UINTPTR_HALF_TYPE__ u_width; /* [const] The minimum encoding size (One of `STRING_WIDTH_*`).
 	                                *         Also used as index into the encoding-data vector below.
 	                                *         NOTE: The data-representation indexed by this is _always_ allocated! */
-	__UINTPTR_HALF_TYPE__ u_flags; /* [const] UTF flags (Set of `STRING_UTF_F*') */
+	__UINTPTR_HALF_TYPE__ u_flags; /* [const] UTF flags (Set of `STRING_UTF_F*`) */
 	size_t      *u_data[Dee_STRING_WIDTH_COUNT]; /* [0..1][owned][lock(WRITE_ONCE)][*]
 	                                              * Multi-byte string variant.
-	                                              * Variants at indices `>= u_width' can always be accessed without
-	                                              * any problems, with the version at `u_width' even being guarantied
-	                                              * to be 1..1 (that version is returned by `DeeString_WSTR()').
+	                                              * Variants at indices `>= u_width` can always be accessed without
+	                                              * any problems, with the version at `u_width` even being guarantied
+	                                              * to be 1..1 (that version is returned by `DeeString_WSTR()`).
 	                                              * Accessing lower-order variants requires the string to be cast into
 	                                              * that width-class, with the result being that characters which don't fit
-	                                              * into that class are replaced by `?', potentially causing a DecodeError.
+	                                              * into that class are replaced by `?`, potentially causing a DecodeError.
 	                                              * >> Dee_ASSERT(u_data[u_width] != NULL);
 	                                              * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_1BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_1BYTE]));
 	                                              * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_2BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_2BYTE]));
@@ -419,17 +419,17 @@ struct Dee_string_utf {
 	                                              * >> if (u_flags & Dee_STRING_UTF_FASCII)
 	                                              * >>     Dee_ASSERT(u_utf8 == :s_str); */
 	char        *u_utf8;  /* [0..1][lock(WRITE_ONCE)][owned_if(!= :s_str)]
-	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
+	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH` to
 	                       * determine its length), representing the UTF-8 variant of this string. */
 #if __SIZEOF_WCHAR_T__ == 2
 #define _Dee_string_utf_utf16_t Dee_wchar_t
 	Dee_wchar_t *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[Dee_STRING_WIDTH_2BYTE])]
-	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
+	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH` to
 	                       * determine its length), representing the UTF-16 variant of this string. */
 #else /* __SIZEOF_WCHAR_T__ == 2 */
 #define _Dee_string_utf_utf16_t uint16_t
 	uint16_t    *u_utf16; /* [0..1][lock(WRITE_ONCE)][owned_if(!= u_data[Dee_STRING_WIDTH_2BYTE])]
-	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
+	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH` to
 	                       * determine its length), representing the UTF-16 variant of this string. */
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 };
@@ -553,14 +553,14 @@ DDATDEF struct Dee_empty_string_struct DeeString_Empty;
 #endif /* DEE_SOURCE */
 
 
-DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
+DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon` */
 #define DeeString_Check(x)      DeeObject_InstanceOfExact(x, &DeeString_Type)
 #define DeeString_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeString_Type)
 
 
 /* Return a pointer to the multi-byte encoded variant of the given string.
  * Characters <= 127 follow ASCII characters, while the meaning of characters
- * above this depends on `DeeString_WIDTH()':
+ * above this depends on `DeeString_WIDTH()`:
  *   - Dee_STRING_WIDTH_1BYTE:
  *      - If there are no characters above 127, the string is pure ASCII
  *      - Otherwise, the string may have been created from raw, non-decoded
@@ -572,12 +572,12 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *        of the unicode character range U+0080...U+00FF, meaning that the
  *        string should behave like any ordinary unicode string.
  *   - Dee_STRING_WIDTH_2BYTE:
- *      - `DeeString_STR()' is the multi-byte, UTF-8 form of a UTF-16 string
- *        found in `x->s_data->u_data[Dee_STRING_WIDTH_2BYTE]', while `DeeString_SIZE()'
+ *      - `DeeString_STR()` is the multi-byte, UTF-8 form of a UTF-16 string
+ *        found in `x->s_data->u_data[Dee_STRING_WIDTH_2BYTE]`, while `DeeString_SIZE()`
  *        refers to the number of bytes used by the multi-byte string.
  *   - Dee_STRING_WIDTH_4BYTE:
- *      - `DeeString_STR()' is the multi-byte, UTF-8 form of a UTF-32 string
- *        found in `x->s_data->u_data[Dee_STRING_WIDTH_4BYTE]', while `DeeString_SIZE()'
+ *      - `DeeString_STR()` is the multi-byte, UTF-8 form of a UTF-32 string
+ *        found in `x->s_data->u_data[Dee_STRING_WIDTH_4BYTE]`, while `DeeString_SIZE()`
  *        refers to the number of bytes used by the multi-byte string.
  */
 #define DeeString_STR(x)  Dee_REQUIRES_OBJECT(DeeStringObject const, x)->s_str
@@ -592,7 +592,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_LEN16(x) Dee_WSTR_LENGTH(DeeString_STR16(x))
 #define DeeString_LEN32(x) Dee_WSTR_LENGTH(DeeString_STR32(x))
 
-/* Returns true if `DeeString_STR()' is encoded in UTF-8
+/* Returns true if `DeeString_STR()` is encoded in UTF-8
  * HINT: This is very useful when creating transformed sub-strings
  *       of another string, when caring about encodings, but only
  *       working within the ASCII-range:
@@ -603,7 +603,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *    >>                                DeeString_SIZE(str));
  *    >>     if (!pos)
  *    >>         return_none;
- *    >>     // Return the sub-string after `ch'
+ *    >>     // Return the sub-string after `ch`
  *    >>     ++pos;
  *    >>     result = DeeString_NewSized(pos, (size_t)(DeeString_END(str) - pos));
  *    >>     if likely(result && DeeString_STR_ISUTF8(str))
@@ -611,7 +611,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
  *    >>     return result;
  *    >> }
  *       This method works with any kind of string, but has an O(n) slowdown in
- *       `DeeString_SetUtf8()' when the input string contains ASCII characters
+ *       `DeeString_SetUtf8()` when the input string contains ASCII characters
  *       outside of the ASCII range (or in some cases: LATIN-1 range).
  */
 #define DeeString_STR_ISUTF8(x)                                              \
@@ -619,18 +619,18 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	 ((((DeeStringObject *)(x))->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
 	  ((DeeStringObject *)(x))->s_data->u_width != Dee_STRING_WIDTH_1BYTE))
 
-/* Returns true if `DeeString_STR()' is encoded in LATIN-1, or ASCII */
+/* Returns true if `DeeString_STR()` is encoded in LATIN-1, or ASCII */
 #define DeeString_STR_ISLATIN1(x)                                           \
 	(!((DeeStringObject *)(x))->s_data ||                                   \
 	 (((DeeStringObject *)(x))->s_data->u_flags & Dee_STRING_UTF_FASCII) || \
 	 ((DeeStringObject *)(x))->s_data->u_width == Dee_STRING_WIDTH_1BYTE)
 
 
-/* Check if the given string object `x' has had its hash calculated. */
+/* Check if the given string object `x` has had its hash calculated. */
 #define DeeString_HASHOK(x) (Dee_REQUIRES_OBJECT(DeeStringObject const, x)->s_hash != (Dee_hash_t)-1)
 #define DeeString_HASH(x)   Dee_REQUIRES_OBJECT(DeeStringObject const, x)->s_hash
 
-/* Check if the given string object `x' is an (the) empty string. */
+/* Check if the given string object `x` is an (the) empty string. */
 #define DeeString_IsEmpty(x) (Dee_REQUIRES_OBJECT(DeeStringObject const, x)->s_len == 0)
 
 
@@ -645,7 +645,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	 bcmp(DeeString_STR(x) + DeeString_SIZE(x) - COMPILER_STRLEN(ascii_str), \
 	      ascii_str, sizeof(ascii_str) - sizeof(char)) == 0)
 
-/* FIXME: These macros need to check for `DeeString_STR_ISUTF8()':
+/* FIXME: These macros need to check for `DeeString_STR_ISUTF8()`:
  * >> local a = string.fromseq({ 0x100 });
  * >> local b = string.fromseq({ 0xc4, 0x80 });
  * >> assert a.__str_bytes__ == b.__str_bytes__; // Same str-bytes, but different strings!
@@ -663,7 +663,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	 bcmp(DeeString_END(lhs) - DeeString_SIZE(rhs_STR), \
 	      DeeString_STR(rhs_STR), DeeString_SIZE(rhs_STR) * sizeof(char)) == 0)
 
-/* FIXME: These macros don't account for `DeeString_STR_ISUTF8()' */
+/* FIXME: These macros don't account for `DeeString_STR_ISUTF8()` */
 #define DeeString_EqualsBuf(lhs, rhs_base, rhs_size) \
 	(DeeString_SIZE(lhs) == (rhs_size) &&            \
 	 bcmp(DeeString_STR(lhs), rhs_base,              \
@@ -678,7 +678,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 	      rhs_base, (rhs_size) * sizeof(char)) == 0)
 
 
-/* Return the unicode character-width of characters found in the given string `x' */
+/* Return the unicode character-width of characters found in the given string `x` */
 #define DeeString_WIDTH(x)                                 \
 	(Dee_REQUIRES_OBJECT(DeeStringObject const, x)->s_data \
 	 ? ((DeeStringObject const *)(x))->s_data->u_width     \
@@ -690,10 +690,10 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 
 /* Return a pointer to the unicode character-array for which all
  * characters can be fitted into the same number of bytes, the
- * amount of which can be determined by `Dee_WSTR_LENGTH(DeeString_WSTR(x))',
- * or `DeeString_WLEN(x)', with their individual size in bytes determinable
- * as `Dee_STRING_SIZEOF_WIDTH(DeeString_WSTR(x))'.
- * HINT: The string length returned by `string.operator #' is `DeeString_WLEN()' */
+ * amount of which can be determined by `Dee_WSTR_LENGTH(DeeString_WSTR(x))`,
+ * or `DeeString_WLEN(x)`, with their individual size in bytes determinable
+ * as `Dee_STRING_SIZEOF_WIDTH(DeeString_WSTR(x))`.
+ * HINT: The string length returned by `string.operator #` is `DeeString_WLEN()` */
 #define DeeString_WSTR(x) _DeeString_WStr(Dee_REQUIRES_OBJECT(DeeStringObject const, x))
 #define DeeString_WLEN(x) _DeeString_WLen(Dee_REQUIRES_OBJECT(DeeStringObject const, x))
 #define DeeString_WEND(x) _DeeString_WEnd(Dee_REQUIRES_OBJECT(DeeStringObject const, x))
@@ -748,7 +748,7 @@ _DeeString_WSiz(DeeStringObject const *__restrict self) {
 }
 
 
-/* Return the hash of `self', or calculate it if it wasn't already. */
+/* Return the hash of `self`, or calculate it if it wasn't already. */
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 (DCALL DeeString_Hash)(DeeObject *__restrict self);
@@ -764,10 +764,10 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
 
 /* Return the given string's characters as a byte-array.
- * Characters above 0xFF either cause `NULL' to be returned, alongside
+ * Characters above 0xFF either cause `NULL` to be returned, alongside
  * a ValueError being thrown, or cause them to be replaced with '?'.
- * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
- *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
+ * @return: * :   The Bytes-data of the given string `self` (encoded as a width-string)
+ *                NOTE: The length of this block also matches `DeeString_WLEN(self)`
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ __BYTE_TYPE__ const *
 (DCALL DeeString_AsBytes)(DeeObject *__restrict self, bool allow_invalid);
@@ -830,14 +830,14 @@ ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t const *(DeeString_Get4Byte)(DeeObj
 /* Return the UTF-8 variant of the given string.
  * The returned string can be used as a width-string, meaning that
  * upon success (return != NULL), you can determine its length by
- * using `Dee_WSTR_LENGTH(return)'.
- * @return: * :   A pointer to the UTF-8 variant-string of `self'
+ * using `Dee_WSTR_LENGTH(return)`.
+ * @return: * :   A pointer to the UTF-8 variant-string of `self`
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *
 (DCALL DeeString_AsUtf8)(DeeObject *__restrict self);
 #define DeeString_AsUtf8(self) DeeString_AsUtf8(Dee_AsObject(self))
 
-/* Same as `DeeString_AsUtf8()', but returns NULL without throwing an error. */
+/* Same as `DeeString_AsUtf8()`, but returns NULL without throwing an error. */
 DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *
 (DCALL DeeString_TryAsUtf8)(DeeObject *__restrict self);
 #define DeeString_TryAsUtf8(self) DeeString_TryAsUtf8(Dee_AsObject(self))
@@ -873,7 +873,7 @@ Dee_wchar_t const *DeeString_AsWide(DeeObject *__restrict self);
 /* ================================================================================= */
 
 /* Construct an uninitialized single-byte string,
- * capable of representing up to `num_bytes' bytes of text (representing LATIN-1 text). */
+ * capable of representing up to `num_bytes` bytes of text (representing LATIN-1 text). */
 #undef DeeString_NewBuffer
 #undef DeeDbgString_NewBuffer
 DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_NewBuffer)(size_t num_bytes);
@@ -885,18 +885,18 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeDbgString_NewBuffer)(size_t num_bytes,
 #endif /* !NDEBUG */
 #define DeeString_GetBuffer(self) Dee_REQUIRES_OBJECT(DeeStringObject, self)->s_str
 
-/* Resize a single-byte string to have a length of `num_bytes' bytes.
- * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
+/* Resize a single-byte string to have a length of `num_bytes` bytes.
+ * You may pass `NULL` for `self`, or a reference to `Dee_EmptyString`
  * in order to allocate and return a new buffer. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Print the text of `self' to `printer', encoded as a UTF-8 string.
- * NOTE: If `printer' is `&Dee_unicode_printer_print', special optimization
+/* Print the text of `self` to `printer`, encoded as a UTF-8 string.
+ * NOTE: If `printer` is `&Dee_unicode_printer_print`, special optimization
  *       is done, meaning that this is the preferred method of printing
  *       an object to a unicode printer.
- * NOTE: This optimization is also done when `DeeObject_Print' is used. */
+ * NOTE: This optimization is also done when `DeeObject_Print` is used. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintUtf8(DeeObject *__restrict self,
                     Dee_formatprinter_t printer,
@@ -907,7 +907,7 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 #define DeeString_PrintAscii(self, printer, arg) \
 	(*printer)(arg, DeeString_STR(self), DeeString_SIZE(self))
 
-/* Print the escape-encoded variant of `self' */
+/* Print the escape-encoded variant of `self` */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
                     Dee_formatprinter_t printer,
@@ -920,7 +920,7 @@ DeeString_PrintRepr(DeeObject *__restrict self,
  * UTF-8 text.
  *  - Surrounding quotation marks should be stripped before calling this function.
  *  - Escaped linefeeds are implicitly parsed, too.
- * @param: error_mode: One of `STRING_ERROR_F*' */
+ * @param: error_mode: One of `STRING_ERROR_F*` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode);
@@ -934,7 +934,7 @@ DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
 
 
 
-/* Construct a new, non-decoded single-byte-per-character string `str'.
+/* Construct a new, non-decoded single-byte-per-character string `str`.
  * The string itself may contain characters above 127, which are then
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 #undef DeeString_New
@@ -956,9 +956,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned
 #endif /* __ARCH_PAGESIZE */
 #endif /* !__ARCH_PAGESIZE_MIN */
 
-/* Check if `str' is the `DeeString_STR()' of a string object, and return
+/* Check if `str` is the `DeeString_STR()` of a string object, and return
  * a pointer to that object, only if it being that can be guarantied.
- * Otherwise return `NULL'.
+ * Otherwise return `NULL`.
  * WARNING: In order to prevent race conditions, only use this function
  *          with statically allocated strings, as a heap implementation
  *          that doesn't fill free memory and uses a block-size field in
@@ -981,12 +981,12 @@ DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 			 * allowed by any kind of allocator, regardless of what may be
 			 * done to freed objects:
 			 * #1: If the heap does some debug stuff to memset() free memory,
-			 *     and the given `str' is allocated within such a region, ob_type
-			 *     would not be a pointer to `DeeString_Type'
+			 *     and the given `str` is allocated within such a region, ob_type
+			 *     would not be a pointer to `DeeString_Type`
 			 * #2: If the heap doesn't do debug-memset()-stuff, and we were unlucky
-			 *     enough to be given an `str' allocated at the exact location where
-			 *     then `ob_refcnt' would still be zero.
-			 * #3: UNLUCKY: Same as in #2, but `ob_refcnt' is the heap-size field,
+			 *     enough to be given an `str` allocated at the exact location where
+			 *     then `ob_refcnt` would still be zero.
+			 * #3: UNLUCKY: Same as in #2, but `ob_refcnt` is the heap-size field,
 			 *              in which case we'd get an invalid match by assuming
 			 *              that the heap-size field was our reference counter.
 			 * -> Because of case #3, this function can't be used for heap-allocated strings. */
@@ -1118,8 +1118,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8)(/*utf-
 #define DeeString_NewUtf8(str, length, error_mode) DeeDbgString_NewUtf8(str, length, error_mode, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
-/* Same as `DeeString_NewUtf8()', but uses `DeeObject_TryMalloc' & friends
- * Given `error_mode' _MUST_ be `Dee_STRING_ERROR_FREPLAC' or `Dee_STRING_ERROR_FIGNORE' */
+/* Same as `DeeString_NewUtf8()`, but uses `DeeObject_TryMalloc` & friends
+ * Given `error_mode` _MUST_ be `Dee_STRING_ERROR_FREPLAC` or `Dee_STRING_ERROR_FIGNORE` */
 #undef DeeString_TryNewUtf8
 #undef DeeDbgString_TryNewUtf8
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
@@ -1130,12 +1130,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_TryNewUtf8)(/*u
 #define DeeString_TryNewUtf8(str, length, error_mode) DeeDbgString_TryNewUtf8(str, length, error_mode, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
-/* Given a string `self' that has previously been allocated as a byte-buffer
- * string (such as `DeeString_NewSized()' or `DeeString_NewBuffer()'), convert
+/* Given a string `self` that has previously been allocated as a byte-buffer
+ * string (such as `DeeString_NewSized()` or `DeeString_NewBuffer()`), convert
  * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.
  *
- * This function _always_ inherits a reference to `self', and will return
- * `NULL' on error. */
+ * This function _always_ inherits a reference to `self`, and will return
+ * `NULL` on error. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode);
@@ -1163,7 +1163,7 @@ DeeString_NewAutoUtf8(/*unsigned*/ char const *__restrict str) {
 
 
 /* Construct strings from UTF-16/32 encoded content.
- * @param: error_mode: One of `STRING_ERROR_F*' */
+ * @param: error_mode: One of `STRING_ERROR_F*` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewUtf16(uint16_t const *__restrict str,
                    size_t length, unsigned int error_mode);
@@ -1850,8 +1850,8 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *
 
 
 /* API for string construction from buffers, with character size being determined at runtime.
- * NOTE: All of these functions take a `width' argument that is one of `STRING_WIDTH_*BYTE',
- *       behaving identical to the same `DeeString_*NByteBuffer' function.
+ * NOTE: All of these functions take a `width` argument that is one of `STRING_WIDTH_*BYTE`,
+ *       behaving identical to the same `DeeString_*NByteBuffer` function.
  * NOTE: Packing of strings is done as raw word streams (no utf-8/16/32 decoding is performed!) */
 #ifdef __INTELLISENSE__
 LOCAL ATTR_MALLOC WUNUSED void *(DCALL DeeString_NewWidthBuffer)(size_t num_chars, unsigned int width);
@@ -2208,16 +2208,16 @@ DeeString_NewWithWidth(void const *__restrict str,
 
 /* Generic format printer function (can be used to implement
  * both string (unicode), as well as Bytes formatting)
- * @param: pattern_printer: Printer used to emit data from `pattern' (i.e. static data)
- *                          Note that this is a distinct argument so-as to allow `pattern'
+ * @param: pattern_printer: Printer used to emit data from `pattern` (i.e. static data)
+ *                          Note that this is a distinct argument so-as to allow `pattern`
  *                          to be an ASCII string, rather than it needing to be utf-8.
- * @param: data_printer:    Printer used to emit data from `args' (i.e. dynamic data) */
+ * @param: data_printer:    Printer used to emit data from `args` (i.e. dynamic data) */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeString_FormatPrinter(char const *pattern, size_t pattern_length, DeeObject *args,
                         Dee_formatprinter_t pattern_printer,
                         Dee_formatprinter_t data_printer, void *arg);
 
-/* API functions for `string.format'. */
+/* API functions for `string.format`. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
 DeeString_FormatWStr(/*utf-8*/ char const *pattern_wstr, DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
@@ -2295,7 +2295,7 @@ typedef uint16_t Dee_uniflag_t;
  * by case folding a single unicode character. */
 #define Dee_UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
 
-/* case-fold the given unicode character `ch', and
+/* case-fold the given unicode character `ch`, and
  * return the number of resulting folded characters.
  * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
 #define DeeUni_ToFolded(ch, buf) \
@@ -2375,18 +2375,18 @@ typedef uint16_t Dee_uniflag_t;
  * -> Using this, we can greatly optimize unicode database
  *    lookups by checking the size of a character at compile-
  *    time, meaning that when working with 8-bit characters,
- *    no call to `DeeUni_Descriptor()' needs to be assembled. */
+ *    no call to `DeeUni_Descriptor()` needs to be assembled. */
 DDATDEF Dee_uniflag_t const _DeeLatin1_Flags[256];
 
-/* When `ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT', then the associated unicode
- * character has a digit value equal to `ut_digit_idx' (iow: the digit decode step
- * can be skipped, since `ut_digit_idx' _is_ the digit value) */
+/* When `ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT`, then the associated unicode
+ * character has a digit value equal to `ut_digit_idx` (iow: the digit decode step
+ * can be skipped, since `ut_digit_idx` _is_ the digit value) */
 #define Dee_UNICODE_DIGIT_IDENTITY_COUNT 51
 struct Dee_unitraits {
-	Dee_uniflag_t const ut_flags;     /* Character flags (Set of `UNICODE_IS*') */
-	uint8_t       const ut_digit_idx; /* Digit/decimal extension index, or `0xff'.
-	                                   * When `< Dee_UNICODE_DIGIT_IDENTITY_COUNT', this _is_ the digit value. */
-	uint8_t       const ut_fold_idx;  /* Unicode fold extension index, or `0xff'. */
+	Dee_uniflag_t const ut_flags;     /* Character flags (Set of `UNICODE_IS*`) */
+	uint8_t       const ut_digit_idx; /* Digit/decimal extension index, or `0xff`.
+	                                   * When `< Dee_UNICODE_DIGIT_IDENTITY_COUNT`, this _is_ the digit value. */
+	uint8_t       const ut_fold_idx;  /* Unicode fold extension index, or `0xff`. */
 	int32_t       const ut_lower;     /* Delta added to the character to convert it to lowercase, or 0. */
 	int32_t       const ut_upper;     /* Delta added to the character to convert it to uppercase, or 0. */
 	int32_t       const ut_title;     /* Delta added to the character to convert it to titlecase, or 0. */
@@ -2400,7 +2400,7 @@ DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED struct Dee_unitraits const *
  * by case folding a single unicode character. */
 #define Dee_UNICODE_FOLDED_MAX 3
 
-/* case-fold the given unicode character `ch', and
+/* case-fold the given unicode character `ch`, and
  * return the number of resulting folded characters.
  * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
 DFUNDEF NONNULL((2)) size_t
@@ -2464,25 +2464,25 @@ LOCAL ATTR_CONST WUNUSED double (DCALL DeeUni_GetNumericD)(uint32_t ch) {
 
 
 
-/* Store the digit-value of `ch' in `*p_result' and check if it belongs to `radix'
- * @return: true:  Success (`*p_result' contains the decimal value of the digit)
- * @return: false: Error. Either `ch' isn't a digit, or it can't be used in `radix'.
- *                 In this case, the contents of `*p_result' are undefined. */
+/* Store the digit-value of `ch` in `*p_result` and check if it belongs to `radix`
+ * @return: true:  Success (`*p_result` contains the decimal value of the digit)
+ * @return: false: Error. Either `ch` isn't a digit, or it can't be used in `radix`.
+ *                 In this case, the contents of `*p_result` are undefined. */
 #define DeeUni_AsDigit(ch, radix, p_result) \
 	((*(p_result) = DeeUni_AsDigitVal(ch)) < (radix))
 
-/* Returns 0xff if `ch' isn't a digit */
+/* Returns 0xff if `ch` isn't a digit */
 LOCAL ATTR_CONST WUNUSED uint8_t DCALL DeeUni_AsDigitVal(uint32_t ch) {
 	struct Dee_unitraits const *traits = DeeUni_Descriptor(ch);
 	if (!(traits->ut_flags & Dee_UNICODE_ISXDIGIT))
 		return 0xff; /* Filter out stuff like `²' */
-	/* We assume that `ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT', and
-	 * that `Dee_UNICODE_DIGIT_IDENTITY_COUNT >= 16'. With these  assumptions,
+	/* We assume that `ut_digit_idx < Dee_UNICODE_DIGIT_IDENTITY_COUNT`, and
+	 * that `Dee_UNICODE_DIGIT_IDENTITY_COUNT >= 16`. With these  assumptions,
 	 * we are allowed to simply return the digit index to our caller  (which
-	 * is  the `unicode_asdigit(3)'  macro), who  will then  check that said
+	 * is  the `unicode_asdigit(3)`  macro), who  will then  check that said
 	 * index is less than their radix.
 	 *
-	 * Thus, so-long as `radix <= Dee_UNICODE_DIGIT_IDENTITY_COUNT', there won't
+	 * Thus, so-long as `radix <= Dee_UNICODE_DIGIT_IDENTITY_COUNT`, there won't
 	 * be any inconsistencies! */
 	return traits->ut_digit_idx;
 }
@@ -2566,7 +2566,7 @@ LOCAL ATTR_CONST WUNUSED uint8_t DCALL DeeUni_AsDigitVal(uint32_t ch) {
 
 
 
-/* ASCII-only character traits (that treat bytes 80h-FFh as undefined; `_DeeAscii_Flags[80h-FFh] == 0') */
+/* ASCII-only character traits (that treat bytes 80h-FFh as undefined; `_DeeAscii_Flags[80h-FFh] == 0`) */
 DDATDEF Dee_uniflag_t const _DeeAscii_Flags[256];
 
 #define DeeAscii_Flags(ch)       _DeeAscii_Flags[(uint8_t)(ch)]
@@ -2606,13 +2606,13 @@ DDATDEF Dee_uniflag_t const _DeeAscii_Flags[256];
  * Bytes that can't be used as hex-characters yield some value >= 16. */
 DDATDEF uint8_t const _DeeAscii_HexValue[256];
 
-/* Returns 0xff if `ch' isn't a digit */
+/* Returns 0xff if `ch` isn't a digit */
 #define DeeAscii_AsDigitVal(ch) _DeeAscii_HexValue[(uint8_t)(ch)]
 
-/* Store the digit-value of `ch' in `*p_result' and check if it belongs to `radix'
- * @return: true:  Success (`*p_result' contains the decimal value of the digit)
- * @return: false: Error. Either `ch' isn't a digit, or it can't be used in `radix'.
- *                 In this case, the contents of `*p_result' are undefined. */
+/* Store the digit-value of `ch` in `*p_result` and check if it belongs to `radix`
+ * @return: true:  Success (`*p_result` contains the decimal value of the digit)
+ * @return: false: Error. Either `ch` isn't a digit, or it can't be used in `radix`.
+ *                 In this case, the contents of `*p_result` are undefined. */
 #define DeeAscii_AsDigit(ch, radix, p_result) \
 	((*(p_result) = DeeAscii_AsDigitVal(ch)) < (radix))
 
@@ -2631,8 +2631,8 @@ DDATDEF char const _DeeAscii_Itoa[101];
 
 
 /* =================================================================================== */
-/*   ASCII / LATIN-1 PRINTER API (Formerly `string_printer')                           */
-/*   Superseded by `Dee_unicode_printer' (only use this one for pure ascii strings!)   */
+/*   ASCII / LATIN-1 PRINTER API (Formerly `string_printer`)                           */
+/*   Superseded by `Dee_unicode_printer` (only use this one for pure ascii strings!)   */
 /* =================================================================================== */
 struct Dee_ascii_printer {
 	size_t           ap_length; /* Used string length. */
@@ -2651,16 +2651,16 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 #endif /* !__INTELLISENSE__ */
 
 
-/* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
+/* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t`) */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
 Dee_ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
-/* Allocate space for `datalen' bytes at the end of `self',
+/* Allocate space for `datalen` bytes at the end of `self`,
  * then return a pointer to the start of this new buffer. */
 DFUNDEF WUNUSED NONNULL((1)) char *DCALL
 Dee_ascii_printer_alloc(struct Dee_ascii_printer *__restrict self, size_t datalen);
 
-/* Release exactly `datalen' bytes from the printer to be
+/* Release exactly `datalen` bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
 DFUNDEF NONNULL((1)) void DCALL
 Dee_ascii_printer_release(struct Dee_ascii_printer *__restrict self, size_t datalen);
@@ -2680,7 +2680,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t Dee_ascii_printer_vprintf(struct Dee_ascii_p
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_ascii_printer_putc)(struct Dee_ascii_printer *__restrict self, char ch);
 
 /* Search the buffer that has already been created for an existing instance
- * of `str...+=length' and if found, return a pointer to its location.
+ * of `str...+=length` and if found, return a pointer to its location.
  * Otherwise, append the given string and return a pointer to that location.
  * Upon error (append failed to allocate more memory), NULL is returned.
  * HINT: This function is very useful when creating
@@ -2689,7 +2689,7 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_ascii_printer_putc)(struct Dee_ascii
  *       >> Dee_ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> Dee_ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
  * @return: * :   A pointer to a volatile memory location within the already printed string
- *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)'
+ *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)`
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) char *DCALL
@@ -2697,7 +2697,7 @@ Dee_ascii_printer_allocstr(struct Dee_ascii_printer *__restrict self,
                            char const *__restrict str, size_t length);
 
 /* Pack together data from a string printer and return the generated contained string.
- * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
+ * Upon success, as well as upon failure, the state of `self` is undefined upon return. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_ascii_printer_pack(/*inherit(always)*/ struct Dee_ascii_printer *__restrict self);
 
@@ -2754,7 +2754,7 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? _Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
 #define Dee_UNICODE_PRINTER_WIDTH(x)         ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
 #define Dee_UNICODE_PRINTER_GETCHAR(x, i)    Dee_STRING_WIDTH_GETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i)    /* Get a character */
-#define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */
+#define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v` must fit into the buffer's current width) */
 
 #ifndef NDEBUG
 #define Dee_unicode_printer_truncate(self, len)                                           \
@@ -2772,32 +2772,32 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 	(void)((self)->up_length = 0)
 #endif /* NDEBUG */
 
-/* Initialize a unicode printer from a given `string'
- * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString' */
+/* Initialize a unicode printer from a given `string`
+ * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString` */
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_unicode_printer_init_string(struct Dee_unicode_printer *__restrict self,
                                 /*inherit(always)*/ DREF DeeObject *__restrict string);
 
 
 /* _Always_ inherit all string data (even upon error) saved in
- * `self', and construct a new string from all that data, before
+ * `self`, and construct a new string from all that data, before
  * returning a reference to that string.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
- *      ---> Regardless of return value, `self' is finalized and left
+ *      ---> Regardless of return value, `self` is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `Dee_unicode_printer_fini()'
+ *           after a call to `Dee_unicode_printer_fini()`
  * @return: * :   A reference to the packed string.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_pack(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self);
 
-/* Same as `Dee_unicode_printer_pack()', but don't throw errors upon failure, but
- * simply return `NULL' and leave `self' in a valid state, ready for the call
+/* Same as `Dee_unicode_printer_pack()`, but don't throw errors upon failure, but
+ * simply return `NULL` and leave `self` in a valid state, ready for the call
  * to be repeated at a later time. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct Dee_unicode_printer *__restrict self);
 
-/* Try to pre-allocate memory for `num_chars' characters.
+/* Try to pre-allocate memory for `num_chars` characters.
  * NOTE: This function merely acts as a hint, and calls may even be ignored.
  * @return: true:  The pre-allocation was successful.
  * @return: false: The pre-allocation has failed. */
@@ -2806,8 +2806,8 @@ Dee_unicode_printer_allocate(struct Dee_unicode_printer *__restrict self,
                              size_t num_chars, unsigned int width);
 
 /* Append a single character to the given printer.
- * If `ch' can't fit the currently set `up_width', copy already
- * written data into a larger representation before appending `ch'.
+ * If `ch` can't fit the currently set `up_width`, copy already
+ * written data into a larger representation before appending `ch`.
  * @return:  0: Successfully appended the character.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) int
@@ -2857,7 +2857,7 @@ WUNUSED NONNULL((1)) int
 
 /* Append UTF-8 text to the back of the given printer.
  * An incomplete UTF-8 sequences can be completed by future uses of this function.
- * HINT: This function is intentionally designed as compatible with `Dee_formatprinter_t'
+ * HINT: This function is intentionally designed as compatible with `Dee_formatprinter_t`
  *       >> DeeObject_Print(ob, &Dee_unicode_printer_print, &printer);
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
@@ -2908,14 +2908,14 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 #endif /* !__INTELLISENSE__ */
 
-/* Append the ASCII character `ch' a total of `num_repetitions' times. */
+/* Append the ASCII character `ch` a total of `num_repetitions` times. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_unicode_printer_repeatascii)(struct Dee_unicode_printer *__restrict self,
                                         char ch, size_t num_repetitions);
 
 
-/* Reserve `num_chars' characters, to-be either using
- * `Dee_UNICODE_PRINTER_SETCHAR()', or `DeeString_SetChar()'.
+/* Reserve `num_chars` characters, to-be either using
+ * `Dee_UNICODE_PRINTER_SETCHAR()`, or `DeeString_SetChar()`.
  * The return value of this function is the starting index of the reservation,
  * which is made at the end of the currently printed portion of text.
  * @return: * : The starting index of the reservation.
@@ -2925,24 +2925,24 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
                                     size_t num_chars);
 
 
-/* Print the entire contents of `self' into `printer'
- * NOTE: This function is allowed to erase characters from `self' if `printer'
+/* Print the entire contents of `self` into `printer`
+ * NOTE: This function is allowed to erase characters from `self` if `printer`
  *       is recognized to be another unicode-printer. However, regardless of
- *       whether of not this is done, the caller must still finalize `self'! */
+ *       whether of not this is done, the caller must still finalize `self`! */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL Dee_unicode_printer_printinto)(struct Dee_unicode_printer *__restrict self,
                                       Dee_formatprinter_t printer, void *arg);
 
-/* Append the characters from the given string object `string' at the end of `self' */
+/* Append the characters from the given string object `string` at the end of `self` */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL Dee_unicode_printer_printstring)(struct Dee_unicode_printer *__restrict self,
                                         DeeObject *__restrict string);
 
 
 /* Print raw 8, 16 or 32-bit-per-character sequences, consisting of unicode characters.
- *  - `Dee_unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
- *  - `Dee_unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
- *  - `Dee_unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (really is FFFFFFFF)
+ *  - `Dee_unicode_printer_print8` prints characters from the range U+0000 .. U+00FF (aka. latin-1)
+ *  - `Dee_unicode_printer_print16` prints characters from the range U+0000 .. U+FFFF
+ *  - `Dee_unicode_printer_print32` prints characters from the range U+0000 .. U+10FFFF (really is FFFFFFFF)
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
@@ -2957,7 +2957,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 
 /* Search for existing occurrences of, or append a new instance of a given string.
  * Upon success, return the index (offset from the base) of the string (in characters).
- * @return: * : The offset from the base of string being printed, where the given `str' can be found.
+ * @return: * : The offset from the base of string being printed, where the given `str` can be found.
  * @return: -1: Failed to allocate the string. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL Dee_unicode_printer_reuse)(struct Dee_unicode_printer *__restrict self,
@@ -2975,11 +2975,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 
 /* Allocate buffers for UTF-8 with the intent of appending them to the end of the unicode printer.
  * Under specific circumstances, these functions allow the printer to allocate the utf-8 string as
- * in-line to the string being generated, with `Dee_unicode_printer_commit_utf8()' then checking
+ * in-line to the string being generated, with `Dee_unicode_printer_commit_utf8()` then checking
  * if the buffer contains non-ascii characters, in which case the string would be up-cast.
  *
  * However, if the buffer cannot be allocated in-line, it is allocated on the heap, and a later call
- * to `Dee_unicode_printer_commit_utf8()' will append it the same way `Dee_unicode_printer_print()'
+ * to `Dee_unicode_printer_commit_utf8()` will append it the same way `Dee_unicode_printer_print()`
  * would. Note however that when a UTF-8 buffer has been allocated, no text may be printed to the
  * printer before that buffer is either confirmed, or freed. However, this shouldn't be a problem,
  * considering the intended usage case in something like this:
@@ -3009,16 +3009,16 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  *       you to write 1 past the end (usually meant for some trailing \0-character that
  *       you don't really care about)
  * NOTE: All functions operate identical to those one would expect to find in a
- *       heap-API, with `Dee_unicode_printer_commit_utf8()' acting as a semantically
- *       similar behavior to `Dee_unicode_printer_free_utf8()', which will ensure that
+ *       heap-API, with `Dee_unicode_printer_commit_utf8()` acting as a semantically
+ *       similar behavior to `Dee_unicode_printer_free_utf8()`, which will ensure that
  *       the contents of the buffer are decoded and appended at the end of the string
  *       that is being printed.
- * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_resize_utf8()' or
- *       `Dee_unicode_printer_tryresize_utf8()' will allocate a new buffer, the same
- *       way `Dee_unicode_printer_alloc_utf8()' and `Dee_unicode_printer_tryalloc_utf8()' would have)
- * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_free_utf8()' is a no-op
- * NOTE: Passing `NULL' for `buf' to `Dee_unicode_printer_commit_utf8()' is a no-op and causes `0' to be returned.
- * @return[Dee_unicode_printer_alloc_utf8]:     * :   The pointer to the base of a utf-8 buffer consisting of `length' bytes.
+ * NOTE: Passing `NULL` for `buf` to `Dee_unicode_printer_resize_utf8()` or
+ *       `Dee_unicode_printer_tryresize_utf8()` will allocate a new buffer, the same
+ *       way `Dee_unicode_printer_alloc_utf8()` and `Dee_unicode_printer_tryalloc_utf8()` would have)
+ * NOTE: Passing `NULL` for `buf` to `Dee_unicode_printer_free_utf8()` is a no-op
+ * NOTE: Passing `NULL` for `buf` to `Dee_unicode_printer_commit_utf8()` is a no-op and causes `0` to be returned.
+ * @return[Dee_unicode_printer_alloc_utf8]:     * :   The pointer to the base of a utf-8 buffer consisting of `length` bytes.
  * @return[Dee_unicode_printer_alloc_utf8]:     NULL: An error occurred.
  * @return[Dee_unicode_printer_tryalloc_utf8]:  * :   Failed to allocate the buffer.
  * @return[Dee_unicode_printer_tryalloc_utf8]:  NULL: An error occurred.
@@ -3110,12 +3110,12 @@ DFUNDEF WUNUSED NONNULL((1)) size_t
 (DCALL Dee_unicode_printer_memrchr)(struct Dee_unicode_printer *__restrict self,
                                     uint32_t chr, size_t start, size_t length);
 
-/* Move `length' characters from `src' to `dst' */
+/* Move `length` characters from `src` to `dst` */
 DFUNDEF NONNULL((1)) void
 (DCALL Dee_unicode_printer_memmove)(struct Dee_unicode_printer *__restrict self,
                                     size_t dst, size_t src, size_t length);
 
-/* Compare characters of `self' against `rhs' */
+/* Compare characters of `self` against `rhs` */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_unicode_printer_memcmp8)(struct Dee_unicode_printer const *__restrict self,
                                     uint8_t const *rhs, size_t lhs_start, size_t num_chars);
@@ -3126,7 +3126,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_unicode_printer_memcmp32)(struct Dee_unicode_printer const *__restrict self,
                                      uint32_t const *rhs, size_t lhs_start, size_t num_chars);
 
-/* Copy characters from `src' into `self' */
+/* Copy characters from `src` into `self` */
 DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy8)(struct Dee_unicode_printer *__restrict self,
                                     uint8_t const *src, size_t dst, size_t num_chars);
@@ -3137,7 +3137,7 @@ DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
                                      uint32_t const *src, size_t dst, size_t num_chars);
 
-/* Erase `count' characters at index `i' from the given Dee_unicode_printer `self' */
+/* Erase `count` characters at index `i` from the given Dee_unicode_printer `self` */
 #define Dee_unicode_printer_erase(self, i, count)                                           \
 	(void)(Dee_unicode_printer_memmove(self, i, (i) + (count),                              \
 	                                   Dee_UNICODE_PRINTER_LENGTH(self) - ((i) + (count))), \
@@ -3177,10 +3177,10 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 
 
 
-/* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
- * These functions will start by normalizing `name', checking if it refers to
+/* Encode/decode `self` (usually a bytes- or string-object) to/from a codec `name`.
+ * These functions will start by normalizing `name`, checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
- * call to `encode from iconv' / `decode from iconv':
+ * call to `encode from iconv` / `decode from iconv`:
  * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
  * >>     name = "iso" + name[4:];
@@ -3200,13 +3200,13 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
  *  - "utf-32-le", "utf32-le", "u32-le", "utf-32le", "utf32le", "u32le"
  *  - "utf-32-be", "utf32-be", "u32-be", "utf-32be", "utf32be", "u32be"
  *  - "string-escape", "backslash-escape", "c-escape"
- * @throw: ValueError: The given `name' is not a recognized codec name.
- * @param: error_mode: One of `STRING_ERROR_F*'
- * @return: * :   The encoded/decoded variant of `self'
- *                The type of this object is unrelated to `self', but rather
- *                depends on `self' and is usually a bytes, or string object.
- *                In most cases, `DeeCodec_Decode()' returns a string object,
- *                while `DeeCodec_Encode()' returns a Bytes object.
+ * @throw: ValueError: The given `name` is not a recognized codec name.
+ * @param: error_mode: One of `STRING_ERROR_F*`
+ * @return: * :   The encoded/decoded variant of `self`
+ *                The type of this object is unrelated to `self`, but rather
+ *                depends on `self` and is usually a bytes, or string object.
+ *                In most cases, `DeeCodec_Decode()` returns a string object,
+ *                while `DeeCodec_Encode()` returns a Bytes object.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,
@@ -3226,9 +3226,9 @@ struct Dee_string_fini_hook {
 	/* Internal reference counter for this hook. */
 	Dee_refcnt_t sfh_refcnt;
 
-	/* [1..1][const] Called when `sfh_refcnt' hits zero.
-	 * This may happen asynchronously **AFTER** `DeeString_RemoveFiniHook()'
-	 * was called, possibly after `sfh_onfini' was called a couple more
+	/* [1..1][const] Called when `sfh_refcnt` hits zero.
+	 * This may happen asynchronously **AFTER** `DeeString_RemoveFiniHook()`
+	 * was called, possibly after `sfh_onfini` was called a couple more
 	 * times, and/or in the context of another thread. */
 	NONNULL_T((1)) void
 	(DCALL *sfh_destroy)(struct Dee_string_fini_hook *__restrict self);
@@ -3248,37 +3248,37 @@ struct Dee_string_fini_hook {
 /* Register an additional string finalization hook.
  *
  * The hook is only guarantied to be called for strings that had
- * finalization hooks enabled (using `DeeString_EnableFiniHook()')
+ * finalization hooks enabled (using `DeeString_EnableFiniHook()`)
  * during their life-time. Strings that never had finalization
  * hooks enabled may not invoke these hooks.
  *
- * @return: 1 : No-op (given `hook' was already registered)
+ * @return: 1 : No-op (given `hook` was already registered)
  * @return: 0 : Success (hook was registered)
  * @return: -1: Failure (an error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeString_AddFiniHook(struct Dee_string_fini_hook *__restrict hook);
 
 /* Unregister a previously register string finalization hook.
- * @return: true:  Given `hook' has been unregistered.
- * @return: false: Given `hook' was never registered. */
+ * @return: true:  Given `hook` has been unregistered.
+ * @return: false: Given `hook` was never registered. */
 DFUNDEF NONNULL((1)) bool DCALL
 DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook);
 
-/* Mark a given string object `self' such that upon that string's
- * finalization (i.e.: it's reference count dropping to `0'), all
+/* Mark a given string object `self` such that upon that string's
+ * finalization (i.e.: it's reference count dropping to `0`), all
  * string finalization hooks (still) registered at **that** point
  * will be invoked. Execution order of hooks is undefined.
  *
  * If this function is called multiple times on the same string,
  * all additional calls are no-ops.
  *
- * @return: 0 : Success (finalization hooks have been enabled for `self')
+ * @return: 0 : Success (finalization hooks have been enabled for `self`)
  * @return: -1: Insufficient memory (an error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self);
 
-/* Same as `DeeString_EnableFiniHook()', but don't throw an error
- * on failure, and use `Dee_TryMalloc()' instead of `Dee_Malloc()'
+/* Same as `DeeString_EnableFiniHook()`, but don't throw an error
+ * on failure, and use `Dee_TryMalloc()` instead of `Dee_Malloc()`
  * to allocate memory (meaning user-defined OOM handler or any
  * other user-code for that matter won't be invoked).
  * @return: true:  Success

@@ -427,8 +427,8 @@ INTERN int DCALL default__setattr_string_len_hash__badalloc(void*UNUSED(self), v
  * - DeeType_GetNativeOperatorWithoutInherit()
  * - DeeType_GetNativeOperatorWithoutUnsupported()
  * when it failed to allocate a necessary operator table. These impls behave
- * similar to `DeeType_GetNativeOperatorUnsupported()', except that rather
- * than calling `err_unimplemented_operator()', these call:
+ * similar to `DeeType_GetNativeOperatorUnsupported()`, except that rather
+ * than calling `err_unimplemented_operator()`, these call:
  * >> Dee_BadAlloc(type_tno_sizeof_table(oh_init_specs[id].ohis_table));
  * where "id" is the same as the given "id"
  *
@@ -562,7 +562,7 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 };
 
 
-/* Returns the impl for "id" that calls `err_unimplemented_operator()'.
+/* Returns the impl for "id" that calls `err_unimplemented_operator()`.
  * Returns "NULL" if "id" doesn't define a user-code ID */
 INTERN_TPCONST Dee_funptr_t tpconst
 _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {

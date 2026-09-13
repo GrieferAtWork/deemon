@@ -110,7 +110,7 @@ DECL_BEGIN
  * - Attributes are ordered in reverse MRO resolution order.
  *
  * WARNING: The following struct types CANNOT be used (since they require initialization
- *          which isn't supported by `DeeStructObject_*' which requires that all fields
+ *          which isn't supported by `DeeStructObject_*` which requires that all fields
  *          be optional):
  * - "STRUCT_CSTR"        (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
  * - "STRUCT_CSTR_OPT"    (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
@@ -118,14 +118,14 @@ DECL_BEGIN
  * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT_OPT" instead)
  *
  * The following can be used, but have a hard pre-defined initializer when not specified:
- * - "STRUCT_OBJECT"      (Initialized to `Dee_None' when not specified)
- * - "STRUCT_OBJECT_AB"   (Initialized to `Dee_None' when not specified)
- * - "STRUCT_WOBJECT"     (Initialized to `Dee_None' when not specified)
+ * - "STRUCT_OBJECT"      (Initialized to `Dee_None` when not specified)
+ * - "STRUCT_OBJECT_AB"   (Initialized to `Dee_None` when not specified)
+ * - "STRUCT_WOBJECT"     (Initialized to `Dee_None` when not specified)
  */
 
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED           /*!export-*/
-typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>` for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;
@@ -166,7 +166,7 @@ DDATDEF struct Dee_type_cmp DeeStructObject_Cmp;
  * by sub-classes from being enumerated too early with incorrect names
  *
  * @param: undo: When non-NULL, invoke this for every already-processed
- *               field if `cb' happens to return a negative value.
+ *               field if `cb` happens to return a negative value.
  *
  * @return: >= 0: Success (return value is the sum of return values from "cb")
  * @return: < 0:  Enumeration stopped prematurely (return value is first

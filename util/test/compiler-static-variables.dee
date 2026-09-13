@@ -33,11 +33,11 @@ function bar() {
 }
 
 /* Static variables are allocated every time the relevant function is.
- * As such, each call to `foo()' returns a function with a distinct
+ * As such, each call to `foo()` returns a function with a distinct
  * storage location for a static variable.
  *
  * With old static variable semantics, there used to be only 1 storage
- * location within the code object itself, which would that `y1(43)'
+ * location within the code object itself, which would that `y1(43)`
  * would still return the initial `42`.
  *
  * This was not only unintuitive, but also impossible to support _strexec,

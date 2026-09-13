@@ -39,10 +39,10 @@ File.stdout = newStdout;
  * be skipped without being parsed (causing the compiler to see the
  * next statement as: `({ "Line #2"; });' instead)
  *
- * hybrid because `({ a(), b(), c() })' is a 3-
- * element sequence, while `({ a(), b(), c(); })'
+ * hybrid because `({ a(), b(), c() })` is a 3-
+ * element sequence, while `({ a(), b(), c(); })`
  * is a statement-in-expression construct that
- * evaluates to the value of `c()' */
+ * evaluates to the value of `c()` */
 ({
 	print "Line #2";
 });

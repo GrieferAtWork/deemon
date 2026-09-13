@@ -44,7 +44,7 @@ typedef struct {
 	Dee_atomic_lock_t     cswi_lock;  /* The lock used to synchronize the cache below. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject       *cswi_iter;  /* [0..1][lock(cswi_lock)] The iterator whose results are being cached (or NULL once exhausted). */
-	struct Dee_objectlist cswi_cache; /* [lock(cswi_lock)] Cache of results returned by `cswi_iter' */
+	struct Dee_objectlist cswi_cache; /* [lock(cswi_lock)] Cache of results returned by `cswi_iter` */
 } CachedSeq_WithIter;
 
 /* Uses an auto-growing vector for elements, that is fed by an iterator. */
@@ -98,26 +98,26 @@ err:
 #endif
 
 #ifdef HAVE_CachedSeq_WithGetItem
-/* Threshold used to determine if a `cswgi_vector' should be used (as opposed to `cswgi_btab') */
+/* Threshold used to determine if a `cswgi_vector` should be used (as opposed to `cswgi_btab`) */
 #define CACHEDSEQ_WITHGETITEM_SMALLINDEX_THRESHOLD 0xffff
 #define CACHEDSEQ_WITHGETITEM_ISSMALLINDEX(index) \
 	((index) <= CACHEDSEQ_WITHGETITEM_SMALLINDEX_THRESHOLD)
 
 struct indexbtab_item {
 	DREF DeeIntObject *ibti_index; /* [1..1] Integer index. */
-	DREF DeeObject    *ibti_value; /* [0..1] Value of this index (NULL means `DeeRT_ErrUnboundKey') */
+	DREF DeeObject    *ibti_value; /* [0..1] Value of this index (NULL means `DeeRT_ErrUnboundKey`) */
 };
 
 struct indexbtab {
 	struct indexbtab_item *ibt_elem; /* [0..ibt_size][owned] Sorted (for bsearch) vector of index/value pairs. */
-	size_t                 ibt_size; /* Size of `ibt_elem' */
+	size_t                 ibt_size; /* Size of `ibt_elem` */
 };
 
 #define indexbtab_init(self) \
 	(void)((self)->ibt_size = 0, (self)->ibt_elem = NULL)
 
 struct cachedseq_index {
-	DREF DeeIntObject *csi_indexob; /* [0..1] Object-based index, or `NULL' if `csi_index' should be used. */
+	DREF DeeIntObject *csi_indexob; /* [0..1] Object-based index, or `NULL` if `csi_index` should be used. */
 	size_t             csi_index;   /* [valid_if(csi_indexob == NULL)] Native index. */
 };
 #define cachedseq_index_init_index(self, index) \
@@ -142,11 +142,11 @@ typedef struct {
 	Dee_atomic_lock_t      cswgi_lock;    /* The lock used to synchronize the cache below. */
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject        *cswgi_seq;     /* [0..1][lock(cswgi_lock)] The sequence being cached (or NULL if fully cached). */
-	struct cachedseq_index cswgi_size;    /* [lock(cswgi_lock)] Size of `cswgi_seq' as an object (or {NULL,(size_t)-1} if not yet calculated). */
+	struct cachedseq_index cswgi_size;    /* [lock(cswgi_lock)] Size of `cswgi_seq` as an object (or {NULL,(size_t)-1} if not yet calculated). */
 	struct cachedseq_index cswgi_maxsize; /* [lock(cswgi_lock)] First index known to be out-of-bounds (or {NULL,(size_t)-1} if not yet calculated). */
 	struct cachedseq_index cswgi_loaded;  /* [lock(cswgi_lock)] # of leading, consecutive sequence elements that have been loaded (can assume that absence in the cache means UNBOUND) */
 	/* XXX: Remove "cswgi_vector"? */
-	struct Dee_objectlist  cswgi_vector;  /* [lock(cswgi_lock)] Cache for "small" indices (may contain NULL-elements) (s.a. `CACHEDSEQ_WITHGETITEM_ISSMALLINDEX') */
+	struct Dee_objectlist  cswgi_vector;  /* [lock(cswgi_lock)] Cache for "small" indices (may contain NULL-elements) (s.a. `CACHEDSEQ_WITHGETITEM_ISSMALLINDEX`) */
 	struct indexbtab       cswgi_btab;    /* [lock(cswgi_lock)] Binary-table for "large" indices */
 } CachedSeq_WithGetItem;
 
@@ -158,8 +158,8 @@ typedef struct {
 #define CachedSeq_WithGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->cswgi_lock)
 
 INTDEF DeeTypeObject CachedSeq_WithGetItem_Type;          /* Uses a lazily-allocated vector for small integers, and a mapping for large ones */
-INTDEF DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type; /* Like `CachedSeq_WithGetItem_Type', but also uses+caches `seq_operator_sizeob' */
-INTDEF DeeTypeObject CachedSeq_WithSizeAndGetItem_Type;   /* Like `CachedSeq_WithSizeObAndGetItem_Type', but uses `seq_operator_Size' instead of `seq_operator_sizeob' */
+INTDEF DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type; /* Like `CachedSeq_WithGetItem_Type`, but also uses+caches `seq_operator_sizeob` */
+INTDEF DeeTypeObject CachedSeq_WithSizeAndGetItem_Type;   /* Like `CachedSeq_WithSizeObAndGetItem_Type`, but uses `seq_operator_Size` instead of `seq_operator_sizeob` */
 
 
 typedef struct {

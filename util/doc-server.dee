@@ -839,7 +839,7 @@ function listModulesInPath(
 		for (local f: fs.dir(p)) {
 			local path = fs.joinpath(p, f);
 			if (f.startswith("_") && !showAll)
-				continue; /* Hidden symbol (e.g. `_codecs') */
+				continue; /* Hidden symbol (e.g. `_codecs`) */
 			if (fs.stat.isdir(path)) {
 				/* Skip files found in /include-folders. */
 				if (f == "include" && !showAll)

@@ -188,7 +188,7 @@ map_operator_getitem = {
 };
 
 
-/* Returns `ITER_DONE' if `key' doesn't exist. */
+/* Returns `ITER_DONE` if `key` doesn't exist. */
 [[operator(Mapping: tp_seq->tp_trygetitem)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
@@ -339,7 +339,7 @@ map_operator_getitem_index = {
 
 
 
-/* Returns `ITER_DONE' if `key' doesn't exist. */
+/* Returns `ITER_DONE` if `key` doesn't exist. */
 [[operator(Mapping: tp_seq->tp_trygetitem_index)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_index([[nonnull]] DeeObject *self, size_t key)
@@ -380,7 +380,7 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 		return lhs_len == DeeBytes_SIZE(rhs) &&
 		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
-	/* `string.operator ==' isn't implemented for any other types. */
+	/* `string.operator ==` isn't implemented for any other types. */
 	return false;
 }
 #endif /* !DEFINED_string_hash_equals_object */
@@ -391,7 +391,7 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 #define DEFINED_default_map_getitem_string_hash_with_enumerate_cb
 struct default_map_getitem_string_hash_with_enumerate_data {
 	char const     *mgished_key;    /* [1..1] The key we're looking for. */
-	Dee_hash_t      mgished_hash;   /* Hash for `mgished_key'. */
+	Dee_hash_t      mgished_hash;   /* Hash for `mgished_key`. */
 	DREF DeeObject *mgished_result; /* [?..1][out] Result value. */
 };
 
@@ -471,7 +471,7 @@ map_operator_getitem_string_hash = {
 
 
 
-/* Returns `ITER_DONE' if `key' doesn't exist. */
+/* Returns `ITER_DONE` if `key` doesn't exist. */
 [[operator(Mapping: tp_seq->tp_trygetitem_string_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_string_hash([[nonnull]] DeeObject *self,
@@ -530,7 +530,7 @@ string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_ha
 		return lhs_len == DeeBytes_SIZE(rhs) &&
 		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
-	/* `string.operator ==' isn't implemented for any other types. */
+	/* `string.operator ==` isn't implemented for any other types. */
 	return false;
 }
 #endif /* !DEFINED_string_len_hash_equals_object */
@@ -541,8 +541,8 @@ string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_ha
 #define DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb
 struct default_map_getitem_string_len_hash_with_enumerate_data {
 	char const     *mgislhed_key;    /* [1..1] The key we're looking for. */
-	size_t          mgislhed_keylen; /* Length of `mgislhed_key'. */
-	Dee_hash_t      mgislhed_hash;   /* Hash for `mgislhed_key'. */
+	size_t          mgislhed_keylen; /* Length of `mgislhed_key`. */
+	Dee_hash_t      mgislhed_hash;   /* Hash for `mgislhed_key`. */
 	DREF DeeObject *mgislhed_result; /* [?..1][out] Result value. */
 };
 
@@ -624,7 +624,7 @@ map_operator_getitem_string_len_hash = {
 
 
 
-/* Returns `ITER_DONE' if `key' doesn't exist. */
+/* Returns `ITER_DONE` if `key` doesn't exist. */
 [[operator(Mapping: tp_seq->tp_trygetitem_string_len_hash)]]
 [[wunused]] DREF DeeObject *
 __map_getitem__.map_operator_trygetitem_string_len_hash([[nonnull]] DeeObject *self,

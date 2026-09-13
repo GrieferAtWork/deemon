@@ -158,7 +158,7 @@
 #endif /* ... */
 
 /* Check if  the hosting  preprocessor  supports '$'  in  identifiers.
- * If they aren't accepted, `#define __COMPILER_NO_DOLLAR_IN_SYMBOL $' */
+ * If they aren't accepted, `#define __COMPILER_NO_DOLLAR_IN_SYMBOL $` */
 #define __COMPILER_NO_DOLLAR_IN_SYMBOL$
 #ifndef __COMPILER_NO_DOLLAR_IN_SYMBOL
 #undef __COMPILER_NO_DOLLAR_IN_SYMBOL$
@@ -210,8 +210,8 @@
 
 #if defined(__DCC_VERSION__) || defined(__TINYC__)
 #ifdef __TINYC__
-/* TCC ignores `__asm__()' the first time some symbol is declared.
- * For reference, see its `external_sym' function:
+/* TCC ignores `__asm__()` the first time some symbol is declared.
+ * For reference, see its `external_sym` function:
  * >> static Sym *external_sym(int v, CType *type, int r, AttributeDef *ad) {
  * >>     Sym *s = sym_find(v);
  * >>     if (!s) {
@@ -219,7 +219,7 @@
  * >>         ...
  * >>     } else {
  * >>         ...
- * >>         patch_storage(s, ad, type);  // <<<< This right here applies our `__COMPILER_ASMNAME',
+ * >>         patch_storage(s, ad, type);  // <<<< This right here applies our `__COMPILER_ASMNAME`,
  * >>                                      //      but this only happens if the symbol already
  * >>                                      //      existed previously.
  * >>     }
@@ -679,7 +679,7 @@
 
 #if __has_attribute(__format__)
 #define __ATTR_FORMAT_PRINTF(fmt, args) __attribute__((__format__(__printf__, fmt, args)))
-#if 0 /* TODO: Only `printf' is supported by everything implementing `__has_attribute(__format__)' */
+#if 0 /* TODO: Only `printf` is supported by everything implementing `__has_attribute(__format__)` */
 #define __ATTR_FORMAT_SCANF(fmt, args)    __attribute__((__format__(__scanf__, fmt, args)))
 #define __ATTR_FORMAT_STRFMON(fmt, args)  __attribute__((__format__(__strfmon__, fmt, args)))
 #define __ATTR_FORMAT_STRFTIME(fmt, args) __attribute__((__format__(__strftime__, fmt, args)))
@@ -705,7 +705,7 @@
 #endif /* !__ATTR_FORMAT_STRFTIME */
 
 #if defined(__TINYC__) && defined(__PE__)
-/* TCC doesn't understand if we write `__attribute__((__dllimport__))' */
+/* TCC doesn't understand if we write `__attribute__((__dllimport__))` */
 #define __ATTR_DLLIMPORT __attribute__((dllimport))
 #define __ATTR_DLLEXPORT __attribute__((dllexport))
 #elif __has_attribute(__dllimport__)
@@ -940,7 +940,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
 #ifdef __INTELLISENSE__
-#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
+#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))`... */
 #define __EXTERN_INLINE      static
 #define __EXTERN_FORCEINLINE static
 #elif __has_attribute(__gnu_inline__)
@@ -1066,7 +1066,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var
 #endif /* !__COMPILER_IGNORE_UNINITIALIZED */
 
-/* Delete assumptions the compiler may have made about `var'.
+/* Delete assumptions the compiler may have made about `var`.
  * This includes:
  *  - __builtin_constant_p(var)
  *  - __builtin_object_size(var)

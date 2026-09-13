@@ -79,7 +79,7 @@ err:
 }}
 
 
-/* @return: * : The actual # of objects written to `result' (always in range [min_count, max_count])
+/* @return: * : The actual # of objects written to `result` (always in range [min_count, max_count])
  * @return: (size_t)-1: Error */
 [[wunused]]
 size_t __seq_unpackub__.seq_unpack_ub([[nonnull]] DeeObject *__restrict self,
@@ -199,7 +199,7 @@ err:
 seq_unpack_ub = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
 	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__))
-		return REQUIRE(seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex' */
+		return REQUIRE(seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex` */
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;

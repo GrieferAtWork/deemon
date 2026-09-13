@@ -49,13 +49,13 @@
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintN_t */
 
-/* Figure out how to implement `opendir()' */
+/* Figure out how to implement `opendir()` */
 #undef posix_opendir_USE_FindFirstFileExW
 #undef posix_opendir_USE_opendir
 #undef posix_opendir_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
 #define posix_opendir_USE_FindFirstFileExW
-/* TODO: Add another option to implement using `_findfirst()' */
+/* TODO: Add another option to implement using `_findfirst()` */
 #elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
 #define posix_opendir_USE_opendir
 #else /* ... */
@@ -499,9 +499,9 @@
 
 DECL_BEGIN
 
-/* NOTE: For performance, the fields of some given `dirent' will only remain valid
+/* NOTE: For performance, the fields of some given `dirent` will only remain valid
  *       as long as the next entry has yet to be read from the directory stream.
- * As such, you must take special care and not do something like `List(opendir(...))',
+ * As such, you must take special care and not do something like `List(opendir(...))`,
  * which will produce a list of dirent objects, where  */
 typedef struct dir_iterator_object {
 	OBJECT_HEAD
@@ -522,7 +522,7 @@ typedef struct dir_iterator_object {
 #endif /* posix_opendir_USE_FindFirstFileExW */
 
 #ifdef posix_opendir_USE_opendir
-	struct DIR_dirent    *odi_ent;      /* [0..1] Last-read directory entry (or `NULL' for end-of-directory) */
+	struct DIR_dirent    *odi_ent;      /* [0..1] Last-read directory entry (or `NULL` for end-of-directory) */
 	DIR                  *odi_dir;      /* [1..1][const] The directory access stream. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t   odi_lock;     /* Lock for the above fields. */
@@ -532,10 +532,10 @@ typedef struct dir_iterator_object {
 
 #ifdef posix_opendir_NEED_STAT_EXTENSION
 #ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
-	HANDLE                odi_stHandle; /* [lock(odi_lock)] Handle used to fill `odi_st', or `INVALID_HANDLE_VALUE'. */
+	HANDLE                odi_stHandle; /* [lock(odi_lock)] Handle used to fill `odi_st`, or `INVALID_HANDLE_VALUE`. */
 #define DeeDirIterator_IsStatValid(self) ((self)->odi_stHandle != INVALID_HANDLE_VALUE)
 #else /* DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
-	bool                  odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st' has been loaded. */
+	bool                  odi_stvalid;  /* [lock(odi_lock)] Set to true if `odi_st` has been loaded. */
 #define DeeDirIterator_IsStatValid(self) ((self)->odi_stvalid)
 #endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	DIR_struct_stat       odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
@@ -582,11 +582,11 @@ typedef struct dir_object {
 	OBJECT_HEAD
 	DREF DeeObject *d_path;      /* [1..1][const] String, File, or int */
 	bool            d_skipdots;  /* [const] When true, skip '.' and '..' entries. */
-	bool            d_inheritfd; /* [const] When true, creating an iterator when `d_path' is
+	bool            d_inheritfd; /* [const] When true, creating an iterator when `d_path` is
 	                              * something other than a string (i.e. a HANDLE or fd_t),
 	                              * then the iterator inherits that handle (iow: closes it
 	                              * at some point during its lifetime).
-	                              * When this dir_object was created by `fdopendir()', then
+	                              * When this dir_object was created by `fdopendir()`, then
 	                              * this option is enabled by default. */
 } DeeDirObject;
 
@@ -780,9 +780,9 @@ err:
 INTERN DEFINE_CMETHOD1(posix_DTTOIF, &posix_DTTOIF_f, METHOD_FNORMAL);
 INTERN DEFINE_CMETHOD1(posix_IFTODT, &posix_IFTODT_f, METHOD_FNORMAL);
 
-/* High-level wrappers around `struct dirent' and `DIR'
- * Note that `DIR' has a constructor that behaves just like `opendir(3)',
- * which is also why `posix.opendir' is exported as an alias for `posix.DIR' */
+/* High-level wrappers around `struct dirent` and `DIR`
+ * Note that `DIR` has a constructor that behaves just like `opendir(3)`,
+ * which is also why `posix.opendir` is exported as an alias for `posix.DIR` */
 INTDEF DeeTypeObject DeeDirIterator_Type;
 INTDEF DeeTypeObject DeeDir_Type;
 
@@ -831,9 +831,9 @@ directory_open(DeeDirIteratorObject *__restrict self,
 				}
 #ifdef CONFIG_HAVE_close
 			} else if (fd != -1) {
-				/* NOTE: If `DeeNTSystem_GetHandle' used get_osfhandle(), we must
-				 *       close(fd) here instead (where `fd' is the fd that was
-				 *       used by `DeeNTSystem_GetHandle')! */
+				/* NOTE: If `DeeNTSystem_GetHandle` used get_osfhandle(), we must
+				 *       close(fd) here instead (where `fd` is the fd that was
+				 *       used by `DeeNTSystem_GetHandle`)! */
 				(void)close(fd); /* Inherited! */
 #endif /* CONFIG_HAVE_close */
 			} else {
@@ -1184,7 +1184,7 @@ diriter_fini(DeeDirIteratorObject *__restrict self) {
 PRIVATE NONNULL((1)) int DCALL
 diriter_unbound_attr(char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%k.%s'",
+	                       "Unbound attribute `%k.%s`",
 	                       &DeeDirIterator_Type, name);
 }
 
@@ -1981,7 +1981,7 @@ err:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DeeDirIteratorObject *__restrict self, Dee_visit_t proc, void *arg) {
-	/* Not needed (and mustn't be enabled; `diriter_visit' is re-used as `dir_visit'!) */
+	/* Not needed (and mustn't be enabled; `diriter_visit` is re-used as `dir_visit`!) */
 	/*Dee_XVisit(self->odi_pathstr);*/
 	Dee_Visit(self->odi_path);
 }
@@ -2077,7 +2077,7 @@ PRIVATE struct type_getset tpconst diriter_getsets[] = {
 	TYPE_GETTER_F("d_mtime", &diriter_get_d_mtime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_mtime?Gstat"),
 	TYPE_GETTER_F("d_ctime", &diriter_get_d_ctime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_ctime?Gstat"),
 	TYPE_GETTER_F("d_birthtime", &diriter_get_d_birthtime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_birthtime?Gstat"),
-	/* TODO: `stat->?Gstat' (returns the stat information for this directory entry) */
+	/* TODO: `stat->?Gstat` (returns the stat information for this directory entry) */
 
 	TYPE_GETSET_END
 };

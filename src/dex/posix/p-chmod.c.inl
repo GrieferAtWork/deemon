@@ -41,8 +41,8 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
-#include "p-path.c.inl"     /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
-#include "p-readlink.c.inl" /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()' */
+#include "p-path.c.inl"     /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()` */
+#include "p-readlink.c.inl" /* For `posix_chmod_USE_posix_readlink__AND__posix_lchmod()` */
 
 #include <stddef.h> /* NULL, size_t, wchar_t */
 
@@ -106,7 +106,7 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
-/* Figure out how we want to implement `chmod()' */
+/* Figure out how we want to implement `chmod()` */
 #undef posix_chmod_USE_wchmod
 #undef posix_chmod_USE_chmod
 #undef posix_chmod_USE_wopen_AND_fchmod
@@ -131,7 +131,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `lchmod()' */
+/* Figure out how we want to implement `lchmod()` */
 #undef posix_lchmod_USE_wlchmod
 #undef posix_lchmod_USE_lchmod
 #undef posix_lchmod_USE_wopen_AND_fchmod
@@ -168,7 +168,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `fchmod()' */
+/* Figure out how we want to implement `fchmod()` */
 #undef posix_fchmod_USE_fchmod
 #undef posix_fchmod_USE_posix_lchmod
 #undef posix_fchmod_USE_posix_chmod
@@ -185,7 +185,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `fchmodat()' */
+/* Figure out how we want to implement `fchmodat()` */
 #undef posix_fchmodat_USE_fchmodat
 #undef posix_fchmodat_USE_posix_chmod
 #undef posix_fchmodat_USE_posix_lchmod
@@ -315,7 +315,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_chmod_f_impl(DeeO
 {
 #ifdef posix_chmod_USE_posix_readlink__AND__posix_lchmod
 	DREF DeeObject *link_text;
-	/* Try to readlink() the given `path' to see if it's a symbolic link. */
+	/* Try to readlink() the given `path` to see if it's a symbolic link. */
 	link_text = posix_readlink_f_impl(path);
 	if (link_text) {
 		DREF DeeObject *full_path, *result;

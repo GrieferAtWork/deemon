@@ -58,8 +58,8 @@ PRIVATE void DCALL libsqlite3_fini_impl(void) {
 
 /* These functions are called when a "DB_Type" object is created/destroyed.
  * Internally, these keep a running counter such that:
- * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
- * - The last call does `sqlite3_shutdown()'
+ * - The first call does `sqlite3_initialize()` and throws an error if something went wrong
+ * - The last call does `sqlite3_shutdown()`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTERN WUNUSED int DCALL libsqlite3_init(void) {
@@ -101,13 +101,13 @@ DEX_BEGIN
  * >> db.query(r"SELECT * from my_table1 WHERE id = ? AND v1 < ?", { 10, 99 });
  *
  * NOTE: "sqlite3_stmt" get lazily pre-compiled and are then stored alongside
- *       deemon's `DeeStringObject' (and are only destroyed when the corresponding
- *       string is, making use of `DeeString_AddFiniHook()')
+ *       deemon's `DeeStringObject` (and are only destroyed when the corresponding
+ *       string is, making use of `DeeString_AddFiniHook()`)
  *
  * The "Query" type returned by "DB.query()" then:
  * - Extends "Sequence" (meaning you can do stuff like ".first" to get the first row)
  * - Also has methods like "fetchone()" (hint: ".fetchall()" is the same as ".frozen")
- * - Implements "operator iter(): QueryIterator", which calls "sqlite3_step()" and yield columns as `Row'.
+ * - Implements "operator iter(): QueryIterator", which calls "sqlite3_step()" and yield columns as `Row`.
  *   - The "Row" type then:
  *     - Implements "operator getitem(index: int): Object" to lookup columns by index (using "sqlite3_column_*()")
  *     - Implements "operator getitem(name: string): Object" to lookup columns by name (using "sqlite3_column_*()")
@@ -118,7 +118,7 @@ DEX_BEGIN
  *     old columns (meaning that the apparent contents of some "Row" don't change if the
  *     query is advanced)
  *
- * Above, `Object' as returned or passed into sqlite3 is always mapped as:
+ * Above, `Object` as returned or passed into sqlite3 is always mapped as:
  * - SQLITE_INTEGER: int
  * - SQLITE_FLOAT:   float
  * - SQLITE_TEXT:    string

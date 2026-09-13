@@ -57,7 +57,7 @@ DeeSystem_DEFINE_memrchr(Dee_libc_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 /************************************************************************/
-/* Path utilities (originally from `fs')                                */
+/* Path utilities (originally from `fs`)                                */
 /************************************************************************/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_headof_f(DeeStringObject *__restrict path);
@@ -217,7 +217,7 @@ posix_path_exctrail_f(DeeStringObject *__restrict path) {
 
 
 /* Given 2 text pointer, return a pointer to the start of
- * the latest path segment, or re-return `pth_begin' if only
+ * the latest path segment, or re-return `pth_begin` if only
  * one, or zero segments exist:
  * >> "/foo/bar/foobar/"
  *     ^        ^      ^
@@ -254,12 +254,12 @@ again:
 		pth_end = next;
 	}
 
-	/* Search for the next DeeSystem_SEP and unroll `pth_end' to point directly after it. */
+	/* Search for the next DeeSystem_SEP and unroll `pth_end` to point directly after it. */
 	for (;;) {
 		if (pth_begin >= pth_end)
 			goto done;
 		next = pth_end;
-		/* TODO: special handling for unwinding `.' and `..' segments. */
+		/* TODO: special handling for unwinding `.` and `..` segments. */
 		ch = Dee_unicode_readutf8_rev_n(&next, pth_begin);
 		if (DeeSystem_IsSep(ch))
 			break;
@@ -310,7 +310,7 @@ done:
 
 
 #ifdef CONFIG_HOST_WINDOWS
-/* Check if `path_str...+=path_len' is a special NT filename */
+/* Check if `path_str...+=path_len` is a special NT filename */
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 posix_path_is_nt_special(char const *path_str, size_t path_len) {
 	switch (path_len) {
@@ -380,8 +380,8 @@ is_special:
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-/* Similar to `posix_path_abspath_f()', don't try to get rid of `..' elements,
- * and use `posix_path_headof_f(linkname)' when `link' isn't an absolute path:
+/* Similar to `posix_path_abspath_f()`, don't try to get rid of `..` elements,
+ * and use `posix_path_headof_f(linkname)` when `link` isn't an absolute path:
  * >> if (isabs(link))
  * >>     return link;
  * >> linkname = headof(linkname);
@@ -394,18 +394,18 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 	char const *link_base, *link_start, *link_end;
 	char const *name_base, *name_end;
 
-	/* Check for simple case: `link' is absolute */
+	/* Check for simple case: `link` is absolute */
 	if (DeeString_IsAbsPath(link))
 		goto return_link;
 
 #ifdef CONFIG_HOST_WINDOWS
-	/* Don't modify special filenames such as `CON' or `NUL' */
+	/* Don't modify special filenames such as `CON` or `NUL` */
 	if (posix_path_is_nt_special(DeeString_STR(link),
 	                             DeeString_SIZE(link)))
 		goto return_link;
 #endif /* CONFIG_HOST_WINDOWS */
 
-	/* Load `linkname' as UTF-8 and check where the containing directory ends. */
+	/* Load `linkname` as UTF-8 and check where the containing directory ends. */
 	name_base = DeeString_AsUtf8(linkname);
 	if unlikely(!name_base)
 		goto err;
@@ -417,7 +417,7 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 		goto return_link;
 	}
 
-	/* Load the string as UTF-8 and strip leading `./' */
+	/* Load the string as UTF-8 and strip leading `./` */
 	link_base = DeeString_AsUtf8(link);
 	if unlikely(!link_base)
 		goto err;
@@ -479,13 +479,13 @@ return_unmodified:
 	}
 
 #ifdef CONFIG_HOST_WINDOWS
-	/* Don't modify special filenames such as `CON' or `NUL' */
+	/* Don't modify special filenames such as `CON` or `NUL` */
 	if (posix_path_is_nt_special(DeeString_STR(path),
 	                             DeeString_SIZE(path)))
 		goto return_unmodified;
 #endif /* CONFIG_HOST_WINDOWS */
 
-	/* If the given `pwd' isn't absolute, make it using the real PWD. */
+	/* If the given `pwd` isn't absolute, make it using the real PWD. */
 	if (pwd && !DeeString_IsAbsPath(pwd)) {
 		pwd = posix_path_abspath_f(pwd, NULL);
 		if unlikely(!pwd)
@@ -558,7 +558,7 @@ again_trip_paths:
 			pwd_end = next;
 		}
 
-		/* Check for leading parent-/current-folder references in `pth_begin' */
+		/* Check for leading parent-/current-folder references in `pth_begin` */
 		if (*pth_begin == '.') {
 			bool is_parent_ref;
 			next          = pth_begin + 1;
@@ -585,7 +585,7 @@ again_trip_paths:
 				pth_begin = next;
 			}
 			if (is_parent_ref) {
-				/* Must strip a trailing path segment from `pwd_begin...pwd_end' */
+				/* Must strip a trailing path segment from `pwd_begin...pwd_end` */
 				pwd_end = find_last_path_segment(pwd_begin, pwd_end);
 			}
 			goto again_trip_paths;
@@ -694,7 +694,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 		return result;
 	}
 
-	/* If the given `pwd' isn't absolute, make it using the real PWD. */
+	/* If the given `pwd` isn't absolute, make it using the real PWD. */
 	if (pwd && !DeeString_IsAbsPath(pwd)) {
 		pwd = posix_path_abspath_f(pwd, NULL);
 		if unlikely(!pwd)
@@ -751,7 +751,7 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 		b = DeeUni_ToUpper(b);
 #endif /* DeeSystem_HAVE_FS_ICASE */
 		if (DeeSystem_IsSep(a)) {
-			/* Align differing space in `b' */
+			/* Align differing space in `b` */
 			while (DeeUni_IsSpace(b)) {
 				b = Dee_unicode_readutf8_n(&pwd_iter, pwd_end);
 			}
@@ -795,7 +795,7 @@ continue_after_sep_sp:
 			continue;
 		}
 		if (DeeSystem_IsSep(b)) {
-			/* Align differing space in `a' */
+			/* Align differing space in `a` */
 			while (DeeUni_IsSpace(a))
 				a = Dee_unicode_readutf8_n(&pth_iter, pth_end);
 			if (!DeeSystem_IsSep(a)) {
@@ -867,9 +867,9 @@ continue_after_sep_sp:
 			break;
 		}
 
-		/* NOTE: When `a' is NUL, we also know that `b' is NUL
-		 *       because `a != b' breaks out of the loop, so we
-		 *       wouldn't get here if `a' didn't equal `b'. */
+		/* NOTE: When `a` is NUL, we also know that `b` is NUL
+		 *       because `a != b` breaks out of the loop, so we
+		 *       wouldn't get here if `a` didn't equal `b`. */
 		if (!a && (pth_iter >= pth_end ||
 		           pwd_iter >= pwd_end)) {
 			/* If both paths are now empty, then they were equal from the get-go. */
@@ -881,7 +881,7 @@ continue_after_sep_sp:
 
 	/* Count the amount of folders remaining in 'cwd'
 	 * >> Depending on it's about, we have to add
-	 *    additional `..DeeSystem_SEP' prefixes to the resulting path. */
+	 *    additional `..DeeSystem_SEP` prefixes to the resulting path. */
 	uprefs              = 0;
 	is_nonempty_segment = false;
 continue_uprefs_normal:
@@ -890,7 +890,7 @@ continue_uprefs_normal:
 		if (!DeeSystem_IsSep(b) || (!b && pwd_begin >= pwd_end)) {
 			bool is_parent_ref;
 
-			/* Deal with trailing `/././.'-like and `/../../..'-like paths! */
+			/* Deal with trailing `/././.`-like and `/../../..`-like paths! */
 			if (b != '.') {
 				is_nonempty_segment = true;
 				continue;
@@ -916,9 +916,9 @@ continue_uprefs_normal:
 					 * RESULT: "../../c/dexmon/deemon"
 					 *                [][-----]
 					 * To implement this, we must retroactively search for the last
-					 * sep in the given `path' string, and revert `pth_begin' to be
+					 * sep in the given `path` string, and revert `pth_begin` to be
 					 * located directly past its position.
-					 * The two brackets denote the portions of the input `path' that
+					 * The two brackets denote the portions of the input `path` that
 					 * had to be retrieved retroactively. */
 #ifndef DeeSystem_HAVE_FS_DRIVES
 					char const *pth_base;
@@ -956,7 +956,7 @@ continue_uprefs_normal:
 		return_reference_(path);
 #endif
 
-	/* Strip leading slashes & whitespace from `path' */
+	/* Strip leading slashes & whitespace from `path` */
 	while (pth_begin < pth_end) {
 		next = pth_begin;
 		a    = Dee_unicode_readutf8_n(&next, pth_end);
@@ -965,7 +965,7 @@ continue_uprefs_normal:
 		pth_begin = next;
 	}
 
-	/* Strip trailing whitespace from `path' */
+	/* Strip trailing whitespace from `path` */
 	while (pth_end > pth_begin) {
 		next = pth_end;
 		a    = Dee_unicode_readutf8_rev_n(&next, pth_begin);
@@ -1025,7 +1025,7 @@ posix_path_normalpath_f(DeeStringObject *__restrict path) {
 next:
 	ch = *iter++;
 	switch (ch) {
-		/* NOTE: The following part has been mirrored in `DeeSystem_MakeNormalAndAbsolute'
+		/* NOTE: The following part has been mirrored in `DeeSystem_MakeNormalAndAbsolute`
 		 * If a bug is found in this code, it should be fixed here, as well as
 		 * within the core. */
 
@@ -1051,7 +1051,7 @@ next:
 		}
 		flush_end = Dee_unicode_skipspaceutf8_rev_n(flush_end, flush_start);
 
-		/* Analyze the last path portion for being a special name (`.' or `..') */
+		/* Analyze the last path portion for being a special name (`.` or `..`) */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
 				/* Parent-directory-reference. */
@@ -1128,15 +1128,15 @@ do_flush_after_sep:
 			goto err;
 		flush_start = iter;
 		if (did_print_sep) {
-			/* The slash has already been been printed: `foo/ bar' */
+			/* The slash has already been been printed: `foo/ bar` */
 		} else if (sep_loc == iter - 1
 #ifdef DeeSystem_ALTSEP
 		           && (!*sep_loc || *sep_loc == DeeSystem_SEP)
 #endif /* DeeSystem_ALTSEP */
 		           ) {
-			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
+			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar` */
 		} else {
-			/* The slash must be printed explicitly: `foo / bar' */
+			/* The slash must be printed explicitly: `foo / bar` */
 			if (Dee_unicode_printer_putascii(&printer, DeeSystem_SEP) < 0)
 				goto err;
 		}
@@ -1186,7 +1186,7 @@ posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv) {
 	char nextsep = DeeSystem_SEP;
 	struct Dee_unicode_printer printer;
 
-	/* Special case: Return `.' when no paths are given. */
+	/* Special case: Return `.` when no paths are given. */
 	if unlikely(!pathc)
 		return_reference_((DeeStringObject *)&str_single_dot);
 	Dee_unicode_printer_init(&printer);

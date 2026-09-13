@@ -40,13 +40,13 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(StringSplit, s_split) /* [1..1][const] The split descriptor object. */
 	union Dee_charptr_const           s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                                            *                (points into the s_enc-specific string of `s_split->s_str')
-	                                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
-	union Dee_charptr_const           s_start; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
-	union Dee_charptr_const           s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
-	union Dee_charptr_const           s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
+	                                            *                (points into the s_enc-specific string of `s_split->s_str`)
+	                                            *                When the iterator is exhausted, this pointer is set to `NULL`. */
+	union Dee_charptr_const           s_start; /* [1..1][const] The starting address of the width string of `s_split->s_str`. */
+	union Dee_charptr_const           s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str`. */
+	union Dee_charptr_const           s_sep;   /* [1..1][const] The starting address of the `s_enc`-encoded string of `s_split->s_sep`. */
 	size_t                            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
-	int                               s_width; /* [const] The width of `s_split->s_str' */
+	int                               s_width; /* [const] The width of `s_split->s_str` */
 } StringSplitIterator;
 
 INTDEF DeeTypeObject StringSplit_Type;
@@ -79,11 +79,11 @@ typedef struct {
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(LineSplit, ls_split) /* [1..1][const] The split descriptor object. */
 	union Dee_charptr_const         ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                                           *                (points into the s_enc-specific string of `ls_split->ls_str')
+	                                           *                (points into the s_enc-specific string of `ls_split->ls_str`)
 	                                           *                When the iterator is exhausted, this pointer is set to NULL. */
-	union Dee_charptr_const         ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
-	union Dee_charptr_const         ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
-	int                             ls_width; /* [const] The width of `ls_split->ls_str' */
+	union Dee_charptr_const         ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str`. */
+	union Dee_charptr_const         ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str`. */
+	int                             ls_width; /* [const] The width of `ls_split->ls_str` */
 	bool                            ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
 } LineSplitIterator;
 

@@ -34,12 +34,12 @@ __map_sub__.map_operator_sub([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *keys)
 %{unsupported({
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a - ~b' -> `a & b' */
+		/* Special case: `a - ~b` -> `a & b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return DeeObject_InvokeMethodHint(map_operator_and, lhs, xkeys->si_set);
 	}
 	if (DeeSet_CheckEmpty(keys))
-		return_reference_(lhs); /* `a - {}' -> `a' */
+		return_reference_(lhs); /* `a - {}` -> `a` */
 	return Dee_AsObject(MapDifference_New(lhs, keys));
 })}
 %{$none = return_none}

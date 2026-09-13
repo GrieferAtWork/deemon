@@ -34,13 +34,13 @@ struct DeeRegexBaseExec {
 	DREF DeeStringObject      *rx_pattern;  /* [1..1] Pattern string (only a reference within objects in "./reproxy.c.inl") */
 	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
 	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
+	                                         * When `rx_code` was compiled with `Dee_RE_COMPILE_NOUTF8`, this data
 	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
-	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
-	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
-	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
-	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
+	                                         * In either case, `rx_insize` is the # of bytes within this buffer. */
+	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase` */
+	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase` of data to match. */
+	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase` of data to match. */
+	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*`) */
 };
 
 struct DeeRegexExecWithRange {
@@ -50,8 +50,8 @@ struct DeeRegexExecWithRange {
 	DeeStringObject    *rewr_rules;   /* [0..1] Pattern rules */
 };
 
-/* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `Dee_STRING_UTF_FFINIHOOK' was set. */
+/* Destroy the regex cache associated with `self`.
+ * Called from `DeeString_Type.tp_fini` when `Dee_STRING_UTF_FFINIHOOK` was set. */
 INTDEF NONNULL((1)) void DCALL
 DeeString_DestroyRegex(DeeStringObject const *__restrict self);
 

@@ -32,12 +32,12 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DeeTypeMRO        tmi_mro;  /* [lock(tmi_lock)] MRO iterator (holds a reference to `tp_mro_orig'). */
+	DeeTypeMRO        tmi_mro;  /* [lock(tmi_lock)] MRO iterator (holds a reference to `tp_mro_orig`). */
 	DeeTypeObject    *tmi_iter; /* [0..1][lock(tmi_lock)] The type that was enumerated previously (when
-	                             * set to `NULL' for `TypeMROIterator_Type', then enumeration has yet to
+	                             * set to `NULL` for `TypeMROIterator_Type`, then enumeration has yet to
 	                             * begin) */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t tmi_lock; /* Lock for `tmi_mro' */
+	Dee_atomic_lock_t tmi_lock; /* Lock for `tmi_mro` */
 #endif /* !CONFIG_NO_THREADS */
 } TypeMROIterator;
 

@@ -114,7 +114,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 casesplititer_next(StringSplitIterator *__restrict self) {
-	/* Literally the same as the non-case version, but use `unicode_memcasemem(b|w|l)' instead. */
+	/* Literally the same as the non-case version, but use `unicode_memcasemem(b|w|l)` instead. */
 	union Dee_charptr_const result_start, result_end, next_ptr;
 	size_t result_len, match_length;
 	do {
@@ -917,7 +917,7 @@ lineiter_next(LineSplitIterator *__restrict self) {
 }
 
 
-/* Assert that we're allowed to re-use some helper functions from `strsplit' */
+/* Assert that we're allowed to re-use some helper functions from `strsplit` */
 STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(LineSplitIterator, ls_split));
 STATIC_ASSERT(offsetof(StringSplitIterator, s_next) == offsetof(LineSplitIterator, ls_next));
 
@@ -1027,21 +1027,21 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &lineiter_serialize
 		),
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split' == offset:`ls_split' */
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&splititer_fini, /* offset:`s_split` == offset:`ls_split` */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next` == offset:`ls_next` */,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&splititer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ &splititer_cmp, /* offset:`s_next' == offset:`ls_next' */
+	/* .tp_cmp           = */ &splititer_cmp, /* offset:`s_next` == offset:`ls_next` */
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lineiter_next,
 	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
@@ -1050,7 +1050,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ splititer_members, /* offset:`s_split' == offset:`ls_split' */
+	/* .tp_members       = */ splititer_members, /* offset:`s_split` == offset:`ls_split` */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,

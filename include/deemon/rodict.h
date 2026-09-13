@@ -45,15 +45,15 @@ DECL_BEGIN
  * in various locations, when mapping arguments are constant.
  *
  * As the name implies, this type of mapping is read-only, in a sense being
- * for `Dict' what `Tuple' is for `List'.
+ * for `Dict` what `Tuple` is for `List`.
  *
- * The read-only Dict type inherits from `mapping', meaning that mapping
+ * The read-only Dict type inherits from `mapping`, meaning that mapping
  * proxy types are automatically provided for by abstract base classes.
  * Secondly, because read-only dicts cannot be modified, this allows them
  * to operate using an inline hash-vector, as well as not requiring the
  * use of any sort of lock.
  *
- * NOTE: `_RoDict' is exported as `deemon.Dict.Frozen' */
+ * NOTE: `_RoDict` is exported as `deemon.Dict.Frozen` */
 
 typedef struct Dee_rodict_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
@@ -67,9 +67,9 @@ typedef struct Dee_rodict_object {
 
 #define DeeRoDict_IsEmpty(self) (Dee_REQUIRES_OBJECT(DeeRoDictObject, self)->rd_vsize == 0)
 
-/* The main `_RoDict' container class. */
+/* The main `_RoDict` container class. */
 DDATDEF DeeTypeObject DeeRoDict_Type;
-#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
+#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict` is final */
 #define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DFUNDEF WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL
@@ -78,7 +78,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*RoDict*/ DeeObject *DCALL
 DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self);
 
 
-/* Special empty instance of `DeeRoDict_Type'
+/* Special empty instance of `DeeRoDict_Type`
  * NOTE: This is _NOT_ a singleton! */
 struct Dee_empty_rodict_object {
 	Dee_OBJECT_HEAD
@@ -110,8 +110,8 @@ struct Dee_rodict_builder {
 	 * - rdb_dict->rd_htab:    [== _DeeRoDict_GetRealVTab(rdb_dict) + rdb_valloc]
 	 * - rdb_dict->rd_hidxget: [== Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(rdb_valloc)].hxio_get] */
 	DeeRoDictObject   *rdb_dict;    /* [0..1][owned] The dict being built. */
-	size_t             rdb_valloc;  /* Allocated size of `rdb_dict' (or 0 when `rdb_dict' is `NULL') */
-	Dee_hash_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */
+	size_t             rdb_valloc;  /* Allocated size of `rdb_dict` (or 0 when `rdb_dict` is `NULL`) */
+	Dee_hash_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab` */
 };
 
 #define Dee_RODICT_BUILDER_INIT { NULL, 0, NULL }

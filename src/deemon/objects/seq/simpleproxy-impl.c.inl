@@ -213,7 +213,7 @@ err:
 
 struct LOCAL_foreach_data {
 	Dee_foreach_t pfd_proc; /* [1..1] Underlying callback. */
-	void         *pfd_arg;  /* [?..?] Cookie for `pfd_proc' */
+	void         *pfd_arg;  /* [?..?] Cookie for `pfd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -260,7 +260,7 @@ LOCAL_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
 
 struct LOCAL_mh_seq_enumerate_data {
 	Dee_seq_enumerate_t ped_proc; /* [1..1] Underlying callback. */
-	void               *ped_arg;  /* [?..?] Cookie for `ped_proc' */
+	void               *ped_arg;  /* [?..?] Cookie for `ped_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -309,7 +309,7 @@ LOCAL_mh_seq_enumerate(SeqSimpleProxy *self, Dee_seq_enumerate_t proc, void *arg
 
 struct LOCAL_mh_seq_enumerate_index_data {
 	Dee_seq_enumerate_index_t peid_proc; /* [1..1] Underlying callback. */
-	void                     *peid_arg;  /* [?..?] Cookie for `peid_proc' */
+	void                     *peid_arg;  /* [?..?] Cookie for `peid_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL

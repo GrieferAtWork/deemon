@@ -75,7 +75,7 @@ DFUNDEF void (DCALL DeeRCU_UnlockDefault)(void);
 
 /* Synchronize RCU, blocking until all threads that
  * locked an older RCU version will have left their
- * RCU section (by calling `DeeRCU_UnlockDefault()')
+ * RCU section (by calling `DeeRCU_UnlockDefault()`)
  *
  * This function must be called before the old state
  * of some variable protected by RCU may be destroyed */
@@ -101,7 +101,7 @@ typedef struct Dee_rcu_lock {
 } Dee_rcu_lock_t;
 
 /* [lock(ATOMIC)] Global RCU "version" number (only here for reading;
- * only `DeeRCU_SynchronizeDefault()' is allowed to write this!) */
+ * only `DeeRCU_SynchronizeDefault()` is allowed to write this!) */
 DDATDEF Dee_rcu_lock_t _DeeRCU_Default;
 
 #define Dee_RCU_LOCK_INIT            {1}
@@ -117,7 +117,7 @@ typedef void Dee_rcu_lock_t;
 
 #ifndef CONFIG_NO_THREADS
 /* [lock(ATOMIC)] Global RCU "version" number (only here for reading;
- * only `DeeRCU_SynchronizeDefault()' is allowed to write this!) */
+ * only `DeeRCU_SynchronizeDefault()` is allowed to write this!) */
 DDATDEF struct Dee_rcu_lock {
 	Dee_thread_rcuvers_t rcul_version;
 } _DeeRCU_Default;

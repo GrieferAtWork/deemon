@@ -65,7 +65,7 @@ typedef struct {
 	size_t              d_head_idx;  /* [lock(d_lock)][< d_bucket_sz][if(d_size == 0, [== 0])]
 	                                  * Absolute index where the head starts. */
 	size_t              d_head_use;  /* [lock(d_lock)][<= d_bucket_sz][if(d_size == 0, [== 0])]
-	                                  * Amount of indices in use in `d_head'. */
+	                                  * Amount of indices in use in `d_head`. */
 	size_t              d_tail_sz;   /* [lock(d_lock)][if(d_head == d_tail, [== 0])]
 	                                  * [if(d_head && d_head != d_tail, [!= 0])][<= d_bucket_sz]
 	                                  * Number of items in use by the tail-bucket (only when there are more than 2 buckets). */
@@ -158,10 +158,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopFront(Deque *__restri
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopBack(Deque *__restrict self);
 
 /* Deque rotation */
-INTDEF NONNULL((1)) void DCALL Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' left. */
-INTDEF NONNULL((1)) void DCALL Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' right. */
-INTDEF NONNULL((1)) void DCALL Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' left. */
-INTDEF NONNULL((1)) void DCALL Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' right. */
+INTDEF NONNULL((1)) void DCALL Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects` left. */
+INTDEF NONNULL((1)) void DCALL Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects` right. */
+INTDEF NONNULL((1)) void DCALL Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects` left. */
+INTDEF NONNULL((1)) void DCALL Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects` right. */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Deque_llrot(Deque *__restrict self, size_t num_objects);
 INTDEF WUNUSED NONNULL((1)) int DCALL Deque_lrrot(Deque *__restrict self, size_t num_objects);
@@ -171,7 +171,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Deque_rrrot(Deque *__restrict self, size_t
 
 /* @return: true:  Successfully inserted the given item.
  * @return: false: Insertion failed. - Unlock the deque and collect
- *                `SIZEOF_BUCKET(self->d_bucket_sz)' bytes of memory. */
+ *                `SIZEOF_BUCKET(self->d_bucket_sz)` bytes of memory. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushFront_unlocked(Deque *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushBack_unlocked(Deque *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 3)) bool DCALL Deque_Insert_unlocked(Deque *self, size_t index, DeeObject *item);
@@ -350,7 +350,7 @@ typedef struct {
 	DequeIterator       di_iter; /* [lock(di_lock)] The C-level iterator used to implement this one. */
 	DREF Deque         *di_deq;  /* [1..1][const] The deque in question. */
 	size_t              di_ver;  /* [lock(di_lock)] The deque version for this this iterator was created.
-	                              * When this number doesn't match `di_deq->d_version', then the
+	                              * When this number doesn't match `di_deq->d_version`, then the
 	                              * iterator behaves as though it was exhausted. */
 } DequeIteratorObject;
 
@@ -382,7 +382,7 @@ typedef struct {
 	/* A fixed-length list who's elements may be modified
 	 * Basically a tuple, but its elements can change.
 	 * Additionally, elements may either be bound or unbound,
-	 * with `del this[x]' causing the x'th item to become unbound. */
+	 * with `del this[x]` causing the x'th item to become unbound. */
 	Dee_OBJECT_HEAD /* GC object */
 	Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
@@ -442,7 +442,7 @@ typedef struct udict_object {
 	OBJECT_HEAD /* GC Object */
 	size_t              ud_mask; /* [lock(ud_lock)][> ud_size || ud_mask == 0] Allocated dictionary size. */
 	size_t              ud_used; /* [lock(ud_lock)][<= ud_size] Amount of key-item pairs actually in use.
-	                             *  HINT: The difference to `ud_size' is the number of dummy keys currently in use. */
+	                             *  HINT: The difference to `ud_size` is the number of dummy keys currently in use. */
 	size_t              ud_size; /* [lock(ud_lock)][< ud_mask || ud_mask == 0] Amount of non-NULL key-item pairs. */
 	struct udict_item  *ud_elem; /* [1..ud_size|ALLOC(ud_mask+1)][lock(ud_lock)]
 	                             * [owned_if(!= INTERNAL(empty_dict_items))] Dict key-item pairs (items). */
@@ -453,7 +453,7 @@ typedef struct udict_object {
 } UDict;
 
 #define UDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(UDict, self)->ud_mask)
-#define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define UDict_HashIt(self, i)     (Dee_REQUIRES_OBJECT(UDict, self)->ud_elem + ((i) & ((UDict *)(self))->ud_mask))
 
 #define UDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ud_lock)
@@ -481,7 +481,7 @@ typedef struct urodict_object {
 } URoDict;
 
 #define URoDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(URoDict, self)->urd_mask)
-#define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define URoDict_HashIt(self, i)     (Dee_REQUIRES_OBJECT(URoDict, self)->urd_elem + ((i) & ((URoDict *)(self))->urd_mask))
 
 
@@ -492,9 +492,9 @@ typedef struct udict_iterator_object {
 	                              * The first candidate for the next item.
 	                              * NOTE: Before being dereferenced, this pointer is checked
 	                              *       for being located inside the dict's element vector.
-	                              *       In the event that it is located at its end, `ITER_DONE'
+	                              *       In the event that it is located at its end, `ITER_DONE`
 	                              *       is returned, though in the event that it is located
-	                              *       outside, an error is thrown (`err_changed_sequence()'). */
+	                              *       outside, an error is thrown (`err_changed_sequence()`). */
 } UDictIterator;
 
 typedef struct urodict_iterator_object {
@@ -517,7 +517,7 @@ typedef struct uset_object {
 	OBJECT_HEAD /* GC Object */
 	size_t              us_mask; /* [lock(us_lock)][> us_size || us_mask == 0] Allocated set size. */
 	size_t              us_used; /* [lock(us_lock)][<= us_size] Amount of keys actually in use.
-	                              * HINT: The difference to `us_size' is the number of dummy keys currently in use. */
+	                              * HINT: The difference to `us_size` is the number of dummy keys currently in use. */
 	size_t              us_size; /* [lock(us_lock)][< us_mask || us_mask == 0] Amount of non-NULL keys. */
 	struct uset_item   *us_elem; /* [1..us_size|ALLOC(us_mask+1)][lock(us_lock)]
 	                              * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
@@ -534,13 +534,13 @@ typedef struct uset_iterator_object {
 	                             * The first candidate for the next item.
 	                             * NOTE: Before being dereferenced, this pointer is checked
 	                             *       for being located inside the set's element vector.
-	                             *       In the event that it is located at its end, `ITER_DONE'
+	                             *       In the event that it is located at its end, `ITER_DONE`
 	                             *       is returned, though in the event that it is located
-	                             *       outside, an error is thrown (`err_changed_sequence()'). */
+	                             *       outside, an error is thrown (`err_changed_sequence()`). */
 } USetIterator;
 
 #define USet_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(USet, self)->us_mask)
-#define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define USet_HashIt(self, i)     (Dee_REQUIRES_OBJECT(USet, self)->us_elem + ((i) & ((USet *)(self))->us_mask))
 
 #define USet_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->us_lock)
@@ -594,8 +594,8 @@ INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromUDict(UDict *__restr
 
 /* Unique map/set types.
  * These function identical to the normal Dict/HashSet, but instead
- * of using `x.operator hash()' + `x == y' to check for duplicates,
- * these types use `Object.id(x)' + `x === y', meaning that they don't
+ * of using `x.operator hash()` + `x == y` to check for duplicates,
+ * these types use `Object.id(x)` + `x === y`, meaning that they don't
  * rely on any user-defined operator, or on hashing being implemented. */
 INTDEF DeeTypeObject USet_Type;
 INTDEF DeeTypeObject USetIterator_Type;
@@ -898,8 +898,8 @@ INTDEF DeeTypeObject RangeMapAsMapIterator_Type;
  * of red/black trees in order to reference not just simple keys,
  * but ranges of keys.
  *
- * Unlike normal mappings (which behave like `{(Key, Value)...}'),
- * RBTree mappings behave like `{(MinKey, MaxKey, Value)...}' when
+ * Unlike normal mappings (which behave like `{(Key, Value)...}`),
+ * RBTree mappings behave like `{(MinKey, MaxKey, Value)...}` when
  * iterated or used with some other sequence-style function.
  *
  * However, it is also possible to initialize this mapping like this:
@@ -908,9 +908,9 @@ INTDEF DeeTypeObject RangeMapAsMapIterator_Type;
  * >>     [10:20]: "foo",
  * >>     [21:30]: "bar",
  * >> });
- * iow: by using a mapping where the keys are `rt.SeqRange' objects.
+ * iow: by using a mapping where the keys are `rt.SeqRange` objects.
  * This representation is also the *native* representation of an
- * RBTree object, and is what's generated by `operator repr()'
+ * RBTree object, and is what's generated by `operator repr()`
  */
 INTDEF DeeTypeObject RBTree_Type;
 INTDEF DeeTypeObject RBTreeIterator_Type;

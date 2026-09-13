@@ -111,9 +111,9 @@ err:
 
 
 
-/* Remove/unbind `key' and return whatever used to be assigned to it.
- * When the key was already absent/unbound, return `default_' or throw a `KeyError'
- * @return: * :   The old value of `key'
+/* Remove/unbind `key` and return whatever used to be assigned to it.
+ * When the key was already absent/unbound, return `default_` or throw a `KeyError`
+ * @return: * :   The old value of `key`
  * @return: NULL: Error */
 [[wunused]] DREF DeeObject *
 __map_pop__.map_pop([[nonnull]] DeeObject *self,

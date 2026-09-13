@@ -112,7 +112,7 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define LENGTH_I16  0x21
 #define LENGTH_I8   0x10
 #else /* VA_SIZE >= ... */
-#error "Error: Unsupported `VA_SIZE'"
+#error "Error: Unsupported `VA_SIZE`"
 #endif /* VA_SIZE < ... */
 
 #define LENGTH_VASIZEOF(x) ((x)&0xf)
@@ -142,8 +142,8 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define F_SPACE    0x0008 /* '% '. */
 #define F_PADZERO  0x0010 /* '%0'. */
 #define F_HASWIDTH 0x0020 /* '%123'. */
-#define F_HASPREC  0x0040 /* `%.123'. */
-#define F_PREFIX   0x0080 /* `%#'. */
+#define F_HASPREC  0x0040 /* `%.123`. */
+#define F_PREFIX   0x0080 /* `%#`. */
 #define F_SIGNED   0x0100
 #define F_FIXBUF   0x0200
 
@@ -423,45 +423,45 @@ err:
 }
 
 
-/* General-purpose printing of formatted data to the given `printer'.
- * These functions implement c's `printf()' standard (except for the
+/* General-purpose printing of formatted data to the given `printer`.
+ * These functions implement c's `printf()` standard (except for the
  * wide-string part) with the following extensions:
- *   - `%I...': Length prefix: sizeof(size_t)
- *   - `%I8...', `%I16...', `%I32...', `%I64...': Absolute length prefix.
- *   - `%q': Print quoted (escaped) string from a UTF-8 source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I8q': Print quoted (escaped) string from a 1-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I16q': Print quoted (escaped) string from a 2-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I32q': Print quoted (escaped) string from a 4-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%s': Print a UTF-8 string.
- *   - `%I8s': Print a 1-byte-per-character string.
- *   - `%I16s': Print a 2-byte-per-character string.
- *   - `%I32s': Print a 4-byte-per-character string.
- *   - `%I8c': Print a character from the range U+0000 - U+00FF (Same as the regular `%c')
- *   - `%I16c': Print a character from the range U+0000 - U+FFFF
- *   - `%I32c': Print a character from the range U+00000000 - U+FFFFFFFF
- *   - `%$s', `%$q': Take the absolute length of the string as a `size_t' (may also be combined with I* prefixes)
- *   - `%C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"')
- *   - `%I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"') (Same as the regular `%C')
- *   - `%I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (using '\'' instead of '\"')
- *   - `%I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (using '\'' instead of '\"')
- *   - `%#C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters)
- *   - `%#I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters) (Same as the regular `%C')
- *   - `%#I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (without surrounding '\''-characters)
- *   - `%#I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (without surrounding '\''-characters)
- *   - `%.?s', `%.?q': Take the max length of the string or precision as a `size_t' (may also be combined with I* prefixes)
- *   - `%:?s', `%:?q': Same as `%$s' / `%$q'
- *   - `%:DIGIT: Similar to `%.DIGIT', but set the absolute length of the string, rather than its maximum length
- *               This is to `%.DIGIT' what `%$s' is to `%.?s'
- *   - `%?...': Take the width of the output text as a `size_t'
- *   - `%b': Integer option: Same as `o', but output as a binary.
- *   - `%k': Taking a `DeeObject *', print `__str__' or `none' when `NULL' was passed.
- *   - `%r': Taking a `DeeObject *', print `__repr__' or `none' when `NULL' was passed.
- *   - `%K': Same as `%k', but decref() the object afterwards.
- *   - `%R': Same as `%r', but decref() the object afterwards.
- * HINT: To guaranty fulfillment of `K' and `R' operands,
+ *   - `%I...`: Length prefix: sizeof(size_t)
+ *   - `%I8...`, `%I16...`, `%I32...`, `%I64...`: Absolute length prefix.
+ *   - `%q`: Print quoted (escaped) string from a UTF-8 source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I8q`: Print quoted (escaped) string from a 1-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I16q`: Print quoted (escaped) string from a 2-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I32q`: Print quoted (escaped) string from a 4-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%s`: Print a UTF-8 string.
+ *   - `%I8s`: Print a 1-byte-per-character string.
+ *   - `%I16s`: Print a 2-byte-per-character string.
+ *   - `%I32s`: Print a 4-byte-per-character string.
+ *   - `%I8c`: Print a character from the range U+0000 - U+00FF (Same as the regular `%c`)
+ *   - `%I16c`: Print a character from the range U+0000 - U+FFFF
+ *   - `%I32c`: Print a character from the range U+00000000 - U+FFFFFFFF
+ *   - `%$s`, `%$q`: Take the absolute length of the string as a `size_t` (may also be combined with I* prefixes)
+ *   - `%C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I8C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"') (Same as the regular `%C`)
+ *   - `%I16C`: Print a character from the range U+0000 - U+FFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I32C`: Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%#C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I8C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters) (Same as the regular `%C`)
+ *   - `%#I16C`: Print a character from the range U+0000 - U+FFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I32C`: Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%.?s`, `%.?q`: Take the max length of the string or precision as a `size_t` (may also be combined with I* prefixes)
+ *   - `%:?s`, `%:?q`: Same as `%$s` / `%$q`
+ *   - `%:DIGIT: Similar to `%.DIGIT`, but set the absolute length of the string, rather than its maximum length
+ *               This is to `%.DIGIT` what `%$s` is to `%.?s`
+ *   - `%?...`: Take the width of the output text as a `size_t`
+ *   - `%b`: Integer option: Same as `o`, but output as a binary.
+ *   - `%k`: Taking a `DeeObject *`, print `__str__` or `none` when `NULL` was passed.
+ *   - `%r`: Taking a `DeeObject *`, print `__repr__` or `none` when `NULL` was passed.
+ *   - `%K`: Same as `%k`, but decref() the object afterwards.
+ *   - `%R`: Same as `%r`, but decref() the object afterwards.
+ * HINT: To guaranty fulfillment of `K` and `R` operands,
  *       the format string is _always_ fully processed.
- * @return: * :  The sum of all return values from calls to `*printer'
- * @return: < 0: The first negative return value of a call to `*printer' */
+ * @return: * :  The sum of all return values from calls to `*printer`
+ * @return: < 0: The first negative return value of a call to `*printer` */
 PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
                   char const *__restrict format, va_list args) {
@@ -1092,9 +1092,9 @@ DeeFormat_Printf(Dee_formatprinter_t printer, void *arg,
 	 !strchr("\'\"\\", (uint8_t)(byte)))
 
 
-/* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
+/* Quote (backslash-escape) the given text, printing the resulting text to `printer`.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
- *       when targeting a `Dee_ascii_printer'
+ *       when targeting a `Dee_ascii_printer`
  * Output:
  * - ASCII+isprint --> keep
  * - ASCII+iscntrl --> \r, \n, \b, ...
@@ -1463,7 +1463,7 @@ err:
 }
 
 
-/* Repeat the given `ch' a total of `count' times. */
+/* Repeat the given `ch` a total of `count` times. */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
@@ -1509,7 +1509,7 @@ err:
 
 
 
-/* Repeat `str...+=length' such that a total of `total_characters'
+/* Repeat `str...+=length` such that a total of `total_characters`
  * characters (not bytes, but characters) are printed. */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
@@ -1621,11 +1621,11 @@ err:
 
 /* Both of these functions return a pointer to the target address where
  * printing has/would have stopped (excluding a terminating \0-character).
- * In the event that the buffer provided to `Dee_snprintf' is insufficient,
- * at most `bufsize' characters will have been written, and the exact required
- * size can be determined by `((return - buffer) + 1) * sizeof(char)'.
- * In the event of an error (only possible when `format' contains
- * something like `%k' or `%r'), `NULL' will be returned. */
+ * In the event that the buffer provided to `Dee_snprintf` is insufficient,
+ * at most `bufsize` characters will have been written, and the exact required
+ * size can be determined by `((return - buffer) + 1) * sizeof(char)`.
+ * In the event of an error (only possible when `format` contains
+ * something like `%k` or `%r`), `NULL` will be returned. */
 PUBLIC NONNULL((1, 2)) char *
 Dee_sprintf(char *__restrict buffer,
             char const *__restrict format, ...) {
@@ -1705,7 +1705,7 @@ err:
 }
 
 /* Print the object types passed by the given argument list.
- * If given, also include keyword names & types from `kw'
+ * If given, also include keyword names & types from `kw`
  * >> foo(10, 1.0, "bar", enabled: true);
  * Printed: "int, float, string, enabled: bool" */
 PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t

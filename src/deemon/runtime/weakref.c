@@ -231,8 +231,8 @@ Dee_weakref_initmany_contains_ob(struct Dee_weakref *const *weakref_v,
  * >> Dee_weakref_initmany_exec(weakref_v, weakref_c);
  * >> Dee_weakref_initmany_unlock_and_inherit(weakref_v, weakref_c);
  *
- * WARNING: `Dee_weakref_initmany_unlock_and_inherit()' will clobber the contents of
- *          `weakref_v' as a vector of object references that is returned (and must
+ * WARNING: `Dee_weakref_initmany_unlock_and_inherit()` will clobber the contents of
+ *          `weakref_v` as a vector of object references that is returned (and must
  *          be decref'd by the caller) */
 PUBLIC WUNUSED bool DCALL
 Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakref_c,
@@ -457,7 +457,7 @@ again:
 				LOCAL_UNLOCK_other__prev();
 				LOCAL_UNLOCK_other();
 				if (other_pself == &self->wr_next)
-					return; /* Special case: `self' is the predecessor of `other' */
+					return; /* Special case: `self` is the predecessor of `other` */
 				WEAKREF_WAITFOR(self);
 				goto again;
 			}
@@ -465,7 +465,7 @@ again:
 			if (self->wr_obj) {
 				struct Dee_weakref *old_self_next;
 				if unlikely(self->wr_obj == other->wr_obj) {
-					/* Special case: both point to the same object -> must clear `other' */
+					/* Special case: both point to the same object -> must clear `other` */
 					LOCAL_UNLOCK_self();
 					LOCAL_UNLOCK_other__prev();
 					LOCAL_UNLOCK_other();
@@ -500,7 +500,7 @@ again:
 #undef LOCAL_UNLOCK_self__prev
 			}
 
-			/* Insert `self' before `other' */
+			/* Insert `self` before `other` */
 			self->wr_pself = other->wr_pself;
 			self->wr_obj   = other->wr_obj;
 			((struct Dee_weakref *)other)->wr_pself = &self->wr_next;
@@ -555,7 +555,7 @@ again:
 #define LOCAL_UNLOCK_self() WEAKREF_UNLOCK(self)
 			if unlikely(!WEAKREF_TRYLOCK(self)) {
 				if (other->wr_pself == &self->wr_next || self == next) {
-					/* Special case: `self' is a neighbor of `other' */
+					/* Special case: `self` is a neighbor of `other` */
 					if (next) {
 						next->wr_pself = other->wr_pself;
 						WEAKREF_UNLOCK(next); /* LOCAL_UNLOCK_other__next(); */
@@ -576,7 +576,7 @@ again:
 			if (self->wr_obj) {
 				struct Dee_weakref *old_self_next;
 				if unlikely(self->wr_obj == other->wr_obj) {
-					/* Special case: both point to the same object -> must clear `other' */
+					/* Special case: both point to the same object -> must clear `other` */
 					if (next) {
 						next->wr_pself = other->wr_pself;
 						WEAKREF_UNLOCK(next); /* LOCAL_UNLOCK_other__next(); */
@@ -721,9 +721,9 @@ again:
 }
 
 
-/* Overwrite an already initialize weak reference with the given `ob'.
+/* Overwrite an already initialize weak reference with the given `ob`.
  * @return: true:  Successfully overwritten the weak reference.
- * @return: false: The given object `ob' does not support weak referencing
+ * @return: false: The given object `ob` does not support weak referencing
  *                 and the stored weak reference was not modified. */
 PUBLIC NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct Dee_weakref *__restrict self,
@@ -826,7 +826,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	return result;
 }
 
-/* Return the state of a snapshot of `self' currently being bound. */
+/* Return the state of a snapshot of `self` currently being bound. */
 #ifdef __INTELLISENSE__
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self)
@@ -856,10 +856,10 @@ PUBLIC WUNUSED NONNULL((1)) bool
 
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
- * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
+ * `NULL` when none was assigned, or `Dee_ITER_DONE` when `new_ob`
  * does not support weak referencing functionality (in which case
- * the actual pointed-to weak object of `self' isn't changed).
- * NOTE: You may pass `NULL' for `new_ob' to clear the weakref. */
+ * the actual pointed-to weak object of `self` isn't changed).
+ * NOTE: You may pass `NULL` for `new_ob` to clear the weakref. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_weakref_cmpxch(struct Dee_weakref *__restrict self,
                    DeeObject *old_ob,
@@ -912,10 +912,10 @@ again:
 			new_list = WEAKREFS_GET(new_ob);
 			if unlikely(!WEAKREFS_OK(new_list, new_ob)) {
 				WEAKREF_UNLOCK(self);
-				/* Weak referencing is not supported by `new_ob'. */
+				/* Weak referencing is not supported by `new_ob`. */
 				return ITER_DONE;
 			} else if unlikely(old_ob == new_ob) {
-				/* Special case: `old_ob' matches `new_ob' */
+				/* Special case: `old_ob` matches `new_ob` */
 				WEAKREF_UNLOCK(self);
 			} else {
 				struct Dee_weakref *next;
@@ -1075,7 +1075,7 @@ restart_clear_weakrefs:
 
 
 /* Special "dummy" object used to carry weak references that
- * were transferred by `Dee_weakref_list_transfer_to_dummy()' */
+ * were transferred by `Dee_weakref_list_transfer_to_dummy()` */
 PRIVATE DeeNoneObject weakref_dummy = {
 	/* .ob_refcnt = */ 0,
 	/* .ob_type   = */ &DeeNone_Type,
@@ -1089,7 +1089,7 @@ PRIVATE DeeNoneObject weakref_dummy = {
 
 /* Transfer all weak references of "self" to an always-dead dummy object.
  * Weak references with callbacks are **NOT** executed immediately, and
- * will only be invoked once `Dee_weakref_list_kill_dummy()' is called. */
+ * will only be invoked once `Dee_weakref_list_kill_dummy()` is called. */
 INTERN NONNULL((1)) void DCALL
 Dee_weakref_list_transfer_to_dummy(struct Dee_weakref_list *__restrict self) {
 	struct Dee_weakref *iter, *next;

@@ -56,11 +56,11 @@ DECL_BEGIN
 
 typedef DeeSuperObject Super;
 
-/* Create a new super-wrapper for `tp_self:self'.
+/* Create a new super-wrapper for `tp_self:self`.
  * NOTE: This function automatically checks the given operands for validity:
  *        - DeeType_Check(tp_self);
  *        - DeeObject_InstanceOf(self, tp_self);
- * It also automatically unwraps `self' should it already be a super-object. */
+ * It also automatically unwraps `self` should it already be a super-object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF Super *result;
@@ -99,9 +99,9 @@ err:
 }
 
 /* Taking some object, return the effective super-class of it.
- * HINT: When `self' is another super-object, this is identical to
- *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
- * @throws: Error.TypeError: The class of `self' has no super-class. */
+ * HINT: When `self` is another super-object, this is identical to
+ *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))`
+ * @throws: Error.TypeError: The class of `self` has no super-class. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSuper_Of(DeeObject *__restrict self) {
 	DeeTypeObject *base;

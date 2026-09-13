@@ -27,7 +27,7 @@ print repr rt.argv;
  *       by creating a custom stdout file that does per-thread line
  *       buffering of input text) */
 
-@@Run all tests found in the `/util/test' directory
+@@Run all tests found in the `/util/test` directory
 function runall() {
 	/*local path = joinpath(headof(__FILE__), "test/.*.dec");
 	for (local x: query(path)) {

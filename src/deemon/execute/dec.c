@@ -119,7 +119,7 @@ STATIC_ASSERT(sizeof(Dec_Dhdr) == 32);
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-/* Destructor linked into `struct Dee_heapregion' for dec file mappings. */
+/* Destructor linked into `struct Dee_heapregion` for dec file mappings. */
 INTERN NONNULL((1)) void DCALL
 DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self) {
 	Dec_Ehdr *ehdr = container_of(self, Dec_Ehdr, e_heap);
@@ -372,19 +372,19 @@ DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self,
 
 
 
-/* Execute relocations on `*p_self' and return a pointer to the
+/* Execute relocations on `*p_self` and return a pointer to the
  * first object of the dec file's heap (which is always the
- * `DeeModuleObject' describing the dec file itself).
- * NOTE: Can only be used when `(*p_self)->e_type == Dee_DEC_TYPE_RELOC'
+ * `DeeModuleObject` describing the dec file itself).
+ * NOTE: Can only be used when `(*p_self)->e_type == Dee_DEC_TYPE_RELOC`
  *
- * On success, `*p_self' is inherited by `return', such that rather than calling
- * `DeeDec_Ehdr_Destroy(*p_self)', you must `DeeDec_DestroyUntracked(return)'
+ * On success, `*p_self` is inherited by `return`, such that rather than calling
+ * `DeeDec_Ehdr_Destroy(*p_self)`, you must `DeeDec_DestroyUntracked(return)`
  *
- * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR':
+ * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR`:
  *                - DeeModule_IMPORT_F_CTXDIR: When set, "context_absname...+=context_absname_size" is
  *                                             the directory containing the .dec file mapped by "*p_self",
  *                                             rather than the .dec file itself.
- * @return: * :   The module object described by `*p_self'
+ * @return: * :   The module object described by `*p_self`
  * @return: NULL: An error was thrown
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
@@ -397,7 +397,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
 	size_t dep_index;
 	DeeDec_Ehdr *self = *p_self;
 	ASSERTF(self->e_type == Dee_DEC_TYPE_RELOC,
-	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()', "
+	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()`, "
 	        "which should have already asserted that 'e_type == Dee_DEC_TYPE_RELOC'");
 	dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
 
@@ -540,7 +540,7 @@ corrupt_dep_index_reloc_rrel:
 		goto corrupt_dep_index_reloc;
 	}
 
-#if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
+#if 0 /* This needs to be done by the caller using `DeeDec_Track()` */
 	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
 		DeeObject *gc_head = DeeDec_Ehdr_RELOC_GetGCHead(self);
@@ -742,15 +742,15 @@ w_rrela_decref_nokill(DeeDec_Ehdr *__restrict self,
 #endif
 
 
-/* Similar to `DeeDec_Relocate()', but also works when `ehdr' is a "simplified" DEC
- * EHDR (as created by `DeeDecWriter_PackEhdr()' when `DeeModule_IMPORT_F_NOGDEC'
+/* Similar to `DeeDec_Relocate()`, but also works when `ehdr` is a "simplified" DEC
+ * EHDR (as created by `DeeDecWriter_PackEhdr()` when `DeeModule_IMPORT_F_NOGDEC`
  * is set), since this function will take info about relocations and dependencies
- * from `self', rather than `ehdr->e_typedata.td_reloc'
- * NOTE: Can be used with both `Dee_DEC_TYPE_RELOC' and `Dee_DEC_TYPE_IMAGE'
+ * from `self`, rather than `ehdr->e_typedata.td_reloc`
+ * NOTE: Can be used with both `Dee_DEC_TYPE_RELOC` and `Dee_DEC_TYPE_IMAGE`
  *
  * @return: * :    Success (given "ehdr" has been inherited). Caller must still start
- *                 tracking returned module via `DeeDec_Track()', or destroy it using
- *                 `DeeDec_Ehdr_Destroy(DeeDec_Ehdr_FromModule(return))'
+ *                 tracking returned module via `DeeDec_Track()`, or destroy it using
+ *                 `DeeDec_Ehdr_Destroy(DeeDec_Ehdr_FromModule(return))`
  * @return: NULL : An error was thrown (given "ehdr" was *NOT* inherited) */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
@@ -830,21 +830,21 @@ DeeDecWriter_PackModule(DeeDecWriter *__restrict self,
 	return result;
 }
 
-/* Free relocation-only data from the image mapping of `DeeDec_Ehdr'.
+/* Free relocation-only data from the image mapping of `DeeDec_Ehdr`.
  *
  * - Dee_DEC_TYPE_RELOC:
- *   For EHDRs created by `DeeDec_Relocate()', this will try to munmap()
- *   or realloc_in_place() all data of `self' that comes after the end
- *   of the file's object heap (iow: will truncate `self->e_mapping' to
- *   have a size of `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size')
+ *   For EHDRs created by `DeeDec_Relocate()`, this will try to munmap()
+ *   or realloc_in_place() all data of `self` that comes after the end
+ *   of the file's object heap (iow: will truncate `self->e_mapping` to
+ *   have a size of `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size`)
  *
  * - Dee_DEC_TYPE_IMAGE:
- *   For EHDRs created by `DeeDecWriter_PackModule()', this frees the
- *   relocation tables that were stolen from the associated `DeeDecWriter'
- *   and only kept within the dec's EHDR for `DeeDec_DestroyUntracked()'
+ *   For EHDRs created by `DeeDecWriter_PackModule()`, this frees the
+ *   relocation tables that were stolen from the associated `DeeDecWriter`
+ *   and only kept within the dec's EHDR for `DeeDec_DestroyUntracked()`
  *   to be able to undo incref()s that had been done.
  *   Because 'Dee_DEC_TYPE_RELOC' may be converted to this type of EHDR,
- *   this type will also try to truncate `self->e_mapping'. */
+ *   this type will also try to truncate `self->e_mapping`. */
 INTERN NONNULL((1)) void DCALL
 DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 	size_t heap_end_offset;
@@ -852,7 +852,7 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 
 #ifndef CONFIG_NO_DEC
 	case Dee_DEC_TYPE_RELOC: {
-		/* Drop references to dependencies that were stored in `Dec_Dhdr::d_modspec.d_mod'. */
+		/* Drop references to dependencies that were stored in `Dec_Dhdr::d_modspec.d_mod`. */
 		size_t i;
 		Dec_Dhdr *dhdr = (Dec_Dhdr *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_deps);
 		for (i = 0; dhdr[i].d_modspec.d_mod; ++i) {
@@ -888,12 +888,12 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 	}
 
 	/* Try to munmap() or realloc_in_place() to truncate unused trailing
-	 * memory within `self'. Namely: everything after `e_heap', which ends
-	 * at offset `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size'
+	 * memory within `self`. Namely: everything after `e_heap`, which ends
+	 * at offset `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size`
 	 *
-	 * As such, the value of `DeeMapFile_GetSize(&self->e_mapping)' will
+	 * As such, the value of `DeeMapFile_GetSize(&self->e_mapping)` will
 	 * be lowered up until (but not becoming less than) the end of the
-	 * heap: `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size'.
+	 * heap: `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size`.
 	 */
 	ASSERTF(DeeMapFile_GetAddr(&self->e_mapping) == (void *)self,
 	        "The EHDR should be located at the start of the file mapping");
@@ -906,7 +906,7 @@ DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self) {
 	}
 }
 
-/* Destroy a module and all contained objects prior to `DeeDec_Track()' having been called. */
+/* Destroy a module and all contained objects prior to `DeeDec_Track()` having been called. */
 PUBLIC NONNULL((1)) void DCALL
 DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	Dec_Ehdr *ehdr = DeeDec_Ehdr_FromModule(self);
@@ -918,10 +918,10 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 	 * when "self" was relocated. For this purpose, must support 2
 	 * ways of the module having been relocated:
 	 *
-	 * - DeeDecWriter_PackModule() (following `DeeDecWriter_PackEhdr()'
+	 * - DeeDecWriter_PackModule() (following `DeeDecWriter_PackEhdr()`
 	 *   not having encoded relocation info within the dec file image)
 	 * - DeeDec_RelocateEx() (which can only be used when relocation
-	 *   info exists within the dec file image, as per `DeeDec_Ehdr')
+	 *   info exists within the dec file image, as per `DeeDec_Ehdr`)
 	 */
 
 	switch (ehdr->e_type) {
@@ -929,7 +929,7 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 #ifndef CONFIG_NO_DEC
 	case Dee_DEC_TYPE_RELOC:
 		/* Drop references to dependencies that were stored
-		 * in `Dec_Dhdr::d_modspec.d_mod', as well as undo
+		 * in `Dec_Dhdr::d_modspec.d_mod`, as well as undo
 		 * all incref() relocations against that module. */
 		DeeDec_RELOC_undo_rrel_and_decref_deps(ehdr, (size_t)-1);
 		break;
@@ -941,7 +941,7 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 		w_applied_rrel_decref_nokill(ehdr, ehdr->e_typedata.td_image.ei_drrel_v, ehdr->e_typedata.td_image.ei_drrel_c);
 		Dee_Free(ehdr->e_typedata.td_image.ei_drrel_v);
 		/* Special case: this might actually kill if it was a "DeeDecWriter_F_NRELOC" relocation.
-		 *               As such, can't use `w_applied_rrela_decref_nokill' here! */
+		 *               As such, can't use `w_applied_rrela_decref_nokill` here! */
 		w_applied_rrela_decref(ehdr, ehdr->e_typedata.td_image.ei_drrela_v, ehdr->e_typedata.td_image.ei_drrela_c);
 		Dee_Free(ehdr->e_typedata.td_image.ei_drrela_v);
 		deps_v = ehdr->e_typedata.td_image.ei_deps_v;
@@ -990,12 +990,12 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 }
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_NO_DEC */
-/* Validate the contents of `fmap' and relocate them. Once all locks have been
- * acquired to register the module globally, the caller must call `DeeDec_Track()'
+/* Validate the contents of `fmap` and relocate them. Once all locks have been
+ * acquired to register the module globally, the caller must call `DeeDec_Track()`
  * to hook the start tracking GC objects related to the returned module (including
  * the returned module itself).
  *
- * @param: flags: See `DeeDec_Relocate()'
+ * @param: flags: See `DeeDec_Relocate()`
  * @param: dee_file_last_modified: Timestamp when the ".dee" file was last modified
  * @return: * :        Successfully loaded the given DEC file.
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted.
@@ -1115,7 +1115,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		 * changes made not affected the generated code), will not result in a
 		 * cascade of there-on depending modules also needing to be re-built).
 		 *
-		 * s.a.: the MD5 generation code in `DeeDecWriter_PackEhdr()' */
+		 * s.a.: the MD5 generation code in `DeeDecWriter_PackEhdr()` */
 		ehdr->e_typedata.td_reloc.er_build_timestamp = 0;
 
 		/* Calculate MD5 checksum */
@@ -1181,7 +1181,7 @@ err:
 /************************************************************************/
 
 #ifndef CONFIG_NO_DEC
-/* Generate import strings for module dependencies (s.a. `struct Dee_dec_depmod::ddm_impstr') */
+/* Generate import strings for module dependencies (s.a. `struct Dee_dec_depmod::ddm_impstr`) */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decwriter_genimpstr(DeeDecWriter *__restrict self,
                     /*utf-8*/ char const *context_absname,
@@ -1328,7 +1328,7 @@ decslab_freeN_last(struct Dee_slab_page *__restrict self) {
 
 
 /* Finish build the currently active set of slab
- * pages (~ala `Dee_slab_page_buildpack()') */
+ * pages (~ala `Dee_slab_page_buildpack()`) */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 	struct Dee_heapchunk *slab_chunk;
@@ -1344,9 +1344,9 @@ decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 	slab_chunk = DeeDecWriter_Addr2Mem(self, self->dw_slabb, struct Dee_heapchunk);
 	slab_chunk->hc_head = Dee_HEAPCHUNK_HEAD(self->dw_slabs - sizeof(struct Dee_heapchunk));
 
-	/* Use static relocations to replicate `Dee_slab_page_buildpack()' such that
+	/* Use static relocations to replicate `Dee_slab_page_buildpack()` such that
 	 * each slab page can be free'd individually, and once all slab pages have
-	 * been freed, the last free operation will call `Dee_Free()' on the base
+	 * been freed, the last free operation will call `Dee_Free()` on the base
 	 * address of the first slab page (since that page has been preceded by a
 	 * heap chunk header spanning the entirety of the slab segment).
 	 *
@@ -1356,7 +1356,7 @@ decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 	addrof_first_page = self->dw_slabb + sizeof(struct Dee_heapchunk);
 	num_pages = (self->dw_slabs - sizeof(struct Dee_heapchunk)) / Dee_SLAB_PAGESIZE;
 
-	/* This part here replicates what is done by `Dee_slab_page_buildpack()'
+	/* This part here replicates what is done by `Dee_slab_page_buildpack()`
 	 * (only that instead of directly initializing the slab page, it writes
 	 * the relevant pointers to the dec file) */
 	for (i = 0; i < num_pages; ++i) {
@@ -1402,19 +1402,19 @@ err:
  * >> DeeDec_Ehdr_Destroy(ehdr);
  *
  * The returned pointer should either:
- * - be free'd using `DeeDec_Ehdr_Destroy(return)'
- * - be passed to `DeeDecWriter_PackModule()'
- *   to turn it into a `DeeModuleObject'
+ * - be free'd using `DeeDec_Ehdr_Destroy(return)`
+ * - be passed to `DeeDecWriter_PackModule()`
+ *   to turn it into a `DeeModuleObject`
  *
  * The returned EHDR has typing:
  * - Dee_DEC_TYPE_RELOC: when 'flags & DeeModule_IMPORT_F_NOGDEC' isn't given
  * - Dee_DEC_TYPE_IMAGE: when 'flags & DeeModule_IMPORT_F_NOGDEC' is given
  *
- * @param: context_absname: see `DeeDec_Relocate()' (ignored when `DeeModule_IMPORT_F_NOGDEC' is given)
- * @param: flags:           Set of `DeeModule_IMPORT_F_NOGDEC' + flags taken by `DeeDec_Relocate()'
+ * @param: context_absname: see `DeeDec_Relocate()` (ignored when `DeeModule_IMPORT_F_NOGDEC` is given)
+ * @param: flags:           Set of `DeeModule_IMPORT_F_NOGDEC` + flags taken by `DeeDec_Relocate()`
  * @return: * :   The not-yet-relocated dec file (header + contents).
  *                This blob is serialized to the point where it can simply be written to some file
- *                (but only if `DeeModule_IMPORT_F_NOGDEC' wasn't given), and is also no longer
+ *                (but only if `DeeModule_IMPORT_F_NOGDEC` wasn't given), and is also no longer
  *                owned by "self".
  * @return: NULL: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) DeeDec_Ehdr *DCALL
@@ -1445,7 +1445,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	}
 #endif /* !NDEBUG */
 
-	/* Update `dw_used' to include memory reserved for the currently-allocated page */
+	/* Update `dw_used` to include memory reserved for the currently-allocated page */
 	if (self->dw_slabs) {
 		ASSERT(self->dw_slabs > sizeof(struct Dee_heapchunk));
 		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
@@ -1498,7 +1498,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 	if (!(flags & DeeModule_IMPORT_F_NOGDEC) &&
 	    !(self->dw_flags & DeeDecWriter_F_NRELOC) && likely(self->dw_used < DFILE_LIMIT)) {
 		Dee_dec_addr32_t addrof_modrel; /* Start address for relocation tables pointed to by "Dec_Dhdr" entries. */
-		Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname' string table (possibly unaligned) */
+		Dee_dec_addr32_t addrof_modstr; /* Start address of `d_offsetof_modname` string table (possibly unaligned) */
 		size_t dep_index;
 		Dee_dec_addr32_t addrof_zero;
 		union Dee_module_buildid const *deemon_buildid;
@@ -1521,7 +1521,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ehdr->e_typedata.td_reloc.er_deemon_build_id[0] = deemon_buildid->mbi_word64[0];
 		ehdr->e_typedata.td_reloc.er_deemon_build_id[1] = deemon_buildid->mbi_word64[1];
 
-		/* Generate `ddm_impstr' strings for dependencies. */
+		/* Generate `ddm_impstr` strings for dependencies. */
 		if unlikely(decwriter_genimpstr(self, context_absname, context_absname_size, flags))
 			goto err;
 
@@ -1814,10 +1814,10 @@ output_image:
 
 		/* NOTE: Leave the zero-initialized build-id, as well as
 		 *       the 'Dee_MODULE_FHASBUILDID' flag in "mod" as-is.
-		 * The module will just return `0' as its `__buildid__'. */
+		 * The module will just return `0` as its `__buildid__`. */
 	}
 
-	/* Steal the ehdr from `self' */
+	/* Steal the ehdr from `self` */
 	self->dw_ehdr  = NULL;
 	self->dw_used  = 0;
 	self->dw_alloc = 0;
@@ -1954,10 +1954,10 @@ err:
 
 
 
-/* Add an additional file dependency to `self'. The given `filename' must
- * be relative to the directory that the `.dec' file will eventually reside
- * within. By default, only the relevant `.dee' file will be a dependency
- * of the produced `.dec' file.
+/* Add an additional file dependency to `self`. The given `filename` must
+ * be relative to the directory that the `.dec` file will eventually reside
+ * within. By default, only the relevant `.dee` file will be a dependency
+ * of the produced `.dec` file.
  * @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
@@ -2045,7 +2045,7 @@ err:
 }
 
 /* Find an existing dependency on "mod", and if none exists, add one.
- * @return: * :   The dependent module descriptor for `mod'
+ * @return: * :   The dependent module descriptor for `mod`
  * @return: NULL: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_dec_depmod *DCALL
 decwriter_getdep(DeeDecWriter *__restrict self,
@@ -2080,7 +2080,7 @@ err:
 }
 
 
-/* Remember that `obj' has been serialized at offset `addr' (s.a. `self->dw_known')
+/* Remember that `obj` has been serialized at offset `addr` (s.a. `self->dw_known`)
  * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2145,7 +2145,7 @@ err:
 }
 
 
-/* Possible values for `decwriter_malloc_impl::flags' */
+/* Possible values for `decwriter_malloc_impl::flags` */
 #define decwriter_malloc_impl_F_NORMAL 0x0000 /* Normal flags */
 #define decwriter_malloc_impl_F_TRY    0x0001 /* Do try-malloc semantics */
 #define decwriter_malloc_impl_F_BZERO  0x0002 /* Zero-initialize result */
@@ -2202,7 +2202,7 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	}
 
 	/* Ensure that enough space has been allocated.
-	 * Always include space for the eventual `struct Dee_heaptail'! */
+	 * Always include space for the eventual `struct Dee_heaptail`! */
 	ASSERT(self->dw_alloc >= self->dw_used);
 	cur_avail = self->dw_alloc - self->dw_used;
 	req_avail = nb + sizeof(struct Dee_heaptail);
@@ -2290,7 +2290,7 @@ decwriter_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr, void const *re
 	self->dw_hlast = p->hc_prevsize;
 }
 
-/* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
+/* Encode a reference to `obj` at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -2500,16 +2500,16 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 
-/* Allocate a new slab-page and return its base-address, or `Dee_SERADDR_INVALID' on error.
- * The returned base-address is always aligned by `Dee_SLAB_PAGESIZE', and spans a total of
- * `Dee_SLAB_PAGESIZE' bytes of memory.
+/* Allocate a new slab-page and return its base-address, or `Dee_SERADDR_INVALID` on error.
+ * The returned base-address is always aligned by `Dee_SLAB_PAGESIZE`, and spans a total of
+ * `Dee_SLAB_PAGESIZE` bytes of memory.
  *
  * WARNING: While the returned address is properly aligned, note that the dec writer's buffer
  *          probably isn't. However, that is fine since the writer's buffer is only indirectly
  *          accessible, and its only purpose is to construct the contents of a dec file. It is
- *          only after `DeeDecWriter_PackEhdr()' was called that the buffer becomes a proper
+ *          only after `DeeDecWriter_PackEhdr()` was called that the buffer becomes a proper
  *          dec file memory mapping, and any bad alignment of buffers will finally be fixed
- *          by `DeeDec_Relocate()'. */
+ *          by `DeeDec_Relocate()`. */
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
 decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
 	Dee_seraddr_t result;
@@ -2621,7 +2621,7 @@ decwriter_slab_malloc_impl(DeeDecWriter *__restrict self, size_t n, bool do_try)
 	}
 
 	/* None of the existing slab pages allow us to allocate an "n"-byte slab chunk
-	 * -> use `decwriter_slab_malloc_newpage_impl()' to allocate a new slab page. */
+	 * -> use `decwriter_slab_malloc_newpage_impl()` to allocate a new slab page. */
 	addrof_page = decwriter_slab_malloc_newpage_impl(self, do_try);
 	if (!Dee_SERADDR_ISOK(addrof_page))
 		goto err;
@@ -2896,7 +2896,7 @@ decwriter_slab_gcobject_trycalloc(DeeDecWriter *__restrict self,
 
 
 
-/* Append a copy of `obj' to self and write its address to `addrof_object'
+/* Append a copy of `obj` to self and write its address to `addrof_object`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -3012,7 +3012,7 @@ err:
 }
 
 
-/* Encode a reference to `obj' at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)'
+/* Encode a reference to `obj` at `DeeDecWriter_Addr2Mem(self, addr, DeeObject)`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -3145,7 +3145,7 @@ decwriter_putpointer(DeeDecWriter *__restrict self,
 	 *         When being serialized, its "co_iter" and "co_end" pointers point
 	 *         into the associated "ClassDescriptor *co_desc"'s cd_clsop_list,
 	 *         but when "ClassDescriptor" is serialized, 'cd_clsop_list' is
-	 *         copied using 'DeeSerial_Malloc()', meaning that we won't be able
+	 *         copied using 'DeeSerial_Malloc()`, meaning that we won't be able
 	 *         to link "co_iter" and "co_end" to 'cd_clsop_list'! */
 	{
 		size_t lo = 0, hi = self->dw_known.dpt_ptrc;
@@ -3270,16 +3270,16 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 };
 
 
-/* Initialize/finalize a dec writer. Note that unlike usual, `DeeDecWriter_Init()'
+/* Initialize/finalize a dec writer. Note that unlike usual, `DeeDecWriter_Init()`
  * already needs to allocate a small amount of heap memory, meaning it can actually
- * fail due to OOM and do so by returning `-1'
+ * fail due to OOM and do so by returning `-1`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	STATIC_ASSERT_MSG(IS_ALIGNED(offsetof(Dec_Ehdr, e_heap.hr_first), Dee_HEAPCHUNK_ALIGN),
 	                  "This is required for the embedded heap to work properly, and is "
-	                  /**/ "also required for 'decwriter_malloc_impl()' to function");
+	                  /**/ "also required for 'decwriter_malloc_impl()` to function");
 	self->ser_type = &decwriter_serial_type;
 	self->dw_ehdr = (Dec_Ehdr *)Dee_TryMalloc(sizeof(Dec_Ehdr) + (64 * 1024));
 	if unlikely(!self->dw_ehdr) {
@@ -3315,7 +3315,7 @@ DeeDecWriter_Fini(DeeDecWriter *__restrict self) {
 	Dee_dec_ptrtab_fini(&self->dw_known);
 	Dee_dec_fdeptab_fini(&self->dw_fdeps);
 	w_rrel_decref_nokill(self->dw_ehdr, self->dw_drrel.drrt_relv, self->dw_drrel.drrt_relc, (uintptr_t)&DeeModule_Deemon);
-	/* NOTE: "DeeDecWriter_F_NRELOC"-relocations in `decwriter_putobject' are
+	/* NOTE: "DeeDecWriter_F_NRELOC"-relocations in `decwriter_putobject` are
 	 *       written to "dw_drrela", so can't use w_rrela_decref_nokill here! */
 	w_rrela_decref(self->dw_ehdr, self->dw_drrela.drat_relv, self->dw_drrela.drat_relc, (uintptr_t)&DeeModule_Deemon);
 	Dee_dec_rrelatab_fini(&self->dw_drrela);

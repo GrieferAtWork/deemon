@@ -405,7 +405,7 @@ rowfmt_fini(RowFmt *__restrict self) {
 		cellfmt_fini(&self->rf_cols[i]);
 }
 
-/* Returns the index of column "column_name", or `(size_t)-1' if not found */
+/* Returns the index of column "column_name", or `(size_t)-1` if not found */
 PRIVATE NONNULL((1, 2)) unsigned int DCALL
 rowfmt_indexof_string(RowFmt *__restrict self, char const *column_name) {
 	unsigned int i;
@@ -765,8 +765,8 @@ err:
 }
 
 
-/* Upgrade a read-lock to `self->r_lock' (which gets released)
- * into locks equivalent to `Query_LockDB()' */
+/* Upgrade a read-lock to `self->r_lock` (which gets released)
+ * into locks equivalent to `Query_LockDB()` */
 #define ROW_READUPGRADE_LOCKDB_SUCCESS 1    /* Success */
 #define ROW_READUPGRADE_LOCKDB_RETRY   0    /* Try again (lock to "self" was lost) */
 #define ROW_READUPGRADE_LOCKDB_ERROR   (-1) /* Error was thrown (lock to "self" was lost) */

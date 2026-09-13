@@ -203,36 +203,36 @@
 #define __GCC_HAS_BUILTIN___builtin_throw
 
 /* >> T __builtin_void(T val);
- * Evaluates to `val', but value becomes unknown */
+ * Evaluates to `val`, but value becomes unknown */
 #define __GCC_HAS_BUILTIN___builtin_void
 
 /* >> T __builtin_rvoid(T val);
- * Like `__builtin_void()', but also do r-value */
+ * Like `__builtin_void()`, but also do r-value */
 #define __GCC_HAS_BUILTIN___builtin_rvoid
 
 /* >> __builtin_define_alias(char const new[], char const old[]);
- * Verify correct attributes for `DEFINE_PUBLIC_ALIAS()' & friends */
+ * Verify correct attributes for `DEFINE_PUBLIC_ALIAS()` & friends */
 #define __GCC_HAS_BUILTIN___builtin_define_alias
 
 /* >> T *__builtin_remove_noderef(__attribute__((noderef)) T *p);
- * Remove `noderef' from a type/variable and re-return that variable.
+ * Remove `noderef` from a type/variable and re-return that variable.
  * NOTE: the annotation is only removed for the duration of the current scope */
 #define __GCC_HAS_BUILTIN___builtin_remove_noderef
 
 /* >> bool __builtin_tag_get(char const *name);
- * Return true/false indicate of the tag `name' currently being enabled,
- * as  per `__attribute__((tag(...)))' attributes,  as well as preceding
- * uses of `__builtin_tag_set()'
+ * Return true/false indicate of the tag `name` currently being enabled,
+ * as  per `__attribute__((tag(...)))` attributes,  as well as preceding
+ * uses of `__builtin_tag_set()`
  *
- * When the state of `name' is known, this evaluates to a  compile-time
+ * When the state of `name` is known, this evaluates to a  compile-time
  * constant expression. Otherwise, it evaluations to a void-expression. */
 #define __GCC_HAS_BUILTIN___builtin_tag_get
 
 /* >> void __builtin_tag_set(char const *name, bool active);
- * Set  the state of the tag `name' to `active'. The state of tags can
- * be read  out using  `__builtin_tag_get()'.  When `active'  isn't  a
- * compile-time constant expression, the state of `name' is marked  as
- * unknown, such that `__builtin_tag_get()' for that same tag will not
+ * Set  the state of the tag `name` to `active`. The state of tags can
+ * be read  out using  `__builtin_tag_get()`.  When `active`  isn't  a
+ * compile-time constant expression, the state of `name` is marked  as
+ * unknown, such that `__builtin_tag_get()` for that same tag will not
  * evaluate to a compile-time constant expression. */
 #define __GCC_HAS_BUILTIN___builtin_tag_set
 
@@ -328,9 +328,9 @@
 
 /* >> __attribute__((nothrow(<level>))
  * >> __attribute__((nothrow(*<level>))
- * Set  the nothrow level for the annotated  function. When `*' appears before `<level>',
+ * Set  the nothrow level for the annotated  function. When `*` appears before `<level>`,
  * scan the argument list of the function and use the greatest nothrow level of arguments
- * instead. If no argument specifies a nothrow level, use the given `<level>'.
+ * instead. If no argument specifies a nothrow level, use the given `<level>`.
  *
  * A  warning will be  issued if a nothrow  function is called  by another function that
  * also has a  nothrow attribute,  and whose nothrow  attribute specifies  a level  that
@@ -347,19 +347,19 @@
  *
  * >> __attribute__((noderef))
  * >> __attribute__((deref))
- * Specify if this pointer may be dereferenced or not (`deref' is the
- * default and supersedes `noderef' when both attributes are present)
+ * Specify if this pointer may be dereferenced or not (`deref` is the
+ * default and supersedes `noderef` when both attributes are present)
  *
  * >> __attribute__((tag(<name>)))
  * Tag the annotated function with a name. Each function can have at  most
  * 1 tag, and it is possible to assert that the calling function also have
- * some tag (s.a. `require_caller_tag').
+ * some tag (s.a. `require_caller_tag`).
  * A warning is generated when trying to assign multiple tags to the same
  * function.
  *
  * >> __attribute__((require_caller_tag(<name>)))
  * Produce a compiler warning if this function is invoked by one that is
- * not tagged as `__attribute__((tag(<name>)))'.
+ * not tagged as `__attribute__((tag(<name>)))`.
  */
 #define __ATTR_NOTHROW          __checker_attribute__(__nothrow__(0))
 #define __NOTHROW               __checker_attribute__(__nothrow__(0))
@@ -376,19 +376,19 @@
 #define __ATTR_UNCHECKED        __checker_attribute__(__noderef__)
 #define __ATTR_PHYS             __checker_attribute__(__noderef__) /* Physical pointer, only for arithmetic */
 #define __ATTR_VIRT             __checker_attribute__(__noderef__) /* Virtual pointer, only for arithmetic */
-/* TODO: `__ATTR_BLOCKING' should be a no-op for now, and places that use it should
+/* TODO: `__ATTR_BLOCKING` should be a no-op for now, and places that use it should
  *       explicitly be annotated as THROWS(E_INTERRUPT) (if appropriate). Later on,
  *       this annotation should then become some  special tag that warns if  called
- *       from a `__ATTR_NOBLOCK' or `__ATTR_NOPREEMPT' function. */
+ *       from a `__ATTR_NOBLOCK` or `__ATTR_NOPREEMPT` function. */
 #define __ATTR_BLOCKING         /* nothing */
 #define __ATTR_BLOCKING_IF(...) /* nothing */
 
 #define __ATTR_THROWS(...)      __checker_attribute__(__throws__(__VA_ARGS__))
 /* TODO: __attribute__((__throws__(code if condition)))
  *
- * Here,  `condition' is saved as a code-block  and is evaluated at the call-site
+ * Here,  `condition` is saved as a code-block  and is evaluated at the call-site
  * of  the function in question. It can already make use of function arguments by
- * their name, as well as `__builtin_tag_get()' in order to indicate that certain
+ * their name, as well as `__builtin_tag_get()` in order to indicate that certain
  * exceptions are only thrown in specific contexts. When the expression cannot be
  * determined  at compile-time, the behavior is the  same as when it evaluates to
  * true.
@@ -467,7 +467,7 @@
 #define __ATTR_EXTERNALLY_VISIBLE            /* Nothing */
 #define __ATTR_VISIBILITY(vis)               /* Nothing */
 
-/* Warn if declarations for `new' and `old' exist, but they're incompatible. */
+/* Warn if declarations for `new` and `old` exist, but they're incompatible. */
 #define __DEFINE_PRIVATE_ALIAS(new, old)      __builtin_define_alias(#new, #old)
 #define __DEFINE_PUBLIC_ALIAS(new, old)       __builtin_define_alias(#new, #old)
 #define __DEFINE_INTERN_ALIAS(new, old)       __builtin_define_alias(#new, #old)
@@ -475,7 +475,7 @@
 #define __DEFINE_PUBLIC_WEAK_ALIAS(new, old)  __builtin_define_alias(#new, #old)
 #define __DEFINE_INTERN_WEAK_ALIAS(new, old)  __builtin_define_alias(#new, #old)
 
-/* Suppress warnings about  `-Wsuggest-attribute=const' or  `-Wsuggest-attribute=pure'
+/* Suppress warnings about  `-Wsuggest-attribute=const` or  `-Wsuggest-attribute=pure`
  * Within the checker, this also works to suppress warnings about errors that (appear)
  * to never be thrown, or suggestions for making a function NOTHROW. */
 #define __COMPILER_IMPURE() __asm__("")

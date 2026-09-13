@@ -58,7 +58,7 @@ print p.terminated();
  * NOTE: This is done live, meaning that
  *       output is read as soon as it arrives.
  *       >> You proove yourself that it works by
- *          commenting out the 'iw.close()' */
+ *          commenting out the 'iw.close()` */
 for (l: File.Buffer(or))
 	print ">>", l.rstrip().center(100);
 for (l: File.Buffer(er))

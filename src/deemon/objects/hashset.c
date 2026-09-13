@@ -460,13 +460,13 @@ hashset_htab_rebuild(HashSet *__restrict self);
  * do so without ever releasing that lock.
  * NOTES:
  * - This function will NEVER rehash the hashset or change the contents of hs_htab!
- * - The caller must ensure that `_DeeHashSet_CanGrowVTab(self)' is true
+ * - The caller must ensure that `_DeeHashSet_CanGrowVTab(self)` is true
  * @return: true:  Success
  * @return: false: Failure */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
 hashset_trygrow_vtab(HashSet *__restrict self);
 
-/* Same as `hashset_trygrow_vtab()', but allowed to grow the htab
+/* Same as `hashset_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!_DeeHashSet_CanGrowVTab(self)"
  * Tries to make it so "hs_valloc >= min_valloc"
  * @return: true:  Success: "hs_valloc >= min_valloc"
@@ -476,7 +476,7 @@ hashset_trygrow_vtab_and_htab_with(HashSet *__restrict self,
                                    Dee_hash_vidx_t min_valloc,
                                    bool allow_overalloc);
 
-/* Same as `hashset_trygrow_vtab()', but allowed to grow the htab
+/* Same as `hashset_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!_DeeHashSet_CanGrowVTab(self)"
  * @return: true:  Success
  * @return: false: Failure */
@@ -519,7 +519,7 @@ hashset_grow_htab_and_relock(HashSet *__restrict self);
 /* Shrink the vtab and release a lock to "self". Must be called when:
  * - holding a write-lock
  * - _DeeHashSet_CanShrinkHTab(self) is true
- * - _DeeHashSet_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
+ * - _DeeHashSet_ShouldShrinkHTab(self) is true (or `fully_shrink=true`)
  * NOTE: After a call to this function, the caller must always rebuild the htab! */
 PRIVATE NONNULL((1)) void DCALL
 hashset_shrink_htab(HashSet *__restrict self, bool fully_shrink);
@@ -527,7 +527,7 @@ hashset_shrink_htab(HashSet *__restrict self, bool fully_shrink);
 /* Shrink the vtab+htab. Must be called while:
  * - holding a write-lock
  * - _DeeHashSet_CanShrinkVTab(self) is true
- * - _DeeHashSet_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
+ * - _DeeHashSet_ShouldShrinkVTab(self) is true (or `fully_shrink=true`) */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 hashset_shrink_vtab_and_htab(HashSet *__restrict self, bool fully_shrink);
 
@@ -558,7 +558,7 @@ DECL_BEGIN
  *                   "hs_vtab", which is the same as this callback returning "hs_vsize"
  *                   @param: overwrite_index: When "key" already exists, the index of
  *                                            the item that will be deleted. Else, set
- *                                            to `Dee_HASH_HTAB_EOF' when "key" is new.
+ *                                            to `Dee_HASH_HTAB_EOF` when "key" is new.
  *                   - To throw an error, the callback should:
  *                     >> DeeHashSet_LockEndWrite(self)
  *                     >> DeeError_Throw(...);
@@ -744,8 +744,8 @@ err:
 	return -1;
 }
 
-/* Given an "index" in range `[0,d_used)', return a value
- * in range `[0,d_size)' that points to the index'th non-
+/* Given an "index" in range `[0,d_used)`, return a value
+ * in range `[0,d_size)` that points to the index'th non-
  * deleted key in "d_vtab" */
 PRIVATE WUNUSED NONNULL((1)) /*real*/ Dee_hash_vidx_t DCALL
 hashset_unoptimize_vtab_index(HashSet *self, size_t index) {
@@ -1497,7 +1497,7 @@ PRIVATE struct type_operator const hashset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FNOREFESCAPE),
 };
 
-/* The main `HashSet' container class */
+/* The main `HashSet` container class */
 PUBLIC DeeTypeObject DeeHashSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_HashSet),

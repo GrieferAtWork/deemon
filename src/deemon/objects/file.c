@@ -502,9 +502,9 @@ DeeFile_PWriteAll(DeeObject *self,
 }
 
 /* Check if the given file is an interactive device.
- * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
- *       invokes `self.isatty()' without arguments, casting the return value to bool.
- *       This function is used to implement the auto-buffering mode of `File.Buffer'
+ * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type` and
+ *       invokes `self.isatty()` without arguments, casting the return value to bool.
+ *       This function is used to implement the auto-buffering mode of `File.Buffer`
  * @return: Dee_HAS_YES: The file is a TTY
  * @return: Dee_HAS_NO:  The file isn't a TTY
  * @return: Dee_HAS_ERR: An error occurred. */
@@ -512,7 +512,7 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
 
-	/* Very simply: Just lookup the `isatty' property. */
+	/* Very simply: Just lookup the `isatty` property. */
 	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_isatty));
 	if unlikely(!result_ob)
 		goto err_call;
@@ -520,7 +520,7 @@ DeeFile_IsAtty(DeeObject *__restrict self) {
 err_call:
 	/* Check if we can handle attribute/not-implement errors that
 	 * could be interpreted as indicative of this not being a tty.
-	 * Fun fact: The way that `isatty' is implemented on linux (and KOS ;) ),
+	 * Fun fact: The way that `isatty` is implemented on linux (and KOS ;) ),
 	 *           is by invoking an fcntl() that is only allowed for TTY file
 	 *           descriptors, then checking if errno was set, meaning that
 	 *           even linux does something similar to this, just on a
@@ -532,14 +532,14 @@ err_call:
 }
 
 /* Return the system file descriptor of the given file, or throw
- * an error and return `Dee_fd_INVALID' if the file was closed,
+ * an error and return `Dee_fd_INVALID` if the file was closed,
  * or doesn't refer to a file carrying a descriptor.
- * Note that this function queries the `Dee_fd_GETSET' attribute
- * of the given object, and always fails if `Dee_fd_GETSET' isn't
+ * Note that this function queries the `Dee_fd_GETSET` attribute
+ * of the given object, and always fails if `Dee_fd_GETSET` isn't
  * defined for the configuration used when deemon was built.
- * NOTE: This function doesn't require that `self' actually be
- *       derived from a `deemon.File'!
- * @return: * :             The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * NOTE: This function doesn't require that `self` actually be
+ *       derived from a `deemon.File`!
+ * @return: * :             The used system fD. (either a `HANDLE`, `fd_t` or `FILE *`)
  * @return: Dee_fd_INVALID: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeFile_GetSysFD(DeeObject *__restrict self) {
@@ -551,11 +551,11 @@ DeeFile_GetSysFD(DeeObject *__restrict self) {
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Fileno(self);
 
-	/* General case: look for a `Dee_fd_GETSET' attribute */
+	/* General case: look for a `Dee_fd_GETSET` attribute */
 	result_ob = DeeObject_GetAttr(self, Dee_AsObject(&str_getsysfd));
 	if unlikely(!result_ob) {
 #if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HAVE_get_osfhandle)
-		/* TODO: Also check for an attribute `Dee_fd_fileno_GETSET' */
+		/* TODO: Also check for an attribute `Dee_fd_fileno_GETSET` */
 #endif /* Dee_fd_t_IS_HANDLE && CONFIG_HAVE_get_osfhandle */
 		goto err;
 	}
@@ -578,11 +578,11 @@ err:
 }
 
 /* Retrieve and return the filename used to open the given file.
- * NOTE: This function automatically asserts that `self'
- *       is a `File', throwing a TypeError if it isn't.
- * For this purpose, `DeeSystemFile_Filename()' is invoked if `self'
- * is a system file, however if it isn't, `self.filename' will be
- * retrieved (using `operator getattr()') and after asserting the
+ * NOTE: This function automatically asserts that `self`
+ *       is a `File`, throwing a TypeError if it isn't.
+ * For this purpose, `DeeSystemFile_Filename()` is invoked if `self`
+ * is a system file, however if it isn't, `self.filename` will be
+ * retrieved (using `operator getattr()`) and after asserting the
  * result to be a string object, its value will be returned instead.
  * This function should be used by library functions that wish to
  * operate on a path, thus allowing them to accept file objects just
@@ -594,7 +594,7 @@ err:
  * >> } else {
  * >>     Dee_Incref(arg);
  * >> }
- * >> ... // Operate on a filename string `arg'
+ * >> ... // Operate on a filename string `arg`
  * >> Dee_Decref(arg); */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self) {
@@ -602,13 +602,13 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	/* Special case: If the file is a system-file,  */
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Filename(self);
-#if 0 /* There might be non-file types that implement a `filename' member. */
+#if 0 /* There might be non-file types that implement a `filename` member. */
 	/* Check that it's a file at all. */
 	if (DeeObject_AssertType(self, &DeeFile_Type.ft_base))
 		goto err;
 #endif
 	result = DeeObject_GetAttr(self, Dee_AsObject(&str_filename));
-	/* Validate that `filename' is actually a string. */
+	/* Validate that `filename` is actually a string. */
 	if (result && DeeObject_AssertTypeExact(result, &DeeString_Type))
 		Dee_Clear(result);
 	return result;
@@ -617,7 +617,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 }
 
 /* Read text from a file, a line or block at a time.
- * @param: readall: When true, keep trying to read data until `DeeFile_Read()'
+ * @param: readall: When true, keep trying to read data until `DeeFile_Read()`
  *                  actually returns ZERO(0), rather than stopping once it returns
  *                  something other than the then effective read buffer size.
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
@@ -775,7 +775,7 @@ file_read_trymap(Dee_fd_t fd, size_t maxbytes,
 		return ITER_DONE; /* Unsupported (instruct caller to use fallback read/pread) */
 	}
 
-	/* Success! -> Wrap the mapfile as `DeeMapFileObject -> DeeBytesObject' */
+	/* Success! -> Wrap the mapfile as `DeeMapFileObject -> DeeBytesObject` */
 	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
 	if unlikely(!mapob)
 		goto err_map;
@@ -832,10 +832,10 @@ do_invoke_generic_ft_read:
 	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t))&DeeFile_Readf;
 do_invoke_ft_read:
 #ifdef HAVE_file_read_trymap
-	/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	/* if `ft_read` belongs to `DeeSystemFile_Type`, and `maxbytes` is larger
 	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
-	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
-	 * which can then be wrapped by a regular `Bytes' object.
+	 * `DeeMapFile_InitSysFd()`, which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes` object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
 	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t))&sysfile_read)) {
@@ -847,7 +847,7 @@ do_invoke_ft_read:
 		if (result != ITER_DONE)
 			return result;
 	}
-	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap!
+	/* TODO: if `ft_read` is for a FileBuffer that is currently empty, also try to mmap!
 	 *       In this case we can also use the FileBuffer's position to (possibly) skip
 	 *       the initial seek done during file mapping! */
 #endif /* HAVE_file_read_trymap */
@@ -924,10 +924,10 @@ do_invoke_generic_ft_pread:
 	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&DeeFile_PReadf;
 do_invoke_ft_pread:
 #ifdef HAVE_file_read_trymap
-	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	/* if `ft_pread` belongs to `DeeSystemFile_Type`, and `maxbytes` is larger
 	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
-	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
-	 * which can then be wrapped by a regular `Bytes' object.
+	 * `DeeMapFile_InitSysFd()`, which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes` object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
 	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pread)) {
@@ -937,7 +937,7 @@ do_invoke_ft_pread:
 		if (result != ITER_DONE)
 			return result;
 	}
-	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap! */
+	/* TODO: if `ft_read` is for a FileBuffer that is currently empty, also try to mmap! */
 #endif /* HAVE_file_read_trymap */
 
 	{
@@ -1112,8 +1112,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 
 
 
-/* HINT: `DeeFile_Printf' is literally implemented as
- *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
+/* HINT: `DeeFile_Printf` is literally implemented as
+ *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)`
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self,
@@ -1257,9 +1257,9 @@ struct open_option {
 #define OPEN_EXFLAG_FTEXT   0x01 /* Wrap the file in a text-file wrapper that
 	                              * automatically converts its encoding to UTF-8. */
 #define OPEN_EXFLAG_FNOBUF  0x02 /* Open the file without wrapping it inside a buffer. */
-	uint8_t      exflg;   /* Extended flags (Set of `OPEN_EXFLAG_F*'). */
+	uint8_t      exflg;   /* Extended flags (Set of `OPEN_EXFLAG_F*`). */
 	unsigned int mask;    /* Mask of flags which, when already set, causes the format to become invalid. */
-	unsigned int flag;    /* Flags. (or-ed with the flags after `mask' is checked) */
+	unsigned int flag;    /* Flags. (or-ed with the flags after `mask` is checked) */
 };
 
 /* Open options are parsed from a comma-separated
@@ -1358,7 +1358,7 @@ file_class_open(DeeObject *UNUSED(self), size_t argc,
 	if (DeeObject_AssertTypeExact(args.path, &DeeString_Type))
 		goto err;
 	if (!args.oflags) {
-		/* Default to `r' */
+		/* Default to `r` */
 		flags  = OPEN_EXFLAG_FTEXT;
 		oflags = OPEN_FRDONLY;
 	} else if (!DeeString_Check(args.oflags)) {
@@ -1417,7 +1417,7 @@ file_class_open(DeeObject *UNUSED(self), size_t argc,
 			if (*iter == 'x' && (oflags & (OPEN_FTRUNC | OPEN_FCREAT)) == (OPEN_FTRUNC | OPEN_FCREAT))
 				++iter, oflags |= OPEN_FEXCL;
 			if (*iter == 't' && !open_binary)
-				++iter; /* Accept a trailing `t', as suggested by STD-C */
+				++iter; /* Accept a trailing `t`, as suggested by STD-C */
 			if (iter != next)
 				goto err_invalid_oflags;
 			if (!open_binary)
@@ -1618,10 +1618,10 @@ done:
 }
 
 
-/* Return a file stream for a standard file number `id'.
- * @param: id:   One of `Dee_STD*' (Except `Dee_STDDBG')
- * @param: file: The file to use, or `NULL' to unbind that stream.
- * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
+/* Return a file stream for a standard file number `id`.
+ * @param: id:   One of `Dee_STD*` (Except `Dee_STDDBG`)
+ * @param: file: The file to use, or `NULL` to unbind that stream.
+ * `DeeFile_GetStd()` will throw an `UnboundAttribute` error if the stream isn't assigned. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
@@ -1636,7 +1636,7 @@ DeeFile_GetStd(unsigned int id) {
 	}
 	Dee_stdio_FAST_unlock();
 
-	/* When the stream is `ITER_DONE', lazily create the STD stream. */
+	/* When the stream is `ITER_DONE`, lazily create the STD stream. */
 	if (result == ITER_DONE)
 		return create_std_buffer(id);
 	DeeError_Throwf(&DeeError_UnboundAttribute,
@@ -1658,7 +1658,7 @@ DeeFile_TryGetStd(unsigned int id) {
 	}
 	Dee_stdio_FAST_unlock();
 
-	/* When the stream is `ITER_DONE', lazily create the STD stream. */
+	/* When the stream is `ITER_DONE`, lazily create the STD stream. */
 	if (result == ITER_DONE) {
 		result = create_std_buffer(id);
 		if unlikely(!result)
@@ -1667,8 +1667,8 @@ DeeFile_TryGetStd(unsigned int id) {
 	return result;
 }
 
-/* Returns the old stream, `NULL' when none was assigned,
- * or `ITER_DONE' when it hadn't been allocated yet */
+/* Returns the old stream, `NULL` when none was assigned,
+ * or `ITER_DONE` when it hadn't been allocated yet */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	DREF DeeObject *old_stream;
@@ -1684,7 +1684,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	return old_stream;
 }
 
-/* [0..1][lock(WRITE_ONCE)] The `files' module. */
+/* [0..1][lock(WRITE_ONCE)] The `files` module. */
 PRIVATE Dee_ATOMIC_XREF(DeeModuleObject) files_module = Dee_ATOMIC_XREF_INIT(NULL);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1926,10 +1926,10 @@ PRIVATE struct type_member tpconst file_class_members[] = {
 /* Returns the total size of a given file stream.
  * If the file doesn't support retrieval of its
  * size, a NotImplemented error is thrown.
- * NOTE: This function is equivalent to calling a member function `size()',
+ * NOTE: This function is equivalent to calling a member function `size()`,
  *       which file objects default-implement by temporarily seeking to the
  *       end of the file and determining where that position is located at.
- * @return: * : The size of the given file `self' in bytes.
+ * @return: * : The size of the given file `self` in bytes.
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) Dee_pos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
@@ -2868,17 +2868,17 @@ PRIVATE struct type_math file_math = {
 	/* .tp_inplace_pow = */ DEFIMPL_UNSUPPORTED(&default__inplace_pow__unsupported),
 };
 
-#if 0 /* Even though `File' is technically a sequence, don't spam its
-       * members with all the additional functions provided by `DeeSeq_Type'.
-       * Especially considering that `File' does its own handling for
-       * operations such as `a|b' (creating a multi-targeted file), whereas
-       * `Sequence' already implements that operator as a union (in the case
+#if 0 /* Even though `File` is technically a sequence, don't spam its
+       * members with all the additional functions provided by `DeeSeq_Type`.
+       * Especially considering that `File` does its own handling for
+       * operations such as `a|b` (creating a multi-targeted file), whereas
+       * `Sequence` already implements that operator as a union (in the case
        * of file: of all lines in either file).
        * Besides: A lot of sequence functions expect to be able to re-run
        *          iterators multiple times, yet file iterators expect the
        *          user to rewind the file before they can be iterated again,
-       *          meaning that in that respect, `File' isn't 100% compliant
-       *          to the `Sequence' interface, meaning we're kind-of not
+       *          meaning that in that respect, `File` isn't 100% compliant
+       *          to the `Sequence` interface, meaning we're kind-of not
        *          even allowed to consider ourselves a sequence.
        *          But as already said: that's a good thing, because
        *          we don't even want to be considered one. */

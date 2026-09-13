@@ -44,9 +44,9 @@
 #include <deemon/serial.h>    /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>    /* DeeString_Check, DeeString_IsEmpty */
 
-#include "p-readlink.c.inl" /* Needed for `lcopyfile()' to check for symbolic links. */
-#include "p-remove.c.inl"   /* Needed for `lcopyfile()' to remove existing files when `RENAME_NOREPLACE' isn't given. */
-#include "p-symlink.c.inl"  /* Needed for `lcopyfile()' to create copies of symbolic links. */
+#include "p-readlink.c.inl" /* Needed for `lcopyfile()` to check for symbolic links. */
+#include "p-remove.c.inl"   /* Needed for `lcopyfile()` to remove existing files when `RENAME_NOREPLACE` isn't given. */
+#include "p-symlink.c.inl"  /* Needed for `lcopyfile()` to create copies of symbolic links. */
 
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -56,7 +56,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fcopyfile()' */
+/* Figure out how to implement `fcopyfile()` */
 #undef posix_fcopyfile_USE_posix_copyfile_fileio
 #undef posix_fcopyfile_USE_STUB
 #if 1 /* Always supported */
@@ -67,7 +67,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `copyfile()' */
+/* Figure out how to implement `copyfile()` */
 #undef posix_copyfile_USE_posix_copyfile_fileio
 #undef posix_copyfile_USE_STUB
 #if 1 /* Always supported */
@@ -78,7 +78,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `lcopyfile()' */
+/* Figure out how to implement `lcopyfile()` */
 #undef posix_lcopyfile_USE_posix_copyfile_fileio
 #undef posix_lcopyfile_USE_STUB
 #if 1 /* Always supported */
@@ -89,7 +89,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `copyfileat()' */
+/* Figure out how to implement `copyfileat()` */
 #undef posix_copyfileat_USE_copyfile__AND__lcopyfile__AND__fcopyfile
 #undef posix_copyfileat_USE_STUB
 #if (!defined(posix_copyfile_USE_STUB) &&  \
@@ -147,7 +147,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_fcopyfile_f
 	if unlikely(!src_file)
 		goto err;
 
-	/* Load `newpath' as a deemon file object. */
+	/* Load `newpath` as a deemon file object. */
 	if (DeeString_Check(newpath)) {
 		if (flags & RENAME_NOREPLACE) {
 			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL, 0644);
@@ -251,7 +251,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_copyfile_f_
 	if unlikely(!src_file)
 		goto err;
 
-	/* Load `newpath' as a deemon file object. */
+	/* Load `newpath` as a deemon file object. */
 	if (DeeString_Check(newpath)) {
 		if (flags & RENAME_NOREPLACE) {
 			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL | OPEN_FCLOEXEC, 0644);
@@ -301,7 +301,7 @@ err:
 
 
 
-/* Figure out how we want to implement the symlink check in `lcopyfile()' */
+/* Figure out how we want to implement the symlink check in `lcopyfile()` */
 #undef posix_lcopyfile_USE_symlink_after_open
 #undef posix_lcopyfile_USE_symlink_before_open
 #if (defined(DeeSystem_FILE_USE_nt_HANDLE) && \
@@ -313,8 +313,8 @@ err:
 
 #if (defined(posix_lcopyfile_USE_symlink_before_open) || \
      defined(posix_lcopyfile_USE_symlink_after_open))
-/* Same as `posix__symlink_f_impl()', but unless `RENAME_NOREPLACE' is given,
- * delete an existing file at `path' (though this doesn't delete an existing
+/* Same as `posix__symlink_f_impl()`, but unless `RENAME_NOREPLACE` is given,
+ * delete an existing file at `path` (though this doesn't delete an existing
  * directory) */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 posix__symlink_with_optional_replace(DeeObject *text, DeeObject *path,
@@ -388,7 +388,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 
 	/* Open arguments as deemon file objects. */
 	if (DeeString_Check(oldpath)) {
-		/* Check if `oldpath' refers to a symbolic link. */
+		/* Check if `oldpath` refers to a symbolic link. */
 #ifdef posix_lcopyfile_USE_symlink_before_open
 		if (DeeString_Check(newpath)) {
 			DREF DeeObject *symlink_text;
@@ -450,7 +450,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL posix_lcopyfile_f
 	}
 #endif /* posix_lcopyfile_USE_symlink_after_open */
 
-	/* Load `newpath' as a deemon file object. */
+	/* Load `newpath` as a deemon file object. */
 	if (DeeString_Check(newpath)) {
 		if (flags & RENAME_NOREPLACE) {
 			dst_file = DeeFile_Open(newpath, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FTRUNC | OPEN_FEXCL | OPEN_FCLOEXEC, 0644);
@@ -544,8 +544,8 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 7, 8)) DREF DeeObject *DCALL posix_copyf
 		err_bad_atflags(atflags);
 		goto err;
 	}
-	/* TODO: Support for `openat()' to open files without needing to expand paths first! */
-	/* TODO: Support for `readlinkat()' to check for symlink copy without needing to expand paths first! */
+	/* TODO: Support for `openat()` to open files without needing to expand paths first! */
+	/* TODO: Support for `readlinkat()` to check for symlink copy without needing to expand paths first! */
 
 	abs_newpath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 	if unlikely(!abs_newpath)

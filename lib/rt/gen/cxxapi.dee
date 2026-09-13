@@ -289,8 +289,8 @@ function encodeTemplateParameters(
 	if (templateParameters) {
 		/* TODO: Deemon doc text needs a way to expression generic types, so we're
 		 *       somehow able to encode RTTI information such that the runtime will
-		 *       know that (e.g.) `Sequence<T>.frozen' returns `Sequence<T>'
-		 * This also goes for deemon code, where `{string...}' is `Sequence<T>'.
+		 *       know that (e.g.) `Sequence<T>.frozen` returns `Sequence<T>`
+		 * This also goes for deemon code, where `{string...}` is `Sequence<T>`.
 		 * Also, get rid of the "Cell with int" syntax. - Instead, the syntax
 		 * used should be "Cell<int>" (which simply feels much more natural).
 		 *
@@ -431,13 +431,13 @@ final class CxxType {
 
 			case "function": {
 				if (!encounteredNames.insert(name))
-					continue; /* FIXME: Work-around because `Doc(Type)' enumerates attributes twice. */
+					continue; /* FIXME: Work-around because `Doc(Type)` enumerates attributes twice. */
 				/* Every deemon type should have a list of C types:
 				 *  - int: {ssize_t, size_t}
 				 *  - float: {double}
 				 *  - string: {char const *, wchar_t const *, char16_t const *, char32_t const *}
 				 *  - ...
-				 * Additionally, any deemon type can also be encoded as `DEE_ENABLE_IF_OBJECT_PTR_T()'
+				 * Additionally, any deemon type can also be encoded as `DEE_ENABLE_IF_OBJECT_PTR_T()`
 				 * We must generate overloads for all possible permutations of argument types, and
 				 * always chose the correct return type. */
 
@@ -546,7 +546,7 @@ final class CxxType {
 
 			case "property": {
 				if (!encounteredNames.insert(name))
-					continue; /* FIXME: Work-around because `Doc(Type)' enumerates attributes twice. */
+					continue; /* FIXME: Work-around because `Doc(Type)` enumerates attributes twice. */
 				local cxxReturnType: string = typeExprsToCxxType(c.decls.each.ret);
 				cxxReturnType = encodeTemplateParameters(name, cxxReturnType, templateParameters);
 				local propertyWrapperClassName = f"_Wrap_{cxxName}";

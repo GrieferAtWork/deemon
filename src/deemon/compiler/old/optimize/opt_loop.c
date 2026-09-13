@@ -36,7 +36,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
                           struct ast *__restrict self, bool result_used) {
 	(void)result_used;
 	if (optimizer_unwind_limit != 0) {
-		/* TODO: Loop unwinding when `self->a_loop.l_iter'
+		/* TODO: Loop unwinding when `self->a_loop.l_iter`
 		 *       evaluates to a constant expression.
 		 * >> for (local x: [:3])
 		 * >>      print x;
@@ -250,7 +250,7 @@ err_entry_assumptions:
        * TODO: This can only be done when no loop control statements were used. */
 				/* Unused loop:
 				 * >> do { ... } while (0); */
-				/* Convert to `{ <loop>; <next>; <cond>; none; }' */
+				/* Convert to `{ <loop>; <next>; <cond>; none; }` */
 				DREF struct ast **elemv, *none_ast, **iter;
 				elemv = (DREF struct ast **)Dee_Mallocc(4, sizeof(DREF struct ast *));
 				if unlikely(!elemv)

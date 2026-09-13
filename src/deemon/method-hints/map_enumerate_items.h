@@ -22,8 +22,8 @@
 /* deemon.Mapping.__map_enumerate_items__()                             */
 /************************************************************************/
 
-/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects.
- * Together with `__map_enumerate__', this API is used to implement `Mapping.enumerate()' */
+/* Operators for the purpose of constructing `DefaultEnumeration_With*` objects.
+ * Together with `__map_enumerate__`, this API is used to implement `Mapping.enumerate()` */
 
 [[docstring("->?S?T2?O?O\n(start,end)->?S?T2?O?O\n")]]
 __map_enumerate_items__(start?=?,end?)->?S?T2?O?O {{

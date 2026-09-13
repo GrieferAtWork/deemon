@@ -526,7 +526,7 @@ err:
 struct bytes_findany_data {
 	byte_t *bfad_base;   /* [1..1][const] Search range start. */
 	size_t  bfad_size;   /* [const] Search range size (in bytes). */
-	size_t  bfad_result; /* [<= bfad_size] Offset from `bfad_base' of best match. */
+	size_t  bfad_result; /* [<= bfad_size] Offset from `bfad_base` of best match. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -625,8 +625,8 @@ err:
 struct bytes_casefindany_data {
 	byte_t *bcfad_base;   /* [1..1] Search range start. */
 	size_t  bcfad_size;   /* Search range size (in bytes). */
-	size_t  bcfad_result; /* [(. + bcfad_reslen) <= bcfad_size] Offset from `bcfad_base' of best match. */
-	size_t  bcfad_reslen; /* # of matched bytes at `bcfad_result'. */
+	size_t  bcfad_result; /* [(. + bcfad_reslen) <= bcfad_size] Offset from `bcfad_base` of best match. */
+	size_t  bcfad_reslen; /* # of matched bytes at `bcfad_result`. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -1263,7 +1263,7 @@ bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[end]]]*/
 	if (DeeBytes_IsWritable(self))
 		return_reference_(self);
-	/* Return a copy of `self' */
+	/* Return a copy of `self` */
 	result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
 	                                DeeBytes_SIZE(self));
 	return result;
@@ -2368,7 +2368,7 @@ err:
 }
 
 
-/* The string decode() and encode() member functions also function for `Bytes' objects.
+/* The string decode() and encode() member functions also function for `Bytes` objects.
  * As a matter of fact: they'd work for any kind of object, however built-in
  *                      codecs only function for bytes and string objects! */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2436,7 +2436,7 @@ struct bytes_join_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 bytes_join_cb(void *arg, DeeObject *elem) {
 	struct bytes_join_data *data = (struct bytes_join_data *)arg;
-	/* Print `self' prior to every object, starting with the 2nd one. */
+	/* Print `self` prior to every object, starting with the 2nd one. */
 	if (!data->bjd_first) {
 		if unlikely(Dee_bytes_printer_append(&data->bjd_out,
 		                                 DeeBytes_DATA(data->bjd_sep),
@@ -3804,7 +3804,7 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		}
 		if (iter == flush_start) {
 			/* Either the string is empty or ends with a line-feed.
-			 * In either case, we must remove `filler' from its end,
+			 * In either case, we must remove `filler` from its end,
 			 * because we're not supposed to have the resulting
 			 * string include it as trailing memory. */
 			ASSERT(Dee_BYTES_PRINTER_SIZE(&printer) >= filler.n_size);
@@ -3869,7 +3869,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					                             (size_t)(iter - flush_start)) < 0)
 						goto err_printer;
 
-					/* Skip up to `args.max_' characters after a linefeed. */
+					/* Skip up to `args.max_` characters after a linefeed. */
 					for (i = 0; i < args.max_ && memchr(mask.n_data, *iter, mask.n_size); ++i)
 						++iter;
 					flush_start = iter;
@@ -3899,7 +3899,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err_printer;
 
-					/* Skip up to `args.max_' characters after a linefeed. */
+					/* Skip up to `args.max_` characters after a linefeed. */
 					for (i = 0; i < args.max_ && DeeBytes_ENC_IsSpace(*iter); ++i)
 						++iter;
 					flush_start = iter;
@@ -6917,7 +6917,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "${"
 	                /**/ "local data = \"10 , 20,30 40, 50\".bytes();\n"
 	                /**/ "for (local x: data.resplit(r\"[[:space:],]+\"))\n"
-	                /**/ "	print x; /* `10' `20' `30' `40' `50' */"
+	                /**/ "	print x; /* `10` `20` `30` `40` `50` */"
 	                "}\n"
 
 	                "If you wish to do the inverse and enumerate matches, rather than the "

@@ -50,10 +50,10 @@ struct parser_errors {
 	                                                    * something went wrong during parsing, we keep track of the active exception
 	                                                    * recursion recursion before compilation started.
 	                                                    * Later, we compare the old recursion to the new and analyze all errors that occurred in-between.
-	                                                    * Any object derived from `DeeError_CompilerError' is appended to `pe_errors'.
-	                                                    * If after doing this, `pe_except' doesn't match the then active exception
+	                                                    * Any object derived from `DeeError_CompilerError` is appended to `pe_errors`.
+	                                                    * If after doing this, `pe_except` doesn't match the then active exception
 	                                                    * recursion, all compiler errors are discarded before all errors except for
-	                                                    * the first (at index `pe_except') are discarded, while interrupts are re-scheduled.
+	                                                    * the first (at index `pe_except`) are discarded, while interrupts are re-scheduled.
 	                                                    * This way, we can keep the regular exception system functioning like normal. */
 };
 
@@ -62,20 +62,20 @@ INTDEF struct parser_errors current_parser_errors;
 INTDEF void DCALL parser_errors_fini(struct parser_errors *__restrict self);
 
 /* Invoke a user-defined compiler error handler and save the
- * given compiler error in `current_parser_errors' if necessary.
+ * given compiler error in `current_parser_errors` if necessary.
  * @return:  1: The error should cause the compiler to abort.
  *              It, as well as all other warnings/errors will be
- *              thrown the next time `parser_rethrow' is invoked.
+ *              thrown the next time `parser_rethrow` is invoked.
  * @return:  0: Compilation can continue normally.
- * @return: -1: An error occurred and was thrown (using DeeError_Throw(); e.g.: `NoMemory()'). */
+ * @return: -1: An error occurred and was thrown (using DeeError_Throw(); e.g.: `NoMemory()`). */
 INTDEF WUNUSED NONNULL((1)) int DCALL parser_throw(struct Dee_compiler_error_object *__restrict error);
 
 /* Check/pack/throw errors. What exactly is done
- * is documented in `parser_errors::pe_except'
+ * is documented in `parser_errors::pe_except`
  * @return: -1: Compilation has failed and the caller should discard
  *              whatever it is they thought to have retrieved as far
  *              as information goes.
- *              NOTE: Always returned when `must_fail' is true.
+ *              NOTE: Always returned when `must_fail` is true.
  * @return:  0: Compilation was successful. */
 INTDEF int DCALL parser_rethrow(bool must_fail);
 

@@ -218,9 +218,9 @@ continue_modifier:
 	if ((*p_mode & (LOOKUP_SYM_VARYING | LOOKUP_SYM_FINAL)) == LOOKUP_SYM_VARYING &&
 	    /* We do explicitly accept code like:
 	     * >> varying function foo() { ... }
-	     * to indicate that the symbol `foo' may be re-assigned at a later point
+	     * to indicate that the symbol `foo` may be re-assigned at a later point
 	     * in time! As such, don't emit a compiler warning if the next keyword is
-	     * either `function' or `class'! */
+	     * either `function` or `class`! */
 	    (tok != KWD_function && tok != KWD_class)) {
 		if (WARN(W_VARYING_WITHOUT_FINAL))
 			goto err;
@@ -237,12 +237,12 @@ err:
  * >> foo += 42;              // (foo += (42));
  * >> foo, bar = (10, 20)...; // (foo, bar = (10, 20)...);
  * >> foo, bar = 10;          // (foo, (bar = 10));
- * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * @param: mode:       Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
- * @param: flags:      Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
- * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
- *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+ * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE` is set
+ * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE` is set
+ * @param: mode:       Set of `AST_COMMA_*`     - What is allowed and when should we pack values.
+ * @param: flags:      Set of `AST_FMULTIPLE_*` - How should multiple values be packaged.
+ * @param: p_out_mode: When non-NULL, instead of parsing a `;` when required,
+ *                     set to `AST_COMMA_OUT_FNEEDSEMI` indicative of this. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	struct decl_ast decl;
@@ -278,26 +278,26 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	    ast_parse_lookup_mode(&lookup_mode))
 		goto err;
 
-	/* Allow `final' variable declarations.
+	/* Allow `final` variable declarations.
 	 * >> final global foo = 42;
-	 * A variable declared as `final' can only be assigned once during its life-time,
+	 * A variable declared as `final` can only be assigned once during its life-time,
 	 * with any attempt to assign another value after that point resulting in an Error
 	 * being thrown.
 	 * Semantically, this behavior would be identical to java, while finally adding a
 	 * way for user-code to make use of module-scope constants which the compiler is
 	 * allowed to inline at the use-site whenever used.
 	 * Problems:
-	 *  - User-defined classes already use `final' where it would appear if it was
+	 *  - User-defined classes already use `final` where it would appear if it was
 	 *    a variable/storage modifier, with it appearing in that location having a
 	 *    different meaning that specifying a write-once variable.
 	 *    Solution #1: All user-defined classes are stored in write-once variables (not a good idea)
 	 *    Solution #2: User-defined classes are not stored in write-once variables, and the
-	 *                `final' prefix is not applied to class itself (disallowing sub-classing)
-	 *              -> This way, the user could still write `final MyClass = class { ... };'
-	 *                 or `final MyClass = final class { ... };', thus solving the problem.
+	 *                `final` prefix is not applied to class itself (disallowing sub-classing)
+	 *              -> This way, the user could still write `final MyClass = class { ... };`
+	 *                 or `final MyClass = final class { ... };`, thus solving the problem.
 	 *  - Not everything that's final should also be constant.
-	 *    By default, any `final' global should be, however another variable modifier
-	 *   `varying' should be introduced which may be combined with `final' to declare
+	 *    By default, any `final` global should be, however another variable modifier
+	 *   `varying` should be introduced which may be combined with `final` to declare
 	 *    a write-once variable whose value may not be assumed to be constant at compile
 	 *    time, as it may not be consistent across multiple runs.
 	 *    As far as runtime support goes, that's already there:
@@ -350,8 +350,8 @@ next_expr:
 				}
 			}
 
-			/* Class symbols are implicitly `final' (though only regarding their decl
-			 * variable; not the actual class itself), unless `varying' was used. This
+			/* Class symbols are implicitly `final` (though only regarding their decl
+			 * variable; not the actual class itself), unless `varying` was used. This
 			 * is required for the optimizer to take type annotations into account when
 			 * trying to predict the types of expressions. */
 			if (!(symbol_mode & LOOKUP_SYM_VARYING))
@@ -390,7 +390,7 @@ next_expr:
 				}
 			}
 
-			/* Functions symbols are implicitly `final', unless `varying' was used.
+			/* Functions symbols are implicitly `final`, unless `varying` was used.
 			 * This is required for the optimizer to take type annotations into account
 			 * when trying to predict the types of expressions. */
 			if (!(symbol_mode & LOOKUP_SYM_VARYING))
@@ -469,13 +469,13 @@ err_function_anno:
 	} else {
 		if (mode & AST_COMMA_ALLOWKWDLIST) {
 			if (TPP_ISKEYWORD(tok)) {
-				/* If the next token is a `:', then we're currently at a keyword list label,
+				/* If the next token is a `:`, then we`re currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
 				char *next = peek_next_token(NULL);
 				if unlikely(!next)
 					goto err;
 				if (*next == ':') {
-					/* Make sure it isn't a `::' or `:=' token. */
+					/* Make sure it isn't a `::` or `:=` token. */
 					++next;
 					while (SKIP_WRAPLF(next, token.t_file->f_end))
 						;
@@ -483,7 +483,7 @@ err_function_anno:
 						goto done_expression_nocurrent;
 				}
 			}
-			if (tok == TOK_POW) /* foo(**bar) --> Invoke using `bar' for keyword arguments. */
+			if (tok == TOK_POW) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
 				goto done_expression_nocurrent;
 		}
 		if (!IS_SYMBOL_NAME(tok) &&
@@ -504,7 +504,7 @@ err_function_anno:
 			DREF struct ast *args, *merge;
 			struct ast_loc symbol_name_loc;
 			if (KWD_IS_D100_VARIABLE_MODIFIER(tok)) {
-				/* Deemon 100+ used to allow `int local x;' as alias for `local x = int()'.
+				/* Deemon 100+ used to allow `int local x;` as alias for `local x = int()`.
 				 * While this isn't support anymore, still try to emulate it... */
 				if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
 					goto err_current;
@@ -768,8 +768,8 @@ continue_at_comma:
 				if unlikely(temp < 0)
 					goto err;
 
-				/* Special case: `x = (10,)'
-				 * Same as `x = pack(10)', in that a single-element tuple is created. */
+				/* Special case: `x = (10,)`
+				 * Same as `x = pack(10)`, in that a single-element tuple is created. */
 
 				/* Flush any remaining entries from the comma-list. */
 				error = astlist_appendall(&expr_batch, &expr_comma);
@@ -786,7 +786,7 @@ continue_at_comma:
 				/* Free an remaining buffers. */
 				/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 
-				/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+				/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 				 *          in an undefined state, but don't hold any real data. */
 				goto done_expression_nomerge;
 			}
@@ -818,7 +818,7 @@ continue_at_comma:
 		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
 		if (store_source->a_type == AST_EXPAND) {
 			DREF struct ast *store_target;
-			/* Append the last expression (in the example above, that is `c') */
+			/* Append the last expression (in the example above, that is `c`) */
 			error = astlist_append(&expr_comma, current);
 			ast_decref(current);
 			if unlikely(error) {
@@ -851,7 +851,7 @@ err_store_source:
 		} else {
 			DREF struct ast *store_branch;
 
-			/* Second case: assign `store_source' to `current' after
+			/* Second case: assign `store_source` to `current` after
 			 *              flushing everything from the comma-list. */
 			error = astlist_appendall(&expr_batch, &expr_comma);
 			if unlikely(error) {
@@ -917,7 +917,7 @@ done_expression:
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		Dee_Free(expr_comma.ast_v);
 
-		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+		/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
 		ASSERT(!expr_batch.ast_v);
@@ -943,7 +943,7 @@ done_expression_nomerge:
 		if (need_semi)
 			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
-		/* Consume a `;' token as part of the expression. */
+		/* Consume a `;` token as part of the expression. */
 		if likely(tok == ';' || tok == '\n') {
 			do {
 				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
@@ -976,7 +976,7 @@ done_expression_nocurrent:
 		/* Free an remaining buffers. */
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		Dee_Free(expr_comma.ast_v);
-		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+		/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
 		ASSERT(!expr_batch.ast_v);

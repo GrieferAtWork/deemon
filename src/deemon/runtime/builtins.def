@@ -19,7 +19,7 @@
  */
 
 #ifndef BUILTIN
-#error "Must `#define BUILTIN(name, object, flags)' before including this file"
+#error "Must `#define BUILTIN(name, object, flags)` before including this file"
 #endif /* !BUILTIN */
 #ifndef BUILTIN_DOC
 #define BUILTIN_DOC(name, object, flags, doc) BUILTIN(name, object, flags)
@@ -65,7 +65,7 @@
 #include <deemon/weakref.h>
 #endif /* !BUILTIN_NO_INCLUDES */
 
-/* Very important symbols: `Signal', `Error' and `Traceback' */
+/* Very important symbols: `Signal`, `Error` and `Traceback` */
 BUILTIN(Signal, &DeeError_Signal, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 BUILTIN(Error, &DeeError_Error, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 BUILTIN(Traceback, &DeeTraceback_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
@@ -227,7 +227,7 @@ BUILTIN_DOC(equals, &DeeBuiltin_Equals, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONST
 
 /* Load a module, given its name.
  * >> __import__(base: Module, name: string): string;
- * NOTE: This is what `import' links against when used
+ * NOTE: This is what `import` links against when used
  *       as a stand-alone within an expression (after
  *       injecting the current module as a leading arg). */
 BUILTIN_DOC(__import__, &DeeBuiltin_Import, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
@@ -239,7 +239,7 @@ BUILTIN_DOC(__import__, &DeeBuiltin_Import, Dee_MODSYM_FREADONLY | Dee_MODSYM_FC
 
 /* Load a module, given its name.
  * >> import(module_name: string, base?: Module): string;
- * NOTE: This is what `import' links against when
+ * NOTE: This is what `import` links against when
  *       as a stand-alone within an expression. */
 BUILTIN_DOC(hash, &DeeBuiltin_Hash, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(objects!)->?Dint\n"
@@ -275,7 +275,7 @@ BUILTIN(__grosr, &rt_grosr, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
 BUILTIN(__gaosa, &rt_gaosa, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
 BUILTIN(__roloc, &rt_roloc, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
 
-/* Used to implement the `assert' keyword.
+/* Used to implement the `assert` keyword.
  * NOTE: This function is not marked as read-only,
  *       because user-code is allowed to override it! */
 BUILTIN(__assert, &rt_assert, Dee_MODSYM_FHIDDEN)

@@ -1414,11 +1414,11 @@ struct page_format const *DCALL get_page_format(size_t n) {
  *       area being moved don't require relocations).
  *
  * WARNING: The caller of these functions is responsible to ensure that
- *          `DeeSlab_EXISTS(n)' (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)')
+ *          `DeeSlab_EXISTS(n)` (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)`)
  *          This requirement is asserted internally, so you'll get an assert
  *          failure if you don't comply with this requirement!
  *
- * @return: * :   Pointer into `self->sp_data' to an n-byte payload area
+ * @return: * :   Pointer into `self->sp_data` to an n-byte payload area
  * @return: NULL: Insufficient memory -- given slab page "self" does not
  *                have space for another "n"-byte large slab. (you should
  *                probably allocate another page) */
@@ -1669,7 +1669,7 @@ again:
 
 	/* Other threads can DeeSlab_Free() chunks even while our caller has a write-lock
 	 * the the slab's "ss_lock". Because of this, "real_used" may be greater than the
-	 * originally read `orig_used', but when that is the case, a newly read 'orig_used'
+	 * originally read `orig_used`, but when that is the case, a newly read `orig_used`
 	 * must also be greater. */
 	ASSERTF(real_used >= orig_used,
 	        "Too many chunks marked as in-use (chunksize: %" PRFuSIZ ")\n"
@@ -1755,8 +1755,8 @@ INTERN void DCALL Dee_slab_leaks_release(void) {
 
 /* Enumerate all slab pages containing at least 1 allocated chunk.
  * Before calling this function, the caller must acquire locks by
- * use of `Dee_slab_leaks_tryacquire()'
- * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb' */
+ * use of `Dee_slab_leaks_tryacquire()`
+ * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb` */
 #ifdef HAVE_Dee_slab_leaks_foreach_page
 #if SLAB_DEBUG_EXTERNAL
 #ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
@@ -1845,7 +1845,7 @@ Dee_slab_leaks_foreach_page(Dee_slab_leaks_page_cb_t cb, void *arg) {
 #endif /* HAVE_Dee_slab_leaks_foreach_page */
 
 
-/* Called by `DeeHeap_CheckMemory()' */
+/* Called by `DeeHeap_CheckMemory()` */
 #ifdef HAVE_DeeSlab_CheckMemory
 INTERN void DCALL DeeSlab_CheckMemory(void) {
 #if SLAB_DEBUG_EXTERNAL
@@ -1866,7 +1866,7 @@ INTERN void DCALL DeeSlab_CheckMemory(void) {
 /* One-time, static test-code to demonstrate that a
  * 4-word metadata footer doesn't change anything */
 #if defined(__INTELLISENSE__) && 0
-#define EX_Dee_SIZEOF_SLAB_PAGE_META(ms)  (ms) /* `sizeof(struct Dee_slab_page::sp_meta)' */
+#define EX_Dee_SIZEOF_SLAB_PAGE_META(ms)  (ms) /* `sizeof(struct Dee_slab_page::sp_meta)` */
 #define EX_Dee_OFFSET_SLAB_PAGE_META(ms)  (Dee_SLAB_PAGESIZE - EX_Dee_SIZEOF_SLAB_PAGE_META(ms))
 #define EX__UPPER__MAX_CHUNK_COUNT(ms, n) (EX_Dee_OFFSET_SLAB_PAGE_META(ms) / n)
 #define EX__UPPER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__UPPER__MAX_CHUNK_COUNT(ms, n), BITSOF_slab_bitword_t)

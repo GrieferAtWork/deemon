@@ -33,16 +33,16 @@ DECL_BEGIN
 
 /* Special meanings for assembly text-bytes. */
 #define TEXTBYTE_LABELCLASS_NORMAL       0x00 /* No special meaning. */
-#define TEXTBYTE_LABELCLASS_EXCEPT_START 0x01 /* The starting address of an exception handler. - `tl_name' is the index of the exception handler. */
-#define TEXTBYTE_LABELCLASS_EXCEPT_END   0x02 /* The ending address of an exception handler. - `tl_name' is the index of the exception handler. */
-#define TEXTBYTE_LABELCLASS_EXCEPT_ENTRY 0x03 /* The entry point of an exception handler. - `tl_name' is the index of the exception handler. */
-#define TEXTBYTE_LABELCLASS_JMP          0x04 /* The target of a `jmp', `jf', `jt' or `foreach' instruction.
-                                               * `tl_name' is the address of the jump-like instruction. */
+#define TEXTBYTE_LABELCLASS_EXCEPT_START 0x01 /* The starting address of an exception handler. - `tl_name` is the index of the exception handler. */
+#define TEXTBYTE_LABELCLASS_EXCEPT_END   0x02 /* The ending address of an exception handler. - `tl_name` is the index of the exception handler. */
+#define TEXTBYTE_LABELCLASS_EXCEPT_ENTRY 0x03 /* The entry point of an exception handler. - `tl_name` is the index of the exception handler. */
+#define TEXTBYTE_LABELCLASS_JMP          0x04 /* The target of a `jmp`, `jf`, `jt` or `foreach` instruction.
+                                               * `tl_name` is the address of the jump-like instruction. */
 struct textlabel {
 	code_addr_t tl_addr;   /* The absolute address of this text label. */
-	uint8_t     tl_class;  /* The type of special text location (one of `TEXTBYTE_LABELCLASS_*'). */
+	uint8_t     tl_class;  /* The type of special text location (one of `TEXTBYTE_LABELCLASS_*`). */
 	uint8_t    _tl_pad[3]; /* ... */
-	uint32_t    tl_name;   /* The name of this label (dependent on `tl_class') */
+	uint32_t    tl_name;   /* The name of this label (dependent on `tl_class`) */
 };
 
 typedef struct {
@@ -52,8 +52,8 @@ typedef struct {
 
 
 /* Print the user-assembly-like mnemonic representation of a given instruction
- * NOTE: When the stack-depth is unknown, pass `(uint16_t)-1' for `stacksz'
- * @param: flags: Set of `PCODE_F*' (Only flags masked by `PCODE_FINSTRMASK' are recognized)
+ * NOTE: When the stack-depth is unknown, pass `(uint16_t)-1` for `stacksz`
+ * @param: flags: Set of `PCODE_F*` (Only flags masked by `PCODE_FINSTRMASK` are recognized)
  */
 INTDEF Dee_ssize_t DCALL
 libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
@@ -67,8 +67,8 @@ libdisasm_printlabel(Dee_formatprinter_t printer, void *arg,
                      code_addr_t target);
 
 
-/* Print assembly for `code', one instruction per line.
- * When non-NULL, prefix `line_prefix' infront of every
+/* Print assembly for `code`, one instruction per line.
+ * When non-NULL, prefix `line_prefix` infront of every
  * line, allowing the caller to specify an indentation. */
 INTDEF WUNUSED NONNULL((1, 3, 4)) Dee_ssize_t DCALL
 libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
@@ -82,7 +82,7 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 #define PCODE_FNOEXCEPT     0x0002 /* FLAG: Do not include exception handler labels & directives. */
 #define PCODE_FNOJUMPARROW  0x0004 /* FLAG: Do not draw arrows indicating the path of jumps. */
 #define PCODE_FNOCOFLAGS    0x0008 /* FLAG: Do not include code-flag directives in output. */
-#define PCODE_FINSTRMASK    0x00f0 /* MASK: Mask of flags recognized by `libdisasm_printinstr()'. */
+#define PCODE_FINSTRMASK    0x00f0 /* MASK: Mask of flags recognized by `libdisasm_printinstr()`. */
 #define PCODE_FNOBADCOMMENT 0x0010 /* FLAG: Do not include comments about invalid instructions/operands. */
 #define PCODE_FNOARGCOMMENT 0x0020 /* FLAG: Do not include comments about the typing of operands. */
 #define PCODE_FALTCOMMENT   0x0040 /* FLAG: Include comments about alternate operand representations. */
@@ -94,8 +94,8 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 #define PCODE_FNOBYTES      0x8000 /* FLAG: Do not include raw text bytes in output. */
 
 
-/* Return the S-name (e.g. `add') of an operator.
- * Returns `NULL' when the name cannot be determined. */
+/* Return the S-name (e.g. `add`) of an operator.
+ * Returns `NULL` when the name cannot be determined. */
 INTDEF WUNUSED char const *DCALL
 libdisasm_get_operator_sname(Dee_operator_t operator_id);
 

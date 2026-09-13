@@ -20,12 +20,12 @@
  */
 import * from errors;
 
-/* Global functions can be re-assigned if declared as `varying' */
+/* Global functions can be re-assigned if declared as `varying` */
 varying function foo() -> "v1";
 varying function foo() -> "v2";
 assert foo() == "v2";
 
-/* Without `varying', trying to re-assign a function symbol must throw a RuntimeError */
+/* Without `varying`, trying to re-assign a function symbol must throw a RuntimeError */
 local error = none;
 try {
 	function bar() -> "v1";

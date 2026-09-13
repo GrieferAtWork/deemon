@@ -218,7 +218,7 @@ for (local x: util::range(128)) {
 /* Lookup mode used by secondary AST operands */
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
 
-/* Parser flags (Set of `PARSE_F*') */
+/* Parser flags (Set of `PARSE_F*`) */
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
 
 /* Return 1 if the current token may be the begin of an expression.
@@ -273,7 +273,7 @@ INTERN WUNUSED int DCALL maybe_expression_begin(void) {
 		struct TPPFile *tok_file;
 		struct TPPKeyword *kwd;
 		char *tok_begin;
-		/* Check if this ! is eventually followed by `is' or `in'
+		/* Check if this ! is eventually followed by `is` or `in`
 		 * If this is the case, then this can't be the start of an
 		 * expression! */
 		tok_begin = peek_next_token(&tok_file);
@@ -312,7 +312,7 @@ err:
 	return -1;
 }
 
-/* Same as `maybe_expression_begin()', but for the next (peeked) token. */
+/* Same as `maybe_expression_begin()`, but for the next (peeked) token. */
 INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 	char *tok_begin, peek;
 	struct TPPFile *tok_file;
@@ -342,8 +342,8 @@ INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 			next = *tok_begin;
 			if (next == peek) {
 				if (peek == '<')
-					goto no; /* `<<' cannot appear at the start of expression */
-				goto yes; /* `++' and `--' can appear, though */
+					goto no; /* `<<` cannot appear at the start of expression */
+				goto yes; /* `++` and `--` can appear, though */
 			}
 			if (next == '=')
 				goto no; /* +=, -=, <= can only appear in the middle of expressions! */
@@ -375,7 +375,7 @@ INTERN WUNUSED int DCALL maybe_expression_begin_peek(void) {
 
 	case '!': {
 		struct TPPKeyword *kwd;
-		/* Check if this ! is eventually followed by `is' or `in'
+		/* Check if this ! is eventually followed by `is` or `in`
 		 * If this is the case, then this can't be the start of an
 		 * expression! */
 		for (;;) {
@@ -473,7 +473,7 @@ make_bound_expression(struct ast *__restrict base_expr,
 	} else if (WARNAST(base_expr, W_CANNOT_TEST_EXPRESSION_BINDING)) {
 		result = NULL;
 	} else {
-		/* Fallback-after-warning: Return `true' */
+		/* Fallback-after-warning: Return `true` */
 		result = ast_constexpr(Dee_True);
 	}
 	return ast_putddi(result, loc);
@@ -580,7 +580,7 @@ ast_sym___import___from_deemon(void) {
 	import_symbol = new_unnamed_symbol();
 	if unlikely(!import_symbol)
 		goto err;
-	/* Setup an external symbol pointing at `import from deemon' */
+	/* Setup an external symbol pointing at `import from deemon` */
 	import_symbol->s_type            = SYMBOL_TYPE_EXTERN;
 	import_symbol->s_extern.e_module = DeeModule_GetDeemon();
 	Dee_Incref(import_symbol->s_extern.e_module);
@@ -733,8 +733,8 @@ PRIVATE WUNUSED int DFCALL verify_consistent_grouping(void) {
 		lastsep = iter;
 	}
 
-	/* Decimals should use a thousands-interval of `3'.
-	 * For every other radix, the interval should be `4'. */
+	/* Decimals should use a thousands-interval of `3`.
+	 * For every other radix, the interval should be `4`. */
 	wanted_interval = *tok_start == '0' ? 4 : 3;
 	if (wanted_interval != interval) {
 		return WARN(W_INCORRECT_THOUSANDS_SEPERATORS,
@@ -972,11 +972,11 @@ do_unary_action_kwd:
 		 * Cell objects. I wasn't thinking and as a result of that, I have to maintain
 		 * it for backwards compatibility.
 		 * Anyways... The most I can do for now is have it emit a warning, telling that
-		 * you should be using `Cell from deemon' instead (which actually won't even
-		 * break backwards-compatibility with the old deemon, who's `Cell' object
+		 * you should be using `Cell from deemon` instead (which actually won't even
+		 * break backwards-compatibility with the old deemon, who's `Cell` object
 		 * offered you the same functionality)
 		 * NOTE: To ensure backwards-compatibility, you may place this
-		 *       in your code in order to simply always use `Cell(...)':
+		 *       in your code in order to simply always use `Cell(...)`:
 		 * >> #if __DEEMON__ >= 200
 		 * >> import Cell from deemon;
 		 * >> #else
@@ -1103,7 +1103,7 @@ do_create_class:
 			goto err;
 		if (TPP_ISKEYWORD(tok)) {
 			if (tok == KWD_final && !(class_flags & TP_FFINAL)) {
-				/* allow `class final' as an alias for `final class' */
+				/* allow `class final` as an alias for `final class` */
 				if unlikely(yield() < 0)
 					goto err;
 				class_flags |= TP_FFINAL;
@@ -1155,7 +1155,7 @@ do_create_class:
 				                         : AST_COMMA_FORCEMULTIPLE | AST_COMMA_STRICTCOMMA,
 				                         AST_FMULTIPLE_TUPLE,
 				                         NULL);
-#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE', this is unnecessary */
+#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE`, this is unnecessary */
 				if likely(result &&
 				          result->a_type == AST_EXPAND) {
 					/* Wrap into a single-item tuple multiple-branch:
@@ -1183,8 +1183,8 @@ do_create_class:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (skip(')', W_EXPECTED_RPAREN_AFTER_PACK))
 				goto err_r;
-#if 0 /* The `result->a_type != AST_MULTIPLE' would never \
-       * fly, because of the `AST_COMMA_FORCEMULTIPLE' */
+#if 0 /* The `result->a_type != AST_MULTIPLE` would never \
+       * fly, because of the `AST_COMMA_FORCEMULTIPLE` */
 			if (has_paren == 1 && result->a_type != AST_MULTIPLE &&
 			    !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS)) {
 				/* C-style cast expression (only for single-parenthesis expressions) */
@@ -1628,8 +1628,8 @@ err_begin_expr:
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		/* Optimize the ast-expression to propagate constant, thus
-		 * allowing the use of `__nth(2+3)' instead of forcing the
-		 * user to write `__nth(5)' or `__nth(__TPP_EVAL(2+3))' */
+		 * allowing the use of `__nth(2+3)` instead of forcing the
+		 * user to write `__nth(5)` or `__nth(__TPP_EVAL(2+3))` */
 		if (ast_optimize_all(result, true))
 			goto err_r;
 		if (result->a_type != AST_CONSTEXPR &&
@@ -1697,7 +1697,7 @@ do_warn_deprecated_modifier:
 			 * >>     print a, b;
 			 * >> }
 			 * >> function bar(...) {
-			 * >>     foo(...); // In the old deemon you'd have to write `foo((...)...);'
+			 * >>     foo(...); // In the old deemon you'd have to write `foo((...)...);`
 			 * >> }
 			 */
 			new_result = ast_sethere(ast_expand(result));
@@ -1721,7 +1721,7 @@ do_keyword:
 			if unlikely(yield() < 0)
 				goto err;
 			if (tok == KWD_from) {
-				/* `Error from deemon' - Short form of `import Error from deemon' */
+				/* `Error from deemon` - Short form of `import Error from deemon` */
 				loc_here(&loc);
 				if unlikely(yield() < 0)
 					goto err;
@@ -1938,7 +1938,7 @@ do_range:
 			other = ast_parse_unaryhead(LOOKUP_SYM_SECONDARY);
 			if unlikely(!other)
 				goto err_r;
-			/* Use the brace AST in a single-argument call to `result' */
+			/* Use the brace AST in a single-argument call to `result` */
 			DREF struct ast **elemv;
 			elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 			if unlikely(!elemv) {
@@ -2300,7 +2300,7 @@ yield_again:
 					 * >> local foo = "value";
 					 * >> local bar = f"foo = {foo!r}"; // << we mustn't parse the '!' here!
 					 *
-					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM' warning needs to go away
+					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM` warning needs to go away
 					 */
 					if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
 						goto err_r;
@@ -2308,7 +2308,7 @@ yield_again:
 				}
 			}
 			if (tok == KWD_bound && cmd == KWD_is) {
-				/* Special cast: `foo is bound' --> `bound(foo)' */
+				/* Special cast: `foo is bound` --> `bound(foo)` */
 				if unlikely(yield() < 0)
 					goto err_r;
 				merge = make_bound_expression(lhs, &loc);
@@ -2597,8 +2597,8 @@ ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 					goto err_tt;
 				/* Missing false-branch. (Reuse the condition branch!)
 				 * >> This is a new extension of deemon that completes semantics
-				 *    by allowing the reverse of what `foo() ?: bar()' already does
-				 *    by specifying the syntax `(foo() ? bar() :)' */
+				 *    by allowing the reverse of what `foo() ?: bar()` already does
+				 *    by specifying the syntax `(foo() ? bar() :)` */
 				ff = lhs;
 				ast_incref(lhs);
 			} else {
@@ -2608,7 +2608,7 @@ do_parse_ff_branch:
 					goto err_tt;
 			}
 		} else {
-			/* Missing false-branch will be evaluated to `none' */
+			/* Missing false-branch will be evaluated to `none` */
 			ff = NULL;
 		}
 		merge = ast_conditional(AST_FCOND_EVAL | expect, lhs, tt, ff);

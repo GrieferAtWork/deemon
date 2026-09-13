@@ -183,8 +183,8 @@ LOCAL_DeeFunction_OptimizeAndCall(DeeFunctionObject *self
 	}
 
 	/* Fallback: do a normal invocation (in this case,
-	 * `DeeCode_OptimizeCallThreshold' was set to (size_t)-1,
-	 * or `Dee_CODE_FNOOPTIMIZE' was set, so this won't loop) */
+	 * `DeeCode_OptimizeCallThreshold` was set to (size_t)-1,
+	 * or `Dee_CODE_FNOOPTIMIZE` was set, so this won't loop) */
 #if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
 	return DeeFunction_ThisCallTupleKw(self, this_arg, args, kw);
 #elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
@@ -378,10 +378,10 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 		size_t i;
 		size_t kw_argc; /* # of keyword arguments passed (DeeKwds_SIZE(kw)). */
 		size_t ex_argc; /* # of objects in the keyword-overlay vector (code->co_argc_max - frame.cf_argc) */
-		size_t kw_used; /* # of keyword arguments that have been loaded from `kw'.
+		size_t kw_used; /* # of keyword arguments that have been loaded from `kw`.
 		                 * NOTE: Once all provided arguments have been loaded, this is used
 		                 *       to check if _all_ keywords have actually been used, which
-		                 *       is a requirement when `Dee_CODE_FVARKWDS' isn't set. */
+		                 *       is a requirement when `Dee_CODE_FVARKWDS` isn't set. */
 	
 		/* Keep track of metrics. */
 #ifdef CONFIG_HAVE_CODE_METRICS
@@ -606,7 +606,7 @@ err_ex_frame:
 			}
 
 			/* Safe code execution allows for stack-space extension into heap memory.
-			 * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
+			 * >> Free that memory now that `DeeCode_ExecFrameSafe()` has finished. */
 			if (frame.cf_stacksz)
 				Dee_Free(frame.cf_stack);
 			frame.cf_sp = frame.cf_frame + code->co_localc;

@@ -159,7 +159,7 @@ PRIVATE char const str_usage[] =
 //"       deemon [options...] -i\n" /* TODO: Re-implement somehow */
 ;
 PRIVATE char const str_minhelp[] =
-"See `deemon --help' for more help\n"
+"See `deemon --help` for more help\n"
 ;
 PRIVATE char const str_version[] =
 "["
@@ -232,18 +232,18 @@ PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
 #define OPERATION_MODE_INTERACTIVE 5 /* Read, compile, and execute sourcecode interactively from the stdin. */
 #endif
 
-/* The effective operation mode (One of `OPERATION_MODE_*') */
+/* The effective operation mode (One of `OPERATION_MODE_*`) */
 PRIVATE uint8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
 
 
-/* Operational flags and state for `OPERATION_MODE_PRINTPP' operations mode. */
+/* Operational flags and state for `OPERATION_MODE_PRINTPP` operations mode. */
 #define EMITPP_FNORMAL         0x0000 /* Normal preprocessor flags. */
 #define EMITPP_MOUTLINE        0x000f /* Token outline mode mask. */
 #define EMITPP_FOUTLINE_NORMAL 0x0000 /* Normal (no) token outlining. */
 #define EMITPP_FOUTLINE_TOK    0x0001 /* Outline with [...] */
 #define EMITPP_FOUTLINE_ZERO   0x0002 /* Separate with `\0' */
 #define EMITPP_FNOLINE         0x0100 /* Do not emit #line directives. */
-#define EMITPP_FNOCXXLINE      0x0200 /* Emit #line directives using the STD-C notation of `#line ...', rather than `# ...' */
+#define EMITPP_FNOCXXLINE      0x0200 /* Emit #line directives using the STD-C notation of `#line ...`, rather than `# ...` */
 #define EMITPP_FATLINEFEED     0x1000 /* The preprocessor has last emit a linefeed. */
 #define EMITPP_FNODECODETOK    0x2000 /* Don't decode stuff like escape sequences and trigraphs before writing to out. */
 #define EMITPP_FMAGICTOKENS    0x4000 /* Enable ~magic~ tokens for small line-shifts to prevent a #line being emit. */
@@ -317,7 +317,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_O(char *arg) {
 			                                                     * in generated debug information, or assembly. */
 #ifdef OPTIMIZE_FASSUME
 			                                |
-			                                OPTIMIZE_FASSUME /* Similar to `OPTIMIZE_FNOUSESYMS', assumptions can lead
+			                                OPTIMIZE_FASSUME /* Similar to `OPTIMIZE_FNOUSESYMS`, assumptions can lead
 			                                                  * to symbols being turned into constants at unexpected
 			                                                  * times, which is why we only enable them here.
 			                                                  * Another reason is that they are quite expensive... */
@@ -345,7 +345,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_O(char *arg) {
 		}
 		/* Level #1: Enable general assembly optimizations (mainly affects automatic
 		 *           instruction width selection, used to minimize assembly size, as
-		 *           well as rudimentary deletion of `adjstack #SP + 0' instructions). */
+		 *           well as rudimentary deletion of `adjstack #SP + 0` instructions). */
 		if (level >= 1) {
 			script_options.co_assembler |= (ASM_FOPTIMIZE);
 		}
@@ -478,7 +478,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_f(char *arg) {
 		        : (emitpp_state &= ~EMITPP_FNOCXXLINE);
 	} else if (!TPPLexer_SetExtension(arg, !disable)) {
 		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Unknown extension `%#q'",
+		                       "Unknown extension `%#q`",
 		                       arg);
 	}
 	return 0;
@@ -507,7 +507,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_W(char *arg) {
 			goto err;
 		if (error == 2) {
 			return DeeError_Throwf(&DeeError_ValueError,
-			                       "Unknown warning `%#q'",
+			                       "Unknown warning `%#q`",
 			                       arg);
 		}
 	}
@@ -558,7 +558,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_A(char *arg) {
 		*val++ = '\0';
 	} else if (add) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "No assertion value given by `%#q'",
+		                "No assertion value given by `%#q`",
 		                arg);
 		goto err;
 	}
@@ -578,7 +578,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_message_format(char *arg) {
 		TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_MSVC_MESSAGEFORMAT);
 	} else {
 		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Unsupported message format `%s'",
+		                       "Unsupported message format `%s`",
 		                       arg);
 	}
 	return 0;
@@ -602,7 +602,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_name(char *arg) {
 struct compiler_flag {
 	char const name[15]; /* The name of this flag. */
 	uint8_t    inv;      /* Meaning of this flag is revered. */
-	uint16_t   addr;     /* Offset into a `struct Dee_compiler_options' where this flag is located at. */
+	uint16_t   addr;     /* Offset into a `struct Dee_compiler_options` where this flag is located at. */
 	uint16_t   flag;     /* The bit associated with this flag. */
 };
 
@@ -648,7 +648,7 @@ PRIVATE WUNUSED int DCALL cmd_C(char *arg) {
 		return 0;
 	}
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Unknown compiler flag `%#q'",
+	                       "Unknown compiler flag `%#q`",
 	                       arg);
 }
 
@@ -664,38 +664,38 @@ PRIVATE WUNUSED int DCALL cmd_debug_static_refs(char *UNUSED(arg)) {
 
 PRIVATE char const doc_cmdc[]    = "Only build (parse + compile) the given source file. Don't run it afterwards";
 PRIVATE char const doc_cmdo[]    = "<name>\tRedirect output to a given file (defaults to STDOUT)";
-PRIVATE char const doc_cmdO[]    = "level\tSet the optimization level as an integer `level' between 0 and 4 (default: 1).\nYou may also pass `s' to optimize for size";
-PRIVATE char const doc_cmdS[]    = "[=options]\tEmit deemon module assembly after compiling a user-script.\n`options' is a string of flags passed to `printcode from disassembler'";
-PRIVATE char const doc_cmdA[]    = "pred=answer\tDefine an assertion `pred' as `answer'\n"
-                                   "-pred[=answer]\tDelete `answer' or all assertions previously made about `pred'";
-PRIVATE char const doc_cmdf[]    = "[no-]<extension>\tEnable/Disable a given `extension' (s.a.: `--help extensions')";
-PRIVATE char const doc_cmdW[]    = "[no-]<warning>\tEnable/Disable a given `warning' (s.a.: `--help warnings')";
+PRIVATE char const doc_cmdO[]    = "level\tSet the optimization level as an integer `level` between 0 and 4 (default: 1).\nYou may also pass `s` to optimize for size";
+PRIVATE char const doc_cmdS[]    = "[=options]\tEmit deemon module assembly after compiling a user-script.\n`options` is a string of flags passed to `printcode from disassembler`";
+PRIVATE char const doc_cmdA[]    = "pred=answer\tDefine an assertion `pred` as `answer`\n"
+                                   "-pred[=answer]\tDelete `answer` or all assertions previously made about `pred`";
+PRIVATE char const doc_cmdf[]    = "[no-]<extension>\tEnable/Disable a given `extension` (s.a.: `--help extensions`)";
+PRIVATE char const doc_cmdW[]    = "[no-]<warning>\tEnable/Disable a given `warning` (s.a.: `--help warnings`)";
 PRIVATE char const doc_cmdname[] = "=<name>\tSet the name of the main module";
 #ifdef OPERATION_MODE_INTERACTIVE
 PRIVATE char const doc_cmdi[]    = " ...\tRead, compile, and execute sourcecode interactively from the stdin";
 #endif /* OPERATION_MODE_INTERACTIVE */
 PRIVATE char const doc_cmdE[]    = "Emit preprocessor output, rather than running a user-script";
 PRIVATE char const doc_cmdP[]    = "Disable emission of #line adjustment directives (Default: on)";
-PRIVATE char const doc_cmdD[]    = "sym[=val=1]\tDefines `sym' as `val'";
-PRIVATE char const doc_cmdU[]    = "sym\tUndefine a previously defined symbol `sym'";
-PRIVATE char const doc_cmdL[]    = "<path>\tAdd `path' to the system module search path (s.a.: `(Module from deemon).path')";
-PRIVATE char const doc_cmdI[]    = "<dir>\tAdd `dir' to the list of #include <...> paths";
+PRIVATE char const doc_cmdD[]    = "sym[=val=1]\tDefines `sym` as `val`";
+PRIVATE char const doc_cmdU[]    = "sym\tUndefine a previously defined symbol `sym`";
+PRIVATE char const doc_cmdL[]    = "<path>\tAdd `path` to the system module search path (s.a.: `(Module from deemon).path`)";
+PRIVATE char const doc_cmdI[]    = "<dir>\tAdd `dir` to the list of #include <...> paths";
 PRIVATE char const doc_cmdtok[]  = "Outline all tokens using the [...] notation (Default: off)";
 PRIVATE char const doc_cmdpp[]   = "Enable preprocess-mode, which emits all tokens separated by `\\0'-bytes\n"
                                    "Enabling this option also disabled SPACE and LF tokens, though\n"
-                                   "they can be re-enabled using the `-fspc' and `-flf' switches";
+                                   "they can be re-enabled using the `-fspc` and `-flf` switches";
 #ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for error message (Default: msvc)";
 #elif defined(CONFIG_DEFAULT_MESSAGE_FORMAT_GCC)
 PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for error message (Default: gcc)";
 #endif /* ... */
-PRIVATE char const doc_cmd_ftabstop[]    = "=width\tSet the width of tab characters used by `__COLUMN__' and in warning/error messages (Default: " PP_STR(TPPLEXER_DEFAULT_TABSIZE) ")";
+PRIVATE char const doc_cmd_ftabstop[]    = "=width\tSet the width of tab characters used by `__COLUMN__` and in warning/error messages (Default: " PP_STR(TPPLEXER_DEFAULT_TABSIZE) ")";
 PRIVATE char const doc_cmd_undef[]       = "Disable all builtin macros";
 PRIVATE char const doc_cmd_trigraphs[]   = "Enable recognition of trigraph character sequences";
 PRIVATE char const doc_cmd_traditional[] = "Enable recognition of traditional tokens & macros (Default: off)";
 
 PRIVATE struct cmd_option const preprocessor_options[] = {
-	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__' and debug informations by `INFILE'\nUseful when running in interactive mode" },
+	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmdpp_name }, " <name>\tSet the name used for `__FILE__` and debug informations by `INFILE`\nUseful when running in interactive mode" },
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
 	{ CMD_FJOINABLE, "P", NULL, { (void *)&cmd_P }, doc_cmdP },
 	{ CMD_FARG | CMD_FARGIMM, "o", NULL, { (void *)&cmd_o }, doc_cmdo },
@@ -719,14 +719,14 @@ PRIVATE struct cmd_option const preprocessor_options[] = {
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "W", NULL, { (void *)&cmd_W }, doc_cmdW },
 /*TODO:
                 INDENT "-M                          Instead of emitting preprocessor output, emit a make-style list of dependencies.\n"
-                INDENT "-MM                         Similar to `-M', but don't include system headers.\n"
-                INDENT "-MD                         Like `-M', but don't disable preprocessing.\n"
-                INDENT "-MMD                        Like `-MM', but don't disable preprocessing.\n"
+                INDENT "-MM                         Similar to `-M`, but don't include system headers.\n"
+                INDENT "-MD                         Like `-M`, but don't disable preprocessing.\n"
+                INDENT "-MMD                        Like `-MM`, but don't disable preprocessing.\n"
                 INDENT "-MG                         Disable preprocessing, but include missing files as dependencies, assuming they will be generated.\n"
                 INDENT "-MP                         Emit dummy targets for every dependency.\n"
                 INDENT "-MF <file>                  Enable dependency tracking and emit its output to <file>, but also preprocess regularly.\n"
                 INDENT "-MT <target>                Specify the target object name used within the generated make dependency.\n"
-                INDENT "-MQ <target>                Same as `-MT', but escape characters special to make, such as `$'.\n"
+                INDENT "-MQ <target>                Same as `-MT`, but escape characters special to make, such as `$`.\n"
 */
 	CMD_OPTION_SENTINEL
 };
@@ -750,16 +750,16 @@ PRIVATE struct cmd_option const cmdline_options[] = {
 	{ CMD_FNORMAL, "", "version", { (void *)&cmd_version }, "Display version information" },
 	{ CMD_FARG | CMD_FARGOPT, "", "help", { (void *)&cmd_help },
 	  "\tDisplays this help\n"
-	  " <subject>\tDisplay help on a specific <subject> (one of `extensions', `warnings')\n"
-	  " <option>\tDisplay help on a given commandline <option> (e.g. `--help Wp,E')\n"
-	  " /<path>\tDisplay a formatted documentation string concerning a given <path> (e.g. `--help /deemon/string')" },
+	  " <subject>\tDisplay help on a specific <subject> (one of `extensions`, `warnings`)\n"
+	  " <option>\tDisplay help on a given commandline <option> (e.g. `--help Wp,E`)\n"
+	  " /<path>\tDisplay a formatted documentation string concerning a given <path> (e.g. `--help /deemon/string`)" },
 	{ CMD_FJOINABLE, "F", NULL, { (void *)&cmd_F }, "Enable file formatting" },
-	{ CMD_FARG | CMD_FARGIMM, "C", NULL, { (void *)&cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options')" },
+	{ CMD_FARG | CMD_FARGIMM, "C", NULL, { (void *)&cmd_C }, "[no-]<opt>\tEnable/disable a given compiler option <opt> (s.a. `--help compiler-options`)" },
 
 	/* Sub-option namespaces. */
-	{ CMD_FGROUP, "Wp", NULL, { (void *)preprocessor_options }, ", ...\tPreprocessor-specific options (s.a. `--help Wp')" },
-	{ CMD_FGROUP, "Wa", NULL, { (void *)assembler_options }, ", ...\tAssembler-specific options (s.a. `--help Wa')" },
-	{ CMD_FGROUP, "Wl", NULL, { (void *)linker_options }, ", ...\tLinker-specific options (s.a. `--help Wl')" },
+	{ CMD_FGROUP, "Wp", NULL, { (void *)preprocessor_options }, ", ...\tPreprocessor-specific options (s.a. `--help Wp`)" },
+	{ CMD_FGROUP, "Wa", NULL, { (void *)assembler_options }, ", ...\tAssembler-specific options (s.a. `--help Wa`)" },
+	{ CMD_FGROUP, "Wl", NULL, { (void *)linker_options }, ", ...\tLinker-specific options (s.a. `--help Wl`)" },
 
 	/* Preprocessor-specific options that are promoted into the root commandline namespace. */
 	{ CMD_FJOINABLE, "E", NULL, { (void *)&cmd_E }, doc_cmdE },
@@ -1045,7 +1045,7 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 	if unlikely(!fp)
 		goto err;
 	if (!arg) {
-		/* Display help on all options from `cmdline_options' */
+		/* Display help on all options from `cmdline_options` */
 		if (DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage)) == (size_t)-1)
 			goto err_fp;
 		if (display_help_group((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, ""))
@@ -1054,7 +1054,7 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 		if (display_help_query((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
 			goto err_fp;
 	} else {
-		/* `print import.doc.Doc(arg)' */
+		/* `print import.doc.Doc(arg)` */
 		Dee_ssize_t error;
 		DREF DeeObject *doc_node;
 		doc_node = DeeModule_CallExternStringf("doc", "Doc", "s", arg);
@@ -1075,7 +1075,7 @@ err:
 
 
 PRIVATE WUNUSED int DCALL compiler_setup(void *UNUSED(arg)) {
-	/* Define a macro `__MAIN__' in order to indicate to script/module
+	/* Define a macro `__MAIN__` in order to indicate to script/module
 	 * hybrid source files that they are being executed as a script.
 	 * Using macros for this case is OK because when executed as a
 	 * script, the source file isn't normally cached as a dec-file,
@@ -1084,9 +1084,9 @@ PRIVATE WUNUSED int DCALL compiler_setup(void *UNUSED(arg)) {
 	if (!TPPLexer_Define("__MAIN__", 8, "1", 1, TPPLEXER_DEFINE_FLAG_NONE))
 		goto err;
 
-	/* - Add additional #include paths passed through `-I' */
-	/* - Add pre-defined macros passed through `-D' */
-	/* - Add pre-defined assertions passed through `-A' */
+	/* - Add additional #include paths passed through `-I` */
+	/* - Add pre-defined macros passed through `-D` */
+	/* - Add pre-defined assertions passed through `-A` */
 	/* - Set misc. lexer context/flags based on the commandline. */
 	return cmd_runlate();
 err:
@@ -1132,12 +1132,12 @@ int main(int argc, char *argv[]) {
 
 #ifdef _MSC_VER
 	/* The following stuff is required to correct errno-behavior when doing
-	 * (possibly) invalid stuff like `close(42)' (where `42' isn't an open
-	 * file). This is required since we expose functions such as `close' to
-	 * user-code via `import posix', and without the following, user-code
+	 * (possibly) invalid stuff like `close(42)` (where `42` isn't an open
+	 * file). This is required since we expose functions such as `close` to
+	 * user-code via `import posix`, and without the following, user-code
 	 * doing something bad would result in an assertion-failure-like error
 	 * message box being displayed on-screen, rather than the normal, expected
-	 * `errno=EBADFD' -> `throw FileClosed()' exception dispatching. */
+	 * `errno=EBADFD` -> `throw FileClosed()` exception dispatching. */
 	_set_invalid_parameter_handler((_invalid_parameter_handler)&noop_invalid_parameter_handler);
 #ifdef CONFIG_HAVE_CRTDBG_H
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
@@ -1157,7 +1157,7 @@ int main(int argc, char *argv[]) {
 
 	/* Literally the only deemon component that actually needs to
 	 * be initialized (and isn't already initialized statically):
-	 *  - The TLS variable that is used by `DeeThread_Self()'
+	 *  - The TLS variable that is used by `DeeThread_Self()`
 	 * Too bad there's no cross-platform way to do this statically.
 	 * Else, this'd be so much simpler. */
 	Dee_Initialize();
@@ -1239,7 +1239,7 @@ int main(int argc, char *argv[]) {
 			interactive_output = script_output_stream;
 			script_output_stream = NULL;
 
-			/* Default to using `stderr' as output for interactive modules. */
+			/* Default to using `stderr` as output for interactive modules. */
 			if (!interactive_output &&
 			    (interactive_output = DeeFile_GetStd(Dee_STDERR)) == NULL)
 				goto err;
@@ -1369,7 +1369,7 @@ int main(int argc, char *argv[]) {
 				goto err;
 #if EXIT_SUCCESS != 0
 			if (DeeNone_Check(user_module_result)) {
-				/* Special case: A return value of `none' indicates a portable EXIT_SUCCESS */
+				/* Special case: A return value of `none` indicates a portable EXIT_SUCCESS */
 				result = EXIT_SUCCESS;
 				Dee_DecrefNokill(user_module_result);
 			} else
@@ -1457,10 +1457,10 @@ err_no_input:
 	goto err;
 err_discard_compiler_errors:
 	/* Discard (and don't print) compiler errors, since we've already printed
-	 * them via our custom `co_error_handler' callback that was hooked into
+	 * them via our custom `co_error_handler` callback that was hooked into
 	 * the compiler while the primary module and its dependencies were being
 	 * compiled. */
-	/* FIXME: This swallows explicitly thrown compiler errors (`DeeError_Throwf(&DeeError_CompilerError, ...)') */
+	/* FIXME: This swallows explicitly thrown compiler errors (`DeeError_Throwf(&DeeError_CompilerError, ...)`) */
 	while (DeeError_CurrentIs(&DeeError_CompilerError))
 		DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 err:
@@ -1566,7 +1566,7 @@ PRIVATE void DCALL emitpp_putline(void) {
 	f = TPPLexer_Textfile();
 	if (TPPLexer_Current->l_token.t_file == f) {
 		/* Try to use the start of the current token.
-		 * NOTE: Something like `f->f_oldpos' would be more
+		 * NOTE: Something like `f->f_oldpos` would be more
 		 *       appropriate to use, but we don't track that... */
 		line = TPPFile_LineAt(f, TPPLexer_Current->l_token.t_begin);
 	} else {
@@ -1869,8 +1869,8 @@ compare_escaped_rev(char const *lf_escaped_text_end,
 
 
 #define COMMENT_TYPE_OTHER       0 /* Everything else. */
-#define COMMENT_TYPE_BLOCK_START 1 /* `[[[deemon*' */
-#define COMMENT_TYPE_BLOCK_END   2 /* `[[[end]]]' */
+#define COMMENT_TYPE_BLOCK_START 1 /* `[[[deemon*` */
+#define COMMENT_TYPE_BLOCK_END   2 /* `[[[end]]]` */
 PRIVATE WUNUSED int DCALL get_comment_type(void) {
 	char const *comment_start;
 	char const *comment_end;
@@ -2096,7 +2096,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	 * >> if (has_leading_linefeed)
 	 * >>     output_text += "\n";
 	 * NOTE: The old deemon didn't used to do this rstrip(), however in
-	 *       all the time that I've already been using `deemon -F', trailing
+	 *       all the time that I've already been using `deemon -F`, trailing
 	 *       whitespace is something I often have to be real careful to prevent,
 	 *       or adjust in a way that won't cause your eyes to start bleeding...
 	 *    -> Having deemon itself auto-adjust trailing whitespace will solve
@@ -2119,7 +2119,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	override_start_pos -= (size_t)(file->f_end - override_start_ptr);
 
 	/* Skip leading line-feeds in the format-code.
-	 * This way, `DeeModule_OpenSourceMemoryString()' won't have to adjust for column-offsets. */
+	 * This way, `DeeModule_OpenSourceMemoryString()` won't have to adjust for column-offsets. */
 	while (format_code_start < format_code_end &&
 	       (*format_code_start == '\n' ||
 	        *format_code_start == '\r')) {
@@ -2132,14 +2132,14 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	}
 
 	/* Let's recap:
-	 *  - We're supposed to execute text from `format_code_start...format_code_end'
+	 *  - We're supposed to execute text from `format_code_start...format_code_end`
 	 *    as deemon user-code with File.stdout redirected such that all data written
 	 *    gets appended to an internal string-stream.
 	 *  - Once that is done (and only if doing so didn't fail with some kind of error),
-	 *    take all that output and replace all source-data from `override_start_pos'
-	 *    up to `override_start_pos + (override_end_ptr - override_start_ptr)' with
+	 *    take all that output and replace all source-data from `override_start_pos`
+	 *    up to `override_start_pos + (override_end_ptr - override_start_ptr)` with
 	 *    that new data, after copying back-up of the source file into $TMP (as
-	 *    determined using the `fs' module's `gettmp()' function)
+	 *    determined using the `fs` module's `gettmp()` function)
 	 *  - Once we're finished with that, update TPP file caches, such that it
 	 *    can safely continue parsing the source file for more format-blocks.
 	 *    NOTE: With the way that I ended up implementing it, this is a given... */
@@ -2166,7 +2166,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 				goto err;
 		}
 		/* Save the current token, include-stack, as well as some other TPP options.
-		 * We don't just use a new lexer (i.e. we set the `COMPILER_FKEEPLEXER' flag),
+		 * We don't just use a new lexer (i.e. we set the `COMPILER_FKEEPLEXER` flag),
 		 * because we want to make the same macros visible to the script, as were
 		 * already visible by the surrounding code. That way, format-scripts are able
 		 * to make use of macros defined by the surrounding code, allowing them to
@@ -2198,12 +2198,12 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		old_l_eof_file               = TPPLexer_Current->l_eof_file;
 		TPPLexer_Current->l_eof_file = NULL;
 
-		/* Reset the `#pragma once' lexer state. (required for backwards compatibility)
+		/* Reset the `#pragma once` lexer state. (required for backwards compatibility)
 		 * This is the same trick that deemon 101+ used to re-enable including of headers
 		 * within script code, when those headers had already been included once before. */
 		TPPLexer_Reset(TPPLexer_Current, TPPLEXER_RESET_FONCE);
 
-		/* During Execution of script code, define another macro `__FORMAT_SCRIPT__',
+		/* During Execution of script code, define another macro `__FORMAT_SCRIPT__`,
 		 * allowing the execution-context of a format script to be detected in user-code. */
 		if (!TPPLexer_Define("__FORMAT_SCRIPT__", 17, "1", 1, TPPLEXER_DEFINE_FLAG_NONE)) {
 			script_module = NULL;
@@ -2259,7 +2259,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 
 		/* Check if the new file-data is equal to what's already within the file.
 		 * If the two are identical, then we can skip actually modifying the file,
-		 * and thus not changing it's `st_mtime' timestamp. */
+		 * and thus not changing it's `st_mtime` timestamp. */
 		new_text_size = (size_t)(result_end - result_start);
 		old_text_size = (size_t)(override_end_ptr - override_start_ptr);
 		if ((new_text_size + (has_leading_linefeed ? 1 : 0)) == old_text_size &&
@@ -2348,7 +2348,7 @@ PRIVATE uint8_t const format_disabled_warnings[] = {
 	W_INVALID_INTEGER,
 	W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO,
 	W_INVALID_WARNING,
-	W_DIVIDE_BY_ZERO, /* As the result of `W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO' */
+	W_DIVIDE_BY_ZERO, /* As the result of `W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO` */
 	W_SLASHSTAR_INSIDE_OF_COMMENT,
 	W_LINE_COMMENT_CONTINUED,
 	W_CHARACTER_TOO_LONG,
@@ -2379,7 +2379,7 @@ dformat_source_files(char *filename,
 	                              TPPLEXER_FLAG_ASM_COMMENTS |
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF);
 
-	/* Define a macro `__FORMAT__' that can be used to
+	/* Define a macro `__FORMAT__` that can be used to
 	 * identify a format-related preprocessor context. */
 	if (!TPPLexer_Define("__FORMAT__", 10, "1", 1, TPPLEXER_DEFINE_FLAG_NONE))
 		goto err;
@@ -2605,7 +2605,7 @@ err:
 	 : false)
 #else /* CONFIG_HAVE_chdir */
 PRIVATE bool DCALL os_trychdir(char const *path) {
-	/* Try to off-load the job to `posix.chdir()' (thus allowing the
+	/* Try to off-load the job to `posix.chdir()` (thus allowing the
 	 * user to override it if they know how we'd be able to do this) */
 	DREF DeeObject *result;
 	result = DeeModule_CallExternStringf("posix", "chdir", "s", path);

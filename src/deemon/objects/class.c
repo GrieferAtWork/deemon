@@ -75,7 +75,7 @@
 DECL_BEGIN
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
+/* `OPERATOR_CONSTRUCTOR` (but the type doesn't have a base) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_ctor(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
@@ -95,7 +95,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_initkw(DeeObject *
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
 
-/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT`). */
 #define instance_auto_nobase_tctor instance_nobase_tctor
 #define instance_auto_nobase_ctor  instance_nobase_ctor
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
@@ -155,7 +155,7 @@ is_operator_class_inherited(DeeTypeObject *__restrict type_type,
 	return false;
 }
 
-/* Class callbacks for inside of `type' */
+/* Class callbacks for inside of `type` */
 INTERN NONNULL((1)) void DCALL
 class_fini(DeeTypeObject *__restrict self) {
 	uint16_t i;
@@ -206,7 +206,7 @@ class_fini(DeeTypeObject *__restrict self) {
 						continue; /* Class isn't allocated. */
 					/* Check if "class_table" has been inherited from a base class. */
 					if (!is_operator_class_inherited(type_type, self, class_offset, class_table)) {
-						/* Table isn't inherited, meaning it was allocated for use by `self' */
+						/* Table isn't inherited, meaning it was allocated for use by `self` */
 						Dee_Free(class_table);
 					}
 
@@ -461,11 +461,11 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 	}
 }
 
-/* Return the nearest operator function for `name',
- * implemented by `self', which must be a class type.
+/* Return the nearest operator function for `name`,
+ * implemented by `self`, which must be a class type.
  * If the operator doesn't exist, return NULL and throw
  * a NotImplemented error, or return NULL and don't throw
- * an error when `DeeClass_TryGetOperator()' was used. */
+ * an error when `DeeClass_TryGetOperator()` was used. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DREF DeeObject *result;
@@ -534,8 +534,8 @@ done:
 	return NULL;
 }
 
-/* Same as `DeeClass_GetOperator()', but don't simply return `NULL'
- * if the operator hasn't been implemented, and `ITER_DONE' when it
+/* Same as `DeeClass_GetOperator()`, but don't simply return `NULL`
+ * if the operator hasn't been implemented, and `ITER_DONE` when it
  * has been, but wasn't assigned anything. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
@@ -603,8 +603,8 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 	return NULL;
 }
 
-/* Same as `DeeClass_TryGetOperator()', but don't return an operator
- * that has been inherited from a base-class, but return `NULL' instead. */
+/* Same as `DeeClass_TryGetOperator()`, but don't return an operator
+ * that has been inherited from a base-class, but return `NULL` instead. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
@@ -677,7 +677,7 @@ err:
 
 
 
-/* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
+/* Same as `DeeClass_TryGetPrivateOperator()`, but don't return a reference */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
 DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
@@ -795,7 +795,7 @@ instance_builtin_serialize(DeeObject *__restrict self,
 		if (!DeeType_IsClass(first_non_class)) {
 			int nested;
 			ASSERTF(first_non_class->tp_init.tp_alloc.tp_serialize,
-			        "This should have been checked by `DeeClass_New()'");
+			        "This should have been checked by `DeeClass_New()`");
 			nested = (*first_non_class->tp_init.tp_alloc.tp_serialize)(self, writer, addr);
 			if unlikely(nested)
 				return nested;
@@ -1065,7 +1065,7 @@ instance_builtin_tcopy(DeeTypeObject *tp_self,
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 
 	/* Initialize the members of this instance as
-	 * references to the same also found in `other'. */
+	 * references to the same also found in `other`. */
 	Dee_instance_desc_lock_init(instance);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
@@ -1097,7 +1097,7 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 
 	/* Initialize the members of this instance as
-	 * references to the same also found in `other'. */
+	 * references to the same also found in `other`. */
 	Dee_instance_desc_lock_init(instance);
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
@@ -1145,12 +1145,12 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 	if unlikely(!old_items)
 		goto err;
 
-	/* Load member values from `others' */
+	/* Load member values from `others` */
 	Dee_instance_desc_lock_read(other_instance);
 	Dee_XMovrefv(old_items, other_instance->id_vtab, size);
 	Dee_instance_desc_lock_endread(other_instance);
 
-	/* Exchange our own member values with those loaded from `other' */
+	/* Exchange our own member values with those loaded from `other` */
 #ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
@@ -1201,12 +1201,12 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 		goto err;
 
 #ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
-	/* Load member values from `others', while also unbinding all members. */
+	/* Load member values from `others`, while also unbinding all members. */
 	for (i = 0; i < size; ++i)
 		old_items[i] = atomic_xch(&other_instance->id_vtab[i], NULL);
 	Dee_instance_desc_lock_synchronize(other_instance);
 
-	/* Exchange our own member values with those loaded from `other' */
+	/* Exchange our own member values with those loaded from `other` */
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
 		temp = atomic_xch(&instance->id_vtab[i], old_items[i]);
@@ -1214,7 +1214,7 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 	}
 	Dee_instance_desc_lock_synchronize(instance);
 #else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
-	/* Load member values from `others', while also unbinding all members. */
+	/* Load member values from `others`, while also unbinding all members. */
 	Dee_instance_desc_lock_write(other_instance);
 	memcpyc(old_items, other_instance->id_vtab,
 	        size, sizeof(DREF DeeObject *));
@@ -1223,7 +1223,7 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 	       sizeof(DREF DeeObject *));
 	Dee_instance_desc_lock_endwrite(other_instance);
 
-	/* Exchange our own member values with those loaded from `other' */
+	/* Exchange our own member values with those loaded from `other` */
 	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < size; ++i) {
 		DREF DeeObject *temp;
@@ -1372,7 +1372,7 @@ err:
 }
 
 /* User-defined constructor invocation. */
-/* `OPERATOR_CONSTRUCTOR' + `Dee_CLASS_OPERATOR_SUPERARGS' */
+/* `OPERATOR_CONSTRUCTOR` + `Dee_CLASS_OPERATOR_SUPERARGS` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_super_tctor(DeeTypeObject *tp_self,
                      DeeObject *__restrict self) {
@@ -1852,7 +1852,7 @@ err_args_only:
 	goto err;
 }
 
-/* `Dee_CLASS_OPERATOR_SUPERARGS' */
+/* `Dee_CLASS_OPERATOR_SUPERARGS` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_super_tctor(DeeTypeObject *tp_self,
                              DeeObject *__restrict self) {
@@ -2197,7 +2197,7 @@ err:
 	return -1;
 }
 
-/* `OPERATOR_CONSTRUCTOR' */
+/* `OPERATOR_CONSTRUCTOR` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tctor(DeeTypeObject *tp_self,
                DeeObject *__restrict self) {
@@ -2341,7 +2341,7 @@ err:
 }
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
+/* `OPERATOR_CONSTRUCTOR` (but the type doesn't have a base) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tctor(DeeTypeObject *tp_self,
                       DeeObject *__restrict self) {
@@ -2452,7 +2452,7 @@ err:
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
-/* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
+/* `OPERATOR_CONSTRUCTOR`, with the `TP_FINHERITCTOR` flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
@@ -2709,7 +2709,7 @@ err:
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
-/* No predefined construction operators, but `TP_FINHERITCTOR' is set. */
+/* No predefined construction operators, but `TP_FINHERITCTOR` is set. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_inherited_tctor(DeeTypeObject *tp_self,
                                  DeeObject *__restrict self) {
@@ -3205,7 +3205,7 @@ instance_builtin_auto_printrepr(DeeObject *__restrict self,
 	return instance_builtin_auto_tprintrepr(Dee_TYPE(self), self, printer, arg);
 }
 
-/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT`). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                     size_t argc, DeeObject *const *argv) {
@@ -3408,7 +3408,7 @@ instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc,
 
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT`). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                            size_t argc, DeeObject *const *argv) {
@@ -3568,7 +3568,7 @@ instance_iterattr(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	/* Hook function for user-defined enumattr() callbacks!
 	 * User-code should be allowed to yield either:
 	 *  - deemon.Attribute   (gets forwarded as-is)
-	 *  - deemon.string      (gets wrapped as `Attribute(tp_self, <value>)') */
+	 *  - deemon.string      (gets wrapped as `Attribute(tp_self, <value>)`) */
 	(void)tp_self;
 	(void)self;
 	(void)iterbuf;
@@ -3702,8 +3702,8 @@ get_operator_class_table_size(DeeTypeObject *__restrict type_type, uint16_t oi_c
 	return result;
 }
 
-/* Bind the C-wrapper function(s) for `operator_name' in `class_type',
- * with `type_type' being responsible for providing said operator. */
+/* Bind the C-wrapper function(s) for `operator_name` in `class_type`,
+ * with `type_type` being responsible for providing said operator. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bind_class_operator(DeeTypeObject *__restrict type_type,
                     DeeTypeObject *__restrict class_type,
@@ -3717,7 +3717,7 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		if unlikely(!info->oi_invoke->opi_classhook) {
 			/* Special case: operator cannot be overwritten by user-code. */
 			DeeError_Throwf(&DeeError_TypeError,
-			                "Operator `%s' of type-type %k cannot be implemented",
+			                "Operator `%s` of type-type %k cannot be implemented",
 			                info->oi_uname, type_type);
 			goto err;
 		}
@@ -3740,8 +3740,8 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		*(void **)((byte_t *)class_table + info->oi_offset) = info->oi_invoke->opi_classhook;
 	} else {
 		/* Operator has nowhere to go natively
-		 * -> add a Dee_TYPE_OPERATOR_CUSTOM-entry for it in `class_type->tp_operators',
-		 *    using `instance_generic_operator_invoke_cb()'. */
+		 * -> add a Dee_TYPE_OPERATOR_CUSTOM-entry for it in `class_type->tp_operators`,
+		 *    using `instance_generic_operator_invoke_cb()`. */
 		struct type_operator *new_table;
 		size_t new_size;
 		size_t lo, hi;
@@ -3814,11 +3814,11 @@ class_bases_fini(struct class_bases *__restrict self) {
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_cannot_use_final_type_as_base(DeeTypeObject *__restrict base) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Cannot use final, or variable type `%k' as class base",
+	                       "Cannot use final, or variable type `%k` as class base",
 	                       base);
 }
 
-/* Return the first "relevant" base of `self' (or `self' itself if it is "relevant").
+/* Return the first "relevant" base of `self` (or `self` itself if it is "relevant").
  * A type is relevant if (at least one):
  * - It isn't a user-defined class type
  * - It has a non-inherited constructor
@@ -3841,7 +3841,7 @@ DeeType_GetFirstRelevantBase(DeeTypeObject *__restrict self) {
 	return self;
 }
 
-/* Load class bases from `bases'. */
+/* Load class bases from `bases`. */
 PRIVATE NONNULL((1, 2)) int DCALL
 class_bases_init(struct class_bases *__restrict self,
                  DeeObject *__restrict bases) {
@@ -3990,21 +3990,21 @@ err:
 }
 
 
-/* Create a new class type derived from `bases',
- * featuring traits from `descriptor'.
+/* Create a new class type derived from `bases`,
+ * featuring traits from `descriptor`.
  * @param: bases: The base(s) of the resulting class.
- *                You may pass `Dee_None' to have the resulting
+ *                You may pass `Dee_None` to have the resulting
  *                class not be derived from anything (be base-less).
  *                You may also pass a sequence of types, in which
  *                case this sequence (and its order) describe the
  *                class's top-level MRO (thus becoming its __bases__).
- * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
- * @param: declaring_module: When non-NULL, the module that gets stored in `tp_module'
+ * @param: descriptor: A `DeeClassDescriptor_Type`-object, detailing the class's prototype.
+ * @param: declaring_module: When non-NULL, the module that gets stored in `tp_module`
  *                           NOTE: Passing NULL here must be allowed for situations where
  *                                 code is executing without having a module-context (as
  *                                 is the case for code running in a JIT-context)
- * @throw: TypeError: The given `base' is neither `none', nor a type-object.
- * @throw: TypeError: The given `base' is a final or variable type. */
+ * @throw: TypeError: The given `base` is neither `none`, nor a type-object.
+ * @throw: TypeError: The given `base` is a final or variable type. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeTypeObject *DCALL
 DeeClass_New(DeeObject *bases, DeeObject *descriptor,
              struct Dee_module_object *declaring_module) {
@@ -4041,7 +4041,7 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 	if (!result_class_size) {
 err_custom_allocator:
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Cannot use `%k' with custom allocator as class base",
+		                "Cannot use `%k` with custom allocator as class base",
 		                cbases.cb_base);
 		goto err_cbases;
 	}
@@ -4107,7 +4107,7 @@ err_custom_allocator:
 	if (desc->cd_imemb_size == 0) {
 		/* ... but only if the underlying type is abstract */
 		if ((cbases.cb_base == NULL) ||
-#if 0 /* `DeeObject_Type' has TP_FABSTRACT set, so no extra check needed */
+#if 0 /* `DeeObject_Type` has TP_FABSTRACT set, so no extra check needed */
 		    (cbases.cb_base == &DeeObject_Type) ||
 #endif
 		    DeeType_IsAbstract(cbases.cb_base)) {

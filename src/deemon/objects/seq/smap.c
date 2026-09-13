@@ -464,8 +464,8 @@ smap_cache(SharedMap *self, DeeObject *key,
 		if (item->si_key)
 			continue;
 
-		/* Make sure that the given `key' isn't already cached.
-		 * NOTE: Because we can't be certain that `hash' is consistent
+		/* Make sure that the given `key` isn't already cached.
+		 * NOTE: Because we can't be certain that `hash` is consistent
 		 *       for the object (since a malicious caller may intentionally
 		 *       cause different hash-values to be used), we have to manually
 		 *       check the entire cache for other instances. */
@@ -890,13 +890,13 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 
 
 /* Create a new shared map that will inherit elements from
- * the given vector once `DeeSharedMap_Decref()' is called.
+ * the given vector once `DeeSharedMap_Decref()` is called.
  * NOTE: This function can implicitly inherit a reference to each item of the
  *       given vector, though does not actually inherit the vector itself:
- *       - DeeSharedMap_Decref:            The `vector' arg here is `DREF DeeSharedItem *const *'
- *       - DeeSharedMap_DecrefNoGiftItems: The `vector' arg here is `DeeSharedItem *const *'
- * NOTE: Do NOT free the given `vector' before calling `DeeSharedMap_Decref'
- *       on the returned object, as `vector' will be shared with it until
+ *       - DeeSharedMap_Decref:            The `vector` arg here is `DREF DeeSharedItem *const *`
+ *       - DeeSharedMap_DecrefNoGiftItems: The `vector` arg here is `DeeSharedItem *const *`
+ * NOTE: Do NOT free the given `vector` before calling `DeeSharedMap_Decref`
+ *       on the returned object, as `vector` will be shared with it until
  *       that point in time! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedMap_NewShared(size_t length, /*inherit(maybe)*/ DREF DeeSharedItem const *vector) {
@@ -917,13 +917,13 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `vector',
- * as passed to `DeeSharedMap_NewShared()', but still decref()
+/* Check if the reference counter of `self` is 1. When it is,
+ * simply destroy the shared vector without freeing `vector`,
+ * as passed to `DeeSharedMap_NewShared()`, but still decref()
  * all contained object.
- * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sskv_vector' with
- * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * Otherwise, try to allocate a new vector with a length of `sv_length`.
+ * If doing so fails, don't raise an error but replace `sskv_vector` with
+ * `NULL` and `sv_length` with `0` before decref()-ing all elements
  * that that pair of members used to refer to.
  * If allocation does succeed, memcpy() all objects contained in
  * the original vector into the dynamically allocated one, thus
@@ -931,7 +931,7 @@ done:
  * to the SharedMap object.
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
+ *    the `ASM_CALL_MAP` opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
@@ -984,7 +984,7 @@ err_cannot_inherit:
 	Dee_Decref_unlikely(me);
 }
 
-/* Same as `DeeSharedMap_Decref()', but should be used if the caller
+/* Same as `DeeSharedMap_Decref()`, but should be used if the caller
  * does *not* want to gift the vector references to all of its items. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedMap_DecrefNoGiftItems(DREF DeeObject *__restrict self) {

@@ -31,9 +31,9 @@ DECL_BEGIN
 typedef struct nt_reg_key {
 	OBJECT_HEAD
 	HKEY                    rk_key;  /* [0..1][lock(rk_lock)] A handle for the key being accessed.
-	                                  * When `NULL', the handle must lazily be allocated when it is first needed. */
-	DREF DeeStringObject   *rk_name; /* [1..1][const] Name of the key, possibly in relation to `rk_rel'. */
-	DREF struct nt_reg_key *rk_rel;  /* [0..1][const] Underlying base-key, describing where `rk_name' originates from. */
+	                                  * When `NULL`, the handle must lazily be allocated when it is first needed. */
+	DREF DeeStringObject   *rk_name; /* [1..1][const] Name of the key, possibly in relation to `rk_rel`. */
+	DREF struct nt_reg_key *rk_rel;  /* [0..1][const] Underlying base-key, describing where `rk_name` originates from. */
 } NTRegKeyObject;
 #endif
 

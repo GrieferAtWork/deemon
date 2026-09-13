@@ -44,16 +44,16 @@
 DECL_BEGIN
 
 struct Dee_hashset_item {
-	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)] Hash of `hsi_key' (undefined, but readable when "di_key == NULL") */
+	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)] Hash of `hsi_key` (undefined, but readable when "di_key == NULL") */
 	DREF DeeObject *hsi_key;  /* [0..1] Item key, or "NULL" if deleted and not cleaned up (yet) */
 };
 
-/* Static initializer for `struct Dee_hashset_item' */
+/* Static initializer for `struct Dee_hashset_item` */
 #define Dee_HASHSET_ITEM_INIT(hash, key) { hash, key }
 
 typedef struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	/*real*/Dee_hash_vidx_t           hs_valloc;  /* [lock(hs_lock)][<= hs_hmask] Allocated size of "hs_vtab" (should be ~2/3rd of `hs_hmask + 1') */
+	/*real*/Dee_hash_vidx_t           hs_valloc;  /* [lock(hs_lock)][<= hs_hmask] Allocated size of "hs_vtab" (should be ~2/3rd of `hs_hmask + 1`) */
 	/*real*/Dee_hash_vidx_t           hs_vsize;   /* [lock(hs_lock)][<= hs_valloc] 1+ the greatest index in "hs_vtab" that was ever initialized (and also the index of the next item in "hs_vtab" to-be populated). */
 	size_t                            hs_vused;   /* [lock(hs_lock)][<= hs_vsize] # of non-NULL keys in "hs_vtab". */
 	struct Dee_hashset_item          *hs_vtab;    /* [lock(hs_lock)][0..hs_vsize][ownehs_if(!= INTERNAL(DeeDict_EmptyTab))]
@@ -128,7 +128,7 @@ typedef struct Dee_hashset_object {
 	Dee_atomic_read_with_atomic_rwlock(&(self)->hs_vused, &(self)->hs_lock)
 
 
-/* The main `HashSet' container class. */
+/* The main `HashSet` container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_Check(ob)      DeeObject_InstanceOf(ob, &DeeHashSet_Type)
 #define DeeHashSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
@@ -143,7 +143,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromSe
 DFUNDEF WUNUSED NONNULL((1)) DREF /*HashSet*/ DeeObject *DCALL DeeHashSet_FromRoSet(/*RoSet*/ DeeObject *__restrict self);
 
 /* Create a new HashSet by inheriting a set of passed keys.
- * @param: items:    A vector containing `num_keys' objects.
+ * @param: items:    A vector containing `num_keys` objects.
  * @param: num_keys: The number of keys passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */
 DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL

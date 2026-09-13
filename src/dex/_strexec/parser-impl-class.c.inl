@@ -36,12 +36,12 @@
 DECL_BEGIN
 
 /* Parse a class declaration, and return the produced class type.
- * Parsing starts after the `class' (or `class final'), meaning
+ * Parsing starts after the `class` (or `class final`), meaning
  * that the current token is either:
- *   - `extends', `:' or `('     (followed by the class's base-type)
+ *   - `extends`, `:` or `(`     (followed by the class's base-type)
  *   - A keyword                 (the class name)
  *   - '{'                       (Start of the class body)
- * @param: tp_flags: Set of `0 | TP_FFINAL' */
+ * @param: tp_flags: Set of `0 | TP_FFINAL` */
 #ifdef JIT_EVAL
 INTERN WUNUSED DREF DeeTypeObject *DFCALL
 JITLexer_EvalClass(JITLexer *__restrict self, uint16_t tp_flags)
@@ -137,20 +137,20 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 	 *       for all of them in the class descriptor's class-object-table. */
 
 	/* TODO: Once the new class descriptor has been finalized, make use of
-	 *       `DeeClass_New()' in order to create the to-be returned type object. */
+	 *       `DeeClass_New()` in order to create the to-be returned type object. */
 
 	/* TODO: Create a new scope and:
-	 *    - Fill it with `JIT_OBJECT_ENTRY_TYPE_ATTR'-entries for every non-static
-	 *      class member, as well as `JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED'-entries for
+	 *    - Fill it with `JIT_OBJECT_ENTRY_TYPE_ATTR`-entries for every non-static
+	 *      class member, as well as `JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED`-entries for
 	 *      every static class member. (in the later case, use the to-be returned
 	 *      class type as the bound object)
-	 *    - Define a local variable `JIT_RTSYM_CLASS', and store the to-be returned
-	 *      class inside. This variable is needed when class members make use of `super',
+	 *    - Define a local variable `JIT_RTSYM_CLASS`, and store the to-be returned
+	 *      class inside. This variable is needed when class members make use of `super`,
 	 *      in which case it is expected to hold the surrounding class's base-type.
 	 */
 
-	/* TODO: If present, do custom processing for `Dee_CLASS_OPERATOR_SUPERARGS' */
-	/* TODO: If present, do custom processing for `OPERATOR_CONSTRUCTOR'
+	/* TODO: If present, do custom processing for `Dee_CLASS_OPERATOR_SUPERARGS` */
+	/* TODO: If present, do custom processing for `OPERATOR_CONSTRUCTOR`
 	 *       Note that in this case, it may be necessary to generate additional
 	 *       code in order to initialize class member prior to the normal construct
 	 *       being invoked. - This should be quite easy to do, as we can simply
@@ -161,7 +161,7 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 	 *       Which we must execute as:
 	 *       >> this() { foo = 42; bar = 17; baz = "hello"; ... } */
 
-	/* TODO: Use `JITFunction_New()' (with `JIT_FUNCTION_FTHISCALL' for non-static functions)
+	/* TODO: Use `JITFunction_New()` (with `JIT_FUNCTION_FTHISCALL` for non-static functions)
 	 *       to construct all of the member functions needed. At the same time (as they're
 	 *       being created), use these newly created functions to fill in the class-object-
 	 *       table of the to-be returned class type. */

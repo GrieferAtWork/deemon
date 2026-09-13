@@ -178,8 +178,8 @@ free_inner:
 
 
 #if 0
-/* If `self' refers to a constant object, return that object.
- * Otherwise, return `NULL' */
+/* If `self` refers to a constant object, return that object.
+ * Otherwise, return `NULL` */
 PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 decl_ast_getobj(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
@@ -194,7 +194,7 @@ decl_ast_getobj(struct decl_ast const *__restrict self) {
 }
 #endif
 
-/* Check if `self' refers to `none' or `type none' */
+/* Check if `self` refers to `none` or `type none` */
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isnone(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
@@ -222,7 +222,7 @@ check_symbol:
 }
 
 
-/* Check if `self' refers to `Object from deemon' */
+/* Check if `self` refers to `Object from deemon` */
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isobject(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
@@ -249,7 +249,7 @@ check_symbol:
 	return false;
 }
 
-/* Check if `self' is the given `tp' */
+/* Check if `self` is the given `tp` */
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_istype(struct decl_ast const *__restrict self,
                 DeeTypeObject *__restrict tp) {
@@ -314,7 +314,7 @@ decl_ast_isempty(struct decl_ast const *__restrict self) {
 		if unlikely(!scope)
 			goto nope;
 		if ((scope->bs_argc != 0) ||                   /* We've got argument names */
-		    !(scope->bs_cflags & BASESCOPE_FRETURN)) { /* We know that only `none' is ever returned */
+		    !(scope->bs_cflags & BASESCOPE_FRETURN)) { /* We know that only `none` is ever returned */
 			Dee_Decref_unlikely(&scope->bs_scope);
 			goto nope;
 		}
@@ -330,7 +330,7 @@ nope:
 	return false;
 }
 
-/* Print the given `name' as encoded documentation name:
+/* Print the given `name` as encoded documentation name:
  * >> if (!name.issymbol()) {
  * >>     for (local x: r'\?!{}|,()<>[]=')
  * >>          name = name.replace(x, r'\' + x);
@@ -371,7 +371,7 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 				++iter; /* CRLF */
 			continue;
 		}
-		/* Escape `->' as `-\>' */
+		/* Escape `->` as `-\>' */
 		if (ch == '-' && iter + 1 < end && iter[1] == '>') {
 			++iter;
 			if (!must_escape &&
@@ -410,7 +410,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 	if (!DeeType_Check(ob))
 		goto print_object;
 	deemon = DeeModule_GetDeemon();
-	/* Search the builtin `deemon' module for this export. */
+	/* Search the builtin `deemon` module for this export. */
 	for (i = 0; i < deemon->mo_globalc; ++i) {
 		struct Dee_module_symbol *sym;
 		if (deemon->mo_globalv[i] != ob)
@@ -437,7 +437,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 			ASSERT(sym != NULL);
 			if (Dee_UNICODE_PRINTER_PRINT(printer, "?D") < 0)
 				goto err;
-			/* NOTE: No need to use `decl_ast_escapename()' here. - We can assume that
+			/* NOTE: No need to use `decl_ast_escapename()` here. - We can assume that
 			 *       the builtin deemon module doesn't export anything that would require
 			 *       its name to be escaped (deemon only exposes symbols with pure names) */
 			if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ) {
@@ -530,7 +530,7 @@ switch_symbol_type:
 			}
 		}	break;
 
-#if 0 /* TODO: This can sometimes be implemented through `?#' */
+#if 0 /* TODO: This can sometimes be implemented through `?#` */
 		case SYMBOL_TYPE_CATTR:
 #endif
 
@@ -646,7 +646,7 @@ print_undefined_symbol_name:
 	default:
 		goto print_object;
 print_object:
-		/* Fallback: emit a reference to `object' */
+		/* Fallback: emit a reference to `object` */
 		if (Dee_UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 			goto err;
 		break;
@@ -699,7 +699,7 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
 	if (DeeHashSet_Check(self)) {
 		/* TODO */
 	}
-	/* Fallback: just print `none' */
+	/* Fallback: just print `none` */
 eval_none:
 	return Dee_unicode_printer_putascii(printer, 'n');
 err:
@@ -707,7 +707,7 @@ err:
 }
 #endif
 
-/* Print declaration information from `self', encoded as described above, into `printer' */
+/* Print declaration information from `self`, encoded as described above, into `printer` */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct Dee_unicode_printer *__restrict printer) {
@@ -759,7 +759,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 					goto err;
 			}
 			if (!decl_ast_isempty(&arg->s_decltype) &&
-			    /* Since `Object' is the default, we don't have to
+			    /* Since `Object` is the default, we don't have to
 			     * generate annotations when it's explicitly stated */
 			    !decl_ast_isobject(&arg->s_decltype) &&
 			    (i < scope->bs_argc_min || i >= scope->bs_argc_max ||
@@ -788,9 +788,9 @@ decl_ast_print(struct decl_ast const *__restrict self,
 	}
 	if (self->da_func.f_ret) {
 		struct decl_ast *ret = self->da_func.f_ret;
-		/* Check if the hinted type is `none'
+		/* Check if the hinted type is `none`
 		 * If it is, we can encode declaration information
-		 * through its shorted variant written as `()' */
+		 * through its shorted variant written as `()` */
 		if (!scope->bs_argc && decl_ast_isnone(ret))
 			goto encode_empty_paren;
 
@@ -798,17 +798,17 @@ decl_ast_print(struct decl_ast const *__restrict self,
 		if (Dee_UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err;
 
-		/* The return type can be omitted when it is `object from deemon' */
+		/* The return type can be omitted when it is `object from deemon` */
 		if (!decl_ast_isobject(ret)) {
 			if (decl_ast_print_type(ret, printer))
 				goto err;
 		}
 	} else if (scope->bs_cflags & BASESCOPE_FRETURN) {
-		/* Function can return anything --- encode as `(args...)->' */
+		/* Function can return anything --- encode as `(args...)->` */
 		if (Dee_UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err;
 	} else if (!scope->bs_argc) {
-		/* Function only returns `none' --- encode as `()' */
+		/* Function only returns `none` --- encode as `()` */
 encode_empty_paren:
 		if (Dee_UNICODE_PRINTER_PRINT(printer, "()") < 0)
 			goto err;
@@ -822,7 +822,7 @@ err_noscope:
 }
 
 
-/* Print the given `text' as encoded documentation text.
+/* Print the given `text` as encoded documentation text.
  *  - Escape any line-feed immediately following after another
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */
@@ -1105,9 +1105,9 @@ err_type_expr:
 			goto err_flags;
 
 		/* This also functions as regular parenthesis, just like in
-		 * normal expressions, where `()' is the empty tuple, `(foo)'
-		 * is regular parenthesis, `(foo,)' is a 1-element tuple, and
-		 * `(foo, bar)' and `(foo, bar,)' are 2-element tuples. */
+		 * normal expressions, where `()` is the empty tuple, `(foo)`
+		 * is regular parenthesis, `(foo,)` is a 1-element tuple, and
+		 * `(foo, bar)` and `(foo, bar,)` are 2-element tuples. */
 		if (tok == ')' && !has_pack) {
 			/* Simple parenthesis. */
 			if unlikely(yield() < 0)
@@ -1194,7 +1194,7 @@ err_seq:
 			goto err_flags;
 		}
 		if (tok == ':') {
-			/* Special case: `{x: y}' is an alias for `{(x, y)...}', as it best represents a mapping */
+			/* Special case: `{x: y}` is an alias for `{(x, y)...}`, as it best represents a mapping */
 			struct decl_ast *key_value;
 			key_value = (struct decl_ast *)Dee_Reallocc(decl_seq, 2, sizeof(struct decl_ast));
 			if unlikely(!key_value) {
@@ -1243,8 +1243,8 @@ err_elemv_0:
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		/* Optimize the ast-expression to propagate constant, thus
-		 * allowing the use of `__nth(2+3)' instead of forcing the
-		 * user to write `__nth(5)' or `__nth(__TPP_EVAL(2+3))' */
+		 * allowing the use of `__nth(2+3)` instead of forcing the
+		 * user to write `__nth(5)` or `__nth(__TPP_EVAL(2+3))` */
 		if (ast_optimize_all(nth_expr, true)) {
 err_nth:
 			ast_decref(nth_expr);
@@ -1296,7 +1296,7 @@ err_nth:
 			if unlikely(yield() < 0)
 				goto err;
 			if (tok == KWD_from) {
-				/* `Error from deemon' - Short form of `import Error from deemon' */
+				/* `Error from deemon` - Short form of `import Error from deemon` */
 				if unlikely(yield() < 0)
 					goto err;
 				sym = ast_parse_import_single_sym(name);

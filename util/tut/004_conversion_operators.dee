@@ -22,7 +22,7 @@
 /* Deemon includes a variety of operators for conversion.
  * One operator that has already been seen, but not actually mentioned
  * as such is the str-operator, which can manually be invoked by pre-fixing
- * an object-expression with `str', optionally followed by parenthesis. */
+ * an object-expression with `str`, optionally followed by parenthesis. */
 print str(12) + str(34); /* 1234 */
 
 /* Operators are provided on a per-type basis, meaning that their behavior
@@ -34,19 +34,19 @@ print !!12; /* Logical double-negation -- true */
 print ~12;  /* Bit-wise inversion      -- -13 */
 print -12;  /* Negation                -- -12 */
 
-/* Another important unary operator is `repr', which operates similarly
- * to `str', but is meant to return a representation of how an expression
+/* Another important unary operator is `repr`, which operates similarly
+ * to `str`, but is meant to return a representation of how an expression
  * would be written in usercode in order to produce that object. */
-print repr 12;               /* Still prints `12', because that's how you would write this object. */
+print repr 12;               /* Still prints `12`, because that's how you would write this object. */
 print repr("foo\n" + "bar"); /* Prints "foo\nbar". */
 
 
-/* One more unary keyword-like operator exists, which is `type' */
+/* One more unary keyword-like operator exists, which is `type` */
 print type 10;     /* int */
 print type "foo";  /* string */
 print type str 10; /* string */
 
-/* The `type' expression simply returns the type of the expression it is handed */
+/* The `type` expression simply returns the type of the expression it is handed */
 
 
 

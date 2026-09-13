@@ -180,7 +180,7 @@ check_with_iterkeys:
 #define DEFINED_map_enumerate_with_filter_cb
 struct map_enumerate_with_filter_data {
 	Dee_seq_enumerate_t mewfd_cb;           /* [1..1] Underlying callback. */
-	void               *mewfd_arg;          /* Cookie for `mewfd_cb' */
+	void               *mewfd_arg;          /* Cookie for `mewfd_cb` */
 	DeeObject          *mewfd_filter_start; /* [1..1] Filter start. */
 	DeeObject          *mewfd_filter_end;   /* [1..1] Filter end. */
 };

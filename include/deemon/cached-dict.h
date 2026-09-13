@@ -35,12 +35,12 @@ DECL_BEGIN
 struct Dee_cached_dict_item {
 	DREF DeeObject *cdi_key;   /* [0..1][lock(:cd_lock)] Dictionary item key. */
 	DREF DeeObject *cdi_value; /* [1..1][valid_if(cdi_key)][lock(:cd_lock)] Dictionary item value. */
-	Dee_hash_t      cdi_hash;  /* [valid_if(cdi_key)][lock(:cd_lock)] Hash of `cdi_key' */
+	Dee_hash_t      cdi_hash;  /* [valid_if(cdi_key)][lock(:cd_lock)] Hash of `cdi_key` */
 };
 
 typedef struct Dee_cached_dict_object {
 	Dee_OBJECT_HEAD
-	DREF DeeObject              *cd_map;  /* [1..1][const] Underlying mapping used to populate `cd_elem', as they are accessed. */
+	DREF DeeObject              *cd_map;  /* [1..1][const] Underlying mapping used to populate `cd_elem`, as they are accessed. */
 	size_t                       cd_mask; /* [lock(cd_lock)][> cd_size || cd_mask == 0] Allocated dictionary size. */
 	size_t                       cd_size; /* [lock(cd_lock)][< cd_mask || cd_mask == 0] Amount of non-NULL key-item pairs. */
 	struct Dee_cached_dict_item *cd_elem; /* [1..cd_size|ALLOC(cd_mask+1)][lock(cd_lock)]
@@ -50,7 +50,7 @@ typedef struct Dee_cached_dict_object {
 #endif /* !CONFIG_NO_THREADS */
 } DeeCachedDictObject;
 
-/* Locking helpers for `DeeDictObject' */
+/* Locking helpers for `DeeDictObject` */
 #define DeeCachedDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->cd_lock)
 #define DeeCachedDict_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->cd_lock)
 #define DeeCachedDict_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->cd_lock)
@@ -78,7 +78,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_NewInheritedOnS
 
 /* Hash iteration helpers. */
 #define DeeCachedDict_HashSt(self, hash)  ((hash) & (self)->cd_mask)
-#define DeeCachedDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define DeeCachedDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define DeeCachedDict_HashIt(self, i)     ((self)->cd_elem + ((i) & (self)->cd_mask))
 
 DECL_END

@@ -78,7 +78,7 @@ map_operator_iter = {
 #define DEFINED_default_foreach_pair_with_map_enumerate_cb
 struct default_foreach_pair_with_map_enumerate_data {
 	Dee_foreach_pair_t dfpwme_cb;  /* [1..1] Underlying callback */
-	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb' */
+	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -100,7 +100,7 @@ default_foreach_pair_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject 
 struct default_map_foreach_pair_unique_data {
 	struct Dee_simple_hashset dmfpud_encountered; /* Set of keys already encountered. */
 	Dee_foreach_pair_t        dmfpud_cb;          /* [1..1] user-defined callback */
-	void                     *dmfpud_arg;         /* [?..?] Cookie for `dmfpud_cb' */
+	void                     *dmfpud_arg;         /* [?..?] Cookie for `dmfpud_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL

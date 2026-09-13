@@ -24,10 +24,10 @@
 
 import * from fs;
 
-/* `environ from fs' is a mapping-like singleton that can be used used to
+/* `environ from fs` is a mapping-like singleton that can be used used to
  * access the environment variables set for the calling process.
- * A similar functionality is also provided through the `ipc' module,
- * using `(process from ipc).self().environ'.
+ * A similar functionality is also provided through the `ipc` module,
+ * using `(process from ipc).self().environ`.
  * However, while the two objects share the same meaning, it is
  * implementation-specific if they actually are the exact same object.
  * However, it is guarantied that they can be used interchangably. */

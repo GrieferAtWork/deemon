@@ -549,7 +549,7 @@ DeeType_RequireDestroy_uncached(DeeTypeObject *__restrict self) {
 
 
 /* Return a pointer to the optimized implementation of
- * object destruction called by `DeeObject_Destroy()' */
+ * object destruction called by `DeeObject_Destroy()` */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self) {
 	if likely(self->tp_init.tp_destroy)
@@ -559,7 +559,7 @@ DeeType_RequireDestroy(DeeTypeObject *__restrict self) {
 
 
 
-/* Destroy a given deemon object (called when its refcnt reaches `0') */
+/* Destroy a given deemon object (called when its refcnt reaches `0`) */
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
 PUBLIC NONNULL((1)) void
 (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
@@ -603,7 +603,7 @@ PUBLIC NONNULL((1)) void
 #if 0
 #ifndef CONFIG_NO_THREADS
 	/* Make sure that all threads now see this object as dead.
-	 * For why this is required, see `INCREF_IF_NONZERO()' */
+	 * For why this is required, see `INCREF_IF_NONZERO()` */
 	atomic_thread_fence(Dee_ATOMIC_ACQ_REL);
 #endif /* !CONFIG_NO_THREADS */
 #endif
@@ -941,7 +941,7 @@ Dee_DecrefDokill_traced(DeeObject *__restrict ob,
 	if (atomic_fetchdec(&ob->ob_refcnt) != 1)
 		DeeFatal_BadDecref(ob, file, line);
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-	/* Without `CONFIG_NO_BADREFCNT_CHECKS', DeeObject_Destroy doesn't
+	/* Without `CONFIG_NO_BADREFCNT_CHECKS`, DeeObject_Destroy doesn't
 	 * care about the final reference count, so no need for us to change it. */
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 	DeeObject_Destroy_d(ob, file, line);
@@ -1265,7 +1265,7 @@ PUBLIC WUNUSED NONNULL((1)) Dee_refcnt_t
 }
 
 
-/* incref() + return `self' (may be used in type operators,
+/* incref() + return `self` (may be used in type operators,
  * and receives special optimizations in some situations) */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
@@ -1286,8 +1286,8 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 
 
-/* Increment the reference counter of every object from `object_vector...+=object_count'
- * @return: * : Always re-returns the pointer to `object_vector' */
+/* Increment the reference counter of every object from `object_vector...+=object_count`
+ * @return: * : Always re-returns the pointer to `object_vector` */
 PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv)(DeeObject *const *__restrict object_vector,
                     size_t object_count) {
@@ -1299,8 +1299,8 @@ PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 	return (DREF DeeObject **)object_vector;
 }
 
-/* Decrement the reference counter of every object from `object_vector...+=object_count'
- * @return: * : Always re-returns the pointer to `object_vector' */
+/* Decrement the reference counter of every object from `object_vector...+=object_count`
+ * @return: * : Always re-returns the pointer to `object_vector` */
 PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv)(DREF DeeObject *const *__restrict object_vector,
                     size_t object_count) {
@@ -1313,9 +1313,9 @@ PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 	return (DREF DeeObject **)object_vector;
 }
 
-/* Copy object pointers from `src' to `dst' and increment
+/* Copy object pointers from `src` to `dst` and increment
  * the reference counter of every object that got copied.
- * @return: * : Always re-returns the pointer to `dst' */
+ * @return: * : Always re-returns the pointer to `dst` */
 PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *const *__restrict src,
@@ -1329,9 +1329,9 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 	return dst;
 }
 
-/* Fill object pointers in `dst' with `obj' and increment
- * the reference counter of `obj' accordingly.
- * @return: * : Always re-returns the pointer to `dst' */
+/* Fill object pointers in `dst` with `obj` and increment
+ * the reference counter of `obj` accordingly.
+ * @return: * : Always re-returns the pointer to `dst` */
 PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 (DCALL Dee_Setrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *obj, size_t object_count) {

@@ -223,8 +223,8 @@ PRIVATE struct type_gc tpconst cswi_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cswi_clear
 };
 
-/* @return: 1 : Failure (`index' is out-of-bounds, but the cache is now fully loaded)
- * @return: 0 : Success (`index' is now loaded within the cache)
+/* @return: 1 : Failure (`index` is out-of-bounds, but the cache is now fully loaded)
+ * @return: 0 : Success (`index` is now loaded within the cache)
  * @return: -1: Error * */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_ensure_loaded(CachedSeq_WithIter *__restrict self, size_t index) {
@@ -1126,9 +1126,9 @@ cswgi_loadsize(CachedSeq_WithGetItem *__restrict self) {
 	return DeeError_NOTIMPLEMENTED();
 }
 
-/* Returns the next (bound) index that is `>= min_index [&& <= end_index]'
- * NOTE: Initializes `result' on success (return == 0)
- * @param: end_index: when non-NULL, never return indices `>= end_index'.
+/* Returns the next (bound) index that is `>= min_index [&& <= end_index]`
+ * NOTE: Initializes `result` on success (return == 0)
+ * @param: end_index: when non-NULL, never return indices `>= end_index`.
  *                    Instead, temporarily act as if "self" ended at "end_index".
  * @return: 1 : No such index
  * @return: 0 : Success

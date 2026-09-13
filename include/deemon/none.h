@@ -50,9 +50,9 @@ DDATDEF DeeObject DeeNone_Singleton;
 #endif /* !GUARD_DEEMON_OBJECTS_NONE_C */
 
 /* WARNING: If these two macros are ever changed, make sure to allow
- *          `NULL' to be passed for `x', as code exists that assumes
- *          this being possible (btw: `NULL' should evaluate to `false') */
-#define DeeNone_Check(x)      (Dee_AsObject(x) == Dee_None) /* `none' is a singleton. */
+ *          `NULL` to be passed for `x`, as code exists that assumes
+ *          this being possible (btw: `NULL` should evaluate to `false`) */
+#define DeeNone_Check(x)      (Dee_AsObject(x) == Dee_None) /* `none` is a singleton. */
 #define DeeNone_CheckExact(x) (Dee_AsObject(x) == Dee_None)
 
 #ifdef __INTELLISENSE__

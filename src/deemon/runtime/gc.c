@@ -113,8 +113,8 @@ print_code:
  * This operator is necessary to implement GC support, but is generic
  * enough to also allow it to be exposed here.
  *
- * WARNING: **NEVER** do anything that might block inside of `proc' --
- *          implementations of this operator may invoke `proc' while
+ * WARNING: **NEVER** do anything that might block inside of `proc` --
+ *          implementations of this operator may invoke `proc` while
  *          certain internal locks are held.
  * WARNING: Implementors of this operator must not alter the reference
  *          counters of referenced objects in this operator, and must
@@ -155,33 +155,33 @@ struct gc_generation {
 	size_t                gg_count;      /* [lock(gc_lock)] # of objects within this generation
 	                                      * (only an exact number for generation #0; in other
 	                                      * generation, this represents an upper bound) */
-	size_t                gg_fixed_count;/* [lock(gc_lock)][valid_if(self != &gc_gen0)] Same as `gg_count', but used to speed up `gc_generation_fixcount()' */
+	size_t                gg_fixed_count;/* [lock(gc_lock)][valid_if(self != &gc_gen0)] Same as `gg_count`, but used to speed up `gc_generation_fixcount()` */
 	Dee_ssize_t           gg_collect_on; /* [lock(gc_lock)] Decremented on each object add -- when this becomes negative, collect objects of this generation */
-	Dee_ssize_t           gg_mindim;     /* [lock(gc_lock)] Lower bound for `gg_collect_on' */
+	Dee_ssize_t           gg_mindim;     /* [lock(gc_lock)] Lower bound for `gg_collect_on` */
 	struct gc_generation *gg_next;       /* [0..1][lock(gc_lock)] Next generation (or "NULL" if this is the last one) */
 };
 #define GC_GENERATION_INIT(mindim, next) \
 	{ NULL, 0, 0, mindim, mindim, next }
 
-/* Use these macros to ensure that a pointer to some `struct gc_generation'
- * remains valid, even after `gc_lock_release()' has been called. Calls to
- * these macros can also be made without `gc_lock' being held. */
+/* Use these macros to ensure that a pointer to some `struct gc_generation`
+ * remains valid, even after `gc_lock_release()` has been called. Calls to
+ * these macros can also be made without `gc_lock` being held. */
 #define gc_generation_incref(self) (void)0
 #define gc_generation_decref(self) (void)0
 
 
-/* [0..1][lock(ATOMIC)] Objects that are pending insertion into "gc_gen0" (linked via `gc_next') */
+/* [0..1][lock(ATOMIC)] Objects that are pending insertion into "gc_gen0" (linked via `gc_next`) */
 PRIVATE DeeObject *gc_insert = NULL;
 #define gc_insert__p_link(ob) (&DeeGC_Head(ob)->gc_next)
 
-/* [0..1][lock(ATOMIC)] Objects that are pending removal (linked via `ob_refcnt')
+/* [0..1][lock(ATOMIC)] Objects that are pending removal (linked via `ob_refcnt`)
  * (weakrefs of these objects have already been killed, and user-defined "tp_finalize" has
  * also already been invoked for these objects). Only used by special implementations of
- * `DeeObject_Destroy()', such that object destruction continues when this list is reaped.
+ * `DeeObject_Destroy()`, such that object destruction continues when this list is reaped.
  *
- * NOTE: All objects within this linked list have the `Dee_GC_FLAG_FINALIZED' flag set.
+ * NOTE: All objects within this linked list have the `Dee_GC_FLAG_FINALIZED` flag set.
  *       As such: when trying to incref objects found in the GC, anything that has a non-
- *       zero reference count and does not have the `Dee_GC_FLAG_FINALIZED' flag set can
+ *       zero reference count and does not have the `Dee_GC_FLAG_FINALIZED` flag set can
  *       be incref'd, without needing to reap/search the "gc_remove" list. */
 PRIVATE DeeObject *gc_remove = NULL;
 #define gc_remove__p_link(ob) ((DeeObject **)((byte_t *)(ob) + offsetof(DeeObject, ob_refcnt)))
@@ -227,7 +227,7 @@ PRIVATE void DCALL gc_lock_acquire(void) {
 /* Called to (try to) collect GC objects after "gg_collect_on" of some
  * GC generation was reached. This function is must be called without
  * the calling thread holding any (internal) locks, include locks
- * related to GC (such as `gc_lock')
+ * related to GC (such as `gc_lock`)
  *
  * @return: true:  Success
  * @return: false: Failure (collect failed; caller must set "gc_mustreap"
@@ -344,12 +344,12 @@ typedef struct {
 } GenericObject;
 #endif /* !GenericObject_DEFINED */
 
-/* Possible return values for `_gc_lock_reap_and_maybe_unlock()' */
+/* Possible return values for `_gc_lock_reap_and_maybe_unlock()` */
 #define REAP_STATUS_RETAINED             0 /* Lock wasn't released */
 #define REAP_STATUS_UNLOCKED             1 /* Lock was released */
 #define REAP_STATUS_UNLOCKED_RETRY_LATER 2 /* Lock was released; caller should set "gc_mustreap" but not retry (unless "gc_mustreap" was already "true") */
 
-/* @return: * : one of `REAP_STATUS_*' */
+/* @return: * : one of `REAP_STATUS_*` */
 PRIVATE ATTR_NOINLINE unsigned int DCALL
 _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
 	bool should_collect;
@@ -393,7 +393,7 @@ _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
 		pending_remove = next;
 	}
 
-	/* Collect garbage if there are generations with `gg_collect_on < 0' */
+	/* Collect garbage if there are generations with `gg_collect_on < 0` */
 	if (should_collect) {
 		if (flags & DeeGC_TRACK_F_NOCOLLECT)
 			return REAP_STATUS_UNLOCKED_RETRY_LATER;
@@ -601,7 +601,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 
 /* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
  * locks couldn't be acquired immediately, do the untrack asynchronously, followed
- * by everything else that would have normally been done in `DeeObject_Destroy()'
+ * by everything else that would have normally been done in `DeeObject_Destroy()`
  * @return: ob:   Untrack happened synchronously -- remainder of object destruction must be done by caller
  * @return: NULL: Untrack will happen asynchronously -- caller must not do any further object destruction */
 INTERN NONNULL((1)) DeeObject *DCALL
@@ -651,7 +651,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 	atomic_inc(&gc_remove_modifying);
 	COMPILER_BARRIER();
 
-	/* The `Dee_GC_FLAG_FINALIZED' flag must be set for "gc_remove" to be used. */
+	/* The `Dee_GC_FLAG_FINALIZED` flag must be set for "gc_remove" to be used. */
 	{
 		struct Dee_gc_head *head = DeeGC_Head(ob);
 		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_FINALIZED);
@@ -708,8 +708,8 @@ count_gc_objecs_in_simple_chain(DeeObject *first, DeeObject *last) {
 }
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct Dee_gc_head'
- * @param: flags: Set of `DeeGC_TRACK_F_*' */
+ * already been linked together using their `struct Dee_gc_head`
+ * @param: flags: Set of `DeeGC_TRACK_F_*` */
 PUBLIC NONNULL((1, 2)) void DCALL
 DeeGC_TrackAll(DeeObject *first, DeeObject *last, unsigned int flags) {
 	bool should_collect;
@@ -766,7 +766,7 @@ DeeGC_TrackAll(DeeObject *first, DeeObject *last, unsigned int flags) {
 }
 
 
-/* Call this function (once no more locks are held) after using `DeeGC_TRACK_F_NOCOLLECT' */
+/* Call this function (once no more locks are held) after using `DeeGC_TRACK_F_NOCOLLECT` */
 PUBLIC void DCALL DeeGC_CollectAsNecessary(void) {
 	gc_lock_reap(DeeGC_TRACK_F_NORMAL);
 }
@@ -906,22 +906,22 @@ PRIVATE void DCALL gc_collect_release(void) {
 
 /* Nothing could be collected; everything from "self" appears reachable.
  * Caller may move everything still within this generation into the next.
- * - Calculate a new value for `gg_collect_on' (set to the # of reachable objects)
- * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' was handled */
+ * - Calculate a new value for `gg_collect_on` (set to the # of reachable objects)
+ * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE` was handled */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING 0
 
 /* Success:
- * - `gc_collect_release()' was called
- * - Calculate a new value for `gg_collect_on' (set to the # of reachable objects;
+ * - `gc_collect_release()` was called
+ * - Calculate a new value for `gg_collect_on` (set to the # of reachable objects;
  *   when 'GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' is set == # of objects moved)
- * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' was handled
- * - `*p_num_collected' was populated */
+ * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE` was handled
+ * - `*p_num_collected` was populated */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__SUCCESS 1
 
-/* Had to `gc_collect_release()' for temporary (one-time) reasons; try again */
+/* Had to `gc_collect_release()` for temporary (one-time) reasons; try again */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__RETRY 2
 
-/* Possible flags for `gc_generation_collect_or_unlock()' */
+/* Possible flags for `gc_generation_collect_or_unlock()` */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL         0
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 1 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
 
@@ -1185,7 +1185,7 @@ sithrd_gc_generation_insert_temp_list(struct gc_generation *__restrict self,
 
 
 /* Heart-piece of GC collect
- * @return: * : One of `GC_GENERATION_COLLECT_OR_UNLOCK__*' */
+ * @return: * : One of `GC_GENERATION_COLLECT_OR_UNLOCK__*` */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) unsigned int DCALL
 gc_generation_collect_or_unlock(struct gc_generation *__restrict gen,
                                 size_t *__restrict p_num_collected,
@@ -1239,7 +1239,7 @@ gc_collect_threshold_generations_r(struct gc_generation *__restrict self) {
 /* Called to (try to) collect GC objects after "gg_collect_on" of some
  * GC generation was reached. This function is must be called without
  * the calling thread holding any (internal) locks, include locks
- * related to GC (such as `gc_lock')
+ * related to GC (such as `gc_lock`)
  *
  * @return: true:  Success
  * @return: false: Failure (collect failed; caller must set "gc_mustreap"
@@ -1367,7 +1367,7 @@ continue_with_iter:
 }
 
 
-/* Try to collect `max_objects' GC-objects (though more than that
+/* Try to collect `max_objects` GC-objects (though more than that
  * may be collected), returning the actual amount collected.
  *
  * This function really only has 2 valid use-cases:
@@ -1456,9 +1456,9 @@ err:
 }
 
 
-/* Return `true' if any GC objects with a non-zero reference
+/* Return `true` if any GC objects with a non-zero reference
  * counter is being tracked.
- * NOTE: In addition, this function does not return `true' when
+ * NOTE: In addition, this function does not return `true` when
  *       all that's left are dex objects (which are destroyed
  *       at a later point during deemon shutdown, than the point
  *       when this function is called to determine if the GC must
@@ -1538,8 +1538,8 @@ LOCAL void *gc_initob(void *ptr) {
 /* GC object alloc/free.
  * Don't you think these functions allocate some magical memory
  * that can somehow track what objects it references. - No!
- * All these do is allocate a block of memory of `n_bytes' that
- * includes some storage at negative offsets to hold a `struct Dee_gc_head',
+ * All these do is allocate a block of memory of `n_bytes` that
+ * includes some storage at negative offsets to hold a `struct Dee_gc_head`,
  * as is required for objects that should later be tracked by the GC. */
 PUBLIC ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
 	size_t whole_size;

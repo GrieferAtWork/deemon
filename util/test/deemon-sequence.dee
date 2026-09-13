@@ -89,7 +89,7 @@ function testSequenceType(typ: Type, cls: string) {
 				local dc = deepcopy(obj);
 				/* A deepcopy of a UniqueSet (correctly) returns a new set of
 				 * objects who's ids differ from those in the original set.
-				 * Because of this and the fact that `x in UniqueSet()' is
+				 * Because of this and the fact that `x in UniqueSet()` is
 				 * only true if the set contains the exact same object, comparing
 				 * with a UniqueSet object on the left-hand-side only succeeds if
 				 * the other set contains the _exact_ same objects!
@@ -124,7 +124,7 @@ function testSequenceType(typ: Type, cls: string) {
 				}
 				str(obj);
 				repr(obj);
-				/* Interactions between `operator bool' and `operator #' */
+				/* Interactions between `operator bool` and `operator #` */
 				assert (!!obj) == (#obj != 0), repr obj;
 				assert (!!(obj as Sequence)) == (#obj != 0), repr obj;
 				assert (!!obj) == (#(obj as Sequence) != 0), repr obj;

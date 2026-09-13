@@ -50,10 +50,10 @@ typedef DeeInstanceMethodObject InstanceMethod;
 /* Create a new instance method.
  *
  * This is a simple wrapper object that simply invokes a thiscall on
- * `im_func', using `this_arg' as the this-argument when called normally.
+ * `im_func`, using `this_arg` as the this-argument when called normally.
  *
  * In user-code, it is used to implement the temporary/split type when an
- * instance attribute with the `Dee_CLASS_ATTRIBUTE_FMETHOD' flag is loaded
+ * instance attribute with the `Dee_CLASS_ATTRIBUTE_FMETHOD` flag is loaded
  * as an object, rather than being called directly. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func,

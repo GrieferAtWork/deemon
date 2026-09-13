@@ -33,7 +33,7 @@ typedef struct { /* GC Object */
 	PROXY_OBJECT_HEAD2(sfi_baseiter, /* [1..1][const] Iterator for the base sequence */
 	                   sfi_curriter) /* [1..1][lock(sfi_currlock)] Iterator for the current sub-sequence */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t  sfi_currlock; /* Lock for `sfi_curriter' */
+	Dee_atomic_lock_t  sfi_currlock; /* Lock for `sfi_curriter` */
 #endif /* !CONFIG_NO_THREADS */
 } SeqFlatIterator;
 #define SeqFlatIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->sfi_currlock)

@@ -53,7 +53,7 @@ ast_parse_argument_list(uint16_t mode,
 	if unlikely(!result)
 		goto err;
 	if (tok == TOK_POW) {
-		/* XXX: I really don't like using `**' for this.
+		/* XXX: I really don't like using `**` for this.
 		 *      I realize that I _have_ to provide some way
 		 *      of passing arbitrary mappings through keywords,
 		 *      however this just feels too python-esque to me...

@@ -45,7 +45,7 @@
  * >> ATTR_NORETURN void SPCALL_NORETURN(void (SPCALL_CC &fun)(void *), void *arg,
  * >>                                    void *stackaddr, size_t stacksize);
  *
- * When not supported, `!defined(SPCALL_NORETURN)'
+ * When not supported, `!defined(SPCALL_NORETURN)`
  */
 
 #ifndef __USER_LABEL_PREFIX_STR__

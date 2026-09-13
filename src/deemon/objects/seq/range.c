@@ -366,7 +366,7 @@ PRIVATE struct type_getset tpconst ri_getsets[] = {
 PRIVATE struct type_member tpconst ri_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT_AB, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
-	/* TODO: `__isfirst__' is writeable when `ri_lock' is held! */
+	/* TODO: `__isfirst__` is writeable when `ri_lock` is held! */
 	TYPE_MEMBER_FIELD("__isfirst__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
 	TYPE_MEMBER_END
 };
@@ -1635,7 +1635,7 @@ intrange_init(IntRange *__restrict self,
 	return 0;
 err_bad_step:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Cannot used `0' as step for _SeqIntRange");
+	                "Cannot used `0` as step for _SeqIntRange");
 err:
 	return -1;
 }
@@ -1791,7 +1791,7 @@ do_object_range:
 #endif /* !ALWAYS_USE_OBJECT_RANGES */
 	temp = 0;
 
-	/* Check if `step' is negative (required for proper compare operations of the range iterator). */
+	/* Check if `step` is negative (required for proper compare operations of the range iterator). */
 	if (step) {
 		temp = DeeObject_CmpLoAsBool(step, DeeInt_Zero);
 		if unlikely(temp < 0)

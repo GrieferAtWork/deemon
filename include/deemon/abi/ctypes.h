@@ -42,7 +42,7 @@ DECL_BEGIN
 /* Return the void type object. */
 LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void);
 
-/* Construct a new void-pointer pointing to the given `address'. */
+/* Construct a new void-pointer pointing to the given `address`. */
 LOCAL WUNUSED DREF DeeObject *DCALL
 DeeCTypes_CreateVoidPointer(void *address);
 
@@ -57,7 +57,7 @@ LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void) {
 	return DeeModule_GetExternString("ctypes", "void");
 }
 
-/* Construct a new void-pointer pointing to the given `address'. */
+/* Construct a new void-pointer pointing to the given `address`. */
 LOCAL WUNUSED DREF DeeObject *DCALL
 DeeCTypes_CreateVoidPointer(void *address) {
 	DREF DeeObject *result;

@@ -60,10 +60,10 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
 	current_basescope = function_ast->a_function.f_scope;
 
-	/* HINT: `code_compile' will safe and restore our own assembler context. */
+	/* HINT: `code_compile` will safe and restore our own assembler context. */
 	options = DeeCompiler_Current->cp_options;
 	result = code_compile(function_ast->a_function.f_code,
-	                      /* Don't propagate `ASM_FBIGCODE' */
+	                      /* Don't propagate `ASM_FBIGCODE` */
 	                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
 	                      (options ? (options->co_assembler & ASM_FBIGCODE) : 0),
 	                      false, p_refc, p_refv);

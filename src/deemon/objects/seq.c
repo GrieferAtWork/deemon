@@ -88,7 +88,7 @@ DECL_BEGIN
 	((size) - ((size_t)(-(index)) % (size)))
 
 
-/* Clamp a range, as given to `operator [:]' & friends to the bounds
+/* Clamp a range, as given to `operator [:]` & friends to the bounds
  * accepted by the associated sequence. This handles stuff like negative
  * index over-roll and past-the-end truncation. */
 PUBLIC ATTR_INOUT(1) void DCALL
@@ -99,7 +99,7 @@ DeeSeqRange_DoClamp(struct Dee_seq_range *__restrict self,
 		if (self->sr_istart >= 0)
 			goto empty_range; /* Range starts at too great of an index. */
 
-		/* Fast-case for when `-1' is used (or anything with an
+		/* Fast-case for when `-1` is used (or anything with an
 		 * absolute value less than the sequence's size) */
 		self->sr_istart += size;
 		if unlikely(self->sr_istart < 0) {
@@ -138,7 +138,7 @@ empty_range:
 	self->sr_end   = size;
 }
 
-/* Specialized version of `DeeSeqRange_DoClamp()' for `[istart:none]' range expressions. */
+/* Specialized version of `DeeSeqRange_DoClamp()` for `[istart:none]` range expressions. */
 PUBLIC ATTR_CONST WUNUSED size_t DCALL
 DeeSeqRange_DoClamp_n(Dee_ssize_t start, size_t size) {
 	if likely((size_t)start >= size) {
@@ -193,7 +193,7 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 
 struct foreach_seq_printrepr_data {
 	Dee_formatprinter_t fsprd_printer; /* [1..1] Underlying printer. */
-	void               *fsprd_arg;     /* [?..?] Cookie for `fsprd_printer' */
+	void               *fsprd_arg;     /* [?..?] Cookie for `fsprd_printer` */
 	bool                fsprd_first;   /* Is this the first element? */
 };
 
@@ -665,7 +665,7 @@ DOC_DEF(seq_byhash_doc,
 #ifdef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE
 #else /* CONFIG_NO_DEEMON_100_COMPAT */
-INTERN /* Needed for alias `List.unique' */
+INTERN /* Needed for alias `List.unique` */
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -791,7 +791,7 @@ err:
 #ifdef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE
 #else /* CONFIG_NO_DEEMON_100_COMPAT */
-INTERN /* Needed for alias `List.sorted_insert' */
+INTERN /* Needed for alias `List.sorted_insert` */
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -851,7 +851,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front' */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front` */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popfront", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popfront");
@@ -861,7 +861,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back' */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back` */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("popback", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "popback");
@@ -3245,8 +3245,8 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	               /**/ "print seq.find({ 5, 7 }.some);  /* 1 */\n"
 	               /**/ "print seq.rfind({ 5, 7 }.some); /* 3 */\n"
 	               /**/ "\\\n"
-	               /**/ "/* Similar to (except `seq' is only enumerated once) */\n"
-	               /**/ "print (for (local x: { 5, 7 }) seq.find(x)) < ...;  /* 1 -- (would break if `seq' didn't contain both 5 and 7) */\n"
+	               /**/ "/* Similar to (except `seq` is only enumerated once) */\n"
+	               /**/ "print (for (local x: { 5, 7 }) seq.find(x)) < ...;  /* 1 -- (would break if `seq` didn't contain both 5 and 7) */\n"
 	               /**/ "print (for (local x: { 5, 7 }) seq.rfind(x)) > ...; /* 3 */"
 	               "}\n"
 	               "This works because ?#find and similar functions always perform comparisons with the "
@@ -3296,7 +3296,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER_AB("asset", &seq_asset, "->?DSet\nOptimized version of ${this as Set}"),
 	TYPE_GETTER_AB("asmap", &seq_asmap, "->?DMapping\nOptimized version of ${this as Mapping}"),
 
-	/* TODO: Variants of this need to be added for `Set' and `Mapping' */
+	/* TODO: Variants of this need to be added for `Set` and `Mapping` */
 	TYPE_GETTER(STR_cached, &default__seq_cached,
 	            "->?.\n"
 	            "Returns a sequence that is a lazily-populated, read-only proxy of @this ?..\n"
@@ -3392,10 +3392,10 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_class_range(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
-	/*  Offering the same functionality as the legacy `util::range()',
-	 * `Sequence.range()' is the new builtin way of getting this
-	 *  behavior from a core function (since `Sequence' is a
-	 *  builtin type like `List', `Tuple', etc.). */
+	/*  Offering the same functionality as the legacy `util::range()`,
+	 * `Sequence.range()` is the new builtin way of getting this
+	 *  behavior from a core function (since `Sequence` is a
+	 *  builtin type like `List`, `Tuple`, etc.). */
 	DeeObject *result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("range", params: """
 	DeeObject *start;
@@ -3413,7 +3413,7 @@ seq_class_range(DeeObject *UNUSED(self),
 /*[[[end]]]*/
 	if (args.end)
 		return DeeRange_New(args.start, args.end, args.step);
-	/* Use a default-constructed instance of `type(start)' for the real start. */
+	/* Use a default-constructed instance of `type(start)` for the real start. */
 	args.end = DeeObject_NewDefault(Dee_TYPE(args.start));
 	if unlikely(!args.end)
 		goto err;
@@ -3541,7 +3541,7 @@ PRIVATE struct type_operator const seq_operators[] = {
 
 
 PRIVATE struct type_member tpconst seq_class_members[] = {
-	/* Here primarily to allow doc strings to do stuff like `{string...}.Some'
+	/* Here primarily to allow doc strings to do stuff like `{string...}.Some`
 	 * to indicate "(sequence of string).some" */
 	TYPE_MEMBER_CONST("Some", &DeeSeqSome_Type),
 
@@ -4064,7 +4064,7 @@ PRIVATE char const seq_doc[] =
 
 
 
-/* `Sequence from deemon' */
+/* `Sequence from deemon` */
 PUBLIC DeeTypeObject DeeSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Sequence),
@@ -4120,10 +4120,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 
 /* An empty instance of a generic sequence object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
- *       calling the constructor of `DeeSeq_Type' with no arguments.
+ *       calling the constructor of `DeeSeq_Type` with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty,
+ * HINT: Any exact instance of `DeeSeq_Type` should be considered stub/empty,
  *       but obviously something like an empty tuple is also an empty sequence. */
 PUBLIC DeeObject DeeSeq_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeSeq_Type)
@@ -4144,7 +4144,7 @@ DeeType_GetSeqClass_uncached(DeeTypeObject const *__restrict self) {
 }
 
 /* Sequence type classification
- * @return: * : One of `Dee_SEQCLASS_*' */
+ * @return: * : One of `Dee_SEQCLASS_*` */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_GetSeqClass(DeeTypeObject const *__restrict self) {
 	unsigned int result;
@@ -4186,13 +4186,13 @@ DeeSeq_Max(DeeObject *self) {
 	return DeeObject_InvokeMethodHint(seq_max, self, Dee_None);
 }
 
-/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
- * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+/* Unpack the given sequence `self` into `dst_length` items then stored within the `dst` vector.
+ * This operator follows `DeeObject_Foreach()` semantics, in that unbound items are skipped.
  *
- * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)'
+ * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)`
  *
- * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
- * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
+ * @return: 0 : Success (`dst` now contains exactly `dst_length` references to [1..1] objects)
+ * @return: -1: An error was thrown (`dst` may have been modified, but contains no references) */
 PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeSeq_Unpack)(DeeObject *__restrict self, size_t dst_length,
                       /*out*/ DREF DeeObject **__restrict dst) {

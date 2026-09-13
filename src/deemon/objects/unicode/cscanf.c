@@ -146,7 +146,7 @@ next_spec:
 		switch (ch32) {
 
 		case '%':
-			/* Double-`%' -> match source data against a single `%'-character */
+			/* Double-`%` -> match source data against a single `%`-character */
 			goto match_ch;
 
 		case 'o':
@@ -218,7 +218,7 @@ do_integer_scan:
 			}
 			if (ignore_data)
 				goto next_format;
-			/* NOTE: Pass the `Dee_INT_STRING_FTRY' flag to have `DeeInt_FromString()'
+			/* NOTE: Pass the `Dee_INT_STRING_FTRY` flag to have `DeeInt_FromString()`
 			 *       return ITER_DONE in case of parsing failure, meaning that we in
 			 *       turn will stop enumeration. */
 			result = DeeInt_FromString(spec_data_start,
@@ -338,7 +338,7 @@ do_integer_scan:
 					--width;
 				}
 			}
-			/* Skip the trailing `]'-character */
+			/* Skip the trailing `]`-character */
 			if (format != format_end &&
 			    format[0] == ']')
 				++format;
@@ -380,13 +380,13 @@ yield_string_from_spec_data_start_until_data:
 
 		default:
 			/* Throw an error for an invalid format option.
-			 * NOTE: the old deemon used to return `none' here, however that was
+			 * NOTE: the old deemon used to return `none` here, however that was
 			 *       a decision I made before finally understanding why you don't
 			 *       want to implement spots for potential future expansion as
 			 *       no-ops, rather than as exceptions.
 			 *       aka.: The difference between ~reserved~ and ~ignored~ */
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Unknown or unexpected cscanf character %I32C in `%$s', apart of %r",
+			                "Unknown or unexpected cscanf character %I32C in `%$s`, apart of %r",
 			                ch32, (size_t)(format - orig_format), orig_format,
 			                self->si_scanner->ss_format);
 			goto err;
@@ -394,7 +394,7 @@ yield_string_from_spec_data_start_until_data:
 	}	break;
 
 	case ' ':
-		/* Skip space characters in `data' */
+		/* Skip space characters in `data` */
 		if (is_bytes < 0)
 			is_bytes = DeeBytes_Check(self->si_scanner->ss_data);
 		if (is_bytes) {
@@ -414,7 +414,7 @@ yield_string_from_spec_data_start_until_data:
 		goto next_format;
 
 	/* Match universal linefeeds in format
-	 * against any kind of linefeed in `data'. */
+	 * against any kind of linefeed in `data`. */
 
 #if 0 /* Don't... (otherwise we'd have to include any kind of unicode line-feed, too) */
 	case '\r':
@@ -425,7 +425,7 @@ yield_string_from_spec_data_start_until_data:
 		ATTR_FALLTHROUGH
 #endif
 	case '\n':
-		/* Skip some sort of linefeed in `data' */
+		/* Skip some sort of linefeed in `data` */
 		if (data >= data_end)
 			goto out_dataend;
 		if (*data == '\r') {
@@ -472,7 +472,7 @@ yield_string_from_spec_data_start_until_data:
 		 *       thrown if the number of parsed items doesn't match the
 		 *       expected number of items, that behavior still exists due
 		 *       to the fact that the unpack operation above will throw an
-		 *       UnpackError if less than 3 items were parsed from `data',
+		 *       UnpackError if less than 3 items were parsed from `data`,
 		 *       now indicated by the effective scanf()-sequence literally
 		 *       not being as long. */
 match_ch:

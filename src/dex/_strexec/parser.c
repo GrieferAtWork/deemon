@@ -65,7 +65,7 @@ INTERN_CONST char const rt_operator_names[1 + (JIT_AST_OPERATOR_MAX - JIT_AST_OP
 
 /* Check if the current token may refer to the start of an expression.
  * The currently selected token is not altered/is restored before this function returns.
- * NOTE: This function may also be used with `JITSmallLexer' */
+ * NOTE: This function may also be used with `JITSmallLexer` */
 INTERN WUNUSED NONNULL((1)) bool DFCALL
 JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
@@ -92,7 +92,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		bool result;
 		unsigned char const *orig_tok_start;
 		orig_tok_start = self->jl_tokstart;
-		/* Check if this ! is eventually followed by `is' or `in'
+		/* Check if this ! is eventually followed by `is` or `in`
 		 * If this is the case, then this can't be the start of an
 		 * expression! */
 		do {
@@ -103,7 +103,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		} else if (self->jl_tokstart + 2 == self->jl_tokend &&
 		           self->jl_tokstart[0] == 'i' &&
 		           (self->jl_tokstart[1] == 's' || self->jl_tokstart[1] == 'n')) {
-			/* `is' or `in' after `!' cannot appear at the start of an expression! */
+			/* `is` or `in` after `!` cannot appear at the start of an expression! */
 			result = false;
 		} else {
 			result = true;
@@ -124,10 +124,10 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		case 2:
 			if (tokptr[0] == 'a') {
 				if (tokptr[1] == 's')
-					goto no; /* `as' */
+					goto no; /* `as` */
 			} else if (tokptr[0] == 'i') {
 				if (tokptr[1] == 'n' || tokptr[1] == 's')
-					goto no; /* `in', `is' */
+					goto no; /* `in`, `is` */
 			}
 			break;
 
@@ -244,7 +244,7 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 		Dee_hash_t hash = Dee_HashStr(symbol_name);
 		result = DeeObject_GetAttrStringHash(Dee_AsObject(operators_module), symbol_name, hash);
 	} else {
-		/* Fallback: Invoke `operator(id)' to generate the default callback. */
+		/* Fallback: Invoke `operator(id)` to generate the default callback. */
 		result = DeeObject_CallAttrStringHashf(Dee_AsObject(operators_module),
 		                                       "operator", Dee_HashStr__operator,
 		                                       PCKu16, opname);
@@ -411,7 +411,7 @@ do_operator_gr:
 		result = OPERATOR_ASSIGN;
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move")) {
-			/* `= move' move-assign operator. */
+			/* `= move` move-assign operator. */
 			result = OPERATOR_MOVEASSIGN;
 			goto done_y1;
 		}
@@ -562,7 +562,7 @@ err_rbrck_after_lbrck:
 				if unlikely(self->jl_tok != '=' &&
 				            self->jl_tok != TOK_COLON_EQUAL) {
 					DeeError_Throwf(&DeeError_SyntaxError,
-					                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
+					                "Expected `:=` or `=` after `move` in operator name, but got `%$s`",
 					                JITLexer_TokLen(self),
 					                JITLexer_TokPtr(self));
 					goto err_trace;
@@ -653,7 +653,7 @@ err_rbrck_after_lbrck:
 
 		/* Query an explicit operator by its name.
 		 * NOTE: This is also where a lot of backwards-compatibility lies, as
-		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
+		 *       the old deemon used to only accept e.g.: `operator __contains__`. */
 		{
 			struct Dee_opinfo const *info;
 			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size, (size_t)-1);
@@ -842,7 +842,7 @@ err_rbrck_after_lbrck:
 				if unlikely(self->jl_tok != '=' &&
 				            self->jl_tok != TOK_COLON_EQUAL) {
 					DeeError_Throwf(&DeeError_SyntaxError,
-					                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
+					                "Expected `:=` or `=` after `move` in operator name, but got `%$s`",
 					                JITLexer_TokLen(self),
 					                JITLexer_TokPtr(self));
 					goto err_trace;
@@ -890,7 +890,7 @@ print_module_name(JITLexer *__restrict self,
 			    self->jl_tok != JIT_RAWSTRING &&
 			    self->jl_tok != '.' &&
 			    self->jl_tok != TOK_DOTS)
-				break; /* Special case: `.' is a valid name for the current module. */
+				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			if (printer &&
 			    Dee_unicode_printer_print(printer,
@@ -935,11 +935,11 @@ err_trace:
 }
 
 
-/* Parse a module name, either writing it to `*printer' (if non-NULL),
- * or storing the name's start and end pointers in `*p_name_start' and
- * `*p_name_end'
- * @return:  1: Successfully parsed the module name and written it to `*printer'
- * @return:  0: Successfully parsed the module name and stored it in `*p_name_start' / `*p_name_end'
+/* Parse a module name, either writing it to `*printer` (if non-NULL),
+ * or storing the name's start and end pointers in `*p_name_start` and
+ * `*p_name_end`
+ * @return:  1: Successfully parsed the module name and written it to `*printer`
+ * @return:  0: Successfully parsed the module name and stored it in `*p_name_start` / `*p_name_end`
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
@@ -997,7 +997,7 @@ use_printer:
 	return error;
 }
 
-/* Same as `JITLexer_EvalModuleName()', but always parse into a printer.
+/* Same as `JITLexer_EvalModuleName()`, but always parse into a printer.
  * @return:  0: Successfully.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
@@ -1160,7 +1160,7 @@ do_with_paren:
 			result = DeeObject_CallTuple(self->jl_context->jc_import, args);
 		}
 	} else {
-		/* Do what `deemon.__import__' would do (except that we don't accept the "base" argument) */
+		/* Do what `deemon.__import__` would do (except that we don't accept the "base" argument) */
 		DeeObject *module_name;
 		if (!kwds && DeeTuple_SIZE(args) == 1) {
 			module_name = DeeTuple_GET(args, 0);
@@ -1243,8 +1243,8 @@ err:
 }
 
 
-/* Recursively skip a pair of tokens, such as `{' and `}' or `(' and `)'
- * NOTE: Entry is expected to be after the initial instance of `pair_open' */
+/* Recursively skip a pair of tokens, such as `{` and `}` or `(` and `)`
+ * NOTE: Entry is expected to be after the initial instance of `pair_open` */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipPair(JITLexer *__restrict self,
                   unsigned int pair_open,
@@ -1270,7 +1270,7 @@ err_eof:
 	JITLexer_ErrorTrace(self, start);
 	self->jl_context->jc_flags |= JITCONTEXT_FSYNERR;
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Missing `%c' after `%c'",
+	                       "Missing `%c` after `%c`",
 	                       pair_close, pair_open);
 }
 
@@ -1346,7 +1346,7 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 	if (self->jl_tok == TOK_DOTS) {
 		/* >> catch (...) */
 		/* >> catch (...var)  (This syntax is allowed, but is rarely ever used;
-		 *                     code usually uses `catch (var...)' instead) */
+		 *                     code usually uses `catch (var...)` instead) */
 		JITLexer_Yield(self);
 		*p_typemask    = NULL;
 		*p_symbol_name = NULL;
@@ -1363,7 +1363,7 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 			unsigned char const *end   = self->jl_tokend;
 			JITLexer_Yield(self);
 			if (self->jl_tok == TOK_DOTS) {
-				/* `catch (e...)' (catch all into `e') */
+				/* `catch (e...)` (catch all into `e`) */
 				*p_typemask    = NULL;
 				*p_symbol_name = (char *)start;
 				*p_symbol_size = (size_t)(end - start);
@@ -1378,9 +1378,9 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 			goto err;
 		*p_symbol_name = NULL;
 		*p_symbol_size = 0;
-		/* Check for an `as foo' suffix. */
+		/* Check for an `as foo` suffix. */
 		if (self->jl_tok == JIT_KEYWORD) {
-			/* the `as' is optional */
+			/* the `as` is optional */
 			if (JITLexer_ISTOK(self, "as")) {
 				JITLexer_Yield(self);
 				if unlikely(self->jl_tok != JIT_KEYWORD) {
@@ -1406,7 +1406,7 @@ err:
 	return -1;
 }
 
-/* Check if `thrown_object' can be caught with `typemask'
+/* Check if `thrown_object` can be caught with `typemask`
  * NOTE: Assumes that interrupt catches are allowed.
  *       If such catches aren't allowed, the caller should
  *       call this function as:
@@ -1416,9 +1416,9 @@ INTERN WUNUSED NONNULL((1, 2)) bool DFCALL
 JIT_IsCatchable(DeeObject *thrown_object,
                 DeeObject *typemask) {
 	DeeTypeObject *thrown_object_type;
-	/* The runtime uses `instanceof' for dynamic catch-mask detection.
-	 * As such, the special case for `foo is none' applies, such that
-	 * a type mask of `none' must match itself! */
+	/* The runtime uses `instanceof` for dynamic catch-mask detection.
+	 * As such, the special case for `foo is none` applies, such that
+	 * a type mask of `none` must match itself! */
 	if (DeeNone_Check(typemask))
 		typemask = Dee_AsObject(&DeeNone_Type);
 	thrown_object_type = Dee_TYPE(thrown_object);
@@ -1440,7 +1440,7 @@ JIT_IsCatchable(DeeObject *thrown_object,
 	}
 
 	/* Fallback: Do a regular implements check.
-	 * NOTE: `DeeType_Implements()' simply returns `false' when
+	 * NOTE: `DeeType_Implements()` simply returns `false` when
 	 *       its second argument isn't actually a type at runtime. */
 	return DeeType_Implements(thrown_object_type, (DeeTypeObject *)typemask);
 }

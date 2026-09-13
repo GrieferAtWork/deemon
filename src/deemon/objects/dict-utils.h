@@ -89,7 +89,7 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 
 
 /* Evaluates to true if the dict's "d_vtab" should be optimized.
- * s.a. `dict_optimize_vtab()' */
+ * s.a. `dict_optimize_vtab()` */
 #define _DeeDict_ShouldOptimizeVTab(self) \
 	_DeeDict_ShouldOptimizeVTab2((self)->d_vsize, (self)->d_vused)
 #define _DeeDict_ShouldOptimizeVTab2(vsize, vused) \
@@ -139,7 +139,7 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 	((valloc) <= ((hmask) >> 1) && (hmask))
 
 
-/* Default hint in `DeeDict_FromSequence' when the sequence doesn't provide one itself. */
+/* Default hint in `DeeDict_FromSequence` when the sequence doesn't provide one itself. */
 #ifndef DICT_FROMSEQ_DEFAULT_HINT
 #define DICT_FROMSEQ_DEFAULT_HINT 64
 #endif /* !DICT_FROMSEQ_DEFAULT_HINT */
@@ -299,7 +299,7 @@ boolcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs) {
 }
 
 /* Slow equivalents to the above -- only use these when the above returned "-1"
- * Return value is like `DeeObject_TryCompareEq()' (iow: Dee_COMPARE_ERR on error) */
+ * Return value is like `DeeObject_TryCompareEq()` (iow: Dee_COMPARE_ERR on error) */
 LOCAL WUNUSED NONNULL((2)) int DCALL
 slowcmp_index(size_t lhs, DeeObject *rhs) {
 	bool ok;
@@ -395,7 +395,7 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 #define _DeeHashSet_ShouldShrinkHTab(self)          _DeeDict_ShouldShrinkHTab2((self)->hs_valloc, (self)->hs_hmask)
 #define _DeeHashSet_CanShrinkHTab(self)             _DeeDict_CanShrinkHTab2((self)->hs_valloc, (self)->hs_hmask)
 
-/* Default hint in `DeeHashSet_FromSequence' when the sequence doesn't provide one itself. */
+/* Default hint in `DeeHashSet_FromSequence` when the sequence doesn't provide one itself. */
 #ifndef HASHSET_FROMSEQ_DEFAULT_HINT
 #define HASHSET_FROMSEQ_DEFAULT_HINT DICT_FROMSEQ_DEFAULT_HINT
 #endif /* !HASHSET_FROMSEQ_DEFAULT_HINT */

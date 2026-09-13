@@ -194,7 +194,7 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 	info->fi_clsop  = NULL;
 	info->fi_getset = (uint16_t)-1;
 
-	/* Step #1: Search the code object's module for the given `function' */
+	/* Step #1: Search the code object's module for the given `function` */
 	mod = code->co_module;
 	if unlikely(!mod) {
 		mod = DeeModule_OfPointer(code);
@@ -1050,21 +1050,21 @@ function_fini(Function *__restrict self) {
 	 *       that we don't actually hold a proper DREF to.
 	 * We could use those slots to reference the declaring
 	 * class in the case of thiscall functions, as used by
-	 * the `getmember' instruction set:
-	 *   - `DeeObject_InstanceOf(thisarg, MyClass)' fails safely,
-	 *     even when `MyClass' has already been destroyed.
-	 *     XXX: But what if `MyClass' was free'd, and alloc'd again?
-	 *          In that case, `thisarg' could be an instance of the
-	 *          new `MyClass', and we'd be none the wiser...
-	 *          To solve this, we'd need a proper `weakref'...
-	 *   - Assuming that `DeeObject_InstanceOf(thisarg, MyClass)'
-	 *     succeeds, we know that `MyClass' will remain alive as long
-	 *     as `thisarg' remains alive, too. With this knowledge, we
-	 *     can keep on accessing the `MyClass' type object without
+	 * the `getmember` instruction set:
+	 *   - `DeeObject_InstanceOf(thisarg, MyClass)` fails safely,
+	 *     even when `MyClass` has already been destroyed.
+	 *     XXX: But what if `MyClass` was free'd, and alloc'd again?
+	 *          In that case, `thisarg` could be an instance of the
+	 *          new `MyClass`, and we'd be none the wiser...
+	 *          To solve this, we'd need a proper `weakref`...
+	 *   - Assuming that `DeeObject_InstanceOf(thisarg, MyClass)`
+	 *     succeeds, we know that `MyClass` will remain alive as long
+	 *     as `thisarg` remains alive, too. With this knowledge, we
+	 *     can keep on accessing the `MyClass` type object without
 	 *     holding our own, dedicated reference to it!
 	 *
 	 * Why all this? - Because right now we rely on GC to kill the
-	 * reference loop within `MyClass -> Member-function -> refs -> MyClass',
+	 * reference loop within `MyClass -> Member-function -> refs -> MyClass`,
 	 * and while that works, it's really inefficient, and most importantly:
 	 * doesn't automatically free the class as soon as possible, but instead
 	 * waits until GC is invoked. - And this in turn results in some really
@@ -1085,51 +1085,51 @@ function_fini(Function *__restrict self) {
 	 * >> local x = makeUnboundClassFunction();
 	 * >> local y = x(Object());
 	 *
-	 * FIXME: Currently, the above code crashes in `DeeInstance_GetMember()'! (very bad)
+	 * FIXME: Currently, the above code crashes in `DeeInstance_GetMember()`! (very bad)
 	 *        All of this could be fixed if DeeFunctionObject had a weakref
 	 *        member that is a pointer to the required thisarg type.
 	 * This field could then be accessible via a new instruction set:
 	 *   - Added instructions:
-	 *     - `push this_class'
-	 *     - `push super this, super_class'                        (uses DeeType_Base(this_class))
-	 *     - `push getcmember this_class, $<imm8>'
-	 *     - `push getcmember this_class, $<imm16>'
-	 *     - `push callcmember this, this_class, $<imm8>, #<imm8>'
-	 *     - `push callcmember this, this_class, $<imm16>, #<imm8>'
-	 *     - `push getattr this, super_class, const <imm8>'
-	 *     - `push getattr this, super_class, const <imm16>'
-	 *     - `push callattr this, super_class, const <imm8>, #<imm8>'
-	 *     - `push callattr this, super_class, const <imm16>, #<imm8>'
-	 *     - `push boundmember this, this_class, $<imm8>'
-	 *     - `push boundmember this, this_class, $<imm16>'
-	 *     - `push getmember this, this_class, $<imm8>'
-	 *     - `push getmember this, this_class, $<imm16>'
-	 *     - `delmember this, this_class, $<imm8>'
-	 *     - `delmember this, this_class, $<imm16>'
-	 *     - `setmember this, this_class, $<imm8>, pop'
-	 *     - `setmember this, this_class, $<imm16>, pop'
+	 *     - `push this_class`
+	 *     - `push super this, super_class`                        (uses DeeType_Base(this_class))
+	 *     - `push getcmember this_class, $<imm8>`
+	 *     - `push getcmember this_class, $<imm16>`
+	 *     - `push callcmember this, this_class, $<imm8>, #<imm8>`
+	 *     - `push callcmember this, this_class, $<imm16>, #<imm8>`
+	 *     - `push getattr this, super_class, const <imm8>`
+	 *     - `push getattr this, super_class, const <imm16>`
+	 *     - `push callattr this, super_class, const <imm8>, #<imm8>`
+	 *     - `push callattr this, super_class, const <imm16>, #<imm8>`
+	 *     - `push boundmember this, this_class, $<imm8>`
+	 *     - `push boundmember this, this_class, $<imm16>`
+	 *     - `push getmember this, this_class, $<imm8>`
+	 *     - `push getmember this, this_class, $<imm16>`
+	 *     - `delmember this, this_class, $<imm8>`
+	 *     - `delmember this, this_class, $<imm16>`
+	 *     - `setmember this, this_class, $<imm8>, pop`
+	 *     - `setmember this, this_class, $<imm16>, pop`
 	 *   - Removed instructions:
-	 *     - `push super this, ref <imm8/16>'
-	 *     - `push getcmember ref <imm8/16>, $<imm8>'
-	 *     - `push getcmember ref <imm8/16>, $<imm16>'
-	 *     - `push callcmember this, ref <imm8/16>, $<imm8>, #<imm8>'
-	 *     - `push callcmember this, ref <imm8/16>, $<imm16>, #<imm8>'
-	 *     - `push getattr this, ref <imm8>, const <imm8>'
-	 *     - `push getattr this, ref <imm16>, const <imm16>'
-	 *     - `push callattr this, ref <imm8>, const <imm8>, #<imm8>'
-	 *     - `push callattr this, ref <imm16>, const <imm16>, #<imm8>'
-	 *     - `push boundmember this, ref <imm8/16>, $<imm8>'
-	 *     - `push boundmember this, ref <imm8/16>, $<imm16>'
-	 *     - `push getmember this, ref <imm8/16>, $<imm8>'
-	 *     - `push getmember this, ref <imm8/16>, $<imm16>'
-	 *     - `delmember this, ref <imm8/16>, $<imm8>'
-	 *     - `delmember this, ref <imm8/16>, $<imm16>'
-	 *     - `setmember this, ref <imm8/16>, $<imm8>, pop'
-	 *     - `setmember this, ref <imm8/16>, $<imm16>, pop'
+	 *     - `push super this, ref <imm8/16>`
+	 *     - `push getcmember ref <imm8/16>, $<imm8>`
+	 *     - `push getcmember ref <imm8/16>, $<imm16>`
+	 *     - `push callcmember this, ref <imm8/16>, $<imm8>, #<imm8>`
+	 *     - `push callcmember this, ref <imm8/16>, $<imm16>, #<imm8>`
+	 *     - `push getattr this, ref <imm8>, const <imm8>`
+	 *     - `push getattr this, ref <imm16>, const <imm16>`
+	 *     - `push callattr this, ref <imm8>, const <imm8>, #<imm8>`
+	 *     - `push callattr this, ref <imm16>, const <imm16>, #<imm8>`
+	 *     - `push boundmember this, ref <imm8/16>, $<imm8>`
+	 *     - `push boundmember this, ref <imm8/16>, $<imm16>`
+	 *     - `push getmember this, ref <imm8/16>, $<imm8>`
+	 *     - `push getmember this, ref <imm8/16>, $<imm16>`
+	 *     - `delmember this, ref <imm8/16>, $<imm8>`
+	 *     - `delmember this, ref <imm8/16>, $<imm16>`
+	 *     - `setmember this, ref <imm8/16>, $<imm8>, pop`
+	 *     - `setmember this, ref <imm8/16>, $<imm16>, pop`
 	 * Additionally, when performing a thiscall, check that the
-	 * this-argument is actually an instance of `this_class'!
+	 * this-argument is actually an instance of `this_class`!
 	 * However, this check may be skipped in the case of an attribute
-	 * call (as in `foo.fun()', as opposed to `type(foo).fun(foo)')
+	 * call (as in `foo.fun()`, as opposed to `type(foo).fun(foo)`)
 	 */
 	DeeCodeObject *code;
 	DREF DeeObject **refv_iter;
@@ -1546,7 +1546,7 @@ yfi_init(YFIterator *__restrict self,
 	DeeCodeObject *code;
 	DBG_memset(&self->yi_frame, 0xcc, sizeof(struct Dee_code_frame));
 	/* Setup the frame for the iterator. */
-	Dee_Incref(yield_function); /* Reference stored in `self->yi_func' */
+	Dee_Incref(yield_function); /* Reference stored in `self->yi_func` */
 	self->yi_func          = yield_function;
 	self->yi_frame.cf_func = yield_function->yf_func;
 #ifndef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
@@ -1624,7 +1624,7 @@ yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 		goto err;
 
 	/* Copy keyword arguments (must happen last since may contain
-	 * weak references to objects actually owned by `yf_argv') */
+	 * weak references to objects actually owned by `yf_argv`) */
 	if (self->yf_kw) {
 		struct Dee_code_frame_kwds *kw = self->yf_kw;
 		size_t i, count;
@@ -1646,7 +1646,7 @@ yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 		if (DeeSerial_PutObject(writer, KW_ADDROF(fk_kw), kw->fk_kw))
 			goto err;
 
-		/* Copy `fk_kargv' */
+		/* Copy `fk_kargv` */
 		for (i = 0; i < count; ++i) {
 			DeeObject *ob = kw->fk_kargv[i];
 			if (DeeSerial_XPutPointer(writer, KW_ADDROF(fk_kargv) + (i * sizeof(DeeObject *)), ob))
@@ -2031,10 +2031,10 @@ exec_finally:
 		}
 
 		/* We must somehow indicate to code-exec to stop when an
-		 * `ASM_ENDFINALLY' instruction is hit.
+		 * `ASM_ENDFINALLY` instruction is hit.
 		 *
 		 * Normally, this is done when the return value has been
-		 * assigned, so we simply fake that by pre-assigning `none'. */
+		 * assigned, so we simply fake that by pre-assigning `none`. */
 		self->yi_frame.cf_result = DeeNone_NewRef();
 #ifdef CONFIG_EXPERIMENTAL_SIMPLIFIED_YIELD_FUNCTION_ITERATORS
 		if unlikely(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FASSEMBLY)
@@ -2049,7 +2049,7 @@ exec_finally:
 			result = DeeCode_ExecFrameFast(&self->yi_frame);
 		}
 		if likely(result) {
-			/* Most likely, this is still the `none' from above */
+			/* Most likely, this is still the `none` from above */
 			Dee_Decref(result);
 		} else {
 			DeeError_Print("Unhandled exception in YieldFunction.Iterator destructor",
@@ -2399,7 +2399,7 @@ inplace_deepcopy_noarg(DREF DeeObject **__restrict p_ob,
                        size_t argc2, DeeObject *const *argv2) {
 	size_t i;
 	DREF DeeObject *ob = *p_ob;
-	/* Check if `*p_ob' is apart of the argument
+	/* Check if `*p_ob` is apart of the argument
 	 * tuple, and don't copy it if it is.
 	 * We take special care not to copy objects that were loaded
 	 * from arguments/references, as those are intended to be shared.
@@ -2459,7 +2459,7 @@ yfi_copy(YFIterator *__restrict self,
 		char const *function_name = DeeCode_NAME(code);
 		if (function_name == NULL)
 			function_name = "?";
-		return DeeError_Throwf(&DeeError_ValueError, "Function `%s' is not copyable", function_name);
+		return DeeError_Throwf(&DeeError_ValueError, "Function `%s` is not copyable", function_name);
 	}
 
 	/* Copy over [const] frame data. */
@@ -2619,7 +2619,7 @@ again:
 			DeeYieldFunctionIterator_LockEndRead(other);
 			if (!function_name)
 				function_name = "?";
-			DeeError_Throwf(&DeeError_ValueError, "Function `%s' is not copyable", function_name);
+			DeeError_Throwf(&DeeError_ValueError, "Function `%s` is not copyable", function_name);
 			Dee_XDecref(code);
 			return -1;
 		}
@@ -2802,7 +2802,7 @@ again_lock_self:
 		goto err;
 
 	/* Copy locals/stack (as a shallow reference copies that can
-	 * then be serialized via `DeeSerial_*InplacePutObjectv') */
+	 * then be serialized via `DeeSerial_*InplacePutObjectv`) */
 	stacksize = self->yi_frame.cf_stacksz;
 	out->yi_frame.cf_stacksz = (uint16_t)stacksize;
 	if (stacksize) {
@@ -2972,13 +2972,13 @@ yfi_get_frame(YFIterator *__restrict self) {
 		         * holding a lock to the respective iterator's lock. Since that lock is also
 		         * held while the frame is executing, it becomes impossible for the frame to
 		         * be read while executing.
-		         * FIXME: This doesn't work under `#define CONFIG_NO_THREADS' */
+		         * FIXME: This doesn't work under `#define CONFIG_NO_THREADS` */
 		        Dee_FRAME_FWRITABLE |
 		
 		        /* Yield-function-iterator use recursive, shared locks */
 		        Dee_FRAME_FSHRLOCK | Dee_FRAME_FRECLOCK |
 
-		        /* The "cf_result" field is undefined here (see `yfi_iter_next()' which
+		        /* The "cf_result" field is undefined here (see `yfi_iter_next()` which
 		         * only assigns a proper value *before* yielding the next value). As such,
 		         * the frame needs some sort of flag to tell it that the frame's result
 		         * field should not be touched and be considered as unbound. */

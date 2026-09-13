@@ -594,7 +594,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 property_printrepr(Property *__restrict self,
                    Dee_formatprinter_t printer, void *arg) {
 	/* TODO: Better distinction between *actual* properties, and
-	 *       custom properties (w/ an attribute `iscustom: bool',
+	 *       custom properties (w/ an attribute `iscustom: bool`,
 	 *       and us making the repr dependent on that) */
 	Dee_ssize_t temp, result;
 	struct Dee_function_info info;
@@ -657,7 +657,7 @@ PRIVATE struct type_callable property_callable = {
 };
 
 
-/* `Property from deemon' */
+/* `Property from deemon` */
 PUBLIC DeeTypeObject DeeProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Property),

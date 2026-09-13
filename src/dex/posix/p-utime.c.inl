@@ -40,9 +40,9 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
-#include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
-#include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
-#include "p-stat.c.inl"     /* For `Dee_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
+#include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()` */
+#include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()` */
+#include "p-stat.c.inl"     /* For `Dee_STAT_F_LSTAT`, `stat_get_ctime_IS_stat_get_mtime` */
 
 #include <stddef.h> /* NULL, size_t, wchar_t */
 
@@ -106,7 +106,7 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
-/* Check if we can use `AT_CHANGE_BTIME' to implement 3-channel utime() functions. */
+/* Check if we can use `AT_CHANGE_BTIME` to implement 3-channel utime() functions. */
 #undef utimens_3
 #undef futimens_3
 #undef lutimens_3
@@ -135,7 +135,7 @@ for (local f: functions) {
 #endif /* CONFIG_HAVE_AT_CHANGE_BTIME */
 
 
-/* Figure out how we want to implement `utime()' */
+/* Figure out how we want to implement `utime()` */
 #undef posix_utime_USE_nt_SetFileTime
 #undef posix_utime_USE_utimens64_3
 #undef posix_utime_USE_utimens_3
@@ -213,7 +213,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `lutime()' */
+/* Figure out how we want to implement `lutime()` */
 #undef posix_lutime_USE_nt_SetFileTime
 #undef posix_lutime_USE_lutimens64_3
 #undef posix_lutime_USE_lutimens_3
@@ -312,7 +312,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `futime()' */
+/* Figure out how we want to implement `futime()` */
 #undef posix_futime_USE_nt_SetFileTime
 #undef posix_futime_USE_futimens64_3
 #undef posix_futime_USE_futimens_3
@@ -356,7 +356,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `utimeat()' */
+/* Figure out how we want to implement `utimeat()` */
 #undef posix_utimeat_USE_utimensat
 #undef posix_utimeat_USE_utimensat64
 #undef posix_utimeat_USE_posix_utime
@@ -607,7 +607,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #endif /* posix_utime_USE_posix_readlink__AND__posix_lutime */
 
 
-/* Define helper macros for `posix_utime()' */
+/* Define helper macros for `posix_utime()` */
 #undef posix_utime_USED_struct_utimbuf
 #undef posix_utime_USED_struct_utimbuf_parse
 #if defined(posix_utime_USE_utime) || defined(posix_utime_USE_wutime)
@@ -678,7 +678,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #endif /* ... */
 
 
-/* Define helper macros for `posix_lutime()' */
+/* Define helper macros for `posix_lutime()` */
 #undef posix_lutime_USED_struct_utimbuf
 #undef posix_lutime_USED_struct_utimbuf_parse
 #if defined(posix_lutime_USE_lutime) || defined(posix_lutime_USE_wlutime)
@@ -749,7 +749,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 #endif /* ... */
 
 
-/* Define helper macros for `posix_futime()' */
+/* Define helper macros for `posix_futime()` */
 #undef posix_futime_USED_struct_utimbuf
 #undef posix_futime_USED_struct_utimbuf_parse
 #if defined(posix_futime_USE_futime) || defined(posix_futime_USE_wfutime)
@@ -813,7 +813,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, De
 
 
 
-/* Define helper macros for `posix_utimeat()' */
+/* Define helper macros for `posix_utimeat()` */
 #undef posix_utimeat_USED_utimensat
 #undef posix_utimeat_USED_struct_timespec
 #undef posix_utimeat_USED_struct_timespec_COUNT
@@ -937,7 +937,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_utime_f_
 
 #ifdef posix_utime_USE_posix_readlink__AND__posix_lutime
 	DREF DeeObject *link_text;
-	/* Try to readlink() the given `path' to see if it's a symbolic link. */
+	/* Try to readlink() the given `path` to see if it's a symbolic link. */
 	link_text = posix_readlink_f_impl(path);
 	if (link_text) {
 		DREF DeeObject *full_path, *result;

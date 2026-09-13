@@ -28,8 +28,8 @@ import * from errors;
 	class List4: List2, List1 {};
 	assert List3.__base__ === List1,
 		"The primary base always needs to be the first base that "
-		"needs to be used as primary base. Even though `List2' could "
-		"also be used as primary base, `List1' was specified first.";
+		"needs to be used as primary base. Even though `List2` could "
+		"also be used as primary base, `List1` was specified first.";
 	assert List4.__base__ === List2;
 	assert List3() is List;
 	assert List3() is List1;
@@ -139,7 +139,7 @@ try {
 	class List2: List { member m2; function b() { print "b"; } };
 	class List3: List1, List2 {};
 	assert false, "List1 and List2 are both non-abstract, and even "
-		"though they have identical bases, the `m1' and `m2' members "
+		"though they have identical bases, the `m1` and `m2` members "
 		"would conflict with each other because they would need to go "
 		"at identical instance offsets.";
 } catch (TypeError) {

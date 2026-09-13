@@ -26,8 +26,8 @@
  * seen here.
  * ----------------------------------------------------------------------------------
  * Backwards compatibility with the old __builtin_object() function:
- *   - `__builtin_object(...)' is a macro that
- *     compiles as `(get_builtin from __builtins)(...)'
+ *   - `__builtin_object(...)` is a macro that
+ *     compiles as `(get_builtin from __builtins)(...)`
  */
 
 import deemon;
@@ -164,7 +164,7 @@ local __objects = deemon.List {
 	/* 0x0065 */ operators.next,
 	/* 0x0066 */ rt.FileType,
 	/* 0x0067 */ deemon.File,
-	/* 0x0068 */ deemon.File, /* File.io (merged with `File') */
+	/* 0x0068 */ deemon.File, /* File.io (merged with `File`) */
 	/* 0x0069 */ deemon.File.Reader,
 	/* 0x006a */ deemon.File.Writer,
 	/* 0x006b */ deemon.File.Iterator,
@@ -293,7 +293,7 @@ local __objects = deemon.List {
 	/* 0x00e6 */ deemon.gc.collect, /* __builtin_gc_collect_now */
 	/* 0x00e7 */ posix.stat.isexe,
 	/* 0x00e8 */ ctypes.strdup,
-	/* 0x00e9 */ ctypes.strdup, /* strndup  (`ctypes.strdup' is overloaded to implement this as well) */
+	/* 0x00e9 */ ctypes.strdup, /* strndup  (`ctypes.strdup` is overloaded to implement this as well) */
 	/* 0x00ea */ ctypes.strncat,
 	/* 0x00eb */ fs.query,
 	/* 0x00ec */ fs.query.Iterator,

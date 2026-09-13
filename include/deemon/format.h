@@ -56,47 +56,47 @@ LOCAL WUNUSED NONNULL((1)) size_t Dee_libc_strlen(char const *str) { /*!export-*
 #endif /* !CONFIG_HAVE_strlen */
 #endif /* !__INTELLISENSE__ */
 
-/* General-purpose printing of formatted data to the given `printer'.
- * These functions implement c's `printf()' standard (except for the
+/* General-purpose printing of formatted data to the given `printer`.
+ * These functions implement c's `printf()` standard (except for the
  * wide-string part) with the following extensions:
- *   - `%I...': Length prefix: sizeof(size_t)
- *   - `%I8...', `%I16...', `%I32...', `%I64...': Absolute length prefix.
- *   - `%q': Print quoted (escaped) string from a UTF-8 source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I8q': Print quoted (escaped) string from a 1-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I16q': Print quoted (escaped) string from a 2-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%I32q': Print quoted (escaped) string from a 4-byte-per-character source. - Prefix with `%#q' to omit surrounding quotes.
- *   - `%s': Print a UTF-8 string.
- *   - `%I8s': Print a 1-byte-per-character string.
- *   - `%I16s': Print a 2-byte-per-character string.
- *   - `%I32s': Print a 4-byte-per-character string.
- *   - `%I8c': Print a character from the range U+0000 - U+00FF (Same as the regular `%c')
- *   - `%I16c': Print a character from the range U+0000 - U+FFFF
- *   - `%I32c': Print a character from the range U+00000000 - U+FFFFFFFF
- *   - `%$s', `%$q': Take the absolute length of the string as a `size_t' (may also be combined with I* prefixes)
- *   - `%C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"')
- *   - `%I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"') (Same as the regular `%C')
- *   - `%I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (using '\'' instead of '\"')
- *   - `%I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (using '\'' instead of '\"')
- *   - `%#C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters)
- *   - `%#I8C': Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters) (Same as the regular `%C')
- *   - `%#I16C': Print a character from the range U+0000 - U+FFFF in its c-escaped form (without surrounding '\''-characters)
- *   - `%#I32C': Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (without surrounding '\''-characters)
- *   - `%.?s', `%.?q': Take the max length of the string or precision as a `size_t' (may also be combined with I* prefixes)
- *   - `%:?s', `%:?q': Same as `%$s' / `%$q'
- *   - `%:DIGIT: Similar to `%.DIGIT', but set the absolute length of the string, rather than its maximum length
- *               This is to `%.DIGIT' what `%$s' is to `%.?s'
- *   - `%?...': Take the width of the output text as a `size_t'
- *   - `%b': Integer option: Same as `o', but output as a binary.
- *   - `%k': Taking a `DeeObject *', print `__str__' (return `-1', but don't set an (additional) error if NULL)
- *   - `%r': Taking a `DeeObject *', print `__repr__' (return `-1', but don't set an (additional) error if NULL)
- *   - `%K': Same as `%k', but decref() the object afterwards.
- *   - `%R': Same as `%r', but decref() the object afterwards.
- *   - `%Vk': Print `Dee_variant_print(va_arg(struct Dee_variant *))'
- *   - `%Vr': Print `Dee_variant_printrepr(va_arg(struct Dee_variant *))'
- * HINT: To guaranty fulfillment of `K' and `R' operands,
+ *   - `%I...`: Length prefix: sizeof(size_t)
+ *   - `%I8...`, `%I16...`, `%I32...`, `%I64...`: Absolute length prefix.
+ *   - `%q`: Print quoted (escaped) string from a UTF-8 source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I8q`: Print quoted (escaped) string from a 1-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I16q`: Print quoted (escaped) string from a 2-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%I32q`: Print quoted (escaped) string from a 4-byte-per-character source. - Prefix with `%#q` to omit surrounding quotes.
+ *   - `%s`: Print a UTF-8 string.
+ *   - `%I8s`: Print a 1-byte-per-character string.
+ *   - `%I16s`: Print a 2-byte-per-character string.
+ *   - `%I32s`: Print a 4-byte-per-character string.
+ *   - `%I8c`: Print a character from the range U+0000 - U+00FF (Same as the regular `%c`)
+ *   - `%I16c`: Print a character from the range U+0000 - U+FFFF
+ *   - `%I32c`: Print a character from the range U+00000000 - U+FFFFFFFF
+ *   - `%$s`, `%$q`: Take the absolute length of the string as a `size_t` (may also be combined with I* prefixes)
+ *   - `%C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I8C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (using '\'' instead of '\"') (Same as the regular `%C`)
+ *   - `%I16C`: Print a character from the range U+0000 - U+FFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%I32C`: Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (using '\'' instead of '\"')
+ *   - `%#C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I8C`: Print a character from the range U+0000 - U+00FF in its c-escaped form (without surrounding '\''-characters) (Same as the regular `%C`)
+ *   - `%#I16C`: Print a character from the range U+0000 - U+FFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%#I32C`: Print a character from the range U+00000000 - U+FFFFFFFF in its c-escaped form (without surrounding '\''-characters)
+ *   - `%.?s`, `%.?q`: Take the max length of the string or precision as a `size_t` (may also be combined with I* prefixes)
+ *   - `%:?s`, `%:?q`: Same as `%$s` / `%$q`
+ *   - `%:DIGIT: Similar to `%.DIGIT`, but set the absolute length of the string, rather than its maximum length
+ *               This is to `%.DIGIT` what `%$s` is to `%.?s`
+ *   - `%?...`: Take the width of the output text as a `size_t`
+ *   - `%b`: Integer option: Same as `o`, but output as a binary.
+ *   - `%k`: Taking a `DeeObject *`, print `__str__` (return `-1`, but don't set an (additional) error if NULL)
+ *   - `%r`: Taking a `DeeObject *`, print `__repr__` (return `-1`, but don't set an (additional) error if NULL)
+ *   - `%K`: Same as `%k`, but decref() the object afterwards.
+ *   - `%R`: Same as `%r`, but decref() the object afterwards.
+ *   - `%Vk`: Print `Dee_variant_print(va_arg(struct Dee_variant *))`
+ *   - `%Vr`: Print `Dee_variant_printrepr(va_arg(struct Dee_variant *))`
+ * HINT: To guaranty fulfillment of `K` and `R` operands,
  *       the format string is _always_ fully processed.
- * @return: * :  The sum of all return values from calls to `*printer'
- * @return: < 0: The first negative return value of a call to `*printer' */
+ * @return: * :  The sum of all return values from calls to `*printer`
+ * @return: < 0: The first negative return value of a call to `*printer` */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t
 DeeFormat_Printf(Dee_formatprinter_t printer, void *arg,
                  char const *__restrict format, ...);
@@ -109,7 +109,7 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
  * - DeeString_Newf()
  * - ... */
 #define _Dee_PRIVATE_PRF8 "" /* Due to integer promotions, we can assume that any 8-bit integral alwas
-                              * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+                              * gets promoted to an integer, because we can assume that `sizeof(int) >= 1` */
 #if __VA_SIZE >= 2
 #define _Dee_PRIVATE_PRF16 ""
 #elif __SIZEOF_SHORT__ == 2
@@ -268,9 +268,9 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 #define DeeFormat_PrintObject(printer, arg, ob)     DeeObject_Print(ob, printer, arg)
 #define DeeFormat_PrintObjectRepr(printer, arg, ob) DeeObject_PrintRepr(ob, printer, arg)
 
-/* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
+/* Quote (backslash-escape) the given text, printing the resulting text to `printer`.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
- *       when targeting a `Dee_ascii_printer'
+ *       when targeting a `Dee_ascii_printer`
  * Output:
  * - ASCII+isprint --> keep
  * - ASCII+iscntrl --> \r, \n, \b, ...
@@ -301,23 +301,23 @@ DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Quote32(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                   /*utf-32*/ uint32_t const *__restrict text, size_t textlen);
 
-/* Repeat the given `ch' a total of `count' times. */
+/* Repeat the given `ch` a total of `count` times. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
                  /*ascii*/ char ch, size_t count);
 
-/* Repeat `str...+=length' such that a total of `total_characters'
+/* Repeat `str...+=length` such that a total of `total_characters`
  * characters (not bytes, but characters) are printed. */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters);
 
-/* Print a unicode character `ch', encoded as UTF-8 into `printer' */
+/* Print a unicode character `ch`, encoded as UTF-8 into `printer` */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeFormat_Putc(/*utf-8*/ Dee_formatprinter_t printer, void *arg, uint32_t ch);
 
-/* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
+/* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer`
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Print8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
@@ -337,24 +337,24 @@ struct Dee_va_list_struct {
 	va_list vl_ap;
 };
 
-/* Pack a new value, given a special format string `string'.
+/* Pack a new value, given a special format string `string`.
  * Format language syntax:
  *     __main__ ::= object;
- *     object ::= ('n' | '-')         // `none'
- *              | ref_object          // `Object' <-- `va_arg(DeeObject *)'
- *              | ref_int             // `int'    <-- `va_arg(...)'
- *              | ref_float           // `float'  <-- `va_arg(...)'
- *              | ref_bool            // `bool'   <-- `va_arg(...)'
- *              | ref_str             // `string' <-- `va_arg(...)'
- *              | '[' [objects] ']'   // `List'
- *              | '(' [objects] ')'   // `Tuple'
- *              | '{' [objects] '}'   // `Set'
- *              | '<' [object] '>'    // `Cell' (When `object')
+ *     object ::= ('n' | '-')         // `none`
+ *              | ref_object          // `Object` <-- `va_arg(DeeObject *)`
+ *              | ref_int             // `int`    <-- `va_arg(...)`
+ *              | ref_float           // `float`  <-- `va_arg(...)`
+ *              | ref_bool            // `bool`   <-- `va_arg(...)`
+ *              | ref_str             // `string` <-- `va_arg(...)`
+ *              | '[' [objects] ']'   // `List`
+ *              | '(' [objects] ')'   // `Tuple`
+ *              | '{' [objects] '}'   // `Set`
+ *              | '<' [object] '>'    // `Cell` (When `object`)
  *     ;
- *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
+ *     objects ::= (object | ',')...  // `,` is simply ignored, but can be used to prevent ambiguity
  *
- *     ref_object ::= 'o' | 'O'; // `DeeObject *' (Uppercase `O' inherits a reference from `va_arg' and causes `Dee_Packf' to propagate an error when `NULL')
- *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u' and `x' create unsigned integers
+ *     ref_object ::= 'o' | 'O'; // `DeeObject *` (Uppercase `O` inherits a reference from `va_arg` and causes `Dee_Packf` to propagate an error when `NULL`)
+ *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u` and `x` create unsigned integers
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
  *                  | 'hh' // char
  *                  | 'h'  // short
@@ -396,7 +396,7 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  * - DeeObject_CallAttrStringf()
  * - ... */
 #define Dee_PCKu8 "u" /* Due to integer promotions, we can assume that any 8-bit integral always
-                       * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+                       * gets promoted to an integer, because we can assume that `sizeof(int) >= 1` */
 #define Dee_PCKd8 "d" /* *ditto* */
 #if __VA_SIZE >= 2
 #define Dee_PCKu16 "u"
@@ -513,21 +513,21 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 /* Unpack values from an object.
  * Format language syntax:
  *     __main__   ::= object;
- *     object     ::= ('n' | '-')     // Ignore / skip this object. (Do not advance `va_arg')
- *                  | ref_object      // `va_arg(DeeObject **)'
+ *     object     ::= ('n' | '-')     // Ignore / skip this object. (Do not advance `va_arg`)
+ *                  | ref_object      // `va_arg(DeeObject **)`
  *                  | ref_int         //
  *                  | ref_float       //
  *                  | ref_bool        //
- *                  | ref_str         // `char const **'
+ *                  | ref_str         // `char const **`
  *                  | '(' objects ')' // Enumerate elements of a sequence
  *     ;
  *     objects    ::= [(object   // Parse some object from the sequence.
- *                    | ','      // `,' is simply ignored, but can be used to prevent ambiguity.
+ *                    | ','      // `,` is simply ignored, but can be used to prevent ambiguity.
  *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
  *                    )...]
  *     ;
- *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
- *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers ("x" uses *M1)
+ *     ref_object ::= 'o'; // `va_arg(DeeObject **)`
+ *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u` and `x` read unsigned integers ("x" uses *M1)
  *     ref_str    ::= ['$']      // va_arg(size_t *)   (Store WSTR_LENGTH of the following string)
  *                  | 'ls'       // *va_arg(wchar_t const **)  = DeeString_AsWide()
  *                  | 'Us'       // *va_arg(uint8_t const **)  = DeeString_AsUtf8()
@@ -539,17 +539,17 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *                  | 's'        // *va_arg(char const **)     = DeeString_STR()
  *     ;
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
- *                  | 'hh' // `va_arg(char *)'
- *                  | 'h'  // `va_arg(short *)'
- *                  | ''   // `va_arg(int *)' (Default when nothing else was given)
- *                  | 'l'  // `va_arg(long *)'
- *                  | 'll' // `va_arg(long long *)' (__(U)LONGLONG *)
+ *                  | 'hh' // `va_arg(char *)`
+ *                  | 'h'  // `va_arg(short *)`
+ *                  | ''   // `va_arg(int *)` (Default when nothing else was given)
+ *                  | 'l'  // `va_arg(long *)`
+ *                  | 'll' // `va_arg(long long *)` (__(U)LONGLONG *)
  *     ;
- *     ref_float  ::= 'f'  // `va_arg(float *)'
- *                  | 'D'  // `va_arg(double *)'
- *                  | 'LD' // `va_arg(long double *)'
+ *     ref_float  ::= 'f'  // `va_arg(float *)`
+ *                  | 'D'  // `va_arg(double *)`
+ *                  | 'LD' // `va_arg(long double *)`
  *     ;
- *     ref_bool   ::= 'b'; // `va_arg(bool)'
+ *     ref_bool   ::= 'b'; // `va_arg(bool)`
  */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (Dee_Unpackf)(DeeObject *__restrict self, char const *__restrict format, ...);
@@ -569,11 +569,11 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 
 /* Both of these functions return a pointer to the target address where
  * printing has/would have stopped (excluding a terminating \0-character).
- * In the event that the buffer provided to `Dee_snprintf' is insufficient,
- * at most `bufsize' characters will have been written, and the exact required
- * size can be determined by `((return - buffer) + 1) * sizeof(char)'.
- * In the event of an error (only possible when `format' contains
- * something like `%k' or `%r'), `NULL' will be returned. */
+ * In the event that the buffer provided to `Dee_snprintf` is insufficient,
+ * at most `bufsize` characters will have been written, and the exact required
+ * size can be determined by `((return - buffer) + 1) * sizeof(char)`.
+ * In the event of an error (only possible when `format` contains
+ * something like `%k` or `%r`), `NULL` will be returned. */
 DFUNDEF NONNULL((1, 2)) char *
 Dee_sprintf(char *__restrict buffer,
             char const *__restrict format, ...);
@@ -601,7 +601,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 /* ==========? Extensible formating functions ?========== */
 
 /* Print the object types passed by the given argument list.
- * If given, also include keyword names & types from `kw'
+ * If given, also include keyword names & types from `kw`
  * >> foo(10, 1.0, "bar", enabled: true);
  * Printed: "int, float, string, enabled: bool" */
 #define DeeFormat_PrintArgumentTypes(printer, arg, argc, argv) \
@@ -617,10 +617,10 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 typedef uint16_t Dee_operator_t; /*!export-*/
 #endif /* !Dee_operator_t_DEFINED */
 
-/* Print a representation of invoking operator `name' on `self' with the given arguments.
+/* Print a representation of invoking operator `name` on `self` with the given arguments.
  * This function is used to generate the representation of the expression in the default
  * assertion failure handler.
- * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*') for `name' */
+ * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*`) for `name` */
 DFUNDEF WUNUSED ATTR_INS(6, 5) NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             DeeObject *self, Dee_operator_t name,

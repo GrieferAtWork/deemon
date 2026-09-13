@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `readlink()' */
+/* Figure out how to implement `readlink()` */
 #undef posix_readlink_USE_nt_FReadLink
 #undef posix_readlink_USE_freadlinkat
 #undef posix_readlink_USE_wreadlink
@@ -68,7 +68,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `freadlink()' */
+/* Figure out how to implement `freadlink()` */
 #undef posix_freadlink_USE_nt_FReadLink
 #undef posix_freadlink_USE_posix_readlink
 #undef posix_freadlink_USE_STUB
@@ -82,7 +82,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `readlinkat()' */
+/* Figure out how to implement `readlinkat()` */
 #undef posix_readlinkat_USE_freadlinkat
 #undef posix_readlinkat_USE_readlinkat
 #undef posix_readlinkat_USE_posix_readlink
@@ -347,7 +347,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_freadlink_f_impl(Dee
 		    !DeeError_Catch(&DeeError_NotImplemented) &&
 		    !DeeError_Catch(&DeeError_FileClosed))
 			goto err;
-		/* Use the filename of the given `fd'. */
+		/* Use the filename of the given `fd`. */
 		filename = DeeFile_Filename(fd);
 		if unlikely(!filename)
 			goto err;

@@ -390,8 +390,8 @@ f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 
 
 
-/* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
- * HINT: These are exported using the `Dee_MODSYM_FHIDDEN' flag, so you won't see them in listings. */
+/* These CMETHOD objects are exported from `deemon` with the `rt_` prefix replaced with `__`
+ * HINT: These are exported using the `Dee_MODSYM_FHIDDEN` flag, so you won't see them in listings. */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(Dee_operator_t operator_name,
@@ -411,7 +411,7 @@ err:
 }
 
 /* ASSERT(string message = "", int operator_id = -1, operator_args...) -> none;
- * NOTE: When `operator_id' is -1, ignore all remaining arguments. */
+ * NOTE: When `operator_id` is -1, ignore all remaining arguments. */
 PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const *argv);
 INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert, METHOD_FNORETURN);
 PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const *argv) {

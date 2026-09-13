@@ -89,8 +89,8 @@ typedef struct {
 #endif /* !GenericObject_DEFINED */
 
 
-/* Assert the typing of an object (raising an `Error.TypeError' if the type wasn't expected)
- * HINT: When `required_type' isn't a type-object, these functions throw an error!
+/* Assert the typing of an object (raising an `Error.TypeError` if the type wasn't expected)
+ * HINT: When `required_type` isn't a type-object, these functions throw an error!
  * @return: -1: The object doesn't match the required typing.
  * @return:  0: The object matches the required typing. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -124,9 +124,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 
-/* Returns the class of `self', automatically
+/* Returns the class of `self`, automatically
  * dereferencing super-objects and other wrappers.
- * Beyond that, this function returns the same as `Dee_TYPE()' */
+ * Beyond that, this function returns the same as `Dee_TYPE()` */
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self) {
 	DeeTypeObject *result;
@@ -138,13 +138,13 @@ DeeObject_Class(DeeObject *__restrict self) {
 }
 
 
-/* Return true if `test_type' is equal to, or extends `extended_type'
- * NOTE: When `extended_type' is not a type, this function simply returns `false'
+/* Return true if `test_type` is equal to, or extends `extended_type`
+ * NOTE: When `extended_type` is not a type, this function simply returns `false`
  * >> return test_type.extends(extended_type);
  *
- * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not inherit from `extended_type', or `extended_type' isn't a type
- * @return: 1 : "test_type" does inherit from `extended_type' */
+ * HINT: Always returns either `0` or `1`!
+ * @return: 0 : "test_type" does not inherit from `extended_type`, or `extended_type` isn't a type
+ * @return: 1 : "test_type" does inherit from `extended_type` */
 PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Extends(DeeTypeObject const *test_type,
                 DeeTypeObject const *extended_type) {
@@ -155,11 +155,11 @@ DeeType_Extends(DeeTypeObject const *test_type,
 	return 0;
 }
 
-/* Same as `DeeType_Extends()', but also check `tp_mro' for matches.
- * This function should be used when `implemented_type' is an abstract type.
+/* Same as `DeeType_Extends()`, but also check `tp_mro` for matches.
+ * This function should be used when `implemented_type` is an abstract type.
  * >> return test_type.implements(implemented_type);
  *
- * HINT: Always returns either `0' or `1'!
+ * HINT: Always returns either `0` or `1`!
  * @return: 0 : "test_type" does not implement "implemented_type"
  * @return: 1 : "test_type" does implement "implemented_type" */
 PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
@@ -1203,7 +1203,7 @@ type_newinstance(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	if (self == &DeeNone_Type)
-		return_none; /* Allow `none' to be instantiated with whatever you throw at it! */
+		return_none; /* Allow `none` to be instantiated with whatever you throw at it! */
 	if (kw && (DeeKwds_Check(kw) ? (argc == DeeKwds_SIZE(kw)) : (argc == 0))) {
 		/* Instantiate using keyword arguments. */
 		result = type_new_raw(self);
@@ -1769,7 +1769,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                "If @other isn't a ?., ?f is returned.\n"
 	                "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	                "${"
-	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
+	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;` */"
 	                "}"),
 	TYPE_KWMETHOD_F("extends", &type_extends, METHOD_FNOREFESCAPE,
 	                "(" type_extends_params ")->?Dbool\n"
@@ -1954,7 +1954,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "import stat from posix;\n"
 	              /**/ "local statIsDirProperty = stat.getinstanceattr(\"isdir\");\n"
 	              /**/ "local myStatInstance = stat(\".\");\n"
-	              /**/ "// Same as `myStatInstance.isdir' -- true\n"
+	              /**/ "// Same as `myStatInstance.isdir` -- true\n"
 	              /**/ "print repr statIsDirProperty(myStatInstance);"
 	              "}\n"
 	              "Note that one minor exception exists to the default lookup rule, and it relates to how "
@@ -1963,7 +1963,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "?. is considered an instance of ?. (typetype), rather than the type of ?. (typetype) "
 	              /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
 	              /**/ "return a class method object taking 2 arguments, rather than the intended single argument).\n"
-	              "Also note that the `*instanceattr' functions will not check for types that have overwritten "
+	              "Also note that the `*instanceattr` functions will not check for types that have overwritten "
 	              /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
 	              /**/ "if those attributes would normally have been overshadowed by attribute callbacks."),
 	TYPE_KWMETHOD("callinstanceattr", &type_callinstanceattr,
@@ -2193,9 +2193,9 @@ done:
 	return result;
 }
 
-/* Return the module used to define a given type `self',
- * or `NULL' if that module could not be determined.
- * NOTE: When `NULL' is returned, _NO_ error is thrown! */
+/* Return the module used to define a given type `self`,
+ * or `NULL` if that module could not be determined.
+ * NOTE: When `NULL` is returned, _NO_ error is thrown! */
 PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
 	DREF DeeModuleObject *result;
@@ -2205,7 +2205,7 @@ DeeType_GetModule(DeeTypeObject *__restrict self) {
 	 * - For types loaded by dex modules, do some platform-specific trickery to
 	 *   determine the address space bounds within which the module was loaded,
 	 *   then simply compare the type pointer against those bounds.
-	 * - All other types are defined as part of the builtin `deemon' module. */
+	 * - All other types are defined as part of the builtin `deemon` module. */
 again:
 	result = (DREF DeeModuleObject *)Dee_weakref_lock(&self->tp_module);
 	if (result != NULL)
@@ -2225,7 +2225,7 @@ again:
 	}
 
 	/* Special case for custom type-types (such
-	 * as those provided by the `ctypes' module)
+	 * as those provided by the `ctypes` module)
 	 *  -> In this case, we simply return the module associated with the
 	 *     typetype, thus allowing custom types to be resolved as well. */
 	if (self != Dee_TYPE(self)) {
@@ -2237,8 +2237,8 @@ again:
 	return NULL;
 }
 
-/* Returns the `tp_name' of `self', or the string
- * "<anonymous type>" when `self' doesn't have a
+/* Returns the `tp_name` of `self`, or the string
+ * "<anonymous type>" when `self` doesn't have a
  * type name set. */
 PUBLIC ATTR_RETNONNULL ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeType_GetName(DeeTypeObject const *__restrict self) {
@@ -2266,7 +2266,7 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 
 /* Returns the "instance-size" of a given object "self",
  * whilst trying to resolve known standard allocators.
- * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))'
+ * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))`
  * @return: * : The instance size of "self"
  * @return: 0 : Instance size is unknown (non-standard allocator used) */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
@@ -2692,7 +2692,7 @@ err:
 	return NULL;
 }
 
-/* Generic operators that implement equals using `===' and hash using `Object.id()'
+/* Generic operators that implement equals using `===` and hash using `Object.id()`
  * Use this instead of re-inventing the wheel in order to allow for special optimization
  * to be possible when your type appears in compare operations. */
 PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
@@ -2892,7 +2892,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* NOTE: The "TP_FDEEPIMMUTABLE" flag here is actually kind-of wrong: Types can have
 	 *       static members that might in turn not be immutable. However, it is expected
 	 *       behavior that "deepcopy MyClass()" will just return another instance of
-	 *       `MyClass', and not an instance of a new class that is a copy of MyClass! */
+	 *       `MyClass`, and not an instance of a new class that is a copy of MyClass! */
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,

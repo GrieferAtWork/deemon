@@ -177,7 +177,7 @@
  *    Since an ASP is still a proper sequence in all respects (implementing
  *    index- & range-based item access, as well as `operator #', and
  *    all of the sequence functions provided by `Sequence from deemon',
- *    such as `find()' or `sorted()'), this transition should have no
+ *    such as `find()` or `sorted()`), this transition should have no
  *    effect on 99% of existing code.
  *    The only existing code that might be affected is code that relied on
  *    the specific sequence type returned by a function that now returns
@@ -327,7 +327,7 @@
  *        Unify all linefeeds found in a string, replacing all of them with
  *        `replacement'. This function should be used to replace stuff like
  *        This function should be used to replace stuff like
- *        `x.replace("\r\n", "\n").replace("\r", "\n")' with `x.unifylines()'.
+ *        `x.replace("\r\n", "\n").replace("\r", "\n")' with `x.unifylines()`.
  *      - casereplace, casefind, caserfind, caseindex, caserindex, casecount, casecontains,
  *        casesstrip, caselsstrip, casersstrip, casestartswith, caseendswith, casepartition,
  *        caserpartition, casecompare, casevercompare, casewildcompare, casefuzzycompare,
@@ -381,7 +381,7 @@
  *        as a predicate taking 2 arguments and returning some combination.
  *      - property isnonempty: bool
  *        Returns true if the sequence is non-empty, identical to
- *        directly invoking `operator bool()' on the sequence.
+ *        directly invoking `operator bool()` on the sequence.
  *    Deprecated functions:
  *      - non_empty(): bool
  *        `isnonempty' should now be used instead
@@ -681,7 +681,7 @@
  *     >>     yield 20;
  *     >>     yield 30;
  *     >> }
- *     The same also applies to `operator for()', which thanks to this
+ *     The same also applies to `operator for()`, which thanks to this
  *     change can now be implemented as an arrow-function returning the
  *     expand expression pointing to an inner expression.
  *     WARNING: Optimization is allowed to change code such as that above
@@ -742,7 +742,7 @@
  *    >>         __hidden_symbol.operator leave();
  *    >>     }
  *    >> }
- *    NOTE: The `get_lock()' expression is allowed to declare new
+ *    NOTE: The `get_lock()` expression is allowed to declare new
  *          variables which will be scoped to the associated with-block
  *          >> with (local fp = file.open("foo.txt")) {
  *          >>     print fp.read();
@@ -780,14 +780,14 @@
  *    that's now required to do an expand-to-multiple-targets, is to use a sequence
  *    construct on the left-hand-side (aka. the target).
  *    NOTE: Portable code must not make use of sequence objects on the left-hand-side
- *          of an assignment expression. `(x, y, z) = get_value()' is not portable
+ *          of an assignment expression. `(x, y, z) = get_value()` is not portable
  *          between different implementations of the deemon compiler (e.g. the gatw
  *          JIT compiler doesn't accept this syntax). The only portable way of unpacking
  *          an expression into multiple variables is, and remains `x, y, z = get_values()...'
  *    NOTE: GATW-specific: As far as the intended semantics of expand-expressions
  *          go, this change technically fixed a bug in expand's old design, as an
  *          expression such as `(x, y, z) = get_values()...' should (and now does)
- *          mean that after calling `get_values()', the return value should be
+ *          mean that after calling `get_values()`, the return value should be
  *          expanded as a sequence. However since it is used in a binary operator,
  *          there is only a single target item into which to expand, meaning that
  *          the sequence must expand into a single item (as is the default-case
@@ -797,16 +797,16 @@
  *          compile-time targets, meaning that the already expanded sequence
  *          must be expanded again. - This time into 3 target.
  *          However prior to v200, deemon used to associate the expansion of
- *          the return value of `get_values()' to imply the expansion required
+ *          the return value of `get_values()` to imply the expansion required
  *          when storing values into multiple targets on the left.
  *          And while the intended behavior of `x, y, z = get_values()...' continues
  *          to work the same, it only does so by transferring that single indirection
  *          of expansion described by the `...' on the right-hand-side, by
  *          inverting it into a sequence construct and moving it to the left,
  *          thus leading back to the much more sensical internal representation
- *          that is `(x, y, z) = get_values()'.
+ *          that is `(x, y, z) = get_values()`.
  *          *huff* *huff* *huff*...
- *          Basically, you can think of `(x, y, z) = get_values()' being equal to
+ *          Basically, you can think of `(x, y, z) = get_values()` being equal to
  *          `x, y, z = get_values()...' the same way `x-z = y' is equal to `x = y+z'
  */
 
@@ -1939,7 +1939,7 @@ assembly_format ::= (
 	)...
 );
 
-/* `get_unique_number()' returns an integer that is
+/* `get_unique_number()` returns an integer that is
  * guarantied to remain unique within the current module.
  * Note that this number differs for each expansion of the
  * assembly statement, should the associated function get
@@ -2853,13 +2853,13 @@ compiler_annotation ::= (
 	 *       should choose its own prefix for compiler-specific annotations.
 	 *       An example are the GATW-specific annotations:
 	 * >> @[gatw.truncate]
-	 *    For class: The return value of `operator int()' may be truncated
+	 *    For class: The return value of `operator int()` may be truncated
 	 *               to fit the type through which the class is being viewed.
-	 *               -> With a 32-bit size_t type, `operator int()' returning
+	 *               -> With a 32-bit size_t type, `operator int()` returning
 	 *                  a 40-bit unsigned integer to a caller who intends to
 	 *                  use its value as a `size_t' object, the most significant
 	 *                  8 bits of data are truncated, leaving the value to have
-	 *                  the same meaning as though `operator int()' had masked
+	 *                  the same meaning as though `operator int()` had masked
 	 *                  its return value with 0xffffffff
 	 *                  Something similar happens for negative integers, which
 	 *                  are converted to become positive. - On on 2-complement host,
@@ -2911,7 +2911,7 @@ parse_tags ::= (
 	 *   >> if (local x = get_value()) {
 	 *   >> 	// Same goes for `with' and `while'
 	 *   >> 	// Also note that in the case of `with',
-	 *   >> 	// `MyTab(obj).operator enter()' will be invoked.
+	 *   >> 	// `MyTab(obj).operator enter()` will be invoked.
 	 *   >> 	...
 	 *   >> }
 	 *   >> @MyTag

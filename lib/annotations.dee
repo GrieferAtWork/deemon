@@ -96,8 +96,8 @@ class Overload: Callable {
 @@>	print "In mydepr2()";
 @@>}
 @@>
-@@>mydepr();  /* ... : Deprecated function `mydepr' called */
-@@>mydepr2(); /* ... : Deprecated function `mydepr2' called: Don't call me! */
+@@>mydepr();  /* ... : Deprecated function `mydepr` called */
+@@>mydepr2(); /* ... : Deprecated function `mydepr2` called: Don't call me! */
 class Deprecated: Callable {
 	private member m_func: Callable;
 	private member m_message: string;
@@ -296,7 +296,7 @@ do_del_total:
  * >>     return x + y;
  * >> }
  * >> foo(10, 20);    // Ok
- * >> foo(10, "foo"); // Error: Argument `y' must be an `int', but is actually a `string'
+ * >> foo(10, "foo"); // Error: Argument `y` must be an `int`, but is actually a `string`
  * TODO: Also extend the Overload annotation to look at argument
  *       types and try to overload depending on the argument types
  *       being passed.

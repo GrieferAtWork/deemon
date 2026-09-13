@@ -41,7 +41,7 @@ err:
 #ifndef DEFINED_seq_reduce_data
 #define DEFINED_seq_reduce_data
 struct seq_reduce_data {
-	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, item)') */
+	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, item)`) */
 	DREF DeeObject *gsr_result;  /* [0..1] Current reduction result, or NULL if no init given and at first item. */
 };
 #endif /* !DEFINED_seq_reduce_data */

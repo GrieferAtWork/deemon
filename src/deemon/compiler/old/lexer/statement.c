@@ -73,7 +73,7 @@ err:
 
 
 /* Parse the head header of a for-statement, returning the appropriate
- * AST flags for creating the loop (usually `AST_FLOOP_NORMAL' or `AST_FLOOP_FOREACH'),
+ * AST flags for creating the loop (usually `AST_FLOOP_NORMAL` or `AST_FLOOP_FOREACH`),
  * as well as filling in the given pointers to used asts.
  * NOTE: The caller is responsible for wrapping this function in its own
  *       scope, should they choose to with initializers/loop element symbols
@@ -81,9 +81,9 @@ err:
  * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
  *       unless the loop is actually a foreach-loop, in which case they _must_ always
  *       be present.
- * WARNING: The caller is responsible for wrapping `*p_iter_or_next' in an `__iterself__()'
- *          operator call when `AST_FLOOP_FOREACH' is part of the return mask, unless they wish
- *          to enumerate an iterator itself (which is possible using the `__foreach' statement). */
+ * WARNING: The caller is responsible for wrapping `*p_iter_or_next` in an `__iterself__()`
+ *          operator call when `AST_FLOOP_FOREACH` is part of the return mask, unless they wish
+ *          to enumerate an iterator itself (which is possible using the `__foreach` statement). */
 INTERN WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
 ast_parse_for_head(DREF struct ast **__restrict p_init,
                    DREF struct ast **__restrict p_elem_or_cond,
@@ -141,13 +141,13 @@ err:
 
 
 
-/* Parse a sequence of statements until `end_token' is
+/* Parse a sequence of statements until `end_token` is
  * encountered at the start of a statement, or until
  * the end of the current input-file-stack is reached.
- * NOTE: The returned ast is usually an `AST_MULTIPLE',
- *       which will have the given `flags' assigned.
+ * NOTE: The returned ast is usually an `AST_MULTIPLE`,
+ *       which will have the given `flags` assigned.
  * WARNING: If only a single AST would be contained
- *          and `flags' is `AST_FMULTIPLE_KEEPLAST',
+ *          and `flags` is `AST_FMULTIPLE_KEEPLAST`,
  *          the inner expression is automatically
  *          returned instead.
  * NOTE: If desired, the caller is responsible to setup
@@ -302,7 +302,7 @@ again:
 			goto err_r;
 		ff_branch = NULL;
 
-		/* Allow tags before the `else' keyword (forward-compatibility...) */
+		/* Allow tags before the `else` keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_tt_branch;
 		if unlikely(skip_lf())
@@ -442,14 +442,14 @@ do_else_branch:
 		if unlikely(yield() < 0)
 			goto err;
 		if (tok == ',') {
-			/* `print,;' --> `none' */
+			/* `print,;` --> `none` */
 			if unlikely(yield() < 0)
 				goto err;
 			result = ast_constexpr(Dee_None);
 			if unlikely(!result)
 				goto err;
 		} else if (is_semicolon()) {
-			/* `print;' --> `print pack()...;' */
+			/* `print;` --> `print pack()...;` */
 			result = ast_constexpr(Dee_EmptyTuple);
 			if unlikely(!result)
 				goto err;
@@ -668,7 +668,7 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err;
 
-		/* Allow tags before the `while' keyword (forward-compatibility...) */
+		/* Allow tags before the `while` keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_r;
 		if unlikely(skip_lf())
@@ -770,7 +770,7 @@ err_foreach_elem:
 		 * >>     print "Error";
 		 * >> }
 		 * >>
-		 * >> @@Documentation text // We've already parsed this due to the chance of this being followed by `catch' or `finally'
+		 * >> @@Documentation text // We've already parsed this due to the chance of this being followed by `catch` or `finally`
 		 * >> global foo = 42;
 		 */
 		goto done_no_tag_reset;
@@ -965,12 +965,12 @@ err_r_switch:
 				if unlikely(skip_lf())
 					goto err;
 				if unlikely(yield() < 0)
-					goto err; /* `:' token. */
+					goto err; /* `:` token. */
 handle_post_label:
 				if unlikely(skip_lf())
 					goto err;
 				if unlikely(tok == '}') {
-					/* Emit a warning and when the next token is a `}' */
+					/* Emit a warning and when the next token is a `}` */
 					if unlikely(WARN(W_MISSING_STATEMENT_AFTER_LABEL))
 						goto err;
 					result = ast_constexpr(Dee_None);

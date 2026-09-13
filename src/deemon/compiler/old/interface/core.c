@@ -259,7 +259,7 @@ done:
 
 
 
-/* Lookup or create a new compiler item for `value' */
+/* Lookup or create a new compiler item for `value` */
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 get_compiler_item_impl(DeeTypeObject *__restrict type,
                        void *__restrict value,
@@ -396,7 +396,7 @@ DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
 	return get_compiler_item_impl(type, value, true);
 }
 
-/* Delete (clear) the compiler item associated with `value'. */
+/* Delete (clear) the compiler item associated with `value`. */
 INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	CompilerItem *item;
 	struct Dee_compiler_item_object_list *list;
@@ -436,7 +436,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	return item != NULL;
 }
 
-/* Delete (clear) all compiler items matching the given `type'. */
+/* Delete (clear) all compiler items matching the given `type`. */
 INTERN NONNULL((1)) size_t DCALL
 DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	size_t i, result = 0;

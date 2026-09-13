@@ -34,19 +34,19 @@ __set_xor__.set_operator_xor([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)
 %{unsupported({
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a ^ ~b' -> `~(a ^ b)'
+		/* Special case: `a ^ ~b` -> `~(a ^ b)`
 		 * -> Keep the inversion on the outside, since it prevents enumeration. */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		DREF SetSymmetricDifference *symdiff;
 		if (DeeSet_CheckEmpty(xrhs->si_set))
-			return DeeObject_InvokeMethodHint(set_operator_inv, lhs); /* `a ^ ~{}' -> `~a' */
+			return DeeObject_InvokeMethodHint(set_operator_inv, lhs); /* `a ^ ~{}` -> `~a` */
 		symdiff = SetSymmetricDifference_New(lhs, xrhs->si_set);
 		if unlikely(!symdiff)
 			goto err;
 		return Dee_AsObject(SetInversion_NewInherited(symdiff));
 	}
 	if (DeeSet_CheckEmpty(rhs))
-		return_reference_(lhs); /* `a ^ {}' -> `a' */
+		return_reference_(lhs); /* `a ^ {}` -> `a` */
 	return Dee_AsObject(SetSymmetricDifference_New(lhs, rhs));
 err:
 	return NULL;

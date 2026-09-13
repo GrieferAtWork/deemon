@@ -23,7 +23,7 @@
  * Instead, they implement proper support for unicode case-folding.
  *
  * Make sure that this is working properly.
- * Btw: `Straße' is german for `street' :) */
+ * Btw: `Straße' is german for `street` :) */
 assert "Straße". casecompare("Straße")    == 0;
 assert "Strasse".casecompare("Strasse")   == 0;
 assert "Straße". casecompare("Strasse")   == 0;

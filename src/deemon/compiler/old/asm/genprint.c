@@ -95,7 +95,7 @@ ast_is_empty_string(struct ast *__restrict self) {
 	while (self->a_type == AST_MULTIPLE &&
 	       self->a_flag == AST_FMULTIPLE_KEEPLAST) {
 		if (!self->a_multiple.m_astc)
-			return false; /* This would be `none' */
+			return false; /* This would be `none` */
 		self = self->a_multiple.m_astv[self->a_multiple.m_astc - 1];
 	}
 	if (self->a_type == AST_CONSTEXPR)
@@ -267,7 +267,7 @@ ast_genprint_string_format(instruction_t mode,
 				DO(ast_genprint(argument_mode, format_argv[0], ddi_ast));
 			} else {
 				ASSERTF(insert_size == 2 && insert_start[0] == '!' && insert_start[1] == 'r',
-				        "This should have been asserted by `ast_genprint_string_format_check_simple()'");
+				        "This should have been asserted by `ast_genprint_string_format_check_simple()`");
 				DO(ast_genprint_repr(argument_mode, format_argv[0], ddi_ast));
 			}
 
@@ -297,7 +297,7 @@ append_single_ch_to_flush_buffer:
 			continue;
 		}
 	}
-	ASSERTF(format_argc == 0, "This should have been asserted by `ast_genprint_string_format_check_simple()'");
+	ASSERTF(format_argc == 0, "This should have been asserted by `ast_genprint_string_format_check_simple()`");
 
 	/* Flush any remaining text from the flush buffer and/or the input text. */
 	if (flush_buffer_size || flush_start < end) {
@@ -331,7 +331,7 @@ err:
 	return -1;
 }
 
-/* Check if `format_str' is simple enough to be used for `ast_genprint_string_format'.
+/* Check if `format_str` is simple enough to be used for `ast_genprint_string_format`.
  * @return: 1 : Yes, it's simple enough
  * @return: 0 : No, it's not simple enough
  * @return: -1: Error */
@@ -399,8 +399,8 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 string_format(DeeStringObject *self, size_t argc, DeeObject *const *argv);
 
 
-/* Generate code for the expression `print print_expression...;'
- * @param: mode: The print mode. NOTE: When `PRINT_MODE_FILE' is set,
+/* Generate code for the expression `print print_expression...;`
+ * @param: mode: The print mode. NOTE: When `PRINT_MODE_FILE` is set,
  *               then the caller must first push the file to print to. */
 INTERN WUNUSED NONNULL((2, 3)) int DCALL
 ast_genprint(instruction_t mode,
@@ -541,7 +541,7 @@ fallback:
 				while (cnt && ast_is_empty_string(print_expression->a_multiple.m_astv[cnt - 1]))
 					--cnt;
 				if (!cnt)
-					goto empty_operand; /* Special case: `print()'; */
+					goto empty_operand; /* Special case: `print()`; */
 				for (i = 0; i < cnt; ++i) {
 					instruction_t elem_mode = mode;
 					if (i < cnt - 1)
@@ -557,7 +557,7 @@ fallback:
 				switch (print_expression->a_flag) {
 
 				case OPERATOR_STR:
-					/* `print str(x);' is the same as `print x;'. */
+					/* `print str(x);` is the same as `print x;`. */
 					if likely(print_expression->a_operator.o_op0 != NULL)
 						return ast_genprint(mode, print_expression->a_operator.o_op0, ddi_ast);
 					break;
@@ -672,14 +672,14 @@ err:
 	return -1;
 }
 
-/* Same as `ast_genprint()', but print the repr of `print_expression' */
+/* Same as `ast_genprint()`, but print the repr of `print_expression` */
 INTERN WUNUSED NONNULL((2, 3)) int DCALL
 ast_genprint_repr(instruction_t mode,
                   struct ast *print_expression,
                   struct ast *ddi_ast) {
 	/* Super hacky (don't look)
 	 *
-	 * However, this *does* work, because `ast_genprint()' doesn't take
+	 * However, this *does* work, because `ast_genprint()` doesn't take
 	 * references to AST objects, nor does it modify them in any way. */
 	struct ast repr_ast;
 	DBG_memset(&repr_ast, 0xcc, sizeof(repr_ast));

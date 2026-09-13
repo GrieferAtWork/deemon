@@ -105,7 +105,7 @@ struct textjump {
 	code_addr_t tj_origin; /* Origin instruction address. */
 #define TEXTJUMP_ABSTRACT_TARGET ((code_addr_t)-1)
 	code_addr_t tj_target; /* Target instruction address.
-	                        * Set to `TEXTJUMP_ABSTRACT_TARGET' for abstract jump targets. */
+	                        * Set to `TEXTJUMP_ABSTRACT_TARGET` for abstract jump targets. */
 	uint16_t    tj_level;  /* The display level of this jump. */
 	uint16_t    tj_render; /* The number of times that this jump has been rendered. */
 };
@@ -472,12 +472,12 @@ textjumps_print(Dee_formatprinter_t printer, void *arg,
 		if (lines[i] != CORNER_TOP &&
 		    lines[i] != CORNER_BOTTOM)
 			continue;
-		/* Replace all whitespace with `-' */
+		/* Replace all whitespace with `-` */
 		++i;
 		while (i < line_length) {
 			if (lines[i] == ' ')
 				lines[i] = LINE_HORI;
-			/* Force the use of `|' here, so-as to keep
+			/* Force the use of `|` here, so-as to keep
 			 * intersecting lines as clear as possible. */
 			if (lines[i] == ARROW_UP || lines[i] == ARROW_DOWN)
 				lines[i] = LINE_VERT;
@@ -582,8 +582,8 @@ err:
 	return temp;
 }
 
-/* Return the S-name (e.g. `add') of an operator.
- * Returns `NULL' when the name cannot be determined. */
+/* Return the S-name (e.g. `add`) of an operator.
+ * Returns `NULL` when the name cannot be determined. */
 INTERN WUNUSED char const *DCALL
 libdisasm_get_operator_sname(Dee_operator_t operator_id) {
 	char const *result;
@@ -869,7 +869,7 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 			 * >> 00B0   FF 00 74    [1 -> 0] |               | | |       add    local 0, pop
 			 * >> 00B3   FF 01 3F 05 [0]      |               | | |       mov    local 1, local 5
 			 * >> 00B7   14 3F       [0 -> ?] |             +-|-|-|--<    jmp    00F8
-			 * >> 00B9   3F 01                |             | +-+-|-->    push   local 1 // We can re-use `00AC.SP - 1' as SP for this instruction.
+			 * >> 00B9   3F 01                |             | +-+-|-->    push   local 1 // We can re-use `00AC.SP - 1` as SP for this instruction.
 			 * >> 00BB   3B 09                |             |     v       push   @"("
 			 */
 		}

@@ -347,7 +347,7 @@ do_handle_code:
 		uint16_t reloc_type;
 		uint16_t reloc_value;
 do_handle_reloc:
-		/* `.reloc ., <name> [, <symbol> [, <value>]]'  */
+		/* `.reloc ., <name> [, <symbol> [, <value>]]`  */
 		if likely(tok == '.') {
 			if unlikely(yield() < 0)
 				goto err;
@@ -404,12 +404,12 @@ do_handle_reloc:
 		uint16_t except_flags;
 		struct asm_exc *except;
 do_handle_except:
-		/* `.except <start>, <end>, <entry>, [',' ~~ <tags>...]'
+		/* `.except <start>, <end>, <entry>, ["," ~~ <tags>...]`
 		 * tags:
-		 *   - `[@]finally'     -- Set the `Dee_EXCEPTION_HANDLER_FFINALLY' bit.
-		 *   - `[@]interrupt'   -- Set the `Dee_EXCEPTION_HANDLER_FINTERPT' bit.
-		 *   - `[@]handled'     -- Set the `Dee_EXCEPTION_HANDLER_FHANDLED' bit.
-		 *   - `[@]mask(const)' -- Use `const' as exception handler mask.
+		 *   - `[@]finally`     -- Set the `Dee_EXCEPTION_HANDLER_FFINALLY` bit.
+		 *   - `[@]interrupt`   -- Set the `Dee_EXCEPTION_HANDLER_FINTERPT` bit.
+		 *   - `[@]handled`     -- Set the `Dee_EXCEPTION_HANDLER_FHANDLED` bit.
+		 *   - `[@]mask(const)` -- Use `const` as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except();
 		DO(skip(',', W_EXPECTED_COMMA));
@@ -453,7 +453,7 @@ except_unknown_tag:
 					goto except_err;
 				mask = do_parse_constant();
 				if (DeeNone_Check(mask)) {
-					/* Special case: `mask(none)' is the same as `mask(type none)' */
+					/* Special case: `mask(none)` is the same as `mask(type none)` */
 					Dee_Decref(mask);
 					mask = Dee_AsObject(&DeeNone_Type);
 					Dee_Incref(mask);
@@ -620,15 +620,15 @@ check_invalid_stack_and_adjust:
 		DREF DeeObject *line;
 		DREF DeeObject *col;
 do_handle_ddi:
-		/* `.ddi <line:imm>' */
-		/* `.ddi <line:imm>, <col:imm>' */
-		/* `.ddi <filename:string>, <line:imm>' */
-		/* `.ddi <filename:string>, <line:imm>, <col:imm>' */
+		/* `.ddi <line:imm>` */
+		/* `.ddi <line:imm>, <col:imm>` */
+		/* `.ddi <filename:string>, <line:imm>` */
+		/* `.ddi <filename:string>, <line:imm>, <col:imm>` */
 		filename = do_parse_constant();
 		if unlikely(!filename)
 			goto err;
 		if (tok != ',') {
-			/* `.ddi <line:imm>' */
+			/* `.ddi <line:imm>` */
 			line     = filename;
 			filename = NULL;
 			col      = NULL;
@@ -640,16 +640,16 @@ do_handle_ddi:
 				goto err_ddi_filename;
 			if (tok != ',') {
 				if (DeeString_Check(filename)) {
-					/* `.ddi <filename:string>, <line:imm>' */
+					/* `.ddi <filename:string>, <line:imm>` */
 					col = NULL;
 				} else {
-					/* `.ddi <line:imm>, <col:imm>' */
+					/* `.ddi <line:imm>, <col:imm>` */
 					col      = line;
 					line     = filename;
 					filename = NULL;
 				}
 			} else {
-				/* `.ddi <filename:string>, <line:imm>, <col:imm>' */
+				/* `.ddi <filename:string>, <line:imm>, <col:imm>` */
 				if unlikely(yield() < 0)
 					goto err_ddi_line;
 				col = do_parse_constant();
@@ -750,14 +750,14 @@ err_ddi_filename:
 	{
 		struct asm_intexpr new_depth;
 do_handle_adjstack:
-		/* `.adjstack <imm32>'
+		/* `.adjstack <imm32>`
 		 * Adjust/set the virtual stack-depth as seen by the assembler.
 		 * Doing this usually only makes sense if the previous instruction
 		 * doesn't return, as well as no symbols having been defined since:
 		 * >>     push $1f.PC
 		 * >>     push $1f.SP
 		 * >>     jmp  pop, #pop
-		 * >> .setstack 42  // `jmp' doesn't return and no label had been defined
+		 * >> .setstack 42  // `jmp` doesn't return and no label had been defined
 		 * >>               // between this point and the end of it's instruction.
 		 * >> 1:  print @"The current stack depth is 42", nl
 		 */

@@ -40,11 +40,11 @@ DECL_BEGIN
  * to underlying sequence elements.
  *  - Transformations are applied by performing the same
  *    operation on the each-wrapper, with all operations
- *    with the exception of sequence (`tp_seq') and
- *    cast (`tp_cast') operators with continue to behave
+ *    with the exception of sequence (`tp_seq`) and
+ *    cast (`tp_cast`) operators with continue to behave
  *    normally, and as would be expected for a sequence.
  *  - An exception to this is the first operator invoked
- *    after the `each' wrapper is accessed, which _always_
+ *    after the `each` wrapper is accessed, which _always_
  *    is applied as a proxy operation, then also including
  *    any sequence or cast operator.
  *    Only the wrapper that _it_ then returns can be used
@@ -68,7 +68,7 @@ struct Dee_string_object;
 	PROXY_OBJECT_HEAD(se_seq) /* [1..1][const] The sequence being accessed. */
 
 typedef struct {
-	/* `seq.each' -- The root wrapper descriptor which
+	/* `seq.each` -- The root wrapper descriptor which
 	 * has yet to be bound to any specific operation. */
 	SEQ_EACH_HEAD
 } SeqEachBase;
@@ -120,7 +120,7 @@ typedef struct {
 /************************************************************************/
 /************************************************************************/
 
-/* Leave undefined to get dedicated `operator repr' for `Sequence.each[...]'
+/* Leave undefined to get dedicated `operator repr` for `Sequence.each[...]`
  *
  * This actually degrades usability, since it prevents default repr
  * (which includes the effective value of all elements) for these
@@ -138,14 +138,14 @@ typedef struct {
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_REPR
 #endif
 
-/* When defined, `SeqEachOperator_Type' (and types related to
- * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+/* When defined, `SeqEachOperator_Type` (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS`) define the
  * following operators in compliance with "Sequence":
  * - operator hash()
  * - operator <=> ()
  *
  * When not defined, those operators produce more SeqEach
- * wrappers, just like `SeqEach_Type' does (iow: this config
+ * wrappers, just like `SeqEach_Type` does (iow: this config
  * does not affect the first .each-step, which always allows
  * use of *any* operator)
  */
@@ -154,8 +154,8 @@ typedef struct {
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_COMPARE
 #endif
 
-/* When defined, `SeqEachOperator_Type' (and types related to
- * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+/* When defined, `SeqEachOperator_Type` (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS`) define the
  * following operators in compliance with "Sequence":
  * - operator iter()
  */
@@ -164,8 +164,8 @@ typedef struct {
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_ITER
 #endif
 
-/* When defined, `SeqEachOperator_Type' (and types related to
- * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+/* When defined, `SeqEachOperator_Type` (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS`) define the
  * following operators in compliance with "Sequence":
  * - operator size()
  * - operator getitem()
@@ -176,8 +176,8 @@ typedef struct {
 #define CONFIG_HAVE_SEQEACHOPERATOR_HAS_SEQLIKE_GETITEM
 #endif
 
-/* When defined, `SeqEachOperator_Type' (and types related to
- * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+/* When defined, `SeqEachOperator_Type` (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS`) define the
  * following operators in compliance with "Sequence":
  * - operator contains()
  */
@@ -273,7 +273,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLe
 #endif /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 
 
-/* Construct an each-wrapper for `self' */
+/* Construct an each-wrapper for `self` */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Each(DeeObject *__restrict self);
 

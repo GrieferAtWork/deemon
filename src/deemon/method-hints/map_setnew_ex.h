@@ -45,8 +45,8 @@ err:
 }
 
 
-/* @return: ITER_DONE: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
- * @return: * :        The given `key' already exists (nothing was inserted; returned object is the already-present value)
+/* @return: ITER_DONE: The value of `key` was set to `value` (the key didn't exist or used to be unbound)
+ * @return: * :        The given `key` already exists (nothing was inserted; returned object is the already-present value)
  * @return: NULL:      Error */
 [[wunused]] DREF DeeObject *
 __map_setnew_ex__.map_setnew_ex([[nonnull]] DeeObject *self,
@@ -127,7 +127,7 @@ err:
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;

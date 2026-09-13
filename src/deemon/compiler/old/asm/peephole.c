@@ -46,7 +46,7 @@ DECL_BEGIN
 
 #define sc_main   current_assembler.a_sect[0]
 
-/* Given an instruction that is known to be a jump (`IP_ISJMP()'), check the operand size. */
+/* Given an instruction that is known to be a jump (`IP_ISJMP()`), check the operand size. */
 #define JMP_IS32(x)   ((x)[0] == ASM_EXTENDED1 && (x)[1] == (ASM32_JMP & 0xff))
 #define JMP_IS16(x)   (((x)[0] & 1) || ((x)[0] == ASM_EXTENDED1 && ((x)[1] & 1)))
 /*#define JMP_IS8(x)  (!((x)[0] & 1))*/
@@ -73,7 +73,7 @@ STATIC_ASSERT(!(ASM_FOREACH_PAIR & 1));
 #define IP_ISCJMP(x) OP_ISCJMP(*(x))
 
 
-/* Similar to `DeeAsm_NextInstr()', but skip `ASM_DELOP'
+/* Similar to `DeeAsm_NextInstr()`, but skip `ASM_DELOP`
  * WARNING: Do _NOT_ use this one for walking instructions for
  *          inter-opcode optimizations.
  *          While ASM_DELOP instruction will be deleted before too long,
@@ -82,7 +82,7 @@ STATIC_ASSERT(!(ASM_FOREACH_PAIR & 1));
  *       -> Just use this one sparingly, and remember that ASM_DELOP instructions
  *          will be deleted before peephole will be invoked another time, so
  *          your optimization will still get its chance, even if you don't
- *          use `next_instr()' and instead use `DeeAsm_NextInstr()' everywhere. */
+ *          use `next_instr()` and instead use `DeeAsm_NextInstr()` everywhere. */
 LOCAL instruction_t *DCALL
 next_instr(instruction_t *__restrict iter) {
 	do {
@@ -358,7 +358,7 @@ switch_on_opcode:
 			abs_stackaddr = (stacksz - (*(uint8_t *)(iiter + 0) + 2));
 			if (abs_stackaddr <= old_stacksz) {
 				if ((*(uint8_t *)(iiter + 0))-- == 0) {
-					/* Replace with a regular `pop' instruction */
+					/* Replace with a regular `pop` instruction */
 					memset(iter + 1, ASM_DELOP, (size_t)(iiter - iter));
 					iter[0] = ASM_POP;
 				}
@@ -374,7 +374,7 @@ switch_on_opcode:
 				old_val = UNALIGNED_GETLE16(iiter + 0);
 				UNALIGNED_SETLE16(iiter + 0, old_val - 1);
 				if (old_val == 0) {
-					/* Replace with a regular `pop' instruction */
+					/* Replace with a regular `pop` instruction */
 					memset(iter, ASM_DELOP, (size_t)(iiter - iter) + 2);
 					iter[0] = ASM_POP;
 				}
@@ -387,7 +387,7 @@ switch_on_opcode:
 			abs_stackaddr = (stacksz - (*(uint8_t *)(iiter + 0) + 2));
 			if (abs_stackaddr <= old_stacksz) {
 				if ((*(uint8_t *)(iiter + 0))-- == 0) {
-					/* Replace with a regular `dup' instruction */
+					/* Replace with a regular `dup` instruction */
 					memset(iter + 1, ASM_DELOP, (size_t)(iiter - iter));
 					iter[0] = ASM_DUP;
 				}
@@ -403,7 +403,7 @@ switch_on_opcode:
 				old_val = UNALIGNED_GETLE16(iiter + 0);
 				UNALIGNED_SETLE16(iiter + 0, old_val - 1);
 				if (old_val == 0) {
-					/* Replace with a regular `dup' instruction */
+					/* Replace with a regular `dup` instruction */
 					memset(iter, ASM_DELOP, (size_t)(iiter - iter) + 2);
 					iter[0] = ASM_DUP;
 				}
@@ -648,7 +648,7 @@ continue_at_iter:
 		uint16_t opcode;
 		instruction_t *iiter = iter;
 #ifdef HAVE_get_mnemonic
-		Dee_DPRINTF("PC %.4" PRFX32 " SP %" PRFu16 " (`%s')\n",
+		Dee_DPRINTF("PC %.4" PRFX32 " SP %" PRFu16 " (`%s`)\n",
 		            (uint32_t)(iter - sc_main.sec_begin), stacksz,
 		            get_mnemonic(iter));
 #endif /* HAVE_get_mnemonic */
@@ -669,7 +669,7 @@ continue_at_iter:
 		 * >>              // the instruction immediately before the target is the same.
 		 * >>              // If they are, create a new symbol point to the instruction
 		 * >>              // before the target, delete the instruction immediately prior
-		 * >>              // to the `jmp', and replace the `jmp's target with that new
+		 * >>              // to the `jmp`, and replace the `jmp`s target with that new
 		 * >>              // symbol.
 		 * >>              // It's sufficient if we only optimize one instruction at a
 		 * >>              // time using this method, as peephole is repeated indefinitely
@@ -693,7 +693,7 @@ continue_at_iter:
 		 * >>    jmp   2f
 		 * >>1:  print @"bar", nl
 		 * >>    ret
-		 * >>2:  print @"baz", nl // ... before this instruction, because it is not reachable except for the `jmp'
+		 * >>2:  print @"baz", nl // ... before this instruction, because it is not reachable except for the `jmp`
 		 * >>    jmp   1b
 		 * This may not seem too important, but it would allow us to start
 		 * optimizing stack adjustment code generated from jmp-clutches.
@@ -726,12 +726,12 @@ continue_at_iter:
 			if (!(current_assembler.a_flag & ASM_FOPTIMIZE))
 				break;
 do_adjstack_optimization:
-			/* The `adjstack' instruction is normally optimized by the linker
-			 * when `asm_minjmp()' reduces required instruction groupings.
+			/* The `adjstack` instruction is normally optimized by the linker
+			 * when `asm_minjmp()` reduces required instruction groupings.
 			 * But since peephole optimizations require fully linked stack
 			 * alignments, special code has been called to link any stack-related
 			 * instruction prematurely, meaning that it falls upon us to optimize
-			 * uses of `adjstack', as well as `push $<imm*>', both of which may
+			 * uses of `adjstack`, as well as `push $<imm*>`, both of which may
 			 * be used with an operand that (used to) depend on a relocation
 			 * pointing at a stack-address. */
 			switch (*(int8_t *)(iter + 1)) {
@@ -739,31 +739,31 @@ do_adjstack_optimization:
 			case -2:
 				iter[0] = ASM_POP;
 				iter[1] = ASM_POP;
-				SET_RESULTF(iter, "Flatten `adjstack #SP - 2' into `pop; pop'");
+				SET_RESULTF(iter, "Flatten `adjstack #SP - 2` into `pop; pop`");
 				break;
 
 			case -1:
 				iter[0] = ASM_POP;
 				iter[1] = ASM_DELOP;
-				SET_RESULTF(iter, "Flatten `adjstack #SP - 1' into `pop'");
+				SET_RESULTF(iter, "Flatten `adjstack #SP - 1` into `pop`");
 				break;
 
 			case 0:
 				iter[0] = ASM_DELOP;
 				iter[1] = ASM_DELOP;
-				SET_RESULTF(iter, "Flatten `adjstack #SP + 0' into `-'");
+				SET_RESULTF(iter, "Flatten `adjstack #SP + 0` into `-`");
 				break;
 
 			case 1:
 				iter[0] = ASM_PUSH_NONE;
 				iter[1] = ASM_DELOP;
-				SET_RESULTF(iter, "Flatten `adjstack #SP + 1' into `push none'");
+				SET_RESULTF(iter, "Flatten `adjstack #SP + 1` into `push none`");
 				break;
 
 			case 2:
 				iter[0] = ASM_PUSH_NONE;
 				iter[1] = ASM_PUSH_NONE;
-				SET_RESULTF(iter, "Flatten `adjstack #SP + 2' into `push none; push none'");
+				SET_RESULTF(iter, "Flatten `adjstack #SP + 2` into `push none; push none`");
 				break;
 
 			default: break;
@@ -891,7 +891,7 @@ do_jmpf:
 				while (*jmp_target == ASM_DELOP)
 					++jmp_target;
 					/* Check if the target of this jump is another jump.
-					 * NOTE: This however doesn't apply to `foreach' as that one does more than just jump.
+					 * NOTE: This however doesn't apply to `foreach` as that one does more than just jump.
 					 *       XXX: foreach to the next instruction? That's not even allowed
 					 *            because it breaks stack alignment in an unpredictable fashion... */
 #if 1
@@ -900,7 +900,7 @@ do_jmpf:
 				     (after_prefix[0] != ASM_EXTENDED1 || after_prefix[1] != ASM_FOREACH))) {
 					/* Jump to the following instruction (aka. no-op jump)
 					 * NOTE: To keep any and all side-effects of the original instruction,
-					 *       we replace code like `jf 1f; 1:' with `bool top; pop;' */
+					 *       we replace code like `jf 1f; 1:` with `bool top; pop;` */
 					if (JMP_IS32(after_prefix)) {
 						after_prefix[2] = ASM_DELOP;
 						after_prefix[3] = ASM_DELOP;
@@ -972,7 +972,7 @@ do_jmpf:
 						}
 						relative_target += inplace_disp;
 						relative_target -= (code_saddr_t)(DeeAsm_NextInstr(after_prefix) - sc_main.sec_begin);
-						/* `relative_target' now contains the absolute (sign-extended)
+						/* `relative_target` now contains the absolute (sign-extended)
 						 *  value that will eventually be written to operator of the
 						 *  instruction to-be forwarded.
 						 *  NOTE: This value can only become smaller when more code may be deleted. */
@@ -1217,7 +1217,7 @@ do_push_bool_optimizations:
 					 * affected at all.
 					 * NOTE: However, since the jump instruction is protected, we must
 					 *       not attempt to invert its meaning if the current logical
-					 *       answer is negated following an `ASM_NOT' instruction. */
+					 *       answer is negated following an `ASM_NOT` instruction. */
 					if (IP_ISCJMP(iiter) && !must_invert && num_instruction != 0)
 						goto delete_bool_before_jft;
 					goto done_opt_bool;
@@ -1299,7 +1299,7 @@ conditional_jump_forwarding_ok:
 										                (code_size_t)(instr_jmp - iter));
 										/* Apply logic inversion _after_ forwarding checks, because
 										 * doing so beforehand would break the branching logic in
-										 * expressions like `if (!foo && bar)' */
+										 * expressions like `if (!foo && bar)` */
 										if (must_invert) {
 											*instr_jmp ^= ASM_JX_NOTBIT;
 										} if (*instr_pop == ASM_POP) {
@@ -1400,7 +1400,7 @@ delete_bool_before_jft:
 				delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 				                (code_size_t)(iiter - iter));
 				*iter = ASM_BOOL ^ (must_invert ? 1 : 0);
-				SET_RESULTF(iter, "Flatten boolean logic repetition to a single `%s'",
+				SET_RESULTF(iter, "Flatten boolean logic repetition to a single `%s`",
 				            must_invert ? "not" : STR_bool);
 			}
 done_opt_bool:
@@ -1431,8 +1431,8 @@ do_optimize_conditional_jump:
 			 * >>    adjstack #target.sp
 			 * >>    jmp       target.ip
 			 * >>1:
-			 * We're here to optimize the latter when `asm_minjmp()' was able to
-			 * determine the operand of `adjstack' being ZERO(0), allowing it to
+			 * We're here to optimize the latter when `asm_minjmp()` was able to
+			 * determine the operand of `adjstack` being ZERO(0), allowing it to
 			 * be deleted all-together, leaving us with code like this:
 			 * >>    jt           1f
 			 * >>    jmp          target.ip
@@ -1441,7 +1441,7 @@ do_optimize_conditional_jump:
 			 * >>    jf           target.ip
 			 * NOTE: Since the wrapper assembly used by conditional stack-jumps
 			 *       is also required when generating 32-bit long jumps, we
-			 *       intentionally don't optimize `ASM32_JMP' instructions,
+			 *       intentionally don't optimize `ASM32_JMP` instructions,
 			 *       so-as not to break bigcode mode. */
 			iiter = DeeAsm_NextInstr(after_prefix);
 			if ((*iiter == ASM_JMP || *iiter == ASM_JMP16) && !IS_PROTECTED(iiter)) {
@@ -1463,7 +1463,7 @@ do_optimize_conditional_jump:
 				opcode ^= ASM_JX_NOTBIT;          /* Invert the test. */
 				opcode |= iiter[0] & 1;           /* Copy the 16-bit operand flag of the following unconditional jump. */
 				iiter[0] = (instruction_t)opcode; /* Change an unconditional jump to one that is conditional. */
-				SET_RESULTF(iter, "Merge conditional double-jump around +%.4I32X to +%.4I32X (`j%c 1f; jmp 2f; 1:' -> `j%c 2f')",
+				SET_RESULTF(iter, "Merge conditional double-jump around +%.4I32X to +%.4I32X (`j%c 1f; jmp 2f; 1:` -> `j%c 2f`)",
 				            (code_addr_t)(iiter - sc_main.sec_begin),
 				            (code_addr_t)(jmp_next - sc_main.sec_begin),
 				            ((opcode & ~1) == ASM_JT) ? 'f' : 't',
@@ -1519,7 +1519,7 @@ do_switch_after_prefix_opcode:
 			instruction_t *next_instruction;
 			bool contains_stack_max;
 			/* Instructions without any guarantied side-effect
-			 * that have a positive stack-effect of >= `+1'. */
+			 * that have a positive stack-effect of >= `+1`. */
 		case ASM_ADJSTACK:
 			if (*(int8_t *)(iiter + 0) > 0)
 				goto do_unused_operand_optimization;
@@ -1689,21 +1689,21 @@ do_optimize_popmov_16bit:
 			/* Optimize the following:
 			 *  >> dup
 			 *  >> *    // Any sequence of code that doesn't make use of absolute
-			 *  >>      // stack offsets >= the stacksz value before `dup' and
+			 *  >>      // stack offsets >= the stacksz value before `dup` and
 			 *  >>      // doesn't access any stack object below dup.
 			 *  >>      // With these restrictions, the code must be able to run
 			 *  >>      // without regards to the currently stack alignment, so long
 			 *  >>      // that it doesn't exceed specifications (max-stack-size).
 			 *  >> pop
 			 * This is the optimization that implements what is referred to in
-			 * the documentation of `ASM_FSTACKDISP' to optimize the following:
-			 *  >>    dup      #0      // Copy `x' for print
-			 *  >>    print    pop, nl // Print `x'
-			 *  >>    adjstack #SP - 1 // Adjust to fix the stack before the following jump. (actually assembled as `pop')
+			 * the documentation of `ASM_FSTACKDISP` to optimize the following:
+			 *  >>    dup      #0      // Copy `x` for print
+			 *  >>    print    pop, nl // Print `x`
+			 *  >>    adjstack #SP - 1 // Adjust to fix the stack before the following jump. (actually assembled as `pop`)
 			 * ... Into this:
-			 *  >>    print    pop, nl // Print `x'
-			 * NOTE: Remember that if `current_assembler.a_stackmax' is located
-			 *       within `*' above, then we could re-calculated the max required
+			 *  >>    print    pop, nl // Print `x`
+			 * NOTE: Remember that if `current_assembler.a_stackmax` is located
+			 *       within `*` above, then we could re-calculated the max required
 			 *       stack size of the entire assembly.
 			 * NOTE: This optimization also gets rid of unused pushes such as:
 			 *  >>   push      $10
@@ -1787,7 +1787,7 @@ do_optimize_dupmov_8bit:
 						abs_sp = (stacksz + 1) - (UNALIGNED_GETLE8(next_instruction + 1) + 2);
 						if (abs_sp == last_operand_address) {
 							memset(iter, ASM_DELOP, (size_t)((next_instruction + 2) - iter));
-							SET_RESULTF(iter, "Remove redundant `dup; pop #SP-2' instruction pair");
+							SET_RESULTF(iter, "Remove redundant `dup; pop #SP-2` instruction pair");
 							goto continue_at_iter;
 						} else if (abs_sp <= UINT8_MAX) {
 							temp[0] = ASM_STACK;
@@ -1837,7 +1837,7 @@ do_optimize_dupmov_16bit:
 							abs_sp = (stacksz + 1) - (*(uint16_t *)(next_instruction + 2) + 2);
 							if (abs_sp == last_operand_address) {
 								memset(iter, ASM_DELOP, (size_t)((next_instruction + 4) - iter));
-								SET_RESULTF(iter, "Remove redundant `dup; pop #SP-2' instruction pair");
+								SET_RESULTF(iter, "Remove redundant `dup; pop #SP-2` instruction pair");
 							} else {
 								temp[0] = (ASM16_STACK & 0xff00) >> 8;
 								temp[1] = ASM16_STACK & 0xff;
@@ -1878,7 +1878,7 @@ do_unused_operand_optimization_ex:
 			      (int16_t)UNALIGNED_GETLE16(next_instruction + 2) < 0)) &&
 			    !IS_PROTECTED(next_instruction)) {
 
-				/* Optimize stuff like `dup; pop' */
+				/* Optimize stuff like `dup; pop` */
 				int16_t total_adjustment = stacksz - iiter_sp;
 				instruction_t *continue_after;
 				if (next_instruction[0] == ASM_POP) {
@@ -1991,15 +1991,15 @@ do_unused_operand_optimization_ex:
 					if (stacksz == current_assembler.a_stackmax)
 						contains_stack_max = true;
 					if (old_stacksz - sp_sub <= last_operand_address) {
-						/* Instructions such as `dup' and `dup #n' may use our operand as
+						/* Instructions such as `dup` and `dup #n` may use our operand as
 						 * an input argument, but for all we are concerned, they don't count as uses.
 						 * After all: The main idea here is to optimize assembly like this:
 						 * >> push  $10
-						 * >> dup           // This is the `dup' in question.
+						 * >> dup           // This is the `dup` in question.
 						 * >> print pop, nl
 						 * >> pop
-						 * Instead, we must interpret the `dup' as being an alias for the `push' above,
-						 * and delete it, as well as the `pop' when going to perform the optimization.
+						 * Instead, we must interpret the `dup` as being an alias for the `push` above,
+						 * and delete it, as well as the `pop` when going to perform the optimization.
 						 */
 						if (opcode == ASM_EXTENDED1)
 							opcode = iter[1];
@@ -2047,7 +2047,7 @@ do_unused_operand_optimization_ex:
 							}
 							goto delete_asm_after_pop;
 						} else if (opcode == ASM_POP) {
-							/* The parade-example: `pop'
+							/* The parade-example: `pop`
 							 * In this situation, the assembly may look something like this:
 							 * >> push $10
 							 * >> dup           // This is the instruction that started all of this
@@ -2066,7 +2066,7 @@ delete_asm_after_pop:
 							iter[0] = ASM_DELOP;
 							goto set_result_for_pop;
 						} else if (opcode == ASM_ADJSTACK) {
-							/* Similar to `pop': `adjstack' with a negative
+							/* Similar to `pop`: `adjstack` with a negative
 							 * operand can be used to pop multiple values. */
 							delete_assembly((code_addr_t)(positive_instruction - sc_main.sec_begin),
 							                (code_size_t)(next_instruction - positive_instruction));
@@ -2106,7 +2106,7 @@ continue_unused_operand:
 					iter = next;
 				}
 			/* Continue regular peephole optimization at the address
-			 * following the `push' we've failed to optimize away. */
+			 * following the `push` we've failed to optimize away. */
 			iter    = continue_ip;
 			stacksz = continue_sp;
 			validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
@@ -2126,13 +2126,13 @@ continue_unused_operand:
 			uint16_t effect_instructions;
 			/* Merge consecutive adjstack/pop/push instructions.
 			 * This kind of thing can easily happen in code like this:
-			 * >> {   __stack local a = 10;         // `push $10'
-			 * >>     {   __stack local b = 20;     // `push $20'
-			 * >>         {   __stack local c = 30; // `push $30'
-			 * >>         }                         // `pop'
-			 * >>     }                             // `pop'
-			 * >> }                                 // `pop'
-			 * Optimize `pop;pop;pop' to `adjstack #SP - 3'
+			 * >> {   __stack local a = 10;         // `push $10`
+			 * >>     {   __stack local b = 20;     // `push $20`
+			 * >>         {   __stack local c = 30; // `push $30`
+			 * >>         }                         // `pop`
+			 * >>     }                             // `pop`
+			 * >> }                                 // `pop`
+			 * Optimize `pop;pop;pop` to `adjstack #SP - 3`
 			 * ... But even more easily once peephole optimization
 			 *     has already performed a bunch of optimizations. */
 		case ASM_POP:
@@ -2148,9 +2148,9 @@ do_pop_merge_optimization:
 					break; /* Don't merge protected instructions. */
 				opcode = *iter++;
 				if (opcode == ASM_PUSH_NONE) {
-					/* NOTE: When a `push none' follows after `pop', then we must
+					/* NOTE: When a `push none` follows after `pop`, then we must
 					 *       not optimize it away because the assembly may be used
-					 *       to first pop some object, then replace it with `none'. */
+					 *       to first pop some object, then replace it with `none`. */
 					if (effect_sum < 0)
 						break;
 					++effect_sum;
@@ -2227,8 +2227,8 @@ do_pop_merge_optimization:
 			if (*iter == ASM_PUSH_NONE && !(current_basescope->bs_flags & Dee_CODE_FYIELDING)) {
 				instruction_t *next;
 				/* Minor optimization: In non-yielding functions, we can
-				 *                     optimize `push none; ret pop' to `ret none'
-				 *                     In yielding functions however, `ret pop' doesn't
+				 *                     optimize `push none; ret pop` to `ret none`
+				 *                     In yielding functions however, `ret pop` doesn't
 				 *                     exist, meaning that we can't perform the optimization. */
 				next = next_instr_sp(iter, &stacksz);
 				if (*next == ASM_RET && !IS_PROTECTED(next)) {
@@ -2265,11 +2265,11 @@ do_pop_merge_optimization:
 			 * >> pop   local @foo
 			 * >> print pop, nl
 			 * ... At which point later optimization passes may notice that the
-			 *     local variable `foo' is never read from following the point of
+			 *     local variable `foo` is never read from following the point of
 			 *     its assignment (and no DDI information is being created),
 			 *     further optimizing the code into this:
-			 *     NOTE: Only happens for `local' variables if not read from
-			 *           after the assignment, or `static' variables when
+			 *     NOTE: Only happens for `local` variables if not read from
+			 *           after the assignment, or `static` variables when
 			 *           never read from at all.
 			 * >> push  $10
 			 * >> dup
@@ -2356,7 +2356,7 @@ do_pop_push_optimization2:
 						if ((opcode & 0xff) == (ASM16_POP_EXTERN & 0xff))
 							UNALIGNED_SETLE8(iter + 2, (uint8_t)pop_immb);
 					}
-					SET_RESULTF(iter - 1, "Optimize `pop x; push x' into `dup; pop x'");
+					SET_RESULTF(iter - 1, "Optimize `pop x; push x` into `dup; pop x`");
 					validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
 				}
 			} else if ((next_op & 0xff00) == (opcode & 0xff00) &&
@@ -2377,7 +2377,7 @@ do_pop_push_optimization2:
 				 * >>     pop local @x
 				 * >>     jt  pop, 1f
 				 * This might seem slower because it's +1 more instruction, however this will
-				 * actually run faster, because `jt pop' can operate faster than `jt PREFIX' */
+				 * actually run faster, because `jt pop` can operate faster than `jt PREFIX` */
 				if (next_op == ASM16_GLOBAL) {
 					next_op_imma      = UNALIGNED_GETLE16((uint16_t *)(next + 2));
 					next_after_prefix = next + 4;
@@ -2396,8 +2396,8 @@ do_pop_push_optimization2:
 				if (pop_imma == next_op_imma &&
 				    pop_immb == next_op_immb) {
 					uint16_t next_after_prefix_opcode;
-					uint16_t pop_size;    /* Size of `pop ...' instruction found at `iter' */
-					uint16_t prefix_size; /* Size of `...:' prefix found at `next' */
+					uint16_t pop_size;    /* Size of `pop ...` instruction found at `iter` */
+					uint16_t prefix_size; /* Size of `...:` prefix found at `next` */
 					pop_size                 = (uint16_t)(next - iter);
 					prefix_size              = (uint16_t)(next_after_prefix - next);
 					next_after_prefix_opcode = next_after_prefix[0];
@@ -2409,25 +2409,25 @@ do_switch_next_after_prefix_opcode:
 						next_after_prefix_opcode |= next_after_prefix[1];
 						goto do_switch_next_after_prefix_opcode;
 
-					case ASM_YIELD:        /* `yield PREFIX' can be translated to `yield pop' */
-					case ASM_YIELDALL:     /* `yield foreach, PREFIX' can be translated to `yield foreach, pop' */
-					case ASM_THROW:        /* `throw PREFIX' can be translated to `throw pop' */
-					case ASM_JT:           /* `jt PREFIX, 1f' can be translated to `jt pop, 1f' */
+					case ASM_YIELD:        /* `yield PREFIX` can be translated to `yield pop` */
+					case ASM_YIELDALL:     /* `yield foreach, PREFIX` can be translated to `yield foreach, pop` */
+					case ASM_THROW:        /* `throw PREFIX` can be translated to `throw pop` */
+					case ASM_JT:           /* `jt PREFIX, 1f` can be translated to `jt pop, 1f` */
 					case ASM_JT16:         /* ... */
-					case ASM_JF:           /* `jf PREFIX, 1f' can be translated to `jf pop, 1f' */
+					case ASM_JF:           /* `jf PREFIX, 1f` can be translated to `jf pop, 1f` */
 					case ASM_JF16:         /* ... */
-					case ASM_POP_STATIC:   /* `mov static, PREFIX' can be translated to `pop static' */
+					case ASM_POP_STATIC:   /* `mov static, PREFIX` can be translated to `pop static` */
 					case ASM16_POP_STATIC: /* ... */
-					case ASM_POP_EXTERN:   /* `mov extern, PREFIX' can be translated to `pop extern' */
+					case ASM_POP_EXTERN:   /* `mov extern, PREFIX` can be translated to `pop extern` */
 					case ASM16_POP_EXTERN: /* ... */
-					case ASM_POP_GLOBAL:   /* `mov global, PREFIX' can be translated to `pop global' */
+					case ASM_POP_GLOBAL:   /* `mov global, PREFIX` can be translated to `pop global` */
 					case ASM16_POP_GLOBAL: /* ... */
-					case ASM_POP_LOCAL:    /* `mov local, PREFIX' can be translated to `pop local' */
+					case ASM_POP_LOCAL:    /* `mov local, PREFIX` can be translated to `pop local` */
 					case ASM16_POP_LOCAL:  /* ... */
 						memmoveupc(iter + prefix_size, iter, pop_size, sizeof(instruction_t));
 						memset(iter, ASM_DELOP, prefix_size - 1);
 						iter[prefix_size - 1] = ASM_DUP;
-						SET_RESULTF(iter, "Optimize `pop FOO; j%c FOO, ...' into `dup; pop FOO; j%c pop, ...'",
+						SET_RESULTF(iter, "Optimize `pop FOO; j%c FOO, ...` into `dup; pop FOO; j%c pop, ...`",
 						            (next_after_prefix_opcode & ~1) == ASM_JT ? 't' : 'f');
 						/* The optimized variant uses +1 more stack slots. */
 						if (stacksz == current_assembler.a_stackmax)
@@ -2443,7 +2443,7 @@ do_writeonly_symbol_optimization:
 			 *       that only uses a prefix as a write-only target, such as
 			 *       mov instructions:
 			 *    >> ...
-			 *    >> mov local @x, @"foobar"  // When `x' is never used, this should get deleted.
+			 *    >> mov local @x, @"foobar"  // When `x` is never used, this should get deleted.
 			 *    >> ...
 			 */
 #if 0 /* TODO: This can only be done when the length of the the source \

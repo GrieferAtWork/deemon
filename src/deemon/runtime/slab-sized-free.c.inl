@@ -92,7 +92,7 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	/* Mark chunk as available */
 	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
 
-	/* Update the page's `spm_used' counter. */
+	/* Update the page's `spm_used` counter. */
 #ifdef CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
 again_read_status: /* TODO: Simplification under CONFIG_NO_THREADS */
 	old_status.sps_word = atomic_read(&page->sp_meta.spm_status.sps_word);

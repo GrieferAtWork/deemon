@@ -31,8 +31,8 @@ __seq_reversed__(size_t start = 0, size_t end = (size_t)-1)->?DSequence {
 #define DEFINED_DeeSeq_GetForeachSubRangeAsTuple
 struct foreach_subrange_as_tuple_data {
 	DREF DeeTupleObject *fesrat_result;  /* [1..1] The tuple being constructed. */
-	size_t               fesrat_used;    /* Used # of elements of `fesrat_result' */
-	size_t               fesrat_maxsize; /* Max value for `fesrat_used' */
+	size_t               fesrat_used;    /* Used # of elements of `fesrat_result` */
+	size_t               fesrat_maxsize; /* Max value for `fesrat_used` */
 	size_t               fesrat_start;   /* # of elements that still need to be skipped. */
 };
 

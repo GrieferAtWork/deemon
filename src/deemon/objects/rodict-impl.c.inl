@@ -404,7 +404,7 @@ LOCAL_rodict_builder_grow(struct LOCAL_Dee_rodict_builder *__restrict me) {
 	size_t old_valloc, new_valloc;
 	Dee_hash_hidxio_t old_hidxio, new_hidxio;
 
-	/* Calculate desired change in buffer size (s.a. `dict_trygrow_vtab_and_htab_with()') */
+	/* Calculate desired change in buffer size (s.a. `dict_trygrow_vtab_and_htab_with()`) */
 	old_dict = me->rdb_dict;
 	ASSERT(old_dict);
 	min_valloc = old_dict->rd_vsize + 1;

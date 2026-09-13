@@ -21,7 +21,7 @@
 #include "__stddef.dee"
 #include "__builtin_gcc.dee"
 
-/* `switch' can't be used in expressions anymore... */
+/* `switch` can't be used in expressions anymore... */
 //#define _Generic(x, ...) (switch (type(x)) { __VA_ARGS__ })
 #pragma push_macro(undef, "from", "ctypes", "import")
 from ctypes import void = "void", sizeof = "sizeof";

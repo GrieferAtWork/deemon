@@ -57,7 +57,7 @@ segiter_init(SegmentsIterator *__restrict self,
 /*[[[end]]]*/
 	if unlikely(!args.len) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid length passed to `_SeqSegmentsIterator'");
+		                "Invalid length passed to `_SeqSegmentsIterator`");
 		goto err;
 	}
 	Dee_Incref(args.iter);
@@ -250,7 +250,7 @@ seg_init(Segments *__restrict self,
 /*[[[end]]]*/
 	if unlikely(!args.len) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid length passed to `_SeqSegments'");
+		                "Invalid length passed to `_SeqSegments`");
 		goto err;
 	}
 	Dee_Incref(args.seq);
@@ -418,7 +418,7 @@ PRIVATE struct type_getset tpconst seg_getsets[] = {
 PRIVATE struct type_member tpconst seg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqSegmentsIterator_Type),
 	TYPE_MEMBER_CONST(STR_Frozen, &SeqSegments_Type),
-	TYPE_MEMBER_CONST(STR_ItemType, &DeeTuple_Type), /* s.a. `DeeTuple_NewUninitialized()' calls above */
+	TYPE_MEMBER_CONST(STR_ItemType, &DeeTuple_Type), /* s.a. `DeeTuple_NewUninitialized()` calls above */
 	TYPE_MEMBER_CONST(STR___seq_getitem_always_bound__, Dee_True),
 	TYPE_MEMBER_END
 };

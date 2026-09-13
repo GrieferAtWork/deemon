@@ -29,7 +29,7 @@
 DECL_BEGIN
 
 typedef struct {
-	PROXY_OBJECT_HEAD(dk_owner) /* [1..1][const] The owner of `dk_start'. */
+	PROXY_OBJECT_HEAD(dk_owner) /* [1..1][const] The owner of `dk_start`. */
 	char const       *dk_start; /* [1..1][const] Doc string. */
 } DocKwds;
 

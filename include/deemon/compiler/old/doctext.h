@@ -67,7 +67,7 @@ DECL_BEGIN
  *     >> if (startswith("\n")) this = "\\" + this;
  *
  * The resulting text is then appended after the documentation's declaration string,
- * the format of which is documented in `/include/deemon/compiler/old/symbol.h', with
+ * the format of which is documented in `/include/deemon/compiler/old/symbol.h`, with
  * an additional \n-character inserted inserted in-between.
  *
  * This encoding method can be reversed at runtime to re-gain the original documentation
@@ -80,13 +80,13 @@ DECL_BEGIN
  *
  *   - Encoded Documentation Text:
  *         This text's format is produced by compiling the "Raw Documentation Text",
- *         and encoding it using the the methods described in the section `ENCODING'
+ *         and encoding it using the the methods described in the section `ENCODING`
  *
  *   - Raw Documentation Text:
  *         The raw list of strings preceding some declaration in user-code
  *         after being stripped of each line's leading "@@", and joined by
  *         line-feeds ("\n".join(lines.each.lsstrip("@@")))
- *         This text's format is described in the next section `FORMAT'
+ *         This text's format is described in the next section `FORMAT`
  *
  */
 
@@ -97,7 +97,7 @@ DECL_BEGIN
  * This section details how "Raw Documentation Text" is compiled into "Encoded Documentation Text"
  *
  * Since this format is designed to compile from a human-readable documentation text format
- * into something that is easier parsed by tools such as `doc-browser.dee', this format is
+ * into something that is easier parsed by tools such as `doc-browser.dee`, this format is
  * designed with redundancy in mind.
  * This means that anything that would normally be considered a compiler error in a normal
  * compiler will instead cause anything that had already been specially encoded to be discarded,
@@ -109,12 +109,12 @@ DECL_BEGIN
  * >> +-----+--------------------+
  * >> | @10 | @(int from deemon) |
  * >> +--------------------------+
- * This table is not well-formed (its footer is lacking a `+' where there is a `-' instead).
+ * This table is not well-formed (its footer is lacking a `+` where there is a `-` instead).
  * As such, the produced output text will not contain a table, but will instead contain the
  * raw +, - and | characters as they appear in this example the same way they would appear
  * if encoding tables in this form wasn't actually a feature of doc texts.
  * However, @10 and @(int from deemon) will still be encoded and high-lit properly, the later
- * also being clickable when the documentation string is viewed in `doc-browser.dee'.
+ * also being clickable when the documentation string is viewed in `doc-browser.dee`.
  *
  * Any character that would be a controlling part of a special formating construct can be
  * prefixed by a \-character in order to disable the recognition of that construct, and have
@@ -130,7 +130,7 @@ DECL_BEGIN
  *     0 1 2 3 4 5 6 7 8 9 .  (Only if the character appeared at the beginning of a line, or
  *                            was preceded by only other decimal, \, . or : characters (i.e.
  *                            would have been apart of a possibly already broken ordered list))
- *                            HINT: Any character matching `DeeUni_IsDigit()' is considered
+ *                            HINT: Any character matching `DeeUni_IsDigit()` is considered
  *
  * Additionally, ' ' (or any other ) can be escaped to force the insertion of an additional
  * or specific space character.
@@ -183,7 +183,7 @@ DECL_BEGIN
  *     >> First line
  *     >>         Second line Third line
  *     An exception to this rule is when the line prior to the indented line contains
- *     a `:' character preceded by `.', <space> or <issymcont>:
+ *     a `:` character preceded by `.`, <space> or <issymcont>:
  *     >> @@First line
  *     >> @@
  *     >> @@NOTE: Second line
@@ -246,7 +246,7 @@ DECL_BEGIN
  *       - Numbered:  each line begins with a decimal number, followed by (the same) . or :
  *                    These numbers don't necessarily have to be incremental, nor does there
  *                    need to be only a single decimal number (so-long as decimals are only
- *                    ever separated by `.' characters; i.e. `1.1.3:' is a valid list item start)
+ *                    ever separated by `.` characters; i.e. `1.1.3:` is a valid list item start)
  *       - Unordered: each line beings with (the same) character, which is one of - + or *
  *     A list sequence is continuous starting with the first item, after which all following
  *     items must use the same ordering format (i.e. if the first item uses -, the next item
@@ -304,7 +304,7 @@ DECL_BEGIN
  *
  *
  *   - Inline code (with- and without deemon syntax highlighting)
- *     >> @@Highlight `code`, `code', ``code`` and ```code``` differently
+ *     >> @@Highlight `code`, `code`, ``code`` and ```code``` differently
  *     >> @@
  *     >> @@```
  *     >> @@Highlight this part the same as code above
@@ -327,7 +327,7 @@ DECL_BEGIN
  *       - `foo`-like is the easiest, in that it behaves just like **foo** and __foo__,
  *         meaning that the contained text may contain space characters, but must terminate
  *         on the same line.
- *       - START_OF_LINE + OPTIONAL_WHITESPACE + `>' (optionally repeated) is also pretty simple:
+ *       - START_OF_LINE + OPTIONAL_WHITESPACE + `>` (optionally repeated) is also pretty simple:
  *         line-feed followed by any number of >-characters (though at least one), with any line
  *         there-after that starts with the same number of >-characters also belonging to the same
  *         source representation block.
@@ -343,10 +343,10 @@ DECL_BEGIN
  *       - ```deemon
  *         ...
  *         ```
- *         This one behaves the same as the previous one (`@@> ...'), in that it allows for deemon
- *         syntax highlighting within the eventual output. However, unlike the `@@> ...' form, this
+ *         This one behaves the same as the previous one (`@@> ...`), in that it allows for deemon
+ *         syntax highlighting within the eventual output. However, unlike the `@@> ...` form, this
  *         one allows the first line (containing "```deemon\n") to not appear at the start of its own
- *         line, and also unlike the `@@>...' form, this form strip leading and trailing whitespace
+ *         line, and also unlike the `@@>...` form, this form strip leading and trailing whitespace
  *         from the embedded code, which also includes line-feeds.
  *         Note that forms such as "```deemon\n if (true) none;```" are also allowed, so-long as the
  *         "```deemon\n" portion is followed by at least 1 whitespace character, or a linefeed.
@@ -405,7 +405,7 @@ DECL_BEGIN
  *
  *   - Symbol references
  *     >> @@Click the following @(List from deemon)
- *     Will be rendered such that a clickable link for `List' appears within flow-text
+ *     Will be rendered such that a clickable link for `List` appears within flow-text
  *     Formating rules:
  *       - The format starts with an @-character that is followed by one of:
  *         - "- or '-character (normal string; allow \-escape):
@@ -425,12 +425,12 @@ DECL_BEGIN
  *           @-123.4  Encoded as "```deemon\n-123.4```"  (except that no new-line is inserted)
  *           @-123. 4 Encoded as "```deemon\n-123```. 4"  (except that no new-line is inserted)
  *         - A keyword:
- *           @foo    Resolves to a clickable symbol `foo' in the context of the component
+ *           @foo    Resolves to a clickable symbol `foo` in the context of the component
  *                   being annotated by the documentation text. Note that in the case of
  *                   a function, this also allows function arguments to be annotated!
  *           @foo()  Same as a pure keyword, but annotate as a function-call
  *         - A ( [ or {-character:
- *           @(foo)          Same as `@foo'
+ *           @(foo)          Same as `@foo`
  *           @(foo, bar)     A tuple expression (```deemon\n(foo, bar)```)
  *           @[foo]          An array expression (```deemon\n[foo]```)
  *           @{foo}          An sequence expression (```deemon\n{foo}```)
@@ -449,7 +449,7 @@ DECL_BEGIN
  *      - The @-character must appear at the start of a line (or only be preceded by whitespace)
  *      - An optional ':' character may appear after the tag, and once again after the referenced argument/type
  *        >> @@@throws: Error: This time with ':'-characters
- *      - In the case of `@param' and `@throws', the referenced
+ *      - In the case of `@param` and `@throws`, the referenced
  *        >> @@@throws: Error: This time with ':'-characters
  */
 
@@ -482,7 +482,7 @@ DECL_BEGIN
  *   - Headers
  *         #Hn{BODY}
  *         #HnBODY\n
- *             Where `n' is one of 1 2 3 4 5 or 6, and BODY is the text used as header.
+ *             Where `n` is one of 1 2 3 4 5 or 6, and BODY is the text used as header.
  *
  *   - Emphasis/italics, Strong emphasis/bold and strikethrough
  *         #B{BODY}   Bold for BODY
@@ -565,7 +565,7 @@ DECL_BEGIN
  *                                                    future options.
  *
  *   - Parameter/return/throws descriptions
- *         #pNAME{BODY}         Description on parameter `NAME' (NAME is handled similarly to `@NAME')
+ *         #pNAME{BODY}         Description on parameter `NAME` (NAME is handled similarly to `@NAME`)
  *         #p{NAME}{BODY}       ...
  *
  *         #r{BODY}             Description on function return value
@@ -578,12 +578,12 @@ DECL_BEGIN
  *
  *   - Symbol references
  *         ?.                   The current type in the documentation of a type-header, operator, or this-function
- *                              For global (non-class) symbols, this references the current module the same as `?M{.}'
+ *                              For global (non-class) symbols, this references the current module the same as `?M{.}`
  *         ?Mposix              Module reference to `import("posix")'
  *         ?M{posix}            ...
  *         ?M{.}                Module reference to the current module
- *         ?Afoo?<ref>          Reference to an attribute `foo' of ?<ref> (where `ref' must be one of those that start with `?')
- *         ?A{foo}?<ref>        ...   (e.g. ?Aid?O for `deemon.Object.id')
+ *         ?Afoo?<ref>          Reference to an attribute `foo` of ?<ref> (where `ref` must be one of those that start with `?`)
+ *         ?A{foo}?<ref>        ...   (e.g. ?Aid?O for `deemon.Object.id`)
  *         ?Eposix:errno        Same as ?Aerrno?Mposix
  *         ?E{posix}:errno      Same as ?Aerrno?M{posix}
  *         ?Eposix:{errno}      Same as ?A{errno}?Mposix
@@ -618,7 +618,7 @@ DECL_BEGIN
  *         ?R!#foo]             Same as ?#foo
  *         ?R!#{foo}]           Same as ?#{foo}
  *         ?R!#{op:call}]       Same as ?#{op:call}
- *         @foo                 Reference to an argument `foo' of the current function (only allowed for function doc texts)
+ *         @foo                 Reference to an argument `foo` of the current function (only allowed for function doc texts)
  *         @{foo}               ...
  *         @this                Reference to the hidden this-argument
  *         @{this}              ...
@@ -628,7 +628,7 @@ DECL_BEGIN
  *         :{foo}               ...
  *
  *     When no {}-block is used, the string must allow for issymbol().
- *     Otherwise, when a {}-block is used, the contained string `name'
+ *     Otherwise, when a {}-block is used, the contained string `name`
  *     is escaped as follows:
  *     >> if (!name.issymbol()) {
  *     >>     for (local x: r'#$%&~^{}[]|?*@-+')
@@ -639,10 +639,10 @@ DECL_BEGIN
  * NOTE: The !-encoding is fully documented under EXPR-ENCODING in "deemon/compiler/old/symbol.h"
  */
 
-/* Compile documentation text in `doctext' into itself.
- * This function scans `doctext' according to `FORMAT',
- * then re-writes `doctext' to contain the equivalent
- * as described by `ENCODING'.
+/* Compile documentation text in `doctext` into itself.
+ * This function scans `doctext` according to `FORMAT`,
+ * then re-writes `doctext` to contain the equivalent
+ * as described by `ENCODING`.
  * NOTE: This function should be called by the compiler
  *       in the context of the declaration being annotated,
  *       such that in the case of a function being annotated,

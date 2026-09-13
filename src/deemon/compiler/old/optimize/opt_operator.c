@@ -134,15 +134,15 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_hasutf(DeeObject *__res
 	 (self) == Dee_AsObject(&DeeTraceback_Type) || \
 	 (self) == Dee_AsObject(&DeeModule_Type))
 
-/* Returns `ITER_DONE' if the call isn't allowed. */
+/* Returns `ITER_DONE` if the call isn't allowed. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self)) {
 		/* Must emulate encode() and decode() functions, so they don't
 		 * call into libcodecs, which should only be loaded at runtime!
 		 * However, builtin codecs are still allowed!
-		 * NOTE: Both `string' and `Bytes' use the same underlying
-		 *       function in order to implement `encode' and `decode'! */
+		 * NOTE: Both `string` and `Bytes` use the same underlying
+		 *       function in order to implement `encode` and `decode`! */
 		DeeObject *meth_self   = DeeObjMethod_SELF(self);
 		Dee_objmethod_t method = DeeObjMethod_FUNC(self);
 		if (method == (Dee_objmethod_t)&string_encode)
@@ -155,10 +155,10 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeClsProperty_Check(self)) {
 		Dee_getmethod_t get;
 		get = DeeClsProperty_GET(self);
-		/* `Object.id()' should not be evaluated at compile-time! */
+		/* `Object.id()` should not be evaluated at compile-time! */
 		if (get == &object_id_get)
 			return ITER_DONE;
-		/* `string.__hasutf__' and `string.__hashed__' are runtime-volatile. */
+		/* `string.__hasutf__` and `string.__hashed__` are runtime-volatile. */
 		if (get == &string_hasutf || get == &string_hashed)
 			return ITER_DONE;
 	}
@@ -166,7 +166,7 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 }
 
 
-/* Returns `ITER_DONE' if the call isn't allowed. */
+/* Returns `ITER_DONE` if the call isn't allowed. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 emulate_member_call(DeeObject *base, DeeObject *name,
                     size_t argc, DeeObject *const *argv) {
@@ -178,7 +178,7 @@ emulate_member_call(DeeObject *base, DeeObject *name,
 		if (DeeString_EQUALS_ASCII(name, "decode"))
 			return emulate_object_decode(base, argc, argv);
 	}
-	/* `Object.id()' should not be evaluated at compile-time! */
+	/* `Object.id()` should not be evaluated at compile-time! */
 	if (DeeString_EQUALS_ASCII(name, "id"))
 		return ITER_DONE;
 	if (IS_BLACKLISTED_BASE(base))
@@ -186,11 +186,11 @@ emulate_member_call(DeeObject *base, DeeObject *name,
 	return DeeObject_CallAttr(base, name, argc, argv);
 }
 
-/* Returns `ITER_DONE' if the call isn't allowed. */
+/* Returns `ITER_DONE` if the call isn't allowed. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 emulate_getattr(DeeObject *base, DeeObject *name) {
 	if (DeeString_Check(base)) {
-		/* `string.__hasutf__' and `string.__hashed__' are runtime-volatile. */
+		/* `string.__hasutf__` and `string.__hashed__` are runtime-volatile. */
 		if (DeeString_EQUALS_ASCII(name, "__hasutf__") ||
 		    DeeString_EQUALS_ASCII(name, "__hashed__"))
 			return ITER_DONE;
@@ -377,7 +377,7 @@ err_inline_constexpr_printer:
 				*p_template_str = new_template_str; /* Inherit reference */
 				template_str    = new_template_str;
 
-				/* Remove the argument at index `i' */
+				/* Remove the argument at index `i` */
 				ast_decref(arg);
 				--argc;
 				memmovedownp(&argv[i], &argv[i + 1], argc - i);
@@ -398,7 +398,7 @@ dont_do_inline_constant_arg_optimization:
 				 * to:   >> local foo = str bar; */
 				int error;
 				DREF struct ast *arg_asstr;
-				OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}\".format({ x })' to `str x'\n");
+				OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}\".format({ x })' to `str x`\n");
 				arg_asstr = ast_operator1(OPERATOR_STR, AST_OPERATOR_FNORMAL, argv[0]);
 				if unlikely(!arg_asstr)
 					goto err;
@@ -440,7 +440,7 @@ dont_do_inline_constant_arg_optimization:
 			 * to:   >> local foo = repr bar; */
 			int error;
 			DREF struct ast *arg_asstr;
-			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{!r}\".format({ x })' to `repr x'\n");
+			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{!r}\".format({ x })' to `repr x`\n");
 			arg_asstr = ast_operator1(OPERATOR_REPR, AST_OPERATOR_FNORMAL, argv[0]);
 			if unlikely(!arg_asstr)
 				goto err;
@@ -458,7 +458,7 @@ dont_do_inline_constant_arg_optimization:
 			 * to:   >> local foo = a + b; // Only when type(a) == string */
 			int error;
 			DREF struct ast *add_ast;
-			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}{}\".format({ a, b })' (where `type a === string') to `a + b'\n");
+			OPTIMIZE_VERBOSEAT(argv[0], "Optimize `\"{}{}\".format({ a, b })' (where `type a === string`) to `a + b`\n");
 			add_ast = ast_operator2(OPERATOR_ADD, AST_OPERATOR_FNORMAL, argv[0], argv[1]);
 			if unlikely(!add_ast)
 				goto err;
@@ -528,7 +528,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 				if (operator_result &&
 				    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
-					OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k -> %r'\n",
+					OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k -> %r`\n",
 					                 base->a_constexpr,
 					                 attr->a_constexpr,
 					                 operator_result);
@@ -537,23 +537,23 @@ INTERN WUNUSED NONNULL((1, 2)) int
 				opcount = 2;
 				goto set_operator_result;
 			}
-			/* Special handling to allow propagation of `static final' member of user-defined classes:
+			/* Special handling to allow propagation of `static final` member of user-defined classes:
 			 * >> class MyClass1 {
 			 * >>     public static final FOO = 42;
 			 * >> }
 			 * >> class MyClass2 {
 			 * >>     public static final BAR = MyClass1;
 			 * >> }
-			 * >> print MyClass1.FOO;     // Can be optimized to `42'
-			 * >> print MyClass2.BAR.FOO; // Can be optimized to `42'
-			 * >> print MyClass2.BAR;     // Can be optimized to `MyClass1' */
+			 * >> print MyClass1.FOO;     // Can be optimized to `42`
+			 * >> print MyClass2.BAR.FOO; // Can be optimized to `42`
+			 * >> print MyClass2.BAR;     // Can be optimized to `MyClass1` */
 
 			/* TODO: Must differentiate a couple of different cases here:
-			 * - AST_SYM -> SYMBOL_TYPE_EXTERN             (for `MyClass.FOO')
-			 * - ast_isoperator2(base, OPERATOR_GETATTR)   (for `MyClass2.BAR.FOO')
+			 * - AST_SYM -> SYMBOL_TYPE_EXTERN             (for `MyClass.FOO`)
+			 * - ast_isoperator2(base, OPERATOR_GETATTR)   (for `MyClass2.BAR.FOO`)
 			 *
 			 * Note that this doesn't yet handle the case where the class gets
-			 * defined by the current module! For that, `ast_assumes' probably
+			 * defined by the current module! For that, `ast_assumes` probably
 			 * needs to be re-written to not track constant expressions, but
 			 * instead track the ASTs that get assigned to variables (because
 			 * that way, we can know if a symbol will *always* hold some class
@@ -564,9 +564,9 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		goto do_generic;
 	}
 
-	/* Since `ObjMethod' isn't allowed in constant expressions, but
+	/* Since `ObjMethod` isn't allowed in constant expressions, but
 	 * since it is the gateway to all kinds of compiler optimizations,
-	 * such as `"foo".upper()' --> `"FOO"', as a special case we try
+	 * such as `"foo".upper()` --> `"FOO"', as a special case we try
 	 * to bridge across the GETATTR operator invocation and try to
 	 * directly invoke the function when possible. */
 	if (self->a_flag == OPERATOR_CALL && self->a_operator.o_op1 &&
@@ -604,7 +604,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 					if (operator_result &&
 					    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
-						OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k%r -> %r'\n",
+						OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k%r -> %r`\n",
 						                 base->a_constexpr, name->a_constexpr,
 						                 args->a_constexpr, operator_result);
 					}
@@ -642,7 +642,7 @@ do_generic:
 		if (ast_flatten_tostr(self->a_operator.o_op0))
 			goto err;
 		if (ast_predict_type(self->a_operator.o_op0) == &DeeString_Type) {
-			OPTIMIZE_VERBOSE("Optimize `str x' (where `type x === string') into `x'\n");
+			OPTIMIZE_VERBOSE("Optimize `str x` (where `type x === string`) into `x`\n");
 			if (ast_assign(self, self->a_operator.o_op0))
 				goto err;
 			++optimizer_count;
@@ -660,7 +660,7 @@ do_generic:
 			++optimizer_count;
 		}
 
-		/* TODO: from: >> ((a) + b) + c        // where `type a === string' at comile-time
+		/* TODO: from: >> ((a) + b) + c        // where `type a === string` at comile-time
 		 *       to:   >> "{}{}{}".format({ a, b, c })
 		 * NOTE: Only do this when there are 3 or more operands */
 
@@ -688,7 +688,7 @@ do_generic:
 				    DeeString_EQUALS_ASCII(name->a_constexpr, "format")) {
 					unsigned int old_optimizer_count = optimizer_count;
 	
-					/* Special optimizations for `string.format' (since
+					/* Special optimizations for `string.format` (since
 					 * that one's used to implement template-strings) */
 					if (ast_optimize_string_format(self, base, &base->a_constexpr, args->a_multiple.m_astv[0]))
 						goto err;
@@ -716,7 +716,7 @@ do_generic:
 					self->a_operator.o_op0->a_constexpr = Dee_AsObject(objmethod); /* Inherit reference */
 				}
 	
-				/* Special optimizations for `string.format' (since
+				/* Special optimizations for `string.format` (since
 				 * that one's used to implement template-strings) */
 				if (ast_optimize_string_format(self, self, &objmethod->om_this,
 				                               args->a_multiple.m_astv[0]))
@@ -730,7 +730,7 @@ do_generic:
 
 
 	/* Invoke the specified operator. */
-	/* XXX: `AST_FOPERATOR_POSTOP'? */
+	/* XXX: `AST_FOPERATOR_POSTOP`? */
 	{
 		DREF DeeObject *argv[4];
 		unsigned int i = opcount;
@@ -808,7 +808,7 @@ not_allowed:
 		    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
 			struct Dee_opinfo const *info;
 			info = DeeTypeType_GetOperatorById(Dee_TYPE(Dee_TYPE(argv[0])), self->a_flag);
-			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r'\n",
+			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r`\n",
 			                 argv[0], info ? info->oi_uname : "?",
 			                 self->a_flag == OPERATOR_CALL && opcount == 2
 			                 ? DeeObject_NewRef(argv[1])
@@ -839,7 +839,7 @@ dont_optimize_operator:
 		}
 	}
 
-	/* Override this branch with a constant expression `operator_result' */
+	/* Override this branch with a constant expression `operator_result` */
 	while (opcount--)
 		ast_decref(self->a_operator_ops[opcount]);
 	self->a_type      = AST_CONSTEXPR;
@@ -857,7 +857,7 @@ generic_operator_optimizations:
 		if (has_cast_constructor(function) &&
 		    ast_predict_type(cast_expr) == (DeeTypeObject *)function) {
 			/* Certain types of calls can be optimized away:
-			 * >> local x = List([10, 20, 30]); // Optimize to `x = [10, 20, 30]' */
+			 * >> local x = List([10, 20, 30]); // Optimize to `x = [10, 20, 30]` */
 			OPTIMIZE_VERBOSE("Discard no-op cast-style function call to %k\n", function);
 			/* We can simply get rid of this function call! */
 			if (ast_assign(self, cast_expr))
@@ -867,7 +867,7 @@ generic_operator_optimizations:
 		if (cast_expr->a_type == AST_MULTIPLE &&
 		    cast_expr->a_flag != AST_FMULTIPLE_KEEPLAST) {
 			/* Propagate explicit cast calls to underlying sequence types:
-			 * >> tuple([10, 20, 30]); // Optimize to `pack(10, 20, 30)' */
+			 * >> tuple([10, 20, 30]); // Optimize to `pack(10, 20, 30)` */
 			uint16_t new_kind;
 			if (function == Dee_AsObject(&DeeTuple_Type)) {
 				new_kind = AST_FMULTIPLE_TUPLE;
@@ -882,7 +882,7 @@ generic_operator_optimizations:
 			}
 			if (AST_FMULTIPLE_ISMAP(new_kind)) {
 				if (!AST_FMULTIPLE_ISMAP(cast_expr->a_flag)) {
-					/* TODO: unpack each element of `cast_expr' into a key/value
+					/* TODO: unpack each element of `cast_expr` into a key/value
 					 *       pair, and inline all of them into a new multi-branch
 					 *       If this isn't possible for all branches, don't perform
 					 *       the optimization.

@@ -102,7 +102,7 @@ typedef struct {
 	/* For: RangeMapProxyIterator_Type,
 	 *      RangeMapNodesIterator_Type */
 	OBJECT_HEAD
-	DREF DeeObject *rmpi_iter; /* [1..1][const] The iterator for enumerating `rmpi_rmap'. */
+	DREF DeeObject *rmpi_iter; /* [1..1][const] The iterator for enumerating `rmpi_rmap`. */
 	DREF DeeObject *rmpi_rmap; /* [1..1][const] The RangeMap object being iterated. */
 } RangeMapProxyIterator;
 
@@ -114,7 +114,7 @@ typedef struct {
 	union {
 		/* For: RangeMapMapItemsIterator_Type,
 		 *      RangeMapAsMapIterator_Type */
-		DREF DeeObject        *rmpii_value; /* [1..1][lock(:rmpki_lock)] Value linked to `rmpki_prvkey' */
+		DREF DeeObject        *rmpii_value; /* [1..1][lock(:rmpki_lock)] Value linked to `rmpki_prvkey` */
 		/* For: ... */
 		void *rmpii_UNUSED; /* Unused... (used to be for NSI, but not fully removed because this entire file needs a re-write) */
 	};
@@ -126,11 +126,11 @@ typedef struct {
 	 *      RangeMapAsMapIterator_Type */
 	RangeMapProxyItemsIterator rmpki_base;   /* Underlying iterator */
 	DREF DeeObject            *rmpki_prvkey; /* [1..1][lock(rmpki_lock)] Previously enumerated key */
-	DREF DeeObject            *rmpki_maxkey; /* [1..1][lock(rmpki_lock)] Upper bound for current key range (once `>= rmpki_prvkey', use `rmpki_base.rmpii_base.rmpi_iter' to get the next range) */
+	DREF DeeObject            *rmpki_maxkey; /* [1..1][lock(rmpki_lock)] Upper bound for current key range (once `>= rmpki_prvkey`, use `rmpki_base.rmpii_base.rmpi_iter` to get the next range) */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_lock_t          rmpki_lock;   /* Lock for this iterator */
 #endif /* !CONFIG_NO_THREADS */
-	bool                       rmpki_first;  /* [lock(rmpki_lock)] Set to true if `rmpki_prvkey' must be copied. */
+	bool                       rmpki_first;  /* [lock(rmpki_lock)] Set to true if `rmpki_prvkey` must be copied. */
 } RangeMapProxyKeysIterator;
 
 #define RangeMapProxyKeysIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->rmpki_lock)
@@ -451,7 +451,7 @@ rangemap_size(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *item;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 
-	/* Check if a sub-class is overriding `operator iter'. If
+	/* Check if a sub-class is overriding `operator iter`. If
 	 * not, then the mapping is empty for all we're concerned */
 	if (tp_self->tp_seq->tp_iter == &rangemap_iterself)
 		goto done;
@@ -483,7 +483,7 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *item_data[3];
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 
-	/* Check if a sub-class is overriding `operator iter'. If
+	/* Check if a sub-class is overriding `operator iter`. If
 	 * not, then the mapping is empty for all we're concerned */
 	if (tp_self->tp_seq->tp_iter == &rangemap_iterself) {
 		DeeRT_ErrUnknownKey(self, key);
@@ -533,7 +533,7 @@ rangemap_trygetitem(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *item_data[3];
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 
-	/* Check if a sub-class is overriding `operator iter'. If
+	/* Check if a sub-class is overriding `operator iter`. If
 	 * not, then the mapping is empty for all we're concerned */
 	if (tp_self->tp_seq->tp_iter == &rangemap_iterself)
 		goto return_defl;
@@ -784,11 +784,11 @@ PRIVATE struct type_member tpconst rangemap_class_members[] = {
 	TYPE_MEMBER_CONST("AsMap", &RangeMapAsMap_Type),
 
 	/* This hint right here is actually mandatory. Without it, the method hint system
-	 * would (rightfully so) try to make use of `keys' in order to implement stuff like
-	 * `seq_operator_size', since it'd think that that's the only way to get access to
+	 * would (rightfully so) try to make use of `keys` in order to implement stuff like
+	 * `seq_operator_size`, since it'd think that that's the only way to get access to
 	 * unbound keys.
 	 *
-	 * In turn, that would lead to `seq_operator_foreach' being implemented to yield
+	 * In turn, that would lead to `seq_operator_foreach` being implemented to yield
 	 * tuples like "([lo:hi], value)", rather than "(lo, hi, value)", which would then
 	 * break a whole bunch of other stuff down the line... */
 	TYPE_MEMBER_CONST("__map_getitem_always_bound__", Dee_True),
@@ -2432,7 +2432,7 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL, /* TODO: `minkey', `maxkey', `value' */
+	/* .tp_getsets       = */ NULL, /* TODO: `minkey`, `maxkey`, `value` */
 	/* .tp_members       = */ proxy_iterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

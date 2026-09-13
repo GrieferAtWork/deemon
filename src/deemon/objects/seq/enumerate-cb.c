@@ -349,7 +349,7 @@ INTERN DeeTypeObject SeqEnumerateWrapper_Type = {
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* Not possible (wouldn't work with `SeqEnumerateWrapper_Decref()') */
+			/* tp_serialize:   */ NULL /* Not possible (wouldn't work with `SeqEnumerateWrapper_Decref()`) */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sew_fini,
 		/* .tp_assign      = */ NULL,
@@ -398,7 +398,7 @@ INTERN DeeTypeObject SeqEnumerateIndexWrapper_Type = {
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* Not possible (wouldn't work with `SeqEnumerateWrapper_Decref()') */
+			/* tp_serialize:   */ NULL /* Not possible (wouldn't work with `SeqEnumerateWrapper_Decref()`) */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sew_fini,
 		/* .tp_assign      = */ NULL,

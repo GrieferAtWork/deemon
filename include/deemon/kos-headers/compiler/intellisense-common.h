@@ -118,7 +118,7 @@ public:
 	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> const &) throw() = default;
 	template<class __S> explicit ____intellisense_altint(__S *) throw()                                                            = default;
 
-	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0' */
+	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0` */
 	____intellisense_altint(char) throw();
 	____intellisense_altint(short) throw();
 	____intellisense_altint(int) throw();
@@ -215,7 +215,7 @@ public:
 	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> const &) throw() = default;
 	template<class __S> explicit ____intellisense_altint(__S *) throw()                                                            = default;
 
-	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0' */
+	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0` */
 	explicit ____intellisense_altint(char) throw();
 	explicit ____intellisense_altint(short) throw();
 	explicit ____intellisense_altint(int) throw();

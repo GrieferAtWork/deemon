@@ -28,12 +28,12 @@
 
 DECL_BEGIN
 
-INTDEF DeeFileTypeObject DeePipe_Type; /* Extends `_SystemFile' */
+INTDEF DeeFileTypeObject DeePipe_Type; /* Extends `_SystemFile` */
 INTDEF DeeFileTypeObject DeePipeReader_Type;
 INTDEF DeeFileTypeObject DeePipeWriter_Type;
 INTDEF DeeTypeObject DeeProcess_Type;
 
-/* On-demand functions (Need to `#define WANT_<name-of-function>') */
+/* On-demand functions (Need to `#define WANT_<name-of-function>`) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 DeeObject_AsFileSystemPathString(DeeObject *__restrict self);
 

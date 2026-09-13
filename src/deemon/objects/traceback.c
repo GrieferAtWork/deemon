@@ -66,11 +66,11 @@ INTERN struct empty_traceback_object DeeTraceback_Empty = {
 
 
 
-/* Same as `DeeTraceback_New()', but throw errors when returning NULL. */
+/* Same as `DeeTraceback_New()`, but throw errors when returning NULL. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread) {
 	DREF DeeTracebackObject *result;
-	/* `DeeTraceback_New()' is special in that it doesn't throw exceptions.
+	/* `DeeTraceback_New()` is special in that it doesn't throw exceptions.
 	 * However, we want there to be an out-of-memory exception when we're
 	 * unable to generate a traceback, so implement that behavior here. */
 	do {
@@ -81,13 +81,13 @@ DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread) {
 
 
 /* Try to create a new traceback, but don't throw
- * an error and return `NULL' if doing so failed.
- * NOTE: The given `thread' must be the caller's. */
+ * an error and return `NULL` if doing so failed.
+ * NOTE: The given `thread` must be the caller's. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct Dee_thread_object *__restrict thread) {
 	struct Dee_code_frame *dst, *src;
 	DREF DeeTracebackObject *result;
-	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()'");
+	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()`");
 	result = (DREF DeeTracebackObject *)DeeGCObject_TryMallocc(offsetof(DeeTracebackObject, tb_frames),
 	                                                           thread->t_execsz, sizeof(struct Dee_code_frame));
 	if unlikely(!result)
@@ -166,7 +166,7 @@ DeeTraceback_New(struct Dee_thread_object *__restrict thread) {
 		}
 
 		/* At this point, the contents of the stack can't be trusted. */
-		dst->cf_stack   = (DREF DeeObject **)dont_track_this; /* Save this here so that `DeeTraceback_AddFrame()' sees it. */
+		dst->cf_stack   = (DREF DeeObject **)dont_track_this; /* Save this here so that `DeeTraceback_AddFrame()` sees it. */
 		dst->cf_sp      = NULL;
 		dst->cf_stacksz = 0;
 
@@ -179,7 +179,7 @@ err:
 	return NULL;
 }
 
-/* Fill in stack information in the given traceback for `frame'. */
+/* Fill in stack information in the given traceback for `frame`. */
 INTERN NONNULL((1, 2)) void DCALL
 DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
                       struct Dee_code_frame *__restrict frame,
@@ -828,7 +828,7 @@ err_no_except:
 	return DeeRT_ErrUnboundAttrCStr(self, "current");
 }
 
-/* @return: NULL: No traceback for `error' (does not cause another error to be thrown) */
+/* @return: NULL: No traceback for `error` (does not cause another error to be thrown) */
 INTERN WUNUSED NONNULL((1)) DeeTracebackObject *DCALL
 traceback_ofthrow_impl(DeeObject *__restrict error) {
 	DeeTracebackObject *result;

@@ -39,7 +39,7 @@ tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 #define DEFINED_default_foreach_with_foreach_pair_cb
 struct default_foreach_with_foreach_pair_data {
 	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
-	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
+	void         *dfwfp_arg; /* Cookie for `dfwfp_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -92,7 +92,7 @@ err:
 #define DEFINED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
-	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
+	void              *dfpwf_arg; /* Cookie for `dfpwf_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -524,7 +524,7 @@ continue_at_iter:
 			if (!iter)
 				break;
 
-			/* Also set `self', so we don't corrupt the cache by
+			/* Also set `self`, so we don't corrupt the cache by
 			 * potentially failing to cache attributes that should
 			 * have been visible. */
 			self = iter;
@@ -602,15 +602,15 @@ continue_at_iter:
 			if (iter != &DeeType_Type)
 #endif /* CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE */
 			{
-				if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject' */
+				if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject` */
 					retval = LOCAL_DeeType_AccessInstanceMethodAttr(self, iter);
 					LOCAL_process_retval(retval, done);
 				}
-				if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject' */
+				if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject` */
 					retval = LOCAL_DeeType_AccessInstanceGetSetAttr(self, iter);
 					LOCAL_process_retval(retval, done);
 				}
-				if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject' */
+				if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject` */
 					retval = LOCAL_DeeType_AccessInstanceMemberAttr(self, iter);
 					LOCAL_process_retval(retval, done);
 				}

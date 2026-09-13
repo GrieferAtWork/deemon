@@ -61,7 +61,7 @@ PRIVATE void DCALL ddi_load_symbols(void) {
 		ASSERT(iter->dc_sym);
 		ASSERT(ASM_SYM_DEFINED(iter->dc_sym));
 		/* NOTE: We disregard the fact that we're still holding
-		 *       a reference to `iter->dc_sym->as_used', simply
+		 *       a reference to `iter->dc_sym->as_used`, simply
 		 *       because at this point those use counters no
 		 *       longer matter. */
 		iter->dc_addr = iter->dc_sym->as_addr;
@@ -106,11 +106,11 @@ find_or_alloc_offset(uint32_t **__restrict p_vector,
                      uint32_t *__restrict p_size,
                      uint32_t offset_value,
                      uint32_t max_size) {
-	/* Search for `offset_value' in the given vector and return its index.
+	/* Search for `offset_value` in the given vector and return its index.
 	 * If not found, extend the vector by adding to the end, but don't
-	 * exceed a size of `max_size'.
+	 * exceed a size of `max_size`.
 	 * If the size limit cannot be sustained, raise a Compiler Error.
-	 * Upon failure, return -1. Upon success return the index of `offset_value' */
+	 * Upon failure, return -1. Upon success return the index of `offset_value` */
 	uint32_t *vector = *p_vector, *iter, *end;
 	uint32_t size    = *p_size;
 	end              = (iter = vector) + size;
@@ -194,8 +194,8 @@ usp_transition(uint8_t *__restrict text,
 	return text;
 }
 
-/* Generate DDI assembly to transition from `old_state' to `new_state' and write to `*test'.
- * This function assumes that sufficient memory is available inside `*text' to write any
+/* Generate DDI assembly to transition from `old_state` to `new_state` and write to `*test`.
+ * This function assumes that sufficient memory is available inside `*text` to write any
  * potential transition that may exist.
  * NOTE: The caller is required to ensure that the new state's UIP is > the old state's. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) uint8_t *DCALL
@@ -353,7 +353,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 
 	{
 		struct ddi_checkpoint *iter, *end;
-		/* NOTE: A DDI text buffer of `64' just has to
+		/* NOTE: A DDI text buffer of `64` just has to
 		 *       be enough for any possible transition. */
 		uint8_t buffer[64], *text;
 		size_t text_size;
@@ -478,7 +478,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 							                                      UINT32_MAX);
 							if unlikely(symbol_name_id < 0)
 								goto err_result_printer;
-							/* Optimize to make use of the `DDI_DEFSPNAME' instruction. */
+							/* Optimize to make use of the `DDI_DEFSPNAME` instruction. */
 							if (old_state.reg_usp == binding->db_index + 1) {
 								*bind_text++ = DDI_DEFSPNAME;
 							} else if (new_state.reg_usp == binding->db_index + 1) {
@@ -486,7 +486,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 								old_state.reg_usp = new_state.reg_usp;
 								*bind_text++      = DDI_DEFSPNAME;
 							} else {
-								/* Fallback: Encode using the `DDI_DEFLCNAME' instruction. */
+								/* Fallback: Encode using the `DDI_DEFLCNAME` instruction. */
 								*bind_text++ = DDI_DEFLCNAME;
 								bind_text = put_uleb(bind_text,
 								                     current_assembler.a_localc +
@@ -624,7 +624,7 @@ do_realloc:
 		struct symbol *sym;
 		struct Dee_bytewriter writer = Dee_BYTEWRITER_INIT;
 		if unlikely(!Dee_bytewriter_alloc(&writer, 4))
-			goto err_xwriter; /* `dx_size' */
+			goto err_xwriter; /* `dx_size` */
 		/* Generate debug information for references and static variables. */
 		for (i = 0; i < current_assembler.a_refc; ++i) {
 			char *namebuf;

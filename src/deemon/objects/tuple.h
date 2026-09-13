@@ -39,7 +39,7 @@ tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumer
                                  void *arg, size_t start, size_t end);
 
 
-/*  ====== `Tuple.Iterator' type implementation ======  */
+/*  ====== `Tuple.Iterator` type implementation ======  */
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeTupleObject, ti_tuple); /* [1..1][const] Referenced tuple. */
 	DWEAK size_t                         ti_index;  /* [<= ti_tuple->t_size] Next-element index. */

@@ -36,13 +36,13 @@
  * Notes on GC slabs:
  * - GC slabs aren't actually distinct from regular slabs, they only need
  *   a different enumeration and name because they allocate slabs that have
- *   some extra space for a leading `struct Dee_gc_head'
- * - As such (with 32-bit pointers), `DeeGCSlab_Malloc16()' would just be a
- *   wrapper around `DeeSlab_Malloc24()' that adjusts the returned pointer
- *   by an offset of `8' bytes (on success).
- * - Also as a consequence, the macro `Dee_SLAB_CHUNKSIZE_GC_FOREACH()'
+ *   some extra space for a leading `struct Dee_gc_head`
+ * - As such (with 32-bit pointers), `DeeGCSlab_Malloc16()` would just be a
+ *   wrapper around `DeeSlab_Malloc24()` that adjusts the returned pointer
+ *   by an offset of `8` bytes (on success).
+ * - Also as a consequence, the macro `Dee_SLAB_CHUNKSIZE_GC_FOREACH()`
  *   doesn't actually add anything new (the set of supported GC slabs is
- *   already defined by `Dee_SLAB_CHUNKSIZE_FOREACH()'), only that another
+ *   already defined by `Dee_SLAB_CHUNKSIZE_FOREACH()`), only that another
  *   macro is needed because the preprocessor can't evaluate the logic:
  *   >> SLABS    = {<some set of integers>}
  *   >> GC_SLABS = SOME_SUBSET_OF((
@@ -51,7 +51,7 @@
  *   >>             n - sizeof(struct Dee_gc_head)
  *   >> ).asset)
  *   iow: every slab (can) have a GC sibling after subtracting
- *        `sizeof(struct Dee_gc_head)' from the slab's size.
+ *        `sizeof(struct Dee_gc_head)` from the slab's size.
  */
 
 /* To tune GC slab sizes (and to figure out which types use slab allocators),
@@ -91,8 +91,8 @@ for (local s: typesBySize.keys.sorted()) {
  *
  * The only types (where adding slab support might improve
  * performance) that don't fall into any slab allocator are:
- * - 88:  _FileBuffer              (as returned by `File.open()')
- * - 92:  _YieldFunctionIterator   (as produced by `operator iter()' on user-defined yield functions)
+ * - 88:  _FileBuffer              (as returned by `File.open()`)
+ * - 92:  _YieldFunctionIterator   (as produced by `operator iter()` on user-defined yield functions)
  *
  * Some more types where performance gains wouldn't
  * matter (due to the type only being used rarely):
@@ -141,7 +141,7 @@ for (local s: typesBySize.keys.sorted()) {
 #elif (defined(_MSC_VER) && !defined(__clang__) && \
        defined(__cplusplus) && !defined(__NO_builtin_choose_expr))
 /* Use some compiler magic to force compile-time evaluation of the appropriate
- * expression in `_Dee_PRIVATE_SLAB_SELECT()' macro expansions, when the "N"
+ * expression in `_Dee_PRIVATE_SLAB_SELECT()` macro expansions, when the "N"
  * argument is a compile-time constant.
  *
  * Without this, MSVC will actually generate code for all dead branches in:
@@ -164,7 +164,7 @@ for (local s: typesBySize.keys.sorted()) {
  * including the ability to set breakpoints within the static initializers (which
  * is a completely unnecessary and useless thing to be able to do). */
 #define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Z(n, N, PREFIX, f, SUFFIX) \
-	__STATIC_IF(n>=(N)){(PREFIX f##n SUFFIX)}__STATIC_ELSE(n>=(N)){ /* Closed by `_Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS' */
+	__STATIC_IF(n>=(N)){(PREFIX f##n SUFFIX)}__STATIC_ELSE(n>=(N)){ /* Closed by `_Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS` */
 #define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Y(args)  _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Z args
 #define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN(n, args) _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
 #define _Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS(n, _) }
@@ -200,7 +200,7 @@ for (local s: typesBySize.keys.sorted()) {
  * >> )
  */
 #define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Z(n, N, PREFIX, f, SUFFIX) \
-	__builtin_choose_expr(n>=(N), PREFIX f##n SUFFIX, /* Closed by `_Dee_PRIVATE_SLAB_SELECT_BCE_CLOS' */
+	__builtin_choose_expr(n>=(N), PREFIX f##n SUFFIX, /* Closed by `_Dee_PRIVATE_SLAB_SELECT_BCE_CLOS` */
 #define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Y(args)  _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Z args
 #define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN(n, args) _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
 #define _Dee_PRIVATE_SLAB_SELECT_BCE_CLOS(n, _) )

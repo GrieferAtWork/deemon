@@ -56,8 +56,8 @@ STATIC_ASSERT_MSG(Dee_BOUND_ERR == Dee_HAS_ERR &&
                   Dee_BOUND_MISSING == Dee_HAS_NO &&
                   Dee_BOUND_YES == Dee_HAS_YES,
                   "These equivalences are required in order to allow type implementations to "
-                  "unconditionally implement (e.g.) `tp_hasitem' using the same function pointer "
-                  "as used to implement `tp_bounditem'");
+                  "unconditionally implement (e.g.) `tp_hasitem` using the same function pointer "
+                  "as used to implement `tp_bounditem`");
 
 STATIC_ASSERT_MSG(Dee_BOUND_ERR < 0, "Required for hasitem=bounditem aliasing");
 STATIC_ASSERT_MSG(Dee_BOUND_MISSING == 0, "Required for hasitem=bounditem aliasing");
@@ -66,9 +66,9 @@ STATIC_ASSERT_MSG(Dee_BOUND_NO > 0, "Required for hasitem=bounditem aliasing");
 
 
 struct oh_init_spec_class {
-	Dee_funptr_t   ohisc_usertyp; /* [1..1] `usertyp__*' implementation. */
-	Dee_operator_t ohisc_dep1;    /* Operator used by `ohis_class', or `OPERATOR_USERCOUNT' if not applicable */;
-	Dee_operator_t ohisc_dep2;    /* Operator used by `ohis_class', or `OPERATOR_USERCOUNT' if not applicable */;
+	Dee_funptr_t   ohisc_usertyp; /* [1..1] `usertyp__*` implementation. */
+	Dee_operator_t ohisc_dep1;    /* Operator used by `ohis_class`, or `OPERATOR_USERCOUNT` if not applicable */;
+	Dee_operator_t ohisc_dep2;    /* Operator used by `ohis_class`, or `OPERATOR_USERCOUNT` if not applicable */;
 };
 #define OH_INIT_SPEC_CLASS_END { NULL, OPERATOR_USERCOUNT, OPERATOR_USERCOUNT }
 #define OH_INIT_SPEC_CLASS_INIT(ohisc_usertyp, ohisc_dep1, ohisc_dep2) \
@@ -79,8 +79,8 @@ struct oh_init_spec_class {
 	}
 
 struct oh_init_spec_impl {
-	Dee_funptr_t          ohisi_impl;    /* [1..1] Default impl (e.g. `default__seq_iter__with__seq_foreach') */
-	__UINTPTR_HALF_TYPE__ ohisi_deps[2]; /* Dependent operators (or `>= Dee_TNO_COUNT' if unused; when both are equal, the impl is disliked) */
+	Dee_funptr_t          ohisi_impl;    /* [1..1] Default impl (e.g. `default__seq_iter__with__seq_foreach`) */
+	__UINTPTR_HALF_TYPE__ ohisi_deps[2]; /* Dependent operators (or `>= Dee_TNO_COUNT` if unused; when both are equal, the impl is disliked) */
 };
 #define oh_init_spec_impl_isdisliked(self) ((self)->ohisi_deps[0] == (self)->ohisi_deps[1])
 
@@ -131,7 +131,7 @@ nope:
 	return false;
 }
 
-/* Same as `oh_init_spec_mhint_canuse', but returns
+/* Same as `oh_init_spec_mhint_canuse`, but returns
  * true even when "type" is the hint's abstract origin. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 oh_init_spec_mhint_caninherit(struct oh_init_spec_mhint const *__restrict self,
@@ -157,12 +157,12 @@ nope:
 	}
 
 struct oh_init_spec {
-	__UINTPTR_HALF_TYPE__            ohis_table;   /* Offset into `DeeTypeObject' for the sub-table containing this operator, or `0' when part of the primary table. */
+	__UINTPTR_HALF_TYPE__            ohis_table;   /* Offset into `DeeTypeObject` for the sub-table containing this operator, or `0` when part of the primary table. */
 	__UINTPTR_HALF_TYPE__            ohis_field;   /* Offset into the sub-table (or root) where the operator's function pointer is located. */
-	struct oh_init_spec_class const *ohis_class;   /* [0..n] Class(usertyp) impls of this operator (terminated by `ohisc_usertyp == NULL') */
-	struct oh_init_spec_impl  const *ohis_impls;   /* [0..n] Default impls of this operator (terminated by `ohisi_impl == NULL') */
-	struct oh_init_spec_mhint const *ohis_mhints;  /* [0..n] Method hints that can be loaded into this operator (terminated by `ohismh_id >= Dee_TMH_COUNT') */
-	struct oh_init_inherit_as const *ohis_inherit; /* [0..n] Rules for transforming special operator impls during inherit (terminated by `ohia_optr == NULL') */
+	struct oh_init_spec_class const *ohis_class;   /* [0..n] Class(usertyp) impls of this operator (terminated by `ohisc_usertyp == NULL`) */
+	struct oh_init_spec_impl  const *ohis_impls;   /* [0..n] Default impls of this operator (terminated by `ohisi_impl == NULL`) */
+	struct oh_init_spec_mhint const *ohis_mhints;  /* [0..n] Method hints that can be loaded into this operator (terminated by `ohismh_id >= Dee_TMH_COUNT`) */
+	struct oh_init_inherit_as const *ohis_inherit; /* [0..n] Rules for transforming special operator impls during inherit (terminated by `ohia_optr == NULL`) */
 };
 #define OH_INIT_SPEC_INIT(ohis_table, ohis_field, ohis_class,    \
                           ohis_impls, ohis_mhints, ohis_inherit) \
@@ -1482,8 +1482,8 @@ type_tno_tryset(DeeTypeObject /*const*/ *__restrict self,
 					 *           allocation to that module's lifetime. This only works for DEX
 					 *           modules (since DEE modules cannot contain *truely* static objects),
 					 *           and when the dex module is unloaded, all memory allocated using
-					 *           this API will be automatically free'd, and `*p_target_addr' of
-					 *           every call will be set to `NULL' (in order to restore what was
+					 *           this API will be automatically free'd, and `*p_target_addr` of
+					 *           every call will be set to `NULL` (in order to restore what was
 					 *           presumably the original allocation state).
 					 *
 					 * The same also goes for pretty much all other instances where "Dee_UntrackAlloc"
@@ -1504,13 +1504,13 @@ type_tno_tryset(DeeTypeObject /*const*/ *__restrict self,
 
 struct Dee_tno_assign {
 	enum Dee_tno_id       tnoa_id;          /* Operator slot ID to write to */
-	Dee_funptr_t          tnoa_cb;          /* [1..1] Function pointer to write to `tnoa_id' */
-	__UINTPTR_HALF_TYPE__ tnoa_pres_dep[2]; /* Already-present dependencies of `tnoa_cb' (or `Dee_TNO_COUNT') */
+	Dee_funptr_t          tnoa_cb;          /* [1..1] Function pointer to write to `tnoa_id` */
+	__UINTPTR_HALF_TYPE__ tnoa_pres_dep[2]; /* Already-present dependencies of `tnoa_cb` (or `Dee_TNO_COUNT`) */
 };
 
 /* The max # of operator slots that might ever need to be assigned at once.
  * iow: this is the length of the longest non-looping dependency chain that
- *      can be formed using `default__*__with__*' callbacks below. */
+ *      can be formed using `default__*__with__*` callbacks below. */
 /*[[[deemon (print_TNO_ASSIGN_MAXLEN from "..method-hints.method-hints")();]]]*/
 /* { Dee_TNO_getitem,                    &default__getitem__with__getitem_index__and__getitem_string_len_hash }
  * { Dee_TNO_hasitem_string_len_hash,    &default__hasitem_string_len_hash__with__hasitem }
@@ -1743,21 +1743,21 @@ next_implementation:;
 }
 
 /* Looking at related operators that actually *are* present,
- * and assuming that `id' isn't implemented, return the most
+ * and assuming that `id` isn't implemented, return the most
  * applicable default implementation for the operator.
  *
- * e.g. Given a type that defines `tp_iter' and `id=Dee_TNO_foreach',
- *      this function would return `&default__foreach__with__iter'
+ * e.g. Given a type that defines `tp_iter` and `id=Dee_TNO_foreach`,
+ *      this function would return `&default__foreach__with__iter`
  *
- * When no related operators are present (or `id' doesn't
- * have *any* related operators), return `NULL' instead.
+ * When no related operators are present (or `id` doesn't
+ * have *any* related operators), return `NULL` instead.
  *
  * NOTE: This function does *!!NOT!!* return method hint pointers
  * @param actions: Actions that need to be performed (multiple assignments
  *                 might be necessary in case of a transitive dependency)
  *                 Stored actions must be performed in *REVERSE* order
- *                 The first (last-written) action is always for `id'
- * @return: The number of actions written to `actions' */
+ *                 The first (last-written) action is always for `id`
+ * @return: The number of actions written to `actions` */
 PRIVATE WUNUSED NONNULL((1)) size_t
 (DCALL DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
                                             struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN]) {
@@ -1769,20 +1769,20 @@ INTDEF ATTR_CONST WUNUSED bool DCALL /* Implemented in "./method-hint-super-invo
 Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
 
 /* Return an actual, user-defined operator "id"
- * (*NOT* allowing stuff like `default__size__with__sizeob'
- * or `default__seq_operator_size__with__seq_operator_sizeob')
- * Also never returns `DeeType_GetNativeOperatorOOM()' or
- * `DeeType_GetNativeOperatorUnsupported()' */
+ * (*NOT* allowing stuff like `default__size__with__sizeob`
+ * or `default__seq_operator_size__with__seq_operator_sizeob`)
+ * Also never returns `DeeType_GetNativeOperatorOOM()` or
+ * `DeeType_GetNativeOperatorUnsupported()` */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self,
                                                  enum Dee_tno_id id) {
 	Dee_funptr_t result = type_tno_get(self, id);
 	if (result) {
-		/* Check if `result' might be a default operator
+		/* Check if `result` might be a default operator
 		 * implementation (including method hint defaults). */
 		struct oh_init_spec const *specs = &oh_init_specs[id];
 		if (specs->ohis_class) {
-			/* Important: `Dee_tmh_isdefault_or_usrtype' would indicate
+			/* Important: `Dee_tmh_isdefault_or_usrtype` would indicate
 			 * that usrtype impls would be default impls, but for our
 			 * purpose, that mustn't actually be the case. As such, filter
 			 * out these impls here and treat them as non-default. */
@@ -1828,7 +1828,7 @@ present_depv_contains(enum Dee_tno_id const *present_depv,
 	return false;
 }
 
-/* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the
+/* Wrapper around `DeeType_SelectMissingNativeOperator` that checks if the
  * operator is already defined, and if not: see if can be substituted via
  * some other set of native operators (in which case: do that substitution
  * and then return the operator's function pointer) */
@@ -2012,7 +2012,7 @@ nope:
 
 struct Dee_tno_inherit {
 	enum Dee_tno_id tnoi_id; /* Operator slot ID to write to */
-	Dee_funptr_t    tnoi_cb; /* [1..1] Function pointer to write to `tnoi_id' */
+	Dee_funptr_t    tnoi_cb; /* [1..1] Function pointer to write to `tnoi_id` */
 };
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -2042,7 +2042,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 	/* Inherit this operator (even if it's a method hint).
 	 *
 	 * The reason we can do this is because our caller previously tried to
-	 * make use of `DeeType_GetNativeOperatorWithoutInherit', which already
+	 * make use of `DeeType_GetNativeOperatorWithoutInherit`, which already
 	 * attempted to load a method hint into the operator. As such, we know
 	 * that no method-hint implementation of the operator is available for
 	 * this type in particular, meaning that if we happen to inherit a hint
@@ -2053,7 +2053,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 	 * "[[inherit_as(...)]]" annotation, then we must inherit the referenced
 	 * implementation, rather than the original one. (This is needed to
 	 * map method hint default impls that assume the presence of specific
-	 * operators within `Dee_TYPE(into)'). */
+	 * operators within `Dee_TYPE(into)`). */
 	impl = DeeType_MapTMHInTNOForInherit(from, into, id, impl);
 	if unlikely(!impl) {
 		/* Unfulfilled conditions */
@@ -2062,7 +2062,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 
 	/* Check if the given "impl" is one of the defaults that has dependencies.
 	 * If that is the case, then we must ensure that those dependencies are also
-	 * inherited (if not already present in `into').
+	 * inherited (if not already present in `into`).
 	 *
 	 * We're allowed to assume that "impl" is the only correct impl, so there is
 	 * no need to check if some other impl should be used instead (no other impl
@@ -2125,14 +2125,14 @@ PRIVATE WUNUSED NONNULL((1, 2, 4, 5, 6)) Dee_funptr_t
 }
 
 /* Ignoring method hints that might have been able to implement "id" along
- * the way, and assuming that `DeeType_GetNativeOperatorWithoutHints(from, id)'
- * returned `impl', make sure that `impl' can be (and is) inherited by `into'.
+ * the way, and assuming that `DeeType_GetNativeOperatorWithoutHints(from, id)`
+ * returned `impl`, make sure that `impl` can be (and is) inherited by `into`.
  *
  * This function is allowed to assume that "impl" really is what should be
  * inherited for the specified "id" (if it is not correct, everything breaks)
  *
  * @return: Indicative of a successful inherit (inherit may fail when "impl"
- *          is `default__*__with__*', and dependencies could not be written
+ *          is `default__*__with__*`, and dependencies could not be written
  *          due to OOM, though in this case, no error is thrown) */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 (DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
@@ -2188,7 +2188,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_funptr_t
 
 
 
-/* Same as `DeeType_GetNativeOperatorWithoutHints', but also load operators
+/* Same as `DeeType_GetNativeOperatorWithoutHints`, but also load operators
  * from method hints (though don't inherit them from base-types, yet). */
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutInherit)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
@@ -2227,10 +2227,10 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 	return NULL;
 }
 
-/* Same as `DeeType_GetNativeOperatorWithoutUnsupported()', but never returns NULL
+/* Same as `DeeType_GetNativeOperatorWithoutUnsupported()`, but never returns NULL
  * (for any operator linked against a deemon user-code ID (e.g. "OPERATOR_ITER"))
  * and instead returns special implementations for each operator that simply call
- * `err_unimplemented_operator()' with the relevant arguments, before returning
+ * `err_unimplemented_operator()` with the relevant arguments, before returning
  * whatever is indicative of an error in the context of the native operator. */
 PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
@@ -2254,12 +2254,12 @@ PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 #endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 }
 
-/* Same as `DeeType_GetNativeOperatorWithoutInherit', but actually also does the
+/* Same as `DeeType_GetNativeOperatorWithoutInherit`, but actually also does the
  * operator inherit part (meaning that this is the low-level* master-function
  * that's called when you invoke one of the standard operators whose callback
  * is currently set to "NULL" within its relevant type)
- * [*] The actual master function is `DeeType_GetNativeOperator', but that
- *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()' */
+ * [*] The actual master function is `DeeType_GetNativeOperator`, but that
+ *     one only adds coalesce to `DeeType_GetNativeOperatorUnsupported()` */
 PUBLIC WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutUnsupported)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS

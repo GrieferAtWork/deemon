@@ -42,8 +42,8 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
-#include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
-#include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()' */
+#include "p-path.c.inl"     /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()` */
+#include "p-readlink.c.inl" /* For `posix_chown_USE_posix_readlink__AND__posix_lchown()` */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t, wchar_t */
@@ -109,7 +109,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `chown()' */
+/* Figure out how we want to implement `chown()` */
 #undef posix_chown_USE_wchown
 #undef posix_chown_USE_chown
 #undef posix_chown_USE_wopen_AND_fchown
@@ -134,7 +134,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `lchown()' */
+/* Figure out how we want to implement `lchown()` */
 #undef posix_lchown_USE_nt_SetNamedSecurityInfo
 #undef posix_lchown_USE_wlchown
 #undef posix_lchown_USE_lchown
@@ -174,7 +174,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `fchown()' */
+/* Figure out how we want to implement `fchown()` */
 #undef posix_fchown_USE_nt_SetSecurityInfo
 #undef posix_fchown_USE_fchown
 #undef posix_fchown_USE_posix_lchown
@@ -194,7 +194,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `fchownat()' */
+/* Figure out how we want to implement `fchownat()` */
 #undef posix_fchownat_USE_fchownat
 #undef posix_fchownat_USE_posix_chown
 #undef posix_fchownat_USE_posix_lchown
@@ -327,7 +327,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_chown_f_impl(D
 {
 #ifdef posix_chown_USE_posix_readlink__AND__posix_lchown
 	DREF DeeObject *link_text;
-	/* Try to readlink() the given `path' to see if it's a symbolic link. */
+	/* Try to readlink() the given `path` to see if it's a symbolic link. */
 	link_text = posix_readlink_f_impl(path);
 	if (link_text) {
 		DREF DeeObject *full_path, *result;

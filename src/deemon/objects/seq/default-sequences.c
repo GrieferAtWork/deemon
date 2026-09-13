@@ -712,7 +712,7 @@ err_obb:
 }
 
 
-/* // Can't be used because our end offset may be greater than `Sequence.length(dssgi_seq)'
+/* // Can't be used because our end offset may be greater than `Sequence.length(dssgi_seq)`
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_sgif_getitem_index_fast(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	ASSERT(index < (self->dssgi_end - self->dssgi_start));

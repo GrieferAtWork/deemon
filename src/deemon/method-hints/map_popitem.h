@@ -27,7 +27,7 @@ __map_popitem__()->?X2?T2?O?O?N {
 }
 
 
-/* Remove a random key/value pair from `self' and store it in `key_and_value'
+/* Remove a random key/value pair from `self` and store it in `key_and_value`
  * Returns "Dee_None" if nothing found */
 [[wunused]] DREF DeeObject *
 __map_popitem__.map_popitem([[nonnull]] DeeObject *self)

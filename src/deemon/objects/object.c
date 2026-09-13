@@ -318,12 +318,12 @@ object_sizeof(DeeObject *self) {
 	return DeeInt_NewSize(instance_size);
 err_iscustom:
 	DeeError_Throwf(&DeeError_TypeError,
-	                "Cannot determine size of Type `%k' with custom allocator",
+	                "Cannot determine size of Type `%k` with custom allocator",
 	                type);
 	goto err;
 err_isvar:
 	DeeError_Throwf(&DeeError_TypeError,
-	                "Cannot determine size of variable-length Type `%k'",
+	                "Cannot determine size of variable-length Type `%k`",
 	                type);
 err:
 	return NULL;
@@ -1886,7 +1886,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                    /**/ "that may or may not get evaluated at compile-time:\n"
 	                    "${"
 	                    /**/ "print \"foo\".__module__;           /* Always works: same as `import(\".\")' */\n"
-	                    /**/ "print (\"foo\" + \"bar\").__module__; /* Only works when compiled with `-O3' */\n"
+	                    /**/ "print (\"foo\" + \"bar\").__module__; /* Only works when compiled with `-O3` */\n"
 	                    "}\n"
 	                    "With this in mind, the address-based determination of a linked ?DModule "
 	                    /**/ "only works for true compile-time constant expressions (or more specific: "
@@ -1913,7 +1913,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	                    /**/ "If @this is dynamically allocated, :UnboundAttribute is thrown\n"
 	                    "For more information, see ?#__module__"),
 
-	/* Helper function: `foo.id' returns a unique id for any object. */
+	/* Helper function: `foo.id` returns a unique id for any object. */
 	TYPE_GETTER_AB_F("id", &object_id_get,
 	                 /* This one isn't CONSTCALL because IDs can change if a constant
 	                  * is serialized and deserialized (as would be the case when building

@@ -50,7 +50,7 @@ register_jump(struct function_assembler *__restrict self,
 	struct basic_block *to_block;
 	struct jump_descriptor *jump;
 
-	/* Make sure that a basic block begins at `to' */
+	/* Make sure that a basic block begins at `to` */
 	to_block = function_assembler_splitblock(self, to);
 	if unlikely(!to_block)
 		goto err;
@@ -73,7 +73,7 @@ register_jump(struct function_assembler *__restrict self,
 	if unlikely(jump_descriptors_insert(&to_block->bb_entries, jump))
 		goto err_jump;
 	if unlikely(jump_descriptors_insert(&from_block->bb_exits, jump))
-		goto err; /* `to_block->bb_entries' owns the jump at this point. */
+		goto err; /* `to_block->bb_entries` owns the jump at this point. */
 
 	return 0;
 err_jump:
@@ -209,7 +209,7 @@ scan_block_for_noreturn(struct basic_block *__restrict block, uint16_t code_flag
 }
 
 
-/* Remove exits from `self' that have origins beyond `self->bb_deemon_end' */
+/* Remove exits from `self` that have origins beyond `self->bb_deemon_end` */
 INTERN NONNULL((1)) void DCALL
 basic_block_trim_unused_exits(struct basic_block *__restrict self) {
 	size_t exit_count = self->bb_exits.jds_size;
@@ -296,7 +296,7 @@ function_assembler_loadblocks(struct function_assembler *__restrict self) {
 
 	/* Search basic blocks for noreturn instructions.
 	 * When one such instruction is found, the block ends on that instruction,
-	 * and has its `bb_next' field set to `NULL' and its end trimmed. */
+	 * and has its `bb_next` field set to `NULL` and its end trimmed. */
 	for (i = 0; i < self->fa_blockc; ++i) {
 		bool has_noreturn;
 		block = self->fa_blockv[i];
@@ -381,7 +381,7 @@ continue_with_next_block:
 			prev_block->bb_next = block->bb_next;
 		}
 
-		/* Remove `block' */
+		/* Remove `block` */
 		--self->fa_blockc;
 		memmovedownc(&self->fa_blockv[i],
 		             &self->fa_blockv[i + 1],

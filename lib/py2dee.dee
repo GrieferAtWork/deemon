@@ -46,7 +46,7 @@
  *     general rule-of-thumb is to simply store an attribute value, at
  *     which point missing members are automatically created.
  *     For classes without base this can easily be emulated by extending
- *     the compatibility class `OldUserClass from rt.d200', however if a
+ *     the compatibility class `OldUserClass from rt.d200`, however if a
  *     base class is present, this becomes impossible.
  *   - Deemon does not allow for multiple-inheritance, where-as python does.
  *   - Deemon has support for private/public symbols in classes.
@@ -861,7 +861,7 @@ do_suffix:
 				parts.append(".");
 				next();
 				if (kind != TOK_KEYWORD)
-					err(f"Expected keyword after `.', but got {repr tok}");
+					err(f"Expected keyword after `.`, but got {repr tok}");
 				parts.append(tok);
 				next();
 				goto do_suffix;
@@ -883,7 +883,7 @@ do_suffix:
 				goto do_suffix;
 
 			case "if": {
-				/* if-else expressions are written as `tt if cond [else ff]' */
+				/* if-else expressions are written as `tt if cond [else ff]` */
 				next();
 				local new_result = PyAstExpression();
 				new_result.location = result.location;
@@ -911,7 +911,7 @@ do_suffix:
 				result = new_result;
 				for (;;) {
 					if (kind != TOK_KEYWORD)
-						err("Expected keyword after `for' in expression, but got ");
+						err("Expected keyword after `for` in expression, but got ");
 					for_branch.usedSymbols.append(tok);
 					next();
 					if (tok != ",")
@@ -996,16 +996,16 @@ done:
 				while (tok in [TOK_LF, TOK_INDENT, TOK_DEDENT])
 					next();
 				if (indent > escapeIndent)
-					err("Indentation too large after `pass'");
+					err("Indentation too large after `pass`");
 			}
 		} else {
 			if (indent <= escapeIndent)
-				err("Missing `pass' in empty block");
+				err("Missing `pass` in empty block");
 			while (indent > escapeIndent) {
 				local st = parseStatement();
 				if (st is none) {
 					if (!asts)
-						err("Missing `pass' in empty block")
+						err("Missing `pass` in empty block")
 					break;
 				}
 				if (st is PyAstMultiple) {
@@ -1057,7 +1057,7 @@ again:
 			local result = PyAstFor();
 			for (;;) {
 				if (kind != TOK_KEYWORD)
-					err("Expected keyword after `for', but got ");
+					err("Expected keyword after `for`, but got ");
 				result.usedSymbols.append(tok);
 				next();
 				if (tok != ",")
@@ -1129,7 +1129,7 @@ again:
 			local loc = location;
 			next();
 			if (kind != TOK_KEYWORD)
-				err(f"Expected function name after `def', but got {repr tok}");
+				err(f"Expected function name after `def`, but got {repr tok}");
 			local name = tok;
 			next();
 			skip("(");
@@ -1140,13 +1140,13 @@ again:
 				if (tok == "*") {
 					next();
 					if (kind != TOK_KEYWORD)
-						err(f"Expected keyword after `*' in def, but got {repr tok}");
+						err(f"Expected keyword after `*` in def, but got {repr tok}");
 					varargs_name = tok;
 					next();
 				} else if (tok == "**") {
 					next();
 					if (kind != TOK_KEYWORD)
-						err(f"Expected keyword after `**' in def, but got {repr tok}");
+						err(f"Expected keyword after `**` in def, but got {repr tok}");
 					varkwds_name = tok;
 					next();
 				} else break;
@@ -1502,8 +1502,8 @@ do_load_string_input:
 @@>	foo(10, 20)
 @@>', globals: glob);
 @@>
-@@>glob["foo"](7, 8);  /* prints `15' */
-@@>glob["bar"]();      /* prints `30' */
+@@>glob["foo"](7, 8);  /* prints `15` */
+@@>glob["bar"]();      /* prints `30` */
 function exec(input?: File | string | Bytes, filename?: string, args..., **kwds) {
 	if (input !is bound)
 		input = File.open(filename, "r");

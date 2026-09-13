@@ -41,7 +41,7 @@ __map_inplace_and__.map_operator_inplace_and([[nonnull]] DREF DeeObject **__rest
 %{unsupported({
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_operator_inplace_sub))(p_self, xkeys->si_set);
 	}
@@ -62,16 +62,16 @@ err:
 	DREF DeeObject *a_keys_without_b_proxy;
 	DREF DeeObject *a_keys_without_b;
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return CALL_DEPENDENCY(map_operator_inplace_sub, p_self, xkeys->si_set);
 	}
 
-	/* `a &= {}' -> `(a as Sequence).clear()' */
+	/* `a &= {}` -> `(a as Sequence).clear()` */
 	if (DeeSet_CheckEmpty(keys))
 		return CALL_DEPENDENCY(seq_clear, *p_self);
 
-	/* `a &= b' -> `(a as Mapping).removekeys(((((a as Mapping).keys as Set) - b) as Set).frozen)' */
+	/* `a &= b` -> `(a as Mapping).removekeys(((((a as Mapping).keys as Set) - b) as Set).frozen)` */
 	a_keys = CALL_DEPENDENCY(map_keys, *p_self);
 	if unlikely(!a_keys)
 		goto err;

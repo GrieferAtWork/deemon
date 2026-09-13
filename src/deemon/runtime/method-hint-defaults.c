@@ -98,12 +98,12 @@ DECL_BEGIN
 	((size) - ((size_t)(-(index)) % (size)))
 
 #define Dee_Decref_probably_none(x) \
-	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None' */
+	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None` */
 
-STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(Dee_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(Dee_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(Dee_HASHOF_RECURSIVE_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by `detectConstantReturnValue()`");
+STATIC_ASSERT_MSG(Dee_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()`");
+STATIC_ASSERT_MSG(Dee_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()`");
+STATIC_ASSERT_MSG(Dee_HASHOF_RECURSIVE_ITEM == 0, "Assumed by `detectConstantReturnValue()`");
 
 /* Mutable sequence functions */
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
@@ -935,7 +935,7 @@ default__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_t cb, void
 #define DEFINED_default_foreach_with_foreach_pair_cb
 struct default_foreach_with_foreach_pair_data {
 	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
-	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
+	void         *dfwfp_arg; /* Cookie for `dfwfp_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -980,7 +980,7 @@ err:
 #define DEFINED_default_foreach_with_seq_enumerate_cb
 struct default_foreach_with_seq_enumerate_data {
 	Dee_foreach_t dfwse_cb;  /* [1..1] Underlying callback */
-	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb' */
+	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1203,7 +1203,7 @@ err_index:
 #define DEFINED_default_foreach_with_map_enumerate_cb
 struct default_foreach_with_map_enumerate_data {
 	Dee_foreach_t dfwme_cb;  /* [1..1] Underlying callback */
-	void         *dfwme_arg; /* [?..?] Cookie for `dfwme_cb' */
+	void         *dfwme_arg; /* [?..?] Cookie for `dfwme_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1243,7 +1243,7 @@ default__seq_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_
 #define DEFINED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
-	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
+	void              *dfpwf_arg; /* Cookie for `dfpwf_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1294,7 +1294,7 @@ err:
 #define DEFINED_default_foreach_pair_with_map_enumerate_cb
 struct default_foreach_pair_with_map_enumerate_data {
 	Dee_foreach_pair_t dfpwme_cb;  /* [1..1] Underlying callback */
-	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb' */
+	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -3077,7 +3077,7 @@ default__seq_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_seq_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 seq_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Sequence.operator hash'",
+	DeeError_Print("Unhandled error in `Sequence.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -5084,7 +5084,7 @@ default__seq_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerat
 #define DEFINED_default_enumerate_with_enumerate_index_cb
 struct default_enumerate_with_enumerate_index_data {
 	Dee_seq_enumerate_t dewei_cb;  /* [1..1] Wrapped callback. */
-	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb' */
+	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -5351,7 +5351,7 @@ err_indexob:
 #define DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb
 struct default_seq_enumerate_with_counter__and__seq_foreach_data {
 	Dee_seq_enumerate_t dewcaf_cb;      /* [1..1] Wrapped callback */
-	void               *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_cb' */
+	void               *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_cb` */
 	size_t              dewcaf_counter; /* Index of the next element that will be enumerated */
 };
 
@@ -5550,7 +5550,7 @@ err:
 #define DEFINED_default_enumerate_index_with_enumerate_cb
 struct default_enumerate_index_with_enumerate_data {
 	Dee_seq_enumerate_index_t deiwe_cb;    /* [1..1] Underlying callback. */
-	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb' */
+	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb` */
 	size_t                    deiwe_start; /* Enumeration start index */
 	size_t                    deiwe_end;   /* Enumeration end index */
 };
@@ -5624,7 +5624,7 @@ err:
 
 struct default_seq_enumerate_index_with_counter__and__seq_foreach_data {
 	Dee_seq_enumerate_index_t deiwcaf_cb;    /* [1..1] Wrapped callback */
-	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_cb' */
+	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_cb` */
 	size_t                    deiwcaf_index; /* Index of the next element that will be enumerate_indexd */
 	size_t                    deiwcaf_start; /* Enumeration start index */
 	size_t                    deiwcaf_end;   /* Enumeration end index */
@@ -8550,7 +8550,7 @@ default__seq_reduce__empty(DeeObject *self, DeeObject *combine) {
 #ifndef DEFINED_seq_reduce_data
 #define DEFINED_seq_reduce_data
 struct seq_reduce_data {
-	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, item)') */
+	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, item)`) */
 	DREF DeeObject *gsr_result;  /* [0..1] Current reduction result, or NULL if no init given and at first item. */
 };
 #endif /* !DEFINED_seq_reduce_data */
@@ -13906,8 +13906,8 @@ err:
 #define DEFINED_DeeSeq_GetForeachSubRangeAsTuple
 struct foreach_subrange_as_tuple_data {
 	DREF DeeTupleObject *fesrat_result;  /* [1..1] The tuple being constructed. */
-	size_t               fesrat_used;    /* Used # of elements of `fesrat_result' */
-	size_t               fesrat_maxsize; /* Max value for `fesrat_used' */
+	size_t               fesrat_used;    /* Used # of elements of `fesrat_result` */
+	size_t               fesrat_maxsize; /* Max value for `fesrat_used` */
 	size_t               fesrat_start;   /* # of elements that still need to be skipped. */
 };
 
@@ -14495,7 +14495,7 @@ default__seq_bfind__with__seq_operator_size__and__seq_operator_trygetitem_index(
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -14614,7 +14614,7 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -14733,7 +14733,7 @@ default__seq_bposition__with__seq_operator_size__and__seq_operator_trygetitem_in
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -14854,7 +14854,7 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -15334,7 +15334,7 @@ err:
 struct default_set_foreach_unique_data {
 	struct Dee_simple_hashset dsfud_encountered; /* Set of objects already encountered. */
 	Dee_foreach_t             dsfud_cb;          /* [1..1] user-defined callback */
-	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb' */
+	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -15457,7 +15457,7 @@ default__set_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'",
+	DeeError_Print("Unhandled error in `Set.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -16143,7 +16143,7 @@ default__set_operator_add__with_callobjectcache___set_add__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_add__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a | ~b' --> `~(~a & b)'
+		/* Special case: `a | ~b` --> `~(~a & b)`
 		 * -> Keep the inversion on the outside, since it prevents enumeration. */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		DREF SetInversion *inv_lhs;
@@ -16194,12 +16194,12 @@ default__set_operator_sub__with_callobjectcache___set_sub__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_sub__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a - ~b' -> `a & b' */
+		/* Special case: `a - ~b` -> `a & b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return DeeObject_InvokeMethodHint(set_operator_and, lhs, xrhs->si_set);
 	}
 	if (DeeSet_CheckEmpty(rhs))
-		return_reference_(lhs); /* `a - {}' -> `a' */
+		return_reference_(lhs); /* `a - {}` -> `a` */
 	return Dee_AsObject(SetDifference_New(lhs, rhs));
 }
 
@@ -16232,12 +16232,12 @@ default__set_operator_and__with_callobjectcache___set_and__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_and__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a & ~b' -> `a - b' */
+		/* Special case: `a & ~b` -> `a - b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return DeeObject_InvokeMethodHint(set_operator_sub, lhs, xrhs->si_set);
 	}
 	if (DeeSet_CheckEmpty(rhs))
-		return_reference_(Dee_EmptySet); /* `a & {}' -> `{}' */
+		return_reference_(Dee_EmptySet); /* `a & {}` -> `{}` */
 	return Dee_AsObject(SetIntersection_New(lhs, rhs));
 }
 
@@ -16270,19 +16270,19 @@ default__set_operator_xor__with_callobjectcache___set_xor__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__set_operator_xor__unsupported(DeeObject *lhs, DeeObject *rhs) {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a ^ ~b' -> `~(a ^ b)'
+		/* Special case: `a ^ ~b` -> `~(a ^ b)`
 		 * -> Keep the inversion on the outside, since it prevents enumeration. */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		DREF SetSymmetricDifference *symdiff;
 		if (DeeSet_CheckEmpty(xrhs->si_set))
-			return DeeObject_InvokeMethodHint(set_operator_inv, lhs); /* `a ^ ~{}' -> `~a' */
+			return DeeObject_InvokeMethodHint(set_operator_inv, lhs); /* `a ^ ~{}` -> `~a` */
 		symdiff = SetSymmetricDifference_New(lhs, xrhs->si_set);
 		if unlikely(!symdiff)
 			goto err;
 		return Dee_AsObject(SetInversion_NewInherited(symdiff));
 	}
 	if (DeeSet_CheckEmpty(rhs))
-		return_reference_(lhs); /* `a ^ {}' -> `a' */
+		return_reference_(lhs); /* `a ^ {}` -> `a` */
 	return Dee_AsObject(SetSymmetricDifference_New(lhs, rhs));
 err:
 	return NULL;
@@ -16383,7 +16383,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_inplace_sub__unsupported(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_and))(p_self, xrhs->si_set);
 	}
@@ -16400,7 +16400,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_inplace_sub__with__set_operator_foreach__and__set_removeall(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_and))(p_self, xrhs->si_set);
 	}
@@ -16448,7 +16448,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_operator_inplace_and__unsupported(DREF DeeObject **__restrict p_self, DeeObject *rhs) {
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_sub))(p_self, xrhs->si_set);
 	}
@@ -16468,14 +16468,14 @@ default__set_operator_inplace_and__with__set_operator_foreach__and__set_removeal
 	DREF DeeObject *keys_to_remove_proxy;
 	DREF DeeObject *keys_to_remove;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_sub))(p_self, xrhs->si_set);
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_clear))(*p_self);
 
-	/* `a &= b' -> `(a as Set).removeall((((a as Set) - b) as Set).frozen)' */
+	/* `a &= b` -> `(a as Set).removeall((((a as Set) - b) as Set).frozen)` */
 	keys_to_remove_proxy = DeeObject_InvokeMethodHint(set_operator_sub, *p_self, rhs);
 	if unlikely(!keys_to_remove_proxy)
 		goto err;
@@ -17970,7 +17970,7 @@ err:
 struct default_map_foreach_pair_unique_data {
 	struct Dee_simple_hashset dmfpud_encountered; /* Set of keys already encountered. */
 	Dee_foreach_pair_t        dmfpud_cb;          /* [1..1] user-defined callback */
-	void                     *dmfpud_arg;         /* [?..?] Cookie for `dmfpud_cb' */
+	void                     *dmfpud_arg;         /* [?..?] Cookie for `dmfpud_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -18093,7 +18093,7 @@ default__map_operator_hash(DeeObject *__restrict self) {
 #define DEFINED_map_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 map_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Mapping.operator hash'",
+	DeeError_Print("Unhandled error in `Mapping.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -18450,7 +18450,7 @@ default__map_operator_getitem_string_hash__empty(DeeObject *self, char const *ke
 #define DEFINED_default_map_getitem_string_hash_with_enumerate_cb
 struct default_map_getitem_string_hash_with_enumerate_data {
 	char const     *mgished_key;    /* [1..1] The key we're looking for. */
-	Dee_hash_t      mgished_hash;   /* Hash for `mgished_key'. */
+	Dee_hash_t      mgished_hash;   /* Hash for `mgished_key`. */
 	DREF DeeObject *mgished_result; /* [?..1][out] Result value. */
 };
 
@@ -18465,7 +18465,7 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 		return lhs_len == DeeBytes_SIZE(rhs) &&
 		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
-	/* `string.operator ==' isn't implemented for any other types. */
+	/* `string.operator ==` isn't implemented for any other types. */
 	return false;
 }
 #endif /* !DEFINED_string_hash_equals_object */
@@ -18578,8 +18578,8 @@ default__map_operator_getitem_string_len_hash__empty(DeeObject *self, char const
 #define DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb
 struct default_map_getitem_string_len_hash_with_enumerate_data {
 	char const     *mgislhed_key;    /* [1..1] The key we're looking for. */
-	size_t          mgislhed_keylen; /* Length of `mgislhed_key'. */
-	Dee_hash_t      mgislhed_hash;   /* Hash for `mgislhed_key'. */
+	size_t          mgislhed_keylen; /* Length of `mgislhed_key`. */
+	Dee_hash_t      mgislhed_hash;   /* Hash for `mgislhed_key`. */
 	DREF DeeObject *mgislhed_result; /* [?..1][out] Result value. */
 };
 
@@ -18593,7 +18593,7 @@ string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_ha
 		return lhs_len == DeeBytes_SIZE(rhs) &&
 		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
-	/* `string.operator ==' isn't implemented for any other types. */
+	/* `string.operator ==` isn't implemented for any other types. */
 	return false;
 }
 #endif /* !DEFINED_string_len_hash_equals_object */
@@ -19864,7 +19864,7 @@ default__map_enumerate_range__unsupported(DeeObject *self, Dee_seq_enumerate_t U
 #define DEFINED_map_enumerate_with_filter_cb
 struct map_enumerate_with_filter_data {
 	Dee_seq_enumerate_t mewfd_cb;           /* [1..1] Underlying callback. */
-	void               *mewfd_arg;          /* Cookie for `mewfd_cb' */
+	void               *mewfd_arg;          /* Cookie for `mewfd_cb` */
 	DeeObject          *mewfd_filter_start; /* [1..1] Filter start. */
 	DeeObject          *mewfd_filter_end;   /* [1..1] Filter end. */
 };
@@ -20495,12 +20495,12 @@ default__map_operator_sub__with_callobjectcache___map_sub__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_sub__unsupported(DeeObject *lhs, DeeObject *keys) {
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a - ~b' -> `a & b' */
+		/* Special case: `a - ~b` -> `a & b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return DeeObject_InvokeMethodHint(map_operator_and, lhs, xkeys->si_set);
 	}
 	if (DeeSet_CheckEmpty(keys))
-		return_reference_(lhs); /* `a - {}' -> `a' */
+		return_reference_(lhs); /* `a - {}` -> `a` */
 	return Dee_AsObject(MapDifference_New(lhs, keys));
 }
 
@@ -20533,12 +20533,12 @@ default__map_operator_and__with_callobjectcache___map_and__(DeeObject *lhs, DeeO
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_and__unsupported(DeeObject *lhs, DeeObject *keys) {
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a & ~b' -> `a - b' */
+		/* Special case: `a & ~b` -> `a - b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return DeeObject_InvokeMethodHint(map_operator_sub, lhs, xkeys->si_set);
 	}
 	if (DeeSet_CheckEmpty(keys))
-		return_reference_(Dee_EmptyMap); /* `a & {}' -> `{}' */
+		return_reference_(Dee_EmptyMap); /* `a & {}` -> `{}` */
 	return Dee_AsObject(MapIntersection_New(lhs, keys));
 }
 
@@ -20670,7 +20670,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_inplace_sub__unsupported(DREF DeeObject **__restrict p_self, DeeObject *keys) {
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_operator_inplace_and))(p_self, xkeys->si_set);
 	}
@@ -20687,7 +20687,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_inplace_sub__with__map_removekeys(DREF DeeObject **__restrict p_self, DeeObject *keys) {
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_operator_inplace_and))(p_self, xkeys->si_set);
 	}
@@ -20735,7 +20735,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_inplace_and__unsupported(DREF DeeObject **__restrict p_self, DeeObject *keys) {
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_operator_inplace_sub))(p_self, xkeys->si_set);
 	}
@@ -20756,16 +20756,16 @@ default__map_operator_inplace_and__with__map_operator_foreach_pair__and__map_rem
 	DREF DeeObject *a_keys_without_b_proxy;
 	DREF DeeObject *a_keys_without_b;
 	if (SetInversion_CheckExact(keys)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xkeys = (SetInversion *)keys;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_operator_inplace_sub))(p_self, xkeys->si_set);
 	}
 
-	/* `a &= {}' -> `(a as Sequence).clear()' */
+	/* `a &= {}` -> `(a as Sequence).clear()` */
 	if (DeeSet_CheckEmpty(keys))
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), seq_clear))(*p_self);
 
-	/* `a &= b' -> `(a as Mapping).removekeys(((((a as Mapping).keys as Set) - b) as Set).frozen)' */
+	/* `a &= b` -> `(a as Mapping).removekeys(((((a as Mapping).keys as Set) - b) as Set).frozen)` */
 	a_keys = (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), map_keys))(*p_self);
 	if unlikely(!a_keys)
 		goto err;
@@ -21012,7 +21012,7 @@ default__map_setold_ex__with_callattr_setold_ex(DeeObject *self, DeeObject *key,
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -21038,7 +21038,7 @@ default__map_setold_ex__with_callattr___map_setold_ex__(DeeObject *self, DeeObje
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -21067,7 +21067,7 @@ default__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeObject *self, 
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -21279,7 +21279,7 @@ default__map_setnew_ex__with_callattr_setnew_ex(DeeObject *self, DeeObject *key,
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -21305,7 +21305,7 @@ default__map_setnew_ex__with_callattr___map_setnew_ex__(DeeObject *self, DeeObje
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -21334,7 +21334,7 @@ default__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeObject *self, 
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -22637,7 +22637,7 @@ default__iter_rewind__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__iter_rewind__with_callattr_rewind(DeeObject *__restrict self) {
-	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()') */
+	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()`) */
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_rewind), 0, NULL);
 	if unlikely(!result)
@@ -22650,7 +22650,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__iter_rewind__with_callattr___iter_rewind__(DeeObject *__restrict self) {
-	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()') */
+	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()`) */
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___iter_rewind__), 0, NULL);
 	if unlikely(!result)
@@ -23042,7 +23042,7 @@ err:
 #define DEFINED_seq_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 seq_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Sequence.operator hash'",
+	DeeError_Print("Unhandled error in `Sequence.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -24387,7 +24387,7 @@ tdefault__set_operator_sizeob__with_callobjectcache___set_size__(DeeTypeObject *
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'",
+	DeeError_Print("Unhandled error in `Set.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -24712,7 +24712,7 @@ tdefault__map_operator_sizeob__with_callobjectcache___map_size__(DeeTypeObject *
 #define DEFINED_map_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 map_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Mapping.operator hash'",
+	DeeError_Print("Unhandled error in `Mapping.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -25024,7 +25024,7 @@ tdefault__map_setold_ex__with_callobjectcache___map_setold_ex__(DeeTypeObject *t
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;
@@ -25068,7 +25068,7 @@ tdefault__map_setnew_ex__with_callobjectcache___map_setnew_ex__(DeeTypeObject *t
 		goto err;
 	temp = DeeObject_BoolInherited(status[0]);
 	if (Dee_HAS_ISYES_OR_ERR(temp)) {
-		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None' */
+		Dee_Decref_probably_none(status[1]); /* Should always be `Dee_None` */
 		if (Dee_HAS_ISERR(temp))
 			goto err;
 		return ITER_DONE;

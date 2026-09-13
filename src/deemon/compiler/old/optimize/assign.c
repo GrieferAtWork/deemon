@@ -49,7 +49,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
                    struct ast *__restrict other) {
 	byte_t buffer[(sizeof(struct ast) - offsetof(struct ast, a_type))];
 	/* Use a temporary buffer for the variable portion of the AST.
-	 * Until we actually assign `other' to `self', we initialize it as a shallow copy of `other'. */
+	 * Until we actually assign `other` to `self`, we initialize it as a shallow copy of `other`. */
 #if defined(__INTELLISENSE__) || 1
 	struct ast *temp = COMPILER_CONTAINER_OF(buffer, struct ast, a_type);
 #else
@@ -264,7 +264,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		memcpy(&self->a_ddi, &other->a_ddi, sizeof(struct ast_loc));
 	}
 	ast_fini_contents(self);
-	/* Override the (currently) invalid ast `self'. */
+	/* Override the (currently) invalid ast `self`. */
 	self->a_type            = AST_MULTIPLE;
 	self->a_flag            = AST_FMULTIPLE_KEEPLAST;
 	self->a_multiple.m_astc = 1;

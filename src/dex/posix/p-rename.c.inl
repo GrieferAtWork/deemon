@@ -44,7 +44,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `rename()' */
+/* Figure out how to implement `rename()` */
 #undef posix_rename_USE_nt_MoveFileEx
 #undef posix_rename_USE_wrename
 #undef posix_rename_USE_rename
@@ -63,7 +63,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `frename()' */
+/* Figure out how to implement `frename()` */
 #undef posix_frename_USE_posix_rename
 #undef posix_frename_USE_STUB
 #ifndef posix_rename_USE_STUB
@@ -74,7 +74,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `renameat()' */
+/* Figure out how to implement `renameat()` */
 #undef posix_renameat_USE_posix_rename
 #undef posix_renameat_USE_renameat2
 #undef posix_renameat_USE_renameat
@@ -94,7 +94,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `renameat2()' */
+/* Figure out how to implement `renameat2()` */
 #undef posix_renameat2_USE_posix_renameat
 #undef posix_renameat2_USE_renameat2
 #undef posix_renameat2_USE_nt_MoveFileEx
@@ -111,7 +111,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `link()' */
+/* Figure out how to implement `link()` */
 #undef posix_link_USE_nt_CreateHardLink
 #undef posix_link_USE_wlink
 #undef posix_link_USE_link
@@ -130,7 +130,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `flink()' */
+/* Figure out how to implement `flink()` */
 #undef posix_flink_USE_posix_link
 #undef posix_flink_USE_linkat
 #undef posix_flink_USE_STUB
@@ -147,7 +147,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `linkat()' */
+/* Figure out how to implement `linkat()` */
 #undef posix_linkat_USE_posix_link
 #undef posix_linkat_USE_linkat
 #undef posix_linkat_USE_STUB
@@ -511,7 +511,7 @@ err:
 		if unlikely(!utf8_newpath)
 			goto err;
 
-		/* Name the call to `renameat2()' */
+		/* Name the call to `renameat2()` */
 again_renameat2:
 #if defined(AT_RENAME_NOREPLACE) || defined(AT_RENAME_EXCHANGE) || defined(AT_RENAME_WHITEOUT)
 		if (renameat2(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath, flags | atflags) == 0)
@@ -544,7 +544,7 @@ err_abs_oldpath:
 #if !defined(AT_RENAME_NOREPLACE) && !defined(AT_RENAME_EXCHANGE) && !defined(AT_RENAME_WHITEOUT)
 #undef posix_renameat2_USE_posix_renameat
 #define posix_renameat2_USE_posix_renameat
-	/* Fallthru to `posix_renameat2_USE_posix_renameat' */
+	/* Fallthru to `posix_renameat2_USE_posix_renameat` */
 #else /* !AT_RENAME_NOREPLACE && !AT_RENAME_EXCHANGE && !AT_RENAME_WHITEOUT */
 err:
 	return NULL;
@@ -553,16 +553,16 @@ err:
 
 #ifdef posix_renameat2_USE_posix_renameat
 	if (flags & RENAME_NOREPLACE) {
-		/* Check if `newpath' already exists (and if so: fail)
+		/* Check if `newpath` already exists (and if so: fail)
 		 *
 		 * Note that this isn't 100% safe since some other process
 		 * may create the file after we checked for it, but this is
-		 * the best we can do (since without `renameat2(2)', there
+		 * the best we can do (since without `renameat2(2)`, there
 		 * literally isn't a system call that would make the check
 		 * for us) */
 		struct dee_stat st;
 		int status;
-		/* TODO: Use `faccessat(..., F_OK, AT_SYMLINK_NOFOLLOW)' if available */
+		/* TODO: Use `faccessat(..., F_OK, AT_SYMLINK_NOFOLLOW)` if available */
 		status = dee_stat_init(&st, newdirfd, newpath,
 		                       atflags | AT_SYMLINK_NOFOLLOW | Dee_STAT_F_TRY);
 		if unlikely(status < 0)
@@ -852,7 +852,7 @@ again:
 	if ((atflags & AT_EMPTY_PATH) &&
 	    (DeeNone_Check(oldpath) || (DeeString_Check(oldpath) && DeeString_IsEmpty(oldpath))) &&
 	    !DeeString_Check(olddirfd)) {
-		/* Special case: create a hardlink for the file specified by `olddirfd' */
+		/* Special case: create a hardlink for the file specified by `olddirfd` */
 		result = posix_flink_f_impl(olddirfd, newpath_abspath);
 	} else {
 		oldpath_abspath = posix_dfd_makepath(olddirfd, oldpath, atflags);

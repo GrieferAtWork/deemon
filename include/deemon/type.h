@@ -204,7 +204,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 /* >> DeeTypeObject *DeeObject_Init(DeeObject *self, DeeTypeObject *type);
  * >> DeeTypeObject *DeeObject_InitInherited(DeeObject *self, [inherit(always)] DREF DeeTypeObject *type);
  * Initialize the standard objects fields of a freshly allocated object.
- * If possible, you should use `DeeObject_InitHeap' / `DeeObject_InitStatic' instead!
+ * If possible, you should use `DeeObject_InitHeap` / `DeeObject_InitStatic` instead!
  * @param: DeeObject      *self: The object to initialize
  * @param: DeeTypeoObject *type: The (non-static) type to assign to the object */
 #define DeeObject_Init(self, type)          DeeObject_InitEx(self, type, /**/)
@@ -231,7 +231,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 /* Serialization address (points into the abstract serialization buffer) */
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED           /*!export-*/
-typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>` for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;
@@ -410,19 +410,19 @@ struct Dee_type_constructor {
 			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
-			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
-			 *           even when `tp_ctor' has been defined as non-NULL! */
+			/* WARNING: `tp_any_ctor_kw` may be invoked with `argc == 0 && kw == NULL`,
+			 *           even when `tp_ctor` has been defined as non-NULL! */
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2)
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
 
-			/* [0..1] Serialize the binary data of `self' into `writer'.
+			/* [0..1] Serialize the binary data of `self` into `writer`.
 			 * The caller has already pre-allocated the necessary amount
-			 * of storage needed as per `tp_instance_size' (or `tp_alloc')
-			 * at `addr', leaving it to this operator to stream the data
-			 * of `self' into `writer'
+			 * of storage needed as per `tp_instance_size` (or `tp_alloc`)
+			 * at `addr`, leaving it to this operator to stream the data
+			 * of `self` into `writer`
 			 *
-			 * Standard fields like `ob_refcnt' and `ob_type' will have
+			 * Standard fields like `ob_refcnt` and `ob_type` will have
 			 * already been initialized by the time this operator is called.
 			 *
 			 * @return: 0 : Success
@@ -432,12 +432,12 @@ struct Dee_type_constructor {
 			                      struct Dee_serial *__restrict writer,
 			                      Dee_seraddr_t addr);
 
-			/* WARNING: A situation can arise in which the `tp_free'
+			/* WARNING: A situation can arise in which the `tp_free`
 			 *          operator of a base-class is used instead of
-			 *          the one accompanying `tp_alloc()'.
-			 *       >> Because of this, `tp_alloc' and `tp_free' should only
+			 *          the one accompanying `tp_alloc()`.
+			 *       >> Because of this, `tp_alloc` and `tp_free` should only
 			 *          be used for accessing a cache of pre-allocated objects, that
-			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
+			 *          were created using regular heap allocations (`DeeObject_Malloc`). */
 			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
 			union {
 				size_t tp_instance_size;       /*       [valid_if(tp_free == NULL)] */
@@ -453,13 +453,13 @@ struct Dee_type_constructor {
 		struct {
 			/* NOTES:
 			 * - Var-constructors are allowed to return instances of types other than
-			 *   `tp'. However, this is a privilege that is not exposed to user-code.
+			 *   `tp`. However, this is a privilege that is not exposed to user-code.
 			 * - Additionally, any type making use of this must openly document this
 			 *   in order to prevent confusion.
 			 * - It should also be noted that the deemon core does not make use of
 			 *   this functionality anywhere, and as of right now, the only type that
-			 *   does make use of it is the copy constructor of `LValue' objects
-			 *   found in `ctypes'.
+			 *   does make use of it is the copy constructor of `LValue` objects
+			 *   found in `ctypes`.
 			 * - Rather than returning another instance of the l-value type, it
 			 *   returns a regular structured object containing a copy of the data
 			 *   that was pointed-to by the l-value.
@@ -467,13 +467,13 @@ struct Dee_type_constructor {
 			WUNUSED_T                  DREF DeeObject *(DCALL *tp_ctor)(void);
 			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
-			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
-			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
+			/* WARNING: `tp_any_ctor_kw` may be invoked with `argc == 0 && kw == NULL`,
+			 *          even when `tp_ctor` or `tp_any_ctor` has been defined as non-NULL! */
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-			/* [0..1] Serialize the binary data of `self' into `writer'.
+			/* [0..1] Serialize the binary data of `self` into `writer`.
 			 * @return: Dee_SERADDR_INVALID : Error
-			 * @return: * : Address where data of `self' was written to. */
+			 * @return: * : Address where data of `self` was written to. */
 			WUNUSED_T NONNULL_T((1, 2)) Dee_seraddr_t
 			(DCALL *tp_serialize)(DeeObject *__restrict self,
 			                      struct Dee_serial *__restrict writer);
@@ -493,7 +493,7 @@ struct Dee_type_constructor {
 	 * >> NONNULL_T((1, 2)) void (DCALL *tp_dtor)(DeeTypeObject *tp_self, DeeObject *__restrict self); */
 	NONNULL_T((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self);
 
-	/* NOTE: `tp_move_assign' is favored in code such as this:
+	/* NOTE: `tp_move_assign` is favored in code such as this:
 	 * >> local my_list = [];
 	 * >> my_list := copy     get_other_list(); // Will try to move-assign the copy.
 	 * >> my_list := deepcopy get_other_list(); // Will try to move-assign the deep copy.
@@ -507,8 +507,8 @@ struct Dee_type_constructor {
 	Dee_tp_new_kw_t   tp_new_kw;
 	Dee_tp_new_copy_t tp_new_copy;
 
-	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by
-	 * `DeeType_RequireDestroy()', but can be overwritten with a
+	/* Callback for `DeeObject_Destroy()` (usually auto-assigned by
+	 * `DeeType_RequireDestroy()`, but can be overwritten with a
 	 * custom implementation). */
 	Dee_tp_destroy_t tp_destroy;
 
@@ -533,19 +533,19 @@ struct Dee_type_cast {
 	 * @return: == 0: Object is false
 	 * @return: <  0: Error was thrown */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_bool)(DeeObject *__restrict self);
-	/* Optional fast-pass operator for `DeeObject_Print(tp_str(self), printer, arg)' */
+	/* Optional fast-pass operator for `DeeObject_Print(tp_str(self), printer, arg)` */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_print)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-	/* Optional fast-pass operator for `DeeObject_Print(tp_repr(self), printer, arg)' */
+	/* Optional fast-pass operator for `DeeObject_Print(tp_repr(self), printer, arg)` */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_printrepr)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 };
 
 struct Dee_type_gc {
-	/* Clear all possible references with `NULL' or some
-	 * statically allocated stub-object (e.g.: `Dee_None') */
+	/* Clear all possible references with `NULL` or some
+	 * statically allocated stub-object (e.g.: `Dee_None`) */
 	NONNULL_T((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
 
-	/* TODO: Consider inlining `tp_clear' into `DeeTypeObject' by getting
-	 *       rid of `tp_gc'. `tp_cc' could then become a method hint */
+	/* TODO: Consider inlining `tp_clear` into `DeeTypeObject` by getting
+	 *       rid of `tp_gc`. `tp_cc` could then become a method hint */
 
 	/* Clear unused heap caches of the object. Called when deemon is
 	 * running low on memory (iow: from "Dee_CollectMemory") */
@@ -553,7 +553,7 @@ struct Dee_type_gc {
 };
 
 
-/* Return values for `tp_int32' and `tp_int64' */
+/* Return values for `tp_int32` and `tp_int64` */
 #define Dee_INT_SIGNED   0    /* The saved integer value is signed. */
 #define Dee_INT_UNSIGNED 1    /* The saved integer value is unsigned. */
 #define Dee_INT_ERROR    (-1) /* An error was thrown */
@@ -567,14 +567,14 @@ struct Dee_type_gc {
 
 struct Dee_type_math {
 	/* Math related operators. */
-	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed.
-	 * @return: Dee_INT_UNSIGNED: The value stored in `*result' is unsigned.
+	/* @return: Dee_INT_SIGNED:   The value stored in `*result` is signed.
+	 * @return: Dee_INT_UNSIGNED: The value stored in `*result` is unsigned.
 	 * @return: Dee_INT_ERROR:    An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_int64)(DeeObject *__restrict self, int64_t *__restrict result);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_double)(DeeObject *__restrict self, double *__restrict result);
 
-	/* Cast to `int' (Must return an `DeeInt_Type' object) */
+	/* Cast to `int` (Must return an `DeeInt_Type` object) */
 	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_int)(DeeObject *__restrict self);
 
 	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_inv)(DeeObject *__restrict self);
@@ -619,37 +619,37 @@ struct Dee_type_cmp {
 	WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *tp_hash)(DeeObject *__restrict self);
 
 	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
-	 * @return: Dee_COMPARE_LO: `lhs != rhs'
-	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
-	 * @return: Dee_COMPARE_GR: `lhs != rhs'
+	 * @return: Dee_COMPARE_LO: `lhs != rhs`
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs`
+	 * @return: Dee_COMPARE_GR: `lhs != rhs`
 	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare_eq)(DeeObject *self, DeeObject *some_object);
 
 	/* Rich-compare operator that can be defined instead
-	 * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
-	 * @return: Dee_COMPARE_LO: `lhs < rhs'
-	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
-	 * @return: Dee_COMPARE_GR: `lhs > rhs'
+	 * of `tp_eq`, `tp_ne`, `tp_lo`, `tp_le`, `tp_gr`, `tp_ge`
+	 * @return: Dee_COMPARE_LO: `lhs < rhs`
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs`
+	 * @return: Dee_COMPARE_GR: `lhs > rhs`
 	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
 
-	/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented', `TypeError' or `ValueError'.
+	/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented`, `TypeError` or `ValueError`.
 	 * Instead of throwing these errors, this implementation should handle these errors by returning
-	 * either `Dee_COMPARE_LO' or `Dee_COMPARE_GR' to indicate non-equality (if you're unsure which
-	 * one to return, you can also just return `Dee_COMPARE_NE' instead).
+	 * either `Dee_COMPARE_LO` or `Dee_COMPARE_GR` to indicate non-equality (if you're unsure which
+	 * one to return, you can also just return `Dee_COMPARE_NE` instead).
 	 *
 	 * [1] With "shouldn't" I mean *REALLY* shouldn't. As in: unless you *really* want it to throw
 	 *     one of those errors, you should either use API functions that never throw these errors,
-	 *     or add `DeeError_Catch()' calls to your function to catch those errors by returning either
-	 *     `Dee_COMPARE_LO' or `Dee_COMPARE_GR' instead.
+	 *     or add `DeeError_Catch()` calls to your function to catch those errors by returning either
+	 *     `Dee_COMPARE_LO` or `Dee_COMPARE_GR` instead.
 	 *
 	 * !!! THIS OPERATOR CANNOT BE USED TO SUBSTITUTE "tp_compare_eq" !!!
 	 * -> Defining this operator but not defining "tp_compare_eq" is !NOT VALID!
 	 *    However, "tp_trycompare_eq" can ITSELF be substituted by "tp_compare_eq"
 	 *
-	 * @return: Dee_COMPARE_LO: `lhs != rhs'
-	 * @return: Dee_COMPARE_EQ: `lhs == rhs'
-	 * @return: Dee_COMPARE_GR: `lhs != rhs'
+	 * @return: Dee_COMPARE_LO: `lhs != rhs`
+	 * @return: Dee_COMPARE_EQ: `lhs == rhs`
+	 * @return: Dee_COMPARE_GR: `lhs != rhs`
 	 * @return: Dee_COMPARE_ERR: An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_trycompare_eq)(DeeObject *self, DeeObject *some_object);
 
@@ -677,51 +677,51 @@ struct Dee_type_seq {
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants of the sequence operators above. */
 
-	/* Alternate forms for `tp_iter'...
+	/* Alternate forms for `tp_iter`...
 	 *
-	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
+	 * Instead of defining `tp_iter`, you can just define one of these and have the runtime
 	 * use these for enumerating the object. Note however that this is less efficient when
 	 * enumeration still requires an iterator, and that for this purpose, the type should
-	 * still provide a proper `tp_iter' callback (or if it is derived from DeeSeq_Type, it
-	 * can also just provide `tp_size' and `tp_getitem_index'). */
+	 * still provide a proper `tp_iter` callback (or if it is derived from DeeSeq_Type, it
+	 * can also just provide `tp_size` and `tp_getitem_index`). */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
-	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
-	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
+	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem`)
+	 * Check if a given item is bound (`self[index] is bound` / `deemon.bounditem(self, index)`)
 	 * @return: Dee_BOUND_YES:     Item is bound.
-	 * @return: Dee_BOUND_NO:      Item isn't bound. (in `tp_getitem': `UnboundItem')
+	 * @return: Dee_BOUND_NO:      Item isn't bound. (in `tp_getitem`: `UnboundItem`)
 	 * @return: Dee_BOUND_ERR:     An error occurred.
-	 * @return: Dee_BOUND_MISSING: Item doesn't exist (in `tp_getitem': `KeyError'). */
+	 * @return: Dee_BOUND_MISSING: Item doesn't exist (in `tp_getitem`: `KeyError`). */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem)(DeeObject *self, DeeObject *index);
 
-	/* Check if a given item exists (`deemon.hasitem(self, index)') (inherited alongside `tp_getitem')
-	 * @return: Dee_HAS_YES: Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
-	 * @return: Dee_HAS_NO:  Doesn't exist. (in `tp_getitem': `KeyError')
+	/* Check if a given item exists (`deemon.hasitem(self, index)`) (inherited alongside `tp_getitem`)
+	 * @return: Dee_HAS_YES: Does exists.   (in `tp_getitem`: `UnboundItem` or <no error>)
+	 * @return: Dee_HAS_NO:  Doesn't exist. (in `tp_getitem`: `KeyError`)
 	 * @return: Dee_HAS_ERR: Error. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
 
-	/* Aliases for `tp_sizeob' that returns the size in its native form.
+	/* Aliases for `tp_sizeob` that returns the size in its native form.
 	 * @return: (size_t)-1: Error */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size)(DeeObject *__restrict self);
 
-	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions.
-	 * NOTE: This operator can NOT be used to substitute `tp_size'!
+	/* Same as `tp_size`, but should execute in O(1) time and never throw exceptions.
+	 * NOTE: This operator can NOT be used to substitute `tp_size`!
 	 * @return: * : A snapshot of the object's current size.
 	 * @return: (size_t)-1: Size cannot be determined fast. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size_fast)(DeeObject *__restrict self);
 
-	/* Aliases for `tp_getitem' */
+	/* Aliases for `tp_getitem` */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index)(DeeObject *self, size_t index);
 
-	/* Same as `tp_getitem_index', but never throws an exception:
-	 * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
-	 * @param: index: Index of item to access. Guarantied to be `<' some preceding
-	 *                call to `tp_size_fast', `tp_size', or `tp_sizeob' (from the
+	/* Same as `tp_getitem_index`, but never throws an exception:
+	 * NOTE: This operator can NOT be used to substitute `tp_getitem_index`!
+	 * @param: index: Index of item to access. Guarantied to be `<` some preceding
+	 *                call to `tp_size_fast`, `tp_size`, or `tp_sizeob` (from the
 	 *                same type; i.e. the size operator will not be from a sub-class).
 	 * @return: * :   A reference to the index.
-	 * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
-	 * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
+	 * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE`
+	 * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index` right now. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 
 	/* Aliases of the non-*_index variants above. Behavior of these matches behavior above. */
@@ -738,9 +738,9 @@ struct Dee_type_seq {
 
 	/* Operators meant to speed up map operators. */
 
-	/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
-	 * `KeyError' (or `UnboundItem', which is a given since that one's a
-	 * sub-class of `KeyError') */
+	/* Same as `tp_getitem`, but returns `ITER_DONE` instead of throwing
+	 * `KeyError` (or `UnboundItem`, which is a given since that one's a
+	 * sub-class of `KeyError`) */
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
 	WUNUSED_T NONNULL_T((1))       DREF DeeObject *(DCALL *tp_trygetitem_index)(DeeObject *self, size_t index);
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
@@ -756,7 +756,7 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
-	/* [0..1] Optional helper to help implement `DeeSeq_AsHeapVector()' & friends.
+	/* [0..1] Optional helper to help implement `DeeSeq_AsHeapVector()` & friends.
 	 * NOTES:
 	 * - This operator is NOT used to implement stuff above, and will NOT
 	 *   be substituted using other operators. This operator gets inherited
@@ -776,9 +776,9 @@ struct Dee_type_seq {
 	 * @return: (size_t)-1:    Error. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
-	/* [0..1] Same as `tp_asvector', but not allowed to throw exceptions or
+	/* [0..1] Same as `tp_asvector`, but not allowed to throw exceptions or
 	 *        ever invoke user-code in any form, or for any reason, or acquire
-	 *        arbitrary object locks (other than immediately owned by `self').
+	 *        arbitrary object locks (other than immediately owned by `self`).
 	 * This means:
 	 * - The caller is allowed to invoke this function while holding some kind
 	 *   of lock themselves (so-long as they the lock they're holding isn't
@@ -786,13 +786,13 @@ struct Dee_type_seq {
 	 * - The caller can assume this function to be NOBLOCK, even while holding
 	 *   locks themselves (so-long as "self" can't access already-held locks)
 	 * Usage:
-	 * - This operator is used by `deemon.List' in order to in-place insert
+	 * - This operator is used by `deemon.List` in order to in-place insert
 	 *   caller-given sequences into the list's internal vector buffer, without
 	 *   the need to transfer objects one-at-a-time, or via a temporary vector.
 	 *   Note that in this case, this operator is invoked WHILE the caller is
 	 *   HOLDING A LOCK to the list being modified!
 	 * NOTE: When defining this operator, you can usually assign the same function
-	 *       pointer to `tp_asvector' also. Please do so explicitly. Otherwise,
+	 *       pointer to `tp_asvector` also. Please do so explicitly. Otherwise,
 	 *       the runtime may not be able to notice its availability.
 	 * @return: <= dst_length: Success: the first "return" elements of "dst" were filled with the items of this sequence.
 	 * @return: > dst_length:  The given "dst_length" is too short. In this case, "dst" may have been modified,
@@ -802,7 +802,7 @@ struct Dee_type_seq {
 
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
-	 * with the exception of `DeeKwds_Type', which has that flag, but does
+	 * with the exception of `DeeKwds_Type`, which has that flag, but does
 	 * not implement these operators.
 	 *
 	 * NOTE: Even when these operators are defined, the operator above will
@@ -1214,17 +1214,17 @@ PRIVATE struct type_seq myob_seq = {
 #endif
 
 struct Dee_type_iterator {
-	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)'
+	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)`
 	 * @return: 0 : Success
 	 * @return: 1 : Iterator has been exhausted
 	 * @return: -1: Error */
 	/* TODO: Change this API to use Dee_HAS_* instead (though this will flip the meaning of 0/1) */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
 
-	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
+	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]`
 	 * In the case of mapping iterators, these can be used to iterate only the
 	 * key/value part of the map, without needing to construct a temporary tuple
-	 * holding both values (as needs to be done by `tp_iter_next'). */
+	 * holding both values (as needs to be done by `tp_iter_next`). */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextkey)(DeeObject *__restrict self);
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextvalue)(DeeObject *__restrict self);
 };
@@ -1280,11 +1280,11 @@ struct Dee_type_attr {
 	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *attr);
 	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *attr);
 	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
-	/* Initialize an iterator for enumerating attributes recognized by `tp_getattr'
+	/* Initialize an iterator for enumerating attributes recognized by `tp_getattr`
 	 * @param: hint: Hint specifying which attributes to enumerate (may be ignored by constructed iterator,
 	 *               meaning you have to do your own additional filtering if you want to be sure that only
 	 *               attributes matching your filter get enumerated)
-	 * @return: <= bufsize: Success; the given `iterbuf' was initialized and you can start enumeration
+	 * @return: <= bufsize: Success; the given `iterbuf` was initialized and you can start enumeration
 	 * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of at least "return" bytes)
 	 * @return: (size_t)-1: An error was thrown. */
 	WUNUSED_T NONNULL_T((1, 2, 5))
@@ -1301,53 +1301,53 @@ struct Dee_type_attr {
 	 *       it would add a whole ton of otherwise unnecessary DeeObject_T-checks)
 	 *       This means that if you want to implement stuff below, you *MUST* also
 	 *       implement the operators above like follows:
-	 *   - tp_findattr:                      Must also implement `tp_iterattr'
-	 *   - tp_hasattr:                       Must also implement `tp_getattr'
-	 *   - tp_boundattr:                     Must also implement `tp_getattr'
-	 *   - tp_callattr:                      Must also implement `tp_getattr'
-	 *   - tp_callattr_kw:                   Must also implement `tp_getattr'
-	 *   - tp_vcallattrf:                    Must also implement `tp_getattr'
-	 *   - tp_getattr_string_hash:           Must also implement `tp_getattr'
-	 *   - tp_delattr_string_hash:           Must also implement `tp_delattr'
-	 *   - tp_setattr_string_hash:           Must also implement `tp_setattr'
-	 *   - tp_hasattr_string_hash:           Must also implement `tp_getattr'
-	 *   - tp_boundattr_string_hash:         Must also implement `tp_getattr'
-	 *   - tp_callattr_string_hash:          Must also implement `tp_getattr'
-	 *   - tp_callattr_string_hash_kw:       Must also implement `tp_getattr'
-	 *   - tp_vcallattr_string_hashf:        Must also implement `tp_getattr'
-	 *   - tp_getattr_string_len_hash:       Must also implement `tp_getattr'
-	 *   - tp_delattr_string_len_hash:       Must also implement `tp_delattr'
-	 *   - tp_setattr_string_len_hash:       Must also implement `tp_setattr'
-	 *   - tp_hasattr_string_len_hash:       Must also implement `tp_getattr'
-	 *   - tp_boundattr_string_len_hash:     Must also implement `tp_getattr'
-	 *   - tp_callattr_string_len_hash:      Must also implement `tp_getattr'
-	 *   - tp_callattr_string_len_hash_kw:   Must also implement `tp_getattr'
+	 *   - tp_findattr:                      Must also implement `tp_iterattr`
+	 *   - tp_hasattr:                       Must also implement `tp_getattr`
+	 *   - tp_boundattr:                     Must also implement `tp_getattr`
+	 *   - tp_callattr:                      Must also implement `tp_getattr`
+	 *   - tp_callattr_kw:                   Must also implement `tp_getattr`
+	 *   - tp_vcallattrf:                    Must also implement `tp_getattr`
+	 *   - tp_getattr_string_hash:           Must also implement `tp_getattr`
+	 *   - tp_delattr_string_hash:           Must also implement `tp_delattr`
+	 *   - tp_setattr_string_hash:           Must also implement `tp_setattr`
+	 *   - tp_hasattr_string_hash:           Must also implement `tp_getattr`
+	 *   - tp_boundattr_string_hash:         Must also implement `tp_getattr`
+	 *   - tp_callattr_string_hash:          Must also implement `tp_getattr`
+	 *   - tp_callattr_string_hash_kw:       Must also implement `tp_getattr`
+	 *   - tp_vcallattr_string_hashf:        Must also implement `tp_getattr`
+	 *   - tp_getattr_string_len_hash:       Must also implement `tp_getattr`
+	 *   - tp_delattr_string_len_hash:       Must also implement `tp_delattr`
+	 *   - tp_setattr_string_len_hash:       Must also implement `tp_setattr`
+	 *   - tp_hasattr_string_len_hash:       Must also implement `tp_getattr`
+	 *   - tp_boundattr_string_len_hash:     Must also implement `tp_getattr`
+	 *   - tp_callattr_string_len_hash:      Must also implement `tp_getattr`
+	 *   - tp_callattr_string_len_hash_kw:   Must also implement `tp_getattr`
 	 *   - tp_findattr_info_string_len_hash: Don't implement unless your type uses standard attribute
 	 *                                       mechanisms (usually DeeObject_Generic*Attr) at some point,
 	 *                                       in which case you can implement this operator to tell deemon
 	 *                                       about attributes that *always* resolve to standard ones.
 	 */
 
-	/* [0..1] Like `tp_iterattr', but find a specific attribute */
+	/* [0..1] Like `tp_iterattr`, but find a specific attribute */
 	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int
 	(DCALL *tp_findattr)(DeeTypeObject *tp_self, DeeObject *self,
 	                     struct Dee_attrspec const *__restrict specs,
 	                     struct Dee_attrdesc *__restrict result);
 
-	/* [0..1] Like `tp_getattr', but handles attribute errors:
+	/* [0..1] Like `tp_getattr`, but handles attribute errors:
 	 * @return: Dee_HAS_YES: Attribute exists.
 	 * @return: Dee_HAS_NO:  Attribute doesn't exist.
 	 * @return: Dee_HAS_ERR: An error occurred. .*/
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr)(DeeObject *self, /*String*/ DeeObject *attr);
 
-	/* [0..1] Like `tp_getattr', but handles attribute errors:
+	/* [0..1] Like `tp_getattr`, but handles attribute errors:
 	 * @return: Dee_BOUND_YES:     Attribute is bound.
 	 * @return: Dee_BOUND_NO:      Attribute isn't bound.
 	 * @return: Dee_BOUND_ERR:     An error occurred.
 	 * @return: Dee_BOUND_MISSING: The attribute doesn't exist. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_boundattr)(DeeObject *self, /*String*/ DeeObject *attr);
 
-	/* [0..1] Like `tp_getattr' + `DeeObject_Call()', but no need to create the intermediate object. */
+	/* [0..1] Like `tp_getattr` + `DeeObject_Call()`, but no need to create the intermediate object. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr)(DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_kw)(DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_vcallattrf)(DeeObject *self, /*String*/ DeeObject *attr, char const *format, va_list args);
@@ -1371,15 +1371,15 @@ struct Dee_type_attr {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_len_hash_kw)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-	/* [0..1] For implementing `DeeObject_TFindAttrInfoStringLenHash()'.
-	 * This should ONLY be defined by proxy types (like `Super'), or types that always
+	/* [0..1] For implementing `DeeObject_TFindAttrInfoStringLenHash()`.
+	 * This should ONLY be defined by proxy types (like `Super`), or types that always
 	 * make use of standard attribute access mechanisms for certain attributes (usually
-	 * `DeeObject_Generic*Attr'), and know what they're doing.
-	 * @return: true:   Attribute information was found, and `*retinfo' was filled.
-	 *                  Note that in case of `Dee_ATTRINFO_CUSTOM', accessing the
+	 * `DeeObject_Generic*Attr`), and know what they`re doing.
+	 * @return: true:   Attribute information was found, and `*retinfo` was filled.
+	 *                  Note that in case of `Dee_ATTRINFO_CUSTOM`, accessing the
 	 *                  attribute can still fail for any number of reasons at runtime.
-	 * @return: false:  Attribute information could not be found, and `*retinfo' is undefined.
-	 *                  This has the same meaning as `Dee_HAS_ISYES(DeeObject_HasAttr(...))'. */
+	 * @return: false:  Attribute information could not be found, and `*retinfo` is undefined.
+	 *                  This has the same meaning as `Dee_HAS_ISYES(DeeObject_HasAttr(...))`. */
 	WUNUSED_T NONNULL_T((1, 2, 3, 6)) bool (DCALL *tp_findattr_info_string_len_hash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -1397,17 +1397,17 @@ struct Dee_type_with {
 };
 
 struct Dee_type_callable {
-	/* Same as `tp_call', but having support for keyword arguments. */
+	/* Same as `tp_call`, but having support for keyword arguments. */
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
 	                                    DeeObject *const *argv, DeeObject *kw);
 
-	/* Same as `tp_call', but "thisarg" gets injected as an additional, leading argument. */
+	/* Same as `tp_call`, but "thisarg" gets injected as an additional, leading argument. */
 	WUNUSED_T ATTR_INS_T(4, 3) NONNULL_T((1, 2))
 	DREF DeeObject *(DCALL *tp_thiscall)(DeeObject *self, DeeObject *thisarg,
 	                                     size_t argc, DeeObject *const *argv);
 
-	/* Same as `tp_thiscall', but having support for keyword arguments. */
+	/* Same as `tp_thiscall`, but having support for keyword arguments. */
 	WUNUSED_T ATTR_INS_T(4, 3) NONNULL_T((1, 2))
 	DREF DeeObject *(DCALL *tp_thiscall_kw)(DeeObject *self, DeeObject *thisarg, size_t argc,
 	                                        DeeObject *const *argv, DeeObject *kw);
@@ -1426,8 +1426,8 @@ struct Dee_buffer;
 struct Dee_type_buffer {
 	/* Low-level buffer interface. */
 
-	/* When implemented, `tp_getbuf' must fill in at least `bb_base' and `bb_size'
-	 * @param: flags: Set of `Dee_BUFFER_F*' */
+	/* When implemented, `tp_getbuf` must fill in at least `bb_base` and `bb_size`
+	 * @param: flags: Set of `Dee_BUFFER_F*` */
 	WUNUSED_T NONNULL_T((1, 2))
 	int  (DCALL *tp_getbuf)(DeeObject *__restrict self,
 	                        struct Dee_buffer *__restrict info,
@@ -1435,19 +1435,19 @@ struct Dee_type_buffer {
 
 #define Dee_BUFFER_TYPE_FNORMAL   0x0000 /* Normal buffer type flags. */
 #define Dee_BUFFER_TYPE_FREADONLY 0x0001 /* The buffer can only be used for reading.
-	                                      * -> When set, `DeeObject_GetBuf' fails when
-	                                      *    the `Dee_BUFFER_FWRITABLE' flag is set. */
-	unsigned int tp_buffer_flags; /* Buffer type flags (Set of `Dee_BUFFER_TYPE_F*') */
+	                                      * -> When set, `DeeObject_GetBuf` fails when
+	                                      *    the `Dee_BUFFER_FWRITABLE` flag is set. */
+	unsigned int tp_buffer_flags; /* Buffer type flags (Set of `Dee_BUFFER_TYPE_F*`) */
 };
 
 
 
 
-/* WARNING: The `argv' vector should actually be written as `DeeObject *const *argv',
+/* WARNING: The `argv` vector should actually be written as `DeeObject *const *argv`,
  *          however since it appears in as many places as it does, doing so would really
  *          just be unnecessary work. However because of this you must remember never
  *          to modify an argument vector!
- * For example: If your function is called from the interpreter, `argv' often points
+ * For example: If your function is called from the interpreter, `argv` often points
  * into the associated frame's stack, meaning that modifications could bring along
  * deadly consequences!
  * Even in user-code itself, where it might seem as though you are able to write to
@@ -1465,7 +1465,7 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObj
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
 /* @return: Dee_BOUND_YES: Attribute is bound
- * @return: Dee_BOUND_NO:  Attribute isn't bound (reading it would throw `DeeError_UnboundAttribute')
+ * @return: Dee_BOUND_NO:  Attribute isn't bound (reading it would throw `DeeError_UnboundAttribute`)
  * @return: Dee_BOUND_ERR: Some other error occurred. */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_boundmethod_t)(DeeObject *__restrict self);
 #if 1 // Dee_BOUND_YES == 1
@@ -1488,7 +1488,7 @@ DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 #endif /* !DCALL_CALLER_CLEANUP */
 #endif /* !DCALL_RETURN_COMMON && __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 #else /* Dee_BOUND_YES == 1 */
-#error "Unsupported value for `Dee_BOUND_YES'"
+#error "Unsupported value for `Dee_BOUND_YES`"
 #endif /* Dee_BOUND_YES != 1 */
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
@@ -1538,21 +1538,21 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  */
 #define Dee_METHOD_FMASK        0xffffff00 /* Mask of portable method flags. */
 #define Dee_METHOD_FNORMAL      0x00000000 /* Normal flags */
-#define Dee_METHOD_FEXACTRETURN 0x04000000 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI')
-                                            * WARNING: _hostasm treats `struct type_member' with doc strings as though this flag was *always* set! */
-#define Dee_METHOD_FNOTHROW     0x08000000 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL' and also means no OOM allowed) */
-#define Dee_METHOD_FNORETURN    0x10000000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
+#define Dee_METHOD_FEXACTRETURN 0x04000000 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI`)
+                                            * WARNING: _hostasm treats `struct type_member` with doc strings as though this flag was *always* set! */
+#define Dee_METHOD_FNOTHROW     0x08000000 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL` and also means no OOM allowed) */
+#define Dee_METHOD_FNORETURN    0x10000000 /* Function never returns normally (always throws an exception, or calls `exit(3)`) */
 #define Dee_METHOD_FPURECALL    0x20000000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
                                             * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
                                             * When set, repeated calls with identical arguments may be combined. */
 #define Dee_METHOD_FCONSTCALL   0x40000000 /* ATTR_CONST: Function does not modify or read mutable args, or affect
                                             * the global state (except for reference counts or memory usage).
                                             * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
-                                            * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation.
-                                            * IMPORTANT: when attached to `OPERATOR_ITER', the meaning isn't that `operator iter()'
+                                            * Implies `Dee_METHOD_FPURECALL`. Function can be used in constant propagation.
+                                            * IMPORTANT: when attached to `OPERATOR_ITER`, the meaning isn't that `operator iter()`
                                             *            can be called at compile-time (it never can, since the whole point of an iterator
                                             *            is that it holds a small state usable for enumeration of a sequence).
-                                            *            Instead, here the meaning is that `DeeObject_Foreach()' can be called at compile-
+                                            *            Instead, here the meaning is that `DeeObject_Foreach()` can be called at compile-
                                             *            time (or alternatively creating an iterator, and then enumerating it). */
 #define Dee_METHOD_FNOREFESCAPE 0x80000000 /* Optimizer hint flag: when invoked, this method never incref's
                                             * the "this" argument (unless it also appears in argv/kw, or "this"
@@ -1563,10 +1563,10 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
                                             * entry must match refcnt on exit (except as listed above))
                                             *
                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it!
-                                            * IMPORTANT: when attached to `OPERATOR_ITER', same special case as `Dee_METHOD_FCONSTCALL' */
+                                            * IMPORTANT: when attached to `OPERATOR_ITER`, same special case as `Dee_METHOD_FCONSTCALL` */
 
-/* Extra conditions that may be used to restrict when `Dee_METHOD_FPURECALL'
- * and `Dee_METHOD_FCONSTCALL' should be considered enabled (must be combined
+/* Extra conditions that may be used to restrict when `Dee_METHOD_FPURECALL`
+ * and `Dee_METHOD_FCONSTCALL` should be considered enabled (must be combined
  * with the resp. flag in order to affect anything).
  *
  * NOTES:
@@ -1591,7 +1591,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
 #define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000e00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
-#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00000f00 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
+#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00000f00 /* Special casing for `OPERATOR_CALL` of `DeeInstanceMethod_Type`, `DeeObjMethod_Type`, `DeeKwObjMethod_Type`, `DeeClsMethod_Type`, `DeeKwClsMethod_Type`, `DeeClsProperty_Type`, `DeeClsMember_Type`, `DeeCMethod_Type` and `DeeKwCMethod_Type` */
 #define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR            0x00001000 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator str)    (fields are STRUCT_OBJECT-like tp_members) */
 #define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR           0x00001100 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator repr)   (fields are STRUCT_OBJECT-like tp_members) */
 #define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ          0x00001200 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]) */
@@ -1633,7 +1633,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP            Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP
 #endif /* DEE_SOURCE */
 
-/* Check if the condition from `flags & Dee_METHOD_FCONSTCALL_IF_MASK' is
+/* Check if the condition from `flags & Dee_METHOD_FCONSTCALL_IF_MASK` is
  * fulfilled when applied to the given argument list (which does not
  * include the "this" argument, if there would have been one). */
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
@@ -1647,10 +1647,10 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
-/* Possible values for `struct Dee_type_method::m_flag' (also accepts `Dee_METHOD_FMASK') */
+/* Possible values for `struct Dee_type_method::m_flag` (also accepts `Dee_METHOD_FMASK`) */
 #define Dee_TYPE_METHOD_FNORMAL 0x00000000 /* Normal type method flags. */
-#define Dee_TYPE_METHOD_FKWDS   0x00000001 /* `m_func' takes a keywords argument.
-                                            * When set, `m_func' is actually a `Dee_kwobjmethod_t' */
+#define Dee_TYPE_METHOD_FKWDS   0x00000001 /* `m_func` takes a keywords argument.
+                                            * When set, `m_func` is actually a `Dee_kwobjmethod_t` */
 #ifdef DEE_SOURCE
 #define TYPE_METHOD_FNORMAL Dee_TYPE_METHOD_FNORMAL
 #define TYPE_METHOD_FKWDS   Dee_TYPE_METHOD_FKWDS
@@ -1660,7 +1660,7 @@ struct Dee_type_method {
 	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
 	Dee_objmethod_t       m_func;   /* [1..1] The method that is getting invoked. */
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
-	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*'). */
+	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*`). */
 };
 #define Dee_TYPE_METHOD(name, func, doc)             { name, Dee_REQUIRES_OBJMETHOD(func), DOC(doc), Dee_TYPE_METHOD_FNORMAL }
 #define Dee_TYPE_METHOD_NODOC(name, func)            { name, Dee_REQUIRES_OBJMETHOD(func), NULL, Dee_TYPE_METHOD_FNORMAL }
@@ -1683,7 +1683,7 @@ struct Dee_type_method {
 #define TYPE_METHOD_END       Dee_TYPE_METHOD_END
 #endif /* DEE_SOURCE */
 
-/* Possible values for `struct Dee_type_getset::gs_flag' (also accepts `Dee_METHOD_FMASK') */
+/* Possible values for `struct Dee_type_getset::gs_flag` (also accepts `Dee_METHOD_FMASK`) */
 #define Dee_TYPE_GETSET_FNORMAL 0x00000000 /* Normal type method flags. */
 #ifdef DEE_SOURCE
 #define TYPE_GETSET_FNORMAL Dee_TYPE_GETSET_FNORMAL
@@ -1691,13 +1691,13 @@ struct Dee_type_method {
 
 struct Dee_type_getset {
 	char const           *gs_name;  /* [1..1][SENTINAL(NULL)] Member name. */
-	/* Getset callbacks (NULL callbacks will result in `Error.AttributeError' being raised) */
+	/* Getset callbacks (NULL callbacks will result in `Error.AttributeError` being raised) */
 	Dee_getmethod_t       gs_get;   /* [0..1] Getter callback. */
 	Dee_delmethod_t       gs_del;   /* [0..1] Delete callback. */
 	Dee_setmethod_t       gs_set;   /* [0..1] Setter callback. */
-	Dee_boundmethod_t     gs_bound; /* [0..1] Is-bound callback. (optional; if not given, call `gs_get' and see if it throws `UnboundAttribute' or `AttributeError' / `NotImplemented') */
+	Dee_boundmethod_t     gs_bound; /* [0..1] Is-bound callback. (optional; if not given, call `gs_get` and see if it throws `UnboundAttribute` or `AttributeError` / `NotImplemented`) */
 	/*utf-8*/ char const *gs_doc;   /* [0..1] Documentation string. */
-	uintptr_t             gs_flags; /* Getset flags (set of `Dee_TYPE_GETSET_F*') */
+	uintptr_t             gs_flags; /* Getset flags (set of `Dee_TYPE_GETSET_F*`) */
 };
 #define Dee_TYPE_GETSET(name, get, del, set, doc)                        { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
 #define Dee_TYPE_GETSET_NODOC(name, get, del, set)                       { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
@@ -1767,47 +1767,47 @@ struct Dee_type_getset {
 
 
 /* Member type codes. */
-#define Dee_STRUCT_NONE        0x0001 /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
-#define Dee_STRUCT_OBJECT      0x8003 /* `[0..1] DREF DeeObject *const' (raise `Error.AttributeError' if `NULL') */
-#define Dee_STRUCT_WOBJECT     0x0007 /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
-#define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
-#define Dee_STRUCT_WOBJECT_OPT 0x000f /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
-#define Dee_STRUCT_OBJECT_AB   0x8013 /* `[1..1] DREF DeeObject *const' (never NULL) */
-#define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
-#define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
-#define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
-#define Dee_STRUCT_STRING      0x8027 /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_CHAR        0x0029 /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_VARIANT     0x002b /* `struct Dee_variant' (combine with `Dee_STRUCT_CONST' to make read-only) */
-#define Dee_STRUCT_BOOL8       0x0041 /* `uint8_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL16      0x0043 /* `uint16_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL32      0x0045 /* `uint32_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOL64      0x0047 /* `uint64_t' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT0    0x0061 /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT1    0x0063 /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT2    0x0065 /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT3    0x0067 /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT4    0x0069 /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT5    0x006b /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT6    0x006d /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_BOOLBIT7    0x006f /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_NONE        0x0001 /* Ignore offset and always return `none` (Useful for forward/backward no-op compatibility) */
+#define Dee_STRUCT_OBJECT      0x8003 /* `[0..1] DREF DeeObject *const` (raise `Error.AttributeError` if `NULL`) */
+#define Dee_STRUCT_WOBJECT     0x0007 /* `[0..1] struct Dee_weakref` (raise `Error.AttributeError` if locking fails) */
+#define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *const` (return `none` if NULL) */
+#define Dee_STRUCT_WOBJECT_OPT 0x000f /* `[0..1] struct Dee_weakref` (return `none` if locking fails) */
+#define Dee_STRUCT_OBJECT_AB   0x8013 /* `[1..1] DREF DeeObject *const` (never NULL) */
+#define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; raise `Error.AttributeError` if `NULL`) */
+#define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; return `none` when `NULL`) */
+#define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; return an empty string when `NULL`) */
+#define Dee_STRUCT_STRING      0x8027 /* `char const[*]` (utf-8) (Accessible as `DeeStringObject`) */
+#define Dee_STRUCT_CHAR        0x0029 /* `unsigned char const` (latin-1) (Accessible as `DeeStringObject`) */
+#define Dee_STRUCT_VARIANT     0x002b /* `struct Dee_variant` (combine with `Dee_STRUCT_CONST` to make read-only) */
+#define Dee_STRUCT_BOOL8       0x0041 /* `uint8_t` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOL16      0x0043 /* `uint16_t` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOL32      0x0045 /* `uint32_t` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOL64      0x0047 /* `uint64_t` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT0    0x0061 /* `uint8_t & 0x01` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT1    0x0063 /* `uint8_t & 0x02` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT2    0x0065 /* `uint8_t & 0x04` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT3    0x0067 /* `uint8_t & 0x08` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT4    0x0069 /* `uint8_t & 0x10` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT5    0x006b /* `uint8_t & 0x20` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT6    0x006d /* `uint8_t & 0x40` (Accessible as `DeeBoolObject`) */
+#define Dee_STRUCT_BOOLBIT7    0x006f /* `uint8_t & 0x80` (Accessible as `DeeBoolObject`) */
 #define Dee_STRUCT_BOOLBIT(mask)                                                   \
 	((mask) == 0x80 ? Dee_STRUCT_BOOLBIT7 : (mask) == 0x40 ? Dee_STRUCT_BOOLBIT6 : \
 	 (mask) == 0x20 ? Dee_STRUCT_BOOLBIT5 : (mask) == 0x10 ? Dee_STRUCT_BOOLBIT4 : \
 	 (mask) == 0x08 ? Dee_STRUCT_BOOLBIT3 : (mask) == 0x04 ? Dee_STRUCT_BOOLBIT2 : \
 	 (mask) == 0x02 ? Dee_STRUCT_BOOLBIT1 : Dee_STRUCT_BOOLBIT0)
 #define Dee_STRUCT_BOOLBITMASK(type) (1 << (((type) - Dee_STRUCT_BOOLBIT0) >> 1))
-#define Dee_STRUCT_FLOAT       0x0081 /* `float' */
-#define Dee_STRUCT_DOUBLE      0x0083 /* `double' */
-#define Dee_STRUCT_LDOUBLE     0x0085 /* `long double' */
-#define Dee_STRUCT_VOID        Dee_STRUCT_NONE /* `void' */
-#define Dee_STRUCT_INT8        0x1001 /* `int8_t' */
-#define Dee_STRUCT_INT16       0x1003 /* `int16_t' */
-#define Dee_STRUCT_INT32       0x1005 /* `int32_t' */
-#define Dee_STRUCT_INT64       0x1007 /* `int64_t' */
-#define Dee_STRUCT_INT128      0x1009 /* `Dee_int128_t' */
-#define Dee_STRUCT_UNSIGNED    0x0010 /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
-#define Dee_STRUCT_ATOMIC      0x4000 /* FLAG: Atomic read/write access (Use with `STRUCT_INT*'). */
+#define Dee_STRUCT_FLOAT       0x0081 /* `float` */
+#define Dee_STRUCT_DOUBLE      0x0083 /* `double` */
+#define Dee_STRUCT_LDOUBLE     0x0085 /* `long double` */
+#define Dee_STRUCT_VOID        Dee_STRUCT_NONE /* `void` */
+#define Dee_STRUCT_INT8        0x1001 /* `int8_t` */
+#define Dee_STRUCT_INT16       0x1003 /* `int16_t` */
+#define Dee_STRUCT_INT32       0x1005 /* `int32_t` */
+#define Dee_STRUCT_INT64       0x1007 /* `int64_t` */
+#define Dee_STRUCT_INT128      0x1009 /* `Dee_int128_t` */
+#define Dee_STRUCT_UNSIGNED    0x0010 /* FLAG: Unsigned integer (Use with `STRUCT_INT*`). */
+#define Dee_STRUCT_ATOMIC      0x4000 /* FLAG: Atomic read/write access (Use with `STRUCT_INT*`). */
 #define Dee_STRUCT_CONST       0x8000 /* FLAG: Read-only field. */
 
 #define _Dee_PRIVATE_STRUCT_INT1  Dee_STRUCT_INT8
@@ -1826,44 +1826,44 @@ struct Dee_type_getset {
 #define Dee_STRUCT_BOOL(sizeof) _Dee_PRIVATE_STRUCT_BOOL(sizeof)
 
 #ifdef DEE_SOURCE
-#define STRUCT_NONE        Dee_STRUCT_NONE        /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
-#define STRUCT_OBJECT      Dee_STRUCT_OBJECT      /* `[0..1] DREF DeeObject *const' (raise `Error.AttributeError' if `NULL') */
-#define STRUCT_WOBJECT     Dee_STRUCT_WOBJECT     /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
-#define STRUCT_OBJECT_OPT  Dee_STRUCT_OBJECT_OPT  /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
-#define STRUCT_WOBJECT_OPT Dee_STRUCT_WOBJECT_OPT /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
-#define STRUCT_OBJECT_AB   Dee_STRUCT_OBJECT_AB   /* `[1..1] DREF DeeObject *const' (never NULL) */
-#define STRUCT_CSTR        Dee_STRUCT_CSTR        /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
-#define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
-#define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
-#define STRUCT_STRING      Dee_STRUCT_STRING      /* `char const[*]' (utf-8) (Accessible as `DeeStringObject') */
-#define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `unsigned char const' (latin-1) (Accessible as `DeeStringObject') */
-#define STRUCT_VARIANT     Dee_STRUCT_VARIANT     /* `struct Dee_variant' (combine with `Dee_STRUCT_CONST' to make read-only) */
-#define STRUCT_BOOL8       Dee_STRUCT_BOOL8       /* `uint8_t' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOL16      Dee_STRUCT_BOOL16      /* `uint16_t' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOL32      Dee_STRUCT_BOOL32      /* `uint32_t' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOL64      Dee_STRUCT_BOOL64      /* `uint64_t' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT0    Dee_STRUCT_BOOLBIT0    /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT1    Dee_STRUCT_BOOLBIT1    /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT2    Dee_STRUCT_BOOLBIT2    /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT3    Dee_STRUCT_BOOLBIT3    /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT4    Dee_STRUCT_BOOLBIT4    /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT5    Dee_STRUCT_BOOLBIT5    /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT6    Dee_STRUCT_BOOLBIT6    /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
-#define STRUCT_BOOLBIT7    Dee_STRUCT_BOOLBIT7    /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
+#define STRUCT_NONE        Dee_STRUCT_NONE        /* Ignore offset and always return `none` (Useful for forward/backward no-op compatibility) */
+#define STRUCT_OBJECT      Dee_STRUCT_OBJECT      /* `[0..1] DREF DeeObject *const` (raise `Error.AttributeError` if `NULL`) */
+#define STRUCT_WOBJECT     Dee_STRUCT_WOBJECT     /* `[0..1] struct Dee_weakref` (raise `Error.AttributeError` if locking fails) */
+#define STRUCT_OBJECT_OPT  Dee_STRUCT_OBJECT_OPT  /* `[0..1] DREF DeeObject *const` (return `none` if NULL) */
+#define STRUCT_WOBJECT_OPT Dee_STRUCT_WOBJECT_OPT /* `[0..1] struct Dee_weakref` (return `none` if locking fails) */
+#define STRUCT_OBJECT_AB   Dee_STRUCT_OBJECT_AB   /* `[1..1] DREF DeeObject *const` (never NULL) */
+#define STRUCT_CSTR        Dee_STRUCT_CSTR        /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; raise `Error.AttributeError` if `NULL`) */
+#define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; return `none` when `NULL`) */
+#define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char const *` (utf-8) (Accessible as `DeeStringObject`; return an empty string when `NULL`) */
+#define STRUCT_STRING      Dee_STRUCT_STRING      /* `char const[*]` (utf-8) (Accessible as `DeeStringObject`) */
+#define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `unsigned char const` (latin-1) (Accessible as `DeeStringObject`) */
+#define STRUCT_VARIANT     Dee_STRUCT_VARIANT     /* `struct Dee_variant` (combine with `Dee_STRUCT_CONST` to make read-only) */
+#define STRUCT_BOOL8       Dee_STRUCT_BOOL8       /* `uint8_t` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOL16      Dee_STRUCT_BOOL16      /* `uint16_t` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOL32      Dee_STRUCT_BOOL32      /* `uint32_t` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOL64      Dee_STRUCT_BOOL64      /* `uint64_t` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT0    Dee_STRUCT_BOOLBIT0    /* `uint8_t & 0x01` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT1    Dee_STRUCT_BOOLBIT1    /* `uint8_t & 0x02` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT2    Dee_STRUCT_BOOLBIT2    /* `uint8_t & 0x04` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT3    Dee_STRUCT_BOOLBIT3    /* `uint8_t & 0x08` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT4    Dee_STRUCT_BOOLBIT4    /* `uint8_t & 0x10` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT5    Dee_STRUCT_BOOLBIT5    /* `uint8_t & 0x20` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT6    Dee_STRUCT_BOOLBIT6    /* `uint8_t & 0x40` (Accessible as `DeeBoolObject`) */
+#define STRUCT_BOOLBIT7    Dee_STRUCT_BOOLBIT7    /* `uint8_t & 0x80` (Accessible as `DeeBoolObject`) */
 #define STRUCT_BOOL        Dee_STRUCT_BOOL
 #define STRUCT_BOOLBIT     Dee_STRUCT_BOOLBIT
 #define STRUCT_BOOLBITMASK Dee_STRUCT_BOOLBITMASK
-#define STRUCT_FLOAT       Dee_STRUCT_FLOAT       /* `float' */
-#define STRUCT_DOUBLE      Dee_STRUCT_DOUBLE      /* `double' */
-#define STRUCT_LDOUBLE     Dee_STRUCT_LDOUBLE     /* `long double' */
-#define STRUCT_VOID        Dee_STRUCT_VOID        /* `void' */
-#define STRUCT_INT8        Dee_STRUCT_INT8        /* `int8_t' */
-#define STRUCT_INT16       Dee_STRUCT_INT16       /* `int16_t' */
-#define STRUCT_INT32       Dee_STRUCT_INT32       /* `int32_t' */
-#define STRUCT_INT64       Dee_STRUCT_INT64       /* `int64_t' */
-#define STRUCT_INT128      Dee_STRUCT_INT128      /* `Dee_int128_t' */
-#define STRUCT_UNSIGNED    Dee_STRUCT_UNSIGNED    /* FLAG: Unsigned integer (Use with `STRUCT_INT*'). */
-#define STRUCT_ATOMIC      Dee_STRUCT_ATOMIC      /* FLAG: Atomic read/write access (Use with `STRUCT_INT*'). */
+#define STRUCT_FLOAT       Dee_STRUCT_FLOAT       /* `float` */
+#define STRUCT_DOUBLE      Dee_STRUCT_DOUBLE      /* `double` */
+#define STRUCT_LDOUBLE     Dee_STRUCT_LDOUBLE     /* `long double` */
+#define STRUCT_VOID        Dee_STRUCT_VOID        /* `void` */
+#define STRUCT_INT8        Dee_STRUCT_INT8        /* `int8_t` */
+#define STRUCT_INT16       Dee_STRUCT_INT16       /* `int16_t` */
+#define STRUCT_INT32       Dee_STRUCT_INT32       /* `int32_t` */
+#define STRUCT_INT64       Dee_STRUCT_INT64       /* `int64_t` */
+#define STRUCT_INT128      Dee_STRUCT_INT128      /* `Dee_int128_t` */
+#define STRUCT_UNSIGNED    Dee_STRUCT_UNSIGNED    /* FLAG: Unsigned integer (Use with `STRUCT_INT*`). */
+#define STRUCT_ATOMIC      Dee_STRUCT_ATOMIC      /* FLAG: Atomic read/write access (Use with `STRUCT_INT*`). */
 #define STRUCT_CONST       Dee_STRUCT_CONST       /* FLAG: Read-only field. */
 #define STRUCT_INTEGER     Dee_STRUCT_INTEGER
 
@@ -1894,11 +1894,11 @@ union Dee_type_member_desc {
 	DeeObject *md_const;  /* [valid_if(Dee_TYPE_MEMBER_ISCONST(this))][1..1] Constant. */
 	struct {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
+		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*`). */
 		__UINTPTR_HALF_TYPE__ mdf_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		__UINTPTR_HALF_TYPE__ mdf_offset; /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field offset (offsetof() field). */
-		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*'). */
+		__UINTPTR_HALF_TYPE__ mdf_type;   /* [valid_if(Dee_TYPE_MEMBER_ISFIELD(this))] Field type (One of `STRUCT_*`). */
 #endif /* !... */
 	}          md_field; /* Field descriptor */
 };
@@ -2073,7 +2073,7 @@ struct Dee_membercache {
 		struct Dee_membercache *le_next, **le_prev;
 	}                                  mc_link;   /* [0..1][lock(INTERNAL(membercache_lock))]
 	                                               * Entry in global list of caches (or unbound if not yet
-	                                               * linked, in which case `mc_table == NULL') */
+	                                               * linked, in which case `mc_table == NULL`) */
 	DREF struct Dee_membercache_table *mc_table;  /* [0..1][lock(_DeeRCU_Default)] Member cache table. */
 };
 
@@ -2084,84 +2084,84 @@ struct Dee_membercache {
 typedef uint16_t Dee_operator_t;
 #endif /* !Dee_operator_t_DEFINED */
 
-#define Dee_OPERATOR_USERCOUNT    0x003e        /* Number of user-accessible operators. (Used by `class' types) */
+#define Dee_OPERATOR_USERCOUNT    0x003e        /* Number of user-accessible operators. (Used by `class` types) */
 #define Dee_OPERATOR_EXTENDED(x) (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #ifdef DEE_SOURCE
 /* Universal operator codes. */
-#define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...)'                                    - `__constructor__' - `tp_any_ctor'. */
-#define OPERATOR_COPY         0x0001 /* `operator copy(other: type(this))'                          - `__copy__'        - `tp_copy_ctor'. */
-#define OPERATOR_SERIALIZE    0x0002 /* `operator serialize(TODO)'                                  - `__serialize__'   - `tp_serialize'. */
-#define OPERATOR_DESTRUCTOR   0x0003 /* `operator ~this()'                                          - `__destructor__'  - `tp_dtor'. */
-#define OPERATOR_ASSIGN       0x0004 /* `operator := (other: Object)'                               - `__assign__'      - `tp_assign'. */
-#define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (other: type(this))'                      - `__moveassign__'  - `tp_move_assign'. */
-#define OPERATOR_STR          0x0006 /* `operator str(): string'                                    - `__str__'         - `tp_str'. */
-#define OPERATOR_REPR         0x0007 /* `operator repr(): string'                                   - `__repr__'        - `tp_repr'. */
-#define OPERATOR_BOOL         0x0008 /* `operator bool(): bool'                                     - `__bool__'        - `tp_bool'. */
-#define OPERATOR_ITERNEXT     0x0009 /* `operator next(): Object'                                   - `__next__'        - `tp_iter_next'. */
-#define OPERATOR_CALL         0x000a /* `operator ()(args...): Object'                              - `__call__'        - `tp_call'. */
-#define OPERATOR_INT          0x000b /* `operator int(): int'                                       - `__int__'         - `tp_int'. */
-#define OPERATOR_FLOAT        0x000c /* `operator float(): float'                                   - `__float__'       - `tp_double'. */
-#define OPERATOR_INV          0x000d /* `operator ~ (): Object'                                     - `__inv__'         - `tp_inv'. */
-#define OPERATOR_POS          0x000e /* `operator + (): Object'                                     - `__pos__'         - `tp_pos'. */
-#define OPERATOR_NEG          0x000f /* `operator - (): Object'                                     - `__neg__'         - `tp_neg'. */
-#define OPERATOR_ADD          0x0010 /* `operator + (other: Object): Object'                        - `__add__'         - `tp_add'. */
-#define OPERATOR_SUB          0x0011 /* `operator - (other: Object): Object'                        - `__sub__'         - `tp_sub'. */
-#define OPERATOR_MUL          0x0012 /* `operator * (other: Object): Object'                        - `__mul__'         - `tp_mul'. */
-#define OPERATOR_DIV          0x0013 /* `operator / (other: Object): Object'                        - `__div__'         - `tp_div'. */
-#define OPERATOR_MOD          0x0014 /* `operator % (other: Object): Object'                        - `__mod__'         - `tp_mod'. */
-#define OPERATOR_SHL          0x0015 /* `operator << (other: Object): Object'                       - `__shl__'         - `tp_shl'. */
-#define OPERATOR_SHR          0x0016 /* `operator >> (other: Object): Object'                       - `__shr__'         - `tp_shr'. */
-#define OPERATOR_AND          0x0017 /* `operator & (other: Object): Object'                        - `__and__'         - `tp_and'. */
-#define OPERATOR_OR           0x0018 /* `operator | (other: Object): Object'                        - `__or__'          - `tp_or'. */
-#define OPERATOR_XOR          0x0019 /* `operator ^ (other: Object): Object'                        - `__xor__'         - `tp_xor'. */
-#define OPERATOR_POW          0x001a /* `operator ** (other: Object): Object'                       - `__pow__'         - `tp_pow'. */
-#define OPERATOR_INC          0x001b /* `operator ++ (): type(this)'                                - `__inc__'         - `tp_inc'. */
-#define OPERATOR_DEC          0x001c /* `operator -- (): type(this)'                                - `__dec__'         - `tp_dec'. */
-#define OPERATOR_INPLACE_ADD  0x001d /* `operator += (other: Object): type(this)'                   - `__iadd__'        - `tp_inplace_add'. */
-#define OPERATOR_INPLACE_SUB  0x001e /* `operator -= (other: Object): type(this)'                   - `__isub__'        - `tp_inplace_sub'. */
-#define OPERATOR_INPLACE_MUL  0x001f /* `operator *= (other: Object): type(this)'                   - `__imul__'        - `tp_inplace_mul'. */
-#define OPERATOR_INPLACE_DIV  0x0020 /* `operator /= (other: Object): type(this)'                   - `__idiv__'        - `tp_inplace_div'. */
-#define OPERATOR_INPLACE_MOD  0x0021 /* `operator %= (other: Object): type(this)'                   - `__imod__'        - `tp_inplace_mod'. */
-#define OPERATOR_INPLACE_SHL  0x0022 /* `operator <<= (other: Object): type(this)'                  - `__ishl__'        - `tp_inplace_shl'. */
-#define OPERATOR_INPLACE_SHR  0x0023 /* `operator >>= (other: Object): type(this)'                  - `__ishr__'        - `tp_inplace_shr'. */
-#define OPERATOR_INPLACE_AND  0x0024 /* `operator &= (other: Object): type(this)'                   - `__iand__'        - `tp_inplace_and'. */
-#define OPERATOR_INPLACE_OR   0x0025 /* `operator |= (other: Object): type(this)'                   - `__ior__'         - `tp_inplace_or'. */
-#define OPERATOR_INPLACE_XOR  0x0026 /* `operator ^= (other: Object): type(this)'                   - `__ixor__'        - `tp_inplace_xor'. */
-#define OPERATOR_INPLACE_POW  0x0027 /* `operator **= (other: Object): type(this)'                  - `__ipow__'        - `tp_inplace_pow'. */
-#define OPERATOR_HASH         0x0028 /* `operator hash(): int'                                      - `__hash__'        - `tp_hash'. */
-#define OPERATOR_EQ           0x0029 /* `operator == (other: Object): Object'                       - `__eq__'          - `tp_eq'. */
-#define OPERATOR_NE           0x002a /* `operator != (other: Object): Object'                       - `__ne__'          - `tp_ne'. */
-#define OPERATOR_LO           0x002b /* `operator < (other: Object): Object'                        - `__lo__'          - `tp_lo'. */
-#define OPERATOR_LE           0x002c /* `operator <= (other: Object): Object'                       - `__le__'          - `tp_le'. */
-#define OPERATOR_GR           0x002d /* `operator > (other: Object): Object'                        - `__gr__'          - `tp_gr'. */
-#define OPERATOR_GE           0x002e /* `operator >= (other: Object): Object'                       - `__ge__'          - `tp_ge'. */
-#define OPERATOR_ITER         0x002f /* `operator iter(): Object'                                   - `__iter__'        - `tp_iter'. */
-#define OPERATOR_SIZE         0x0030 /* `operator # (): Object'                                     - `__size__'        - `tp_sizeob'. */
-#define OPERATOR_CONTAINS     0x0031 /* `operator contains(other: Object): Object'                  - `__contains__'    - `tp_contains'. */
-#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object'                       - `__getitem__'     - `tp_getitem'. */
-#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object)'                            - `__delitem__'     - `tp_delitem'. */
-#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object)'               - `__setitem__'     - `tp_setitem'. */
-#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object'         - `__getrange__'    - `tp_getrange'. */
-#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)'              - `__delrange__'    - `tp_delrange'. */
-#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)' - `__setrange__'    - `tp_setrange'. */
-#define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object'                          - `__getattr__'     - `tp_getattr'. */
-#define OPERATOR_DELATTR      0x0039 /* `operator del. (string attr)'                               - `__delattr__'     - `tp_delattr'. */
-#define OPERATOR_SETATTR      0x003a /* `operator .= (string attr, value: Object)'                  - `__setattr__'     - `tp_setattr'. */
-#define OPERATOR_ENUMATTR     0x003b /* `operator enumattr(): {attribute...}'                       - `__enumattr__'    - `tp_iterattr'. */
-#define OPERATOR_ENTER        0x003c /* `operator enter()'                                          - `__enter__'       - `tp_enter'. */
-#define OPERATOR_LEAVE        0x003d /* `operator leave()'                                          - `__leave__'       - `tp_leave'. */
-#define OPERATOR_USERCOUNT    0x003e /* Number of user-accessible operators. (Used by `class' types) */
+#define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...)`                                    - `__constructor__` - `tp_any_ctor`. */
+#define OPERATOR_COPY         0x0001 /* `operator copy(other: type(this))`                          - `__copy__`        - `tp_copy_ctor`. */
+#define OPERATOR_SERIALIZE    0x0002 /* `operator serialize(TODO)`                                  - `__serialize__`   - `tp_serialize`. */
+#define OPERATOR_DESTRUCTOR   0x0003 /* `operator ~this()`                                          - `__destructor__`  - `tp_dtor`. */
+#define OPERATOR_ASSIGN       0x0004 /* `operator := (other: Object)`                               - `__assign__`      - `tp_assign`. */
+#define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (other: type(this))`                      - `__moveassign__`  - `tp_move_assign`. */
+#define OPERATOR_STR          0x0006 /* `operator str(): string`                                    - `__str__`         - `tp_str`. */
+#define OPERATOR_REPR         0x0007 /* `operator repr(): string`                                   - `__repr__`        - `tp_repr`. */
+#define OPERATOR_BOOL         0x0008 /* `operator bool(): bool`                                     - `__bool__`        - `tp_bool`. */
+#define OPERATOR_ITERNEXT     0x0009 /* `operator next(): Object`                                   - `__next__`        - `tp_iter_next`. */
+#define OPERATOR_CALL         0x000a /* `operator ()(args...): Object`                              - `__call__`        - `tp_call`. */
+#define OPERATOR_INT          0x000b /* `operator int(): int`                                       - `__int__`         - `tp_int`. */
+#define OPERATOR_FLOAT        0x000c /* `operator float(): float`                                   - `__float__`       - `tp_double`. */
+#define OPERATOR_INV          0x000d /* `operator ~ (): Object`                                     - `__inv__`         - `tp_inv`. */
+#define OPERATOR_POS          0x000e /* `operator + (): Object`                                     - `__pos__`         - `tp_pos`. */
+#define OPERATOR_NEG          0x000f /* `operator - (): Object`                                     - `__neg__`         - `tp_neg`. */
+#define OPERATOR_ADD          0x0010 /* `operator + (other: Object): Object`                        - `__add__`         - `tp_add`. */
+#define OPERATOR_SUB          0x0011 /* `operator - (other: Object): Object`                        - `__sub__`         - `tp_sub`. */
+#define OPERATOR_MUL          0x0012 /* `operator * (other: Object): Object`                        - `__mul__`         - `tp_mul`. */
+#define OPERATOR_DIV          0x0013 /* `operator / (other: Object): Object`                        - `__div__`         - `tp_div`. */
+#define OPERATOR_MOD          0x0014 /* `operator % (other: Object): Object`                        - `__mod__`         - `tp_mod`. */
+#define OPERATOR_SHL          0x0015 /* `operator << (other: Object): Object`                       - `__shl__`         - `tp_shl`. */
+#define OPERATOR_SHR          0x0016 /* `operator >> (other: Object): Object`                       - `__shr__`         - `tp_shr`. */
+#define OPERATOR_AND          0x0017 /* `operator & (other: Object): Object`                        - `__and__`         - `tp_and`. */
+#define OPERATOR_OR           0x0018 /* `operator | (other: Object): Object`                        - `__or__`          - `tp_or`. */
+#define OPERATOR_XOR          0x0019 /* `operator ^ (other: Object): Object`                        - `__xor__`         - `tp_xor`. */
+#define OPERATOR_POW          0x001a /* `operator ** (other: Object): Object`                       - `__pow__`         - `tp_pow`. */
+#define OPERATOR_INC          0x001b /* `operator ++ (): type(this)`                                - `__inc__`         - `tp_inc`. */
+#define OPERATOR_DEC          0x001c /* `operator -- (): type(this)`                                - `__dec__`         - `tp_dec`. */
+#define OPERATOR_INPLACE_ADD  0x001d /* `operator += (other: Object): type(this)`                   - `__iadd__`        - `tp_inplace_add`. */
+#define OPERATOR_INPLACE_SUB  0x001e /* `operator -= (other: Object): type(this)`                   - `__isub__`        - `tp_inplace_sub`. */
+#define OPERATOR_INPLACE_MUL  0x001f /* `operator *= (other: Object): type(this)`                   - `__imul__`        - `tp_inplace_mul`. */
+#define OPERATOR_INPLACE_DIV  0x0020 /* `operator /= (other: Object): type(this)`                   - `__idiv__`        - `tp_inplace_div`. */
+#define OPERATOR_INPLACE_MOD  0x0021 /* `operator %= (other: Object): type(this)`                   - `__imod__`        - `tp_inplace_mod`. */
+#define OPERATOR_INPLACE_SHL  0x0022 /* `operator <<= (other: Object): type(this)`                  - `__ishl__`        - `tp_inplace_shl`. */
+#define OPERATOR_INPLACE_SHR  0x0023 /* `operator >>= (other: Object): type(this)`                  - `__ishr__`        - `tp_inplace_shr`. */
+#define OPERATOR_INPLACE_AND  0x0024 /* `operator &= (other: Object): type(this)`                   - `__iand__`        - `tp_inplace_and`. */
+#define OPERATOR_INPLACE_OR   0x0025 /* `operator |= (other: Object): type(this)`                   - `__ior__`         - `tp_inplace_or`. */
+#define OPERATOR_INPLACE_XOR  0x0026 /* `operator ^= (other: Object): type(this)`                   - `__ixor__`        - `tp_inplace_xor`. */
+#define OPERATOR_INPLACE_POW  0x0027 /* `operator **= (other: Object): type(this)`                  - `__ipow__`        - `tp_inplace_pow`. */
+#define OPERATOR_HASH         0x0028 /* `operator hash(): int`                                      - `__hash__`        - `tp_hash`. */
+#define OPERATOR_EQ           0x0029 /* `operator == (other: Object): Object`                       - `__eq__`          - `tp_eq`. */
+#define OPERATOR_NE           0x002a /* `operator != (other: Object): Object`                       - `__ne__`          - `tp_ne`. */
+#define OPERATOR_LO           0x002b /* `operator < (other: Object): Object`                        - `__lo__`          - `tp_lo`. */
+#define OPERATOR_LE           0x002c /* `operator <= (other: Object): Object`                       - `__le__`          - `tp_le`. */
+#define OPERATOR_GR           0x002d /* `operator > (other: Object): Object`                        - `__gr__`          - `tp_gr`. */
+#define OPERATOR_GE           0x002e /* `operator >= (other: Object): Object`                       - `__ge__`          - `tp_ge`. */
+#define OPERATOR_ITER         0x002f /* `operator iter(): Object`                                   - `__iter__`        - `tp_iter`. */
+#define OPERATOR_SIZE         0x0030 /* `operator # (): Object`                                     - `__size__`        - `tp_sizeob`. */
+#define OPERATOR_CONTAINS     0x0031 /* `operator contains(other: Object): Object`                  - `__contains__`    - `tp_contains`. */
+#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object`                       - `__getitem__`     - `tp_getitem`. */
+#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object)`                            - `__delitem__`     - `tp_delitem`. */
+#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object)`               - `__setitem__`     - `tp_setitem`. */
+#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object`         - `__getrange__`    - `tp_getrange`. */
+#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)`              - `__delrange__`    - `tp_delrange`. */
+#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)` - `__setrange__`    - `tp_setrange`. */
+#define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object`                          - `__getattr__`     - `tp_getattr`. */
+#define OPERATOR_DELATTR      0x0039 /* `operator del. (string attr)`                               - `__delattr__`     - `tp_delattr`. */
+#define OPERATOR_SETATTR      0x003a /* `operator .= (string attr, value: Object)`                  - `__setattr__`     - `tp_setattr`. */
+#define OPERATOR_ENUMATTR     0x003b /* `operator enumattr(): {attribute...}`                       - `__enumattr__`    - `tp_iterattr`. */
+#define OPERATOR_ENTER        0x003c /* `operator enter()`                                          - `__enter__`       - `tp_enter`. */
+#define OPERATOR_LEAVE        0x003d /* `operator leave()`                                          - `__leave__`       - `tp_leave`. */
+#define OPERATOR_USERCOUNT    0x003e /* Number of user-accessible operators. (Used by `class` types) */
 #define OPERATOR_EXTENDED(x)  (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #define OPERATOR_ISINPLACE(x) ((x) >= OPERATOR_INC && (x) <= OPERATOR_INPLACE_POW)
 
 /* Operators not exposed to user-code. */
-#define OPERATOR_GETBUF       0x8000 /* `tp_getbuf'. */
+#define OPERATOR_GETBUF       0x8000 /* `tp_getbuf`. */
 
-/* Fake operators (for use with `DeeFormat_PrintOperatorRepr()'). */
-#define FAKE_OPERATOR_IS          0xff00 /* `a is b' */
-#define FAKE_OPERATOR_SAME_OBJECT 0xff01 /* `a === b' */
-#define FAKE_OPERATOR_DIFF_OBJECT 0xff02 /* `a !== b' */
-#define FAKE_OPERATOR_NOT         0xff03 /* `!a' */
+/* Fake operators (for use with `DeeFormat_PrintOperatorRepr()`). */
+#define FAKE_OPERATOR_IS          0xff00 /* `a is b` */
+#define FAKE_OPERATOR_SAME_OBJECT 0xff01 /* `a === b` */
+#define FAKE_OPERATOR_DIFF_OBJECT 0xff02 /* `a !== b` */
+#define FAKE_OPERATOR_NOT         0xff03 /* `!a` */
 
 /* Operator association ranges. */
 #define OPERATOR_PRIVMIN OPERATOR_GETBUF
@@ -2239,11 +2239,11 @@ typedef uint16_t Dee_operator_t;
 
 
 #ifdef DEE_SOURCE
-/* Operator calling conventions (values for `oi_cc')
+/* Operator calling conventions (values for `oi_cc`)
  * These are completely optional and only serve to aid certain sub-systems in making
- * special optimizations (such as `_hostasm' having an easier time inlining operator
+ * special optimizations (such as `_hostasm` having an easier time inlining operator
  * calls) */
-#define OPCC_SPECIAL            0x0000 /* A special operator that cannot be invoked directly (e.g.: `OPERATOR_CONSTRUCTOR'). */
+#define OPCC_SPECIAL            0x0000 /* A special operator that cannot be invoked directly (e.g.: `OPERATOR_CONSTRUCTOR`). */
 #define OPCC_FINPLACE           0x8000 /* Flag: this operator must be invoked as inplace. */
 #define OPCC_UNARY_OBJECT       0x0010 /* DREF DeeObject *(DCALL *)(DeeObject *__restrict self); */
 #define OPCC_UNARY_VOID         0x0011 /* void (DCALL *)(DeeObject *__restrict self); */
@@ -2264,21 +2264,21 @@ typedef uint16_t Dee_operator_t;
 #define OPCC_QUATERNARY_INPLACE 0x8043 /* int (DCALL *)(DREF DeeObject **__restrict p_self, DeeObject *a, DeeObject *b, DeeObject *c); */
 #define OPCC_ARGC(x) (((x) & 0xf0) >> 4)
 
-/* Operator classes (values for `oi_class') */
-#define OPCLASS_TYPE    0x0      /* `oi_offset' points into `DeeTypeObject'. */
-#define OPCLASS(offset) (offset) /* `oi_offset' points into a [0..1] struct at this offset */
-#define OPCLASS_CUSTOM  0xffff   /* Custom operator (never appears in `Dee_opinfo') */
+/* Operator classes (values for `oi_class`) */
+#define OPCLASS_TYPE    0x0      /* `oi_offset` points into `DeeTypeObject`. */
+#define OPCLASS(offset) (offset) /* `oi_offset` points into a [0..1] struct at this offset */
+#define OPCLASS_CUSTOM  0xffff   /* Custom operator (never appears in `Dee_opinfo`) */
 #endif /* DEE_SOURCE */
 
 struct Dee_opinfo;
 
 /* Abstract/generic operator invocation wrapper.
  * NOTE: This callback should:
- * - Load the operator C function from `fun = *(*(tp_self + :oi_class) + :oi_offset) != NULL'
- * - Check if `fun' is the special `opi_classhook' function (in which case, invoke `DeeClass_GetOperator(tp_self, :oi_id)')
- * - Otherwise, unpack "argc" and "argv", and invoke `fun' with the loaded arguments.
- * @param: p_self: Self-pointer argument (non-NULL in case of an inplace invocation), or `NULL' (in case of a normal operator)
- * @return: * :   The operator result (in case of inplace operator, usually the same as was written back to `*p_self')
+ * - Load the operator C function from `fun = *(*(tp_self + :oi_class) + :oi_offset) != NULL`
+ * - Check if `fun` is the special `opi_classhook` function (in which case, invoke `DeeClass_GetOperator(tp_self, :oi_id)`)
+ * - Otherwise, unpack "argc" and "argv", and invoke `fun` with the loaded arguments.
+ * @param: p_self: Self-pointer argument (non-NULL in case of an inplace invocation), or `NULL` (in case of a normal operator)
+ * @return: * :   The operator result (in case of inplace operator, usually the same as was written back to `*p_self`)
  * @return: NULL: An error was thrown. */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *
 (DCALL *Dee_operator_invoke_cb_t)(DeeTypeObject *tp_self, DeeObject *self,
@@ -2290,7 +2290,7 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *
  * This function may be overwritten in order to control how/when a
  * specific operator "info->oi_id" (as declared by "type_type") can
  * be inherited by "self" from one of its direct bases, and is used
- * to implement `DeeType_InheritOperator()'.
+ * to implement `DeeType_InheritOperator()`.
  *
  * When not explicit operator inheritance callback is provided,
  * operators are inherited automatically by recursively checking
@@ -2333,13 +2333,13 @@ _Dee_RequiresOperatorInheritCb(void (DCALL *_meth)(_TSelf *self, _TTypeType *typ
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 struct Dee_operator_invoke {
-	Dee_operator_invoke_cb_t  opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()' when this operator is
-	                                          * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL'). */
-	Dee_funptr_t              opi_classhook; /* [0..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)' when `DeeClass_New()'
-	                                          * hooks this operator. The implementation of `opi_invoke' should check for this function and
-	                                          * manually invoke its t* variant, which should then use `DeeClass_GetOperator()' in order to
+	Dee_operator_invoke_cb_t  opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()` when this operator is
+	                                          * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL`). */
+	Dee_funptr_t              opi_classhook; /* [0..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)` when `DeeClass_New()`
+	                                          * hooks this operator. The implementation of `opi_invoke` should check for this function and
+	                                          * manually invoke its t* variant, which should then use `DeeClass_GetOperator()` in order to
 	                                          * load the user-defined function object associated with this operator.
-	                                          * When set to `NULL', the operator cannot be overwritten by user-code. */
+	                                          * When set to `NULL`, the operator cannot be overwritten by user-code. */
 	Dee_operator_inherit_cb_t opi_inherit;   /* [0..1] Override for inheriting this operator. */
 };
 #define Dee_OPERATOR_INVOKE_INIT(opi_invoke_, opi_classhook_, opi_inherit)          \
@@ -2349,12 +2349,12 @@ struct Dee_operator_invoke {
 struct Dee_opinfo {
 	/* TODO: This here needs to be re-designed */
 	Dee_operator_t                          oi_id;        /* Operator ID */
-	uint16_t                                oi_class;     /* Offset into the type for where to find a `0..1' struct that contains more  */
-	uint16_t                                oi_offset;    /* Offset from `oi_class' to where the c-function of this operator can be found. */
-	uint16_t                                oi_cc;        /* The operator calling convention (s.a. `OPCC_*'). */
-	char                                    oi_uname[12]; /* `+' */
-	char                                    oi_sname[12]; /* `add' */
-	char                                    oi_iname[16]; /* `tp_add' */
+	uint16_t                                oi_class;     /* Offset into the type for where to find a `0..1` struct that contains more  */
+	uint16_t                                oi_offset;    /* Offset from `oi_class` to where the c-function of this operator can be found. */
+	uint16_t                                oi_cc;        /* The operator calling convention (s.a. `OPCC_*`). */
+	char                                    oi_uname[12]; /* `+` */
+	char                                    oi_sname[12]; /* `add` */
+	char                                    oi_iname[16]; /* `tp_add` */
 	struct Dee_operator_invoke Dee_tpconst *oi_invoke;    /* [1..1] Generic info on how to invoke/hook this operator. */
 };
 
@@ -2399,15 +2399,15 @@ struct Dee_opinfo const &_Dee_OPINFO_INIT(Dee_operator_t id, uint16_t class_, ui
 struct Dee_type_operator {
 	union {
 		struct Dee_opinfo            to_decl;     /* [valid_if(Dee_type_operator_isdecl(.))] Operator declaration
-		                                           * NOTE: Only allowed in `tp->tp_operators' if `DeeType_IsTypeType(tp)'! */
+		                                           * NOTE: Only allowed in `tp->tp_operators` if `DeeType_IsTypeType(tp)`! */
 		struct {
 			Dee_operator_t          _s_pad_id;    /* ... */
-			uint16_t                _s_class;     /* Always `OPCLASS_CUSTOM' */
+			uint16_t                _s_class;     /* Always `OPCLASS_CUSTOM` */
 			uint16_t                _s_offset;    /* ... */
-			uint16_t                _s_cc;        /* Always `OPCC_SPECIAL' */
-			uintptr_t                s_flags;     /* Operator method flags (set of `Dee_METHOD_F*') */
+			uint16_t                _s_cc;        /* Always `OPCC_SPECIAL` */
+			uintptr_t                s_flags;     /* Operator method flags (set of `Dee_METHOD_F*`) */
 			char                    _s_Xname[40 - sizeof(uintptr_t)]; /* ... */
-			Dee_operator_invoke_cb_t s_invoke;    /* [0..1] Operator implementation (or `NULL' if only flags are declared) */
+			Dee_operator_invoke_cb_t s_invoke;    /* [0..1] Operator implementation (or `NULL` if only flags are declared) */
 		}                            to_custom;   /* [valid_if(Dee_type_operator_iscustom(.))] Custom operator, or operator flags */
 		Dee_operator_t               to_id;       /* Operator ID */
 	}
@@ -2443,45 +2443,45 @@ struct Dee_type_operator {
 
 
 
-/* Type flags for `DeeTypeObject::tp_flags' */
+/* Type flags for `DeeTypeObject::tp_flags` */
 #define Dee_TP_FNORMAL          0x0000 /* Normal type flags. */
 #define Dee_TP_FFINAL           0x0001 /* The class cannot be sub-classed again. */
-#define Dee_TP_FTRUNCATE        0x0002 /* Truncate values during integer conversion, rather than throwing an `OverflowError'. */
+#define Dee_TP_FTRUNCATE        0x0002 /* Truncate values during integer conversion, rather than throwing an `OverflowError`. */
 #define Dee_TP_FINTERRUPT       0x0004 /* This type is a so-called interrupt signal.
                                         * Instances of this type have special behavior when thrown as errors,
-                                        * or when delivered to threads through use of `Thread.interrupt()'.
+                                        * or when delivered to threads through use of `Thread.interrupt()`.
                                         * In such situations, the error can only be caught by exception handlers
-                                        * specifically marked as `@[interrupt]' (or rather `Dee_EXCEPTION_HANDLER_FINTERPT')
-                                        * Additionally (but only when `CONFIG_NO_THREADS' is disabled), such errors are
+                                        * specifically marked as `@[interrupt]` (or rather `Dee_EXCEPTION_HANDLER_FINTERPT`)
+                                        * Additionally (but only when `CONFIG_NO_THREADS` is disabled), such errors are
                                         * re-scheduled in the pending-interrupt system of the calling thread when they
                                         * are thrown in a context where errors are normally discarded (such as destructions
                                         * or secondary exceptions in user-code functions)
                                         * WARNING: This flag must be inherited explicitly by sub-classes! */
-#define Dee_TP_FMOVEANY         0x0008 /* The type accepts any other object as second operator to `tp_move_assign' */
+#define Dee_TP_FMOVEANY         0x0008 /* The type accepts any other object as second operator to `tp_move_assign` */
 #define Dee_TP_FDEEPIMMUTABLE   0x0010 /* Instances of this type are deeply immutable, meaning "deepcopy INSTANCE" is allowed to just re-return "INSTANCE" */
 /*      Dee_TP_F                0x0020  * ... */
-#define Dee_TP_FINHERITCTOR     0x0040 /* This type inherits its constructor from `tp_base'.
+#define Dee_TP_FINHERITCTOR     0x0040 /* This type inherits its constructor from `tp_base`.
                                         * Additionally, if no assign/move-assign operator is defined, those are inherited as well. */
 #define Dee_TP_FABSTRACT        0x0080 /* Member functions and getsets of this type are type-generic and may
                                         * even be invoked when being passed objects that do not fulfill the
-                                        * requirement of `DeeObject_InstanceOf(ob, self)' (where `self' is this type).
-                                        * For example: Abstract base classes have this flag set, such as `Object', `Sequence' or `Iterator'
+                                        * requirement of `DeeObject_InstanceOf(ob, self)` (where `self` is this type).
+                                        * For example: Abstract base classes have this flag set, such as `Object`, `Sequence` or `Iterator`
                                         * NOTE: This flag is not inherited.
                                         * When this flag is set, the type may also be used to construct super-wrappers
                                         * for any other kind of object, even if that object isn't derived from the type.
-                                        * NOTE: When combined with `TF_SINGLETON' and `TP_FFINAL', class member functions
+                                        * NOTE: When combined with `TF_SINGLETON` and `TP_FFINAL`, class member functions
                                         *       may be called with invalid/broken "self" arguments, as it is assumed that
-                                        *       the class only functions as a simple namespace (e.g. `deemon.gc').
-                                        *       s.a.: `DeeType_IsNamespace()' */
+                                        *       the class only functions as a simple namespace (e.g. `deemon.gc`).
+                                        *       s.a.: `DeeType_IsNamespace()` */
 /*      Dee_TP_F                0x0080  * ... */
 /*      Dee_TP_F                0x0100  * ... */
 /*      Dee_TP_F                0x0200  * ... */
-#define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
-#define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
+#define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name` actually points to the `s_str` member of a `DeeStringObject` that this type holds a reference to. */
+#define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc` actually points to the `s_str` member of a `DeeStringObject` that this type holds a reference to. */
 /*      Dee_TP_F                0x1000  * ... */
 #define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
-#define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
+#define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var` is used, rather than `tp_alloc`) */
 #define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FGC | Dee_TP_FVARIABLE) \
                                        /* Set of special flags that are inherited by sub-classes. */
 
@@ -2490,18 +2490,18 @@ struct Dee_type_operator {
                                             * This flag may be set when it is known that an object will only ever point to other objects
                                             * that either don't point to any objects, or are guarantied to never point back.
                                             * An example for where this flag should be used would be an object that only ever
-                                            * holds references to `String' or `int' objects, but not to objects of its own type,
+                                            * holds references to `String` or `int` objects, but not to objects of its own type,
                                             * or any sort of container object capable of holding instances of the same type. */
-#define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
-                                            * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
-#define Dee_TF_TPVISIT          0x00000004 /* Adds an extra `DeeTypeObject *tp_self' argument o "tp_visit", "tp_cleaar" and "tp_dtor":
+#define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()`)
+                                            * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*` */
+#define Dee_TF_TPVISIT          0x00000004 /* Adds an extra `DeeTypeObject *tp_self` argument o "tp_visit", "tp_cleaar" and "tp_dtor":
                                             * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
                                             * >> void (DCALL *tp_clear)(DeeTypeObject *tp_self, DeeObject *self);
                                             * >> void (DCALL *tp_dtor)(DeeTypeObject *tp_self, DeeObject *self); */
-#define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK' */
-#define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*' */
-#define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */
-#define Dee_TF_ISCONSTCASTABLE  0x40000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': true */
+#define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK` */
+#define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*` */
+#define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable`: false */
+#define Dee_TF_ISCONSTCASTABLE  0x40000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable`: true */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
@@ -2541,14 +2541,14 @@ struct Dee_type_object {
 #endif /* __INTELLISENSE__ */
 	char const                         *tp_name;     /* [0..1] Name of this type. */
 	/*utf-8*/ char const               *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
-	uint16_t                            tp_flags;    /* Type flags (Set of `TP_F*'). */
-	uint16_t                            tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)', or 0 when not supported.
+	uint16_t                            tp_flags;    /* Type flags (Set of `TP_F*`). */
+	uint16_t                            tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)`, or 0 when not supported.
 	                                                  * NOTE: Must be explicitly inherited by derived types.
 	                                                  * NOTE: This member must explicitly be initialized during object construction
-	                                                  *       using `Dee_weakref_support_init' and `Dee_weakref_support_fini', during destruction. */
-	uint32_t                            tp_features; /* Type sub-class specific features (Set of `TF_*'). */
+	                                                  *       using `Dee_weakref_support_init` and `Dee_weakref_support_fini`, during destruction. */
+	uint32_t                            tp_features; /* Type sub-class specific features (Set of `TF_*`). */
 	DREF DeeTypeObject                 *tp_base;     /* [0..1][const] Base class.
-	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
+	                                                  * NOTE: When the `TP_FINHERITCTOR` flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
 	/* WARNINGS:
@@ -2564,7 +2564,7 @@ struct Dee_type_object {
 	 *     ... or could be a GC object itself
 	 */
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
-	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
+	/* NOTE: Anything used by `DeeType_Inherit*` can't be made `Dee_tpconst` here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
 	struct Dee_type_math               *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
 	struct Dee_type_cmp                *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */
@@ -2572,7 +2572,7 @@ struct Dee_type_object {
 	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_iter_next)(DeeObject *__restrict self);
 	/* TODO: Get rid of "struct Dee_type_iterator *tp_iterator" -- all functionality should be implemented using method hints! */
-	struct Dee_type_iterator           *tp_iterator; /* [0..1][owned_if(tp_class != NULL)] Extra iterator operators (all of these are optional; only `tp_iter_next' is required) */
+	struct Dee_type_iterator           *tp_iterator; /* [0..1][owned_if(tp_class != NULL)] Extra iterator operators (all of these are optional; only `tp_iter_next` is required) */
 	struct Dee_type_attr               *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
 	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
 	struct Dee_type_buffer             *tp_buffer;   /* [0..1] Raw buffer interface. */
@@ -2583,25 +2583,25 @@ struct Dee_type_object {
 	struct Dee_type_method Dee_tpconst *tp_class_methods; /* [0..1] Class methods. */
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
-	struct Dee_type_method_hint Dee_tpconst *tp_method_hints; /* [0..1] Instance method hints (referenced by `tp_methods'; see `<deemon/method-hints.h>') */
+	struct Dee_type_method_hint Dee_tpconst *tp_method_hints; /* [0..1] Instance method hints (referenced by `tp_methods`; see `<deemon/method-hints.h>`) */
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
 	struct Dee_type_callable           *tp_callable; /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
 
 	/* [1..1][0..n][owned] NULL-terminated MRO override for this type.
-	 * - When NULL, MRO for this type is facilitated through `tp_base'
+	 * - When NULL, MRO for this type is facilitated through `tp_base`
 	 * - When non-NULL, MRO for this type is [<the type itself>, tp_mro[0], tp_mro[1], ...]
-	 *   until the first NULL-element in `tp_mro' is reached. Note that for this purpose,
-	 *   it is assumed that `tp_mro[0] != NULL', and that <the type itself> does not appear
-	 *   within `tp_mro' a second time.
+	 *   until the first NULL-element in `tp_mro` is reached. Note that for this purpose,
+	 *   it is assumed that `tp_mro[0] != NULL`, and that <the type itself> does not appear
+	 *   within `tp_mro` a second time.
 	 * In order to enumerate the MRO of a type, irregardless of that type having a custom
-	 * `tp_mro' or not, you should use `DeeTypeMRO' and its helper API (its API is also
-	 * used in order to facilitate MRO for stuff like `DeeObject_GetAttr()', as well as
+	 * `tp_mro` or not, you should use `DeeTypeMRO` and its helper API (its API is also
+	 * used in order to facilitate MRO for stuff like `DeeObject_GetAttr()`, as well as
 	 * all other operators)
 	 *
 	 * NOTES:
-	 *  - MRO bases that don't appear in `tp_base' must not define any
-	 *    extra instance fields (i.e. have the `TP_FABSTRACT' flag set).
+	 *  - MRO bases that don't appear in `tp_base` must not define any
+	 *    extra instance fields (i.e. have the `TP_FABSTRACT` flag set).
 	 *    As such, these types essentially only act as interface definitions,
 	 *    with the ability to define fixed functions and operators,
 	 *    thought no actual instance members, and not as actual types
@@ -2613,7 +2613,7 @@ struct Dee_type_object {
 
 	/* [0..tp_operators_size][SORT(to_id)][owned_if(tp_class != NULL)]
 	 * Extra per-type operators, and operator info for type-types.
-	 * IMPORTANT: This list must be `tp_operators_size' items long, and be sorted by `to_id'
+	 * IMPORTANT: This list must be `tp_operators_size` items long, and be sorted by `to_id`
 	 * - DeeType_IsTypeType types can define their type-specific operators (including offsets) here
 	 * - !DeeType_IsTypeType types can define per-type extra operators here (without offsets,
 	 *   but instead the direct function pointers).
@@ -2641,7 +2641,7 @@ struct Dee_type_object {
 	struct Dee_class_desc  *tp_class;    /* [0..1][owned] Class descriptor (Usually points below this type object). */
 	Dee_WEAKREF_SUPPORT                  /* Weak reference support. */
 	struct Dee_weakref      tp_module;   /* [0..1] Weak reference to module that is declaring this type. */
-	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
+	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject`) */
 };
 #define DeeType_IsFinal(x)               (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FFINAL)
 #define DeeType_IsFinalOrVariable(x)     (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & (Dee_TP_FFINAL | Dee_TP_FVARIABLE))
@@ -2675,7 +2675,7 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeO
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Return a pointer to the optimized implementation of
- * object destruction called by `DeeObject_Destroy()' */
+ * object destruction called by `DeeObject_Destroy()` */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self);
 
@@ -2687,7 +2687,7 @@ DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_copy_t DCALL D
 
 /* Returns the "instance-size" of a given object "self",
  * whilst trying to resolve known standard allocators.
- * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))'
+ * The caller must ensure that `!DeeType_IsVariable(Dee_TYPE(self))`
  * @return: * : The instance size of "self"
  * @return: 0 : Instance size is unknown (non-standard allocator used) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) size_t
@@ -2732,8 +2732,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_Next(DeeTypeMRO *__restrict self,
                 DeeTypeObject const *tp_iter);
 
-/* Like `DeeTypeMRO_Next()', but only enumerate direct
- * bases of the type passed to `DeeTypeMRO_Init()' */
+/* Like `DeeTypeMRO_Next()`, but only enumerate direct
+ * bases of the type passed to `DeeTypeMRO_Init()` */
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
                           DeeTypeObject const *tp_iter);
@@ -2750,30 +2750,30 @@ DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
 
 
 
-/* Lookup information about operator `id', as defined by `typetype'
+/* Lookup information about operator `id`, as defined by `typetype`
  * Returns NULL if the given operator is not known.
- * NOTE: The given `typetype' must be a type-type, meaning it must
- *       be the result of `Dee_TYPE(Dee_TYPE(ob))', in order to return
- *       information about generic operators that can be used on `ob' */
+ * NOTE: The given `typetype` must be a type-type, meaning it must
+ *       be the result of `Dee_TYPE(Dee_TYPE(ob))`, in order to return
+ *       information about generic operators that can be used on `ob` */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, Dee_operator_t id);
 
-/* Same as `DeeTypeType_GetOperatorById()', but also fill in `*p_declaring_type_type'
+/* Same as `DeeTypeType_GetOperatorById()`, but also fill in `*p_declaring_type_type`
  * as the type-type that is declaring the operator "id". This can differ from "typetype"
- * in (e.g.) `DeeTypeType_GetOperatorByIdEx(&DeeFileType_Type, OPERATOR_BOOL)', where
- * `&DeeFileType_Type' is still able to implement "OPERATOR_BOOL", but the declaration
- * originates from `DeeType_Type', so in that case, `*p_declaring_type_type' is set to
- * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
+ * in (e.g.) `DeeTypeType_GetOperatorByIdEx(&DeeFileType_Type, OPERATOR_BOOL)`, where
+ * `&DeeFileType_Type` is still able to implement "OPERATOR_BOOL", but the declaration
+ * originates from `DeeType_Type`, so in that case, `*p_declaring_type_type` is set to
+ * `DeeType_Type`, whereas for `FILE_OPERATOR_READ`, it would be `DeeFileType_Type`
  * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here.
- * @return: NULL: No such operator (`*p_declaring_type_type' is undefined) */
+ * @return: NULL: No such operator (`*p_declaring_type_type` is undefined) */
 DFUNDEF WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
                               DeeTypeObject **p_declaring_type_type);
 
-/* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
- * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
+/* Same as `DeeTypeType_GetOperatorById()`, but lookup operators by `oi_sname`
+ * or `oi_uname` (though `oi_uname` only when that name isn't ambiguous).
  * @param: argc: The number of extra arguments taken by the operator (excluding
- *               the "this"-argument), or `(size_t)-1' if unknown. */
+ *               the "this"-argument), or `(size_t)-1` if unknown. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
                               char const *__restrict name, size_t argc);
@@ -2787,13 +2787,13 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator_t id);
 
 /* Lookup per-type method flags that may be defined for "opname".
- * IMPORTANT: When querying the flags for `OPERATOR_ITER', the `Dee_METHOD_FCONSTCALL',
- *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
- *            you can call `operator iter()' at compile-time. Instead, it means that
+ * IMPORTANT: When querying the flags for `OPERATOR_ITER`, the `Dee_METHOD_FCONSTCALL`,
+ *            `Dee_METHOD_FPURECALL`, and `Dee_METHOD_FNOREFESCAPE` flags doesn't mean that
+ *            you can call `operator iter()` at compile-time. Instead, it means that
  *            *enumerating* the object can be done at compile-time (so-long as the associated
  *            iterator is never exposed). Alternatively, think of this case as allowing a
- *            call to `DeeObject_Foreach()' at compile-time.
- * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
+ *            call to `DeeObject_Foreach()` at compile-time.
+ * @return: * : Set of `Dee_METHOD_F*` describing special optimizations possible for "opname".
  * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, Dee_operator_t opname);
@@ -2810,43 +2810,43 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, Dee_operator_t op
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsConstCastable(DeeTypeObject const *__restrict self);
 
-/* Check if `name' is being implemented by the given type, or has been inherited by a base. */
+/* Check if `name` is being implemented by the given type, or has been inherited by a base. */
 #define DeeType_HasOperator(self, name) \
 	DeeType_InheritOperator(Dee_REQUIRES_OBJECT(DeeTypeObject, self), name)
 
-/* Check if the callback slot for `name' in `self' is populated.
- * If it isn't, then search the MRO of `self' for the first type
+/* Check if the callback slot for `name` in `self` is populated.
+ * If it isn't, then search the MRO of `self` for the first type
  * that *does* implement said operator, and cache that base's
- * callback in `self'
- * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
- * @return: false: `self' doesn't implement the operator, and neither does one of its bases (or the
+ * callback in `self`
+ * @return: true:  Either `self` already implemented the operator, it it was successfully inherited.
+ * @return: false: `self` doesn't implement the operator, and neither does one of its bases (or the
  *                 operator could not be inherited by one of its bases). In this case, trying to
  *                 invoke the operator will result in a NotImplemented error. */
 DFUNDEF NONNULL((1)) bool DCALL
 DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name);
 
-/* Same as `DeeType_HasOperator()', however don't return `true' if the
- * operator has been inherited implicitly from a base-type of `self'. */
+/* Same as `DeeType_HasOperator()`, however don't return `true` if the
+ * operator has been inherited implicitly from a base-type of `self`. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name);
 
-/* Return the type from `self' inherited its operator `name'.
- * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
- * Returns `NULL' when the operator isn't being implemented. */
+/* Return the type from `self` inherited its operator `name`.
+ * If `name` wasn't inherited, or isn't defined, simply re-return `self`.
+ * Returns `NULL` when the operator isn't being implemented. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Inherit different groups of operators from base-classes, returning `true' if
+/* Inherit different groups of operators from base-classes, returning `true` if
  * operators were inherited from some base class (even if those same operators
- * had already been inherited previously), and `false' if no base-class provides
+ * had already been inherited previously), and `false` if no base-class provides
  * any of the specified operators (though note that inheriting constructors
- * requires that all base classes carry the `Dee_TP_FINHERITCTOR' flag; else,
+ * requires that all base classes carry the `Dee_TP_FINHERITCTOR` flag; else,
  * a class without this flag cannot inherit constructors from its base, though
  * can still provide its constructors to some derived class that does specify
  * its intend of inheriting constructors)
  *
- * s.a. `DeeType_InheritOperator()' */
+ * s.a. `DeeType_InheritOperator()` */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
@@ -2857,15 +2857,15 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
  *       extension operators as well as some operators marked as
- *       `OPCC_SPECIAL' (most notably: `tp_int'), as well as throwing
- *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
- * Operators marked as `oi_private' cannot be invoked and
- * attempting to do so will cause an `Error.TypeError' to be thrown.
- * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
- * HINT: `DeeObject_PInvokeOperator' can be used the same way `DeeObject_InvokeOperator'
+ *       `OPCC_SPECIAL` (most notably: `tp_int`), as well as throwing
+ *       a `Signal.StopIteration` when `tp_iter_next` is exhausted.
+ * Operators marked as `oi_private` cannot be invoked and
+ * attempting to do so will cause an `Error.TypeError` to be thrown.
+ * Attempting to invoke an unknown operator will cause an `Error.TypeError` to be thrown.
+ * HINT: `DeeObject_PInvokeOperator` can be used the same way `DeeObject_InvokeOperator`
  *        can be, with the addition of allowing inplace operators to be executed.
- *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
- *        will cause an `Error.TypeError' to be thrown. */
+ *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()`
+ *        will cause an `Error.TypeError` to be thrown. */
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, Dee_operator_t name,
                          size_t argc, DeeObject *const *argv);
@@ -2893,7 +2893,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOper
 #define DeeObject_PVInvokeOperatorf(p_self, name, format, args) DeeObject_VPTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, args)
 
 
-/* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
+/* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members`
  * @return: Dee_BOUND_ERR     / ---   / NULL:          Error.
  * @return: Dee_BOUND_YES     / true  / * :            OK.
  * @return: Dee_BOUND_NO      / ---   / NULL:          Unbound or error.
@@ -3003,24 +3003,24 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLe
 
 
 
-/* Generic operators that implement equals using `===' and hash using `Object.id()'
+/* Generic operators that implement equals using `===` and hash using `Object.id()`
  * Use this instead of re-inventing the wheel in order to allow for special optimization
  * to be possible when your type appears in compare operations. */
 DDATDEF struct Dee_type_cmp DeeObject_GenericCmpByAddr;
 
-DDATDEF DeeTypeObject DeeType_Type;   /* `type(Object)' */
+DDATDEF DeeTypeObject DeeType_Type;   /* `type(Object)` */
 #define DeeType_Check(ob)      DeeObject_InstanceOf(ob, &DeeType_Type)
 #define DeeType_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeType_Type)
 
 struct Dee_module_object;
-/* Return the module used to define a given type `self',
- * or `NULL' if that module could not be determined.
- * NOTE: When `NULL' is returned, _NO_ error is thrown! */
+/* Return the module used to define a given type `self`,
+ * or `NULL` if that module could not be determined.
+ * NOTE: When `NULL` is returned, _NO_ error is thrown! */
 DFUNDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self);
 
-/* Returns the `tp_name' of `self', or the string
- * "<anonymous type>" when `self' doesn't have a
+/* Returns the `tp_name` of `self`, or the string
+ * "<anonymous type>" when `self` doesn't have a
  * type name set. */
 DFUNDEF ATTR_RETNONNULL ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeType_GetName(DeeTypeObject const *__restrict self);
@@ -3059,8 +3059,8 @@ DFUNDEF WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
                            DeeObject *self);
 
-/* Same as `DeeObject_UndoConstruction()', however optimize for the
- * case of `undo_start' known to either be `NULL' or `DeeObject_Type' */
+/* Same as `DeeObject_UndoConstruction()`, however optimize for the
+ * case of `undo_start` known to either be `NULL` or `DeeObject_Type` */
 #define DeeObject_UndoConstructionNoBase(self) \
 	__hybrid_atomic_cmpxch(&(self)->ob_refcnt, 1, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 

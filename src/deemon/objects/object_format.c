@@ -156,7 +156,7 @@ object_format_generic(DeeObject *__restrict self,
 	if unlikely(!alignment_width)
 		return DeeObject_Print(self, printer, arg);
 
-	/* Generate the string representation of `self' */
+	/* Generate the string representation of `self` */
 	self_str = DeeObject_Str(self);
 	if unlikely(!self_str)
 		goto err;
@@ -336,7 +336,7 @@ call_format_function:
 			return result;
 		}
 	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
-	/* Fallback: Format using `object.__format__' */
+	/* Fallback: Format using `object.__format__` */
 	return object_format_generic(self, printer, arg, format_str, format_len);
 err:
 	return -1;

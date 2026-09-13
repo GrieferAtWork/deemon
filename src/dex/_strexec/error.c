@@ -56,14 +56,14 @@ INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unknown_global(DeeObject *__restrict key) {
 	ASSERT_OBJECT(key);
 	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Unknown global `%k'",
+	                       "Unknown global `%k`",
 	                       key);
 }
 
 INTERN ATTR_COLD ATTR_INS(1, 2) int DCALL
 err_unknown_global_str_len(char const *__restrict key, size_t keylen) {
 	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Unknown global `%$s'",
+	                       "Unknown global `%$s`",
 	                       keylen, key);
 }
 
@@ -84,7 +84,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_if_expected_lparen_after_if(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `if', but got `%$s'",
+	                       "Expected `(` after `if`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -93,7 +93,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_if_expected_rparen_after_if(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `if (...', but got `%$s'",
+	                       "Expected `)` after `if (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -102,7 +102,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_with_expected_lparen_after_with(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `with', but got `%$s'",
+	                       "Expected `(` after `with`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -111,7 +111,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_with_expected_rparen_after_with(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `with (...', but got `%$s'",
+	                       "Expected `)` after `with (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -120,7 +120,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_lparen_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `for', but got `%$s'",
+	                       "Expected `(` after `for`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -129,7 +129,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_rparen_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `for (...;...;...', but got `%$s'",
+	                       "Expected `)` after `for (...;...;...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -138,7 +138,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `for (...: ...', but got `%$s'",
+	                       "Expected `)` after `for (...: ...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -147,7 +147,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_semi1_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `for', but got `%$s'",
+	                       "Expected `;` after `for`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -156,7 +156,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_for_expected_semi2_after_for(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a second `;' after `for', but got `%$s'",
+	                       "Expected a second `;` after `for`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -165,7 +165,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_throw_expected_semi_after_throw(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `throw', but got `%$s'",
+	                       "Expected `;` after `throw`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -174,7 +174,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_yield_expected_semi_after_yield(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `yield', but got `%$s'",
+	                       "Expected `;` after `yield`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -183,7 +183,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_break_expected_semi_after_break(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `break', but got `%$s'",
+	                       "Expected `;` after `break`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -192,7 +192,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_continue_expected_semi_after_continue(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `continue', but got `%$s'",
+	                       "Expected `;` after `continue`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -201,7 +201,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_return_expected_semi_after_return(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `return', but got `%$s'",
+	                       "Expected `;` after `return`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -210,7 +210,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_lparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `foreach', but got `%$s'",
+	                       "Expected `(` after `foreach`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -219,7 +219,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_colon_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `:' after `foreach (...', but got `%$s'",
+	                       "Expected `:` after `foreach (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -228,7 +228,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_foreach_expected_rparen_after_foreach(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `foreach (...: ...', but got `%$s'",
+	                       "Expected `)` after `foreach (...: ...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -237,7 +237,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_while_expected_lparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `while', but got `%$s'",
+	                       "Expected `(` after `while`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -246,7 +246,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_while_expected_rparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `while (...', but got `%$s'",
+	                       "Expected `)` after `while (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -257,7 +257,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_while_after_do(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `while' after `do ...', but got `%$s'",
+	                       "Expected `while` after `do ...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -266,7 +266,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_lparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `do ... while', but got `%$s'",
+	                       "Expected `(` after `do ... while`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -275,7 +275,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_rparen_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `do ... while (...', but got `%$s'",
+	                       "Expected `)` after `do ... while (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -284,7 +284,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_dowhile_expected_semi_after_while(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `do ... while (...)', but got `%$s'",
+	                       "Expected `;` after `do ... while (...)`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -301,7 +301,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_string_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `{' or a string after `__asm__', but got `%$s'",
+	                       "Expected `{` or a string after `__asm__`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -310,7 +310,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_semi_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after `__asm__(...)', but got `%$s'",
+	                       "Expected `;` after `__asm__(...)`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -319,7 +319,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_lparen_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `__asm__', but got `%$s'",
+	                       "Expected `(` after `__asm__`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -328,7 +328,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rparen_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `__asm__(...', but got `%$s'",
+	                       "Expected `)` after `__asm__(...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -337,7 +337,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_keyword_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword as operand name after `[', but got `%$s'",
+	                       "Expected a keyword as operand name after `[`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -346,7 +346,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `]' after `[' followed by an operand name, but got `%$s'",
+	                       "Expected `]` after `[` followed by an operand name, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -355,7 +355,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_string_before_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a string before the operand value, but got `%$s'",
+	                       "Expected a string before the operand value, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -364,7 +364,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_lparen_before_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' before an assembly operand value, but got `%$s'",
+	                       "Expected `(` before an assembly operand value, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -373,7 +373,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_rparen_after_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after an assembly operand value, but got `%$s'",
+	                       "Expected `)` after an assembly operand value, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -382,7 +382,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword as label operand, but got `%$s'",
+	                       "Expected a keyword as label operand, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -393,7 +393,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_lparen_after_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `catch', but got `%$s'",
+	                       "Expected `(` after `catch`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -402,7 +402,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_rparen_after_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `catch', but got `%$s'",
+	                       "Expected `)` after `catch`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -411,7 +411,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword after `catch (... as', but got `%$s'",
+	                       "Expected a keyword after `catch (... as`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -420,7 +420,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `}' to end a brace initializer, but got `%$s'",
+	                       "Expected `}` to end a brace initializer, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -429,7 +429,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_keyword_after_dot(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected keyword after `.' in brace initializer, but got `%$s'",
+	                       "Expected keyword after `.` in brace initializer, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -438,7 +438,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_equals_after_dot(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `=' after `.' in mapping-like brace initializer, but got `%$s'",
+	                       "Expected `=` after `.` in mapping-like brace initializer, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -447,7 +447,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_brace_expected_colon_after_key(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `:' after key in mapping-like brace initializer, but got `%$s'",
+	                       "Expected `:` after key in mapping-like brace initializer, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -457,7 +457,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_expr_expected_semi_after_expr(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `;' after expression, but got `%$s'",
+	                       "Expected `;` after expression, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -466,7 +466,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_expr_unexpected_token(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unexpected token `%$s' in expression",
+	                       "Unexpected token `%$s` in expression",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -476,7 +476,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_function_expected_lparen_after_function(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `function', but got `%$s'",
+	                       "Expected `(` after `function`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -485,7 +485,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_function_expected_arrow_or_lbrace_after_function(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `{' or `->' after `function(...)' or `[](...)', but got `%$s'",
+	                       "Expected `{` or `->` after `function(...)` or `[](...)`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -495,7 +495,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_call_expected_rparen_after_call(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' to end call operation, but got `%$s'",
+	                       "Expected `)` to end call operation, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -514,7 +514,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_pack_expected_rparen_after_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `pack(', but got `%$s'",
+	                       "Expected `)` after `pack(`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -524,7 +524,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_paren_expected_rparen_after_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `(', but got `%$s'",
+	                       "Expected `)` after `(`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -534,7 +534,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_bracket_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `]' after `[', but got `%$s'",
+	                       "Expected `]` after `[`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -544,7 +544,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_attr_expected_keyword(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword after `.', but got `%$s'",
+	                       "Expected a keyword after `.`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -554,7 +554,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_item_expected_rbracket_after_lbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `]' to end `getitem' operator, but got `%$s'",
+	                       "Expected `]` to end `getitem` operator, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -564,7 +564,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_isin_expected_is_or_in_after_exclaim(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `is' or `in' after `!', but got `%$s'",
+	                       "Expected `is` or `in` after `!`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -574,14 +574,14 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_expected_empty_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected an empty string for `operator str'");
+	                       "Expected an empty string for `operator str`");
 }
 
 INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_expected_lbracket_or_dot_after_del(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `[' or `.' after `del' in operator name, but got `%$s'",
+	                       "Expected `[` or `.` after `del` in operator name, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -590,7 +590,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_operator_unknown_name(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unknown operator name `%$s'",
+	                       "Unknown operator name `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -600,7 +600,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_anno_expected_rbracket(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `]' after `@[...', but got `%$s'",
+	                       "Expected `]` after `@[...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -610,7 +610,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_class_after_final(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `class' after `final', but got `%$s'",
+	                       "Expected `class` after `final`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -620,7 +620,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_rparen_after_lparen_base(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `class ... (...', but got `%$s'",
+	                       "Expected `)` after `class ... (...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -630,7 +630,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_lbrace_after_class(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `{' after `class ...', but got `%$s'",
+	                       "Expected `{` after `class ...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -640,7 +640,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_expected_rbrace_after_class(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `}' after `class { ...', but got `%$s'",
+	                       "Expected `}` after `class { ...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -649,14 +649,14 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_class_not_thiscall(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "`this' or `super' are only allowed in thiscall functions");
+	                       "`this` or `super` are only allowed in thiscall functions");
 }
 
 INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_nth_expected_lparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `(' after `__nth', but got `%$s'",
+	                       "Expected `(` after `__nth`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -665,7 +665,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_nth_expected_rparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after `__nth(...', but got `%$s'",
+	                       "Expected `)` after `__nth(...`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -675,7 +675,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_unexpected_token(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unexpected token `%$s' in type annotation",
+	                       "Unexpected token `%$s` in type annotation",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -684,7 +684,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_dots_or_colon(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `...' or `:' after `{type' in type annotation, but got `%$s'",
+	                       "Expected `...` or `:` after `{type` in type annotation, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -693,7 +693,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_rbrace(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `}' after sequence or mapping declaration, but got `%$s'",
+	                       "Expected `}` after sequence or mapping declaration, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -702,7 +702,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_rparen(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `)' after Tuple declaration or parenthesis, but got `%$s'",
+	                       "Expected `)` after Tuple declaration or parenthesis, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -711,7 +711,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_type_annotation_expected_string_after_asm(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a string after `__asm__', but got `%$s'",
+	                       "Expected a string after `__asm__`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -746,7 +746,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_template_string_undefined_escape(JITLexer *__restrict self, int ch) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unknown escape character `%c' in template string",
+	                       "Unknown escape character `%c` in template string",
 	                       ch);
 }
 
@@ -755,7 +755,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_dot_keyword_or_string(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `.', a keyword or a string in a module- or symbol-import list, but got `%$s'",
+	                       "Expected `.`, a keyword or a string in a module- or symbol-import list, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -764,7 +764,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_keyword_after_as(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword after `as' in a module- or symbol-import list, but got `%$s'",
+	                       "Expected a keyword after `as` in a module- or symbol-import list, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -773,7 +773,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_keyword_or_string_in_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword or a string in a symbol-import list, but got `%$s'",
+	                       "Expected a keyword or a string in a symbol-import list, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -804,7 +804,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_comma_or_from_after_star(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `,' or `from' after `*' in symbol import list, but got `%$s'",
+	                       "Expected `,` or `from` after `*` in symbol import list, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -813,7 +813,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_from_after_symbol_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `from' after symbol import list, but got `%$s'",
+	                       "Expected `from` after symbol import list, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -822,7 +822,7 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_expected_import_after_from(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected `import' after `from', but got `%$s'",
+	                       "Expected `import` after `from`, but got `%$s`",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
@@ -831,14 +831,14 @@ INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_unexpected_from_after_module_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unexpected `from' following a module import list");
+	                       "Unexpected `from` following a module import list");
 }
 
 INTERN ATTR_COLD NONNULL((1)) int DFCALL
 syn_import_unexpected_star_duplication_in_import_list(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Unexpected `*' in import list, when `*' had already been encountered before");
+	                       "Unexpected `*` in import list, when `*` had already been encountered before");
 }
 
 

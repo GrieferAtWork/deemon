@@ -95,9 +95,9 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
 	current_basescope = function_ast->a_function.f_scope;
 
-	/* HINT: `code_compile_argrefs()' will safe and restore our own assembler context. */
+	/* HINT: `code_compile_argrefs()` will safe and restore our own assembler context. */
 	result = code_compile_argrefs(function_ast->a_function.f_code,
-	                              /* Don't propagate `ASM_FBIGCODE' */
+	                              /* Don't propagate `ASM_FBIGCODE` */
 	                              (current_assembler.a_flag & ~(ASM_FBIGCODE)) |
 	                              (DeeCompiler_Current->cp_options
 	                               ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE)
@@ -657,7 +657,7 @@ check_getattr_base_symbol_class_small:
 						case SYMBOL_TYPE_THIS:
 							if (SYMBOL_MUST_REFERENCE_THIS(sym))
 								break;
-							/* call to the `this' argument. (aka. in-class member call) */
+							/* call to the `this` argument. (aka. in-class member call) */
 							DO(push_tuple_items(args->a_constexpr, args));
 							attrid = asm_newconst(function_attr->a_constexpr);
 							if unlikely(attrid < 0)
@@ -683,7 +683,7 @@ check_getattr_base_symbol_class_small:
 							}
 							if unlikely(module_id < 0)
 								goto err;
-							/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
+							/* Do a call to an external symbol. `ASM_CALL_EXTERN` */
 							DO(push_tuple_items(args->a_constexpr, args));
 							DO(asm_putddi(ddi_ast));
 							DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym), argc));
@@ -715,8 +715,8 @@ check_getattr_base_symbol_class_small:
 					     * exactly 2 arguments) */
 					    argc <= ((current_assembler.a_stackmax - current_assembler.a_stackcur) +
 					             ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) ? 2 : 16))) {
-						/* `(this as ...).foobar(10, 20, 30)'
-						 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+						/* `(this as ...).foobar(10, 20, 30)`
+						 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC` instructions. */
 						struct ast *type_expr = function_self->a_action.a_act1;
 						int32_t type_rid;
 						if (type_expr->a_type == AST_SYM &&
@@ -738,7 +738,7 @@ do_perform_supercallattr_small:
 						    current_basescope != (DeeBaseScopeObject *)current_rootscope &&
 						    !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
 							/* Check if the type-expression is a constant that had been exported
-							 * from the builtin `deemon' module, in which case we are able to cast
+							 * from the builtin `deemon` module, in which case we are able to cast
 							 * an explicit reference to it. */
 							struct symbol *deemon_symbol;
 							deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
@@ -1127,7 +1127,7 @@ check_getattr_base_symbol_class_tuple:
 				DeeTypeObject *predict = ast_predict_type(arg0);
 				if (predict == &DeeList_Type)
 					goto pop_unused;
-				/* The constructor of `List()' has special functionality when
+				/* The constructor of `List()` has special functionality when
 				 * given an integer, in which case the list is created with
 				 * the given number of pre-allocates space.
 				 *
@@ -1441,7 +1441,7 @@ check_getattr_base_symbol_class_argv:
 				case SYMBOL_TYPE_THIS:
 					if (SYMBOL_MUST_REFERENCE_THIS(sym))
 						break;
-					/* call to the `this' argument. (aka. in-class member call) */
+					/* call to the `this` argument. (aka. in-class member call) */
 					DO(asm_gargv(argc, argv));
 					attrid = asm_newconst(function_attr->a_constexpr);
 					if unlikely(attrid < 0)
@@ -1467,7 +1467,7 @@ check_getattr_base_symbol_class_argv:
 					}
 					if unlikely(module_id < 0)
 						goto err;
-					/* Do a call to an external symbol. `ASM_CALL_EXTERN' */
+					/* Do a call to an external symbol. `ASM_CALL_EXTERN` */
 					DO(asm_gargv(argc, argv));
 					DO(asm_putddi(ddi_ast));
 					DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym), argc));
@@ -1483,8 +1483,8 @@ check_getattr_base_symbol_class_argv:
 			    function_self->a_action.a_act0->a_type == AST_SYM &&
 			    function_self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
 			    !SYMBOL_MUST_REFERENCE_THIS(function_self->a_action.a_act0->a_sym)) {
-				/* `(this as ...).foobar(a, b, c)'
-				 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+				/* `(this as ...).foobar(a, b, c)`
+				 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC` instructions. */
 				struct ast *type_expr = function_self->a_action.a_act1;
 				int32_t type_rid;
 				if (type_expr->a_type == AST_SYM &&
@@ -1506,7 +1506,7 @@ do_perform_supercallattr_argv:
 				    current_basescope != (DeeBaseScopeObject *)current_rootscope &&
 				    !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
 					/* Check if the type-expression is a constant that had been exported
-					 * from the builtin `deemon' module, in which case we are able to cast
+					 * from the builtin `deemon` module, in which case we are able to cast
 					 * an explicit reference to it. */
 					struct symbol *deemon_symbol;
 					deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);

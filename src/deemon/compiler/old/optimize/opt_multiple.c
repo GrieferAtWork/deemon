@@ -285,12 +285,12 @@ after_multiple_constexpr:
 			break;
 
 		case 0:
-			/* Convert this branch into `none' */
+			/* Convert this branch into `none` */
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_type      = AST_CONSTEXPR;
 			self->a_flag      = AST_FNORMAL;
 			self->a_constexpr = DeeNone_NewRef();
-			OPTIMIZE_VERBOSE("Replace empty multi-ast with `none'\n");
+			OPTIMIZE_VERBOSE("Replace empty multi-ast with `none`\n");
 			goto did_optimize;
 
 		default:
@@ -299,8 +299,8 @@ after_multiple_constexpr:
 	} else {
 		if (self->a_multiple.m_astc == 1 &&
 		    self->a_multiple.m_astv[0]->a_type == AST_EXPAND) {
-			/* Something like `{ x... }' can be optimized to `x' when
-			 * it is already  known that `x' has some sequence typing.
+			/* Something like `{ x... }` can be optimized to `x` when
+			 * it is already  known that `x` has some sequence typing.
 			 *
 			 * TODO: This can only be done when "type(x)" doesn't re-
 			 *       implement any sequence function using some custom
@@ -330,14 +330,14 @@ after_multiple_constexpr:
 			if (expanded_type && expanded_type == needed_type) {
 				if (ast_assign(self, expanded_expr))
 					goto err;
-				OPTIMIZE_VERBOSE("Replace `{ x... }' with `x' of type %k\n",
+				OPTIMIZE_VERBOSE("Replace `{ x... }` with `x` of type %k\n",
 				                 expanded_type);
 				goto did_optimize;
 			}
 		}
 done_seq_cast_optimization:
 
-		/* Try to optimize something like `[10, [x, y]...]' to `[10, x, y]' */
+		/* Try to optimize something like `[10, [x, y]...]` to `[10, x, y]` */
 		iter = self->a_multiple.m_astv;
 		end  = iter + self->a_multiple.m_astc;
 continue_inline_at_iter:

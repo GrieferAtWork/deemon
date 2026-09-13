@@ -42,8 +42,8 @@
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
-#include "p-path.c.inl"     /* For `DeeString_IsAbsPath()' */
-#include "p-readlink.c.inl" /* For `posix_readlink()' */
+#include "p-path.c.inl"     /* For `DeeString_IsAbsPath()` */
+#include "p-readlink.c.inl" /* For `posix_readlink()` */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t, wchar_t */
@@ -64,8 +64,8 @@ DECL_BEGIN
 #endif /* !PATH_MAX */
 
 
-/* Figure out how to implement `DeeSystem_GetFilenameOfFD()'
- * NOTE: This listing is duplicated in `src/deemon/system/system-unix.c.inl' */
+/* Figure out how to implement `DeeSystem_GetFilenameOfFD()`
+ * NOTE: This listing is duplicated in `src/deemon/system/system-unix.c.inl` */
 #undef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 #undef DeeSystem_PrintFilenameOfFD_USE_frealpath
 #undef DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
@@ -162,15 +162,15 @@ DeeSystem_DEFINE_strnlen(Dee_libc_strnlen)
 
 
 #ifndef posix_readlink_USE_STUB
-/* Print `path' to `printer' whilst expanding embedded symlink references.
- * NOTE: The caller must ensure that `printer' is either empty, or contains
- *       a trailing `DeeSystem_SEP' before calling this function! */
+/* Print `path` to `printer` whilst expanding embedded symlink references.
+ * NOTE: The caller must ensure that `printer` is either empty, or contains
+ *       a trailing `DeeSystem_SEP` before calling this function! */
 #undef posix_print_resolved_path
 #define HAVE_posix_print_resolved_path
 
 #define posix_try_readlink_ENOENT ((DREF DeeObject *)-2)
 
-/* Try to do a `readlink()' operation on the string represented by `printer'
+/* Try to do a `readlink()` operation on the string represented by `printer`
  * @return: * :        The expansion of a symlink
  * @return: NULL:      An error was thrown
  * @return: ITER_DONE: Not a symlink
@@ -323,7 +323,7 @@ err:
 #endif /* posix_readlink_USE_wreadlink || posix_readlink_USE_readlink || posix_readlink_USE_freadlinkat */
 }
 
-/* Try to do a `readlink()' operation on the string represented by `printer'
+/* Try to do a `readlink()` operation on the string represented by `printer`
  * @return: * :        The expansion of a symlink
  * @return: NULL:      An error was thrown
  * @return: ITER_DONE: Not a symlink
@@ -371,7 +371,7 @@ posix_print_resolved_path(struct Dee_unicode_printer *__restrict printer,
 	if (!*path_utf8)
 		return 0; /* End-of-path */
 	if (DeeSystem_IsAbs(path_utf8)) {
-		/* Reset path resolver and print everything from `path' until we reach the relative part. */
+		/* Reset path resolver and print everything from `path` until we reach the relative part. */
 		Dee_unicode_printer_clear(printer);
 #ifdef DeeSystem_HAVE_FS_DRIVES
 		{
@@ -443,7 +443,7 @@ skip_segment:
 
 		case 2:
 			if (path_utf8[0] == '.' && path_utf8[1] == '.') {
-				/* Delete the last segment from `printer' (so-long as that segment isn't "..").
+				/* Delete the last segment from `printer` (so-long as that segment isn't "..").
 				 * If the printer is empty, print the ".." to the printer. */
 				size_t printer_length, prev_segment_end;
 				uint32_t lastch;
@@ -501,7 +501,7 @@ print_dot_dot_segment:
 		default: break;
 		}
 	
-		/* Print this path segment to `printer' */
+		/* Print this path segment to `printer` */
 		if (!Dee_UNICODE_PRINTER_ISEMPTY(printer)) {
 			uint32_t lastch;
 			lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, Dee_UNICODE_PRINTER_LENGTH(printer) - 1);
@@ -1485,7 +1485,7 @@ got_dfd_path:
 	}
 
 #ifndef CONFIG_HAVE_AT_FDCWD
-	/* OS doesn't support AT_FDCWD --> check if `dfd' is our custom replacement. */
+	/* OS doesn't support AT_FDCWD --> check if `dfd` is our custom replacement. */
 	if (DeeInt_Check(dfd)) {
 		int dfd_intval;
 		if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
@@ -1545,7 +1545,7 @@ do_print_path_abs:
 			goto err;
 		}
 
-		/* Return a path that is relative to the absolute path of the caller-given `dfd' */
+		/* Return a path that is relative to the absolute path of the caller-given `dfd` */
 		result = Dee_AsObject(posix_path_relpath_f((DeeStringObject *)abspath,
 	                                               (DeeStringObject *)basedir));
 		Dee_Decref_likely(abspath);

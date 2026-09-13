@@ -247,7 +247,7 @@ while (i < end) {
 	local name, opcode, length, sp_sub, sp_add, mnemonic = none...;
 	try {
 		name, opcode, length, sp_sub, sp_add, mnemonic =
-			blob.rescanf(r"([^\s]+)\s+([0-9a-fA-FxX]+)\s*" r"/\*\s*\[([^]]+)\]\s*\[([^,\]]+)\s*,\s*([^\]]+)\s*\]\s*`([^']*)'", i, eol)...;
+			blob.rescanf(r"([^\s]+)\s+([0-9a-fA-FxX]+)\s*" r"/\*\s*\[([^]]+)\]\s*\[([^,\]]+)\s*,\s*([^\]]+)\s*\]\s*`([^`]*)`", i, eol)...;
 	} catch (...) {
 		try {
 			name, opcode, length, sp_sub, sp_add =
@@ -272,7 +272,7 @@ while (i < end) {
 		local p_length, p_sp_sub, p_sp_add, p_mnemonic = none...;
 		try {
 			p_length, p_sp_sub, p_sp_add, p_mnemonic =
-				blob.rescanf(r"\s*\*\s*\[([^]]+)\]\s*\[([^,\]]+)\s*,\s*([^\]]+)\s*\]\s*`([^']*)'", nextLine, nextEol)...;
+				blob.rescanf(r"\s*\*\s*\[([^]]+)\]\s*\[([^,\]]+)\s*,\s*([^\]]+)\s*\]\s*`([^`]*)`", nextLine, nextEol)...;
 		} catch (...) {
 			try {
 				p_length, p_sp_sub, p_sp_add =
@@ -566,15 +566,15 @@ for (local prefix: prefixBytes) {
 #define SP_SUBIMM1N8_MINUS2   9
 #define SP_SUBIMM1N8_MINUS3   10
 #define SP_SUBIMM2N8          11
-#define SP_SUBIMM2N8_MINUS1   12
-#define SP_SUBIMM2N8X2        13
-#define SP_SUBIMM2N8X2_MINUS1 14
+#define SP_SUBIMM2N8X2        12
+#define SP_SUBIMM2N8X2_MINUS1 13
+#define SP_SUBIMM2N8_MINUS1   14
 #define SP_SUBIMM2N8_MINUS3   15
 #define SP_SUBIMM2N16         16
-#define SP_SUBIMM2N16_MINUS1  17
-#define SP_SUBIMM2N16_MINUS2  18
-#define SP_SUBIMM2N16_MINUS3  19
-#define SP_SUBIMM2N16X2       20
+#define SP_SUBIMM2N16X2       17
+#define SP_SUBIMM2N16_MINUS1  18
+#define SP_SUBIMM2N16_MINUS2  19
+#define SP_SUBIMM2N16_MINUS3  20
 #define SP_SUBIMM3N8          21
 #define SP_SUBIMM4N8          22
 #define SP_SUBIMM4N8X2_MINUS1 23
@@ -597,15 +597,15 @@ DEE_SP_SUB(SP_SUBIMM1N8_MINUS1, UNALIGNED_GETLE8(pc + 1) + 1)
 DEE_SP_SUB(SP_SUBIMM1N8_MINUS2, UNALIGNED_GETLE8(pc + 1) + 2)
 DEE_SP_SUB(SP_SUBIMM1N8_MINUS3, UNALIGNED_GETLE8(pc + 1) + 3)
 DEE_SP_SUB(SP_SUBIMM2N8, UNALIGNED_GETLE8(pc + 2))
-DEE_SP_SUB(SP_SUBIMM2N8_MINUS1, UNALIGNED_GETLE8(pc + 2) + 1)
 DEE_SP_SUB(SP_SUBIMM2N8X2, UNALIGNED_GETLE8(pc + 2) * 2)
 DEE_SP_SUB(SP_SUBIMM2N8X2_MINUS1, UNALIGNED_GETLE8(pc + 2) * 2 + 1)
+DEE_SP_SUB(SP_SUBIMM2N8_MINUS1, UNALIGNED_GETLE8(pc + 2) + 1)
 DEE_SP_SUB(SP_SUBIMM2N8_MINUS3, UNALIGNED_GETLE8(pc + 2) + 3)
 DEE_SP_SUB(SP_SUBIMM2N16, UNALIGNED_GETLE16(pc + 2))
+DEE_SP_SUB(SP_SUBIMM2N16X2, UNALIGNED_GETLE16(pc + 2) * 2)
 DEE_SP_SUB(SP_SUBIMM2N16_MINUS1, UNALIGNED_GETLE16(pc + 2) + 1)
 DEE_SP_SUB(SP_SUBIMM2N16_MINUS2, UNALIGNED_GETLE16(pc + 2) + 2)
 DEE_SP_SUB(SP_SUBIMM2N16_MINUS3, UNALIGNED_GETLE16(pc + 2) + 3)
-DEE_SP_SUB(SP_SUBIMM2N16X2, UNALIGNED_GETLE16(pc + 2) * 2)
 DEE_SP_SUB(SP_SUBIMM3N8, UNALIGNED_GETLE8(pc + 3))
 DEE_SP_SUB(SP_SUBIMM4N8, UNALIGNED_GETLE8(pc + 4))
 DEE_SP_SUB(SP_SUBIMM4N8X2_MINUS1, UNALIGNED_GETLE8(pc + 4) * 2 + 1)

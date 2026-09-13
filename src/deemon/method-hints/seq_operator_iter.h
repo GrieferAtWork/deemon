@@ -240,7 +240,7 @@ err:
 #define DEFINED_default_foreach_with_map_enumerate_cb
 struct default_foreach_with_map_enumerate_data {
 	Dee_foreach_t dfwme_cb;  /* [1..1] Underlying callback */
-	void         *dfwme_arg; /* [?..?] Cookie for `dfwme_cb' */
+	void         *dfwme_arg; /* [?..?] Cookie for `dfwme_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -268,7 +268,7 @@ err:
 #define DEFINED_default_foreach_with_seq_enumerate_cb
 struct default_foreach_with_seq_enumerate_data {
 	Dee_foreach_t dfwse_cb;  /* [1..1] Underlying callback */
-	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb' */
+	void         *dfwse_arg; /* [?..?] Cookie for `dfwse_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -521,7 +521,7 @@ err:
 #define DEFINED_default_foreach_pair_with_map_enumerate_cb
 struct default_foreach_pair_with_map_enumerate_data {
 	Dee_foreach_pair_t dfpwme_cb;  /* [1..1] Underlying callback */
-	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb' */
+	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

@@ -34,7 +34,7 @@ function foo() {
 		/* This is another "yield pop" instruction, but must
 		 * hide that from the assembler, or else it will refuse
 		 * to compile by throwing:
-		 * >> Negative stack effect during `yield' instruction */
+		 * >> Negative stack effect during `yield` instruction */
 		.byte 0x01
 	});
 

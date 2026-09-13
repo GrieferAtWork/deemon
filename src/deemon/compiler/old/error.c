@@ -76,7 +76,7 @@ print_symbol_declaration(struct Dee_unicode_printer *__restrict printer,
 	                                sym->s_decl.l_col + 1);
 	if unlikely(result < 0)
 		goto err;
-	temp = Dee_unicode_printer_printf(printer, "See reference to declaration of `%s'", SYMBOL_NAME(sym));
+	temp = Dee_unicode_printer_printf(printer, "See reference to declaration of `%s`", SYMBOL_NAME(sym));
 	if unlikely(temp < 0)
 		goto err_temp;
 	return result + temp;
@@ -205,7 +205,7 @@ parser_errors_fini(struct parser_errors *__restrict self) {
 INTERN WUNUSED NONNULL((1)) int DCALL
 parser_throw(struct Dee_compiler_error_object *__restrict error) {
 	ASSERT_OBJECT_TYPE(error, &DeeError_CompilerError);
-	/* Special case: If TPP was started using `-E' or `-F', then it is
+	/* Special case: If TPP was started using `-E` or `-F`, then it is
 	 *               possible that no compiler is currently active, in
 	 *               which case we need to do this ourself! */
 	if (!DeeCompiler_Current) {
@@ -282,7 +282,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 	DeeThreadObject *caller = DeeThread_Self();
 	ASSERTF(caller->t_exceptsz >= current_parser_errors.pe_except,
 	        "The caller handled errors that didn't belong to them, or "
-	        "forgot to call `parser_start()' prior to compilation");
+	        "forgot to call `parser_start()` prior to compilation");
 	if (caller->t_exceptsz > current_parser_errors.pe_except) {
 		/* New errors have been thrown in the mean time.
 		 * We must analyze them and capture any compiler error.
@@ -394,7 +394,7 @@ handle_master:
 
 		/* NOTE: At this point, we secretly transfer a reference from
 		 *       the master compiler error's vector entry to our local
-		 *      `master' variable. */
+		 *      `master` variable. */
 
 		/* With the master fully initialized, throw it. */
 		DeeError_ThrowInherited(master);
@@ -701,7 +701,7 @@ handle_compiler_warning(struct ast_loc *loc,
 	Dee_weakref_initempty(&error->ce_master);
 
 	/* NOTE: Use different sub-classes depending
-	 *       on wgroups associated with `wnum' */
+	 *       on wgroups associated with `wnum` */
 	{
 		DeeTypeObject *error_type;
 		error_type = get_warning_error_class(wnum);

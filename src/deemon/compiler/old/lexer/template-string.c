@@ -176,11 +176,11 @@ err_old_flags:
 			 * >> f"foo: {a + '"' + b} -- {'"'} more"
 			 *                              ^-- This counts as a hit, but isn't escaped
 			 * But that's OK because it's part of another template argument expression,
-			 * which will be parsed by `ast_parse_expr()', which in turn makes use of
+			 * which will be parsed by `ast_parse_expr()`, which in turn makes use of
 			 * TPP's automatic file-chunk-extension function. The only thing we need to
 			 * ensure at that point, is that TPP doesn't discard older parts of its file
 			 * so our pointers don't get all out of wack, which we do by setting the
-			 * lexer's `TPPLEXER_FLAG_EXTENDFILE' flag above, and converting our pointers
+			 * lexer's `TPPLEXER_FLAG_EXTENDFILE` flag above, and converting our pointers
 			 * into relative offsets above/after the parsing step (which is needed in
 			 * case a file extension causes the file buffer's base address to change)
 			 */
@@ -261,7 +261,7 @@ err_old_flags:
 			text_iter   = token.t_begin;
 			flush_start = token.t_begin;
 
-			/* Append `expr_ast' to `format_argv' */
+			/* Append `expr_ast` to `format_argv` */
 			ASSERT(format_argc <= format_arga);
 			if (format_argc >= format_arga) {
 				size_t new_format_arga = (format_arga << 1) | 1;
@@ -290,7 +290,7 @@ err_expr_ast:
 			if (*text_iter == '}') {
 				/* Escaped '}'
 				 * No need to flush since '}' also needs to be escaped
-				 * as '}}' in the template for `string.format'! */
+				 * as '}}' in the template for `string.format`! */
 				++text_iter;
 			} else {
 				/* Error: unmatched '}' */
@@ -317,7 +317,7 @@ err_expr_ast:
 			case '{':
 			case '}':
 				/* Special case: in template strings, these can also be escaped with a backslash.
-				 * However, because we're using them with `string.format', we still have to escape
+				 * However, because we're using them with `string.format`, we still have to escape
 				 * them for use with it (by writing them twice)! */
 				if unlikely(Dee_unicode_printer_put8(&format_printer, ch))
 					goto err;

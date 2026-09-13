@@ -76,25 +76,25 @@ warn_idcompare_bool(struct ast *__restrict warn_ast) {
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 ast_sequence_is_nonempty(struct ast *__restrict self) {
 	(void)self;
-	/* TODO: Check if `self' is a non-empty sequence expression. */
+	/* TODO: Check if `self` is a non-empty sequence expression. */
 	return false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 ast_iterator_is_nonempty(struct ast *__restrict self) {
-	/* Simple (and most likely) case: Check if `self' invokes `operator iter'. */
+	/* Simple (and most likely) case: Check if `self` invokes `operator iter`. */
 	if (self->a_type == AST_OPERATOR &&
 	    self->a_flag == OPERATOR_ITER &&
 	    !(self->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS)) &&
 	    self->a_operator.o_op0)
 		return ast_sequence_is_nonempty(self->a_operator.o_op0);
-	/* TODO: Check if `self' is an iterator that is non-empty. */
+	/* TODO: Check if `self` is an iterator that is non-empty. */
 	return false;
 }
 
 /* Flatten `(a, "foo", ("bar", 42), b)' into `(a, "foobar42", b)',
- * as can be done when `self' is used in a tostr context such as
- * `print' or `str' */
+ * as can be done when `self` is used in a tostr context such as
+ * `print` or `str` */
 INTERN WUNUSED NONNULL((1)) int
 (DCALL ast_flatten_tostr)(struct ast *__restrict self) {
 	while (self->a_type == AST_MULTIPLE &&
@@ -127,10 +127,10 @@ INTERN WUNUSED NONNULL((1)) int
 						if unlikely(!concat) {
 							DeeError_Handled(ERROR_HANDLED_RESTORE);
 						} else {
-							OPTIMIZE_VERBOSE("Optimize `str(..., %r, %r, ...)' -> `str(..., %r, ...)'\n",
+							OPTIMIZE_VERBOSE("Optimize `str(..., %r, %r, ...)` -> `str(..., %r, ...)`\n",
 							                 a->a_constexpr, b->a_constexpr, concat);
 							++optimizer_count;
-							/* Remove `b' and replace `a' with `a + b' */
+							/* Remove `b` and replace `a` with `a + b` */
 							Dee_Decref(a->a_constexpr);
 							ast_decref(b);
 							a->a_constexpr = concat;
@@ -156,7 +156,7 @@ INTERN WUNUSED NONNULL((1)) int
 			if unlikely(!str_repr) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 			} else {
-				OPTIMIZE_VERBOSE("Optimize `str(%r)' -> `str(%r)'\n",
+				OPTIMIZE_VERBOSE("Optimize `str(%r)` -> `str(%r)`\n",
 				                 self->a_constexpr, str_repr);
 				++optimizer_count;
 				Dee_Decref(self->a_constexpr);
@@ -176,7 +176,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
                             struct ast *__restrict self, bool result_used) {
 	DREF DeeObject *expr_result;
 	/* TODO: The result-used parameter depends on what kind of action it is...
-	 * TODO: Optimize AST order of `AST_FACTION_IN' and `AST_FACTION_AS'.
+	 * TODO: Optimize AST order of `AST_FACTION_IN` and `AST_FACTION_AS`.
 	 * TODO: Do constant propagation when branches are known at compile-time. */
 	switch (self->a_flag) {
 
@@ -217,7 +217,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			    (optimizer_flags & OPTIMIZE_FNOUSESYMS)) {
 				/* Special case: the symbol is never read from, or checked for being bound.
 				 * -> We can simply get rid of this symbol all-together! */
-				OPTIMIZE_VERBOSE("Removing store to symbol `%s' that is never "
+				OPTIMIZE_VERBOSE("Removing store to symbol `%s` that is never "
 				                 "read from, or checking for being bound\n",
 				                 SYMBOL_NAME(target_sym));
 				if unlikely(ast_graft_onto(self, self->a_action.a_act1))
@@ -263,10 +263,10 @@ INTERN WUNUSED NONNULL((1, 2)) int
 						 * >>     x = "foobar"; // This can be propagated
 						 * >> } while (--i != 0);
 						 * >> print x;
-						 * NOTE: Checks for `goto' are required to ensure that no side-effects
+						 * NOTE: Checks for `goto` are required to ensure that no side-effects
 						 *       are broken by inlining constants assigned to variables:
 						 * >>     local x;
-						 * >>     goto foo;     // Because of this `goto', our branch becomes conditional,
+						 * >>     goto foo;     // Because of this `goto`, our branch becomes conditional,
 						 * >>                   // and just as with regular conditional branches, constant
 						 * >>                   // symbols cannot be propagated outside of them!
 						 * >>     x = "foobar";
@@ -297,7 +297,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 									if (iter_ast->a_loop.l_iter == prev_ast)
 										goto stack_next; /* It's OK. - The iterator is always executed. */
 									if (!ast_iterator_is_nonempty(iter_ast->a_loop.l_iter))
-										goto done_symbol_store; /* The iterator may be empty, meaning that `elem' and `loop' may not be executed! */
+										goto done_symbol_store; /* The iterator may be empty, meaning that `elem` and `loop` may not be executed! */
 									if (ast_contains_goto(iter_ast->a_loop.l_iter, AST_CONTAINS_GOTO_CONSIDER_NONE))
 										goto done_symbol_store;
 									if (ast_uses_symbol(iter_ast->a_loop.l_iter, target_sym))
@@ -334,7 +334,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 									goto done_symbol_store;
 								}
 							} else if (iter_ast->a_type == AST_MULTIPLE) {
-								/* Check if there is a `goto' before the matching sub-ast,
+								/* Check if there is a `goto` before the matching sub-ast,
 								 * which might be used to skip our expression. */
 								size_t i;
 								struct ast *prev_ast = prev_stack->os_ast;
@@ -366,7 +366,7 @@ stack_next:
 						}
 
 						/* Everything checks out. - We can use this symbol for constant propagation. */
-						OPTIMIZE_VERBOSE("Defining symbol `%s' as a constant evaluating to `%r'\n",
+						OPTIMIZE_VERBOSE("Defining symbol `%s` as a constant evaluating to `%r`\n",
 						                 SYMBOL_NAME(target_sym), self->a_action.a_act1->a_constexpr);
 						target_sym->s_type  = SYMBOL_TYPE_CONST;
 						target_sym->s_const = self->a_action.a_act1->a_constexpr;
@@ -379,9 +379,9 @@ stack_next:
 					if (!target_sym->s_nread && target_sym->s_nbound &&
 					    !DeeNone_Check(self->a_action.a_act1->a_constexpr)) {
 						/* Special case: the symbol is never read from, but checking for being bound.
-						 *  - In this case, we can instead assign a quicker value (`Dee_None'),
+						 *  - In this case, we can instead assign a quicker value (`Dee_None`),
 						 *    that the constant currently being used. */
-						OPTIMIZE_VERBOSE("Store `none' in symbol `%s' only ever checked for being bound, rather than `%r'\n",
+						OPTIMIZE_VERBOSE("Store `none` in symbol `%s` only ever checked for being bound, rather than `%r`\n",
 						                 SYMBOL_NAME(target_sym), self->a_action.a_act1->a_constexpr);
 						Dee_Decref(self->a_action.a_act1->a_constexpr);
 						self->a_action.a_act1->a_constexpr = DeeNone_NewRef();
@@ -613,7 +613,7 @@ action_set_expr_result:
 			goto action_set_expr_result;
 		} else if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 #ifdef is_builtin_object
-			/* Warn if the constant of `act0' isn't a builtin object */
+			/* Warn if the constant of `act0` isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act0->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
 				goto err;
@@ -621,18 +621,18 @@ action_set_expr_result:
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
-				/* Optimize: `none === x' -> `x is none' */
+				/* Optimize: `none === x` -> `x is none` */
 				struct ast *temp;
 				temp                  = self->a_action.a_act1;
 				self->a_action.a_act1 = self->a_action.a_act0;
 				self->a_action.a_act0 = temp;
 				self->a_flag          = AST_FACTION_IS;
-				OPTIMIZE_VERBOSE("Optimize `none === x' -> `x is none'\n");
+				OPTIMIZE_VERBOSE("Optimize `none === x` -> `x is none`\n");
 				goto did_optimize;
 			}
 		} else if (self->a_action.a_act1->a_type == AST_CONSTEXPR) {
 #ifdef is_builtin_object
-			/* Warn if the constant of `act1' isn't a builtin object */
+			/* Warn if the constant of `act1` isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act1->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
 				goto err;
@@ -640,9 +640,9 @@ action_set_expr_result:
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
-				/* Optimize: `x === none' -> `x is none' */
+				/* Optimize: `x === none` -> `x is none` */
 				self->a_flag = AST_FACTION_IS;
-				OPTIMIZE_VERBOSE("Optimize `x === none' -> `x is none'\n");
+				OPTIMIZE_VERBOSE("Optimize `x === none` -> `x is none`\n");
 				goto did_optimize;
 			}
 		}
@@ -667,7 +667,7 @@ action_set_expr_result:
 			struct ast *base = self->a_action.a_act0->a_operator.o_op0;
 			if (ast_isconstexpr(base, Dee_AsObject(&DeeFile_Type.ft_base)) ||
 			    ast_is_deemon_symbol(base, id_File)) {
-				OPTIMIZE_VERBOSE("Optimize `print File.stdout: ...' -> `print ...'\n");
+				OPTIMIZE_VERBOSE("Optimize `print File.stdout: ...` -> `print ...`\n");
 				++optimizer_count;
 				ast_decref(self->a_action.a_act0);
 				self->a_action.a_act0 = self->a_action.a_act1;
@@ -720,7 +720,7 @@ check_printseq_const:
 					DeeError_Handled(ERROR_HANDLED_RESTORE);
 					goto done;
 				}
-				OPTIMIZE_VERBOSE("Optimize `print %r...' -> `print %r...'\n",
+				OPTIMIZE_VERBOSE("Optimize `print %r...` -> `print %r...`\n",
 				                 printseq->a_constexpr, tpl);
 				++optimizer_count;
 				Dee_Decref(printseq->a_constexpr);
@@ -799,7 +799,7 @@ check_printseq_const:
 			goto action_set_expr_result;
 		} else if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 #ifdef is_builtin_object
-			/* Warn if the constant of `act0' isn't a builtin object */
+			/* Warn if the constant of `act0` isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act0->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
 				goto err;
@@ -807,7 +807,7 @@ check_printseq_const:
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
-				/* Optimize: `none !== x' -> `x !is none' */
+				/* Optimize: `none !== x` -> `x !is none` */
 				DREF struct ast *temp;
 				temp = ast_setscope_and_ddi(ast_action2(AST_FACTION_IS,
 				                                        self->a_action.a_act1,
@@ -820,12 +820,12 @@ check_printseq_const:
 				self->a_bool = temp; /* Inherit reference. */
 				self->a_type = AST_BOOL;
 				self->a_flag = AST_FBOOL_NEGATE;
-				OPTIMIZE_VERBOSE("Optimize `none !== x' -> `x !is none'\n");
+				OPTIMIZE_VERBOSE("Optimize `none !== x` -> `x !is none`\n");
 				goto did_optimize;
 			}
 		} else if (self->a_action.a_act1->a_type == AST_CONSTEXPR) {
 #ifdef is_builtin_object
-			/* Warn if the constant of `act1' isn't a builtin object */
+			/* Warn if the constant of `act1` isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act1->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
 				goto err;
@@ -833,7 +833,7 @@ check_printseq_const:
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
-				/* Optimize: `x !== none' -> `x !is none' */
+				/* Optimize: `x !== none` -> `x !is none` */
 				DREF struct ast *temp;
 				temp = ast_setscope_and_ddi(ast_action2(AST_FACTION_IS,
 				                                        self->a_action.a_act0,
@@ -846,7 +846,7 @@ check_printseq_const:
 				self->a_bool = temp; /* Inherit reference. */
 				self->a_type = AST_BOOL;
 				self->a_flag = AST_FBOOL_NEGATE;
-				OPTIMIZE_VERBOSE("Optimize `x !== none' -> `x !is none'\n");
+				OPTIMIZE_VERBOSE("Optimize `x !== none` -> `x !is none`\n");
 				goto did_optimize;
 			}
 		}

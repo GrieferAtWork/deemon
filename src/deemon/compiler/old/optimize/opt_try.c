@@ -93,8 +93,8 @@ err_guard_assumes:
 				 * >> if (...) {
 				 * >>     <catch_03>
 				 * >> }
-				 * NOTE: It must look like this, because `catch_01' can jump to
-				 *      `catch_02' when re-throwing an exception! */
+				 * NOTE: It must look like this, because `catch_01` can jump to
+				 *      `catch_02` when re-throwing an exception! */
 				if (ast_assumes_initcond(&guard_assumes, stack->os_assume))
 					goto err;
 				child_stack.os_assume = &guard_assumes;
@@ -137,7 +137,7 @@ err_guard_assumes:
 	for (; iter < end; ++iter) {
 		if (iter->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY)
 			continue;
-		/* `catch (object)' --> `catch (...)' */
+		/* `catch (object)` --> `catch (...)` */
 		if (iter->ce_mask &&
 		    iter->ce_mask->a_type == AST_CONSTEXPR &&
 		    iter->ce_mask->a_constexpr == Dee_AsObject(&DeeObject_Type)) {
@@ -146,7 +146,7 @@ err_guard_assumes:
 			ast_decref(iter->ce_mask);
 			iter->ce_mask = NULL;
 		}
-		/* Set the `CATCH_EXPR_FSECOND' flag for all noexcept catch-handlers. */
+		/* Set the `CATCH_EXPR_FSECOND` flag for all noexcept catch-handlers. */
 		if (!(iter->ce_mode & CATCH_EXPR_FSECOND) &&
 		    ast_is_nothrow(iter->ce_code, result_used) &&
 		    (!iter->ce_mask || ast_is_nothrow(iter->ce_mask, true))) {
@@ -156,8 +156,8 @@ err_guard_assumes:
 		}
 	}
 	if (ast_is_nothrow(self->a_try.t_guard, result_used)) {
-		/* TODO: `try { foo; } finally { bar; }' -> `({ __stack local _r = foo; bar; _r; })'
-		 * TODO: `try { foo; } catch (...) { bar; }' -> `(foo)' */
+		/* TODO: `try { foo; } finally { bar; }` -> `({ __stack local _r = foo; bar; _r; })`
+		 * TODO: `try { foo; } catch (...) { bar; }` -> `(foo)` */
 	}
 	return 0;
 err:

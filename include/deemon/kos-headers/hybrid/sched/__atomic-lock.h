@@ -106,8 +106,8 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW(__hybrid_atomic_lock
 
 #ifndef __INTELLISENSE__
 #ifdef __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
-/* No need to have duplicate code -- if `__hybrid_preemption_tryyield_nopr()'
- * is  the same as `__hybrid_yield()', the `*_nopr' variant behaves just like
+/* No need to have duplicate code -- if `__hybrid_preemption_tryyield_nopr()`
+ * is  the same as `__hybrid_yield()`, the `*_nopr` variant behaves just like
  * the normal variant! */
 #define __hybrid_atomic_lock_acquire(self) __hybrid_atomic_lock_acquire_nopr(self)
 #define __hybrid_atomic_lock_waitfor(self) __hybrid_atomic_lock_waitfor_nopr(self)

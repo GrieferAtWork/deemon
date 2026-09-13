@@ -28,7 +28,7 @@
 DECL_BEGIN
 
 enum{
-	/* Global object ids for builtin objects, as exported by the `deemon' module. */
+	/* Global object ids for builtin objects, as exported by the `deemon` module. */
 #define BUILTIN(name, object, flags)    id_##name,
 #define BUILTIN_ALIAS(name, alt, flags) /* nothing */
 #include "builtins.def"

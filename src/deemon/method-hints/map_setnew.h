@@ -33,9 +33,9 @@ err:
 
 
 /* Insert a new key whilst making sure that the key doesn't already exist
- * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
- * @return: Dee_HAS_YES: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
- * @return: Dee_HAS_NO:  The given `key' already exists (nothing was inserted)
+ * @param: value: The value to overwrite that of `key` with (so-long as `key` already exists)
+ * @return: Dee_HAS_YES: The value of `key` was set to `value` (the key didn't exist or used to be unbound)
+ * @return: Dee_HAS_NO:  The given `key` already exists (nothing was inserted)
  * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __map_setnew__.map_setnew([[nonnull]] DeeObject *self,

@@ -170,13 +170,13 @@ DECL_BEGIN
 
 #ifdef __CC__
 /* Default malloc/free functions used for heap allocation.
- * NOTE: Upon allocation failure, allocation functions call `Dee_CollectMemory()'.
+ * NOTE: Upon allocation failure, allocation functions call `Dee_CollectMemory()`.
  *       If memory was collected successfully, the allocation is attempted again. */
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_Malloc)(size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_Calloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_Realloc)(void *ptr, size_t n_bytes);
 
-/* Same as the non-*Try* versions above, but these functions don't call `Dee_CollectMemory()' */
+/* Same as the non-*Try* versions above, but these functions don't call `Dee_CollectMemory()` */
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryMalloc)(size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryCalloc)(size_t n_bytes);
 DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
@@ -185,7 +185,7 @@ DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
 DFUNDEF void (DCALL Dee_Free)(void *ptr);
 
 /* Same as functions above, but instrument the allocation with file/line
- * debug information for use when `DeeHeap_DumpMemoryLeaks()' is called. */
+ * debug information for use when `DeeHeap_DumpMemoryLeaks()` is called. */
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_Malloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL DeeDbg_Calloc)(size_t n_bytes, char const *file, int line);
 DFUNDEF WUNUSED void *(DCALL DeeDbg_Realloc)(void *ptr, size_t n_bytes, char const *file, int line);
@@ -206,7 +206,7 @@ DFUNDEF void (DCALL DeeDbg_Free)(void *ptr, char const *file, int line);
 DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line);
 
 /* Try to change the size of a memory block, without changing its position in memory.
- * Just like `Dee_TryRealloc()', this function can be used to both shrink a block of
+ * Just like `Dee_TryRealloc()`, this function can be used to both shrink a block of
  * memory, as well as grow one (though this function has a high likelihood of failing
  * in the later case, since another allocation may have already consumed memory that
  * would have been needed to grow "ptr")
@@ -222,16 +222,16 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
 #define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
 
-/* Same as `Dee_Malloc()', but the returned pointer is guaranted to be aligned by
- * at least some multiple of `min_alignment'. For this purpose, `min_alignment'
+/* Same as `Dee_Malloc()`, but the returned pointer is guaranted to be aligned by
+ * at least some multiple of `min_alignment`. For this purpose, `min_alignment`
  * must be a power-of-2. The returned pointer can be free'd as normal by simply
- * passing it to `Dee_Free()'. When passed to `Dee_Realloc()', the alignment that
- * was requested here will be lost (`Dee_Realloc()' only guaranties default heap
+ * passing it to `Dee_Free()`. When passed to `Dee_Realloc()`, the alignment that
+ * was requested here will be lost (`Dee_Realloc()` only guaranties default heap
  * alignment)
  *
  * @param: min_alignment: Minimum alignment for returned pointer (power-of-2)
  * @param: n_bytes:       Minimum usable memory size for returned pointer
- * @return: * :   Success: Base address of newly allocated memory (address is a multiple of `min_alignment')
+ * @return: * :   Success: Base address of newly allocated memory (address is a multiple of `min_alignment`)
  * @return: NULL: Failure: Insufficient memory. */
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL Dee_Memalign)(size_t min_alignment, size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
@@ -239,9 +239,9 @@ DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCAL
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL DeeDbg_TryMemalign)(size_t min_alignment, size_t n_bytes, char const *file, int line);
 
 /* Return the usable memory size (in bytes) of a heap "ptr" returned by any of the
- * other heap functions, including `Dee_Malloc()', `Dee_Realloc()' and `Dee_Memalign()'
- * When "ptr" points at the start of the payload area of a `struct Dee_heapchunk', the
- * return value is the value that was passed to `Dee_HEAPCHUNK_HEAD()'.
+ * other heap functions, including `Dee_Malloc()`, `Dee_Realloc()` and `Dee_Memalign()`
+ * When "ptr" points at the start of the payload area of a `struct Dee_heapchunk`, the
+ * return value is the value that was passed to `Dee_HEAPCHUNK_HEAD()`.
  *
  * @param: ptr: Base address as returned by one of the other heap functions, or "NULL".
  *              Behavior is undefined if "ptr" isn't a heap pointer, or doesn't point
@@ -386,9 +386,9 @@ _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size
 #define DeeDbg_TryReallococSafe(ptr, base_offset, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
 
 /* Reclaim free memory by going through internal pre-allocation caches,
- * freeing up to (but potentially exceeding by a bit) `max_collect' bytes of memory.
+ * freeing up to (but potentially exceeding by a bit) `max_collect` bytes of memory.
  * The actual amount freed is returned in bytes.
- * NOTE: This function is automatically called by `Dee_CollectMemory()' */
+ * NOTE: This function is automatically called by `Dee_CollectMemory()` */
 DFUNDEF size_t DCALL DeeMem_ClearCaches(size_t max_collect);
 
 /* Try to clear caches and free up at most "req_bytes" memory. If
@@ -404,7 +404,7 @@ DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
  * @return: 0 : No memory could be released back to the system (no error was thrown) */
 DFUNDEF ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void);
 
-/* Same as `Dee_TryReleaseSystemMemory()', but also tries to free
+/* Same as `Dee_TryReleaseSystemMemory()`, but also tries to free
  * @return: * : Amount of memory that was released back to the system.
  * @return: 0 : No memory could be released back to the system (an error was thrown) */
 DFUNDEF ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void);
@@ -418,7 +418,7 @@ DFUNDEF ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void);
 #define Dee_CollectMemoryocSafe(base_offset, elem_count, elem_size) \
 	Dee_CollectMemory(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
 
-/* Throw a bad-allocation error for `req_bytes' bytes.
+/* Throw a bad-allocation error for `req_bytes` bytes.
  * @return: -1: Always returns -1. */
 DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 
@@ -474,7 +474,7 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 
 #ifdef __CC__
 /* Free the reference tracker of a given object.
- * Should be called prior to `DeeObject_Free()' for any object
+ * Should be called prior to `DeeObject_Free()` for any object
  * who's reference counter was modified at any point in time. */
 #ifdef CONFIG_TRACE_REFCHANGES
 struct Dee_object;
@@ -616,7 +616,7 @@ Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_DeeSlab_API, ~)
 
 
 /* Same as the regular malloc functions, but use the same allocation methods
- * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED', meaning that
+ * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED`, meaning that
  * pointers returned by these macros have binary compatibility with them. */
 #define DeeObject_MALLOC(T)                               ((T *)DeeObject_FMalloc(sizeof(T)))
 #define DeeObject_CALLOC(T)                               ((T *)DeeObject_FCalloc(sizeof(T)))
@@ -668,8 +668,8 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 
 /* A hybrid between alloca and malloc, using alloca for
  * small allocations, but malloc() for larger ones.
- * NOTE: In all cases, 'Dee_Freea()' should be used to clean up a
- *       pointer previously allocated using 'Dee_Malloca()' and
+ * NOTE: In all cases, 'Dee_Freea()` should be used to clean up a
+ *       pointer previously allocated using 'Dee_Malloca()` and
  *       friends. */
 #if !defined(Dee_Alloca) || !defined(__NO_hybrid_dbg_alignment)
 #define Dee_Malloca(s)    Dee_Malloc(s)

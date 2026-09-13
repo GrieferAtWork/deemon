@@ -290,7 +290,7 @@ rvec_setrange_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	data = (struct rvec_setrange_enumerate_data *)arg;
 	data->rvsre_mxidx = index;
 	if unlikely(index < data->rvsre_rsize) {
-		Dee_XIncref(item); /* Inherited by `rvec_setitem_index_fast()' */
+		Dee_XIncref(item); /* Inherited by `rvec_setitem_index_fast()` */
 		rvec_setitem_index_fast(data->rvsre_self,
 		                        data->rvsre_range.sr_start + index,
 		                        item);
@@ -589,10 +589,10 @@ INTERN DeeTypeObject RefVector_Type = {
 };
 
 /* Construct a new reference-vector object that can be iterated
- * and used to potentially modify the elements of a given `vector'.
- * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
+ * and used to potentially modify the elements of a given `vector`.
+ * NOTE: When write-access is granted, `vector` should be `[0..1][0..length]`,
  *       whereas when write-access is not possible, then the disposition of
- *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
+ *       elements of `vector` doesn't matter and can either be `[0..1]` or `[1..1]`. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeRefVector_New)(DeeObject *owner, size_t length,
                          DeeObject **vector,
@@ -609,7 +609,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	if unlikely(!result)
 		goto done;
 	DeeObject_InitStatic(result, &RefVector_Type);
-	Dee_Incref(owner); /* Create the reference for `rv_owner' */
+	Dee_Incref(owner); /* Create the reference for `rv_owner` */
 	result->rv_length = length;
 	result->rv_vector = vector;
 	result->rv_owner  = owner;
@@ -1099,13 +1099,13 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 
 
 /* Create a new shared vector that will inherit elements
- * from the given vector once `DeeSharedVector_Decref()' is called.
+ * from the given vector once `DeeSharedVector_Decref()` is called.
  * NOTE: This function can implicitly inherit a reference to each item of the
  *       given vector, though does not actually inherit the vector itself:
- *       - DeeSharedVector_Decref:            The `vector' arg here is `DREF DeeObject *const *'
- *       - DeeSharedVector_DecrefNoGiftItems: The `vector' arg here is `DeeObject *const *'
+ *       - DeeSharedVector_Decref:            The `vector` arg here is `DREF DeeObject *const *`
+ *       - DeeSharedVector_DecrefNoGiftItems: The `vector` arg here is `DeeObject *const *`
  * NOTE: The returned object cannot be used to change out the elements
- *       of the given `vector', meaning that _it_ can still be [const] */
+ *       of the given `vector`, meaning that _it_ can still be [const] */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	DREF SharedVector *result;
@@ -1120,12 +1120,12 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `sv_vector',
+/* Check if the reference counter of `self` is 1. When it is,
+ * simply destroy the shared vector without freeing `sv_vector`,
  * but still decref() all contained objects.
- * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sv_vector' with
- * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * Otherwise, try to allocate a new vector with a length of `sv_length`.
+ * If doing so fails, don't raise an error but replace `sv_vector` with
+ * `NULL` and `sv_length` with `0` before decref()-ing all elements
  * that that pair of members used to refer to.
  * If allocation does succeed, memcpy() all objects contained in
  * the original vector into the dynamically allocated one, thus
@@ -1133,7 +1133,7 @@ done:
  * to the SharedVector object.
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
+ *    the `ASM_CALL_SEQ` opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
@@ -1185,10 +1185,10 @@ err_cannot_inherit:
 	Dee_Decref(me);
 }
 
-/* Same as `DeeSharedVector_Decref()', but should be used if the caller
+/* Same as `DeeSharedVector_Decref()`, but should be used if the caller
  * does *not* want to gift the vector references to all of its items.
- * s.a.: the "maybe DREF" annotated on the `vector' argument of
- *       `DeeSharedVector_NewShared()' */
+ * s.a.: the "maybe DREF" annotated on the `vector` argument of
+ *       `DeeSharedVector_NewShared()` */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	DREF DeeObject **vector_copy;

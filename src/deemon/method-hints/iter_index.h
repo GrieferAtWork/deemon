@@ -40,7 +40,7 @@
  *   may advance "Iterator.index" by many values.
  * - "Iterator.index" must start at "0", and "Iterator.rewind()" is the same as "Iterator.index = 0"
  * - "Iterator.index" always increases during "operator next", but may do so lots of times
- * - `del Iterator.index' and `Iterator.rewind()' do the same thing, in that they both
+ * - `del Iterator.index` and `Iterator.rewind()` do the same thing, in that they both
  *   reset the iterator's index to its initial position (like "Iterator.index = 0").
  *
  *
@@ -227,7 +227,7 @@ __iter_index__.iter_rewind([[nonnull]] DeeObject *__restrict self)
 %{unsupported(err_seq_unsupportedf(self, "del index"))}
 %{$empty = 0}
 %{$with_callattr_rewind = {
-	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()') */
+	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()`) */
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str_rewind), 0, NULL);
 	if unlikely(!result)
@@ -238,7 +238,7 @@ err:
 	return -1;
 }}
 %{$with_callattr___iter_rewind__ = {
-	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()') */
+	/* custom hack (s.a. `gpmhnd_extra__iter_rewind()`) */
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, Dee_AsObject(&str___iter_rewind__), 0, NULL);
 	if unlikely(!result)

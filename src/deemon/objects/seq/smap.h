@@ -53,8 +53,8 @@ typedef struct {
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t  sm_lock;   /* Lock for this shared-vector. */
 #endif /* !CONFIG_NO_THREADS */
-	size_t               sm_loaded; /* [lock(sm_lock)] Set to non-zero once `sm_vector' has been fully loaded. */
-	size_t               sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
+	size_t               sm_loaded; /* [lock(sm_lock)] Set to non-zero once `sm_vector` has been fully loaded. */
+	size_t               sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map`. */
 	COMPILER_FLEXIBLE_ARRAY(SharedItemEx, sm_map); /* [lock(WRITE_ONCE)][sm_mask + 1] Hash-vector of cached keys.
 	                                                * This hash-vector is populated lazily as objects are queried by key. */
 } SharedMap;
@@ -82,14 +82,14 @@ typedef struct {
 
 /* Hash-iteration control. */
 #define SMAP_HASHST(self, hash)  ((hash) & ((SharedMap *)(self))->sm_mask)
-#define SMAP_HASHNX(hs, perturb) (hs = (((hs) << 2) + (hs) + (perturb) + 1), (perturb) >>= 5) /* This `5' is tunable. */
+#define SMAP_HASHNX(hs, perturb) (hs = (((hs) << 2) + (hs) + (perturb) + 1), (perturb) >>= 5) /* This `5` is tunable. */
 #define SMAP_HASHIT(self, i)     (((SharedMap *)(self))->sm_map + ((i) & ((SharedMap *)(self))->sm_mask))
 
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(SharedMap, smi_seq);  /* [1..1][const] The shared-vector that is being iterated. */
 	size_t                          smi_index; /* [atomic] The current sequence index.
-	                                            * Should this value be `>= si_seq->sm_length',
+	                                            * Should this value be `>= si_seq->sm_length`,
 	                                            * then the iterator has been exhausted. */
 } SharedMapIterator;
 

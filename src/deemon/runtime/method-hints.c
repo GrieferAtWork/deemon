@@ -65,16 +65,16 @@ typedef ATTR_PURE_T WUNUSED_T NONNULL_T((1, 2)) Dee_funptr_t
  * have to supply *all* hints from within a group (but be allowed to omit
  * any hint that can be implemented "using" other hints of the group)
  *
- * WARNING: THIS IS NOT A REPLACEMENT FOR `mh_init_select_t'!!!
+ * WARNING: THIS IS NOT A REPLACEMENT FOR `mh_init_select_t`!!!
  *          Only use this to substitute method hints within groups.
  *          These using-decls *ONLY* substitute method hints that
  *          appear in "tp_method_hints", meaning that method hint
  *          attributes (and thus: user-defined method hints) are
  *          NOT recognized when it comes to availability checking. */
 struct mh_init_using {
-	Dee_funptr_t          miu_impl; /* [1..1] Implementation that calls implicit aliases (e.g. `default__seq_enumerate__with__seq_enumerate_index') */
-	__UINTPTR_HALF_TYPE__ miu_dep1; /* First dependency (or `>= Dee_TMH_COUNT' if unused; e.g. `Dee_TMH_seq_enumerate_index') */
-	__UINTPTR_HALF_TYPE__ miu_dep2; /* Second dependency (or `>= Dee_TMH_COUNT' if unused) */
+	Dee_funptr_t          miu_impl; /* [1..1] Implementation that calls implicit aliases (e.g. `default__seq_enumerate__with__seq_enumerate_index`) */
+	__UINTPTR_HALF_TYPE__ miu_dep1; /* First dependency (or `>= Dee_TMH_COUNT` if unused; e.g. `Dee_TMH_seq_enumerate_index`) */
+	__UINTPTR_HALF_TYPE__ miu_dep2; /* Second dependency (or `>= Dee_TMH_COUNT` if unused) */
 };
 
 #define MH_INIT_USING_END { NULL, Dee_TMH_COUNT, Dee_TMH_COUNT }
@@ -90,7 +90,7 @@ struct mh_init_spec_secondary_attrib {
 	DeeStringObject *missa_attrib;     /* [1..1] Name of second attrib (NULL is used as sentinel) (e.g. "any") */
 	DeeTypeObject   *missa_implements; /* [0..1] Type that must be implemented for this attribute to be used. */
 	unsigned int     missa_seqclass;   /* [valid_if(!missa_implements)] Required sequence class for this attribute to be used. (e.g. "Dee_SEQCLASS_SEQ") */
-	Dee_funptr_t     missa_withattr;   /* [1..1] Fallback for direct CallAttr(missa_attrib) (e.g. `default__seq_any_with_range__with_callattr_any') */
+	Dee_funptr_t     missa_withattr;   /* [1..1] Fallback for direct CallAttr(missa_attrib) (e.g. `default__seq_any_with_range__with_callattr_any`) */
 };
 
 #define MH_INIT_SPEC_SECONDARY_ATTRIB_END { NULL, NULL, 0, NULL }
@@ -119,12 +119,12 @@ struct mh_init_spec_operator {
 
 struct mh_init_spec {
 	DeeStringObject                            *mis_attr_prim;          /* [0..1] Name of the primary attribute (unless anonymous); e.g. "__seq_bool__" */
-	struct mh_init_spec_secondary_attrib const *mis_attr_seco;          /* [0..1] Array of secondary attributes (terminated by `missa_attrib == NULL') */
-	struct mh_init_using const                 *mis_using;              /* [0..1] Method hint using-aliases (terminated by `miso_tno >= Dee_TNO_COUNT') */
-	struct mh_init_spec_operator         const *mis_operators;          /* [0..1] Method hint operator-aliases (terminated by `miu_impl == NULL') */
-	Dee_funptr_t                                mis_withattr_prim;      /* [1..1][valid_if(mis_attr_prim)] Fallback for direct CallAttr(mis_attr_prim) (e.g. `default__seq_operator_bool__with_callattr___seq_bool__') */
-	__UINTPTR_HALF_TYPE__                       mis_offsetof_cache;     /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] Offset of the cache-slot in `struct Dee_type_mh_cache' (e.g. "mhc___seq_bool__") */
-	__UINTPTR_HALF_TYPE__                       mis_attr_kind;          /* [valid_if(mis_attr_prim || mis_attr_seco)] Attribute kind (one of `MH_KIND_*') */
+	struct mh_init_spec_secondary_attrib const *mis_attr_seco;          /* [0..1] Array of secondary attributes (terminated by `missa_attrib == NULL`) */
+	struct mh_init_using const                 *mis_using;              /* [0..1] Method hint using-aliases (terminated by `miso_tno >= Dee_TNO_COUNT`) */
+	struct mh_init_spec_operator         const *mis_operators;          /* [0..1] Method hint operator-aliases (terminated by `miu_impl == NULL`) */
+	Dee_funptr_t                                mis_withattr_prim;      /* [1..1][valid_if(mis_attr_prim)] Fallback for direct CallAttr(mis_attr_prim) (e.g. `default__seq_operator_bool__with_callattr___seq_bool__`) */
+	__UINTPTR_HALF_TYPE__                       mis_offsetof_cache;     /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] Offset of the cache-slot in `struct Dee_type_mh_cache` (e.g. "mhc___seq_bool__") */
+	__UINTPTR_HALF_TYPE__                       mis_attr_kind;          /* [valid_if(mis_attr_prim || mis_attr_seco)] Attribute kind (one of `MH_KIND_*`) */
 #define MH_KIND_METHOD          0 /* Attribute is a method */
 #define MH_KIND_GETSET_GET      1 /* Attribute is getset (get). The get/del/set and bound-callbacks are loaded. */
 #define MH_KIND_GETSET_DEL      2 /* Attribute is getset (del). The get/del/set and bound-callbacks are loaded. */
@@ -453,12 +453,12 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 
 /* Master function for looking up method hints, that searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
- * native version for that attribute (or `NULL' if it doesn't have one)
+ * native version for that attribute (or `NULL` if it doesn't have one)
  *
  * This function can also be used to query the optimized, internal
  * implementation of built-in sequence (previously: TSC) functions.
  *
- * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+ * Never returns NULL when `id` has an "%{unsupported}" implementation. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	Dee_funptr_t result;
@@ -492,9 +492,9 @@ read_from_mhcache:
 	return result;
 }
 
-/* Same as `DeeType_GetMethodHint', but don't make use of the method-hint cache.
+/* Same as `DeeType_GetMethodHint`, but don't make use of the method-hint cache.
  *
- * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+ * Never returns NULL when `id` has an "%{unsupported}" implementation. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	DeeTypeMRO mro;
@@ -508,7 +508,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 	return DeeType_GetUnsupportedMethodHint(id);
 }
 
-/* Returns a pointer to method hint's entry in `self->tp_method_hints' */
+/* Returns a pointer to method hint's entry in `self->tp_method_hints` */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetExplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	struct type_method_hint const *hints = self->tp_method_hints;
@@ -522,8 +522,8 @@ done:
 	return NULL;
 }
 
-/* Returns the "%{unsupported}" implementation of `id'
- * (if it has one). If not, return `NULL' instead. */
+/* Returns the "%{unsupported}" implementation of `id`
+ * (if it has one). If not, return `NULL` instead. */
 PUBLIC ATTR_CONST WUNUSED Dee_funptr_t
 (DCALL DeeType_GetUnsupportedMethodHint)(enum Dee_tmh_id id) {
 	ASSERT((unsigned int)id < (unsigned int)Dee_TMH_COUNT);
@@ -2191,10 +2191,10 @@ next_using:;
 
 __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
-/* Same as `DeeType_GetExplicitMethodHint()', but also resolves direct
+/* Same as `DeeType_GetExplicitMethodHint()`, but also resolves direct
  * aliases within method hint groups (e.g. when an explicit method hint
- * for `seq_enumerate_index' is defined, but none for `seq_enumerate',
- * then return `default__seq_enumerate__with__seq_enumerate_index') */
+ * for `seq_enumerate_index` is defined, but none for `seq_enumerate`,
+ * then return `default__seq_enumerate__with__seq_enumerate_index`) */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetExplicitOrImplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	Dee_funptr_t result = DeeType_GetExplicitMethodHint(self, id);
@@ -2311,7 +2311,7 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 
 	case Dee_ATTRINFO_CUSTOM:
 #ifndef SEARCH_IN_TYPE_FOR_ATTRIBUTES
-		/* Even if a type overrides "operator getattr", look at `tp_methods' and `tp_class' to see
+		/* Even if a type overrides "operator getattr", look at `tp_methods` and `tp_class` to see
 		 * if it defines attributes (which could the be accessed like "MyClass.__seq_find__(seq)") */
 		return DeeType_GetExplicitOrImplicitMethodHint((DeeTypeObject *)info->ai_decl, id);
 #else /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
@@ -2596,8 +2596,8 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 	return result;
 }
 
-/* Check if `self' specifically is able to supply the method hint `id'
- * in some form. If not, return `NULL' to indicate this lack of support.
+/* Check if `self` specifically is able to supply the method hint `id`
+ * in some form. If not, return `NULL` to indicate this lack of support.
  *
  * Note that this function doesn't return "%{unsupported}" implementations.
  *
@@ -2734,7 +2734,7 @@ PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 }
 
 
-/* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
+/* Same as `DeeType_GetPrivateMethodHint`, but only check for attributes
  * without doing any additional default substitutions.
  *
  * WARNING: Only call this function for some given "self, orig_type" if
@@ -2816,13 +2816,13 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			/* See if the type implements the relevant native operator.
 			 * Important: don't accept "result" if it's something like default__size__with__sizeob!
 			 *            operator aliasing must happen a second time using method hint selection.
-			 * Otherwise, `REQUIRE(seq_operator_size)' would return `default__size__with__sizeob'
-			 * instead of `default__seq_operator_size__with__seq_operator_sizeob', which would then
+			 * Otherwise, `REQUIRE(seq_operator_size)` would return `default__size__with__sizeob`
+			 * instead of `default__seq_operator_size__with__seq_operator_sizeob`, which would then
 			 * lead to a whole chain of stuff breaking. */
 			result = DeeType_GetNativeOperatorWithoutDefaults(self, iter->miso_tno);
 
 			/* NOTE: DeeType_GetNativeOperatorWithoutDefaults already filters default method hint
-			 *       invocation wrapper (like `default__set_operator_foreach'), even when loading
+			 *       invocation wrapper (like `default__set_operator_foreach`), even when loading
 			 *       method hints for a different, but compatible method hint.
 			 *
 			 * This is necessary to prevent infinite recursion in code like:
@@ -2868,7 +2868,7 @@ Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
  *   implement the hint), return the "%{unsupported}" impl
  * Otherwise, return "NULL"
  *
- * The caller must ensure that `id' can be used to implement
+ * The caller must ensure that `id` can be used to implement
  * native operators. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
 (DCALL DeeType_MapDefaultMethodHintOperatorImplForInherit)(DeeTypeObject *into,

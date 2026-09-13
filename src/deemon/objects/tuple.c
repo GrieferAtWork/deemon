@@ -86,8 +86,8 @@ done:
 	return result;
 }
 
-/* Same as `DeeTuple_NewUninitialized()', but
- * doesn't throw an exception when returning `NULL' */
+/* Same as `DeeTuple_NewUninitialized()`, but
+ * doesn't throw an exception when returning `NULL` */
 PUBLIC WUNUSED DREF DeeTupleObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n) {
 	DREF DeeTupleObject *result;
@@ -309,7 +309,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_FromSequence(DeeObject *__restrict self) {
 	DeeTypeObject *tp_seq = Dee_TYPE(self);
 
-	/* Optimizations for specific types such as `Tuple' and `List' */
+	/* Optimizations for specific types such as `Tuple` and `List` */
 	if (tp_seq == &DeeTuple_Type) {
 		return_reference_(self);
 	} else if (tp_seq == &DeeList_Type) {
@@ -569,7 +569,7 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 
 
 
-/*  ====== `Tuple.Iterator' type implementation ======  */
+/*  ====== `Tuple.Iterator` type implementation ======  */
 #define READ_INDEX(x) atomic_read(&(x)->ti_index)
 
 PRIVATE NONNULL((1)) int DCALL
@@ -783,7 +783,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 
 
 
-/*  ====== `Tuple' type implementation ======  */
+/*  ====== `Tuple` type implementation ======  */
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL tuple_ctor(void) {
 	return (DREF DeeTupleObject *)DeeTuple_NewEmpty();
@@ -1105,7 +1105,7 @@ tuple_visit(DeeTupleObject *__restrict self, Dee_visit_t proc, void *arg) {
 }
 
 /* Print all elements of the given tuple without any separators in-between
- * elements. This is equivalent to `Tuple.operator str' and is related to
+ * elements. This is equivalent to `Tuple.operator str` and is related to
  * the change introduced for handling `print("foo", "bar");'-like statements */
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_print(DeeTupleObject *__restrict self,
@@ -1127,7 +1127,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_str(DeeTupleObject *__restrict self) {
-	/* Special case to facilitate function-like use of `print':
+	/* Special case to facilitate function-like use of `print`:
 	 * >> print "foo", "bar";   // Prints "foo bar\n"
 	 * >> print("foo", "bar");  // Prints "foobar\n"
 	 * >> print "foo", "bar",;  // Prints "foo bar"
@@ -1136,11 +1136,11 @@ tuple_str(DeeTupleObject *__restrict self) {
 	 * them separated by spaces becomes much simpler, especially since
 	 * this way of implementing this mechanism is entirely opaque to
 	 * user-code and fully compliant with Sequence requirements (since
-	 * `Sequence' only mandates a proper implementation of `operator repr',
-	 * but leaves `operator str' unspecified)
+	 * `Sequence` only mandates a proper implementation of `operator repr`,
+	 * but leaves `operator str` unspecified)
 	 * Note that the compiler knows about this and will optimize away
 	 * attempts of printing Tuple sequences at compile-time, reducing
-	 * them to `print' instructions that never actually create a tuple.
+	 * them to `print` instructions that never actually create a tuple.
 	 * >> print;                         // Prints "\n"
 	 * >> print();                       // Prints "\n"
 	 * >> print("foo", "bar");           // Prints "foobar\n"
@@ -1461,7 +1461,7 @@ PRIVATE struct type_getset tpconst tuple_getsets[] = {
 
 struct tuple_concat_fe_data {
 	DREF DeeTupleObject *tcfed_result; /* [1..1] The resulting tuple. */
-	size_t      tcfed_offset; /* Offset of next element to write in `tcfed_result' */
+	size_t      tcfed_offset; /* Offset of next element to write in `tcfed_result` */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -1562,7 +1562,7 @@ DeeTuple_Concat(DeeTupleObject *self, DeeObject *other) {
 		result = DeeTuple_TruncateUninitialized(result, total_size);
 	}
 
-	/* Fill in elements inherited from `self' */
+	/* Fill in elements inherited from `self` */
 	Dee_Movrefv(result->t_elem, self->t_elem, self->t_size);
 	return result;
 err_r:
@@ -1572,7 +1572,7 @@ err:
 }
 
 /* Concat a tuple and some generic sequence,
- * inheriting a reference from `self' in the process. */
+ * inheriting a reference from `self` in the process. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence) {
 	DREF DeeTupleObject *me = (DREF DeeTupleObject *)self;
@@ -1707,7 +1707,7 @@ tuple_repeat(DeeTupleObject *self, DeeObject *other) {
 	if (count == 1)
 		return_reference_(self);
 
-	/* Repeat `self' `count' number of times. */
+	/* Repeat `self` `count` number of times. */
 	my_length = DeeTuple_SIZE(self);
 	if (OVERFLOW_UMUL(my_length, count, &total_length))
 		goto err_overflow;
@@ -2456,9 +2456,9 @@ err:
 	return -1;
 }
 
-/* Ensure that space for at least `n' items is allocated, and return
- * a pointer to a buffer where those `n' items can be written. Once
- * written, commit the write using `Dee_tuple_builder_commit' */
+/* Ensure that space for at least `n` items is allocated, and return
+ * a pointer to a buffer where those `n` items can be written. Once
+ * written, commit the write using `Dee_tuple_builder_commit` */
 PUBLIC WUNUSED NONNULL((1)) DeeObject **DCALL
 Dee_tuple_builder_alloc(struct Dee_tuple_builder *__restrict self, size_t n) {
 	size_t sizeof_tuple;
@@ -2497,7 +2497,7 @@ Dee_tuple_builder_alloc1(struct Dee_tuple_builder *__restrict self) {
 	return NULL;
 }
 
-/* Try to ensure that space for at least `n' extra items is available.
+/* Try to ensure that space for at least `n` extra items is available.
  * Returns indicate of that much space now being pre-allocated. */
 PUBLIC NONNULL((1)) bool DCALL
 Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n) {
@@ -2556,7 +2556,7 @@ Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
  * previously unallocated items to "NULL"; iow: unbound), and set the index'th
  * element to "item" (which is also allowed to be "NULL")
  *
- * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t'
+ * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t`
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */

@@ -78,7 +78,7 @@ struct Dee_dex_symbol {
 	char const               *ds_name;   /* [1..1][SENTINEL(NULL)] Name of this symbol. */
 	/*utf-8*/ char const     *ds_doc;    /* [0..1] An optional documentation string. */
 	DeeObject                *ds_obj;    /* [0..1] The initial value of this symbol. */
-	__UINTPTR_QUARTER_TYPE__  ds_flags;  /* Set of `Dee_DEXSYM_*'. */
+	__UINTPTR_QUARTER_TYPE__  ds_flags;  /* Set of `Dee_DEXSYM_*`. */
 	__UINTPTR_QUARTER_TYPE__  _ds_temp;  /* Used internally during initialization */
 	__UINTPTR_HALF_TYPE__     _ds_index; /* Used internally during initialization */
 };
@@ -285,8 +285,8 @@ INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[]; /*!expo
  * @param: absname: The absolute, normalized filesystem name where "dex_handle"
  *                  was loaded from, with its trailing .dll/.so removed (as such,
  *                  this is the name under which a new DEX module should appear
- *                  within `module_abstree_root')
- * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()'
+ *                  within `module_abstree_root`)
+ * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()`
  * @return: * :   The newly loaded DEX module.
  * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a DEX module) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL

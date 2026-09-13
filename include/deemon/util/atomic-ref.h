@@ -64,16 +64,16 @@ DECL_BEGIN
  *   (so no intermediate values can ever be observed)
  * - After writing a new value to "ar_obj", the reference
  *   held to the previous object is *ONLY* dropped *AFTER*
- *   `DeeRCU_Synchronize()' ensured that no thread is still
- *   inside the `DeeRCU_Lock()' ... `DeeRCU_Unlock()' region
- * - As a consequence, for as long as `DeeRCU_Lock()' is held, it
- *   is guarantied that `ar_obj == NULL || ar_obj->ob_refcnt != 0',
+ *   `DeeRCU_Synchronize()` ensured that no thread is still
+ *   inside the `DeeRCU_Lock()` ... `DeeRCU_Unlock()` region
+ * - As a consequence, for as long as `DeeRCU_Lock()` is held, it
+ *   is guarantied that `ar_obj == NULL || ar_obj->ob_refcnt != 0`,
  *   meaning that it is always safe to:
- *   - Acquire `DeeRCU_Lock()' (thus preventing the current, or any
+ *   - Acquire `DeeRCU_Lock()` (thus preventing the current, or any
  *     new object currently being set from being destroyed until
- *     `DeeRCU_Unlock()' is called)
+ *     `DeeRCU_Unlock()` is called)
  *   - Atomically read the current object and Dee_Incref() it
- *   - Call `DeeRCU_Unlock()' (thus allowing writes to complete)
+ *   - Call `DeeRCU_Unlock()` (thus allowing writes to complete)
  * - More advanced write operations (like atomic_cmpxch) can
  *   be implemented analogous to regular writes.
  */
@@ -156,7 +156,7 @@ DECL_BEGIN
 	}	__WHILE0
 
 
-/* Set "newval" and store old value in `*p_oldval' */
+/* Set "newval" and store old value in `*p_oldval` */
 #define Dee_atomic_ref_xch_inherited(self,                                        \
                                      /*inherit(always) DREF[1..1] in*/ newval,    \
                                      /*inherit(always) DREF[1..1] out*/ p_oldval) \
@@ -187,7 +187,7 @@ DECL_BEGIN
 		Dee_XDecref(_daxrsi_oldval);                                               \
 	}	__WHILE0
 
-/* Set "newval" and store old value in `*p_oldval' */
+/* Set "newval" and store old value in `*p_oldval` */
 #define Dee_atomic_ref_xch(self, /*[1..1] in*/ newval, /*inherit(always) DREF[1..1] out*/ p_oldval) \
 	(Dee_Incref(newval), Dee_atomic_ref_xch_inherited(self, newval, p_oldval))
 #define Dee_atomic_xref_xch(self, /*[0..1] in*/ newval, /*inherit(always) DREF[0..1] out*/ p_oldval) \

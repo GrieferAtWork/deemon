@@ -54,7 +54,7 @@ typedef struct {
 	byte_t const                   *bfi_end;        /* [1..1][const] End pointer. */
 	byte_t const                   *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                          bfi_needle_len; /* [const] Length of the needle being searched. */
-	size_t                          bfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
+	size_t                          bfi_find_delta; /* [const] Delta added to `sfi_ptr` after each match */
 } BytesFindIterator;
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

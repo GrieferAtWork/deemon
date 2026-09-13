@@ -102,7 +102,7 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 		if unlikely(!status)
 			goto err;
 		Dee_Decref(status);
-		/* XXX: Returning `0' here is technically wrong; we'd need to
+		/* XXX: Returning `0` here is technically wrong; we'd need to
 		 *      return the total sum of bytes written to file, but then
 		 *      again: this should also be good enough (and the specs
 		 *      require us to pass along the original file in this case)

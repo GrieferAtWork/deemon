@@ -67,8 +67,8 @@ err:
 
 
 
-/* @return: * :         Index of `item' in `self'
- * @return: (size_t)-1: `item' could not be located in `self'
+/* @return: * :         Index of `item` in `self`
+ * @return: (size_t)-1: `item` could not be located in `self`
  * @return: (size_t)Dee_COMPARE_ERR: Error */
 [[wunused]] size_t
 __seq_find__.seq_find([[nonnull]] DeeObject *self,
@@ -143,8 +143,8 @@ err:
 )]
 
 
-/* @return: * :         Index of `item' in `self'
- * @return: (size_t)-1: `item' could not be located in `self'
+/* @return: * :         Index of `item` in `self`
+ * @return: (size_t)-1: `item` could not be located in `self`
  * @return: (size_t)Dee_COMPARE_ERR: Error */
 [[wunused]] size_t
 __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,

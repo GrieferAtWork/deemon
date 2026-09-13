@@ -93,7 +93,7 @@ typedef struct Dee_float_object {
 #define DeeFloat_VALUE(x) Dee_REQUIRES_OBJECT(DeeFloatObject, x)->f_value
 #endif /* CONFIG_HAVE_FPU */
 
-#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x, &DeeFloat_Type) /* `float' is final */
+#define DeeFloat_Check(x)      DeeObject_InstanceOfExact(x, &DeeFloat_Type) /* `float` is final */
 #define DeeFloat_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeFloat_Type)
 DDATDEF DeeTypeObject DeeFloat_Type;
 
@@ -111,7 +111,7 @@ DFUNDEF NONNULL((1)) __LONGDOUBLE DCALL Dee_Strtold(char const *str, char **p_en
 
 
 /* Print a string representation of the given floating point value.
- * @param: flags: Set of `Dee_FLOAT_PRINT_F*' */
+ * @param: flags: Set of `Dee_FLOAT_PRINT_F*` */
 #ifdef CONFIG_HAVE_FPU
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
@@ -128,9 +128,9 @@ DeeFloat_LPrint(__LONGDOUBLE value, Dee_formatprinter_t printer, void *arg,
 #define Dee_FLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
 #define Dee_FLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */
 #define Dee_FLOAT_PRINT_FSPACE     0x0008 /* When no sign is printed, put a space character instead. */
-#define Dee_FLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width'. */
-#define Dee_FLOAT_PRINT_FWIDTH     0x0020 /* The given `width' must be respected. */
-#define Dee_FLOAT_PRINT_FPRECISION 0x0040 /* The given `precision' must be respected. */
+#define Dee_FLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width`. */
+#define Dee_FLOAT_PRINT_FWIDTH     0x0020 /* The given `width` must be respected. */
+#define Dee_FLOAT_PRINT_FPRECISION 0x0040 /* The given `precision` must be respected. */
 
 DECL_END
 

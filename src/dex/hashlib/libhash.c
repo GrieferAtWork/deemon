@@ -2150,8 +2150,8 @@ PRIVATE struct dhashalgo const *const dhash_algorithms[] = {
 };
 /*[[[end]]]*/
 
-/* Execute the given hash algorithm to hash `data...+=datasize'
- * When given, `start' is used as the initial hash value (which
+/* Execute the given hash algorithm to hash `data...+=datasize`
+ * When given, `start` is used as the initial hash value (which
  * may be the hash result of a previous call), but when set to
  * NULL, the algorythm's default start-value is used instead. */
 INTERN WUNUSED NONNULL((1, 3)) DREF /*Int*/ DeeObject *DCALL
@@ -2276,7 +2276,7 @@ dhashname_equals(char const *a, char const *b) {
 	return true;
 }
 
-/* Try to find the hash algorithm associated with `name', returning
+/* Try to find the hash algorithm associated with `name`, returning
  * NULL (but not throwing an error) if no such algorithm exists. */
 INTERN WUNUSED NONNULL((1)) struct dhashalgo const *DCALL
 dhashalgo_tryfind(char const *__restrict name) {
@@ -2297,7 +2297,7 @@ done:
 	return algo;
 }
 
-/* Same as `dhashalgo_tryfind()', but throw an error if the algorithm wasn't found. */
+/* Same as `dhashalgo_tryfind()`, but throw an error if the algorithm wasn't found. */
 INTERN WUNUSED NONNULL((1)) struct dhashalgo const *DCALL
 dhashalgo_find(char const *__restrict name) {
 	struct dhashalgo const *result;

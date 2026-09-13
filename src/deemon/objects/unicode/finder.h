@@ -47,7 +47,7 @@ typedef struct {
 	union Dee_charptr_const          sfi_end;        /* [1..1][const] End pointer. */
 	union Dee_charptr_const          sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
-	size_t                           sfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
+	size_t                           sfi_find_delta; /* [const] Delta added to `sfi_ptr` after each match */
 	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
 

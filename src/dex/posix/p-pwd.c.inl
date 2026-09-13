@@ -50,7 +50,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `gettmp()' */
+/* Figure out how to implement `gettmp()` */
 #undef posix_gettmp_USE_nt_GetTempPath
 #undef posix_gettmp_USE_P_tmpdir
 #ifdef CONFIG_HOST_WINDOWS
@@ -64,7 +64,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `gethostname()' */
+/* Figure out how to implement `gethostname()` */
 #undef posix_gethostname_USE_nt_GetComputerName
 #undef posix_gethostname_USE_gethostname
 #undef posix_gethostname_USE_read_etc_hostname
@@ -81,7 +81,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `chdir()' */
+/* Figure out how to implement `chdir()` */
 #undef posix_chdir_USE_nt_SetCurrentDirectory
 #undef posix_chdir_USE_chdir
 #undef posix_chdir_USE_wchdir
@@ -101,7 +101,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fchdir()' */
+/* Figure out how to implement `fchdir()` */
 #undef posix_fchdir_USE_fchdir
 #undef posix_fchdir_USE_posix_chdir
 #undef posix_fchdir_USE_STUB
@@ -117,7 +117,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fchdirat()' */
+/* Figure out how to implement `fchdirat()` */
 #undef posix_fchdirat_USE_fchdirat
 #undef posix_fchdirat_USE_posix_chdir
 #undef posix_fchdirat_USE_STUB

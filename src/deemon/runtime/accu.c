@@ -127,10 +127,10 @@ Dee_accu_visit(struct Dee_accu *__restrict self,
 
 /* Pack the accumulator and return its final result as an object.
  * This function may only be called once, as it does an implicit
- * `Dee_accu_fini()'. Returns `NULL' if an error was thrown.
+ * `Dee_accu_fini()`. Returns `NULL` if an error was thrown.
  *
- * Hint: if you want `self' to remain valid, you can just re-init it
- *       after the call using `Dee_accu_init_with_first_inherited()'
+ * Hint: if you want `self` to remain valid, you can just re-init it
+ *       after the call using `Dee_accu_init_with_first_inherited()`
  * @return: * :        Result of accumulation
  * @return: NULL:      Error
  * @return: ITER_DONE: Accumulator is empty. */
@@ -310,8 +310,8 @@ err:
 	return -1;
 }
 
-/* Add `item' into the accumulator.
- * HINT: This function is `Dee_foreach_t'-compatible. */
+/* Add `item` into the accumulator.
+ * HINT: This function is `Dee_foreach_t`-compatible. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item) {
 	struct Dee_accu *me = (struct Dee_accu *)self;
@@ -440,7 +440,7 @@ Dee_accu_add_inherited(/*struct Dee_accu*/ void *self,
 }
 
 
-/* Add all elements of `items' into the accumulator. */
+/* Add all elements of `items` into the accumulator. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items) {
 	struct Dee_accu *me = (struct Dee_accu *)self;

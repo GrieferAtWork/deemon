@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `system()' */
+/* Figure out how to implement `system()` */
 #undef posix_system_USE_wsystem
 #undef posix_system_USE_system
 #undef posix_system_USE_fork_AND_wexec
@@ -86,7 +86,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `getpid()' */
+/* Figure out how to implement `getpid()` */
 #undef posix_getpid_USE_getpid
 #undef posix_getpid_USE_STUB
 #ifdef CONFIG_HAVE_getpid

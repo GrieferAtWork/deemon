@@ -276,7 +276,7 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob
 
 
 
-/* Destroy a given deemon object (called when its refcnt reaches `0') */
+/* Destroy a given deemon object (called when its refcnt reaches `0`) */
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)
 DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy(DeeObject *__restrict self);
 #else /* CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_TRACE_REFCHANGES */
@@ -286,7 +286,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, 
 
 
 /* Reference control macros as functions.
- * Use these (#undef'ing the macros, or like `(Dee_Incref)(foo)') in dex
+ * Use these (#undef'ing the macros, or like `(Dee_Incref)(foo)`) in dex
  * modules that should work independently of the deemon configuration. */
 DFUNDEF NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob);
 DFUNDEF NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, Dee_refcnt_t n);
@@ -522,27 +522,27 @@ LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
  *                                   - Returns true/false indicative of "ob_refcnt" having changed
  * ============================== DECREF ==============================
  * Dee_Decref                        Decrement reference count
- *                                   - Invoke `DeeObject_Destroy()' if "ob_refcnt == 0" after decrement
+ *                                   - Invoke `DeeObject_Destroy()` if "ob_refcnt == 0" after decrement
  *                                   - Illegal if "ob_refcnt == 0" at the start of the call
  * Dee_Decref_n                      Decrement reference count "n" times
- *                                   - Invoke `DeeObject_Destroy()' if "ob_refcnt == 0" after decrement
+ *                                   - Invoke `DeeObject_Destroy()` if "ob_refcnt == 0" after decrement
  *                                   - no-op when "n == 0"
  *                                   - Illegal if "ob_refcnt < n" at the start of the call
- * Dee_DecrefDokill                  Assert that "ob_refcnt == 1", the call `DeeObject_Destroy()'
+ * Dee_DecrefDokill                  Assert that "ob_refcnt == 1", the call `DeeObject_Destroy()`
  * Dee_DecrefNokill                  Decrement reference count
  *                                   - Assert that "ob_refcnt >= 2" on entry
  *                                   - Illegal if "ob_refcnt < 2" at the start of the call
- *                                   - `DeeObject_Destroy()' is never called
+ *                                   - `DeeObject_Destroy()` is never called
  * Dee_DecrefIfOne                   Decrement reference count only iff "ob_refcnt == 1"
  *                                   - Illegal if "ob_refcnt == 0" at the start of the call
  *                                   - Returns true/false indicative of "ob_refcnt" having changed
- *                                   - When true is returned, `DeeObject_Destroy()' is also called
+ *                                   - When true is returned, `DeeObject_Destroy()` is also called
  * Dee_DecrefIfNotOne                Decrement reference count only iff "ob_refcnt != 1"
  *                                   - Illegal if "ob_refcnt == 0" at the start of the call
  *                                   - Returns true/false indicative of "ob_refcnt" having changed
- *                                   - `DeeObject_Destroy()' is never called
+ *                                   - `DeeObject_Destroy()` is never called
  * Dee_DecrefAndFetch                Same as Dee_Decref, but also returns the new reference count
- *                                   - When `0' is returned, `DeeObject_Destroy()' was called
+ *                                   - When `0` is returned, `DeeObject_Destroy()` was called
  * Dee_Decref_likely                 Same as Dee_Decref, but it is likely that "ob_refcnt == 0" after the decref
  * Dee_Decref_unlikely               Same as Dee_Decref, but it is unlikely that "ob_refcnt == 0" after the decref
  */
@@ -643,7 +643,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_refcnt_t DCALL Dee_DecrefAndFetch_traced(DeeObj
 #define Dee_XClear_likely_traced(x, file, line)    (void)(!(x) || (Dee_Decref_likely_traced(x, file, line), (x) = NULL, 0))
 #define Dee_XClear_unlikely_traced(x, file, line)  (void)(!(x) || (Dee_Decref_unlikely_traced(x, file, line), (x) = NULL, 0))
 
-/* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
+/* NOTE: `(Dee_)return_reference()` only evaluates `ob` _once_! */
 #define Dee_return_reference(ob)                                   \
 	do {                                                           \
 		__register DeeObject *const _rr_result = Dee_AsObject(ob); \
@@ -651,7 +651,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_refcnt_t DCALL Dee_DecrefAndFetch_traced(DeeObj
 		return _rr_result;                                         \
 	}	__WHILE0
 
-/* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
+/* NOTE: `(Dee_)return_reference_()` may evaluate `ob` multiple times */
 #define Dee_return_reference_(ob) \
 	return (Dee_Incref(ob), ob)
 
@@ -663,29 +663,29 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_refcnt_t DCALL Dee_DecrefAndFetch_traced(DeeObj
 
 
 
-/* Increment the reference counter of every object from `object_vector...+=object_count'
- * @return: * : Always re-returns the pointer to `object_vector' */
+/* Increment the reference counter of every object from `object_vector...+=object_count`
+ * @return: * : Always re-returns the pointer to `object_vector` */
 DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_Increfv)(DeeObject *const *__restrict object_vector,
                     size_t object_count);
 
-/* Decrement the reference counter of every object from `object_vector...+=object_count'
- * @return: * : Always re-returns the pointer to `object_vector' */
+/* Decrement the reference counter of every object from `object_vector...+=object_count`
+ * @return: * : Always re-returns the pointer to `object_vector` */
 DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **
 (DCALL Dee_Decrefv)(DREF DeeObject *const *__restrict object_vector,
                     size_t object_count);
 
-/* Copy object pointers from `src' to `dst' and increment
+/* Copy object pointers from `src` to `dst` and increment
  * the reference counter of every object that got copied.
- * @return: * : Always re-returns the pointer to `dst' */
+ * @return: * : Always re-returns the pointer to `dst` */
 DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_Movrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *const *__restrict src,
                     size_t object_count);
 
-/* Fill object pointers in `dst' with `obj' and increment
- * the reference counter of `obj' accordingly.
- * @return: * : Always re-returns the pointer to `dst' */
+/* Fill object pointers in `dst` with `obj` and increment
+ * the reference counter of `obj` accordingly.
+ * @return: * : Always re-returns the pointer to `dst` */
 DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 (DCALL Dee_Setrefv)(/*out:ref*/ DeeObject **__restrict dst,
                     /*in*/ DeeObject *obj, size_t object_count);
@@ -738,7 +738,7 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 
 
-/* Try to define `_Dee_PRIVATE_MEMSETP' with platform-specific optimizations (if possible) */
+/* Try to define `_Dee_PRIVATE_MEMSETP` with platform-specific optimizations (if possible) */
 #undef _Dee_PRIVATE_MEMSETP
 #ifdef CONFIG_INLINE_INCREFV
 #ifdef CONFIG_HAVE_memsetp
@@ -1036,7 +1036,7 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_XDecrefv_traced_likely(object_vector, object_count, file, line)   Dee_XDecrefv_traced(object_vector, object_count, file, line)
 #define Dee_XDecrefv_traced_unlikely(object_vector, object_count, file, line) Dee_XDecrefv_traced(object_vector, object_count, file, line)
 
-/* same as above, but return a pointer to the end of `object_vector' / `dst' */
+/* same as above, but return a pointer to the end of `object_vector` / `dst` */
 #define Dee_Incprefv_untraced(object_vector, object_count)            (Dee_Increfv_untraced(object_vector, object_count) + (object_count))
 #define Dee_Decprefv_untraced(object_vector, object_count)            (Dee_Decrefv_untraced(object_vector, object_count) + (object_count))
 #define Dee_Movprefv_untraced(dst, src, object_count)                 (Dee_Movrefv_untraced(dst, src, object_count) + (object_count))
@@ -1060,7 +1060,7 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_XMovprefv(dst, src, object_count)                         (Dee_XMovrefv(dst, src, object_count) + (object_count))
 
 
-/* incref() + return `self' (may be used in type operators,
+/* incref() + return `self` (may be used in type operators,
  * and receives special optimizations in some situations) */
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef)(DeeObject *__restrict self);
@@ -1073,7 +1073,7 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 
-/* Inline version of `DeeObject_NewRef()' */
+/* Inline version of `DeeObject_NewRef()` */
 #ifndef __OPTIMIZE_SIZE__
 LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef_inline)(DeeObject *__restrict self) {
@@ -1102,18 +1102,18 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 
 /* The base class of all objects. */
-DDATDEF DeeTypeObject DeeObject_Type; /* `Object' */
+DDATDEF DeeTypeObject DeeObject_Type; /* `Object` */
 
 
-/* Assert the typing of an object (raising an `Error.TypeError' if the type wasn't expected)
- * HINT: When `required_type' isn't a type-object, these functions throw an error!
+/* Assert the typing of an object (raising an `Error.TypeError` if the type wasn't expected)
+ * HINT: When `required_type` isn't a type-object, these functions throw an error!
  * @return: -1: The object doesn't match the required typing.
  * @return:  0: The object matches the required typing. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertType)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeOrAbstract)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertImplements)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type);
-/* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
+/* Throw a TypeError stating that an instance of `required_type` was required, when `self` was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeObject_TypeAssertFailed2)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2, DeeTypeObject *required_type3);
@@ -1137,9 +1137,9 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(
 #endif /* !__OPTIMIZE_SIZE__ */
 
 
-/* Returns the class of `self', automatically
+/* Returns the class of `self`, automatically
  * dereferencing super-objects and other wrappers.
- * Beyond that, this function returns the same as `Dee_TYPE()' */
+ * Beyond that, this function returns the same as `Dee_TYPE()` */
 DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self);
 
@@ -1159,7 +1159,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObj
 #define DeeObject_NewTupleKw(object_type, args, kw) DeeObject_NewKw(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/* Object deepcopy invocation (convenience wrappers for `DeeDeepCopyContext') */
+/* Object deepcopy invocation (convenience wrappers for `DeeDeepCopyContext`) */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopyInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict p_self); /* TODO: Remove me */
@@ -1202,22 +1202,22 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VCallf(DeeObject
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(DeeObject *self, DeeObject *thisarg, char const *__restrict format, va_list args);
 
 /* Same as the regular call functions, however also include special
- * optimizations to re-use `args' as the varargs tuple in calls to
+ * optimizations to re-use `args` as the varargs tuple in calls to
  * pure user-code varargs functions:
  * >> function foo(args...) {
  * >>     import Object from deemon;
  * >>     print Object.id(args);
  * >> }
- * // `my_tuple' will be re-used as `args',
+ * // `my_tuple` will be re-used as `args`,
  * // without the need to creating a new tuple
  * DeeObject_CallTuple(foo, my_tuple);
  *
  * User-code can test if deemon was compiled with this option enabled
  * through use of code such as follows:
  * >> function b(args...) -> Object.id(args);
- * >> __asm__("" : "+x" (b)); // Ensure that the call to `b()' can't be inlined
+ * >> __asm__("" : "+x" (b)); // Ensure that the call to `b()` can't be inlined
  * >> function a(args...) -> Object.id(args) == b(args...);
- * >> print a(10, 20); // Prints `true' if `CONFIG_CALLTUPLE_OPTIMIZATIONS' was enabled; else `false'
+ * >> print a(10, 20); // Prints `true` if `CONFIG_CALLTUPLE_OPTIMIZATIONS` was enabled; else `false`
  */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTuple)(DeeObject *self, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleKw)(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
@@ -1269,8 +1269,8 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
  * enough to also allow it to be exposed here.
  *
  * NOTES:
- * - **NEVER** do anything that might block inside of `proc' --
- *   implementations of this operator may invoke `proc' while
+ * - **NEVER** do anything that might block inside of `proc` --
+ *   implementations of this operator may invoke `proc` while
  *   certain internal locks are held.
  * - Implementors of this operator must not alter the reference
  *   counters of referenced objects in this operator, and must
@@ -1278,19 +1278,19 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
  *   operator may be called while "self->ob_refcnt == 0", or the
  *   objects referenced by "self" have weird/non-sense reference
  *   counts (this is intentional and the result of GC operations)
- * - By the time `*proc' is invoked with some reference, "self"
+ * - By the time `*proc` is invoked with some reference, "self"
  *   may no longer be actually holding that same reference. This
  *   can happen when the passed referenced was protected by an
- *   RCU lock, though in this case `*proc' is invoked while that
- *   same RCU lock is still held (meaning that while `self' may
+ *   RCU lock, though in this case `*proc` is invoked while that
+ *   same RCU lock is still held (meaning that while `self` may
  *   no longer be *holding* that reference, that reference will
  *   not have been dropped, yet, since another thread wanting to
  *   do so would have to wait for the RCU lock to be dropped). */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Integral value lookup operators.
- * @return: Dee_INT_SIGNED:   The value stored in `result' must be interpreted as signed.
- * @return: Dee_INT_UNSIGNED: The value stored in `result' must be interpreted as unsigned.
+ * @return: Dee_INT_SIGNED:   The value stored in `result` must be interpreted as signed.
+ * @return: Dee_INT_UNSIGNED: The value stored in `result` must be interpreted as unsigned.
  * @return: Dee_INT_ERROR:    An error occurred. */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get8Bit)(DeeObject *__restrict self, int8_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_Get16Bit)(DeeObject *__restrict self, int16_t *__restrict result);
@@ -1311,14 +1311,14 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt64)(DeeObjec
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
-/* Same as the functions above, but these also accept `-1' as an alias for `UINTn_MAX' */
+/* Same as the functions above, but these also accept `-1` as an alias for `UINTn_MAX` */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt8M1)(DeeObject *__restrict self, uint8_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt16M1)(DeeObject *__restrict self, uint16_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt32M1)(DeeObject *__restrict self, uint32_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt64M1)(DeeObject *__restrict self, uint64_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeObject_AsUInt128M1)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 
-/* All of these return (T)-1 on error. When the object's actual value is `(T)-1', throw `IntegerOverflow' */
+/* All of these return (T)-1 on error. When the object's actual value is `(T)-1`, throw `IntegerOverflow` */
 DFUNDEF WUNUSED NONNULL((1)) uint8_t (DCALL DeeObject_AsUInt8Direct)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) uint16_t (DCALL DeeObject_AsUInt16Direct)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeObject_AsUInt32Direct)(DeeObject *__restrict self);
@@ -1425,8 +1425,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInheritedOnSucc
 #define DeeObject_AsByteDirect(self)             _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_1(self)
 #define DeeObject_AsByteDirectInherited(self)    _Dee_PRIVATE_OBJECT_AS_DIRECT_UINT_INHERITED_1(self)
 
-/* Helper wrapper around `DeeObject_Bool()' that writes
- * the value to `*result' rather than use the return value. */
+/* Helper wrapper around `DeeObject_Bool()` that writes
+ * the value to `*result` rather than use the return value. */
 LOCAL WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AsBool)(DeeObject *__restrict self, bool *__restrict result) {
 	int value = DeeObject_Bool(self);
@@ -1452,17 +1452,17 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Xor)(DeeObject 
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Pow)(DeeObject *self, DeeObject *some_object);
 
 /* Inplace math operator invocation.
- * NOTE: For the duration of the call, `*p_self' must not be changed by outside sources.
+ * NOTE: For the duration of the call, `*p_self` must not be changed by outside sources.
  *       Because of this, pointers to external, global, or static variables must be passed
  *       indirectly, though local or stack variables can be passed directly (as they are
  *       private to their stack-frame and cannot be changed through outside interference,
  *       aside of debuggers which know to look out for manipulating operands of inplace
  *       instructions)
- * >> Because these functions will inherit a reference to `IN(*p_self)' upon success, it is
+ * >> Because these functions will inherit a reference to `IN(*p_self)` upon success, it is
  *    possible for the implementation to check for otherwise immutable objects to be modified
- *    in-line (when `DeeObject_IsShared(IN(*p_self))' is false), thus allowing an invocation
- *    such as `DeeObject_Inc(&my_int)' to potentially be completed without having to allocate
- *    a new integer object (though only in case `my_int' isn't being shared, and incrementing
+ *    in-line (when `DeeObject_IsShared(IN(*p_self))` is false), thus allowing an invocation
+ *    such as `DeeObject_Inc(&my_int)` to potentially be completed without having to allocate
+ *    a new integer object (though only in case `my_int` isn't being shared, and incrementing
  *    wouldn't overflow within the available number of digits) */
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Inc)(DREF DeeObject **__restrict p_self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Dec)(DREF DeeObject **__restrict p_self);
@@ -1522,7 +1522,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpLe)(DeeObjec
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpGr)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpGe)(DeeObject *self, DeeObject *some_object);
 
-/* Same as above, but automatically cast the returned object using `DeeObject_Bool()' */
+/* Same as above, but automatically cast the returned object using `DeeObject_Bool()` */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpEqAsBool)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpNeAsBool)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpLoAsBool)(DeeObject *self, DeeObject *some_object);
@@ -1531,56 +1531,56 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGrAsBool)(DeeObject *sel
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *self, DeeObject *some_object);
 
 
-/* @return: == Dee_COMPARE_LO: `lhs < rhs'
- * @return: == Dee_COMPARE_EQ: `lhs == rhs'
- * @return: == Dee_COMPARE_GR: `lhs > rhs'
+/* @return: == Dee_COMPARE_LO: `lhs < rhs`
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs`
+ * @return: == Dee_COMPARE_GR: `lhs > rhs`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
-/* @return: == Dee_COMPARE_LO: `lhs != rhs'
- * @return: == Dee_COMPARE_EQ: `lhs == rhs'
- * @return: == Dee_COMPARE_GR: `lhs != rhs'
+/* @return: == Dee_COMPARE_LO: `lhs != rhs`
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs`
+ * @return: == Dee_COMPARE_GR: `lhs != rhs`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareEq)(DeeObject *lhs, DeeObject *rhs);
 
-/* Same as `DeeObject_CompareEq()', but automatically handles errors
+/* Same as `DeeObject_CompareEq()`, but automatically handles errors
  * that usually indicate that "lhs" and "rhs" cannot be compared by returning
- * either `-1' or `1' instead. The following errors get handled (so-long as
- * the effective `tp_trycompare_eq' callback doesn't end up throwing these):
- * - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
- * - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
- * - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
- * @return: == Dee_COMPARE_LO: `lhs != rhs'
- * @return: == Dee_COMPARE_EQ: `lhs == rhs'
- * @return: == Dee_COMPARE_GR: `lhs != rhs'
+ * either `-1` or `1` instead. The following errors get handled (so-long as
+ * the effective `tp_trycompare_eq` callback doesn't end up throwing these):
+ * - `Error.RuntimeError.NotImplemented` (`DeeError_NotImplemented`; Should indicate compare-not-implemented)
+ * - `Error.TypeError`                   (`DeeError_TypeError`;      Should indicate unsupported type combination)
+ * - `Error.ValueError`                  (`DeeError_ValueError`;     Should indicate unsupported instance combination)
+ * @return: == Dee_COMPARE_LO: `lhs != rhs`
+ * @return: == Dee_COMPARE_EQ: `lhs == rhs`
+ * @return: == Dee_COMPARE_GR: `lhs != rhs`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCompareEq)(DeeObject *lhs, DeeObject *rhs);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, DeeObject *key);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
                                DeeObject *rhs, DeeObject *key);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
@@ -1635,8 +1635,8 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define DeeObject_SetItemStringLen(self, key, keylen, value)  DeeObject_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
 
-/* Suggested return values for `DeeObject_HasItem()' and `DeeObject_HasAttr()'
- * HINT: Can also be used for `DeeObject_Bool()'
+/* Suggested return values for `DeeObject_HasItem()` and `DeeObject_HasAttr()`
+ * HINT: Can also be used for `DeeObject_Bool()`
  * In actuality, any integer value is accepted/may-be-returned, with the following meaning:
  * @return: < 0:  Dee_HAS_ERR: Error
  * @return: == 0: Dee_HAS_NO : No (item/attr does not exist)
@@ -1645,7 +1645,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_NO  0    /* In doc-strings: means 0 exactly:                   "== 0" */
 #define Dee_HAS_YES 1    /* In doc-strings: actually means any positive value: "> 0" */
 
-/* Helper methods for testing return values of `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
+/* Helper methods for testing return values of `DeeObject_HasItem()` and `DeeObject_HasAttr()` */
 #define Dee_HAS_ISERR(x) unlikely((x) < 0)
 #define Dee_HAS_ISNO(x)  ((x) == 0) /* Never matches "Dee_HAS_ISERR" */
 #define Dee_HAS_ISYES(x) ((x) > 0)  /* Never matches "Dee_HAS_ISERR" */
@@ -1665,7 +1665,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 /* Optimized conversion macros that rely on bit-magic
  * Note that these macros are statically asserted in "operator-hint-invoke.c",
- * so they're guarantied to work for all allowed `Dee_COMPARE_*' values. */
+ * so they're guarantied to work for all allowed `Dee_COMPARE_*` values. */
 #if Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1673,7 +1673,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     1     >0
  *  1     0     ==0 */
 #define Dee_HAS_FROM_COMPARE_EQ(cmp)        (((cmp) + 1) & ~2)
-#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) (((cmp) + 1) & 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) (((cmp) + 1) & 1) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1681,7 +1681,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     1     >0 */
 #define Dee_HAS_FROM_COMPARE_NE(cmp)        (((cmp) + 1) ^ 1)
-#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) ((cmp) & 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) ((cmp) & 1) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1689,7 +1689,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     0     ==0 */
 #define Dee_HAS_FROM_COMPARE_LO(cmp)        (((((cmp) + 1) & -5) + 3) & -6)
-#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) ((cmp) & 2) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) ((cmp) & 2) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1697,7 +1697,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     1     >0
  *  1     0     ==0 */
 #define Dee_HAS_FROM_COMPARE_LE(cmp)        (((cmp) + 1) ^ 2)
-#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) (((cmp) + 1) ^ 2) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) (((cmp) + 1) ^ 2) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1705,7 +1705,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     0     ==0
  *  1     1     >0 */
 #define Dee_HAS_FROM_COMPARE_GR(cmp)        (((cmp) + 1) & -2)
-#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) (((cmp) + 1) & 2) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) (((cmp) + 1) & 2) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 /* IN   CANON   REQ
  * -2    -1     <0
@@ -1713,15 +1713,15 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  0     1     >0
  *  1     1     >0 */
 #define Dee_HAS_FROM_COMPARE_GE(cmp)        ((cmp) + 1)
-#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) ((cmp) + 1) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) ((cmp) + 1) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 
 #else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
-#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISEQ(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
-#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISNE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
-#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLO(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
-#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
-#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGR(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
-#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGE(cmp)) /* WARNING: Don't use this macro when `cmp' may be `Dee_COMPARE_ERR' */
+#define Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISEQ(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
+#define Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISNE(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
+#define Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLO(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
+#define Dee_HAS_FROM_COMPARE_LE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISLE(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
+#define Dee_HAS_FROM_COMPARE_GR_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGR(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
+#define Dee_HAS_FROM_COMPARE_GE_NO_ERR(cmp) Dee_HAS_FROMBOOL(Dee_COMPARE_ISGE(cmp)) /* WARNING: Don't use this macro when `cmp` may be `Dee_COMPARE_ERR` */
 #define Dee_HAS_FROM_COMPARE_EQ(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_EQ_NO_ERR(cmp))
 #define Dee_HAS_FROM_COMPARE_NE(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_NE_NO_ERR(cmp))
 #define Dee_HAS_FROM_COMPARE_LO(cmp)        (Dee_COMPARE_ISERR(cmp) ? Dee_HAS_ERR : Dee_HAS_FROM_COMPARE_LO_NO_ERR(cmp))
@@ -1731,7 +1731,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 || Dee_COMPARE_GR != 1 */
 
 
-/* Custom converters that are useful for `Dee_foreach_t' status values:
+/* Custom converters that are useful for `Dee_foreach_t` status values:
  * Dee_HAS_FROM_eM1_n0_yM2:                           Dee_HAS_INTO_eM1_n0_yM2:
  * >> Dee_HAS_ISERR(Dee_HAS_FROM_eM1_n0_yM2(-1));     >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_ERR) == -1;
  * >> Dee_HAS_ISNO (Dee_HAS_FROM_eM1_n0_yM2(0));      >> Dee_HAS_INTO_eM1_n0_yM2(Dee_HAS_NO)  == 0;
@@ -1877,17 +1877,17 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 
 /* Possible values returned by C-API isbound checking functions.
  * These values have been intentionally chosen so-as to be binary-
- * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()'
+ * compatible with `DeeObject_HasItem()` and `DeeObject_HasAttr()`
  *
  * WARNING: This compatibility only goes 1 way!
  *          Unlike the Dee_HAS_* API, which defines behavior for
  *          all integer values, Dee_BOUND_* only accepts these 4
  *          values, with all other values resulting in undefined
  *          behavior! */
-#define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to be accepted by `Dee_HAS_ISERR' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to be accepted by `Dee_HAS_ISNO'  to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to be accepted by `Dee_HAS_ISYES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
-#define Dee_BOUND_NO       2           /* Guarantied to be accepted by `Dee_HAS_ISYES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+#define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to be accepted by `Dee_HAS_ISERR` to allow (e.g.) `tp_hasitem` to alias `tp_bounditem` */
+#define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to be accepted by `Dee_HAS_ISNO`  to allow (e.g.) `tp_hasitem` to alias `tp_bounditem` */
+#define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to be accepted by `Dee_HAS_ISYES` to allow (e.g.) `tp_hasitem` to alias `tp_bounditem` */
+#define Dee_BOUND_NO       2           /* Guarantied to be accepted by `Dee_HAS_ISYES` to allow (e.g.) `tp_hasitem` to alias `tp_bounditem` */
 
 /* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
 #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES)
@@ -1996,7 +1996,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
  *  1    1    1     >0
  *  2    0    0     ==0 */
 #define Dee_HAS_FROMBOUND(bound_status)        ((bound_status) & ~2)
-#define Dee_HAS_FROMBOUND_NO_ERR(bound_status) ((bound_status) & ~2) /* WARNING: Don't use this macro when `bound_status' may be `Dee_BOUND_ERR' */
+#define Dee_HAS_FROMBOUND_NO_ERR(bound_status) ((bound_status) & ~2) /* WARNING: Don't use this macro when `bound_status` may be `Dee_BOUND_ERR` */
 #else /* Dee_BOUND_ERR == -1 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 && Dee_BOUND_NO == 2 */
 #define Dee_HAS_FROMBOUND(bound_status)        ((bound_status) == Dee_BOUND_NO ? Dee_HAS_NO : (bound_status))
 #define Dee_HAS_FROMBOUND_NO_ERR(bound_status) (+((bound_status) == Dee_BOUND_YES))
@@ -2034,7 +2034,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_BOUND_MISSING != 0 */
 
 
-/* Custom converters that are useful for `Dee_foreach_t' status values:
+/* Custom converters that are useful for `Dee_foreach_t` status values:
  * Dee_BOUND_FROM_eM1_m0_yM2_nM3:
  * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(-1) == Dee_BOUND_ERR;
  * >> Dee_BOUND_FROM_eM1_m0_yM2_nM3(0)  == Dee_BOUND_MISSING;
@@ -2072,7 +2072,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif /* Dee_BOUND_ERR != -1 || Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 || Dee_BOUND_NO != 2 */
 
 
-/* Check if a given item exists (`deemon.hasitem(self, index)')
+/* Check if a given item exists (`deemon.hasitem(self, index)`)
  * @return: Dee_HAS_YES: Item exists
  * @return: Dee_HAS_NO:  Item doesn't exist
  * @return: Dee_HAS_ERR: An error was thrown */
@@ -2083,10 +2083,10 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLenHash)(DeeOb
 #define DeeObject_HasItemString(self, key)            DeeObject_HasItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_HasItemStringLen(self, key, keylen) DeeObject_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
-/* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
+/* Check if a given item is bound (`self[index] is bound` / `deemon.bounditem(self, index)`)
  * @return: Dee_BOUND_YES:     Item is bound.
- * @return: Dee_BOUND_NO:      Item isn't bound. (`UnboundItem' was caught internally)
- * @return: Dee_BOUND_MISSING: Item doesn't exist (`KeyError' was caught).
+ * @return: Dee_BOUND_NO:      Item isn't bound. (`UnboundItem` was caught internally)
+ * @return: Dee_BOUND_MISSING: Item doesn't exist (`KeyError` was caught).
  * @return: Dee_BOUND_ERR:     An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index);
@@ -2095,13 +2095,13 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLenHash)(Dee
 #define DeeObject_BoundItemString(self, key)            DeeObject_BoundItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_BoundItemStringLen(self, key, keylen) DeeObject_BoundItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
-/* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
+/* NOTE: The `argv` vector itself isn't inherited; only its elements are! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *other);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(always)*/ DREF DeeObject *self, size_t argc, /*inherit(always)*/ DREF DeeObject *const *argv);
 
 /* Print the given object to a format printer.
- * This is identical to printing the return value of `DeeObject_Str', but is quite
- * faster for certain types such as `int', `string', as well as certain list types,
+ * This is identical to printing the return value of `DeeObject_Str`, but is quite
+ * faster for certain types such as `int`, `string`, as well as certain list types,
  * which then don't have to create temporary string objects.
  * Upon success, the sum of all printer-callbacks is returned. Upon
  * error, the first negative return value of printer is propagated,
@@ -2110,18 +2110,18 @@ DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeObject_Print)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeObject_PrintRepr)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 
-/* Print a given object while using the given `format_str' format-string.
- * These functions are called by `string.format' when a `:' is found in
+/* Print a given object while using the given `format_str` format-string.
+ * These functions are called by `string.format` when a `:` is found in
  * a format string, with the associated format-string passed:
  * >> print repr "foo = {:5}".format({ "bar" }); // "foo = bar  "
- * If `self' implements a member function `__format__', that function
- * is called as `self.__format__(format_str)', with the returned object
- * then printed using `DeeObject_Print()'
- * Also note that `Object' implements a `__format__' function that calls forward
- * to the `str' operator and allows for alignment of the produced string, as well
+ * If `self` implements a member function `__format__`, that function
+ * is called as `self.__format__(format_str)`, with the returned object
+ * then printed using `DeeObject_Print()`
+ * Also note that `Object` implements a `__format__` function that calls forward
+ * to the `str` operator and allows for alignment of the produced string, as well
  * as the fact that if accessing a sub-classes __format__ attribute causes an
  * AttributeError, or NotImplemented error to be thrown, the object will be formatted
- * using `Object.__format__' as well:
+ * using `Object.__format__` as well:
  *  - "{:}"        --> arg.operator str()
  *  - "{:42}"      --> arg.operator str().ljust(42);
  *  - "{:<42}"     --> arg.operator str().ljust(42);
@@ -2145,29 +2145,29 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Iter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
-/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]`
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
- * holding both values (as needs to be done by `DeeObject_IterNext'). */
+ * holding both values (as needs to be done by `DeeObject_IterNext`). */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_IterNextPair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextKey)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextValue)(DeeObject *__restrict self);
 
-/* Invoke `proc' for each element of a general-purpose sequence.
- * When `*proc' returns < 0, that value is propagated.
+/* Invoke `proc` for each element of a general-purpose sequence.
+ * When `*proc` returns < 0, that value is propagated.
  * Otherwise, return the sum of all calls to it.
  * NOTE: This function does some special optimizations for known sequence types.
- * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Iter()' */
+ * @return: -1: An error occurred during iteration (or potentially inside of `*proc`) */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Iter()` */
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
-/* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeSeq_Unpack()' */
+/* Same as `DeeObject_Foreach()`, but meant for enumeration of mapping key/value pairs. */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeSeq_Unpack()` */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* >> DeeObject_GetAttr() -- <self>.<attr>;
  * Retrieve a named attribute of an object
- * @return: * :   The value of the attribute `attr'
+ * @return: * :   The value of the attribute `attr`
  * @return: NULL: An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttr)(DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrString)(DeeObject *__restrict self, char const *__restrict attr);
@@ -2178,7 +2178,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrStringLe
 /* >> DeeObject_DelAttr() -- del <self>.<attr>;
  * Delete an attribute, either removing it from existence, marking it as
  * unbound, or doing something else entirely (such as assigning it some
- * default value); the exact behavior here depends on the object `self'.
+ * default value); the exact behavior here depends on the object `self`.
  * Note that generally, attempting to delete an attribute that is already
  * unbound is considered as no-op (NO error should be thrown).
  * @return: 0 : Success.
@@ -2190,7 +2190,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelAttrStringLenHash)(DeeOb
 #define DeeObject_DelAttrStringLen(self, attr, attrlen) DeeObject_DelAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 /* >> DeeObject_SetAttr() -- <self>.<attr> = <value>;
- * Assign a given `value' to a named attribute `attr' of `self'.
+ * Assign a given `value` to a named attribute `attr` of `self`.
  * @return: 0 : Success.
  * @return: -1: An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_SetAttr)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
@@ -2200,12 +2200,12 @@ DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_SetAttrStringLenHash)(De
 #define DeeObject_SetAttrStringLen(self, attr, attrlen, value) DeeObject_SetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
 
 /* >> DeeObject_CallAttr() -- <self>.<attr>(<args>...);
- * Convenience (and performance) wrapper for `DeeObject_Call(DeeObject_GetAttr(self, attr), args)'.
+ * Convenience (and performance) wrapper for `DeeObject_Call(DeeObject_GetAttr(self, attr), args)`.
  * Even though this function uses its own dedicated code paths, its behavior must always be equal
  * to the 2-step process of first retrieving an attribute, and then calling its current value.
  * The dictated code paths exist in order to skip the need to create a temporary (wrapper) object,
- * as would be necessary for pretty much all built-in object attributes (s.a. `DeeObjMethod_Type')
- * @return: * :   The return value of the `DeeObject_Call()' being applied to the attribute.
+ * as would be necessary for pretty much all built-in object attributes (s.a. `DeeObjMethod_Type`)
+ * @return: * :   The return value of the `DeeObject_Call()` being applied to the attribute.
  * @return: NULL: An error was thrown. */
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttr)(DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallAttrString)(DeeObject *self, char const *__restrict attr, size_t argc, DeeObject *const *argv);
@@ -2253,15 +2253,15 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupl
 #define DeeObject_CallAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw) DeeObject_CallAttrStringLenHashKw(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 
 /* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
- * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'
+ * Check if `self` has an attribute `attr`. Same as the builtin `deemon.hasattr()`
  * function. Note that an attribute that is currently unbound, differs from one
- * that does not exist at all. This function will return `1' (true) for the former,
- * but `0' (false) for the later. During normal attribute access, this difference
- * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
+ * that does not exist at all. This function will return `1` (true) for the former,
+ * but `0` (false) for the later. During normal attribute access, this difference
+ * is reflected by the type of exception: `UnboundAttribute` and `AttributeError`.
  * @return: == 0: Attribute doesn't exist
  * @return: > 0:  Attribute exists
  * @return: < 0:  An error was thrown
- * HINT: Use `Dee_HAS_IS*' to test return value */
+ * HINT: Use `Dee_HAS_IS*` to test return value */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
@@ -2300,18 +2300,18 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Leave)(DeeObject *__restrict s
 
 typedef struct Dee_buffer {
 	void  *bb_base; /* [0..bb_size][const] Base address of the buffer.
-	                 * NOTE: Only writable if the buffer was acquired with `Dee_BUFFER_FWRITABLE' set. */
+	                 * NOTE: Only writable if the buffer was acquired with `Dee_BUFFER_FWRITABLE` set. */
 	size_t bb_size; /* [const] Size of the buffer (in bytes) */
 } DeeBuffer;
 #define DeeBuffer_Fini(self) (void)0
 
-/* Possible values for `DeeObject_GetBuf::flags' */
+/* Possible values for `DeeObject_GetBuf::flags` */
 #define Dee_BUFFER_FREADONLY 0x0000 /* Acquire the buffer for reading. */
 #define Dee_BUFFER_FWRITABLE 0x0001 /* Acquire the buffer for reading / writing. */
 #define Dee_BUFFER_FMASK     0x0001 /* Mask of known buffer flags. */
 
 /* Object buffer interface.
- * @param: flags: Set of `Dee_BUFFER_F*'
+ * @param: flags: Set of `Dee_BUFFER_F*`
  * @throw: Error.RuntimeError.NotImplemented: The object doesn't implement the buffer protocol.
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int

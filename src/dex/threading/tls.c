@@ -47,7 +47,7 @@ DECL_BEGIN
 #ifndef CONFIG_NO_THREADS
 
 /* Ensure allocation and return a pointer to the TLS variable
- * slot associated with `index' within the calling thread.
+ * slot associated with `index` within the calling thread.
  * @return: NULL: Failed to allocated the slot for the given index.
  * WARNING: Consecutive calls to this function may
  *          invalidate previously returned pointers. */
@@ -60,7 +60,7 @@ thread_tls_get(size_t index) {
 	if unlikely(!desc || index >= desc->td_size) {
 		size_t old_size;
 		if (caller->t_state & Dee_THREAD_STATE_TERMINATING) {
-			/* If `Dee_THREAD_STATE_TERMINATING' is set, don't allow TLS alloc! */
+			/* If `Dee_THREAD_STATE_TERMINATING` is set, don't allow TLS alloc! */
 			DeeError_Throwf(&DeeError_RuntimeError,
 			                "Cannot allocate TLS variables for "
 			                "thread %r that has begun termination",
@@ -157,7 +157,7 @@ again:
 		for (;;) {
 			uint8_t byte, bitno;
 			ASSERTF(iter != tls_inuse,
-			        "But `tls_nexti' said there would be unused entries...");
+			        "But `tls_nexti` said there would be unused entries...");
 			byte = *--iter;
 			if (byte == 0xff)
 				continue;
@@ -180,7 +180,7 @@ again:
 		/* Must allocate more bitset memory. */
 		uint8_t *new_bitset;
 		new_bitset = (uint8_t *)Dee_TryReallocc(tls_inuse, (tls_nexti / 8) + 1, sizeof(uint8_t));
-		/* The the realloc failed, return `(size_t)-1'. */
+		/* The the realloc failed, return `(size_t)-1`. */
 		if unlikely(!new_bitset) {
 			tls_reglock_release();
 			/* Try to collect some memory. */
@@ -295,7 +295,7 @@ tls_getvalue(TLS *__restrict self) {
 		goto err;
 	} else if (DeeNone_Check(self->t_factory)) {
 		Dee_Incref_n(&DeeNone_Singleton, 2);
-		result = *p_result = Dee_AsObject(&DeeNone_Singleton); /* Save and return `none'. */
+		result = *p_result = Dee_AsObject(&DeeNone_Singleton); /* Save and return `none`. */
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
@@ -424,7 +424,7 @@ again:
 		goto err;
 	}
 	if (!result) {
-		/* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
+		/* Cheat a bit by letting `tls_getvalue()` deal with the factory call. */
 		result = tls_getvalue(self);
 		if unlikely(!result)
 			goto err;
@@ -512,7 +512,7 @@ tls_getvalue(TLS *__restrict self) {
 		goto err;
 	} else if (DeeNone_Check(self->t_factory)) {
 		Dee_None->ob_refcnt += 2;
-		result = self->t_value = Dee_None; /* Save and return `none'. */
+		result = self->t_value = Dee_None; /* Save and return `none`. */
 	} else {
 		/* Invoke the factory. */
 		result = DeeObject_Call(self->t_factory, 0, NULL);
@@ -619,7 +619,7 @@ again:
 		goto err;
 	}
 	if (!result) {
-		/* Cheat a bit by letting `tls_getvalue()' deal with the factory call. */
+		/* Cheat a bit by letting `tls_getvalue()` deal with the factory call. */
 		result = tls_getvalue(self);
 		if unlikely(!result)
 			goto err;

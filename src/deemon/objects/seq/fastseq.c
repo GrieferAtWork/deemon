@@ -79,8 +79,8 @@ err:
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
  * the caller must inherit upon success.
- * @return: * :   A vector of objects (with a length of `*p_length'),
- *                that must be freed using `Dee_Free', before inheriting
+ * @return: * :   A vector of objects (with a length of `*p_length`),
+ *                that must be freed using `Dee_Free`, before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
@@ -225,22 +225,22 @@ err:
 }
 
 
-/* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
- * a pre-allocated heap-vector `*p_vector' with an allocated size
- * of `IN(*p_allocated) * sizeof(DeeObject *)', which is updated
+/* Same as `DeeSeq_AsHeapVectorWithAlloc()`, however also inherit
+ * a pre-allocated heap-vector `*p_vector` with an allocated size
+ * of `IN(*p_allocated) * sizeof(DeeObject *)`, which is updated
  * as more memory needs to be allocated.
- * NOTE: `*p_vector' may be updated to point to a new vector, even
+ * NOTE: `*p_vector` may be updated to point to a new vector, even
  *       when the function fails (i.e. (size_t)-1 is returned)
- * @param: p_vector:    A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
- *                      May only point to a `NULL' vector when `IN(*p_allocated)' is ZERO(0).
+ * @param: p_vector:    A pointer to a preallocated object-vector `[0..IN(*p_allocated)]`
+ *                      May only point to a `NULL` vector when `IN(*p_allocated)` is ZERO(0).
  *                      Upon return, this pointer may have been updated to point to a
  *                      realloc()-ated vector, should the need to allocate more memory
  *                      have arisen.
  * @param: p_allocated: A pointer to an information field describing how much pointers
  *                      are allocated upon entry / how much are allocated upon exit.
- *                      Just as `p_vector', this pointer may be updated, even upon error.
- * @return: * :         The amount of filled in objects in `*p_vector'
- * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
+ *                      Just as `p_vector`, this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*p_vector`
+ * @return: (size_t)-1: An error occurred. Note that both `*p_vector` and `*p_allocated`
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
 PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -310,10 +310,10 @@ err:
 }
 
 
-/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
- * that `IN(*p_allocated) >= offset', while also leaving the first
- * `offset' vector entries untouched and inserting the first enumerated
- * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
+/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()`, but assume
+ * that `IN(*p_allocated) >= offset`, while also leaving the first
+ * `offset` vector entries untouched and inserting the first enumerated
+ * sequence element at `(*p_vector)[offset]`, rather than `(*p_vector)[0]`
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
 PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -377,7 +377,7 @@ again_asvector:
 		goto again_asvector;
 	}
 
-	/* Use `DeeObject_Foreach()' */
+	/* Use `DeeObject_Foreach()` */
 	data.sahvd_size = offset;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 	if unlikely((*tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))

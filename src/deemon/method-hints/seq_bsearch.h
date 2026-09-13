@@ -377,7 +377,7 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -464,7 +464,7 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -550,7 +550,7 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;
@@ -639,7 +639,7 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 				start = mid + 1;
 			} else {
 				/* Found it! (at "mid") */
-				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end', it can't be SIZE_MAX!");
+				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can't be SIZE_MAX!");
 				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {
 					end = mid;
 					goto err_item_overflow;

@@ -48,7 +48,7 @@ err:
 #define DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb
 struct default_seq_enumerate_with_counter__and__seq_foreach_data {
 	Dee_seq_enumerate_t dewcaf_cb;      /* [1..1] Wrapped callback */
-	void               *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_cb' */
+	void               *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_cb` */
 	size_t              dewcaf_counter; /* Index of the next element that will be enumerated */
 };
 
@@ -76,7 +76,7 @@ err:
 #define DEFINED_default_enumerate_with_enumerate_index_cb
 struct default_enumerate_with_enumerate_index_data {
 	Dee_seq_enumerate_t dewei_cb;  /* [1..1] Wrapped callback. */
-	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb' */
+	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -102,8 +102,8 @@ err:
 
 
 /* Enumerate valid keys/indices of "self", as well as their current value.
- * @return: * : Sum of return values of `*cb'
- * @return: -1: An error occurred during iteration (or potentially inside of `*cb') */
+ * @return: * : Sum of return values of `*cb`
+ * @return: -1: An error occurred during iteration (or potentially inside of `*cb`) */
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate([[nonnull]] DeeObject *__restrict self,
                                 [[nonnull]] Dee_seq_enumerate_t cb,
@@ -426,7 +426,7 @@ use_seq_operator_foreach:
 
 struct default_seq_enumerate_index_with_counter__and__seq_foreach_data {
 	Dee_seq_enumerate_index_t deiwcaf_cb;    /* [1..1] Wrapped callback */
-	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_cb' */
+	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_cb` */
 	size_t                    deiwcaf_index; /* Index of the next element that will be enumerate_indexd */
 	size_t                    deiwcaf_start; /* Enumeration start index */
 	size_t                    deiwcaf_end;   /* Enumeration end index */
@@ -454,7 +454,7 @@ default_seq_enumerate_index_with_counter__and__seq_foreach_cb(void *arg, DeeObje
 #define DEFINED_default_enumerate_index_with_enumerate_cb
 struct default_enumerate_index_with_enumerate_data {
 	Dee_seq_enumerate_index_t deiwe_cb;    /* [1..1] Underlying callback. */
-	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb' */
+	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb` */
 	size_t                    deiwe_start; /* Enumeration start index */
 	size_t                    deiwe_end;   /* Enumeration end index */
 };
@@ -477,15 +477,15 @@ err:
 
 
 
-/* Same as `seq_enumerate()', but only valid when "self" uses integers for indices
+/* Same as `seq_enumerate()`, but only valid when "self" uses integers for indices
  * or is a mapping where all keys are integers. In the former case, [start,end)
  * can be given in order to allow the implementation to only enumerate indices that
  * fall within that range (though an implementation is allowed to simply ignore these
  * arguments)
- * If you want to always enumerate all indices (like is also done by `seq_enumerate',
- * then simply pass `start = 0, end = (size_t)-1')
- * @return: * : Sum of return values of `*cb'
- * @return: -1: An error occurred during iteration (or potentially inside of `*cb') */
+ * If you want to always enumerate all indices (like is also done by `seq_enumerate`,
+ * then simply pass `start = 0, end = (size_t)-1`)
+ * @return: * : Sum of return values of `*cb`
+ * @return: -1: An error occurred during iteration (or potentially inside of `*cb`) */
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate_index([[nonnull]] DeeObject *__restrict self,
                                       [[nonnull]] Dee_seq_enumerate_index_t cb,

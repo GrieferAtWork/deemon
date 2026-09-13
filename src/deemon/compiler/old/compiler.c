@@ -148,7 +148,7 @@ DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler) {
 	if (DeeCompiler_Current != compiler) {
 		ASSERTF(compiler->cp_recursion == 0,
 		        "Cannot use interweaved compiler recursion "
-		        "(`a -> b -> a' is illegal)!");
+		        "(`a -> b -> a` is illegal)!");
 		if ((compiler->cp_prev = DeeCompiler_Current) != NULL) {
 			ASSERT(compiler_loaded != compiler);
 			ASSERT(compiler_loaded == DeeCompiler_Current);
@@ -158,7 +158,7 @@ DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler) {
 		}
 		if (compiler_loaded != compiler) {
 			if (compiler_loaded) {
-				/* WARNING: The reference counter of `compiler_loaded'
+				/* WARNING: The reference counter of `compiler_loaded`
 				 *          may already be ZERO(0) at this point, but that is OK. */
 				/* Safe the state of a dangling compiler. */
 				save_compiler(compiler_loaded);
@@ -194,7 +194,7 @@ DeeCompiler_End(void) {
 			compiler_loaded = DeeCompiler_Current;
 			Dee_weakref_set(&DeeCompiler_Active, Dee_AsObject(DeeCompiler_Current));
 		} else {
-			/* NOTE: We intentionally leave `compiler_loaded' dangling,
+			/* NOTE: We intentionally leave `compiler_loaded` dangling,
 			 *       so we can optimize for cases in which only one compiler
 			 *       exists, but it constantly starts and stops.
 			 *       In such cases, we leave its state loaded, so we don't
@@ -231,8 +231,8 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 
 
 /* -------- Compiler Object Implementation -------- */
-/* Construct a new compiler for generating the source for the given `mod'.
- * @param: flags: Set of `COMPILER_F*' (see above) */
+/* Construct a new compiler for generating the source for the given `mod`.
+ * @param: flags: Set of `COMPILER_F*` (see above) */
 PUBLIC WUNUSED DREF DeeCompilerObject *DCALL
 DeeCompiler_New(uint16_t flags) {
 	DREF DeeCompilerObject *result;
@@ -419,14 +419,14 @@ err:
 	return -1;
 }
 
-/* Similar to `DeeExec_RunStream()', but rather than directly executing it,
+/* Similar to `DeeExec_RunStream()`, but rather than directly executing it,
  * return the module used to describe the code that is being executed, or
  * some unspecified, callable object which (when invoked) executes the given
  * input code in one way or another.
  * It is up to the implementation if an associated module should simply be
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
- * JIT-like execution of simple expressions such as `10 + 20' */
+ * JIT-like execution of simple expressions such as `10 + 20` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
@@ -669,7 +669,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	if unlikely(!ehdr)
 		goto err_writer;
 
-	/* Convert EHDR into a proper module (by executing relocations stored in `writer') */
+	/* Convert EHDR into a proper module (by executing relocations stored in `writer`) */
 	result = DeeDecWriter_PackModule(&writer, ehdr);
 	if unlikely(!result)
 		goto err_writer_ehdr;

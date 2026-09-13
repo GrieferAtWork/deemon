@@ -36,11 +36,11 @@ DECL_BEGIN
 
 typedef struct {
 	/* An inverse set, that is the symbolic set containing all
-	 * object, excluding those already contained within `si_set'
+	 * object, excluding those already contained within `si_set`
 	 * Since such a set cannot be iterated, working with it
 	 * requires some special operations, as well as special
 	 * support in some places, which is why it is exposed here.
-	 * In user-code, such a set is created through use of `operator ~()' */
+	 * In user-code, such a set is created through use of `operator ~()` */
 	PROXY_OBJECT_HEAD(si_set); /* [1..1][const] The underlying set. */
 } SetInversion;
 
@@ -61,7 +61,7 @@ INTDEF DeeTypeObject SetInversion_Type;
 /* Check for a symbolic, empty set.
  * NOTE: This function isn't guarantied to capture any kind of empty set,
  *       only sets that are meant to symbolically represent an empty one.
- * This set is represented as `{}' */
+ * This set is represented as `{}` */
 #define DeeSet_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeSet_Type)
 
 
@@ -82,7 +82,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject, sui_iter,  /* [1..1][lock(sui_lock)] The current iterator. */
 	                      SetUnion,  sui_union) /* [1..1][const] The underlying union-set. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t              sui_lock;  /* Lock for `sui_iter' and `sui_in2nd' */
+	Dee_atomic_rwlock_t              sui_lock;  /* Lock for `sui_iter` and `sui_in2nd` */
 #endif /* !CONFIG_NO_THREADS */
 	bool                             sui_in2nd; /* [lock(sui_lock)] The second set is being iterated. */
 } SetUnionIterator;
@@ -122,7 +122,7 @@ typedef struct {
 #define SetIntersection_NewInheritedOnSuccess(obj1, obj2) ((DREF SetIntersection *)ProxyObject2_NewInheritedOnSuccess(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,       sii_iter,       /* [1..1][const] An iterator for `sii_intersect->si_a' */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,       sii_iter,       /* [1..1][const] An iterator for `sii_intersect->si_a` */
 	                      SetIntersection, sii_intersect); /* [1..1][const] The underlying intersection-set. */
 	DeeObject                             *sii_other;      /* [1..1][const][== sii_intersect->si_b]. */
 } SetIntersectionIterator;
@@ -135,7 +135,7 @@ INTDEF DeeTypeObject SetIntersectionIterator_Type;
 /* {"a", "b"} - {"b"}   ->   {"a"} */
 typedef struct {
 	PROXY_OBJECT_HEAD2(sd_a,  /* [1..1][const] The primary set. */
-	                   sd_b); /* [1..1][const] The set of objects excluded from `sd_a'. */
+	                   sd_b); /* [1..1][const] The set of objects excluded from `sd_a`. */
 } SetDifference;
 
 #define SetDifference_New(obj1, obj2)                   ((DREF SetDifference *)ProxyObject2_New(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
@@ -145,7 +145,7 @@ typedef struct {
 #define SetDifference_NewInheritedOnSuccess(obj1, obj2) ((DREF SetDifference *)ProxyObject2_NewInheritedOnSuccess(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,     sdi_iter,  /* [1..1][const] An iterator for `sdi_diff->sd_a' */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,     sdi_iter,  /* [1..1][const] An iterator for `sdi_diff->sd_a` */
 	                      SetDifference, sdi_diff); /* [1..1][const] The underlying difference-set. */
 	DeeObject                           *sdi_other; /* [1..1][const][== sdi_diff->sd_b]. */
 } SetDifferenceIterator;
@@ -171,7 +171,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject,              ssd_iter,  /* [1..1][lock(ssd_lock)] The current iterator. */
 	                      SetSymmetricDifference, ssd_set);  /* [1..1][const] The underlying set. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t                           ssd_lock;  /* Lock for `ssd_iter' and `ssd_in2nd' */
+	Dee_atomic_rwlock_t                           ssd_lock;  /* Lock for `ssd_iter` and `ssd_in2nd` */
 #endif /* !CONFIG_NO_THREADS */
 	bool                                          ssd_in2nd; /* [lock(ssd_lock)] The second set is being iterated. */
 } SetSymmetricDifferenceIterator;

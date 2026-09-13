@@ -58,7 +58,7 @@
 
 DECL_BEGIN
 
-/* Construct a new `_ObjMethod' object. */
+/* Construct a new `_ObjMethod` object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self) {
 	DREF DeeObjMethodObject *result;
@@ -111,8 +111,8 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self, Dee_objmethod_t meth,
 	return false;
 }
 
-/* Lookup the origin of the function bound by the given `_ObjMethod'.
- * @return: true:  Success -- `*result' was populated with origin info on "self"
+/* Lookup the origin of the function bound by the given `_ObjMethod`.
+ * @return: true:  Success -- `*result` was populated with origin info on "self"
  * @return: false: Failure -- original of "self" could not be determined */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
@@ -146,7 +146,7 @@ DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
 }
 
 /* Lookup the origin of the function bound by
- * the given `_ClsMethod', or `NULL' if unknown. */
+ * the given `_ClsMethod`, or `NULL` if unknown. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
                        struct Dee_objmethod_origin *__restrict result) {
@@ -798,7 +798,7 @@ dockwds_init(DocKwds *__restrict self,
 		goto err;
 	if (DeeString_STR(args.text)[0] != '(') {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "The given string %r does not start with `('");
+		                "The given string %r does not start with `(`");
 		goto err;
 	}
 	Dee_Incref(args.text);
@@ -1033,7 +1033,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 };
 
 
-/* Construct a new `_ClassMethod' object. */
+/* Construct a new `_ClassMethod` object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type,
                  Dee_objmethod_t func) {
@@ -1497,7 +1497,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 
 /* Lookup the origin of the function bound by
- * the given `_ClassProperty', or `NULL' if unknown. */
+ * the given `_ClassProperty`, or `NULL` if unknown. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
                          struct Dee_clsproperty_origin *__restrict result) {
@@ -2518,7 +2518,7 @@ cmethod_gettypefield(DeeModuleObject *mod,
 }
 
 
-/* Try to figure out doc information about `func' */
+/* Try to figure out doc information about `func` */
 PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict result, Dee_cmethod_t func) {
 	bzero(result, sizeof(*result));
@@ -2547,7 +2547,7 @@ Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict result, Dee_cmetho
 
 
 
-/* Make sure that we can re-use some functions from `ClassMethod' */
+/* Make sure that we can re-use some functions from `ClassMethod` */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
               offsetof(DeeClsMethodObject, clm_func));
 
@@ -3063,7 +3063,7 @@ kwcmethod_call_kw(DeeCMethodObject *self, size_t argc,
 	return DeeKwCMethod_CallFunc(self->cm_func.cmf_kwmeth, argc, argv, kw);
 }
 
-/* Make sure that we can re-use some functions from `CMethod' */
+/* Make sure that we can re-use some functions from `CMethod` */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func.cmf_kwmeth) ==
               offsetof(DeeCMethodObject, cm_func.cmf_meth));
 #define kwcmethod_serialize  cmethod_serialize
@@ -3143,7 +3143,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
  * for portable bindings of the deemon API in languages other
  * than C.
  *
- * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
+ * If at all possible, use `Dee_DEFINE_CMETHOD` instead! */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
@@ -3229,7 +3229,7 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	            "FATAL ERROR: Exception depth was improperly modified:\n"
 	            "After a return value %p from C-function %p, the exception "
 	            /**/ "depth should have been %u, but was actually %u\n"
-	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
+	            "For details, see the C documentation of `DeeCMethod_CallFunc`",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
 	assert_print_usercode_trace();
 	Dee_BREAKPOINT();

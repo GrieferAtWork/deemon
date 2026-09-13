@@ -125,7 +125,7 @@ DECL_BEGIN
 #undef cslab_malloc_USE_mmap
 #undef cslab_malloc_USE_Dee_Memalign
 #undef cslab_malloc_USE_Dee_Memalign_MAYBE
-#undef cslab_malloc_CAN_COALESCE /* randomly adjacent segments can be coalesced (else: must remember base address of every segment for `Dee_slab_page_rawfree_impl()') */
+#undef cslab_malloc_CAN_COALESCE /* randomly adjacent segments can be coalesced (else: must remember base address of every segment for `Dee_slab_page_rawfree_impl()`) */
 #if 0
 #define cslab_malloc_USE_Dee_Memalign
 #elif defined(__ARCH_PAGESIZE_MIN) && (Dee_SLAB_PAGESIZE > __ARCH_PAGESIZE_MIN)
@@ -349,7 +349,7 @@ base_malloc_from_cache(void) {
 	struct Dee_slab_page *result;
 	psegment_lock_acquire();
 	/* Always try to allocate from the segment with the least # of remaining
-	 * free pages. That segment is always the last element of `psegment_byfree',
+	 * free pages. That segment is always the last element of `psegment_byfree`,
 	 * since that list is sorted by "ps_free DESC" */
 	seg = TAILQ_LAST(&psegment_byfree, psegment_tailq);
 	if (seg) {
@@ -539,10 +539,10 @@ PRIVATE Dee_atomic_lock_t fslab_lock = Dee_ATOMIC_LOCK_INIT;
 /* [0..n][lock(fslab_lock)] Fast cache of free pages */
 PRIVATE struct fslab_list fslab_pages = SLIST_HEAD_INITIALIZER(fslab_pages);
 
-/* [lock(fslab_lock)] # of elements in `fslab_pages' */
+/* [lock(fslab_lock)] # of elements in `fslab_pages` */
 PRIVATE size_t fslab_size = 0;
 
-/* [lock(fslab_lock)] # of calls to `Dee_slab_page_rawmalloc_uncached()'
+/* [lock(fslab_lock)] # of calls to `Dee_slab_page_rawmalloc_uncached()`
  * since the last clear of the fast-free cache */
 PRIVATE size_t fslab_allocs_since_last_clear = 0;
 
@@ -552,9 +552,9 @@ PRIVATE size_t fslab_allocs_since_last_clear = 0;
 
 /* [lock(fslab_lock)] Threshold before half of "fslab_pages"
  * are passed to "Dee_slab_page_rawfree_uncached()".
- * - Increased before 'Dee_slab_page_rawmalloc_uncached()' when:
+ * - Increased before 'Dee_slab_page_rawmalloc_uncached()` when:
  *   fslab_allocs_since_last_clear == 0
- * - Decreased before 'Dee_slab_page_rawfree_uncached()' when:
+ * - Decreased before 'Dee_slab_page_rawfree_uncached()` when:
  *   fslab_allocs_since_last_clear == 0 */
 PRIVATE size_t fslab_treshold = FSLAB_TRESHOLD_MIN - 1;
 
@@ -721,10 +721,10 @@ again:
  *       the page back to the underlying page allocator.
  *
  * WARNING: The memory of the pages returned these malloc functions is entirely
- *          uninitialized (similarly, `Dee_slab_page_rawfree()' does not care
+ *          uninitialized (similarly, `Dee_slab_page_rawfree()` does not care
  *          about the contents of memory within the pages it's given). As such,
  *          the caller is responsible for doing all initialization/finalization
- * WARNING: Do not pass custom slab pages to `Dee_slab_page_rawfree()'! These
+ * WARNING: Do not pass custom slab pages to `Dee_slab_page_rawfree()`! These
  *          are just the dumb, low-level page allocation functions. If you want
  *          to support custom free function, that's up to you! */
 PUBLIC ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
@@ -752,7 +752,7 @@ Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page) {
 	/* TODO: Debug checks for use-after-free (fill "page" with a
 	 *       known debug pattern, probably the same pattern as
 	 *       also used by the actual slab allocator, and define
-	 *       a function called by `DeeHeap_CheckMemory()' to
+	 *       a function called by `DeeHeap_CheckMemory()` to
 	 *       verify that this pattern is still in-place in all
 	 *       places it should be) */
 #ifdef USE_fslab
@@ -766,7 +766,7 @@ Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page) {
 
 
 /* Clear caches kept by the raw slab page allocator.
- * This function is automatically called by `DeeHeap_Trim()'
+ * This function is automatically called by `DeeHeap_Trim()`
  * @param: pad: Try to keep at least this many bytes within the cache
  * @return: * : The # of bytes free'd from the cache. */
 INTERN size_t DCALL Dee_slab_page_rawtrim(size_t pad) {

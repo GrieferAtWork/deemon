@@ -302,7 +302,7 @@ do_iter:
 		/* Store our new iterator, replacing the previous one. */
 		result = self->cti_curr;
 		self->cti_curr = iter;
-		Dee_Incref(iter); /* The reference now stored in `self->cti_curr' */
+		Dee_Incref(iter); /* The reference now stored in `self->cti_curr` */
 		CatIterator_LockEndWrite(self);
 
 		/* Drop the old iterator. */
@@ -465,7 +465,7 @@ cat_get_frozen(Cat *__restrict self) {
 
 	/* Check for special case: the frozen variants of all inner sequences
 	 * are identical to the non-frozen versions (by-id). In this case, we
-	 * don't need to actually copy `self', but can simply re-return the
+	 * don't need to actually copy `self`, but can simply re-return the
 	 * original cat-object! */
 	if (bcmpc(result->t_elem, self->t_elem,
 	          result->t_size, sizeof(DREF DeeObject *)) == 0) {
@@ -721,8 +721,8 @@ cat_bool(Cat *__restrict self) {
 
 
 INTERN DeeTypeObject SeqConcat_Type = {
-	/* NOTE: `_SeqConcat' objects are never empty, else
-	 *        we'd get an overlap with `Dee_EmptyTuple' */
+	/* NOTE: `_SeqConcat` objects are never empty, else
+	 *        we'd get an overlap with `Dee_EmptyTuple` */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqConcat",
 	/* .tp_doc      = */ NULL,

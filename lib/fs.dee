@@ -373,15 +373,15 @@ local function _gethome(user: string = none): string {
 function expand(path: string, options: string = "hvpf", env: {string: string} = none) {
 	if (env is none)
 		env = posix.environ;
-	local opt_HOME   = false; /* `h': Expand a `~' prefix with `_gethome()' */
-	local opt_VARS   = false; /* `v': Expand `$nam' and `${nam}' with `env[nam]' */
-	local opt_WVARS  = false; /* `V': Expand `%nam%' with `env[nam]' */
-	local opt_PATH   = false; /* `p': Expand `.' and `..' folders and delete multiple consecutive
+	local opt_HOME   = false; /* `h`: Expand a `~` prefix with `_gethome()` */
+	local opt_VARS   = false; /* `v`: Expand `$nam` and `${nam}` with `env[nam]` */
+	local opt_WVARS  = false; /* `V`: Expand `%nam%` with `env[nam]` */
+	local opt_PATH   = false; /* `p`: Expand `.` and `..` folders and delete multiple consecutive
 	                           *      slashes, as well as whitespace surrounding them. */
-	local opt_ABS    = false; /* `a': Force the path to become absolute (same as `posix.abspath(path)'). */
-	local opt_REL    = false; /* `r': Force the path to become relative (same as `posix.relpath(path)'). - Overrules `opt_ABS' */
-	local opt_CASE   = false; /* `c': Force all parts of the path to share the same casing when the host file-system is case-insensitive. */
-	local opt_NOFAIL = false; /* `f': Skip expansion when a variable isn't known, or the home path cannot be determined. */
+	local opt_ABS    = false; /* `a`: Force the path to become absolute (same as `posix.abspath(path)`). */
+	local opt_REL    = false; /* `r`: Force the path to become relative (same as `posix.relpath(path)`). - Overrules `opt_ABS` */
+	local opt_CASE   = false; /* `c`: Force all parts of the path to share the same casing when the host file-system is case-insensitive. */
+	local opt_NOFAIL = false; /* `f`: Skip expansion when a variable isn't known, or the home path cannot be determined. */
 	for (local ch: options) {
 		switch (ch) {
 		case 'h': opt_HOME   = true; break;

@@ -109,7 +109,7 @@ do_realloc:
 		                    &multi_loc);
 		if unlikely(!result)
 			goto err_exprv;
-		/* `ast_multiple()' inherited `exprv' and all contained asts upon success. */
+		/* `ast_multiple()` inherited `exprv` and all contained asts upon success. */
 	}
 	return result;
 err_exprv:
@@ -205,7 +205,7 @@ do_realloc_catchv:
 					goto err_try_flags;
 				if (TPP_ISKEYWORD(tok)) {
 					/* Alternative catch-all spelling for backwards
-					 * compatibility: `catch (...error)' */
+					 * compatibility: `catch (...error)` */
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
@@ -218,11 +218,11 @@ do_realloc_catchv:
 						goto err_try_flags;
 				}
 			} else if (TPP_ISKEYWORD(tok)) {
-				/* Exception guard name: `try { ... } catch (err...) {}' */
+				/* Exception guard name: `try { ... } catch (err...) {}` */
 				char *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
-				if (*next_token == '.' && /* Check for `...' */
+				if (*next_token == '.' && /* Check for `...` */
 				    (next_token = advance_wraplf(next_token), *next_token == '.') &&
 				    (next_token = advance_wraplf(next_token), *next_token == '.')) {
 					if unlikely(scope_push() < 0)
@@ -236,17 +236,17 @@ do_realloc_catchv:
 					if unlikely(yield() < 0)
 						goto err_try_flags; /* Yield the exception addressing keyword. */
 					if unlikely(yield() < 0)
-						goto err_try_flags; /* Yield `...'. */
+						goto err_try_flags; /* Yield `...`. */
 				} else {
 					goto parse_catch_mask;
 				}
 			} else {
 parse_catch_mask:
-				/* Explicit catch mask: `try { ... } catch (get_mask())' */
+				/* Explicit catch mask: `try { ... } catch (get_mask())` */
 				handler->ce_mask = ast_parse_catchmask();
 				/* NOTE: For some reason I though it would be a good idea to use
 				 *       the arrow token here in the old deemon (like wtf?).
-				 *       But since using `as' in its place is literally a 1-on-1
+				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
 				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
 					if (unlikely(tok == TOK_ARROW) &&
@@ -262,7 +262,7 @@ parse_catch_mask:
 					goto parse_catch_symbol;
 				}
 				if (TPP_ISKEYWORD(tok)) {
-					/* Exception guard name: `try { ... } catch (Error err) {}' */
+					/* Exception guard name: `try { ... } catch (Error err) {}` */
 parse_catch_symbol:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
@@ -328,7 +328,7 @@ err:
 }
 
 
-/* With the current token being `try', parse the construct and
+/* With the current token being `try`, parse the construct and
  * try to figure out if it's a statement or an expression. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_try_hybrid(unsigned int *p_was_expression) {
@@ -407,7 +407,7 @@ do_realloc_catchv:
 					goto err_try_flags;
 				if (TPP_ISKEYWORD(tok)) {
 					/* Alternative catch-all spelling for backwards
-					 * compatibility: `catch (...error)' */
+					 * compatibility: `catch (...error)` */
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
@@ -420,11 +420,11 @@ do_realloc_catchv:
 						goto err_try_flags;
 				}
 			} else if (TPP_ISKEYWORD(tok)) {
-				/* Exception guard name: `try { ... } catch (err...) {}' */
+				/* Exception guard name: `try { ... } catch (err...) {}` */
 				char *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
-				if (*next_token == '.' && /* Check for `...' */
+				if (*next_token == '.' && /* Check for `...` */
 				    (next_token = advance_wraplf(next_token), *next_token == '.') &&
 				    (next_token = advance_wraplf(next_token), *next_token == '.')) {
 					if unlikely(scope_push() < 0)
@@ -438,18 +438,18 @@ do_realloc_catchv:
 					if unlikely(yield() < 0)
 						goto err_try_flags; /* Yield the exception addressing keyword. */
 					if unlikely(yield() < 0)
-						goto err_try_flags; /* Yield `...'. */
+						goto err_try_flags; /* Yield `...`. */
 				} else {
 					goto parse_catch_mask;
 				}
 			} else {
 parse_catch_mask:
-				/* Explicit catch mask: `try { ... } catch (get_mask())' */
+				/* Explicit catch mask: `try { ... } catch (get_mask())` */
 				handler->ce_mask = ast_parse_catchmask();
 
 				/* NOTE: For some reason I though it would be a good idea to use
 				 *       the arrow token here in the old deemon (like wtf?).
-				 *       But since using `as' in its place is literally a 1-on-1
+				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
 				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
 					if unlikely(tok == TOK_ARROW &&
@@ -465,7 +465,7 @@ parse_catch_mask:
 					goto parse_catch_symbol;
 				}
 				if (TPP_ISKEYWORD(tok)) {
-					/* Exception guard name: `try { ... } catch (Error err) {}' */
+					/* Exception guard name: `try { ... } catch (Error err) {}` */
 parse_catch_symbol:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;

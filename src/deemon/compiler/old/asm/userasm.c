@@ -494,7 +494,7 @@ err:
 
 
 
-/* @param: ao_flags: Set of `ASM_OVERLOAD_F*' */
+/* @param: ao_flags: Set of `ASM_OVERLOAD_F*` */
 PRIVATE WUNUSED NONNULL((1, 2)) bool DFCALL
 compatible_operand(struct asm_invoke_operand const *__restrict iop,
                    struct asm_overload_operand const *__restrict oop,
@@ -504,7 +504,7 @@ compatible_operand(struct asm_invoke_operand const *__restrict iop,
 #define OPERAND_CLASS_FFLAGMASK \
 	(~OPERAND_CLASS_FMASK & ~(OPERAND_CLASS_FSUBSP | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_FSPADD))
 
-	/* Match context flags (aka. flags set by a prefix such as `$' or `{...}') */
+	/* Match context flags (aka. flags set by a prefix such as `$` or `{...}`) */
 	if ((iop->io_class & OPERAND_CLASS_FFLAGMASK) !=
 	    (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FFLAGMASK)) {
 		if (((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_TOP ||
@@ -536,15 +536,15 @@ compatible_operand(struct asm_invoke_operand const *__restrict iop,
 	switch (UNALIGNED_GET16(&oop->aoo_class) & (OPERAND_CLASS_FSPADD |
 	                                            OPERAND_CLASS_FSPSUB)) {
 
-	case OPERAND_CLASS_FSPADD: /* `SP + imm' */
+	case OPERAND_CLASS_FSPADD: /* `SP + imm` */
 		imm_val -= current_assembler.a_stackcur;
 		break;
 
-	case OPERAND_CLASS_FSPSUB: /* `SP - imm' */
+	case OPERAND_CLASS_FSPSUB: /* `SP - imm` */
 		imm_val = current_assembler.a_stackcur - imm_val;
 		break;
 
-	case OPERAND_CLASS_FSUBSP: /* `imm - SP' */
+	case OPERAND_CLASS_FSUBSP: /* `imm - SP` */
 		imm_val += current_assembler.a_stackcur;
 		break;
 
@@ -562,7 +562,7 @@ compatible_operand(struct asm_invoke_operand const *__restrict iop,
 	case OPERAND_CLASS_VARARGS:
 		if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARARGS)
 			break;
-		/* Special case: If Allow the use of the last argument as replacement for `varargs' */
+		/* Special case: If Allow the use of the last argument as replacement for `varargs` */
 		if (((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) &&
 		    current_basescope->bs_varargs &&
 		    iop->io_symid == current_basescope->bs_varargs->s_symid)
@@ -572,7 +572,7 @@ compatible_operand(struct asm_invoke_operand const *__restrict iop,
 	case OPERAND_CLASS_VARKWDS:
 		if ((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_VARKWDS)
 			break;
-		/* Special case: If Allow the use of the last argument as replacement for `varargs' */
+		/* Special case: If Allow the use of the last argument as replacement for `varargs` */
 		if (((iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_ARG) &&
 		    current_basescope->bs_varkwds &&
 		    iop->io_symid == current_basescope->bs_varkwds->s_symid)
@@ -767,8 +767,8 @@ struct reldesc {
 };
 
 /* Relocation type descriptors.
- * The index is one of `ASM_OVERLOAD_FREL*' or `ASM_OVERLOAD_FSTK*'
- * Unsupported relocations are encoded as `R_DMN_NONE' */
+ * The index is one of `ASM_OVERLOAD_FREL*` or `ASM_OVERLOAD_FSTK*`
+ * Unsupported relocations are encoded as `R_DMN_NONE` */
 PRIVATE struct reldesc const reldescs[ASM_OVERLOAD_FRELMSK + 1] = {
 	/* [ASM_OVERLOAD_FRELABS] = */ { R_DMN_ABS8, R_DMN_ABS16, R_DMN_ABS32 },
 	/* [ASM_OVERLOAD_FRELDSP] = */ { R_DMN_DISP8, R_DMN_DISP16, R_DMN_DISP32 },
@@ -776,8 +776,8 @@ PRIVATE struct reldesc const reldescs[ASM_OVERLOAD_FRELMSK + 1] = {
 	/* [ASM_OVERLOAD_FSTKDSP] = */ { R_DMN_STCKA8, R_DMN_STCKA16, R_DMN_NONE },
 };
 
-/* @param: flags: Set of `ASM_OVERLOAD_F*'
- * @param: bits:  One of `8', `16' or `32' */
+/* @param: flags: Set of `ASM_OVERLOAD_F*`
+ * @param: bits:  One of `8`, `16` or `32` */
 #define asm_putrel_f(flags, sym, bits) \
 	asm_putrel(reldescs[(flags) & ASM_OVERLOAD_FRELMSK].rd_rel##bits, sym, 0)
 
@@ -791,7 +791,7 @@ uasm_invoke(struct asm_mnemonic const *__restrict instr,
 retry:
 	if (invoc->ai_flags & INVOKE_FPUSH && invoc->ai_opcount &&
 	    invoc->ai_ops[0].io_class == OPERAND_CLASS_POP) {
-		/* Translate: `push add pop, pop' --> `add top, pop' */
+		/* Translate: `push add pop, pop` --> `add top, pop` */
 		invoc->ai_flags &= ~INVOKE_FPUSH;
 		invoc->ai_ops[0].io_class = OPERAND_CLASS_TOP;
 	}
@@ -841,7 +841,7 @@ next_overload:
 
 		/* Translate absolute stack addresses in operands:
 		 * >> add top, #1
-		 * Translate to this when the previous stack-alignment was `#2'
+		 * Translate to this when the previous stack-alignment was `#2`
 		 * >> add top, pop */
 		i = invoc->ai_opcount;
 		immediate_stackdepth = current_assembler.a_stackcur;
@@ -867,7 +867,7 @@ next_overload:
 	}
 err_no_overload:
 	DeeError_Throwf(&DeeError_CompilerError,
-	                "No overload of `%s' matches the operands and prefix in `%K'",
+	                "No overload of `%s` matches the operands and prefix in `%K`",
 	                instr->am_name, asm_invocation_tostring(invoc, instr));
 err:
 	return -1;
@@ -1030,7 +1030,7 @@ got_overload:
 		for (i = 0; i < iter->ao_opcount; ++i) {
 			switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) & OPERAND_CLASS_FMASK) {
 
-			case OPERAND_CLASS_EXTERN: /* `extern <io_modid>:<io_symid>' */
+			case OPERAND_CLASS_EXTERN: /* `extern <io_modid>:<io_symid>` */
 				if (invoc->ai_ops[i].io_extern.io_modid > UINT8_MAX)
 					goto do_emit_f0_prefix;
 				ATTR_FALLTHROUGH
@@ -1089,15 +1089,15 @@ do_emit_instruction:
 			switch (UNALIGNED_GET16(&iter->ao_ops[i].aoo_class) &
 			        (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
 
-			case OPERAND_CLASS_FSPADD: /* `SP + imm' */
+			case OPERAND_CLASS_FSPADD: /* `SP + imm` */
 				imm_val -= current_assembler.a_stackcur;
 				break;
 
-			case OPERAND_CLASS_FSPSUB: /* `SP - imm' */
+			case OPERAND_CLASS_FSPSUB: /* `SP - imm` */
 				imm_val = current_assembler.a_stackcur - imm_val;
 				break;
 
-			case OPERAND_CLASS_FSUBSP: /* `imm - SP' */
+			case OPERAND_CLASS_FSUBSP: /* `imm - SP` */
 				imm_val += current_assembler.a_stackcur;
 				break;
 
@@ -1220,7 +1220,7 @@ do_emit_instruction:
 		        "Generated instruction does not terminate properly");
 		if (current_userasm.ua_mode & USER_ASM_FSTKINV && (sp_add || sp_sub)) {
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Instruction `%s' with stack effect used while the stack is in an undefined state",
+			                "Instruction `%s` with stack effect used while the stack is in an undefined state",
 			                instr->am_name);
 			goto err;
 		}
@@ -1229,7 +1229,7 @@ do_emit_instruction:
 			/* Negative stack offset? */
 #if 1
 			DeeError_Throwf(&DeeError_CompilerError,
-			                "Negative stack effect during `%s' instruction",
+			                "Negative stack effect during `%s` instruction",
 			                instr->am_name);
 			goto err;
 #else
@@ -1268,55 +1268,55 @@ done:
 #define OPNAME4(a, b, c, d) (uint32_t)((d) | (c) << 8 | (b) << 16 | (a) << 24)
 
 struct assembler_state {
-	uint16_t as_handlerc; /* The old amount of active catch/finally handlers (`a_handlerc'). */
-	uint16_t as_stackcur; /* The old stack alignment before user-assembly began compiling (`a_stackcur'). */
+	uint16_t as_handlerc; /* The old amount of active catch/finally handlers (`a_handlerc`). */
+	uint16_t as_stackcur; /* The old stack alignment before user-assembly began compiling (`a_stackcur`). */
 };
 
 /* User-assembly operand identifiers. */
 #define ASM_OP_INOUT         OPNAME1('+')           /* Switch operand mode to input/output. */
 #define ASM_OP_OUT           OPNAME1('=')           /* Switch operand mode to output. */
-#define ASM_OP_NONE          OPNAME1('n')           /* `none'                       The `none' builtin constant. */
-#define ASM_OP_STACK         OPNAME1('s')           /* `stack #7'                   An absolute position on the stack, located at the top. */
-#define ASM_OP_ABSSTACK      OPNAME1('S')           /* `stack #7'                   An absolute position on the stack. */
-#define ASM_OP_EXCEPT        OPNAME1('E')           /* `except'                     The currently active exception. */
-#define ASM_OP_MODULE        OPNAME1('M')           /* `module <imm8|16>'           An imported module descriptor. */
-#define ASM_OP_THIS          OPNAME2('T', 'i')      /* `this'                       The this-argument of a this-class function. */
-#define ASM_OP_THIS_MODULE   OPNAME2('T', 'm')      /* `this_module'                The calling module. */
-#define ASM_OP_THIS_FUNCTION OPNAME2('T', 'f')      /* `this_function'              The calling function. */
-#define ASM_OP_REF           OPNAME1('r')           /* `ref <imm8|16>'              A referenced variable. */
-#define ASM_OP_REF_GEN       OPNAME1('R')           /* `ref <imm8|16>'              A referenced variable (create new references for variables where that is possible). */
-#define ASM_OP_ARG           OPNAME1('a')           /* `arg <imm8|16>'              An argument variable. */
-#define ASM_OP_VARG          OPNAME2('A', 'v')      /* `varargs'                    Variable positional arguments. */
-#define ASM_OP_VKWD          OPNAME2('A', 'k')      /* `varkwds'                    Variable keyword arguments. */
-#define ASM_OP_CONST         OPNAME1('c')           /* `const <imm8|16>'            A constant expression. */
-#define ASM_OP_STATIC        OPNAME2('C', 's')      /* `static <imm8|16>'           A static expression. */
-#define ASM_OP_EXTERN        OPNAME1('e')           /* `extern <imm8|16>:<imm8|16>' An external symbol. */
-#define ASM_OP_GLOBAL        OPNAME1('g')           /* `global <imm8|16>'           A global symbol. */
-#define ASM_OP_LOCAL         OPNAME1('l')           /* `local <imm8|16>'            A local symbol. */
-#define ASM_OP_LOCAL_GEN     OPNAME1('L')           /* `local <imm8|16>'            A local symbol (allow the use of an anonymous local). */
-#define ASM_OP_TRUE          OPNAME2('T', 'T')      /* `true'                       A constant true. */
-#define ASM_OP_FALSE         OPNAME2('F', 'F')      /* `false'                      A constant false. */
-#define ASM_OP_IMMZERO       OPNAME2('I', 'z')      /* `$0'                         An integer equal to zero. */
-#define ASM_OP_SIMM8         OPNAME2('I', '8')      /* `$42'                        Any signed 8-bit integer. */
-#define ASM_OP_SIMM16        OPNAME3('I', '1', '6') /* `$42'                        Any signed 16-bit integer. */
-#define ASM_OP_SIMM32        OPNAME3('I', '3', '2') /* `$42'                        Any signed 32-bit integer. */
-#define ASM_OP_SIMM64        OPNAME3('I', '6', '4') /* `$42'                        Any signed 64-bit integer. */
-#define ASM_OP_IMM8          OPNAME2('N', '8')      /* `$42'                        Any unsigned 8-bit integer. */
-#define ASM_OP_IMM16         OPNAME3('N', '1', '6') /* `$42'                        Any unsigned 16-bit integer. */
-#define ASM_OP_IMM32         OPNAME3('N', '3', '2') /* `$42'                        Any unsigned 32-bit integer. */
-#define ASM_OP_IMM64         OPNAME3('N', '6', '4') /* `$42'                        Any unsigned 64-bit integer. */
-#define ASM_OP_CAST          OPNAME2('C', 'a')      /* `...'                        A valid operand for the `cast' instruction. */
-#define ASM_OP_SEQ_SEQ       OPNAME2('Q', 's')      /* `[#...]'                     A sequence-operand, as accepted by the `call' instruction. */
-#define ASM_OP_SEQ_MAP       OPNAME2('Q', 'm')      /* `{#...}'                     A Dict-compatible sequence-operand, as accepted by the `call' instruction. */
-#define ASM_OP_PREFIX        OPNAME1('p')           /* Input operand: Same as `ceglCsS' (Any prefix operand, including const-as-static)
-                                                     * Output operand: Same as `eglCsS' (Any prefix operand, excluding const-as-static) */
-#define ASM_OP_INTEGER       OPNAME1('i')           /* Same as `I32N32' (Any integer operand). */
-#define ASM_OP_SYMBOL        OPNAME1('v')           /* Same as `raAvAkcCseglRS' (Any symbol, potentially immutable). */
-#define ASM_OP_VARIABLE      OPNAME1('V')           /* Same as `eglSCs' (Any symbol, must be mutable). */
-#define ASM_OP_BINDABLE      OPNAME1('b')           /* Same as `eglCs' (Any symbol, must be able to be unbound). */
-#define ASM_OP_PUSH          OPNAME1('P')           /* Input operand:  Same as `nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
-                                                     * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
-                                                     * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
+#define ASM_OP_NONE          OPNAME1('n')           /* `none`                       The `none` builtin constant. */
+#define ASM_OP_STACK         OPNAME1('s')           /* `stack #7`                   An absolute position on the stack, located at the top. */
+#define ASM_OP_ABSSTACK      OPNAME1('S')           /* `stack #7`                   An absolute position on the stack. */
+#define ASM_OP_EXCEPT        OPNAME1('E')           /* `except`                     The currently active exception. */
+#define ASM_OP_MODULE        OPNAME1('M')           /* `module <imm8|16>`           An imported module descriptor. */
+#define ASM_OP_THIS          OPNAME2('T', 'i')      /* `this`                       The this-argument of a this-class function. */
+#define ASM_OP_THIS_MODULE   OPNAME2('T', 'm')      /* `this_module`                The calling module. */
+#define ASM_OP_THIS_FUNCTION OPNAME2('T', 'f')      /* `this_function`              The calling function. */
+#define ASM_OP_REF           OPNAME1('r')           /* `ref <imm8|16>`              A referenced variable. */
+#define ASM_OP_REF_GEN       OPNAME1('R')           /* `ref <imm8|16>`              A referenced variable (create new references for variables where that is possible). */
+#define ASM_OP_ARG           OPNAME1('a')           /* `arg <imm8|16>`              An argument variable. */
+#define ASM_OP_VARG          OPNAME2('A', 'v')      /* `varargs`                    Variable positional arguments. */
+#define ASM_OP_VKWD          OPNAME2('A', 'k')      /* `varkwds`                    Variable keyword arguments. */
+#define ASM_OP_CONST         OPNAME1('c')           /* `const <imm8|16>`            A constant expression. */
+#define ASM_OP_STATIC        OPNAME2('C', 's')      /* `static <imm8|16>`           A static expression. */
+#define ASM_OP_EXTERN        OPNAME1('e')           /* `extern <imm8|16>:<imm8|16>` An external symbol. */
+#define ASM_OP_GLOBAL        OPNAME1('g')           /* `global <imm8|16>`           A global symbol. */
+#define ASM_OP_LOCAL         OPNAME1('l')           /* `local <imm8|16>`            A local symbol. */
+#define ASM_OP_LOCAL_GEN     OPNAME1('L')           /* `local <imm8|16>`            A local symbol (allow the use of an anonymous local). */
+#define ASM_OP_TRUE          OPNAME2('T', 'T')      /* `true`                       A constant true. */
+#define ASM_OP_FALSE         OPNAME2('F', 'F')      /* `false`                      A constant false. */
+#define ASM_OP_IMMZERO       OPNAME2('I', 'z')      /* `$0`                         An integer equal to zero. */
+#define ASM_OP_SIMM8         OPNAME2('I', '8')      /* `$42`                        Any signed 8-bit integer. */
+#define ASM_OP_SIMM16        OPNAME3('I', '1', '6') /* `$42`                        Any signed 16-bit integer. */
+#define ASM_OP_SIMM32        OPNAME3('I', '3', '2') /* `$42`                        Any signed 32-bit integer. */
+#define ASM_OP_SIMM64        OPNAME3('I', '6', '4') /* `$42`                        Any signed 64-bit integer. */
+#define ASM_OP_IMM8          OPNAME2('N', '8')      /* `$42`                        Any unsigned 8-bit integer. */
+#define ASM_OP_IMM16         OPNAME3('N', '1', '6') /* `$42`                        Any unsigned 16-bit integer. */
+#define ASM_OP_IMM32         OPNAME3('N', '3', '2') /* `$42`                        Any unsigned 32-bit integer. */
+#define ASM_OP_IMM64         OPNAME3('N', '6', '4') /* `$42`                        Any unsigned 64-bit integer. */
+#define ASM_OP_CAST          OPNAME2('C', 'a')      /* `...`                        A valid operand for the `cast` instruction. */
+#define ASM_OP_SEQ_SEQ       OPNAME2('Q', 's')      /* `[#...]`                     A sequence-operand, as accepted by the `call` instruction. */
+#define ASM_OP_SEQ_MAP       OPNAME2('Q', 'm')      /* `{#...}`                     A Dict-compatible sequence-operand, as accepted by the `call` instruction. */
+#define ASM_OP_PREFIX        OPNAME1('p')           /* Input operand: Same as `ceglCsS` (Any prefix operand, including const-as-static)
+                                                     * Output operand: Same as `eglCsS` (Any prefix operand, excluding const-as-static) */
+#define ASM_OP_INTEGER       OPNAME1('i')           /* Same as `I32N32` (Any integer operand). */
+#define ASM_OP_SYMBOL        OPNAME1('v')           /* Same as `raAvAkcCseglRS` (Any symbol, potentially immutable). */
+#define ASM_OP_VARIABLE      OPNAME1('V')           /* Same as `eglSCs` (Any symbol, must be mutable). */
+#define ASM_OP_BINDABLE      OPNAME1('b')           /* Same as `eglCs` (Any symbol, must be able to be unbound). */
+#define ASM_OP_PUSH          OPNAME1('P')           /* Input operand:  Same as `nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR` (All operands accepted by the `push` instruction)
+                                                     * Output operand: Same as `eglCsS` (All operands accepted by the `pop` instruction)
+                                                     * In/out operand: Same as output operand (All operands accepted by both the `push` and `pop` instructions) */
 #define ASM_OP_ANYTHING      OPNAME1('X')           /* Any kind of operand (only really meaningful for artificial dependencies). */
 #define ASM_OP_ANYTHING_OLD  OPNAME1('x')           /* Old (deprecated) alias. I always meant to be follow what gcc does, but I missed that gcc uses 'X' for anything, and not 'x'... */
 
@@ -1350,12 +1350,12 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 }
 
 struct cleanup_mode {
-	uint16_t cm_kind;   /* The kind of cleanup (One of `CLEANUP_MODE_F*') */
+	uint16_t cm_kind;   /* The kind of cleanup (One of `CLEANUP_MODE_F*`) */
 #define CLEANUP_MODE_FNONE      0x0000 /* No special cleanup required. */
 #define CLEANUP_MODE_FSTACK     0x0001 /* Cleanup by popping a value from the stack. */
 #define CLEANUP_MODE_FLOCAL     0x0002 /* Cleanup by deleting a local variable. */
 #define CLEANUP_MODE_FLOCAL_POP 0x0003 /* Cleanup by loading from a local variable & deleting it. */
-	uint16_t cm_value;  /* For `CLEANUP_MODE_FLOCAL*': The local variable ID */
+	uint16_t cm_value;  /* For `CLEANUP_MODE_FLOCAL*`: The local variable ID */
 };
 
 
@@ -1563,7 +1563,7 @@ abs_stack_any:
 		int32_t rid;
 		if (self->a_type == AST_CONSTEXPR &&
 		    current_basescope != (DeeBaseScopeObject *)current_rootscope) {
-			/* Check if the object is being exported from `deemon' */
+			/* Check if the object is being exported from `deemon` */
 			sym = asm_bind_deemon_export(self->a_constexpr);
 			if unlikely(!sym)
 				goto err;
@@ -2112,7 +2112,7 @@ next:
 				ch   = *iter++;
 				if (!DeeUni_IsSymStrt(ch)) {
 					DeeError_Throwf(&DeeError_CompilerError,
-					                "Expected an identifier after `%[' in user-assembly text");
+					                "Expected an identifier after `%[` in user-assembly text");
 					goto err;
 				}
 				name_start = iter - 1;
@@ -2143,14 +2143,14 @@ has_operand:
 				ch   = *iter++;
 				if (ch != ']') {
 					DeeError_Throwf(&DeeError_CompilerError,
-					                "Expected `]' after `%[' in user-assembly text");
+					                "Expected `]` after `%[` in user-assembly text");
 					goto err;
 				}
 			} else {
 				uint8_t digit;
 				if (!DeeUni_AsDigit(ch, 10, &opno)) {
 					DeeError_Throwf(&DeeError_CompilerError,
-					                "Expected `[' or a digit after `%%' in user-assembly text");
+					                "Expected `[` or a digit after `%%` in user-assembly text");
 					goto err;
 				}
 				ch = *iter++;
@@ -2169,13 +2169,13 @@ has_operand:
 			}
 			ASSERT(opno < self->af_ast->a_assembly.as_opc);
 
-			/* Label operands must be prefixed with `l' */
+			/* Label operands must be prefixed with `l` */
 			if ((opno >= (self->af_ast->a_assembly.as_num_i +
 			              self->af_ast->a_assembly.as_num_o)) !=
 			    (mod == 'l')) {
 				DeeError_Throwf(&DeeError_CompilerError,
-				                mod == 'l' ? "Only label operands may be prefixed by `l'"
-				                           : "A label operand must be prefixed by `l'");
+				                mod == 'l' ? "Only label operands may be prefixed by `l`"
+				                           : "A label operand must be prefixed by `l`");
 				goto err;
 			}
 
@@ -2190,7 +2190,7 @@ done_special:
 			iter = Dee_unicode_skipspaceutf8_n(iter, end);
 			if (*iter != ')') {
 				DeeError_Throwf(&DeeError_CompilerError,
-				                "Expected `)' after `%(' in user-assembly text");
+				                "Expected `)` after `%(` in user-assembly text");
 				goto err;
 			}
 			++iter;
@@ -2457,7 +2457,7 @@ create_assembly_file:
 		}
 
 		/* Emit one last symbol to prevent peephole at the end
-		 * of user-assembly when the `volatile' bit is set. */
+		 * of user-assembly when the `volatile` bit is set. */
 		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
 		    (current_assembler.a_flag & ASM_FPEEPHOLE) && !result) {
 			struct asm_sym *volatile_sym = asm_newsym();
@@ -2514,7 +2514,7 @@ create_assembly_file:
 		goto err;
 	}
 
-	/* Pop operands according to `must_pop_ops' */
+	/* Pop operands according to `must_pop_ops` */
 	count = (self->a_assembly.as_num_o +
 	         self->a_assembly.as_num_i);
 	while (count--) {
@@ -2568,7 +2568,7 @@ create_assembly_file:
 	/* Re-adjust the stack depth to what the caller expects. */
 	ASSERT(old_state.as_handlerc == current_assembler.a_handlerc);
 	if (old_state.as_stackcur != current_assembler.a_stackcur) {
-		/* NOTE: Don't omit stack miss-alignment warnings when `SP' was specified in the clobber list. */
+		/* NOTE: Don't omit stack miss-alignment warnings when `SP` was specified in the clobber list. */
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
 				if (WARN(W_UASM_DOESNT_CLEANUP_STACK,
@@ -2608,10 +2608,10 @@ compile_operator(struct asm_operand const *__restrict op, bool is_output) {
 	ASSERT(op->ao_type);
 	format = op->ao_type->s_text;
 	if (is_output) {
-		/* Since there is no portable way of providing a value, `=X', while
+		/* Since there is no portable way of providing a value, `=X`, while
 		 * having an explicitly defined meaning, can't actually be used, since
 		 * there would be nothing to store into it.
-		 * However, `+X' is portable, and has the meaning of `op = op', which
+		 * However, `+X` is portable, and has the meaning of `op = op`, which
 		 * may actually have side-effects for non-symbol operands. */
 		if (strcmp(format, "+X") != 0 && strcmp(format, "+x") != 0) {
 			if (*format != '+' && *format != '=')

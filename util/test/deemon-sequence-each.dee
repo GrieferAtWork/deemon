@@ -41,7 +41,7 @@ import .common.test;
 
 	/* Modifying member function.
 	 * -> To force function evaluation, the generate proxy
-	 *    sequence needs to be expanded (thus explaining the `...')
+	 *    sequence needs to be expanded (thus explaining the `...`)
 	 * HINT:
 	 *    For this, the compiler generates assembly is equivalent to:
 	 * >> for (none: lists.each.insert(0, 9)) {} */

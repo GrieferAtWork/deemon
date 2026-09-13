@@ -74,22 +74,22 @@ INTDEF struct Dee_class_attribute empty_class_attributes[];
 struct class_maker {
 	DREF struct ast           *cm_base;        /* [0..1] An AST evaluating to the base of the class. */
 	DREF DeeClassDescriptorObject *cm_desc;    /* [1..1] The descriptor for the class. */
-	size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_iattr_list' */
-	size_t                     cm_cattr_size;  /* Number of used slots in `cm_desc->cd_cattr_list' */
-	Dee_operator_t             cm_clsop_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
+	size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_iattr_list` */
+	size_t                     cm_cattr_size;  /* Number of used slots in `cm_desc->cd_cattr_list` */
+	Dee_operator_t             cm_clsop_size;  /* Number of used slots in `cm_desc->cd_clsop_list` */
 	uint16_t                   cm_null_member; /* The address of a class member that is always unbound (used for
-	                                            * deleted operator), or `(uint16_t)-1' when no such address has
+	                                            * deleted operator), or `(uint16_t)-1` when no such address has
 	                                            * yet to be designated. */
 #define CLASS_MAKER_CTOR_FNORMAL    0x0000     /* Normal constructor flags. */
 #define CLASS_MAKER_CTOR_FDELETED   0x0001     /* The constructor has been deleted. */
 #define CLASS_MAKER_CTOR_FSUPER     0x0002     /* The constructor has explicitly been inherited from the super-type. */
 #define CLASS_MAKER_CTOR_FDEFAULT   0x0004     /* The constructor has explicitly been defined to be default-implemented. */
 #define CLASS_MAKER_CTOR_FSUPERKWDS 0x0008     /* The superargs operator returns an (args, kwds) pair. */
-	uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*') */
+	uint16_t                   cm_ctor_flags;  /* Special flags concerning the constructor (Set of `CLASS_MAKER_CTOR_F*`) */
 #define CLASS_MAKER_FEAT_FNORMAL    0x0000     /* Normal class features. */
 #define CLASS_MAKER_FEAT_FATTROPS   0x0001     /* The class is defining attribute operators */
 #define CLASS_MAKER_FEAT_FNOFINPUB  0x0002     /* The class contains at least one non-final, public member */
-	uint16_t                   cm_features;    /* Encountered class features (only used for warnings; set of `CLASS_MAKER_FEAT_F*') */
+	uint16_t                   cm_features;    /* Encountered class features (only used for warnings; set of `CLASS_MAKER_FEAT_F*`) */
 	DREF struct ast           *cm_ctor;        /* [0..1][(!= NULL) == (cm_ctor_scope != NULL) == (cm_initc != 0)]
 	                                            * The class's constructor function AST (AST_FUNCTION) */
 	DREF DeeBaseScopeObject   *cm_ctor_scope;  /* [0..1][(!= NULL) == (cm_ctor != NULL) == (cm_initc != 0)] (lazy-alloc)
@@ -100,18 +100,18 @@ struct class_maker {
 	size_t                     cm_inita;       /* [>= cm_initc] Allocated amount of ASTs executed before the actual constructor. */
 	DREF struct ast          **cm_initv;       /* [0..cm_initc|ALLOC(cm_inita)][owned][[*]->a_scope == cm_ctor_scope]
 	                                            * Vector of ASTs executed before the actual constructor.
-	                                            * NOTE: Each of these asts is generated in the context of the `cm_ctor_scope' scope. */
+	                                            * NOTE: Each of these asts is generated in the context of the `cm_ctor_scope` scope. */
 	size_t                     cm_class_initc; /* Amount of class member initializers. */
 	size_t                     cm_class_inita; /* Allocate amount of class member initializers. */
 	struct class_member       *cm_class_initv; /* [0..cm_class_initc|ALLOC(cm_class_inita)][owned]
 	                                            * Vector of class member initializers.
 	                                            * This contains stuff like creation of operator callbacks and
-	                                            * instance methods using the `Dee_CLASS_ATTRIBUTE_FCLASSMEM' flag. */
+	                                            * instance methods using the `Dee_CLASS_ATTRIBUTE_FCLASSMEM` flag. */
 	struct symbol             *cm_classsym;    /* [1..1] The symbol describing the class in the scope it is defined in.
 	                                            * This symbol is assigned in the base scope of every member
 	                                            * function/operator that is parsed. */
-	struct symbol             *cm_supersym;    /* [0..1] Same as `cm_classsym', but instead describes the class's super-class. */
-	struct symbol             *cm_thissym;     /* [1..1] The this-symbol associated with `cm_classsym'. */
+	struct symbol             *cm_supersym;    /* [0..1] Same as `cm_classsym`, but instead describes the class's super-class. */
+	struct symbol             *cm_thissym;     /* [1..1] The this-symbol associated with `cm_classsym`. */
 };
 
 
@@ -218,7 +218,7 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	DREF DeeClassDescriptorObject *new_descr;
 	new_mask = (self->cd_iattr_mask << 1) | 1;
 #if 0 /* The instance-attribute table is pre-initialized
-       * to a mask of `7', so this would never trigger. */
+       * to a mask of `7`, so this would never trigger. */
 	if (new_mask <= 1)
 		new_mask = 7;
 #endif
@@ -406,8 +406,8 @@ err:
 	return NULL;
 }
 
-/* Bind operator `name' to a function stored
- * in the class member table under `addr' */
+/* Bind operator `name` to a function stored
+ * in the class member table under `addr` */
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 class_maker_bindoperator(struct class_maker *__restrict self,
                          Dee_operator_t name, uint16_t addr,
@@ -447,10 +447,10 @@ err:
 }
 
 
-/* Similar to `class_maker_push_ctorscope()', but pushes a basescope
+/* Similar to `class_maker_push_ctorscope()`, but pushes a basescope
  * that should be used for an other operator or member-method other
  * than the constructor.
- * Upon success (0), the scope can later be popped using `basescope_pop()'. */
+ * Upon success (0), the scope can later be popped using `basescope_pop()`. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 class_maker_push_methscope(struct class_maker *__restrict self) {
 	if (basescope_push())
@@ -466,7 +466,7 @@ err:
 }
 
 /* Push the constructor-scope of the given class-maker.
- * Upon success (0), the scope can later be popped using `basescope_pop()'.
+ * Upon success (0), the scope can later be popped using `basescope_pop()`.
  * The constructor scope must be active when member initializers
  * and (obviously) the constructor operator are being parsed. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -500,16 +500,16 @@ err:
  * id, as well as creating symbols in the associated member tables and
  * the current scope that can be used to access the member.
  * HINT: This function also deals with accessing properties.
- * WARNING: Once done, the caller is required to increment `**pp_usage_counter'
+ * WARNING: Once done, the caller is required to increment `**pp_usage_counter`
  *          by the number of slots that are then being used by the member.
  * @param: name:             The name of the member that should be added.
- * @param: is_class_member:  `true', if the member should be added as a class-member.
- * @param: flags:            Set of `CLASS_ATTRIBUTE_F*'.
+ * @param: is_class_member:  `true`, if the member should be added as a class-member.
+ * @param: flags:            Set of `CLASS_ATTRIBUTE_F*`.
  * @param: pp_usage_counter: Filled with a pointer to the usage-counter which must be increment
  *                           by however-many consecutive VTABLE slots will be used by the member.
- * @return: * :              A new symbol classified as `SYM_CLASS_MEMBER' that is now stored in the caller's scope.
- *                           The symbol has already been fully initialized, including the `sym_member.sym_member'
- *                           field which contains the member descriptor apart of the either the `cm_cmem' or `cm_imem' table. */
+ * @return: * :              A new symbol classified as `SYM_CLASS_MEMBER` that is now stored in the caller's scope.
+ *                           The symbol has already been fully initialized, including the `sym_member.sym_member`
+ *                           field which contains the member descriptor apart of the either the `cm_cmem` or `cm_imem` table. */
 PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
                       struct TPPKeyword *__restrict name,
@@ -684,8 +684,8 @@ do_realloc:
 }
 
 
-/* Add a member initializer for `sym', previously returned by `class_maker_addmember()'.
- * NOTE: If the symbol describes an instance member, `initializer' must have been generated
+/* Add a member initializer for `sym`, previously returned by `class_maker_addmember()`.
+ * NOTE: If the symbol describes an instance member, `initializer` must have been generated
  *       in the context of the constructor scope (as it will be run immediately before
  *       the __constructor__ operator) */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -813,7 +813,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_deloperator(struct class_maker *__restrict self,
                         Dee_operator_t operator_name,
                         struct ast_loc *__restrict loc) {
-	/* Deleted operator (e.g. `operator str = del;') */
+	/* Deleted operator (e.g. `operator str = del;`) */
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
 		if unlikely(self->cm_null_member == (uint16_t)-1) {
@@ -839,7 +839,7 @@ PRIVATE NONNULL((1)) void DCALL
 class_maker_fini(struct class_maker *__restrict self) {
 	size_t i;
 
-	/* May be `NULL' following an init-failure. */
+	/* May be `NULL` following an init-failure. */
 	Dee_XDecref_unlikely(self->cm_desc);
 	ast_xdecref_unlikely(self->cm_base);
 	ast_xdecref_unlikely(self->cm_ctor);
@@ -852,7 +852,7 @@ class_maker_fini(struct class_maker *__restrict self) {
 	Dee_Free(self->cm_class_initv);
 }
 
-/* Pack together an AST to create the class described by `self'. */
+/* Pack together an AST to create the class described by `self`. */
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DCALL
 class_maker_pack(struct class_maker *__restrict self) {
 	DREF struct ast *result;
@@ -1165,7 +1165,7 @@ done_superargs:
 				if (paren_begin(&has_paren, W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
 					goto err_flags;
 				if (has_paren && tok == ')') {
-					/* Special case: Same as `= none' (aka: initializer to `none') */
+					/* Special case: Same as `= none` (aka: initializer to `none`) */
 constructor_list_none_initializer:
 					initializer_ast = ast_constexpr(Dee_None);
 					initializer_ast = ast_setddi(initializer_ast, &loc);
@@ -1230,7 +1230,7 @@ STATIC_ASSERT(Dee_CLASS_GETSET_SET < Dee_CLASS_GETSET_COUNT);
 struct callback_name {
 	char    cn_name[MAX_CALLBACK_NAME_LENGTH]; /* Callback name. */
 	uint8_t cn_depr;                           /* Non-zero if deprecated name. */
-	uint8_t cn_id;                             /* Property callback index (One of `CLASS_PROPERTY_*'). */
+	uint8_t cn_id;                             /* Property callback index (One of `CLASS_PROPERTY_*`). */
 };
 
 
@@ -1244,8 +1244,8 @@ PRIVATE struct callback_name const callback_names[] = {
 
 	/* The old deemon accepted _a_ _lot_ of other names for callbacks.
 	 * We continue to support them, but we warn if they are used instead
-	 * of the preferred `get', `del' and `set' names, as also found as the
-	 * names of property/member wrapper types like `ClassMember from rt' */
+	 * of the preferred `get`, `del` and `set` names, as also found as the
+	 * names of property/member wrapper types like `ClassMember from rt` */
 	{ "__get__", 1, Dee_CLASS_GETSET_GET },
 	{ "__del__", 1, Dee_CLASS_GETSET_DEL },
 	{ "__set__", 1, Dee_CLASS_GETSET_SET },
@@ -1290,14 +1290,14 @@ next:
 
 	case ';':
 		/* Rewind and clear context flags.
-		 * NOTE: If a type prefix (`function' or `operator')
+		 * NOTE: If a type prefix (`function` or `operator`)
 		 *       was used, warn about it being discarded. */
 		if (has_name_prefix &&
 		    WARN(W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX))
 			goto err;
 		goto next_callback;
 
-		/* Ignore a `function' / `operator' prefix. */
+		/* Ignore a `function` / `operator` prefix. */
 	case KWD_function:
 	case KWD_operator:
 		if (has_name_prefix &&
@@ -1350,9 +1350,9 @@ warn_deprecated_yield:
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(tok == '.') {
-						/* The old deemon allowed a `.' to follow some property names such as `del .'.
+						/* The old deemon allowed a `.` to follow some property names such as `del .`.
 						 * But since such behavior is now deprecated, just disregard all that and
-						 * consume a `.' token after a keyword and warn about it being ignored. */
+						 * consume a `.` token after a keyword and warn about it being ignored. */
 						if (WARN(W_DEPRECATED_PROPERTY_NAME,
 						         callback_names[callback_id].cn_name))
 							goto err;
@@ -1425,7 +1425,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 	DREF struct ast *result;
 	struct class_maker maker;
 	struct ast_annotations annotations;
-	uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*' */
+	uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*` */
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	struct decl_ast decl;
 	class_maker_init(&maker);
@@ -1454,7 +1454,7 @@ do_parse_class_base:
 do_parse_class_base_after_yield:
 		/* Parse the class's base expression.
 		 * NOTE: We parse it as a unary-base expression, so-as to not
-		 *       parse the `{' token that follows as a brace-initializer. */
+		 *       parse the `{` token that follows as a brace-initializer. */
 		maker.cm_base = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
@@ -1469,7 +1469,7 @@ do_parse_class_base_after_yield:
 			basec    = 1;
 			basea    = 2;
 			do {
-				/* Consume the `,' */
+				/* Consume the `,` */
 				if unlikely(yield() < 0)
 					goto err_basev;
 				if (basec >= basea) {
@@ -1511,7 +1511,7 @@ err_basev:
 	} else if (tok == '(') {
 		/* Just another syntax for class bases that the old
 		 * deemon supported and we're supporting as well.
-		 * Though I should note that the intended syntax is `class foo: bar { ... }' */
+		 * Though I should note that the intended syntax is `class foo: bar { ... }` */
 		if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
 			goto err;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -1524,7 +1524,7 @@ err_basev:
 		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 	} else {
-		/* Since this is the only place that `extends' may appear at,
+		/* Since this is the only place that `extends` may appear at,
 		 * I decided that it wouldn't merit its own keyword because
 		 * this may there is much less overhead. */
 		if (TPP_ISKEYWORD(tok) &&
@@ -1545,7 +1545,7 @@ err_basev:
 			goto do_parse_class_base;
 		}
 
-		/* Automatically use `Object' as base class when `-fold-style-classes' is active. */
+		/* Automatically use `Object` as base class when `-fold-style-classes` is active. */
 		if (HAS(EXT_OLD_STYLE_CLASSES)) {
 			DREF DeeModuleObject *rt_d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
@@ -1755,7 +1755,7 @@ set_visibility:
 			if (tok == '(' || tok == '{' ||
 			    tok == ':' || tok == TOK_ARROW || tok == KWD_pack) {
 				/* A deprecated syntax for defining constructors allowed
-				 * the use of `class' as another alias for `this' and the
+				 * the use of `class` as another alias for `this` and the
 				 * actual name of the class. */
 				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
 				         maker.cm_classsym->s_name->k_name))
@@ -1763,7 +1763,7 @@ set_visibility:
 				goto define_constructor;
 			}
 
-			/* Warn about `class' being used to declare static members being deprecated */
+			/* Warn about `class` being used to declare static members being deprecated */
 			if (WARN(W_DEPRECATED_USING_CLASS_FOR_STATIC))
 				goto err;
 			is_class_member       = true;
@@ -1854,7 +1854,7 @@ define_operator:
 					}
 
 					/* Make sure that we always emit at least 1 warning.
-					 * But note that at this point, `did_warn_any' should _always_ already be true! */
+					 * But note that at this point, `did_warn_any` should _always_ already be true! */
 					if unlikely(!did_warn_any) {
 						struct Dee_class_attribute *attr;
 						attr = cdesc_find_nonfinal_public_symbol(maker.cm_desc);
@@ -1906,7 +1906,7 @@ define_operator:
 					goto err_anno;
 				need_semi = true;
 				if (tok == KWD_del) {
-					/* Deleted operator (e.g. `operator str = del;') */
+					/* Deleted operator (e.g. `operator str = del;`) */
 					if unlikely(class_maker_deloperator(&maker, operator_name, &loc))
 						goto err_anno;
 					if unlikely(yield() < 0)
@@ -1919,10 +1919,10 @@ define_operator:
 				goto set_operator_ast;
 			}
 			if (operator_name == AST_OPERATOR_FOR) {
-				/* Special case: `operator for()' is a wrapper around `operator iter()' */
+				/* Special case: `operator for()` is a wrapper around `operator iter()` */
 				DREF struct ast *yield_function, *tempast, **argv;
-				/* Not actually an operator (shares a slot with `OPERATOR_ITER')
-				 * This operator can be used by `DeeClass_SetOperator()' to wrap the
+				/* Not actually an operator (shares a slot with `OPERATOR_ITER`)
+				 * This operator can be used by `DeeClass_SetOperator()` to wrap the
 				 * given callback using an internal wrapper type that behaves as follows:
 				 * >> class MyClass {
 				 * >>
@@ -1950,7 +1950,7 @@ define_operator:
 				current_basescope->bs_name = operator_name_kwd;
 				operator_name              = OPERATOR_ITER;
 
-				/* Inner function scope (yes: `operator for' is a function within a function....)
+				/* Inner function scope (yes: `operator for` is a function within a function....)
 				 * WRAP: `AST_FUNCTION(AST_RETURN(AST_OPERATOR(OPERATOR_ITER,
 				 *                                AST_OPERATOR(OPERATOR_CALL,
 				 *                                             ...,  // The inner function
@@ -2185,9 +2185,9 @@ define_constructor:
 				}
 				if (tok == '=') {
 					/* Special cases:
-					 *   - `this = del' (delete the constructor)
-					 *   - `this = super' (inherit the constructor from a super-class)
-					 *   - `this = ...' (Assign a custom callback that is invoked as the constructor) */
+					 *   - `this = del` (delete the constructor)
+					 *   - `this = super` (inherit the constructor from a super-class)
+					 *   - `this = ...` (Assign a custom callback that is invoked as the constructor) */
 					if unlikely(yield() < 0)
 						goto err;
 					if (tok == KWD_del) {
@@ -2228,8 +2228,8 @@ define_constructor:
 					}
 					if (tok == KWD_super) {
 						/* Inherit constructors.
-						 * - Set the `TP_FINHERITCTOR' flag, which will instruct the
-						 *   class runtime to implement `Dee_CLASS_OPERATOR_SUPERARGS' in
+						 * - Set the `TP_FINHERITCTOR` flag, which will instruct the
+						 *   class runtime to implement `Dee_CLASS_OPERATOR_SUPERARGS` in
 						 *   such a way that arguments are forwarded exactly. */
 						if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
 							if (WARNAT(&loc, W_CANNOT_INHERIT_DELETED_CONSTRUCTOR,
@@ -2696,10 +2696,10 @@ err:
 	return NULL;
 }
 
-/* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
- * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
- * @param: class_flags:   Set of `TP_F* & 0xf'
- * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name' != NULL).
+/* Parse a class definition, starting at the `{` token (or at `:` when a base exists).
+ * The returned AST is of type `AST_CLASS` (create_symbol == false) or `AST_STORE` (create_symbol == true).
+ * @param: class_flags:   Set of `TP_F* & 0xf`
+ * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,

@@ -78,7 +78,7 @@ DECL_BEGIN
  *       >> };
  */
 struct Dee_dict_item {
-	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key' (undefined, but readable when "di_key == NULL") */
+	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key` (undefined, but readable when "di_key == NULL") */
 	union {
 		DREF DeeObject *di_key_and_value[2]; /* [0..1] Inline vector of the key, followed by its value. */
 		struct {
@@ -108,12 +108,12 @@ struct Dee_dict_item {
 	;
 };
 
-/* Static initializer for `struct Dee_dict_item' */
+/* Static initializer for `struct Dee_dict_item` */
 #define Dee_DICT_ITEM_INIT(hash, key, value) { hash, { { key, value } } }
 
 typedef struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	/*real*/Dee_hash_vidx_t           d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
+	/*real*/Dee_hash_vidx_t           d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1`) */
 	/*real*/Dee_hash_vidx_t           d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
 	Dee_hash_vidx_t                   d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
 	struct Dee_dict_item             *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
@@ -165,7 +165,7 @@ typedef struct Dee_dict_object {
 #define _DeeDict_HTabSet(self, htab_index, v) (*(self)->d_hidxops->hxio_set)((self)->d_htab, htab_index, v)
 #endif /* DEE_SOURCE */
 
-/* The main `Dict' container class */
+/* The main `Dict` container class */
 DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob, &DeeDict_Type)
 #define DeeDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeDict_Type)
@@ -215,7 +215,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromRoDict(/
 #define DeeDict_Clear(self) ((*DeeDict_Type.tp_gc->tp_clear)(self))
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
- * @param: key_values: A vector containing `num_items*2' objects,
+ * @param: key_values: A vector containing `num_items*2` objects,
  *                     even ones being keys and odd ones being items.
  * @param: num_items:  The number of key-value pairs passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */
@@ -223,7 +223,7 @@ DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
                               /*inherit(on_success)*/ DREF DeeObject **key_values);
 
-/* Locking helpers for `DeeDictObject' */
+/* Locking helpers for `DeeDictObject` */
 #define DeeDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->d_lock)
 #define DeeDict_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->d_lock)
 #define DeeDict_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->d_lock)

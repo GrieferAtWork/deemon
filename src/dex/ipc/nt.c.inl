@@ -57,7 +57,7 @@
 
 DECL_BEGIN
 
-/* Structures are taken from `https://www.nirsoft.net/kernel_struct/vista/RTL_USER_PROCESS_PARAMETERS.html' */
+/* Structures are taken from `https://www.nirsoft.net/kernel_struct/vista/RTL_USER_PROCESS_PARAMETERS.html` */
 
 #ifndef _MSC_VER
 #undef PVOID64
@@ -214,12 +214,12 @@ STATIC_ASSERT(offsetof(RTL_USER_PROCESS_PARAMETERS64, CommandLine)      == 112);
 #define PROCATTR_COMMANDLINE           6 /* DREF DeeStringObject * */
 #define PROCATTR_ENVIRONMENT           7 /* DREF DeeSequenceObject * -- {(string, string)...} */
 
-/* Read the attribute `dwAttributeId' (One of `PROCATTR_*')
- * for the given process `*lphProcess' with id `dwProcessId'.
+/* Read the attribute `dwAttributeId` (One of `PROCATTR_*`)
+ * for the given process `*lphProcess` with id `dwProcessId`.
  * @param: lphProcess:     [in|out] A handle to the process (may be replaced by a different handle, though the old handle is not closed)
  * @param: dwProcessId:     The ID of the process in question.
- * @param: dwAttributeType: The attribute that should be accessed (One of `PROCATTR_*').
- * @return: * :             An object encapsulating the value referred to by `dwAttributeId'
+ * @param: dwAttributeType: The attribute that should be accessed (One of `PROCATTR_*`).
+ * @return: * :             An object encapsulating the value referred to by `dwAttributeId`
  * @return: NULL:           An error occurred. */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nt_GetProcessAttribute(HANDLE *__restrict lphProcess,

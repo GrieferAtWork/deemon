@@ -113,7 +113,7 @@ DEX_MEMBER_NODOC("__dummy__", Dee_None),
 #endif /* !CONFIG_HAVE_LIBHOSTASM */
 
 /* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
- *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay
+ *       and be given their compiled equivalents (`test_compile_and_run()` will *not* stay
  *       and is only here to test re-compiling and running code) */
 DEX_END(NULL, NULL, NULL);
 

@@ -464,7 +464,7 @@ again:
 		return true;
 	}
 	sysdb_lock_endwrite();
-	/* Search for case-insensitive `PROTO' in the name and re-try with
+	/* Search for case-insensitive `PROTO` in the name and re-try with
 	 * the following string after stripping leading underscores.
 	 * >> `sock_getprotovalue("IPPROTO_TCP")' should still work,
 	 *     but the system's database usually only accepts `"TCP"' */
@@ -607,7 +607,7 @@ get_shutdown_mode(char const *__restrict mode,
 		return 0;
 	}
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid shutdown mode `%s'",
+	                       "Invalid shutdown mode `%s`",
 	                       mode);
 }
 
@@ -1164,7 +1164,7 @@ err:
 #endif /* TRY_AGAIN */
 do_gethostbyname:
 		bzero(self, sizeof(SockAddr));
-		/* Quick check: If the host starts with a digit, or with `:',
+		/* Quick check: If the host starts with a digit, or with `:`,
 		 * then it isn't a special name, but an absolute address. */
 		if (host_length && (!DeeUni_IsDigit(*host) && *host != ':')) {
 			char const *special_name = host;
@@ -1698,7 +1698,7 @@ sockaddr_ctor(DeeSockAddrObject *__restrict self,
 	int af_type, result;
 	if (!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Expected at least one argument for construction of `sockaddr'");
+		                "Expected at least one argument for construction of `sockaddr`");
 		goto err;
 	}
 	if (sock_getafof(argv[0], &af_type))

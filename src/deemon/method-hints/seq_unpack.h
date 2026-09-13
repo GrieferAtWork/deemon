@@ -98,10 +98,10 @@ default_unpack_with_foreach_cb(void *arg, DeeObject *elem) {
 )]
 
 
-/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
- * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
- * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
- * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
+/* Unpack the given sequence `self` into `dst_length` items then stored within the `dst` vector.
+ * This operator follows `DeeObject_Foreach()` semantics, in that unbound items are skipped.
+ * @return: 0 : Success (`dst` now contains exactly `dst_length` references to [1..1] objects)
+ * @return: -1: An error was thrown (`dst` may have been modified, but contains no references) */
 [[wunused]]
 int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t count,
                               [[nonnull]] /*out*/ DREF DeeObject *result[])
@@ -284,7 +284,7 @@ err:
 
 
 
-/* @return: * : The actual # of objects written to `result' (always in range [min_count, max_count])
+/* @return: * : The actual # of objects written to `result` (always in range [min_count, max_count])
  * @return: (size_t)-1: Error */
 [[wunused]]
 size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,

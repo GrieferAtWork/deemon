@@ -507,7 +507,7 @@ mfkv_delitem(MapFromKeys *__restrict self, DeeObject *key) {
 
 struct mfkX_foreach_pair_data {
 	Dee_foreach_pair_t mfkX_fpd_cb;    /* [1..1] Inner callback. */
-	void              *mfkX_fpd_arg;   /* [?..?] Cookie for `mfkX_fpd_cb'. */
+	void              *mfkX_fpd_arg;   /* [?..?] Cookie for `mfkX_fpd_cb`. */
 	DeeObject         *mfkX_fpd_value; /* [1..1] Value to yield for every possible key, or callback. */
 };
 

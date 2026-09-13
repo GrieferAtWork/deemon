@@ -33,9 +33,9 @@ err:
 
 
 /* Override the value of a pre-existing key
- * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
- * @return: Dee_HAS_YES: The value of `key' was set to `value'
- * @return: Dee_HAS_NO:  The given `key' doesn't exist (nothing was updated)
+ * @param: value: The value to overwrite that of `key` with (so-long as `key` already exists)
+ * @return: Dee_HAS_YES: The value of `key` was set to `value`
+ * @return: Dee_HAS_NO:  The given `key` doesn't exist (nothing was updated)
  * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __map_setold__.map_setold([[nonnull]] DeeObject *self,

@@ -34,15 +34,15 @@ DECL_BEGIN
 
 #define DO(expr) if unlikely(expr) goto err
 
-/* @param: loop_flags:   Set of `AST_FLOOP_*'
+/* @param: loop_flags:   Set of `AST_FLOOP_*`
  * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),
  *                       or the loop-continue condition ([0..1] in other loop types).
  * @param: iter_or_next: The loop iterator ([1..1] in a foreach loop),
  *                       or an optional expression executed at the end
- *                       of each iteration, and jumped to by `continue' ([0..1])
+ *                       of each iteration, and jumped to by `continue` ([0..1])
  * @param: block:        The main loop block executed in each iteration ([0..1])
  * @param: ddi_ast:      A branch used for debug information.
- * @return: * :         `loop_break' -- This symbol must be defined immediately
+ * @return: * :         `loop_break` -- This symbol must be defined immediately
  *                       after the loop, however after variables allocated by
  *                       the scope have been disposed of.
  */
@@ -90,7 +90,7 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 		} else {
 			DO(ast_genasm(iter_or_next, ASM_G_FPUSHRES));
 		}
-		/* This is where the loop starts! (and where `continue' jump to) */
+		/* This is where the loop starts! (and where `continue` jump to) */
 		asm_defsym(loop_continue);
 		/* The foreach instruction will jump to the break-address
 		 * when the iterator has been exhausted. */
@@ -129,7 +129,7 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 		DO(asm_gjmp(ASM_JMP, loop_continue)); /* Jump back to yield the next item. */
 		current_assembler.a_curr = prev_section;
 
-		/* -1: Adjust for the `ASM_FOREACH' instruction popping the iterator once it's empty. */
+		/* -1: Adjust for the `ASM_FOREACH` instruction popping the iterator once it's empty. */
 		asm_decsp();
 	} else if (loop_flags & AST_FLOOP_POSTCOND) {
 		struct asm_sym *loop_block = asm_newsym();
@@ -137,7 +137,7 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 			goto err;
 		asm_defsym(loop_block);
 		/* NOTE: There's no point in trying to put some if this stuff into
-		 *       the cold section when the `AST_FLOOP_UNLIKELY' flag is set.
+		 *       the cold section when the `AST_FLOOP_UNLIKELY` flag is set.
 		 *       Since the loop-block is always executed, we'd always have
 		 *       to jump into cold text, which would kind-of defeat the purpose
 		 *       considering that it's meant to contain code that's unlikely

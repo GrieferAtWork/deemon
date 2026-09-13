@@ -37,7 +37,7 @@ class b: a {
 		/* Call a method from another base
 		 * Note how we don't have to explicitly state
 		 * which base class should be used
-		 * WARNING: If you would write 'this.super.foo()',
+		 * WARNING: If you would write 'this.super.foo()`,
 		 *          you would once again call b::foo,
 		 *          as 'this' is an instance of 'c'
 		 * Internally, this super is replaced with

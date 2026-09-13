@@ -43,7 +43,7 @@
 #endif /* CONFIG_HAVE_MATH_H */
 
 /* Print a string representation of the given floating point value.
- * @param: flags: Set of `Dee_FLOAT_PRINT_F*' */
+ * @param: flags: Set of `Dee_FLOAT_PRINT_F*` */
 #ifdef DEFINE_DeeFloat_LPrint
 #define LOCAL_float_t __LONGDOUBLE
 PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL

@@ -37,7 +37,7 @@ DECL_BEGIN
 
 struct late_cmd_option {
 	int (DCALL *lco_func)(char *arg); /* [1..1] The command to execute. */
-	char       *lco_arg;              /* [0..1] The argument for `lco_func' */
+	char       *lco_arg;              /* [0..1] The argument for `lco_func` */
 };
 struct late_cmd_options {
 	size_t                  lco_opta; /* Allocated amount of late-options. */
@@ -47,7 +47,7 @@ struct late_cmd_options {
 
 PRIVATE struct late_cmd_options late_options = { 0, 0, NULL };
 
-/* Execute all late-options and free the `lco_optv' of the internal late-options list. */
+/* Execute all late-options and free the `lco_optv` of the internal late-options list. */
 INTERN int DCALL cmd_runlate(void) {
 	struct late_cmd_option *iter, *end;
 	int result = 0;
@@ -98,8 +98,8 @@ do_realloc:
 	(COMPILER_LENOF(((struct cmd_option *)0)->co_shortnam) - 1)
 
 /* Find and return a short option with all bits
- * set in `req_flags', as well as matching `name'.
- * If not found, return `NULL' */
+ * set in `req_flags`, as well as matching `name`.
+ * If not found, return `NULL` */
 PRIVATE struct cmd_option const *DCALL
 find_short_option(struct cmd_option const *__restrict options,
                   char const *__restrict name, size_t name_len,
@@ -121,7 +121,7 @@ done:
 	return NULL;
 }
 
-/* Same as `find_short_option', but for long names. */
+/* Same as `find_short_option`, but for long names. */
 PRIVATE struct cmd_option const *DCALL
 find_long_option(struct cmd_option const *__restrict options,
                  char const *__restrict name, size_t name_len,
@@ -172,7 +172,7 @@ cmd_parse(int *__restrict p_argc, char ***__restrict p_argv,
 		if (cmd[0] == '-') {
 			++cmd; /* Skip the initial dash. */
 			if (!*cmd)
-				break; /* Nothing after the `-' (used in places as alias for /dev/stdin) */
+				break; /* Nothing after the `-` (used in places as alias for /dev/stdin) */
 		}
 		++argv, --argc; /* Consume this argument. */
 		if (cmd[0] == '-') {
@@ -182,14 +182,14 @@ cmd_parse(int *__restrict p_argc, char ***__restrict p_argv,
 check_long:
 			cmd_len = strlen(cmd);
 			if (!exec_all && !cmd_len)
-				break; /* Explicit command list end (double dash: `--') */
+				break; /* Explicit command list end (double dash: `--`) */
 			/* Long option name. */
 			opt = find_long_option(options, cmd, cmd_len,
 			                       long_flags | CMD_FARGONLYIMM,
 			                       long_flags);
 			if (opt)
 				goto has_opt;
-			/* Check for long options that accept their argument following a `=' character. */
+			/* Check for long options that accept their argument following a `=` character. */
 			eq_sign = (char *)memchr(cmd, '=', cmd_len);
 			if (eq_sign) {
 				opt = find_long_option(options, cmd, (size_t)(eq_sign - cmd),
@@ -259,7 +259,7 @@ check_short_options:
 		}
 		/* Finally: execute the option. */
 		DeeError_Throwf(&DeeError_RuntimeError,
-		                "Unknown commandline option `%#q'",
+		                "Unknown commandline option `%#q`",
 		                cmd);
 		goto err;
 has_opt:
@@ -344,7 +344,7 @@ has_opt:
 			/* Check if an absent argument is acceptable by the command. */
 			if (!arg && (opt->co_flags & (CMD_FARG | CMD_FARGOPT)) == (CMD_FARG)) {
 				DeeError_Throwf(&DeeError_RuntimeError,
-				                "Commandline option `%s%s' requires an argument",
+				                "Commandline option `%s%s` requires an argument",
 				                opt->co_longname ? "--" : "-",
 				                opt->co_longname ? opt->co_longname : opt->co_shortnam);
 				goto err;

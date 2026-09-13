@@ -125,7 +125,7 @@ STATIC_ASSERT((LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data +
                LOCAL_SIZEOF__sp_pad + Dee_SIZEOF_SLAB_PAGE_META) == Dee_SLAB_PAGESIZE);
 STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + SIZEOF_slab_bitword_t),
                   "More padding than this wouldn't make sense, because "
-                  "then 1 extra item in `sp_data' should have been used");
+                  "then 1 extra item in `sp_data` should have been used");
 
 /* Define the "slab_page" structure */
 struct LOCAL_slab_page {
@@ -341,7 +341,7 @@ PRIVATE Dee_atomic_rwlock_t LOCAL_slab_lock = Dee_ATOMIC_RWLOCK_INIT;
 PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOCAL_slab_pages);
 
 #if SLAB_TRACK_FULL_PAGES
-/* [0..n][lock(LOCAL_slab_lock)] Pages that are fully allocated (`spm_used == LOCAL_MAX_CHUNK_COUNT') */
+/* [0..n][lock(LOCAL_slab_lock)] Pages that are fully allocated (`spm_used == LOCAL_MAX_CHUNK_COUNT`) */
 PRIVATE struct LOCAL_slab_page_list LOCAL_slab_fullpages = LIST_HEAD_INITIALIZER(LOCAL_slab_fullpages);
 #endif /* SLAB_TRACK_FULL_PAGES */
 #endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */

@@ -107,7 +107,7 @@ err:
 }
 
 
-/* All of these return (T)-1 on error. When the object's actual value is `(T)-1', throw `IntegerOverflow' */
+/* All of these return (T)-1 on error. When the object's actual value is `(T)-1`, throw `IntegerOverflow` */
 PUBLIC WUNUSED NONNULL((1)) uint8_t
 (DCALL DeeObject_AsUInt8Direct)(DeeObject *__restrict self) {
 	uint8_t result;
@@ -919,7 +919,7 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 		return Dee_HASHOF_EMPTY_SEQUENCE;
 
 	/* Important: when only a single object is given, our
-	 * return value must be equal to `DeeObject_Hash()'.
+	 * return value must be equal to `DeeObject_Hash()`.
 	 *
 	 * This is required so that:
 	 * >> import hash from deemon;
@@ -944,7 +944,7 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 		return Dee_HASHOF_EMPTY_SEQUENCE;
 
 	/* Important: when only a single object is given, our
-	 * return value must be equal to `DeeObject_Hash()'.
+	 * return value must be equal to `DeeObject_Hash()`.
 	 *
 	 * This is required so that:
 	 * >> import hash from deemon;
@@ -968,10 +968,10 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 
 
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed < key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed > key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
@@ -987,10 +987,10 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
@@ -1006,10 +1006,10 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
- * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)'
- * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)'
- * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)'
+/* Compare a pre-keyed `lhs_keyed` with `rhs` using the given `key` function
+ * @return: == Dee_COMPARE_LO: `lhs_keyed != key(rhs)`
+ * @return: == Dee_COMPARE_EQ: `lhs_keyed == key(rhs)`
+ * @return: == Dee_COMPARE_GR: `lhs_keyed != key(rhs)`
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,

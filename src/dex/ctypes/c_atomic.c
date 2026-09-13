@@ -443,7 +443,7 @@ INTERN DEFINE_CMETHOD1(c_atomic_futex_wakeone, &c_atomic_futex_wakeone_f, METHOD
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_atomic_futex_wakeone_f_impl(void *ptr)
 /*[[[end]]]*/
 {
-	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
+	/* Because our `capi_futex_wait()` emulates 8-bit and 16-bit waits
 	 * by waiting for the relevant 32-bit word, we have to match its
 	 * alignment here! */
 	ptr = (void *)((uintptr_t)ptr & ~3);
@@ -466,7 +466,7 @@ INTERN DEFINE_CMETHOD1(c_atomic_futex_wakeall, &c_atomic_futex_wakeall_f, METHOD
 FORCELOCAL WUNUSED DREF DeeObject *DCALL c_atomic_futex_wakeall_f_impl(void *ptr)
 /*[[[end]]]*/
 {
-	/* Because our `capi_futex_wait()' emulates 8-bit and 16-bit waits
+	/* Because our `capi_futex_wait()` emulates 8-bit and 16-bit waits
 	 * by waiting for the relevant 32-bit word, we have to match its
 	 * alignment here! */
 	ptr = (void *)((uintptr_t)ptr & ~3);

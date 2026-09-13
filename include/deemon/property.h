@@ -46,11 +46,11 @@ typedef struct Dee_property_object {
 	 * >>     }
 	 * >> }
 	 * >>
-	 * >> local prop = MyClass.foo; // This is a `DeePropertyObject'
-	 * >> print repr prop;          // `Property(...)'
+	 * >> local prop = MyClass.foo; // This is a `DeePropertyObject`
+	 * >> print repr prop;          // `Property(...)`
 	 * >> local inst = MyClass();
-	 * >> print inst.foo;           // `In getter' `42'
-	 * >> print prop.get(inst);     // `In getter' `42'
+	 * >> print inst.foo;           // `In getter` `42`
+	 * >> print prop.get(inst);     // `In getter` `42`
 	 * Note that property wrappers are always unbound and not actually
 	 * used when accessing instance members through normal means.
 	 * They are merely used as syntactical sugar to allow access to
@@ -63,7 +63,7 @@ typedef struct Dee_property_object {
 	DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
 } DeePropertyObject;
 
-DDATDEF DeeTypeObject DeeProperty_Type; /* `Property from deemon' */
+DDATDEF DeeTypeObject DeeProperty_Type; /* `Property from deemon` */
 #define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob, &DeeProperty_Type)
 #define DeeProperty_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeProperty_Type)
 

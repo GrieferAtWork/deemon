@@ -84,7 +84,7 @@ DeeSystem_DEFINE_memrchr(Dee_libc_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 
-/* Figure out how to implement `DeeSystem_PrintPwd()' */
+/* Figure out how to implement `DeeSystem_PrintPwd()` */
 #undef DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
 #undef DeeSystem_PrintPwd_USE_wgetcwd
 #undef DeeSystem_PrintPwd_USE_getcwd
@@ -198,7 +198,7 @@ yes:
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-/* Ensure that the given `filename' describes an absolute path. */
+/* Ensure that the given `filename` describes an absolute path. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
@@ -210,7 +210,7 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 		goto err;
 	end = begin + WSTR_LENGTH(begin);
 #ifdef CONFIG_HOST_WINDOWS
-	/* Don't modify special filenames such as `CON' or `NUL' */
+	/* Don't modify special filenames such as `CON` or `NUL` */
 	if (nt_IsSpecialFilename(begin, WSTR_LENGTH(begin)))
 		goto return_unmodified;
 #endif /* CONFIG_HOST_WINDOWS */
@@ -227,7 +227,7 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 		if (DeeSystem_IsSep(iter[0]) && Dee_UNICODE_PRINTER_LENGTH(&printer)) {
 			size_t index = 0;
 
-			/* This sep must exist because it was printed by `DeeSystem_PrintPwd()' */
+			/* This sep must exist because it was printed by `DeeSystem_PrintPwd()` */
 			while ((++index, Dee_UNICODE_PRINTER_GETCHAR(&printer, index - 1) != DeeSystem_SEP))
 				;
 			Dee_unicode_printer_truncate(&printer, index);
@@ -253,7 +253,7 @@ next:
 	ch = *iter++;
 	switch (ch) {
 
-	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f'
+	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f`
 	 * If a bug is found in this code, it should be fixed here, as well as
 	 * within the DEX source file. */
 #if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
@@ -276,7 +276,7 @@ next:
 		}
 		flush_end = Dee_unicode_skipspaceutf8_rev_n(flush_end, flush_start);
 
-		/* Analyze the last path portion for being a special name (`.' or `..') */
+		/* Analyze the last path portion for being a special name (`.` or `..`) */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
 				/* Parent-directory-reference. */
@@ -350,15 +350,15 @@ do_flush_after_sep:
 			goto err;
 		flush_start = iter;
 		if (did_print_sep) {
-			/* The slash has already been been printed: `foo/ bar' */
+			/* The slash has already been been printed: `foo/ bar` */
 		} else if (sep_loc == iter - 1
 #ifdef DeeSystem_ALTSEP
 		         && (!*sep_loc || *sep_loc == DeeSystem_SEP)
 #endif /* !DeeSystem_ALTSEP */
 		         ) {
-			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
+			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar` */
 		} else {
-			/* The slash must be printed explicitly: `foo / bar' */
+			/* The slash must be printed explicitly: `foo / bar` */
 			if (Dee_unicode_printer_putascii(&printer, DeeSystem_SEP) < 0)
 				goto err;
 		}
@@ -396,15 +396,15 @@ err:
 	return NULL;
 }
 
-/* Check if the given `filename' can be considered an absolute, normalized
- * path, that is: isn't relative, and doesn't contain `.' or `..' segments. */
+/* Check if the given `filename` can be considered an absolute, normalized
+ * path, that is: isn't relative, and doesn't contain `.` or `..` segments. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_len) {
 	char const *iter, *end, *flush_start, *flush_end;
 	char ch;
 	end = filename + filename_len;
 #ifdef CONFIG_HOST_WINDOWS
-	/* Don't modify special filenames such as `CON' or `NUL' */
+	/* Don't modify special filenames such as `CON` or `NUL` */
 	if (nt_IsSpecialFilename(filename, filename_len))
 		goto yes;
 #endif /* CONFIG_HOST_WINDOWS */
@@ -420,7 +420,7 @@ next:
 	ch = *iter++;
 	switch (ch) {
 
-	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f'
+	/* NOTE: The following part has been mirrored in `posix_path_normalpath_f`
 	 * If a bug is found in this code, it should be fixed here, as well as
 	 * within the DEX source file. */
 #if defined(DeeSystem_ALTSEP) && DeeSystem_ALTSEP != DeeSystem_SEP
@@ -437,7 +437,7 @@ handle_eof:
 		if (flush_end != Dee_unicode_skipspaceutf8_rev_n(flush_end, flush_start))
 			goto no;
 
-		/* Analyze the last path portion for being a special name (`.' or `..') */
+		/* Analyze the last path portion for being a special name (`.` or `..`) */
 		if (flush_end[-1] == '.') {
 			if (flush_end[-2] == '.' && flush_end - 2 == flush_start)
 				goto no; /* Parent-directory-reference. */
@@ -461,10 +461,10 @@ no:
 
 
 
-/* Print the current working directory to the given `printer'
+/* Print the current working directory to the given `printer`
  * @param: include_trailing_sep: A trailing / or \\-character is also printed.
  * @return:  0: Success.
- * @return: -1: An error occurred (s.a. `DeeError_*'). */
+ * @return: -1: An error occurred (s.a. `DeeError_*`). */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSystem_PrintPwd)(struct Dee_unicode_printer *__restrict printer,
                            bool include_trailing_sep) {
@@ -678,14 +678,14 @@ DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 #endif /* !DeeSystem_ALTSEP || (DeeSystem_ALTSEP == DeeSystem_SEP) */
 
 
-/* Returns the filename-portion of a given `path'
+/* Returns the filename-portion of a given `path`
  * >> print DeeSystem_BaseName(r"/foo/bar/file.txt");   // "file.txt"
  * >> print DeeSystem_BaseName(r"file.txt");            // "file.txt"
  * >> print DeeSystem_BaseName(r"E:\path\to\file.txt"); // "file.txt"  (Windows-only)
  *
  * This function returns a pointer to 1 character past the
- * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
- * just re-returns `path' when no such character exists. */
+ * last `DeeSystem_SEP` or `DeeSystem_ALTSEP` in `path`, or
+ * just re-returns `path` when no such character exists. */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
 (DFCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen) {
 #if defined(DeeSystem_ALTSEP) && (DeeSystem_ALTSEP != DeeSystem_SEP)
@@ -820,8 +820,8 @@ DeeSystem_DlOpenString(/*utf-8*/ char const *filename) {
 	hResult = LoadLibraryA(filename);
 	DBG_ALIGNMENT_ENABLE();
 	if (!hResult) {
-		/* Try to convert `filename' into its wide-character form,
-		 * then use `DeeSystem_DlOpen()' to load the library. */
+		/* Try to convert `filename` into its wide-character form,
+		 * then use `DeeSystem_DlOpen()` to load the library. */
 		DREF DeeStringObject *filename_ob;
 		filename_ob = (DREF DeeStringObject *)DeeString_NewUtf8(filename, strlen(filename),
 		                                                        STRING_ERROR_FSTRICT);
@@ -853,8 +853,8 @@ done:
 }
 
 /* Try to get a human-readable description on what went wrong during a call
- * to `DeeSystem_DlOpen[String]()' that caused `DeeSystem_DlOpen_FAILED' to
- * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
+ * to `DeeSystem_DlOpen[String]()` that caused `DeeSystem_DlOpen_FAILED` to
+ * be returned, or `DeeSystem_DlSym()` to have caused `NULL` to be returned.
  * @return: * :        The human-readable error description
  * @return: NULL:      A deemon callback failed and an error was thrown.
  * @return: ITER_DONE: No description is available. */
@@ -898,7 +898,7 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 
 
 /* Lookup a symbol within a given shared library
- * Returns `NULL' if the symbol could not be found */
+ * Returns `NULL` if the symbol could not be found */
 PUBLIC WUNUSED NONNULL((2)) void *DCALL
 DeeSystem_DlSym(void *handle, char const *symbol_name) {
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
@@ -1005,7 +1005,7 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #endif /* CONFIG_HAVE_struct_stat64_st_mtimensec */
 #endif /* !... */
 
-/* Figure out how to implement `DeeSystem_GetLastModified()' */
+/* Figure out how to implement `DeeSystem_GetLastModified()` */
 #undef DeeSystem_GetLastModified_USE_GetFileAttributesExW
 #undef DeeSystem_GetLastModified_USE_stat
 #undef DeeSystem_GetLastModified_USE_stat64
@@ -1094,8 +1094,8 @@ err:
 }
 #endif /* DeeSystem_GetLastModified_USE_GetFileAttributesExW */
 
-/* Return the last modified timestamp of `filename'
- * > uses the same format as `DeeSystem_GetWalltime()'
+/* Return the last modified timestamp of `filename`
+ * > uses the same format as `DeeSystem_GetWalltime()`
  * @return: (uint64_t)-1: An error was thrown
  * @return: 0 : Failed to query file timestamp (probably ENOENT) */
 PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
@@ -1205,7 +1205,7 @@ err:
 
 
 
-/* Figure out how to implement `DeeSystem_GetFileType()' */
+/* Figure out how to implement `DeeSystem_GetFileType()` */
 #undef DeeSystem_GetFileType_USE_GetFileAttributesExW
 #undef DeeSystem_GetFileType_USE_stat
 #undef DeeSystem_GetFileType_USE_stat64
@@ -1222,12 +1222,12 @@ err:
 
 
 /* Check if the named file (or directory) exists in some way, shape, or form,
- * and return the type of that file. If `filename' refers to a symbolic link,
+ * and return the type of that file. If `filename` refers to a symbolic link,
  * that link is dereferenced, and information about its target is returned.
  *
- * @return: DeeSystem_GetFileType_T_NONE: `filename' does not exist
- * @return: DeeSystem_GetFileType_T_DIR:  `filename' is a directory
- * @return: DeeSystem_GetFileType_T_REG:  `filename' is a regular file
+ * @return: DeeSystem_GetFileType_T_NONE: `filename` does not exist
+ * @return: DeeSystem_GetFileType_T_DIR:  `filename` is a directory
+ * @return: DeeSystem_GetFileType_T_REG:  `filename` is a regular file
  * @return: DeeSystem_GetFileType_ERR:    An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_GetFileType(/*String*/ DeeObject *__restrict filename) {
@@ -1384,7 +1384,7 @@ err:
 
 
 
-/* Figure out how to implement `DeeSystem_GetWalltime()' */
+/* Figure out how to implement `DeeSystem_GetWalltime()` */
 #undef DeeSystem_GetWalltime_USE_GetSystemTimePreciseAsFileTime_OR_GetSystemTimeAsFileTime
 #undef DeeSystem_GetWalltime_USE_gettimeofday64
 #undef DeeSystem_GetWalltime_USE_gettimeofday
@@ -1525,7 +1525,7 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 
 
 
-/* Figure out how to implement `DeeSystem_Unlink()' */
+/* Figure out how to implement `DeeSystem_Unlink()` */
 #undef DeeSystem_Unlink_USE_DeleteFileW
 #undef DeeSystem_Unlink_USE_wunlink
 #undef DeeSystem_Unlink_USE_unlink
@@ -1552,14 +1552,14 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 
 
 
-/* Try to unlink() the given `filename'
- * WARNING: When `filename' is an empty directory, it is system-specific if
+/* Try to unlink() the given `filename`
+ * WARNING: When `filename` is an empty directory, it is system-specific if
  *          that directory will be removed or not (basically, this function
- *          may be implemented using the STD-C `remove()' function)
+ *          may be implemented using the STD-C `remove()` function)
  * NOTE:    Even upon error, there exists a chance that the file was deleted.
- * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
+ * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error` is `false`)
  * @return: 0 : The unlink() operation was successful
- * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */
+ * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error` is `false`) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
                  bool throw_exception_on_error) {
@@ -1878,8 +1878,8 @@ err:
  * >> return DeeObject_AsInt(ob);
  * @return: * : Success (the actual handle value)
  * @return: -1: Error (handle translation failed)
- *              In case the actual handle value stored inside of `ob'
- *              was `-1', then an `DeeError_FileClosed' error is thrown. */
+ *              In case the actual handle value stored inside of `ob`
+ *              was `-1`, then an `DeeError_FileClosed` error is thrown. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob) {
 	int error, result;
@@ -1907,7 +1907,7 @@ DeeUnixSystem_GetFD(DeeObject *__restrict ob) {
 		if (!DeeError_Catch(&DeeError_AttributeError) &&
 		    !DeeError_Catch(&DeeError_NotImplemented))
 			goto err;
-		/* Fallback: Convert an `int'-object into a unix file descriptor. */
+		/* Fallback: Convert an `int`-object into a unix file descriptor. */
 		error = DeeObject_AsInt(ob, &result);
 	}
 	if unlikely(error)
@@ -1930,7 +1930,7 @@ err:
 /************************************************************************/
 
 #ifdef __CYGWIN__
-/* Cygwin's `getpagesize' is broken in that it returns the
+/* Cygwin's `getpagesize` is broken in that it returns the
  * allocation granularity instead of the actual page-size. */
 #undef getpagesize
 #define getpagesize() 4096
@@ -2025,7 +2025,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 		(void)UnmapViewOfFile(baseptr);
 		COMPILER_BARRIER();
 		/* It is possible that "self" was moved into its own mapping. As
-		 * such, we must no longer dereference `*self' at this point! */
+		 * such, we must no longer dereference `*self` at this point! */
 		(void)CloseHandle(hmap);
 	} else
 #elif defined(DeeMapFile_IS_mmap)
@@ -2040,18 +2040,18 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 	}
 }
 
-/* Try to inplace-realloc-truncate the buffer of `self' ("inplace"
- * meaning that `DeeMapFile_GetAddr(self)' will never change) such
- * that `DeeMapFile_GetSize(self)' will be set to `newsize'.
+/* Try to inplace-realloc-truncate the buffer of `self` ("inplace"
+ * meaning that `DeeMapFile_GetAddr(self)` will never change) such
+ * that `DeeMapFile_GetSize(self)` will be set to `newsize`.
  *
  * Note that this will **NOT** retain trailing NUL-bytes that may
- * have been allocated by `DeeMapFile_InitSysFd()', and that more
- * memory than `newsize' may need to be retained due to pagesize
+ * have been allocated by `DeeMapFile_InitSysFd()`, and that more
+ * memory than `newsize` may need to be retained due to pagesize
  * requirements (though this function will never increase the size
  * of the file mapping).
  *
- * @return: true : Success: `DeeMapFile_GetSize(self)' has been lowered from its
- *                          previous value to some value that is `>= newsize'.
+ * @return: true : Success: `DeeMapFile_GetSize(self)` has been lowered from its
+ *                          previous value to some value that is `>= newsize`.
  * @return: false: Failure: Mapping size could not be reduced. Note that this is
  *                          **NOT** an error (and also should not be treated as
  *                          such), since the mapping is, and remains, up-and-
@@ -2110,36 +2110,36 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  * @param: fd:        The file that should be loaded into memory.
  * @param: self:      Filled with mapping information. This structure contains at least 2 fields:
  *                     - DeeMapFile_GetAddr: Filled with the base address of a mapping of the file's contents
- *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes')
- *                                           This will always be `>= min_bytes && <= max_bytes'.
+ *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes`)
+ *                                           This will always be `>= min_bytes && <= max_bytes`.
  *                     - Other fields are implementation-specific
- *                    Note that the memory located at `DeeMapFile_GetAddr' is writable, though changes to
- *                    it are guarantied not to be written back to `fd'. iow: it behaves like MAP_PRIVATE
+ *                    Note that the memory located at `DeeMapFile_GetAddr` is writable, though changes to
+ *                    it are guarantied not to be written back to `fd`. iow: it behaves like MAP_PRIVATE
  *                    mapped as PROT_READ|PROT_WRITE.
  * @param: offset:    File offset / number of leading bytes that should not be mapped
- *                    When set to `(Dee_pos_t)-1', use the fd's current file position.
+ *                    When set to `(Dee_pos_t)-1`, use the fd's current file position.
  * @param: min_bytes: The  min number of bytes (excluding num_trailing_nulbytes) that should be mapped
- *                    starting  at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    starting  at `offset`. If the file is smaller than this, or indicates EOF before
  *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
- *                    Note that this doesn't include `num_trailing_nulbytes', meaning that (e.g.) when
+ *                    Note that this doesn't include `num_trailing_nulbytes`, meaning that (e.g.) when
  *                    an entirely empty file is mapped you get a buffer like:
  *                    >> mf_addr = calloc(min_bytes + num_trailing_nulbytes);
  *                    >> mf_size = min_bytes;
- *                    This argument essentially acts as if `fd' was at least `min_bytes' bytes large
+ *                    This argument essentially acts as if `fd` was at least `min_bytes` bytes large
  *                    by filling the non-present address range with all zeroes.
  * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped
- *                    starting at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    starting at `offset`. If the file is smaller than this, or indicates EOF before
  *                    this number of bytes has been reached, simply stop there. - The actual number of
- *                    mapped bytes (excluding `num_trailing_nulbytes') is `DeeMapFile_GetSize'.
+ *                    mapped bytes (excluding `num_trailing_nulbytes`) is `DeeMapFile_GetSize`.
  * @param: num_trailing_nulbytes: When non-zero, append this many trailing NUL-bytes at the end of
  *                    the mapping. More bytes than this may be appended if necessary, but at least
  *                    this many are guarantied to be. - Useful if you want to load a file as a
- *                    string, in which case you can specify `1' to always have a trailing '\0' be
+ *                    string, in which case you can specify `1` to always have a trailing '\0' be
  *                    appended:
  *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
- * @param: flags:     Set of `DeeMapFile_F_*'
- * @return:  1: Both `DeeMapFile_F_MUSTMMAP' and `DeeMapFile_F_TRYMMAP' were set, but mmap failed.
- * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
+ * @param: flags:     Set of `DeeMapFile_F_*`
+ * @return:  1: Both `DeeMapFile_F_MUSTMMAP` and `DeeMapFile_F_TRYMMAP` were set, but mmap failed.
+ * @return:  0: Success (`self` must be deleted using `DeeMapFile_Fini(3)`)
  * @return: -1: Error (an exception was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
@@ -2147,7 +2147,7 @@ DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
                      size_t num_trailing_nulbytes, unsigned int flags) {
 #if defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HAVE_read)
 
-	/* General implementation (stolen from KOS's `fmapfile(3)') */
+	/* General implementation (stolen from KOS's `fmapfile(3)`) */
 #if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
 	STRUCT_STAT_FOR_SIZE st;
 #endif /* DeeMapFile_IS_CreateFileMapping || DeeMapFile_IS_mmap */
@@ -2241,10 +2241,10 @@ again:
 			}
 #ifdef DeeMapFile_IS_CreateFileMapping
 			/* NOTE: This right here doesn't work in all cases, mainly due to
-			 *       the fact that the `VirtualAlloc()' below fails if passed
+			 *       the fact that the `VirtualAlloc()` below fails if passed
 			 *       a base address that isn't a multiple of 0x10000 (and we
 			 *       need it to work if it isn't a multiple of 0x1000). Also,
-			 *       there can be the case where `VirtualAlloc()' fails because
+			 *       there can be the case where `VirtualAlloc()` fails because
 			 *       the relevant address is already mapped.
 			 */
 			hMap = CreateFileMappingW(fd, NULL,
@@ -2280,7 +2280,7 @@ again:
 #if defined(__CYGWIN__)
 			/* Thanks to windows, cygwin has a (somewhat) broken mmap().
 			 *
-			 * Taken from `winsup/cygwin/mmap.cc:1108(mmap64)':
+			 * Taken from `winsup/cygwin/mmap.cc:1108(mmap64)`:
 			 * """
 			 * If the requested length is bigger than the file size, the remainder
 			 * is created as anonymous mapping, as reserved pages which raise a SIGBUS
@@ -2402,7 +2402,7 @@ again:
 						}
 						tail_size = tail_size & ~psm;
 
-						/* Must map bss memory at `tail_base...+=tail_size'
+						/* Must map bss memory at `tail_base...+=tail_size`
 						 * If mapping memory here isn't possible, try to map
 						 * the file once again, but at a different location.
 						 *
@@ -2438,7 +2438,7 @@ again:
 				return 0;
 			}
 		} else {
-			/* Special files from procfs indicate their size as `0', even
+			/* Special files from procfs indicate their size as `0`, even
 			 * though they aren't actually empty. - As such, we can't just
 			 * use the normal approach of read(2)-ing the file.
 			 *
@@ -2478,7 +2478,7 @@ err_mmap_impossible:
 		if (bufsize < min_bytes)
 			bufsize = min_bytes;
 		if unlikely(OVERFLOW_UADD(bufsize, num_trailing_nulbytes, &alcsize))
-			goto err_2big; /* This can happen when `max_bytes == 0' */
+			goto err_2big; /* This can happen when `max_bytes == 0` */
 		buf = (unsigned char *)Dee_Malloc(alcsize);
 		if unlikely(!buf)
 			return -1;
@@ -2503,7 +2503,7 @@ err_mmap_impossible:
 			ol.OffsetHigh = (DWORD)(offset >> 32);
 			if (!ReadFile(fd, buf + bufused, (DWORD)readsize, &error, &ol)) {
 				if (bufused == 0)
-					break; /* File probably doesn't support `pread(2)'... */
+					break; /* File probably doesn't support `pread(2)`... */
 				/* Read error */
 				goto system_err_buf;
 			}
@@ -2546,7 +2546,7 @@ err_mmap_impossible:
 					return 0;
 				}
 				if (bufused == 0)
-					break; /* File probably doesn't support `pread(2)'... */
+					break; /* File probably doesn't support `pread(2)`... */
 				/* Read error */
 				goto system_err_buf;
 			}
@@ -2622,14 +2622,14 @@ err_mmap_impossible:
 						if (!ReadFile(fd, buf, (DWORD)readsize, &error, NULL))
 							goto system_err_buf;
 						if (!error || (!(flags & DeeMapFile_F_READALL) && error < (DWORD)readsize))
-							goto empty_file; /* EOF reached before `offset' */
+							goto empty_file; /* EOF reached before `offset` */
 #else /* CONFIG_HOST_WINDOWS */
 						Dee_ssize_t error;
 						error = read(fd, buf, skip);
 						if (error <= 0 || (!(flags & DeeMapFile_F_READALL) && (size_t)error < skip)) {
 							if (error < 0)
 								goto system_err_buf;
-							goto empty_file; /* EOF reached before `offset' */
+							goto empty_file; /* EOF reached before `offset` */
 						}
 #endif /* !CONFIG_HOST_WINDOWS */
 						offset -= (size_t)error;
@@ -2734,7 +2734,7 @@ err_mmap_impossible:
 		unsigned char *newbuf;
 		size_t used_nulbytes;
 		/* Because of how large our original buffer was, and because at this
-		 * point all we want to do is return a `num_trailing_nulbytes'-
+		 * point all we want to do is return a `num_trailing_nulbytes`-
 		 * large buffer of all NUL-bytes, it's probably more efficient to
 		 * allocate a new (small) buffer, than trying to realloc the old
 		 * buffer. If we try to do realloc(), the heap might see that all
@@ -2804,7 +2804,7 @@ again_restore_orig_offset:
 #endif /* !... */
 }
 
-/* Same as `DeeMapFile_InitSysFd()', but initialize from a deemon File object. */
+/* Same as `DeeMapFile_InitSysFd()`, but initialize from a deemon File object. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict file,
                     Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
@@ -2842,7 +2842,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		                       Dee_TYPE(file));
 	}
 
-	/* Same as the after-mmap code in `DeeMapFile_InitSysFd()',
+	/* Same as the after-mmap code in `DeeMapFile_InitSysFd()`,
 	 * but using deemon's file API, rather than the system's! */
 
 	/* Allocate a heap buffer. */
@@ -2953,7 +2953,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 				if unlikely(error == (size_t)-1)
 					goto err_buf;
 				if (error < skip)
-					goto empty_file; /* EOF reached before `offset' */
+					goto empty_file; /* EOF reached before `offset` */
 				offset -= error;
 			}
 		}
@@ -3026,7 +3026,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		unsigned char *newbuf;
 		size_t used_nulbytes;
 		/* Because of how large our original buffer was, and because at this
-		 * point all we want to do is return a `num_trailing_nulbytes'-
+		 * point all we want to do is return a `num_trailing_nulbytes`-
 		 * large buffer of all NUL-bytes, it's probably more efficient to
 		 * allocate a new (small) buffer, than trying to realloc the old
 		 * buffer. If we try to do realloc(), the heap might see that all

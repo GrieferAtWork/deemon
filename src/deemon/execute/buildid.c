@@ -267,8 +267,8 @@ DeeModule_GetBuildId_uncached(DeeModuleObject *__restrict self) {
 #endif /* CONFIG_NO_DEX */
 
 #ifndef CONFIG_NO_DEX
-	/* Fallback: use last-modified timestamp of `DeeModule_GetFileName()'
-	 * NOTE: This would never work under `CONFIG_NO_DEX', since in that case
+	/* Fallback: use last-modified timestamp of `DeeModule_GetFileName()`
+	 * NOTE: This would never work under `CONFIG_NO_DEX`, since in that case
 	 *       the only module we'd get here for is the deemon core, which does
 	 *       not have a pre-defined filename! */
 	{

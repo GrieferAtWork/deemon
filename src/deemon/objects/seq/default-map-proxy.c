@@ -73,7 +73,7 @@ STATIC_ASSERT(offsetof(DefaultSequence_MapProxy, dsmp_map) ==
 
 struct ds_mX_foreach_cb_data {
 	Dee_foreach_t dmxfcd_cb;  /* [1..1] Nested callback. */
-	void         *dmxfcd_arg; /* [?..?] Cookie for `dmxfcd_cb' */
+	void         *dmxfcd_arg; /* [?..?] Cookie for `dmxfcd_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

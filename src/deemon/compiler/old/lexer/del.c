@@ -125,7 +125,7 @@ err:
 }
 
 
-/* Parse everything following a `del' keyword in a statement, or expression:
+/* Parse everything following a `del` keyword in a statement, or expression:
  * >> foo = 7;
  * >> print foo;
  * >> del foo;        // Unbind + delete
@@ -134,7 +134,7 @@ err:
  * >> print foo;
  * >> print del(foo); // Unbind only
  *              ^  ^
- * NOTE: When `LOOKUP_SYM_ALLOWDECL' is set in `lookup_mode',
+ * NOTE: When `LOOKUP_SYM_ALLOWDECL` is set in `lookup_mode`,
  *       the function is allocated to delete locally defined
  *       variable symbols.
  *       However, in all cases is this function allowed to
@@ -223,7 +223,7 @@ do_realloc_delv:
 		if unlikely(!result)
 			goto err_delv;
 
-		/* Upon success, the multiple-branch `result' inherited all `delv' expressions. */
+		/* Upon success, the multiple-branch `result` inherited all `delv` expressions. */
 	}
 done:
 	return result;

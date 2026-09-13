@@ -24,7 +24,7 @@
 #if !defined(__FORMAT__) || defined(__FORMAT_SCRIPT__)
 
 /* The entire include-system should no longer be used by new code.
- * Instead, the `import'-statement should be used.
+ * Instead, the `import`-statement should be used.
  *
  * These headers will however remain to support existing code to
  * run with as few modifications as possible.
@@ -35,7 +35,7 @@
  * implement as clutches, following the removal of any compiler-
  * helpers that used to do a lot of things at compile-time that
  * must now be done at run-time (especially in the field of C-
- * compatibility, which is now implemented through `ctypes'). */
+ * compatibility, which is now implemented through `ctypes`). */
 
 #ifndef __DEEMON__
 #	error "This header is meant for deemon"
@@ -67,7 +67,7 @@
 #endif
 
 /* Attribute and declspec has been replaced by tags.
- * No backwards-compatibility is provided for `[[tag]]'-style tags */
+ * No backwards-compatibility is provided for `[[tag]]`-style tags */
 #define __PRIVATE_ATTRIBUTE(...) @__VA_ARGS__
 #define __declspec(...) @__VA_ARGS__
 #define __attribute(x) __PRIVATE_ATTRIBUTE x
@@ -83,9 +83,9 @@
  * deemon200+'s and deemon100+'s Dict member functions:
  * - While the intention of Dict's proxy views had always been to
  *   emulate python, deemon 100+ did this incorrectly and had swapped
- *   the meaning of `items' and `values'
- * - In python (just as in deemon200), `items' is a sequence of 2-element
- *   tuples, each referring to a key-value pair, while `values' is the
+ *   the meaning of `items` and `values`
+ * - In python (just as in deemon200), `items` is a sequence of 2-element
+ *   tuples, each referring to a key-value pair, while `values` is the
  *   same sequence, however only referring to the value-portion.
  * - To keep backwards-compatibility with older code, as well as considering
  *   that old code was usually written to use Dict.items() / Dict.keys()
@@ -108,7 +108,7 @@
 
 
 
-#if 0 /* Would interfere with stuff like `x, y = pipe.new()...;' */
+#if 0 /* Would interfere with stuff like `x, y = pipe.new()...;` */
 local function __ctypes_new(tp) {
 	import malloc, sizeof from ctypes;
 	return (tp.ptr)malloc(sizeof(tp));
@@ -171,7 +171,7 @@ local function __ctypes_new(tp) {
 #define __if_true          if(true)
 #define __if_false         if(false)
 
-/* Re-define the removed alias for `assert' */
+/* Re-define the removed alias for `assert` */
 #define __assert    assert
 
 /* Re-define removed loop statements. */
@@ -201,7 +201,7 @@ local function __ctypes_new(tp) {
 // XXX: enum
 
 
-#if 1 /* This allows `static if' to be compiled correctly, however it
+#if 1 /* This allows `static if` to be compiled correctly, however it
        * also causes static variable declaration to be impossible... */
 #define static    /* nothing */
 #endif
@@ -222,11 +222,11 @@ from deemon import
 /* Import some C-types.
  *
  * Note however that we can't actually support stuff
- * like `x = (unsigned int)42', because there's no way
+ * like `x = (unsigned int)42`, because there's no way
  * of defining multi-keyword identifiers.
  *
  * As a quick & dirty work-around, such code can be altered
- * to instead be `x = (unsigned)42', which means the same,
+ * to instead be `x = (unsigned)42`, which means the same,
  * and is still portable between d100+ and d200! */
 from ctypes import
 	__int8 = int8_t, __int16 = int16_t, __int32 = int32_t, __int64 = int64_t,
@@ -238,7 +238,7 @@ from ctypes import
 	uint32_t = uint32_t, uint64_t = uint64_t, char16_t = char16_t, char32_t = char32_t,
 	__signed = int, __signed__ = int, __unsigned = uint, __unsigned__ = uint
 ;
-#define long /* Delete to fix stuff such as `long double' */
+#define long /* Delete to fix stuff such as `long double` */
 
 
 
@@ -246,7 +246,7 @@ from ctypes import
 #pragma extension("-ffixed-length-integrals")
 
 /* Enable old-style classes (now emulated by
- * always extending `OldUserClass from rt.d200') */
+ * always extending `OldUserClass from rt.d200`) */
 #pragma extension("-fold-style-classes")
 
 /* Enable old-style character literals, causing '\x12' to be compiled
@@ -272,15 +272,15 @@ from ctypes import
 /* The deemon 100+ runtime used reserved identifiers
  * for attributes names in a bunch of places:
  * >> fp = File.Writer();
- * >> fp.pack(); // You should use `fp.string' now
+ * >> fp.pack(); // You should use `fp.string` now
  * >> local my_cell = Cell(42);
- * >> my_cell.del(); // You should use `del my_cell.value' now
+ * >> my_cell.del(); // You should use `del my_cell.value` now
  * There are more like this, but you should get the idea.
  *
  * Deemon 200 on the other hand will now warn about the use
  * of reserved keywords as identifiers and attribute names,
  * suggesting refactoring, as well as doing something like
- * `my_cell.operator . ("del")()', which will work to suppress
+ * `my_cell.operator . ("del")()`, which will work to suppress
  * such a warning, however since we're only here to keep
  * legacy code running as intended, just disable these types
  * of warnings! */
@@ -298,8 +298,8 @@ from ctypes import
 
 
 
-/* HINT: `__FORMAT__' -- Defined for code parsed by `deemon -F' (including scripts)
- * HINT: `__FORMAT_SCRIPT__' -- Defined for scripts found in comments by `deemon -F' */
+/* HINT: `__FORMAT__` -- Defined for code parsed by `deemon -F` (including scripts)
+ * HINT: `__FORMAT_SCRIPT__` -- Defined for scripts found in comments by `deemon -F` */
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
 /* We're currently inside of an old-style format script.
  *

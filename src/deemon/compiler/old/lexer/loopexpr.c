@@ -66,7 +66,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 	DREF struct ast *result, *other, *merge;
 	/* Special handling for recursive loops and conditional statements:
 	 * >> print (for (local x: items) if (x > 10) x)...; // Print all items > 10
-	 * >> print (for (local x: items) for (local y: x) y)...; // Print all items or each item of `items'
+	 * >> print (for (local x: items) for (local y: x) y)...; // Print all items or each item of `items`
 	 */
 	switch (tok) {
 
@@ -381,7 +381,7 @@ err:
 }
 
 
-/* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
+/* Same as `ast_parse_try_hybrid` but for loopexpr statements / expressions. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_loopexpr_hybrid(unsigned int *p_was_expression) {
 	/* TODO */

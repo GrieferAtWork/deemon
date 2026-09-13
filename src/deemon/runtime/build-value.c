@@ -141,7 +141,7 @@ again:
 	case '{':
 	case '<': /* Recursion (Can be ignored here) */
 	case ',': /* Separator. */
-	case 'n': /* `none' */
+	case 'n': /* `none` */
 	case '-':
 		goto again;
 
@@ -150,13 +150,13 @@ again:
 		goto again;
 
 	case 'L':
-		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
+		ASSERTF(*format == 'D', "Invalid format: `%s`", format);
 		(void)va_arg(args, long double);
 		goto again;
 
 	case 'f':
 	case 'D':
-		(void)va_arg(args, double); /* NOTE: C promotes `float' to double in varargs. */
+		(void)va_arg(args, double); /* NOTE: C promotes `float` to double in varargs. */
 		goto again;
 
 	case '.':
@@ -171,7 +171,7 @@ again:
 			while (*format >= '0' && *format <= '9')
 				++format;
 		}
-		ASSERTF(*format == 's', "Invalid format: `%s'", format);
+		ASSERTF(*format == 's', "Invalid format: `%s`", format);
 		goto again;
 
 	{
@@ -203,20 +203,20 @@ again:
 			format += 1;
 		} else if (*format == '1') {
 			if (format[2] == '2') {
-				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
+				ASSERTF(format[3] == '8', "Invalid format: `%s`", format);
 				length = 16;
 				format += 3;
 			} else {
-				ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
+				ASSERTF(format[1] == '6', "Invalid format: `%s`", format);
 				length = 2;
 				format += 2;
 			}
 		} else if (*format == '3') {
-			ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
+			ASSERTF(format[1] == '2', "Invalid format: `%s`", format);
 			length = 4;
 			format += 2;
 		} else if (*format == '6') {
-			ASSERTF(format[1] == '4', "Invalid format: `%s'", format);
+			ASSERTF(format[1] == '4', "Invalid format: `%s`", format);
 			length = 8;
 			format += 2;
 		}
@@ -232,7 +232,7 @@ do_int:
 		ASSERTF(format[-1] == 'd' || *format == 'u' ||
 			    format[-1] == 'i' || *format == 'x' ||
 			    format[-1] == 'b',
-			    "Invalid format: `%s'", format);
+			    "Invalid format: `%s`", format);
 #if __VA_SIZE < 2
 		if (length <= 1) {
 			(void)va_arg(args, uint8_t);
@@ -260,14 +260,14 @@ do_int:
 
 	case 'O': {
 		DeeObject *temp;
-		/* _Always_ inherit reference to `O' operands. */
+		/* _Always_ inherit reference to `O` operands. */
 		temp = va_arg(args, DeeObject *);
 		Dee_XDecref(temp);
 		goto again;
 	}
 
 	default:
-		ASSERTF(!*format, "Invalid format: `%s'", format);
+		ASSERTF(!*format, "Invalid format: `%s`", format);
 		break;
 	}
 }
@@ -296,7 +296,7 @@ again:
 	case 'O':
 		result = va_arg(p_args->vl_ap, DeeObject *);
 		if (format[-1] == 'o') {
-			ASSERTF(result, "NULL-object passed to `o' operand");
+			ASSERTF(result, "NULL-object passed to `o` operand");
 			Dee_Incref(result);
 		}
 		break;
@@ -345,13 +345,13 @@ again:
 					Dee_int128_t  s;
 					Dee_uint128_t u;
 				} data128;
-				ASSERTF(format[3] == '8', "Invalid format: `%s'", format);
+				ASSERTF(format[3] == '8', "Invalid format: `%s`", format);
 				data128.u = va_arg(p_args->vl_ap, Dee_uint128_t);
 				format += 3;
 				ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
 				        format[-1] == 'i' || format[-1] == 'x' ||
 				        format[-1] == 'b',
-				        "Invalid format: `%s'", format);
+				        "Invalid format: `%s`", format);
 				if (format[-1] == 'b') {
 					/* Boolean. */
 					result = DeeBool_For(!__hybrid_uint128_iszero(data128.u));
@@ -365,16 +365,16 @@ again:
 				}
 				break;
 			} else {
-				ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *p_format);
+				ASSERTF(format[1] == '6', "Invalid format: `%s` (`%s`)", format, *p_format);
 				format += 2;
 				length = 2;
 			}
 		} else if (*format == '3') {
-			ASSERTF(format[1] == '2', "Invalid format: `%s' (`%s')", format, *p_format);
+			ASSERTF(format[1] == '2', "Invalid format: `%s` (`%s`)", format, *p_format);
 			format += 2;
 			length = 4;
 		} else if (*format == '6') {
-			ASSERTF(format[1] == '4', "Invalid format: `%s' (`%s')", format, *p_format);
+			ASSERTF(format[1] == '4', "Invalid format: `%s` (`%s`)", format, *p_format);
 			format += 2;
 			length = 8;
 		}
@@ -390,7 +390,7 @@ has_length:
 		ASSERTF(format[-1] == 'd' || format[-1] == 'u' ||
 		        format[-1] == 'i' || format[-1] == 'x' ||
 		        format[-1] == 'b',
-		        "Invalid format: `%s'", format);
+		        "Invalid format: `%s`", format);
 #if __VA_SIZE < 2
 		if (length <= 1) {
 			data.u32 = (uint32_t)va_arg(p_args->vl_ap, uint8_t);
@@ -434,7 +434,7 @@ has_length:
 		size_t string_length;
 		char const *string;
 	case '$':
-		ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
+		ASSERTF(*format == 's', "Invalid format: `%s` (`%s`)", format, *p_format);
 		++format;
 		string_length = va_arg(p_args->vl_ap, size_t);
 		string        = va_arg(p_args->vl_ap, char const *);
@@ -460,7 +460,7 @@ do_strnlen:
 			string_length = strnlen(string, string_length);
 		} else {
 			ASSERTF(*format >= '0' && *format <= '9',
-				    "Invalid format: `%s' (`%s')", format, *p_format);
+				    "Invalid format: `%s` (`%s`)", format, *p_format);
 			string_length = 0;
 			do {
 				string_length = (string_length * 10) + (*format - '0');
@@ -468,10 +468,10 @@ do_strnlen:
 			goto do_strnlen;
 		}
 do_string:
-		ASSERTF(format[-1] == 's', "Invalid format: `%s' (`%s')", format, *p_format);
-		/* TODO: `%I8s' -- latin-1 string */
-		/* TODO: `%I16s' -- 2-byte string */
-		/* TODO: `%I32s' -- utf-32 string */
+		ASSERTF(format[-1] == 's', "Invalid format: `%s` (`%s`)", format, *p_format);
+		/* TODO: `%I8s` -- latin-1 string */
+		/* TODO: `%I16s` -- 2-byte string */
+		/* TODO: `%I32s` -- utf-32 string */
 		result = DeeString_NewUtf8(string, string_length, STRING_ERROR_FIGNORE);
 	}	break;
 
@@ -494,7 +494,7 @@ do_string:
 			}
 			DeeTuple_SET(result, i, elem);
 		}
-		ASSERTF(*format == ')', "Invalid format: `%s' (`%s')", format, *p_format);
+		ASSERTF(*format == ')', "Invalid format: `%s` (`%s`)", format, *p_format);
 		++format;
 	}	break;
 
@@ -502,7 +502,7 @@ do_string:
 		/* TODO: float */
 
 	default:
-		Dee_XFatalf("Invalid format: `%s' (`%s')", format, *p_format);
+		Dee_XFatalf("Invalid format: `%s` (`%s`)", format, *p_format);
 		break;
 	}
 end:
@@ -528,7 +528,7 @@ DeeTuple_VNewf(char const *__restrict format, va_list args) {
 			goto err_r;
 		DeeTuple_SET(result, i, elem);
 	}
-	ASSERTF(!*format, "Invalid format: `%s'", format);
+	ASSERTF(!*format, "Invalid format: `%s`", format);
 	return Dee_AsObject(result);
 err_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
@@ -556,24 +556,24 @@ Dee_VPackf(char const *__restrict format, va_list args) {
 }
 
 
-/* Pack a new value, given a special format string `string'.
+/* Pack a new value, given a special format string `string`.
  * Format language syntax:
  *     __main__ ::= object;
- *     object ::= ('n' | '-')         // `none'
- *              | ref_object          // `Object' <-- `va_arg(DeeObject *)'
- *              | ref_int             // `int'    <-- `va_arg(...)'
- *              | ref_float           // `float'  <-- `va_arg(...)'
- *              | ref_bool            // `bool'   <-- `va_arg(...)'
- *              | ref_str             // `string' <-- `va_arg(...)'
- *              | '[' [objects] ']'   // `List'
- *              | '(' [objects] ')'   // `Tuple'
- *              | '{' [objects] '}'   // `Set'
- *              | '<' [object] '>'    // `Cell' (When `object')
+ *     object ::= ('n' | '-')         // `none`
+ *              | ref_object          // `Object` <-- `va_arg(DeeObject *)`
+ *              | ref_int             // `int`    <-- `va_arg(...)`
+ *              | ref_float           // `float`  <-- `va_arg(...)`
+ *              | ref_bool            // `bool`   <-- `va_arg(...)`
+ *              | ref_str             // `string` <-- `va_arg(...)`
+ *              | '[' [objects] ']'   // `List`
+ *              | '(' [objects] ')'   // `Tuple`
+ *              | '{' [objects] '}'   // `Set`
+ *              | '<' [object] '>'    // `Cell` (When `object`)
  *     ;
- *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
+ *     objects ::= (object | ',')...  // `,` is simply ignored, but can be used to prevent ambiguity
  *
- *     ref_object ::= 'o' | 'O'; // `DeeObject *' (Uppercase `O' inherits a reference from `va_arg' and causes `Dee_Packf' to propagate an error when `NULL')
- *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u' and `x' create unsigned integers
+ *     ref_object ::= 'o' | 'O'; // `DeeObject *` (Uppercase `O` inherits a reference from `va_arg` and causes `Dee_Packf` to propagate an error when `NULL`)
+ *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u` and `x` create unsigned integers
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
  *                  | 'hh' // char
  *                  | 'h'  // short
@@ -607,9 +607,9 @@ Dee_Packf(char const *__restrict format, ...) {
 	return result;
 }
 
-/* Similar to `Dee_Packf', but parse any number of formated values and
- * put them in a tuple, essentially doing the same as `Dee_Packf' when
- * the entire `format' string was surrounded by `(' and `)'. */
+/* Similar to `Dee_Packf`, but parse any number of formated values and
+ * put them in a tuple, essentially doing the same as `Dee_Packf` when
+ * the entire `format` string was surrounded by `(` and `)`. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 DeeTuple_Newf(char const *__restrict format, ...) {
 	DREF DeeObject *result;
@@ -622,7 +622,7 @@ DeeTuple_Newf(char const *__restrict format, ...) {
 
 
 /* Assert that our alignment constants are correct. If these were to
- * fail, then the `Dee_UnpackStruct()' would produce incorrect results. */
+ * fail, then the `Dee_UnpackStruct()` would produce incorrect results. */
 #define ASSERT_ALIGNMENT(T, expected)                      \
 	struct _check_alignof_##T { __BYTE_TYPE__ _v; T _x; }; \
 	STATIC_ASSERT(offsetof(struct _check_alignof_##T, _x) == (expected))

@@ -185,8 +185,8 @@ INTDEF struct seqops tpconst seqops_info[4];
 
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
- * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
+ * NOTE: When the `OPTIMIZE_FNOPREDICT` flag is set, this function always returns `NULL`.
+ * @param: flags: Set of `AST_PREDICT_TYPE_F_*` */
 INTERN WUNUSED NONNULL((1)) DeeTypeObject *DFCALL
 ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 	ASSERT_AST(self);
@@ -213,9 +213,9 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			 * >> local c = (a...); // Cast-to-tuple can be optimized away
 			 * >> local d = (b...); // Cast-to-tuple must be retained
 			 *
-			 * So if the caller is now asking us about the type of `c' when
+			 * So if the caller is now asking us about the type of `c` when
 			 * not considering type annotations, we mustn't respect the type
-			 * annotation of `a' */
+			 * annotation of `a` */
 			if (self->a_multiple.m_astc >= 1) {
 				struct ast *e0 = self->a_multiple.m_astv[0];
 				if (e0->a_type == AST_EXPAND) {
@@ -325,7 +325,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			break; /* XXX: Special handling? */
 		/* TODO: When !AST_PREDICT_TYPE_F_NOANNO, predict the type of op0 and look
-		 *       if its `tp_doc' makes any mention of operator return types. */
+		 *       if its `tp_doc` makes any mention of operator return types. */
 		switch (self->a_flag) {
 
 		case OPERATOR_STR:
@@ -425,7 +425,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			}
 
 			/* Assume that all types (other than none) that are defined by
-			 * the deemon core return `bool' for their compare operators. */
+			 * the deemon core return `bool` for their compare operators. */
 			if (is_defined_by_deemon_core(predict)) {
 				INTDEF DeeTypeObject SeqEachOperator_Type;
 				INTDEF DeeTypeObject SeqEach_Type;
@@ -436,7 +436,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 				return &DeeBool_Type;
 			}
 
-			/* TODO: When !AST_PREDICT_TYPE_F_NOANNO, look into `predict->tp_doc' */
+			/* TODO: When !AST_PREDICT_TYPE_F_NOANNO, look into `predict->tp_doc` */
 		}	break;
 
 		case OPERATOR_CONTAINS: {
@@ -527,7 +527,7 @@ nope:
 
 
 /* Predict the reference count of a given AST at runtime (if predictable)
- * If not predictable, return `0' (which is never a valid reference count) */
+ * If not predictable, return `0` (which is never a valid reference count) */
 INTERN WUNUSED NONNULL((1)) Dee_refcnt_t DFCALL
 ast_predict_object_refcnt(struct ast *__restrict self) {
 	switch (self->a_type) {
@@ -548,10 +548,10 @@ ast_predict_object_refcnt(struct ast *__restrict self) {
 			/* Tuples with at least 2 elements must be created on the spot. */
 		} else {
 			/* Special case for 1-element tuples.
-			 * Here, `(foo...)' can get optimized when `foo' is already known to have tuple
+			 * Here, `(foo...)` can get optimized when `foo` is already known to have tuple
 			 * typing (when not considering type annotations), so if that optimization is
 			 * done, then the resulting expression won't represent a new tuple, and we need
-			 * to return the reference count of `foo'. */
+			 * to return the reference count of `foo`. */
 			struct ast *e0 = self->a_multiple.m_astv[0];
 			if (e0->a_type == AST_EXPAND) {
 				if (ast_predict_type(e0->a_expand) == &DeeTuple_Type)
@@ -578,7 +578,7 @@ ast_predict_object_refcnt(struct ast *__restrict self) {
 		if (self->a_flag & AST_FCOND_BOOL)
 			goto nope; /* Evaluates to a boolean singleton (which has unknown refcnt) */
 		if (!self->a_conditional.c_tt || !self->a_conditional.c_ff)
-			goto nope; /* Possibly evaluates to `none' (which has unknown refcnt) */
+			goto nope; /* Possibly evaluates to `none` (which has unknown refcnt) */
 		result = ast_predict_object_refcnt(self->a_conditional.c_tt);
 		if (result == 0)
 			goto nope;
@@ -656,7 +656,7 @@ ast_has_sideeffects(struct ast *__restrict self) {
 		         self->a_conditional.c_ff != self->a_conditional.c_cond &&
 		         ast_has_sideeffects(self->a_conditional.c_ff)));
 
-		/* TODO: `function' without references that could cause side-effects (aka. property refs) */
+		/* TODO: `function` without references that could cause side-effects (aka. property refs) */
 
 	case AST_ACTION:
 		switch (self->a_flag) {
@@ -943,7 +943,7 @@ ast_doesnt_return(struct ast *__restrict self,
 			return temp;
 		if (temp)
 			has_noreturn = true;
-		flags |= AST_DOESNT_RETURN_FINLOOP; /* Switch overrides `break' */
+		flags |= AST_DOESNT_RETURN_FINLOOP; /* Switch overrides `break` */
 		temp = ast_doesnt_return(self->a_switch.s_block, flags);
 		if (temp < 0)
 			return temp;
@@ -1278,7 +1278,7 @@ INTERN WUNUSED NONNULL((1, 2)) bool
 
 	case AST_ASSEMBLY: {
 		struct asm_operand *iter, *end;
-		/* Assembly branches with the `AST_FASSEMBLY_MEMORY'
+		/* Assembly branches with the `AST_FASSEMBLY_MEMORY`
 		 * flag set are assumed to use _any_ symbol. */
 		if (self->a_flag & AST_FASSEMBLY_MEMORY)
 			goto yup;
@@ -1472,9 +1472,9 @@ ast_equal(struct ast const *a,
 
 
 
-/* Check if a given ast `self' is, or contains a `goto' branch,
- * or a `break' / `continue' branch when `consider_loopctl' is true.
- * NOTE: `goto' branches found in inner functions are not considered here! */
+/* Check if a given ast `self` is, or contains a `goto` branch,
+ * or a `break` / `continue` branch when `consider_loopctl` is true.
+ * NOTE: `goto` branches found in inner functions are not considered here! */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_contains_goto(struct ast *__restrict self,
                   uint16_t consider_loopctl) {
@@ -1606,7 +1606,7 @@ no:
 
 	case AST_SWITCH: {
 		struct text_label *iter;
-		/* Don't consider `break', which appears as part of the switch-branch! */
+		/* Don't consider `break`, which appears as part of the switch-branch! */
 		consider_loopctl &= ~AST_CONTAINS_GOTO_CONSIDER_BREAK;
 		if (ast_contains_goto(self->a_switch.s_expr, consider_loopctl))
 			goto yes;
@@ -1624,7 +1624,7 @@ no:
 		size_t i;
 #if 0 /* Nope! - User-assembly should mark variables it uses manually! \
        * >> local x = "foobar";                                        \
-       * >> __asm__("" : "+x" (x)); // This prevents `x' from being optimized away! */
+       * >> __asm__("" : "+x" (x)); // This prevents `x` from being optimized away! */
 		if (self->a_flag & AST_FASSEMBLY_NORETURN)
 			goto yes;
 #endif
@@ -1645,7 +1645,7 @@ yes:
 }
 
 
-/* Check if a given ast `self' contains a return-statement. */
+/* Check if a given ast `self` contains a return-statement. */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_contains_return(struct ast *__restrict self) {
 	switch (self->a_type) {

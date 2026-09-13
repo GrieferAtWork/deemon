@@ -26,7 +26,7 @@
 
 /* __VA_SIZE: Minimal  size  of  integral  type  arguments  in  ellipsis
  *            May be  used to  optimize PRI*  macros from  <inttypes.h>,
- *            as well as implement a more efficient `printf()' function. */
+ *            as well as implement a more efficient `printf()` function. */
 #ifndef __VA_SIZE
 #if defined(__x86_64__)
 /* Must still be 4 because gcc (understandably) doesn't sign-extend

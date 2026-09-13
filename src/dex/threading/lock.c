@@ -2726,7 +2726,7 @@ err:
 }
 
 
-/* Try to acquire all locks except for the lock at index `already_holding'.
+/* Try to acquire all locks except for the lock at index `already_holding`.
  * @return: Dee_HAS_YES: Success
  * @return: Dee_HAS_NO:  Failure
  * @return: Dee_HAS_ERR: Error */
@@ -3160,7 +3160,7 @@ DECL_END
 
 /* Define generic lock types */
 #ifndef __INTELLISENSE__
-/* NOTE: Under `CONFIG_NO_THREADS', shared types _must_ come first! */
+/* NOTE: Under `CONFIG_NO_THREADS`, shared types _must_ come first! */
 #define DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type
 #include "lock.c.inl"
 #define DEFINE_DeeRSharedLock_Type__AND__DeeRSharedRWLock_Type

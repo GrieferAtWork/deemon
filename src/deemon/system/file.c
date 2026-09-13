@@ -101,7 +101,7 @@
 
 
 /************************************************************************/
-/* Auto-configure system features for `DeeSystem_FILE_USE_unix_fd'-mode    */
+/* Auto-configure system features for `DeeSystem_FILE_USE_unix_fd`-mode    */
 /************************************************************************/
 #ifdef DeeSystem_FILE_USE_unix_fd
 #ifndef STDIN_FILENO
@@ -118,7 +118,7 @@
 
 
 /************************************************************************/
-/* Auto-configure system features for `DeeSystem_FILE_USE_stdio_FILE'-mode   */
+/* Auto-configure system features for `DeeSystem_FILE_USE_stdio_FILE`-mode   */
 /************************************************************************/
 #ifdef CONFIG_HAVE_fopen64
 #undef fopen
@@ -169,7 +169,7 @@ typedef DeeSystemFileObject SystemFile;
 
 
 /************************************************************************/
-/* Special support for `OutputDebugStringA()'                           */
+/* Special support for `OutputDebugStringA()`                           */
 /************************************************************************/
 #ifdef Dee_STDDBG_IS_UNIQUE
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
@@ -468,16 +468,16 @@ done:
 #ifdef DeeSystem_FILE_USE_unix_fd
 /* Fix names of aliasing flags. */
 #ifndef CONFIG_HAVE_O_CREAT
-#error "Missing system support for `O_CREAT'"
+#error "Missing system support for `O_CREAT`"
 #endif /* !CONFIG_HAVE_O_CREAT */
 #ifndef CONFIG_HAVE_O_EXCL
-#error "Missing system support for `O_EXCL'"
+#error "Missing system support for `O_EXCL`"
 #endif /* !CONFIG_HAVE_O_EXCL */
 #ifndef CONFIG_HAVE_O_TRUNC
-#error "Missing system support for `O_TRUNC'"
+#error "Missing system support for `O_TRUNC`"
 #endif /* !CONFIG_HAVE_O_TRUNC */
 #ifndef CONFIG_HAVE_O_APPEND
-#error "Missing system support for `O_APPEND'"
+#error "Missing system support for `O_APPEND`"
 #endif /* !CONFIG_HAVE_O_APPEND */
 
 #define PRIVATE_SHARED_FLAGS_0   0
@@ -643,7 +643,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	result->sf_handle    = hFile;
 	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
-	Dee_Incref(filename); /* For `result->sf_filename' */
+	Dee_Incref(filename); /* For `result->sf_filename` */
 	result->sf_filetype  = (uint32_t)FILE_TYPE_UNKNOWN;
 	result->sf_pendingc  = 0;
 	return Dee_AsObject(result);
@@ -742,7 +742,7 @@ err:
 
 	/* Do the open. */
 	/* TODO: Don't try both utf8- and wide-char modes! only
-	 *       try 1, based on `CONFIG_PREFER_WCHAR_FUNCTIONS' */
+	 *       try 1, based on `CONFIG_PREFER_WCHAR_FUNCTIONS` */
 	utf8_filename = DeeString_AsUtf8(filename);
 	if unlikely(!utf8_filename)
 		goto err;
@@ -903,7 +903,7 @@ err_fp:
 #endif /* CONFIG_HAVE_fclose */
 #else /* CONFIG_HAVE_fopen || CONFIG_HAVE_fopen64 */
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                "Unsupported function `fopen()'");
+	                "Unsupported function `fopen()`");
 #endif /* !CONFIG_HAVE_fopen && !CONFIG_HAVE_fopen64 */
 err:
 	return NULL;
@@ -1054,7 +1054,7 @@ DeeFile_DefaultStd(unsigned int id) {
 		{
 #ifndef CONFIG_NO_THREADS
 			/* Make sure not to re-write another file in the event that
-			 * the `std*' keywords of the hosting c-library evaluate to
+			 * the `std*` keywords of the hosting c-library evaluate to
 			 * different things when called more than once (this may
 			 * sound weird, but some really strange platform might do
 			 * this to implement freopen()?) */
@@ -1127,7 +1127,7 @@ DeeFile_DefaultStd(unsigned int id) {
 typedef union {
 	struct {
 		/* Use our own structure so it gets aligned by 64 bits,
-		 * and `Offset' can be assigned directly, without some
+		 * and `Offset` can be assigned directly, without some
 		 * sh1tty wrapper code. */
 		uintptr_t Internal;
 		uintptr_t InternalHigh;
@@ -1168,7 +1168,7 @@ nt_sysfile_on_filetype_set(SystemFile *__restrict self, DWORD type) {
 }
 
 /* Determine if the referenced file is a TTY file.
- * @return: * :                One of `FILE_TYPE_*'.
+ * @return: * :                One of `FILE_TYPE_*`.
  * @return: FILE_TYPE_UNKNOWN: An error occurred and was thrown. */
 PRIVATE NONNULL((1)) DWORD DCALL
 nt_sysfile_gettype(SystemFile *__restrict self) {
@@ -1540,7 +1540,7 @@ again:
 			goto err;
 		if (file_type == FILE_TYPE_PIPE) {
 			BYTE temp_buffer[1];
-			/* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
+			/* `WaitForSingleObject()` doesn't work on pipes (for some reason...) */
 			result = 0;
 			DBG_ALIGNMENT_DISABLE();
 			if (PeekNamedPipe(self->sf_handle,
@@ -1603,7 +1603,7 @@ err:
 	/* Unix implementation */
 #ifdef DeeSystem_FILE_USE_unix_fd
 #ifdef CONFIG_HAVE_read
-	/* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
+	/* TODO: Use `select()` to check if reading will block for `Dee_FILEIO_FNONBLOCKING` */
 	/* TODO: Use KOS's readf() function */
 	size_t result;
 	(void)flags;
@@ -1684,19 +1684,19 @@ sysfile_write(SystemFile *__restrict self,
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 	file_type = nt_sysfile_trygettype(self);
 	if unlikely(file_type == FILE_TYPE_CHAR) {
-		/* Because windows's `WriteFile()' function just doesn't work
-		 * for UTF-8 input (even if you do `SetConsoleOutputCP(CP_UTF8)'),
+		/* Because windows's `WriteFile()` function just doesn't work
+		 * for UTF-8 input (even if you do `SetConsoleOutputCP(CP_UTF8)`),
 		 * we must manually do the conversion to windows's proprietary
 		 * wide-character format, before writing everything using
-		 * `WriteConsoleW()'.
+		 * `WriteConsoleW()`.
 		 * -> It seems like this is the only way to get _true_ UTF-8
 		 *    output when writing data to the windows console...
-		 * Also note that if you were to do `SetConsoleOutputCP(CP_UTF8)',
-		 * WriteFile() would still fail to print UTF-8 data, and `WriteConsoleW()'
+		 * Also note that if you were to do `SetConsoleOutputCP(CP_UTF8)`,
+		 * WriteFile() would still fail to print UTF-8 data, and `WriteConsoleW()`
 		 * called with converted UTF-8 data will fail with an error.
 		 * This, as well as the fact that I've seen the default console CP
-		 * having been changed to `CP_UTF8' in some environments is why in
-		 * our main(), we call `SetConsoleOutputCP(GetOEMCP())' to make sure
+		 * having been changed to `CP_UTF8` in some environments is why in
+		 * our main(), we call `SetConsoleOutputCP(GetOEMCP())` to make sure
 		 * that the default OEM code page is set (which can be used for the
 		 * purposes of converting UTF-8 to Wide-chars, before printing with
 		 * full unicode support enabled)
@@ -1735,7 +1735,7 @@ err:
 	/* Unix implementation */
 #ifdef DeeSystem_FILE_USE_unix_fd
 #ifdef CONFIG_HAVE_write
-	/* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
+	/* TODO: Use `select()` to check if writing will block for `Dee_FILEIO_FNONBLOCKING` */
 	/* TODO: Use KOS's writef() function */
 	size_t result;
 	(void)flags;
@@ -2544,7 +2544,7 @@ err:
 #define Dee_fd_t_AsUnixFd(sysfd) fileno(sysfd)
 #endif /* ... */
 
-/* Figure out how to implement `isatty()' */
+/* Figure out how to implement `isatty()` */
 #undef sysfile_isatty_USE_nt_sysfile_gettype
 #undef sysfile_isatty_USE_fisatty
 #undef sysfile_isatty_USE_isatty
@@ -2602,7 +2602,7 @@ err:
 	int result;
 #if defined(__CYGWIN__) || defined(__CYGWIN32__)
 	/* BUG BUG BUG: Cygwin doesn't set errno when isatty()
-	 *              returns `0' because file isn't a tty */
+	 *              returns `0` because file isn't a tty */
 	DeeSystem_SetErrno(ENOTTY);
 #endif /* __CYGWIN__ || __CYGWIN32__ */
 	DBG_ALIGNMENT_DISABLE();
@@ -2797,7 +2797,7 @@ again_dup:
 #ifdef ENOSYS
 			if (error == ENOSYS) {
 				DeeError_Throwf(&DeeError_UnsupportedAPI,
-				                "Unsupported function `dup()'");
+				                "Unsupported function `dup()`");
 				goto err;
 			}
 #endif /* ENOSYS */
@@ -2814,7 +2814,7 @@ again_dup:
 		DBG_ALIGNMENT_ENABLE();
 #else /* CONFIG_HAVE_dup */
 		DeeError_Throwf(&DeeError_UnsupportedAPI,
-		                "Unsupported function `dup()'");
+		                "Unsupported function `dup()`");
 		goto err;
 #endif /* !CONFIG_HAVE_dup */
 	} else {
@@ -2917,7 +2917,7 @@ sysfile_class_sync(DeeObject *UNUSED(self),
 	 *      Considering how the linux alternative doesn't
 	 *      require any special rights, should we simply
 	 *      ignore failure?
-	 *      How does cygwin implement `sync()'?
+	 *      How does cygwin implement `sync()`?
 	 */
 #endif /* DeeSystem_FILE_USE_nt_HANDLE */
 	return_none;
@@ -2938,7 +2938,7 @@ PRIVATE struct type_member tpconst sysfile_class_members[] = {
 };
 
 
-/* Extra methods to emulate the `File.Buffer' API that
+/* Extra methods to emulate the `File.Buffer` API that
  * are only available when the STDIO backend is used. */
 #ifdef DeeSystem_FILE_USE_stdio_FILE
 #undef HAVE_USABLE_setvbuf
@@ -3060,13 +3060,13 @@ done:
 	return_none;
 err_invalid_mode:
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Unrecognized buffer mode `%s'",
+	                "Unrecognized buffer mode `%s`",
 	                args.mode_str);
 err:
 	return NULL;
 #else /* HAVE_USABLE_setvbuf */
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                "Unsupported function `setvbuf()'");
+	                "Unsupported function `setvbuf()`");
 	return NULL;
 #endif /* !HAVE_USABLE_setvbuf */
 }

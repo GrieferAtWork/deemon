@@ -34,7 +34,7 @@
 
 DECL_BEGIN
 
-/* A type `RefVector' that acts and works very much the same as `SharedVector',
+/* A type `RefVector` that acts and works very much the same as `SharedVector`,
  * but instead allows other objects to enumerate private vectors, such as the
  * global objects of modules, or their imports, as well as static variables of
  * code objects, etc. etc. etc... */
@@ -43,7 +43,7 @@ typedef struct {
 	size_t               rv_length;   /* [const] The number of items in this vector. */
 	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][const]
 	                                   * The vector of objects that is being referenced.
-	                                   * NOTE: Elements of this vector may only be changed when `RefVector_IsWritable()'. */
+	                                   * NOTE: Elements of this vector may only be changed when `RefVector_IsWritable()`. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t *rv_plock;    /* [0..1][const] An optional lock that must be held when accessing the list.
 	                                   * Also: when non-NULL, items of the vector can be modified. */

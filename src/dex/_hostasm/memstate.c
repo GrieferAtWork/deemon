@@ -92,8 +92,8 @@ memval_vec_moveup(struct memval *dst,
 }
 #endif /* !memval_initmove_IS_MEMCPY */
 
-/* Check if there is a register that contains `usage'.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent. */
+/* Check if there is a register that contains `usage`.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_usage(struct memstate const *__restrict self,
                           host_regusage_t usage) {
@@ -106,9 +106,9 @@ memstate_hregs_find_usage(struct memstate const *__restrict self,
 }
 
 /* Check if there is a register that is completely unused.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent.
  * @param: accept_if_with_regusage: When true, allowed to return registers with
- *                                  `ms_rusage[return] != HOST_REGUSAGE_GENERIC' */
+ *                                  `ms_rusage[return] != HOST_REGUSAGE_GENERIC` */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_unused(struct memstate const *__restrict self,
                            bool accept_if_with_regusage) {
@@ -140,9 +140,9 @@ memstate_hregs_find_unused(struct memstate const *__restrict self,
 	return result;
 }
 
-/* Same as `memstate_hregs_find_unused(self, true)', but don't return `not_these',
- * which is an array of register numbers terminated by one `>= HOST_REGNO_COUNT'.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent. */
+/* Same as `memstate_hregs_find_unused(self, true)`, but don't return `not_these`,
+ * which is an array of register numbers terminated by one `>= HOST_REGNO_COUNT`.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent. */
 INTERN WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_unused_ex(struct memstate *__restrict self,
                               host_regno_t const *not_these) {
@@ -186,7 +186,7 @@ done:
 	return result;
 }
 
-/* Adjust register-related memory locations to account for `%regno = %regno + delta' */
+/* Adjust register-related memory locations to account for `%regno = %regno + delta` */
 INTERN NONNULL((1)) void DCALL
 memstate_hregs_adjust_delta(struct memstate *__restrict self,
                             host_regno_t regno, ptrdiff_t delta) {
@@ -203,7 +203,7 @@ memstate_hregs_adjust_delta(struct memstate *__restrict self,
 }
 
 
-/* Check if a pointer-sized blob at `cfa_offset' is being used by something. */
+/* Check if a pointer-sized blob at `cfa_offset` is being used by something. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 memstate_hstack_isused(struct memstate const *__restrict self,
                        host_cfa_t cfa_offset) {
@@ -290,11 +290,11 @@ memstate_hstack_used(struct memstate const *__restrict self,
 	return false;
 }
 
-/* Try to find a `n_bytes'-large free section of host stack memory.
+/* Try to find a `n_bytes`-large free section of host stack memory.
  * @param: hstack_reserved: When non-NULL, only consider locations that are *also* free in here
  * @return: * :            The base-CFA offset of the free section of memory
- * @return: (host_cfa_t)-1: There is no free section of at least `n_bytes' bytes.
- *                         In this case, allocate using `memstate_hstack_alloca()' */
+ * @return: (host_cfa_t)-1: There is no free section of at least `n_bytes` bytes.
+ *                         In this case, allocate using `memstate_hstack_alloca()` */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) host_cfa_t DCALL
 memstate_hstack_find(struct memstate const *__restrict self,
                      struct memstate const *hstack_reserved,
@@ -397,7 +397,7 @@ memloc_constrainwith(struct memstate *__restrict self,
 #endif /* !HOSTASM_X86 || HOSTASM_X86_64 */
 
 	default: {
-		/* If the location describe by `other' isn't already in use in `state',
+		/* If the location describe by `other` isn't already in use in `state`,
 		 * then use *it* as-it. That way, we can reduce the necessary number of
 		 * memory state transformation! */
 		switch (other_loc->ml_adr.ma_typ) {
@@ -443,7 +443,7 @@ did_runtime_value_merge:
 	}
 
 	/* Even if both sides have it in-register/on-stack, must still
-	 * ensure that all aliases in `self' also appear in `other'.
+	 * ensure that all aliases in `self` also appear in `other`.
 	 * Any alias that doesn't must become a distinct memory location. */
 	{
 		unsigned int kind;
@@ -501,13 +501,13 @@ memobj_constrainwith(struct memstate *__restrict self,
 	                                   memobj_getloc(obj),
 	                                   memobj_getloc(other_obj));
 
-	/* If `MEMOBJ_F_ISREF' isn't set in "other_obj", it must also be set in `self' */
+	/* If `MEMOBJ_F_ISREF` isn't set in "other_obj", it must also be set in `self` */
 	if (!(obj->mo_flags & MEMOBJ_F_ISREF) && (other_obj->mo_flags & MEMOBJ_F_ISREF)) {
 		obj->mo_flags |= MEMOBJ_F_ISREF;
 		result = true;
 	}
 
-	/* Merge `MEMOBJ_F_MAYBEUNBOUND' flags. */
+	/* Merge `MEMOBJ_F_MAYBEUNBOUND` flags. */
 	if ((is_local) &&
 	    (obj->mo_flags & MEMOBJ_F_MAYBEUNBOUND) == 0 &&
 	    (other_obj->mo_flags & MEMOBJ_F_MAYBEUNBOUND) != 0) {
@@ -632,9 +632,9 @@ incompatible_morph:
 	return result;
 }
 
-/* Constrain `self' with `other', such that it is possible to generate code to
- * transition from `other' to `self', as well as any other mem-state that might
- * be the result of further constraints applied to `self'.
+/* Constrain `self` with `other`, such that it is possible to generate code to
+ * transition from `other` to `self`, as well as any other mem-state that might
+ * be the result of further constraints applied to `self`.
  * @return: true:  State become more constrained
  * @return: false: State didn't change */
 INTERN NONNULL((1, 2)) bool DCALL
@@ -679,7 +679,7 @@ memstate_constrainwith(struct memstate *__restrict self,
 	return result;
 }
 
-/* Check if a reference is being held by `mobj' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mobj` or some other location that may be aliasing it. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 memstate_hasref(struct memstate const *__restrict self,
                 struct memobj const *mobj) {
@@ -698,7 +698,7 @@ memstate_hasref(struct memstate const *__restrict self,
 	return false;
 }
 
-/* Check if `mval' has an alias. */
+/* Check if `mval` has an alias. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 memstate_hasalias(struct memstate const *__restrict self,
                   struct memval const *mval) {
@@ -727,8 +727,8 @@ basic_block_clear_hcode_and_exits(struct basic_block *__restrict self) {
 	host_section_clear(&self->bb_htext);
 }
 
-/* Constrain or assign `self->bb_mem_start' with the memory state `state'
- * @param: self_start_addr: The starting-address of `self' (for error messages)
+/* Constrain or assign `self->bb_mem_start` with the memory state `state`
+ * @param: self_start_addr: The starting-address of `self` (for error messages)
  * @return: 1 : State become more constrained
  * @return: 0 : State didn't change
  * @return: -1: Error */
@@ -782,7 +782,7 @@ err:
 
 
 
-/* Ensure that at least `min_alloc' stack slots are allocated. */
+/* Ensure that at least `min_alloc` stack slots are allocated. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 memstate_reqvstack(struct memstate *__restrict self,
                    vstackaddr_t min_alloc) {
@@ -906,7 +906,7 @@ err:
 	return -1;
 }
 
-/* Same as `memobj_reqxinfo()', but must be used when "obj" may be aliased by
+/* Same as `memobj_reqxinfo()`, but must be used when "obj" may be aliased by
  * other memory locations, in which case the returned struct will be allocated in
  * all aliases as well. */
 INTERN WUNUSED NONNULL((1, 2)) struct memobj_xinfo *DCALL
@@ -1308,7 +1308,7 @@ except_exitinfo_id_addref(struct except_exitinfo_id *__restrict self,
 }
 
 
-/* Check if `self' is more "canonical" than `other' */
+/* Check if `self` is more "canonical" than `other` */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 memloc_is_more_canonical_than(struct memloc const *__restrict self,
                               struct memloc const *__restrict other) {
@@ -1344,7 +1344,7 @@ memloc_is_more_canonical_than(struct memloc const *__restrict self,
 	return memloc_getoff(self) < memloc_getoff(other);
 }
 
-/* Looking at equivalence classes, fill `*result' with the "canonical" description of `loc'
+/* Looking at equivalence classes, fill `*result` with the "canonical" description of `loc`
  * @return: true: if there is a constant equivalence. */
 PRIVATE NONNULL((1, 2, 3)) bool DCALL
 memstate_select_canonical_equiv(struct memstate const *__restrict self,
@@ -1374,8 +1374,8 @@ memstate_select_canonical_equiv(struct memstate const *__restrict self,
 	return isconst;
 }
 
-/* Initialize `self' from `state'
- * @return: * : Always re-returns `self' */
+/* Initialize `self` from `state`
+ * @return: * : Always re-returns `self` */
 INTERN NONNULL((1, 2)) struct except_exitinfo_id *DCALL
 except_exitinfo_id_init(struct except_exitinfo_id *__restrict self,
                         struct memstate const *__restrict state) {
@@ -1414,11 +1414,11 @@ except_exitinfo_id_init(struct except_exitinfo_id *__restrict self,
 
 
 /* Calculate the "distance" score that determines the complexity of the
- * transitioning code needed to morph from `oldinfo' to `newinfo'. When
+ * transitioning code needed to morph from `oldinfo` to `newinfo`. When
  * ordering exception cleanup code, exit descriptors should be ordered
  * such that the fallthru of one to the next always yields the lowest
  * distance score.
- * @return: * : The distance scrore for morphing from `oldinfo' to `newinfo' */
+ * @return: * : The distance scrore for morphing from `oldinfo` to `newinfo` */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 except_exitinfo_id_distance(struct except_exitinfo_id const *__restrict oldinfo,
                             struct except_exitinfo_id const *__restrict newinfo) {

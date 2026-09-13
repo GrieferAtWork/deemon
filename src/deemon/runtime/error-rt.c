@@ -118,7 +118,7 @@ print define_Dee_HashStr("cause");
 	                     tp_class_members)
 
 
-/* Initialize an error type that uses `DeeErrorObject' as its struct type */
+/* Initialize an error type that uses `DeeErrorObject` as its struct type */
 #define INIT_LIKE_ERROR(tp_name, tp_doc, tp_flags,                             \
                         tp_base, tp_str, tp_print,                             \
                         tp_methods, tp_getsets, tp_class_members)              \
@@ -825,7 +825,7 @@ INIT_CUSTOM_ERROR("CannotWeakReference", "(" CannotWeakReference_init_params ")"
                   NULL, &CannotWeakReference_print,
                   NULL, NULL, CannotWeakReference_members, NULL);
 
-/* Throws a `DeeError_CannotWeakReference' indicating that `self' cannot be weak-referenced */
+/* Throws a `DeeError_CannotWeakReference` indicating that `self` cannot be weak-referenced */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrCannotWeakReference)(DeeObject *__restrict self) {
 	DREF CannotWeakReference *result = DeeObject_MALLOC(CannotWeakReference);
@@ -924,7 +924,7 @@ DivideByZero_print(DivideByZero *__restrict self,
 #endif
 	}
 	result = DeeFormat_Printf(printer, arg,
-	                          "Divide by Zero: `%Vk / %Vk'",
+	                          "Divide by Zero: `%Vk / %Vk`",
 	                          &lhs, &rhs);
 	Dee_variant_fini(&rhs);
 	Dee_variant_fini(&lhs);
@@ -943,7 +943,7 @@ INIT_CUSTOM_ERROR("DivideByZero", "(" DivideByZero_init_params ")",
                   TP_FNORMAL, &DeeError_ArithmeticError, DivideByZero,
                   NULL, &DivideByZero_print, NULL, NULL, DivideByZero_members, NULL);
 
-/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
+/* Throws an `DeeError_DivideByZero` indicating that a zero-division attempt has taken place. */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs) {
 	DREF DivideByZero *result = DeeObject_MALLOC(DivideByZero);
@@ -996,7 +996,7 @@ NegativeShift_print(NegativeShift *__restrict self,
 	Dee_variant_init_copy(&lhs, &self->nsf_base.ve_value);
 	Dee_variant_init_copy(&rhs, &self->nsf_rhs);
 	result = DeeFormat_Printf(printer, arg,
-	                          "Negative %s shift: `%Vk %s %Vk'",
+	                          "Negative %s shift: `%Vk %s %Vk`",
 	                          self->nsf_left ? "left" : "right", &lhs,
 	                          self->nsf_left ? "<<" : ">>", &rhs);
 	Dee_variant_fini(&rhs);
@@ -1165,7 +1165,7 @@ INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, IndexError, NULL, &IndexError_print,
                   NULL, IndexError_getsets, IndexError_members, IndexError_class_members);
 
-/* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
+/* Throws an `DeeError_IndexError` indicating that a given index is out-of-bounds */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length) {
 	DREF IndexError *result = DeeObject_MALLOC(IndexError);
@@ -1233,7 +1233,7 @@ EmptySequence_print(IndexError *__restrict self,
 	if (self->ie_base.ke_base.e_msg)
 		return DeeObject_Print(self->ie_base.ke_base.e_msg, printer, arg);
 	return DeeFormat_Printf(printer, arg,
-	                        "Empty sequence of type `%K' encountered",
+	                        "Empty sequence of type `%K` encountered",
 	                        SequenceError_GetSeqType(&self->ie_base.ke_base));
 }
 
@@ -1242,7 +1242,7 @@ INIT_LIKE_BASECLASS("EmptySequence", "(" IndexError_init_params ")",
                     TP_FNORMAL, &DeeError_IndexError, EmptySequence, NULL, &EmptySequence_print,
                     NULL, NULL, NULL);
 
-/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
+/* Throws an `DeeError_EmptySequence` indicating that a given sequence is empty */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq) {
 	DREF EmptySequence *result = DeeObject_MALLOC(EmptySequence);
@@ -1282,7 +1282,7 @@ INIT_CUSTOM_ERROR("UnknownKey", "(" KeyError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, UnknownKey, NULL, &UnknownKey_print,
                   NULL, NULL, NULL, NULL);
 
-/* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
+/* Throws an `DeeError_UnknownKey` indicating that a given index/key is unknown */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key) {
 	DREF UnknownKey *result = DeeObject_MALLOC(UnknownKey);
@@ -1428,7 +1428,7 @@ INIT_CUSTOM_ERROR("ReadOnlyKey", "(" KeyError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, ReadOnlyKey, NULL, &ReadOnlyKey_print,
                   NULL, NULL, NULL, NULL);
 
-/* Throws an `DeeError_ReadOnlyKey' indicating that a given index/key is unknown */
+/* Throws an `DeeError_ReadOnlyKey` indicating that a given index/key is unknown */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key) {
 	DREF ReadOnlyKey *result = DeeObject_MALLOC(ReadOnlyKey);
@@ -1512,7 +1512,7 @@ UnboundItem_print(UnboundItem *__restrict self,
 	if (self->ui_base.ke_base.e_msg)
 		return DeeObject_Print(self->ui_base.ke_base.e_msg, printer, arg);
 	return DeeFormat_Printf(printer, arg,
-	                        "%s `%Vr' of instance of `%K': %Vk has not been bound",
+	                        "%s `%Vr` of instance of `%K`: %Vk has not been bound",
 	                        self->ui_iskey ? "Key" : "Index",
 	                        &self->ui_base.ke_key, SequenceError_GetSeqType(&self->ui_base.ke_base),
 	                        &self->ui_base.ke_base.ve_value);
@@ -1722,21 +1722,21 @@ ItemNotFound_print(ItemNotFound *__restrict self,
 	Dee_variant_init_copy(&active_end, &self->inf_end);
 	if ((Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) && self->inf_key) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%k(%Vk)' in sequence `%Vk' [%" PRFuSIZ ",%Vk)",
+		                          "Could not locate item `%k(%Vk)` in sequence `%Vk` [%" PRFuSIZ ",%Vk)",
 		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value,
 		                          self->inf_start, &active_end);
 	} else if (Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%Vk' in sequence `%Vk' [%" PRFuSIZ ",%Vk)",
+		                          "Could not locate item `%Vk` in sequence `%Vk` [%" PRFuSIZ ",%Vk)",
 		                          &self->inf_item, &self->inf_base.ve_value,
 		                          self->inf_start, &active_end);
 	} else if (self->inf_key) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%k(%Vk)' in sequence `%Vk'",
+		                          "Could not locate item `%k(%Vk)` in sequence `%Vk`",
 		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value);
 	} else {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%Vk' in sequence `%Vk'",
+		                          "Could not locate item `%Vk` in sequence `%Vk`",
 		                          &self->inf_item, &self->inf_base.ve_value);
 	}
 	Dee_variant_fini(&active_end);
@@ -1748,7 +1748,7 @@ INIT_CUSTOM_ERROR("ItemNotFound", "(" ItemNotFound_init_params ")",
                   TP_FNORMAL, &DeeError_SequenceError, ItemNotFound, NULL, &ItemNotFound_print,
                   NULL, NULL, ItemNotFound_members, ItemNotFound_class_members);
 
-/* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
+/* Throws an `DeeError_ItemNotFound` indicating that a given item could not be found within some sequence */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item) {
 	return DeeRT_ErrItemNotFoundEx(seq, item, 0, (size_t)-1, NULL);
@@ -1851,9 +1851,9 @@ INIT_CUSTOM_ERROR("RegexNotFound", "(" RegexNotFound_init_params ")",
                   TP_FNORMAL, &DeeError_ItemNotFound, RegexNotFound, NULL, &RegexNotFound_print,
                   NULL, NULL, RegexNotFound_members, NULL);
 
-/* Throws an `DeeError_RegexNotFound' indicating that
+/* Throws an `DeeError_RegexNotFound` indicating that
  * the given "regex" could not be found within "data"
- * @param: eflags: Set of `Dee_RE_EXEC_*' */
+ * @param: eflags: Set of `Dee_RE_EXEC_*` */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
@@ -1970,8 +1970,8 @@ INIT_CUSTOM_ERROR("UnpackError", "(" UnpackError_init_params ")",
                   TP_FNORMAL, &DeeError_SequenceError, UnpackError,
                   NULL, &UnpackError_print, NULL, NULL, UnpackError_members, NULL);
 
-/* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
- * of `actual_size' elements cannot be unpacked to `expected_size'. */
+/* Throws an `DeeError_UnpackError` indicating that a sequence `seq`
+ * of `actual_size` elements cannot be unpacked to `expected_size`. */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size) {
 #ifdef __OPTIMIZE_SIZE__
@@ -2156,7 +2156,7 @@ PRIVATE ValueError EmptyWeakReference_instance = {
 	/* .ve_value = */ Dee_VARIANT_INIT_UNBOUND
 };
 
-/* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
+/* Throws a `DeeError_EmptyWeakReference` indicating that a weak reference is empty */
 PUBLIC ATTR_COLD int
 (DCALL DeeRT_ErrEmptyWeakReference)(void) {
 	return DeeError_Throw(&EmptyWeakReference_instance);
@@ -2239,13 +2239,13 @@ INIT_CUSTOM_ERROR("IntegerOverflow",
                   IntegerOverflow, NULL, &IntegerOverflow_print,
                   NULL, NULL, IntegerOverflow_members, NULL);
 
-/* Throws a `DeeError_IntegerOverflow' indicating that some an integer
+/* Throws a `DeeError_IntegerOverflow` indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
  * exceeds the maximum supported value bounds within some context-of-use.
  *
  * The unsigned overflow throwing functions will only take the upper
  * bound (greatest) of valid values, and assume that the lower bound
- * is equal to `0'
+ * is equal to `0`
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
@@ -2526,13 +2526,13 @@ PUBLIC ATTR_COLD int
 
 
 
-/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within an `IndexError' (setting it as the `IndexError's "cause"), and using
- * `seq' as the accompanying sequence.
+/* Check if the currently-thrown exception is an `IntegerOverflow`. If so, wrap that
+ * error within an `IndexError` (setting it as the `IndexError`s "cause"), and using
+ * `seq` as the accompanying sequence.
  *
- * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ * If the currently-thrown exception isn't an `IntegerOverflow`, do nothing.
  *
- * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+ * @return: -1: Always returns `-1`, no matter what this function ended up doing. */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq) {
 	DREF DeeThreadObject *me = DeeThread_Self();
@@ -2574,13 +2574,13 @@ done:
 }
 
 
-/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within a `NegativeShift' (setting it as the `NegativeShift's "cause"), and
- * using `lhs' as the shift's left-hand-side expression.
+/* Check if the currently-thrown exception is an `IntegerOverflow`. If so, wrap that
+ * error within a `NegativeShift` (setting it as the `NegativeShift`s "cause"), and
+ * using `lhs` as the shift's left-hand-side expression.
  *
- * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ * If the currently-thrown exception isn't an `IntegerOverflow`, do nothing.
  *
- * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+ * @return: -1: Always returns `-1`, no matter what this function ended up doing. */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObject *lhs, bool is_left_shift) {
 	DREF DeeThreadObject *me = DeeThread_Self();
@@ -2707,13 +2707,13 @@ done:
 
 
 
-/* Same as functions above, but check if the currently thrown error is `IntegerOverflow'
- * If so, wrap it in another nested `IntegerOverflow' that uses the specified minval/maxval
- * values, rather than those of the underlying `IntegerOverflow'
+/* Same as functions above, but check if the currently thrown error is `IntegerOverflow`
+ * If so, wrap it in another nested `IntegerOverflow` that uses the specified minval/maxval
+ * values, rather than those of the underlying `IntegerOverflow`
  *
- * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8',
- * which is implemented in terms of `DeeObject_Get32Bit()'. Now if `DeeObject_Get32Bit()'
- * already fails with an `IntegerOverflow', that error will list 2^32 as its upper limit,
+ * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8`,
+ * which is implemented in terms of `DeeObject_Get32Bit()`. Now if `DeeObject_Get32Bit()`
+ * already fails with an `IntegerOverflow`, that error will list 2^32 as its upper limit,
  * when the caller's limit would have actually been 2^8. */
 PRIVATE ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrNestedOverflow_impl)(struct Dee_variant *__restrict minval,
@@ -2830,19 +2830,19 @@ PUBLIC ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void) {
 }
 
 
-/* Throws a `DeeError_NotImplemented' indicating that `self' cannot be serialized */
+/* Throws a `DeeError_NotImplemented` indicating that `self` cannot be serialized */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrCannotSerialize)(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Cannot serialize instance of `%s'",
+	                       "Cannot serialize instance of `%s`",
 	                       DeeType_GetName(DeeObject_Class(self)));
 }
 
-/* Throws a `DeeError_NotImplemented' indicating that `self' has no buffer interface */
+/* Throws a `DeeError_NotImplemented` indicating that `self` has no buffer interface */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrNoBufferInterface)(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Type `%s' does not implement the buffer interface",
+	                       "Type `%s` does not implement the buffer interface",
 	                       DeeType_GetName(DeeObject_Class(self)));
 }
 

@@ -50,7 +50,7 @@ DECL_BEGIN
 
 
 #ifdef __CYGWIN__
-/* Prevent syntax errors because of `_Pragma' deprecation warnings
+/* Prevent syntax errors because of `_Pragma` deprecation warnings
  * inside definitions, which in turn break use of these within
  * preprocessor expressions. */
 #undef ENOSHARE
@@ -486,7 +486,7 @@ PRIVATE DEFINE_CMETHOD1(posix_errno_set, &posix_errno_set_f, METHOD_FNORMAL);
 
 
 
-/* Figure out how to implement `posix_strerror()' */
+/* Figure out how to implement `posix_strerror()` */
 #undef posix_strerror_USE_strerrordesc_np
 #undef posix_strerror_USE_sys_errlist
 #undef posix_strerror_USE_strerror
@@ -597,7 +597,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 
 
 
-/* Figure out how to implement `posix_strerrorname()' */
+/* Figure out how to implement `posix_strerrorname()` */
 #undef posix_strerrorname_USE_STUB
 #undef posix_strerrorname_USE_strerrorname_np
 #undef posix_strerrorname_USE_SYMBOLNAMES

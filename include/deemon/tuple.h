@@ -47,7 +47,6 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_tuple_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
 	size_t                                    t_size;  /* [const] Tuple size. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, t_elem); /* [1..1][const][t_size] Tuple elements. */
@@ -56,14 +55,14 @@ typedef struct Dee_tuple_object {
 #ifdef __INTELLISENSE__
 #define DeeTuple_SIZEOF(n_items) \
 	(COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
-/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
+/* Same as `DeeTuple_SIZEOF()`, but makes sure that no overflow takes place. */
 #define DeeTuple_SIZEOF_SAFE(n_items) \
 	(COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
 #else /* __INTELLISENSE__ */
 #define DeeTuple_SIZEOF(n_items)                                    \
 	_Dee_MallococBufsize(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
 	                     n_items, sizeof(DREF DeeObject *))
-/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
+/* Same as `DeeTuple_SIZEOF()`, but makes sure that no overflow takes place. */
 #define DeeTuple_SIZEOF_SAFE(n_items)                                   \
 	_Dee_MallococBufsizeSafe(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
 	                         n_items, sizeof(DREF DeeObject *))
@@ -114,7 +113,7 @@ DDATDEF struct Dee_empty_tuple_struct DeeNullableTuple_Empty;
 
 DDATDEF DeeTypeObject DeeTuple_Type;
 DDATDEF DeeTypeObject DeeNullableTuple_Type; /* Same as "DeeTuple_Type", but items are allowed to be NULL (meaning unbound) */
-#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `Tuple' is final */
+#define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `Tuple` is final */
 #define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeTuple_Type)
 
 
@@ -122,16 +121,16 @@ DDATDEF DeeTypeObject DeeNullableTuple_Type; /* Same as "DeeTuple_Type", but ite
 DFUNDEF WUNUSED DREF DeeTupleObject *DCALL
 DeeTuple_NewUninitialized(size_t n);
 
-/* Same as `DeeTuple_NewUninitialized()', but
- * doesn't throw an exception when returning `NULL' */
+/* Same as `DeeTuple_NewUninitialized()`, but
+ * doesn't throw an exception when returning `NULL` */
 DFUNDEF WUNUSED DREF DeeTupleObject *DCALL
 DeeTuple_TryNewUninitialized(size_t n);
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__restrict self, size_t n);
 
-/* Same as `DeeTuple_ResizeUninitialized()', but
- * doesn't throw an exception when returning `NULL' */
+/* Same as `DeeTuple_ResizeUninitialized()`, but
+ * doesn't throw an exception when returning `NULL` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF DeeTupleObject *__restrict self, size_t n);
 
@@ -186,14 +185,14 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbol
 DFUNDEF NONNULL((1)) void DCALL
 DeeTuple_DecrefSymbolic(DeeObject *__restrict self);
 
-/* Similar to `Dee_Packf', but parse any number of formated values and
- * put them in a tuple, essentially doing the same as `Dee_Packf' when
- * the entire `format' string was surrounded by `(' and `)'. */
+/* Similar to `Dee_Packf`, but parse any number of formated values and
+ * put them in a tuple, essentially doing the same as `Dee_Packf` when
+ * the entire `format` string was surrounded by `(` and `)`. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeTuple_Newf(char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_VNewf(char const *__restrict format, va_list args);
 
 /* Concat a tuple and some generic sequence,
- * inheriting a reference from `self' in the process. */
+ * inheriting a reference from `self` in the process. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence);
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -210,7 +209,7 @@ DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
 /* TUPLE BUILDER                                                        */
 /************************************************************************/
 struct Dee_tuple_builder {
-	size_t               tb_size;  /* Used size (allocated size is stored in `tb_tuple->t_size') */
+	size_t               tb_size;  /* Used size (allocated size is stored in `tb_tuple->t_size`) */
 	DREF DeeTupleObject *tb_tuple; /* [0..1][owned] Result tuple (guarantied to not be shared) */
 };
 
@@ -247,9 +246,9 @@ DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) int DCALL
 Dee_tuple_builder_extend_inherited(struct Dee_tuple_builder *self, size_t objc,
                                    /*inherit(always)*/ DREF DeeObject *const *__restrict objv);
 
-/* Ensure that space for at least `n' items is allocated, and return
- * a pointer to a buffer where those `n' items can be written. Once
- * written, commit the write using `Dee_tuple_builder_commit' */
+/* Ensure that space for at least `n` items is allocated, and return
+ * a pointer to a buffer where those `n` items can be written. Once
+ * written, commit the write using `Dee_tuple_builder_commit` */
 DFUNDEF WUNUSED NONNULL((1)) DeeObject **DCALL
 Dee_tuple_builder_alloc(struct Dee_tuple_builder *__restrict self, size_t n);
 DFUNDEF WUNUSED NONNULL((1)) DeeObject **DCALL
@@ -257,15 +256,15 @@ Dee_tuple_builder_alloc1(struct Dee_tuple_builder *__restrict self);
 #define Dee_tuple_builder_commit(self, n) (void)((self)->tb_size += (n))
 #define Dee_tuple_builder_commit1(self)   Dee_tuple_builder_commit(self, 1)
 
-/* Try to ensure that space for at least `n' extra items is available.
+/* Try to ensure that space for at least `n` extra items is available.
  * Returns indicate of that much space now being pre-allocated. */
 DFUNDEF NONNULL((1)) bool DCALL
 Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n);
 
 
 /* Same as above, but produced tuple's items must either be incref'd,
- * or the reference returned by `Dee_tuple_builder_pack_symbolic' must
- * be decref'd by `DeeTuple_DecrefSymbolic' */
+ * or the reference returned by `Dee_tuple_builder_pack_symbolic` must
+ * be decref'd by `DeeTuple_DecrefSymbolic` */
 #define Dee_tuple_builder_init_symbolic            Dee_tuple_builder_init
 #define Dee_tuple_builder_cinit_symbolic           Dee_tuple_builder_cinit
 #define Dee_tuple_builder_init_with_hint_symbolic  Dee_tuple_builder_init_with_hint
@@ -294,7 +293,7 @@ Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
  * previously unallocated items to "NULL"; iow: unbound), and set the index'th
  * element to "item" (which is also allowed to be "NULL")
  *
- * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t'
+ * HINT: This function is binary-compatible with `Dee_seq_enumerate_index_t`
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
@@ -302,15 +301,15 @@ DFUNDEF WUNUSED Dee_ssize_t DCALL
 Dee_nullable_tuple_builder_setitem_index(/*struct Dee_nullable_tuple_builder **/void *self,
                                          size_t index, /*0..1*/ DeeObject *item);
 
-/* Ensure that space for at least `n' items is allocated, and return
- * a pointer to a buffer where those `n' items can be written. Once
- * written, commit the write using `Dee_nullable_tuple_builder_commit' */
+/* Ensure that space for at least `n` items is allocated, and return
+ * a pointer to a buffer where those `n` items can be written. Once
+ * written, commit the write using `Dee_nullable_tuple_builder_commit` */
 #define Dee_nullable_tuple_builder_alloc   Dee_tuple_builder_alloc
 #define Dee_nullable_tuple_builder_alloc1  Dee_tuple_builder_alloc1
 #define Dee_nullable_tuple_builder_commit  Dee_tuple_builder_commit
 #define Dee_nullable_tuple_builder_commit1 Dee_tuple_builder_commit1
 
-/* Try to ensure that space for at least `n' extra items is available.
+/* Try to ensure that space for at least `n` extra items is available.
  * Returns indicate of that much space now being pre-allocated. */
 #define Dee_nullable_tuple_builder_reserve Dee_tuple_builder_reserve
 

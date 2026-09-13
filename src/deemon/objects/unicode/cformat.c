@@ -49,8 +49,8 @@ DECL_BEGIN
 #define F_SPACE    0x0008 /* '% '. */
 #define F_PADZERO  0x0010 /* '%0'. */
 #define F_HASWIDTH 0x0020 /* '%123'. */
-#define F_HASPREC  0x0040 /* `%.123'. */
-#define F_PREFIX   0x0080 /* `%#'. */
+#define F_HASPREC  0x0040 /* `%.123`. */
+#define F_PREFIX   0x0080 /* `%#`. */
 #define F_SIGNED   0x0100
 #define F_FIXBUF   0x0200
 
@@ -143,8 +143,8 @@ err:
 }
 
 
-/* Format a given `format' string subject to printf-style formatting rules.
- * NOTE: This is the function called by `operator %' for strings. */
+/* Format a given `format` string subject to printf-style formatting rules.
+ * NOTE: This is the function called by `operator %` for strings. */
 INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 DeeString_CFormat(Dee_formatprinter_t printer,
                   Dee_formatprinter_t format_printer, void *arg,
@@ -750,12 +750,12 @@ err_preprinter:
 
 invalid_format:
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Unknown or unexpected cformat character `%c' in `%$s', apart of %r",
+			                "Unknown or unexpected cformat character `%c` in `%$s`, apart of %r",
 			                ch, (size_t)(iter - format_start), format_start, format);
 			goto err_m1;
 missing_argument:
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Missing argument for `%$s'",
+			                "Missing argument for `%$s`",
 			                (size_t)(iter - format_start), format_start);
 			goto err_m1;
 		}

@@ -403,9 +403,9 @@ do_handle_filetype:
 	} else if (tp_self == &DeeNone_Type) {
 		return 0;
 	}
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	/* TODO: Make a call to DeeObject_InvokeOperatorf() */
 	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_READ);
 }
@@ -432,9 +432,9 @@ do_handle_filetype:
 	} else if (tp_self == &DeeNone_Type) {
 		return 0;
 	}
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	/* TODO: Make a call to DeeObject_InvokeOperatorf() */
 	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_READ);
 }
@@ -860,9 +860,9 @@ do_handle_filetype:
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	/* TODO: Make a call to DeeObject_InvokeOperatorf() */
 	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PREAD);
 }
@@ -889,9 +889,9 @@ do_handle_filetype:
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	/* TODO: Make a call to DeeObject_InvokeOperatorf() */
 	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PWRITE);
 }

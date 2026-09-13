@@ -61,10 +61,10 @@ Dee_GetEnv(DeeObject *__restrict name) {
 	}
 	return result;
 err_tryhandle:
-	if (DeeError_Catch(&DeeError_ValueError) ||     /* Super-error that includes `KeyError' (thrown when a key (env_name) wasn't found) */
-	    DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `posix' doesn't export a symbol `environ') */
-	    DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `posix' only provides a stub implementation for `environ') */
-	    DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `posix.environ' doesn't support lookup) */
+	if (DeeError_Catch(&DeeError_ValueError) ||     /* Super-error that includes `KeyError` (thrown when a key (env_name) wasn't found) */
+	    DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `posix` doesn't export a symbol `environ`) */
+	    DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `posix` only provides a stub implementation for `environ`) */
+	    DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `posix.environ` doesn't support lookup) */
 		return ITER_DONE;
 	return NULL;
 err_r:
@@ -96,9 +96,9 @@ struct notify_entry {
 	uint16_t              nh_class; /* The notification class. */
 	uint16_t              nh_pad[(sizeof(void *) - 2) / 2]; /* ... */
 	DREF DeeStringObject *nh_name;  /* [0..1] The notification name (or NULL if the entry is unused) */
-	Dee_hash_t            nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr' when `Dee_NOTIFICATION_CLASS_FNOCASE' is set) */
+	Dee_hash_t            nh_hash;  /* The effective hash of the name (using `Dee_HashCasePtr` when `Dee_NOTIFICATION_CLASS_FNOCASE` is set) */
 	Dee_notify_t          nh_func;  /* [1..1][valid_if(nh_name)] The callback invoked for the purposes of this notification. */
-	DREF DeeObject       *nh_arg;   /* [0..1][valid_if(nh_name)] The argument passed to `nh_func' */
+	DREF DeeObject       *nh_arg;   /* [0..1][valid_if(nh_name)] The argument passed to `nh_func` */
 };
 
 PRIVATE ATTR_COLD int DCALL
@@ -137,12 +137,12 @@ PRIVATE size_t /*         */ notify_mask = 0;
 PRIVATE struct notify_entry *notify_list = (struct notify_entry *)empty_notifications;
 
 #define NOTIFY_HASHST(hash)        ((hash) & notify_mask)
-#define NOTIFY_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define NOTIFY_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define NOTIFY_HASHIT(i)           (notify_list + ((i) & notify_mask))
 
 
 /* Resize the hash size by a factor of 2 and re-insert all elements.
- * When `sizedir > 0', increase the hash; When `sizedir < 0', decrease it.
+ * When `sizedir > 0`, increase the hash; When `sizedir < 0`, decrease it.
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the notification map.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
@@ -211,14 +211,14 @@ notify_rehash(int sizedir) {
 /* Add/remove a notification listener for a given class and name.
  * @param:  arg: When non-NULL, an object to which the internal
  *               notification registration will keep a reference.
- *               Additionally, this object is passed to `callback'
+ *               Additionally, this object is passed to `callback`
  *               whenever it is invoked.
- * @param:  cls: One of `NOTIFICATION_CLASS_*'
+ * @param:  cls: One of `NOTIFICATION_CLASS_*`
  * @param: name: The name of the notification to listen for. (Must be a string; e.g.: Name of an environment variable)
- * @return:   0: Successfully registered/removed the given `callback' and `arg' for `cls' and `name'.
- * @return:   1: The given `callback' has already / hasn't been registered for `cls'
- *               and `name' with the same `arg' and was not registered again / removed.
- * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen'). */
+ * @return:   0: Successfully registered/removed the given `callback` and `arg` for `cls` and `name`.
+ * @return:   1: The given `callback` has already / hasn't been registered for `cls`
+ *               and `name` with the same `arg` and was not registered again / removed.
+ * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen`). */
 PUBLIC WUNUSED NONNULL((2, 3)) int DCALL
 DeeNotify_StartListen(uint16_t cls, DeeObject *__restrict name,
                       Dee_notify_t callback, DeeObject *arg) {
@@ -336,8 +336,8 @@ not_found:
 }
 
 
-/* Broadcast a change notification for the given class `cls' and `name'
- * NOTE: The caller is responsible for passing a string for `name'
+/* Broadcast a change notification for the given class `cls` and `name`
+ * NOTE: The caller is responsible for passing a string for `name`
  * @return:  0 : Success.
  * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
 PRIVATE WUNUSED NONNULL((2)) int DCALL

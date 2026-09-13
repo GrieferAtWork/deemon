@@ -132,7 +132,7 @@ function round(x: float): int {
 @@>import zip from util;
 @@>print zip([10, 20, 30], [40, 50, 60])...;     /* "(10, 40) (20, 50) (30, 60)" */
 @@>print zip([10, 20, 30], [40, 50, 60, 70])...; /* "(10, 40) (20, 50) (30, 60)" */
-@@>/* `70' is ignored because the shortest Sequence's length is used */
+@@>/* `70` is ignored because the shortest Sequence's length is used */
 function zip(seqs...: Sequence): {Sequence...} {
 	local iterators = (
 		for (local x: seqs)
@@ -210,7 +210,7 @@ function abs(x) {
 @@@return: The [lo,hi) bounds of of the range that is *actually* being accessed.
 @@         This function guaranties that `lo <= hi <= size`
 function clamprange(start: int | none, end: int | none, size: int): (int, int) {
-	/* NOTE: This function's implementation mirrors `DeeSeqRange_DoClamp()'
+	/* NOTE: This function's implementation mirrors `DeeSeqRange_DoClamp()`
 	 *       from deemon's C implementation. */
 	if (start is none) {
 		start = 0;

@@ -18,10 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* Re-exports of all of the builtin error types otherwise reachable via `Error from deemon'
+/* Re-exports of all of the builtin error types otherwise reachable via `Error from deemon`
  * Using these, you can write more compact, but still specific catch statements, without having
- * to write long-a$$ expression such as `Error.SystemError.FSError.FileAccessError.ReadOnlyFile',
- * but instead allowing you to write `ReadOnlyFile from errors' */
+ * to write long-a$$ expression such as `Error.SystemError.FSError.FileAccessError.ReadOnlyFile`,
+ * but instead allowing you to write `ReadOnlyFile from errors` */
 import deemon;
 
 final global Signal = deemon.Signal;

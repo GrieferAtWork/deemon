@@ -58,7 +58,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* Figure out how to implement `getenv()' */
+/* Figure out how to implement `getenv()` */
 #undef posix_getenv_USE_GetEnvironmentVariableW
 #undef posix_getenv_USE_wgetenv
 #undef posix_getenv_USE_getenv
@@ -85,7 +85,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* Figure out how to implement `setenv()' */
+/* Figure out how to implement `setenv()` */
 #undef posix_setenv_USE_SetEnvironmentVariableW
 #undef posix_setenv_USE_wsetenv
 #undef posix_setenv_USE_setenv
@@ -120,7 +120,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* Figure out how to implement `unsetenv()' */
+/* Figure out how to implement `unsetenv()` */
 #undef posix_unsetenv_USE_SetEnvironmentVariableW
 #undef posix_unsetenv_USE_wunsetenv
 #undef posix_unsetenv_USE_unsetenv
@@ -153,7 +153,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* Figure out how to implement `clearenv()' */
+/* Figure out how to implement `clearenv()` */
 #undef posix_clearenv_USE_environ_setempty
 #undef posix_clearenv_USE_wenviron_setempty
 #undef posix_clearenv_USE_SetEnvironmentStringsW
@@ -198,7 +198,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* Figure out how to implement `environ.operator iter()' */
+/* Figure out how to implement `environ.operator iter()` */
 #undef posix_enumenv_USE_GetEnvironmentStringsW
 #undef posix_enumenv_USE_environ
 #undef posix_enumenv_USE_wenviron
@@ -217,7 +217,7 @@ INTDEF DeeTypeObject DeeEnvironIterator_Type;
 
 
 
-/* If we ever use `environ' for anything, we have to use a lock to access it. */
+/* If we ever use `environ` for anything, we have to use a lock to access it. */
 #if (defined(posix_getenv_USE_environ) || defined(posix_getenv_USE_wenviron) ||                       \
      defined(posix_setenv_USE_environ) || defined(posix_setenv_USE_wenviron) ||                       \
      defined(posix_unsetenv_USE_environ) || defined(posix_unsetenv_USE_wenviron) ||                   \
@@ -487,11 +487,11 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_unknown_env_var(DeeObject *__restrict name) {
 	return DeeError_Throwf(&DeeError_KeyError,
-	                       "Unknown environment variable `%k'",
+	                       "Unknown environment variable `%k`",
 	                       name);
 }
 
-/* Caller must call: `err_unknown_env_var(Dee_AsObject(name));'  */
+/* Caller must call: `err_unknown_env_var(Dee_AsObject(name));`  */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_environ_trygetenv(DeeStringObject *name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
@@ -680,7 +680,7 @@ again_setenv:
 		environ_lock_endwrite();
 		DeeNTSystem_HandleGenericError(dwError, err, again_setenv);
 		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-		                        "Failed to set environment variable `%k' to `%k'",
+		                        "Failed to set environment variable `%k` to `%k`",
 		                        name, value);
 		goto err;
 	}
@@ -710,7 +710,7 @@ again_setenv:
 		environ_lock_endwrite();
 		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to set environment variable `%k' to `%k'",
+		                          "Failed to set environment variable `%k` to `%k`",
 		                          name, value);
 		goto err;
 	}
@@ -740,7 +740,7 @@ again_setenv:
 		environ_lock_endwrite();
 		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to set environment variable `%k' to `%k'",
+		                          "Failed to set environment variable `%k` to `%k`",
 		                          name, value);
 		goto err;
 	}
@@ -796,7 +796,7 @@ again_setenv:
 		environ_lock_endwrite();
 		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to set environment variable `%k' to `%k'",
+		                          "Failed to set environment variable `%k` to `%k`",
 		                          name, value);
 		goto err;
 	}
@@ -852,7 +852,7 @@ again_setenv:
 		environ_lock_endwrite();
 		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to set environment variable `%k' to `%k'",
+		                          "Failed to set environment variable `%k` to `%k`",
 		                          name, value);
 		goto err;
 	}
@@ -919,7 +919,7 @@ again_insert_env:
 	}
 	if (!try_set_system_wenviron_is_dee_heap_allocated())
 		goto unlock_and_try_collect_memory;
-	/* Append a new line to `wenviron' */
+	/* Append a new line to `wenviron` */
 	{
 		Dee_wchar_t **new_wenviron;
 		size_t old_wenviron_count;
@@ -1000,7 +1000,7 @@ again_insert_env:
 	}
 	if (!try_set_system_environ_is_dee_heap_allocated())
 		goto unlock_and_try_collect_memory;
-	/* Append a new line to `environ' */
+	/* Append a new line to `environ` */
 	{
 		char **new_environ;
 		size_t old_environ_count;
@@ -1032,7 +1032,7 @@ err:
 	(void)value;
 	(void)replace;
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "No way to set environment variable `%k' to `%k'",
+	                       "No way to set environment variable `%k` to `%k`",
 	                       name, value);
 #endif /* posix_setenv_USE_STUB */
 }
@@ -1240,7 +1240,7 @@ err:
 #ifdef posix_unsetenv_USE_STUB
 	(void)name;
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                       "No way to delete environment variable `%k'",
+	                       "No way to delete environment variable `%k`",
 	                       name);
 #endif /* posix_unsetenv_USE_STUB */
 }
@@ -1551,7 +1551,7 @@ typedef struct environ_iterator_object {
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
 	Dee_wchar_t                         *ei_environment_iter;    /* [1..1][lock(ATOMIC)] Pointer to next environment string to yield */
 	LPWCH                                ei_environment_strings; /* [1..1][owned] Environment strings */
-	DREF struct environ_iterator_object *ei_owner;               /* [0..1][const] Owning iterator (for `operator copy') */
+	DREF struct environ_iterator_object *ei_owner;               /* [0..1][const] Owning iterator (for `operator copy`) */
 #define ENVIRON_ITERATOR_tchar                  WCHAR
 #define ENVIRON_ITERATOR_strchr                 wcschr
 #define ENVIRON_ITERATOR_strlen                 wcslen
@@ -1563,9 +1563,9 @@ typedef struct environ_iterator_object {
 #endif /* posix_enumenv_USE_GetEnvironmentStringsW */
 
 #ifdef posix_enumenv_USE_environ
-	size_t     ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ' */
+	size_t     ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ` */
 	char     **ei_environ;         /* [0..1][lock(dee_environ_lock)][0..n][const] Environ table */
-	size_t     ei_environ_version; /* [const] Environ version loaded into `ei_environ' */
+	size_t     ei_environ_version; /* [const] Environ version loaded into `ei_environ` */
 #define ENVIRON_ITERATOR_tchar                  char
 #define ENVIRON_ITERATOR_strchr                 strchr
 #define ENVIRON_ITERATOR_strlen                 strlen
@@ -1577,9 +1577,9 @@ typedef struct environ_iterator_object {
 #endif /* posix_enumenv_USE_environ */
 
 #ifdef posix_enumenv_USE_wenviron
-	size_t        ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ' */
+	size_t        ei_index;           /* [lock(ATOMIC)] Index of next string to yield from `ei_environ` */
 	Dee_wchar_t **ei_environ;         /* [0..1][lock(dee_environ_lock)][0..n][const] Environ table */
-	size_t        ei_environ_version; /* [const] Environ version loaded into `ei_environ' */
+	size_t        ei_environ_version; /* [const] Environ version loaded into `ei_environ` */
 #define ENVIRON_ITERATOR_tchar                  Dee_wchar_t
 #define ENVIRON_ITERATOR_strchr                 wcschr
 #define ENVIRON_ITERATOR_strlen                 wcslen
@@ -1643,7 +1643,7 @@ environ_iterator_copy(EnvironIterator *__restrict self,
 	self->ei_environment_strings = other->ei_environment_strings;
 	self->ei_environment_iter    = atomic_read(&other->ei_environment_iter);
 
-	/* Set the "owner" field to prevent `self->ei_environment_strings'
+	/* Set the "owner" field to prevent `self->ei_environment_strings`
 	 * from being freed before we are finished with it! */
 	self->ei_owner = other->ei_owner;
 	if (self->ei_owner == NULL)
@@ -1684,7 +1684,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_changed_sequence)(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,
-	                       "A sequence `%k' has changed while being iterated: `%k'",
+	                       "A sequence `%k` has changed while being iterated: `%k`",
 	                       Dee_TYPE(seq), seq);
 }
 #endif /* !err_changed_sequence */

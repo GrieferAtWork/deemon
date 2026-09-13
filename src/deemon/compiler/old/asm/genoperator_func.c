@@ -61,7 +61,7 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 		ASSERT(sym->ss_impid < module->mo_importc);
 		module = module->mo_importv[sym->ss_impid];
 	}
-	/* XXX: What if the calling module is the `operators' module? */
+	/* XXX: What if the calling module is the `operators` module? */
 	temp = asm_newmodule(module);
 	if unlikely(temp < 0)
 		goto err;
@@ -131,7 +131,7 @@ ast_gen_operator_func(struct ast *binding,
 		}
 	} else {
 generic_operator:
-		/* Fallback: invoke the a function `operator from operators',
+		/* Fallback: invoke the a function `operator from operators`,
 		 *           which takes the raw ID of the operator which we're
 		 *           trying to generate a function for, such that the
 		 *           user can override it to implement their custom

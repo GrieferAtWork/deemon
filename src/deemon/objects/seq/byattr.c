@@ -279,7 +279,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 };
 
 
-/* Create a new byattr proxy for `map' */
+/* Create a new byattr proxy for `map` */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 MapByAttr_Of(DeeObject *__restrict map) {
 	return Dee_AsObject(MapByAttr_New(map));

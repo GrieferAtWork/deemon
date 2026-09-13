@@ -65,7 +65,7 @@ err:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2)`
  * @return: 0 : Success
  * @return: 1 : Iterator has been exhausted
  * @return: -1: Error */
@@ -88,10 +88,10 @@ err:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first`
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
- * holding both values (as needs to be done by `tp_iter_next'). */
+ * holding both values (as needs to be done by `tp_iter_next`). */
 [[export("DeeObject_{|T}IterNextKey")]]
 [[wunused]] DREF DeeObject *
 tp_iterator->tp_nextkey([[nonnull]] DeeObject *__restrict self)
@@ -125,10 +125,10 @@ err:
 }} = OPERATOR_ITERNEXT;
 
 
-/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).last'
+/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).last`
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
- * holding both values (as needs to be done by `tp_iter_next'). */
+ * holding both values (as needs to be done by `tp_iter_next`). */
 [[export("DeeObject_{|T}IterNextValue")]]
 [[wunused]] DREF DeeObject *
 tp_iterator->tp_nextvalue([[nonnull]] DeeObject *__restrict self)

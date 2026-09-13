@@ -47,7 +47,7 @@ DECL_BEGIN
 /* UTF-8 helper API */
 DDATDEF uint8_t const Dee_unicode_utf8seqlen[256];
 
-/* Same as `Dee_unicode_utf8seqlen', but illegal
+/* Same as `Dee_unicode_utf8seqlen`, but illegal
  * bytes are encoded as "1" instead of "0" */
 DDATDEF uint8_t const Dee_unicode_utf8seqlen_safe[256];
 #ifdef __INTELLISENSE__
@@ -85,13 +85,13 @@ ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(unsigned char *__restrict text,
 ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(char const *__restrict text, size_t count);
 ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(char *__restrict text, size_t count);
 
-/* Same as above, but returns "0" and increments `*ptext' by 1 when:
- * - `*IN(*ptext)' is a utf-8 continuation byte
- * - `IN(*ptext)' is a followed by too few utf-8 continuation bytes
- * - `IN(*ptext)' is an over-long utf-8 sequence
+/* Same as above, but returns "0" and increments `*ptext` by 1 when:
+ * - `*IN(*ptext)` is a utf-8 continuation byte
+ * - `IN(*ptext)` is a followed by too few utf-8 continuation bytes
+ * - `IN(*ptext)` is an over-long utf-8 sequence
  *
- * Note however that `0' may also be returned when `*IN(*ptext)' was the NUL
- * character. This you can easily by checking if `OUT(*ptext)[-1] == '\0''. */
+ * Note however that `0` may also be returned when `*IN(*ptext)` was the NUL
+ * character. This you can easily by checking if `OUT(*ptext)[-1] == `\0''. */
 WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(unsigned char const **__restrict ptext);
 WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(unsigned char **__restrict ptext);
 WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(char const **__restrict ptext);
@@ -117,7 +117,7 @@ LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 }
 #endif /* !__INTELLISENSE__ */
 
-/* Up to `Dee_UNICODE_UTF8_CURLEN' bytes may be used in `buffer' */
+/* Up to `Dee_UNICODE_UTF8_CURLEN` bytes may be used in `buffer` */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 (DFCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch);
 
@@ -370,7 +370,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeString_GetChar)(struct Dee_strin
 DFUNDEF NONNULL((1)) void (DCALL DeeString_SetChar)(struct Dee_string_object *__restrict self, size_t index, uint32_t value);
 
 
-/* Move `num_chars' characters from `src' to `dst' */
+/* Move `num_chars` characters from `src` to `dst` */
 #define DeeString_Memmove(self, dst, src, num_chars) \
 	DeeString_Memmove(Dee_REQUIRES_OBJECT(struct Dee_string_object, self), dst, src, num_chars)
 DFUNDEF NONNULL((1)) void
@@ -378,7 +378,7 @@ DFUNDEF NONNULL((1)) void
                           size_t dst, size_t src, size_t num_chars);
 
 
-/* Helper macro to enumerate the character of a given string `self' */
+/* Helper macro to enumerate the character of a given string `self` */
 #define DeeString_Foreach(self, ibegin, iend, ch, ...)        \
 	do {                                                      \
 		union Dee_charptr_const _str_;                        \

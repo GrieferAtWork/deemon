@@ -734,7 +734,7 @@ funcsymbolsbynameiter_serialize(FunctionSymbolsByNameIterator *__restrict self,
 	result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
 	if likely(result == 0) {
 		/* Even though it's an object, it isn't a reference that should already
-		 * have been encoded at this point. As such, `fsbni_func' can be encoded
+		 * have been encoded at this point. As such, `fsbni_func` can be encoded
 		 * as a "raw" pointer. */
 		result = DeeSerial_PutPointer(writer,
 		                              addr + offsetof(FunctionSymbolsByNameIterator, fsbni_func),
@@ -973,8 +973,8 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 
 
 
-/* Search for "name" in `self' and return its ID. If not found,
- * *NO* error is thrown, and `(uint16_t)-1' is returned. */
+/* Search for "name" in `self` and return its ID. If not found,
+ * *NO* error is thrown, and `(uint16_t)-1` is returned. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 	/* Reference symbol name */
@@ -1043,9 +1043,9 @@ done_exdat:
 #define RID_ERR ((uint16_t)-1)
 #define RID_UNK ((uint16_t)-2)
 
-/* Returns the ID associated with `key', or:
- * - Throw an error and return `RID_ERR'
- * - Failed to find the ID and return `RID_UNK' */
+/* Returns the ID associated with `key`, or:
+ * - Throw an error and return `RID_ERR`
+ * - Failed to find the ID and return `RID_UNK` */
 PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 FunctionSymbolsByName_TryGetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid;
@@ -1105,7 +1105,7 @@ err:
 	return RID_ERR;*/
 }
 
-/* Returns the ID associated with `key', or throw an error and return `RID_ERR' */
+/* Returns the ID associated with `key`, or throw an error and return `RID_ERR` */
 PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 FunctionSymbolsByName_GetRefIdByObject(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid = FunctionSymbolsByName_TryGetRefIdByObject(self, key);
@@ -1879,7 +1879,7 @@ STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offset
 #define yfuncsymbolsbynameiter_visit     generic_proxy__visit
 #define yfuncsymbolsbynameiter_serialize generic_proxy__serialize_and_wordcopy_atomic32
 
-/* Returns `NULL' if the arg isn't bound. */
+/* Returns `NULL` if the arg isn't bound. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
 YieldFunction_GetArg(DeeYieldFunctionObject const *__restrict self, uint16_t aid) {
 	DeeObject *result;
@@ -2226,7 +2226,7 @@ STATIC_ASSERT(!yfuncsymbol_isrid(yfuncsymbol_makearg(0)));
 STATIC_ASSERT(!yfuncsymbol_isaid(yfuncsymbol_makeref(0)));
 STATIC_ASSERT(yfuncsymbol_isrid(yfuncsymbol_makeref(0)));
 
-/* Try to find the symbol referenced by `name'
+/* Try to find the symbol referenced by `name`
  * @return: YFUNCSYMBOL_INVALID: No such symbol "name" */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
 YieldFunctionSymbolsByName_TryLookupSymByStringLen(YieldFunctionSymbolsByName const *self,
@@ -2246,7 +2246,7 @@ YieldFunctionSymbolsByName_TryLookupSymByStringLen(YieldFunctionSymbolsByName co
 	return YFUNCSYMBOL_INVALID;
 }
 
-/* Try to find the symbol referenced by `key'
+/* Try to find the symbol referenced by `key`
  * @return: YFUNCSYMBOL_INVALID: No such symbol "key"
  * @return: YFUNCSYMBOL_ERROR:   An error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) yfuncsymbol_t DCALL
@@ -2265,7 +2265,7 @@ badsym:
 	return YFUNCSYMBOL_INVALID;
 }
 
-/* Try to find the symbol referenced by `key'
+/* Try to find the symbol referenced by `key`
  * @return: YFUNCSYMBOL_INVALID: No such symbol "key"
  * @return: YFUNCSYMBOL_ERROR:   An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
@@ -2287,7 +2287,7 @@ err_maybe_overflow:
 	return YFUNCSYMBOL_ERROR;
 }
 
-/* Same as `YieldFunctionSymbolsByName_TryLookupSymByObject',
+/* Same as `YieldFunctionSymbolsByName_TryLookupSymByObject`,
  * but throw an error in case of a bad key.
  * @return: YFUNCSYMBOL_ERROR: An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
@@ -2324,7 +2324,7 @@ YieldFunctionSymbolsByName_LookupSymByIndex(YieldFunctionSymbolsByName const *se
 }
 */
 
-/* Returns `NULL' if the symbol isn't bound. */
+/* Returns `NULL` if the symbol isn't bound. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 YieldFunction_TryGetSymbol(DeeYieldFunctionObject *self, yfuncsymbol_t sym) {
 	ASSERT(sym != YFUNCSYMBOL_ERROR);
@@ -4114,12 +4114,12 @@ err:
 
 struct canonical_lid_location {
 	DREF DeeObject **cll_ptr;      /* [0..1][1..1] Pointer to object location. */
-	bool             cll_writable; /* Is `*cll_ptr' writable? (it may not be in case it's a function argument) */
+	bool             cll_writable; /* Is `*cll_ptr` writable? (it may not be in case it's a function argument) */
 	bool             cll_isstatic; /* Is this a static variable (if true: need a lock to the function's statics to access) */
 };
 
 /* Return the address of "clid" in "self"
- * @return: true:  Success; `result' was filled in with info about the location.
+ * @return: true:  Success; `result` was filled in with info about the location.
  * @return: false: No such location (only happens for too-great stack locations) */
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 code_frame_get_clid_addr(struct Dee_code_frame const *self,
@@ -4267,7 +4267,7 @@ err:
 	return NULL;
 }
 
-/* Same as `FrameSymbolsByName_XchCLidValue()', but automatically
+/* Same as `FrameSymbolsByName_XchCLidValue()`, but automatically
  * inherits the reference to the old value.
  * @param: value: The new value, or NULL to unbound the location.
  * @return: 0 : Success
@@ -4311,7 +4311,7 @@ framesymbolsbynameiter_cmpxch_idx(FrameSymbolsByNameIterator *__restrict self,
 
 
 /* Convert "idx" into a canonical LID.
- * Returns `(canonical_lid_t)-1' when `idx' indicates `ITER_DONE' */
+ * Returns `(canonical_lid_t)-1` when `idx` indicates `ITER_DONE` */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
 FrameSymbolsByName_Idx2CLid(FrameSymbolsByName const *__restrict self,
                             FrameSymbolsByNameIteratorIndex const *__restrict idx) {
@@ -4581,9 +4581,9 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 
 
 /* Try to convert "name" into its "canonical location id" within "self"
- * @return: * : The canonical location ID of `name'
+ * @return: * : The canonical location ID of `name`
  * @return: (canonical_lid_t)-1: An error was thrown.
- * @return: (canonical_lid_t)-2: No symbol exists matching `name', or insufficient debug info */
+ * @return: (canonical_lid_t)-2: No symbol exists matching `name`, or insufficient debug info */
 PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
 FrameSymbolsByName_TryName2LocId(FrameSymbolsByName *self,
                                  char const *name, size_t len) {
@@ -4706,10 +4706,10 @@ FrameSymbolsByName_VerifyLocId(FrameSymbolsByName *self, size_t lid) {
 	return result;
 }
 
-/* Same as `FrameSymbolsByName_TryName2LocId()', but handles a generic object `key'
- * @return: * : The canonical location ID of `key'
+/* Same as `FrameSymbolsByName_TryName2LocId()`, but handles a generic object `key`
+ * @return: * : The canonical location ID of `key`
  * @return: (canonical_lid_t)-1: An error was thrown.
- * @return: (canonical_lid_t)-2: No symbol exists matching `key', or insufficient debug info */
+ * @return: (canonical_lid_t)-2: No symbol exists matching `key`, or insufficient debug info */
 PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
 FrameSymbolsByName_TryKey2LocId(FrameSymbolsByName *self, DeeObject *key) {
 	canonical_lid_t result;
@@ -4729,8 +4729,8 @@ err_maybe_overflow:
 	return (canonical_lid_t)-1;
 }
 
-/* Same as `FrameSymbolsByName_TryKey2LocId()', but throw an error for missing-keys
- * @return: * : The canonical location ID of `key'
+/* Same as `FrameSymbolsByName_TryKey2LocId()`, but throw an error for missing-keys
+ * @return: * : The canonical location ID of `key`
  * @return: (canonical_lid_t)-1: An error was thrown. */
 PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
 FrameSymbolsByName_Key2LocId(FrameSymbolsByName *self, DeeObject *key) {

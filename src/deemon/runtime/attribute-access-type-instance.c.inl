@@ -351,25 +351,25 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
 
-	/* Use `tp_cache' and search for regular attributes, loading
+	/* Use `tp_cache` and search for regular attributes, loading
 	 * them as though they were the equivalent typing in INSTANCE-mode.
 	 * Attributes that weren't found must then be searched for in
-	 * the non-class fields, before also being added to the `tp_cache'
+	 * the non-class fields, before also being added to the `tp_cache`
 	 * cache.
-	 * -> `tp_cache' is purely reserved for instance-attributes (tp_methods, etc.)
-	 * -> `tp_class_cache' is used for class-attributes primarily,
+	 * -> `tp_cache` is purely reserved for instance-attributes (tp_methods, etc.)
+	 * -> `tp_class_cache` is used for class-attributes primarily,
 	 *     with instance-attributes overlaid when those don't overlap
 	 *     with class attributes of the same name.
 	 * The GetInstanceAttr-API is meant as a 3 namespace that contains the same
-	 * attributes as already defined for instance-attributes (aka. those from `tp_cache'),
+	 * attributes as already defined for instance-attributes (aka. those from `tp_cache`),
 	 * though instead of producing bound attributes, unbound wrappers (as produced
-	 * by the overlay onto the regular class-attribute namespace (aka. `tp_class_cache'))
+	 * by the overlay onto the regular class-attribute namespace (aka. `tp_class_cache`))
 	 * are accessed.
 	 * >> import stat from posix;
 	 * >> local x = stat(".");
 	 * >> print x.isreg;                       // callable (bound)   -- tp_methods       -- instance->tp_cache
 	 * >> print stat.isreg;                    // class-function     -- tp_class_members -- class->tp_class_cache
-	 * >> // Access to the unbound function `/posix/stat/i:isreg':
+	 * >> // Access to the unbound function `/posix/stat/i:isreg`:
 	 * >> print stat.getinstanceattr("isreg"); // callable (unbound) -- tp_methods       -- class->tp_cache
 	 */
 	retval = LOCAL_DeeType_AccessCachedInstanceAttr(self);
@@ -401,17 +401,17 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 			}
 #endif /* !LOCAL_IS_FIND */
 		} else {
-			if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject' */
+			if (iter->tp_methods) { /* Access instance methods using `DeeClsMethodObject` */
 				retval = LOCAL_DeeType_AccessIInstanceMethodAttr(self, iter);
 				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;
 			}
-			if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject' */
+			if (iter->tp_getsets) { /* Access instance getsets using `DeeClsPropertyObject` */
 				retval = LOCAL_DeeType_AccessIInstanceGetSetAttr(self, iter);
 				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;
 			}
-			if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject' */
+			if (iter->tp_members) { /* Access instance members using `DeeClsMemberObject` */
 				retval = LOCAL_DeeType_AccessIInstanceMemberAttr(self, iter);
 				if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 					goto done;

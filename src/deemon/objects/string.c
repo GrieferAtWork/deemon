@@ -85,7 +85,7 @@ typedef DeeStringObject String;
 DeeSystem_DEFINE_memmem(Dee_libc_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
-/* Release exactly `datalen' bytes from the printer to be
+/* Release exactly `datalen` bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
 PUBLIC NONNULL((1)) void
 (DCALL Dee_ascii_printer_release)(struct Dee_ascii_printer *__restrict self, size_t datalen) {
@@ -95,7 +95,7 @@ PUBLIC NONNULL((1)) void
 	self->ap_length -= datalen;
 }
 
-/* Allocate space for `datalen' bytes at the end of `self',
+/* Allocate space for `datalen` bytes at the end of `self`,
  * then return a pointer to the start of this new buffer. */
 PUBLIC WUNUSED NONNULL((1)) char *
 (DCALL Dee_ascii_printer_alloc)(struct Dee_ascii_printer *__restrict self, size_t datalen) {
@@ -104,7 +104,7 @@ PUBLIC WUNUSED NONNULL((1)) char *
 	char *result;
 	if ((string = self->ap_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
-		 * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL' */
+		 * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL` */
 		if unlikely(!datalen)
 			return 0;
 		/* Allocate the initial string. */
@@ -175,7 +175,7 @@ err:
 	return -1;
 }
 
-/* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
+/* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t`) */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_ascii_printer_print)(void *__restrict self,
                                       char const *__restrict data,
@@ -187,7 +187,7 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 	ASSERT(data || !datalen);
 	if ((string = me->ap_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
-		 * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL' */
+		 * >> Must be done to assure the expectation of `if(ap_length == 0) ap_string == NULL` */
 		if unlikely(!datalen)
 			return 0;
 		/* Allocate the initial string. */
@@ -238,7 +238,7 @@ realloc_again:
 		string->s_len = alloc_size;
 	}
 	/* Copy text into the dynamic string. */
-	/*Dee_DPRINTF("PRINT: %" PRFXSIZ " - `%.*s'\n", datalen, (int)datalen, data);*/
+	/*Dee_DPRINTF("PRINT: %" PRFXSIZ " - `%.*s`\n", datalen, (int)datalen, data);*/
 	memcpyc(string->s_str + me->ap_length,
 	        data, datalen, sizeof(char));
 	me->ap_length += datalen;
@@ -247,7 +247,7 @@ done:
 }
 
 /* Pack together data from a string printer and return the generated contained string.
- * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
+ * Upon success, as well as upon failure, the state of `self` is undefined upon return. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_ascii_printer_pack)(struct Dee_ascii_printer *__restrict self) {
 	DREF String *result = self->ap_string;
@@ -275,7 +275,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 }
 
 /* Search the buffer that has already been created for an existing instance
- * of `str...+=length' and if found, return a pointer to its location.
+ * of `str...+=length` and if found, return a pointer to its location.
  * Otherwise, append the given string and return a pointer to that location.
  * Upon error (append failed to allocate more memory), NULL is returned.
  * HINT: This function is very useful when creating
@@ -284,7 +284,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
  *       >> Dee_ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
  *       >> Dee_ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
  * @return: * :   A pointer to a volatile memory location within the already printed string
- *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)'
+ *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)`
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) char *
@@ -317,8 +317,8 @@ err:
 
 STATIC_ASSERT(STRING_WIDTH_1BYTE < 1);
 
-/* Resize a single-byte string to have a length of `num_bytes' bytes.
- * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
+/* Resize a single-byte string to have a length of `num_bytes` bytes.
+ * You may pass `NULL` for `self`, or a reference to `Dee_EmptyString`
  * in order to allocate and return a new buffer. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
@@ -340,7 +340,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	                                           num_bytes + 1, sizeof(char));
 	if likely(result) {
 		if (!self) {
-			/* Do the initial init when `self' was `NULL'. */
+			/* Do the initial init when `self` was `NULL`. */
 			DeeObject_InitStatic(result, &DeeString_Type);
 			result->s_data = NULL;
 			result->s_hash = (Dee_hash_t)-1;
@@ -371,7 +371,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	                                              num_bytes + 1, sizeof(char));
 	if likely(result) {
 		if (!self) {
-			/* Do the initial init when `self' was `NULL'. */
+			/* Do the initial init when `self` was `NULL`. */
 			DeeObject_InitStatic(result, &DeeString_Type);
 			result->s_data = NULL;
 			result->s_hash = (Dee_hash_t)-1;
@@ -383,7 +383,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 }
 
 /* Construct an uninitialized single-byte string,
- * capable of representing up to `num_bytes' bytes of text. */
+ * capable of representing up to `num_bytes` bytes of text. */
 #ifdef NDEBUG
 PUBLIC WUNUSED DREF DeeObject *
 (DCALL DeeString_NewBuffer)(size_t num_bytes)
@@ -491,7 +491,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	return result;
 }
 
-/* Construct a new, non-decoded single-byte-per-character string `str'.
+/* Construct a new, non-decoded single-byte-per-character string `str`.
  * The string itself may contain characters above 127, which are then
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 #ifdef NDEBUG
@@ -776,11 +776,11 @@ PRIVATE size_t string_fini_hooks_size = 0;
 /* Register an additional string finalization hook.
  *
  * The hook is only guarantied to be called for strings that had
- * finalization hooks enabled (using `DeeString_EnableFiniHook()')
+ * finalization hooks enabled (using `DeeString_EnableFiniHook()`)
  * during their life-time. Strings that never had finalization
  * hooks enabled may not invoke these hooks.
  *
- * @return: 1 : No-op (given `hook' was already registered)
+ * @return: 1 : No-op (given `hook` was already registered)
  * @return: 0 : Success (hook was registered)
  * @return: -1: Failure (an error was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
@@ -844,8 +844,8 @@ err:
 
 
 /* Unregister a previously register string finalization hook.
- * @return: true:  Given `hook' has been unregistered.
- * @return: false: Given `hook' was never registered. */
+ * @return: true:  Given `hook` has been unregistered.
+ * @return: false: Given `hook` was never registered. */
 PUBLIC NONNULL((1)) bool DCALL
 DeeString_RemoveFiniHook(struct Dee_string_fini_hook *__restrict hook) {
 #define ES sizeof(DREF struct Dee_string_fini_hook *)
@@ -911,15 +911,15 @@ DeeString_InvokeFiniHooks(String const *__restrict self) {
 }
 
 
-/* Mark a given string object `self' such that upon that string's
- * finalization (i.e.: it's reference count dropping to `0'), all
+/* Mark a given string object `self` such that upon that string's
+ * finalization (i.e.: it's reference count dropping to `0`), all
  * string finalization hooks (still) registered at **that** point
  * will be invoked. Execution order of hooks is undefined.
  *
  * If this function is called multiple times on the same string,
  * all additional calls are no-ops.
  *
- * @return: 0 : Success (finalization hooks have been enabled for `self')
+ * @return: 0 : Success (finalization hooks have been enabled for `self`)
  * @return: -1: Insufficient memory (an error was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
@@ -947,8 +947,8 @@ err:
 	return -1;
 }
 
-/* Same as `DeeString_EnableFiniHook()', but don't throw an error
- * on failure, and use `Dee_TryMalloc()' instead of `Dee_Malloc()'
+/* Same as `DeeString_EnableFiniHook()`, but don't throw an error
+ * on failure, and use `Dee_TryMalloc()` instead of `Dee_Malloc()`
  * to allocate memory (meaning user-defined OOM handler or any
  * other user-code for that matter won't be invoked).
  * @return: true:  Success
@@ -1299,7 +1299,7 @@ string_trycompare_eq(String *lhs, DeeObject *rhs) {
 struct string_compare_seq_data {
 	size_t const         *scsd_wstr;  /* [1..1] The LHS width-string */
 	size_t                scsd_index; /* Index to next character */
-	__UINTPTR_HALF_TYPE__ scsd_width; /* String switch (one of `Dee_STRING_WIDTH_*BYTE') */
+	__UINTPTR_HALF_TYPE__ scsd_width; /* String switch (one of `Dee_STRING_WIDTH_*BYTE`) */
 };
 
 /* @return: 0 : lhs == rhs (for now...)
@@ -1349,7 +1349,7 @@ err:
 }
 
 
-/* Also accept "rhs" complaying with `{(string | Bytes)...}'
+/* Also accept "rhs" complaying with `{(string | Bytes)...}`
  * - string: Must be a single character
  * - Bytes:  Must be a single byte
  * @return: -1: lhs < rhs
@@ -2463,7 +2463,7 @@ string_sizeof(String *__restrict self) {
 }
 
 
-/* Expose auditing internals for `deemon.string' */
+/* Expose auditing internals for `deemon.string` */
 #undef CONFIG_HAVE_STRING_AUDITING_INTERNALS
 #if 1
 #define CONFIG_HAVE_STRING_AUDITING_INTERNALS
@@ -2573,7 +2573,7 @@ string_getsubstr(String *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_mh_seq_sum(String *self, DeeObject *def) {
-	/* Must handle special case: `({} + ...)' is "none", so
+	/* Must handle special case: `({} + ...)` is "none", so
 	 * if the string is empty, we must return "def" here! */
 	if (DeeString_IsEmpty(self))
 		return_reference(def);
@@ -2798,7 +2798,7 @@ PRIVATE struct type_operator const string_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_8000_GETBUF, METHOD_FCONSTCALL),
 };
 
-/* `string from deemon' */
+/* `string from deemon` */
 PUBLIC DeeTypeObject DeeString_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_string),

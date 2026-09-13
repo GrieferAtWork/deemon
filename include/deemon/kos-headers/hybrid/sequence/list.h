@@ -45,8 +45,8 @@
 /*
  * General purpose macros to defining various types of intrusive linked lists.
  * NOTE: On KOS, this header is also used to implement <sys/queue.h>, with all
- *       macros from  `__HYBRID_LIST_RESTRICT_API' only  getting exposed  when
- *       `_KOS_SOURCE' is enabled. Functions not restricted to this  extension
+ *       macros from  `__HYBRID_LIST_RESTRICT_API` only  getting exposed  when
+ *       `_KOS_SOURCE` is enabled. Functions not restricted to this  extension
  *       namespace are those  declared by the  union of <sys/queue.h>  headers
  *       found in NetBSD, OpenBSD, OpenSolaris, uClibc, GLibC, and libbsd.
  *       iow: Any macro provided by any of those systems is always defined as
@@ -78,8 +78,8 @@
  * │  1 1       1 1│  void [*]_SWAP(l1, l2, [type])                           (C++-style std::swap())
  * │1     1 1      │  void [*]_SWAP(l1, l2, [type], key)                      (C++-style std::swap())
  * ├───────────────┤  ..
- * │  1 1       1 1│  void [*]_TRANSFER(dst, src)                             (C++-style move-constructor, but leaves `src' undefined)
- * │1     1 1      │  void [*]_TRANSFER(dst, src, key)                        (C++-style move-constructor, but leaves `src' undefined)
+ * │  1 1       1 1│  void [*]_TRANSFER(dst, src)                             (C++-style move-constructor, but leaves `src` undefined)
+ * │1     1 1      │  void [*]_TRANSFER(dst, src, key)                        (C++-style move-constructor, but leaves `src` undefined)
  * ├───────────────┤  ..
  * │1 1 1 1 1   1 1│  void [*]_CLEAR(self)
  * ├───────────────┤  ..
@@ -138,23 +138,23 @@
  * │1         1    │  void [*]_REMOVE(elem, key)
  * │      1 1   1  │  void [*]_REMOVE(self, elem, key)
  * │  N N         N│  void [*]_REMOVE(self, elem, [type], key)
- * │1         1    │  void [*]_REMOVE_R(lo_elem, hi_elem, key)                (Remove all elements `lo_elem...hi_elem' inclusively; links between removed elements remain valid)
+ * │1         1    │  void [*]_REMOVE_R(lo_elem, hi_elem, key)                (Remove all elements `lo_elem...hi_elem` inclusively; links between removed elements remain valid)
  * │      1 1   1  │  void [*]_REMOVE_R(self, lo_elem, hi_elem, key)
- * │1 1         1  │  void [*]_REMOVE_AFTER(elem, key)                        (Remove successor of `elem'; undef if no successor)
+ * │1 1         1  │  void [*]_REMOVE_AFTER(elem, key)                        (Remove successor of `elem`; undef if no successor)
  * │    1 1 1     1│  void [*]_REMOVE_AFTER(self, elem, key)
- * │  1            │  void [*]_REMOVE_PREVPTR(p_elem, elem, key)              (libbsd-specific; for use with `SLIST_FOREACH_PREVPTR()')
+ * │  1            │  void [*]_REMOVE_PREVPTR(p_elem, elem, key)              (libbsd-specific; for use with `SLIST_FOREACH_PREVPTR()`)
  * ├───────────────┤  ..
  * │N N N N N   N N│  void [*]_REMOVE_IF(self, out_pelem, [type], key, condition)
- * │░░░░░░░░░░░░░░░│             NOTE: `*out_pelem' is written to before `condition' is
- * │░░░░░░░░░░░░░░░│                   evaluated to test if `*out_pelem' should be removed
- * │░░░░░░░░░░░░░░░│             Assumes that `condition' is true for at least 1 element.
+ * │░░░░░░░░░░░░░░░│             NOTE: `*out_pelem` is written to before `condition` is
+ * │░░░░░░░░░░░░░░░│                   evaluated to test if `*out_pelem` should be removed
+ * │░░░░░░░░░░░░░░░│             Assumes that `condition` is true for at least 1 element.
  * │  N N         N│  void [*]_TRYREMOVE(self, elem, [type], key, on_failure)
  * │N N N N N   N N│  void [*]_TRYREMOVE_IF(self, out_pelem, [type], key, condition, on_failure)
- * │░░░░░░░░░░░░░░░│             Same as *_REMOVE_IF, but allow `condition' to be false for all elements, or
- * │░░░░░░░░░░░░░░░│             the list itself to be empty. (if this happens, `on_failure' is evaluated)
+ * │░░░░░░░░░░░░░░░│             Same as *_REMOVE_IF, but allow `condition` to be false for all elements, or
+ * │░░░░░░░░░░░░░░░│             the list itself to be empty. (if this happens, `on_failure` is evaluated)
  * │N N N N N   N N│  void [*]_REMOVEALL(self, out_pelem, [type], key, condition, on_match)
- * │░░░░░░░░░░░░░░░│             Remove all elements for which `condition' is true, and evaluate `on_match'
- * │░░░░░░░░░░░░░░░│             every time such a match is confirmed. The associated element is `*out_pelem'
+ * │░░░░░░░░░░░░░░░│             Remove all elements for which `condition` is true, and evaluate `on_match`
+ * │░░░░░░░░░░░░░░░│             every time such a match is confirmed. The associated element is `*out_pelem`
  * ├───────────────┤  ..
  * │  N N         N│  void [*]_CONTAINS(self, elem, [type], key, on_success)
  * ├───────────────┤  ..
@@ -168,9 +168,9 @@
  * │  N N         N│  void [*]_TRYREPLACE_R(self, old_lo_elem, old_hi_elem, new_lo_elem, new_hi_elem, [type], key, on_failure)
  * ├───────────────┤  ..
  * │N N N N N   N N│  CODE [*]_FOREACH(elem, self, key)
- * │N N N N N   N N│  CODE [*]_FOREACH_FROM(elem, self, key)                  (If non-NULL, start enumeration with `IN(elem)'; else start w/ `[*]_FIRST(self)')
- * │N N N N N   N N│  CODE [*]_FOREACH_SAFE(elem, self, key, [tvar])          (Same as [*]_FOREACH, but the loop body may safely remove `elem')
- * │N N N N N   N N│  CODE [*]_FOREACH_FROM_SAFE(elem, self, key, [tvar])     (Same as [*]_FOREACH_FROM, but the loop body may safely remove `elem')
+ * │N N N N N   N N│  CODE [*]_FOREACH_FROM(elem, self, key)                  (If non-NULL, start enumeration with `IN(elem)`; else start w/ `[*]_FIRST(self)`)
+ * │N N N N N   N N│  CODE [*]_FOREACH_SAFE(elem, self, key, [tvar])          (Same as [*]_FOREACH, but the loop body may safely remove `elem`)
+ * │N N N N N   N N│  CODE [*]_FOREACH_FROM_SAFE(elem, self, key, [tvar])     (Same as [*]_FOREACH_FROM, but the loop body may safely remove `elem`)
  * │        N      │  CODE [*]_FOREACH_REVERSE(elem, self, key)
  * │        N      │  CODE [*]_FOREACH_REVERSE_FROM(elem, self, key)
  * │      N        │  CODE [*]_FOREACH_REVERSE(elem, self, [headname], key)
@@ -217,7 +217,7 @@
  *   │ (in O(x)) │    ..
  *   ╘═══════════╛    ..
  *
- * NOTE: [foo]-arguments are optional and may be omitted when `__HYBRID_LIST_RESTRICT_API'
+ * NOTE: [foo]-arguments are optional and may be omitted when `__HYBRID_LIST_RESTRICT_API`
  *       is   disabled,   and  sufficient   compiler/preprocessor-support   is  available. */
 
 
@@ -295,7 +295,7 @@
 #define LIST_MOVE(dst, src, key)                  __HYBRID_LIST_MOVE(dst, src, __HYBRID_Q_KEY, key)
 #define LIST_NEXT(elem, key)                      (elem)->key.le_next
 #define LIST_REMOVE(elem, key)                    __HYBRID_LIST_REMOVE(elem, __HYBRID_Q_KEY, key)
-#if defined(__INTELLISENSE__) && defined(__COMPILER_HAVE_TYPEOF) /* Prevent code like `&LIST_FIRST()' (use `LIST_PFIRST()' instead) */
+#if defined(__INTELLISENSE__) && defined(__COMPILER_HAVE_TYPEOF) /* Prevent code like `&LIST_FIRST()` (use `LIST_PFIRST()` instead) */
 #define LIST_FIRST(self)                          ((__typeof__((self)->lh_first))(self)->lh_first)
 #else /* __INTELLISENSE__ && __COMPILER_HAVE_TYPEOF */
 #define LIST_FIRST(self)                          (self)->lh_first
@@ -1872,7 +1872,7 @@
 
 
 /************************************************************************/
-/* Simple queue. (Alias for `Double-head, singly-linked Tail queue', with different field names) */
+/* Simple queue. (Alias for `Double-head, singly-linked Tail queue`, with different field names) */
 /************************************************************************/
 #if !defined(__HYBRID_LIST_RESTRICT_API) && defined(__HYBRID_PP_VA_OVERLOAD)
 #undef SIMPLEQ_HEAD
@@ -3651,13 +3651,13 @@
 #define RINGQ_UNBIND(elem, key)         __HYBRID_RINGQ_UNBIND(elem, __HYBRID_Q_KEY, key)
 #define RINGQ_UNBIND_P(elem, getpath)   __HYBRID_RINGQ_UNBIND(elem, __HYBRID_Q_PTH, getpath)
 
-/* RINGQ_INIT:          Initialize `elem' as the only element of a new ring.
- * RINGQ_NEXT:          Return the successor of `elem' within its ring.
- * RINGQ_PREV:          Return the predecessor of `elem' within its ring.
- * RINGQ_INSERT_AFTER:  Insert `elem' after `predecessor'
- * RINGQ_INSERT_BEFORE: Insert `elem' before `successor'
- * RINGQ_REMOVE:        Remove `elem' from its ring.
- * RINGQ_REPLACE:       Replace `old_elem' with `new_elem' from its ring. */
+/* RINGQ_INIT:          Initialize `elem` as the only element of a new ring.
+ * RINGQ_NEXT:          Return the successor of `elem` within its ring.
+ * RINGQ_PREV:          Return the predecessor of `elem` within its ring.
+ * RINGQ_INSERT_AFTER:  Insert `elem` after `predecessor`
+ * RINGQ_INSERT_BEFORE: Insert `elem` before `successor`
+ * RINGQ_REMOVE:        Remove `elem` from its ring.
+ * RINGQ_REPLACE:       Replace `old_elem` with `new_elem` from its ring. */
 #define RINGQ_INIT(elem, key)                                                          __HYBRID_RINGQ_INIT(elem, __HYBRID_Q_KEY, key)
 #define RINGQ_INIT_P(elem, getpath)                                                    __HYBRID_RINGQ_INIT(elem, __HYBRID_Q_PTH, getpath)
 #define RINGQ_INSERT_AFTER(predecessor, elem, key)                                     __HYBRID_RINGQ_INSERT_AFTER(predecessor, elem, __HYBRID_Q_KEY, key)
@@ -4086,7 +4086,7 @@
 
 /************************************************************************/
 /* XSIMPLEQ: X-or'd simple queue (pointers are xor-key-skewed)          */
-/* NOTE: For `XSIMPLEQ_XOR()', we need special compiler support!        */
+/* NOTE: For `XSIMPLEQ_XOR()`, we need special compiler support!        */
 /************************************************************************/
 #if defined(__COMPILER_HAVE_TYPEOF) || defined(__cplusplus)
 #if !defined(__HYBRID_LIST_RESTRICT_API) && defined(__HYBRID_PP_VA_OVERLOAD)
@@ -4147,7 +4147,7 @@ template<class __T> __ATTR_CONST __ATTR_WUNUSED __T const *__NOTHROW(__hybrid_xs
 __NAMESPACE_INT_END
 } /* extern "C++" */
 #else /* ... */
-#error "No way to implement `XSIMPLEQ_XOR()' :("
+#error "No way to implement `XSIMPLEQ_XOR()` :("
 #endif /* !... */
 #define XSIMPLEQ_FIRST(self)             XSIMPLEQ_XOR(self, (self)->sqx_first)
 #define XSIMPLEQ_END(self)               __NULLPTR

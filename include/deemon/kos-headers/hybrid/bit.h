@@ -34,23 +34,23 @@
 
 /* shift_t CLZ(UNSIGNED i):
  *     CountLeadingZeroes
- *     Return  the number of  leading ZEROes in `i',  starting at the most
- *     significant bit. When `i' is ZERO(0), then the result is undefined. */
+ *     Return  the number of  leading ZEROes in `i`,  starting at the most
+ *     significant bit. When `i` is ZERO(0), then the result is undefined. */
 #define CLZ __hybrid_clz /*!export*/
 
 /* shift_t CTZ(UNSIGNED i):
  *     CounTrailingZeroes
- *     Return the number of trailing ZEROes in `i', starting at the  least
- *     significant bit. When `i' is ZERO(0), then the result is undefined. */
+ *     Return the number of trailing ZEROes in `i`, starting at the  least
+ *     significant bit. When `i` is ZERO(0), then the result is undefined. */
 #define CTZ __hybrid_ctz /*!export*/
 
 /* shift_t POPCOUNT(UNSIGNED i):
  *     POPulationCOUNT
- *     Return the number of 1-bits in `i' */
+ *     Return the number of 1-bits in `i` */
 #define POPCOUNT __hybrid_popcount /*!export*/
 
 /* shift_t PARITY(UNSIGNED i):
- *     Return the parity of `i', that is `POPCOUNT(i) % 2' */
+ *     Return the parity of `i`, that is `POPCOUNT(i) % 2` */
 #define PARITY __hybrid_parity /*!export*/
 
 /* shift_t CLRSB(signed Integer i):
@@ -62,12 +62,12 @@
 
 /* UNSIGNED PEXT(UNSIGNED value, UNSIGNED mask):
  *     Parallel bit EXTract
- *     Return a compressed stream of bits from `value', selected by `mask'. */
+ *     Return a compressed stream of bits from `value`, selected by `mask`. */
 #define PEXT __hybrid_pext /*!export*/
 
 /* UNSIGNED PDEP(UNSIGNED value, UNSIGNED mask):
  *     Parallel bit DEPosit
- *     Decompress compressed bitset `value' by depositing as data selected by `mask'. */
+ *     Decompress compressed bitset `value` by depositing as data selected by `mask`. */
 #define PDEP __hybrid_pdep /*!export*/
 
 #endif /* !__GUARD_HYBRID_BIT_H */

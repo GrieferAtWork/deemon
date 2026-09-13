@@ -51,13 +51,13 @@ struct memaction {
 	struct memobj         *ma_oldobj;   /* [0..1] Old location, or NULL if already done (though in the case a register, it may be gotten flushed again) */
 	struct memobj const   *ma_newobj;   /* [1..1] New location */
 	struct memaction_slist ma_before;   /* [0..n] List of actions that need to happen *before* this one */
-	SLIST_ENTRY(memaction) ma_bflink;   /* Link in some other action's `ma_before' */
+	SLIST_ENTRY(memaction) ma_bflink;   /* Link in some other action's `ma_before` */
 };
 
-/* Check if `self' has already happened. */
+/* Check if `self` has already happened. */
 #define memaction_isdone(self) ((self)->ma_oldobj == NULL)
 
-/* Check if all actions that need to happen before `self' already have. */
+/* Check if all actions that need to happen before `self` already have. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 memaction_isready(struct memaction const *__restrict self) {
 	struct memaction *iter;
@@ -69,8 +69,8 @@ memaction_isready(struct memaction const *__restrict self) {
 }
 
 /* Search for a ready- and not-yet-done memory action where:
- * - the old location is placed such that it can pop from `host_cfa_offset'
- * - the new location is placed such that it can push to `host_cfa_offset'
+ * - the old location is placed such that it can pop from `host_cfa_offset`
+ * - the new location is placed such that it can push to `host_cfa_offset`
  */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) struct memaction *DCALL
 memaction_find_push_or_pop_at_cfa_boundary(struct memaction *mactv, lid_t mactc,
@@ -91,8 +91,8 @@ memaction_find_push_or_pop_at_cfa_boundary(struct memaction *mactv, lid_t mactc,
 	return NULL;
 }
 
-/* Return the action that references the greatest CFA in its `ma_oldobj'
- * If no such action exists, return `NULL' instead. */
+/* Return the action that references the greatest CFA in its `ma_oldobj`
+ * If no such action exists, return `NULL` instead. */
 PRIVATE WUNUSED ATTR_INS(1, 2) struct memaction *DCALL
 memaction_at_greatest_oldobj_cfa(struct memaction *mactv, lid_t mactc) {
 	lid_t i;
@@ -165,13 +165,13 @@ cannot_morph:
 }
 
 
-/* Fill in the `ma_before' of actions:
+/* Fill in the `ma_before` of actions:
  * - mactv[i].ma_before = [act in mactv if memobj_sameadr(act->ma_oldobj, mactv[i].ma_newobj)]
  * Every action should only ever appear at most *once* in any other action's before-list.
- * This is because aliases were already removed, meaning that every `ma_newobj' is
+ * This is because aliases were already removed, meaning that every `ma_newobj` is
  * distinct (when it comes to the underlying base memory location), which also means
- * that (if you look at the pseudo-code above), every `ma_oldobj' can equal at most
- * one `ma_newobj'. */
+ * that (if you look at the pseudo-code above), every `ma_oldobj` can equal at most
+ * one `ma_newobj`. */
 PRIVATE ATTR_INOUTS(1, 2) void DCALL
 memaction_assign_before(struct memaction *mactv, lid_t mactc) {
 	lid_t i, j;
@@ -218,7 +218,7 @@ morph_location(struct fungen *__restrict self,
 		 *       the caller is ever allowed to morph code such that something is no
 		 *       longer a reference, is when it is known that the reference is question
 		 *       is also being held someplace else!
-		 * TODO: This is incorrect. `MEMSTATE_XLOCAL_POPITER' should be decref'd normally
+		 * TODO: This is incorrect. `MEMSTATE_XLOCAL_POPITER` should be decref'd normally
 		 *       if the location isn't being aliased elsewhere. As such, the decref *can*
 		 *       kill if there isn't an alias. */
 		if (memobj_local_alwaysbound(oldobj)) {
@@ -248,7 +248,7 @@ err:
 	return -1;
 }
 
-/* Generate code in `fg_gettext(self)' to morph `self->fg_state' into `new_state' */
+/* Generate code in `fg_gettext(self)` to morph `self->fg_state` into `new_state` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vmorph_no_constrain_equivalences(struct fungen *__restrict self,
                                     struct memstate const *new_state) {
@@ -286,7 +286,7 @@ fg_vmorph_no_constrain_equivalences(struct fungen *__restrict self,
 	 *   or all happens-before have already been performed.
 	 *   - This step also does incref/decref_nokill of locations
 	 *   - When flushing registers here, only consider stack locations as usable
-	 *     that aren't in-use by `new_state'
+	 *     that aren't in-use by `new_state`
 	 *   - When writing to a stack location, automatically make sure that it is
 	 *     always in-bounds of the stack (by increasing the CFA offset)
 	 * - As long as there are still remaining locations, take one of them, move
@@ -296,10 +296,10 @@ fg_vmorph_no_constrain_equivalences(struct fungen *__restrict self,
 	 *   - If no such register exists, that must mean that *all* registers are
 	 *     part of the dependency loop. In this case, save one of them to stack
 	 *   - When flushing registers here, only consider stack locations as usable
-	 *     that aren't in-use by `new_state' (s.a. `fg_state_hstack_res')
+	 *     that aren't in-use by `new_state` (s.a. `fg_state_hstack_res`)
 	 * - With all memory actions served, load any registers that needed to be
 	 *   flushed during the transformation phase above.
-	 * - Adjust CFA offset to match `new_state' (possibly needs to be done a
+	 * - Adjust CFA offset to match `new_state` (possibly needs to be done a
 	 *   second time due to extra stack space needed for saving registers)
 	 */
 	old_state = self->fg_state;
@@ -324,8 +324,8 @@ again_search_changes:
 				continue;
 			if unlikely(oldval->mv_vmorph != newval->mv_vmorph) {
 				ASSERTF(newval->mv_vmorph == MEMVAL_VMORPH_DIRECT,
-				        "In the case of incompatible morphs, `memstate_constrainwith()' "
-				        "should have normalized to `MEMVAL_VMORPH_DIRECT'!");
+				        "In the case of incompatible morphs, `memstate_constrainwith()` "
+				        "should have normalized to `MEMVAL_VMORPH_DIRECT`!");
 				if unlikely(fg_vdirect_memval(self, oldval))
 					goto err;
 				old_valv = old_state->ms_localv;
@@ -338,7 +338,7 @@ again_search_changes:
 			}
 			ASSERTF(locc == memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
-			        "been handled by `memstate_constrainwith()')");
+			        "been handled by `memstate_constrainwith()`)");
 			oldobjv = memval_getobjv(oldval);
 			newobjv = memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
@@ -384,7 +384,7 @@ again_search_changes:
 			ASSERT(oldval->mv_vmorph == newval->mv_vmorph);
 			ASSERTF(locc == memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
-			        "been handled by `memstate_constrainwith()')");
+			        "been handled by `memstate_constrainwith()`)");
 			oldobjv = memval_getobjv(oldval);
 			newobjv = memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
@@ -444,10 +444,10 @@ again_search_for_push_or_pop:
 			 * >> hostasm:addl	$4, %esp
 			 * >> hostasm:popl	%eax
 			 *
-			 * Solution: When `cfa_delta < 0', only release up until the next
+			 * Solution: When `cfa_delta < 0`, only release up until the next
 			 *           value that still lies on the stack but should also be
 			 *           deallocated, then jump back to the while-loop to check
-			 *           `memaction_find_push_or_pop_at_cfa_boundary()' for
+			 *           `memaction_find_push_or_pop_at_cfa_boundary()` for
 			 *           another pop-style morph.
 			 */
 			if (cfa_delta < 0) {
@@ -517,7 +517,7 @@ again_search_for_push_or_pop:
 			ASSERT(oldval->mv_vmorph == newval->mv_vmorph);
 			ASSERTF(locc == memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
-			        "been handled by `memstate_constrainwith()')");
+			        "been handled by `memstate_constrainwith()`)");
 			oldobjv = memval_getobjv(oldval);
 			newobjv = memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
@@ -550,8 +550,8 @@ err:
 	return -1;
 }
 
-/* Same as `fg_vmorph_no_constrain_equivalences()', but also
- * generate code to constrain the equivalences from `new_state' into "self". */
+/* Same as `fg_vmorph_no_constrain_equivalences()`, but also
+ * generate code to constrain the equivalences from `new_state` into "self". */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vmorph(struct fungen *__restrict self,
           struct memstate const *new_state) {

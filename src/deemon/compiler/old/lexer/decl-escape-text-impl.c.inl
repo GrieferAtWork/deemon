@@ -28,7 +28,7 @@
 
 #include <stddef.h> /* size_t */
 
-/* Print the given `text' as encoded documentation text.
+/* Print the given `text` as encoded documentation text.
  *  - Escape any line-feed immediately following after another
  *  - Escape any instance of "->" with "-\>"
  *  - Escape any line starting with "(" as "\(" */

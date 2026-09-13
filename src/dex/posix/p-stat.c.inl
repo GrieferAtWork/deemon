@@ -53,7 +53,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `stat()' */
+/* Figure out how to implement `stat()` */
 #undef posix_stat_USE_WINDOWS
 #undef posix_stat_USE_stat64
 #undef posix_stat_USE_stat
@@ -525,18 +525,18 @@ DECL_BEGIN
 struct dee_stat {
 #ifdef posix_stat_USE_WINDOWS
 	BY_HANDLE_FILE_INFORMATION st_info;       /* [const] Windows-specific stat information. */
-	DWORD                      st_ftype;      /* One of `FILE_TYPE_*' or `FILE_TYPE_UNKNOWN' when not determined. */
+	DWORD                      st_ftype;      /* One of `FILE_TYPE_*` or `FILE_TYPE_UNKNOWN` when not determined. */
 #define NT_STAT_FNORMAL        0x0000         /* Normal information. */
 #define NT_STAT_FNOTIME        0x0001         /* Time stamps are unknown. */
-#define NT_STAT_FNOVOLSERIAL   0x0002         /* `dwVolumeSerialNumber' is unknown. */
-#define NT_STAT_FNOSIZE        0x0004         /* `nFileSize' is unknown. */
-#define NT_STAT_FNONLINK       0x0008         /* `nNumberOfLinks' is unknown. */
-#define NT_STAT_FNOFILEID      0x0010         /* `nFileIndex' is unknown. */
-	uint32_t                   st_valid;      /* Set of `NT_STAT_F*' */
+#define NT_STAT_FNOVOLSERIAL   0x0002         /* `dwVolumeSerialNumber` is unknown. */
+#define NT_STAT_FNOSIZE        0x0004         /* `nFileSize` is unknown. */
+#define NT_STAT_FNONLINK       0x0008         /* `nNumberOfLinks` is unknown. */
+#define NT_STAT_FNOFILEID      0x0010         /* `nFileIndex` is unknown. */
+	uint32_t                   st_valid;      /* Set of `NT_STAT_F*` */
 	HANDLE                     st_hand;       /* [0..1|NULL(INVALID_HANDLE_VALUE)]
 	                                           * Optional handle that may be used to load
 	                                           * additional information upon request. */
-	DREF DeeObject            *st_hand_owner; /* [0..1][const] Owner of `st_hand' (if NULL, we own it) */
+	DREF DeeObject            *st_hand_owner; /* [0..1][const] Owner of `st_hand` (if NULL, we own it) */
 #define dee_stat_fini(self)                    \
 	((self)->st_hand_owner                     \
 	 ? Dee_Decref((self)->st_hand_owner)       \
@@ -578,14 +578,14 @@ PRIVATE ATTR_COLD int DCALL err_lstat_not_implemented(void) {
 #endif /* !posix_stat_HAVE_lstat */
 
 
-/* Bits for `dee_stat_init::atflags' */
+/* Bits for `dee_stat_init::atflags` */
 #define Dee_STAT_F_NORMAL   0x00                       /* Normal flags */
-#define Dee_STAT_F_TRY      (AT_SYMLINK_NOFOLLOW << 1) /* Return `1' on file-not-found, rather than throw an exception */
+#define Dee_STAT_F_TRY      (AT_SYMLINK_NOFOLLOW << 1) /* Return `1` on file-not-found, rather than throw an exception */
 #define Dee_STAT_F_LSTAT    AT_SYMLINK_NOFOLLOW        /* Don't dereference a final symlink */
 
 /* @return: 0 : Success
  * @return: -1: Error
- * @return: 1 : No such file, and `Dee_STAT_F_TRY' */
+ * @return: 1 : No such file, and `Dee_STAT_F_TRY` */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 dee_stat_init(struct dee_stat *__restrict self, DeeObject *dfd,
               DeeObject *path_or_file, unsigned int atflags) {
@@ -713,7 +713,7 @@ again:
 			return 0;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		/* Fallthru to `err_nt' */
+		/* Fallthru to `err_nt` */
 	}
 
 	{
@@ -750,7 +750,7 @@ err_nt:
 		}
 	}
 #define NEED_err
-	/* Fallthru to `err' */
+	/* Fallthru to `err` */
 #endif /* posix_stat_USE_WINDOWS */
 
 #ifdef posix_stat_USED_STRUCT_STAT
@@ -917,9 +917,9 @@ INTDEF DECLARE_DeeTime_NewFILETIME();
 
 
 #ifdef posix_stat_USE_WINDOWS
-/* Returns one of `FILE_TYPE_*' describing the type of the given file.
+/* Returns one of `FILE_TYPE_*` describing the type of the given file.
  * When the type cannot be determined, return FILE_TIME_UNKNOWN when
- * `try_get' is true, or throw an error when it is false. */
+ * `try_get` is true, or throw an error when it is false. */
 PRIVATE DWORD DCALL
 stat_get_nttype(struct dee_stat *__restrict self, bool try_get) {
 	DWORD new_type, result = self->st_ftype;
@@ -1121,7 +1121,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(De
 		}
 #endif /* !posix_stat_HAVE_lstat */
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid `atflags' argument: %#x",
+		                "Invalid `atflags` argument: %#x",
 		                atflags);
 		goto err;
 	}
@@ -1803,7 +1803,7 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 				goto err;
 			if (error == 0) {
 				if (STAT_CLASS_ISLSTAT(self)) {
-					/* If the caller used `posix.lstat.isdir()', then don't accept symlink-to-directory */
+					/* If the caller used `posix.lstat.isdir()`, then don't accept symlink-to-directory */
 					return_bool((dwAttr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) ==
 					/*                 */ (FILE_ATTRIBUTE_DIRECTORY));
 				}
@@ -2316,7 +2316,7 @@ stat_is_nt_exe_filename(DeeObject *__restrict path) {
 		}
 		pathext = next;
 		if (*pathext)
-			++pathext; /* Skip `;' */
+			++pathext; /* Skip `;` */
 	}
 	Dee_Decref(pathext_ob);
 	return result;
@@ -2499,14 +2499,14 @@ PRIVATE struct type_getset tpconst stat_getsets[] = {
 	TYPE_GETTER_F("ntattr_np", &stat_getntattr_np, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
-	              /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
+	              /**/ "attributes being a set of the `FILE_ATTRIBUTE_*` constants found in windows system headers"),
 #endif /* HAVE_stat_getntattr_np */
 #ifdef HAVE_stat_getnttype_np
 	TYPE_GETTER_F("nttype_np", &stat_getnttype_np, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid NT-type information}"
 	              "Non-portable windows extension for retrieving the NT type of this stat-file, that "
-	              /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
+	              /**/ "type being one of the `FILE_TYPE_*` constants found in windows system headers"),
 #endif /* HAVE_stat_getnttype_np */
 	TYPE_GETSET_END
 };

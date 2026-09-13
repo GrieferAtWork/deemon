@@ -48,17 +48,17 @@ DECL_BEGIN
 
 /* Configure libregex */
 #undef LIBREGEX_WANT_PROTOTYPES
-#undef LIBREGEX_NO_MALLOC_USABLE_SIZE /* Always available via `Dee_MallocUsableSize()' */
+#undef LIBREGEX_NO_MALLOC_USABLE_SIZE /* Always available via `Dee_MallocUsableSize()` */
 
 #define LIBREGEX_NO_RE_CODE_DISASM             /* Don't need debug functions to disassemble regex byte code. */
 #define LIBREGEX_NO_SYSTEM_INCLUDES            /* We're providing all of the system includes (so don't try to include any KOS headers) */
 #define LIBREGEX_DECL                   INTDEF /* Declare the normally public API as INTERN (which we override again below) */
-#define LIBREGEX_DEFINE___CTYPE_C_FLAGS        /* Can't rely on KOS's libc's `__ctype_C_flags' */
+#define LIBREGEX_DEFINE___CTYPE_C_FLAGS        /* Can't rely on KOS's libc's `__ctype_C_flags` */
 #define LIBREGEX_REGEXEC_SINGLE_CHUNK          /* Don't need (or want) iovec support */
 #define LIBREGEX_USED__re_max_failures  200000 /* Use a hard-coded, fixed limit on how large the on-fail stack can grow */
 
 
-/* Configure libregex syntax, and inject our `Dee_RE_COMPILE_*' flags. */
+/* Configure libregex syntax, and inject our `Dee_RE_COMPILE_*` flags. */
 #undef RE_SYNTAX_ICASE
 #undef RE_SYNTAX_NO_UTF8
 #define LIBREGEX_CONSTANT__RE_SYNTAX_BACKSLASH_ESCAPE_IN_LISTS 1
@@ -229,7 +229,7 @@ PRIVATE WUNUSED int DCALL re_handle_error(re_errno_t error) {
 /************************************************************************/
 
 /* Perform a regex match
- * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff'
+ * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff`
  * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
  * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -244,14 +244,14 @@ again:
 	return Dee_RE_STATUS_ERROR;
 }
 
-/* Similar to `DeeRegex_Match', try to match a pattern against the given input buffer. Do this
- * with increasing offsets for the first `search_range' bytes, meaning at most `search_range'
+/* Similar to `DeeRegex_Match`, try to match a pattern against the given input buffer. Do this
+ * with increasing offsets for the first `search_range` bytes, meaning at most `search_range`
  * regex matches will be performed.
- * @param: search_range: One plus the max starting  byte offset (from `exec->rx_startoff')  to
- *                       check. Too great values for `search_range' are automatically clamped.
+ * @param: search_range: One plus the max starting  byte offset (from `exec->rx_startoff`)  to
+ *                       check. Too great values for `search_range` are automatically clamped.
  * @param: p_match_size: When non-NULL, set to the # of bytes that were actually matched.
- *                       This would have  been the return  value of  `re_exec_match(3R)'.
- * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)').
+ *                       This would have  been the return  value of  `re_exec_match(3R)`.
+ * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)`).
  * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
  * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -267,7 +267,7 @@ again:
 	return Dee_RE_STATUS_ERROR;
 }
 
-/* Similar to `DeeRegex_Search()', but never matches epsilon.
+/* Similar to `DeeRegex_Search()`, but never matches epsilon.
  * Instead, keep on searching if epsilon happens to be matched. */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_SearchNoEpsilon(struct DeeRegexExec const *__restrict exec,
@@ -283,9 +283,9 @@ again:
 }
 
 
-/* Same as `DeeRegex_Search', but perform searching with starting
- * offsets in `[exec->rx_endoff - search_range, exec->rx_endoff)'
- * Too great values for `search_range' are automatically clamped.
+/* Same as `DeeRegex_Search`, but perform searching with starting
+ * offsets in `[exec->rx_endoff - search_range, exec->rx_endoff)`
+ * Too great values for `search_range` are automatically clamped.
  * The return value will thus be the greatest byte-offset where
  * the given pattern matches that is still within that range. */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
@@ -308,7 +308,7 @@ again:
 /* Regex compile                                                        */
 /************************************************************************/
 
-/* Compile the regex pattern of a given string `self' */
+/* Compile the regex pattern of a given string `self` */
 PRIVATE WUNUSED NONNULL((1)) struct DeeRegexCode *DCALL
 re_compile(DeeStringObject *__restrict self, unsigned int compile_flags) {
 	re_errno_t comp_error;
@@ -378,7 +378,7 @@ PRIVATE Dee_atomic_rwlock_t regex_cache_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define regex_cache_lock_end()        Dee_atomic_rwlock_end(&regex_cache_lock)
 
 #define regex_cache_hashst(hash)        ((hash) & regex_cache_mask)
-#define regex_cache_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define regex_cache_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define regex_cache_hashit(i)           (regex_cache_base + ((i) & regex_cache_mask))
 
 PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
@@ -441,8 +441,8 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 }
 
 
-/* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `Dee_STRING_UTF_FFINIHOOK' was set. */
+/* Destroy the regex cache associated with `self`.
+ * Called from `DeeString_Type.tp_fini` when `Dee_STRING_UTF_FFINIHOOK` was set. */
 INTERN NONNULL((1)) void DCALL
 DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
 	struct regex_cache_entry *item, old_item;
@@ -470,13 +470,13 @@ DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
 }
 
 
-/* Lazily compile `self' as a deemon regex pattern.
+/* Lazily compile `self` as a deemon regex pattern.
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
- * @param: compile_flags: Set of `Dee_RE_COMPILE_*'
+ * @param: compile_flags: Set of `Dee_RE_COMPILE_*`
  * @param: rules:         When non-NULL, a string containing extra rules
- *                        that are or'd into `compile_flags'. For this purpose,
- *                        each character from `rules' is parsed as a flag:
+ *                        that are or'd into `compile_flags`. For this purpose,
+ *                        each character from `rules` is parsed as a flag:
  *                        - "i": Dee_RE_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
@@ -490,7 +490,7 @@ DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
 	Dee_hash_t i, perturb, hash;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
 
-	/* Parse `rules' (if given) */
+	/* Parse `rules` (if given) */
 	if (rules != NULL) {
 		char const *iter;
 		if (DeeObject_AssertTypeExact(rules, &DeeString_Type))
@@ -616,8 +616,8 @@ err:
 }
 
 
-/* Find and return the set of flags that were used to compile `code' for `self'.
- * Behavior is weak-undefined if `code' wasn't compiled from `self'. */
+/* Find and return the set of flags that were used to compile `code` for `self`.
+ * Behavior is weak-undefined if `code` wasn't compiled from `self`. */
 PUBLIC WUNUSED NONNULL((1, 2)) unsigned int DCALL
 DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
                         struct DeeRegexCode const *__restrict code) {

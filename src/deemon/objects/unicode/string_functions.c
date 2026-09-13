@@ -669,7 +669,7 @@ DeeString_IsTitle(String *__restrict self,
 	return true;
 }
 
-/* NOTE: `INTERN', because also used in `/src/deemon/compiler/old/interface/iast.c' */
+/* NOTE: `INTERN`, because also used in `/src/deemon/compiler/old/interface/iast.c` */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(String *__restrict self,
                    size_t start_index,
@@ -724,7 +724,7 @@ DeeString_Indent(String *self, String *filler) {
 			}
 			if (iter.cp8 == flush_start.cp8) {
 				/* Either the string is empty or ends with a line-feed.
-				 * In either case, we must remove `filler' from its end,
+				 * In either case, we must remove `filler` from its end,
 				 * because we're not supposed to have the resulting
 				 * string include it as trailing memory. */
 				ASSERT(Dee_UNICODE_PRINTER_LENGTH(&printer) >= DeeString_WLEN(filler));
@@ -903,7 +903,7 @@ DeeString_Dedent(String *__restrict self,
 				if (Dee_unicode_printer_print8(&printer, flush_start.cp8,
 				                               (size_t)(iter.cp8 - flush_start.cp8)) < 0)
 					goto err;
-				/* Skip up to `max_chars' characters after a linefeed. */
+				/* Skip up to `max_chars` characters after a linefeed. */
 				for (i = 0; i < max_chars && mask_containsb(mask, *iter.cp8); ++i)
 					++iter.cp8;
 				flush_start = iter;
@@ -1005,7 +1005,7 @@ DeeString_DedentSpc(String *__restrict self,
 				if (Dee_unicode_printer_print8(&printer, flush_start.cp8,
 				                               (size_t)(iter.cp8 - flush_start.cp8)) < 0)
 					goto err;
-				/* Skip up to `max_chars' characters after a linefeed. */
+				/* Skip up to `max_chars` characters after a linefeed. */
 				for (i = 0; i < max_chars && DeeUni_IsSpace(*iter.cp8); ++i)
 					++iter.cp8;
 				flush_start = iter;
@@ -1156,7 +1156,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 #endif /* !NDEBUG */
 
 /* Construct strings from UTF-16/32 encoded content.
- * @param: error_mode: One of `STRING_ERROR_F*' */
+ * @param: error_mode: One of `STRING_ERROR_F*` */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewUtf16(uint16_t const *__restrict str,
                    size_t length,
@@ -1270,7 +1270,7 @@ string_replace(String *__restrict self, size_t argc,
 				if unlikely(!--args.max_)
 					break;
 			}
-			/* If we never found `find', our printer will still be empty.
+			/* If we never found `find`, our printer will still be empty.
 			 * >> In that case we don't need to write the entire string to it,
 			 *    but can simply return a reference to the original string,
 			 *    saving on memory and speeding up the function by a lot. */
@@ -1406,7 +1406,7 @@ string_casereplace(String *__restrict self, size_t argc,
 				if unlikely(!--args.max_)
 					break;
 			}
-			/* If we never found `find', our printer will still be empty.
+			/* If we never found `find`, our printer will still be empty.
 			 * >> In that case we don't need to write the entire string to it,
 			 *    but can simply return a reference to the original string,
 			 *    saving on memory and speeding up the function by a lot. */
@@ -2302,9 +2302,9 @@ err:
 
 struct string_findany_data {
 	String *sfad_self;   /* [1..1][const] The string being searched. */
-	size_t  sfad_base;   /* [const] Character offset into `sfad_self' of search start. */
-	size_t  sfad_size;   /* [const] Sub-string length to search in `sfad_self', starting at `sfad_base'. */
-	size_t  sfad_result; /* [<= sfad_size] Offset from `sfad_base' of best match. */
+	size_t  sfad_base;   /* [const] Character offset into `sfad_self` of search start. */
+	size_t  sfad_size;   /* [const] Sub-string length to search in `sfad_self`, starting at `sfad_base`. */
+	size_t  sfad_result; /* [<= sfad_size] Offset from `sfad_base` of best match. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2414,8 +2414,8 @@ err:
 
 struct string_rfindany_data {
 	String *srfad_self;   /* [1..1][const] The string being searched. */
-	size_t  srfad_base;   /* [const] Character offset into `scfad_self' of search start. */
-	size_t  srfad_size;   /* [const] Sub-string length to search in `scfad_self', starting at `srfad_base'. */
+	size_t  srfad_base;   /* [const] Character offset into `scfad_self` of search start. */
+	size_t  srfad_size;   /* [const] Sub-string length to search in `scfad_self`, starting at `srfad_base`. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2517,10 +2517,10 @@ err:
 
 struct string_casefindany_data {
 	String *scfad_self;   /* [1..1][const] The string being searched. */
-	size_t  scfad_base;   /* [const] Character offset into `scfad_self' of search start. */
-	size_t  scfad_size;   /* [const] Sub-string length to search in `scfad_self', starting at `scfad_base'. */
-	size_t  scfad_result; /* [<= scfad_size] Offset from `scfad_base' of best match. */
-	size_t  scfad_reslen; /* # of matched characters at `scfad_result'. */
+	size_t  scfad_base;   /* [const] Character offset into `scfad_self` of search start. */
+	size_t  scfad_size;   /* [const] Sub-string length to search in `scfad_self`, starting at `scfad_base`. */
+	size_t  scfad_result; /* [<= scfad_size] Offset from `scfad_base` of best match. */
+	size_t  scfad_reslen; /* # of matched characters at `scfad_result`. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2638,8 +2638,8 @@ err:
 
 struct string_caserfindany_data {
 	String *scrfad_self;   /* [1..1][const] The string being searched. */
-	size_t  scrfad_base;   /* [const] Character offset into `scfad_self' of search start. */
-	size_t  scrfad_size;   /* [const] Sub-string length to search in `scfad_self', starting at `scrfad_base'. */
+	size_t  scrfad_base;   /* [const] Character offset into `scfad_self` of search start. */
+	size_t  scrfad_size;   /* [const] Sub-string length to search in `scfad_self`, starting at `scrfad_base`. */
 	size_t  scrfad_reslen; /* # of matched characters at last match. */
 };
 
@@ -3424,8 +3424,8 @@ string_startswith(String *self, size_t argc,
 		goto err; /* TODO: Support for SeqSome */
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
 	if (args.start == 0 && args.end >= DeeString_WLEN(self) &&
-	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
-	     *       UTF-8 is the same for both our own, and the `other' string. */
+	    /* NOTE: This checks that `DeeString_STR()` being either LATIN-1, or
+	     *       UTF-8 is the same for both our own, and the `other` string. */
 	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(args.needle))) {
 		/* Special case: Since we don't have to count characters, we can simply
 		 *               match the UTF-8 representations against each other. */
@@ -3510,8 +3510,8 @@ string_endswith(String *self, size_t argc,
 		goto err; /* TODO: Support for SeqSome */
 #ifdef CONFIG_STRING_STARTSWITH_ENDSWITH_SPECIALCASE_OPTIMIZATIONS
 	if (args.start == 0 && args.end >= DeeString_WLEN(self) &&
-	    /* NOTE: This checks that `DeeString_STR()' being either LATIN-1, or
-	     *       UTF-8 is the same for both our own, and the `other' string. */
+	    /* NOTE: This checks that `DeeString_STR()` being either LATIN-1, or
+	     *       UTF-8 is the same for both our own, and the `other` string. */
 	    (DeeString_STR_ISUTF8(self) == DeeString_STR_ISUTF8(args.needle))) {
 		/* Special case: Since we don't have to count characters, we can simply
 		 *               match the UTF-8 representations against each other. */
@@ -3712,8 +3712,8 @@ INTDEF WUNUSED NONNULL((1)) unsigned int DCALL
 DeeCodec_GetErrorMode(char const *__restrict errors);
 
 
-/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c' */
-/* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl' */
+/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c` */
+/* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl` */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
@@ -3743,8 +3743,8 @@ err:
 	return NULL;
 }
 
-/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c' */
-/* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl' */
+/* INTERN, because also used in `/src/deemon/compiler/old/optimize/opt_operators.c` */
+/* INTERN, because also used in `/src/deemon/objects/unicode/bytes_functions.c.inl` */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
@@ -4667,7 +4667,7 @@ struct string_join_data {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_join_cb(void *arg, DeeObject *elem) {
 	struct string_join_data *data = (struct string_join_data *)arg;
-	/* Print `self' prior to every object, starting with the 2nd one. */
+	/* Print `self` prior to every object, starting with the 2nd one. */
 	if (!data->sjd_first) {
 		if unlikely(Dee_unicode_printer_printstring(&data->sjd_out, Dee_AsObject(data->sjd_sep)) < 0)
 			goto err;
@@ -9087,7 +9087,7 @@ err:
 }
 
 
-/* Convert a character-offset into a byte-offset within `self's utf-8 repr */
+/* Convert a character-offset into a byte-offset within `self`s utf-8 repr */
 PRIVATE WUNUSED NONNULL((1, 3)) size_t DCALL
 string_charcnt2bytecnt(String const *self, size_t charpos, char const *utf8) {
 	char const *iter;
@@ -9108,7 +9108,7 @@ string_charcnt2bytecnt(String const *self, size_t charpos, char const *utf8) {
 	return (size_t)(iter - utf8);
 }
 
-/* Convert a character-offset into a byte-offset within `self's utf-8 repr */
+/* Convert a character-offset into a byte-offset within `self`s utf-8 repr */
 PRIVATE WUNUSED NONNULL((1, 3)) size_t DCALL
 string_bytecnt2charcnt(String const *self, size_t bytepos, char const *utf8) {
 	size_t charpos;
@@ -10512,7 +10512,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	 *      "foo: $(echo hi), and `echo there`")
 	 * XXX: However, a full wordexp impl would probably be overkill here,
 	 *      so it'd probably be better to just write that in user-code
-	 *      and expose it as `wordexp from wordexp'
+	 *      and expose it as `wordexp from wordexp`
 	 */
 
 /* String/Character traits */
@@ -10789,7 +10789,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "print repr s[0:##s];           /* \"foo bar foobar\" */\n"
 	                /**/ "print repr s.substr(0, 1234); /* \"foo bar foobar\" */\n"
 	                /**/ "print repr s[0:1234];         /* \"foo bar foobar\" */\n"
-	                /**/ "print repr s.substr(0, -1);   /* \"foo bar foobar\" -- `-1' intentionally underflow into positive infinity */\n"
+	                /**/ "print repr s.substr(0, -1);   /* \"foo bar foobar\" -- `-1` intentionally underflow into positive infinity */\n"
 	                /**/ "print repr s[0:-1];           /* \"foo bar fooba\" */"
 	                "}\n"
 	                "Also note that this way of interpreting integer indices is mirrored by all other "
@@ -11628,7 +11628,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "${"
 	                /**/ "local data = \"10 , 20,30 40, 50\";\n"
 	                /**/ "for (local x: data.resplit(r\"[[:space:],]+\"))\n"
-	                /**/ "	print x; /* `10' `20' `30' `40' `50' */"
+	                /**/ "	print x; /* `10` `20` `30` `40` `50` */"
 	                "}\n"
 
 	                "If you wish to do the inverse and enumerate matches, rather than the "
@@ -11867,11 +11867,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF String *DCALL
 string_cat(String *__restrict self, DeeObject *__restrict other) {
-	/* Simple case: `self' is an empty string, so just cast `other' into a string. */
+	/* Simple case: `self` is an empty string, so just cast `other` into a string. */
 	if (DeeString_IsEmpty(self))
 		return (DREF String *)DeeObject_Str(other);
 	if (DeeString_Check(other)) {
-		/* In the likely case of `other' also being a string, we can
+		/* In the likely case of `other` also being a string, we can
 		 * try to perform some optimizations by looking at the common,
 		 * required character width, and creating the resulting string
 		 * in accordance to what _it_ requires (bypassing the need of
@@ -11879,7 +11879,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 		struct Dee_string_utf *lhs_utf;
 		struct Dee_string_utf *rhs_utf;
 
-		/* Simple case: `other' is an empty string, so just re-use `self'. */
+		/* Simple case: `other` is an empty string, so just re-use `self`. */
 		if (DeeString_IsEmpty(other))
 			return_reference_(self);
 		lhs_utf = self->s_data;
@@ -12037,7 +12037,7 @@ err_r_2_4:
 		}
 	}
 
-	/* Fallback: use a string printer to append `other' to a copy of `self'. */
+	/* Fallback: use a string printer to append `other` to a copy of `self`. */
 	{
 		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		/* Print our own string. */
@@ -12176,8 +12176,8 @@ INTERN struct type_math string_math = {
 };
 
 
-/* INTERN, because also used in `/src/deemon/objects/bytes.c' */
-/* INTERN, because also used in `/src/deemon/objects/string.c' */
+/* INTERN, because also used in `/src/deemon/objects/bytes.c` */
+/* INTERN, because also used in `/src/deemon/objects/string.c` */
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 string_eq_bytes(String *__restrict self,
                 DeeBytesObject *__restrict other) {
@@ -12269,7 +12269,7 @@ nope:
 }
 
 
-/* INTERN, because also used in `/src/deemon/objects/string.c' */
+/* INTERN, because also used in `/src/deemon/objects/string.c` */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_contains(String *self, DeeObject *some_object) {
 	union Dee_charptr_const str, other, ptr;
@@ -12296,7 +12296,7 @@ string_contains(String *self, DeeObject *some_object) {
 	} else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
 			goto err;
-		/* Search for an occurrence of `some_object' */
+		/* Search for an occurrence of `some_object` */
 		SWITCH_SIZEOF_WIDTH(STRING_WIDTH_COMMON(DeeString_WIDTH(self),
 		                                        DeeString_WIDTH(some_object))) {
 

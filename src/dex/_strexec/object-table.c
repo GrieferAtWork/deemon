@@ -47,7 +47,7 @@ INTERN struct jit_object_entry jit_empty_object_list[1] = {
 	}
 };
 
-/* Initialize `dst' as a copy of `src' */
+/* Initialize `dst` as a copy of `src` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_Copy(JITObjectTable *__restrict dst,
                     JITObjectTable const *__restrict src) {
@@ -157,11 +157,11 @@ JITObjectTable_TryRehash(JITObjectTable *__restrict self,
 /* Update an object within the given object table, potentially overwriting an
  * existing object, or creating a new entry if no existing object could be found.
  * @param: value: The value to assign to the entry.
- *                When `NULL', the entry is unbound.
- * @return: 1:  Successfully updated an existing entry when `override_existing' was `true'.
- * @return: 1:  An entry already existed for the given name when `override_existing' was `false'.
+ *                When `NULL`, the entry is unbound.
+ * @return: 1:  Successfully updated an existing entry when `override_existing` was `true`.
+ * @return: 1:  An entry already existed for the given name when `override_existing` was `false`.
  * @return: 0:  Successfully created a new entry.
- * @return: -1: An error occurred (failed to increase the hash size of `self') */
+ * @return: -1: An error occurred (failed to increase the hash size of `self`) */
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) int DCALL
 JITObjectTable_Update(JITObjectTable *__restrict self,
                       /*utf-8*/ char const *namestr,
@@ -273,7 +273,7 @@ JITObjectTable_Delete(JITObjectTable *__restrict self,
 }
 
 
-/* Lookup a given object within `self'
+/* Lookup a given object within `self`
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Could not find an object matching the specified name. (no error was thrown) */
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
@@ -295,7 +295,7 @@ JITObjectTable_Lookup(JITObjectTable *__restrict self,
 	return NULL;
 }
 
-/* Lookup or create an entry for a given name within `self'
+/* Lookup or create an entry for a given name within `self`
  * @return: * :   The entry associated with the given name.
  * @return: NULL: Failed to create a new entry. (an error _WAS_ thrown) */
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct jit_object_entry *DCALL
@@ -360,7 +360,7 @@ err:
 }
 
 
-/* Add a *-import module or object to `self' (if not already present)
+/* Add a *-import module or object to `self` (if not already present)
  * @return: 0 : Success
  * @return: -1: Success */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -387,12 +387,12 @@ err:
 	return -1;
 }
 
-/* Search the list of *-imports of `self' for the one (if it exists)
- * that has an attribute matching the given `namestr'. If found,
+/* Search the list of *-imports of `self` for the one (if it exists)
+ * that has an attribute matching the given `namestr`. If found,
  * return a reference to it, and if not found, return ITER_DONE.
- * NOTE: This function searches `self->ot_star_importv' in reverse
+ * NOTE: This function searches `self->ot_star_importv` in reverse
  *       order, meaning that modules from which an import happened
- *       more recently (as per `JITObjectTable_AddImportStar()')
+ *       more recently (as per `JITObjectTable_AddImportStar()`)
  *       will be hit first. Also note that once a hit is found, the
  *       search ends (this behavior differs from the core compiler,
  *       where multiple *-imports of the same symbol-name result
@@ -401,8 +401,8 @@ err:
  *       affects code that would otherwise be malformed.
  * @param: p_mod_symbol: when non-NULL, store the module-symbol (in
  *                       case the *-import was made for a module)
- * @return: * :        The module/object defining `namestr'
- * @return: ITER_DONE: The *-imported module defines `namestr'
+ * @return: * :        The module/object defining `namestr`
+ * @return: ITER_DONE: The *-imported module defines `namestr`
  * @return: NULL:      An error was thrown. */
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 JITObjectTable_FindImportStar(JITObjectTable *__restrict self,

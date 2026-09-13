@@ -45,7 +45,7 @@
 DECL_BEGIN
 
 
-/* Figure out how to implement `pipe()' */
+/* Figure out how to implement `pipe()` */
 #undef posix_pipe_USE_pipe
 #undef posix_pipe_USE_CreatePipe
 #undef posix_pipe_USE_STUB
@@ -58,7 +58,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
-/* Figure out how to implement `pipe2()' */
+/* Figure out how to implement `pipe2()` */
 #undef posix_pipe2_USE_pipe2
 #undef posix_pipe2_USE_pipe_AND_fcntl
 #undef posix_pipe2_USE_CreatePipe
@@ -234,7 +234,7 @@ again:
 #endif /* posix_pipe2_USE_pipe2 */
 
 #ifdef posix_pipe2_USE_pipe_AND_fcntl
-	/* Validate the given `oflags' */
+	/* Validate the given `oflags` */
 #if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
 #elif defined(CONFIG_HAVE_O_NONBLOCK)

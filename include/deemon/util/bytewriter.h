@@ -50,7 +50,7 @@ struct Dee_bytewriter {
 #define bytewriter_fini(x) \
 	Dee_Free((x)->bw_base)
 
-/* Reserve memory for at least `n_bytes'  */
+/* Reserve memory for at least `n_bytes`  */
 LOCAL WUNUSED NONNULL((1)) uint8_t *DCALL
 Dee_bytewriter_alloc(struct Dee_bytewriter *__restrict self, size_t n_bytes) {
 	uint8_t *result;
@@ -115,7 +115,7 @@ _Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putq, __UINT64_TYPE__, qword)
 
 
 /* Deallocate all unused bytes, and return a heap-allocated pointer to what has been written.
- * When nothing has been written, `NULL' may be returned, which does not indicate an error,
+ * When nothing has been written, `NULL` may be returned, which does not indicate an error,
  * as this function will never throw any. */
 LOCAL NONNULL((1)) uint8_t *DCALL
 Dee_bytewriter_flush(struct Dee_bytewriter *__restrict self) {

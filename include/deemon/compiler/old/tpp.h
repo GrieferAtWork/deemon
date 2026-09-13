@@ -31,14 +31,14 @@
 #include <stdint.h>  /* uint32_t */
 
 #ifdef GUARD_TPP_H
-#error "Don't #include `tpp.h' directly. - Deemon must configure it for itself!"
+#error "Don't #include `tpp.h` directly. - Deemon must configure it for itself!"
 #endif /* GUARD_TPP_H */
 
 DECL_BEGIN
 
 
 #if 0 /* When defined, implement user-assembly as described
-       * by `/lib/LANGUAGE.txt' for distributions lacking
+       * by `/lib/LANGUAGE.txt` for distributions lacking
        * inline-assembly support.
        *  - Still allow assembly for creation of artificial
        *    dependencies restricting the ast-based optimizer.
@@ -54,8 +54,8 @@ struct ast_loc;
 struct ast;
 
 /* Emit a compiler warning/error, given its TPP warning number.
- * The passed var-args are interpreted based on `wnum',
- * which is one of `W_*' defined by the lexer.
+ * The passed var-args are interpreted based on `wnum`,
+ * which is one of `W_*` defined by the lexer.
  * @return: -1: TPP had already been set to an error-state.
  * @return: -1: A fatal compiler error was thrown and TPP was set to an error-state.
  * @return:  0: The warning is being ignored.
@@ -65,16 +65,16 @@ struct ast;
 INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
 INTDEF ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...);
 
-/* Similar to `parser_warnf()', but force the warning
+/* Similar to `parser_warnf()`, but force the warning
  * to be fatal, regardless of its user-defined state.
  * @return: -1: Always returns -1. */
 INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
 INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
 DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
@@ -87,7 +87,7 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 #define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
-/* Warn about use of `pack' (but only if we're not currently inside of a macro) */
+/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
 INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
 
 struct TPPFile;
@@ -116,7 +116,7 @@ struct Dee_file_object;
 #define TPP_CONFIG_ONELEXER                     2 /* Configure for one global lexer to speed things up. */
 #define TPP_CONFIG_GCCFUNC                      0 /* Disable builtin GCC preprocessor functions. */
 #define TPP_CONFIG_MINMACRO                     1 /* Enable minimal-macro mode, disabling all of those predefined C macros. */
-#define TPP_CONFIG_USERSTREAMS                  1 /* Use `DeeFileObject *' as stream type for TPP. */
+#define TPP_CONFIG_USERSTREAMS                  1 /* Use `DeeFileObject *` as stream type for TPP. */
 #define TPP_CONFIG_RAW_STRING_LITERALS          1 /* Enable support for raw string literals. */
 #define TPP_USERSTREAM_TYPE                     struct Dee_file_object *
 #define TPP_USERSTREAM_INVALID                  NULL
@@ -246,8 +246,8 @@ struct Dee_file_object;
 
 DECL_END
 
-/* TODO: Use `DeeStringObject *' for `struct TPPString' */
-/* TODO: Use `DeeObject *' (String/Int) for `struct TPPConst' */
+/* TODO: Use `DeeStringObject *` for `struct TPPString` */
+/* TODO: Use `DeeObject *` (String/Int) for `struct TPPConst` */
 /* clang-format off */
 #include <hybrid/typecore.h> /* Needed for better integration of tpp */
 /* clang-format on */
@@ -263,7 +263,7 @@ tok_t tok;
 tok_t yield(void);
 tok_t yieldnb(void);
 tok_t yieldnbif(bool allow);
-/* Skip a token `expected_tok', or warn with `wnum' if the current token didn't match */
+/* Skip a token `expected_tok`, or warn with `wnum` if the current token didn't match */
 int skip(tok_t expected_tok, int wnum, ...);
 #else /* __INTELLISENSE__ */
 #define token             TPPLexer_Global.l_token

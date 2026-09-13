@@ -38,7 +38,7 @@
 DECL_BEGIN
 
 /* Parse a cast expression suffix following parenthesis, or
- * re-return the given `typeexpr' if there is no cast operand
+ * re-return the given `typeexpr` if there is no cast operand
  * at the current lexer position:
  * >> local x = (int)get_value();
  *                   ^          ^
@@ -65,8 +65,8 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
 		 * >> (int)!!!in my_list; // ... vs. this
-		 * After parsing any number of additional `!' tokens, if the token
-		 * thereafter is the keyword `is' or `in', then this isn't a cast
+		 * After parsing any number of additional `!` tokens, if the token
+		 * thereafter is the keyword `is` or `in`, then this isn't a cast
 		 * expression. However if it isn't, then it is a cast expression. */
 		tok_begin = peek_next_token(&tok_file);
 		for (;;) {
@@ -88,10 +88,10 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		goto do_a_cast;
 	}
 
-	case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
-	case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
-	case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
-	case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List(castexpr))' */
+	case '+': /* `(typexpr).operator add(castexpr)` vs. `(typexpr)castexpr.operator pos()` */
+	case '-': /* `(typexpr).operator sub(castexpr)` vs. `(typexpr)castexpr.operator neg()` */
+	case '<': /* `(typexpr).operator lo(castexpr)` vs. `(typexpr)(Cell(castexpr))` */
+	case '[': /* `(typexpr).operator [](castexpr)` vs. `(typexpr)(List(castexpr))` */
 		if (WARN(W_UNCLEAR_CAST_INTENT))
 			goto err;
 		ATTR_FALLTHROUGH
@@ -108,12 +108,12 @@ not_a_cast:
 		loc_here(&loc);
 		/* Special handling for the following cases:
 		 * >> (float)();                // Call with 0 arguments
-		 * >> (float)(42);              // Call with 1 argument `42'
-		 * >> (float)((42),);           // Call with 1 argument `42'
-		 * >> (float)(10, 20, 30);      // Call with 3 arguments `10, 20, 30'
-		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)'
+		 * >> (float)(42);              // Call with 1 argument `42`
+		 * >> (float)((42),);           // Call with 1 argument `42`
+		 * >> (float)(10, 20, 30);      // Call with 3 arguments `10, 20, 30`
+		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)`
 		 * Without this handling, the 4th line would be compiled as
-		 * `float(pack(10, 20, 30))', when we want it to be `float(10, 20, 30)' */
+		 * `float(pack(10, 20, 30))`, when we want it to be `float(10, 20, 30)` */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)

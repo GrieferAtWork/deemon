@@ -253,7 +253,7 @@ DeeType_HasImplicitTrait_uncached___map_getitem_always_bound__(DeeTypeObject *__
 			return true;
 		}
 	} else if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_trygetitem) {
-		/* In this case `UnboundItem()' is never thrown, since "map_operator_trygetitem"
+		/* In this case `UnboundItem()` is never thrown, since "map_operator_trygetitem"
 		 * returning "ITER_DONE" is always interpreted as meaning "DeeRT_ErrUnknownKey",
 		 * and implementations of "map_operator_trygetitem" have no defined way to state
 		 * that a key exists but is unbound (since they're supposed to return ITER_DONE

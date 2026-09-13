@@ -55,9 +55,9 @@ struct alignof_variant {
 	struct Dee_variant v;
 };
 STATIC_ASSERT_MSG(sizeof(struct Dee_variant) == (offsetof(struct Dee_variant, var_data) + 16),
-                  "The data-blob of `struct Dee_variant' should be 16 bytes large");
+                  "The data-blob of `struct Dee_variant` should be 16 bytes large");
 STATIC_ASSERT_MSG(offsetof(struct alignof_variant, v) == __ALIGNOF_POINTER__,
-                  "`struct Dee_variant' shouldn't require a "
+                  "`struct Dee_variant` shouldn't require a "
                   "greater alignment than '__ALIGNOF_POINTER__'");
 #endif
 
@@ -324,7 +324,7 @@ Dee_variant_setcstrlen(struct Dee_variant *__restrict self,
 }
 
 
-/* Same as `Dee_variant_init_cstr()', but check at runtime if "str" is guarantied
+/* Same as `Dee_variant_init_cstr()`, but check at runtime if "str" is guarantied
  * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
  * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
  *
@@ -458,7 +458,7 @@ Dee_variant_samedata(struct Dee_variant const *__restrict a,
 }
 
 
-/* Compare "self" with "oldval" (asserting identical types and memcmp()'ing "var_data").
+/* Compare "self" with "oldval" (asserting identical types and memcmp()`ing "var_data").
  * If this compare indicates equality, atomically assign "newval" to "self" and return
  * "true". Else, do nothing and return "false".
  *

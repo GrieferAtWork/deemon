@@ -159,7 +159,7 @@
  * !HOWEVER! this only needs to happen under _MSC_VER + __i386__
  *
  * NOTE: The real solution ms should've gone for here would have been to
- *       just have `alignof(int64_t) == 4', like gcc does and actually
+ *       just have `alignof(int64_t) == 4`, like gcc does and actually
  *       makes a lot of sense when you realize that int64_t on a 32-bit
  *       machine is actually just int32_t[2] with a bunch of compiler
  *       magic. */
@@ -331,7 +331,7 @@ again:
 		char const *fmt_start;
 		int temp;
 		/* Unpack a sequence. */
-		iterator = DeeObject_Iter(self); /* TODO: use `DeeObject_Foreach()' */
+		iterator = DeeObject_Iter(self); /* TODO: use `DeeObject_Foreach()` */
 		if unlikely(!iterator)
 			goto err;
 		is_optional = false, fmt_start = format, argc = 0;
@@ -412,13 +412,13 @@ err_iter:
 			str = DeeString_As1Byte(self);
 		} else if (format[0] == '1') {
 			ASSERTF(format[1] == '6' && format[2] == 's',
-			        "Invalid format: `%s' (`%s')",
+			        "Invalid format: `%s` (`%s`)",
 			        format, *p_format);
 			format += 3;
 			str = DeeString_As2Byte(self);
 		} else {
 			ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
-			        "Invalid format: `%s' (`%s')",
+			        "Invalid format: `%s` (`%s`)",
 			        format, *p_format);
 			format += 3;
 			str = DeeString_As4Byte(self);
@@ -437,13 +437,13 @@ err_iter:
 			str = DeeString_AsUtf8(self);
 		} else if (format[0] == '1') {
 			ASSERTF(format[1] == '6' && format[2] == 's',
-			        "Invalid format: `%s' (`%s')",
+			        "Invalid format: `%s` (`%s`)",
 			        format, *p_format);
 			format += 3;
 			str = DeeString_AsUtf16(self, Dee_STRING_ERROR_FSTRICT);
 		} else {
 			ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
-			        "Invalid format: `%s' (`%s')",
+			        "Invalid format: `%s` (`%s`)",
 			        format, *p_format);
 			format += 3;
 			str = DeeString_AsUtf32(self);
@@ -470,13 +470,13 @@ err_iter:
 				str = DeeString_AsUtf8(self);
 			} else if (format[0] == '1') {
 				ASSERTF(format[1] == '6' && format[2] == 's',
-				        "Invalid format: `%s' (`%s')",
+				        "Invalid format: `%s` (`%s`)",
 				        format, *p_format);
 				format += 3;
 				str = DeeString_AsUtf16(self, Dee_STRING_ERROR_FSTRICT);
 			} else {
 				ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
-				        "Invalid format: `%s' (`%s')",
+				        "Invalid format: `%s` (`%s`)",
 				        format, *p_format);
 				format += 3;
 				str = DeeString_AsUtf32(self);
@@ -490,13 +490,13 @@ err_iter:
 				str = DeeString_As1Byte(self);
 			} else if (format[0] == '1') {
 				ASSERTF(format[1] == '6' && format[2] == 's',
-				        "Invalid format: `%s' (`%s')",
+				        "Invalid format: `%s` (`%s`)",
 				        format, *p_format);
 				format += 3;
 				str = DeeString_As2Byte(self);
 			} else {
 				ASSERTF(format[0] == '3' && format[1] == '2' && format[2] == 's',
-				        "Invalid format: `%s' (`%s')",
+				        "Invalid format: `%s` (`%s`)",
 				        format, *p_format);
 				format += 3;
 				str = DeeString_As4Byte(self);
@@ -504,13 +504,13 @@ err_iter:
 			if unlikely(!str)
 				goto err;
 		} else if (*format == 'l') {
-			ASSERTF(format[1] == 's', "Invalid format: `%s' (`%s')", format, *p_format);
+			ASSERTF(format[1] == 's', "Invalid format: `%s` (`%s`)", format, *p_format);
 			format += 2;
 			str = DeeString_AsWide(self);
 			if unlikely(!str)
 				goto err;
 		} else {
-			ASSERTF(*format == 's', "Invalid format: `%s' (`%s')", format, *p_format);
+			ASSERTF(*format == 's', "Invalid format: `%s` (`%s`)", format, *p_format);
 			++format;
 			str = DeeString_STR(self);
 		}
@@ -524,7 +524,7 @@ err_iter:
 	{
 		double value;
 #ifdef __LONGDOUBLE
-		ASSERTF(*format == 'D', "Invalid format: `%s' (`%s')", format, *p_format);
+		ASSERTF(*format == 'D', "Invalid format: `%s` (`%s`)", format, *p_format);
 		++format;
 		ATTR_FALLTHROUGH
 #endif /* __LONGDOUBLE */
@@ -595,20 +595,20 @@ do_integer_format:
 				format += 2;
 			} else if (*format == '1') {
 				if (format[1] == '2') {
-					ASSERTF(format[2] == '8', "Invalid format: `%s' (`%s')", format, *p_format);
+					ASSERTF(format[2] == '8', "Invalid format: `%s` (`%s`)", format, *p_format);
 					length = LEN_INT(16);
 					format += 4;
 				} else {
-					ASSERTF(format[1] == '6', "Invalid format: `%s' (`%s')", format, *p_format);
+					ASSERTF(format[1] == '6', "Invalid format: `%s` (`%s`)", format, *p_format);
 					length = LEN_INT(2);
 					format += 3;
 				}
 			} else if (*format == '3') {
-				ASSERTF(format[1] == '2', "Invalid format: `%s' (`%s')", format, *p_format);
+				ASSERTF(format[1] == '2', "Invalid format: `%s` (`%s`)", format, *p_format);
 				length = LEN_INT(4);
 				format += 3;
 			} else if (*format == '6') {
-				ASSERTF(format[1] == '4', "Invalid format: `%s' (`%s')", format, *p_format);
+				ASSERTF(format[1] == '4', "Invalid format: `%s` (`%s`)", format, *p_format);
 				length = LEN_INT(8);
 				format += 3;
 			} else {
@@ -708,7 +708,7 @@ parse_unsigned_int:
 			default: __builtin_unreachable();
 			}
 		} else {
-			ASSERTF(format[-1] == 'c', "Invalid format: `%s' (`%s')", format, *p_format);
+			ASSERTF(format[-1] == 'c', "Invalid format: `%s` (`%s`)", format, *p_format);
 			/* Unicode character (either a single-character string/Bytes object, or an integer). */
 			if (DeeString_Check(self)) {
 				uint32_t ch;
@@ -760,7 +760,7 @@ parse_unsigned_int:
 	}	break;
 
 	default:
-		ASSERTF(!*format, "Invalid format: `%s' (`%s')", format, *p_format);
+		ASSERTF(!*format, "Invalid format: `%s` (`%s`)", format, *p_format);
 		break;
 	}
 	*p_format = format;
@@ -792,7 +792,7 @@ again:
 
 #ifdef __LONGDOUBLE
 	case 'L':
-		ASSERTF(*format == 'D', "Invalid format: `%s'", format);
+		ASSERTF(*format == 'D', "Invalid format: `%s`", format);
 		++format;
 #endif /* __LONGDOUBLE */
 #ifdef DEFINE_DeeArg_Unpack
@@ -827,7 +827,7 @@ again:
 		} else {
 			ASSERTF((format[0] == '1' && format[1] == '6' && format[2] == 's') ||
 			        (format[0] == '3' && format[1] == '2' && format[2] == 's'),
-			        "Invalid format: `%s'", format);
+			        "Invalid format: `%s`", format);
 			format += 3;
 		}
 		ATTR_FALLTHROUGH
@@ -844,14 +844,14 @@ again:
 			} else {
 				ASSERTF((format[0] == '1' && format[1] == '6' && format[2] == 's') ||
 				        (format[0] == '3' && format[1] == '2' && format[2] == 's'),
-				        "Invalid format: `%s'", format);
+				        "Invalid format: `%s`", format);
 				format += 3;
 			}
 		} else if (*format == 'l') {
-			ASSERTF(format[1] == 's', "Invalid format: `%s'", format);
+			ASSERTF(format[1] == 's', "Invalid format: `%s`", format);
 			format += 2;
 		} else {
-			ASSERTF(*format == 's', "Invalid format: `%s'", format);
+			ASSERTF(*format == 's', "Invalid format: `%s`", format);
 			++format;
 		}
 		LOCAL_SKIP(size_t, __ALIGNOF_SIZE_T__);
@@ -889,20 +889,20 @@ again:
 				format += 2;
 			} else if (*format == '1') {
 				if (format[1] == '2') {
-					ASSERTF(format[2] == '8', "Invalid format: `%s'", format);
+					ASSERTF(format[2] == '8', "Invalid format: `%s`", format);
 					LOCAL_SETLENGTH(LEN_INT(16));
 					format += 4;
 				} else {
-					ASSERTF(format[1] == '6', "Invalid format: `%s'", format);
+					ASSERTF(format[1] == '6', "Invalid format: `%s`", format);
 					LOCAL_SETLENGTH(LEN_INT(2));
 					format += 3;
 				}
 			} else if (*format == '3') {
-				ASSERTF(format[1] == '2', "Invalid format: `%s'", format);
+				ASSERTF(format[1] == '2', "Invalid format: `%s`", format);
 				LOCAL_SETLENGTH(LEN_INT(4));
 				format += 3;
 			} else if (*format == '6') {
-				ASSERTF(format[1] == '4', "Invalid format: `%s'", format);
+				ASSERTF(format[1] == '4', "Invalid format: `%s`", format);
 				LOCAL_SETLENGTH(LEN_INT(8));
 				format += 3;
 			} else {
@@ -944,7 +944,7 @@ again:
 	}	break;
 
 	default:
-		ASSERTF(!*format, "Invalid format: `%s'", format);
+		ASSERTF(!*format, "Invalid format: `%s`", format);
 		break;
 	}
 	return format;
@@ -952,7 +952,7 @@ again:
 
 
 
-/* An extension to `Dee_Unpackf', explicitly for unpacking elements from function arguments.
+/* An extension to `Dee_Unpackf`, explicitly for unpacking elements from function arguments.
  * Format language syntax:
  *     using Dee_Unpackf::object;
  *     __main__   ::= [(object  // Process regular objects, writing values to pointers passed through varargs.
@@ -962,7 +962,7 @@ again:
  *     ;
  * Example usage:
  * >> // function my_function(a: int, b: int, c: int = 5): int;
- * >> // @return: * : The sum of `a', `b' and `c'
+ * >> // @return: * : The sum of `a`, `b` and `c`
  * >> PRIVATE WUNUSED ATTR_INS(2, 1) NONNULL((1)) DREF DeeObject *DCALL
  * >> my_function(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
@@ -1107,7 +1107,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		}
 
 		/* All remaining arguments are passed through
-		 * keywords found in `kwlist .. kwlist + x'. */
+		 * keywords found in `kwlist .. kwlist + x`. */
 		for (;;) {
 			Dee_hash_t keyword_hash;
 			size_t kwd_index;
@@ -1122,8 +1122,8 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 					 * >> function foo(x, bar = none);
 					 * >> foo(x: 10, baz: 20);
 					 * In this case we should do a fuzzy match and
-					 * warn the caller that instead of `baz', they
-					 * probably meant `bar' */
+					 * warn the caller that instead of `baz`, they
+					 * probably meant `bar` */
 					goto err_invalid_argc; /* Too many arguments. */
 				}
 				break;
@@ -1179,8 +1179,8 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 					 * >> function foo(x, bar);
 					 * >> foo(x: 10, baz: 20);
 					 * In this case we should do a fuzzy match and
-					 * warn the caller that instead of `baz', they
-					 * probably meant `bar' */
+					 * warn the caller that instead of `baz`, they
+					 * probably meant `bar` */
 					goto err_invalid_argc; /* Too few arguments. */
 				}
 			}
@@ -1189,7 +1189,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		return 0; /* Done! */
 	}
 
-	/* Keyword arguments are given, but aren't a `DeeKwds_Type' object.
+	/* Keyword arguments are given, but aren't a `DeeKwds_Type` object.
 	 * In this situation, we're supposed to interpret them as a mapping-like object!
 	 * But first off: parse all the positional argument! */
 	while (argc--) {
@@ -1334,16 +1334,16 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 
 /* Same as the regular unpack functions above, however these are enabled to
  * support keyword lists in the event that the calling function has been
- * provided with a keyword object (`kw').
- * -> When `DeeKwds_Check(kw)' is true, keyword argument objects are passed
+ * provided with a keyword object (`kw`).
+ * -> When `DeeKwds_Check(kw)` is true, keyword argument objects are passed
  *    through the regular argument vector, located within the range
- *    `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError
- *    is thrown), using names from `kwlist + NUM_POSITIONAL' to match association.
+ *    `argc - kw->kw_size .. argc - 1` (if `kw->kw_size > argc`, a TypeError
+ *    is thrown), using names from `kwlist + NUM_POSITIONAL` to match association.
  * -> Otherwise, positional arguments are also parsed regularly, before
- *    using `DeeObject_GetItemStringHash()' to lookup argument names starting
- *    at `kwlist + NUM_POSITIONAL', counting how may arguments were actually
+ *    using `DeeObject_GetItemStringHash()` to lookup argument names starting
+ *    at `kwlist + NUM_POSITIONAL`, counting how may arguments were actually
  *    found (and failing if a non-optional argument wasn't given), before
- *    finally using `DeeObject_Size()' to see how many keyword-arguments
+ *    finally using `DeeObject_Size()` to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used.
  *
@@ -1365,38 +1365,38 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 /* Unpack values from an object.
  * Format language syntax:
  *     __main__   ::= object;
- *     object     ::= ('n' | '-')          // Ignore / skip this object. (Do not advance `va_arg')
- *                  | ref_object           // `va_arg(DeeObject **)'
+ *     object     ::= ('n' | '-')          // Ignore / skip this object. (Do not advance `va_arg`)
+ *                  | ref_object           // `va_arg(DeeObject **)`
  *                  | ref_int              //
  *                  | ref_float            //
  *                  | ref_bool             //
- *                  | ref_str              // `char const **'
+ *                  | ref_str              // `char const **`
  *                  | '(' [objects...] ')' // Enumerate elements of a sequence
  *     ;
  *     objects    ::= [(object   // Parse some object from the sequence.
- *                    | ','      // `,' is simply ignored, but can be used to prevent ambiguity.
+ *                    | ','      // `,` is simply ignored, but can be used to prevent ambiguity.
  *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
  *                      )...];
- *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
- *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers ("x" uses *M1)
- *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)
- *                  | 'l' 's'    // `va_arg(wchar_t const **)'
- *                  | 'U16' 's'  // `va_arg(uint16_t const **)'
- *                  | 'U32' 's'  // `va_arg(uint32_t const **)'
- *                  | 's'        // `va_arg(char const **)'
+ *     ref_object ::= 'o'; // `va_arg(DeeObject **)`
+ *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u` and `x` read unsigned integers ("x" uses *M1)
+ *     ref_str    ::= ['$']      // `va_arg(size_t *)` (Store the length of the string)
+ *                  | 'l' 's'    // `va_arg(wchar_t const **)`
+ *                  | 'U16' 's'  // `va_arg(uint16_t const **)`
+ *                  | 'U32' 's'  // `va_arg(uint32_t const **)`
+ *                  | 's'        // `va_arg(char const **)`
  *                  ;
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)
- *                  | 'hh' // `va_arg(char *)'
- *                  | 'h'  // `va_arg(short *)'
- *                  | ''   // `va_arg(int *)' (Default when nothing else was given)
- *                  | 'l'  // `va_arg(long *)'
- *                  | 'll' // `va_arg(long long *)' (__(U)LONGLONG *)
+ *                  | 'hh' // `va_arg(char *)`
+ *                  | 'h'  // `va_arg(short *)`
+ *                  | ''   // `va_arg(int *)` (Default when nothing else was given)
+ *                  | 'l'  // `va_arg(long *)`
+ *                  | 'll' // `va_arg(long long *)` (__(U)LONGLONG *)
  *     ;
- *     ref_float  ::= 'f'  // `va_arg(float *)'
- *                  | 'D'  // `va_arg(double *)'
- *                  | 'LD' // `va_arg(long double *)'
+ *     ref_float  ::= 'f'  // `va_arg(float *)`
+ *                  | 'D'  // `va_arg(double *)`
+ *                  | 'LD' // `va_arg(long double *)`
  *     ;
- *     ref_bool   ::= 'b'; // `va_arg(bool)'
+ *     ref_bool   ::= 'b'; // `va_arg(bool)`
  */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (Dee_Unpackf)(DeeObject *__restrict self,

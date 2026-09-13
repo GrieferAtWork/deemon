@@ -49,7 +49,7 @@ assert x is C;
 assert x is Numeric;
 assert x.y == "foo";
 assert x.y is string;
-assert C.__base__ === B, "Because `B' has instance members, it must be the primary base";
+assert C.__base__ === B, "Because `B` has instance members, it must be the primary base";
 assert C.__mro__ == { C, A, B, Numeric, Object };
 assert C.__bases__ == { A, B, Numeric };
 

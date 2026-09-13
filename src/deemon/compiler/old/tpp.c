@@ -187,10 +187,10 @@ DECL_END
 #define vsprintf(buf, format, args) \
 	(int)(unsigned int)(size_t)(Dee_vsprintf(buf, format, args) - (buf))
 
-/* TODO: TPP has a non-redundant dependency on `time_t time(time_t *ptr)' */
-/* TODO: TPP has a non-redundant dependency on `struct tm *localtime(time_t const *tmr)' */
-/* TODO: TPP has a non-redundant dependency on `void srand(unsigned int seed)' */
-/* TODO: TPP has a non-redundant dependency on `int rand(void)' */
+/* TODO: TPP has a non-redundant dependency on `time_t time(time_t *ptr)` */
+/* TODO: TPP has a non-redundant dependency on `struct tm *localtime(time_t const *tmr)` */
+/* TODO: TPP has a non-redundant dependency on `void srand(unsigned int seed)` */
+/* TODO: TPP has a non-redundant dependency on `int rand(void)` */
 
 
 
@@ -528,7 +528,7 @@ get_warning_error_class(int wnum) {
 		wgroup_t group;
 		wgroups = w_associated_groups[wid - WG_COUNT];
 		for (; (group = *wgroups) != 0; ++wgroups) {
-			/* Use sub-classes of `CompilerError' for certain warning groups. */
+			/* Use sub-classes of `CompilerError` for certain warning groups. */
 			if (group == WG_SYNTAX)
 				return &DeeError_SyntaxError;
 			if (group == WG_SYMBOL)
@@ -615,7 +615,7 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 			printf(file_and_line,
 			       TPPFile_Filename(iter->cl_file, NULL),
 			       iter->cl_line + 1, iter->cl_col + 1);
-			printf("In expansion of macro `%$s'",
+			printf("In expansion of macro `%$s`",
 			       iter->cl_file->f_namesize,
 			       iter->cl_file->f_name);
 		}
@@ -776,7 +776,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		}
 
 		/* Initialize the buffer string.
-		 * NOTE: The reference to `DeeString_Type' is added if we succeed in opening the file. */
+		 * NOTE: The reference to `DeeString_Type` is added if we succeed in opening the file. */
 		DeeObject_InitStatic(buffer, &DeeString_Type);
 		buffer->s_len = req_length;
 
@@ -792,7 +792,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		stream = DeeFile_Open(Dee_AsObject(buffer), OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (stream != ITER_DONE) { /* Error or success. */
 
-			/* Check for errors that may have occurred during `DeeFile_Open()' */
+			/* Check for errors that may have occurred during `DeeFile_Open()` */
 			if unlikely(!stream) {
 				Dee_Decref_unlikely(libpath);
 				goto err_streamopen_failed;
@@ -871,7 +871,7 @@ err_r_path:
 
 
 
-/* Warn about use of `pack' (but only if we're not currently inside of a macro) */
+/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
 INTERN WUNUSED int DCALL
 parser_warn_pack_used(struct ast_loc *loc) {
 	struct TPPFile *file = token.t_file;
@@ -942,8 +942,8 @@ _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 			if unlikely(yield() < 0)
 				goto err;
 		} else {
-			/* Warn about use of `pack' (if done so outside
-			 * of a macro, and only if not followed by a `(') */
+			/* Warn about use of `pack` (if done so outside
+			 * of a macro, and only if not followed by a `(`) */
 			if unlikely(parser_warn_pack_used(&packloc))
 				goto err;
 		}

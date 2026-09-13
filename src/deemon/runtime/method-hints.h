@@ -49,8 +49,8 @@ struct Dee_type_struct_field {
 	DeeTypeObject                *tsf_decltype; /* [1..1] Declaring type */
 };
 struct Dee_type_struct_cache {
-	struct Dee_type_struct_field  *tsc_allfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_ForeachField()' */
-	struct Dee_type_member const **tsc_locfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_Visit()' / `DeeStructObject_Fini()' */
+	struct Dee_type_struct_field  *tsc_allfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_ForeachField()` */
+	struct Dee_type_member const **tsc_locfields; /* [0..N][lock(WRITE_ONCE)][owned] Cache for fields enumerated by `DeeStructObject_Visit()` / `DeeStructObject_Fini()` */
 };
 
 #define Dee_type_struct_cache_alloc() \
@@ -67,7 +67,7 @@ Dee_type_struct_cache_destroy(struct Dee_type_struct_cache *__restrict self) {
 
 
 
-/* Address in `:tp_class->cb_members'.
+/* Address in `:tp_class->cb_members`.
  *
  * Q: Why do we store class member address here, and not the actual
  *    references to the underlying methods?

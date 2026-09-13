@@ -579,7 +579,7 @@ constant("AT_NO_AUTOMOUNT");
 constant("AT_EMPTY_PATH");
 constant("AT_SYMLINK_REGULAR");
 constant("AT_CHANGE_BTIME");
-//constant("AT_READLINK_REQSIZE"); // Not needed (Only used by; and also implied by `freadlinkat()')
+//constant("AT_READLINK_REQSIZE"); // Not needed (Only used by; and also implied by `freadlinkat()`)
 constant("AT_REMOVEREG");
 constant("AT_ALTPATH");
 constant("AT_DOSPATH");
@@ -11223,7 +11223,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
  *       optional features and only impacts things that may
  *       be attempted at runtime to implement various functions.
  *       One such function is dex:posix.cpu_count(), which tries
- *       to make use of `/proc/cpuinfo' when this option is enabled.
+ *       to make use of `/proc/cpuinfo` when this option is enabled.
  * Anything that uses this feature still functions properly, even
  * when a /proc filesystem is actually available at runtime.
  * Furthermore, certain components may simply assume that a /proc
@@ -11473,7 +11473,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
      !(defined(CONFIG_HAVE_wutime) && !defined(CONFIG_HAVE__wutime)) && \
      !(defined(CONFIG_HAVE_wlutime) && !defined(CONFIG_HAVE__wlutime)))
 /* Alias the variants without an underscore to the ones with.
- * Because this also requires using `_utimbuf', we have to do
+ * Because this also requires using `_utimbuf`, we have to do
  * all of these at once. */
 #undef utimbuf
 #define utimbuf _utimbuf
@@ -11518,7 +11518,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
      !(defined(CONFIG_HAVE_wutime32) && !defined(CONFIG_HAVE__wutime32)) && \
      !(defined(CONFIG_HAVE_wlutime32) && !defined(CONFIG_HAVE__wlutime32)))
 /* Alias the variants without an underscore to the ones with.
- * Because this also requires using `__utimbuf32', we have to
+ * Because this also requires using `__utimbuf32`, we have to
  * do all of these at once. */
 #undef utimbuf32
 #define utimbuf32 __utimbuf32
@@ -11563,7 +11563,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
      !(defined(CONFIG_HAVE_wutime64) && !defined(CONFIG_HAVE__wutime64)) && \
      !(defined(CONFIG_HAVE_wlutime64) && !defined(CONFIG_HAVE__wlutime64)))
 /* Alias the variants without an underscore to the ones with.
- * Because this also requires using `__utimbuf64', we have to
+ * Because this also requires using `__utimbuf64`, we have to
  * do all of these at once. */
 #undef utimbuf64
 #define utimbuf64 __utimbuf64
@@ -12360,7 +12360,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #endif /* !CONFIG_HAVE_strend */
 
 
-/* Configure O_* flags for `open()' */
+/* Configure O_* flags for `open()` */
 
 /* Set optional flags to no-ops */
 #ifndef CONFIG_HAVE_O_BINARY
@@ -13113,7 +13113,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-/* MSVC is actually lying about the behavior of its `chmod()' function!
+/* MSVC is actually lying about the behavior of its `chmod()` function!
  * It doesn't dereference symbolic links, so it's actually lchmod()! */
 #ifdef CONFIG_HAVE_chmod
 #undef CONFIG_HAVE_chmod
@@ -13136,7 +13136,7 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define _wlchmod(path, mode) _wchmod(path, mode)
 #endif /* CONFIG_HAVE__wchmod */
 
-/* Same deal with `utime()' as with `chmod()' -- it's actually `lutime()' */
+/* Same deal with `utime()` as with `chmod()` -- it's actually `lutime()` */
 #ifdef CONFIG_HAVE_utime
 #undef CONFIG_HAVE_utime
 #define CONFIG_HAVE_lutime
@@ -13946,7 +13946,7 @@ DECL_END
 			c1 = *lhs++;                                           \
 			if (!rhs_len--) {                                      \
 				/* Once  RHS  reaches  the end  of  the string,    \
-				 * compare the last character of LHS with `NUL' */ \
+				 * compare the last character of LHS with `NUL` */ \
 				return (Tr)((Tu)c1 - '\0');                        \
 			}                                                      \
 			c2 = *rhs++;                                           \
@@ -13966,7 +13966,7 @@ DECL_END
 			c1 = *lhs++;                                           \
 			if (!rhs_len--) {                                      \
 				/* Once  RHS  reaches  the end  of  the string,    \
-				 * compare the last character of LHS with `NUL' */ \
+				 * compare the last character of LHS with `NUL` */ \
 				return (Tr)((Tu)c1 - '\0');                        \
 			}                                                      \
 			c2 = *rhs++;                                           \
@@ -15078,7 +15078,7 @@ DECL_END
 #define bcmpw(s1, s2, num_words) bcmp(s1, s2, (num_words) << 1)
 #endif /* !CONFIG_HAVE_bcmpw */
 
-/* NOTE: `memsetp' is enabled on a per-file basis by writing:
+/* NOTE: `memsetp` is enabled on a per-file basis by writing:
  * >> #ifndef CONFIG_HAVE_memsetp
  * >> #define memsetp(dst, pointer, num_pointers) \
  * >> 	Dee_libc_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
@@ -15150,7 +15150,7 @@ DECL_END
 
 
 /* memp* functions --> same as their mem* equivalents, but
- * return pointer to `dst + num_*' (iow: end of written area) */
+ * return pointer to `dst + num_*` (iow: end of written area) */
 #ifndef CONFIG_HAVE_mempcpy
 #define CONFIG_HAVE_mempcpy
 #define mempcpy(dst, src, num_bytes) \

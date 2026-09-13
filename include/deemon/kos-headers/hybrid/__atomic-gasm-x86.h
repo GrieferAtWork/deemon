@@ -25,7 +25,7 @@
 #include "typecore.h"
 
 #ifndef __GUARD_HYBRID___ATOMIC_H
-#error "Never include this file directly. - Always include `<hybrid/__atomic.h>' instead"
+#error "Never include this file directly. - Always include `<hybrid/__atomic.h>` instead"
 #endif /* !__GUARD_HYBRID___ATOMIC_H */
 
 #ifndef __COMPILER_HAVE_GCC_ASM
@@ -161,7 +161,7 @@ function defineX86AtomicMacros(N: int) {
 	'                     : "=m" (*(ptr))\n'
 	'                     : "r" (val)\n'
 	'                     : "memory");\n'
-	'__COMPILER_WRITE_BARRIER()');
+	'__COMPILER_WRITE_BARRIER()`);
 
 	// xch
 	defineX86AsmT(N, "__UINT{N}_TYPE__", "__hybrid_atomic_xch{N}", [

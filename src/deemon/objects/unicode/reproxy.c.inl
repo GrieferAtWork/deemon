@@ -51,8 +51,8 @@
 #include <stdint.h> /* uintptr_t */
 
 
-/* Proxy sequence objects for `string.refindall',
- * `string.relocateall' and `string.resplit' */
+/* Proxy sequence objects for `string.refindall`,
+ * `string.relocateall` and `string.resplit` */
 
 DECL_BEGIN
 
@@ -61,8 +61,8 @@ DECL_BEGIN
 STATIC_ASSERT_MSG(_Dee_RE_COMPILE_MASK <= 0xf,
                   "Keep this low, since no valid pointer must overlap with this range");
 
-/* Return the `struct DeeRegexCode *' of `self'
- * @return: * :   The regex code of `self'
+/* Return the `struct DeeRegexCode *` of `self`
+ * @return: * :   The regex code of `self`
  * @return: NULL: An error was thrown */
 #define DeeRegexBaseExec_GetCode(self) \
 	(likely((uintptr_t)(self)->rx_code > _Dee_RE_COMPILE_MASK) ? (self)->rx_code : _DeeRegexBaseExec_LoadCode(self))
@@ -157,7 +157,7 @@ DeeRegexBaseExec_Serialize(struct DeeRegexBaseExec *__restrict self,
 	}
 	out = DeeSerial_Addr2Mem(writer, addr, struct DeeRegexBaseExec);
 	/* Set "rx_code" to the flags that were used to compile it.
-	 * After deserialization, this will be detected by `DeeRegexBaseExec_GetCode()',
+	 * After deserialization, this will be detected by `DeeRegexBaseExec_GetCode()`,
 	 * which will then re-compile the regex, meaning it doesn't need to be serialized
 	 * as well! */
 	out->rx_code     = (struct DeeRegexCode const *)(uintptr_t)compile_flags;

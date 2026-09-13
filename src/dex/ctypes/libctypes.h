@@ -153,7 +153,7 @@ INTDEF void ctypes_kos_guard(void);
 #endif /* TRY && EXCEPT */
 
 #else /* ... */
-/* TODO: handle #PF (PAGEFAULT) interrupts within `expr'
+/* TODO: handle #PF (PAGEFAULT) interrupts within `expr`
  * Do this by defining a handler for SIGSEGV, as well as
  * a (thread-local) jmp_buf to do SJLJ exceptions. */
 #endif /* !... */
@@ -454,8 +454,8 @@ typedef int ctypes_cc_t;
 #endif /* CONFIG_NO_CFUNCTION */
 
 /* Convert a calling convention to/from its name.
- * @return: CC_INVALID: The given `name' was not recognized.
- * @return: NULL:       The given `cc' was not recognized. */
+ * @return: CC_INVALID: The given `name` was not recognized.
+ * @return: NULL:       The given `cc` was not recognized. */
 INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_lookup(char const *__restrict name);
 INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_trylookup(char const *__restrict name);
 INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
@@ -564,13 +564,13 @@ struct ctype_operators {
 	(DCALL *co_compare)(CType *tp_self, void const *lhs, DeeObject *rhs);
 
 	/* Math operators. */
-	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed.
-	 * @return: Dee_INT_UNSIGNED: The value stored in `*result' is unsigned.
+	/* @return: Dee_INT_SIGNED:   The value stored in `*result` is signed.
+	 * @return: Dee_INT_UNSIGNED: The value stored in `*result` is unsigned.
 	 * @return: Dee_INT_ERROR:    An error occurred. */
 	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_int32)(CType *tp_self, void const *self, int32_t *result);
 	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_int64)(CType *tp_self, void const *self, int64_t *result);
 	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_double)(CType *tp_self, void const *self, double *result);
-	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_int)(CType *tp_self, void const *self); /* Cast to `int' */
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_int)(CType *tp_self, void const *self); /* Cast to `int` */
 	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_inv)(CType *tp_self, void const *self);
 	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_pos)(CType *tp_self, void const *self);
 	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_neg)(CType *tp_self, void const *self);
@@ -664,7 +664,7 @@ struct ctype_array_types {
 	size_t                   sa_size; /* Amount of cached array types. */
 	Dee_hash_t               sa_mask; /* Allocated map mask. */
 	struct carray_type_list *sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
-	                                   * As hash for indexing this map, use `at_count'. */
+	                                   * As hash for indexing this map, use `at_count`. */
 };
 #define CTYPE_ARRAY_TYPES_INIT { 0, 0, NULL }
 
@@ -674,7 +674,7 @@ struct ctype_function_types {
 	size_t                      sf_size; /* Amount of cached function types. */
 	Dee_hash_t                  sf_mask; /* Allocated map mask. */
 	struct cfunction_type_list *sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
-	                                      * As hash for indexing this map, use `cft_hash'. */
+	                                      * As hash for indexing this map, use `cft_hash`. */
 };
 #define CTYPE_FUNCTION_TYPES_INIT { 0, 0, NULL }
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -767,25 +767,25 @@ INTDEF CType AbstractCObject_Type; /* == Type.__base__(ctypes.int) */
 #define Object_AsCType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CType, ct_base)
 #define Object_IsCType(self) DeeType_Extends(Dee_TYPE(self), &CType_Type)
 
-/* Return the structured type equivalent of `self', or
- * re-return `self' if it already is a structured type.
- * The following types found in the builtin `deemon' module are mapped:
- *   - `none from deemon'       --> `void from ctypes'
- *   - `type(none from deemon)' --> `void from ctypes'
- *   - `bool from deemon'       --> `bool from ctypes'
- *   - `int from deemon'        --> `int from ctypes'
- *   - `float from deemon'      --> `double from ctypes'
- * If `self' is not one of these mappings and also not
+/* Return the structured type equivalent of `self`, or
+ * re-return `self` if it already is a structured type.
+ * The following types found in the builtin `deemon` module are mapped:
+ *   - `none from deemon`       --> `void from ctypes`
+ *   - `type(none from deemon)` --> `void from ctypes`
+ *   - `bool from deemon`       --> `bool from ctypes`
+ *   - `int from deemon`        --> `int from ctypes`
+ *   - `float from deemon`      --> `double from ctypes`
+ * If `self` is not one of these mappings and also not
  * a c-type, a TypeError is thrown and NULL is returned.
  * WARNING: This function does not return a reference! */
 INTDEF WUNUSED NONNULL((1)) CType *DCALL CType_Of(DeeObject *__restrict self);
 
-/* Same as `DeeSType_Get()', but also able to handle the
+/* Same as `DeeSType_Get()`, but also able to handle the
  * case where "self" is an *instance*, rather a some type. */
 INTDEF WUNUSED NONNULL((1)) CType *DCALL CType_TypeOf(DeeObject *__restrict self);
 
 /* Print the C-representation of "self" for the purposes of a variable "varname"
- * Note that "varname" may be `NULL' or an empty string, in which case the type
+ * Note that "varname" may be `NULL` or an empty string, in which case the type
  * is printed anonymously. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 CType_PrintCRepr(CType *__restrict self, Dee_formatprinter_t printer, void *arg, char const *varname);
@@ -795,7 +795,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 CType_PrintDRepr(CType *__restrict self, Dee_formatprinter_t printer, void *arg);
 
 #ifndef CONFIG_NO_CFUNCTION
-/* Lazily allocated + return the FFI type descriptor of `self' */
+/* Lazily allocated + return the FFI type descriptor of `self` */
 INTDEF WUNUSED NONNULL((1)) ffi_type *DCALL
 CType_GetFFIType(CType *__restrict self);
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -841,7 +841,7 @@ struct carray_type_object {
 #define CArrayType_Stride(self)              (self)->cat_stride
 #define CArrayType_SizeofPointedToType(self) (self)->cat_stride
 
-/* Construct a new array-type `item_type[item_count]' */
+/* Construct a new array-type `item_type[item_count]` */
 INTDEF WUNUSED NONNULL((1)) DREF CArrayType *DCALL
 CArrayType_Of(CType *__restrict item_type, size_t item_count);
 
@@ -872,11 +872,11 @@ struct carray_object {
 #define CArray_ItemAddr(self, i) ((self)->ca_data + ((i) * CArrayType_Stride(Dee_TYPE(self))))
 #define CArray_Items(self)       (self)->ca_data
 
-/* Return a pointer to the `index' element (no bounds checking done) */
+/* Return a pointer to the `index` element (no bounds checking done) */
 INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CArray_PlusOffset(CArray *__restrict self, ptrdiff_t index);
 
-/* Return an LValue to the `index' element (no bounds checking done) */
+/* Return an LValue to the `index` element (no bounds checking done) */
 INTDEF WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CArray_GetItem(CArray *__restrict self, ptrdiff_t index);
 
@@ -895,7 +895,7 @@ struct Dee_string_object;
 struct cstruct_field {
 	DREF struct Dee_string_object *csf_name;   /* [0..1] The name of this field (NULL is used as sentinel; empty string for anonymous fields) */
 	Dee_hash_t                     csf_hash;   /* [valid_if(csf_name)][const][== DeeString_Hash(csf_name)] */
-	ptrdiff_t                      csf_offset; /* [valid_if(csf_name)] Offset of the field (from `CStruct_Data()') */
+	ptrdiff_t                      csf_offset; /* [valid_if(csf_name)] Offset of the field (from `CStruct_Data()`) */
 	struct cstruct_field          *csf_next;   /* [0..1] Next field for the purposes of anonymous initialization and field ordering */
 	DREF CLValueType              *csf_lvtype; /* [1..1][valid_if(csf_name)] l-value variant of this field's type. */
 };
@@ -935,18 +935,18 @@ struct cstruct_type_object {
 	 *
 	 * NOTES:
 	 * - When processing unnamed arguments in "co_initwith", those arguments are
-	 *   used to initialize struct members enumerated via `cst_first->[...]->csf_next'
+	 *   used to initialize struct members enumerated via `cst_first->[...]->csf_next`
 	 * - The same method is used to implement the object-printing functions
 	 */
 	CType                                         cst_base;  /* The underlying C-type object. */
-	struct cstruct_field                         *cst_first; /* [0..1][const] First field in `cst_fvec' */
+	struct cstruct_field                         *cst_first; /* [0..1][const] First field in `cst_fvec` */
 	Dee_hash_t                                    cst_fmsk;  /* [const] Field-vector mask. */
-	size_t                                        cst_size;  /* [const][<= (cst_fmsk+1)] # of elements in `cst_fvec' */
-	COMPILER_FLEXIBLE_ARRAY(struct cstruct_field, cst_fvec); /* [1..cst_size][const] Hash-vector of field names, followed by `cst_size - (cst_fmsk + 1)' anonymous fields (which use "Dee_EmptyString" as name) */
+	size_t                                        cst_size;  /* [const][<= (cst_fmsk+1)] # of elements in `cst_fvec` */
+	COMPILER_FLEXIBLE_ARRAY(struct cstruct_field, cst_fvec); /* [1..cst_size][const] Hash-vector of field names, followed by `cst_size - (cst_fmsk + 1)` anonymous fields (which use "Dee_EmptyString" as name) */
 };
 
 #define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((CStructType *)(self))->cst_fmsk)
-#define STRUCT_TYPE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define STRUCT_TYPE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define STRUCT_TYPE_HASHIT(self, i)     (((CStructType *)(self))->cst_fvec + ((i) & ((CStructType *)(self))->cst_fmsk))
 
 /* Query properties of a given Struct-Type */
@@ -969,9 +969,9 @@ err_no_such_struct_field(CStructType *__restrict type,
                          size_t field_name_length);
 
 
-/* Construct a new struct-type from `initializer', which
- * should be `{((string, CType) | CStructType)...}'
- * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+/* Construct a new struct-type from `initializer`, which
+ * should be `{((string, CType) | CStructType)...}`
+ * @param: flags: Set of `CSTRUCTTYPE_F_*` */
 INTDEF WUNUSED NONNULL((1)) DREF CStructType *DCALL
 CStructType_Of(DeeObject *__restrict initializer,
                unsigned int flags, size_t min_alignment);
@@ -979,9 +979,9 @@ CStructType_Of(DeeObject *__restrict initializer,
 #define CSTRUCTTYPE_F_PACKED  0x0001 /* Create a packed structure. */
 #define CSTRUCTTYPE_F_UNION   0x0002 /* Create a union. */
 
-/* Construct a new struct-type from `initializer', which
- * should be `{((int, string, CType) | (int, CStructType))...}'
- * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+/* Construct a new struct-type from `initializer`, which
+ * should be `{((int, string, CType) | (int, CStructType))...}`
+ * @param: flags: Set of `CSTRUCTTYPE_F_*` */
 INTDEF WUNUSED NONNULL((1)) DREF CStructType *DCALL
 CStructType_OfExtended(DeeObject *__restrict initializer, size_t min_alignment);
 
@@ -989,10 +989,10 @@ CStructType_OfExtended(DeeObject *__restrict initializer, size_t min_alignment);
 INTDEF DeeTypeObject CStructType_Type;   /* == type(ctypes.struct { .x = ctypes.int }) */
 INTDEF struct empty_cstruct_type_object {
 	CType                 cst_base;    /* The underlying C-type object. */
-	struct cstruct_field *cst_first;   /* [0..1][const] First field in `cst_fvec' */
+	struct cstruct_field *cst_first;   /* [0..1][const] First field in `cst_fvec` */
 	Dee_hash_t            cst_fmsk;    /* [const] Field-vector mask. */
-	size_t                cst_size;    /* [const][<= (cst_fmsk+1)] # of elements in `cst_fvec' */
-	struct cstruct_field  cst_fvec[1]; /* [1..cst_size][const] Hash-vector of field names, followed by `cst_size - (cst_fmsk + 1)' anonymous fields (which use "Dee_EmptyString" as name) */
+	size_t                cst_size;    /* [const][<= (cst_fmsk+1)] # of elements in `cst_fvec` */
+	struct cstruct_field  cst_fvec[1]; /* [1..cst_size][const] Hash-vector of field names, followed by `cst_size - (cst_fmsk + 1)` anonymous fields (which use "Dee_EmptyString" as name) */
 } AbstractCStruct_Type; /* == Type.__base__(ctypes.struct { .x = ctypes.int }) */
 
 
@@ -1055,7 +1055,7 @@ struct cfunction_type_object {
 	DREF DeeObject           *(DCALL *cft_call)(CFunctionType *__restrict tp_self, Dee_funptr_t self, size_t argc, DeeObject *const *argv);
 	DREF CType                       *cft_return;          /* [1..1][const] The function's return type. */
 	LIST_ENTRY(cfunction_type_object) cft_chain;           /* [lock(cft_return->st_cachelock)] Hash-map entry of this c-function. */
-	Dee_hash_t                        cft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	Dee_hash_t                        cft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction` */
 	size_t                            cft_argc;            /* [const] Amount of function argument types. */
 	ctypes_cc_t                       cft_cc;              /* [const] The calling convention used by this function. */
 	ffi_type                         *cft_ffi_return_type; /* [1..1] Raw return type. */
@@ -1095,7 +1095,7 @@ INTDEF struct empty_cfunction_type_object {
 	DREF DeeObject           *(DCALL *cft_call)(CFunctionType *__restrict tp_self, Dee_funptr_t self, size_t argc, DeeObject *const *argv);
 	DREF CType                       *cft_return;          /* [1..1][const] The function's return type. */
 	LIST_ENTRY(cfunction_type_object) cft_chain;           /* [lock(cft_return->st_cachelock)] Hash-map entry of this c-function. */
-	Dee_hash_t                        cft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	Dee_hash_t                        cft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction` */
 	size_t                            cft_argc;            /* [const] Amount of function argument types. */
 	ctypes_cc_t                       cft_cc;              /* [const] The calling convention used by this function. */
 	ffi_type                         *cft_ffi_return_type; /* [1..1] Raw return type. */
@@ -1129,7 +1129,7 @@ struct cfunction_object {
 		Dee_funptr_t cff_func; /* [1..1][const] Function pointer (the prototype of this matches "CFunctionType") */
 		void        *cff_vptr; /* [1..1][const] Used internally */
 	} cf_func;
-	DREF DeeObject  *cf_cb;    /* [1..1][const] Object that gets invoked by `cff_func' */
+	DREF DeeObject  *cf_cb;    /* [1..1][const] Object that gets invoked by `cff_func` */
 	ffi_closure     *cf_write; /* [1..1][owned] The writable callback function pointer. */
 #ifndef CONFIG_HAVE_CTYPES_FUNCTION_CLOSURES_REUSE_CFI
 	ffi_cif          cf_cif;   /* cif object to call the function. */
@@ -1228,17 +1228,17 @@ INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_For(CType *__restrict 
 #define CPointer_NewChar(pointer_value) CPointer_For(&CChar_Type, pointer_value)
 #endif /* !CTYPES_DEFINE_STATIC_POINTER_TYPES */
 
-/* Return a new pointer offset by `index' */
+/* Return a new pointer offset by `index` */
 INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL
 CPointer_PlusOffset(CPointer *__restrict self, ptrdiff_t index);
 
-/* Return an L-Value after `index' as an offset to "self"  */
+/* Return an L-Value after `index` as an offset to "self"  */
 INTDEF WUNUSED NONNULL((1)) DREF CLValue *DCALL
 CPointer_GetItem(CPointer *__restrict self, ptrdiff_t index);
 
 
-/* Interpret `self' as a pointer and store the result in `*result'
- * @return:  0: Successfully converted `self' to a pointer.
+/* Interpret `self` as a pointer and store the result in `*result`
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPointer(DeeObject *self, CType *pointer_base,
@@ -1247,26 +1247,26 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPPointer(DeeObject *self, CType *pointer_base_base,
                      void ***__restrict p_result);
 
-/* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
+/* Same as `DeeObject_AsPointer()`, but only ~try~ to interpret it.
  * @return:  1: The conversion failed.
- * @return:  0: Successfully converted `self' to a pointer.
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsPointer(DeeObject *self, CType *pointer_base,
                        union pointer *__restrict result);
 
-/* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
- * pointer-base type. For use with type-generic functions (such as the `atomic_*' api)
+/* Similar to `DeeObject_TryAsPointer()`, but fills in `*p_pointer_base` with the
+ * pointer-base type. For use with type-generic functions (such as the `atomic_*` api)
  * @return:  1: The conversion failed.
- * @return:  0: Successfully converted `self' to a pointer.
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsGenericPointer(DeeObject *self,
                               CType **__restrict p_pointer_base,
                               union pointer *__restrict result);
 
-/* S.a. `DeeObject_TryAsGenericPointer()'
- * @return:  0: Successfully converted `self' to a pointer.
+/* S.a. `DeeObject_TryAsGenericPointer()`
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsGenericPointer(DeeObject *self,
@@ -1666,7 +1666,7 @@ INTDEF WUNUSED DREF CObject *DCALL CULLong_New(CTYPES_ullong val);
 #if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&     \
      (CTYPES_sizeof_long == CTYPES_sizeof_int && \
       CTYPES_alignof_long == CTYPES_alignof_int))
-/* Make `long' its own distinct type. */
+/* Make `long` its own distinct type. */
 #define CONFIG_LONG_NEEDS_OWN_TYPE
 #undef CLong_Type
 #undef CULong_Type
@@ -1710,10 +1710,10 @@ INTDEF WUNUSED DREF CObject *DCALL CULong_New(CTYPES_ulong val);
  * >> operator enumattr();
  * >>
  * >> @@Returns the image load address.
- * >> @@NOTE: Only accessible via the class: `shlib.base(my_shlib)'
+ * >> @@NOTE: Only accessible via the class: `shlib.base(my_shlib)`
  * >> function base(): void.ptr;
  *
- * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
+ * NOTE: This type is not derived from `deemon.Sequence`, but simply `deemon.Object`
  */
 INTDEF DeeTypeObject ShLib_Type;
 

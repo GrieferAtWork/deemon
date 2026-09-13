@@ -276,7 +276,7 @@ again:
  * >> local x: int from deemon | string from deemon = 42;
  *             ^                                    ^
  * @return: 0 : Success
- * @return: -1: Compiler error (only thrown when `throw_errors != false') */
+ * @return: -1: Compiler error (only thrown when `throw_errors != false`) */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipTypeAnnotation(JITLexer *__restrict self, bool throw_errors) {
 	int result;

@@ -1012,7 +1012,7 @@ continue_at_iter:
 			if (!tp_iter)
 				break;
 
-			/* Also set `tp_self', so we don't corrupt the cache by
+			/* Also set `tp_self`, so we don't corrupt the cache by
 			 * potentially failing to cache attributes that should
 			 * have been visible. */
 			tp_self = tp_iter;
@@ -1339,7 +1339,7 @@ do_tp_iter_attr:
 #ifdef LOCAL_HAS_len
 				attr_ob = DeeString_NewSizedWithHash(attr, attrlen, hash);
 #else /* LOCAL_HAS_len */
-				/* Don't use `DeeString_NewAutoWithHash()' here:
+				/* Don't use `DeeString_NewAutoWithHash()` here:
 				 * """ [...] only use this function with statically allocated strings [...] """ */
 				attr_ob = DeeString_NewWithHash(attr, hash);
 #endif /* !LOCAL_HAS_len */

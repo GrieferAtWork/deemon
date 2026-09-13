@@ -95,8 +95,8 @@ struct chunkleak {
 	                      * metadata. */
 };
 
-/* Heap-allocated structure that is pointed-to by `struct Dee_slab_page::sp_meta::spm_leak'
- * When `spm_leak == NULL || Dee_slab_page_iscustom()', no leak debug info is attached to
+/* Heap-allocated structure that is pointed-to by `struct Dee_slab_page::sp_meta::spm_leak`
+ * When `spm_leak == NULL || Dee_slab_page_iscustom()`, no leak debug info is attached to
  * the slab page. */
 struct pageleaks {
 	/* XXX: "pl_chnksiz" and "pl_chnkcnt" are only used by assertions -- maybe get rid of them? */
@@ -139,20 +139,20 @@ INTDEF void DCALL Dee_slab_leaks_release(void);
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
-/* Callback prototype for `Dee_slab_leaks_foreach_page()' */
+/* Callback prototype for `Dee_slab_leaks_foreach_page()` */
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t
 (DCALL *Dee_slab_leaks_page_cb_t)(void *arg, struct Dee_slab_page *page,
                                   struct pagespecs const *specs);
 
 /* Enumerate all slab pages containing at least 1 allocated chunk.
  * Before calling this function, the caller must acquire locks by
- * use of `Dee_slab_leaks_tryacquire()'
- * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb' */
+ * use of `Dee_slab_leaks_tryacquire()`
+ * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb` */
 INTDEF NONNULL((1)) Dee_ssize_t DCALL
 Dee_slab_leaks_foreach_page(Dee_slab_leaks_page_cb_t cb, void *arg);
 #define HAVE_Dee_slab_leaks_foreach_page
 
-/* Called by `DeeHeap_CheckMemory()' */
+/* Called by `DeeHeap_CheckMemory()` */
 #define HAVE_DeeSlab_CheckMemory
 INTDEF void DCALL DeeSlab_CheckMemory(void);
 #endif /* !NDEBUG */

@@ -1455,9 +1455,9 @@ copy_from_cvalue:
 			status = DeeObject_ForeachPair(value, &struct_initfrommap_cb, &data);
 		} else {
 			/* HINT: This initializer here also handles "DeeNone_Check(value)":
-			 *  - `MyStruct(none)' should return a 0-initialize struct.
+			 *  - `MyStruct(none)` should return a 0-initialize struct.
 			 *  - The 0-initialization already happened above
-			 *  - And `DeeObject_Foreach(Dee_None)' is a no-op in that it doesn't
+			 *  - And `DeeObject_Foreach(Dee_None)` is a no-op in that it doesn't
 			 *    enumerate anything, meaning no extra initialization will happen */
 			struct struct_initfromseq_data data;
 			data.sifsd_tp_self = tp_self;
@@ -1677,9 +1677,9 @@ copy_from_cvalue:
 			status = DeeObject_ForeachPair(value, &struct_assignmap_cb, &data);
 		} else {
 			/* HINT: This initializer here also handles "DeeNone_Check(value)":
-			 *  - `MyStruct(none)' should return a 0-initialize struct.
+			 *  - `MyStruct(none)` should return a 0-initialize struct.
 			 *  - The 0-initialization already happened above
-			 *  - And `DeeObject_Foreach(Dee_None)' is a no-op in that it doesn't
+			 *  - And `DeeObject_Foreach(Dee_None)` is a no-op in that it doesn't
 			 *    enumerate anything, meaning no extra initialization will happen */
 			struct struct_initfromseq_data data;
 			data.sifsd_tp_self = tp_self;

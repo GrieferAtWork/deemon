@@ -192,8 +192,8 @@ __pragma_GCC_diagnostic_ignored(Wunused_variable)
 SQLITE_API const char sqlite3_version[] = SQLITE_VERSION;
 
 
-/* Custom function: like `sqlite3_bind_parameter_index', but "zName"
- * doesn't have to include the leading `:', `$' or `@'. */
+/* Custom function: like `sqlite3_bind_parameter_index`, but "zName"
+ * doesn't have to include the leading `:`, `$` or `@`. */
 SQLITE_API int sqlite3_bind_parameter_index__without_prefix(sqlite3_stmt *pStmt, char const *zName) {
 	VList *pIn = ((Vdbe*)pStmt)->pVList;
 	int i, mx;

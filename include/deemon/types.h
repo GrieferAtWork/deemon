@@ -55,7 +55,7 @@ struct Dee_type_object;
 
 typedef struct Dee_object /*     */ DeeObject;     /* Common base for all deemon objects */
 typedef struct Dee_type_object /**/ DeeTypeObject; /* Common base for all deemon type objects */
-typedef __SSIZE_TYPE__ /*        */ Dee_ssize_t;   /* Signed size type (s.a. `size_t') */
+typedef __SSIZE_TYPE__ /*        */ Dee_ssize_t;   /* Signed size type (s.a. `size_t`) */
 typedef __ULONG64_TYPE__ /*      */ Dee_pos_t;     /* File position */
 typedef __LONG64_TYPE__ /*       */ Dee_off_t;     /* Delta between 2 file positions */
 typedef __UINTPTR_TYPE__ /*      */ Dee_refcnt_t;  /* Object reference count type */
@@ -112,10 +112,10 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
 
 
 /* Iterator/tristate pointer helpers. */
-#define Dee_ITER_ISOK(x) (((uintptr_t)(x) - 1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE' */
+#define Dee_ITER_ISOK(x) (((uintptr_t)(x) - 1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE` */
 #define Dee_ITER_DONE    ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
 #ifdef DEE_SOURCE
-#define ITER_ISOK Dee_ITER_ISOK /* `x != NULL && x != ITER_DONE' */
+#define ITER_ISOK Dee_ITER_ISOK /* `x != NULL && x != ITER_DONE` */
 #define ITER_DONE Dee_ITER_DONE /* Returned when the iterator has been exhausted. */
 #endif /* DEE_SOURCE */
 
@@ -143,7 +143,7 @@ struct Dee_reftracker;
 
 #define Dee_OBJECT_HEAD_EX(Ttype)                                                                     \
 	Dee_refcnt_t          ob_refcnt; /* Reference count */                                            \
-	/*maybe:DREF*/ Ttype *ob_type;   /* [1..1][const] Only reference iff type has `TP_FHEAP' flag. */ \
+	/*maybe:DREF*/ Ttype *ob_type;   /* [1..1][const] Only reference iff type has `TP_FHEAP` flag. */ \
 	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD \
 	Dee_OBJECT_HEAD_EX(DeeTypeObject)
@@ -157,12 +157,12 @@ struct Dee_reftracker;
 
 struct Dee_object {
 	Dee_refcnt_t                                    ob_refcnt; /* [lock(ATOMIC)] Object reference counter */
-	/*maybe:DREF*/ DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type;Only reference iff type has `TP_FHEAP' flag. */
+	/*maybe:DREF*/ DeeTypeObject *Dee_ob_type_const ob_type;   /* [1..1][const] Object type;Only reference iff type has `TP_FHEAP` flag. */
 	_Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
 };
 
 
-/* IDE hint for macros that require arguments types to implement `OBJECT_HEAD' */
+/* IDE hint for macros that require arguments types to implement `OBJECT_HEAD` */
 #ifdef __INTELLISENSE__
 #ifdef __cplusplus
 extern "C++" {namespace __intern {
@@ -223,22 +223,22 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 #define DeeObject_InstanceOfExact(self, object_type) (Dee_TYPE(self) == (object_type))
 
 
-/* Return true if `test_type' is equal to, or extends `extended_type'
- * NOTE: When `extended_type' is not a type, this function simply returns `false'
+/* Return true if `test_type` is equal to, or extends `extended_type`
+ * NOTE: When `extended_type` is not a type, this function simply returns `false`
  * >> return test_type.extends(extended_type);
  *
- * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not inherit from `extended_type', or `extended_type' isn't a type
- * @return: 1 : "test_type" does inherit from `extended_type' */
+ * HINT: Always returns either `0` or `1`!
+ * @return: 0 : "test_type" does not inherit from `extended_type`, or `extended_type` isn't a type
+ * @return: 1 : "test_type" does inherit from `extended_type` */
 DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Extends(DeeTypeObject const *test_type,
                 DeeTypeObject const *extended_type);
 
-/* Same as `DeeType_Extends()', but also check `tp_mro' for matches.
- * This function should be used when `implemented_type' is an abstract type.
+/* Same as `DeeType_Extends()`, but also check `tp_mro` for matches.
+ * This function should be used when `implemented_type` is an abstract type.
  * >> return test_type.implements(implemented_type);
  *
- * HINT: Always returns either `0' or `1'!
+ * HINT: Always returns either `0` or `1`!
  * @return: 0 : "test_type" does not implement "implemented_type"
  * @return: 1 : "test_type" does implement "implemented_type" */
 DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL

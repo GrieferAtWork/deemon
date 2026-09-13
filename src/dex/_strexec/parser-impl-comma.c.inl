@@ -281,14 +281,14 @@ err_var_symbol:
 	} else {
 		if (mode & JIT_AST_COMMA_ALLOWKWDLIST) {
 			if (self->jl_tok == JIT_KEYWORD) {
-				/* If the next token is a `:', then we're currently at a keyword list label,
+				/* If the next token is a `:`, then we`re currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
 				memcpy(&smlex, self, sizeof(JITSmallLexer));
 				JITLexer_Yield((JITLexer *)&smlex);
 				if (smlex.jl_tok == ':')
 					goto done_expression_nocurrent;
 			}
-			if (self->jl_tok == TOK_POW) /* foo(**bar) --> Invoke using `bar' for keyword arguments. */
+			if (self->jl_tok == TOK_POW) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
 				goto done_expression_nocurrent;
 		}
 		current = CALL_PRIMARYF(Expression, lookup_mode);
@@ -424,7 +424,7 @@ err_currrent_var_symbol:
 	}
 
 	if (self->jl_tok == TOK_DOTS) {
-		/* Expand expression (append everything from `current' to the resulting expression) */
+		/* Expand expression (append everything from `current` to the resulting expression) */
 		JITLexer_Yield(self);
 		if (p_out_mode)
 			*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
@@ -479,8 +479,8 @@ continue_at_comma:
 			goto done_expression_nocurrent;
 #else
 		if (!JITLexer_MaybeExpressionBegin(self)) {
-			/* Special case: `x = (10,)'
-			 * Same as `x = pack(10)', in that a single-element tuple is created. */
+			/* Special case: `x = (10,)`
+			 * Same as `x = pack(10)`, in that a single-element tuple is created. */
 #ifdef JIT_EVAL
 			/* Flush any remaining entries from the comma-list. */
 			ASSERT(expr_comma.ll_size != 0);
@@ -506,7 +506,7 @@ continue_at_comma:
 				if unlikely(!current)
 					goto err_nocomma;
 			}
-			/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+			/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 			 *          in an undefined state, but don't hold any real data. */
 #endif /* JIT_EVAL */
 			goto done_expression_nomerge;
@@ -559,7 +559,7 @@ err_current_lvalue:
 		 * >> a, b, c = get_value()...; // >> (((a, b, c) = get_value())...);
 		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
 		if (self->jl_tok == TOK_DOTS) {
-			/* Append the last expression (in the example above, that is `c') */
+			/* Append the last expression (in the example above, that is `c`) */
 			if (p_out_mode)
 				*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 			JITLexer_Yield(self);
@@ -584,9 +584,9 @@ err_store_source_current_lvalue:
 				Dee_Decref(current);
 			}
 
-			/* At this point, we have to unpack `store_source' into `expr_comma.ll_size'
+			/* At this point, we have to unpack `store_source` into `expr_comma.ll_size`
 			 * different objects, then proceed to assign each of those to the objects
-			 * to their respective l-values in `expr_comma' */
+			 * to their respective l-values in `expr_comma` */
 			{
 				DREF DeeObject **buf;
 				size_t i;
@@ -654,7 +654,7 @@ continue_expression_after_dots:
 			}
 #endif /* JIT_EVAL */
 		} else {
-			/* Second case: assign `store_source' to `current' after
+			/* Second case: assign `store_source` to `current` after
 			 *              flushing everything from the comma-list. */
 #ifdef JIT_EVAL
 			if (current != JIT_LVALUE) {
@@ -757,7 +757,7 @@ done_expression:
 			JITLValueList_Fini(&expr_comma);
 		}
 
-		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+		/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
 		ASSERT(!expr_batch.ol_elemv);
@@ -787,7 +787,7 @@ done_expression_nomerge:
 		if (need_semi)
 			*p_out_mode |= JIT_AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi) {
-		/* Consume a `;' token as part of the expression. */
+		/* Consume a `;` token as part of the expression. */
 		if likely(self->jl_tok == ';') {
 			JITLexer_Yield(self);
 		} else {
@@ -841,7 +841,7 @@ done_expression_nocurrent:
 			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		}
 
-		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+		/* WARNING: At this point, both `expr_batch` and `expr_comma` are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
 		ASSERT(!expr_batch.ol_elemv);

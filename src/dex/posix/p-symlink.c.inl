@@ -43,7 +43,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `symlink()' */
+/* Figure out how to implement `symlink()` */
 #undef posix_symlink_USE_nt_CreateSymbolicLinkAuto
 #undef posix_symlink_USE_wsymlink
 #undef posix_symlink_USE_symlink
@@ -62,7 +62,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fsymlinkat()' */
+/* Figure out how to implement `fsymlinkat()` */
 #undef posix_fsymlinkat_USE_wfsymlinkat
 #undef posix_fsymlinkat_USE_wsymlinkat
 #undef posix_fsymlinkat_USE_fsymlinkat
@@ -95,7 +95,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `symlinkat()' */
+/* Figure out how to implement `symlinkat()` */
 #undef posix_symlinkat_USE_posix_fsymlinkat
 #undef posix_symlinkat_USE_STUB
 #if !defined(posix_fsymlinkat_USE_STUB)
@@ -375,7 +375,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix__symlinkat_f_i
 
 
 #if defined(posix_symlink_USE_nt_CreateSymbolicLinkAuto) || defined(__DEEMON__)
-/* The `nt_CreateSymbolicLinkAuto()' impl works just as intended.
+/* The `nt_CreateSymbolicLinkAuto()` impl works just as intended.
  * However, it works a little bit *too well*:
  * >> try mkdir("out"); catch (...);
  * >> with (local fp = File.open("out/data.txt", "w"))
@@ -387,11 +387,11 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix__symlinkat_f_i
  * >> print repr fp1; // "none" (on windows) -- because '/' isn't parsed by windows in symlinks
  * >> print repr fp2;
  *
- * Solution: we define `_symlink()' as the *true* symlink function
- *           we define `symlink()' as an alias that does OS-specific fix-ups on link text
+ * Solution: we define `_symlink()` as the *true* symlink function
+ *           we define `symlink()` as an alias that does OS-specific fix-ups on link text
  *
  * Fun fact:
- * In the above example, windows itself is unable to open `out-data1.txt'.
+ * In the above example, windows itself is unable to open `out-data1.txt`.
  * However, cygwin *is* actually able to open that file (iow: cygwin's
  * path evaluation engine *does* actually accept '/' as an alias for '\'
  * in native windows symlinks)

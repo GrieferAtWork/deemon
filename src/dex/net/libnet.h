@@ -578,13 +578,13 @@ typedef union {
 #define SockAddr_NETLINK_GROUPS(ob) ((ob)->sa_nl.nl_groups)
 #endif /* AF_NETLINK */
 
-/* Wrapper around `gethostbyaddr()'
- * @param flags: Set of `SOCKADDR_STR_F*' */
+/* Wrapper around `gethostbyaddr()`
+ * @param flags: Set of `SOCKADDR_STR_F*` */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sock_gethostbyaddr(void const *__restrict data, socklen_t datalen,
                    sa_family_t family, int flags);
 
-/* @param flags: Set of `SOCKADDR_STR_F*' */
+/* @param flags: Set of `SOCKADDR_STR_F*` */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
 #define SOCKADDR_STR_FNORMAL 0x0000 /* Normal flags:?Dstring. */
@@ -593,11 +593,11 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
 #define SOCKADDR_STR_FNOPORT 0x0004 /* Don't include port numbers in address strings. */
 
 
-/* Returns the effective size of the given socket address when used with `protocol'. */
+/* Returns the effective size of the given socket address when used with `protocol`. */
 INTDEF socklen_t DCALL SockAddr_Sizeof(sa_family_t family, int protocol);
 
 /* Initialize a generic socket address from an argument vector.
- * HINT: `family' may be set to `AF_AUTO' for automatic deduction. */
+ * HINT: `family` may be set to `AF_AUTO` for automatic deduction. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 SockAddr_FromArgv(SockAddr *__restrict self,
                   int family, int protocol, int type,
@@ -620,14 +620,14 @@ sock_getprotovalue(char const *__restrict name,
                    int *__restrict p_result);
 
 /* Same as the functions above, but return an int-object for
- * `value' when the database doesn't recognize the value. */
+ * `value` when the database doesn't recognize the value. */
 INTDEF WUNUSED DREF DeeObject *DCALL sock_getafnameorid(int value);
 INTDEF WUNUSED DREF DeeObject *DCALL sock_gettypenameorid(int value);
 INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotonameorid(int value);
 
 /* Cast integer to direct numbers or search the database for strings.
  * When not found, throw an error and return -1.
- * NOTE: When `none' is passed, these functions return the following:
+ * NOTE: When `none` is passed, these functions return the following:
  *    - sock_getafof:    AF_AUTO
  *    - sock_gettypeof:  SOCK_STREAM
  *    - sock_getprotoof: 0 */
@@ -658,14 +658,14 @@ typedef struct socket_object {
 	Dee_atomic_rwlock_t s_lock;     /* Lock for this socket. */
 #endif /* !CONFIG_NO_THREADS */
 	sock_t              s_socket;   /* [lock(s_lock)] System-specific socket handle.
-	                                 * NOTE: Set to `INVALID_SOCKET' when closed. */
+	                                 * NOTE: Set to `INVALID_SOCKET` when closed. */
 	SockAddr            s_sockaddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                                 * Local socket address (family is the `af' constructor argument) */
+	                                 * Local socket address (family is the `af` constructor argument) */
 	SockAddr            s_peeraddr; /* [const(.sa.sa_family)][lock(s_lock)]
-	                                 * Local socket address (family is the `af' constructor argument) */
-	int                 s_type;     /* [const] Socket type (`type' constructor argument). */
-	int                 s_proto;    /* [const] Socket protocol (`proto' constructor argument). */
-	uint16_t            s_state;    /* [lock(s_lock) + ATOMIC] Socket state (Set of `SOCKET_F*') */
+	                                 * Local socket address (family is the `af` constructor argument) */
+	int                 s_type;     /* [const] Socket type (`type` constructor argument). */
+	int                 s_proto;    /* [const] Socket protocol (`proto` constructor argument). */
+	uint16_t            s_state;    /* [lock(s_lock) + ATOMIC] Socket state (Set of `SOCKET_F*`) */
 #define SOCKET_FNORMAL         0x0000 /* Normal flags. */
 #define SOCKET_FBINDING        0x0001 /* Socket is current being bound. */
 #define SOCKET_FBOUND          0x0002 /* Socket was bound. */
@@ -679,8 +679,8 @@ typedef struct socket_object {
 #define SOCKET_FRECVCONFOK     0x0100 /* The recv timeout has been configured appropriately. */
 #define SOCKET_FSENDCONFOK     0x0200 /* The send timeout has been configured appropriately. */
 #endif /* SOCKET_HAVE_CONFIGURE_SENDRECV */
-#define SOCKET_FHASSOCKADDR    0x1000 /* The socket's `s_sockaddr' field has been initialized. */
-#define SOCKET_FHASPEERADDR    0x2000 /* The socket's `s_peeraddr' field has been initialized. */
+#define SOCKET_FHASSOCKADDR    0x1000 /* The socket's `s_sockaddr` field has been initialized. */
+#define SOCKET_FHASPEERADDR    0x2000 /* The socket's `s_peeraddr` field has been initialized. */
 #define SOCKET_FOPENED         0x4000 /* Socket hasn't been closed (yet). */
 #define SOCKET_FSHUTTINGDOWN   0x8000 /* Socket is being shut down. */
 } DeeSocketObject;
@@ -702,7 +702,7 @@ INTDEF DeeTypeObject DeeSocket_Type;
 
 
 /* Try to retrieve the local (sock) / remote (peer) address of a given socket.
- * @param: throw_error: When true, throw an error describing the reason before returning `-1'. */
+ * @param: throw_error: When true, throw an error describing the reason before returning `-1`. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_GetSockName(DeeSocketObject *__restrict self,
                       SockAddr *__restrict result, bool throw_error);
@@ -725,17 +725,17 @@ DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
  * @return:  0: Successfully accepted a new connection.
  * @return:  1: Timed out.
  * @param: timeout_nanoseconds: The timeout (in nanoseconds).
- *                              Set to `0' for try-accept; Set to (uint64_t)-1 to never time out. */
+ *                              Set to `0` for try-accept; Set to (uint64_t)-1 to never time out. */
 INTDEF NONNULL((1, 3, 4)) int DCALL
 DeeSocket_Accept(DeeSocketObject *__restrict self,
                  uint64_t timeout_nanoseconds,
                  sock_t *__restrict sock_fd,
                  SockAddr *__restrict addr);
 
-/* Send/Receive data. `timeout_nanoseconds' behaves the same as for `DeeSocket_Accept()'.
+/* Send/Receive data. `timeout_nanoseconds` behaves the same as for `DeeSocket_Accept()`.
  * @return: * : The number of received bytes.
  * @return: -1: An error occurred.
- * @return: -2: The given `timeout_nanoseconds' has expired. */
+ * @return: -2: The given `timeout_nanoseconds` has expired. */
 INTDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
                uint64_t timeout_nanoseconds,
@@ -757,15 +757,15 @@ DeeSocket_SendTo(DeeSocketObject *__restrict self,
                  void const *__restrict buf, size_t bufsize,
                  int flags, SockAddr const *__restrict target);
 
-/* Receive data from the given source, or the bound peer (when `source' is NULL)
- * NOTE: When the given `timeout_nanoseconds' has expired, `ITER_DONE' is returned. */
+/* Receive data from the given source, or the bound peer (when `source` is NULL)
+ * NOTE: When the given `timeout_nanoseconds` has expired, `ITER_DONE` is returned. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_nanoseconds,
                    size_t max_bufsize, int flags,
                    SockAddr *source);
 
-/* Convert a given object to message flags (Set of `MSG_*') */
+/* Convert a given object to message flags (Set of `MSG_*`) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
                   int *__restrict p_result);
@@ -776,7 +776,7 @@ sock_getmsgflagsnameorid(int flags);
 
 /* Translate the given string into an options mode for shutdown.
  * Accepted values are (all case-insensitive with an
- * optional `SHUT' prefix and any number of `_' removed):
+ * optional `SHUT` prefix and any number of `_` removed):
  *   - "R":         SHUT_RD
  *   - "W":         SHUT_WR
  *   - "RW":        SHUT_RDWR
@@ -790,11 +790,11 @@ sock_getmsgflagsnameorid(int flags);
  *   - "READWRITE": SHUT_RDWR
  *   - "WRITEREAD": SHUT_RDWR
  * When the given mode is not recognized, an
- * `Error.ValueError' is thrown and -1 is returned. */
+ * `Error.ValueError` is thrown and -1 is returned. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_mode(char const *__restrict mode, int *__restrict p_result);
 
-/* Same as `get_shutdown_mode', but interpret strings
+/* Same as `get_shutdown_mode`, but interpret strings
  * and convert everything else to an integer. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict p_result);
@@ -812,7 +812,7 @@ INTDEF DeeTypeObject DeeSockAddr_Type;
 
 
 /* New error classes added by the net subsystem. */
-INTDEF DeeTypeObject DeeError_NetError; /* extends `Error.SystemError' */
+INTDEF DeeTypeObject DeeError_NetError; /* extends `Error.SystemError` */
 INTDEF DeeTypeObject     DeeError_NoSupport;
 INTDEF DeeTypeObject     DeeError_NotBound;
 INTDEF DeeTypeObject         DeeError_NotListening;
@@ -829,7 +829,7 @@ INTDEF DeeTypeObject     DeeError_AddrNotAvail;
 INTDEF DeeTypeObject     DeeError_HostNotFound; /* Host name does not exist. */
 INTDEF DeeTypeObject         DeeError_NoHostAddress; /* Host has no addresses associated with it. */
 
-/* Throws an `Error.SystemError.FSError.FileClosed' */
+/* Throws an `Error.SystemError.FSError.FileClosed` */
 INTDEF NONNULL((2)) int DCALL
 err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
 

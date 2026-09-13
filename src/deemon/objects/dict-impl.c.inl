@@ -523,7 +523,7 @@ LOCAL_dict_htab_rebuild(LOCAL_Dict *__restrict self) {
  * do so without ever releasing that lock.
  * NOTES:
  * - This function will NEVER rehash the dict or change the contents of d_htab!
- * - The caller must ensure that `LOCAL__DeeDict_CanGrowVTab(self)' is true
+ * - The caller must ensure that `LOCAL__DeeDict_CanGrowVTab(self)` is true
  * @return: true:  Success
  * @return: false: Failure */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
@@ -575,7 +575,7 @@ LOCAL_dict_trygrow_vtab(LOCAL_Dict *__restrict self) {
 	return true;
 }
 
-/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+/* Same as `dict_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!LOCAL__DeeDict_CanGrowVTab(self)"
  * Tries to make it so "d_valloc >= min_valloc"
  * @return: true:  Success: "d_valloc >= min_valloc"
@@ -656,7 +656,7 @@ LOCAL_dict_trygrow_vtab_and_htab_with(LOCAL_Dict *__restrict self,
 }
 
 
-/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+/* Same as `dict_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!LOCAL__DeeDict_CanGrowVTab(self)"
  * @return: true:  Success
  * @return: false: Failure */
@@ -916,7 +916,7 @@ err:
 /* Shrink the vtab and release a lock to "self". Must be called when:
  * - holding a write-lock
  * - LOCAL__DeeDict_CanShrinkHTab(self) is true
- * - LOCAL__DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
+ * - LOCAL__DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true`)
  * NOTE: After a call to this function, the caller must always rebuild the htab! */
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_dict_shrink_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
@@ -958,7 +958,7 @@ LOCAL_dict_shrink_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
 /* Shrink the vtab+htab. Must be called while:
  * - holding a write-lock
  * - LOCAL__DeeDict_CanShrinkVTab(self) is true
- * - LOCAL__DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
+ * - LOCAL__DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true`) */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 LOCAL_dict_shrink_vtab_and_htab(LOCAL_Dict *__restrict self, bool fully_shrink) {
 	bool must_rebuild_htab = false;
@@ -989,7 +989,7 @@ LOCAL_dict_shrink_vtab_and_htab(LOCAL_Dict *__restrict self, bool fully_shrink) 
 	}
 
 	/* Optimize the dict so we don't have to transfer deleted
-	 * items, and can shrink even more when `fully_shrink=true' */
+	 * items, and can shrink even more when `fully_shrink=true` */
 	if (LOCAL__DeeDict_CanOptimizeVTab(self)) {
 		LOCAL_dict_do_optimize_vtab_without_rebuild(self);
 		must_rebuild_htab = true;
@@ -1434,7 +1434,7 @@ err_duplicates:
 }
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
- * @param: key_values: A vector containing `num_items*LOCAL_OBJECTS_PER_ITEM' objects,
+ * @param: key_values: A vector containing `num_items*LOCAL_OBJECTS_PER_ITEM` objects,
  *                     even ones being keys and odd ones being items.
  * @param: num_items:  The number of key-value pairs passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ references to its elements! */

@@ -145,7 +145,7 @@ do_reload:
 	return true;
 err_unloaded:
 	DeeError_Throwf(&DeeError_SymbolError,
-	                "Unknown variable `%$s'",
+	                "Unknown variable `%$s`",
 	                self->js_objent.jo_namelen,
 	                self->js_objent.jo_namestr);
 	return false;
@@ -873,7 +873,7 @@ err:
 }
 
 
-/* Pack `self' and append all of the referenced objects to the given object list. */
+/* Pack `self` and append all of the referenced objects to the given object list. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_CopyObjects(JITLValueList *__restrict self,
                           struct Dee_objectlist *__restrict dst,
@@ -900,8 +900,8 @@ err:
 	return -1;
 }
 
-/* Unpack `values' and assign each of the unpacked values to
- * the proper LValue of at the same position within `self'
+/* Unpack `values` and assign each of the unpacked values to
+ * the proper LValue of at the same position within `self`
  * @return:  0: Success.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -932,7 +932,7 @@ err:
 
 
 
-/* Similar to `JITLexer_GetLValue()', but also finalize
+/* Similar to `JITLexer_GetLValue()`, but also finalize
  * the stored L-value, and set it to describe nothing.
  * NOTE: The stored L-value is _always_ reset! */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -961,8 +961,8 @@ _JITContext_PopLocals(JITContext *__restrict self) {
 
 
 /* Get a pointer to the first locals object-table for the current scope,
- * either for reading (in which case `NULL' is indicative of an empty scope),
- * or for writing (in which case `NULL' indicates an error) */
+ * either for reading (in which case `NULL` is indicative of an empty scope),
+ * or for writing (in which case `NULL` indicates an error) */
 INTERN WUNUSED NONNULL((1)) JITObjectTable *DCALL
 JITContext_GetRWLocals(JITContext *__restrict self) {
 	JITObjectTable *result;
@@ -986,8 +986,8 @@ done:
 
 
 /* Lookup a given symbol within a specific JIT context
- * @param: mode: Set of `JIT_LOOKUP_SYM_*'
- * @return: 0:  The specified symbol was found, and `result' was filled
+ * @param: mode: Set of `JIT_LOOKUP_SYM_*`
+ * @return: 0:  The specified symbol was found, and `result` was filled
  * @return: -1: An error occurred. */
 INTERN WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
 JITContext_Lookup(JITContext *__restrict self,
@@ -1169,7 +1169,7 @@ set_global:
 	goto set_object_entry;
 err_unknown_var:
 	DeeError_Throwf(&DeeError_SymbolError,
-	                "Unknown variable `%$s'",
+	                "Unknown variable `%$s`",
 	                namelen, name);
 err:
 	return -1;
@@ -1187,7 +1187,7 @@ JITContext_LookupNth(JITContext *__restrict self,
 	(void)nth;
 	/* TODO */
 	return DeeError_Throwf(&DeeError_SymbolError,
-	                       "Unknown variable `%$s'",
+	                       "Unknown variable `%$s`",
 	                       namelen, name);
 }
 
@@ -1342,7 +1342,7 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
 		                                          source_name, source_size, source_hash);
 		if unlikely(!modsym) {
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Symbol `%$s' could not be found in module `%s'",
+			                "Symbol `%$s` could not be found in module `%s`",
 			                source_size, source_name,
 			                DeeModule_GetShortName((DeeModuleObject *)source_module));
 			goto err;

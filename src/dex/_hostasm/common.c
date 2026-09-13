@@ -112,7 +112,7 @@ _memequivs_verifyrinuse_d(struct memequivs const *__restrict self) {
 #endif /* HAVE__memequivs_verifyrinuse_d */
 
 
-/* Inplace-replace `self->meqs_list' with a copy of itself. */
+/* Inplace-replace `self->meqs_list` with a copy of itself. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 _memequivs_inplace_copy(struct memequivs *__restrict self) {
 	size_t i, mask = self->meqs_mask;
@@ -182,7 +182,7 @@ memequiv_ring_contains_identical(struct memequiv const *__restrict ring,
 	return false;
 }
 
-/* Constrain equivalences in `self' by deleting all that aren't also present in `other'
+/* Constrain equivalences in `self` by deleting all that aren't also present in `other`
  * @return: true:  At least 1 equivalence had to be deleted.
  * @return: false: Everything is good! */
 INTERN NONNULL((1, 2)) bool DCALL
@@ -430,7 +430,7 @@ memequivs_undefined_hregind_for_hreg(struct memequivs *__restrict self,
 /* Remember that "to" now contains the same value as "from".
  * In the even that "to" was already part of another equivalence
  * class, it will first be removed from that class the same way
- * a call to `memequivs_undefined(self, to)' would.
+ * a call to `memequivs_undefined(self, to)` would.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -509,12 +509,12 @@ vector_is_ready:
 	ASSERTF(to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND ||
 	        to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HREG ||
 	        to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HREGIND,
-	        "This must be the case for us to directly modify `to_eq->meq_loc.ml_off'");
+	        "This must be the case for us to directly modify `to_eq->meq_loc.ml_off`");
 	to_eq->meq_loc.ml_off = memloc_getoff(to);
 	to_eq->meq_loc.ml_off -= memloc_getoff(from);
 	to_eq->meq_loc.ml_off += memloc_getoff(&from_eq->meq_loc);
 
-	/* Append `to_eq' onto the equivalence class of `from_eq' */
+	/* Append `to_eq` onto the equivalence class of `from_eq` */
 	RINGQ_INSERT_AFTER(from_eq, to_eq, meq_class);
 
 	if (to->ml_adr.ma_typ == MEMADR_TYPE_HREG) {
@@ -651,7 +651,7 @@ memequivs_undefined_allregs(struct memequivs *__restrict self) {
 	_memequivs_verifyrinuse(self);
 }
 
-/* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset' as undefined. */
+/* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset` as undefined. */
 INTERN NONNULL((1)) void DCALL
 memequivs_undefined_hstackind_after(struct memequivs *__restrict self,
                                     host_cfa_t min_cfa_offset) {
@@ -736,15 +736,15 @@ memequivs_undefined_hstackind_inrange(struct memequivs *__restrict self,
 
 
 /* Return a pointer to the equivalence location of "loc" (ignoring
- * value offsets), or `NULL' if there aren't any additional locations
+ * value offsets), or `NULL` if there aren't any additional locations
  * that are known to be equivalent to "loc".
  *
- * Equivalent locations can be enumerated via the `meq_class' ring.
+ * Equivalent locations can be enumerated via the `meq_class` ring.
  * NOTE: This function ignores the value-delta of "loc" */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) struct memequiv *DCALL
 memequivs_getclassof(struct memequivs const *__restrict self,
                      struct memadr const *__restrict loc) {
-#if 0 /* Not needed (also checked by `memadr_sameadr()') */
+#if 0 /* Not needed (also checked by `memadr_sameadr()`) */
 	if likely(MEMEQUIV_TYPE_SUPPORTED(loc->ma_typ))
 #endif
 	{
@@ -803,7 +803,7 @@ nope:
 	return false;
 }
 
-/* Ensure that `self->mo_xinfo' has been allocated, then return it.
+/* Ensure that `self->mo_xinfo` has been allocated, then return it.
  * @return: NULL: Extended object info had yet to be allocated, and allocation failed. */
 INTERN WUNUSED NONNULL((1)) struct memobj_xinfo *DCALL
 memobj_reqxinfo(struct memobj *__restrict self) {
@@ -821,7 +821,7 @@ err:
 }
 
 
-/* Construct a new `struct memobjs' with an uninitialized `mos_objv'. */
+/* Construct a new `struct memobjs` with an uninitialized `mos_objv`. */
 INTERN WUNUSED struct memobjs *DCALL
 memobjs_new(size_t objc) {
 	struct memobjs *result;
@@ -928,7 +928,7 @@ memstate_destroy(struct memstate *__restrict self) {
 	memstate_free(self);
 }
 
-/* Replace `*p_self' with a copy of itself
+/* Replace `*p_self` with a copy of itself
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -978,8 +978,8 @@ err:
 
 
 
-/* Fill in `self->hr_vtype' and `self->hr_value' based on `sym'
- * If `sym' has already been defined as absolute or pointing to
+/* Fill in `self->hr_vtype` and `self->hr_value` based on `sym`
+ * If `sym` has already been defined as absolute or pointing to
  * the start of a section, directly inline it. */
 INTERN NONNULL((1, 2)) void DCALL
 host_reloc_setsym(struct host_reloc *__restrict self,
@@ -1005,8 +1005,8 @@ host_reloc_setsym(struct host_reloc *__restrict self,
 }
 
 
-/* Calculate and return the value of `self'
- * Only returns valid values after `hs_base' have been assigned. */
+/* Calculate and return the value of `self`
+ * Only returns valid values after `hs_base` have been assigned. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 host_symbol_value(struct host_symbol const *__restrict self) {
 	ASSERTF(self->hs_type != HOST_SYMBOL_UNDEF,
@@ -1035,8 +1035,8 @@ host_symbol_value(struct host_symbol const *__restrict self) {
 	}
 }
 
-/* Calculate and return the value of `self'
- * Only returns valid values after `hs_base' have been assigned. */
+/* Calculate and return the value of `self`
+ * Only returns valid values after `hs_base` have been assigned. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 host_reloc_value(struct host_reloc const *__restrict self) {
 	switch (self->hr_vtype) {
@@ -1098,7 +1098,7 @@ host_section_getcold(struct host_section *__restrict self) {
 	return result;
 }
 
-/* Ensure that at least `num_bytes' of host text memory are available.
+/* Ensure that at least `num_bytes` of host text memory are available.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1130,7 +1130,7 @@ err:
 
 /* Allocate and return a new host relocation. The caller is responsible
  * for filling in said relocation, and the returned pointer only remains
- * valid until the next call to this function with the same `self'.
+ * valid until the next call to this function with the same `self`.
  * @return: * :   The (uninitialized) host relocation
  * @return: NULL: Error  */
 INTERN WUNUSED NONNULL((1)) struct host_reloc *DCALL
@@ -1170,7 +1170,7 @@ err:
 
 
 
-/* Lookup the jump descriptor for `deemon_from'
+/* Lookup the jump descriptor for `deemon_from`
  * @return: * :   The jump descriptor in question.
  * @return: NULL: No such jump descriptor. */
 INTERN WUNUSED NONNULL((1)) struct jump_descriptor *DCALL
@@ -1194,7 +1194,7 @@ jump_descriptors_lookup(struct jump_descriptors const *__restrict self,
 	return NULL;
 }
 
-/* Insert a new jump descriptor into `self'
+/* Insert a new jump descriptor into `self`
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1250,7 +1250,7 @@ err:
 	return -1;
 }
 
-/* Remove `descriptor' from `self' (said descriptor *must* be part of `self') */
+/* Remove `descriptor` from `self` (said descriptor *must* be part of `self`) */
 INTERN WUNUSED NONNULL((1, 2)) void DCALL
 jump_descriptors_remove(struct jump_descriptors *__restrict self,
                         struct jump_descriptor *__restrict descriptor) {
@@ -1281,7 +1281,7 @@ jump_descriptors_remove(struct jump_descriptors *__restrict self,
 
 
 
-/* Destroy the given basic block `self'. */
+/* Destroy the given basic block `self`. */
 INTERN NONNULL((1)) void DCALL
 basic_block_destroy(struct basic_block *__restrict self) {
 	size_t i;
@@ -1325,9 +1325,9 @@ jump_descriptors_find_lowest_addr(struct jump_descriptors const *__restrict self
 	return result;
 }
 
-/* Split this basic block at `addr' (which must be `> bb_deemon_start'),
- * and move all jumps from `bb_exits' into the new basic block, as needed.
- * @return: * :   A new basic block that starts at `addr'
+/* Split this basic block at `addr` (which must be `> bb_deemon_start`),
+ * and move all jumps from `bb_exits` into the new basic block, as needed.
+ * @return: * :   A new basic block that starts at `addr`
  * @return: NULL: Error */
 INTERN WUNUSED NONNULL((1)) struct basic_block *DCALL
 basic_block_splitat(struct basic_block *__restrict self,
@@ -1432,8 +1432,8 @@ inlined_references_rehash(struct inlined_references *__restrict self) {
 	return 0;
 }
 
-/* Make sure that `inherit_me' appears in `self', thus inheriting a reference to it.
- * @return: inherit_me: Success: `self' now owns the reference to `inherit_me', and you can use it lazily
+/* Make sure that `inherit_me` appears in `self`, thus inheriting a reference to it.
+ * @return: inherit_me: Success: `self` now owns the reference to `inherit_me`, and you can use it lazily
  * @return: NULL:       Error */
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 inlined_references_ref(struct inlined_references *__restrict self,
@@ -1510,7 +1510,7 @@ function_assembler_fini(struct function_assembler *__restrict self) {
 }
 
 
-/* Ensure that the basic block containing `deemon_addr' also *starts* at that address.
+/* Ensure that the basic block containing `deemon_addr` also *starts* at that address.
  * This function is used during the initial scan-pass where basic blocks are identified
  * and created.
  * @return: * :   The basic block in question.
@@ -1556,7 +1556,7 @@ function_assembler_splitblock(struct function_assembler *__restrict self,
 				if unlikely(!result)
 					goto err;
 
-				/* Insert the new block into the vector at `mid+1' */
+				/* Insert the new block into the vector at `mid+1` */
 				++mid;
 				memmoveupc(&self->fa_blockv[mid + 1],
 				           &self->fa_blockv[mid],
@@ -1575,7 +1575,7 @@ err:
 	return NULL;
 }
 
-/* Locate the basic block that contains `deemon_addr'
+/* Locate the basic block that contains `deemon_addr`
  * @return: * :   The basic block in question.
  * @return: NULL: Address is out-of-bounds. */
 INTERN WUNUSED NONNULL((1)) struct basic_block *DCALL
@@ -1608,8 +1608,8 @@ memref_constrain_flags(uint8_t a, uint8_t b) {
 }
 
 /* Lookup/allocate an exception-exit basic block that can be used to clean
- * up `state' and then return `NULL' to the caller of the generated function.
- * @return: * :   The basic block to which to jump in order to clean up `state'.
+ * up `state` and then return `NULL` to the caller of the generated function.
+ * @return: * :   The basic block to which to jump in order to clean up `state`.
  * @return: NULL: Error. */
 INTERN WUNUSED NONNULL((1, 2)) struct except_exitinfo *DCALL
 function_assembler_except_exit(struct function_assembler *__restrict self,
@@ -1688,7 +1688,7 @@ function_assembler_except_exit(struct function_assembler *__restrict self,
 		self->fa_except_exita = new_alloc;
 	}
 
-	/* Insert the new info-descriptor at the appropriate location (`lo'). */
+	/* Insert the new info-descriptor at the appropriate location (`lo`). */
 	memmoveupc(&self->fa_except_exitv[lo + 1],
 	           &self->fa_except_exitv[lo],
 	           self->fa_except_exitc - lo,

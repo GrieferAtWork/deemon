@@ -52,17 +52,17 @@ typedef struct {
 	Dee_once_t      o_once;  /* Once controller. */
 	DREF DeeObject *o_value; /* [0..1] The callback to execute, or the result of the callback.
 	                          * When NULL:
-	                          * - `o_once' hasn't run yet (or is currently running,
+	                          * - `o_once` hasn't run yet (or is currently running,
 	                          *   and no callback was set during construction).
-	                          * - `o_once' has already run, but the Once-object was GC-cleared
+	                          * - `o_once` has already run, but the Once-object was GC-cleared
 	                          * When non-NULL:
 	                          * - the callback set during construction
-	                          * - the result of the callback (if `o_once' says that the call
+	                          * - the result of the callback (if `o_once` says that the call
 	                          *   has already been made)
 	                          * Note that this field is [lock(o_inuse && ATOMIC)] when it
 	                          * represents the result of a once-callback, but [lock(o_once)]
 	                          * when the once-operation hasn't been executed, yet. */
-	Dee_DECLARE_RCU_LOCK(o_inuse); /* RCU Lock for `o_value' */
+	Dee_DECLARE_RCU_LOCK(o_inuse); /* RCU Lock for `o_value` */
 } DeeOnceObject;
 
 #define DeeOnce_LockRead(self)        DeeRCU_Lock(&(self)->o_inuse)
@@ -242,7 +242,7 @@ already_run:
 	/* Try to start the once-operation.
 	 *
 	 * NOTE: In paren, so we don't use the macro fast-pass, since
-	 *       that one just checks `Dee_once_hasrun()', which we
+	 *       that one just checks `Dee_once_hasrun()`, which we
 	 *       already do manually. */
 	status = (Dee_once_begin)(&self->o_once);
 	if unlikely(status <= 0) {
@@ -259,7 +259,7 @@ already_run:
 		result = DeeObject_CallKw(callback, argc, argv, kw);
 	} else {
 		/* No callback has been given. In this case, we must process the
-		 * caller-given arguments for 2 arguments `(callback,args)' */
+		 * caller-given arguments for 2 arguments `(callback,args)` */
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("operator()", params: "
 		DeeObject *callback:?DCallable,
 		DeeObject *args:?DTuple = Dee_EmptyTuple,
@@ -289,7 +289,7 @@ already_run:
 	/* Store the result in the once-controller. */
 	Dee_Incref(result);
 	ASSERT(self->o_value == callback);
-	self->o_value = result; /* This like causes `callback' to inherit a reference. */
+	self->o_value = result; /* This like causes `callback` to inherit a reference. */
 
 	/* Commit the once-operation (thus indicating that it has completed) */
 	Dee_once_commit(&self->o_once);

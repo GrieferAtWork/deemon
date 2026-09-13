@@ -566,7 +566,7 @@ _memval_debug_print(struct memval const *__restrict self,
 	}
 }
 
-/* Return the name of `lid' at `code_addr' in `self' */
+/* Return the name of `lid` at `code_addr` in `self` */
 PRIVATE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_LidNameAtAddr(DeeCodeObject *__restrict self,
                       uint16_t lid, Dee_code_addr_t code_addr) {
@@ -718,10 +718,10 @@ _memequivs_debug_print(struct memequivs const *__restrict self) {
 #endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 
 
-/* Adjust the delta of `regno' */
+/* Adjust the delta of `regno` */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 _fungen_gadjust_reg_delta_impl(struct host_section *sect,
-                               struct fungen *self, /* when NULL, don't adjust memory locations using `regno' */
+                               struct fungen *self, /* when NULL, don't adjust memory locations using `regno` */
                                host_regno_t regno, ptrdiff_t val_delta
 #if defined(NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY) && !defined(NO_HOSTASM_DEBUG_PRINT)
                                , bool log_instructions
@@ -775,8 +775,8 @@ _fungen_gadjust_reg_fit32_impl(struct fungen *__restrict self,
 	host_regno_t regno = *p_regno;
 	ptrdiff_t val_delta = *p_val_delta;
 	ptrdiff_t adj_delta;
-	/* TODO: Check if there is a known register equivalence of `regno'
-	 *       with a value-delta that causes the final `val_delta' to
+	/* TODO: Check if there is a known register equivalence of `regno`
+	 *       with a value-delta that causes the final `val_delta` to
 	 *       fit into 32 bit */
 	if (val_delta < INT32_MIN) {
 		adj_delta = val_delta - INT32_MIN;
@@ -1131,7 +1131,7 @@ _fungen_gdestroy_regx(struct fungen *__restrict self,
 #endif /* !_fungen_gcall86_prepare_stack_for_call_IS_NOOP */
 	}
 
-	/* Load `regno' as argument for the call to `DeeObject_Destroy()' */
+	/* Load `regno` as argument for the call to `DeeObject_Destroy()` */
 #ifdef HOST_REGNO_R_ARG0
 	if (used_regno != HOST_REGNO_R_ARG0) {
 		ptrdiff_t adj_delta;
@@ -1189,7 +1189,7 @@ _fungen_gdestroy_regx(struct fungen *__restrict self,
 		                   gen86_registers[used_regno]);
 	}
 
-	/* Make the call to `DeeObject_Destroy()' */
+	/* Make the call to `DeeObject_Destroy()` */
 #ifndef HOST_REGNO_R_ARG0
 	IF_VERBOSE_REFCNT_LOGGING(gen86_printf(sect, "push" Plq "\t%s\n", gen86_regname(used_regno)));
 	gen86_pushP_r(p_pc(sect), gen86_registers[used_regno]);
@@ -1300,7 +1300,7 @@ _fungen_gdecref_regx_impl(struct fungen *__restrict self,
 		                   ob_refcnt_offset, gen86_registers[regno]);
 	}
 
-	/* NOTE: decP sets FLAGS.Z=1 when the reference counter becomes `0'. */
+	/* NOTE: decP sets FLAGS.Z=1 when the reference counter becomes `0`. */
 	if (text == cold) {
 		struct host_symbol *sym_1f;
 		struct host_reloc *rel;
@@ -1325,7 +1325,7 @@ _fungen_gdecref_regx_impl(struct fungen *__restrict self,
 		struct host_reloc *enter_rel, *leave_rel;
 		struct host_symbol *enter_sym, *leave_sym;
 
-		/* Generate code that jumps into the cold section when the reference counter became `0'. */
+		/* Generate code that jumps into the cold section when the reference counter became `0`. */
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf(sect, "jzl\t1f\n"));
 		gen86_jccl_offset(p_pc(text), GEN86_CC_Z, -4);
 		enter_rel = host_section_newhostrel(text);
@@ -1647,7 +1647,7 @@ _host_section_gdecref_const(struct host_section *__restrict self,
 	if unlikely(host_section_reqx86(self, 2))
 		goto err;
 	/* Constants can never be destroyed, so decref'ing one is
-	 * like `Dee_DecrefNokill()' (iow: doesn't need a zero-check) */
+	 * like `Dee_DecrefNokill()` (iow: doesn't need a zero-check) */
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
 	gen86_printf(self, "decref_nokill\t%s", gen86_addrname(value));
@@ -1732,7 +1732,7 @@ _fungen_gpause_or_yield(struct fungen *__restrict self,
 	}
 	sect = fg_gettext(self);
 
-	/* Make the call to the host's `sched_yield(2)' function */
+	/* Make the call to the host's `sched_yield(2)` function */
 #ifdef rt_sched_yield_IS_SleepEx
 	if unlikely(host_section_reqx86(sect, 2))
 		goto err;
@@ -2217,13 +2217,13 @@ log_compact_rwlock_register_preserve_list(struct fungen *__restrict self) {
 #endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 
-/* Make sure that `loc' doesn't use %Pax */
+/* Make sure that `loc` doesn't use %Pax */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 _fungen_gloc_no_Pax(struct fungen *__restrict self,
                     struct memloc *__restrict loc) {
 	if (loc->ml_adr.ma_typ == MEMADR_TYPE_HREG &&
 	    loc->ml_adr.ma_reg == HOST_REGNO_PAX) {
-		/* We explicity *need* to use a register other than `%Pax' here! */
+		/* We explicity *need* to use a register other than `%Pax` here! */
 		host_regno_t not_these[2], lockreg;
 		struct memstate *state;
 		not_these[0] = HOST_REGNO_PAX;
@@ -2582,7 +2582,7 @@ err:
 	return -1;
 }
 
-/* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
+/* Pushes the address of `(self)->fg_state->ms_host_cfa_offset` (as it was before the push) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 _fungen_ghstack_pushhstack_at_cfa_boundary_np(struct fungen *__restrict self) {
 	struct host_section *sect = fg_gettext(self);
@@ -2679,7 +2679,7 @@ _host_section_gmov_const2reg(struct host_section *__restrict self,
 		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
 	} else {
 		gen86_printf(self, "mov" Plq "\t$%s, %s\n", gen86_addrname(value), gen86_regname(dst_regno));
-		/* NOTE: This automatically does `movabs' on x86_64! */
+		/* NOTE: This automatically does `movabs` on x86_64! */
 		gen86_movP_imm_r(p_pc(self), (intptr_t)(uintptr_t)value, gen86_registers[dst_regno]);
 	}
 	return 0;
@@ -2828,8 +2828,8 @@ _fungen_gmov_reg2regind(struct fungen *__restrict self,
 		ptrdiff_t adj_delta;
 		host_regno_t new_dst_regno;
 		host_regno_t not_these[2];
-		/* TODO: Check if there is a known register equivalence of `dst_regno'
-		 *       with a value-delta that causes the final `val_delta' to
+		/* TODO: Check if there is a known register equivalence of `dst_regno`
+		 *       with a value-delta that causes the final `val_delta` to
 		 *       fit into 32 bit */
 		not_these[0] = dst_regno;
 		not_these[1] = HOST_REGNO_COUNT;
@@ -3227,7 +3227,7 @@ push_memloc_maybe_adjust_regs(struct fungen *__restrict self,
 	 * #3: CONST (on x86_64: if it fits)
 	 * #4: HREGIND[rel_valoff==0]/HSTACKIND[rel_valoff==0]
 	 * #5: HREG
-	 * #6: Fallback (use `arg' as-is)
+	 * #6: Fallback (use `arg` as-is)
 	 */
 	struct memequiv *eq;
 	eq = memequivs_getclassof(&self->fg_state->ms_memequiv, memloc_getadr(arg));
@@ -3278,8 +3278,8 @@ use_memequiv_iter_as_arg:
 	}
 use_arg:
 
-	/* NOTE: It is important that this function doesn't call `fg_gallocreg()'!
-	 *       That is because `alloc_unused_reg_for_call_args()' needs to be used for temporary
+	/* NOTE: It is important that this function doesn't call `fg_gallocreg()`!
+	 *       That is because `alloc_unused_reg_for_call_args()` needs to be used for temporary
 	 *       registers */
 	switch (memloc_gettyp(arg)) {
 
@@ -3322,7 +3322,7 @@ use_arg:
 		ptrdiff_t sp_offset = memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 		struct host_section *sect = fg_gettext(self);
 		if (sp_offset == 0) {
-			/* Special case: can use `pushP %Psp', which pushes the current %Psp value (as it was before the push) */
+			/* Special case: can use `pushP %Psp`, which pushes the current %Psp value (as it was before the push) */
 			if unlikely(host_section_reqx86(sect, 1))
 				goto err;
 			gen86_printf(sect, "push" Plq "\t%%" Per "sp\n");
@@ -3468,7 +3468,7 @@ setreg_memloc_maybe_adjust_regs(struct fungen *__restrict self,
 			if (used_regno == free_regno && free_regno_initialized) {
 				nextarg_valoff -= free_regno_val_offset_from_dst_regno;
 			} else {
-				/* TODO: If "nextarg" is `MEMADR_TYPE_HREGIND' and the register isn't used
+				/* TODO: If "nextarg" is `MEMADR_TYPE_HREGIND` and the register isn't used
 				 *       by any other argument, directly load the value into the register. */
 				if unlikely(fg_gmov_regx2reg(self, dst_regno, nextarg_valoff, used_regno))
 					goto err;
@@ -3494,8 +3494,8 @@ setreg_memloc_maybe_adjust_regs(struct fungen *__restrict self,
 
 	/* At this point, we've successfully made it so that "dst_regno" isn't used by future arguments. */
 
-	/* NOTE: It is important that this function doesn't call `fg_gallocreg()'!
-	 *       That is because `alloc_unused_reg_for_call_args()' needs to be used for temporary
+	/* NOTE: It is important that this function doesn't call `fg_gallocreg()`!
+	 *       That is because `alloc_unused_reg_for_call_args()` needs to be used for temporary
 	 *       registers */
 	switch (memloc_gettyp(arg)) {
 
@@ -3672,7 +3672,7 @@ _fungen_gcallapi(struct fungen *__restrict self,
 			 * #2: HREG/HSTACK
 			 * #3: CONST
 			 * #4: HREGIND[rel_valoff==0]/HSTACKIND[rel_valoff==0]
-			 * #5: Fallback (use `arg' as-is) */
+			 * #5: Fallback (use `arg` as-is) */
 			struct memloc *arg = &locv[i];
 			struct memequiv *eq = memequivs_getclassof(&self->fg_state->ms_memequiv, memloc_getadr(arg));
 			if (eq != NULL) {

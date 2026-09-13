@@ -82,7 +82,7 @@
  * >> };
  *
  * Obviously, this magic script can only run when deemon was
- * built with `CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS'.
+ * built with `CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS`.
  *
  * To re-generate computed operators:
  * #1: Build deemon with CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS

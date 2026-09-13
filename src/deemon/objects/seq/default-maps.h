@@ -37,7 +37,7 @@ DECL_BEGIN
 /* Check for a symbolic, empty map.
  * NOTE: This function isn't guarantied to capture any kind of empty map,
  *       only maps that are meant to symbolically represent an empty one.
- * This map is represented as `{}' */
+ * This map is represented as `{}` */
 #define DeeMap_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeMap_Type)
 
 typedef struct {
@@ -55,7 +55,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject, mui_iter,  /* [1..1][lock(mui_lock)] The current iterator. */
 	                      MapUnion,  mui_union) /* [1..1][const] The underlying union-map. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t              mui_lock;  /* Lock for `mui_iter' and `mui_in2nd' */
+	Dee_atomic_rwlock_t              mui_lock;  /* Lock for `mui_iter` and `mui_in2nd` */
 #endif /* !CONFIG_NO_THREADS */
 	bool                             mui_in2nd; /* [lock(mui_lock)] The second map is being iterated. */
 } MapUnionIterator;
@@ -94,7 +94,7 @@ typedef struct {
 #define MapIntersection_NewInheritedOnSuccess(obj1, obj2) ((DREF MapIntersection *)ProxyObject2_NewInheritedOnSuccess(&MapIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,       mii_iter,       /* [1..1][const] An iterator for `mii_intersect->mi_map' */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,       mii_iter,       /* [1..1][const] An iterator for `mii_intersect->mi_map` */
 	                      MapIntersection, mii_intersect); /* [1..1][const] The underlying intersection-map. */
 	DeeObject                             *mii_keys;       /* [1..1][const][== mii_intersect->mi_keys]. */
 } MapIntersectionIterator;
@@ -106,7 +106,7 @@ INTDEF DeeTypeObject MapIntersectionIterator_Type;
 
 typedef struct {
 	PROXY_OBJECT_HEAD2(md_map,   /* [1..1][const] The primary map. */
-	                   md_keys); /* [1..1][const] Set of keys that should be excluded from `md_map' */
+	                   md_keys); /* [1..1][const] Set of keys that should be excluded from `md_map` */
 } MapDifference;
 
 #define MapDifference_New(obj1, obj2)                   ((DREF MapDifference *)ProxyObject2_New(&MapDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
@@ -116,7 +116,7 @@ typedef struct {
 #define MapDifference_NewInheritedOnSuccess(obj1, obj2) ((DREF MapDifference *)ProxyObject2_NewInheritedOnSuccess(&MapDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,     mdi_iter,  /* [1..1][const] An iterator for `mdi_diff->md_map' */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,     mdi_iter,  /* [1..1][const] An iterator for `mdi_diff->md_map` */
 	                      MapDifference, mdi_diff); /* [1..1][const] The underlying difference-map. */
 	DeeObject                           *mdi_keys;  /* [1..1][const][== mdi_diff->md_keys]. */
 } MapDifferenceIterator;
@@ -141,7 +141,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject,              msdi_iter,     /* [1..1][lock(msdi_lock)] The current iterator. */
 	                      MapSymmetricDifference, msdi_symdiff); /* [1..1][const] The underlying map. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t                           msdi_lock;     /* Lock for `msdi_iter' and `msdi_in2nd' */
+	Dee_atomic_rwlock_t                           msdi_lock;     /* Lock for `msdi_iter` and `msdi_in2nd` */
 #endif /* !CONFIG_NO_THREADS */
 	bool                                          msdi_in2nd;    /* [lock(msdi_lock)] The second map is being iterated. */
 } MapSymmetricDifferenceIterator;

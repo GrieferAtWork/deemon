@@ -59,7 +59,7 @@ DECL_BEGIN
 
 
 /* Heart-piece of GC collect
- * @return: * : One of `GC_GENERATION_COLLECT_OR_UNLOCK__*' */
+ * @return: * : One of `GC_GENERATION_COLLECT_OR_UNLOCK__*` */
 #ifdef DEFINE_gc_generation_collect_or_unlock
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) unsigned int DCALL
 gc_generation_collect_or_unlock(struct gc_generation *__restrict gen,
@@ -309,7 +309,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 
 		/* At this point, "unreachable_slow" exists in a sort-of "fake" generation
 		 * defined by "unreachable_slow" itself. If anything causes these objects to
-		 * be destroyed after this point, `DeeGC_Untrack()' and `DeeGC_UntrackAsync()'
+		 * be destroyed after this point, `DeeGC_Untrack()` and `DeeGC_UntrackAsync()`
 		 * will remove them from *that* linked list. */
 		COMPILER_BARRIER();
 		gc_collect_release();
@@ -435,7 +435,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 	COMPILER_BARRIER();
 	gc_collect_release();
 
-	/* Invoke weakref callbacks scheduled by `Dee_weakref_list_transfer_to_dummy()'
+	/* Invoke weakref callbacks scheduled by `Dee_weakref_list_transfer_to_dummy()`
 	 * This can only happen now that the GC lock has been released, since no user-
 	 * code can be executed while said lock is held. */
 	if (must_kill_nested_weakrefs || must_kill_weakrefs)

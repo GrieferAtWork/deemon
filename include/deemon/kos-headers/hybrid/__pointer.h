@@ -102,8 +102,8 @@ template<class __T, class __I> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__T 
 #endif /* !__COMPILER_HAVE_TRANSPARENT_NONCLASS */
 #define __HYBRID_FUNCPTR32(return, cc, name, args) __HYBRID_PTR32(return (cc *)args) name
 #ifdef __COMPILER_HAVE_CXX_TEMPLATE_USING
-/* Try to use  `template using' in  order to prevent  `__HYBRID_PTR32()' from  containing
- * any comma tokens that might otherwise interfere with expansion when `__HYBRID_PTR32()'
+/* Try to use  `template using` in  order to prevent  `__HYBRID_PTR32()` from  containing
+ * any comma tokens that might otherwise interfere with expansion when `__HYBRID_PTR32()`
  * is passed as an argument to another macro. */
 __NAMESPACE_INT_BEGIN
 template<class __T> using __hybrid_ptr32 = __hybrid_ptr<__T, __ULONG32_TYPE__>;
@@ -136,8 +136,8 @@ __NAMESPACE_INT_END
 #endif /* !__COMPILER_HAVE_TRANSPARENT_NONCLASS */
 #define __HYBRID_FUNCPTR64(return, cc, name, args) __HYBRID_PTR64(return (cc *)args) name
 #ifdef __COMPILER_HAVE_CXX_TEMPLATE_USING
-/* Try to use  `template using' in  order to prevent  `__HYBRID_PTR64()' from  containing
- * any comma tokens that might otherwise interfere with expansion when `__HYBRID_PTR64()'
+/* Try to use  `template using` in  order to prevent  `__HYBRID_PTR64()` from  containing
+ * any comma tokens that might otherwise interfere with expansion when `__HYBRID_PTR64()`
  * is passed as an argument to another macro. */
 __NAMESPACE_INT_BEGIN
 template<class __T> using __hybrid_ptr64 = __hybrid_ptr<__T, __ULONG64_TYPE__>;

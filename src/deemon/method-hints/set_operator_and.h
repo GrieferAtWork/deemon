@@ -34,12 +34,12 @@ __set_and__.set_operator_and([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)
 %{unsupported({
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a & ~b' -> `a - b' */
+		/* Special case: `a & ~b` -> `a - b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return DeeObject_InvokeMethodHint(set_operator_sub, lhs, xrhs->si_set);
 	}
 	if (DeeSet_CheckEmpty(rhs))
-		return_reference_(Dee_EmptySet); /* `a & {}' -> `{}' */
+		return_reference_(Dee_EmptySet); /* `a & {}` -> `{}` */
 	return Dee_AsObject(SetIntersection_New(lhs, rhs));
 })}
 %{$none = return_none}

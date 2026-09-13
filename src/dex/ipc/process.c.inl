@@ -69,7 +69,7 @@
 #include <vfork.h>
 #endif /* CONFIG_HAVE_VFORK_H */
 
-/* Figure out if `vfork()' causes the VM to be shared with a child-process */
+/* Figure out if `vfork()` causes the VM to be shared with a child-process */
 #if defined(CONFIG_HAVE_vfork) && !defined(CONFIG_HAVE_VFORK_IS_FORK)
 #ifdef __ARCH_HAVE_SHARED_VM_VFORK
 #define CONFIG_IPC_HAVE_vfork_HAS_SHARED_VM
@@ -152,7 +152,7 @@
 #endif /* __SIZEOF_PID_T__ > ... */
 
 
-/* Check if we have the minimum requirements for doing whatever needs to be done after a `fork()' */
+/* Check if we have the minimum requirements for doing whatever needs to be done after a `fork()` */
 #undef CONFIG_IPC_HAVE_exec_requirements
 #if (((defined(CONFIG_HAVE_wexecve) && (defined(CONFIG_HAVE_wexecv) || defined(CONFIG_HAVE_wenviron))) || \
       (defined(CONFIG_HAVE_execve) && (defined(CONFIG_HAVE_execv) || defined(CONFIG_HAVE_environ)))) &&   \
@@ -171,7 +171,7 @@
 #undef ipc_Process_USE_CreateProcessW
 #undef ipc_Process_USE_posix_spawn
 #undef ipc_Process_USE_spawnve
-/* TODO: Support for linux clone() with `CLONE_PIDFD' (in order to then use said pidfd to facilitate wait() operations) */
+/* TODO: Support for linux clone() with `CLONE_PIDFD` (in order to then use said pidfd to facilitate wait() operations) */
 #undef ipc_Process_USE_vfork_AND_execve
 #undef ipc_Process_USE_fork_AND_execve
 #undef ipc_Process_USE_STUB
@@ -238,7 +238,7 @@
 #endif /* !PATH_MAX */
 
 
-/* Check if we want to support `/etc/shells' */
+/* Check if we want to support `/etc/shells` */
 #undef CONFIG_IPC_HAVE_etc_shells
 #ifndef CONFIG_HOST_WINDOWS
 #define CONFIG_IPC_HAVE_etc_shells
@@ -257,7 +257,7 @@ DECL_BEGIN
 #undef ipc_Process_USE_WCHAR_CHDIR_APIS
 #elif defined(ipc_Process_USE_vfork_AND_execve) || defined(ipc_Process_USE_fork_AND_execve)
 #if defined(CONFIG_HAVE_execve) && defined(CONFIG_HAVE_fexecve)
-#undef ipc_Process_USE_WCHAR_SPAWN_APIS /* Using the wide-character API would make it impossible to use `fexecve(2)' */
+#undef ipc_Process_USE_WCHAR_SPAWN_APIS /* Using the wide-character API would make it impossible to use `fexecve(2)` */
 #elif defined(CONFIG_PREFER_WCHAR_FUNCTIONS) && defined(CONFIG_HAVE_wexecve)
 #define ipc_Process_USE_WCHAR_SPAWN_APIS
 #elif defined(CONFIG_HAVE_execve)
@@ -376,7 +376,7 @@ PRIVATE DEFINE_STRING_EX(str_DEFAULT_SHELL_C, "-c", 0x609d4fb4, 0xfea31f2416d3d4
  *   - Only use `"' for escaping (`'' seems to be missing/broken)
  *   - When argv[i] contains any ` ' or `\t' characters,
  *     the argument is to be escaped by surrounding it with `"'
- *      - `foo bar'  --> `"foo bar"'
+ *      - `foo bar`  --> `"foo bar"'
  *   - When argv[i] contains a `"' character, that character
  *     is prefixed with a `\' character
  *      - `foo"'  --> `foo\"'
@@ -385,7 +385,7 @@ PRIVATE DEFINE_STRING_EX(str_DEFAULT_SHELL_C, "-c", 0x609d4fb4, 0xfea31f2416d3d4
  *      - `foo\'  --> `foo\'
  *      - `foo\"' --> `foo\\\"'
  * HINT: The algorithm used by VC/VC++ is located
- *       in `crt/src/stdargv.c' of Visual Studio
+ *       in `crt/src/stdargv.c` of Visual Studio
  */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ipc_nt_cmdline_add_arg(struct Dee_unicode_printer *__restrict printer,
@@ -619,32 +619,32 @@ err:
 #define PROCESS_FLAG_STARTING   0x0001 /* [lock(SET(p_lock), CLEAR(CALLER_SET_BEFORE))] The process is currently starting. */
 #define PROCESS_FLAG_STARTED    0x0002 /* [lock(WRITE_ONCE)] The process has been started. (Always set for external processes) */
 #define PROCESS_FLAG_JOINING    0x0004 /* [lock(SET(p_lock), CLEAR(CALLER_SET_BEFORE))] The process is being joined */
-#define PROCESS_FLAG_DETACHED   0x0008 /* [lock(WRITE_ONCE)] The process has been detached (`p_id' is dangling and `p_handle' is invalid). */
-#define PROCESS_FLAG_TERMINATED 0x0010 /* [lock(WRITE_ONCE)] The process has terminated (implies `PROCESS_FLAG_DETACHED'). */
-#define PROCESS_FLAG_EXTERN     0x4000 /* [lock(const)] The process isn't a child of the hosting deemon process (implies `PROCESS_FLAG_STARTING', `PROCESS_FLAG_STARTED', `PROCESS_FLAG_DETACHED') */
-#define PROCESS_FLAG_SELF       0x8000 /* [lock(const)] This is the stand-in for the deemon-process itself (implies `PROCESS_FLAG_EXTERN'). */
+#define PROCESS_FLAG_DETACHED   0x0008 /* [lock(WRITE_ONCE)] The process has been detached (`p_id` is dangling and `p_handle` is invalid). */
+#define PROCESS_FLAG_TERMINATED 0x0010 /* [lock(WRITE_ONCE)] The process has terminated (implies `PROCESS_FLAG_DETACHED`). */
+#define PROCESS_FLAG_EXTERN     0x4000 /* [lock(const)] The process isn't a child of the hosting deemon process (implies `PROCESS_FLAG_STARTING`, `PROCESS_FLAG_STARTED`, `PROCESS_FLAG_DETACHED`) */
+#define PROCESS_FLAG_SELF       0x8000 /* [lock(const)] This is the stand-in for the deemon-process itself (implies `PROCESS_FLAG_EXTERN`). */
 
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t   p_lock;     /* Lock for accessing members of this structure. */
 #endif /* !CONFIG_NO_THREADS */
-	/* NOTE: `EXTERN_CONST_IF' here means that only the thread that set `PROCESS_FLAG_STARTING' may modify the field. */
+	/* NOTE: `EXTERN_CONST_IF` here means that only the thread that set `PROCESS_FLAG_STARTING` may modify the field. */
 	DREF DeeObject       *p_exe;      /* [lock(p_lock)][0..1][if(!PROCESS_FLAG_EXTERN,[1..1])][EXTERN_CONST_IF(PROCESS_FLAG_STARTING && !PROCESS_FLAG_EXTERN)]
-	                                   * The main executable (either as a string, or an object carrying a file descriptor/handle). (lazily loaded when `PROCESS_FLAG_EXTERN' is set) */
+	                                   * The main executable (either as a string, or an object carrying a file descriptor/handle). (lazily loaded when `PROCESS_FLAG_EXTERN` is set) */
 #ifdef ipc_Process_USE_CreateProcessW
 #define ipc_Process_USE_cmdline
 	DREF DeeStringObject *p_cmdline;  /* [lock(p_lock)][0..1][if(!PROCESS_FLAG_EXTERN,[1..1])][EXTERN_CONST_IF(PROCESS_FLAG_STARTING && !PROCESS_FLAG_EXTERN)]
-	                                   * The commandline of the process (VC/VC++ compatible). (lazily loaded when `PROCESS_FLAG_EXTERN') */
+	                                   * The commandline of the process (VC/VC++ compatible). (lazily loaded when `PROCESS_FLAG_EXTERN`) */
 #else /* ipc_Process_USE_CreateProcessW */
 #define ipc_Process_USE_argv
 	DREF DeeObject       *p_argv;     /* [lock(p_lock)][0..1][if(!PROCESS_FLAG_EXTERN,[1..1])][EXTERN_CONST_IF(PROCESS_FLAG_STARTING && !PROCESS_FLAG_EXTERN)]
-	                                   * Array of arguments passed to the program's main()-function. (lazily loaded when `PROCESS_FLAG_EXTERN') */
+	                                   * Array of arguments passed to the program's main()-function. (lazily loaded when `PROCESS_FLAG_EXTERN`) */
 #endif /* !ipc_Process_USE_CreateProcessW */
-	DREF DeeObject       *p_envp;     /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] The environment block used by the process (or `NULL' to refer to that of the calling process).
-	                                   * NOTE: When set, this is a sequence type compatible with `posix.environ': `{string: string}' (always NULL when `PROCESS_FLAG_EXTERN') */
-	DREF DeeObject       *p_pwd;      /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] The process working directory (or `NULL' to refer to that of the calling process). (always NULL when `PROCESS_FLAG_EXTERN') */
-	DREF DeeObject       *p_stdfd[3]; /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] Std file streams (index is one of DEE_STD*) (always NULL when `PROCESS_FLAG_EXTERN') */
+	DREF DeeObject       *p_envp;     /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] The environment block used by the process (or `NULL` to refer to that of the calling process).
+	                                   * NOTE: When set, this is a sequence type compatible with `posix.environ`: `{string: string}` (always NULL when `PROCESS_FLAG_EXTERN`) */
+	DREF DeeObject       *p_pwd;      /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] The process working directory (or `NULL` to refer to that of the calling process). (always NULL when `PROCESS_FLAG_EXTERN`) */
+	DREF DeeObject       *p_stdfd[3]; /* [lock(p_lock)][0..1][EXTERN_CONST_IF(PROCESS_FLAG_STARTING)] Std file streams (index is one of DEE_STD*) (always NULL when `PROCESS_FLAG_EXTERN`) */
 
 #ifdef ipc_Process_pid_t
 	ipc_Process_pid_t     p_pid;      /* [valid_if(p_pid != ipc_Process_pid_t_INVALID)]
@@ -654,7 +654,7 @@ typedef struct {
 	HANDLE                p_handle;   /* [valid_if(p_handle != INVALID_HANDLE_VALUE)]
 	                                   * [lock(p_lock)][owned] Process handle. */
 #endif /* ipc_Process_USE_CreateProcessW */
-	uint16_t              p_state;    /* [lock(READ(ATOMIC), WRITE(p_lock))] The state of the process (Set of `PROCESS_FLAG_*') */
+	uint16_t              p_state;    /* [lock(READ(ATOMIC), WRITE(p_lock))] The state of the process (Set of `PROCESS_FLAG_*`) */
 } Process;
 
 #define Process_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->p_lock)
@@ -842,8 +842,8 @@ err_fp:
 }
 
 
-/* @return: * :        The default shell (according to `/etc/shells')
- * @return: ITER_DONE: `/etc/shells' does not exist, or does not specify any valid shells.
+/* @return: * :        The default shell (according to `/etc/shells`)
+ * @return: ITER_DONE: `/etc/shells` does not exist, or does not specify any valid shells.
  * @return: NULL:      Error. */
 PRIVATE WUNUSED DREF DeeStringObject *DCALL
 process_get_etc_shells_default_shell(void) {
@@ -870,7 +870,7 @@ PRIVATE WUNUSED DREF DeeStringObject *DCALL process_get_shell(void) {
 	/* Allow overriding the system shell program with the "$SHELL" environment variable. */
 	result = (DREF DeeStringObject *)Dee_GetEnv(Dee_AsObject(&str_SHELL));
 	if (result == (DREF DeeStringObject *)ITER_DONE) {
-		/* On unix, try to make use of `/etc/shells':
+		/* On unix, try to make use of `/etc/shells`:
 		 * >> function getDefaultShell(): string {
 		 * >>     local result = posix.environ.get("SHELL");
 		 * >>     if (result !is none)
@@ -1393,8 +1393,8 @@ err_interrupt:
  * This cache is cleared when $PATH or $PATHEXT is changed.
  *
  * The first time that this cache is used, it is hooked into the
- * notify system via `DeeNotify_StartListen()', and once the ipc
- * dex is unloaded, that hook is deleted by `DeeNotify_EndListen()' */
+ * notify system via `DeeNotify_StartListen()`, and once the ipc
+ * dex is unloaded, that hook is deleted by `DeeNotify_EndListen()` */
 PRIVATE DeeDictObject ipc_exe2path_cache = Dee_DICT_INIT;
 PRIVATE int ipc_exe2path_cache_listening = 0;
 
@@ -1515,7 +1515,7 @@ DeeSystem_DEFINE_wmemchr(Dee_libc_wmemchr)
 #define DeeString_PackBuffer_ipc_exe2path_char_t(buf, emo)     DeeString_Pack1ByteBuffer((uint8_t *)(buf))
 #endif /* !ipc_exe2path_USE_waccess */
 
-/* Return the absolute (fully resolved) version of `exe' */
+/* Return the absolute (fully resolved) version of `exe` */
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeStringObject *DCALL
 ipc_exe2path_uncached_in_path(ipc_exe2path_char_t const *exe, size_t exe_len,
                               ipc_exe2path_char_t const *path) {
@@ -1578,10 +1578,10 @@ err:
 	return NULL;
 }
 
-/* Return the absolute (fully resolved) version of `exe'
+/* Return the absolute (fully resolved) version of `exe`
  * @return: * :   Fully resolved program path
  * @return: NULL: Error
- * @return: ITER_DONE: No such environment variable `$PATH' */
+ * @return: ITER_DONE: No such environment variable `$PATH` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 ipc_exe2path_uncached(ipc_exe2path_char_t const *__restrict exe) {
 	DREF DeeStringObject *result;
@@ -1606,7 +1606,7 @@ err:
 	return NULL;
 }
 
-/* Return the absolute (fully resolved) version of `exe' */
+/* Return the absolute (fully resolved) version of `exe` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 ipc_exe2path(DeeStringObject *__restrict exe_strob) {
 	DREF DeeStringObject *result;
@@ -1622,7 +1622,7 @@ ipc_exe2path(DeeStringObject *__restrict exe_strob) {
 		return_reference_(exe_strob); /* Path is already absolute! */
 	}
 
-	/* Try to lookup the given `exe_strob' within the exe2path cache. */
+	/* Try to lookup the given `exe_strob` within the exe2path cache. */
 	ipc_exe2path_start_listen();
 	result = (DREF DeeStringObject *)DeeDict_TryGetItem(Dee_AsObject(&ipc_exe2path_cache),
 	                                                    (DeeObject *)exe_strob);
@@ -1635,7 +1635,7 @@ ipc_exe2path(DeeStringObject *__restrict exe_strob) {
 	/* Upon success, try to remember the cached pathname. */
 	if (result != NULL) {
 		if (result == (DREF DeeStringObject *)ITER_DONE) {
-			/* No environment variable $PATH has been defined (no choice but to re-return `exe_strob') */
+			/* No environment variable $PATH has been defined (no choice but to re-return `exe_strob`) */
 			result = exe_strob;
 			Dee_Incref(result);
 		} else {
@@ -1835,7 +1835,7 @@ err_result:
 				DBG_ALIGNMENT_ENABLE();
 				buffer = DeeString_TruncateWideBuffer(buffer, pathlen);
 				result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-				/* XXX: But the process is already running if `result' is NULL... */
+				/* XXX: But the process is already running if `result` is NULL... */
 				return result;
 			}
 			error = GetLastError();
@@ -1863,7 +1863,7 @@ err:
 	return NULL;
 }
 
-/* Same as `ipc_nt_CreateProcessPath()', but don't make use of the path-cache
+/* Same as `ipc_nt_CreateProcessPath()`, but don't make use of the path-cache
  * @return: * :        The application name that was eventually used to start the process.
  * @return: NULL:      An error occurred and was thrown.
  * @return: ITER_DONE: Failed to start the process (see GetLastError()) */
@@ -1992,7 +1992,7 @@ ipc_nt_CreateProcessPath(DeeStringObject *exe_str, LPWSTR lpApplicationName,
                          LPPROCESS_INFORMATION lpProcessInformation) {
 	DREF DeeStringObject *cached_pathname;
 
-	/* Check if we already have the correct expansion of `exe_str' in-cache */
+	/* Check if we already have the correct expansion of `exe_str` in-cache */
 	ipc_exe2path_start_listen();
 	cached_pathname = (DREF DeeStringObject *)DeeDict_TryGetItem(Dee_AsObject(&ipc_exe2path_cache),
 	                                                             (DeeObject *)exe_str);
@@ -2083,7 +2083,7 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 			/* Process was successfully created. */
 			buffer = DeeString_TruncateWideBuffer(buffer, pathlen);
 			result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-			/* XXX: But the process is already running if `result' is NULL... */
+			/* XXX: But the process is already running if `result` is NULL... */
 			return result;
 		}
 		error = GetLastError();
@@ -2282,20 +2282,20 @@ ipc_unix_get_fd_for_exec(Process *__restrict self, unsigned int std_handle_id,
 struct unix_spawn_args {
 	ipc_unix_exec_char_t      *usa_exe;   /* [1..1][valid_if(usa_exefd != -1)] Executable name (absolute path). */
 #ifdef HAVE_ipc_unix_spawn_exe_fd
-	int                        usa_exefd; /* Executable file descriptor. Used instead of `exe_str' when `!= -1' */
+	int                        usa_exefd; /* Executable file descriptor. Used instead of `exe_str` when `!= -1` */
 #endif /* HAVE_ipc_unix_spawn_exe_fd */
 	ipc_unix_exec_char_t     **usa_argv;  /* [1..1][1..n] Argument vector (must be non-NULL) */
-	ipc_unix_exec_char_t     **usa_envp;  /* [1..1][0..n] Environment strings (when NULL, use `environ' / `wenviron' instead) */
+	ipc_unix_exec_char_t     **usa_envp;  /* [1..1][0..n] Environment strings (when NULL, use `environ` / `wenviron` instead) */
 #ifdef ipc_Process_USE_posix_spawn
 	posix_spawn_file_actions_t usa_spawn_file_actions; /* Posix spawn file actions */
 	posix_spawnattr_t          usa_spawn_attr;         /* Posix spawn attributes */
 #endif /* ipc_Process_USE_posix_spawn */
 
-	/* All of the following are only used when compiled with `#ifndef ipc_Process_USE_posix_spawn' */
+	/* All of the following are only used when compiled with `#ifndef ipc_Process_USE_posix_spawn` */
 	int                        usa_stdfds[COMPILER_LENOF(((Process *)0)->p_stdfd)]; /* Overrides for STD file handles. */
 	ipc_unix_chdir_char_t     *usa_pwd;   /* [0..1][valid_if(usa_pwdfd != -1)] Process working directory (when NULL, re-use PWD of parent) */
 #ifdef HAVE_ipc_unix_spawn_pwd_fd
-	int                        usa_pwdfd; /* Process working directory file descriptor. Used instead of `usa_pwd' when `!= -1' */
+	int                        usa_pwdfd; /* Process working directory file descriptor. Used instead of `usa_pwd` when `!= -1` */
 #endif /* HAVE_ipc_unix_spawn_pwd_fd */
 };
 
@@ -2589,14 +2589,14 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 		 *
 		 * Because vfork() (in this configuration) allows us to share a VM with our
 		 * child process, any error that happened within the child process will have
-		 * modified `errno' from the 0-value we wrote prior to the vfork().
+		 * modified `errno` from the 0-value we wrote prior to the vfork().
 		 *
 		 * As such, if the child process encountered any kind of problem, we now have
-		 * its error-code safely stored in our `errno'. */
+		 * its error-code safely stored in our `errno`. */
 		error = DeeSystem_GetErrno();
 		if (error != 0) {
 			int status;
-			/* Must still reap `cpid' */
+			/* Must still reap `cpid` */
 			while (ipc_joinpid(cpid, &status) < 0) {
 #ifdef EINTR
 				if (DeeSystem_GetErrno() == EINTR)
@@ -2632,7 +2632,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			/* We're now within the child process! */
 			ipc_unix_spawn_in_child(self);
 
-			/* Exec fail -> write the current `errno' value to the pipe. */
+			/* Exec fail -> write the current `errno` value to the pipe. */
 			error = DeeSystem_GetErrno();
 			if unlikely(error == 0)
 				error = 1; /* Shouldn't happen, but mustn't indicate success here */
@@ -2672,7 +2672,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			int status;
 			Dee_DPRINTF("ipc_unix_spawn: fork'd child process answered with error %d\n", error);
 
-			/* Must still reap `cpid' */
+			/* Must still reap `cpid` */
 			while (ipc_joinpid(cpid, &status) < 0) {
 #ifdef EINTR
 				if (DeeSystem_GetErrno() == EINTR)
@@ -2709,7 +2709,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			}
 		}
 		if (self->usa_pwd) {
-			/* Save current PWD into `saved_pwd' */
+			/* Save current PWD into `saved_pwd` */
 			saved_pwd = ipc_unix_chdir_getcwd();
 			if unlikely(!saved_pwd)
 				goto return_errno_saved_fd;
@@ -2838,7 +2838,7 @@ again:
 		return 1;
 	}
 
-	/* Upgrade to a write-lock so we can set `PROCESS_FLAG_STARTED' */
+	/* Upgrade to a write-lock so we can set `PROCESS_FLAG_STARTED` */
 	if (!Process_LockUpgrade(self)) {
 		if unlikely(self->p_state & PROCESS_FLAG_STARTED) {
 			uint16_t state = self->p_state;
@@ -2884,7 +2884,7 @@ again:
 		if unlikely(!lpwCmdLine)
 			goto err_exe_str;
 
-		/* Must create a duplicate of `lpwCmdLine' since the `CreateProcessW'
+		/* Must create a duplicate of `lpwCmdLine` since the `CreateProcessW`
 		 * function is allowed to (and does) modify it. - So if we were to pass
 		 * the string's original buffer, we would accidentally inplace-modify
 		 * that string. */
@@ -2943,7 +2943,7 @@ again:
 
 		/* Finally, we get to the actual mean to process creation!
 		 *
-		 * Check if `lpwExe' contains any forward or backward slashes.
+		 * Check if `lpwExe` contains any forward or backward slashes.
 		 * If it doesn't, then we must search $PATH and $PATHEXT for the
 		 * program. */
 		if (wmemchr(lpwExe, '/', WSTR_LENGTH(lpwExe)) == NULL &&
@@ -3146,7 +3146,7 @@ process_created_ok:
 		/* Check for special case: trying to execute a file descriptor. */
 #ifdef HAVE_ipc_unix_spawn_exe_fd
 		if (!DeeString_Check(self->p_exe)) {
-			/* Special case for `fexecve()' / `posix_fspawn_np()' */
+			/* Special case for `fexecve()` / `posix_fspawn_np()` */
 			spawn_args.usa_exefd = DeeUnixSystem_GetFD(self->p_exe);
 			if unlikely(spawn_args.usa_exefd == -1)
 				goto err_argv_envp_stdfd_files_pwd_posix;
@@ -3260,7 +3260,7 @@ ipc_nt_throw_process_access_error(DWORD dwPid) {
 	                               dwPid);
 }
 
-/* Return the handle of `self', or `INVALID_HANDLE_VALUE' alongside an error */
+/* Return the handle of `self`, or `INVALID_HANDLE_VALUE` alongside an error */
 PRIVATE WUNUSED NONNULL((1)) HANDLE DCALL
 process_nt_gethandle_or_unlock(Process *__restrict self) {
 	HANDLE hResult = self->p_handle;
@@ -3334,11 +3334,11 @@ process_nt_gethandle_upgrade_or_unlock(Process *__restrict self, DWORD dwDesired
 #endif /* ipc_Process_USE_CreateProcessW */
 
 #ifdef ipc_Process_pid_t
-/* Return the ID of `self', or `ipc_Process_pid_t_INVALID' alongside unlocking `self' and an error */
+/* Return the ID of `self`, or `ipc_Process_pid_t_INVALID` alongside unlocking `self` and an error */
 INTDEF WUNUSED NONNULL((1)) ipc_Process_pid_t DCALL
 process_getpid_or_unlock(Process *__restrict self);
 
-/* Return the ID of `self', or `ipc_Process_pid_t_INVALID' alongside an error */
+/* Return the ID of `self`, or `ipc_Process_pid_t_INVALID` alongside an error */
 PRIVATE WUNUSED NONNULL((1)) ipc_Process_pid_t DCALL
 process_getpid(Process *__restrict self) {
 	ipc_Process_pid_t result;
@@ -3510,7 +3510,7 @@ again_lock:
 				}
 				DBG_ALIGNMENT_ENABLE();
 	
-				/* Try again, but this time with `PROCESS_TERMINATE' access. */
+				/* Try again, but this time with `PROCESS_TERMINATE` access. */
 				hProcess = process_nt_gethandle_upgrade_or_unlock(self, PROCESS_TERMINATE);
 				if unlikely(hProcess == INVALID_HANDLE_VALUE)
 					goto err;
@@ -3708,7 +3708,7 @@ interrupted_stopjoin:
 		Process_LockEndWrite(self);
 
 		/* TODO: Alternative implementation that polls for has-exited
-		 *       by testing with `kill(pid, 0) != -1 || errno != ESRCH' */
+		 *       by testing with `kill(pid, 0) != -1 || errno != ESRCH` */
 		(void)timeout_nanoseconds;
 #ifdef ipc_tryjoinpid
 		if (timeout_nanoseconds != (uint64_t)-1) {
@@ -3719,7 +3719,7 @@ interrupted_stopjoin:
 			error = ipc_joinpid(self->p_pid, p_status);
 		}
 	
-		/* From `man 2 waitid':
+		/* From `man 2 waitid`:
 		 * """
 		 * waitid(): returns 0 on success or if WNOHANG was specified
 		 * and no child(ren) specified by id has yet changed state.
@@ -4253,7 +4253,7 @@ process_get_exe(Process *__restrict self) {
 		if unlikely(!result)
 			goto err;
 		if (result == ITER_DONE) {
-			/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
+			/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS` */
 #define WANT_ipc_unimplemented
 			ipc_unimplemented();
 			goto err;
@@ -4368,7 +4368,7 @@ ipc_unix_strings_from_nulterm_bytes(char const *__restrict data,
 		goto done;
 	}
 
-	/* Count the # of NUL-characters that are embedded in `data'.
+	/* Count the # of NUL-characters that are embedded in `data`.
 	 * This is the number of strings that we will need to return. */
 	for (num_strings = 0, iter = data; iter < end; ++num_strings)
 		iter = strend(iter) + 1;
@@ -4478,7 +4478,7 @@ process_get_argv(Process *__restrict self)
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
 		Process_LockEndWrite(self);
-		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
+		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS` */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
 		goto err;
@@ -4688,7 +4688,7 @@ process_get_environ(Process *__restrict self) {
 		}
 	}
 
-	/* Special case when doing `Process.current.environ' (which just aliases `posix.environ') */
+	/* Special case when doing `Process.current.environ` (which just aliases `posix.environ`) */
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		Process_LockEndWrite(self);
 		return DeeModule_GetExternString("posix", "environ");
@@ -4702,7 +4702,7 @@ process_get_environ(Process *__restrict self) {
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
 		Process_LockEndWrite(self);
-		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
+		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS` */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
 		goto err;
@@ -4771,7 +4771,7 @@ process_set_environ(Process *self, DeeObject *value) {
 			int result;
 			DREF DeeObject *posix_environ;
 			Process_LockEndWrite(self);
-			/* Special case: forward the request on-to `posix.environ' */
+			/* Special case: forward the request on-to `posix.environ` */
 			if (value == NULL)
 				value = Dee_EmptySeq; /* Clear environ */
 			posix_environ = DeeModule_GetExternString("posix", "environ");
@@ -4848,7 +4848,7 @@ process_get_pwd(Process *__restrict self) {
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
 		Process_LockEndWrite(self);
-		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
+		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS` */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
 		goto err;
@@ -4989,7 +4989,7 @@ process_get_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 		if unlikely(hProcess == INVALID_HANDLE_VALUE)
 			goto err;
 		Process_LockEndWrite(self);
-		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS' */
+		/* TODO: Try to read from `RTL_USER_PROCESS_PARAMETERS` */
 #define WANT_ipc_unimplemented
 		ipc_unimplemented();
 		goto err;
@@ -5332,7 +5332,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
      defined(HAVE_ipc_exe2path_fini) ||           \
      defined(HAVE_ipc_etc_shells_default_shell_fini))
 #ifdef HAVE_libipc_fini
-#error "Multiple definitions of `libipc_fini()'"
+#error "Multiple definitions of `libipc_fini()`"
 #endif /* HAVE_libipc_fini */
 #define HAVE_libipc_fini
 PRIVATE void DCALL libipc_fini(void) {

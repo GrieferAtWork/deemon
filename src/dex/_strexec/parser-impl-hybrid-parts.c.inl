@@ -239,7 +239,7 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					if unlikely(!result) {
 						if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
 							goto err_popscope;
-						/* `result' may also be NULL if the catch-body contained
+						/* `result` may also be NULL if the catch-body contained
 						 * a return/break/continue statement. If that was the case,
 						 * then we must still mark the exception as handled, handle
 						 * the exception, proceed with a set return value. */
@@ -364,7 +364,7 @@ H_FUNC(If)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "if"));
 do_if_statement:
 	JITLexer_Yield(self);
-	/* TODO: Support for `pack' */
+	/* TODO: Support for `pack` */
 	if likely(self->jl_tok == '(') {
 		JITLexer_Yield(self);
 	} else {
@@ -497,7 +497,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 		if unlikely(!init)
 			goto err_scope;
 		if (self->jl_tok == ':') {
-			/* TODO: Multiple targets (`for (local x, y, z: triples)') */
+			/* TODO: Multiple targets (`for (local x, y, z: triples)`) */
 			JITLValue iterator_storage;
 			DREF DeeObject *seq, *iterator, *elem;
 			unsigned char const *block_start;
@@ -608,7 +608,7 @@ do_normal_for_noinit:
 				cond_start = self->jl_tokstart;
 				result     = JITLexer_EvalRValue(self);
 				if unlikely(!result)
-					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue` in the cond-expression? */
 				/* Perform the initial condition check. */
 				temp = DeeObject_BoolInherited(result);
 				if (Dee_HAS_ISERR(temp))
@@ -684,7 +684,7 @@ do_continue_normal_forloop:
 					JITLexer_Yield(self);
 					result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
 					if unlikely(!result)
-						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the next-expression? */
+						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue` in the next-expression? */
 					if (result == JIT_LVALUE) {
 						JITLValue_Fini(&self->jl_lvalue);
 						self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
@@ -699,7 +699,7 @@ do_continue_normal_forloop:
 					JITLexer_Yield(self);
 					result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
 					if unlikely(!result)
-						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue` in the cond-expression? */
 					temp = DeeObject_BoolInherited(result);
 					if (Dee_HAS_ISNO_OR_ERR(temp)) {
 						if (Dee_HAS_ISERR(temp))
@@ -789,7 +789,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 			syn_foreach_expected_colon_after_foreach(self);
 			goto err_scope;
 		}
-		/* TODO: Multiple targets (`foreach (local x, y, z: triples)') */
+		/* TODO: Multiple targets (`foreach (local x, y, z: triples)`) */
 		JITLValue iterator_storage;
 		DREF DeeObject *iterator, *elem;
 		unsigned char const *block_start;
@@ -971,7 +971,7 @@ do_check_while_condition:
 		JITLexer_Yield(self);
 		result = JITLexer_EvalRValue(self);
 		if unlikely(!result)
-			goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+			goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue` in the cond-expression? */
 		temp = DeeObject_BoolInherited(result);
 		if (Dee_HAS_ISYES_OR_ERR(temp)) {
 			if (Dee_HAS_ISERR(temp))
@@ -1048,7 +1048,7 @@ do_parse_block:
 		if unlikely(!result) {
 			/* Check for special signal codes. */
 			if (self->jl_context->jc_retval == JITCONTEXT_RETVAL_BREAK) {
-				/* `break' */
+				/* `break` */
 				self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
 				self->jl_tokend             = block_start;
 				JITLexer_Yield(self);
@@ -1102,7 +1102,7 @@ continue_with_loop_cond:
 		/* Parse the condition code. */
 		result = JITLexer_EvalRValue(self);
 		if unlikely(!result)
-			goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
+			goto err; /* XXX: Doesn't the real compiler allow `break/continue` in the cond-expression? */
 		temp = DeeObject_BoolInherited(result);
 		if (Dee_HAS_ISYES_OR_ERR(temp)) {
 			if (Dee_HAS_ISERR(temp))
@@ -1258,10 +1258,10 @@ H_FUNC(Assert)(JITLexer *__restrict self, JIT_ARGS) {
 INTERN RETURN_TYPE DFCALL
 H_FUNC(Import)(JITLexer *__restrict self, JIT_ARGS) {
 	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
-		/* Special handling for `import(...)' expressions. */
+		/* Special handling for `import(...)` expressions. */
 		*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 	} else {
-		/* All other uses of `import' and `from' are statements. */
+		/* All other uses of `import` and `from` are statements. */
 		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	}
 #ifdef JIT_EVAL

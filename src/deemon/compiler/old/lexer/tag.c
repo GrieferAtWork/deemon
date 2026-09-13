@@ -41,7 +41,7 @@ DECL_BEGIN
 
 INTERN struct ast_tags current_tags;
 
-/* Apply & free annotations to the given `input' ast. */
+/* Apply & free annotations to the given `input` ast. */
 INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
                               /*inherit(always)*/ DREF struct ast *__restrict input) {

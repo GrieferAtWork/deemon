@@ -78,11 +78,11 @@ DeeSystem_DEFINE_strcmp(Dee_libc_strcmp)
 
 typedef DeeTypeObject Type;
 
-/* Lookup information about operator `id', as defined by `typetype'
+/* Lookup information about operator `id`, as defined by `typetype`
  * Returns NULL if the given operator is not known.
- * NOTE: The given `typetype' must be a type-type, meaning it must
- *       be the result of `Dee_TYPE(Dee_TYPE(ob))', in order to return
- *       information about generic operators that can be used on `ob' */
+ * NOTE: The given `typetype` must be a type-type, meaning it must
+ *       be the result of `Dee_TYPE(Dee_TYPE(ob))`, in order to return
+ *       information about generic operators that can be used on `ob` */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, Dee_operator_t id) {
 	/* Fallback: select operator defined by the core "DeeType_Type".
@@ -135,12 +135,12 @@ next_base:
 	return NULL;
 }
 
-/* Same as `DeeTypeType_GetOperatorById()', but also fill in `*p_declaring_type_type'
+/* Same as `DeeTypeType_GetOperatorById()`, but also fill in `*p_declaring_type_type`
  * as the type-type that is declaring the operator "id". This can differ from "typetype"
- * in (e.g.) `DeeTypeType_GetOperatorByIdEx(&DeeFileType_Type, OPERATOR_BOOL)', where
- * `&DeeFileType_Type' is still able to implement "OPERATOR_BOOL", but the declaration
- * originates from `DeeType_Type', so in that case, `*p_declaring_type_type' is set to
- * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
+ * in (e.g.) `DeeTypeType_GetOperatorByIdEx(&DeeFileType_Type, OPERATOR_BOOL)`, where
+ * `&DeeFileType_Type` is still able to implement "OPERATOR_BOOL", but the declaration
+ * originates from `DeeType_Type`, so in that case, `*p_declaring_type_type` is set to
+ * `DeeType_Type`, whereas for `FILE_OPERATOR_READ`, it would be `DeeFileType_Type`
  * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here. */
 PUBLIC WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
@@ -197,10 +197,10 @@ next_base:
 }
 
 
-/* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
- * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
+/* Same as `DeeTypeType_GetOperatorById()`, but lookup operators by `oi_sname`
+ * or `oi_uname` (though `oi_uname` only when that name isn't ambiguous).
  * @param: argc: The number of extra arguments taken by the operator (excluding
- *               the "this"-argument), or `(size_t)-1' if unknown. */
+ *               the "this"-argument), or `(size_t)-1` if unknown. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
                               char const *__restrict name, size_t argc) {
@@ -646,7 +646,7 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 		typetype = typetype->tp_base;
 	}
 
-	/* Fallback: scan the operator table of `DeeType_Type' */
+	/* Fallback: scan the operator table of `DeeType_Type` */
 	for (i = 0; i < COMPILER_LENOF(type_operators); ++i) {
 		struct Dee_opinfo const *info = &type_operators[i].to_decl;
 		if (strcmp(info->oi_sname, name) == 0)
@@ -768,7 +768,7 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator
 		return result;
 
 	/* Special case when querying for "DeeType_Type" (which can't define method
-	 * flags for the operators it *itself* implements (e.g. `type_str'), since
+	 * flags for the operators it *itself* implements (e.g. `type_str`), since
 	 * its list "type_operators" is a special case that needs to be linear) */
 	if (self == &DeeType_Type) {
 		return type_operator_table_get_custom_operator_by_id(type_operator_flags,
@@ -787,13 +787,13 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator
 
 
 /* Lookup per-type method flags that may be defined for "opname".
- * IMPORTANT: When querying the flags for `OPERATOR_ITER', the `Dee_METHOD_FCONSTCALL',
- *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
- *            you can call `operator iter()' at compile-time. Instead, it means that
+ * IMPORTANT: When querying the flags for `OPERATOR_ITER`, the `Dee_METHOD_FCONSTCALL`,
+ *            `Dee_METHOD_FPURECALL`, and `Dee_METHOD_FNOREFESCAPE` flags doesn't mean that
+ *            you can call `operator iter()` at compile-time. Instead, it means that
  *            *enumerating* the object can be done at compile-time (so-long as the associated
  *            iterator is never exposed). Alternatively, think of this case as allowing a
- *            call to `DeeObject_Foreach()' at compile-time.
- * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
+ *            call to `DeeObject_Foreach()` at compile-time.
+ * @return: * : Set of `Dee_METHOD_F*` describing special optimizations possible for "opname".
  * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
@@ -966,16 +966,16 @@ DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
 }
 
 
-/* Same as `DeeType_HasOperator()', however don't return `true' if the
- * operator has been inherited implicitly from a base-type of `self'. */
+/* Same as `DeeType_HasOperator()`, however don't return `true` if the
+ * operator has been inherited implicitly from a base-type of `self`. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	return DeeType_GetOperatorOrigin(self, name) == self;
 }
 
-/* Return the type from `self' inherited its operator `name'.
- * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
- * Returns `NULL' when the operator isn't being implemented. */
+/* Return the type from `self` inherited its operator `name`.
+ * If `name` wasn't inherited, or isn't defined, simply re-return `self`.
+ * Returns `NULL` when the operator isn't being implemented. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	void const *my_ptr;
@@ -1052,7 +1052,7 @@ DeeType_GetOperatorContainerOrigin(DeeTypeObject *__restrict self,
 
 /* Ensure that "self" is implementing "info", possibly inheriting it from a base type.
  * @return: true:  Success
- * @return: false: Error (the operator does not appear anywhere in `self.__mro__') */
+ * @return: false: Error (the operator does not appear anywhere in `self.__mro__`) */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
                                DeeTypeObject *type_type,
@@ -1123,12 +1123,12 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
  */
 __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
-/* Check if the callback slot for `name' in `self' is populated.
- * If it isn't, then search the MRO of `self' for the first type
+/* Check if the callback slot for `name` in `self` is populated.
+ * If it isn't, then search the MRO of `self` for the first type
  * that *does* implement said operator, and cache that base's
- * callback in `self'
- * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
- * @return: false: `self' doesn't implement the operator, and neither does one of its bases. In this
+ * callback in `self`
+ * @return: true:  Either `self` already implemented the operator, it it was successfully inherited.
+ * @return: false: `self` doesn't implement the operator, and neither does one of its bases. In this
  *                 case, trying to invoke the operator will result in a NotImplemented error. */
 PUBLIC NONNULL((1)) bool DCALL
 DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
@@ -1214,7 +1214,7 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 			/* Inherit the operator if necessary. */
 			if (DeeType_GetOpPointer(tp_self, info) == NULL &&
 			    /* Special case for "OPERATOR_CONSTRUCTOR", which is inherited abnormally,
-			     * in that after being inherited, its OpPointer may still be `null'! */
+			     * in that after being inherited, its OpPointer may still be `null`! */
 			    likely(name != OPERATOR_CONSTRUCTOR &&
 			           name != OPERATOR_GETATTR &&
 			           name != OPERATOR_DELATTR &&
@@ -1279,15 +1279,15 @@ err:
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
  *       extension operators as well as some operators marked as
- *       `OPCC_SPECIAL' (most notably: `tp_int'), as well as throwing
- *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
- * Operators marked as `oi_private' cannot be invoked and
- * attempting to do so will cause an `Error.TypeError' to be thrown.
- * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
- * HINT: `DeeObject_PInvokeOperator' can be used the same way `DeeObject_InvokeOperator'
+ *       `OPCC_SPECIAL` (most notably: `tp_int`), as well as throwing
+ *       a `Signal.StopIteration` when `tp_iter_next` is exhausted.
+ * Operators marked as `oi_private` cannot be invoked and
+ * attempting to do so will cause an `Error.TypeError` to be thrown.
+ * Attempting to invoke an unknown operator will cause an `Error.TypeError` to be thrown.
+ * HINT: `DeeObject_PInvokeOperator` can be used the same way `DeeObject_InvokeOperator`
  *        can be, with the addition of allowing inplace operators to be executed.
- *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
- *        will cause an `Error.TypeError' to be thrown. */
+ *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()`
+ *        will cause an `Error.TypeError` to be thrown. */
 PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, Dee_operator_t name,
                          size_t argc, DeeObject *const *argv) {
@@ -1404,10 +1404,10 @@ DeeString_IsSymbol(DeeStringObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
 
-/* Print a representation of invoking operator `name' on `self' with the given arguments.
+/* Print a representation of invoking operator `name` on `self` with the given arguments.
  * This function is used to generate the representation of the expression in the default
  * assertion failure handler.
- * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*') for `name' */
+ * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*`) for `name` */
 PUBLIC WUNUSED ATTR_INS(6, 5) NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             DeeObject *self, Dee_operator_t name,
@@ -1633,7 +1633,7 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 	default: break;
 	}
 
-	/* Fallback: print as `<self>.operator <name> (<argv...>)' */
+	/* Fallback: print as `<self>.operator <name> (<argv...>)` */
 	{
 		size_t i;
 		DO(err, DeeFormat_PRINT(printer, arg, ".operator "));
@@ -1658,7 +1658,7 @@ err:
 
 #undef DO
 
-/* When inlining stuff, gcc thinks that `self->tp_mro_iter' below is uninitialized.
+/* When inlining stuff, gcc thinks that `self->tp_mro_iter` below is uninitialized.
  * It's correct, but the the code it's complaining about is unreachable when said
  * field hasn't been initialized, yet. */
 __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
@@ -1697,8 +1697,8 @@ done:
 	return result;
 }
 
-/* Like `DeeTypeMRO_Next()', but only enumerate direct
- * bases of the type passed to `DeeTypeMRO_Init()' */
+/* Like `DeeTypeMRO_Next()`, but only enumerate direct
+ * bases of the type passed to `DeeTypeMRO_Init()` */
 PUBLIC WUNUSED NONNULL((1, 2)) DeeTypeObject *DFCALL
 DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
                           DeeTypeObject const *tp_iter) {

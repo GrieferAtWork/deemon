@@ -29,14 +29,14 @@
  * is being executed directly.
  * Note however that deemon source files that both serve as
  * a module, and as a stand-alone executable should simply
- * check if `__MAIN__' has been defined:
+ * check if `__MAIN__` has been defined:
  * >> function my_awesome_function() {
  * >>     print "Now doing something wasesome";
  * >> }
  * >>
  * >> #ifdef __MAIN__
  * >> // Execute our awesome function if we are being executed directly
- * >> // The python equivalent would be `if __name__ == '__main__':'
+ * >> // The python equivalent would be `if __name__ == "__main__":`
  * >> my_awesome_function();
  * >> #endif
  */

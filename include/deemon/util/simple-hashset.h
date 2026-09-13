@@ -41,7 +41,7 @@ DECL_BEGIN
 
 struct Dee_simple_hashset_item {
 	DREF DeeObject *shsi_key;  /* [0..1] Set item key. */
-	Dee_hash_t      shsi_hash; /* [valis_if(shsi_key)] Hash of `shsi_key'. */
+	Dee_hash_t      shsi_hash; /* [valis_if(shsi_key)] Hash of `shsi_key`. */
 };
 
 struct Dee_simple_hashset {
@@ -116,12 +116,12 @@ Dee_simple_hashset_visit(struct Dee_simple_hashset *__restrict self,
 	}
 }
 
-/* Hash config for `struct Dee_simple_hashset' */
+/* Hash config for `struct Dee_simple_hashset` */
 #define Dee_simple_hashset_hashst(self, hash)  ((hash) & (self)->shs_mask)
-#define Dee_simple_hashset_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_simple_hashset_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define Dee_simple_hashset_hashit(self, i)     ((self)->shs_elem + ((i) & (self)->shs_mask))
 
-/* Insert `item' into `self' (if it wasn't present already)
+/* Insert `item` into `self` (if it wasn't present already)
  * @return:  1: Successfully inserted the object.
  * @return:  0: An identical object already exists.
  * @return: -1: An error occurred. */
@@ -169,7 +169,7 @@ struct Dee_simple_hashset_with_lock {
 struct Dee_serial;
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED           /*!export-*/
-typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>` for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL

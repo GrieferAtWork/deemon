@@ -23,7 +23,7 @@
 #include "../__stdinc.h"
 
 #ifndef __GUARD_HYBRID___ATOMIC_H
-#error "Never include this file directly. - Always include `<hybrid/__atomic.h>' instead"
+#error "Never include this file directly. - Always include `<hybrid/__atomic.h>` instead"
 #endif /* !__GUARD_HYBRID___ATOMIC_H */
 
 /* Substitute atomic operations for one-another */
@@ -3157,10 +3157,10 @@ __NAMESPACE_INT_END
 
 #ifdef _MSC_VER
 #ifdef __HYBRID_ATOMIC_COMPLETE_USE_CXX
-#pragma warning(push) /* Keep `4197' disabled in C because of its use in macros. */
+#pragma warning(push) /* Keep `4197` disabled in C because of its use in macros. */
 #endif /* __HYBRID_ATOMIC_COMPLETE_USE_CXX */
 #if defined(__HYBRID_ATOMIC_COMPLETE_USE_CXX) || defined(__NO_builtin_choose_expr)
-#pragma warning(disable: 4197) /* Casting away `volatile' */
+#pragma warning(disable: 4197) /* Casting away `volatile` */
 #pragma warning(disable: 4047) /* Differing number of dereferences. */
 #pragma warning(disable: 4310) /* Cast truncates constant value */
 #pragma warning(disable: 4302) /* 'type case': truncation from '...' to '...' */

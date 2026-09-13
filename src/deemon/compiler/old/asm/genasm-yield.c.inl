@@ -34,14 +34,14 @@ DECL_BEGIN
 
 #define DO(expr) if unlikely(expr) goto err
 
-/* Yield the given `yieldexpr'. (keeps the stack-pointer unmodified) */
+/* Yield the given `yieldexpr`. (keeps the stack-pointer unmodified) */
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL ast_genasm_yield)(struct ast *__restrict yieldexpr,
                          struct ast *__restrict ddi) {
 	if (yieldexpr->a_type == AST_EXPAND) {
 		struct ast *expandexpr;
 
-		/* By default, the compiler will encode a regular, old `yield foo;' as `yield (foo,)...;',
+		/* By default, the compiler will encode a regular, old `yield foo;` as `yield (foo,)...;`,
 		 * so without special handling here, that would always be assembled as:
 		 * >> push   @foo
 		 * >> push   pack Tuple, #1
@@ -74,7 +74,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 			 * still be used (for sequences of up to 8 elements), as this way of yielding
 			 * sequence elements doesn't require the creation of an iterator at runtime, and
 			 * as such can be executed faster.
-			 * However, also respect `ASM_FOPTIMIZE_SIZE', and only perform this optimization
+			 * However, also respect `ASM_FOPTIMIZE_SIZE`, and only perform this optimization
 			 * for sequences of at most 1 element, as required assembly for anything larger
 			 * would result is more bytecode. */
 			size_t i, seqsize;

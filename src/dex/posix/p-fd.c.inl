@@ -84,7 +84,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `isatty()' */
+/* Figure out how to implement `isatty()` */
 #undef posix_isatty_USE_isatty
 #undef posix_isatty_USE_STUB
 #ifdef CONFIG_HAVE_isatty
@@ -95,7 +95,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `umask()' */
+/* Figure out how to implement `umask()` */
 #undef posix_umask_USE_umask
 #undef posix_umask_USE_STUB
 #ifdef CONFIG_HAVE_umask
@@ -106,7 +106,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `dup()' */
+/* Figure out how to implement `dup()` */
 #undef posix_dup_USE_dup
 #undef posix_dup_USE_STUB
 #ifdef CONFIG_HAVE_dup
@@ -117,7 +117,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `dup2()' */
+/* Figure out how to implement `dup2()` */
 #undef posix_dup2_USE_dup2
 #undef posix_dup2_USE_STUB
 #ifdef CONFIG_HAVE_dup2
@@ -128,7 +128,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `dup3()' */
+/* Figure out how to implement `dup3()` */
 #undef posix_dup3_USE_dup3
 #undef posix_dup3_USE_dup2
 #undef posix_dup3_USE_dup2_AND_fcntl
@@ -152,7 +152,7 @@ MODULE_NAME = none;
 
 
 
-/* Figure out how to implement `close()' */
+/* Figure out how to implement `close()` */
 #undef posix_close_USE_close
 #undef posix_close_USE_STUB
 #ifdef CONFIG_HAVE_close
@@ -204,7 +204,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 #if defined(__CYGWIN__) || defined(__CYGWIN32__)
 	/* BUG BUG BUG: Cygwin doesn't set errno when isatty()
-	 *              returns `0' because file isn't a tty */
+	 *              returns `0` because file isn't a tty */
 	DeeSystem_SetErrno(ENOTTY);
 #endif /* __CYGWIN__ || __CYGWIN32__ */
 	result = isatty(fd);
@@ -465,7 +465,7 @@ again:
 
 #if (defined(posix_dup3_USE_dup2_AND_fcntl) || \
      defined(posix_dup3_USE_dup2_AND_SetHandleInformation))
-	/* Validate the given `oflags' */
+	/* Validate the given `oflags` */
 #if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
 #elif defined(CONFIG_HAVE_O_NONBLOCK)

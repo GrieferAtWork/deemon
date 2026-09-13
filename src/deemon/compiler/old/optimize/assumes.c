@@ -43,7 +43,7 @@ DECL_BEGIN
  *     be modified arbitrarily by other modules, or threads.
  *   - static variables may change unpredictably after multiple
  *     executions. Also, write-once statics are optimized by
- *    `OPTIMIZE_FCONSTSYMS', so they're mostly covered already.
+ *    `OPTIMIZE_FCONSTSYMS`, so they`re mostly covered already.
  *   - And other types of variables don't even qualify at all!
  */
 #define SYMBOL_ALLOW_ASSUMPTIONS(sym) \
@@ -142,9 +142,9 @@ err:
 	return NULL;
 }
 
-/* Add an assumption that the value of `sym' currently is set to `value'.
- * When `value' is `NULL', assume that the value of `sym' is now undefined.
- * NOTE: Depending on the type of `sym', no assumption may be made, such as
+/* Add an assumption that the value of `sym` currently is set to `value`.
+ * When `value` is `NULL`, assume that the value of `sym` is now undefined.
+ * NOTE: Depending on the type of `sym`, no assumption may be made, such as
  *       in the case of external, or global variables, which may arbitrarily
  *       be modified by other threads running independently on the caller.
  * @return:  0: OK.
@@ -167,9 +167,9 @@ err:
 	return -1;
 }
 
-/* Lookup the assumed value of a given symbol `sym', and return a reference to it.
+/* Lookup the assumed value of a given symbol `sym`, and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
- *       unknown, `NULL' is returned, but no error is thrown. */
+ *       unknown, `NULL` is returned, but no error is thrown. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL ast_assumes_getsymval)(struct ast_assumes *__restrict self,
                               struct symbol *__restrict sym) {
@@ -188,9 +188,9 @@ done:
 }
 
 
-/* Update `self' to be the state of assumptions as it would be
- * if `ast' would have been optimized using those assumptions.
- * However, `ast' will not actually be optimized!
+/* Update `self` to be the state of assumptions as it would be
+ * if `ast` would have been optimized using those assumptions.
+ * However, `ast` will not actually be optimized!
  * This is used in cases where it is necessary to determine changes
  * in assumptions made ahead of time, in order to determine which
  * assumptions will continue to hold, which have changed, etc, such
@@ -198,8 +198,8 @@ done:
  * >> local x = "foobar";
  * >> for (local y: get_items()) {
  * >>     // If we were to blindly optimize the loop with previous assumptions,
- * >>     // this use of `x' would get optimized into a constant `"foobar"',
- * >>     // despite the fact that `x' will be re-written further down below.
+ * >>     // this use of `x` would get optimized into a constant `"foobar"',
+ * >>     // despite the fact that `x` will be re-written further down below.
  * >>     print x;
  * >>     x = y;
  * >> }
@@ -207,7 +207,7 @@ done:
  * loop ahead of time, before actually going ahead and performing
  * optimizations.
  * Then, knowing the assumptions at the start and end of the loop,
- * we can merge then using `ast_assumes_mergecond()' (the logic here
+ * we can merge then using `ast_assumes_mergecond()` (the logic here
  * being that a loop is a conditional branch in that it will either
  * continue running, in which case the new state will be used, or will
  * exit, in which case the old state will be used), thus meaning that
@@ -224,7 +224,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	case AST_CONSTEXPR: /* Doesn't affect any symbols. */
 	case AST_GOTO:      /* We don't care about jumps, or behavior after no-return. */
 	case AST_FUNCTION:  /* Inner functions can't modify any of the symbols we're after. */
-	case AST_LOOPCTL:   /* Same as `AST_GOTO': we don't care about jumps. */
+	case AST_LOOPCTL:   /* Same as `AST_GOTO`: we don't care about jumps. */
 		break;
 
 	case AST_SYM:
@@ -232,7 +232,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			return ast_assumes_setsymval(self, branch->a_sym, NULL);
 		break;
 
-	case AST_UNBIND: /* Symbol gets unbound (XXX: maybe track this as `ITER_DONE'?) */
+	case AST_UNBIND: /* Symbol gets unbound (XXX: maybe track this as `ITER_DONE`?) */
 		return ast_assumes_setsymval(self, branch->a_sym, NULL);
 
 		{
@@ -256,7 +256,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 
 		/* TODO: All the other branch types. */
 		/* TODO: Remember the special handling required for
-		 *      `AST_CONDITIONAL', `AST_LOOP' and `AST_TRY'. */
+		 *      `AST_CONDITIONAL`, `AST_LOOP` and `AST_TRY`. */
 
 
 	default:
@@ -346,8 +346,8 @@ ast_assumes_fini(struct ast_assumes *__restrict self) {
 }
 
 /* Setup AST assumption at the start of a conditional branch,
- * where the conditionally executed code is located in `child',
- * while assumptions already made until then are in `parent'
+ * where the conditionally executed code is located in `child`,
+ * while assumptions already made until then are in `parent`
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int
@@ -362,7 +362,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 }
 
 /* Initialize a set of assumptions for a child-function.
- * This also affects the limit of `ast_assumes_undefined_all()' */
+ * This also affects the limit of `ast_assumes_undefined_all()` */
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
                                  struct ast_assumes const *__restrict parent) {
@@ -389,10 +389,10 @@ same_constant_value(DeeObject *__restrict a,
 	return Dee_COMPARE_ISEQ_NO_ERR(temp);
 }
 
-/* Merge assumptions made in `child' and `sibling', such that
+/* Merge assumptions made in `child` and `sibling`, such that
  * only assumptions made in both spaces still hold true, saving
- * that intersection in `child'. Or in other words:
- *   -> Remove all of `child's assumptions, not also made by `sibling'
+ * that intersection in `child`. Or in other words:
+ *   -> Remove all of `child`s assumptions, not also made by `sibling`
  *   -> child = child & sibling;
  * >> local foo = 7;
  * >> if (bar()) {
@@ -404,8 +404,8 @@ same_constant_value(DeeObject *__restrict a,
  * >> // ASSUME(foo == 7)
  * Note however that negative assumptions (i.e. assumptions made
  * that state that the value of a symbol currently is unknown),
- * are merged as a union, meaning that it suffices for either `child'
- * or `sibling' to explicitly not know the value of a symbol, which
+ * are merged as a union, meaning that it suffices for either `child`
+ * or `sibling` to explicitly not know the value of a symbol, which
  * is required in cases such as the following:
  * >> local foo = 7;
  * >> if (bar()) {
@@ -413,9 +413,9 @@ same_constant_value(DeeObject *__restrict a,
  * >> } else {
  * >>     foo = 14;
  * >> }
- * >> // ASSUME(foo == UNKNOWN) // Even though both branches made assumptions for `foo'
- * When `sibling' is `NULL', only keep negative assumptions.
- * WARNING: `sibling' (when non-NULL) may have its data stolen.
+ * >> // ASSUME(foo == UNKNOWN) // Even though both branches made assumptions for `foo`
+ * When `sibling` is `NULL`, only keep negative assumptions.
+ * WARNING: `sibling` (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int
@@ -467,14 +467,14 @@ err:
 
 
 
-/* Merge the assumptions made by `follower' with `self' in a situation
- * where `follower' is a piece of follow-up code to `self', resulting
+/* Merge the assumptions made by `follower` with `self` in a situation
+ * where `follower` is a piece of follow-up code to `self`, resulting
  * in the same behavior as would have been caused by all assumptions
- * made by `follower' instead having been made in `self'
+ * made by `follower` instead having been made in `self`
  * This is used to merge assumptions from conditional branches onto
  * those made by the parent-branch, after they had been merged with
  * each other.
- * WARNING: `follower' may have its data stolen. */
+ * WARNING: `follower` may have its data stolen. */
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
                           struct ast_assumes *__restrict follower) {
@@ -487,7 +487,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 			bzero(&follower->aa_syms, sizeof(struct ast_symbol_assumes));
 			return 0;
 		}
-		/* Override existing assumptions with those from `follower' */
+		/* Override existing assumptions with those from `follower` */
 		for (i = 0; i <= follower->aa_syms.sa_mask; ++i) {
 			struct ast_symbol_assume *fass;
 			fass = &follower->aa_syms.sa_elem[i];

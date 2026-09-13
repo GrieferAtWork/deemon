@@ -267,7 +267,7 @@ DECL_END
 
 
 
-/* Special-case optimizations for `VCallAttrf' */
+/* Special-case optimizations for `VCallAttrf` */
 #define DEFINE_DeeObject_VCallAttrf
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_VCallAttrStringHashf
@@ -335,15 +335,15 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 }
 
 /* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
- * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'
+ * Check if `self` has an attribute `attr`. Same as the builtin `deemon.hasattr()`
  * function. Note that an attribute that is currently unbound, differs from one
- * that does not exist at all. This function will return `1' (true) for the former,
- * but `0' (false) for the later. During normal attribute access, this difference
- * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
+ * that does not exist at all. This function will return `1` (true) for the former,
+ * but `0` (false) for the later. During normal attribute access, this difference
+ * is reflected by the type of exception: `UnboundAttribute` and `AttributeError`.
  * @return: == 0: Attribute doesn't exist
  * @return: > 0:  Attribute exists
  * @return: < 0:  An error was thrown
- * HINT: Use `Dee_HAS_IS*' to test return value */
+ * HINT: Use `Dee_HAS_IS*` to test return value */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr) {

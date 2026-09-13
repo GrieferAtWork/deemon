@@ -176,11 +176,11 @@ cell_clear(DeeCellObject *__restrict self) {
 }
 
 /* Get/Del/Set the value associated with a given Cell.
- * HINT: These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
- *       With that in mind, `DeeCell_Del()' and `DeeCell_Set()'
- *       always return `0' indicative of a successful callback.
- * NOTE: `DeeCell_Get' will return `NULL' and throw an `UnboundAttribute' if the `self' is
- *       empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
+ * HINT: These are the getset callbacks used for `Cell.item` (or its deprecated name `Cell.value`).
+ *       With that in mind, `DeeCell_Del()` and `DeeCell_Set()`
+ *       always return `0` indicative of a successful callback.
+ * NOTE: `DeeCell_Get` will return `NULL` and throw an `UnboundAttribute` if the `self` is
+ *       empty, whereas `DeeCell_TryGet()` will do the same, but never throw any error. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_TryGet(DeeObject *__restrict self) {
 	DeeCellObject *me = (DeeCellObject *)self;

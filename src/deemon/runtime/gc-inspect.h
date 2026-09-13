@@ -39,12 +39,12 @@ struct gcset_item {
 
 typedef struct {
 	struct gcset_item  *gs_map; /* [0..gs_msk+1][owned] Map of referenced objects, or "NULL" if not-yet-allocated */
-	Dee_hash_t          gs_msk; /* Hash-mask for `gs_map' */
-	size_t              gs_siz; /* # of non-NULL items in `gs_map', or `(size_t)-1' after an error */
+	Dee_hash_t          gs_msk; /* Hash-mask for `gs_map` */
+	size_t              gs_siz; /* # of non-NULL items in `gs_map`, or `(size_t)-1` after an error */
 } GCSet;
 
 #define GCSet_HashSt(self, hash)  ((hash) & (self)->gs_msk)
-#define GCSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define GCSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define GCSet_HashIt(self, i)     ((self)->gs_map + ((i) & (self)->gs_msk))
 
 
@@ -56,8 +56,8 @@ struct gc_collection {
 	PROXY_OBJECT_HEAD  (gcc_obj);     /* [1..1][const] The object whose reachable set is being described. */
 	gcset_populate_cb_t gcc_populate; /* [1..1][const] Cache population function */
 	GCSet               gcc_cache;    /* [const_if(Dee_once_hasrun(&gcc_loaded))] Cache of reachable objects (loaded lazily if needed for sequence operations) */
-	Dee_once_t          gcc_loaded;   /* Is-loaded controller for `gcc_cache' */
-	/* NOTE: `gcc_populate' should be one of:
+	Dee_once_t          gcc_loaded;   /* Is-loaded controller for `gcc_cache` */
+	/* NOTE: `gcc_populate` should be one of:
 	 * - GCCollection_PopulateReachableDirect
 	 * - GCCollection_PopulateReachableTransitive
 	 * - GCCollection_PopulateReferringDirect
@@ -70,7 +70,7 @@ INTDEF DeeTypeObject GCCollection_Type;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(GCCollection, gcci_coll); /* [1..1][const] Underlying collection (cache of this has already been loaded) */
-	struct gcset_item                 *gcci_iter;  /* [1..1][const] Next-pointer (in `gcci_coll->gcc_cache.gs_map') */
+	struct gcset_item                 *gcci_iter;  /* [1..1][const] Next-pointer (in `gcci_coll->gcc_cache.gs_map`) */
 	struct gcset_item                 *gcci_end;   /* [1..1][const][== gcci_coll->gcc_cache.gs_map+(.gs_msk+1)] End-pointer */
 } GCCollectionIterator;
 
@@ -83,7 +83,7 @@ INTDEF DeeTypeObject GCCollectionIterator_Type;
 typedef struct {
 	OBJECT_HEAD
 	DREF struct gc_generation *gci_gen; /* [0..1] Current GC generation, or "NULL" if enumeration has finished. */
-	DREF DeeObject            *gci_obj; /* [1..1][valid_if(gci_gen)] Next object to enumerate (object exists within `gci_gen') */
+	DREF DeeObject            *gci_obj; /* [1..1][valid_if(gci_gen)] Next object to enumerate (object exists within `gci_gen`) */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_lock_t          gci_lck; /* Lock for this iterator. */
 #endif /* !CONFIG_NO_THREADS */

@@ -109,7 +109,7 @@ parse_current_token_as_template_string:
 				unsigned char const *spec;
 				spec = self->jl_tokstart;
 #ifdef JIT_EVAL
-				/* Mirror what is done in `/src/deemon/objects/unicode/format.c:format_impl' */
+				/* Mirror what is done in `/src/deemon/objects/unicode/format.c:format_impl` */
 				if (*spec == '!') {
 					unsigned char mode;
 					mode = *++spec;
@@ -121,7 +121,7 @@ parse_current_token_as_template_string:
 							goto err_expr;
 					} else {
 						DeeError_Throwf(&DeeError_ValueError,
-						                "Invalid character %.1q following `!' in string.format",
+						                "Invalid character %.1q following `!` in string.format",
 						                spec);
 err_expr:
 						Dee_Decref(expr);

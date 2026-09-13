@@ -75,7 +75,7 @@ DECL_BEGIN
 #include <deemon/asm-table.h>
 
 
-/* Return a pointer to the instruction following `pc' */
+/* Return a pointer to the instruction following `pc` */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 DeeAsm_NextInstr(instruction_t const *__restrict pc) {
 	instruction_t opcode;
@@ -109,9 +109,9 @@ again:
 }
 
 
-/* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
+/* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL`)
  * The returned pointer points to the first actual instruction byte.
- * When no prefix is present, simply re-return `pc' */
+ * When no prefix is present, simply re-return `pc` */
 PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_instruction_t *DCALL
 DeeAsm_SkipPrefix(Dee_instruction_t const *__restrict pc) {
 	instruction_t opcode;
@@ -145,17 +145,17 @@ again:
 
 
 
-/* Return if the given `instr' doesn't return normally (i.e. doesn't fall
+/* Return if the given `instr` doesn't return normally (i.e. doesn't fall
  * through to its successor instruction) when executed in a context where
- * `code_flags' (which is the set of CODE_F* flags) is active. */
+ * `code_flags` (which is the set of CODE_F* flags) is active. */
 PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	bool result = false;
 	switch (instr) {
 
 	case ASM_RET:
-		/* In yielding code, the `ret' instruction does actually
-		 * return, since it would actually be the `yield' instruction. */
+		/* In yielding code, the `ret` instruction does actually
+		 * return, since it would actually be the `yield` instruction. */
 		if (code_flags & Dee_CODE_FYIELDING)
 			break;
 		ATTR_FALLTHROUGH
@@ -176,7 +176,7 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	return result;
 }
 
-/* Same as `DeeAsm_NextInstr()', but also keep track of the current stack depth.
+/* Same as `DeeAsm_NextInstr()`, but also keep track of the current stack depth.
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
  * WARNING: This also goes for instructions that always take a branch! */
@@ -187,7 +187,7 @@ DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
 	return DeeAsm_NextInstrEf(pc, p_stacksz, &sp_add, &sp_sub);
 }
 
-/* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
+/* Same as `DeeAsm_NextInstr`, but also returns the effective stack effect (sub/add) of the instruction.
  * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
  * NOTES:
  *   - Because some instruction's stack effect depends on the current stack depth;
@@ -196,8 +196,8 @@ DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
  *   - Since some instructions exist who's stack-effect depends on parameters only
  *     known at runtime (e.g.: ASM_JMP_POP_POP), those instructions have an effective
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_add = (*p_sp_sub = *p_stacksz) + 2, *p_stacksz -= 2;')
- *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
+ *     influence (e.g.: `ASM_JMP_POP_POP`: `*p_sp_add = (*p_sp_sub = *p_stacksz) + 2, *p_stacksz -= 2;`)
+ *   - Before returning, `*p_stacksz` will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add` */
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) Dee_instruction_t *DCALL
 DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict p_stacksz,

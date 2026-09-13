@@ -152,21 +152,21 @@ err_ff_tt_assumes:
 		if (other_branch && ast_doesnt_return(other_branch, AST_DOESNT_RETURN_FNORMAL) < 0)
 			goto after_constant_condition;
 		if (!eval_branch) {
-			/* No branch is being evaluated. - Just replace the branch with `none' */
-			/* TODO: In relation to the `TODO: That's not true...': we'd have to assign
-			 *       `{ <everything_after_label_in(other_branch)>; none; }' instead,
-			 *       if `other_branch' contains a `label'. */
+			/* No branch is being evaluated. - Just replace the branch with `none` */
+			/* TODO: In relation to the `TODO: That's not true...`: we'd have to assign
+			 *       `{ <everything_after_label_in(other_branch)>; none; }` instead,
+			 *       if `other_branch` contains a `label`. */
 			ast_fini_contents(self);
 			self->a_type      = AST_CONSTEXPR;
 			self->a_constexpr = DeeNone_NewRef();
 		} else if (eval_branch == self->a_conditional.c_cond) {
 			/* Special case: The branch that is getting evaluated
 			 *               is referencing the condition. */
-			/* TODO: In relation to the `TODO: That's not true...': we'd have to assign
-			 *       `{ __stack local _temp = <eval_branch>; <everything_after_label_in(other_branch)>; _temp; }'
-			 *       instead, if `other_branch' contains a `label'. */
+			/* TODO: In relation to the `TODO: That's not true...`: we'd have to assign
+			 *       `{ __stack local _temp = <eval_branch>; <everything_after_label_in(other_branch)>; _temp; }`
+			 *       instead, if `other_branch` contains a `label`. */
 			if (self->a_flag & AST_FCOND_BOOL) {
-				/* Must also convert `eval_branch' to a boolean. */
+				/* Must also convert `eval_branch` to a boolean. */
 				DREF struct ast *graft;
 				int temp;
 				graft = ast_setscope_and_ddi(ast_bool(AST_FBOOL_NORMAL, eval_branch), self);
@@ -192,10 +192,10 @@ err_ff_tt_assumes:
 			 * >>     print "Here";
 			 * >> }
 			 */
-			/* TODO: In relation to the `TODO: That's not true...': we'd have to assign
+			/* TODO: In relation to the `TODO: That's not true...`: we'd have to assign
 			 *       `{ <l_cond>; __stack local _temp = <eval_branch>;
 			 *          <everything_after_label_in(other_branch)>; _temp; }'
-			 *       instead, if `other_branch' contains a `label'. */
+			 *       instead, if `other_branch` contains a `label`. */
 			elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 			if unlikely(!elemv)
 				goto err;
@@ -232,7 +232,7 @@ after_constant_condition:
 			           : 0;
 			if (ff_value >= 0) {
 				if (ff_value && result_used) {
-					/* Optimize: `!!foo() ? : true' --> `({ foo(); true; })' */
+					/* Optimize: `!!foo() ? : true` --> `({ foo(); true; })` */
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_ff);
 					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
@@ -246,7 +246,7 @@ after_constant_condition:
 					self->a_type            = AST_MULTIPLE;
 					self->a_flag            = AST_FMULTIPLE_KEEPLAST;
 				} else if (result_used) {
-					/* Optimize: `!!foo() ? : false' --> `!!foo();' */
+					/* Optimize: `!!foo() ? : false` --> `!!foo();` */
 					ast_decref_nokill(self->a_conditional.c_tt);
 					ast_xdecref(self->a_conditional.c_ff);
 					__STATIC_IF(offsetof(struct ast, a_bool) !=
@@ -256,7 +256,7 @@ after_constant_condition:
 					self->a_type = AST_BOOL;
 					self->a_flag = AST_FBOOL_NORMAL;
 				} else {
-					/* Optimize: `!!foo() ? : false' --> `foo();' */
+					/* Optimize: `!!foo() ? : false` --> `foo();` */
 					if (ast_graft_onto(self, self->a_conditional.c_cond))
 						goto err;
 				}
@@ -270,7 +270,7 @@ after_constant_condition:
 			           : 0;
 			if (tt_value >= 0) {
 				if (!tt_value && result_used) {
-					/* Optimize: `!!foo() ? false : ' --> `({ foo(); false; })' */
+					/* Optimize: `!!foo() ? false : ` --> `({ foo(); false; })` */
 					DREF struct ast **elemv;
 					ASSERT(self->a_conditional.c_tt);
 					elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
@@ -284,7 +284,7 @@ after_constant_condition:
 					self->a_type            = AST_MULTIPLE;
 					self->a_flag            = AST_FMULTIPLE_KEEPLAST;
 				} else if (result_used) {
-					/* Optimize: `!!foo() ? true : ' --> `!!foo();' */
+					/* Optimize: `!!foo() ? true : ` --> `!!foo();` */
 					ast_decref_nokill(self->a_conditional.c_ff);
 					ast_xdecref(self->a_conditional.c_tt);
 					__STATIC_IF(offsetof(struct ast, a_bool) !=
@@ -294,7 +294,7 @@ after_constant_condition:
 					self->a_type = AST_BOOL;
 					self->a_flag = AST_FBOOL_NORMAL;
 				} else {
-					/* Optimize: `!!foo() ? true : ' --> `foo();' */
+					/* Optimize: `!!foo() ? true : ` --> `foo();` */
 					if (ast_graft_onto(self, self->a_conditional.c_cond))
 						goto err;
 				}
@@ -412,7 +412,7 @@ optimize_conditional_bool_predictable_inherit_multiple:
 			if (DeeBool_Check(tt->a_constexpr) &&
 			    DeeBool_Check(ff->a_constexpr)) {
 				/* TODO: Even without this special case, the optimization
-				 *       for `operator []' should also be able to get
+				 *       for `operator []` should also be able to get
 				 *       rid of this! */
 				tt_value = DeeBool_IsTrue(tt->a_constexpr);
 				ff_value = DeeBool_IsTrue(ff->a_constexpr);

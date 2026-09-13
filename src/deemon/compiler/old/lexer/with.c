@@ -41,7 +41,7 @@ DECL_BEGIN
  * >>     <bar>
  * >> }
  *
- * `with' doesn't have its own AST, but instead is equivalent
+ * `with` doesn't have its own AST, but instead is equivalent
  * (and actually encoded as) the following replacement:
  * >> {
  * >>     __stack local __hidden = <foo>;
@@ -59,11 +59,11 @@ DECL_BEGIN
  * in other places, such as to automatically close files:
  * >> with (local fp = File.open("foo")) {
  * >>     print fp.read();
- * >> }   // `fp.operator leave()' here will invoke `fp.close()'
+ * >> }   // `fp.operator leave()` here will invoke `fp.close()`
  */
 
 /* Parse a with-statement/expression.
- * NOTE: This function expects the current token to be `with' */
+ * NOTE: This function expects the current token to be `with` */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_with(bool is_statement, bool allow_nonblock) {
 	struct ast_loc loc;
@@ -200,7 +200,7 @@ err_scope_r:
 }
 
 
-/* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
+/* Same as `ast_parse_try_hybrid` but for with statements / expressions. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	struct ast_loc loc;

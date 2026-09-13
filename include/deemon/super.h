@@ -38,11 +38,10 @@
 DECL_BEGIN
 
 typedef struct Dee_super_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
-	                             * NOTE: This is never `&DeeSuper_Type' itself and the
-	                             *       check `DeeObject_InstanceOf(s_self, s_type)'
+	                             * NOTE: This is never `&DeeSuper_Type` itself and the
+	                             *       check `DeeObject_InstanceOf(s_self, s_type)`
 	                             *       must always succeed. */
 	DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 } DeeSuperObject;
@@ -51,31 +50,31 @@ typedef struct Dee_super_object {
 #define DeeSuper_SELF(x) Dee_REQUIRES_OBJECT(DeeSuperObject, x)->s_self
 
 DDATDEF DeeTypeObject DeeSuper_Type;
-#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeSuper_Type) /* `Super' is final */
+#define DeeSuper_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeSuper_Type) /* `Super` is final */
 #define DeeSuper_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeSuper_Type)
 
-/* Create a new super-wrapper for `tp_self:self'.
+/* Create a new super-wrapper for `tp_self:self`.
  * NOTE: This function automatically checks the given operands for validity:
  *        - DeeType_Check(tp_self);
  *        - DeeObject_InstanceOf(self, tp_self);
- * It also automatically unwraps `self' should it already be a super-object. */
+ * It also automatically unwraps `self` should it already be a super-object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self);
 
 /* Taking some object, return the effective super-class of it.
- * HINT: When `self' is another super-object, this is identical to
- *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))'
- * @throws: Error.TypeError: The class of `self' has no super-class. */
+ * HINT: When `self` is another super-object, this is identical to
+ *       `DeeSuper_New(DeeType_BASE(DeeSuper_TYPE(self)), DeeSuper_SELF(self))`
+ * @throws: Error.TypeError: The class of `self` has no super-class. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSuper_Of(DeeObject *__restrict self);
 
 
 
 /*
- * Expose all of the `DeeObject_T*' functions.
- * These behave the same as their equivalent `DeeObject_*', except that:
- * - It is assumed that `Dee_ASSERT_OBJECT_TYPE_A(self, tp_self)'
- * - MRO resolution behaves as if `Dee_TYPE(self) == tp_self'
+ * Expose all of the `DeeObject_T*` functions.
+ * These behave the same as their equivalent `DeeObject_*`, except that:
+ * - It is assumed that `Dee_ASSERT_OBJECT_TYPE_A(self, tp_self)`
+ * - MRO resolution behaves as if `Dee_TYPE(self) == tp_self`
  *
  * In other words, these functions behave like:
  *     DeeObject_TFoo(tp_self, self, ...)

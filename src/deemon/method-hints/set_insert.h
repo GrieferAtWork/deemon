@@ -32,8 +32,8 @@ err:
 }
 
 /* Insert a key into a set
- * @return: Dee_HAS_YES: Given `key' was inserted and wasn't already present
- * @return: Dee_HAS_NO:  Given `key' was already present
+ * @return: Dee_HAS_YES: Given `key` was inserted and wasn't already present
+ * @return: Dee_HAS_NO:  Given `key` was already present
  * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __set_insert__.set_insert([[nonnull]] DeeObject *self,

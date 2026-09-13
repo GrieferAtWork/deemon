@@ -82,7 +82,7 @@ mf_init(DeeMemoryFileObject *__restrict self) {
 
 PRIVATE NONNULL((1)) void DCALL
 mf_fini(DeeMemoryFileObject *__restrict self) {
-	/* We only get here if `DeeMemoryFile_Close()'
+	/* We only get here if `DeeMemoryFile_Close()`
 	 * was used to duplicate the memory block! */
 	Dee_Free((void *)self->mf_begin);
 }
@@ -320,9 +320,9 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 /* Open a read-only view for raw memory contained within the given data-block.
  * The returned file can be used to access said data in a read-only fashion,
  * however since the data isn't copied, before that data gets freed, you must
- * call `DeeMemoryFile_Close()' to inform the view of this happened, while
+ * call `DeeMemoryFile_Close()` to inform the view of this happened, while
  * simultaneously decrementing its reference counter by ONE.
- * `DeeMemoryFile_Close()' will automatically determine the proper course
+ * `DeeMemoryFile_Close()` will automatically determine the proper course
  * of action, dependent on whether the file is being shared with some other
  * part of deemon. If it is, it will replace the view's data with a heap-allocated
  * copy of that data, and if that isn't possible, modify the view to represent
@@ -834,11 +834,11 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 	/* .ft_putc   = */ NULL,
 };
 
-/* Open a new file stream for reading memory from `data...+=data_size'
- * This stream assumes that data is immutable, and owned by `data_owner'.
+/* Open a new file stream for reading memory from `data...+=data_size`
+ * This stream assumes that data is immutable, and owned by `data_owner`.
  *
- * The best example for a type that fits these requirements is `string'
- * This function greatly differs from `DeeMemoryFile_New()', in that
+ * The best example for a type that fits these requirements is `string`
+ * This function greatly differs from `DeeMemoryFile_New()`, in that
  * the referenced data is shared with an explicit object, rather that
  * being held using a ticket-system, where the caller must manually
  * inform the memory stream when data is supposed to get released.
@@ -864,7 +864,7 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Similar to `DeeFileReader_NewMemory()', but used
+/* Similar to `DeeFileReader_NewMemory()`, but used
  * to open a generic object using the buffer-interface. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFileReader_NewObjectBuffer(DeeObject *__restrict data,
@@ -2630,7 +2630,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			struct Dee_string_utf *utf = wstr->s_data;
 			ASSERT(utf != NULL);
 
-			/* WARNING: Just string UTF finalizer that doesn't free width data for `width' */
+			/* WARNING: Just string UTF finalizer that doesn't free width data for `width` */
 			if (width == STRING_WIDTH_2BYTE && utf->u_data[STRING_WIDTH_4BYTE]) {
 				Dee_Free((size_t *)utf->u_data[STRING_WIDTH_4BYTE] - 1);
 			} else if (width == STRING_WIDTH_4BYTE && utf->u_data[STRING_WIDTH_2BYTE]) {
@@ -2850,7 +2850,7 @@ again:
 
 	/* Ensure that bytes have been allocated far enough along for us to be
 	 * able to perform the write!
-	 * If the caller's `pos' is something unreasonable, this will just OOM. */
+	 * If the caller's `pos` is something unreasonable, this will just OOM. */
 	status = writer_bytes_set_allocated_or_unlock(self, (size_t)pos + bufsize);
 	if (status != 0) {
 		if unlikely(status < 0)
@@ -2858,7 +2858,7 @@ again:
 		goto again;
 	}
 
-	/* bzero-initialize memory between the current (old) EOF and the caller-given `pos' */
+	/* bzero-initialize memory between the current (old) EOF and the caller-given `pos` */
 	old_length = self->w_printer.wp_byt.bp_length;
 	base = DeeBytes_BUFFER_DATA(self->w_printer.wp_byt.bp_bytes);
 	ASSERT(DeeBytes_SIZE(self->w_printer.wp_byt.bp_bytes) >= ((size_t)pos + bufsize));
@@ -2948,7 +2948,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 };
 
 /* Open a new file stream that writes all written data into a string.
- * @param: hint: One of `Dee_FILE_WRITER_HINT_*' */
+ * @param: hint: One of `Dee_FILE_WRITER_HINT_*` */
 PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
 DeeFileWriter_New(unsigned int hint) {
 	DREF DeeFileWriterObject *result;
@@ -3045,7 +3045,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 				/* tp_copy_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFilePrinter_Close()') */
+				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFilePrinter_Close()`) */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
@@ -3091,7 +3091,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 	/* .ft_putc   = */ NULL,
 };
 
-/* Construct a new printer-wrapper for `printer' and `arg' */
+/* Construct a new printer-wrapper for `printer` and `arg` */
 PUBLIC WUNUSED NONNULL((1)) DREF /*FilePrinter*/ DeeObject *DCALL
 DeeFilePrinter_New(Dee_formatprinter_t printer, void *arg) {
 	DREF DeeFilePrinterObject *result;
@@ -3107,11 +3107,11 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Drop the primary reference from `self'.
+/* Drop the primary reference from `self`.
  *
- * This function tries to destroy `self', but if that fails (because
+ * This function tries to destroy `self`, but if that fails (because
  * the object is still being shared), it will acquire a write-lock to
- * `self' (without serving interrupts), and then proceed to delete
+ * `self` (without serving interrupts), and then proceed to delete
  * the linked printer.
  *
  * @return: * : The total sum of return values of the underlying printer,
@@ -3188,7 +3188,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 		mapflags |= DeeMapFile_F_MUSTMMAP | DeeMapFile_F_MAPSHARED;
 		if (args.nulbytes != 0) {
 			return DeeError_Throwf(&DeeError_ValueError,
-			                       "Cannot use `mapshared = true' with non-zero `nulbytes = %" PRFuSIZ "'",
+			                       "Cannot use `mapshared = true` with non-zero `nulbytes = %" PRFuSIZ "'",
 			                       args.nulbytes);
 		}
 	}

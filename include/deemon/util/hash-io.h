@@ -41,8 +41,8 @@ DECL_BEGIN
  * TERM       TYPE                 EXAMPLE                  DESCRIPTION
  * VTAB       VTAB_ITEM            DeeDictObject.d_vtab     Value table. Base address can either
  *                                                          be REAL (0-based) or VIRT (1-based)
- * HTAB       union Dee_hash_htab  DeeDictObject.d_htab     Hash table. Vector of `union Dee_hash_htab'.
- *                                                          Element size depends on `Dee_hash_hidxio_t',
+ * HTAB       union Dee_hash_htab  DeeDictObject.d_htab     Hash table. Vector of `union Dee_hash_htab`.
+ *                                                          Element size depends on `Dee_hash_hidxio_t`,
  *                                                          which in turn depends on VALLOC
  * VALLOC     Dee_hash_vidx_t      DeeDictObject.d_valloc   Allocated size of VTAB
  * HMASK      Dee_hash_t           DeeDictObject.d_hmask    Hash mask. == size of HTAB (in elements) -1.
@@ -126,7 +126,7 @@ struct Dee_hash_hidxio_ops {
 	                  union Dee_hash_htab const *src,
 	                  Dee_hash_hidx_t n_words);
 
-	/* Insert `it_vidx' (whose associated object has a hash of `it_hash')
+	/* Insert `it_vidx` (whose associated object has a hash of `it_hash`)
 	 * into "HTAB", and return the "htab_idx" where the item was inserted:
 	 * >> Dee_hash_t hs, perturb;
 	 * >> for (_DeeHash_HashIdxInit(&hs, &perturb, it_hash, hmask);;
@@ -145,7 +145,7 @@ struct Dee_hash_hidxio_ops {
 	(DCALL *hxio_insert)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	                     Dee_hash_t it_hash, /*virt*/Dee_hash_vidx_t it_vidx);
 
-	/* Decrement all HTAB elements `>= vtab_threshold':
+	/* Decrement all HTAB elements `>= vtab_threshold`:
 	 * >> Dee_hash_t i;
 	 * >> for (i = 0; i <= hmask; ++i) {
 	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -156,7 +156,7 @@ struct Dee_hash_hidxio_ops {
 	(DCALL *hxio_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	                       /*virt*/ Dee_hash_vidx_t vtab_threshold);
 
-	/* Increment all HTAB elements `>= vtab_threshold':
+	/* Increment all HTAB elements `>= vtab_threshold`:
 	 * >> Dee_hash_t i;
 	 * >> for (i = 0; i <= hmask; ++i) {
 	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -167,7 +167,7 @@ struct Dee_hash_hidxio_ops {
 	(DCALL *hxio_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	                       /*virt*/ Dee_hash_vidx_t vtab_threshold);
 
-	/* Decrement all HTAB elements `>= vtab_min && <= vtab_max':
+	/* Decrement all HTAB elements `>= vtab_min && <= vtab_max`:
 	 * >> Dee_hash_t i;
 	 * >> for (i = 0; i <= hmask; ++i) {
 	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -179,7 +179,7 @@ struct Dee_hash_hidxio_ops {
 	                       /*virt*/ Dee_hash_vidx_t vtab_min,
 	                       /*virt*/ Dee_hash_vidx_t vtab_max);
 
-	/* Increment all HTAB elements `>= vtab_min && <= vtab_max':
+	/* Increment all HTAB elements `>= vtab_min && <= vtab_max`:
 	 * >> Dee_hash_t i;
 	 * >> for (i = 0; i <= hmask; ++i) {
 	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -286,7 +286,7 @@ DDATDEF struct Dee_hash_hidxio_ops Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXIO_C
  * - Accepts indices in range "[Dee_hash_vidx_tovirt(0),Dee_hash_vidx_tovirt(ht_vsize)-1)"  (aka: "[1,ht_vsize]")
  * - These sort of indices are what is stored in HTAB. Indices
  *   start at 1, because an index=0 appearing in HTAB has the
- *   special meaning of `Dee_HASH_HTAB_EOF'
+ *   special meaning of `Dee_HASH_HTAB_EOF`
  *
  * REAL:
  * - Accepts indices in range "[0,ht_vsize)"

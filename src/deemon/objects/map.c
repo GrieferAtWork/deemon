@@ -125,7 +125,7 @@ print define_Dee_HashStr("end");
 PRIVATE ATTR_COLD int DCALL
 err_map_enumerate_start_but_no_end(void) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Mapping.enumerate: `start' given, but no `end'");
+	                       "Mapping.enumerate: `start` given, but no `end`");
 }
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -394,7 +394,7 @@ PRIVATE struct type_method tpconst map_methods[] = {
 
 struct map_printrepr_foreach_data {
 	Dee_formatprinter_t mprf_printer; /* [1..1] Wrapped printer callback */
-	void               *mprf_arg;     /* [?..?] Cookie for `mprf_printer' */
+	void               *mprf_arg;     /* [?..?] Cookie for `mprf_printer` */
 	bool                mprf_isfirst; /* True if this is the first item */
 };
 
@@ -621,7 +621,7 @@ map_fromkeys(DeeTypeObject *self, size_t argc,
 
 	/* Special case: if the accessed mapping type isn't "Mapping" (iow:
 	 * the caller is calling <SubClassOfMapping>.fromkeys()), then cast
-	 * the produced wrapper into an instance of `SubClassOfMapping'. */
+	 * the produced wrapper into an instance of `SubClassOfMapping`. */
 	if (self != &DeeMap_Type) {
 		DREF DeeObject *instance;
 		instance = DeeObject_New(self, 1, (DeeObject *const *)&result);
@@ -873,7 +873,7 @@ PRIVATE char const map_doc[] =
 
 
 
-/* `Mapping from deemon' */
+/* `Mapping from deemon` */
 PUBLIC DeeTypeObject DeeMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Mapping),
@@ -929,16 +929,16 @@ PUBLIC DeeTypeObject DeeMap_Type = {
 
 /* An empty instance of a generic mapping object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
- *       calling the constructor of `DeeMap_Type' with no arguments.
+ *       calling the constructor of `DeeMap_Type` with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeMap_Type' should be considered stub/empty. */
+ * HINT: Any exact instance of `DeeMap_Type` should be considered stub/empty. */
 PUBLIC DeeObject DeeMap_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeMap_Type)
 };
 
 
-/* Wrapper for `DeeObject_BoolInherited(DeeObject_InvokeMethodHint(map_operator_contains, self, key))' */
+/* Wrapper for `DeeObject_BoolInherited(DeeObject_InvokeMethodHint(map_operator_contains, self, key))` */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeMap_OperatorContainsAsBool(DeeObject *self,
                               DeeObject *key) {

@@ -412,7 +412,7 @@ err:
  * by sub-classes from being enumerated too early with incorrect names
  *
  * @param: undo: When non-NULL, invoke this for every already-processed
- *               field if `cb' happens to return a negative value.
+ *               field if `cb` happens to return a negative value.
  *
  * @return: >= 0: Success (return value is the sum of return values from "cb")
  * @return: < 0:  Enumeration stopped prematurely (return value is first
@@ -728,7 +728,7 @@ DeeStructObject_Init(DeeObject *__restrict self,
 struct struct_serialize_data {
 	DeeObject    *scd_src;        /* [1..1][const] Object being serialized */
 	DeeSerial    *scd_dst_writer; /* [1..1][const] Serialization writer */
-	Dee_seraddr_t scd_dst_addr;   /* [const] Address of output object in `scd_dst_writer' */
+	Dee_seraddr_t scd_dst_addr;   /* [const] Address of output object in `scd_dst_writer` */
 };
 
 
@@ -918,7 +918,7 @@ DeeStructObject_Fini(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 struct struct_printrepr_data {
 	DeeObject          *spr_self;    /* [1..1] Object being printed */
 	Dee_formatprinter_t spr_printer; /* [1..1] Printer callback */
-	void               *spr_arg;     /* [?..?] Cookie for `spr_printer' */
+	void               *spr_arg;     /* [?..?] Cookie for `spr_printer` */
 	bool                spr_first;   /* Is this the first argument being printed? */
 };
 

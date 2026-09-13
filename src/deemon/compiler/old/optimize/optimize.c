@@ -124,7 +124,7 @@ again:
 		OPTIMIZE_VERBOSEAT(self, "Inherit parent scope above empty child scope\n");
 #endif
 	}
-	/* TODO: Remove unused symbols from scopes (s.a. `s_nread == 0 && s_nwrite == 0 && s_nbound == 0') */
+	/* TODO: Remove unused symbols from scopes (s.a. `s_nread == 0 && s_nwrite == 0 && s_nbound == 0`) */
 
 	/* TODO: Move variables declared in outer scopes, but only used in inner ones
 	 *       into those inner scopes, thus improving local-variable-reuse optimizations
@@ -144,16 +144,16 @@ again:
 			return ast_assumes_setsymval(stack->os_assume, self->a_unbind, NULL);
 #endif /* OPTIMIZE_FASSUME */
 		/* TODO: Remove this branch if the symbol is never read from, or checking for being bound
-		 *       NOTE: Only do so when `symbol_del_haseffect()' is false */
+		 *       NOTE: Only do so when `symbol_del_haseffect()` is false */
 		break;
 
 	case AST_BOUND:
-		/* TODO: Always `false' for `local-symbols' with `s_nwrite == 0' */
+		/* TODO: Always `false` for `local-symbols` with `s_nwrite == 0` */
 		/* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
 		break;
 
 	case AST_YIELD:
-		/* TODO: `yield { foo }...' -> `yield foo' */
+		/* TODO: `yield { foo }...` -> `yield foo` */
 	case AST_RETURN:
 	case AST_THROW:
 		if (self->a_return &&
@@ -187,7 +187,7 @@ again:
 			if (self->a_flag & AST_FBOOL_NEGATE)
 				ast_value = ast_value ? 0 : 1;
 			if (ast_has_sideeffects(self->a_bool)) {
-				/* Replace this branch with `{ ...; true/false; }' */
+				/* Replace this branch with `{ ...; true/false; }` */
 				elemv = (DREF struct ast **)Dee_Mallocc(2, sizeof(DREF struct ast *));
 				if unlikely(!elemv)
 					goto err;
@@ -262,7 +262,7 @@ again:
 
 		{
 			/* TODO: Replace initializers of function default-arguments that
-			 *       are never actually used by the function with `none'
+			 *       are never actually used by the function with `none`
 			 *    -> That way, we can reduce the size of a produced DEC file.
 			 * NOTE: Only enable this optimization when a DEC file is being
 			 *       generated, as it doesn't affect runtime performance in
@@ -276,7 +276,7 @@ again:
 		ASSERT(self->a_label.l_label);
 		if (!self->a_label.l_label->tl_goto) {
 			/* The label was never used. - Ergo: it should not exist.
-			 * To signify this, we simply convert this branch to `none'. */
+			 * To signify this, we simply convert this branch to `none`. */
 			if (WARNAST(self, W_ASM_LABEL_NEVER_USED,
 			            self->a_flag & AST_FLABEL_CASE ? (self->a_label.l_label->tl_expr ? "case" : "default") : self->a_label.l_label->tl_name->k_name))
 				goto err;
@@ -361,7 +361,7 @@ INTERN WUNUSED NONNULL((1)) int
 		result    = ast_startoptimize(self, result_used);
 		if unlikely(result)
 			break;
-		/* Stop after the first pass if the `OPTIMIZE_FONEPASS' flag is set. */
+		/* Stop after the first pass if the `OPTIMIZE_FONEPASS` flag is set. */
 		if (optimizer_flags & OPTIMIZE_FONEPASS)
 			break;
 		/* Keep optimizing the branch while stuff happens. */

@@ -38,17 +38,17 @@ DECL_BEGIN
 
 typedef struct Dee_system_error_object {
 	Dee_ERROR_OBJECT_HEAD
-	/*errno_t*/ int se_errno;     /* A system-specific error code, or `Dee_SYSTEM_ERROR_UNKNOWN' when not known. */
+	/*errno_t*/ int se_errno;     /* A system-specific error code, or `Dee_SYSTEM_ERROR_UNKNOWN` when not known. */
 #ifdef CONFIG_HOST_WINDOWS
-	uint32_t        se_lasterror; /* The windows-specific error code (as returned by `GetLastError()')
-	                               * Set to `NO_ERROR' if unused. */
+	uint32_t        se_lasterror; /* The windows-specific error code (as returned by `GetLastError()`)
+	                               * Set to `NO_ERROR` if unused. */
 #endif /* CONFIG_HOST_WINDOWS */
 } DeeSystemErrorObject;
 
 typedef struct Dee_nomemory_error_object {
 	Dee_ERROR_OBJECT_HEAD
 	size_t nm_allocsize; /* The size of the allocation that failed (in bytes).
-	                      * Set to `0' when not known. */
+	                      * Set to `0` when not known. */
 } DeeNoMemoryErrorObject;
 
 typedef struct Dee_signal_object {
@@ -61,23 +61,23 @@ struct Dee_compiler_error_loc {
 	                                         * Calling compiler location (might be used
 	                                         * when the parser was inside of a macro) */
 	/*ref*/ struct TPPFile        *cl_file; /* [0..1] The file in which the error occurred
-	                                         * (when `NULL', no location information is available) */
-	int                            cl_line; /* The line within `cl_file' (0-based) */
-	int                            cl_col;  /* The column within that `cl_line' (0-based) */
+	                                         * (when `NULL`, no location information is available) */
+	int                            cl_line; /* The line within `cl_file` (0-based) */
+	int                            cl_col;  /* The column within that `cl_line` (0-based) */
 };
 
 typedef struct Dee_compiler_error_object {
 	Dee_ERROR_OBJECT_HEAD
 	Dee_WEAKREF_SUPPORT
-	int                                           ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*'). */
-	int                                           ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*'). */
+	int                                           ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*`). */
+	int                                           ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*`). */
 	struct Dee_compiler_error_loc                 ce_locs;   /* [const] The parser location where the error occurred. */
-	struct Dee_compiler_error_loc                *ce_loc;    /* [0..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs') */
+	struct Dee_compiler_error_loc                *ce_loc;    /* [0..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs`) */
 	Dee_WEAKREF(struct Dee_compiler_error_object) ce_master; /* Weak reference to the master compiler error. */
 	size_t                                        ce_errorc; /* [const] Number of contained compiler errors. */
 	DREF struct Dee_compiler_error_object       **ce_errorv; /* [1..1][REF_IF(!= self)][const][0..ce_errorc][owned][const]
 	                                                          * Vector of other errors/warnings that occurred, leading up to this one.
-	                                                          * NOTE: The master compiler error (aka. `this' error) is
+	                                                          * NOTE: The master compiler error (aka. `this` error) is
 	                                                          *       the error that caused compilation to actually fail,
 	                                                          *       meaning that it is the first matching error in the
 	                                                          *       following list of conditions:

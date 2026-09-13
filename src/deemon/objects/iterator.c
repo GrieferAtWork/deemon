@@ -119,9 +119,9 @@ err:
 }
 
 /* A default-constructed, raw iterator object behaves as empty. */
-STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `iterator_iternext'");
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `iterator_iternext`");
 #ifndef DCALL_RETURN_COMMON
-STATIC_ASSERT_MSG(sizeof(size_t) == sizeof(void *), "Assumed by definition of `iterator_iternext'");
+STATIC_ASSERT_MSG(sizeof(size_t) == sizeof(void *), "Assumed by definition of `iterator_iternext`");
 #endif /* !DCALL_RETURN_COMMON */
 #define iterator_iternext (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
 
@@ -393,7 +393,7 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	               /**/ "print it.operator next(); /* 10 */\n"
 	               /**/ "print repr it.pending;    /* { 20, 30 } */\n"
 	               /**/ "/* ERROR: Signal.StopIteration.\n"
-	               /**/ " *        The `repr' used the same Iterator,\n"
+	               /**/ " *        The `repr` used the same Iterator,\n"
 	               /**/ " *        which consumed all remaining items */\n"
 	               /**/ "print it.operator next();"
 	               "}"),
@@ -710,7 +710,7 @@ PRIVATE char const iter_doc[] =
 /**/ "of the same type, and used to iterate the exact same sequence";
 #endif
 
-/* `Iterator from deemon' */
+/* `Iterator from deemon` */
 PUBLIC DeeTypeObject DeeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Iterator),
@@ -852,7 +852,7 @@ PRIVATE struct type_member tpconst if_members[] = {
 
 PRIVATE struct type_member tpconst if_class_members[] = {
 	/* Should always be right, because this standard proxy is usually constructed
-	 * by the `future' member of `iterator', meaning that the contained iterator
+	 * by the `future` member of `iterator`, meaning that the contained iterator
 	 * should always be derived from that type.
 	 * -> The only time this isn't correct is when the user manually constructs
 	 *    instances of this type... */

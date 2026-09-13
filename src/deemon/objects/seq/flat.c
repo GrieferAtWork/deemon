@@ -223,7 +223,7 @@ err:
 
 struct sf_foreach_data {
 	Dee_foreach_t sffd_proc; /* [1..1] Underlying proc */
-	void         *sffd_arg;  /* [?..?] Cookie for `sffd_proc' */
+	void         *sffd_arg;  /* [?..?] Cookie for `sffd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -258,7 +258,7 @@ sf_mh_seq_foreach_reverse(SeqFlat *__restrict self, Dee_foreach_t proc, void *ar
 
 struct sf_foreach_pair_data {
 	Dee_foreach_pair_t sffpd_proc; /* [1..1] Underlying proc */
-	void              *sffpd_arg;  /* [?..?] Cookie for `sffpd_proc' */
+	void              *sffpd_arg;  /* [?..?] Cookie for `sffpd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -310,10 +310,10 @@ err:
 
 struct sf_enumerate_index_data {
 	Dee_seq_enumerate_index_t sfeid_proc;   /* [1..1] Underlying proc */
-	void                 *sfeid_arg;    /* [?..?] Cookie for `sfeid_proc' */
+	void                 *sfeid_arg;    /* [?..?] Cookie for `sfeid_proc` */
 	Dee_ssize_t           sfeid_result; /* Nested enumeration result */
 	size_t                sfeid_index;  /* Next index */
-	size_t                sfeid_end;    /* End index (stop enumeration when `sfeid_index') */
+	size_t                sfeid_end;    /* End index (stop enumeration when `sfeid_index`) */
 	size_t                sfeid_skip;   /* Number of indices that still need to be skipped */
 };
 
@@ -359,7 +359,7 @@ sf_enumerate_index_foreach_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_fastsize, subseq_skip;
 	struct sf_enumerate_index_data *data;
 	data = (struct sf_enumerate_index_data *)arg;
-	/* TODO: FIXME: This is wrong -- don't use `seq_operator_foreach' here
+	/* TODO: FIXME: This is wrong -- don't use `seq_operator_foreach` here
 	 *       -- that breaks when flattened sequences contain unbound items! */
 	if (!data->sfeid_skip)
 		return DeeObject_InvokeMethodHint(seq_operator_foreach, subseq, &sf_enumerate_index_foreach_inner_cb, data);
@@ -398,10 +398,10 @@ sf_mh_seq_enumerate_index(SeqFlat *__restrict self,
 
 struct sf_enumerate_index_reverse_data {
 	Dee_seq_enumerate_index_t sfeird_proc;   /* [1..1] Underlying proc */
-	void                     *sfeird_arg;    /* [?..?] Cookie for `sfeird_proc' */
+	void                     *sfeird_arg;    /* [?..?] Cookie for `sfeird_proc` */
 	Dee_ssize_t               sfeird_result; /* Nested enumeration result */
 	size_t                    sfeird_index;  /* Next index */
-	size_t                    sfeird_start;  /* Start index (stop enumeration when `sfeird_index') */
+	size_t                    sfeird_start;  /* Start index (stop enumeration when `sfeird_index`) */
 	size_t                    sfeird_skip;   /* Number of indices that still need to be skipped */
 };
 
@@ -459,7 +459,7 @@ sf_mh_seq_enumerate_index_reverse_cb(void *arg, DeeObject *subseq) {
 	}
 	ei_reverse_op = DeeObject_RequireMethodHint(subseq, seq_enumerate_index_reverse);
 	if (!ei_reverse_op) {
-		/* TODO: FIXME: This is wrong -- don't use `seq_foreach_reverse' here
+		/* TODO: FIXME: This is wrong -- don't use `seq_foreach_reverse` here
 		 *       -- that breaks when flattened sequences contain unbound items! */
 		DeeMH_seq_foreach_reverse_t fe_reverse_op;
 		fe_reverse_op = DeeObject_RequireMethodHint(subseq, seq_foreach_reverse);
@@ -639,7 +639,7 @@ struct sf_interact_withposition_data {
 	size_t                    sfiwpd_index;    /* # of elements that still need to be skipped */
 	size_t                    sfiwpd_count;    /* Total # of elements from sub-sequences */
 	DREF DeeObject           *sfiwpd_lastseq;  /* [0..1] Last-enumerated sequence */
-	size_t                    sfiwpd_lastidx;  /* [valid_if(sfiwpd_lastseq)] position in `sfiwpd_lastseq' */
+	size_t                    sfiwpd_lastidx;  /* [valid_if(sfiwpd_lastseq)] position in `sfiwpd_lastseq` */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -698,11 +698,11 @@ sf_interact_withposition(SeqFlat *__restrict self, size_t position,
 
 /* @param: subseq:       The matching sub-sequence that containing. The
  *                       matched sub-range from the given [start,end) is
- *                       `[range_start,+=(subseq_end-subseq_start))'
- * @param: subseq_start: Start offset into `subseq' to interact with
- * @param: subseq_end:   End offset into `subseq' to interact with
+ *                       `[range_start,+=(subseq_end-subseq_start))`
+ * @param: subseq_start: Start offset into `subseq` to interact with
+ * @param: subseq_end:   End offset into `subseq` to interact with
  * @param: range_start:  Starting index in flattened super-seq matching
- *                       up with `subseq:subseq_start' */
+ *                       up with `subseq:subseq_start` */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
 (DCALL *sf_interact_range_cb_t)(void *arg, DeeObject *subseq,
                                 size_t subseq_start, size_t subseq_end,
@@ -710,11 +710,11 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
 
 struct sf_interact_range_foreach_data {
 	sf_interact_range_cb_t sfirfd_cb;    /* [1..1] Interaction callback */
-	void                  *sfirfd_arg;   /* [?..?] Cookie for `sfirfd_cb' */
+	void                  *sfirfd_arg;   /* [?..?] Cookie for `sfirfd_cb` */
 	size_t                 sfirfd_start; /* # of elements from sub-sequences that must still be skipped */
 	size_t                 sfirfd_range; /* Starting offset in super-sequence where next interaction range starts. */
 	size_t                 sfirfd_count; /* # of elements that must still be enumerated. */
-	Dee_ssize_t            sfirfd_sum;   /* Sum of return values of `sfirfd_cb', or negative for fast-fail */
+	Dee_ssize_t            sfirfd_sum;   /* Sum of return values of `sfirfd_cb`, or negative for fast-fail */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -760,13 +760,13 @@ err:
  * every sub-sequence containing at least 1 item from the given [start,end)
  * range.
  *
- * @param: start:    Start offset into `self' of sub-range to interact with
- * @param: end:      End offset into `self' of sub-range to interact with
+ * @param: start:    Start offset into `self` of sub-range to interact with
+ * @param: end:      End offset into `self` of sub-range to interact with
  * @param: interact: Callback invoked on each matching sub-range.
- * @param: arg:      Cookie for `interact'
- * @return: >= 0: Sum of invocations of `iteract'
- * @return: < 0:  First negative return value of `iteract'
- * @return: -1:   An error was thrown, or `interact' returned `-1' */
+ * @param: arg:      Cookie for `interact`
+ * @return: >= 0: Sum of invocations of `iteract`
+ * @return: < 0:  First negative return value of `iteract`
+ * @return: -1:   An error was thrown, or `interact` returned `-1` */
 PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 sf_interact_withrange(SeqFlat *__restrict self, size_t start, size_t end,
                       sf_interact_range_cb_t interact, void *arg) {

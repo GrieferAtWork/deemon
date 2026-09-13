@@ -175,7 +175,7 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
 
 
 
-/* Figure out mechanisms that (in addition to `__dex_start__' and `_end')
+/* Figure out mechanisms that (in addition to `__dex_start__` and `_end`)
  * can be used to determine the bounding min/max address bounds of some
  * dex module, and (when those bounds shouldn't be used), figure out how
  * we can ask the OS what module is located at some specific address. */
@@ -188,37 +188,37 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
 
 /* Supported OS-APIs for determining the bounds of a DEX module.
  * If none of these are supported / work at runtime:
- * - DEX modules are allowed to pre-initialize their module's `mo_minaddr' / `mo_maxaddr' fields
+ * - DEX modules are allowed to pre-initialize their module's `mo_minaddr` / `mo_maxaddr` fields
  *   (as is the case when the dex module was built using a compiler/linker combo that supports
- *   `CONFIG_HAVE___dex_start____AND___end'). If these fields are non-NULL and appear to make
- *   sense (in regards to the module's "DEX" symbol), then `Dee_DEXBOUNDS_USE__*' isn't used at
+ *   `CONFIG_HAVE___dex_start____AND___end`). If these fields are non-NULL and appear to make
+ *   sense (in regards to the module's "DEX" symbol), then `Dee_DEXBOUNDS_USE__*` isn't used at
  *   all and the pre-set fields are taken as the truth
- * - If the DEX does not pre-initialize `mo_minaddr' / `mo_maxaddr', and none of these methods
+ * - If the DEX does not pre-initialize `mo_minaddr` / `mo_maxaddr`, and none of these methods
  *   are supported / work at runtime, then:
- *   - Try to determine the "IDENT" of the module from `Dee_DEXATADDR_USE__*' APIs above.
+ *   - Try to determine the "IDENT" of the module from `Dee_DEXATADDR_USE__*` APIs above.
  *     - If this works, use binary search on the host address space to determine the probable
  *       bounds of the DEX module ("probable" because we might miss or fail to notice gaps in
  *       the DEX SHLIB's memory map). As such, this binary search is only used to initialize
- *       the module's `mo_minaddr' / `mo_maxaddr' fields since those can also be accessed
+ *       the module's `mo_minaddr` / `mo_maxaddr` fields since those can also be accessed
  *       directly.
- *     - At this, set the module's `_Dee_MODULE_FNOADDR' flag and insert the module into
+ *     - At this, set the module's `_Dee_MODULE_FNOADDR` flag and insert the module into
  *       "dex_byaddr_tree", which works somewhat different from "module_byaddr_tree", in
- *       that it uses the `Dee_DEXATADDR_USE__*'-based `Dee_dexataddr_t' as its key.
- *       This tree will still be searched by `DeeModule_OfPointer()', so it effectively
+ *       that it uses the `Dee_DEXATADDR_USE__*`-based `Dee_dexataddr_t` as its key.
+ *       This tree will still be searched by `DeeModule_OfPointer()`, so it effectively
  *       behaves the same as "module_byaddr_tree", and we're able to support configurations:
  *       - Where system SHLIB memory mappings contain holes
- *       - Where the system's SHLIB only allows `Dee_DEXATADDR_USE__*' to be implemented
- *   - If none of the `Dee_DEXATADDR_USE__*' implementations are supported or work,
+ *       - Where the system's SHLIB only allows `Dee_DEXATADDR_USE__*` to be implemented
+ *   - If none of the `Dee_DEXATADDR_USE__*` implementations are supported or work,
  *     that is is rather unfortunate, but we still try to accommodate this case:
- *     - In this case, `DeeModule_InitDexBounds_with_exports()' is used to initialize
- *       `mo_minaddr' / `mo_maxaddr' using a best-effort approach by looking at the
+ *     - In this case, `DeeModule_InitDexBounds_with_exports()` is used to initialize
+ *       `mo_minaddr` / `mo_maxaddr` using a best-effort approach by looking at the
  *       bounds of everything pointed at by the module's "DEX" symbol.
  *       The bounds determined using this method are then considered as truthy and are
  *       the only qualification that will be usable to detect the module's bounds.
  *
  * NOTES:
- * - The fallback `DeeModule_InitDexBounds_with_exports()' impl is VERY MUCH prone to failure
- * - Both `Dee_DEXBOUNDS_USE__*' amd `Dee_DEXATADDR_USE__*' can deal with multiple implementations
+ * - The fallback `DeeModule_InitDexBounds_with_exports()` impl is VERY MUCH prone to failure
+ * - Both `Dee_DEXBOUNDS_USE__*` amd `Dee_DEXATADDR_USE__*` can deal with multiple implementations
  *   being active at the same time. The more, the merrier (and the better the chance that get it
  *   right), so as many implementations as possible should be active.
  */
@@ -265,7 +265,7 @@ FS_DeeString_LessSTR(DeeStringObject *lhs,
 
 
 
-/* Implement `Dee_dexataddr()' using OS APIs (if possible) */
+/* Implement `Dee_dexataddr()` using OS APIs (if possible) */
 #undef HAVE_Dee_dexataddr_t
 #undef HAVE_Dee_dexataddr_t_SINGLE_IMPL
 #undef HAVE_Dee_dexataddr_t_IS_POINTER
@@ -325,7 +325,7 @@ DeeSystem_DEFINE_strcmp(Dee_libc_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 #endif /* Dee_DEXATADDR_USE__dladdr__dli_fname */
 
-/* Compare `lhs' and `rhs'
+/* Compare `lhs` and `rhs`
  * Both of the given info-blocks must be initialized */
 LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 Dee_dexataddr_compare(Dee_dexataddr_t const *__restrict lhs,
@@ -433,7 +433,7 @@ Dee_dexataddr_init_fromaddr(Dee_dexataddr_t *__restrict self, void const *addr) 
 
 
 
-/* Implement `DeeModule_InitDexBounds()' using OS APIs (if possible) */
+/* Implement `DeeModule_InitDexBounds()` using OS APIs (if possible) */
 #ifdef Dee_DEXBOUNDS_USE__GetModuleInformation
 typedef struct {
 	LPVOID lpBaseOfDll;
@@ -790,7 +790,7 @@ INTERN Dee_atomic_rwlock_t module_libtree_lock = Dee_ATOMIC_RWLOCK_INIT;
 /* [0..n][lock(module_abstree_lock)] Tree of module abs names (absolute, normalized filesystem paths) */
 INTERN RBTREE_ROOT(Dee_module_object) module_abstree_root = NULL;
 
-/* [0..n][lock(module_libtree_lock)] Tree of module lib names (based on `DeeModule_GetLibPath()') */
+/* [0..n][lock(module_libtree_lock)] Tree of module lib names (based on `DeeModule_GetLibPath()`) */
 INTERN RBTREE_ROOT(Dee_module_libentry) module_libtree_root = NULL;
 
 /* [0..1] The currently set deemon LIBPATH */
@@ -882,8 +882,8 @@ DECL_END
 DECL_BEGIN
 
 #ifdef HAVE_Dee_dexataddr_t
-/* Return the `Dee_dexataddr_t *' descriptor of "self". Caller must ensure
- * that `self' is a DEX module, and that `_Dee_MODULE_FNOADDR' is set. */
+/* Return the `Dee_dexataddr_t *` descriptor of "self". Caller must ensure
+ * that `self` is a DEX module, and that `_Dee_MODULE_FNOADDR` is set. */
 #define DeeModule_GetDexAtAddr(self) \
 	(&Dee_module_dexdata__getinfo((self)->mo_moddata.mo_dexdata)->ddi_ataddr)
 
@@ -1415,8 +1415,8 @@ dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
  * @param: absname: The absolute, normalized filesystem name where "dex_handle"
  *                  was loaded from, with its trailing .dll/.so removed (as such,
  *                  this is the name under which a new DEX module should appear
- *                  within `module_abstree_root')
- * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()'
+ *                  within `module_abstree_root`)
+ * @param: dex_handle: The system library handle, as returned by `DeeSystem_DlOpenString()`
  * @return: * :   The newly loaded DEX module.
  * @return: NULL: An error was thrown (e.g. "dex_handle" does not refer to a DEX module) */
 INTERN WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
@@ -1490,7 +1490,7 @@ handle_existing_module:
 #endif /* Dee_module_dexinfo_alloc */
 
 			/* If "existing_module" is a DEE module, then our caller will eventually
-			 * fail an assertion check in `DeeModule_OpenFile_impl2()', because the
+			 * fail an assertion check in `DeeModule_OpenFile_impl2()`, because the
 			 * module will probably already have a name...
 			 * >> remember_dir_module:
 			 * >> 		ASSERT(!result->mo_absname);
@@ -1848,7 +1848,7 @@ INTERN void DCALL DeeModule_UnloadAllDexModules(void) {
 #endif /* !CONFIG_NO_DEX */
 
 
-/* Unbind from `module_byaddr_tree' */
+/* Unbind from `module_byaddr_tree` */
 INTERN NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self) {
 	module_byaddr_lock_write();
@@ -1936,8 +1936,8 @@ DeeSystem_DlSym_with_decoration(void *handle, char const *__restrict name) {
 }
 
 
-/* Return the export address of a native symbol exported from a dex `self'.
- * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
+/* Return the export address of a native symbol exported from a dex `self`.
+ * When `self` isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL`.
  * NOTE: Because native symbols cannot appear in user-defined modules,
  *       in the interest of keeping native functionality to its bare
  *       minimum, any code making using of this function should contain
@@ -1945,7 +1945,7 @@ DeeSystem_DlSym_with_decoration(void *handle, char const *__restrict name) {
  *       than a native symbol:
  * >> static int (*p_add)(int x, int y) = NULL;
  * >> if (!p_add) *(void **)&p_add = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
- * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
+ * >> // Fallback: Invoke a member attribute `add` if the native symbol doesn't exist.
  * >> if (!p_add) return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
  * >> return DeeInt_NewInt((*p_add)(x, y)); */
@@ -1976,7 +1976,7 @@ DeeModule_GetNativeSymbol(DeeModuleObject *__restrict self,
 
 
 /* Unbind "self" from relevant trees.
- * Caller must ensure that `self->mo_absname != NULL' */
+ * Caller must ensure that `self->mo_absname != NULL` */
 INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
 	ASSERT(self->mo_absname);
@@ -2147,7 +2147,7 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 }
 #endif /* !CONFIG_NO_DEC */
 
-#define _DeeModule_IMPORT_F_NO_INHERIT_FILENAME 0x1000 /* Do not inherit `abs_filename' (via `Dee_Free()') */
+#define _DeeModule_IMPORT_F_NO_INHERIT_FILENAME 0x1000 /* Do not inherit `abs_filename` (via `Dee_Free()`) */
 #ifndef CONFIG_NO_DEC
 #define _DeeModule_IMPORT_F_IS_DEE_FILE         0x2000 /* Given "abs_filename" ends with ".dee" */
 #else /* !CONFIG_NO_DEC */
@@ -2174,7 +2174,7 @@ STATIC_ASSERT((DeeModule_IMPORT_F_NOGDEC & _DeeModule_IMPORT_F_MASK) == 0);
 #endif /* !CONFIG_NO_DEC */
 
 /* # of extra characters to pre-alloc in "abs_filename"
- * (unless `_DeeModule_IMPORT_F_NO_INHERIT_FILENAME' is set) */
+ * (unless `_DeeModule_IMPORT_F_NO_INHERIT_FILENAME` is set) */
 #ifdef CONFIG_NO_DEC
 #define DeeModule_OpenFile_impl4_EXTRA_CHARS 0
 #else /* CONFIG_NO_DEC */
@@ -2216,21 +2216,21 @@ module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
 INTDEF NONNULL((1)) void DCALL
 DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self);
 
-/* Free relocation-only data from the image mapping of `DeeDec_Ehdr'.
+/* Free relocation-only data from the image mapping of `DeeDec_Ehdr`.
  *
  * - Dee_DEC_TYPE_RELOC:
- *   For EHDRs created by `DeeDec_Relocate()', this will try to munmap()
- *   or realloc_in_place() all data of `self' that comes after the end
- *   of the file's object heap (iow: will truncate `self->e_mapping' to
- *   have a size of `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size')
+ *   For EHDRs created by `DeeDec_Relocate()`, this will try to munmap()
+ *   or realloc_in_place() all data of `self` that comes after the end
+ *   of the file's object heap (iow: will truncate `self->e_mapping` to
+ *   have a size of `offsetof(DeeDec_Ehdr, e_heap) + self->e_heap.hr_size`)
  *
  * - Dee_DEC_TYPE_IMAGE:
- *   For EHDRs created by `DeeDecWriter_PackModule()', this frees the
- *   relocation tables that were stolen from the associated `DeeDecWriter'
- *   and only kept within the dec's EHDR for `DeeDec_DestroyUntracked()'
+ *   For EHDRs created by `DeeDecWriter_PackModule()`, this frees the
+ *   relocation tables that were stolen from the associated `DeeDecWriter`
+ *   and only kept within the dec's EHDR for `DeeDec_DestroyUntracked()`
  *   to be able to undo incref()s that had been done.
  *   Because 'Dee_DEC_TYPE_RELOC' may be converted to this type of EHDR,
- *   this type will also try to truncate `self->e_mapping'. */
+ *   this type will also try to truncate `self->e_mapping`. */
 INTDEF NONNULL((1)) void DCALL
 DeeDec_Ehdr_FreeRelocationData(DeeDec_Ehdr *__restrict self);
 
@@ -2436,7 +2436,7 @@ DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_fil
 		Dee_DPRINTF("[LD][dec %q] Loading dec file\n", abs_filename);
 		result = DeeModule_OpenDecFile_impl(dec_stream, abs_filename, pathsize,
 		                                    options, dee_file_last_modified);
-//		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()' */
+//		Dee_Decref(dec_stream); /* Inherited by `DeeModule_OpenDecFile_impl()` */
 		if (result != (DREF DeeModuleObject *)ITER_DONE)
 			return result;
 		has_broken_dec_file = true;
@@ -2664,7 +2664,7 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 #ifndef CONFIG_NO_DEX
 		if (!(*p_flags & DeeModule_IMPORT_F_NOLDEX)) {
 			void *dex_handle;
-			/* Attempt to load a dex module after appending ".dll" or ".so" to `abs_filename_end' */
+			/* Attempt to load a dex module after appending ".dll" or ".so" to `abs_filename_end` */
 			strcpy(abs_filename_end, DeeSystem_SOEXT);
 			dex_handle = DeeSystem_DlOpenString(*p_abs_filename);
 			if (dex_handle != DeeSystem_DlOpen_FAILED) {
@@ -2672,7 +2672,7 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 					goto err;
 
 				/* Indicate to our caller that they shouldn't Dee_Free(*p_abs_filename)
-				 * Reason being: the call to `DeeModule_OpenDex()' below will always
+				 * Reason being: the call to `DeeModule_OpenDex()` below will always
 				 *               inherit that string. */
 				*p_flags |= _DeeModule_IMPORT_F_NO_INHERIT_FILENAME;
 
@@ -2683,7 +2683,7 @@ DeeModule_OpenFile_impl3(/*utf-8*/ char **p_abs_filename, size_t abs_filename_le
 				 * into "module_abstree_root" if this is the first time this lib
 				 * file was loaded; which differs from the regular case where the
 				 * act of linking a module into "module_abstree_root" would be
-				 * done by our caller, and only if `DeeModule_IMPORT_F_ANONYM'
+				 * done by our caller, and only if `DeeModule_IMPORT_F_ANONYM`
 				 * wasn't set. Reason being: dex modules cannot be loaded using
 				 * an anonymous module. */
 				return DeeModule_OpenDex(*p_abs_filename, dex_handle);
@@ -2734,7 +2734,7 @@ DeeModule_OpenFile_impl2(/*inherit_if(!(flags & _DeeModule_IMPORT_F_NO_INHERIT_F
 			/* Truncate the trailing file-extension "DeeSystem_SOEXT" from the filename. */
 			abs_filename[abs_filename_length - COMPILER_STRLEN(DeeSystem_SOEXT)] = '\0';
 
-			/* Load module from "dex_handle" (s.a. similar code in `DeeModule_OpenFile_impl3()') */
+			/* Load module from "dex_handle" (s.a. similar code in `DeeModule_OpenFile_impl3()`) */
 			return DeeModule_OpenDex(abs_filename, dex_handle);
 		}
 	}
@@ -2855,7 +2855,7 @@ remember_dir_module:
 		}
 		module_abstree_lock_endwrite();
 
-		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)' above */
+		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)` above */
 		DeeGC_CollectAsNecessary();
 	} else {
 free_abs_filename_and_return_result:
@@ -2966,7 +2966,7 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 			break;
 		}
 	}
-	/* Strip trailing "/" and (if present) set `*p_must_be_directory = true' */
+	/* Strip trailing "/" and (if present) set `*p_must_be_directory = true` */
 	if (dst > result && dst[-1] == DeeSystem_SEP) {
 		*p_must_be_directory = true;
 		--dst;
@@ -3051,7 +3051,7 @@ err_module_is_not_dir(char *__restrict absname, DeeTypeObject *existing_module_t
 	                       absname, absname, extension);
 }
 
-/* Verify that a directory exists, and open it as a cached `DeeModuleDir_Type' */
+/* Verify that a directory exists, and open it as a cached `DeeModuleDir_Type` */
 PRIVATE WUNUSED DREF /*tracked*/ DeeModuleObject *DCALL
 do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_dirname,
                            size_t abs_dirname_length, unsigned int flags) {
@@ -3083,10 +3083,10 @@ do_DeeModule_OpenDirectory(/*inherit(always)*/ /*utf-8*/ char *__restrict abs_di
 	 * (Note the use of "stat" instead of "lstat": we look at symlink **targets**)
 	 *
 	 * If not:
-	 * - return `DeeModule_IMPORT_ENOENT' if `flags & DeeModule_IMPORT_F_ENOENT'
-	 * - throw `DeeError_NoDirectory' if "abs_dirname" is actually a regular file
-	 * - throw `DeeError_FileNotFound' if "abs_dirname" doesn't exist at all
-	 * - throw `DeeError_NoDirectory' if one of the other files exists */
+	 * - return `DeeModule_IMPORT_ENOENT` if `flags & DeeModule_IMPORT_F_ENOENT`
+	 * - throw `DeeError_NoDirectory` if "abs_dirname" is actually a regular file
+	 * - throw `DeeError_FileNotFound` if "abs_dirname" doesn't exist at all
+	 * - throw `DeeError_NoDirectory` if one of the other files exists */
 	status = DeeSystem_GetFileTypeString(abs_dirname);
 	if (status != DeeSystem_GetFileType_T_DIR) {
 		if (status == DeeSystem_GetFileType_T_REG) {
@@ -3247,7 +3247,7 @@ use_absolute_filename:
 
 	/* Deal with case where the effective "normal_filename" would have ended
 	 * with a trailing slash: in this case, assert that the directory exists,
-	 * and open it as a `DeeModuleDir_Type' */
+	 * and open it as a `DeeModuleDir_Type` */
 	if (must_be_directory) {
 		result = do_DeeModule_OpenDirectory(normal_filename, normal_filename_size, flags);
 	} else {
@@ -3675,7 +3675,7 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 		goto err;
 	}
 
-	/* Check if "import_str" is a relative import-string (iow: starts with a leading `.') */
+	/* Check if "import_str" is a relative import-string (iow: starts with a leading `.`) */
 	if (import_str[0] == '.') {
 		size_t filename_size;
 		char *filename;
@@ -3765,7 +3765,7 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
  * Same as:
  * >> rt_hash = DeeModule_Open("rt.hash", NULL, DeeModule_IMPORT_F_NORMAL);
  *
- * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR' flag! */
+ * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR` flag! */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 DeeModule_OpenChild(DeeModuleObject *self,
                     /*String*/ DeeObject *name,
@@ -3846,7 +3846,7 @@ err:
 
 /* Open a module, given an import string, and another module/path used
  * to resolve relative paths. The given "import_str" can take any of the
- * following forms (assuming that `DeeSystem_SEP' is '/'):
+ * following forms (assuming that `DeeSystem_SEP` is '/'):
  * - [m] "deemon"                    (DeeModule_GetDeemon())
  * - [m] "net.ftp"                   ("${LIBPATH}/net/ftp.dee")
  * - [m] "net"                       ("${LIBPATH}/net.so")
@@ -3861,22 +3861,22 @@ err:
  * - [m] "/opt/deemon/file"          ("/opt/deemon/file.dee")
  * - [f] "/opt/deemon"               ("/opt/deemon")                                           DeeModuleDir_Type
  *
- * NOTE: When `DeeModule_IMPORT_F_FILNAM' is given, **ONLY** examples
+ * NOTE: When `DeeModule_IMPORT_F_FILNAM` is given, **ONLY** examples
  *       marked as [f] can be loaded (that is: "import_str" is treated
  *       as a native filename (**WITH** extension), rather than the
  *       usual combination of module-name/filename).
  *
  * The given "context_absname" should be the mo_absname-style name of
  * the calling file, or (at the very least) be a string ending with a
- * trailing `DeeSystem_SEP' (in this case, import_str="." will throw
+ * trailing `DeeSystem_SEP` (in this case, import_str="." will throw
  * an error). When this string isn't actually absolute, it will be
- * made absolute using `DeeSystem_MakeNormalAndAbsolute()'. When it is NULL or
- * an empty string, `DeeSystem_PrintPwd()' is used instead.
+ * made absolute using `DeeSystem_MakeNormalAndAbsolute()`. When it is NULL or
+ * an empty string, `DeeSystem_PrintPwd()` is used instead.
  *
  * @return: * :                      The newly opened module
  * @return: DeeModule_IMPORT_ERROR:  An error was thrown
- * @return: DeeModule_IMPORT_ENOENT: `DeeModule_IMPORT_F_ENOENT' was set, and no such file exists
- * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
+ * @return: DeeModule_IMPORT_ENOENT: `DeeModule_IMPORT_F_ENOENT` was set, and no such file exists
+ * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR` was set, and module is already being imported */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 do_DeeModule_OpenString(/*utf-8*/ char const *__restrict import_str, size_t import_str_size,
                         DeeStringObject *import_str_ob,
@@ -4182,8 +4182,8 @@ DeeSystem_DEFINE_strrchr(Dee_libc_strrchr)
 #endif /* !CONFIG_HAVE_strrchr */
 
 /* Return the module's human-readable "short" name, that is everything after
- * the last '/' (or '\') within `DeeModule_GetAbsName()', or the string
- * "<anonymous module>" if `DeeModule_GetAbsName() == NULL' */
+ * the last '/' (or '\') within `DeeModule_GetAbsName()`, or the string
+ * "<anonymous module>" if `DeeModule_GetAbsName() == NULL` */
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 DeeModule_GetShortName(DeeModuleObject *__restrict self) {
 	char const *result = self->mo_absname;
@@ -4198,7 +4198,7 @@ DeeModule_GetShortName(DeeModuleObject *__restrict self) {
 }
 
 /* Return the absolute, normalized filename that the module was loaded from,
- * `ITER_DONE' if `DeeModule_GetAbsName() == NULL'. This function combines
+ * `ITER_DONE` if `DeeModule_GetAbsName() == NULL`. This function combines
  * the module's 'Dee_MODULE_FABSFILE' flag together with its typing in order
  * to reconstruct the original filename that the module was loaded from.
  *
@@ -4206,7 +4206,7 @@ DeeModule_GetShortName(DeeModuleObject *__restrict self) {
  * - E:\projects\deemon\lib\rt.dll       (after opening 'E:\projects\deemon\lib\rt.dll')
  * - /opt/deemon/lib/net.so              (after opening '/opt/deemon/lib/net.so')
  * - /home/me/projects/deemon/script.dee (after opening '/home/me/projects/deemon/script.dee')
- * - /home/me/projects/readme.txt        (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM')
+ * - /home/me/projects/readme.txt        (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM`)
  *
  * @return: * : The module's original, absolute, normalized source filename.
  * @return: ITER_DONE: Module is anonymous and doesn't have a source filename.
@@ -4244,24 +4244,24 @@ err:
 }
 
 
-/* Same as `DeeModule_GetRelName()', but allows you to specify the context
- * path in the same manner as can be specified by `DeeModule_OpenEx()':
- * - When `DeeModule_RELNAME_F_CTXDIR' is not given, "context_absname"
+/* Same as `DeeModule_GetRelName()`, but allows you to specify the context
+ * path in the same manner as can be specified by `DeeModule_OpenEx()`:
+ * - When `DeeModule_RELNAME_F_CTXDIR` is not given, "context_absname"
  *   should be the mo_absname-style name of the calling file, or (at
- *   the very least) be a string ending with a trailing `DeeSystem_SEP'.
- * - When `DeeModule_RELNAME_F_CTXDIR' is given, "context_absname" is
+ *   the very least) be a string ending with a trailing `DeeSystem_SEP`.
+ * - When `DeeModule_RELNAME_F_CTXDIR` is given, "context_absname" is
  *   treated as the directory relative to which the returned path will
  *   be printed.
- * - When `self' is anonymous or cannot be opened without the use of
- *   the `DeeModule_IMPORT_F_FILNAM' flag, then `ITER_DONE' is returned.
+ * - When `self` is anonymous or cannot be opened without the use of
+ *   the `DeeModule_IMPORT_F_FILNAM` flag, then `ITER_DONE` is returned.
  * - When the last part of the module name (after the last '/') contains
- *   a '.' (e.g. '/home/me/projects/foo/script.v1.dee'), then `ITER_DONE'
+ *   a '.' (e.g. '/home/me/projects/foo/script.v1.dee'), then `ITER_DONE`
  *   is also returned, since no relative module name can be formed. The
  *   same also happens when any part of the path that would appear within
  *   the relative module path contains a '.'.
  * - When this string isn't actually absolute, it will be made absolute
- *   using `DeeSystem_MakeNormalAndAbsolute()'. When it is NULL or an
- *   empty string, `DeeSystem_PrintPwd()' is used instead.
+ *   using `DeeSystem_MakeNormalAndAbsolute()`. When it is NULL or an
+ *   empty string, `DeeSystem_PrintPwd()` is used instead.
  *
  * Examples:
  * - .rt           (self='E:\projects\deemon\lib\rt.dll', context_absname='E:\projects\deemon\lib\doc.dee' + DeeModule_RELNAME_F_NORMAL)
@@ -4270,9 +4270,9 @@ err:
  * - ..foo.script  (self='/home/me/projects/foo/script.dee, context_absname='/home/me/projects/bar/script.dee' + DeeModule_RELNAME_F_NORMAL)
  * - ITER_DONE     (self='/home/me/projects/readme.txt', context_absname='<ignored>' + <ignored>))
  *
- * @param: flags: Set of `DeeModule_RELNAME_F_*'
- * @return: * :        The module's name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
+ * @param: flags: Set of `DeeModule_RELNAME_F_*`
+ * @return: * :        The module's name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE` flag set
  * @return: NULL:      An error was thrown. */
 
 PRIVATE ATTR_PURE WUNUSED size_t DCALL
@@ -4347,7 +4347,7 @@ do_handle_parent_directory:
 		}
 	}
 
-	/* Unless the 'DeeModule_RELNAME_F_CTXDIR' flag is given, `context_absname'
+	/* Unless the 'DeeModule_RELNAME_F_CTXDIR' flag is given, `context_absname`
 	 * actually refers to some file **within** the relevant context directory. */
 	if (!(flags & DeeModule_RELNAME_F_CTXDIR)) {
 		while (context_absname_end > used_context_absname &&
@@ -4393,7 +4393,7 @@ do_handle_parent_directory:
 		goto done;
 
 #ifdef DeeSystem_HAVE_FS_DRIVES
-	/* Special handling when `module_absname' starts with a drive prefix */
+	/* Special handling when `module_absname` starts with a drive prefix */
 	if (DeeSystem_IsAbs(module_absname)) {
 		char drive_char = (char)tolower((unsigned char)module_absname[0]);
 		module_absname += 2; /* "C:" (such that "module_absname" now starts with '\') */
@@ -4405,7 +4405,7 @@ do_handle_parent_directory:
 	}
 #endif /* !DeeSystem_HAVE_FS_DRIVES */
 
-	/* Now print the entirety of `module_absname', but replace '/' with '.' */
+	/* Now print the entirety of `module_absname`, but replace `/` with '.' */
 	while (*module_absname) {
 		char const *chunk_end = module_absname;
 		while (*chunk_end && *chunk_end != DeeSystem_SEP)
@@ -4541,12 +4541,12 @@ err_printer:
 	return NULL;
 }
 
-/* Return the relative import name of `self' when accessed from a file or module
- * `context_absname'. For more information, see `DeeModule_GetRelNameEx()'.
+/* Return the relative import name of `self` when accessed from a file or module
+ * `context_absname`. For more information, see `DeeModule_GetRelNameEx()`.
  *
- * @param: flags: Set of `DeeModule_RELNAME_F_*'
- * @return: * :        The module's name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
+ * @param: flags: Set of `DeeModule_RELNAME_F_*`
+ * @return: * :        The module's name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE` flag set
  * @return: NULL:      An error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(DeeModuleObject *__restrict self,
@@ -4777,9 +4777,9 @@ module_try_add_missing_libnames_or_unlock(DeeModuleObject *__restrict self,
 	return MODULE_TRY_ADD_MISSING_LIBNAMES_OR_UNLOCK__OK;
 }
 
-/* Acquire a lock to `module_libtree_lock_read()' whilst simultaneously
+/* Acquire a lock to `module_libtree_lock_read()` whilst simultaneously
  * ensuring that all possible libpath entries of "self" has been allocated,
- * or at the very least up to- and including the `load_until'th one. */
+ * or at the very least up to- and including the `load_until`th one. */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
 module_lock_and_load_libnames(DeeModuleObject *__restrict self, size_t load_until) {
 	DREF DeeTupleObject *libpath;
@@ -4854,15 +4854,15 @@ err:
 	return -1;
 }
 
-/* Ensure that all possible lib (global) names for `self' have been
- * determined (using paths from `DeeModule_SetLibPath()'), then return
- * the `index'th (0-based) one of them.
- * - A special case is made for the builtin `DeeModule_Deemon',
- *   which always has exactly `1' lib name "deemon".
+/* Ensure that all possible lib (global) names for `self` have been
+ * determined (using paths from `DeeModule_SetLibPath()`), then return
+ * the `index`th (0-based) one of them.
+ * - A special case is made for the builtin `DeeModule_Deemon`,
+ *   which always has exactly `1` lib name "deemon".
  * - When the same module may be accessible from multiple lib paths,
  *   then the order in which its possible absolute names are listed
  *   is undefined.
- * - When `DEEMON_PATH' is set-up such that multiple modules might
+ * - When `DEEMON_PATH` is set-up such that multiple modules might
  *   hold the same lib name, only one of them will (and this function
  *   will also list them for only that one module), though it is
  *   undefined which of those modules that will be.
@@ -4873,10 +4873,10 @@ err:
  * - lib.rt.gen.unpack    (self='/opt/deemon/lib/rt/gen/unpack.dee', DEEMON_PATH="/opt/deemon:/opt/deemon/lib", index=0)
  * - rt.gen.unpack        (self='/opt/deemon/lib/rt/gen/unpack.dee', DEEMON_PATH="/opt/deemon:/opt/deemon/lib", index=1)
  *
- * @return: * :        The module's index'th lib name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE'
- *                     flag set, or isn't located in a sub-directory of `DEEMON_PATH',
- *                     or `index' is greater than the module's # of lib names.
+ * @return: * :        The module's index'th lib name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE`
+ *                     flag set, or isn't located in a sub-directory of `DEEMON_PATH`,
+ *                     or `index` is greater than the module's # of lib names.
  * @return: NULL:      An error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetLibName(DeeModuleObject *__restrict self, size_t index) {
@@ -4910,15 +4910,15 @@ err:
 	return NULL;
 }
 
-/* Return 1+ the greatest index that may be passed to `DeeModule_GetLibName()' for the
- * purpose of querying module lib names. Note that calls to `DeeModule_SetLibPath()'
+/* Return 1+ the greatest index that may be passed to `DeeModule_GetLibName()` for the
+ * purpose of querying module lib names. Note that calls to `DeeModule_SetLibPath()`
  * (even those made from different threads) may cause the return value of this function
  * to fall out-of-date the second this function does return, so be always be prepared
- * for `DeeModule_GetLibName()' to return `ITER_DONE' even before this limit is reached.
+ * for `DeeModule_GetLibName()` to return `ITER_DONE` even before this limit is reached.
  *
- * @return: 0 : The given module is anonymous or has its `Dee_MODULE_FABSFILE'
- *              flag set, or isn't located in a sub-directory of `DEEMON_PATH'.
- * @return: * : The # of lib names that `self' had at the time of this call.
+ * @return: 0 : The given module is anonymous or has its `Dee_MODULE_FABSFILE`
+ *              flag set, or isn't located in a sub-directory of `DEEMON_PATH`.
+ * @return: * : The # of lib names that `self` had at the time of this call.
  * @return: (size_t)-1: An error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeModule_GetLibNameCount(DeeModuleObject *__restrict self) {
@@ -4946,7 +4946,7 @@ err:
 
 
 
-/* Figure out how to implement `get_default_home()' */
+/* Figure out how to implement `get_default_home()` */
 #undef get_default_home_USE_CONFIG_DEEMON_HOME
 #undef get_default_home_USE_GetModuleFileNameW
 #undef get_default_home_USE_readlink_proc_self_exe
@@ -5079,9 +5079,9 @@ err_buffer:
 		if unlikely(!filename)
 			goto fallback;
 		length = strlen(filename);
-		/* Trim the actual executable filename (which is likely to be `deemon'),
+		/* Trim the actual executable filename (which is likely to be `deemon`),
 		 * thus getting the absolute path where the executable is placed (which
-		 * is likely to be something along the lines of `/bin/' or `/usr/bin/') */
+		 * is likely to be something along the lines of `/bin/` or `/usr/bin/`) */
 		while (length && filename[length - 1] != '/')
 			--length;
 		if (length && unlikely(filename[length - 1] == '/')) {
@@ -5127,8 +5127,8 @@ err_printer:
 #ifndef get_default_home_NO_FALLBACK
 fallback:
 
-	/* TODO: Check if `main:argv[0]' is an absolute filename. */
-	/* TODO: Check if `main:argv[0]' can be found in $PATH. */
+	/* TODO: Check if `main:argv[0]` is an absolute filename. */
+	/* TODO: Check if `main:argv[0]` can be found in $PATH. */
 	return_reference_(&str_dot);
 #endif /* !get_default_home_NO_FALLBACK */
 
@@ -5144,7 +5144,7 @@ deemon_home = Dee_ATOMIC_XREF_INIT(NULL);
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
- * Upon first access, `DeeExec_GetHome()' will pre-initialize the home-path as follows:
+ * Upon first access, `DeeExec_GetHome()` will pre-initialize the home-path as follows:
  * >> deemon_home = fs.environ["DEEMON_HOME"];
  * >> if (deemon_home !is none) {
  * >>     deemon_home = fs.abspath(deemon_home);
@@ -5157,10 +5157,10 @@ deemon_home = Dee_ATOMIC_XREF_INIT(NULL);
  * >>#endif
  * >> }
  * >> deemon_home = fs.inctrail(deemon_home);
- * That is: Try to lookup an environment variable `DEEMON_HOME', which
+ * That is: Try to lookup an environment variable `DEEMON_HOME`, which
  *          if found is then converted into an absolute filename.
  *          When this variable doesn't exist, behavior depends on how deemon was built.
- *          If it was built with the `CONFIG_DEEMON_HOME' option enabled, that
+ *          If it was built with the `CONFIG_DEEMON_HOME` option enabled, that
  *          option is interpreted as a string which is then used as the effective
  *          home path, but if that option was disabled, the folder of deemon's
  *          executable is used as home folder instead.
@@ -5193,7 +5193,7 @@ DeeExec_GetHome(void) {
 }
 
 /* Set the new home folder, overwriting whatever was set before.
- * HINT: You may pass `NULL' to cause the default home path to be re-created. */
+ * HINT: You may pass `NULL` to cause the default home path to be re-created. */
 PUBLIC void DCALL
 DeeExec_SetHome(/*String*/ DeeObject *new_home) {
 	DeeStringObject *newval = (DeeStringObject *)new_home;
@@ -5204,12 +5204,12 @@ DeeExec_SetHome(/*String*/ DeeObject *new_home) {
 
 
 /* List of strings that should be used as base paths when searching for global modules.
- * Access to this list should go through `DeeModule_InitPath()', which will
+ * Access to this list should go through `DeeModule_InitPath()`, which will
  * automatically initialize the list to the following default contents upon access:
  *
- * >> Commandline: `-L...' where every occurrance is pre-pended before the home-path.
- *    NOTE: These paths are not added by `DeeModule_InitPath()', but instead
- *          the first encouter of a -L option will call `DeeModule_GetPath()'
+ * >> Commandline: `-L...` where every occurrance is pre-pended before the home-path.
+ *    NOTE: These paths are not added by `DeeModule_InitPath()`, but instead
+ *          the first encouter of a -L option will call `DeeModule_GetPath()`
  *          before pre-pending the following string at the front of the list,
  *          following other -L paths prepended before then.
  * >> posix.environ.get("DEEMON_PATH", "").split(posix.FS_DELIM)...;
@@ -5241,7 +5241,7 @@ err_self:
 	return NULL;
 }
 
-/* Remove duplicate strings from "self". Correctly handles `DeeObject_IsShared(self)' */
+/* Remove duplicate strings from "self". Correctly handles `DeeObject_IsShared(self)` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 DeeTuple_RemoveDuplicateStrings(/*inherit(always)*/ DREF DeeTupleObject *__restrict self) {
 	size_t i, j;
@@ -5350,7 +5350,7 @@ err_self:
 #endif /* ... */
 
 
-/* If we ever use `environ' for anything, we have to use a lock to access it. */
+/* If we ever use `environ` for anything, we have to use a lock to access it. */
 #if (defined(DeeModule_AppendEnvironPath_USE_wgetenv) ||  \
      defined(DeeModule_AppendEnvironPath_USE_getenv) ||   \
      defined(DeeModule_AppendEnvironPath_USE_wenviron) || \
@@ -5645,7 +5645,7 @@ INTERN bool DCALL DeeModule_ClearLibPath(void) {
 
 
 /* Check for paths that were removed in "new_libpath". Allowed to assume
- * that `DeeString_AsUtf8()' will never fail for any contained string
+ * that `DeeString_AsUtf8()` will never fail for any contained string
  * (meaning that the caller should have pre-loaded all utf-8 reprs of
  * all strings). */
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -5812,7 +5812,7 @@ again:
 /* Set (or reset when "new_libpath == NULL") the module path.
  * - Assumes that "new_libpath" is a tuple
  * - Throws an error if any element of "new_libpath" isn't a string
- * - Normalizes given paths using `DeeSystem_MakeNormalAndAbsolute()'
+ * - Normalizes given paths using `DeeSystem_MakeNormalAndAbsolute()`
  * - Removes duplicate paths (but retains order of distinct paths)
  * @return: 0 : Success (always returned when "new_libpath == NULL")
  * @return: -1: Error */
@@ -5983,14 +5983,14 @@ err:
 }
 
 
-/* Given a pointer `ptr' that is either for some statically allocated variable/symbol
+/* Given a pointer `ptr` that is either for some statically allocated variable/symbol
  * (as in: a pointer to some statically allocated structure), or is part of some user
  * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
  * that is a constant in user-code), try to return a reference for the module that
  * contains this pointer.
  *
  * @return: * :   A pointer to the module that 'ptr' belongs to.
- * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part
+ * @return: NULL: Given `ptr` is either invalid, heap-allocated, or simply not part
  *                of the deemon core, some dex module, or a some user-code module. */
 PUBLIC WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OfPointer(void const *ptr) {
@@ -6038,8 +6038,8 @@ DeeModule_OfPointer(void const *ptr) {
 }
 
 
-/* Extension to `DeeModule_OfPointer()' that checks if `ob' is statically allocated
- * within some specific module. But if it isn't, then it looks at the type of `ob'
+/* Extension to `DeeModule_OfPointer()` that checks if `ob` is statically allocated
+ * within some specific module. But if it isn't, then it looks at the type of `ob`
  * and tries to return the associated module via type-specific means:
  * - DeeType_Type: DeeTypeObject::tp_module
  * - DeeCode_Type: DeeCodeObject::co_module */
@@ -6072,15 +6072,15 @@ DeeModule_OfObject(DeeObject *__restrict ob) {
 }
 
 
-/* Check if `DeeModule_OfPointer(ptr) == self' (but is a bit faster than that).
- * Use this function instead of looking at `mo_minaddr' / `mo_maxaddr', because
+/* Check if `DeeModule_OfPointer(ptr) == self` (but is a bit faster than that).
+ * Use this function instead of looking at `mo_minaddr` / `mo_maxaddr`, because
  * this function does some necessarily extra handling for certain types of DEX
  * modules that are loaded in multiple segments (in which case it would not be
- * defined if `mo_minaddr' / `mo_maxaddr' is union of all segments, or only some
+ * defined if `mo_minaddr` / `mo_maxaddr` is union of all segments, or only some
  * (sub-)set of segments)
  *
- * NOTE: Unlike many other functions, this one can actually still be used while `self'
- *       is being finalized (e.g. while inside of `Dee_module_dexdata::mdx_fini'). It
+ * NOTE: Unlike many other functions, this one can actually still be used while `self`
+ *       is being finalized (e.g. while inside of `Dee_module_dexdata::mdx_fini`). It
  *       also guaranties that no user-code will ever be executed (hence the "PURE")
  *
  * @return: true:  Yes, "ptr" is part of "self"
@@ -6107,52 +6107,52 @@ DeeModule_ContainsPointer(DeeModuleObject *__restrict self, void const *ptr) {
 /* Enumerate loaded modules using various different means.
  *
  * DeeModule_EnumerateAbsTree:
- *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL').
+ *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL`).
  *
  * DeeModule_EnumerateLibTree:
  *     Enumerate modules via their "lib" names (e.g. "deemon", "rt", etc.)
  *     Note that this only includes modules whose lib-names are loaded **right now**.
- *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()'
- *     or `DeeModule_RemoveLibPath()' is called), the lib-names of already-loaded
+ *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()`
+ *     or `DeeModule_RemoveLibPath()` is called), the lib-names of already-loaded
  *     modules will **NOT** be calculated immediatly, but lazily. And a call to
- *     `DeeModule_EnumerateLibTree()' will **NOT** do this lazy calculation.
+ *     `DeeModule_EnumerateLibTree()` will **NOT** do this lazy calculation.
  *
  * DeeModule_EnumerateAdrTree:
  *     Enumerate modules that reside within the address space (i.e.: have an
- *     address range as per `mo_minaddr' / `mo_maxaddr'). This essentially means
- *     that all `DeeModuleDee_Type' and `DeeModuleDex_Type' modules (including
- *     the core `DeeModule_Deemon' module) will be enumerated.
+ *     address range as per `mo_minaddr` / `mo_maxaddr`). This essentially means
+ *     that all `DeeModuleDee_Type` and `DeeModuleDex_Type` modules (including
+ *     the core `DeeModule_Deemon` module) will be enumerated.
  *
  * NOTES:
  * - The order in which modules are enumerated is undefined but will not change
  *   for already-enumerated modules (including modules enumerated during a prior
  *   call to these functions).
- * - Every qualifying module loaded at the time the `DeeModule_Enumerate*' call
- *   started, and still-loaded when this call returns has been passed to `*cb'
+ * - Every qualifying module loaded at the time the `DeeModule_Enumerate*` call
+ *   started, and still-loaded when this call returns has been passed to `*cb`
  *   exactly once. (Modules that are unloaded and then quickly re-loaded may be
  *   enumerated multiple times however)
- * - None of the `DeeModule_Enumerate*' functions can throw errors on their own.
- *   The only way that some negative value can be returned, is from `cb' returning
+ * - None of the `DeeModule_Enumerate*` functions can throw errors on their own.
+ *   The only way that some negative value can be returned, is from `cb` returning
  *   that same negative value.
  * - The "opt_type_filter" argument can either be "NULL", or one of:
  *   - DeeModuleDee_Type
  *   - DeeModuleDir_Type
  *   - DeeModuleDex_Type
  *   ... to only enumerate modules with that specific typing.
- * - The `*cb' callback is allowed to do anything it wants, including invoking any
+ * - The `*cb` callback is allowed to do anything it wants, including invoking any
  *   user-code, as well as load additional modules. It is however undefined if modules
- *   that were loaded after the `DeeModule_Enumerate*' call started will also be
+ *   that were loaded after the `DeeModule_Enumerate*` call started will also be
  *   enumerated.
  *
  * @param: cb:              The callback that should be invoked
  * @param: arg:             Cookie argument that should be passed to
- * @param: start_after:     Start enumeration with whatever module comes after `start_after'.
- *                          When `NULL', start enumeration at the very beginning.
+ * @param: start_after:     Start enumeration with whatever module comes after `start_after`.
+ *                          When `NULL`, start enumeration at the very beginning.
  * @param: opt_type_filter: Only enumerate modules of this type (set to "NULL" to not filter).
  *
- * @return: * : Sum of return values of `*cb'
- * @return: 0 : Either `*cb' always returned `0', or it was never invoked
- * @return: <0: A call to `*cb' returned this same negative value. */
+ * @return: * : Sum of return values of `*cb`
+ * @return: 0 : Either `*cb` always returned `0`, or it was never invoked
+ * @return: <0: A call to `*cb` returned this same negative value. */
 PUBLIC NONNULL((1)) Dee_ssize_t DCALL
 DeeModule_EnumerateAbsTree(Dee_module_enumerate_cb_t cb, void *arg,
                            DeeModuleObject *start_after,
@@ -6434,7 +6434,7 @@ continue_at_iter:
 				if unlikely(!iter) {
 					/* This can happen when the entry for "iter" was removed.
 					 * In this case, use the reference in "prev_name" to find
-					 * the smallest entry that is still `> prev_name' */
+					 * the smallest entry that is still `> prev_name` */
 					ASSERT(prev_name);
 continue_after_prev_name:
 					iter = module_libtree_nextafter(module_libtree_root, prev_name);
@@ -6464,7 +6464,7 @@ INTERN RBTREE_ROOT(DREF Dee_module_object) dex_byaddr_tree = NULL;
 
 
 
-/* Convenience wrappers around `DeeModule_Enumerate*' that return whatever
+/* Convenience wrappers around `DeeModule_Enumerate*` that return whatever
  * module comes after "prev" (if such a module exists), or "NULL" if no such
  * module exists. When "prev" is "NULL", return the first module of that tree. */
 PRIVATE NONNULL((2)) Dee_ssize_t DCALL
@@ -6573,7 +6573,7 @@ DeeSystem_IsStaticPointer(void const *ptr) {
 
 
 /* Lookup an external symbol.
- * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
+ * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)`) */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetExtern(/*String*/ DeeObject *module_name,
                     /*String*/ DeeObject *global_name) {
@@ -6605,7 +6605,7 @@ err:
 	return NULL;
 }
 
-/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
+/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)`,
  * that returns the return value of the call operation. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_CallExtern(/*String*/ DeeObject *module_name,
@@ -6640,7 +6640,7 @@ err:
 	return NULL;
 }
 
-/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)`,
  * that returns the return value of the call operation. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 DeeModule_CallExternf(/*String*/ DeeObject *module_name,

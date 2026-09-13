@@ -31,13 +31,13 @@
  * >> bool __hybrid_overflow_ssub(S lhs, U rhs, T *res);
  * >> bool __hybrid_overflow_umul(S lhs, U rhs, T *res);
  * >> bool __hybrid_overflow_smul(S lhs, U rhs, T *res);
- * @return: true:  Overflow  occurred (unlikely; `*res' contains the truncated result)
- *                 Overflow here means that the finite result stored in `*res' doesn't
+ * @return: true:  Overflow  occurred (unlikely; `*res` contains the truncated result)
+ *                 Overflow here means that the finite result stored in `*res` doesn't
  *                 match a value that would have been produced when infinite precision
  *                 was available.
- *                 e.g.: `UINT_MAX + 42u' and `11u - 19u' overflow, but `32u + 42u'
- *                       or `11 - 19' don't
- * @return: false: `*res' contains the correct result. */
+ *                 e.g.: `UINT_MAX + 42u` and `11u - 19u` overflow, but `32u + 42u`
+ *                       or `11 - 19` don't
+ * @return: false: `*res` contains the correct result. */
 #ifdef ____INTELLISENSE_STDINC_COMMON_H
 #ifdef __cplusplus
 #define __hybrid_overflow_uadd __intern::__intellisense_overflow_uadd
@@ -1405,8 +1405,8 @@ print("#endif /" "* !__NO_builtin_choose_expr *" "/");
 
 
 /* Optional variants that may compile faster when operand sizes are known to be fixed.
- * e.g.: `__hybrid_overflow_uadd8(__UINT8_TYPE__ a, __UINT8_TYPE__ b, __UINT8_TYPE__ *c)'
- *       `__hybrid_overflow_sadd8(__INT8_TYPE__ a, __INT8_TYPE__ b, __INT8_TYPE__ *c)'
+ * e.g.: `__hybrid_overflow_uadd8(__UINT8_TYPE__ a, __UINT8_TYPE__ b, __UINT8_TYPE__ *c)`
+ *       `__hybrid_overflow_sadd8(__INT8_TYPE__ a, __INT8_TYPE__ b, __INT8_TYPE__ *c)`
  * etc... */
 #ifndef __hybrid_overflow_uadd8
 #define __hybrid_overflow_uadd8  __hybrid_overflow_uadd
@@ -1449,7 +1449,7 @@ print("#endif /" "* !__NO_builtin_choose_expr *" "/");
 /* >> bool __hybrid_overflow_sneg(T x, T *p_result);
  * >> bool __hybrid_overflow_sneg_p2n(T x, T *p_result);    -- @assume(x >= 0)
  * >> bool __hybrid_overflow_sneg_n2p(T x, T *p_result);    -- @assume(x < 0)
- * Do the operation `*p_result = -x'
+ * Do the operation `*p_result = -x`
  * @return: true:  Overflow happened
  * @return: false: Overflow didn't happen */
 #ifdef __HYBRID_OVERFLOW_USES_BUILTINS
@@ -1604,7 +1604,7 @@ print("#endif /" "* !__NO_builtin_choose_expr *" "/");
 
 /* >> bool __hybrid_overflow_scast(V x, T *p_result);
  * >> bool __hybrid_overflow_ucast(V x, T *p_result);
- * Do the operation `*p_result = (T)x'
+ * Do the operation `*p_result = (T)x`
  * @return: true:  Overflow happened
  * @return: false: Overflow didn't happen */
 #define __hybrid_overflow_ucast8(x, p_result)  __builtin_expect((*(p_result) = (__UINT8_TYPE__)(x)) != (x) && sizeof(x) > 1, 0)

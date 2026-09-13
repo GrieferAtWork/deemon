@@ -25,9 +25,9 @@
 
 #ifndef __NO_KOS_SYSTEM_HEADERS__
 /* Indicator for user-applications that KOS's system headers are available.
- * >> #include <string.h> // Will define `__KOS_SYSTEM_HEADERS__'
+ * >> #include <string.h> // Will define `__KOS_SYSTEM_HEADERS__`
  * >> #ifdef __KOS_SYSTEM_HEADERS__
- * >> #include <hybrid/compiler.h> // Pull in KOS-specific headers without relying on `__has_include'.
+ * >> #include <hybrid/compiler.h> // Pull in KOS-specific headers without relying on `__has_include`.
  * >> #endif
  */
 #define __KOS_SYSTEM_HEADERS__
@@ -71,7 +71,7 @@
 #define __PE__  1
 #endif /* !__REDIRECT */
 #else /* ... */
-#warning "Target binary format not defined. - Assuming `__ELF__'"
+#warning "Target binary format not defined. - Assuming `__ELF__`"
 #define __ELF__ 1
 #endif /* !... */
 #endif /* !__PE__ && !__ELF__ */
@@ -154,14 +154,14 @@
 
 
 /* A  special  variant  of  NOTHROW  that  is  only  applied   when
- * `-fnon-call-exceptions' is disabled  (NCX --  NonCallExceptions)
+ * `-fnon-call-exceptions` is disabled  (NCX --  NonCallExceptions)
  * This applies to a huge  set of functions, including  practically
  * everything from <string.h>, as well as a lot of other functions.
  *     So many as a matter of fact, that it is the default nothrow-
- *     mode used by magic headers created by `generated_header.dee'
+ *     mode used by magic headers created by `generated_header.dee`
  * Basically, anything that is designed to interact with user-provided
  * memory buffers qualifies for this, as  the user may have defined  a
- * signal handler to throw an exception upon `SIGSEGV', or the like.
+ * signal handler to throw an exception upon `SIGSEGV`, or the like.
  * Or alternatively, has KOS kernel exceptions enabled (s.a. <kos/except-handler.h>) */
 #ifndef __NOTHROW_NCX
 #if (!defined(__NO_NON_CALL_EXCEPTIONS) || \
@@ -205,7 +205,7 @@
  * exceptions due to the use of RPC callbacks and pthread cancellation points
  * which themself may throw errors).
  * By default, declare functions such that generated code is capable of  dealing
- * with throwing RPC functions (`rpc_schedule()'), as well as `pthread_cancel()'
+ * with throwing RPC functions (`rpc_schedule()`), as well as `pthread_cancel()`
  * -> This mainly affects system calls */
 #ifndef __NOTHROW_RPC
 #if !defined(__NON_CALL_EXCEPTIONS) && defined(__NO_RPC_EXCEPTIONS)
@@ -250,7 +250,7 @@
 #endif /* !__NOTHROW_RPC */
 
 
-/* Same as `__NOTHROW', but must be used in `typedef's and variable declarations:
+/* Same as `__NOTHROW`, but must be used in `typedef`s and variable declarations:
  * >> typedef void NOTHROW_T(KCALL *PFUN)(void);
  * >> typedef void NOTHROW_T(KCALL TFUN)(void);
  * >> void NOTHROW_T(KCALL *funptr)(void);
@@ -363,7 +363,7 @@
 #endif
 
 
-/* Annotation for `if __untraced(...)' or `while __untraced(...)'
+/* Annotation for `if __untraced(...)` or `while __untraced(...)`
  * Using this macro prevents the injection of meta-data profilers
  * which would otherwise allow branches to be traced. */
 #define __untraced /* nothing */
@@ -396,7 +396,7 @@
 #elif defined(__COMPILER_HAVE_GCC_ASM)
 #ifdef __PE__
 #if 1 /* PE doesn't have .pushsection, .popsection,  or even .previous, however we'd  need
-       * to change sections in order  to write to the `.drectve'  section that we want  to
+       * to change sections in order  to write to the `.drectve`  section that we want  to
        * export a certain symbol. - So while  in theory we can define non-public  aliases,
        * defining public ones is something that we cannot do without assuming the caller's
        * current section. */
@@ -496,18 +496,18 @@
  * prevents lazy relocations from being  used, so overall, enabling this  by
  * default would degrade program performance.
  * As such, this feature is implement as opt-in on a per-file basis, with the
- * user  having to `#define __WANT_NO_PLT_RELOCATIONS' prior to including any
+ * user  having to `#define __WANT_NO_PLT_RELOCATIONS` prior to including any
  * system header file. */
 #if __has_attribute(__noplt__) && __has_attribute(__visibility__)
-#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS' request */
+#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS` request */
 #define __IMPDEF        extern __attribute__((__noplt__, __visibility__("default")))
 #elif !defined(__NO_ATTR_VISIBILITY) && !defined(__NO_ATTR_NOPLT)
-#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS' request */
+#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS` request */
 #define __IMPDEF        extern __ATTR_NOPLT __ATTR_VISIBILITY("default")
 #elif !defined(__NO_ATTR_VISIBILITY)
 #define __IMPDEF        extern __ATTR_VISIBILITY("default")
 #elif !defined(__NO_ATTR_NOPLT)
-#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS' request */
+#define __HAVE_NO_PLT_RELOCATIONS /* ACK feedback that we've understood the `__WANT_NO_PLT_RELOCATIONS` request */
 #define __IMPDEF        extern __ATTR_NOPLT
 #else /* ... */
 #define __IMPDEF        extern
@@ -555,7 +555,7 @@
  * - Only emit code if function is actually used
  * - Try to use COMDAT symbols, meaning in case of multiple definitions in different
  *   source  files, one is selected randomly that is then linked to all other source
- *   files. (if this part isn't supported, define `__NO_INTERN_COMDAT')
+ *   files. (if this part isn't supported, define `__NO_INTERN_COMDAT`)
  * - Symbol visibility is either INTERN or PRIVATE (the later only in the  fallback
  *   case where we're unable to declare COMDAT symbols, in which case we'll instead
  *   declare them as PRIVATE)
@@ -566,7 +566,7 @@
  * >> __INTERN_INLINE_SECTION(".text", "foo") void foo() { ... } // Try to inline; non-inline impl in custom section
  */
 #ifndef __INTERN_COMDAT
-#if defined(__GNUC__) && defined(__ELF__) && 0 /* XXX: This method doesn't work with `*.constprop.0' functions... */
+#if defined(__GNUC__) && defined(__ELF__) && 0 /* XXX: This method doesn't work with `*.constprop.0` functions... */
 #define __INTERN_COMDAT_SECTION(sectnam, name) static __attribute__((__unused__, __section__(sectnam "." name ",\"axG\",@progbits," name ",comdat;.weak " name ";.hidden " name "#")))
 #define __INTERN_COMDAT(name)                  static __attribute__((__unused__, __section__(".text." name ",\"axG\",@progbits," name ",comdat;.weak " name ";.hidden " name "#")))
 #ifdef __cplusplus
@@ -591,7 +591,7 @@
 #endif
 #define __INTERN_INLINE(sectnam, name)         inline __ATTR_UNUSED __ATTR_VISIBILITY("hidden")
 #define __INTERN_INLINE_SECTION(sectnam, name) inline __ATTR_UNUSED __ATTR_VISIBILITY("hidden") __ATTR_SECTION(sectnam "." name)
-#elif defined(__GNUC__) && defined(__OPTIMIZE__) /* `static' only gets guarantied removed in optimized builds... (strange) */
+#elif defined(__GNUC__) && defined(__OPTIMIZE__) /* `static` only gets guarantied removed in optimized builds... (strange) */
 #define __NO_INTERN_COMDAT /* In this fallback case, we don't actually have proper COMDAT functionality... */
 #define __INTERN_COMDAT(sectnam, name)         static __ATTR_UNUSED
 #define __INTERN_COMDAT_SECTION(sectnam, name) static __ATTR_UNUSED __ATTR_SECTION(sectnam)
@@ -974,9 +974,9 @@
 #endif /* !__INTELLISENSE_SIZE_TYPE__ */
 #define __COMPILER_OFFSETAFTER(s, m) (__builtin_offsetof(s, m) + sizeof(((s *)0)->m))
 #if defined(__COMPILER_HAVE_TYPEOF) && !defined(__NO_builtin_types_compatible_p)
-/* Syntax highlighting for improper use of `container_of' (typeof(*ptr) != typeof(type::member))
+/* Syntax highlighting for improper use of `container_of` (typeof(*ptr) != typeof(type::member))
  * Only  do this with intellisense, since GCC's VLA extension might try to turn int(*)[expr(-1)]
- * into  a runtime expression `alloca((size_t)-1)' if (for  some reason) it's unable to evaluate
+ * into  a runtime expression `alloca((size_t)-1)` if (for  some reason) it's unable to evaluate
  * the array length expression at compile-time. */
 #define __COMPILER_CONTAINER_OF(ptr, type, member)                                 \
 	((type *)(int(*)[__builtin_types_compatible_p(__typeof__(((type *)0)->member), \

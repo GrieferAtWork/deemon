@@ -155,7 +155,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* Check for `cnd_t' support                                            */
+/* Check for `cnd_t` support                                            */
 /************************************************************************/
 #ifndef CONFIG_HAVE_cnd_init
 #undef cnd_init
@@ -178,7 +178,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* Check for `mtx_t' support                                            */
+/* Check for `mtx_t` support                                            */
 /************************************************************************/
 #ifndef CONFIG_HAVE_mtx_init
 #undef mtx_init
@@ -196,7 +196,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* Check for `pthread_cond_t' support                                   */
+/* Check for `pthread_cond_t` support                                   */
 /************************************************************************/
 #ifndef CONFIG_HAVE_pthread_cond_init
 #undef pthread_cond_init
@@ -219,7 +219,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* Check for `pthread_mutex_t' support                                  */
+/* Check for `pthread_mutex_t` support                                  */
 /************************************************************************/
 #ifndef CONFIG_HAVE_pthread_mutex_init
 #undef pthread_mutex_init
@@ -237,7 +237,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* Check for `sem_t' support                                            */
+/* Check for `sem_t` support                                            */
 /************************************************************************/
 #undef CONFIG_HAVE_sem_t
 #if (defined(CONFIG_HAVE_SEMAPHORE_H) && defined(CONFIG_HAVE_sem_init) &&              \
@@ -255,7 +255,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 /************************************************************************/
 /* Figure out how we want to implement the deemon Futex API.
  *
- * NOTE: All implementations except for `DeeFutex_USE_os_futex'
+ * NOTE: All implementations except for `DeeFutex_USE_os_futex`
  *       use dynamically allocated structures and a binary tree
  *       to translate wake/wait-addresses into those structures. */
 #undef DeeFutex_USE_os_futex
@@ -307,12 +307,12 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
  * >>     WAKE(&STATUS); */
 #define DeeFutex_USE_os_futex_32_only
 #elif defined(CONFIG_HOST_WINDOWS)
-/* Windows 8+:     WaitOnAddress is pretty much the same as linux's `sys_futex(2)'
- * Windows Vista+: SRWLOCK + CONDITION_VARIABLE (same as `pthread_cond_t' + `pthread_mutex_t')
- * Windows XP+:    CreateSemaphoreW (same as `sem_t') */
+/* Windows 8+:     WaitOnAddress is pretty much the same as linux's `sys_futex(2)`
+ * Windows Vista+: SRWLOCK + CONDITION_VARIABLE (same as `pthread_cond_t` + `pthread_mutex_t`)
+ * Windows XP+:    CreateSemaphoreW (same as `sem_t`) */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
 #elif defined(__CYGWIN__) && 0
-/* TODO: This would work, but breaks because we don't define `DeeNTSystem_ThrowErrorf()' on cygwin... */
+/* TODO: This would work, but breaks because we don't define `DeeNTSystem_ThrowErrorf()` on cygwin... */
 #define DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW
 #elif defined(CONFIG_HAVE_pthread_cond_t) && defined(CONFIG_HAVE_pthread_mutex_t)
 /* Waiting is implemented by blocking on a condition-variable.
@@ -320,14 +320,14 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #define DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t
 #elif (defined(CONFIG_HAVE_cnd_t) && defined(CONFIG_HAVE_mtx_t) && \
        defined(CONFIG_HAVE_thrd_success) && defined(CONFIG_HAVE_thrd_timedout))
-/* Same as `DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t', but using the STDC API. */
+/* Same as `DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t`, but using the STDC API. */
 #define DeeFutex_USE_cnd_t_AND_mtx_t
 #elif defined(CONFIG_HAVE_sem_t)
 /* Use a semaphore to keep track of how many threads are blocking as an
  * upper count-limit. We then implement WakeOne as sem_wake*1, and WakeAll
  * as sem_wake*numWaitingThreads.
  * - This doesn't race so-long as blocking threads re-check the wait condition one last
- *   time _after_ `++numWaitingThreads', since in that case it will be guarantied that
+ *   time _after_ `++numWaitingThreads`, since in that case it will be guarantied that
  *   the blocking thread will be woken in case of a WakeAll()
  * - The situation where more threads are woken than are actually waiting is OK, since
  *   that case will simply be handled as sporadic wake-ups the next time a wait happens
@@ -408,7 +408,7 @@ struct futex_controller {
 
 		struct {
 			HANDLE sm_hSemaphore; /* [const] Semaphore handle */
-			DWORD  sm_dwThreads;  /* [lock(atomic)] Upper bound for # of threads waiting on `sm_hSemaphore' */
+			DWORD  sm_dwThreads;  /* [lock(atomic)] Upper bound for # of threads waiting on `sm_hSemaphore` */
 		} fc_nt_sem; /* NT_FUTEX_IMPLEMENTATION_SEMAPHORE */
 	};
 #elif defined(DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t)
@@ -419,13 +419,13 @@ struct futex_controller {
 	cnd_t fc_cond; /* Condition variable */
 #elif defined(DeeFutex_USE_sem_t)
 	sem_t  fc_sem;       /* Semaphore */
-	size_t fc_n_threads; /* [lock(atomic)] Upper bound for # of threads waiting on `fc_sem' */
+	size_t fc_n_threads; /* [lock(atomic)] Upper bound for # of threads waiting on `fc_sem` */
 #endif /* ... */
 };
 
 /* Helpers to allocate/free futex controllers.
  * NOTE: We use the deemon object heap for this since that one has extra optimizations
- *       for fixed-length objects (which `struct futex_controller' is), so that we're
+ *       for fixed-length objects (which `struct futex_controller` is), so that we're
  *       able to make use of the (extremely fast) slab allocator. */
 #define futex_controller_alloc()    DeeObject_MALLOC(struct futex_controller)
 #define futex_controller_tryalloc() DeeObject_TRYMALLOC(struct futex_controller)
@@ -473,13 +473,13 @@ PRIVATE size_t /*                  */ fcont_freesize = 0;
 
 /* [0..n][lock(fcont_lock)] Tree of futex objects, ordered by the address they affect.
  * NOTE: This tree does _NOT_ hold references to the individual futex controllers!
- *       When a controller's reference counter hits `0', it will automatically remove
+ *       When a controller's reference counter hits `0`, it will automatically remove
  *       itself from this tree, but there is a short period of time where it will still
  *       be present in this tree, so you have to do tryincref() when wanting to get refs
  *       to objects from this tree! */
 PRIVATE LLRBTREE_ROOT(futex_controller) fcont_tree = NULL;
 
-/* Max number of elements in `fcont_freelist' before further controllers are *actually* free'd */
+/* Max number of elements in `fcont_freelist` before further controllers are *actually* free'd */
 #define FCONT_FREELIST_MAXSIZE 8
 
 
@@ -618,7 +618,7 @@ err:
 }
 
 PRIVATE void DCALL nt_futex_do_initialize_subsystem(void) {
-	/* First up: try to load what we need to use `WaitOnAddress()' */
+	/* First up: try to load what we need to use `WaitOnAddress()` */
 	if (nt_futex_try_initialize_WaitOnAddress()) {
 		atomic_write(&nt_futex_implementation, NT_FUTEX_IMPLEMENTATION_WAITONADDRESS);
 		return;
@@ -634,7 +634,7 @@ PRIVATE void DCALL nt_futex_do_initialize_subsystem(void) {
 	atomic_write(&nt_futex_implementation, NT_FUTEX_IMPLEMENTATION_SEMAPHORE);
 }
 
-/* Call this function (`nt_futex_initialize_subsystem()') to initialize the futex-subsystem on NT */
+/* Call this function (`nt_futex_initialize_subsystem()`) to initialize the futex-subsystem on NT */
 PRIVATE struct atomic_once nt_futex_subsystem_initialized = ATOMIC_ONCE_INIT;
 PRIVATE void DCALL nt_futex_initialize_subsystem(void) {
 	ATOMIC_ONCE_RUN(&nt_futex_subsystem_initialized, {
@@ -649,14 +649,14 @@ PRIVATE void DCALL nt_futex_initialize_subsystem(void) {
 /* Even when the OS is providing a native futex API, we still need a way to keep track of
  * threads that are currently inside blocking system calls to futex functions. This is because
  * we need a way to know which thread is blocked-on (or about to be blocked-on) which address,
- * so we're able to send sporadic wake-up signals to blocking threads in `DeeThread_Interrupt'
+ * so we're able to send sporadic wake-up signals to blocking threads in `DeeThread_Interrupt`
  *
  * This is needed because, while we're able to interrupt blocking threads through various
  * different OS-specific means, all of these means only work to interrupt a thread that is
  * already in kernel-space.
  *
  * NOTE: The race condition where the thread in question may yet to have reached the point
- *       where it is actually able to receive `os_futex_wakeall()' signals (but is already
+ *       where it is actually able to receive `os_futex_wakeall()` signals (but is already
  *       apart of the wait-list) is solved because we simply keep on waking all threads on
  *       the to-be woken thread's address until the thread we are trying to wake no longer
  *       appears in the global list of waiting threads. */
@@ -695,7 +695,7 @@ PRIVATE Dee_atomic_lock_t /*          */ os_futex_wait_lock = Dee_ATOMIC_LOCK_IN
 
 PRIVATE NONNULL((1)) void DCALL
 os_futex_wait_list_wakethread(DeeThreadObject *thread) {
-	/* Search for entries regarding `thread' */
+	/* Search for entries regarding `thread` */
 	for (;;) {
 		struct os_futex_wait_entry *ent;
 		bool found_thread = false;
@@ -718,7 +718,7 @@ os_futex_wait_list_wakethread(DeeThreadObject *thread) {
 			break;
 		}
 
-		/* Yield a bit so `thread' will hopefully get a quantum. */
+		/* Yield a bit so `thread` will hopefully get a quantum. */
 		SCHED_YIELD();
 		SCHED_YIELD();
 		SCHED_YIELD();
@@ -734,7 +734,7 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 #ifdef DeeFutex_USE_os_futex_32_only
 	/* No OS-specific cleanup necessary */
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
-	/* NOTE: No need to handle `NT_FUTEX_IMPLEMENTATION_UNINITIALIZED' here, since
+	/* NOTE: No need to handle `NT_FUTEX_IMPLEMENTATION_UNINITIALIZED` here, since
 	 *       the futex controller couldn't have been created in the first place if
 	 *       the implementation wasn't known. */
 	switch (nt_futex_implementation) {
@@ -762,7 +762,7 @@ futex_controller_do_destroy(struct futex_controller *__restrict self) {
 	futex_controller_free(self);
 }
 
-/* incref/decref operations for `struct futex_controller' */
+/* incref/decref operations for `struct futex_controller` */
 #define futex_controller_incref(self) atomic_inc(&(self)->fc_refcnt)
 #define futex_controller_decref(self) (void)(atomic_decfetch(&(self)->fc_refcnt) || (futex_controller_destroy(self), 0))
 
@@ -779,7 +779,7 @@ futex_controller_tryincref(struct futex_controller *__restrict self) {
 }
 
 
-/* Handler for when the controller's reference counter reaches `0' */
+/* Handler for when the controller's reference counter reaches `0` */
 PRIVATE NONNULL((1)) void DCALL
 futex_controller_destroy(struct futex_controller *__restrict self) {
 	fcont_lock_write();
@@ -809,8 +809,8 @@ futex_controller_destroy(struct futex_controller *__restrict self) {
 /* Lookup a futex controller at a given address
  * (but don't create one there if there is none)
  *
- * @return: * :   Reference to the controller at `addr'
- * @return: NULL: There is no controller at `addr' (no error was thrown) */
+ * @return: * :   Reference to the controller at `addr`
+ * @return: NULL: There is no controller at `addr` (no error was thrown) */
 PRIVATE WUNUSED DREF struct futex_controller *DCALL
 futex_ataddr_get(uintptr_t addr) {
 	DREF struct futex_controller *result;
@@ -826,9 +826,9 @@ futex_ataddr_get(uintptr_t addr) {
  * or create one at said address if there wasn't
  * one there already.
  *
- * @return: * :   Reference to the controller at `addr'
+ * @return: * :   Reference to the controller at `addr`
  * @return: NULL: Failed to create a new controller (an error was thrown)
- *                Note that `futex_ataddr_trycreate' doesn't throw an error */
+ *                Note that `futex_ataddr_trycreate` doesn't throw an error */
 PRIVATE WUNUSED DREF struct futex_controller *DCALL futex_ataddr_create(uintptr_t addr);
 PRIVATE WUNUSED DREF struct futex_controller *DCALL futex_ataddr_trycreate(uintptr_t addr);
 
@@ -936,7 +936,7 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread) {
 	}
 #else /* DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW */
 	os_futex_wait_list_wakethread(thread);
-	/* Fallthru to the futex-tree method. When `DeeFutex_USE_os_futex_32_only'
+	/* Fallthru to the futex-tree method. When `DeeFutex_USE_os_futex_32_only`
 	 * is selected, we can have both wait lists, **as well as** futex controllers,
 	 * where the wait list is used for 32-bit futex operations, and controllers
 	 * are used for 64-bit futex operations. */

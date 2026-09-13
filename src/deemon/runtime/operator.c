@@ -90,9 +90,9 @@ DECL_BEGIN
  * C:
  * >> DeeObject_TAdd(MyClass, inst, 7);
  * >> func = MyClass->tp_math->tp_add; // func == &instance_add
- * >> // Invoking `func' directly at this point would result in
- * >> // all information about `MyClass' being referred to, to
- * >> // be lost, resulting in `MySubClass.operator + ' to be
+ * >> // Invoking `func` directly at this point would result in
+ * >> // all information about `MyClass` being referred to, to
+ * >> // be lost, resulting in `MySubClass.operator + ` to be
  * >> // invoked instead.
  * >> if (func == &instance_add) {
  * >>     instance_tadd(MyClass, inst, 7);
@@ -103,28 +103,28 @@ DECL_BEGIN
  * >> // invoke the typed class function when that happens.
  * NOTE: This problem only arises in a super-context:
  * >> DeeObject_Add(inst, 7); // Same as DeeObject_TAdd(MySubSubClass, inst, 7)
- * >> FIND_FRIST_MATCH(tp_math->tp_add); // Found in `MySubClass'
- * >> INHERIT_MATCH();                   // Inherit `operator +' from `MySubClass' into `MySubSubClass'
+ * >> FIND_FRIST_MATCH(tp_math->tp_add); // Found in `MySubClass`
+ * >> INHERIT_MATCH();                   // Inherit `operator +` from `MySubClass` into `MySubSubClass`
  * >>                                    // NOTE: This will only inherit the C-wrapper for the operator,
  * >>                                    //       essentially meaning:
  * >>                                    //       >> MySubSubClass->tp_math = MySubClass->tp_math;
- * >>                                    //       Where `tp_math->tp_add == &instance_add'
- * >> // With the tp_math set of operators now inherited from `MySubClass',
- * >> // we can directly invoke the operator from `MySubSubClass', without
+ * >>                                    //       Where `tp_math->tp_add == &instance_add`
+ * >> // With the tp_math set of operators now inherited from `MySubClass`,
+ * >> // we can directly invoke the operator from `MySubSubClass`, without
  * >> // the need to check for class operators, because we know that no
- * >> // base type of `inst' before `MySubClass' defined an `operator add'
- * >> (*MySubSubClass->tp_math->tp_add)(inst, 7);  // Invokes `instance_add()'
- * >> // `instance_add()' then invokes the following:
+ * >> // base type of `inst` before `MySubClass` defined an `operator add`
+ * >> (*MySubSubClass->tp_math->tp_add)(inst, 7);  // Invokes `instance_add()`
+ * >> // `instance_add()` then invokes the following:
  * >> instance_tadd(MySubSubClass, inst, 7);
  * >> // This will then invoke:
  * >> DeeClass_GetOperator(MySubSubClass, OPERATOR_ADD);
- * >> // After failing to find `OPERATOR_ADD' as part of `MySubSubClass', this
+ * >> // After failing to find `OPERATOR_ADD` as part of `MySubSubClass`, this
  * >> // function will then continue to search base-classes for the operator,
- * >> // until it finds it in `MySubClass', following which the associated
- * >> // callback will become cached as part of `MySubSubClass'
+ * >> // until it finds it in `MySubClass`, following which the associated
+ * >> // callback will become cached as part of `MySubSubClass`
  * >> INVOKE_OPERATOR(inst, 7);
  * So because of this, we only need to check for class operator callbacks in
- * a super-context, or in other words: when `DEFINE_TYPED_OPERATORS' is defined! */
+ * a super-context, or in other words: when `DEFINE_TYPED_OPERATORS` is defined! */
 #ifdef DEFINE_TYPED_OPERATORS
 #define DeeType_INVOKE_STR       DeeType_InvokeCastStr
 #define DeeType_INVOKE_PRINT     DeeType_InvokeCastPrint
@@ -392,7 +392,7 @@ recursion:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AddInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* Optimization for `int' */
+	/* Optimization for `int` */
 	if (DeeInt_Check(self))
 		return Dee_AsObject(DeeInt_AddSDigit((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewInt8(val);
@@ -408,7 +408,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_SubInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* Optimization for `int' */
+	/* Optimization for `int` */
 	if (DeeInt_Check(self))
 		return Dee_AsObject(DeeInt_SubSDigit((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewInt8(val);
@@ -424,7 +424,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AddUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* Optimization for `int' */
+	/* Optimization for `int` */
 	if (DeeInt_Check(self))
 		return Dee_AsObject(DeeInt_AddUInt32((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewUInt32(val);
@@ -440,7 +440,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AddUInt64(DeeObject *__restrict self, uint64_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt64(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -454,7 +454,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_SubUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* Optimization for `int' */
+	/* Optimization for `int` */
 	if (DeeInt_Check(self))
 		return Dee_AsObject(DeeInt_SubUInt32((DeeIntObject *)self, val));
 	val_ob = DeeInt_NewUInt32(val);
@@ -470,7 +470,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_SubUInt64(DeeObject *__restrict self, uint64_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt64(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -484,7 +484,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_MulInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -498,7 +498,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_DivInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -512,7 +512,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ModInt8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -526,7 +526,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShlUInt8(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -540,7 +540,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShrUInt8(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt8(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -554,7 +554,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AndUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -568,7 +568,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_OrUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -582,7 +582,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_XorUInt32(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
-	/* TODO: Optimization for `int' */
+	/* TODO: Optimization for `int` */
 	val_ob = DeeInt_NewUInt32(val);
 	if unlikely(!val_ob)
 		goto err;
@@ -598,7 +598,7 @@ err:
 	DeeObject_InplaceXXX(DREF DeeObject **__restrict p_self, intX_t val) {                                \
 		DREF DeeObject *temp;                                                                             \
 		int result;                                                                                       \
-		/* TODO: Optimization for `int' */                                                                \
+		/* TODO: Optimization for `int` */                                                                \
 		temp = DeeInt_NewXXX(val);                                                                        \
 		if unlikely(!temp)                                                                                \
 			goto err;                                                                                     \
@@ -687,7 +687,7 @@ err:
 
 
 /* Object buffer interface.
- * @param: flags: Set of `Dee_BUFFER_F*'
+ * @param: flags: Set of `Dee_BUFFER_F*`
  * @throw: Error.RuntimeError.NotImplemented: The object doesn't implement the buffer protocol.
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
 DEFINE_OPERATOR(int, GetBuf, (DeeObject *RESTRICT_IF_NOTYPE self,

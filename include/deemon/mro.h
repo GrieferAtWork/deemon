@@ -122,8 +122,8 @@ LOCAL WUNUSED NONNULL((1)) size_t Dee_libc_strlen(char const *str) { /*!export-*
 
 /* MRO -- Method (or rather Attribute) Resolution Order.
  *
- * Defines all the functions and types (except for `Dee_membercache' itself,
- * which needs to be defined in `object.h', because it appears 2x as an
+ * Defines all the functions and types (except for `Dee_membercache` itself,
+ * which needs to be defined in `object.h`, because it appears 2x as an
  * inlined structure in every type object) that are required to resolve,
  * as well as cache the attributes of types/classes, both builtin, and
  * user-defined. */
@@ -142,47 +142,47 @@ struct Dee_type_member;     /*!export-*/
 struct Dee_class_attribute; /*!export-*/
 struct Dee_module_symbol;   /*!export-*/
 
-/* Possible values for `struct Dee_attrinfo::ai_type' */
-#define Dee_ATTRINFO_CUSTOM          0 /* Custom attribute operators are present. (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_MODSYM          1 /* Access a module symbol (ai_decl is a `DeeModuleObject') */
-#define Dee_ATTRINFO_METHOD          2 /* Wrapper for producing `DeeObjMethod_Type' / `DeeKwObjMethod_Type' (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_GETSET          3 /* GetSet that uses the original "this"-argument. (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_MEMBER          4 /* Member that uses the original "this"-argument. (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_ATTR            5 /* Wrapper for producing `DeeInstanceMethod_Type' or directly accessing a property/member (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
-#define Dee_ATTRINFO_INSTANCE_METHOD 6 /* Wrapper for producing `DeeClsMethod_Type' / `DeeKwClsMethod_Type' (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_INSTANCE_GETSET 7 /* Wrapper for producing `DeeClsProperty_Type' (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_INSTANCE_MEMBER 8 /* Wrapper for producing `DeeClsMember_Type' (ai_decl is a `DeeTypeObject') */
-#define Dee_ATTRINFO_INSTANCE_ATTR   9 /* Wrapper for producing `DeeInstanceMember_Type' / `DeeInstanceMethod_Type' / `DeeProperty_Type' (ai_decl is a `DeeTypeObject' with non-NULL `tp_class') */
+/* Possible values for `struct Dee_attrinfo::ai_type` */
+#define Dee_ATTRINFO_CUSTOM          0 /* Custom attribute operators are present. (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_MODSYM          1 /* Access a module symbol (ai_decl is a `DeeModuleObject`) */
+#define Dee_ATTRINFO_METHOD          2 /* Wrapper for producing `DeeObjMethod_Type` / `DeeKwObjMethod_Type` (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_GETSET          3 /* GetSet that uses the original "this"-argument. (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_MEMBER          4 /* Member that uses the original "this"-argument. (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_ATTR            5 /* Wrapper for producing `DeeInstanceMethod_Type` or directly accessing a property/member (ai_decl is a `DeeTypeObject` with non-NULL `tp_class`) */
+#define Dee_ATTRINFO_INSTANCE_METHOD 6 /* Wrapper for producing `DeeClsMethod_Type` / `DeeKwClsMethod_Type` (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_INSTANCE_GETSET 7 /* Wrapper for producing `DeeClsProperty_Type` (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_INSTANCE_MEMBER 8 /* Wrapper for producing `DeeClsMember_Type` (ai_decl is a `DeeTypeObject`) */
+#define Dee_ATTRINFO_INSTANCE_ATTR   9 /* Wrapper for producing `DeeInstanceMember_Type` / `DeeInstanceMethod_Type` / `DeeProperty_Type` (ai_decl is a `DeeTypeObject` with non-NULL `tp_class`) */
 #define Dee_ATTRINFO_COUNT          10 /* # of possible values */
 #define Dee_ATTRINFO_ISINSTANCE(x)      ((x) >= Dee_ATTRINFO_INSTANCE_METHOD)
 #define Dee_ATTRINFO_WITHOUTINSTANCE(x) ((x) - (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
 #define Dee_ATTRINFO_WITHINSTANCE(x)    ((x) + (Dee_ATTRINFO_INSTANCE_METHOD - Dee_ATTRINFO_METHOD))
 
 struct Dee_attrinfo {
-	uintptr_t  ai_type; /* Type of attribute (one of `Dee_ATTRINFO_*'). */
+	uintptr_t  ai_type; /* Type of attribute (one of `Dee_ATTRINFO_*`). */
 	DeeObject *ai_decl; /* [1..1] Declaring object (the type implementing the operators/attribute/instance-attribute, or the module for ATTR_TYPE_MODSYM) */
 	union {
 		void const                       *v_any;             /* [1..1] Data pointer */
-		struct Dee_type_attr const       *v_custom;          /* [1..1][Dee_ATTRINFO_CUSTOM] Custom attribute access operators (same as `((DeeTypeObject *)ai_decl)->tp_attr'). */
-		struct Dee_class_attribute const *v_attr;            /* [1..1][Dee_ATTRINFO_ATTR] Attribute to access or produce a `DeeInstanceMethod_Type' for */
-		struct Dee_type_method const     *v_method;          /* [1..1][Dee_ATTRINFO_METHOD] Method to create a `DeeObjMethod_Type' / `DeeKwObjMethod_Type' for */
+		struct Dee_type_attr const       *v_custom;          /* [1..1][Dee_ATTRINFO_CUSTOM] Custom attribute access operators (same as `((DeeTypeObject *)ai_decl)->tp_attr`). */
+		struct Dee_class_attribute const *v_attr;            /* [1..1][Dee_ATTRINFO_ATTR] Attribute to access or produce a `DeeInstanceMethod_Type` for */
+		struct Dee_type_method const     *v_method;          /* [1..1][Dee_ATTRINFO_METHOD] Method to create a `DeeObjMethod_Type` / `DeeKwObjMethod_Type` for */
 		struct Dee_type_getset const     *v_getset;          /* [1..1][Dee_ATTRINFO_GETSET] Getset that should be accessed */
 		struct Dee_type_member const     *v_member;          /* [1..1][Dee_ATTRINFO_MEMBER] Member that should be accessed */
-		struct Dee_class_attribute const *v_instance_attr;   /* [1..1][Dee_ATTRINFO_INSTANCE_ATTR] Attribute to wrap as `DeeInstanceMember_Type' / `DeeInstanceMethod_Type' / `DeeProperty_Type' */
-		struct Dee_type_method const     *v_instance_method; /* [1..1][Dee_ATTRINFO_INSTANCE_METHOD] Method to wrap as `DeeClsMethod_Type' / `DeeKwClsMethod_Type' */
-		struct Dee_type_getset const     *v_instance_getset; /* [1..1][Dee_ATTRINFO_INSTANCE_GETSET] Getset to wrap as `DeeClsProperty_Type' */
-		struct Dee_type_member const     *v_instance_member; /* [1..1][Dee_ATTRINFO_INSTANCE_MEMBER] Member to wrap as `DeeClsMember_Type' */
+		struct Dee_class_attribute const *v_instance_attr;   /* [1..1][Dee_ATTRINFO_INSTANCE_ATTR] Attribute to wrap as `DeeInstanceMember_Type` / `DeeInstanceMethod_Type` / `DeeProperty_Type` */
+		struct Dee_type_method const     *v_instance_method; /* [1..1][Dee_ATTRINFO_INSTANCE_METHOD] Method to wrap as `DeeClsMethod_Type` / `DeeKwClsMethod_Type` */
+		struct Dee_type_getset const     *v_instance_getset; /* [1..1][Dee_ATTRINFO_INSTANCE_GETSET] Getset to wrap as `DeeClsProperty_Type` */
+		struct Dee_type_member const     *v_instance_member; /* [1..1][Dee_ATTRINFO_INSTANCE_MEMBER] Member to wrap as `DeeClsMember_Type` */
 		struct Dee_module_symbol const   *v_modsym;          /* [1..1][Dee_ATTRINFO_MODSYM] Symbol that should be accessed */
 	} ai_value;
 };
 
-/* Try to determine the type of object returned by `Dee_attrinfo_callget()'
- * When the type cannot be determined, return `NULL' instead. */
+/* Try to determine the type of object returned by `Dee_attrinfo_callget()`
+ * When the type cannot be determined, return `NULL` instead. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self);
 
-/* Same as `Dee_attrinfo_typeof()', but `Dee_ATTRINFO_INSTANCE_*' attributes
- * as though they were the equivalent `Dee_ATTRINFO_*' (iow: the returned type
+/* Same as `Dee_attrinfo_typeof()`, but `Dee_ATTRINFO_INSTANCE_*` attributes
+ * as though they were the equivalent `Dee_ATTRINFO_*` (iow: the returned type
  * does not describe the type when accessed using the enumerated object, but
  * in the case of types and instance-attributes, the type when accessed using
  * an instance of the enumerated object) */
@@ -190,23 +190,23 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 Dee_attrinfo_typeof_ininstance(struct Dee_attrinfo *__restrict self);
 
 
-/* Lookup information on how/where "attr" exists in `tp_self:self'
+/* Lookup information on how/where "attr" exists in `tp_self:self`
  * This function follows normal attribute lookup semantics, except
- * that no dynamically defined `operator getattr' callbacks get
- * called (if they exist, `Dee_ATTRINFO_CUSTOM' is set and true is
+ * that no dynamically defined `operator getattr` callbacks get
+ * called (if they exist, `Dee_ATTRINFO_CUSTOM` is set and true is
  * returned)
- * @param: tp_self: The type where attribute search starts (usually `Dee_TYPE(self)', when `self != NULL')
- * @param: self:    The object whose attributes should be searched, or `NULL' if unknown. Note that in
- *                  order to return `Dee_ATTRINFO_MODSYM', or items from a type's `tp_class_*', you have
- *                  to provide an object here. Otherwise, only the MRO of `tp_self' is searched.
- * @param: attr:    The attribute to search (length is `attrlen'). Ignored for `Dee_ATTRINFO_CUSTOM'.
+ * @param: tp_self: The type where attribute search starts (usually `Dee_TYPE(self)`, when `self != NULL`)
+ * @param: self:    The object whose attributes should be searched, or `NULL` if unknown. Note that in
+ *                  order to return `Dee_ATTRINFO_MODSYM`, or items from a type's `tp_class_*`, you have
+ *                  to provide an object here. Otherwise, only the MRO of `tp_self` is searched.
+ * @param: attr:    The attribute to search (length is `attrlen`). Ignored for `Dee_ATTRINFO_CUSTOM`.
  * @param: attrlen: Attribute name length
  * @param: hash:    Attribute name hash (== Dee_HashPtr(attr, attrlen))
- * @return: true:   Attribute information was found, and `*retinfo' was filled.
- *                  Note that in case of `Dee_ATTRINFO_CUSTOM', accessing the
+ * @return: true:   Attribute information was found, and `*retinfo` was filled.
+ *                  Note that in case of `Dee_ATTRINFO_CUSTOM`, accessing the
  *                  attribute can still fail for any number of reasons at runtime.
- * @return: false:  Attribute information could not be found, and `*retinfo' is undefined.
- *                  This has the same meaning as `DeeObject_HasAttr(...) == false'. */
+ * @return: false:  Attribute information could not be found, and `*retinfo` is undefined.
+ *                  This has the same meaning as `DeeObject_HasAttr(...) == false`. */
 DFUNDEF WUNUSED NONNULL((1, 3, 6)) bool DCALL
 DeeObject_TFindAttrInfoStringLenHash(DeeTypeObject *tp_self, DeeObject *self,
                                      char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
@@ -283,10 +283,10 @@ DeeObject_TGenericFindPrivateAttrInfoStringLenHash(DeeTypeObject *tp_self, char 
 #define Dee_ATTRPERM_F_PRIVATE  0x0040 /* [NAME("h")] This attribute is considered private (h -- hidden). */
 #define Dee_ATTRPERM_F_PROPERTY 0x0080 /* [NAME("p")] Accessing the attribute may have unpredictable side-effects (p -- property). */
 #define Dee_ATTRPERM_F_WRAPPER  0x0100 /* [NAME("w")] In the current context, the attribute will be accessed as a wrapper. */
-#define Dee_ATTRPERM_F_NAMEOBJ  0x4000 /* `ad_name' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
-#define Dee_ATTRPERM_F_DOCOBJ   0x8000 /* `ad_doc' holds a reference to a `DeeStringObject', while pointing to its `s_str' field. */
+#define Dee_ATTRPERM_F_NAMEOBJ  0x4000 /* `ad_name` holds a reference to a `DeeStringObject`, while pointing to its `s_str` field. */
+#define Dee_ATTRPERM_F_DOCOBJ   0x8000 /* `ad_doc` holds a reference to a `DeeStringObject`, while pointing to its `s_str` field. */
 
-/* Set of `Dee_ATTRPERM_F_*' */
+/* Set of `Dee_ATTRPERM_F_*` */
 typedef uint16_t Dee_attrperm_t;
 #define Dee_SIZEOF_ATTRPERM_T 2
 
@@ -297,8 +297,8 @@ struct Dee_attrdesc {
 	/*utf-8*/ char const *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                * [0..1] The documentation string of the attribute (when known). */
 	struct Dee_attrinfo   ad_info; /* Info about this attribute in particular */
-	Dee_attrperm_t        ad_perm; /* Set of `Dee_ATTRPERM_F_*' flags, describing the attribute's behavior. */
-	DREF DeeTypeObject   *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()' */
+	Dee_attrperm_t        ad_perm; /* Set of `Dee_ATTRPERM_F_*` flags, describing the attribute's behavior. */
+	DREF DeeTypeObject   *ad_type; /* [0..1] Optional: the type of object to report as being returned by `Dee_attrdesc_callget()` */
 };
 #define Dee_attrdesc_nameobj(self) COMPILER_CONTAINER_OF((self)->ad_name, DeeStringObject, s_str)
 #define Dee_attrdesc_docobj(self)  COMPILER_CONTAINER_OF((self)->ad_doc, DeeStringObject, s_str)
@@ -323,12 +323,12 @@ struct Dee_attrdesc {
 	 : (void)0,                                 \
 	 _Dee_attrdesc_fini_WITHOUT_NAME(self))
 
-/* Returns a reference to the type returned by `Dee_attrdesc_callget()', or `NULL' if unknown. */
+/* Returns a reference to the type returned by `Dee_attrdesc_callget()`, or `NULL` if unknown. */
 #define Dee_attrdesc_typeof(self)                                     \
 	((self)->ad_type ? (Dee_Incref((self)->ad_type), (self)->ad_type) \
 	                 : Dee_attrinfo_typeof_ininstance(&(self)->ad_info))
 
-/* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
+/* Perform standard operations on the attribute behind `struct Dee_attrdesc` */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -344,9 +344,9 @@ Dee_attrdesc_callcall(struct Dee_attrdesc const *self, DeeObject *thisarg,
 
 
 struct Dee_attrhint {
-	DeeObject     *ah_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
-	Dee_attrperm_t ah_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
-	Dee_attrperm_t ah_perm_value; /* Permissions value for `as_perm_mask' */
+	DeeObject     *ah_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl` */
+	Dee_attrperm_t ah_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value` */
+	Dee_attrperm_t ah_perm_value; /* Permissions value for `as_perm_mask` */
 };
 
 /* Initialize "self" to match *all* attributes */
@@ -362,16 +362,16 @@ struct Dee_attrhint {
 
 struct Dee_attrspec {
 	char const *as_name; /* [1..1] The name of the attribute to look up (ad_name). */
-	Dee_hash_t  as_hash; /* [== Dee_HashStr(alr_name)] Hash of `alr_name' */
+	Dee_hash_t  as_hash; /* [== Dee_HashStr(alr_name)] Hash of `alr_name` */
 #undef as_decl
 #undef as_perm_mask
 #undef as_perm_value
 #undef as_hint
 	union {
 		struct {
-			DeeObject     *as_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl' */
-			Dee_attrperm_t as_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value' */
-			Dee_attrperm_t as_perm_value; /* Permissions value for `as_perm_mask' */
+			DeeObject     *as_decl;       /* [0..1] When non-NULL, filter for `ad_info.ai_decl` */
+			Dee_attrperm_t as_perm_mask;  /* Filter attributes by `(ad_perm & as_perm_mask) == as_perm_value` */
+			Dee_attrperm_t as_perm_value; /* Permissions value for `as_perm_mask` */
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 		_dee_astruct
@@ -410,8 +410,8 @@ struct Dee_attrspec {
 struct Dee_attriter;
 struct Dee_attriter_type {
 	/* [1..1] Yield the next attribute from the iterator.
-	 * @return: 1 : Enumeration has finished (in this case, contents of `desc' are undefined)
-	 * @return: 0 : Success (`desc' was fully initialized)
+	 * @return: 1 : Enumeration has finished (in this case, contents of `desc` are undefined)
+	 * @return: 0 : Success (`desc` was fully initialized)
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 2))
 	int (DCALL *ait_next)(struct Dee_attriter *__restrict self,
@@ -433,7 +433,7 @@ struct Dee_attriter_type {
 	                        Dee_visit_t proc, void *arg);
 
 	/* [0..1] Called when the attribute iterator buffer was moved to a
-	 *        different memory location, where `old_loc + delta == self'. */
+	 *        different memory location, where `old_loc + delta == self`. */
 	NONNULL_T((1))
 	void (DCALL *ait_moved)(struct Dee_attriter *__restrict self,
 	                        ptrdiff_t delta);
@@ -495,7 +495,7 @@ struct Dee_attriter {
 	/* iterator-specific data goes here... */
 };
 
-/* Helper macros for invoking callbacks of `struct Dee_attriter' */
+/* Helper macros for invoking callbacks of `struct Dee_attriter` */
 #define Dee_attriter_next(self, desc) (*(self)->ai_type->ait_next)(self, desc)
 #define Dee_attriter_fini(self)       ((self)->ai_type->ait_fini ? (*(self)->ai_type->ait_fini)(self) : (void)0)
 #define Dee_attriter_visit(self)      ((self)->ai_type->ait_visit ? (*(self)->ai_type->ait_visit)(self, proc, arg) : (void)0)
@@ -515,10 +515,10 @@ Dee_attriter_bool(struct Dee_attriter *__restrict self, size_t selfsize);
 
 
 
-/* Lookup the descriptor for an attribute, given a set of `specs'.
+/* Lookup the descriptor for an attribute, given a set of `specs`.
  * @return:  0: Successfully queried the attribute.
- *              The given `result' was filled, and the must finalize
- *              it through use of `Dee_attribute_info_fini()'.
+ *              The given `result` was filled, and the must finalize
+ *              it through use of `Dee_attribute_info_fini()`.
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -526,14 +526,14 @@ DeeObject_FindAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrspec const *__restrict specs,
                    struct Dee_attrdesc *__restrict result);
 
-/* Initialize an iterator for enumerating attributes recognized by `tp_getattr'
+/* Initialize an iterator for enumerating attributes recognized by `tp_getattr`
  * NOTE: After calling this function, you must retain a reference "self" for
  *       the duration of interacting with the iterator written to "iterbuf"!
  * @param: hint: Hint specifying which attributes to enumerate (may be ignored by constructed iterator,
  *               meaning you have to do your own additional filtering if you want to be sure that only
  *               attributes matching your filter get enumerated)
- * @return: <= bufsize: Success; the given `iterbuf' was initialized and you can start enumeration. In this
- *                               case, you also *have* to finalize the iterator using `Dee_attriter_fini'
+ * @return: <= bufsize: Success; the given `iterbuf` was initialized and you can start enumeration. In this
+ *                               case, you also *have* to finalize the iterator using `Dee_attriter_fini`
  * @return: > bufsize:  Failure: need a larger buffer size (specifically: one of at least "return" bytes)
  * @return: (size_t)-1: An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) size_t DCALL
@@ -541,25 +541,25 @@ DeeObject_IterAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attriter *iterbuf, size_t bufsize,
                    struct Dee_attrhint const *__restrict hint);
 
-/* Suggested default buffer size for `DeeObject_IterAttr()' */
+/* Suggested default buffer size for `DeeObject_IterAttr()` */
 #ifndef Dee_ITERATTR_DEFAULT_BUFSIZE
 #define Dee_ITERATTR_DEFAULT_BUFSIZE (64 * __SIZEOF_POINTER__)
 #endif /* !Dee_ITERATTR_DEFAULT_BUFSIZE */
 
-/* Callback prototype for `DeeObject_EnumAttr'
+/* Callback prototype for `DeeObject_EnumAttr`
  * @return: * : Dee_formatprinter_t-like return value */
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t
 (DCALL *Dee_enumattr_t)(void *arg, struct Dee_attrdesc *__restrict desc);
 
-/* Wrapper around `DeeObject_IterAttr()' that will handle all the instantiation/finalization of the
- * attribute iterator for you, whilst applying a given `filter' to select which arguments should
- * actually be enumerated. The given `cb' may also return any negative value to halt enumeration
+/* Wrapper around `DeeObject_IterAttr()` that will handle all the instantiation/finalization of the
+ * attribute iterator for you, whilst applying a given `filter` to select which arguments should
+ * actually be enumerated. The given `cb` may also return any negative value to halt enumeration
  * prematurely (in which case that same negative value is returned by this function), or return a
  * positive value, which are then summed across all invocations prior to being returned.
  * @param: filter: Only enumerate attributes matched by this filter
- * @return: >= 0: Success (return value is the sum of invocations of `cb')
+ * @return: >= 0: Success (return value is the sum of invocations of `cb`)
  * @return: -1:   An error was thrown
- * @return: < -1: Negative return value returned by `cb' */
+ * @return: < -1: Negative return value returned by `cb` */
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrhint const *__restrict filter,
@@ -582,25 +582,25 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_type_member_del(struct Dee_type_me
 
 
 /* Try to add the specified attribute to the cache of "self".
- * - If this fails due to OOM, return `-1', but DON'T throw an exception
+ * - If this fails due to OOM, return `-1`, but DON`T throw an exception
  * If the MRO cache already contains an entry for the named attribute:
- * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
- *   such that it can be patched without having to alter `mcs_type' (since having to do
+ * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*`),
+ *   such that it can be patched without having to alter `mcs_type` (since having to do
  *   so would result in a non-resolvable race condition where another thread is currently
  *   dereferencing the function pointers from the existing entry).
- *   If this verification fails, return `1'.
- *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
- *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
+ *   If this verification fails, return `1`.
+ *   - For `DeeTypeMRO_Patch*Method`, it is also verified that both the
+ *     old and new function pointers share a common `TYPE_METHOD_FKWDS`.
  * - If the type matches, the pre-existing cache entries pointers are patched such that
  *   they will now reference those from the given parameters.
  *   Note that for this purpose, this exchange is atomic for each individual function
- *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
- *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
+ *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet`,
+ *   another thread may invoke (e.g.) an out-dated `gs_del` after `gs_get` was already
  *   patched.
  *
  * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
  *       that wish to skip certain type-dependent verification steps during future calls.
- *       (e.g. `Sequence.first', `Mapping.keys')
+ *       (e.g. `Sequence.first`, `Mapping.keys`)
  *
  * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
  *                       But also note that when there are many function pointers, some may
@@ -620,7 +620,7 @@ DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *
 
 #ifdef CONFIG_BUILDING_DEEMON
 
-/* Type codes for `struct Dee_membercache_slot::mcs_type' */
+/* Type codes for `struct Dee_membercache_slot::mcs_type` */
 #define Dee_MEMBERCACHE_UNUSED          0  /* Unused slot. */
 #define Dee_MEMBERCACHE_UNINITIALIZED   1  /* Uninitialized slot (when encountered, keep searching)
                                             * Used as a marker for a slot that is currently being
@@ -629,16 +629,16 @@ DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *
 #define Dee_MEMBERCACHE_GETSET          3  /* Getset slot. */
 #define Dee_MEMBERCACHE_MEMBER          4  /* Member slot. */
 #define Dee_MEMBERCACHE_ATTRIB          5  /* Class attribute. */
-#define Dee_MEMBERCACHE_INSTANCE_METHOD 6  /* Same as `Dee_MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
-#define Dee_MEMBERCACHE_INSTANCE_GETSET 7  /* Same as `Dee_MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
-#define Dee_MEMBERCACHE_INSTANCE_MEMBER 8  /* Same as `Dee_MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
-#define Dee_MEMBERCACHE_INSTANCE_ATTRIB 9  /* Same as `Dee_MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
+#define Dee_MEMBERCACHE_INSTANCE_METHOD 6  /* Same as `Dee_MEMBERCACHE_METHOD`, but only found in `tp_class_cache`, referring to an instance-method */
+#define Dee_MEMBERCACHE_INSTANCE_GETSET 7  /* Same as `Dee_MEMBERCACHE_GETSET`, but only found in `tp_class_cache`, referring to an instance-getset */
+#define Dee_MEMBERCACHE_INSTANCE_MEMBER 8  /* Same as `Dee_MEMBERCACHE_MEMBER`, but only found in `tp_class_cache`, referring to an instance-member */
+#define Dee_MEMBERCACHE_INSTANCE_ATTRIB 9  /* Same as `Dee_MEMBERCACHE_ATTRIB`, but only found in `tp_class_cache`, referring to an instance-attribute */
 #define Dee_MEMBERCACHE_COUNT           10 /* Amount of different cache types. */
 
 struct Dee_class_desc;
 struct Dee_membercache_slot {
-	/* A slot inside of a `struct Dee_membercache' table. */
-	uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
+	/* A slot inside of a `struct Dee_membercache` table. */
+	uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*`) */
 	uint16_t              _mcs_pad[(sizeof(void *) - 2) / 2];
 	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != Dee_MEMBERCACHE_UNUSED && mcs_type != Dee_MEMBERCACHE_UNINITIALIZED)][== Dee_HashStr(mcs_name)] */
 	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != Dee_MEMBERCACHE_UNUSED && mcs_type != Dee_MEMBERCACHE_UNINITIALIZED)][1..1][const]
@@ -668,13 +668,13 @@ struct Dee_membercache_slot {
 
 struct Dee_membercache_table {
 	size_t                                               mc_mask;   /* [const] Allocated table size -1. */
-	size_t                                               mc_size;   /* [lock(ATOMIC)] Amount of used table entries (always `<= mc_mask'). */
+	size_t                                               mc_size;   /* [lock(ATOMIC)] Amount of used table entries (always `<= mc_mask`). */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_membercache_slot, mc_table); /* [0..mc_mask+1] Member cache table. */
 };
 
-/* Hashing functions for `Dee_membercache_table' */
+/* Hashing functions for `Dee_membercache_table` */
 #define Dee_membercache_table_hashst(self, hash)  ((hash) & (self)->mc_mask)
-#define Dee_membercache_table_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_membercache_table_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define Dee_membercache_table_hashit(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))
 
 /* Member-cache table reference counting functions. */
@@ -692,7 +692,7 @@ struct Dee_membercache_table {
 /* Finalize a given member-cache. */
 INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__restrict self);
 
-/* Try to insert a new caching point into the given Dee_membercache `self'.
+/* Try to insert a new caching point into the given Dee_membercache `self`.
  * @param: self: The cache to insert into.
  * @param: decl: The type providing the declaration.
  * @return:  2: Slot is being initialized by a different thread (not added)
@@ -709,17 +709,17 @@ INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstancemember(struct Dee
 INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
 
 #ifdef __INTELLISENSE__
-/* Cache an instance member (e.g. `tp_methods') in `tp_cache'. */
+/* Cache an instance member (e.g. `tp_methods`) in `tp_cache`. */
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
-/* Cache a class member (e.g. `tp_class_methods') in `tp_class_cache'. */
+/* Cache a class member (e.g. `tp_class_methods`) in `tp_class_cache`. */
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
-/* Cache an instance member (e.g. `tp_methods') in `tp_class_cache'. */
+/* Cache an instance member (e.g. `tp_methods`) in `tp_class_cache`. */
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
 INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
@@ -741,7 +741,7 @@ INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *s
 
 /* NOTES:
  *  - DeeType_GetCachedAttrStringHash         -- `"foo".lower'
- *  - DeeType_GetCachedClassAttrStringHash    -- `string.chr', `string.lower'
+ *  - DeeType_GetCachedClassAttrStringHash    -- `string.chr`, `string.lower`
  *  - DeeType_GetCachedInstanceAttrStringHash -- `string.getinstanceattr("lower")'
  */
 
@@ -1009,10 +1009,10 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedClassAttrInfoStr
 
 
 /* NOTES:
- *  - GetMethodAttr                  --   instance -> instance  ("foo".lower)                     (cache in `tp_cache' as `Dee_MEMBERCACHE_METHOD')
- *  - GetClassMethodAttr             --   class -> class        (string.chr)                      (cache in `tp_class_cache' as `Dee_MEMBERCACHE_METHOD')
- *  - DeeType_GetInstanceMethodAttrStringHash  --   class -> instance     (string.lower)                    (cache in `tp_class_cache' as `Dee_MEMBERCACHE_INSTANCE_METHOD')
- *  - DeeType_GetIInstanceMethodAttrStringHash --   class -> instance     (string.getinstanceattr("lower")) (cache in `tp_class' as `Dee_MEMBERCACHE_METHOD')
+ *  - GetMethodAttr                  --   instance -> instance  ("foo".lower)                     (cache in `tp_cache` as `Dee_MEMBERCACHE_METHOD`)
+ *  - GetClassMethodAttr             --   class -> class        (string.chr)                      (cache in `tp_class_cache` as `Dee_MEMBERCACHE_METHOD`)
+ *  - DeeType_GetInstanceMethodAttrStringHash  --   class -> instance     (string.lower)                    (cache in `tp_class_cache` as `Dee_MEMBERCACHE_INSTANCE_METHOD`)
+ *  - DeeType_GetIInstanceMethodAttrStringHash --   class -> instance     (string.getinstanceattr("lower")) (cache in `tp_class` as `Dee_MEMBERCACHE_METHOD`)
  */
 
 /* Query user-class attributes, and cache them if some were found!
@@ -1070,10 +1070,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_Que
 #define DeeType_QueryIInstanceAttributeStringLen(tp_invoker, tp_self, attr, namelen)           DeeType_QueryIInstanceAttributeStringLenHash(tp_invoker, tp_self, attr, namelen, Dee_HashPtr(attr, namelen))
 #endif /* !__INTELLISENSE__ */
 
-/* Get attributes from `tp_self->tp_methods' / `tp_self->tp_class_methods'.
+/* Get attributes from `tp_self->tp_methods` / `tp_self->tp_class_methods`.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -1114,10 +1114,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMet
 #define DeeType_GetIInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash) DeeType_GetIInstanceMethodAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash)
 #define DeeType_GetIInstanceMethodAttrString(tp_invoker, tp_self, attr)     DeeType_GetIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, Dee_HashStr(attr))
 
-/* Call attributes from `tp_self->tp_methods' / `tp_self->tp_class_methods'.
+/* Call attributes from `tp_self->tp_methods` / `tp_self->tp_class_methods`.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
@@ -1318,10 +1318,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
 //#define DeeType_VCallIInstanceMethodAttrStringLenf(tp_invoker, tp_self, attr, attrlen, format, args) DeeType_VCallIInstanceMethodAttrStringLenHashf(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), format, args)
 
 
-/* Get attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
+/* Get attributes from `tp_self->tp_getsets` / `tp_self->tp_class_getsets`.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
@@ -1367,10 +1367,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGet
 #define DeeType_GetIInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_GetIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Call attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
+/* Call attributes from `tp_self->tp_getsets` / `tp_self->tp_class_getsets`.
  * @return: * :        The functions's return value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
@@ -1413,10 +1413,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
 #define DeeType_CallIInstanceGetSetAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw) DeeType_CallIInstanceGetSetAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
 
 
-/* Check if attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets' are bound.
+/* Check if attributes from `tp_self->tp_getsets` / `tp_self->tp_class_getsets` are bound.
  * @return: Dee_BOUND_YES:     The attribute is bound.
  * @return: Dee_BOUND_NO:      The attribute is unbound.
- * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain'.
+ * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain`.
  * @return: Dee_BOUND_ERR:     An error occurred. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
@@ -1447,10 +1447,10 @@ type_getset_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
 #define DeeType_BoundClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_BoundClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Delete attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
+/* Delete attributes from `tp_self->tp_getsets` / `tp_self->tp_class_getsets`.
  * @return:  0: Success.
  * @return: -1: An error occurred.
- * @return:  1: The attribute could not be found in `chain'. */
+ * @return:  1: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -1480,10 +1480,10 @@ type_getset_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_DelClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_DelClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Set attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets'.
+/* Set attributes from `tp_self->tp_getsets` / `tp_self->tp_class_getsets`.
  * @return:  0: Success.
  * @return: -1: An error occurred.
- * @return:  1: The attribute could not be found in `chain'. */
+ * @return:  1: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
@@ -1514,10 +1514,10 @@ type_getset_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_SetClassGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)  DeeType_SetClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
 
 
-/* Get attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
+/* Get attributes from `tp_self->tp_members` / `tp_self->tp_class_members`.
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
@@ -1563,10 +1563,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMem
 #define DeeType_GetIInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen) DeeType_GetIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Call attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
+/* Call attributes from `tp_self->tp_members` / `tp_self->tp_class_members`.
  * @return: * :        The functions's return value.
  * @return: NULL:      An error occurred.
- * @return: ITER_DONE: The attribute could not be found in `chain'. */
+ * @return: ITER_DONE: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
@@ -1609,10 +1609,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
 #define DeeType_CallIInstanceMemberAttrStringLenKw(tp_invoker, tp_self, attr, attrlen, argc, argv, kw) DeeType_CallIInstanceMemberAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), argc, argv, kw)
 
 
-/* Check if attributes from `tp_self->tp_members' / `tp_self->tp_class_members' are bound.
+/* Check if attributes from `tp_self->tp_members` / `tp_self->tp_class_members` are bound.
  * @return: Dee_BOUND_YES:     The attribute is bound.
  * @return: Dee_BOUND_NO:      The attribute is unbound.
- * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain'.
+ * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain`.
  * @return: Dee_BOUND_ERR:     An error occurred. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
@@ -1643,10 +1643,10 @@ type_member_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
 #define DeeType_BoundClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_BoundClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Delete attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
+/* Delete attributes from `tp_self->tp_members` / `tp_self->tp_class_members`.
  * @return:  0: Success.
  * @return: -1: An error occurred.
- * @return:  1: The attribute could not be found in `chain'. */
+ * @return:  1: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -1676,10 +1676,10 @@ type_member_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 #define DeeType_DelClassMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)  DeeType_DelClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 
-/* Set attributes from `tp_self->tp_members' / `tp_self->tp_class_members'.
+/* Set attributes from `tp_self->tp_members` / `tp_self->tp_class_members`.
  * @return:  0: Success.
  * @return: -1: An error occurred.
- * @return:  1: The attribute could not be found in `chain'. */
+ * @return:  1: The attribute could not be found in `chain`. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
@@ -2352,7 +2352,7 @@ struct Dee_attriterchain {
 	Dee_ATTRITER_HEAD
 	struct Dee_attriter          *aic_current; /* [1..1][lock(ATOMIC && aic_curlock)] Current iterator. */
 #ifndef CONFIG_NO_THREADS
-	Dee_shared_rwlock_t           aic_curlock; /* Lock for `aic_current'. */
+	Dee_shared_rwlock_t           aic_curlock; /* Lock for `aic_current`. */
 #endif /* !CONFIG_NO_THREADS */
 	struct Dee_attriterchain_item aic_first;   /* First iterator in chain */
 };
@@ -2361,9 +2361,9 @@ DDATDEF struct Dee_attriter_type tpconst Dee_attriterchain_type;
 
 struct Dee_attriterchain_builder {
 	struct Dee_attriter      *aicb_curiter;   /* [0..aicb_bufsize] Pointer to start of remaining buffer */
-	size_t                    aicb_bufsize;   /* Remaining buffer size at `aicb_curiter' */
+	size_t                    aicb_bufsize;   /* Remaining buffer size at `aicb_curiter` */
 	size_t                    aicb_require;   /* Required buffer size */
-	struct Dee_attriter     **aicb_pnext;     /* [?..?][0..1] Pointer to `aici_next' of last fully-written iterator. */
+	struct Dee_attriter     **aicb_pnext;     /* [?..?][0..1] Pointer to `aici_next` of last fully-written iterator. */
 	struct Dee_attriterchain *aicb_iterchain; /* [?..1][const] The chain that is being built. */
 };
 

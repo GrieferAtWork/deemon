@@ -32,17 +32,17 @@
 
 DECL_BEGIN
 
-/* Base class for set-style sequence types (e.g. `HashSet')
+/* Base class for set-style sequence types (e.g. `HashSet`)
  * :: Characteristics of a set type::
- *   - `class member Iterator: Iterator from deemon;'
- *   - `operator iter(): Set.Iterator;'
+ *   - `class member Iterator: Iterator from deemon;`
+ *   - `operator iter(): Set.Iterator;`
  *     Enumerate set elements in some arbitrary order.
- *   - `operator contains(ob: Object): bool':
+ *   - `operator contains(ob: Object): bool`:
  *     Returns ?t if @ob is apart of @this set
  *   - The getitem operator is not implemented.
  *   - The getrange operator is not implemented.
  *
- * Using `Set from deemon' (aka. `DeeSet_Type') as a base class, it will
+ * Using `Set from deemon` (aka. `DeeSet_Type`) as a base class, it will
  * automatically provide for the following member functions and operators:
  *
  * difference(other: Set): Set;
@@ -84,32 +84,32 @@ DECL_BEGIN
  *
  * operator ~ (): Set;
  *     Returns a symbolic set that behaves as though it contained
- *     any feasible object that isn't already apart of `this' set.
+ *     any feasible object that isn't already apart of `this` set.
  *     Note however that due to the impossibility of such a set,
  *     you cannot iterate its elements, and the only ~real~ operator
- *     implemented by it is `operator contains'.
+ *     implemented by it is `operator contains`.
  *     Its main purpose is for being used in conjunction with
- *     `operator &' in order to create a sub-set that doesn't
+ *     `operator &` in order to create a sub-set that doesn't
  *     contain a certain set of sub-elements:
  *     >> local items = HashSet({ 10, 11, 15, 20, 30 });
  *     >> print repr(items & ~({ 11, 15 } as Set))
  *
- * NOTE: `DeeSet_Type' itself is derived from `Sequence from deemon' (aka. `DeeSeq_Type')
- * NOTE: Because `DeeSet_Type' inherits from `DeeSeq_Type', all member functions that
- *       it provides, as well as its operators (such as `bool', compare, etc.), are
- *       implicitly inherited, and also provided by objects derived from `DeeSet_Type',
- *       and `HashSet from deemon' itself.
- *       This also means that sub-classes of `Mapping from deemon' should respect the
- *       `Iterator' interface, provided a `class member Iterator: Type' which represents
+ * NOTE: `DeeSet_Type` itself is derived from `Sequence from deemon` (aka. `DeeSeq_Type`)
+ * NOTE: Because `DeeSet_Type` inherits from `DeeSeq_Type`, all member functions that
+ *       it provides, as well as its operators (such as `bool`, compare, etc.), are
+ *       implicitly inherited, and also provided by objects derived from `DeeSet_Type`,
+ *       and `HashSet from deemon` itself.
+ *       This also means that sub-classes of `Mapping from deemon` should respect the
+ *       `Iterator` interface, provided a `class member Iterator: Type` which represents
  *       the iterator type used by the mapping. */
-DDATDEF DeeTypeObject DeeSet_Type; /* `Set from deemon' */
+DDATDEF DeeTypeObject DeeSet_Type; /* `Set from deemon` */
 
 /* An empty instance of a generic set object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
- *       calling the constructor of `DeeSet_Type' with no arguments.
+ *       calling the constructor of `DeeSet_Type` with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeSet_Type' should be considered stub/empty. */
+ * HINT: Any exact instance of `DeeSet_Type` should be considered stub/empty. */
 DDATDEF DeeObject DeeSet_EmptyInstance;
 #define Dee_EmptySet (&DeeSet_EmptyInstance)
 #ifdef __INTELLISENSE__
@@ -119,7 +119,7 @@ DDATDEF DeeObject DeeSet_EmptyInstance;
 #endif /* !__INTELLISENSE__ */
 
 /* A universal instance of a generic set object (i.e. the set of everything in the universe).
- * NOTE: This is _NOT_ a singleton. - Usercode may create more by calling `~Set()'. */
+ * NOTE: This is _NOT_ a singleton. - Usercode may create more by calling `~Set()`. */
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C
 DDATDEF DeeObject DeeSet_UniversalInstance;
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C */

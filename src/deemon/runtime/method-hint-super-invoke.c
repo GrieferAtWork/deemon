@@ -64,9 +64,9 @@ struct mh_super_map_typed {
 	}
 
 struct mh_super_map {
-	struct mh_super_map_replace const *msm_replace;    /* [0..n] Array of impls that should be replaced with other impls (terminated by `msmr_old == NULL') */
-	Dee_funptr_t                const *msm_with_super; /* [0..n] Array of impls to call as `Dee_SUPER_METHOD_HINT_CC_WITH_SUPER' (terminated by `NULL') */
-	struct mh_super_map_typed   const *msm_with_type;  /* [0..n] Array of impls that should be replaced with typed versions (terminated by `msmr_regular == NULL') */
+	struct mh_super_map_replace const *msm_replace;    /* [0..n] Array of impls that should be replaced with other impls (terminated by `msmr_old == NULL`) */
+	Dee_funptr_t                const *msm_with_super; /* [0..n] Array of impls to call as `Dee_SUPER_METHOD_HINT_CC_WITH_SUPER` (terminated by `NULL`) */
+	struct mh_super_map_typed   const *msm_with_type;  /* [0..n] Array of impls that should be replaced with typed versions (terminated by `msmr_regular == NULL`) */
 };
 
 #define MH_SUPER_MAP_INIT(msm_replace, msm_with_super, msm_with_type) \
@@ -4413,8 +4413,8 @@ Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr) {
 	return false;
 foundit:
 	/* Can't be done because empty/unsupported impls are allowed to alias other hints!
-	 * E.g. `default__seq_operator_eq__empty' is defined as an alias for:
-	 *      `default__seq_operator_eq__with__seq_operator_compare_eq' */
+	 * E.g. `default__seq_operator_eq__empty` is defined as an alias for:
+	 *      `default__seq_operator_eq__with__seq_operator_compare_eq` */
 #if 0
 	/* Check for special cases: "$empty" impls don't have
 	 * dependencies and thus aren't defaults impls, either... */
@@ -4428,10 +4428,10 @@ foundit:
 }
 
 
-/* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)', but must be used in
+/* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)`, but must be used in
  * order to lookup information on how to invoke a method hint on a Super-object.
  * @return: true:  Success (always returned for method hints with "%{unsupported}")
- * @return: false: Failure (method it is not supported by `DeeSuper_TYPE(super)',
+ * @return: false: Failure (method it is not supported by `DeeSuper_TYPE(super)`,
  *                          and also has no "%{unsupported}" version) */
 PUBLIC NONNULL((1, 3)) bool
 (DCALL DeeType_GetMethodHintForSuper)(struct Dee_super_object *__restrict super, enum Dee_tmh_id id,
@@ -4465,7 +4465,7 @@ PUBLIC NONNULL((1, 3)) bool
 	if unlikely(!view_impl)
 		return false;
 
-	/* Load invocation specs for `id' */
+	/* Load invocation specs for `id` */
 	specs = &mh_super_maps[id];
 
 	/* Apply callback replacements */

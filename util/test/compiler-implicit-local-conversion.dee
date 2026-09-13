@@ -31,7 +31,7 @@ local first_pass = true;
 again:
 
 function inner() {
-	/* `deemon' is defined as a module-symbol, which normally wouldn't
+	/* `deemon` is defined as a module-symbol, which normally wouldn't
 	 * have to be referenced. - Assert that despite the write below,
 	 * which turns that symbol into a local variable, we still get
 	 * the original value here! */
@@ -39,7 +39,7 @@ function inner() {
 		assert deemon === deemon_module;
 	} else {
 		/* If the optimizer tried to propagate the original value to
-		 * this point, `deemon' would still evaluate to `deemon_module',
+		 * this point, `deemon` would still evaluate to `deemon_module`,
 		 * despite the fact that it was re-assigned below.
 		 * This asserts that the optimizer either doesn't perform such
 		 * an optimization, or isn't producing incorrect code in this case. */
@@ -57,7 +57,7 @@ assert deemon == 52;
 
 function inner2() {
 	/* Similar to the other function above, only we are here to check
-	 * that the symbol linked here is guarantied to be `52' */
+	 * that the symbol linked here is guarantied to be `52` */
 	assert deemon == 52;
 }
 

@@ -242,7 +242,7 @@ print_help_features() {
 	echo ""
 	echo "    deemon-home-environ=*    [def:DEEMON_HOME]"
 	echo "                               Set the name of the environment variable to check at runtime"
-	echo "                               in order to find library files (s.a. 'DeeExec_GetHome()')"
+	echo "                               in order to find library files (s.a. 'DeeExec_GetHome()`)"
 	echo "                             with:    --config=CONFIG_DEEMON_HOME_ENVIRON=*"
 	echo "                             without: -"
 	echo ""

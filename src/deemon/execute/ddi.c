@@ -133,7 +133,7 @@ Dee_ddi_next_simple(uint8_t *__restrict ip,
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_regs(uint8_t *__restrict ip,
                   struct Dee_ddi_regs *__restrict regs) {
-	/* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
+	/* This algorithm is heavily documented and explained in `<deemon/asm.h>` */
 	for (;;) {
 		uint8_t op = *ip++;
 		switch (op) {
@@ -272,7 +272,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_state(uint8_t *__restrict ip,
                    struct Dee_ddi_state *__restrict self,
                    unsigned int flags) {
-	/* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
+	/* This algorithm is heavily documented and explained in `<deemon/asm.h>` */
 next_ip:
 	for (;;) {
 		uint8_t op = *ip++;
@@ -500,15 +500,15 @@ err:
 	return Dee_DDI_NEXT_ERR;
 }
 
-/* Initialize the given DDI register state from `code'.
- * @param: flags:          Set of `DDI_STATE_F*'
+/* Initialize the given DDI register state from `code`.
+ * @param: flags:          Set of `DDI_STATE_F*`
  * @return: * :            Successfully initialized the register state.
  *                         A pointer to the next DDI instruction.
  *                         This pointer can be used to enumerate DDI information.
  * @return: Dee_DDI_NEXT_ERR:  [!Dee_DDI_STATE_FNOTHROW] An error occurred.
  * NOTE: Upon error (return == Dee_DDI_NEXT_DONE || return == Dee_DDI_NEXT_ERR),
- *       the given ddi-state `self' is initialized to a no-op state that
- *       can still be used in a call to `Dee_ddi_state_fini()'! */
+ *       the given ddi-state `self` is initialized to a no-op state that
+ *       can still be used in a call to `Dee_ddi_state_fini()`! */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_state_init(struct Dee_ddi_state *__restrict self,
                    DeeObject *__restrict code,
@@ -594,12 +594,12 @@ Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self) {
 
 /* Query DDI information for a given code address.
  * @param: self:            The code object for which DDI information should be queried.
- * @param: state:     [out] DDI information for the closest checkpoint below `uip'
- * @param: opt_endip: [out] When non-NULL, filled with the UIP of the closest checkpoint above `uip'
- * @param: flags:           Set of `DDI_STATE_F*'
- * @return: * :             Successfully found the DDI state describing `uip'
+ * @param: state:     [out] DDI information for the closest checkpoint below `uip`
+ * @param: opt_endip: [out] When non-NULL, filled with the UIP of the closest checkpoint above `uip`
+ * @param: flags:           Set of `DDI_STATE_F*`
+ * @return: * :             Successfully found the DDI state describing `uip`
  * @return: Dee_DDI_NEXT_ERR:   [!Dee_DDI_STATE_FNOTHROW] An error occurred.
- * @return: Dee_DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
+ * @return: Dee_DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP` was read. */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeCode_FindDDI(DeeObject *__restrict self,
                 struct Dee_ddi_state *__restrict start_state,

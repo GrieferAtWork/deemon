@@ -45,7 +45,7 @@
 #include <stdint.h> /* UINT32_C, int32_t, int64_t, intptr_t, uintN_t */
 
 #ifdef CONFIG_HAVE_FPU
-#include "int_logic.h" /* `DeeInt_Alloc()' */
+#include "int_logic.h" /* `DeeInt_Alloc()` */
 
 #ifdef CONFIG_HAVE_FLOAT_H
 #include <float.h>

@@ -43,7 +43,7 @@
 
 DECL_BEGIN
 
-/* !!! THIS MODULE IS NON-STANDARD AND DRIVES THE BUILTIN `exec' FUNCTION FOR !!!
+/* !!! THIS MODULE IS NON-STANDARD AND DRIVES THE BUILTIN `exec` FUNCTION FOR !!!
  * !!! THE GATW IMPLEMENTATION OF DEEMON                                      !!!
  * --------------------------------------------------------------------------------
  * Because this module is non-portable between deemon implementations, it's name
@@ -142,7 +142,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 				}
 				result = NULL;
 				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Unexpected token `%$s' after expression",
+				                "Unexpected token `%$s` after expression",
 				                (size_t)(lexer.jl_tokend - lexer.jl_tokstart),
 				                lexer.jl_tokstart);
 			} else {
@@ -197,7 +197,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 		ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
 		if unlikely(lexer.jl_tok != TOK_EOF) {
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Expected EOF but got `%$s'",
+			                "Expected EOF but got `%$s`",
 			                (size_t)(lexer.jl_end - lexer.jl_tokstart),
 			                lexer.jl_tokstart);
 			lexer.jl_errpos = lexer.jl_tokstart;
@@ -208,9 +208,9 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 		if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
 			result = context.jc_retval;
 		} else {
-			/* Exited code via unconventional means, such as `break' or `continue' */
+			/* Exited code via unconventional means, such as `break` or `continue` */
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Attempted to use `break' or `continue' outside of a loop");
+			                "Attempted to use `break` or `continue` outside of a loop");
 			lexer.jl_errpos = lexer.jl_tokstart;
 			goto handle_error;
 		}
@@ -219,7 +219,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 			lexer.jl_errpos = lexer.jl_tokstart;
 handle_error:
 		JITLValue_Fini(&lexer.jl_lvalue);
-		/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
+		/* TODO: Somehow remember that the error happened at `lexer.jl_errpos` */
 		;
 	}
 	ASSERT(!globals || context.jc_globals == globals);
@@ -241,24 +241,24 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
              "Execute a given expression @expr and return the result\n"
              "This function is used to implement the builtin ?Dexec function"),
 
-/* TODO: `mode:?Dstring=!Prestricted'
- * >> One of `full', `restricted' or `pure', controlling which language
+/* TODO: `mode:?Dstring=!Prestricted`
+ * >> One of `full`, `restricted` or `pure`, controlling which language
  *    features are available to the code being executed.
  *  - full:
- *     - `print' statements without a file target are compiled as follows
+ *     - `print` statements without a file target are compiled as follows
  *       >> print "foo"; // This...
  *       >> print globals["__stdout__"]: "foo"; // ... becomes this
- *       If no `__stdout__' global is provided, `File.stdout' is used.
+ *       If no `__stdout__` global is provided, `File.stdout` is used.
  *  - restricted:
- *     - `catch' statements/expressions with interrupt capabilities are not allowed.
- *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
+ *     - `catch` statements/expressions with interrupt capabilities are not allowed.
+ *     - Recursive calls to `exec()` result in a `Error.RuntimeError.StackOverflow`
  *       being thrown immediately, thus preventing code from breaking out of the
  *       sandbox by creating another, less restrictive one.
- *     - `print' statements without a file target are compiled as follows
+ *     - `print` statements without a file target are compiled as follows
  *       >> print "foo"; // This...
  *       >> print globals["__stdout__"]: "foo"; // ... becomes this
- *       If no `__stdout__' global is provided, a NotImplemented error is thrown
- *     - `import' (both in expressions, as well as statements) is restricted
+ *       If no `__stdout__` global is provided, a NotImplemented error is thrown
+ *     - `import` (both in expressions, as well as statements) is restricted
  *       for any arbitrary module, but is subject to the following restriction:
  *       >> // NOTE: import statements are compiled to all use the standard import
  *       >> //       expression, while access to imported modules is compiled to
@@ -266,8 +266,8 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *       >> import("foo"); // This...
  *       >> globals.get("__import__", restricted_import)("foo"); // ... becomes this
  *       >>
- *       >> // Where `restricted_import' is implemented as follows:
- *       >> //   - A function that emulates `deemon.import()', but only allows
+ *       >> // Where `restricted_import` is implemented as follows:
+ *       >> //   - A function that emulates `deemon.import()`, but only allows
  *       >> //     modules to be taken from a globally available mapping-like
  *       >> //     table of allowed modules
  *       >> //     >> import deemon;
@@ -279,7 +279,7 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *       >> function restricted_import(name: string, base?: module): module | none {
  *       >>     local allowed;
  *       >>     try {
- *       >>        // NOTE: `globals' here is the argument passed to `exec()'
+ *       >>        // NOTE: `globals` here is the argument passed to `exec()`
  *       >>        allowed = globals["__modules__"];
  *       >>     } catch (Error.KeyError) {
  *       >>        allowed = {
@@ -303,26 +303,26 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *       >>     }
  *       >> }
  *       Separately, accessing an attribute of a module has special restrictions
- *       applied when done for the exports of the builtin `deemon' module:
+ *       applied when done for the exports of the builtin `deemon` module:
  *         - The following types/objects are off-limits, and access
  *           will cause an AttributeError to be thrown:
- *             - `deemon.gc'
- *             - `deemon.Thread'
- *             - `deemon.Error.SystemError'
- *             - `deemon.Error.AppExit'
- *             - `deemon.Signal.Interrupt'
- *         - `deemon.import' will cause the value of the expression
+ *             - `deemon.gc`
+ *             - `deemon.Thread`
+ *             - `deemon.Error.SystemError`
+ *             - `deemon.Error.AppExit`
+ *             - `deemon.Signal.Interrupt`
+ *         - `deemon.import` will cause the value of the expression
  *            `globals.get("__import__", restricted_import)' to be
  *            returned instead.
- *       Note that other ways of loading modules, such as `string.decode()'
+ *       Note that other ways of loading modules, such as `string.decode()`
  *       are not restricted, as them becoming unsafe would already require
  *       either a bug in their implementation, or pre-existing write-access
  *       to the deemon library path, meaning that they don't pose a security
  *       risk on their own.
- *     - Seperately, the runtime restricts access to `File.open()',
- *       `File.System' (and `File.io'), as well as `File.Buffer.sync()'
+ *     - Seperately, the runtime restricts access to `File.open()`,
+ *       `File.System` (and `File.io`), as well as `File.Buffer.sync()`
  *       Attempting to perform any of these operations will cause a
- *       `NotImplemented' error to be thrown, emulating a target system
+ *       `NotImplemented` error to be thrown, emulating a target system
  *       that doesn't implement user-code I/O support.
  *     - Access to attributes beginning with a leading underscore is disallowed
  *       This is done to prevent access to implementation-specific attributes that
@@ -364,55 +364,55 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *       access without a bound instance of the associated type.
  *
  *  - pure:
- *     - `catch' statements/expressions with interrupt capabilities are not allowed.
- *     - Recursive calls to `exec()' result in a `Error.RuntimeError.StackOverflow'
+ *     - `catch` statements/expressions with interrupt capabilities are not allowed.
+ *     - Recursive calls to `exec()` result in a `Error.RuntimeError.StackOverflow`
  *       being thrown immediately, thus preventing code from breaking out of the
  *       sandbox by creating another.
- *     - `type' and `.class' expressions can only be used if the result is one of the following:
- *        - `deemon.Error'
- *        - `deemon.Signal'
- *        - `deemon.bool'
- *        - `deemon.string'
- *        - `deemon.Bytes'
- *        - `deemon.Tuple'
- *        - `deemon.List'
- *        - `deemon.Dict'
- *        - `deemon.HashSet'
- *        - `deemon.int'
- *        - `deemon.float'
- *        - `deemon.Object'
- *        - `deemon.Type'
- *        - `deemon.Cell'
- *        - `deemon.WeakRef'
- *        - `type(none)'
- *        - `deemon.Super'
- *        - `deemon.InstanceMethod'
- *        - `deemon.Property'
- *        - `deemon.Attribute'
- *        - `deemon.Frame'
- *        - `deemon.enumattr'
- *     - `print' statements without a file target are compiled as follows
+ *     - `type` and `.class` expressions can only be used if the result is one of the following:
+ *        - `deemon.Error`
+ *        - `deemon.Signal`
+ *        - `deemon.bool`
+ *        - `deemon.string`
+ *        - `deemon.Bytes`
+ *        - `deemon.Tuple`
+ *        - `deemon.List`
+ *        - `deemon.Dict`
+ *        - `deemon.HashSet`
+ *        - `deemon.int`
+ *        - `deemon.float`
+ *        - `deemon.Object`
+ *        - `deemon.Type`
+ *        - `deemon.Cell`
+ *        - `deemon.WeakRef`
+ *        - `type(none)`
+ *        - `deemon.Super`
+ *        - `deemon.InstanceMethod`
+ *        - `deemon.Property`
+ *        - `deemon.Attribute`
+ *        - `deemon.Frame`
+ *        - `deemon.enumattr`
+ *     - `print` statements without a file target are compiled as follows
  *       >> print "foo"; // This...
  *       >> print globals["__stdout__"]: "foo"; // ... becomes this
- *       If no `__stdout__' global is provided, a NotImplemented error is thrown
- *     - `import' (both in expressions, as well as statements) is not allowed
+ *       If no `__stdout__` global is provided, a NotImplemented error is thrown
+ *     - `import` (both in expressions, as well as statements) is not allowed
  *     - Attempting to use an instance of one of the following types as
  *       operands for any kind of expression will cause a NotImplemented error
- *       to be thrown, thus preventing them from ever appearing in `pure' code
+ *       to be thrown, thus preventing them from ever appearing in `pure` code
  *       expressions.
- *       NOTE: An exception to this are `x is y', as well as `x === y' and `x !== y' expressions.
+ *       NOTE: An exception to this are `x is y`, as well as `x === y` and `x !== y` expressions.
  *       The types are:
- *         - `deemon.Thread'     (blocking access to multi-threading)
- *         - `deemon.File'       (blocking access to `deemon.File.open()')
+ *         - `deemon.Thread`     (blocking access to multi-threading)
+ *         - `deemon.File`       (blocking access to `deemon.File.open()`)
  *       Additionally, the following objects are disallowed:
- *         - `deemon.gc'
- *         - `deemon.enumattr'   (There is no reason for code to do this)
- *                                NOTE: This also includes `operator enumattr()'!
- *         - `deemon.Traceback'  (Tracebacks should be restricted to the invoker of the code)
- *         - `deemon.import'
- *         - `deemon.Error.SystemError'
- *         - `deemon.Error.AppExit'
- *         - `deemon.Signal.Interrupt'
+ *         - `deemon.gc`
+ *         - `deemon.enumattr`   (There is no reason for code to do this)
+ *                                NOTE: This also includes `operator enumattr()`!
+ *         - `deemon.Traceback`  (Tracebacks should be restricted to the invoker of the code)
+ *         - `deemon.import`
+ *         - `deemon.Error.SystemError`
+ *         - `deemon.Error.AppExit`
+ *         - `deemon.Signal.Interrupt`
  *     - Access to attributes beginning with a leading underscore is disallowed
  *       This is done to prevent access to implementation-specific attributes that
  *       could be used to break out of the pure-code sandbox
@@ -435,7 +435,7 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *     interrupt it if it ends up taking too long, or using too much CPU.
  *   - On its own, exec() code can create an arbitrary amount of objects, potentially
  *     allowing for memory starvation attacks by having code allocate ridiculous amounts
- *     of memory though simple interfaces such as `Bytes from deemon', or simply by
+ *     of memory though simple interfaces such as `Bytes from deemon`, or simply by
  *     doing something like `"foo" * 12345678'
  *     XXX: Add a runtime feature to allow for pre-thread redirection of heap functions,
  *          thus allowing for a custom implementation which could then set a ceiling on

@@ -920,8 +920,8 @@ INTERN void DCALL scope_pop(void) {
 	ASSERT_OBJECT_TYPE(current_scope->s_prev, &DeeScope_Type);
 	pop_scope     = current_scope;
 	current_scope = pop_scope->s_prev;
-	Dee_Incref(current_scope); /* Keep a reference in `current_scope' */
-	Dee_Decref(pop_scope);     /* Drop the reference previously stored in `current_scope' */
+	Dee_Incref(current_scope); /* Keep a reference in `current_scope` */
+	Dee_Decref(pop_scope);     /* Drop the reference previously stored in `current_scope` */
 }
 
 INTERN WUNUSED int (DCALL classscope_push)(void) {
@@ -1011,7 +1011,7 @@ INTERN void DCALL basescope_pop(void) {
 	current_scope     = pop_scope->bs_scope.s_prev;
 	current_basescope = pop_scope->bs_prev;
 	Dee_Incref(current_scope);
-	Dee_Decref(&pop_scope->bs_scope); /* Drop the reference previously stored in `current_scope' */
+	Dee_Decref(&pop_scope->bs_scope); /* Drop the reference previously stored in `current_scope` */
 }
 
 
@@ -1472,7 +1472,7 @@ err:
 INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
 	DeeScopeObject *iter;
-	/* Make sure to return `NULL' when `nth' was zero. */
+	/* Make sure to return `NULL` when `nth` was zero. */
 	if unlikely(!nth--)
 		goto nope;
 	iter = current_scope;

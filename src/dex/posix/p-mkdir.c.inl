@@ -43,7 +43,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `mkdir()' */
+/* Figure out how to implement `mkdir()` */
 #undef posix_mkdir_USE_nt_CreateDirectory
 #undef posix_mkdir_USE_wmkdir
 #undef posix_mkdir_USE_mkdir
@@ -62,7 +62,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fmkdirat()' */
+/* Figure out how to implement `fmkdirat()` */
 #undef posix_fmkdirat_USE_wfmkdirat
 #undef posix_fmkdirat_USE_wmkdirat
 #undef posix_fmkdirat_USE_fmkdirat
@@ -95,7 +95,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `mkdirat()' */
+/* Figure out how to implement `mkdirat()` */
 #undef posix_mkdirat_USE_posix_fmkdirat
 #undef posix_mkdirat_USE_STUB
 #if !defined(posix_fmkdirat_USE_STUB)

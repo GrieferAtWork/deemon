@@ -74,7 +74,7 @@ Dee_simple_hashset_rehash(struct Dee_simple_hashset *__restrict self) {
 	return 0;
 }
 
-/* Insert `item' into `self' (if it wasn't present already)
+/* Insert `item` into `self` (if it wasn't present already)
  * @return:  1: Successfully inserted the object.
  * @return:  0: An identical object already exists.
  * @return: -1: An error occurred. */

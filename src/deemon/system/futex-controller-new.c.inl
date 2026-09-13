@@ -75,7 +75,7 @@ LOCAL_futex_controller_do_new_impl(void) {
 	if unlikely(!result)
 		goto err;
 
-	/* Initialize the os-specific part of `result' */
+	/* Initialize the os-specific part of `result` */
 #ifdef DeeFutex_USE_os_futex_32_only
 	result->fc_word = 0;
 #elif defined(DeeFutex_USE_WaitOnAddress_OR_CONDITION_VARIABLE_AND_SRWLOCK_OR_CreateSemaphoreW)
@@ -163,9 +163,9 @@ err:
 }
 
 
-/* Similar to `LOCAL_futex_controller_do_new_impl()', but try
+/* Similar to `LOCAL_futex_controller_do_new_impl()`, but try
  * to take a pre-existing object from the free-list, as
- * well as also set the reference counter to `1'.
+ * well as also set the reference counter to `1`.
  *
  * @return: * :   The new controller.
  * @return: NULL: Alloc failed (an error was thrown) */
@@ -195,7 +195,7 @@ set_refcnt:
  * or create one at said address if there wasn't
  * one there already.
  *
- * @return: * :   Reference to the controller at `addr'
+ * @return: * :   Reference to the controller at `addr`
  * @return: NULL: Failed to create a new controller (an error was thrown) */
 PRIVATE WUNUSED DREF struct futex_controller *DCALL
 LOCAL_futex_ataddr_create(uintptr_t addr) {

@@ -24,14 +24,14 @@
 #undef __clang__
 
 /*
- * While the `linux-gcc-x86' intellisense driver is _extremely_ welcome if you ask  me,
+ * While the `linux-gcc-x86` intellisense driver is _extremely_ welcome if you ask  me,
  * there are still a couple of things that it does wrong when compared against the real
  * deal. - Fix those in here!.
  * Also: Implement the common intellisense types used to implement alternate integral
  *       types, as well as endian-restricted integers.
  */
 
-/* This  adds auto-completion for stuff like `#ifdef __INTELLISENSE__',
+/* This  adds auto-completion for stuff like `#ifdef __INTELLISENSE__`,
  * as VS only auto completes macros that are defined somewhere (luckily
  * even when only defined in "#if 0"-blocks) */
 #ifndef __INTELLISENSE__
@@ -117,7 +117,7 @@
 #define __i386   1
 #define __i686   1
 #define __i686__ 1
-#define __INTELLISENSE_SIZE_TYPE__  unsigned int /* Should be `long' for elf, but isn't */
+#define __INTELLISENSE_SIZE_TYPE__  unsigned int /* Should be `long` for elf, but isn't */
 #define __INTELLISENSE_SSIZE_TYPE__ signed int
 #undef __SSE2_MATH__
 #undef __SSE2__
@@ -191,8 +191,8 @@ static_assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__, "WTF Intellisense?");
 
 namespace __intern {
 
-/* Intellisense doesn't emulate `__int128' properly  (or rather: at all; it  only
- * defines the `__SIZEOF_INT128__' feature test macro, but don't actually care to
+/* Intellisense doesn't emulate `__int128` properly  (or rather: at all; it  only
+ * defines the `__SIZEOF_INT128__` feature test macro, but don't actually care to
  * implement the actual feature it is used to test for... ~ugh~)
  * -> So try to  fix that  _BUG_! Because  that's totally  what it  is, and  not
  *    just the  vs developers  being lazy.  Oh no,  it totally  isn't that  they
@@ -200,9 +200,9 @@ namespace __intern {
  *    a day without actually going through all of them and checking that they're
  *    actually doing what they're supposed to do.
  * I mean: How else do you think  not only something like this happened,  but
- * also something like `__INT64_TYPE__' not actually being 64-bit because its
- * default definition is (just like  it is in gcc) `signed long int'  (again:
- * Intellisense continues to define `long int' as 32-bit, instead of defining
+ * also something like `__INT64_TYPE__` not actually being 64-bit because its
+ * default definition is (just like  it is in gcc) `signed long int`  (again:
+ * Intellisense continues to define `long int` as 32-bit, instead of defining
  * it as pointer-sized) */
 #ifdef __SIZEOF_INT128__
 class __intellisense_int128;

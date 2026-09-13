@@ -121,7 +121,7 @@ DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, voi
 
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED           /*!export-*/
-typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>` for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;

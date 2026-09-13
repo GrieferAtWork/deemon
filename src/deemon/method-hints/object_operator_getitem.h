@@ -24,14 +24,14 @@
 
 operator {
 
-/* Same as `tp_getitem_index', but never throws an exception:
- * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
- * @param: index: Index of item to access. Guarantied to be `<' some preceding
- *                call to `tp_size_fast', `tp_size', or `tp_sizeob' (from the
+/* Same as `tp_getitem_index`, but never throws an exception:
+ * NOTE: This operator can NOT be used to substitute `tp_getitem_index`!
+ * @param: index: Index of item to access. Guarantied to be `<` some preceding
+ *                call to `tp_size_fast`, `tp_size`, or `tp_sizeob` (from the
  *                same type; i.e. the size operator will not be from a sub-class).
  * @return: * :   A reference to the index.
- * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
- * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
+ * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE`
+ * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index` right now. */
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!! NOT INHERITABLE !!! */
 
@@ -322,9 +322,9 @@ err:
 
 
 
-/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
- * `KeyError' (or `UnboundItem', which is a given since that one's a
- * sub-class of `KeyError') */
+/* Same as `tp_getitem`, but returns `ITER_DONE` instead of throwing
+ * `KeyError` (or `UnboundItem`, which is a given since that one's a
+ * sub-class of `KeyError`) */
 [[export("DeeObject_{|T}TryGetItem")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem([[nonnull]] DeeObject *self,

@@ -91,8 +91,8 @@ DeeSystem_DEFINE_strcmpz(Dee_libc_strcmpz)
 INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_member_typefor(struct type_member const *__restrict self);
 
-/* Try to determine the type of object returned by `Dee_attrinfo_callget()'
- * When the type cannot be determined, return `NULL' instead. */
+/* Try to determine the type of object returned by `Dee_attrinfo_callget()`
+ * When the type cannot be determined, return `NULL` instead. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self) {
 	switch (self->ai_type) {
@@ -223,7 +223,7 @@ read_modsym:
 	return NULL;
 }
 
-/* Assert that the `Dee_ATTRINFO_*' helper macros function correctly. */
+/* Assert that the `Dee_ATTRINFO_*` helper macros function correctly. */
 STATIC_ASSERT(!Dee_ATTRINFO_ISINSTANCE(Dee_ATTRINFO_CUSTOM));
 STATIC_ASSERT(!Dee_ATTRINFO_ISINSTANCE(Dee_ATTRINFO_MODSYM));
 STATIC_ASSERT(!Dee_ATTRINFO_ISINSTANCE(Dee_ATTRINFO_METHOD));
@@ -246,8 +246,8 @@ STATIC_ASSERT(Dee_ATTRINFO_WITHINSTANCE(Dee_ATTRINFO_GETSET) == Dee_ATTRINFO_INS
 STATIC_ASSERT(Dee_ATTRINFO_WITHINSTANCE(Dee_ATTRINFO_MEMBER) == Dee_ATTRINFO_INSTANCE_MEMBER);
 STATIC_ASSERT(Dee_ATTRINFO_WITHINSTANCE(Dee_ATTRINFO_ATTR) == Dee_ATTRINFO_INSTANCE_ATTR);
 
-/* Same as `Dee_attrinfo_typeof()', but `Dee_ATTRINFO_INSTANCE_*' attributes
- * as though they were the equivalent `Dee_ATTRINFO_*' (iow: the returned type
+/* Same as `Dee_attrinfo_typeof()`, but `Dee_ATTRINFO_INSTANCE_*` attributes
+ * as though they were the equivalent `Dee_ATTRINFO_*` (iow: the returned type
  * does not describe the type when accessed using the enumerated object, but
  * in the case of types and instance-attributes, the type when accessed using
  * an instance of the enumerated object) */
@@ -289,7 +289,7 @@ bound_fromob(/*inherit(always)*/ DREF DeeObject *value) {
 }
 
 
-/* Perform standard operations on the attribute behind `struct Dee_attrdesc' */
+/* Perform standard operations on the attribute behind `struct Dee_attrdesc` */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	switch (self->ad_info.ai_type) {
@@ -800,7 +800,7 @@ assert_no_kw:
 	goto again;
 err_no_keywords:
 	DeeError_Throwf(&DeeError_TypeError,
-	                "Attribute `%r.%s' does not accept keyword arguments %r",
+	                "Attribute `%r.%s` does not accept keyword arguments %r",
 	                (DeeTypeObject *)self->ad_info.ai_decl, self->ad_name, kw);
 	goto err;
 }
@@ -860,15 +860,15 @@ err:
 
 
 
-/* Wrapper around `DeeObject_IterAttr()' that will handle all the instantiation/finalization of the
- * attribute iterator for you, whilst applying a given `filter' to select which arguments should
- * actually be enumerated. The given `cb' may also return any negative value to halt enumeration
+/* Wrapper around `DeeObject_IterAttr()` that will handle all the instantiation/finalization of the
+ * attribute iterator for you, whilst applying a given `filter` to select which arguments should
+ * actually be enumerated. The given `cb` may also return any negative value to halt enumeration
  * prematurely (in which case that same negative value is returned by this function), or return a
  * positive value, which are then summed across all invocations prior to being returned.
  * @param: filter: Only enumerate attributes matched by this filter
- * @return: >= 0: Success (return value is the sum of invocations of `cb')
+ * @return: >= 0: Success (return value is the sum of invocations of `cb`)
  * @return: -1:   An error was thrown
- * @return: < -1: Negative return value returned by `cb' */
+ * @return: < -1: Negative return value returned by `cb` */
 PUBLIC WUNUSED NONNULL((1, 3, 4, 5)) Dee_ssize_t DCALL
 DeeObject_EnumAttr(DeeTypeObject *tp_self, DeeObject *self,
                    struct Dee_attrhint const *__restrict filter,
@@ -1339,7 +1339,7 @@ Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
  * @return:  1: Slot already exists in cache (not added)
  * @return:  0: Success
  * @return: -1: No more free slots (caller must allocate a new member-cache
- *              table, or try with `allow_bad_hash_ratios = true') */
+ *              table, or try with `allow_bad_hash_ratios = true`) */
 PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_table_addslot(struct Dee_membercache_table *__restrict self,
                               struct Dee_membercache_slot const *__restrict item,
@@ -1414,7 +1414,7 @@ again_search_slots:
 	 * about the order here, in that we _MUST_ fill in the type-field LAST!
 	 *
 	 * This is because by setting the type-field to something other than
-	 * `Dee_MEMBERCACHE_UNINITIALIZED', we essentially commit the new slot
+	 * `Dee_MEMBERCACHE_UNINITIALIZED`, we essentially commit the new slot
 	 * into the cache. */
 	memcpy((byte_t *)slot + COMPILER_OFFSETAFTER(struct Dee_membercache_slot, mcs_type),
 	       (byte_t *)item + COMPILER_OFFSETAFTER(struct Dee_membercache_slot, mcs_type),
@@ -1459,7 +1459,7 @@ PRIVATE char const membercache_type_names[][16] = {
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
                                     struct Dee_membercache_slot const *__restrict slot) {
-	Dee_DPRINTF("[RT] Cached %s `%k.%s' in `%s' (%s)\n",
+	Dee_DPRINTF("[RT] Cached %s `%k.%s` in `%s` (%s)\n",
 	            membercache_type_names[slot->mcs_type],
 	            slot->mcs_decl,
 	            slot->mcs_attrib.a_name,
@@ -1751,7 +1751,7 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 			atomic_write(&item->mcs_decl, decl);
 			result = 0;
 #ifndef Dee_membercache_addslot_log_success_IS_NOOP
-			Dee_DPRINTF("[RT] Patched %s `%k.%s' in `%s' (%s)\n",
+			Dee_DPRINTF("[RT] Patched %s `%k.%s` in `%s` (%s)\n",
 			            membercache_type_names[attr_type],
 			            decl, attr,
 			            MEMBERCACHE_GETTYPENAME(self),
@@ -1894,25 +1894,25 @@ Dee_membercache_patchinstancegetset(struct Dee_membercache *self, DeeTypeObject 
 
 
 /* Try to add the specified attribute to the cache of "self".
- * - If this fails due to OOM, return `-1', but DON'T throw an exception
+ * - If this fails due to OOM, return `-1`, but DON`T throw an exception
  * If the MRO cache already contains an entry for the named attribute:
- * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
- *   such that it can be patched without having to alter `mcs_type' (since having to do
+ * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*`),
+ *   such that it can be patched without having to alter `mcs_type` (since having to do
  *   so would result in a non-resolvable race condition where another thread is currently
  *   dereferencing the function pointers from the existing entry).
- *   If this verification fails, return `1'.
- *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
- *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
+ *   If this verification fails, return `1`.
+ *   - For `DeeTypeMRO_Patch*Method`, it is also verified that both the
+ *     old and new function pointers share a common `TYPE_METHOD_FKWDS`.
  * - If the type matches, the pre-existing cache entries pointers are patched such that
  *   they will now reference those from the given parameters.
  *   Note that for this purpose, this exchange is atomic for each individual function
- *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
- *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
+ *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet`,
+ *   another thread may invoke (e.g.) an out-dated `gs_del` after `gs_get` was already
  *   patched.
  *
  * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
  *       that wish to skip certain type-dependent verification steps during future calls.
- *       (e.g. `Sequence.first', `Mapping.keys')
+ *       (e.g. `Sequence.first`, `Mapping.keys`)
  *
  * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
  *                       But also note that when there are many function pointers, some may

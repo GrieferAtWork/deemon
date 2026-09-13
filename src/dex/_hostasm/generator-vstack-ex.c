@@ -98,7 +98,7 @@ Dee_libc_strchrnul(char const *haystack, int needle) {
 #define EDO(err, x) if unlikely(x) goto err
 
 
-/* Pop "kw" (as used for `DeeObject_CallKw') and assert that it is NULL or empty:
+/* Pop "kw" (as used for `DeeObject_CallKw`) and assert that it is NULL or empty:
  * >> if (__builtin_constant_p(kw) ? kw != NULL : 1) {
  * >>     size_t kw_length;
  * >>     if (DeeKwds_Check(kw)) {
@@ -338,7 +338,7 @@ err:
 	return -1;
 }
 
-/* Parse a type-expression `<NAME>' element
+/* Parse a type-expression `<NAME>` element
  * @return: 0 : Success (*result was initialized)
  * @return: -1: An error was thrown (*result is in an undefined state) */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -771,10 +771,10 @@ err:
 
 
 /* [args...] -> [args...]
- * Try to extract the type of object returned by a C function as per `info'
+ * Try to extract the type of object returned by a C function as per `info`
  * NOTE: *only* do this for C functions (since type annotations from user-code
  *       may not be correct and thus cannot be trusted unconditionally)
- * NOTE: This function assumes that `info->di_doc != NULL'
+ * NOTE: This function assumes that `info->di_doc != NULL`
  * @return: * :   The correct return type
  * @return: NULL: Return type could not be determined (generic / multiple-choice)
  * @return: (DeeTypeObject *)ITER_DONE: Error */
@@ -805,9 +805,9 @@ extra_return_type_from_doc(struct fungen *__restrict self,
 }
 
 
-/* Try to find the documentation string for `operator_name'
- * @return: * :   The doc string for `operator_name'
- * @return: NULL: No doc string available for `operator_name'
+/* Try to find the documentation string for `operator_name`
+ * @return: * :   The doc string for `operator_name`
+ * @return: NULL: No doc string available for `operator_name`
  * @return: (char const *)ITER_DONE: Error */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
 get_operator_doc(struct fungen const *__restrict self,
@@ -852,7 +852,7 @@ err:
 
 /* [args...], kw  ->  [args...], kw   (return != 0)
  *                ->  [args...]       (return == 0)
- * Try to inline keyword arguments represented by a constant `DeeKwds_Type'
+ * Try to inline keyword arguments represented by a constant `DeeKwds_Type`
  * object by re-ordering positional "[args...]" such that provided keyword
  * arguments fall into their proper positions when passed without keyword:
  * >> local x = SOME_STRING_VALUE;
@@ -883,8 +883,8 @@ vinline_kwds(struct fungen *__restrict self,
 	return 1;
 }
 
-/* Same as `vinline_kwds()', but when keyword arguments could be inlined,
- * then replace them with `NULL' on the v-stack.
+/* Same as `vinline_kwds()`, but when keyword arguments could be inlined,
+ * then replace them with `NULL` on the v-stack.
  * @param: func: When non-NULL, the function that is being invoked (may be used in place of "doc")
  * @return: 0 : Success (keyword arguments may or may not have been inlined)
  * @return: -1: Error */
@@ -1058,7 +1058,7 @@ vcall_getmethod(struct fungen *__restrict self,
                 char const *getset_name, uintptr_t getset_flags) {
 	/* Optimizations for some well-known getter-like functions. */
 	if (func == &DeeObject_NewRef) {
-		/* This right here optimizes stuff like `Object.this' */
+		/* This right here optimizes stuff like `Object.this` */
 		return 0;
 	} else if (func == &DeeObject_SizeOb) {
 		return fg_vopsize(self);
@@ -1629,7 +1629,7 @@ err:
 
 
 /* N/A  ->  instance
- * Emit code to do `DeeType_AllocInstance(type)'.
+ * Emit code to do `DeeType_AllocInstance(type)`.
  * The generated code already includes a NULL-check
  * The pushed "instance" has the "MEMOBJ_F_NOREF" CLEAR and "MEMOBJ_F_ONEREF" SET. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1654,7 +1654,7 @@ err:
 }
 
 /* instance  ->  N/A
- * Emit code to do `DeeType_FreeInstance(type, instance)'. */
+ * Emit code to do `DeeType_FreeInstance(type, instance)`. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vcall_DeeType_FreeInstance(struct fungen *__restrict self,
                            DeeTypeObject *type) {
@@ -1680,7 +1680,7 @@ struct fungen_exceptinject_freeinstance {
 #define fg_xinject_pop_freeinstance(self, ij) \
 	fg_xinject_pop(self, &(ij)->fei_fi_base)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct fungen_exceptinject_freeinstance' */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject` value for `struct fungen_exceptinject_freeinstance` */
 fungen_exceptinject_freeinstance_f(struct fungen *__restrict self,
                                    struct fungen_exceptinject *__restrict inject) {
 	struct fungen_exceptinject_freeinstance *me;
@@ -1700,7 +1700,7 @@ struct fungen_exceptinject_fini_and_freeinstance {
 #define fg_xinject_pop_fini_and_freeinstance(self, ij) \
 	fg_xinject_pop(self, &(ij)->fei_fafi_base)
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct fungen_exceptinject_fini_and_freeinstance' */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject` value for `struct fungen_exceptinject_fini_and_freeinstance` */
 fungen_exceptinject_fini_and_freeinstance_f(struct fungen *__restrict self,
                                             struct fungen_exceptinject *__restrict inject) {
 	struct memloc typeloc;
@@ -1741,7 +1741,7 @@ err:
 
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `Dee_TYPE(func_obj)'
+ * @return: 1 : No dedicated optimization available for `Dee_TYPE(func_obj)`
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 vopcallkw_constfunc(struct fungen *__restrict self,
@@ -1952,12 +1952,12 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		/* Check for constructor calls to specific types. */
 		if (true_argc == 1) {
 			if (type == &DeeString_Type) {
-				/* The string constructor acts just like `OPERATOR_STR' */
+				/* The string constructor acts just like `OPERATOR_STR` */
 				DO(vpop_empty_kwds(self)); /* &DeeString_Type, obj */
 				DO(fg_vpop_at(self, 2));   /* obj */
 				return fg_vopstr(self);    /* result */
 			} else if (type == &DeeBool_Type) {
-				/* The bool constructor acts just like `OPERATOR_BOOL' */
+				/* The bool constructor acts just like `OPERATOR_BOOL` */
 				DO(vpop_empty_kwds(self));                 /* &DeeBool_Type, obj */
 				DO(fg_vpop_at(self, 2));                   /* obj */
 				return fg_vopbool(self, VOPBOOL_F_NORMAL); /* result */
@@ -1966,7 +1966,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			           || type == &DeeFloat_Type
 #endif /* CONFIG_HAVE_FPU */
 			           ) {
-				/* The int/float constructor acts just like `OPERATOR_INT/FLOAT',
+				/* The int/float constructor acts just like `OPERATOR_INT/FLOAT`,
 				 * so-long as the passed argument isn't a string */
 				DeeTypeObject *arg_type = memval_typeof(fg_vtop(self) - 1);
 				if (arg_type != NULL && arg_type != &DeeString_Type) {
@@ -2089,7 +2089,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 						/* Optimizations for special, known callbacks. */
 						if (tp_copy_ctor == &DeeObject_NewRef)
 							return 0;
-						/* TODO: More optimizations from `vcall_getmethod()' */
+						/* TODO: More optimizations from `vcall_getmethod()` */
 						DO(fg_vcallapi(self, tp_copy_ctor, VCALL_CC_OBJECT, 1)); /* result */
 						return fg_vsettyp_noalias(self, type); /* result */
 					}	break;
@@ -2244,7 +2244,7 @@ do_impl_vopTcallkw(struct fungen *__restrict self,
 
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `func_type'
+ * @return: 1 : No dedicated optimization available for `func_type`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopcallkw_consttype(struct fungen *__restrict self,
@@ -2386,7 +2386,7 @@ vopcallkw_consttype(struct fungen *__restrict self,
 		return do_impl_vopTcallkw(self, true_argc, prefer_thiscall);
 	} else if (DeeType_InheritOperator(func_type, OPERATOR_CALL)) {
 		if (func_type == &DeeFunction_Type) {
-			/* TODO: When `func_type' is a `DeeFunctionObject', see if it has already been optimized,
+			/* TODO: When `func_type` is a `DeeFunctionObject`, see if it has already been optimized,
 			 *       or if we're supposed to produce a deeply optimized code object (in which case we
 			 *       have to optimize the referenced function recursively). Then, generate a direct
 			 *       call to function's _hostasm representation. */
@@ -2467,9 +2467,9 @@ do_impl_vopTcallkw(struct fungen *__restrict self,
 	if (prefer_thiscall) {
 		vstackaddr_t argc = true_argc - 1;
 		DO(fg_vrrot(self, argc + 1)); /* tp_func, func, this, kw, [args...] */
-		/* TODO: If generating the linear version of `[args...]' combined with `this' prefixed
+		/* TODO: If generating the linear version of `[args...]` combined with `this` prefixed
 		 *       is not any more complex than it is without, then include it in the argument
-		 *       list and encode as `DeeObject_ThisCall()' instead. */
+		 *       list and encode as `DeeObject_ThisCall()` instead. */
 		DO(fg_vlinear(self, argc, true)); /* tp_func, func, this, kw, [args...], argv */
 		DO(fg_vlrot(self, argc + 5));     /* func, this, kw, [args...], argv, tp_func */
 		DO(fg_vlrot(self, argc + 5));     /* this, kw, [args...], argv, tp_func, func */
@@ -2484,8 +2484,8 @@ do_impl_vopTcallkw(struct fungen *__restrict self,
 		return fg_vcallapi_ex(self, &DeeObject_TThisCallKw, VCALL_CC_OBJECT, 6, argc + 6); /* result */
 	}                                                      /* tp_func, func, [args...], kw */
 	DO(fg_vrrot(self, true_argc + 1)); /* tp_func, func, kw, [args...] */
-	/* TODO: If generating the linear version of `true_argc' is much more complicated
-	 *       than doing the same for `true_argc - 1', then encode as `DeeObject_ThisCall()'
+	/* TODO: If generating the linear version of `true_argc` is much more complicated
+	 *       than doing the same for `true_argc - 1`, then encode as `DeeObject_ThisCall()`
 	 *       instead. */
 	DO(fg_vlinear(self, true_argc, true)); /* tp_func, func, kw, [args...], argv */
 	DO(fg_vlrot(self, true_argc + 2));     /* tp_func, func, [args...], argv, kw */
@@ -2515,7 +2515,7 @@ impl_vopcallkw(struct fungen *__restrict self,
 	DO(fg_state_unshare(self));
 	funcval = fg_vtop(self) - (true_argc + 1);
 
-	/* Optimizations for when the function is a constant. (e.g. `DeeObjMethodObject') */
+	/* Optimizations for when the function is a constant. (e.g. `DeeObjMethodObject`) */
 	if (memval_isconst(funcval)) {
 		DeeObject *func_obj = memval_const_getobj(funcval);
 		int temp = vopcallkw_constfunc(self, func_obj, Dee_TYPE(func_obj), true_argc);
@@ -2525,7 +2525,7 @@ impl_vopcallkw(struct fungen *__restrict self,
 		DO(vinline_kwds_and_replace_with_null(self, &true_argc, NULL, func_obj, Dee_TYPE(func_obj)));
 	}
 
-	/* Optimizations when `type(func)' is known by skipping operator
+	/* Optimizations when `type(func)` is known by skipping operator
 	 * resolution and directly invoking the tp_call[_kw]-operator. */
 	func_type = memval_typeof(funcval);
 	if (func_type != NULL) {
@@ -2540,9 +2540,9 @@ impl_vopcallkw(struct fungen *__restrict self,
 	if (prefer_thiscall) {
 		vstackaddr_t argc = true_argc - 1;
 		DO(fg_vrrot(self, argc + 1)); /* func, this, kw, [args...] */
-		/* TODO: If generating the linear version of `[args...]' combined with `this' prefixed
+		/* TODO: If generating the linear version of `[args...]` combined with `this` prefixed
 		 *       is not any more complex than it is without, then include it in the argument
-		 *       list and encode as `DeeObject_ThisCall()' instead. */
+		 *       list and encode as `DeeObject_ThisCall()` instead. */
 		DO(fg_vlinear(self, argc, true)); /* func, this, kw, [args...], argv */
 		DO(fg_vlrot(self, argc + 4));     /* this, kw, [args...], argv, func */
 		DO(fg_vlrot(self, argc + 4));     /* kw, [args...], argv, func, this */
@@ -2556,8 +2556,8 @@ impl_vopcallkw(struct fungen *__restrict self,
 		return fg_vcallapi_ex(self, &DeeObject_ThisCallKw, VCALL_CC_OBJECT, 5, argc + 5); /* result */
 	}                                                      /* func, [args...], kw */
 	DO(fg_vrrot(self, true_argc + 1)); /* func, kw, [args...] */
-	/* TODO: If generating the linear version of `true_argc' is much more complicated
-	 *       than doing the same for `true_argc - 1', then encode as `DeeObject_ThisCall()'
+	/* TODO: If generating the linear version of `true_argc` is much more complicated
+	 *       than doing the same for `true_argc - 1`, then encode as `DeeObject_ThisCall()`
 	 *       instead. */
 	DO(fg_vlinear(self, true_argc, true)); /* func, kw, [args...], argv */
 	DO(fg_vlrot(self, true_argc + 2));     /* func, [args...], argv, kw */
@@ -2575,8 +2575,8 @@ err:
 }
 
 /* this -> Dee[Kw]ObjMethod_New(method, this)
- * @param: method: When `wrapper_type == DeeKwObjMethod_Type', this must be `Dee_kwobjmethod_t'
- * @param: wrapper_type: Either `DeeObjMethod_Type' or `DeeKwObjMethod_Type'
+ * @param: method: When `wrapper_type == DeeKwObjMethod_Type`, this must be `Dee_kwobjmethod_t`
+ * @param: wrapper_type: Either `DeeObjMethod_Type` or `DeeKwObjMethod_Type`
  * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -2601,7 +2601,7 @@ vnew_ObjMethod(struct fungen *__restrict self,
 		return fg_vpush_const(self, meth);
 	}
 	if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* Inline the call to `DeeObjMethod_New()' / `DeeKwObjMethod_New()' */
+		/* Inline the call to `DeeObjMethod_New()` / `DeeKwObjMethod_New()` */
 		STATIC_ASSERT(sizeof(DeeObjMethodObject) == sizeof(DeeObjMethodObject));
 		DO(fg_vcall_DeeObject_MALLOC(self, sizeof(DeeObjMethodObject), false)); /* this, ref:result */
 		DO(fg_vswap(self));                                                     /* ref:result, this */
@@ -2646,7 +2646,7 @@ vnew_InstanceMethod(struct fungen *__restrict self) {
 		return fg_vpush_const(self, meth);
 	}
 	if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* Inline the behavior of `DeeInstanceMethod_New()' */
+		/* Inline the behavior of `DeeInstanceMethod_New()` */
 		DO(fg_vcall_DeeObject_MALLOC(self, sizeof(DeeInstanceMethodObject), false)); /* func, this, ref:result */
 		DO(fg_vlrot(self, 3));                                                       /* this, ref:result, func */
 		DO(fg_vref2(self, 3));                                                       /* this, ref:result, ref:func */
@@ -2681,7 +2681,7 @@ err:
 
 /* this, attr -> result
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `attr'
+ * @return: 1 : No dedicated optimization available for `attr`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopgetattr_constattr(struct fungen *__restrict self,
@@ -2704,7 +2704,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 		                                                  attr->ai_value.v_attr, true);
 
 	case Dee_ATTRINFO_METHOD: {
-		/* Return a `DeeObjMethod_Type' / `DeeKwObjMethod_Type' wrapper */
+		/* Return a `DeeObjMethod_Type` / `DeeKwObjMethod_Type` wrapper */
 		struct type_method const *item = attr->ai_value.v_method;
 		Dee_objmethod_t method = item->m_func;
 		DeeTypeObject *wrapper_type = &DeeObjMethod_Type;
@@ -2741,7 +2741,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 		if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 			DeeTypeObject *type = (DeeTypeObject *)attr->ai_decl;
 			struct Dee_class_desc *desc = DeeClass_DESC(type);
-			/* Wrapper for producing `DeeProperty_Type' */
+			/* Wrapper for producing `DeeProperty_Type` */
 			DO(fg_vpop(self));     /* this */
 			DO(fg_vdirect1(self)); /* this */
 			if ((item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) &&
@@ -2862,7 +2862,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 			DO(fg_vcall_DeeObject_Init_c(self, &DeeProperty_Type)); /* ref:result */
 			return 0;
 		} else if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
-			/* Wrapper for producing `DeeInstanceMethod_Type' */
+			/* Wrapper for producing `DeeInstanceMethod_Type` */
 			DO(fg_vpop(self)); /* this */
 			if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 				DO(fg_vpush_const(self, attr->ai_decl));                      /* this, type */
@@ -2874,7 +2874,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 			}
 			return vnew_InstanceMethod(self);
 		} else {
-			/* Wrapper for producing `DeeInstanceMember_Type' */
+			/* Wrapper for producing `DeeInstanceMember_Type` */
 			value = DeeInstanceMember_New((DeeTypeObject *)attr->ai_decl, item);
 			if unlikely(!value)
 				goto err;
@@ -2883,7 +2883,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_METHOD: {
-		/* Wrapper for producing `DeeClsMethod_Type' / `DeeKwClsMethod_Type' */
+		/* Wrapper for producing `DeeClsMethod_Type` / `DeeKwClsMethod_Type` */
 		struct type_method const *item = attr->ai_value.v_instance_method;
 		DREF DeeObject *value;
 		if (item->m_flag & Dee_TYPE_METHOD_FKWDS) {
@@ -2898,7 +2898,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_GETSET: {
-		/* Wrapper for producing `DeeClsProperty_Type' */
+		/* Wrapper for producing `DeeClsProperty_Type` */
 		struct type_getset const *item = attr->ai_value.v_instance_getset;
 		DREF DeeObject *value;
 		value = DeeClsProperty_New((DeeTypeObject *)attr->ai_decl, item);
@@ -2908,7 +2908,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_MEMBER: {
-		/* Wrapper for producing `DeeClsMember_Type' */
+		/* Wrapper for producing `DeeClsMember_Type` */
 		struct type_member const *item = attr->ai_value.v_instance_member;
 		DREF DeeObject *value;
 		value = DeeClsMember_New((DeeTypeObject *)attr->ai_decl, item);
@@ -2935,7 +2935,7 @@ err:
 
 /* this, attr -> result
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `attr'
+ * @return: 1 : No dedicated optimization available for `attr`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopboundattr_constattr(struct fungen *__restrict self,
@@ -2992,7 +2992,7 @@ err:
 
 /* this, attr -> N/A
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `attr'
+ * @return: 1 : No dedicated optimization available for `attr`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopdelattr_constattr(struct fungen *__restrict self,
@@ -3047,7 +3047,7 @@ err:
 
 /* this, attr, value -> N/A
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `attr'
+ * @return: 1 : No dedicated optimization available for `attr`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopsetattr_constattr(struct fungen *__restrict self,
@@ -3104,7 +3104,7 @@ err:
 
 /* this, attr, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
- * @return: 1 : No dedicated optimization available for `attr'
+ * @return: 1 : No dedicated optimization available for `attr`
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 vopcallattrkw_constattr(struct fungen *__restrict self,
@@ -3140,7 +3140,7 @@ vopcallattrkw_constattr(struct fungen *__restrict self,
 			break;
 		--argc; /* type, attr, this, [args...], kw */
 		item = attr->ai_value.v_instance_attr;
-		/* Behavior here mirrors `DeeClass_CallInstanceAttributeKw()' */
+		/* Behavior here mirrors `DeeClass_CallInstanceAttributeKw()` */
 		if (!(item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
 			if (argc != 0)
 				break;
@@ -3397,16 +3397,16 @@ err:
 	return -1;
 }
 
-/* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()' and push the result */
+/* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallkw(self, argc, false);
 }
 
-/* func, args, kw -> result -- Invoke `DeeObject_CallTupleKw()' and push the result */
+/* func, args, kw -> result -- Invoke `DeeObject_CallTupleKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcalltuplekw(struct fungen *__restrict self) {
-	/* TODO: Optimizations for MEMADR_TYPE_CONST functions with certain types. (e.g. `DeeObjMethodObject') */
+	/* TODO: Optimizations for MEMADR_TYPE_CONST functions with certain types. (e.g. `DeeObjMethodObject`) */
 	DO(fg_vswap(self));                                             /* func, kw, args */
 	DO(fg_vcall_DeeObject_AssertTypeExact_c(self, &DeeTuple_Type)); /* func, kw, args */
 	DO(fg_vswap(self));                                             /* func, args, kw */
@@ -3421,17 +3421,17 @@ err:
 	return -1;
 }
 
-/* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
+/* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopthiscallkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallkw(self, argc + 1, true);
 }
 
-/* func, this, args, kw -> result -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
+/* func, this, args, kw -> result -- Invoke `DeeObject_ThisCallTupleKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopthiscalltuplekw(struct fungen *__restrict self) {
-	/* TODO: Optimizations for MEMADR_TYPE_CONST functions with certain types. (e.g. `DeeClsMethodObject') */
-	/* TODO: Optimizations when `type(func)' is known by skipping operator resolution and directly invoking the call-operator */
+	/* TODO: Optimizations for MEMADR_TYPE_CONST functions with certain types. (e.g. `DeeClsMethodObject`) */
+	/* TODO: Optimizations when `type(func)` is known by skipping operator resolution and directly invoking the call-operator */
 	DO(fg_vswap(self));                                        /* func, this, kw, args */
 	DO(fg_vcall_DeeObject_AssertTypeExact_c_if_safe(self, &DeeTuple_Type)); /* func, this, kw, args */
 	DO(fg_vswap(self));                                        /* func, this, args, kw */
@@ -3446,17 +3446,17 @@ err:
 	return -1;
 }
 
-/* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
+/* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattrkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallattrkw(self, argc);
 }
 
-/* this, attr, args, kw -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+/* this, attr, args, kw -> result -- Invoke `DeeObject_CallAttrTupleKw()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattrtuplekw(struct fungen *__restrict self) {
-	/* TODO: Optimization for when `attr' and the type of `this' is known:
-	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()',
+	/* TODO: Optimization for when `attr` and the type of `this` is known:
+	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()`,
 	 * >>                          // bypassing the complete attribute lookup */
 	DO(fg_vlrot(self, 3));                                                  /* this, args, kw, attr */
 	DO(fg_vcall_DeeObject_AssertTypeExact_c(self, &DeeString_Type));        /* this, args, kw, attr */
@@ -3587,10 +3587,10 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 	func_type = memval_typeof(funcval);
 	if (func_type) {
 		/* XXX: this optimization is possible whenever the function doesn't let passed arguments escape!
-		 *   -> optimize this by adding another flag `Dee_TYPE_METHOD_FNOARGREFESCAPE' that can then be
+		 *   -> optimize this by adding another flag `Dee_TYPE_METHOD_FNOARGREFESCAPE` that can then be
 		 *      set on a per-function basis.
-		 * NOPE: not that easy. Technically, `string.format' can let its argument escape, because it
-		 *       calls `operator iter' on its argument. What we need to know here is: "can references
+		 * NOPE: not that easy. Technically, `string.format` can let its argument escape, because it
+		 *       calls `operator iter` on its argument. What we need to know here is: "can references
 		 *       escape, assuming that OPERATOR_ITER doesn't let references escape?" */
 #ifndef CONFIG_TRACE_REFCHANGES
 		if (func_type == &DeeString_Type && hasattr && !asmap &&
@@ -3633,7 +3633,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >>     call  string_format
 			 * >>     addl  $28, %esp
 			 * >>     ret   $8 */
-			/* TODO: Can inline more than this! (see impl of `string_format()'):
+			/* TODO: Can inline more than this! (see impl of `string_format()`):
 			 * - Inline "DeeArg_Unpack1(err, argc, argv, "format", &args)"
 			 * - Inline "DeeString_AsUtf8(self)"
 			 */
@@ -3776,25 +3776,25 @@ err:
 }
 
 
-/* func, [items...] -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))' and push the result */
+/* func, [items...] -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallseq(struct fungen *__restrict self, vstackaddr_t itemc) {
 	return vopcallseqmap_impl(self, itemc, false, false, true);
 }
 
-/* func, [[key, value]...] -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
+/* func, [[key, value]...] -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallmap(struct fungen *__restrict self, vstackaddr_t pairc) {
 	return vopcallseqmap_impl(self, pairc * 2, true, false, true);
 }
 
-/* func, attr, [items...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
+/* func, attr, [items...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattrseq(struct fungen *__restrict self, vstackaddr_t itemc) {
 	return vopcallseqmap_impl(self, itemc, false, true, true);
 }
 
-/* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
+/* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattrmap(struct fungen *__restrict self, vstackaddr_t pairc) {
 	return vopcallseqmap_impl(self, pairc * 2, true, true, true);
@@ -3803,7 +3803,7 @@ fg_vopcallattrmap(struct fungen *__restrict self, vstackaddr_t pairc) {
 
 
 
-/* func, [args...] -> [args...], result -- Invoke `DeeObject_Call()' and push the result */
+/* func, [args...] -> [args...], result -- Invoke `DeeObject_Call()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcall(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
@@ -3812,7 +3812,7 @@ fg_vopcall(struct fungen *__restrict self, vstackaddr_t argc) {
 	return result;
 }
 
-/* func, args -> result -- Invoke `DeeObject_CallTuple()' and push the result */
+/* func, args -> result -- Invoke `DeeObject_CallTuple()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcalltuple(struct fungen *__restrict self) {
 	int result = fg_vpush_NULL(self);
@@ -3821,7 +3821,7 @@ fg_vopcalltuple(struct fungen *__restrict self) {
 	return result;
 }
 
-/* func, this, [args...] -> [args...], result -- Invoke `DeeObject_ThisCall()' and push the result */
+/* func, this, [args...] -> [args...], result -- Invoke `DeeObject_ThisCall()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopthiscall(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
@@ -3830,7 +3830,7 @@ fg_vopthiscall(struct fungen *__restrict self, vstackaddr_t argc) {
 	return result;
 }
 
-/* func, this, args -> result -- Invoke `DeeObject_ThisCallTuple()' and push the result */
+/* func, this, args -> result -- Invoke `DeeObject_ThisCallTuple()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopthiscalltuple(struct fungen *__restrict self) {
 	int result = fg_vpush_NULL(self);
@@ -3839,7 +3839,7 @@ fg_vopthiscalltuple(struct fungen *__restrict self) {
 	return result;
 }
 
-/* this, attr, [args...] -> [args...], result -- Invoke `DeeObject_CallAttr()' and push the result */
+/* this, attr, [args...] -> [args...], result -- Invoke `DeeObject_CallAttr()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattr(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
@@ -3848,7 +3848,7 @@ fg_vopcallattr(struct fungen *__restrict self, vstackaddr_t argc) {
 	return result;
 }
 
-/* this, attr, args -> result -- Invoke `DeeObject_CallAttrTuple()' and push the result */
+/* this, attr, args -> result -- Invoke `DeeObject_CallAttrTuple()` and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopcallattrtuple(struct fungen *__restrict self) {
 	int result = fg_vpush_NULL(self);
@@ -4120,7 +4120,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL /* TODO: Remove me and directly use `DeeObject_TryGetItem()' */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL /* TODO: Remove me and directly use `DeeObject_TryGetItem()` */
 deprecated_DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	DREF DeeObject *result = DeeObject_TryGetItem(self, key);
 	if (result == ITER_DONE) {
@@ -4133,7 +4133,7 @@ deprecated_DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def)
 /* seq, key_or_index, def -> result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopgetitemdef(struct fungen *__restrict self) {
-	/* IMPORTANT: `def' is allowed to be `ITER_DONE', and `deprecated_DeeObject_GetItemDef()' is allowed to return `ITER_DONE' */
+	/* IMPORTANT: `def` is allowed to be `ITER_DONE`, and `deprecated_DeeObject_GetItemDef()` is allowed to return `ITER_DONE` */
 	DeeTypeObject *seq_type;
 	if unlikely(self->fg_state->ms_stackc < 3)
 		return err_illegal_stack_effect();
@@ -4177,7 +4177,7 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 		/* Optimizations when typeof(seq) is known */
 		if (DeeType_InheritOperator(seq_type, OPERATOR_GETITEM) &&
 		    seq_type->tp_seq && seq_type->tp_seq->tp_getitem) {
-#if 0 /* TODO: Re-write using `tp_trygetitem' (or even better: replace this function with `fg_voptrygetitem') */
+#if 0 /* TODO: Re-write using `tp_trygetitem` (or even better: replace this function with `fg_voptrygetitem`) */
 			struct Dee_type_nsi const *nsi = seq_type->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_getdefault != NULL) {
 				DO(fg_vnotoneref(self, 2));                                  /* seq, key_or_index, def */
@@ -4241,7 +4241,7 @@ err:
 
 
 /* this, [args...]
- * Try to figure out the return type of `operator_name' by looking at doc info.
+ * Try to figure out the return type of `operator_name` by looking at doc info.
  * NOTE: This function makes no special case for operators that always return
  *       the same type. Doing this is the responsibility of the caller!
  * @param: argc:  Number of extra arguments (excluding the "this" argument)
@@ -4726,7 +4726,7 @@ fg_vopstr(struct fungen *__restrict self) {
 			/* See if we can prematurely load the type's str operator to inline it. */
 			ASSERT(vtop_type->tp_cast.tp_str);
 			ASSERT(vtop_type->tp_cast.tp_print);
-			if (!DeeType_IsGC(vtop_type)) { /* GC types needs more work in `DeeObject_Str()' */
+			if (!DeeType_IsGC(vtop_type)) { /* GC types needs more work in `DeeObject_Str()` */
 				DO(fg_vnotoneref_if_operator(self, OPERATOR_STR, 1));
 				DO(fg_vcallapi(self, vtop_type->tp_cast.tp_str, VCALL_CC_OBJECT, 1)); /* result */
 				goto set_return_type;
@@ -4781,12 +4781,12 @@ impl_vinstanceof(struct fungen *__restrict self,
 	}
 	if (type_type != NULL) {
 		if (type_type == &DeeNone_Type) {
-			/* Special case: `this is none' */
+			/* Special case: `this is none` */
 			DO(fg_vpop(self)); /* this */
 			return fg_veqconstaddr(self, Dee_None);
 		} else if (!DeeType_Extends(type_type, &DeeType_Type)) {
 			/* When the "type" argument isn't "none", and also isn't a type,
-			 * then the `DeeType_Extends()' would always return "false". */
+			 * then the `DeeType_Extends()` would always return "false". */
 			DO(fg_vpop(self)); /* this */
 			DO(fg_vpop(self)); /* N/A */
 			return fg_vpush_const(self, Dee_False);
@@ -4802,7 +4802,7 @@ impl_vinstanceof(struct fungen *__restrict self,
 				return fg_vpush_const(self, DeeBool_For(result));
 			}
 
-			/* Check for special case: if "type" is final, then we can check `Dee_TYPE(this) === type' */
+			/* Check for special case: if "type" is final, then we can check `Dee_TYPE(this) === type` */
 			if (DeeType_IsFinal(type)) {
 				DO(fg_vpop(self));                               /* this */
 				DO(fg_vdup(self));                               /* this, this */
@@ -5082,7 +5082,7 @@ again:
 			DeeObject *key = memval_const_getobj(keyval);
 			uintptr_t eq_flags;
 
-			/* Verify that `DeeObject_Hash(key)' is a constant call. */
+			/* Verify that `DeeObject_Hash(key)` is a constant call. */
 			eq_flags = DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_HASH);
 			if (!(eq_flags & METHOD_FCONSTCALL))
 				goto next_key;
@@ -5111,7 +5111,7 @@ again:
 
 				if (it->ti_hash == hash) {
 					int temp;
-					/* Verify that `DeeObject_TryCompareEq(key, it->ti_key)' is a constant call. */
+					/* Verify that `DeeObject_TryCompareEq(key, it->ti_key)` is a constant call. */
 					if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 1, &it->ti_key, NULL))
 						goto next_key;
 
@@ -5209,7 +5209,7 @@ next_key:
 	 * - d_size = result_d_size
 	 * - d_used = result_d_size
 	 * These fields must be initialized before we fill in non-constant keys,
-	 * as `soi_libhostasm_rt_DeeSeqType_InsertFast()' relies on these fields
+	 * as `soi_libhostasm_rt_DeeSeqType_InsertFast()` relies on these fields
 	 * already being initialized. */
 	DO(fg_vswap(self));                             /* [elems...], d_elem, d */
 	DO(fg_vpush_immSIZ(self, result_d_mask));       /* [elems...], d_elem, d, result_d_mask */
@@ -5264,7 +5264,7 @@ next_key:
 	ASSERT(!asmap || (elemc % 2) == 0);    /* [elems...], d, d_elem */
 	DO(fg_vpop(self)); /* [elems...], d */
 	ASSERT(fg_vtop_direct_isref(self));
-	fg_vtop_direct_clearref(self); /* The "reference" is always inherited by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+	fg_vtop_direct_clearref(self); /* The "reference" is always inherited by `soi_libhostasm_rt_DeeSeqType_InsertFast` */
 	while (elemc) {
 		DO(fg_vlrot(self, elemc + 1));     /* [elems...], d, key */
 		if (asmap) {
@@ -5275,15 +5275,15 @@ next_key:
 			DO(fg_vswap(self));            /* [elems...], d, ref:key, ref:value */
 			ASSERT(memval_direct_isref(&fg_vtop(self)[-1]));
 			ASSERT(memval_direct_isref(&fg_vtop(self)[-0]));
-			memval_direct_clearref(&fg_vtop(self)[-1]); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
-			memval_direct_clearref(&fg_vtop(self)[-0]); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+			memval_direct_clearref(&fg_vtop(self)[-1]); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast` */
+			memval_direct_clearref(&fg_vtop(self)[-0]); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast` */
 			DO(fg_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
 			                                   VCALL_CC_RAWINTPTR, 3)); /* [elems...], UNCHECKED(d) */
 			--elemc;
 		} else {
 			DO(fg_vref2(self, 1));         /* [elems...], d, ref:key */
 			ASSERT(fg_vtop_direct_isref(self));
-			fg_vtop_direct_clearref(self); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+			fg_vtop_direct_clearref(self); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast` */
 			DO(fg_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
 			               VCALL_CC_RAWINTPTR, 2)); /* [elems...], UNCHECKED(d) */
 		}                                           /* [elems...], UNCHECKED(d) */
@@ -5294,7 +5294,7 @@ next_key:
 
 	/* At this point, the v-stack only contains "d", which currently contains all relevant
 	 * items. However, there are still some extra fields (possibly type-specific) fields
-	 * that need to be initialized, including a call to `DeeObject_Init()' */
+	 * that need to be initialized, including a call to `DeeObject_Init()` */
 	if (seq_type == &DeeDict_Type) {
 #ifndef CONFIG_NO_THREADS
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));
@@ -5443,10 +5443,10 @@ fg_vpackseq(struct fungen *__restrict self,
 		DO(fg_vpop(self)); /* ref:seq */
 		if (is_list) {
 			ASSERT(fg_vtop_direct_isref(self));
-			fg_vtop_direct_clearref(self); /* Inherited by `DeeGC_Track()' */
+			fg_vtop_direct_clearref(self); /* Inherited by `DeeGC_Track()` */
 			DO(fg_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
 			ASSERT(!fg_vtop_direct_isref(self));
-			fg_vtop_direct_setref(self); /* Returned by `DeeGC_Track()' */
+			fg_vtop_direct_setref(self); /* Returned by `DeeGC_Track()` */
 		}
 		DO(fg_vsettyp_noalias(self, seq_type));
 		return fg_voneref_noalias(self);
@@ -5498,7 +5498,7 @@ struct host_operator_specs {
 	void const *hos_apifunc;  /* [0..1] API function (or NULL if fallback handling must be used) */
 	void const *hos_tapifunc; /* [0..1] Typed API function (or NULL if fallback handling must be used) */
 	uint8_t     hos_argc;     /* Argument count (1-4) */
-	uint8_t     hos_cc;       /* Operator calling convention (one of `VCALL_CC_*') */
+	uint8_t     hos_cc;       /* Operator calling convention (one of `VCALL_CC_*`) */
 	bool        hos_inplace;  /* Is this an inplace operator? */
 };
 
@@ -5512,7 +5512,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_STR]          = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_REPR]         = */ { (void const *)&DeeObject_Repr, (void const *)&DeeObject_TRepr, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_BOOL]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_ITERNEXT]     = */ { (void const *)NULL }, /* Special handling (because `DeeObject_IterNext' can return ITER_DONE) */
+	/* [OPERATOR_ITERNEXT]     = */ { (void const *)NULL }, /* Special handling (because `DeeObject_IterNext` can return ITER_DONE) */
 	/* [OPERATOR_CALL]         = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_INT]          = */ { (void const *)&DeeObject_Int, (void const *)&DeeObject_TInt, 1, VCALL_CC_OBJECT, false },
 #ifdef CONFIG_HAVE_FPU
@@ -5572,7 +5572,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 };
 
 /* this, [args...]  ->  this, [args...]
- * Try to lookup the inlined API function belonging to `operator_name' with `p_extra_argc'
+ * Try to lookup the inlined API function belonging to `operator_name` with `p_extra_argc`
  * @assume(memval_typeof(fg_vtop(self) - *p_extra_argc) == type);
  * @return: 0 : Dedicated operator API exists
  * @return: 1 : No dedicated operator API exists
@@ -5889,13 +5889,13 @@ not_all_args_are_constant:
 					if (DeeType_IsGC(this_type) && (operator_name == OPERATOR_STR ||
 					                                operator_name == OPERATOR_REPR ||
 					                                operator_name == OPERATOR_HASH)) {
-						/* GC types needs more work in `DeeObject_Str()', `DeeObject_Repr()', ... */
+						/* GC types needs more work in `DeeObject_Str()`, `DeeObject_Repr()`, ... */
 					} else {
 						ASSERT(specs.hos_argc == argc);
 						DO(fg_vnotoneref_if_operator_at(self, operator_name, argc));
 						DO(fg_vnotoneref(self, argc - 1));
 						DO(fg_vcallapi(self, specs.hos_apifunc, specs.hos_cc, argc));
-						if (specs.hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+						if (specs.hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT` is the only one used that doesn't have a return value */
 							goto done_with_result;
 						goto done_without_result;
 					}
@@ -5935,7 +5935,7 @@ not_all_args_are_constant:
 			DO(fg_vnotoneref(self, argc - 1));
 			DO(fg_vcallapi(self, specs->hos_apifunc,
 			                                   specs->hos_cc, argc));
-			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT` is the only one used that doesn't have a return value */
 				goto done_with_result;
 done_without_result:
 			if (flags & VOP_F_PUSHRES) {
@@ -5946,14 +5946,14 @@ done_without_result:
 		}
 	}
 
-	/* Fallback: encode a call to `DeeObject_InvokeOperator()' */
+	/* Fallback: encode a call to `DeeObject_InvokeOperator()` */
 	if unlikely(argc < 1)
 		return err_illegal_stack_effect();
 	--argc; /* The "this"-argument is passed individually */
 	DO(fg_vnotoneref(self, argc));           /* this, [args...] */
 	DO(fg_vlinear(self, argc, true));        /* this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, this */
-	/* Special case: for `OPERATOR_ITER', the ONEREF flag has special meaning. */
+	/* Special case: for `OPERATOR_ITER`, the ONEREF flag has special meaning. */
 	DO(operator_name == OPERATOR_ITER ? fg_vnotoneref_at(self, 1) /* [args...], argv, this */
 	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vpush_imm16(self, operator_name)); /* [args...], argv, this, opname */
@@ -5982,7 +5982,7 @@ vinplaceop_invoke_specs(struct fungen *__restrict self,
 	DO(fg_vnotoneref(self, argc));  /* [ref]:this, [args...] */
 	DO(fg_vlrot(self, argc + 1));   /* [args...], [ref]:this */
 	DO(fg_vnotoneref_if_operator(self, operator_name, 1)); /* [args...], [ref]:this */
-	/* IMPORTANT: don't use vref2() here! The caller of the `vinplaceop()' pushed an alias
+	/* IMPORTANT: don't use vref2() here! The caller of the `vinplaceop()` pushed an alias
 	 *            into VTOP, so vref2() would do an extra incref by thinking that the location
 	 *            being alocated should also need one. -- Only do vref_noalais() to force a
 	 *            reference in case the caller passed a constant as original this-value. */
@@ -6132,7 +6132,7 @@ not_all_args_are_constant:
 				ASSERT(specs.hos_argc == argc + 1);
 				ASSERT(specs.hos_inplace);                                /* [ref]:this, [args...] */
 				DO(vinplaceop_invoke_specs(self, &specs, operator_name)); /* ref:this, [result] */
-				if (specs.hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+				if (specs.hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT` is the only one used that doesn't have a return value */
 					goto done_with_result;
 				goto done_without_result;
 			}
@@ -6215,7 +6215,7 @@ not_all_args_are_constant:
 		struct host_operator_specs const *specs = &operator_apis[operator_name];
 		if (specs->hos_apifunc != NULL && specs->hos_argc == argc + 1 && specs->hos_inplace) {
 			DO(vinplaceop_invoke_specs(self, specs, operator_name)); /* ref:this, [result] */
-			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT` is the only one used that doesn't have a return value */
 				goto done_with_result;
 done_without_result:
 			DO(fg_vsettyp(self, return_type)); /* [ref]:this */
@@ -6227,12 +6227,12 @@ done_without_result:
 		}
 	}
 
-	/* Fallback: encode a call to `DeeObject_PInvokeOperator()' */
+	/* Fallback: encode a call to `DeeObject_PInvokeOperator()` */
 	DO(fg_vnotoneref(self, argc));           /* [ref]:this, [args...] */
 	DO(fg_vlinear(self, argc, true));        /* [ref]:this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, [ref]:this */
 	DO(fg_vref_noalias(self));               /* [args...], argv, ref:this */
-	/* Special case: for `OPERATOR_ITER', the ONEREF flag has special meaning. */
+	/* Special case: for `OPERATOR_ITER`, the ONEREF flag has special meaning. */
 	DO(operator_name == OPERATOR_ITER ? fg_vnotoneref_at(self, 1) /* [args...], argv, ref:this */
 	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vlinear(self, 1, false));          /* [args...], argv, ref:this, p_this */
@@ -6248,7 +6248,7 @@ done_with_result:                                                /* ref:this, re
 		return fg_vsettyp(self, return_type); /* ref:this */
 	}
 	/* NOTE: When return types are known, the that return type always
-	 *       matches the type of object that got assigned to `*p_this' */
+	 *       matches the type of object that got assigned to `*p_this` */
 	DO(fg_vsettyp_noalias(self, return_type)); /* ref:this, result */
 	DO(fg_vswap(self));                        /* result, ref:this */
 	DO(fg_vsettyp(self, return_type));         /* result, ref:this */
@@ -6261,7 +6261,7 @@ err:
 
 /* this, args  ->  result (flags == VOP_F_PUSHRES)
  * this, args  ->  N/A    (flags == VOP_F_NORMAL)
- * Same as `fg_vop()', but arguments are given as via what
+ * Same as `fg_vop()`, but arguments are given as via what
  * should be a tuple-object (the type is asserted by this function) in vtop.
  * NOTE: A tuple-type check is only generated if FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -6469,7 +6469,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			if (seqtype == &DeeList_Type) {
 				/* TODO: Acquire a lock to the list (if the list isn't ONEREF) */
 				/* TODO: Verify that the list has the correct size */
-				/* TODO: Push all of the list's elements (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN') */
+				/* TODO: Push all of the list's elements (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN`) */
 				/* TODO: Incref every element where the consumer needs it to be a reference */
 				/* TODO: Release the lock from the list (if the list isn't ONEREF) */
 			}
@@ -6518,14 +6518,14 @@ fg_vopconcat(struct fungen *__restrict self) {
 	DO(fg_vdirect(self, 2)); /* lhs, rhs */
 	lhs_type = memval_typeof(fg_vtop(self) - 1);
 	rhs_type = memval_typeof(fg_vtop(self) - 0);
-	/* Optimizations for known object types (see impl of `DeeObject_ConcatInherited()'). */
+	/* Optimizations for known object types (see impl of `DeeObject_ConcatInherited()`). */
 	if (lhs_type == &DeeTuple_Type) {
 		concat_inherited_api_function = (void const *)&DeeTuple_ConcatInherited;
 	} else if (lhs_type == &DeeList_Type) {
 		concat_inherited_api_function = (void const *)&DeeList_ConcatInherited;
 	} else if (lhs_type != NULL && (rhs_type != NULL && rhs_type != &DeeTuple_Type)) {
 		/* Fallback: perform an arithmetic add operation if we know
-		 * `DeeObject_ConcatInherited()' won't give us any advantages. */
+		 * `DeeObject_ConcatInherited()` won't give us any advantages. */
 		return fg_vop(self, OPERATOR_ADD, 2, VOP_F_PUSHRES);
 	} else {
 		concat_inherited_api_function = (void const *)&DeeObject_ConcatInherited;
@@ -6555,7 +6555,7 @@ fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	void const *extend_inherited_api_function;
 	DeeTypeObject *seq_type;
 	for (i = 0; i < n; ++i) {
-		/* TODO: Don't create references here if `DeeSharedVector_NewShared()' gets used below! */
+		/* TODO: Don't create references here if `DeeSharedVector_NewShared()` gets used below! */
 		DO(fg_vlrot(self, n));
 		DO(fg_vref2(self, n + 1));
 	}
@@ -6565,7 +6565,7 @@ fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	DO(fg_vlinear(self, n, true));  /* seq, [ref:elems...], elemv */
 	DO(fg_vlrot(self, n + 2));      /* [ref:elems...], elemv, seq */
 
-	/* Optimizations for known object types (see impl of `DeeObject_ExtendInherited()'). */
+	/* Optimizations for known object types (see impl of `DeeObject_ExtendInherited()`). */
 	extend_inherited_api_function = (void const *)&DeeObject_ExtendInherited;
 	if (seq_type == NULL) {
 		/* Use default API function. */
@@ -6574,7 +6574,7 @@ fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	} else if (seq_type == &DeeList_Type) {
 		extend_inherited_api_function = (void const *)&DeeList_ExtendInherited;
 	} else if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* TODO: Inline the fallback from `DeeObject_ExtendInherited()' */
+		/* TODO: Inline the fallback from `DeeObject_ExtendInherited()` */
 	}
 	DO(fg_vdirect1(self));          /* [ref:elems...], elemv, seq */
 	DO(fg_vref2(self, n + 2));      /* [ref:elems...], elemv, ref:seq */
@@ -6649,7 +6649,7 @@ fg_vopclassof(struct fungen *__restrict self, bool ref) {
 		return fg_vpush_const(self, known_type);
 	}
 
-	/* TODO: Inline call to `DeeObject_Class()' */
+	/* TODO: Inline call to `DeeObject_Class()` */
 	DO(fg_vcallapi_ex(self, &DeeObject_Class, VCALL_CC_RAWINTPTR, 1, 0)); /* obj, obj.class */
 	if (ref)
 		DO(fg_vdep(self));      /* obj, obj.class */
@@ -6945,7 +6945,7 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 		return fg_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES);
 	}
 
-	/* Optimizations when `obj' is a constant Tuple/HashSet.Frozen/Dict.Frozen.
+	/* Optimizations when `obj` is a constant Tuple/HashSet.Frozen/Dict.Frozen.
 	 * NOTE: Other object types aren't constexpr, so can't be inlined here! */
 	if (memval_direct_isconst(objval)) {
 		DeeObject *obj = memval_const_getobj(objval);
@@ -7075,7 +7075,7 @@ fg_vopcast_varkwds(struct fungen *__restrict self) {
 	}
 
 	/* Fallback: must emit a regular runtime-call. */
-	/* TODO: Remember that VTOP evaluates to true in `DeeObject_IsKw(VTOP)' */
+	/* TODO: Remember that VTOP evaluates to true in `DeeObject_IsKw(VTOP)` */
 	return fg_vcallapi(self, &DeeKw_Wrap, VCALL_CC_OBJECT, 1);
 err:
 	return -1;
@@ -7146,7 +7146,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 _fg_vpush_type_member(struct fungen *__restrict self,
                       struct Dee_type_member const *__restrict desc, bool ref) {
-	/* Behavior here mirrors `Dee_type_member_get()' */
+	/* Behavior here mirrors `Dee_type_member_get()` */
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		DO(fg_vpop(self)); /* N/A */
 		return fg_vpush_const(self, desc->m_desc.md_const);
@@ -7198,7 +7198,7 @@ _fg_vpush_type_member(struct fungen *__restrict self,
 	default: break;
 	}
 
-	/* Fallback: emit a call to `Dee_type_member_get()' */
+	/* Fallback: emit a call to `Dee_type_member_get()` */
 /*fallback:*/
 	DO(fg_vpush_addr(self, desc)); /* this, desc */
 	return fg_vcallapi(self, &Dee_type_member_get, VCALL_CC_OBJECT, 2);
@@ -7210,7 +7210,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vbound_type_member(struct fungen *__restrict self,
                       struct Dee_type_member const *__restrict desc) {
-	/* Behavior here mirrors `Dee_type_member_bound()' */
+	/* Behavior here mirrors `Dee_type_member_bound()` */
 	if (TYPE_MEMBER_ISCONST(desc)) {
 push_true:
 		DO(fg_vpop(self)); /* N/A */
@@ -7220,7 +7220,7 @@ push_true:
 
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 	CASE(STRUCT_NONE):
-	CASE(STRUCT_OBJECT_OPT): /* Always bound (because it is `none' when NULL) */
+	CASE(STRUCT_OBJECT_OPT): /* Always bound (because it is `none` when NULL) */
 	CASE(STRUCT_CSTR_OPT):
 	CASE(STRUCT_CSTR_EMPTY):
 	CASE(STRUCT_STRING):
@@ -7255,7 +7255,7 @@ push_true:
 		goto push_true;
 
 	CASE(STRUCT_WOBJECT): {
-		/* Check if the reference is bound by generating a call to `Dee_weakref_bound()' */
+		/* Check if the reference is bound by generating a call to `Dee_weakref_bound()` */
 		DO(fg_vdelta(self, desc->m_desc.md_field.mdf_offset)); /* &FIELD */
 		return fg_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL_NX, 1);
 	}	break;
@@ -7276,7 +7276,7 @@ push_true:
 	default: break;
 	}
 
-	/* Fallback: emit a call to `Dee_type_member_bound()' */
+	/* Fallback: emit a call to `Dee_type_member_bound()` */
 /*fallback:*/
 	DO(fg_vpush_addr(self, desc)); /* this, desc */
 	DO(fg_vswap(self));            /* desc, this */
@@ -7289,7 +7289,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vdel_type_member(struct fungen *__restrict self,
                     struct Dee_type_member const *__restrict desc) {
-	/* Behavior here mirrors `Dee_type_member_del()' */
+	/* Behavior here mirrors `Dee_type_member_del()` */
 	int result = fg_vpush_none(self);
 	if likely(result == 0)
 		result = fg_vpop_type_member(self, desc);
@@ -7300,7 +7300,7 @@ fg_vdel_type_member(struct fungen *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vpop_type_member(struct fungen *__restrict self,
                     struct Dee_type_member const *__restrict desc) {
-	/* Behavior here mirrors `Dee_type_member_set()' */
+	/* Behavior here mirrors `Dee_type_member_set()` */
 	if unlikely(TYPE_MEMBER_ISCONST(desc))
 		goto fallback;
 	if unlikely(desc->m_desc.md_field.mdf_type & STRUCT_CONST)
@@ -7308,7 +7308,7 @@ fg_vpop_type_member(struct fungen *__restrict self,
 
 	/* XXX: Inline the set operation where possible. */
 
-	/* Fallback: emit a call to `Dee_type_member_set()' */
+	/* Fallback: emit a call to `Dee_type_member_set()` */
 fallback:
 	DO(fg_vpush_addr(self, desc)); /* this, value, desc */
 	DO(fg_vswap(self));            /* this, desc, value */
@@ -7426,7 +7426,7 @@ fg_vpush_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
 	unsigned int icmember_flags = ref ? FG_CIMEMBER_F_REF
 	                                  : FG_CIMEMBER_F_NORMAL;
 	uint16_t field_addr;
-	/* Behavior here mirrors `DeeInstance_GetAttribute()' */
+	/* Behavior here mirrors `DeeInstance_GetAttribute()` */
 	field_addr = attr->ca_addr;
 #if Dee_CLASS_GETSET_GET != 0
 	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
@@ -7467,7 +7467,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vbound_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
                         struct Dee_class_attribute const *attr) {
 	struct Dee_class_desc *desc;
-	/* Behavior here mirrors `DeeInstance_BoundAttribute()' */
+	/* Behavior here mirrors `DeeInstance_BoundAttribute()` */
 	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)) {
 		/* When it isn't a get-set, then we can just check if the class/instance member is bound. */
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
@@ -7507,7 +7507,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vdel_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
                       struct Dee_class_attribute const *attr) {
-	/* Behavior here mirrors `DeeInstance_DelAttribute()' */
+	/* Behavior here mirrors `DeeInstance_DelAttribute()` */
 	struct Dee_class_desc *desc = DeeClass_DESC(type);
 	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
@@ -7563,7 +7563,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vpop_instance_attr(struct fungen *__restrict self,
                                           DeeTypeObject *type, struct Dee_class_attribute const *attr) {
-	/* Behavior here mirrors `DeeInstance_SetAttribute()' */
+	/* Behavior here mirrors `DeeInstance_SetAttribute()` */
 	struct Dee_class_desc *desc = DeeClass_DESC(type);
 	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
@@ -7628,7 +7628,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vcall_instance_attrkw(struct fungen *__restrict self, DeeTypeObject *type,
                          struct Dee_class_attribute const *attr, vstackaddr_t argc) {
 	uint16_t field_addr;
-	/* Behavior here mirrors `DeeInstance_CallAttributeKw()' */
+	/* Behavior here mirrors `DeeInstance_CallAttributeKw()` */
 	DO(fg_vlrot(self, argc + 2)); /* [args...], kw, this */
 	field_addr = attr->ca_addr;
 #if Dee_CLASS_GETSET_GET != 0

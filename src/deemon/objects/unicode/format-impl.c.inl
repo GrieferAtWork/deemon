@@ -77,10 +77,10 @@ struct LOCAL_string_format_data {
 #ifdef DEFINE_DeeString_FormatPrinter
 	Dee_formatprinter_t         sfd_sprinter; /* [1..1] Output printer for static data */
 	Dee_formatprinter_t         sfd_dprinter; /* [1..1] Output printer for dynamic data */
-	void                       *sfd_printarg; /* [?..?] Cookie for `sfd_sprinter' and `sfd_dprinter' */
-	Dee_ssize_t                 sfd_result;   /* Result of invocations of `sfd_sprinter' and `sfd_dprinter' (or negative after error) */
+	void                       *sfd_printarg; /* [?..?] Cookie for `sfd_sprinter` and `sfd_dprinter` */
+	Dee_ssize_t                 sfd_result;   /* Result of invocations of `sfd_sprinter` and `sfd_dprinter` (or negative after error) */
 #else /* DEFINE_DeeString_FormatPrinter */
-	struct Dee_unicode_printer      sfd_uprinter; /* Output printer (content leading up to `sfd_parser.sfp_iter' is already printed) */
+	struct Dee_unicode_printer      sfd_uprinter; /* Output printer (content leading up to `sfd_parser.sfp_iter` is already printed) */
 #endif /* !DEFINE_DeeString_FormatPrinter */
 };
 #endif /* ... */
@@ -127,13 +127,13 @@ struct LOCAL_string_format_data {
 
 
 /* Implements advanced string format processing.
- * - When called, `data->sfd_parser.sfp_iter' points at the first character after the
+ * - When called, `data->sfd_parser.sfp_iter` points at the first character after the
  *   first unescaped '{', which is guarantied to not be one of "}!:", and
- *   `data->sfd_uprinter' contains any static template text leading up to
+ *   `data->sfd_uprinter` contains any static template text leading up to
  *   (but obviously not including) this first unescaped '{'.
- * - Upon success (return >= 0), `data->sfd_uprinter' contains the final
+ * - Upon success (return >= 0), `data->sfd_uprinter` contains the final
  *   string, but other fields are left undefined.
- * - Upon error (return < 0), `data->sfd_uprinter' must be finalized by
+ * - Upon error (return < 0), `data->sfd_uprinter` must be finalized by
  *   the caller, and other fields may be undefined.
  */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) Dee_ssize_t DFCALL
@@ -253,9 +253,9 @@ err:
 
 
 /* Handler for "{:...}" patterns in simple template strings.
- * Called with `data->sfd_parser.sfp_iter' already pointing after the ':'-character.
- * - Upon success (return >= 0), `data->sfd_parser.sfp_iter' points at the closing '}'
- * - On error (return < 0), `data->sfd_parser.sfp_iter' is left undefined. */
+ * Called with `data->sfd_parser.sfp_iter` already pointing after the ':'-character.
+ * - Upon success (return >= 0), `data->sfd_parser.sfp_iter` points at the closing '}'
+ * - On error (return < 0), `data->sfd_parser.sfp_iter` is left undefined. */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_parse_format_template_for_object_format(struct LOCAL_string_format_data *data, DeeObject *elem) {
 	char const *next_brace, *format_start;
@@ -330,7 +330,7 @@ err_missing_rbrace:
 		break;
 
 	case ':':
-		/* Must use `DeeObject_PrintFormatString()' */
+		/* Must use `DeeObject_PrintFormatString()` */
 		++data->sfd_parser.sfp_iter;
 		temp = LOCAL_parse_format_template_for_object_format(data, elem);
 		break;
@@ -506,19 +506,19 @@ again_handle_brace:
 		 * generated:
 		 * >> local x = "foo = {}, bar = {}".format({ foo, bar });
 		 *
-		 * In this case, we use DeeObject_Foreach() to enumerate `args'
+		 * In this case, we use DeeObject_Foreach() to enumerate `args`
 		 * and append format string parts, as well as argument elements
 		 * onto the resulting string. */
 		temp = DeeObject_Foreach(args, &LOCAL_string_format_wstr_foreach_cb, &data);
 		if likely(temp == STRING_FORMAT_WSTR_FOREACH_DONE)
-			goto done; /* Likely case: the pattern was fully printed without a premature end of `args' */
+			goto done; /* Likely case: the pattern was fully printed without a premature end of `args` */
 		if unlikely(temp < 0) {
 #ifdef DEFINE_DeeString_FormatPrinter
 			data.sfd_result = temp;
 #endif /* DEFINE_DeeString_FormatPrinter */
 			goto LOCAL_err_printerr;
 		}
-		/* Error: `args' ended too early */
+		/* Error: `args` ended too early */
 		goto err_not_enough_args;
 	}	break;
 

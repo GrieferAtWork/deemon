@@ -75,7 +75,7 @@ function sizeofGreatestIntegerInBytes(values: {int...}): int {
 @@while   accessing    the   original    values   as    follows:
 @@>> local a, b, shift = return...;
 @@>> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift)-1))];
-@@HINT: If  no  mapping exists  to optimize  for this,  shift will  equal `0'
+@@HINT: If  no  mapping exists  to optimize  for this,  shift will  equal `0`
 function splitTables(tab: {int: int}, errorValue: int): ({int...}, {int...}, int) {
 	local maxShift = 0;
 	local table = List();
@@ -126,7 +126,7 @@ function splitTables(tab: {int: int}, errorValue: int): ({int...}, {int...}, int
 
 /* Unicode flags defined for compatibility with <ctype.h> in "C"  locale
  * Note that unicode characters also use these flags, but only the ASCII
- * ranges are documented here. e.g. `U+200B' has `Dee_UNICODE_ISWHITE' set!
+ * ranges are documented here. e.g. `U+200B` has `Dee_UNICODE_ISWHITE` set!
  *
  * Meaning:
  *   - Dee_UNICODE_ISCNTRL:    Control characters (UnicodeData.txt: fields[2] == "Cc")
@@ -498,7 +498,7 @@ function generateUnicodeDatabase() {
 	local digit2Index: {int | string | none: int} = Dict();
 	local index2Digit: {(int | string | none)...} = [];
 	/* Special case: the first 51 digits have one-on-one mapping!
-	 * NOTE: This 51 is hard-coded as `__UNICODE_DIGIT_IDENTITY_COUNT' */
+	 * NOTE: This 51 is hard-coded as `__UNICODE_DIGIT_IDENTITY_COUNT` */
 	for (local x: [:51]) {
 		digit2Index[x] = x;
 		assert #index2Digit == x;

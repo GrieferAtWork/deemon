@@ -465,9 +465,9 @@ INTERN DeeTypeObject DeeCompilerParser_Type = {
 	                         "In order to explain what tail parsers do, look at this example:\n"
 	                         "${"
 	                         /**/ "/* input: \"a.foo + 14 * 7 ? x : y-7\" */\n"
-	                         /**/ "x = parser.parse_unaryhead();  /* x = `a' */\n"
-	                         /**/ "x = parser.parse_unarytail(x); /* x = `a' + `.foo' (same as an initial call to `parse_unary') */\n"
-	                         /**/ "x = parser.parse_exprtail(x);  /* x = `a.foo' + `+ 14 * 7 ? x : y-7' (same as an initial call to `parse_expr') */"
+	                         /**/ "x = parser.parse_unaryhead();  /* x = `a` */\n"
+	                         /**/ "x = parser.parse_unarytail(x); /* x = `a` + `.foo` (same as an initial call to `parse_unary`) */\n"
+	                         /**/ "x = parser.parse_exprtail(x);  /* x = `a.foo` + `+ 14 * 7 ? x : y-7` (same as an initial call to `parse_expr`) */"
 	                         "}\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

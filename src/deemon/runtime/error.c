@@ -48,7 +48,7 @@
 
 DECL_BEGIN
 
-/* Try to catch (and thereby handle) an instance of `type',
+/* Try to catch (and thereby handle) an instance of `type`,
  * returning true if doing so was possible.
  * Upon success, the actual error object thrown is discarded during this process. */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
@@ -61,9 +61,9 @@ DeeError_Catch(DeeTypeObject *__restrict type) {
 	return false;
 }
 
-/* Same as `DeeError_Catch()', but returns the actual, caught
+/* Same as `DeeError_Catch()`, but returns the actual, caught
  * error on success, or "NULL" if no error was thrown, or the
- * currently thrown error doesn't implement `type'. */
+ * currently thrown error doesn't implement `type`. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeError_CatchError(DeeTypeObject *__restrict type) {
 	DeeObject *current;
@@ -82,7 +82,7 @@ DeeError_CatchError(DeeTypeObject *__restrict type) {
 STATIC_ASSERT(ERROR_PRINT_DOHANDLE   == ERROR_HANDLED_RESTORE);
 STATIC_ASSERT(ERROR_PRINT_HANDLEINTR == ERROR_HANDLED_INTERRUPT);
 
-/* Handle an error and print it, alongside a human-readable message to `stderr'
+/* Handle an error and print it, alongside a human-readable message to `stderr`
  * @param: handle_errors: Describes how (if at all) errors should be handled.
  * @param: reason: When non-NULL, a message explaining the reason for the exception is being handled.
  * @return: true:  The current (or previous) error was printed.
@@ -148,8 +148,8 @@ DeeError_Display(/*utf-8*/ char const *reason,
 
 struct prefix_printer {
 	Dee_formatprinter_t pp_printer; /* [1..1] Underlying printer */
-	void               *pp_arg;     /* [?..?] Cookie for `pp_printer' */
-	unsigned int        pp_state;   /* Printer state (one of `PREFIX_PRINTER_STATE__*') */
+	void               *pp_arg;     /* [?..?] Cookie for `pp_printer` */
+	unsigned int        pp_state;   /* Printer state (one of `PREFIX_PRINTER_STATE__*`) */
 #define PREFIX_PRINTER_STATE__INITIAL  0 /* Initial state */
 #define PREFIX_PRINTER_STATE__PASSTHRU 1 /* Input passthru state */
 #define PREFIX_PRINTER_STATE__ATSOL    2 /* At start-of-line */
@@ -192,7 +192,7 @@ prefix_printer_print(void *arg, char const *__restrict data, size_t datalen) {
 	__builtin_unreachable();
 }
 
-/* Underlying function used to implement "DeeError_Display()" and `Error.display()'
+/* Underlying function used to implement "DeeError_Display()" and `Error.display()`
  * This function handles all the formatting / wrapping of errors and-the-like...
  * CAUTION: This function is itself allowed to throw errors! */
 PUBLIC WUNUSED NONNULL((2, 4)) Dee_ssize_t DCALL
@@ -256,8 +256,8 @@ err_temp:
 }
 
 
-/* Throw a given object `error' as an error.
- * @return: -1: Always returns `-1' */
+/* Throw a given object `error` as an error.
+ * @return: -1: Always returns `-1` */
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_Throw)(DeeObject *__restrict error) {
 	Dee_Incref(error);
@@ -367,9 +367,9 @@ err:
 	return -1;
 }
 
-/* Throw a new error of type `tp', using a printf-formatted
- * message passed through `format' and varargs.
- * @return: -1: Always returns `-1'*/
+/* Throw a new error of type `tp`, using a printf-formatted
+ * message passed through `format` and varargs.
+ * @return: -1: Always returns `-1`*/
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DeeError_Throwf)(DeeTypeObject *__restrict tp,
                   char const *__restrict format, ...) {
@@ -430,7 +430,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 }
 
 /* Handle the current error, discarding it in the process.
- * @param: mode:   One of `ERROR_HANDLED_*'
+ * @param: mode:   One of `ERROR_HANDLED_*`
  * @return: true:  The current error was handled.
  * @return: false: No error could be handled. */
 PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode) {
@@ -468,7 +468,7 @@ PUBLIC WUNUSED DeeObject *DCALL DeeError_Current(void) {
 	return ts->t_except ? ts->t_except->ef_error : NULL;
 }
 
-/* Check if the current exception is an instance of `tp' */
+/* Check if the current exception is an instance of `tp` */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
 	DeeThreadObject *ts = DeeThread_Self();

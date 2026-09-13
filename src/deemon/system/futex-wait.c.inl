@@ -128,9 +128,9 @@ DECL_BEGIN
 		goto on_success
 #endif /* !LOCAL_IS_NO_INTERRUPT */
 
-/* Blocking wait if `*(uintNN_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
- * @return: 1 : [DeeFutex_WaitNNTimed] The given `timeout_nanoseconds' expired.
- * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
+/* Blocking wait if `*(uintNN_t *)addr == expected`, until someone calls `DeeFutex_Wake*(addr)`
+ * @return: 1 : [DeeFutex_WaitNNTimed] The given `timeout_nanoseconds` expired.
+ * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)`, or `*addr != expected`, or spurious wake-up)
  * @return: -1: Error (an error was thrown) */
 #if defined(LOCAL_IS_NO_INTERRUPT) && !defined(LOCAL_HAVE_timeout_nanoseconds)
 #define LOCAL_return_type_is_void
@@ -501,10 +501,10 @@ again_read_ctrl_word:
 	 *       control word of the futex controller for synchronization, an interrupting
 	 *       thread is able to just increment that word in order to force a sporadic
 	 *       wake-up.
-	 * However, that is also the reason why the read from `fc_word' _MUST_ happen
+	 * However, that is also the reason why the read from `fc_word` _MUST_ happen
 	 * *before* we check if our thread got interrupted (though if we get interrupted
 	 * *after* having checked for that, we'll still get re-awoken as a result of the
-	 * sender incrementing `fc_word')! */
+	 * sender incrementing `fc_word`)! */
 
 	/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
 #ifdef LOCAL_interrupted_work
@@ -568,7 +568,7 @@ again_read_ctrl_word:
 again_pthread_mutex_lock:
 	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 
-	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
+	/* Check for interrupts _while_ we're holding a lock to `fc_mutx`. */
 #ifdef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		(void)pthread_mutex_unlock(&ctrl->fc_mutx);
@@ -672,7 +672,7 @@ again_pthread_mutex_lock:
 again_mtx_lock:
 	(void)mtx_lock(&ctrl->fc_mutx);
 
-	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
+	/* Check for interrupts _while_ we're holding a lock to `fc_mutx`. */
 #ifdef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		(void)mtx_unlock(&ctrl->fc_mutx);

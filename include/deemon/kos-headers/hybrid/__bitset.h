@@ -76,7 +76,7 @@
 #define __HYBRID_BITSET_WORD_POPCOUNT __hybrid_popcount
 #define __HYBRID_BITSET_WORD_CLZ      __hybrid_clz
 #define __HYBRID_BITSET_WORD_CTZ      __hybrid_ctz
-#error "Unsuppported `__HYBRID_BITSET_WORD_BITS'"
+#error "Unsuppported `__HYBRID_BITSET_WORD_BITS`"
 #endif /* __HYBRID_BITSET_WORD_BITS != ... */
 #ifndef __HYBRID_BITSET_WORD_MEMMOVE
 #define __HYBRID_BITSET_WORD_MEMMOVE(dst, src, n_words) \
@@ -87,7 +87,7 @@
 	__hybrid_bcmp(dst, src, (n_words) * sizeof(__hybrid_bitset_t))
 #endif /* !__HYBRID_BITSET_WORD_BCMP */
 
-/* UNDEFINED WHEN `x == 0xff'
+/* UNDEFINED WHEN `x == 0xff`
  * >> result = 0;
  * >> while (x & 0x80) {
  * >>     ++result;
@@ -95,7 +95,7 @@
  * >> } */
 #define __HYBRID_BITSET_WORD_CLO(x) __HYBRID_BITSET_WORD_CLZ(~(x))
 
-/* UNDEFINED WHEN `x == 0x00'
+/* UNDEFINED WHEN `x == 0x00`
  * >> result = 0;
  * >> while (x & 1) {
  * >>     ++result;
@@ -146,8 +146,8 @@
  * >> __HYBRID_BITSET_HI_MASKOU(8) == 0xb00000000 // requires use of __HYBRID_BITSET_HI_MASKOU_P1
  *
  * NOTE: When  "n >= 8", behavior is HARD undefined. If you
- *       need to value of `__HYBRID_BITSET_*_MASK*(n + 1)',
- *       the `*_P1' variant must be used.
+ *       need to value of `__HYBRID_BITSET_*_MASK*(n + 1)`,
+ *       the `*_P1` variant must be used.
  */
 #define __HYBRID_BITSET_LO_MASKIN(n) __CCAST(__hybrid_bitset_t)(~(__HYBRID_BITSET_WORD_BMAX << (n)))
 #define __HYBRID_BITSET_LO_MASKOU(n) __CCAST(__hybrid_bitset_t)(__HYBRID_BITSET_WORD_BMAX << (n))
@@ -238,10 +238,10 @@ __DECL_BEGIN
 
 
 
-/* Turn off bits [minbitno, maxbitno] (inclusive) in `self'
- * NOTE: When  `minbitno > maxbitno', the result  is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Turn off bits [minbitno, maxbitno] (inclusive) in `self`
+ * NOTE: When  `minbitno > maxbitno`, the result  is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nclear_r)(__hybrid_bitset_t *__restrict __self,
                            __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -257,10 +257,10 @@ __LOCAL __ATTR_NONNULL((1)) void
 	}
 }
 
-/* Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Turn off bits [startbitno, endbitno) (non-inclusive) in `self`
+ * NOTE: When `startbitno > endbitno`, the result is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nclear)(__hybrid_bitset_t *__restrict __self,
                          __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -269,10 +269,10 @@ __LOCAL __ATTR_NONNULL((1)) void
 		__hybrid_bitset_nclear_r(__self, __startbitno, __maxbitno);
 }
 
-/* Turn on bits [minbitno, maxbitno] (inclusive) in `self'
- * NOTE: When  `minbitno > maxbitno', the result  is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Turn on bits [minbitno, maxbitno] (inclusive) in `self`
+ * NOTE: When  `minbitno > maxbitno`, the result  is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nset_r)(__hybrid_bitset_t *__restrict __self,
                          __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -288,10 +288,10 @@ __LOCAL __ATTR_NONNULL((1)) void
 	}
 }
 
-/* Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Turn on bits [startbitno, endbitno) (non-inclusive) in `self`
+ * NOTE: When `startbitno > endbitno`, the result is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nset)(__hybrid_bitset_t *__restrict __self,
                        __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -300,10 +300,10 @@ __LOCAL __ATTR_NONNULL((1)) void
 		__hybrid_bitset_nset_r(__self, __startbitno, __maxbitno);
 }
 
-/* Flip bits [minbitno, maxbitno] (inclusive) in `self'
- * NOTE: When  `minbitno > maxbitno', the result  is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Flip bits [minbitno, maxbitno] (inclusive) in `self`
+ * NOTE: When  `minbitno > maxbitno`, the result  is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nflip_r)(__hybrid_bitset_t *__restrict __self,
                           __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -321,10 +321,10 @@ __LOCAL __ATTR_NONNULL((1)) void
 	}
 }
 
-/* Flip bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
- *       in that the way in which `self' is modified is undefined, though the
- *       function still guaranties that nothing but `self' gets modified. */
+/* Flip bits [startbitno, endbitno) (non-inclusive) in `self`
+ * NOTE: When `startbitno > endbitno`, the result is weak undefined behavior,
+ *       in that the way in which `self` is modified is undefined, though the
+ *       function still guaranties that nothing but `self` gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
 (__hybrid_bitset_nflip)(__hybrid_bitset_t *__restrict __self,
                         __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -366,7 +366,7 @@ __LOCAL __ATTR_NONNULL((1)) void
 
 /* >> void __hybrid_bitset_ffc_i(__hybrid_bitset_t const *self, size_t n_bits, ssize_t *p_value);
  * Find the first bitno within [0, n_bits) that is off and store its
- * index in `*p_value'. If no such bit exists, write `-1' into `*p_value'. */
+ * index in `*p_value`. If no such bit exists, write `-1` into `*p_value`. */
 #define __hybrid_bitset_ffc_i(self, n_bits, p_value)                                  \
 	do {                                                                              \
 		__hybrid_bitset_t const *__bffc_self = (self);                                \
@@ -378,7 +378,7 @@ __LOCAL __ATTR_NONNULL((1)) void
 
 /* >> void __hybrid_bitset_ffs_i(__hybrid_bitset_t const *self, size_t n_bits, ssize_t *p_value);
  * Find the first bitno within [0, n_bits) that is on and store its
- * index in `*p_value'. If no such bit exists, write `-1' into `*p_value'. */
+ * index in `*p_value`. If no such bit exists, write `-1` into `*p_value`. */
 #define __hybrid_bitset_ffs_i(self, n_bits, p_value)                                  \
 	do {                                                                              \
 		__hybrid_bitset_t const *__bffc_self = (self);                                \
@@ -390,7 +390,7 @@ __LOCAL __ATTR_NONNULL((1)) void
 
 
 /* Find the first bitno within [0,  n_bits) that is off and  return
- * its index. If no such bit exists, return some value `>= n_bits'. */
+ * its index. If no such bit exists, return some value `>= n_bits`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_ffc)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __result, __bffc_bindex, __bffc_endword;
@@ -408,7 +408,7 @@ __NOTHROW_NCX(__hybrid_bitset_ffc)(__hybrid_bitset_t const *__restrict __self, _
 }
 
 /* Find  the first bitno  within [0, n_bits) that  is on and return
- * its index. If no such bit exists, return some value `>= n_bits'. */
+ * its index. If no such bit exists, return some value `>= n_bits`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_ffs)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __result, __bffs_bindex, __bffs_endword;
@@ -426,7 +426,7 @@ __NOTHROW_NCX(__hybrid_bitset_ffs)(__hybrid_bitset_t const *__restrict __self, _
 }
 
 /* Find  the last bitno  within [0, n_bits) that  is off and return
- * its index. If no such bit exists, return some value `>= n_bits'. */
+ * its index. If no such bit exists, return some value `>= n_bits`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_flc)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __result, __bflc_endword;
@@ -457,7 +457,7 @@ __NOTHROW_NCX(__hybrid_bitset_flc)(__hybrid_bitset_t const *__restrict __self, _
 }
 
 /* Find  the last  bitno within [0,  n_bits) that is  on and return
- * its index. If no such bit exists, return some value `>= n_bits'. */
+ * its index. If no such bit exists, return some value `>= n_bits`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_fls)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __result, __bfls_endword;
@@ -487,7 +487,7 @@ __NOTHROW_NCX(__hybrid_bitset_fls)(__hybrid_bitset_t const *__restrict __self, _
 }
 
 /* Find the first bitno within [minbitno,maxbitno] that is on and return
- * its index. If  no such  bit exists, return  some value  `> maxbitno'. */
+ * its index. If  no such  bit exists, return  some value  `> maxbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffs_r)(__hybrid_bitset_t const *__restrict __self,
                                       __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -524,18 +524,18 @@ __NOTHROW_NCX(__hybrid_bitset_nffs_r)(__hybrid_bitset_t const *__restrict __self
 }
 
 /* Find the first bitno within [startbitno,endbitno) that is on and return
- * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffs)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
 	__SIZE_TYPE__ __maxbitno;
 	if __likely(!__hybrid_overflow_usub(__endbitno, 1, &__maxbitno))
 		return __hybrid_bitset_nffs_r(__self, __startbitno, __maxbitno);
-	return 0; /* Because `__endbitno' must be `0' */
+	return 0; /* Because `__endbitno` must be `0` */
 }
 
 /* Find the first bitno within [minbitno,maxbitno] that is off and return
- * its index.  If no  such bit  exists, return  some value  `> maxbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `> maxbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffc_r)(__hybrid_bitset_t const *__restrict __self,
                                       __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -577,18 +577,18 @@ __NOTHROW_NCX(__hybrid_bitset_nffc_r)(__hybrid_bitset_t const *__restrict __self
 }
 
 /* Find the first bitno within [startbitno,endbitno) that is off and return
- * its  index.  If no  such bit  exists,  return some  value `>= endbitno'. */
+ * its  index.  If no  such bit  exists,  return some  value `>= endbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffc)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
 	__SIZE_TYPE__ __maxbitno;
 	if __likely(!__hybrid_overflow_usub(__endbitno, 1, &__maxbitno))
 		return __hybrid_bitset_nffc_r(__self, __startbitno, __maxbitno);
-	return 0; /* Because `__endbitno' must be `0' */
+	return 0; /* Because `__endbitno` must be `0` */
 }
 
 /* Find the last bitno within [minbitno,maxbitno] that is on and return
- * its  index. If no  such bit exists,  return some value `> maxbitno'. */
+ * its  index. If no  such bit exists,  return some value `> maxbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nfls_r)(__hybrid_bitset_t const *__restrict __self,
                                       __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -629,18 +629,18 @@ __NOTHROW_NCX(__hybrid_bitset_nfls_r)(__hybrid_bitset_t const *__restrict __self
 }
 
 /* Find the last bitno within [startbitno,endbitno) that is on and return
- * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
+ * its index. If  no such  bit exists, return  some value  `>= endbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nfls)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
 	__SIZE_TYPE__ __maxbitno;
 	if __likely(!__hybrid_overflow_usub(__endbitno, 1, &__maxbitno))
 		return __hybrid_bitset_nfls_r(__self, __startbitno, __maxbitno);
-	return 0; /* Because `__endbitno' must be `0' */
+	return 0; /* Because `__endbitno` must be `0` */
 }
 
 /* Find the last bitno within [minbitno,maxbitno] that is off and return
- * its index. If  no such  bit exists, return  some value  `> maxbitno'. */
+ * its index. If  no such  bit exists, return  some value  `> maxbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nflc_r)(__hybrid_bitset_t const *__restrict __self,
                                       __SIZE_TYPE__ __minbitno, __SIZE_TYPE__ __maxbitno) {
@@ -686,14 +686,14 @@ __NOTHROW_NCX(__hybrid_bitset_nflc_r)(__hybrid_bitset_t const *__restrict __self
 }
 
 /* Find the last bitno within [startbitno,endbitno) that is off and return
- * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno`. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nflc)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
 	__SIZE_TYPE__ __maxbitno;
 	if __likely(!__hybrid_overflow_usub(__endbitno, 1, &__maxbitno))
 		return __hybrid_bitset_nflc_r(__self, __startbitno, __maxbitno);
-	return 0; /* Because `__endbitno' must be `0' */
+	return 0; /* Because `__endbitno` must be `0` */
 }
 
 
@@ -803,7 +803,7 @@ __NOTHROW_NCX(__hybrid_bitset_nallset)(__hybrid_bitset_t const *__restrict __sel
 }
 
 
-/* Returns the # of 1-bits in `self' */
+/* Returns the # of 1-bits in `self` */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_popcount)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __i, __result = 0;
@@ -847,7 +847,7 @@ __NOTHROW_NCX(__hybrid_bitset_npopcount)(__hybrid_bitset_t const *__restrict __s
 	return 0;
 }
 
-/* Count-leading-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
+/* Count-leading-zeroes (returns ">= n_bits" when `self` doesn't contain any set bits) */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_clz)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__SIZE_TYPE__ __result = 0;
@@ -877,7 +877,7 @@ __NOTHROW_NCX(__hybrid_bitset_clz)(__hybrid_bitset_t const *__restrict __self, _
 	return __result;
 }
 
-/* Count-trailing-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
+/* Count-trailing-zeroes (returns ">= n_bits" when `self` doesn't contain any set bits) */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_ctz)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__hybrid_bitset_t __word;
@@ -898,7 +898,7 @@ __NOTHROW_NCX(__hybrid_bitset_ctz)(__hybrid_bitset_t const *__restrict __self, _
 	return __result;
 }
 
-/* Count-leading-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
+/* Count-leading-zeroes (hard undefined behavior when `self` doesn't contain any set bits) */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_rawclz)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
 	__hybrid_bitset_t __word;
@@ -924,7 +924,7 @@ __NOTHROW_NCX(__hybrid_bitset_rawclz)(__hybrid_bitset_t const *__restrict __self
 	return __result;
 }
 
-/* Count-trailing-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
+/* Count-trailing-zeroes (hard undefined behavior when `self` doesn't contain any set bits) */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_rawctz)(__hybrid_bitset_t const *__restrict __self) {
 	__SIZE_TYPE__ __result = 0;
@@ -1062,7 +1062,7 @@ __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 	return 1;
 }
 
-/* Check if all 1-bits from `lhs:lhs_startbitno...+=n_bits' also appear in `rhs:rhs_startbitno...+=n_bits'.
+/* Check if all 1-bits from `lhs:lhs_startbitno...+=n_bits` also appear in `rhs:rhs_startbitno...+=n_bits`.
  * This function implements a is-subset-or-equal check. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 (__hybrid_bitset_ncmple)(__hybrid_bitset_t const *__lhs, __SIZE_TYPE__ __lhs_startbitno,
@@ -1148,7 +1148,7 @@ __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 #define __hybrid_bitset_ncmpge0(lhs, rhs, rhs_startbitno, n_bits) __hybrid_bitset_ncmpge(lhs, 0, rhs, rhs_startbitno, n_bits)
 
 
-/* Possible values for `__hybrid_bitset_nbitop::op' */
+/* Possible values for `__hybrid_bitset_nbitop::op` */
 #ifndef __HYBRID_BITSET_OP_AND
 #define __HYBRID_BITSET_OP_AND 0
 #define __HYBRID_BITSET_OP_OR  1
@@ -1179,7 +1179,7 @@ __LOCAL __ATTR_NONNULL((1, 2)) void
 /* Perform  a  bit-operation  "op"  on  the  "n_bits"  from  "src:src_startbitno",
  * together with "dst:dst_startbitno", storing the result at "dst:dst_startbitno".
  * NOTE: Overlap is allowed!
- * @param: op: One of `__HYBRID_BITSET_OP_*' */
+ * @param: op: One of `__HYBRID_BITSET_OP_*` */
 __LOCAL __ATTR_NONNULL((1, 3)) void
 (__hybrid_bitset_nbitop)(__hybrid_bitset_t *__dst, __SIZE_TYPE__ __dst_startbitno,
                          __hybrid_bitset_t const *__src, __SIZE_TYPE__ __src_startbitno,

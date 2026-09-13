@@ -66,7 +66,7 @@ err:
 struct default_set_foreach_unique_data {
 	struct Dee_simple_hashset dsfud_encountered; /* Set of objects already encountered. */
 	Dee_foreach_t             dsfud_cb;          /* [1..1] user-defined callback */
-	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb' */
+	void                     *dsfud_arg;         /* [?..?] Cookie for `dsfud_cb` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

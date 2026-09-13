@@ -64,8 +64,8 @@
 
 DECL_BEGIN
 
-/* Returns true if `tp_asvector_nothrow' of `ob' may
- * attempt to acquire a lock to `DeeList_Lock*(list)'. */
+/* Returns true if `tp_asvector_nothrow` of `ob` may
+ * attempt to acquire a lock to `DeeList_Lock*(list)`. */
 #define DeeObject_IsAsVectorNoThrowUsingLockOfList(ob, list) \
 	((DeeObject *)(list) == (DeeObject *)(ob))
 
@@ -104,7 +104,7 @@ list_assign(List *me, DeeObject *other) {
 		me->l_list.ol_elemc = 0;
 	DeeList_LockEndWrite(me);
 
-	/* Free the list state that got created while we loaded `other' */
+	/* Free the list state that got created while we loaded `other` */
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(old_elemv)
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -303,7 +303,7 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()' and friends. */
+/* Inherit the entire vector, which must have been allocated using `Dee_Malloc()` and friends. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv, size_t objc) {
 	DREF List *result;
@@ -358,7 +358,7 @@ err:
 
 
 /* Concat a list and some generic sequence,
- * inheriting a reference from `self' in the process. */
+ * inheriting a reference from `self` in the process. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence) {
 	DREF DeeObject *result;
@@ -370,14 +370,14 @@ DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *seq
 	}
 
 	/* Fallback: Copy the list and append. */
-	/* XXX: We can do better here: by combining `DeeList_SIZE_ATOMIC(self)' and
-	 *      `DeeObject_SizeFast(sequence)', we can get a snapshot of what the final
+	/* XXX: We can do better here: by combining `DeeList_SIZE_ATOMIC(self)` and
+	 *      `DeeObject_SizeFast(sequence)`, we can get a snapshot of what the final
 	 *      list's length will be, which can then safe us one realloc() that's
-	 *      needed in `DeeList_AppendSequence()' at the moment to resize the list
+	 *      needed in `DeeList_AppendSequence()` at the moment to resize the list
 	 *      before appending "sequence".
 	 * This doesn't even need to be complicated; we can just use the prealloc
-	 * mechanism and have `DeeList_Copy()' prealloc sufficient space for at least
-	 * `DeeObject_SizeFast(sequence)' trailing objects. */
+	 * mechanism and have `DeeList_Copy()` prealloc sufficient space for at least
+	 * `DeeObject_SizeFast(sequence)` trailing objects. */
 	result = Dee_AsObject(DeeList_Copy((List *)self));
 	Dee_Decref_unlikely(self);
 	if unlikely(!result)
@@ -537,8 +537,8 @@ err:
 	return -1;
 }
 
-/* Resize `self' to have a length of `newsize'.
- * If the size increases, use `filler' for new items.
+/* Resize `self` to have a length of `newsize`.
+ * If the size increases, use `filler` for new items.
  * @return: 0 : Success.
  * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
@@ -620,7 +620,7 @@ err:
 }
 
 
-/* Remove all items matching `!!should(item)'
+/* Remove all items matching `!!should(item)`
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -985,7 +985,7 @@ list_visit(List *__restrict self,
 }
 
 /* Clear the given list.
- * Returns `true' if the list wasn't empty before. */
+ * Returns `true` if the list wasn't empty before. */
 PUBLIC NONNULL((1)) bool DCALL
 DeeList_Clear(DeeObject *__restrict self) {
 	List *me = (List *)self;
@@ -3284,7 +3284,7 @@ err:
 	return NULL;
 }
 
-/* Reverse the order of the elements of `self' */
+/* Reverse the order of the elements of `self` */
 PUBLIC NONNULL((1)) void DCALL
 DeeList_Reverse(DeeObject *__restrict self, size_t start, size_t end) {
 	List *me = (List *)self;
@@ -3307,8 +3307,8 @@ DeeList_Reverse(DeeObject *__restrict self, size_t start, size_t end) {
 
 
 
-/* Sort the given list ascendingly, or according to `key'
- * To use default sorting, pass `Dee_None' for `key' */
+/* Sort the given list ascendingly, or according to `key`
+ * To use default sorting, pass `Dee_None` for `key` */
 PUBLIC WUNUSED NONNULL((1, 4)) int DCALL
 DeeList_Sort(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	List *me = (List *)self;
@@ -3605,9 +3605,9 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETSET_END
 };
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* From `seq.c' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* From `seq.c` */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* From `seq.c' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* From `seq.c` */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv);
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -3619,15 +3619,15 @@ seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 
 
 PRIVATE struct type_method tpconst list_methods[] = {
-	/* `List.append()' is a little different from `Sequence.append', in that
+	/* `List.append()` is a little different from `Sequence.append`, in that
 	 * it is a varargs function, and will append *all* given arguments to the
 	 * list in order.
 	 *
 	 * Note that behavior is considered deprecated, but will be maintained
 	 * for the sake of backwards-compatibility.
 	 *
-	 * Additionally, `(myList as Sequence).append(1, 2, 3)' will cause an
-	 * error, meaning that only `myList.append(1, 2, 3)' works. */
+	 * Additionally, `(myList as Sequence).append(1, 2, 3)` will cause an
+	 * error, meaning that only `myList.append(1, 2, 3)` works. */
 	TYPE_METHOD_F(STR_append, &list_append, METHOD_FNOREFESCAPE,
 	              "(items!)\n"
 	              "Append all the given @items at the end of @this List"),
@@ -4118,7 +4118,7 @@ PRIVATE char const list_doc[] =
 /**/ "x.append(10);\n"
 /**/ "x.append(20);\n"
 /**/ "x.append(30);\n"
-/**/ "print repr x; /* `[10, 20, 30]' */"
+/**/ "print repr x; /* `[10, 20, 30]` */"
 "}\n"
 "\n"
 

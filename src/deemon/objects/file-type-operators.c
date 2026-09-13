@@ -116,9 +116,9 @@ instance_putc(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags) {
 INTERN WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
 instance_tread(DeeFileTypeObject *tp_self, DeeFileObject *self,
                void *buffer, size_t bufsize, Dee_ioflag_t flags) {
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	(void)tp_self;
 	(void)self;
 	(void)buffer;
@@ -131,9 +131,9 @@ instance_tread(DeeFileTypeObject *tp_self, DeeFileObject *self,
 INTERN WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL
 instance_twrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
                 void const *buffer, size_t bufsize, Dee_ioflag_t flags) {
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	(void)tp_self;
 	(void)self;
 	(void)buffer;
@@ -199,9 +199,9 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
 instance_tpread(DeeFileTypeObject *tp_self, DeeFileObject *self,
                 void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	(void)tp_self;
 	(void)self;
 	(void)buffer;
@@ -215,9 +215,9 @@ instance_tpread(DeeFileTypeObject *tp_self, DeeFileObject *self,
 INTERN WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL
 instance_tpwrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
                  void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
-	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
-	 *       where `DeeBytes_ReleaseTempView()' makes it so the bytes object can't be accessed anymore.
-	 *       (and yes: I realize that means adding a lock to `DeeBytesObject') */
+	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()`,
+	 *       where `DeeBytes_ReleaseTempView()` makes it so the bytes object can't be accessed anymore.
+	 *       (and yes: I realize that means adding a lock to `DeeBytesObject`) */
 	(void)tp_self;
 	(void)self;
 	(void)buffer;
@@ -551,7 +551,7 @@ DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc, NULL /*&filetype_inherit
 		if (DeeFileType_invoke_ft_trunc(tp_self, tp_self->ft_trunc, self, length))
 			goto err;
 	} else {
-		/* TODO: Directly invoke `ft_trunc' */
+		/* TODO: Directly invoke `ft_trunc` */
 		if (DeeFile_TTruncHere((DeeTypeObject *)tp_self, Dee_AsObject(self), &length))
 			goto err;
 	}

@@ -381,7 +381,7 @@ DeeNone_ReturnFalse(DeeObject *UNUSED(self), DeeObject *UNUSED(other)) {
 #define DeeNone_OperatorThisCallTupleKw (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&_DeeNone_NewRef4)
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
-STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `DeeNone_OperatorIterNext'");
+STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `DeeNone_OperatorIterNext`");
 #define DeeNone_OperatorIterNext (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
@@ -654,11 +654,11 @@ PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_003D_LEAVE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	/**/
 
-	/* Implement char-related file operators such that we always return `Dee_GETC_EOF'.
-	 * Without this, `DeeType_GetCustomOperatorById()' would pick noop_custom_operator_cb,
+	/* Implement char-related file operators such that we always return `Dee_GETC_EOF`.
+	 * Without this, `DeeType_GetCustomOperatorById()` would pick noop_custom_operator_cb,
 	 * which would re-return "none", which would then evaluate to "0" (which isn't,
-	 * and can't be the value of `Dee_GETC_EOF')
-	 * iow: without this, `none' would be "/dev/zero", but we want it to be "/dev/null" */
+	 * and can't be the value of `Dee_GETC_EOF`)
+	 * iow: without this, `none` would be "/dev/zero", but we want it to be "/dev/null" */
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0008_GETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0009_UNGETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_000A_PUTC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),

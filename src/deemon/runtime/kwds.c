@@ -388,7 +388,7 @@ done:
 	return result;
 }
 
-/* Append a new entry for `name'.
+/* Append a new entry for `name`.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) int
@@ -423,7 +423,7 @@ err:
 	return -1;
 }
 
-/* Append a new entry for `name'.
+/* Append a new entry for `name`.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
@@ -459,8 +459,8 @@ err:
 	return -1;
 }
 
-/* Return the keyword-entry associated with `keyword_index'
- * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)' */
+/* Return the keyword-entry associated with `keyword_index`
+ * The caller must ensure that `keyword_index < DeeKwds_SIZE(self)` */
 INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 	DeeKwdsObject *me = (DeeKwdsObject *)self;
@@ -872,8 +872,8 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 };
 
 
-/* Translate an argument keyword name into its index within at given `DeeKwdsObject *self'.
- * When `self' doesn't contain a descriptor for `name', no error is thrown, and `(size_t)-1'
+/* Translate an argument keyword name into its index within at given `DeeKwdsObject *self`.
+ * When `self` doesn't contain a descriptor for `name`, no error is thrown, and `(size_t)-1`
  * is returned instead. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeKwds_IndexOf(DeeObject const *__restrict self, /*string*/ DeeObject *__restrict name) {
@@ -1598,11 +1598,11 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
-/* Construct a keywords-mapping object from a given `kwds' object,
+/* Construct a keywords-mapping object from a given `kwds` object,
  * as well as an argument vector that will be shared with the mapping.
  * The returned object then a mapping {(string, Object)...} for the
  * actual argument values passed to the function.
- * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
+ * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()` in order
  *       to clean up the returned object. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
@@ -1624,8 +1624,8 @@ done:
 }
 
 /* Unshare the argument vector from a keywords-mapping object, automatically
- * constructing a copy if all contained objects if `self' is being shared,
- * or destroying `self' without touching the argument vector if not. */
+ * constructing a copy if all contained objects if `self` is being shared,
+ * or destroying `self` without touching the argument vector if not. */
 PUBLIC NONNULL((1)) void DCALL
 DeeKwdsMapping_Decref(DREF /*KwdsMapping*/ DeeObject *__restrict self) {
 	DREF KwdsMapping *me;
@@ -1668,7 +1668,7 @@ DeeKwMapping_New(size_t *__restrict p_argc,
 		return DeeKwdsMapping_New(kw, argv + *p_argc);
 	}
 
-	/* `kw' already is a user-provided mapping. */
+	/* `kw` already is a user-provided mapping. */
 	return_reference_(kw);
 }
 
@@ -1685,7 +1685,7 @@ DeeKwMapping_Decref(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 }
 
 
-/* Initialize `self' to load keyword arguments.
+/* Initialize `self` to load keyword arguments.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -1712,11 +1712,11 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	return 0;
 }
 
-/* Indicate that you're doing loading arguments from `self'.
- * This function asserts that `kwa_kwused == #kwa_kw' so-as
- * to ensure that `kwa_kw' doesn't contain any unused keyword
+/* Indicate that you're doing loading arguments from `self`.
+ * This function asserts that `kwa_kwused == #kwa_kw` so-as
+ * to ensure that `kwa_kw` doesn't contain any unused keyword
  * arguments.
- * @param: positional_argc: The value of `*p_argc' after `DeeKwArgs_Init()' returned.
+ * @param: positional_argc: The value of `*p_argc` after `DeeKwArgs_Init()` returned.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -1748,7 +1748,7 @@ err:
 }
 
 
-/* Lookup a named keyword argument from `self'
+/* Lookup a named keyword argument from `self`
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
 PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
@@ -1816,11 +1816,11 @@ DeeKwArgs_TryGetItemNRStringLenHash(DeeKwArgs *__restrict self,
 
 
 /* In a keyword-enabled function, return the argument associated with a given
- * `name', or throw a TypeError exception or return `def' if not provided.
+ * `name`, or throw a TypeError exception or return `def` if not provided.
  *
  * Use these functions when you're uncertain if "kw" is non-NULL or might be
- * `DeeKwds_Check()'. If you're certain that `kw != NULL && !DeeKwds_Check(kw)',
- * you can also use the set of `DeeKw_TryGetItemNR*' functions below.
+ * `DeeKwds_Check()`. If you`re certain that `kw != NULL && !DeeKwds_Check(kw)`,
+ * you can also use the set of `DeeKw_TryGetItemNR*` functions below.
  *
  * IMPORTANT: These functions do *NOT* return references! */
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
@@ -1886,8 +1886,8 @@ DeeArg_TryGetKwNRStringLenHash(size_t argc, DeeObject *const *argv,
 
 
 
-/* Check if `kwds' fulfills `DeeObject_IsKw()', and if not, wrap it as a generic
- * kw-capable wrapper that calls forward to `DeeObject_GetItem(kwds)' when keywords
+/* Check if `kwds` fulfills `DeeObject_IsKw()`, and if not, wrap it as a generic
+ * kw-capable wrapper that calls forward to `DeeObject_GetItem(kwds)` when keywords
  * are queried, but then caches returned references such that the keyword consumer
  * doesn't need to keep track of them. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1912,7 +1912,7 @@ DeeKw_ForceWrap(DeeObject *__restrict kwds) {
 
 
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments
- * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
+ * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)`.
  *
  * IMPORTANT: These functions do *NOT* return references! */
 PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
@@ -1962,7 +1962,7 @@ DeeKw_TryGetItemNRStringLenHash(DeeObject *kw, char const *__restrict name,
  * - DeeBlackListKw_New
  * - DeeKwdsMapping_New
  *
- * IMPORTANT: The returned object must be decref'd using `DeeKwBlackList_Decref()'
+ * IMPORTANT: The returned object must be decref'd using `DeeKwBlackList_Decref()`
  *            once the function that created it returns. */
 PUBLIC WUNUSED NONNULL((1, 3)) ATTR_INS(4, 2) DREF DeeObject *DCALL
 DeeKwBlackList_New(struct Dee_code_object *__restrict code,
@@ -1997,7 +1997,7 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 		if (positional_argc >= code->co_argc_max || unlikely(!code->co_keywords)) {
 			/* No keyword information --> Return an unfiltered keywords mapping object.
 			 * -> This happens for purely varkwds user-code functions, such a function
-			 *    written as `function foo(**kw)', in which case there aren't any other
+			 *    written as `function foo(**kw)`, in which case there aren't any other
 			 *    keyword which would have to be blacklisted when access is made. */
 			return DeeKwdsMapping_New((DeeObject *)kw, positional_argv);
 		}
@@ -2005,7 +2005,7 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 		                            positional_argv, (DeeKwdsObject *)kw);
 	}
 
-	/* General case: create a proxy-mapping object for `kw' that get rids
+	/* General case: create a proxy-mapping object for `kw` that get rids
 	 *               of all keys that are equal to one of the strings found
 	 *               within our keyword list.
 	 * Semantically comparable to:

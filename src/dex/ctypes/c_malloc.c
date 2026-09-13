@@ -52,13 +52,13 @@ DECL_BEGIN
 DeeSystem_DEFINE_strnlen(Dee_libc_strnlen)
 #endif /* !CONFIG_HAVE_strnlen */
 
-/* Whitelist of some C libraries where we know that `malloc(0)'
- * doesn't return `NULL' unless it's *actually* out-of-memory. */
+/* Whitelist of some C libraries where we know that `malloc(0)`
+ * doesn't return `NULL` unless it's *actually* out-of-memory. */
 #ifndef __MALLOC_ZERO_IS_NONNULL
 #ifndef __KOS_SYSTEM_HEADERS__
 #if defined(_MSC_VER)
 #define __MALLOC_ZERO_IS_NONNULL
-#undef __REALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)' acts like `free(p)'... */
+#undef __REALLOC_ZERO_IS_NONNULL /* Nope, `realloc(p, 0)` acts like `free(p)`... */
 #elif defined(__GLIBC__) || defined(__GNU_LIBRARY__)
 #define __MALLOC_ZERO_IS_NONNULL
 #define __REALLOC_ZERO_IS_NONNULL

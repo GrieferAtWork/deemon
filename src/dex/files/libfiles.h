@@ -31,14 +31,14 @@
 DECL_BEGIN
 
 typedef struct {
-	/* Joined files are created when `operator |' is used on
-	 * a type derived from `File', in which case the 2 files
+	/* Joined files are created when `operator |` is used on
+	 * a type derived from `File`, in which case the 2 files
 	 * are used to create a so-called joined file type. */
 	Dee_FILE_OBJECT_HEAD
 	size_t                                    j_count;  /* [const] Amount of files that are being joined together. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, j_files); /* [j_count][const] Vector of joined files.
 	                                                     * NOTE: This vector is accessible as an
-	                                                     *       abstract sequence type named `files' */
+	                                                     *       abstract sequence type named `files` */
 } Joined;
 
 INTDEF DeeFileTypeObject Joined_Type; /* TODO: Not implemented. */
@@ -49,7 +49,7 @@ typedef struct {
 	/* General-purpose file data de/en-coder
 	 *
 	 * This file type is used as an intermitten wrapper type
-	 * for `File.open' when the file is being opened in text-mode.
+	 * for `File.open` when the file is being opened in text-mode.
 	 *
 	 * It is not only used to automatically detect the encoding of a
 	 * file, but also be able to encode/decode its contents to/from UTF-8. */
@@ -61,7 +61,7 @@ typedef struct {
 #define DECODER_ENCODING_UTF16_BE 3 /* UTF-16 (big-endian) */
 #define DECODER_ENCODING_UTF32_LE 4 /* UTF-32 (little-endian) */
 #define DECODER_ENCODING_UTF32_BE 5 /* UTF-32 (big-endian) */
-	uint16_t        d_encoding;     /* The encoding of `d_file' (One of `DECODER_ENCODING_*') */
+	uint16_t        d_encoding;     /* The encoding of `d_file` (One of `DECODER_ENCODING_*`) */
 } Decoder;
 
 INTDEF DeeFileTypeObject Decoder_Type; /* TODO: Not implemented. */

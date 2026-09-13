@@ -147,14 +147,14 @@ DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED _DeeBool_Pair *DCALL DeeBool_GetPair(
 
 #else /* Dee_CONFIG_BOOL_TLS */
 
-/* HINT: In i386 assembly, `bool' is 8 bytes, so if you want to
+/* HINT: In i386 assembly, `bool` is 8 bytes, so if you want to
  *       convert an integer 0/1 into a boolean, you can use the
  *       following assembly:
  *    >> leal Dee_FalseTrue(,%reg,8), %reg
  *       The fact that this can be done is the reason why a boolean
  *       doesn't store its value in its structure, but rather in its
  *       self-address.
- * WARNING: Only possible when `CONFIG_TRACE_REFCHANGES' is disabled! */
+ * WARNING: Only possible when `CONFIG_TRACE_REFCHANGES` is disabled! */
 typedef struct {
 	Dee_OBJECT_HEAD
 } DeeBoolObject;
@@ -170,11 +170,11 @@ typedef union _Dee_bool_pair {
 DDATDEF _DeeBool_Pair Dee_FalseTrue;
 #define _DeeBool_For01(val) (&Dee_FalseTrue.bp_bools[val])
 
-/* For binary compatibility: simply returns a pointer to `Dee_FalseTrue' */
+/* For binary compatibility: simply returns a pointer to `Dee_FalseTrue` */
 DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED _DeeBool_Pair *DCALL DeeBool_GetPair(void);
 #endif /* !Dee_CONFIG_BOOL_TLS */
 
-#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
+#define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool` is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
 DDATDEF DeeTypeObject DeeBool_Type;
 

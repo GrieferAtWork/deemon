@@ -51,9 +51,9 @@ struct Dee_weakref {
 	DeeObject             *wr_obj;   /* [0..1][lock(BIT0(wr_next))] Pointed-to object. */
 	Dee_weakref_callback_t wr_del;   /* [0..1][const]
 	                                  * An optional callback that is invoked when the bound object
-	                                  * `wr_obj' gets destroyed, causing the weakref to become unbound.
-	                                  * NOTE: If set, this callback _MUST_ invoke `DeeWeakref_UnlockCallback()'
-	                                  *       in order to unlock the passed `struct Dee_weakref', after it has
+	                                  * `wr_obj` gets destroyed, causing the weakref to become unbound.
+	                                  * NOTE: If set, this callback _MUST_ invoke `DeeWeakref_UnlockCallback()`
+	                                  *       in order to unlock the passed `struct Dee_weakref`, after it has
 	                                  *       acquired shared ownership to a containing object if it intends
 	                                  *       to invoke arbitrary user-code, or drop references. */
 };
@@ -84,7 +84,7 @@ struct Dee_weakref {
 #endif /* NDEBUG */
 
 
-/* Unlock a weakref from within a `wr_del' callback.
+/* Unlock a weakref from within a `wr_del` callback.
  * An invocation of this macro is _MANDATORY_ for any custom weakref
  * callback, as it is part of the synchronization process used to prevent
  * race conditions when working with weakref callbacks.
@@ -92,7 +92,7 @@ struct Dee_weakref {
  * then look like this:
  * >> typedef struct {
  * >>     Dee_OBJECT_HEAD
- * >>     struct Dee_weakref o_ref; // Uses `my_callback'
+ * >>     struct Dee_weakref o_ref; // Uses `my_callback`
  * >>     DREF DeeObject    *o_fun; // 1..1
  * >> } MyObject;
  * >>
@@ -138,7 +138,7 @@ struct Dee_weakref {
 /* Weak reference functionality.
  * @assume(ob != NULL);
  * @return: true:  Successfully initialized the given weak reference.
- * @return: false: The given object `ob' does not support weak referencing. */
+ * @return: false: The given object `ob` does not support weak referencing. */
 #ifdef __INTELLISENSE__
 DFUNDEF NONNULL((1, 2)) bool DCALL
 Dee_weakref_init(struct Dee_weakref *__restrict self,
@@ -163,8 +163,8 @@ DFUNDEF NONNULL((1, 2)) bool
  * >> Dee_weakref_initmany_exec(weakref_v, weakref_c);
  * >> Dee_weakref_initmany_unlock_and_inherit(weakref_v, weakref_c);
  *
- * WARNING: `Dee_weakref_initmany_unlock_and_inherit()' will clobber the contents of
- *          `weakref_v' as a vector of object references that is returned (and must
+ * WARNING: `Dee_weakref_initmany_unlock_and_inherit()` will clobber the contents of
+ *          `weakref_v` as a vector of object references that is returned (and must
  *          be decref'd by the caller) */
 DFUNDEF WUNUSED bool DCALL Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakref_c, struct Dee_unlockinfo *unlock);
 DFUNDEF void DCALL Dee_weakref_initmany_lock(struct Dee_weakref *const *weakref_v, size_t weakref_c);
@@ -196,9 +196,9 @@ DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *
 #endif /* !__cplusplus */
 #endif /* !__INTELLISENSE__ */
 
-/* Overwrite an already initialize weak reference with the given `ob'.
+/* Overwrite an already initialize weak reference with the given `ob`.
  * @return: true:  Successfully overwritten the weak reference.
- * @return: false: The given object `ob' does not support weak referencing
+ * @return: false: The given object `ob` does not support weak referencing
  *                 and the stored weak reference was not modified. */
 DFUNDEF NONNULL((1, 2)) bool DCALL
 Dee_weakref_set(struct Dee_weakref *__restrict self,
@@ -210,8 +210,8 @@ Dee_weakref_set(struct Dee_weakref *__restrict self,
 #define Dee_weakref_set_forced(self, ob) Dee_weakref_set(self, ob)
 #endif /* NDEBUG || NDEBUG_ASSERT */
 
-/* Clear the weak reference `self', returning true if it used to point to an object.
- * NOTE: Upon success (return is `true'), the callback will not be
+/* Clear the weak reference `self`, returning true if it used to point to an object.
+ * NOTE: Upon success (return is `true`), the callback will not be
  *       executed for the previously bound object's destruction. */
 DFUNDEF NONNULL((1)) bool DCALL
 Dee_weakref_clear(struct Dee_weakref *__restrict self);
@@ -232,7 +232,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee
 #endif /* !__cplusplus */
 #endif /* !__INTELLISENSE__ */
 
-/* Return the state of a snapshot of `self' currently being bound. */
+/* Return the state of a snapshot of `self` currently being bound. */
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self);
 #else /* __INTELLISENSE__ */
@@ -246,10 +246,10 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref *
 
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
- * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
+ * `NULL` when none was assigned, or `Dee_ITER_DONE` when `new_ob`
  * does not support weak referencing functionality (in which case
- * the actual pointed-to weak object of `self' isn't changed).
- * NOTE: You may pass `NULL' for `new_ob' to clear the weakref. */
+ * the actual pointed-to weak object of `self` isn't changed).
+ * NOTE: You may pass `NULL` for `new_ob` to clear the weakref. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);
@@ -257,7 +257,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 #ifdef CONFIG_BUILDING_DEEMON
 /* Transfer all weak references of "self" to an always-dead dummy object.
  * Weak references with callbacks are **NOT** executed immediately, and
- * will only be invoked once `Dee_weakref_list_kill_dummy()' is called. */
+ * will only be invoked once `Dee_weakref_list_kill_dummy()` is called. */
 INTDEF NONNULL((1)) void DCALL
 Dee_weakref_list_transfer_to_dummy(struct Dee_weakref_list *__restrict self);
 INTDEF void DCALL Dee_weakref_list_kill_dummy(void);

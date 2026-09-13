@@ -36,7 +36,7 @@
 
 #include <stddef.h> /* offsetof, size_t */
 
-/* Proxy sequence objects for `struct DeeRegexMatch'-arrays */
+/* Proxy sequence objects for `struct DeeRegexMatch`-arrays */
 
 DECL_BEGIN
 
@@ -67,7 +67,7 @@ INTDEF DeeTypeObject ReGroups_Type;
 typedef struct {
 	OBJECT_HEAD
 	size_t                                        rss_ngroups; /* # of groups (may be 0) */
-	DREF DeeObject                               *rss_baseown; /* [1..1][const] Owner of `rss_baseptr' (string or bytes) */
+	DREF DeeObject                               *rss_baseown; /* [1..1][const] Owner of `rss_baseptr` (string or bytes) */
 	__BYTE_TYPE__ const                          *rss_baseptr; /* [1..1][const] Base-pointer. */
 	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rss_groups); /* [rss_ngroups] Array of groups */
 } ReSubStrings;

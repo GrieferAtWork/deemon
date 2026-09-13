@@ -64,7 +64,7 @@ struct Dee_deepcopy_mapitem {
 struct Dee_deepcopy_uheap {
 	struct Dee_deepcopy_uheap       *ddcuh_next; /* [0..1][owned] Next user-heap chunk */
 	DeeObject                       *ddcuh_base; /* [1..1][owned(ddcuh_free)] Heap item base address */
-	NONNULL_T((1)) void      (DCALL *ddcuh_free)(void *__restrict ob); /* [1..1][const] Free function for `ddcuh_base' */
+	NONNULL_T((1)) void      (DCALL *ddcuh_free)(void *__restrict ob); /* [1..1][const] Free function for `ddcuh_base` */
 };
 #ifdef __INTELLISENSE__
 #define Dee_deepcopy_uheap_tryalloc() ((struct Dee_deepcopy_uheap *)sizeof(struct Dee_deepcopy_uheap))
@@ -102,9 +102,9 @@ typedef void Dee_deepcopy_heap_t;
 struct Dee_gc_head;
 struct Dee_weakref;
 
-#define Dee_DEEPCOPY_V_MODE_AUTO 0 /* Determine mode automatically via `DeeObject_IsDeepImmutable()' (default) */
-#define Dee_DEEPCOPY_V_MODE_REF  1 /* Link source object by-reference (default when `DeeObject_IsDeepImmutable() == true') */
-#define Dee_DEEPCOPY_V_MODE_COPY 2 /* Copy source object (default when `DeeObject_IsDeepImmutable() == false') */
+#define Dee_DEEPCOPY_V_MODE_AUTO 0 /* Determine mode automatically via `DeeObject_IsDeepImmutable()` (default) */
+#define Dee_DEEPCOPY_V_MODE_REF  1 /* Link source object by-reference (default when `DeeObject_IsDeepImmutable() == true`) */
+#define Dee_DEEPCOPY_V_MODE_COPY 2 /* Copy source object (default when `DeeObject_IsDeepImmutable() == false`) */
 
 struct Dee_deepcopy_vars {
 #if 0 /* TODO */
@@ -117,7 +117,7 @@ struct Dee_deepcopy_vars {
 #else
 	DeeObject      *dcv_obj;  /* [1..1][const] The object being copied */
 #endif
-	unsigned int    dcv_mode; /* Deepcopy mode (one of `Dee_DEEPCOPY_V_MODE_*') */
+	unsigned int    dcv_mode; /* Deepcopy mode (one of `Dee_DEEPCOPY_V_MODE_*`) */
 };
 
 struct Dee_deepcopy_hook {
@@ -159,23 +159,23 @@ typedef struct {
 	struct Dee_deepcopy_uheap   *dcc_uheap;      /* [0..N][owned] Deepcopy heap for objects with custom allocators */
 	struct Dee_deepcopy_uheap   *dcc_sheap;      /* [0..N][owned] Deepcopy heap for slab allocations */
 	struct Dee_deepcopy_mapitem *dcc_ptrmapv;    /* [0..dcc_ptrmapc][owned][SORT(dcmi_old_minaddr ASC)] mapping of source range to target ranges. */
-	size_t                       dcc_ptrmapc;    /* # of used elements in `dcc_ptrmapv' */
-	size_t                       dcc_ptrmapa;    /* # of allocated elements in `dcc_ptrmapv' */
-	DeeObject                   *dcc_gc_head;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] First GC object to track in `DeeDeepCopy_Pack()' */
-	DeeObject                   *dcc_gc_tail;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] Last GC object to track in `DeeDeepCopy_Pack()' */
+	size_t                       dcc_ptrmapc;    /* # of used elements in `dcc_ptrmapv` */
+	size_t                       dcc_ptrmapa;    /* # of allocated elements in `dcc_ptrmapv` */
+	DeeObject                   *dcc_gc_head;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] First GC object to track in `DeeDeepCopy_Pack()` */
+	DeeObject                   *dcc_gc_tail;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] Last GC object to track in `DeeDeepCopy_Pack()` */
 	union {
 		DREF DeeObject         **dcc_immutablev; /* [1..1][0..dcc_immutablec][valid_if(dcc_immutablec != 1)][owned]
 		                                          * Vector of references to immutable objects that were returned by
-		                                          * `DeeDeepCopy_CopyObject()' or embedded within copied objects, and
-		                                          * must be inherited by `DeeDeepCopy_Pack()', but decref'd by `DeeDeepCopy_Fini' */
+		                                          * `DeeDeepCopy_CopyObject()` or embedded within copied objects, and
+		                                          * must be inherited by `DeeDeepCopy_Pack()`, but decref'd by `DeeDeepCopy_Fini` */
 		DREF DeeObject          *dcc_immutable1; /* [1..1][valid_if(dcc_immutablec == 1)] Singular immutable object */
 	};
-	size_t                       dcc_immutablec; /* # of elements in `dcc_immutablev' */
+	size_t                       dcc_immutablec; /* # of elements in `dcc_immutablev` */
 	struct Dee_weakref         **dcc_weakrefv;   /* [1..1][0..dcc_weakrefc][owned]
 	                                              * List of duplicated weakrefs that must be re-initialized during context packing.
 	                                              * During copying, these weakrefs are initialized to store references to the source
 	                                              * objects, which are then replaced with their serialized equivalents as necessary. */
-	size_t                       dcc_weakrefc;   /* # of elements in `dcc_weakrefv' */
+	size_t                       dcc_weakrefc;   /* # of elements in `dcc_weakrefv` */
 } DeeDeepCopyContext;
 
 #define DeeDeepCopyContext_AddHook(self, hook) \
@@ -196,7 +196,7 @@ DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self);
  * operations that replace certain objects with others in a larger
  * tree of objects referencing each other.
  *
- * However, currently this can't be done because `DeeSerial_PutObject'
+ * However, currently this can't be done because `DeeSerial_PutObject`
  * needs a flag or sibling function to indicate when the typing of the
  * serialized object can/can't be changed (e.g. many iterator types are
  * (rightfully so) assuming the typing of their struct's 'DREF T *'
@@ -206,18 +206,18 @@ DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self);
 
 
 /* Serialize "ob" into "self" and return a pointer for where "ob" will
- * eventually be initialized once `DeeDeepCopy_Pack()' is called. But
+ * eventually be initialized once `DeeDeepCopy_Pack()` is called. But
  * until that has been done, this pointer must **NOT** be exposed to
  * user-code, and must similarly not be interacted with, either!
  *
  * When "ob" has already been copied by "self", remember that an extra
  * incref needs to happen and return that pre-existing copy (any distinct
- * object (as per `DeeObject_Id()') will always be copied at most once)
+ * object (as per `DeeObject_Id()`) will always be copied at most once)
  *
  * @return: * :   Location where the deep-copy of "ob" will appear
  *                When "ob" is immutable, this function may just re-return "ob"
  *                after storing a special reference to "ob" that is dropped if
- *                `DeeDeepCopy_Fini' is called instead of `DeeDeepCopy_Pack'.
+ *                `DeeDeepCopy_Fini` is called instead of `DeeDeepCopy_Pack`.
  * @return: NULL: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*after(DeeDeepCopy_Pack)*/ DeeObject *DCALL
 DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
@@ -225,14 +225,14 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 
 /* Finalize "self" in the sense of doing a COMMIT.
  *
- * This function behaves similar to `DeeDeepCopy_Fini()', but will also
- * (atomically) initialize the return values of `DeeDeepCopy_CopyObject'
+ * This function behaves similar to `DeeDeepCopy_Fini()`, but will also
+ * (atomically) initialize the return values of `DeeDeepCopy_CopyObject`
  * to resemble valid references to deemon objects (which must then be
  * inherited by the caller(s) of that function)
  *
- * IMPORTANT: Do **NOT** call `DeeDeepCopy_Fini(self)' after this function.
+ * IMPORTANT: Do **NOT** call `DeeDeepCopy_Fini(self)` after this function.
  *            If you want to re-use "self" as a different context, you must
- *            first re-initialize it using `DeeDeepCopy_Init(self)' */
+ *            first re-initialize it using `DeeDeepCopy_Init(self)` */
 DFUNDEF NONNULL((1)) void DCALL
 DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self);
 

@@ -173,15 +173,15 @@ CType_FromDeemonType(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
-/* Return the structured type equivalent of `self', or
- * re-return `self' if it already is a structured type.
- * The following types found in the builtin `deemon' module are mapped:
- *   - `none from deemon'       --> `void from ctypes'
- *   - `type(none from deemon)' --> `void from ctypes'
- *   - `bool from deemon'       --> `bool from ctypes'
- *   - `int from deemon'        --> `int from ctypes'
- *   - `float from deemon'      --> `double from ctypes'
- * If `self' is not one of these mappings and also not
+/* Return the structured type equivalent of `self`, or
+ * re-return `self` if it already is a structured type.
+ * The following types found in the builtin `deemon` module are mapped:
+ *   - `none from deemon`       --> `void from ctypes`
+ *   - `type(none from deemon)` --> `void from ctypes`
+ *   - `bool from deemon`       --> `bool from ctypes`
+ *   - `int from deemon`        --> `int from ctypes`
+ *   - `float from deemon`      --> `double from ctypes`
+ * If `self` is not one of these mappings and also not
  * a c-type, a TypeError is thrown and NULL is returned.
  * WARNING: This function does not return a reference! */
 INTERN WUNUSED NONNULL((1)) CType *DCALL
@@ -201,7 +201,7 @@ CType_Of(DeeObject *__restrict self) {
 }
 
 
-/* Same as `DeeSType_Get()', but also able to handle the
+/* Same as `DeeSType_Get()`, but also able to handle the
  * case where "self" is an *instance*, rather a some type. */
 INTERN WUNUSED NONNULL((1)) CType *DCALL
 CType_TypeOf(DeeObject *__restrict self) {
@@ -403,7 +403,7 @@ err_temp:
 
 
 /* Print the C-representation of "self" for the purposes of a variable "varname"
- * Note that "varname" may be `NULL' or an empty string, in which case the type
+ * Note that "varname" may be `NULL` or an empty string, in which case the type
  * is printed anonymously. */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 CType_PrintCRepr(CType *__restrict self, Dee_formatprinter_t printer,
@@ -529,8 +529,8 @@ err_temp:
 
 
 
-/* Interpret `self' as a pointer and store the result in `*result'
- * @return:  0: Successfully converted `self' to a pointer.
+/* Interpret `self` as a pointer and store the result in `*result`
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPointer(DeeObject *self, CType *pointer_base,
@@ -566,9 +566,9 @@ err:
 }
 
 
-/* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
+/* Same as `DeeObject_AsPointer()`, but only ~try~ to interpret it.
  * @return:  1: The conversion failed.
- * @return:  0: Successfully converted `self' to a pointer.
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsPointer(DeeObject *self, CType *pointer_base,
@@ -614,7 +614,7 @@ null_pointer:
 		goto nope;
 	}
 
-	/* Special handling for strings (which can be cast to `char *') */
+	/* Special handling for strings (which can be cast to `char *`) */
 	if (DeeString_Check(self)) {
 		if (pointer_base == &CChar_Type) {
 			result->pcvoid = DeeString_AsUtf8(self);
@@ -686,8 +686,8 @@ err:
 	return -1;
 }
 
-/* S.a. `DeeObject_TryAsGenericPointer()'
- * @return:  0: Successfully converted `self' to a pointer.
+/* S.a. `DeeObject_TryAsGenericPointer()`
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsGenericPointer(DeeObject *self,
@@ -700,10 +700,10 @@ DeeObject_AsGenericPointer(DeeObject *self,
 	return DeeObject_TypeAssertFailed(self, CPointerType_AsType(&AbstractCPointer_Type));
 }
 
-/* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
- * pointer-base type. For use with type-generic functions (such as the `atomic_*' api)
+/* Similar to `DeeObject_TryAsPointer()`, but fills in `*p_pointer_base` with the
+ * pointer-base type. For use with type-generic functions (such as the `atomic_*` api)
  * @return:  1: The conversion failed.
- * @return:  0: Successfully converted `self' to a pointer.
+ * @return:  0: Successfully converted `self` to a pointer.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsGenericPointer(DeeObject *self,

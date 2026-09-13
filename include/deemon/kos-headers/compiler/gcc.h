@@ -247,7 +247,7 @@
 /* For   whatever  reason,  g++  refuses  to  allow  trivially
  * constructible+copyable+etc. classes within unnamed structs:
  *     https://stackoverflow.com/questions/39069799/rules-for-anonymous-aggregates
- * So be careful when using them, and use `__COMPILER_HAVE_TRANSPARENT_NONCLASS'
+ * So be careful when using them, and use `__COMPILER_HAVE_TRANSPARENT_NONCLASS`
  * to test for this special case. */
 #define __COMPILER_HAVE_TRANSPARENT_NONCLASS
 #if 1
@@ -653,7 +653,7 @@
 #endif /* !__has_attribute(__nonnull__) */
 #elif defined(__INTELLISENSE__)
 /* Intellisense doesn't understand __access__, but to get error high-lighting  (since
- * the `ptr_index' argument must reference a pointer-argument), we can use some other
+ * the `ptr_index` argument must reference a pointer-argument), we can use some other
  * attributes that it does know! */
 #define __ATTR_ACCESS_NONE(ptr_index)        __attribute__((__nonnull__(ptr_index)))
 #define __ATTR_INS(ptr_index, size_index)    __attribute__((__nonnull__(ptr_index)))
@@ -708,7 +708,7 @@
 #define __ATTR_EXTERNALLY_VISIBLE __attribute__((__externally_visible__))
 #define __ATTR_VISIBILITY(vis)    __attribute__((__visibility__(vis)))
 
-/* Suppress warnings about `-Wsuggest-attribute=const' or `-Wsuggest-attribute=pure'
+/* Suppress warnings about `-Wsuggest-attribute=const` or `-Wsuggest-attribute=pure`
  * Must  add a single ";" because without it,  GCC seems to have gotten smart enough
  * to understand that `__asm__("")' is not enough indicate something impure. */
 #define __COMPILER_IMPURE() __asm__(";")
@@ -802,7 +802,7 @@ extern "C++" { template<class T> struct __compiler_alignof { char __x; T __y; };
 
 #ifdef __INTELLISENSE__
 #define _Exit __real__Exit /*!export-*/ /* Because for some reason, intellisence pre-defines this one... */
-#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
+#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))`... */
 #define __EXTERN_INLINE      static
 #define __EXTERN_FORCEINLINE static
 #elif __has_attribute(__gnu_inline__)
@@ -945,7 +945,7 @@ __extension__ typedef unsigned long long __ulonglong_t;
 
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var = var
 
-/* Delete assumptions the compiler may have made about `var'.
+/* Delete assumptions the compiler may have made about `var`.
  * This includes:
  *  - __builtin_constant_p(var)
  *  - __builtin_object_size(var)
@@ -975,7 +975,7 @@ __extension__ typedef unsigned long long __ulonglong_t;
 #define __builtin_va_start __builtin_stdarg_start
 #endif /* __GCC_VERSION_NUM < 40402 */
 
-/* Support for complex numbers (test for with `#ifdef _Complex_I') */
+/* Support for complex numbers (test for with `#ifdef _Complex_I`) */
 #ifdef __INTELLISENSE__
 #define _Complex_I 1.0F
 #elif __GCC_VERSION_NUM >= 29700
@@ -1002,12 +1002,12 @@ __extension__ typedef unsigned long long __ulonglong_t;
 #define __COMPILER_HAVE_GCCNCX_BUILTIN_BUG
 #endif /* !__INTELLISENSE__ */
 
-/* `__builtin_choose_expr()' is only available in C, but not in C++ */
+/* `__builtin_choose_expr()` is only available in C, but not in C++ */
 #undef __builtin_choose_expr
 #define __NO_builtin_choose_expr
 #define __builtin_choose_expr(c, tt, ff) ((c) ? (tt) : (ff))
 
-/* `__builtin_types_compatible_p()' isn't consistently defined by g++.
+/* `__builtin_types_compatible_p()` isn't consistently defined by g++.
  * So  to prevent problems  with that, simply  re-implement it using a
  * macro alongside C++ templates. */
 extern "C++" {

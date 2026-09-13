@@ -144,8 +144,8 @@ struct Dee_serial_type {
 	 *              "DeeListObject::l_list::ol_elemv").
 	 *              The reason why this is needed is to allow later "DeeSerial_PutPointer()"
 	 *              calls to connect the dots and understand that a given pointer actually
-	 *              points into a block previously returned by `DeeSerial_Malloc()', similar
-	 *              to how it can do so for `DeeSerial_Object_Malloc()'
+	 *              points into a block previously returned by `DeeSerial_Malloc()`, similar
+	 *              to how it can do so for `DeeSerial_Object_Malloc()`
 	 * @return: * : Serialized address of heap buffer
 	 * @return: Dee_SERADDR_INVALID: Allocation failed (for "set_malloc" and "set_calloc": error was thrown) */
 	WUNUSED_T NONNULL_T((1)) Dee_seraddr_t (DCALL *set_malloc)(DeeSerial *__restrict self, size_t num_bytes, /*0..1*/ void const *ref);
@@ -171,7 +171,7 @@ struct Dee_serial_type {
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_object_trycalloc)(DeeSerial *__restrict self, size_t num_bytes, DeeObject *__restrict ref);
 
 	/* Free generic heap memory (as per "DeeObject_Free()")
-	 * Same restrictions of `set_free' regarding order of free() operations also apply to this */
+	 * Same restrictions of `set_free` regarding order of free() operations also apply to this */
 	NONNULL_T((1, 3)) void (DCALL *set_object_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, DeeObject *__restrict ref);
 
 	/* Same as above, but must be used for GC-objects (as per "DeeGCObject_Malloc()") */
@@ -203,8 +203,8 @@ struct Dee_serial_type {
 	WUNUSED_T NONNULL_T((1, 3)) Dee_seraddr_t (DCALL *set_slab_gcobject_trycalloc)(DeeSerial *__restrict self, size_t n, DeeObject *__restrict ref);
 	NONNULL_T((1, 4)) void (DCALL *set_slab_gcobject_free)(DeeSerial *__restrict self, Dee_seraddr_t addr, size_t n, DeeObject *__restrict ref);
 
-	/* Serialize a `void *' field at `addrof_pointer' as being populated with the
-	 * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)'
+	/* Serialize a `void *` field at `addrof_pointer` as being populated with the
+	 * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)`
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1)) int
@@ -212,8 +212,8 @@ struct Dee_serial_type {
 	                     Dee_seraddr_t addrof_pointer,
 	                     Dee_seraddr_t addrof_target);
 
-	/* Serialize a `DREF DeeObject *' field at `addrof_object'
-	 * as being populated with a reference to `ob'
+	/* Serialize a `DREF DeeObject *` field at `addrof_object`
+	 * as being populated with a reference to `ob`
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
@@ -221,8 +221,8 @@ struct Dee_serial_type {
 	                       Dee_seraddr_t addrof_object,
 	                       DeeObject *__restrict ob);
 
-	/* Same as `set_putobject', but encode a reference to "ob",
-	 * but have the pointer be at `(byte_t *)ob + offset_into_ob'
+	/* Same as `set_putobject`, but encode a reference to "ob",
+	 * but have the pointer be at `(byte_t *)ob + offset_into_ob`
 	 * @return: 0 : Success
 	 * @return: -1: Error */
 	WUNUSED_T NONNULL_T((1, 3)) int
@@ -231,12 +231,12 @@ struct Dee_serial_type {
 	                          DeeObject *__restrict ob,
 	                          ptrdiff_t offset_into_ob);
 
-	/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
-	 * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
-	 * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+	/* Serialize a `void *` field at `addrof_pointer` as being populated with the address of
+	 * a static object at `pointer` ("static" here meaning that `DeeModule_OfPointer()` will
+	 * return a non-NULL pointer for `pointer`), or as pointing into the payload portion of
 	 * another object or heap block that had already been serialized (iow: "pointer" points
 	 * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
-	 * still recognized and linked) of a prior `set_object_malloc', `set_gcobject_malloc', ...).
+	 * still recognized and linked) of a prior `set_object_malloc`, `set_gcobject_malloc`, ...).
 	 * If neither is the case, an error is thrown.
 	 * @return: 0 : Success
 	 * @return: -1: Error */
@@ -244,8 +244,8 @@ struct Dee_serial_type {
 	(DCALL *set_putpointer)(DeeSerial *__restrict self, Dee_seraddr_t addrof_pointer,
 	                        void const *__restrict pointer);
 
-	/* Serialize initialization of a `struct Dee_weakref *addrof_weakref' to `ob':
-	 * - The caller must ensure that `ob' support weak referencing.
+	/* Serialize initialization of a `struct Dee_weakref *addrof_weakref` to `ob`:
+	 * - The caller must ensure that `ob` support weak referencing.
 	 * - If "ob" is statically allocated within a DEE or DEX module,
 	 *   "addrof_weakref" will be injected at runtime.
 	 * - If "ob" is not statically allocated, and if "ob" has already
@@ -281,8 +281,8 @@ struct Dee_serial {
  *              "DeeListObject::l_list::ol_elemv").
  *              The reason why this is needed is to allow later "DeeSerial_PutPointer()"
  *              calls to connect the dots and understand that a given pointer actually
- *              points into a block previously returned by `DeeSerial_Malloc()', similar
- *              to how it can do so for `DeeSerial_Object_Malloc()'
+ *              points into a block previously returned by `DeeSerial_Malloc()`, similar
+ *              to how it can do so for `DeeSerial_Object_Malloc()`
  *              TLDR:
  *              - If you use "DeeSerial_TryMalloc()" because of a lock, you probably want to pass "NULL"
  *              - Otherwise, pass the [const] source pointer
@@ -315,7 +315,7 @@ struct Dee_serial {
 #define DeeSerial_Object_TryCalloc(self, num_bytes, ref) (*(self)->ser_type->set_object_trycalloc)(self, num_bytes, Dee_AsObject(ref))
 
 /* Free generic heap memory (as per "DeeObject_Free()")
- * Same restrictions of `set_free' regarding order of free() operations also apply to this
+ * Same restrictions of `set_free` regarding order of free() operations also apply to this
  *
  * NOTE: DON'T call this method for error-cleanup -- On error, the
  *       owner of the serializer will free all allocated memory! */
@@ -395,8 +395,8 @@ struct Dee_serial {
 
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the
- * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)'
+/* Serialize a `void *` field at `addrof_pointer` as being populated with the
+ * effectively final value of `DeeSerial_Addr2Mem(self, addrof_target, void)`
  * @return: 0 : Success
  * @return: -1: Error */
 #ifdef __INTELLISENSE__
@@ -409,14 +409,14 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect((*(self)->ser_type->set_putaddr)(self, addrof_pointer, addrof_target), 0)
 #endif /* !__INTELLISENSE__ */
 
-/* Serialize a `DREF DeeObject *' field at `addrof_object' as being populated with a reference to `ob'
+/* Serialize a `DREF DeeObject *` field at `addrof_object` as being populated with a reference to `ob`
  * @return: 0 : Success
  * @return: -1: Error */
 #define DeeSerial_PutObject(self, addrof_object, ob) \
 	__builtin_expect((*(self)->ser_type->set_putobject)(self, addrof_object, Dee_AsObject(ob)), 0)
 
-/* Same as `DeeSerial_PutObject', but encode a reference to "ob",
- * but have the pointer be at `(byte_t *)ob + offset_into_ob'
+/* Same as `DeeSerial_PutObject`, but encode a reference to "ob",
+ * but have the pointer be at `(byte_t *)ob + offset_into_ob`
  * @return: 0 : Success
  * @return: -1: Error */
 #define DeeSerial_PutObjectEx(self, addrof_object, ob, offset_into_ob) \
@@ -440,12 +440,12 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect((DeeSerial_XPutObjectInherited)(self, addrof_object, Dee_AsObject(ob)), 0)
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
- * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
- * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+/* Serialize a `void *` field at `addrof_pointer` as being populated with the address of
+ * a static object at `pointer` ("static" here meaning that `DeeModule_OfPointer()` will
+ * return a non-NULL pointer for `pointer`), or as pointing into the payload portion of
  * another object or heap block that had already been serialized (iow: "pointer" points
  * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
- * still recognized and linked) of a prior `DeeSerial_Object_Malloc', `DeeSerial_GCObject_Malloc',
+ * still recognized and linked) of a prior `DeeSerial_Object_Malloc`, `DeeSerial_GCObject_Malloc`,
  * ...). If neither is the case, an error is thrown.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -484,7 +484,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-/* Helper wrapper for encoding a pointer to the memdup of `data' at `addrof_pointer':
+/* Helper wrapper for encoding a pointer to the memdup of `data` at `addrof_pointer`:
  * >> Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes, data);
  * >> memcpy(DeeSerial_Addr2Mem(self, addrof_dup, void), data, num_bytes);
  * >> return DeeSerial_PutAddr(self, addrof_pointer, addrof_dup); */
@@ -545,7 +545,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 	__builtin_expect(DeeSerial_XInplacePutObjectv(self, addrof_objects, objc), 0)
 #endif /* !__INTELLISENSE__ */
 
-/* Encode an `DREF DeeObject *addrof_objv[objc]' from "objv" */
+/* Encode an `DREF DeeObject *addrof_objv[objc]` from "objv" */
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_PutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
                              /*[1..1][0..objc]*/ DeeObject *const *objv, size_t objc);
@@ -565,8 +565,8 @@ DFUNDEF WUNUSED NONNULL((1)) int
                                     /*[0..1][0..objc]*/ DeeObject *const *objv, size_t objc);
 
 
-/* Serialize initialization of a `struct Dee_weakref *addrof_weakref' to `ob':
- * - The caller must ensure that `ob' support weak referencing.
+/* Serialize initialization of a `struct Dee_weakref *addrof_weakref` to `ob`:
+ * - The caller must ensure that `ob` support weak referencing.
  * - If "ob" is statically allocated within a DEE or DEX module,
  *   "addrof_weakref" will be injected at runtime.
  * - If "ob" is not statically allocated, and if "ob" has already
@@ -586,7 +586,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int
 	__builtin_expect((*(self)->ser_type->set_putweakref_ex)(self, addrof_weakref, ob, del), 0)
 #endif /* !__INTELLISENSE__ */
 
-/* Helper wrapper around `DeeSerial_PutWeakrefEx()' */
+/* Helper wrapper around `DeeSerial_PutWeakrefEx()` */
 DFUNDEF WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSerial_PutWeakref)(DeeSerial *__restrict self,
                              Dee_seraddr_t addrof_weakref,

@@ -78,7 +78,7 @@ asm_gpop_stack(uint16_t absolute_stack_addr) {
 	ASSERTF(current_assembler.a_stackcur > absolute_stack_addr,
 	        "Invalid stack address");
 	offset = (current_assembler.a_stackcur - 1) - absolute_stack_addr;
-	/* XXX: `offset == 0' doesn't ~really~ make sense as that would
+	/* XXX: `offset == 0` doesn't ~really~ make sense as that would
 	 *      mean to pop a stack value into itself, then discard it.
 	 *      Though we still allow doing this... */
 	return offset == 0 ? asm_gpop() : asm_gpop_n(offset - 1);
@@ -466,7 +466,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 		if (end > start) {
 			DREF DeeObject *subrange;
 			if (end == start + 1) {
-				/* Special case: encode as  `pack List, #1' */
+				/* Special case: encode as  `pack List, #1` */
 				subrange = DeeList_GET(value, start);
 				Dee_Incref(subrange);
 				DeeList_LockEndRead(value);
@@ -766,8 +766,8 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	if (asm_symbol_accessible(sym))
 		return 0;
 
-	/* Hint to the user that they may write `MyClass.symbol' instead
-	 * of `sym', if they to access the attribute in its unbound form:
+	/* Hint to the user that they may write `MyClass.symbol` instead
+	 * of `sym`, if they to access the attribute in its unbound form:
 	 * >> class MyClass {
 	 * >>     func() {
 	 * >>         print "Hello";
@@ -783,7 +783,7 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	               current_basescope->bs_name ? current_basescope->bs_name->k_name : "?");
 }
 
-/* Generate a call to `function' that pops `num_args' arguments from the stack,
+/* Generate a call to `function` that pops `num_args` arguments from the stack,
  * then pushes its return value back onto the stack. */
 INTERN WUNUSED NONNULL((1, 3)) int
 (DCALL asm_gcall_symbol_n)(struct symbol *__restrict function, uint8_t argc,
@@ -1290,7 +1290,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_GLOBAL:
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1))
-			return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...' */
+			return false; /* Must be assigned as `this_module.<ATTRIBUTE> = ...` */
 		ATTR_FALLTHROUGH
 	case SYMBOL_TYPE_LOCAL:
 	case SYMBOL_TYPE_STATIC:
@@ -1365,7 +1365,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_GLOBAL:
 		ASSERTF(!(sym->s_flag & SYMBOL_FFINAL) || (sym->s_nwrite <= 1),
-		        "This should have caused `asm_can_prefix_symbol()' to return false");
+		        "This should have caused `asm_can_prefix_symbol()` to return false");
 		symid = asm_gsymid(sym);
 		if unlikely(symid < 0)
 			goto err;
@@ -1846,7 +1846,7 @@ check_sym_class:
 					goto err;
 			}
 
-			/* If `del()' is used on the symbol, warn about the fact that
+			/* If `del()` is used on the symbol, warn about the fact that
 			 * doing this will not actually unbind the symbol, but only
 			 * delete the value that was being stored. */
 			if (sym->s_nbound != 0 &&
@@ -1864,7 +1864,7 @@ check_sym_class:
 				return 0;
 			}
 
-			/* Overwrite the stack-variable with `none':
+			/* Overwrite the stack-variable with `none`:
 			 * >> mov stack#..., none */
 			if (asm_pstack(SYMBOL_STACK_OFFSET(sym)))
 				goto err;
@@ -2134,7 +2134,7 @@ check_sym_class:
 						 * >>     __stack local x = "ValueOfX";
 						 * >>     __stack local y = "ValueOfY";
 						 * >>     print foo; // What is printed here is undefined and at
-						 * >>                // the time of this being written is `ValueOfY'
+						 * >>                // the time of this being written is `ValueOfY`
 						 * >>                // Future (unused variable?) optimizations may change this...
 						 * >>                // In either case: what's printed probably isn't what you want to see here.
 						 * >> }
@@ -2330,7 +2330,7 @@ pop_unused_result:
 			if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 			    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
-					goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop' instruction, so use fallback */
+					goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop` instruction, so use fallback */
 				if (asm_gpush_symbol(this_sym, warn_ast))
 					goto err; /* value, this */
 				if (asm_gpush_symbol(class_sym, warn_ast))
@@ -2349,7 +2349,7 @@ pop_unused_result:
 					goto err;
 			} else {
 				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
-					goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop' instruction, so use fallback */
+					goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop` instruction, so use fallback */
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err; /* value, class */
 				if (asm_gswap())
@@ -2391,7 +2391,7 @@ err:
 	return -1;
 }
 
-/* Push the virtual argument known as `argid' */
+/* Push the virtual argument known as `argid` */
 INTERN WUNUSED int DCALL
 asm_gpush_varg(uint16_t argid) {
 	if (argid < current_basescope->bs_argc) {
@@ -2407,7 +2407,7 @@ asm_gpush_varg(uint16_t argid) {
 
 
 
-/* Store the value of the virtual argument `argid' in `dst' */
+/* Store the value of the virtual argument `argid` in `dst` */
 INTERN WUNUSED NONNULL((1, 3)) int
 (DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
                       struct ast *__restrict warn_ast,
@@ -2443,7 +2443,7 @@ err:
 }
 
 
-/* Generate code to throw RuntimeError when `lid' is bound at runtime. */
+/* Generate code to throw RuntimeError when `lid` is bound at runtime. */
 INTERN WUNUSED int DCALL
 asm_gcheck_final_local_bound(uint16_t lid) {
 	/* >>     push   bound local \lid
@@ -2470,7 +2470,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 		goto err;
 	if (asm_gjmp(ASM_JT, within_cold))
 		goto err;
-	asm_decsp(); /* Popped by `ASM_JT' */
+	asm_decsp(); /* Popped by `ASM_JT` */
 	sect = current_assembler.a_curr;
 	if (sect == &current_assembler.a_sect[SECTION_COLD] &&
 	    asm_gjmp(ASM_JMP, after_cold))
@@ -2491,7 +2491,7 @@ asm_gcheck_final_local_bound(uint16_t lid) {
 	if unlikely(temp_id < 0)
 		goto err;
 
-	/* Invoke `__roloc from deemon' and let it decide what to do about the error. */
+	/* Invoke `__roloc from deemon` and let it decide what to do about the error. */
 	if (asm_gcall_extern((uint16_t)temp_id, id___roloc, 1))
 		goto err;
 	if (asm_gpop())

@@ -28,12 +28,12 @@
 
 DECL_BEGIN
 
-/* Return values for `seq_compareeq__*__cb' callbacks. */
+/* Return values for `seq_compareeq__*__cb` callbacks. */
 #define SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL    0
 #define SEQ_COMPAREEQ_FOREACH_RESULT_ERROR    (-1)
 #define SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL (-2)
 
-/* Return values for `seq_compare__*__cb' callbacks. */
+/* Return values for `seq_compare__*__cb` callbacks. */
 #define SEQ_COMPARE_FOREACH_RESULT_EQUAL    0
 #define SEQ_COMPARE_FOREACH_RESULT_ERROR    (-1)
 #define SEQ_COMPARE_FOREACH_RESULT_LESS     (-2)

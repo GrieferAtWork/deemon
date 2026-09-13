@@ -185,7 +185,7 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 #endif /* time_now_local_USE_GetSystemTimePreciseAsFileTime */
 
 #ifdef CONFIG_HOST_WINDOWS
-/* Also needed for `_mkFILETIME' */
+/* Also needed for `_mkFILETIME` */
 #define WANT_NANOSECONDS_01_01_1601
 #endif /* CONFIG_HOST_WINDOWS */
 
@@ -481,7 +481,7 @@ INTERN_CONST struct month const month_info[2][MONTHS_PER_YEAR + 1] = {
 #undef days2nano
 
 
-/* Check if the year referenced by the year-counter `*p_year' is a leap-year */
+/* Check if the year referenced by the year-counter `*p_year` is a leap-year */
 INTERN WUNUSED NONNULL((1)) bool DFCALL
 time_years_isleapyear(Dee_int128_t const *__restrict p_year) {
 	Dee_int128_t year_mod_400;
@@ -749,14 +749,14 @@ DeeTime_GetRepr(DeeTimeObject const *__restrict self,
 }
 
 
-/* Return the integer value for the specified representation of `self' */
+/* Return the integer value for the specified representation of `self` */
 INTERN NONNULL((1, 2)) void DFCALL
 _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
                  DeeTimeObject const *__restrict self,
                  uint8_t repr) {
 	Dee_int128_t nanoseconds;
 
-	/* Check for special case: `self' represents months */
+	/* Check for special case: `self` represents months */
 	if unlikely(self->t_type == TIME_TYPE_MONTHS) {
 		switch (repr) {
 
@@ -986,7 +986,7 @@ _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
 
 LOCAL NONNULL((1)) void DFCALL
 DeeTime_MakeTimestamp(DeeTimeObject *__restrict self) {
-	/* Ensure that `self' uses nano-seconds, and change it to a timestamp */
+	/* Ensure that `self` uses nano-seconds, and change it to a timestamp */
 	if unlikely(self->t_typekind != TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP)) {
 		if (self->t_type == TIME_TYPE_MONTHS)
 			time_inplace_months2nanoseconds(&self->t_nanos);
@@ -994,7 +994,7 @@ DeeTime_MakeTimestamp(DeeTimeObject *__restrict self) {
 	}
 }
 
-/* Set the integer value for the specified representation of `self' */
+/* Set the integer value for the specified representation of `self` */
 INTERN NONNULL((1, 2)) void DFCALL
 DeeTime_SetRepr(DeeTimeObject *__restrict self,
                 Dee_int128_t const *__restrict p_value,
@@ -1194,7 +1194,7 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
 			__hybrid_int128_dec(nano_since_start_of_month);
 		}
 
-		/* Combine `new_months' and `nano_since_start_of_month' to form a new timestamp. */
+		/* Combine `new_months` and `nano_since_start_of_month` to form a new timestamp. */
 		time_inplace_month2nanosecond(&new_months);
 		__hybrid_int128_add128(new_months, nano_since_start_of_month);
 		self->t_nanos = new_months;
@@ -1288,7 +1288,7 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
  */
 struct repr_name {
 	char    name[15]; /* Name */
-	uint8_t repr;     /* One of `TIME_REPR_*' */
+	uint8_t repr;     /* One of `TIME_REPR_*` */
 };
 
 /* Representation descriptor database. */
@@ -2253,7 +2253,7 @@ time_add(DeeTimeObject *self, DeeTimeObject *other) {
 		result->t_nanos = self->t_nanos;
 		__hybrid_int128_add128(result->t_nanos, other->t_nanos);
 	} else if (self->t_type == TIME_TYPE_NANOSECONDS) {
-		/* Add months to `result' */
+		/* Add months to `result` */
 		Dee_int128_t month;
 		ASSERT(other->t_type == TIME_TYPE_MONTHS);
 		result->t_nanos = self->t_nanos;
@@ -2262,7 +2262,7 @@ time_add(DeeTimeObject *self, DeeTimeObject *other) {
 		__hybrid_int128_add128(month, other->t_months);
 		DeeTime_SetRepr(result, &month, TIME_REPR_MONTH);
 	} else {
-		/* Add nano-seconds `result' */
+		/* Add nano-seconds `result` */
 		ASSERT(self->t_type == TIME_TYPE_MONTHS);
 		ASSERT(other->t_type == TIME_TYPE_NANOSECONDS);
 		result->t_type  = TIME_TYPE_NANOSECONDS;
@@ -2301,7 +2301,7 @@ time_sub(DeeTimeObject *self, DeeTimeObject *other) {
 		result->t_nanos = self->t_nanos;
 		__hybrid_int128_sub128(result->t_nanos, other->t_nanos);
 	} else if (self->t_type == TIME_TYPE_NANOSECONDS) {
-		/* Add months to `result' */
+		/* Add months to `result` */
 		Dee_int128_t month;
 		ASSERT(other->t_type == TIME_TYPE_MONTHS);
 		result->t_nanos = self->t_nanos;
@@ -2310,7 +2310,7 @@ time_sub(DeeTimeObject *self, DeeTimeObject *other) {
 		__hybrid_int128_sub128(month, other->t_months);
 		DeeTime_SetRepr(result, &month, TIME_REPR_MONTH);
 	} else {
-		/* Add nano-seconds `result' */
+		/* Add nano-seconds `result` */
 		ASSERT(self->t_type == TIME_TYPE_MONTHS);
 		ASSERT(other->t_type == TIME_TYPE_NANOSECONDS);
 		result->t_type  = TIME_TYPE_NANOSECONDS;
@@ -2512,10 +2512,10 @@ err:
 }
 
 
-/* NOTE: All of this stuff can't be CONSTEXPR because `Time' objects are mutable :(
+/* NOTE: All of this stuff can't be CONSTEXPR because `Time` objects are mutable :(
  * XXX: Maybe reconsider if Time objects really need to be mutable... The only reason
- *      right now is due to setters like `Time.second = 42'. I feel like it would be
- *      nicer if these weren't writable, but instead there was `Time.with(second: 42)'
+ *      right now is due to setters like `Time.second = 42`. I feel like it would be
+ *      nicer if these weren't writable, but instead there was `Time.with(second: 42)`
  *      in order to construct a new time object with certain fields changed to other
  *      values (however: "with" is a reserved keyword...). */
 
@@ -3145,7 +3145,7 @@ PRIVATE struct type_method tpconst time_class_methods[] = {
 
 PRIVATE struct type_member tpconst time_class_members[] = {
 	/* For backwards compatibility with the old deemon (which
-	 * did everything as part of the `time' builtin type) */
+	 * did everything as part of the `time` builtin type) */
 	TYPE_MEMBER_CONST_DOC("now", &libtime_localtime,
 	                      "->?.\n"
 	                      "Deprecated. Use ?Glocaltime instead"),
@@ -3447,7 +3447,7 @@ time_init_kw(DeeTimeObject *__restrict self,
 			__hybrid_int128_add64(arg, SECONDS_01_01_1970);
 			__hybrid_int128_mul32(arg, NANOSECONDS_PER_SECOND);
 			if (!__hybrid_int128_iszero(self->t_nanos)) {
-				/* Keep nano-seconds set by the `nanosecond' property. */
+				/* Keep nano-seconds set by the `nanosecond` property. */
 				uint32_t extra_nano;
 				__hybrid_int128_floormod32_r(self->t_nanos, NANOSECONDS_PER_SECOND, extra_nano);
 				__hybrid_int128_add32(arg, extra_nano);

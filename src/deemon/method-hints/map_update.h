@@ -46,8 +46,8 @@ map_update_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 )]
 
 
-/* Copy all key-value pairs from `items' and assign them to `self'.
- * Same as `for (local key, value: items) self[key] = value;'
+/* Copy all key-value pairs from `items` and assign them to `self`.
+ * Same as `for (local key, value: items) self[key] = value;`
  * @return: 0 : Success
  * @return: -1: Error */
 [[wunused]] int

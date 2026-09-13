@@ -35,7 +35,7 @@ __set_add__.set_operator_add([[nonnull]] DeeObject *lhs,
                              [[nonnull]] DeeObject *rhs)
 %{unsupported({
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a | ~b' --> `~(~a & b)'
+		/* Special case: `a | ~b` --> `~(~a & b)`
 		 * -> Keep the inversion on the outside, since it prevents enumeration. */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		DREF SetInversion *inv_lhs;

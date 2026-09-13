@@ -112,7 +112,7 @@ basic_block_compile(struct basic_block *__restrict self,
 
 /* Given the set of all basic block that have yet to be compiled,
  * find the one that has the most entry descriptors with a defined
- * `jd_stat' and return that one.
+ * `jd_stat` and return that one.
  * @return: (size_t)-1: Everything has been compiled. */
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 find_next_block_to_compile(struct function_assembler *__restrict self) {
@@ -556,7 +556,7 @@ function_assembler_makeprolog(struct function_assembler *__restrict self,
  * always identical (or compatible; i.e.: MEMVAL_F_LOCAL_UNKNOWN can
  * be set at the start of a block, but doesn't need to be set at the
  * end of a preceding block). When not compatible, extra block(s) are
- * inserted with `bb_deemon_start==bb_deemon_end', but non-empty host
+ * inserted with `bb_deemon_start==bb_deemon_end`, but non-empty host
  * assembly, which serves the purpose of transforming memory states.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -612,9 +612,9 @@ err:
 
 struct host_section_set {
 	struct host_section **hss_list; /* [1..1][0..hss_size] List of basic blocks (sorted by pointer) */
-	size_t                hss_size; /* # of items in `hss_list' */
+	size_t                hss_size; /* # of items in `hss_list` */
 #ifndef NDEBUG
-	size_t                hss_smax; /* Max # of items in `hss_list' */
+	size_t                hss_smax; /* Max # of items in `hss_list` */
 #endif /* !NDEBUG */
 };
 
@@ -630,7 +630,7 @@ struct host_section_set {
 	 ((self)->hss_list = (struct host_section **)Dee_Mallocac(smax, sizeof(struct host_section *))) != NULL ? 0 : -1)
 
 
-/* Try to insert `sect' into `self' (if it wasn't inserted already) */
+/* Try to insert `sect` into `self` (if it wasn't inserted already) */
 PRIVATE NONNULL((1, 2)) void DCALL
 host_section_set_insert(struct host_section_set *__restrict self,
                         struct host_section *sect) {
@@ -948,7 +948,7 @@ err_equiv:
 
 
 
-/* Append morphing code for `from_state' to `to_state' to `sect' */
+/* Append morphing code for `from_state` to `to_state` to `sect` */
 #undef assemble_morph
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 assemble_morph(struct function_assembler *__restrict fasm,
@@ -994,7 +994,7 @@ assemble_morph(struct function_assembler *__restrict fasm,
  * other basic block with an extra instructions needed for morphing:
  * - self->fa_prolog                                (to transition )
  * - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph
- * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
+ * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start`)
  * - self->fa_except_exitv[*]->exi_block->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
  * - self->fa_except_exitv[*]->exi_block->bb_next   (set if intend is to fall into another exit block)
  * - self->fa_except_first
@@ -1055,10 +1055,10 @@ collect_morph_sections(struct host_section_tailq *__restrict text,
 /* Step #5: Generate missing unconditional jumps to jump from one block to the next
  * - Find loops of blocks that "fall through" back on each other in a loop, and
  *   append a jump-to-the-start on all blocks that "fall through" to themselves.
- *   For one of these blocks, also generate a call to `DeeThread_CheckInterrupt()'
+ *   For one of these blocks, also generate a call to `DeeThread_CheckInterrupt()`
  * - For all blocks that have more than 1 fallthru predecessors, take all but
  *   1 of those predecessors and append unconditional jumps to them, then set
- *   the `bb_next' field of those blocks to `NULL'.
+ *   the `bb_next` field of those blocks to `NULL`.
  * - Also fills in:
  *   - self->fa_sections
  *   - self->fa_prolog.hs_link+hs_symbols
@@ -1118,8 +1118,8 @@ function_assembler_ordersections(struct function_assembler *__restrict self) {
 #undef LOCAL_morph_flush
 
 	/* Go through exception exits and put them into the section order.
-	 * Note that `function_assembler_compilemorph()' already ordered
-	 * them for us, so all we need to do is start walking at `fa_except_first' */
+	 * Note that `function_assembler_compilemorph()` already ordered
+	 * them for us, so all we need to do is start walking at `fa_except_first` */
 	ASSERT((self->fa_except_first != NULL) ==
 	       (self->fa_except_exitc > 0));
 	if (self->fa_except_first != NULL) {
@@ -1195,7 +1195,7 @@ next_cold_xinfo:;
 	TAILQ_CONCAT(&text, &cold, hs_link);
 
 	/* Go through the big ol' section list and search for sections that have
-	 * a non-NULL `hs_fallthru' that differs from `TAILQ_NEXT(sect, hs_link)'
+	 * a non-NULL `hs_fallthru` that differs from `TAILQ_NEXT(sect, hs_link)`
 	 *
 	 * When encountered, try to move the section before their intended fallthru
 	 * (so-long as doing so doesn't mean that some other section's fallthru
@@ -1219,7 +1219,7 @@ next_cold_xinfo:;
 				 * doesn't matter if we jump to it, or after it.
 				 *
 				 * As such, try to jump *to* it so we get another
-				 * chance of shifting `sect'. */
+				 * chance of shifting `sect`. */
 				want_next = want_prev;
 				want_prev = TAILQ_PREV(want_next, host_section_tailq, hs_link);
 			}
@@ -1316,7 +1316,7 @@ no_jmp_needed:;
 		while (sym) {
 			struct host_symbol *next = sym->_hs_next;
 			struct host_symbol **p_list;
-			/* Must also resolve `HOST_SYMBOL_JUMP' -> `HOST_SYMBOL_SECT' */
+			/* Must also resolve `HOST_SYMBOL_JUMP` -> `HOST_SYMBOL_SECT` */
 			if (sym->hs_type == HOST_SYMBOL_JUMP) {
 				struct jump_descriptor *jmp = sym->hs_value.sv_jump;
 				struct host_section *target_sect;
@@ -1342,7 +1342,7 @@ no_jmp_needed:;
 				struct host_section *symsect;
 				symsect = sym->hs_value.sv_sect.ss_sect;
 				ASSERT(symsect);
-				/* The section may not be linked if it was deleted by `function_assembler_trimdead()'.
+				/* The section may not be linked if it was deleted by `function_assembler_trimdead()`.
 				 * When that is the case, simply keep the symbol as part of the misc-symbols list. */
 				if (host_section_islinked(symsect))
 					p_list = &symsect->hs_symbols;
@@ -1397,7 +1397,7 @@ host_section_deltext(struct host_section *__restrict self,
 			sym->hs_value.sv_sect.ss_off -= num_bytes;
 	}
 
-	/* All sections that code after `self' need to have their base offset adjusted. */
+	/* All sections that code after `self` need to have their base offset adjusted. */
 	for (sect = TAILQ_NEXT(self, hs_link); sect;
 	     sect = TAILQ_NEXT(sect, hs_link))
 		sect->hs_badr -= num_bytes;
@@ -1477,7 +1477,7 @@ host_section_shrinkjumps(struct host_section *__restrict self) {
 }
 
 /* Step #6: Try to shrink large in generated host text with smaller ones.
- * This is an arch-specific step. On x86 it replaces `jmpl' with `jmp8' (if possible) */
+ * This is an arch-specific step. On x86 it replaces `jmpl` with `jmp8` (if possible) */
 INTERN NONNULL((1)) void DCALL
 function_assembler_shrinkjumps(struct function_assembler *__restrict self) {
 	struct host_section *sect;
@@ -1596,7 +1596,7 @@ again:
 		size_t i;
 		DREF DeeObject **refs = self->fa_irefs.ir_elem;
 		for (i = 0; i <= self->fa_irefs.ir_mask; ++i) {
-			/* Fill gaps with references to `Dee_None' */
+			/* Fill gaps with references to `Dee_None` */
 			if (refs[i] == NULL)
 				refs[i] = DeeNone_NewRef();
 		}
@@ -1612,9 +1612,9 @@ err:
 	return -1;
 }
 
-/* High-level wrapper function to fully assemble `function' into its host-asm equivalent.
+/* High-level wrapper function to fully assemble `function` into its host-asm equivalent.
  * @param: cc:    Calling convention of the generated function
- * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*'
+ * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*`
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((2, 3)) int DCALL

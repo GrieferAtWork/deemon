@@ -54,7 +54,7 @@ struct dhashalgo {
 	uint16_t           ha_width; /* Crc bit-width (<= ha_size * 8). */
 	uint8_t            ha_size;  /* Size of a hash value in bytes (1|2|4|8|n). */
 #define HASHALGO_FNORMAL 0x0000  /* Normal flags. */
-	uint8_t            ha_flags; /* Additional flags (set of `HASHALGO_F*') */
+	uint8_t            ha_flags; /* Additional flags (set of `HASHALGO_F*`) */
 	union {
 		/* Internal hash algorithms (these don't perform input/output modulation) */
 		dhashfuncn_t   ha_hashn;  /* [1..1] */
@@ -99,8 +99,8 @@ struct dhashalgon {
 #undef DHASHALGO_MEMBERS
 
 
-/* Execute the given hash algorithm to hash `data...+=datasize'
- * When given, `start' is used as the initial hash value (which
+/* Execute the given hash algorithm to hash `data...+=datasize`
+ * When given, `start` is used as the initial hash value (which
  * may be the hash result of a previous call), but when set to
  * NULL, the algorythm's default start-value is used instead. */
 INTDEF WUNUSED NONNULL((1, 3)) DREF /*Int*/ DeeObject *DCALL
@@ -109,11 +109,11 @@ dhashalgo_exec(struct dhashalgo const *__restrict self,
                void const *__restrict data,
                size_t datasize);
 
-/* Try to find the hash algorithm associated with `name', returning
+/* Try to find the hash algorithm associated with `name`, returning
  * NULL (but not throwing an error) if no such algorithm exists. */
 INTDEF WUNUSED NONNULL((1)) struct dhashalgo const *DCALL
 dhashalgo_tryfind(char const *__restrict name);
-/* Same as `dhashalgo_tryfind()', but throw an error if the algorithm wasn't found. */
+/* Same as `dhashalgo_tryfind()`, but throw an error if the algorithm wasn't found. */
 INTDEF WUNUSED NONNULL((1)) struct dhashalgo const *DCALL
 dhashalgo_find(char const *__restrict name);
 

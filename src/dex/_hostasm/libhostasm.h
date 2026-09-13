@@ -20,7 +20,7 @@
 #ifndef GUARD_DEX_HOSTASM_LIBHOSTASM_H
 #define GUARD_DEX_HOSTASM_LIBHOSTASM_H 1
 #ifndef DEE_SOURCE
-#error "Must `#define DEE_SOURCE' to include this header"
+#error "Must `#define DEE_SOURCE` to include this header"
 #endif /* DEE_SOURCE */
 
 #include "host.h"
@@ -87,13 +87,13 @@
  *     - Select (storage kind): [...]  (identical to stack)
  * - A Basic block ends when a jmp-label-, or the end of the containing code is reached
  * - A Basic block can contain as many branching instructions as it wants
- * - Generated assembly is callable as `DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv)'
+ * - Generated assembly is callable as `DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv)`
  *
  *
  *
  * ============= FLAWS =============
  *
- * How will this integrate with `Dee_code_frame'?
+ * How will this integrate with `Dee_code_frame`?
  * -> It would probably be best to not use it, and use some sort of
  *    new instrumentation in order to unwind the stack and construct
  *    Traceback objects as the stack is unwound.
@@ -266,11 +266,11 @@ struct memval; /* High-level value (encapsulates 1..n memloc that may be morphed
 #define MEMADR_TYPE_HREGIND   7 /* >> value = *(uintptr_t *)(%ma_reg + ma_val.v_indoff); */
 #define MEMADR_TYPE_HASREG(typ) ((typ) >= MEMADR_TYPE_HREG)
 #define MEMADR_TYPE_CASEREG     case MEMADR_TYPE_HREG: case MEMADR_TYPE_HREGIND
-typedef uint8_t memadr_type_t; /* One of `MEMADR_TYPE_*' */
+typedef uint8_t memadr_type_t; /* One of `MEMADR_TYPE_*` */
 
 struct memadr {
 	/* Low level value address */
-	memadr_type_t       ma_typ;     /* Location kind (one of `MEMADR_TYPE_*') */
+	memadr_type_t       ma_typ;     /* Location kind (one of `MEMADR_TYPE_*`) */
 	host_regno_t        ma_reg;     /* [valid_if(MEMADR_TYPE_HREG, MEMADR_TYPE_HREGIND)] Register number (or 0 if not valid). */
 	uint8_t            _ma_zro[sizeof(void *) - 2]; /* Extra padding space (must be 0-initialized) */
 	union {
@@ -345,7 +345,7 @@ struct memloc {
 	/* Low level value location (address of optional value delta) */
 	struct memadr ml_adr; /* >> value = VALUE_OF(ml_adr) + ml_off; */
 	ptrdiff_t     ml_off; /* [if(ml_adr.ma_typ !in [MEMADR_TYPE_HREG, MEMADR_TYPE_HREGIND, MEMADR_TYPE_HSTACKIND], [== 0])]
-	                       * Extra addend added to the effective location value. Must be set to `0' for location
+	                       * Extra addend added to the effective location value. Must be set to `0` for location
 	                       * types where doing so doesn't make sense (see list above of allowed types). */
 };
 
@@ -408,7 +408,7 @@ struct memloc {
 #define memloc_hstackind_getvaloff(self)      memloc_getoff(self)
 #define memloc_hstackind_setvaloff(self, val) memloc_getoff(self, val)
 
-/* Similar to `memloc_setoff()', but works for *all* location types. */
+/* Similar to `memloc_setoff()`, but works for *all* location types. */
 LOCAL NONNULL((1)) void DCALL
 memloc_adjoff(struct memloc *__restrict self, ptrdiff_t val_delta) {
 	switch (memloc_gettyp(self)) {
@@ -486,9 +486,9 @@ memequiv_next_asloc(struct memequiv const *__restrict self,
 
 
 struct memequivs {
-	size_t           meqs_mask; /* Hash-mask of `meqs_list' */
-	size_t           meqs_size; /* # of non-MEMEQUIV_TYPE_UNUSED items in `meqs_list' */
-	size_t           meqs_used; /* # of non-MEMEQUIV_TYPE_UNUSED/MEMEQUIV_TYPE_DUMMY items in `meqs_list' */
+	size_t           meqs_mask; /* Hash-mask of `meqs_list` */
+	size_t           meqs_size; /* # of non-MEMEQUIV_TYPE_UNUSED items in `meqs_list` */
+	size_t           meqs_used; /* # of non-MEMEQUIV_TYPE_UNUSED/MEMEQUIV_TYPE_DUMMY items in `meqs_list` */
 	struct memequiv *meqs_list; /* [1..meqs_mask+1][owned] Memory equivalence hash-vector. */
 	size_t           meqs_regs[HOST_REGNO_COUNT]; /* # of MEMEQUIV_TYPE_HREG/MEMEQUIV_TYPE_HREGIND entries for reach register. */
 };
@@ -497,7 +497,7 @@ INTDEF struct memequiv const memequivs_dummy_list[1];
 
 /* Hash-iteration control. */
 #define memequivs_hashst(self, hash)  ((hash) & (self)->meqs_mask)
-#define memequivs_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define memequivs_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define memequivs_hashit(self, i)     ((self)->meqs_list + ((i) & (self)->meqs_mask))
 
 #define memequivs_init(self)                                                \
@@ -520,11 +520,11 @@ INTDEF NONNULL((1)) void DCALL _memequivs_verifyrinuse_d(struct memequivs const 
 #endif /* !NDEBUG */
 
 
-/* Inplace-replace `self->meqs_list' with a copy of itself. */
+/* Inplace-replace `self->meqs_list` with a copy of itself. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 _memequivs_inplace_copy(struct memequivs *__restrict self);
 
-/* Constrain equivalences in `self' by deleting all that aren't also present in `other'
+/* Constrain equivalences in `self` by deleting all that aren't also present in `other`
  * @return: true:  At least 1 equivalence had to be deleted.
  * @return: false: Everything is good! */
 INTDEF NONNULL((1, 2)) bool DCALL
@@ -534,7 +534,7 @@ memequivs_constrainwith(struct memequivs *__restrict self,
 /* Remember that "to" now contains the same value as "from".
  * In the even that "to" was already part of another equivalence
  * class, it will first be removed from that class the same way
- * a call to `memequivs_undefined(self, to)' would.
+ * a call to `memequivs_undefined(self, to)` would.
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -562,7 +562,7 @@ memequivs_undefined(struct memequivs *__restrict self,
 INTDEF NONNULL((1)) void DCALL
 memequivs_undefined_allregs(struct memequivs *__restrict self);
 
-/* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset' as undefined. */
+/* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset` as undefined. */
 INTDEF NONNULL((1)) void DCALL
 memequivs_undefined_hstackind_after(struct memequivs *__restrict self,
                                     host_cfa_t min_cfa_offset);
@@ -575,7 +575,7 @@ memequivs_undefined_hstackind_inrange(struct memequivs *__restrict self,
                                       host_cfa_t end_cfa_offset);
 
 /* Return a pointer to the equivalence location of "loc" (ignoring
- * value offsets), or `NULL' if there aren't any additional locations
+ * value offsets), or `NULL` if there aren't any additional locations
  * that are known to be equivalent to "loc". */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) struct memequiv *DCALL
 memequivs_getclassof(struct memequivs const *__restrict self,
@@ -769,7 +769,7 @@ memequivs_movevalue_reg2regind(struct memequivs *__restrict self,
 #define Dee_class_descriptor_object Dee_class_descriptor_object
 struct Dee_class_descriptor_object;
 struct memobj_xinfo_cdesc {
-	struct Dee_class_descriptor_object *moxc_desc;  /* [1..1] Known value for `DeeType_Class(:mo_loc)' */
+	struct Dee_class_descriptor_object *moxc_desc;  /* [1..1] Known value for `DeeType_Class(:mo_loc)` */
 	COMPILER_FLEXIBLE_ARRAY(byte_t, moxc_init); /* [CEILDIV(moxc_desc->cd_cmemb_size, CHAR_BIT)] Bitset of cd_members items already initialized. */
 };
 
@@ -788,10 +788,10 @@ memobj_xinfo_cdesc_equals(struct memobj_xinfo_cdesc const *a,
 
 
 struct memobj_xinfo {
-	Dee_refcnt_t               mox_refcnt; /* Reference counter (when >1, this struct is used by multiple `memval'-s) */
+	Dee_refcnt_t               mox_refcnt; /* Reference counter (when >1, this struct is used by multiple `memval`-s) */
 	struct memobj_xinfo_cdesc *mox_cdesc;  /* [0..1] Class descriptor info (or NULL if this isn't a user-defined class in the making). */
 	struct memloc              mox_dep;    /* Dependent memory location (or all zeroes if there is none).
-	                                        * All `memobj' that are equal to this location get the `MEMOBJ_F_HASDEP'
+	                                        * All `memobj` that are equal to this location get the `MEMOBJ_F_HASDEP`
 	                                        * flag. When a location with that flag gets decref'd, it must first make sure
 	                                        * that every distinct objects that depend on it has at least 1 reference. */
 };
@@ -805,15 +805,15 @@ INTDEF ATTR_PURE NONNULL((1, 2)) bool DCALL
 memobj_xinfo_equals(struct memobj_xinfo const *a,
                     struct memobj_xinfo const *b);
 
-/* Possible flags for `struct memobj::mo_flags' */
+/* Possible flags for `struct memobj::mo_flags` */
 #define MEMOBJ_F_NORMAL       0x00
-#define MEMOBJ_F_ISREF        0x01 /* DREF: A reference is being held to the object in `mo_loc' */
-#define MEMOBJ_F_ONEREF       0x02 /* [valid_if(MEMOBJ_F_ISREF)] The reference being held by `mo_loc' has not yet escaped (on decref, can use decref_dokill instead) */
-#define MEMOBJ_F_LINEAR       0x04 /* When mo_loc is `MEMADR_TYPE_HSTACKIND': location is part of a linear vector. It must not be moved to a different cfa offset (only allowed if memobj is part of vstack) */
+#define MEMOBJ_F_ISREF        0x01 /* DREF: A reference is being held to the object in `mo_loc` */
+#define MEMOBJ_F_ONEREF       0x02 /* [valid_if(MEMOBJ_F_ISREF)] The reference being held by `mo_loc` has not yet escaped (on decref, can use decref_dokill instead) */
+#define MEMOBJ_F_LINEAR       0x04 /* When mo_loc is `MEMADR_TYPE_HSTACKIND`: location is part of a linear vector. It must not be moved to a different cfa offset (only allowed if memobj is part of vstack) */
 #define MEMOBJ_F_HASDEP       0x08 /* This object's location (may) appear as a dependency of another object. If it gets decref'd, must first incref every every distinct dependent object. */
 #define _MEMOBJ_F_EXPAND      0x40 /* May appear in MEMVAL_VMORPH_LIST/MEMVAL_VMORPH_TUPLE/MEMVAL_VMORPH_HASHSET/MEMVAL_VMORPH_ROSET to indicate a "foo..." argument */
 #define MEMOBJ_F_MAYBEUNBOUND 0x80 /* Location may be NULL, meaning it may not be bound (only allowed if memobj is used by MEMVAL_VMORPH_DIRECT of a local variable memval)
-                                    * NOTE: This flag is combined with `MEMADR_TYPE_CONST,NULL' to represent uninitialized locals. */
+                                    * NOTE: This flag is combined with `MEMADR_TYPE_CONST,NULL` to represent uninitialized locals. */
 
 /* Offset to go from "struct memobjs::mos_objv" to "struct memobj_xinfo" */
 #define MEMOBJ_MO_XINFO_OFFSET              \
@@ -824,16 +824,16 @@ memobj_xinfo_equals(struct memobj_xinfo const *a,
 struct memobj {
 	/* High-level object value (encapsulates memloc and adds extra deemon-object related meta-data) */
 #ifdef __INTELLISENSE__
-	void                     *mo_xinfo;  /* [0..1] Extra information about the object (subtract "MEMOBJ_MO_XINFO_OFFSET" to get `struct memobj_xinfo'). */
+	void                     *mo_xinfo;  /* [0..1] Extra information about the object (subtract "MEMOBJ_MO_XINFO_OFFSET" to get `struct memobj_xinfo`). */
 #else /* __INTELLISENSE__ */
-	DREF void                *mo_xinfo;  /* [0..1] Extra information about the object (subtract "MEMOBJ_MO_XINFO_OFFSET" to get `struct memobj_xinfo'). */
+	DREF void                *mo_xinfo;  /* [0..1] Extra information about the object (subtract "MEMOBJ_MO_XINFO_OFFSET" to get `struct memobj_xinfo`). */
 #endif /* !__INTELLISENSE__ */
 	struct memloc             mo_loc;    /* Object location */
 	DeeTypeObject            *mo_typeof; /* [0..1] If non-null, the guarantied correct object type of this location (assumed value
 	                                      * for the "ob_type" of this memory location, and used for inlining operator calls).
 	                                      * DON'T SET THIS TO SOMETHING STUPID LIKE "DeeObject_Type" -- NO BASE CLASSES ALLOWED!
-	                                      * NOTE: Only used by `fg_v*' function! */
-	uint8_t                   mo_flags;  /* Object flags (set of `MEMOBJ_F_*') */
+	                                      * NOTE: Only used by `fg_v*` function! */
+	uint8_t                   mo_flags;  /* Object flags (set of `MEMOBJ_F_*`) */
 };
 
 #ifdef NDEBUG
@@ -846,7 +846,7 @@ struct memobj {
 #define memobj_hasxinfo(self) ((self)->mo_xinfo /*!= NULL*/)
 #define memobj_getxinfo(self) ((struct memobj_xinfo *)((byte_t *)(self)->mo_xinfo - MEMOBJ_MO_XINFO_OFFSET))
 
-/* Ensure that `self->mo_xinfo' has been allocated, then return it.
+/* Ensure that `self->mo_xinfo` has been allocated, then return it.
  * @return: NULL: Extended object info had yet to be allocated, and allocation failed. */
 INTDEF WUNUSED NONNULL((1)) struct memobj_xinfo *DCALL
 memobj_reqxinfo(struct memobj *__restrict self);
@@ -860,7 +860,7 @@ memobj_reqxinfo(struct memobj *__restrict self);
 #define memobj_initmove(self, other) (*(self) = *(other), _memobj_fini_DBG_memset(other))
 #define memobj_fini(self)            (_memobj_xdecref_xinfo(self), _memobj_fini_DBG_memset(self))
 #undef memobj_initmove_IS_MEMCPY
-#define memobj_initmove_IS_MEMCPY /* If defined, you can use memcpy/memmove to emulate `memobj_initmove()' */
+#define memobj_initmove_IS_MEMCPY /* If defined, you can use memcpy/memmove to emulate `memobj_initmove()` */
 
 /* Basic memobj initializers.
  * NOTE: NONE OF THESE REQUIRE USE OF "memobj_fini"! */
@@ -949,14 +949,14 @@ memobj_reqxinfo(struct memobj *__restrict self);
 
 
 
-/* Value-proxy indirection (applied on-top of `ml_adr.ma_typ'). e.g.: `value = DeeBool_For(value)'
- * NOTE: All of the `fg_g*' function are allowed to assume `MEMVAL_VMORPH_ISDIRECT'.
- *       Only the `fg_v*' functions actually check for `mv_vmorph'! */
+/* Value-proxy indirection (applied on-top of `ml_adr.ma_typ`). e.g.: `value = DeeBool_For(value)`
+ * NOTE: All of the `fg_g*` function are allowed to assume `MEMVAL_VMORPH_ISDIRECT`.
+ *       Only the `fg_v*` functions actually check for `mv_vmorph`! */
 #define MEMVAL_VMORPH_DIRECT     0 /* >> value = mv_obj.mvo_0; // Location contains a direct value (usually an object pointer, but can also be anything else) */
 #define MEMVAL_VMORPH_DIRECT_01  1 /* >> value = mv_obj.mvo_0; __assume(value == 0 || value == 1); */
 #define MEMVAL_VMORPH_ISDIRECT(vmorph)      ((vmorph) <= MEMVAL_VMORPH_DIRECT_01)
-#define MEMVAL_VMORPH_TESTZ(direct_vmorph)  ((direct_vmorph) | MEMVAL_VMORPH_BOOL_Z)  /* Assume that `MEMVAL_VMORPH_ISDIRECT(direct_vmorph)' */
-#define MEMVAL_VMORPH_TESTNZ(direct_vmorph) ((direct_vmorph) | MEMVAL_VMORPH_BOOL_NZ) /* Assume that `MEMVAL_VMORPH_ISDIRECT(direct_vmorph)' */
+#define MEMVAL_VMORPH_TESTZ(direct_vmorph)  ((direct_vmorph) | MEMVAL_VMORPH_BOOL_Z)  /* Assume that `MEMVAL_VMORPH_ISDIRECT(direct_vmorph)` */
+#define MEMVAL_VMORPH_TESTNZ(direct_vmorph) ((direct_vmorph) | MEMVAL_VMORPH_BOOL_NZ) /* Assume that `MEMVAL_VMORPH_ISDIRECT(direct_vmorph)` */
 #define MEMVAL_VMORPH_ISBOOL(vmorph)        ((vmorph) >= MEMVAL_VMORPH_BOOL_Z && (vmorph) <= MEMVAL_VMORPH_BOOL_GZ)
 #define MEMVAL_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(mv_obj.mvo_0 == 0 ? 1 : 0); */
 #define MEMVAL_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For({1,0}[mv_obj.mvo_0]); */
@@ -987,17 +987,17 @@ struct memobjs {
 	 * current mem-state, and search for identical memvals that also appear within the
 	 * same mos_copies as the old memobjs's ring of copies, and then assign your
 	 * new memobjs to *all* of those memvals. */
-	Dee_refcnt_t                           mos_refcnt; /* Reference counter (when >1, this struct is used by multiple `memval'-s) */
+	Dee_refcnt_t                           mos_refcnt; /* Reference counter (when >1, this struct is used by multiple `memval`-s) */
 	RINGQ_ENTRY(memobjs)                   mos_copies; /* Ring of copies that have been made of this set of mem objects
 	                                                    * All memobjs items refer to the same virtual object at runtime.
-	                                                    * Aside from `mos_objv[*].mo_flags', all items of this ring are
+	                                                    * Aside from `mos_objv[*].mo_flags`, all items of this ring are
 	                                                    * completely identical, and if changes are made, those changes must
 	                                                    * be made on all elements at the same time! */
 	size_t                                 mos_objc;   /* # of objects */
 	COMPILER_FLEXIBLE_ARRAY(struct memobj, mos_objv);  /* [mos_objc] Vector of objects. */
 };
 
-/* Construct a new `struct memobjs' with an uninitialized `mos_objv'. */
+/* Construct a new `struct memobjs` with an uninitialized `mos_objv`. */
 INTDEF WUNUSED struct memobjs *DCALL memobjs_new(size_t objc);
 
 INTDEF NONNULL((1)) void DCALL memobjs_destroy(struct memobjs *__restrict self);
@@ -1019,9 +1019,9 @@ memobjs_copies_contains(struct memobjs const *ring_of_this,
 
 
 
-/* Possible values for `struct memval::mv_flags' */
+/* Possible values for `struct memval::mv_flags` */
 #define MEMVAL_F_NORMAL 0x00 /* Normal flags */
-#define MEMVAL_F_NOREF  0x01 /* Ignore `MEMOBJ_F_ISREF' of objecst (may only be set when `memval_hasobjn()') */
+#define MEMVAL_F_NOREF  0x01 /* Ignore `MEMOBJ_F_ISREF` of objecst (may only be set when `memval_hasobjn()`) */
 
 #undef DEE_DEFINE_MEMVAL_FOR_IDE
 #ifdef __INTELLISENSE__
@@ -1037,21 +1037,21 @@ struct memval {
 			struct memloc             _mv0_loc;    /* Alias for "mv_obj.mvo_0.mo_loc" */
 			DeeTypeObject            *_mv0_typeof; /* Alias for "mv_obj.mvo_0.mo_typeof" */
 			uint8_t                   _mv0_flags;  /* Alias for "mv_obj.mvo_0.mo_flags" */
-			uint8_t                   _mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-			uint8_t                   _mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
+			uint8_t                   _mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*`) */
+			uint8_t                   _mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*`). */
 			uint8_t                  __mv_pad[sizeof(void *) - 3]; /* Padding... */
 		} _mvo_val;
 #endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
 		struct memobj       mvo_0; /* [valid_if(memval_hasobj0(this))] Base location */
 #ifdef DEE_DEFINE_MEMVAL_FOR_IDE
-		struct memobj      *mvo_n; /* [valid_if(memval_hasobjn(this))][1..1] Pointer to a `struct memobjs::mos_objv' */
+		struct memobj      *mvo_n; /* [valid_if(memval_hasobjn(this))][1..1] Pointer to a `struct memobjs::mos_objv` */
 #else /* DEE_DEFINE_MEMVAL_FOR_IDE */
-		DREF struct memobj *mvo_n; /* [valid_if(memval_hasobjn(this))][1..1] Pointer to a `struct memobjs::mos_objv' */
+		DREF struct memobj *mvo_n; /* [valid_if(memval_hasobjn(this))][1..1] Pointer to a `struct memobjs::mos_objv` */
 #endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
 	} mv_obj; /* Object */
 #ifdef DEE_DEFINE_MEMVAL_FOR_IDE
-	uint8_t  mv_vmorph;     /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-	uint8_t  mv_flags;      /* Extra mem value flags (set of `MEMVAL_F_*'). */
+	uint8_t  mv_vmorph;     /* Location value morph type (one of `MEMVAL_VMORPH_*`) */
+	uint8_t  mv_flags;      /* Extra mem value flags (set of `MEMVAL_F_*`). */
 	uint8_t _mv_pad[sizeof(void *) - 3]; /* Padding... */
 #else /* DEE_DEFINE_MEMVAL_FOR_IDE */
 #define mv_vmorph mv_obj._mvo_val._mv_vmorph
@@ -1067,8 +1067,8 @@ struct memval {
 #endif /* !NDEBUG */
 #define memval_fini_direct(self) (void)0 /* Always a no-op, but may be used for easier code readability */
 
-/* Assert that `struct memobj_xinfo' and `struct memobjs' get referenced
- * by `struct memval' in such a way that their reference counters end up at
+/* Assert that `struct memobj_xinfo` and `struct memobjs` get referenced
+ * by `struct memval` in such a way that their reference counters end up at
  * the same location. */
 #define sizeof_field(T, s) sizeof(((T *)0)->s)
 STATIC_ASSERT(offsetof(struct memval, mv_obj.mvo_0.mo_xinfo) == offsetof(struct memval, mv_obj.mvo_n));
@@ -1090,8 +1090,8 @@ memval_do_destroy_objn_or_xinfo(struct memval *__restrict self);
 	(_memval_impl_decref(self), _memval_fini_DBG_memset(self))
 
 /* Create a copy of a memval. Never fails, but may incref a pointed-to
- * struct, meaning you have to call `memval_fini()', unless you know
- * that the `vmorph' of `other' doesn't require such a thing. */
+ * struct, meaning you have to call `memval_fini()`, unless you know
+ * that the `vmorph` of `other` doesn't require such a thing. */
 #define memval_initcopy(self, other) \
 	(void)(*(self) = *(other), _memval_impl_incref(self))
 
@@ -1102,7 +1102,7 @@ memval_do_destroy_objn_or_xinfo(struct memval *__restrict self);
 #define memval_initmove(dst, src) \
 	(void)(*(dst) = *(src), _memval_fini_DBG_memset(src))
 #undef memval_initmove_IS_MEMCPY
-#define memval_initmove_IS_MEMCPY /* If defined, you can use memcpy/memmove to emulate `memval_initmove()' */
+#define memval_initmove_IS_MEMCPY /* If defined, you can use memcpy/memmove to emulate `memval_initmove()` */
 
 /* Basic memval initializers.
  * NOTE: NONE OF THESE REQUIRE USE OF "memval_fini"! */
@@ -1232,7 +1232,7 @@ memval_do_destroy_objn_or_xinfo(struct memval *__restrict self);
 #define memval_direct_sameadr(a, b) memloc_sameadr(memval_direct_getloc(a), memval_direct_getloc(b))
 #define memval_direct_sameloc(a, b) memloc_sameloc(memval_direct_getloc(a), memval_direct_getloc(b))
 
-/* Try to figure out the guarantied runtime object type of `vdirect()' */
+/* Try to figure out the guarantied runtime object type of `vdirect()` */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 memval_typeof(struct memval const *self);
 
@@ -1311,7 +1311,7 @@ memval_sameval(struct memval const *a,
  *       that vdirect() of "a" and "b" produces identical logical code,
  *       and that "a === b" is *allowed* to be true at runtime.
  *
- * This is the same as `memval_sameval()', but can be used if the
+ * This is the same as `memval_sameval()`, but can be used if the
  * caller is OK with 2 yet-to-be-created instances of identical objects
  * (such as 2 Tuples with identical elements) end up being merged. */
 LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
@@ -1339,33 +1339,33 @@ memval_sameval_mayalias(struct memval const *a,
 
 
 
-/* Possible values for `memstate::ms_rusage' */
-#define HOST_REGUSAGE_GENERIC 0x00 /* Register usage is defined by `ms_stackv' and `ms_localv'. */
+/* Possible values for `memstate::ms_rusage` */
+#define HOST_REGUSAGE_GENERIC 0x00 /* Register usage is defined by `ms_stackv` and `ms_localv`. */
 #define HOST_REGUSAGE_THREAD  0x01 /* Register contains: DeeThread_Self() */
 typedef uint8_t host_regusage_t;
 
 
-/* Extra local variable IDs always present in `ms_localv'
+/* Extra local variable IDs always present in `ms_localv`
  * These indices appear after "normal" locals. */
-#define MEMSTATE_XLOCAL_A_FUNC     0  /* Caller-argument: `DeeFunctionObject *func' (only for `HOST_CC_F_FUNC') */
-#define MEMSTATE_XLOCAL_A_THIS     1  /* Caller-argument: `DeeObject *this'         (only for `HOST_CC_F_THIS') */
-#define MEMSTATE_XLOCAL_A_ARGC     2  /* Caller-argument: `size_t argc'             (only for `!HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGS     3  /* Caller-argument: `DeeTupleObject *args'    (only for `HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGV     3  /* Caller-argument: `DeeObject **argv'        (only for `!HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_KW       4  /* Caller-argument: `DeeObject *kw'           (only for `HOST_CC_F_KW') */
-#define MEMSTATE_XLOCAL_VARARGS    5  /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
-#define MEMSTATE_XLOCAL_VARKWDS    6  /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
-#define MEMSTATE_XLOCAL_KW_ARGV    7  /* Keyword argv (s.a. `struct Dee_code_frame_kwds::fk_kargv') */
-#define MEMSTATE_XLOCAL_STDOUT     8  /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
-#define MEMSTATE_XLOCAL_POPITER    9  /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
+#define MEMSTATE_XLOCAL_A_FUNC     0  /* Caller-argument: `DeeFunctionObject *func` (only for `HOST_CC_F_FUNC`) */
+#define MEMSTATE_XLOCAL_A_THIS     1  /* Caller-argument: `DeeObject *this`         (only for `HOST_CC_F_THIS`) */
+#define MEMSTATE_XLOCAL_A_ARGC     2  /* Caller-argument: `size_t argc`             (only for `!HOST_CC_F_TUPLE`) */
+#define MEMSTATE_XLOCAL_A_ARGS     3  /* Caller-argument: `DeeTupleObject *args`    (only for `HOST_CC_F_TUPLE`) */
+#define MEMSTATE_XLOCAL_A_ARGV     3  /* Caller-argument: `DeeObject **argv`        (only for `!HOST_CC_F_TUPLE`) */
+#define MEMSTATE_XLOCAL_A_KW       4  /* Caller-argument: `DeeObject *kw`           (only for `HOST_CC_F_KW`) */
+#define MEMSTATE_XLOCAL_VARARGS    5  /* Varargs (s.a. `struct Dee_code_frame::cf_vargs`) */
+#define MEMSTATE_XLOCAL_VARKWDS    6  /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds`) */
+#define MEMSTATE_XLOCAL_KW_ARGV    7  /* Keyword argv (s.a. `struct Dee_code_frame_kwds::fk_kargv`) */
+#define MEMSTATE_XLOCAL_STDOUT     8  /* Temporary slot for a cached version of `deemon.File.stdout` (to speed up `ASM_PRINT` & friends) */
+#define MEMSTATE_XLOCAL_POPITER    9  /* Temporary slot used by `ASM_FOREACH` to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
 #define MEMSTATE_XLOCAL_MINCOUNT   10 /* Min number of extra locals */
 #define MEMSTATE_XLOCAL_DEFARG_MIN MEMSTATE_XLOCAL_MINCOUNT
 #define MEMSTATE_XLOCAL_DEFARG(opt_aid) (MEMSTATE_XLOCAL_DEFARG_MIN + (opt_aid)) /* Start of cached optional arguments. */
 
 /* Mem-state flags. */
 #define MEMSTATE_F_NORMAL      0x0000 /* Normal flags */
-#define MEMSTATE_F_GOTEXCEPT   0x0001 /* It's known that `DeeThread_Self()->t_except != NULL' */
-#define MEMSTATE_F_GOTNULLABLE 0x0002 /* There exactly 1 memval with `mv_vmorph == MEMVAL_VMORPH_NULLABLE' */
+#define MEMSTATE_F_GOTEXCEPT   0x0001 /* It's known that `DeeThread_Self()->t_except != NULL` */
+#define MEMSTATE_F_GOTNULLABLE 0x0002 /* There exactly 1 memval with `mv_vmorph == MEMVAL_VMORPH_NULLABLE` */
 
 struct memstate {
 	Dee_refcnt_t                           ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
@@ -1374,12 +1374,12 @@ struct memstate {
 	                                                                * Number of local variables + extra slots. NOTE: Never 0! */
 	vstackaddr_t                           ms_stackc;          /* Number of (currently) used deemon stack slots in use. */
 	vstackaddr_t                           ms_stacka;          /* Allocated number of deemon stack slots in use. */
-	uintptr_t                              ms_flags;           /* Special state flags (set of `MEMSTATE_F_*' and'd when constraining states; initialized to `0') */
-	size_t                                 ms_uargc_min;       /* Lower bound for the `argc' passed to the generated function (can be used to skip argc-checks) */
-	size_t                                 ms_rinuse[HOST_REGNO_COUNT]; /* Number of times each register is referenced by `ms_stackv' and `ms_localv' */
-	host_regusage_t                        ms_rusage[HOST_REGNO_COUNT]; /* Meaning of registers (set to `HOST_REGUSAGE_GENERIC' if clobbered) */
+	uintptr_t                              ms_flags;           /* Special state flags (set of `MEMSTATE_F_*` and'd when constraining states; initialized to `0`) */
+	size_t                                 ms_uargc_min;       /* Lower bound for the `argc` passed to the generated function (can be used to skip argc-checks) */
+	size_t                                 ms_rinuse[HOST_REGNO_COUNT]; /* Number of times each register is referenced by `ms_stackv` and `ms_localv` */
+	host_regusage_t                        ms_rusage[HOST_REGNO_COUNT]; /* Meaning of registers (set to `HOST_REGUSAGE_GENERIC` if clobbered) */
 	/* TODO: Array of currently in-use HSTACKIND locations (where each element
-	 *       is a `uint16_t' describing how many memloc's reference that CFA) */
+	 *       is a `uint16_t` describing how many memloc's reference that CFA) */
 
 	/* Keep track of memory locations that contain the same values.
 	 * primarily: when loading a HSTACKIND into a HREG, the stack location
@@ -1406,7 +1406,7 @@ struct memstate {
 #endif /* !__INTELLISENSE__ */
 };
 
-/* Helper macro to enumerate all `struct memval *mval' of a `struct memstate *self':
+/* Helper macro to enumerate all `struct memval *mval` of a `struct memstate *self`:
  * >> struct memval *mval;
  * >> memstate_foreach(mval, state) {
  * >>     ...
@@ -1448,7 +1448,7 @@ INTDEF NONNULL((1)) void DCALL memstate_destroy(struct memstate *__restrict self
 #define memstate_decref(self) (void)(--(self)->ms_refcnt || (memstate_destroy(self), 0))
 #define memstate_decref_nokill(self) (void)(ASSERT((self)->ms_refcnt >= 2), --(self)->ms_refcnt)
 
-/* Replace `*p_self' with a copy of itself
+/* Replace `*p_self` with a copy of itself
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1466,7 +1466,7 @@ memstate_copy(struct memstate *__restrict self);
 	 ASSERT(memstate_isshared(*(p_self))), \
 	 memstate_inplace_copy_because_shared(p_self))
 
-/* Ensure that at least `min_alloc' stack slots are allocated. */
+/* Ensure that at least `min_alloc` stack slots are allocated. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 memstate_reqvstack(struct memstate *__restrict self,
                    vstackaddr_t min_alloc);
@@ -1559,7 +1559,7 @@ memstate_dependency(struct memstate *__restrict self,
                     struct memobj *__restrict this_object,
                     struct memobj *__restrict depends_on_this);
 
-/* Same as `memobj_reqxinfo()', but must be used when "obj" may be aliased by
+/* Same as `memobj_reqxinfo()`, but must be used when "obj" may be aliased by
  * other memory locations, in which case the returned struct will be allocated in
  * all aliases as well. */
 INTDEF WUNUSED NONNULL((1, 2)) struct memobj_xinfo *DCALL
@@ -1593,8 +1593,8 @@ memstate_changeloc(struct memstate *__restrict self,
 #define memstate_hstack_mustpush_skip(self, cfa_offset)     (ptrdiff_t)((host_cfa_t)(cfa_offset) - ((self)->ms_host_cfa_offset + HOST_SIZEOF_POINTER))
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 
-/* Check if there is a register that contains `usage'.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent. */
+/* Check if there is a register that contains `usage`.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_usage(struct memstate const *__restrict self,
                           host_regusage_t usage);
@@ -1607,29 +1607,29 @@ memstate_hregs_find_usage(struct memstate const *__restrict self,
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 
 /* Check if there is a register that is completely unused.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent.
  * @param: accept_if_with_regusage: When true, allowed to return registers with
- *                                  `ms_rusage[return] != HOST_REGUSAGE_GENERIC' */
+ *                                  `ms_rusage[return] != HOST_REGUSAGE_GENERIC` */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_unused(struct memstate const *__restrict self,
                            bool accept_if_with_regusage);
 
-/* Check if `regno' is used by stack/locals (ignores `ms_rusage') */
+/* Check if `regno` is used by stack/locals (ignores `ms_rusage`) */
 #define memstate_hregs_isused(self, regno) ((self)->ms_rinuse[regno] > 0)
 
-/* Same as `memstate_hregs_find_unused(self, true)', but don't return `not_these',
- * which is an array of register numbers terminated by one `>= HOST_REGNO_COUNT'.
- * Returns some value `>= HOST_REGNO_COUNT' if non-existent. */
+/* Same as `memstate_hregs_find_unused(self, true)`, but don't return `not_these`,
+ * which is an array of register numbers terminated by one `>= HOST_REGNO_COUNT`.
+ * Returns some value `>= HOST_REGNO_COUNT` if non-existent. */
 INTDEF WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_unused_ex(struct memstate *__restrict self,
                               host_regno_t const *not_these);
 
-/* Adjust register-related memory locations to account for `%regno = %regno + delta' */
+/* Adjust register-related memory locations to account for `%regno = %regno + delta` */
 INTDEF NONNULL((1)) void DCALL
 memstate_hregs_adjust_delta(struct memstate *__restrict self,
                             host_regno_t regno, ptrdiff_t delta);
 
-/* Set all members of `self->ms_rusage' to `HOST_REGUSAGE_GENERIC' */
+/* Set all members of `self->ms_rusage` to `HOST_REGUSAGE_GENERIC` */
 #if HOST_REGUSAGE_GENERIC == 0
 #define memstate_hregs_clear_usage(self) \
 	bzero((self)->ms_rusage, sizeof((self)->ms_rusage))
@@ -1644,17 +1644,17 @@ memstate_hregs_adjust_delta(struct memstate *__restrict self,
 	
 
 
-/* Try to find a `n_bytes'-large free section of host stack memory.
+/* Try to find a `n_bytes`-large free section of host stack memory.
  * @param: hstack_reserved: When non-NULL, only consider locations that are *also* free in here
  * @return: * :            The base-CFA offset of the free section of memory
- * @return: (host_cfa_t)-1: There is no free section of at least `n_bytes' bytes.
- *                         In this case, allocate using `memstate_hstack_alloca()' */
+ * @return: (host_cfa_t)-1: There is no free section of at least `n_bytes` bytes.
+ *                         In this case, allocate using `memstate_hstack_alloca()` */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) host_cfa_t DCALL
 memstate_hstack_find(struct memstate const *__restrict self,
                      struct memstate const *hstack_reserved,
                      size_t n_bytes);
 
-/* Check if a pointer-sized blob at `cfa_offset' is being used by something. */
+/* Check if a pointer-sized blob at `cfa_offset` is being used by something. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 memstate_hstack_isused(struct memstate const *__restrict self,
                        host_cfa_t cfa_offset);
@@ -1664,21 +1664,21 @@ memstate_hstack_isused(struct memstate const *__restrict self,
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) host_cfa_t DCALL
 memstate_hstack_greatest_inuse(struct memstate const *__restrict self);
 
-/* Constrain `self' with `other', such that it is possible to generate code to
- * transition from `other' to `self', as well as any other mem-state that might
- * be the result of further constraints applied to `self'.
+/* Constrain `self` with `other`, such that it is possible to generate code to
+ * transition from `other` to `self`, as well as any other mem-state that might
+ * be the result of further constraints applied to `self`.
  * @return: true:  State become more constrained
  * @return: false: State didn't change */
 INTDEF NONNULL((1, 2)) bool DCALL
 memstate_constrainwith(struct memstate *__restrict self,
                        struct memstate const *__restrict other);
 
-/* Check if a reference is being held by `mobj' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mobj` or some other location that may be aliasing it. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 memstate_hasref(struct memstate const *__restrict self,
                 struct memobj const *mobj);
 
-/* Check if `mval' has an alias. */
+/* Check if `mval` has an alias. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 memstate_hasalias(struct memstate const *__restrict self,
                   struct memval const *mval);
@@ -1726,16 +1726,16 @@ struct host_symbol {
 #endif /* HAVE_HOST_SYMBOL_ALLOC_INFO */
 #define HOST_SYMBOL_UNDEF 0 /* Not yet defined */
 #define HOST_SYMBOL_ABS   1 /* Absolute value (e.g. for API functions) */
-#define HOST_SYMBOL_JUMP  2 /* Pass-through via a `struct jump_descriptor' (or fast-forward to start of section) */
-#define HOST_SYMBOL_SECT  3 /* Offset into a `struct host_section' */
+#define HOST_SYMBOL_JUMP  2 /* Pass-through via a `struct jump_descriptor` (or fast-forward to start of section) */
+#define HOST_SYMBOL_SECT  3 /* Offset into a `struct host_section` */
 #define HOST_SYMBOL_TCNT  4 /* # of valid types */
-	uintptr_t            hs_type; /* Symbol type (one of `HOST_SYMBOL_*') */
+	uintptr_t            hs_type; /* Symbol type (one of `HOST_SYMBOL_*`) */
 	union {
 		void const             *sv_abs;  /* [?..?][valid_if(HOST_SYMBOL_ABS)] */
 		struct jump_descriptor *sv_jump; /* [1..1][valid_if(HOST_SYMBOL_JUMP)] */
 		struct {
 			struct host_section *ss_sect; /* [1..1] Target section */
-			uintptr_t            ss_off;  /* Offset into `ss_sect' */
+			uintptr_t            ss_off;  /* Offset into `ss_sect` */
 		} sv_sect; /* [valid_if(HOST_SYMBOL_SECT)] */
 	} hs_value;
 };
@@ -1771,8 +1771,8 @@ struct host_symbol {
 	       (self)->hs_value.sv_sect.ss_sect = (sect),           \
 	       (self)->hs_value.sv_sect.ss_off  = (offset))
 
-/* Calculate and return the value of `self'
- * Only returns valid values after `hs_base' have been assigned. */
+/* Calculate and return the value of `self`
+ * Only returns valid values after `hs_base` have been assigned. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 host_symbol_value(struct host_symbol const *__restrict self);
 
@@ -1786,14 +1786,14 @@ host_symbol_value(struct host_symbol const *__restrict self);
 #endif /* HOSTASM_X86 */
 
 struct host_reloc {
-	uint32_t                 hr_offset; /* Offset from `bb_host_start' to where the relocation takes place. */
-	uint16_t                 hr_rtype;  /* Relocation type (one of `DEE_HOST_RELOC_*') */
+	uint32_t                 hr_offset; /* Offset from `bb_host_start` to where the relocation takes place. */
+	uint16_t                 hr_rtype;  /* Relocation type (one of `DEE_HOST_RELOC_*`) */
 #define DEE_HOST_RELOCVALUE_SYM  0      /* Relocate against a symbol */
 #define DEE_HOST_RELOCVALUE_ABS  1      /* Relocate against an absolute value (for API calls) */
 #ifndef HOSTASM_HAVE_SHRINKJUMPS /* shrinkjumps requires all section references to use symbols */
 #define DEE_HOST_RELOCVALUE_SECT 2      /* Relocate against a section base address */
 #endif /* !HOSTASM_HAVE_SHRINKJUMPS */
-	uint16_t                 hr_vtype;  /* Value type (one of `DEE_HOST_RELOCVALUE_*') */
+	uint16_t                 hr_vtype;  /* Value type (one of `DEE_HOST_RELOCVALUE_*`) */
 	union {
 		struct host_symbol  *rv_sym;    /* [1..1][valid_if(DEE_HOST_RELOCVALUE_SYM)] Relocation symbol. */
 		void const          *rv_abs;    /* [?..?][valid_if(DEE_HOST_RELOCVALUE_ABS)] Relocation value. */
@@ -1803,15 +1803,15 @@ struct host_reloc {
 	} hr_value;
 };
 
-/* Fill in `self->hr_vtype' and `self->hr_value' based on `sym'
- * If `sym' has already been defined as absolute or pointing to
+/* Fill in `self->hr_vtype` and `self->hr_value` based on `sym`
+ * If `sym` has already been defined as absolute or pointing to
  * the start of a section, directly inline it. */
 INTDEF NONNULL((1, 2)) void DCALL
 host_reloc_setsym(struct host_reloc *__restrict self,
                   struct host_symbol *__restrict sym);
 
-/* Calculate and return the value of `self'
- * Only returns valid values after `hs_base' have been assigned. */
+/* Calculate and return the value of `self`
+ * Only returns valid values after `hs_base` have been assigned. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 host_reloc_value(struct host_reloc const *__restrict self);
 
@@ -1825,7 +1825,7 @@ struct host_section {
 		byte_t               *hs_alend;   /* [>= hs_start] End of allocated host assembly */
 		struct host_symbol   *hs_symbols; /* [0..1][owned][valid_if(TAILQ_ISBOUND(self, hs_link))]
 		                                   * First symbol defined as part of this section */
-		struct host_section  *hs_fallthru; /* [0..1] Used internally by `function_assembler_ordersections()' */
+		struct host_section  *hs_fallthru; /* [0..1] Used internally by `function_assembler_ordersections()` */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_hs_u1
@@ -1851,7 +1851,7 @@ struct host_section {
 		size_t                hs_rela;    /* [valid_if(NEVER_CALLED(function_assembler_output))] Allocated number of host relocations. */
 		byte_t               *hs_base;    /* [valid_if(EVER_CALLED(function_assembler_output))] Base address in latest output */
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
-		uintptr_t             hs_badr;    /* Used internally by `function_assembler_shrinkjumps()' */
+		uintptr_t             hs_badr;    /* Used internally by `function_assembler_shrinkjumps()` */
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -1885,7 +1885,7 @@ host_section_getcold(struct host_section *__restrict self);
 
 #define host_section_islinked(self) TAILQ_ISBOUND(self, hs_link)
 
-/* Ensure that at least `num_bytes' of host text memory are available.
+/* Ensure that at least `num_bytes` of host text memory are available.
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1898,7 +1898,7 @@ _host_section_reqhost(struct host_section *__restrict self,
 
 /* Allocate and return a new host relocation. The caller is responsible
  * for filling in said relocation, and the returned pointer only remains
- * valid until the next call to this function with the same `self'.
+ * valid until the next call to this function with the same `self`.
  * @return: * :   The (uninitialized) host relocation
  * @return: NULL: Error  */
 INTDEF WUNUSED NONNULL((1)) struct host_reloc *DCALL
@@ -1910,11 +1910,11 @@ struct jump_descriptor {
 	Dee_instruction_t const  *jd_from;   /* [1..1][const] Deemon instruction where the jump originates from. */
 	struct basic_block       *jd_to;     /* [1..1][const] Basic block that this jump goes to. */
 #ifdef __INTELLISENSE__
-	struct memstate          *jd_stat;   /* [0..1] Memory state at the point where `jd_from' performs its jump (or NULL if not yet generated). */
+	struct memstate          *jd_stat;   /* [0..1] Memory state at the point where `jd_from` performs its jump (or NULL if not yet generated). */
 #else /* __INTELLISENSE__ */
-	DREF struct memstate     *jd_stat;   /* [0..1] Memory state at the point where `jd_from' performs its jump (or NULL if not yet generated). */
+	DREF struct memstate     *jd_stat;   /* [0..1] Memory state at the point where `jd_from` performs its jump (or NULL if not yet generated). */
 #endif /* !__INTELLISENSE__ */
-	struct host_section       jd_morph;  /* Text section to morph the memory state from `jd_stat' to `jd_to->bb_mem_start' */
+	struct host_section       jd_morph;  /* Text section to morph the memory state from `jd_stat` to `jd_to->bb_mem_start` */
 };
 
 #define jump_descriptor_alloc() \
@@ -1928,7 +1928,7 @@ struct jump_descriptor {
 
 struct jump_descriptors {
 	struct jump_descriptor **jds_list;  /* [owned_if(this == :bb_entries)][0..jds_size][owned]
-	                                     * List of jump descriptors, sorted by `jd_from' */
+	                                     * List of jump descriptors, sorted by `jd_from` */
 	size_t                   jds_size;  /* Number of jump descriptors. */
 	size_t                   jds_alloc; /* Allocated number of jump descriptors. */
 };
@@ -1938,21 +1938,21 @@ struct jump_descriptors {
 	 (self)->jds_size = 0,          \
 	 (self)->jds_alloc = 0)
 
-/* Lookup the jump descriptor for `deemon_from'
+/* Lookup the jump descriptor for `deemon_from`
  * @return: * :   The jump descriptor in question.
  * @return: NULL: No such jump descriptor. */
 INTDEF WUNUSED NONNULL((1)) struct jump_descriptor *DCALL
 jump_descriptors_lookup(struct jump_descriptors const *__restrict self,
                         Dee_instruction_t const *deemon_from);
 
-/* Insert a new jump descriptor into `self'
+/* Insert a new jump descriptor into `self`
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 jump_descriptors_insert(struct jump_descriptors *__restrict self,
                         struct jump_descriptor *__restrict descriptor);
 
-/* Remove `descriptor' from `self' (said descriptor *must* be part of `self') */
+/* Remove `descriptor` from `self` (said descriptor *must* be part of `self`) */
 INTDEF NONNULL((1, 2)) void DCALL
 jump_descriptors_remove(struct jump_descriptors *__restrict self,
                         struct jump_descriptor *__restrict descriptor);
@@ -1968,7 +1968,7 @@ struct basic_block {
 	Dee_instruction_t const *bb_deemon_start; /* [1..1][<= bb_deemon_end][const] Start of deemon assembly */
 	Dee_instruction_t const *bb_deemon_end;   /* [1..1][>= bb_deemon_start][const] End of deemon assembly */
 	Dee_instruction_t const *bb_deemon_end_r; /* [1..1][>= bb_deemon_start][const] Real end of deemon assembly */
-	struct jump_descriptors  bb_entries;      /* All of the possible ways this basic block can be entered (at `bb_deemon_start' / `bb_host_start'; this one owns descriptors). */
+	struct jump_descriptors  bb_entries;      /* All of the possible ways this basic block can be entered (at `bb_deemon_start` / `bb_host_start`; this one owns descriptors). */
 	struct jump_descriptors  bb_exits;        /* All of the possible ways this basic block can be exited (via deemon code). */
 	struct basic_block      *bb_next;         /* [0..1] Fallthru exit of this basic block (or NULL if there is none, which happens for the last block and blocks that end with NORETURN instructions) */
 	struct basic_block      *bb_next_r;       /* [0..1] Real fallthru exit of this basic block */
@@ -1982,20 +1982,20 @@ struct basic_block {
 	struct host_section      bb_htext;        /* Host assembly text */
 
 	/* Load variable usage data */
-	struct bb_loclastread            *bb_locreadv; /* [SORT(bbl_instr)][0..bb_locreadc][owned] Information about the final times a variable is read (+ trailing entry with `bbl_instr=-1') */
+	struct bb_loclastread            *bb_locreadv; /* [SORT(bbl_instr)][0..bb_locreadc][owned] Information about the final times a variable is read (+ trailing entry with `bbl_instr=-1`) */
 	size_t                            bb_locreadc; /* # of times a local variable is read for the final time in this block. */
 	COMPILER_FLEXIBLE_ARRAY(bitset_t, bb_locuse);  /* [CEILDIV(bb_mem_start->ms_localc, 8)][valid_if(bb_deemon_start < bb_deemon_end)]
 	                                                * Bitset of locals read-from before being written to by this basic block (including
 	                                                * any branch taken prior to writing a local). NOTE: The [valid_if] is correct, but
-	                                                * technically, this bitset only exists for `function_assembler::fa_blockv', but
-	                                                * not `except_exitinfo::exi_block'. */
+	                                                * technically, this bitset only exists for `function_assembler::fa_blockv`, but
+	                                                * not `except_exitinfo::exi_block`. */
 };
 
 #define basic_block_alloc(n_locals) \
 	((struct basic_block *)Dee_Malloc(offsetof(struct basic_block, bb_locuse) + BITSET_SIZEOF(n_locals)))
 #define basic_block_free(self) Dee_Free(self)
 
-/* Initialize common fields of `self'. The caller must still initialize:
+/* Initialize common fields of `self`. The caller must still initialize:
  * - self->bb_deemon_start
  * - self->bb_deemon_end
  * - self->bb_exits */
@@ -2008,21 +2008,21 @@ struct basic_block {
 	 (self)->bb_locreadv = NULL,                 \
 	 (self)->bb_locreadc = 0)
 
-/* Destroy the given basic block `self'. */
+/* Destroy the given basic block `self`. */
 INTDEF NONNULL((1)) void DCALL
 basic_block_destroy(struct basic_block *__restrict self);
 
-/* Split this basic block at `addr' (which must be `> bb_deemon_start'),
- * and move all jumps from `bb_exits' into the new basic block, as needed.
- * @return: * :   A new basic block that starts at `addr'
+/* Split this basic block at `addr` (which must be `> bb_deemon_start`),
+ * and move all jumps from `bb_exits` into the new basic block, as needed.
+ * @return: * :   A new basic block that starts at `addr`
  * @return: NULL: Error */
 INTDEF WUNUSED NONNULL((1)) struct basic_block *DCALL
 basic_block_splitat(struct basic_block *__restrict self,
                     Dee_instruction_t const *addr,
                     lid_t n_locals);
 
-/* Constrain or assign `self->bb_mem_start' with the memory state `state'
- * @param: self_start_addr: The starting-address of `self' (for error messages)
+/* Constrain or assign `self->bb_mem_start` with the memory state `state`
+ * @param: self_start_addr: The starting-address of `self` (for error messages)
  * @return: 1 : State become more constrained
  * @return: 0 : State didn't change
  * @return: -1: Error */
@@ -2031,13 +2031,13 @@ basic_block_constrainwith(struct basic_block *__restrict self,
                           struct memstate *__restrict state,
                           Dee_code_addr_t self_start_addr);
 
-/* Remove exits from `self' that have origins beyond `self->bb_deemon_end' */
+/* Remove exits from `self` that have origins beyond `self->bb_deemon_end` */
 INTDEF NONNULL((1)) void DCALL
 basic_block_trim_unused_exits(struct basic_block *__restrict self);
 
 
 
-/* Flags for `struct memref::mr_flags' */
+/* Flags for `struct memref::mr_flags` */
 #define MEMREF_F_NORMAL   0x00 /* Normal flags */
 #define MEMREF_F_NULLABLE 0x01 /* Location may contain NULL */
 #if 0 /* Leads to problems down the line... */
@@ -2049,48 +2049,48 @@ basic_block_trim_unused_exits(struct basic_block *__restrict self);
 
 /* Descriptor for a held reference
  * NOTE: This structure is designed to be able to impersonate
- *       a `struct memval' in a pinch, and act as if it was
+ *       a `struct memval` in a pinch, and act as if it was
  *       a DIRECT object (only the mo_typeof field is broken) */
 struct memref {
 	uintptr_t    _mr_always0_1; /* Always 0 */
 	struct memloc mr_loc;       /* Underlying memory location */
-	uintptr_t     mr_refc;      /* [>= 1] # of references held to `mr_loc' */
+	uintptr_t     mr_refc;      /* [>= 1] # of references held to `mr_loc` */
 	uint8_t      _mr_always0_2; /* Always 0 */
 	uint8_t      _mr_always0_3; /* Always 0 */
 	uint8_t      _mr_always0_4; /* Always 0 */
-	uint8_t       mr_flags;     /* Special flags (set of `MEMREF_F_*') */
+	uint8_t       mr_flags;     /* Special flags (set of `MEMREF_F_*`) */
 #if __SIZEOF_POINTER__ > 4
 	uint8_t      _mr_pad[sizeof(void *) - 4]; /* Padding (uninitialized) */
 #endif /* __SIZEOF_POINTER__ > 4 */
 };
 
-/* Compare "a" and "b". This is the function used to sort `exi_memrefv' */
+/* Compare "a" and "b". This is the function used to sort `exi_memrefv` */
 #define memref_compare(a, b) \
 	memcmp(&(a)->mr_loc, &(b)->mr_loc, sizeof(struct memloc))
 
-/* Compare "a" and "b". This is the function used by `except_exitinfo_id_compare' */
+/* Compare "a" and "b". This is the function used by `except_exitinfo_id_compare` */
 #define memref_compare2(a, b) \
 	memcmp(a, b, offsetof(struct memref, _mr_always0_1))
 
 struct except_exitinfo_id {
 	host_cfa_t                             exi_cfa_offset; /* CFA offset on entry to this block. */
 	vstackaddr_t                           exi_memrefc;    /* # of references held */
-	COMPILER_FLEXIBLE_ARRAY(struct memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `memref_compare()'). */
+	COMPILER_FLEXIBLE_ARRAY(struct memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `memref_compare()`). */
 };
 
-/* Small descriptor for what needs to be cleaned up in a `struct memstate' */
+/* Small descriptor for what needs to be cleaned up in a `struct memstate` */
 struct except_exitinfo {
 	struct host_section                    exi_text;       /* Host assembly text */
 	struct except_exitinfo                *exi_next;       /* [0..1] Exception handler that this one falls into. */
 	host_cfa_t                             exi_cfa_offset; /* CFA offset on entry to this block. */
 	vstackaddr_t                           exi_memrefc;    /* # of references held */
-	COMPILER_FLEXIBLE_ARRAY(struct memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `memref_compare()'). */
+	COMPILER_FLEXIBLE_ARRAY(struct memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `memref_compare()`). */
 };
 
 #define except_exitinfo_asid(self) \
 	((struct except_exitinfo_id *)&(self)->exi_cfa_offset)
 
-/* Check if `self' has been compiled. */
+/* Check if `self` has been compiled. */
 #define except_exitinfo_wascompiled(self) \
 	((self)->exi_text.hs_start < (self)->exi_text.hs_end || (self)->exi_next)
 
@@ -2112,18 +2112,18 @@ except_exitinfo_id_compare(struct except_exitinfo_id const *__restrict a,
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 except_exitinfo_id_sizefor(struct memstate const *__restrict state);
 
-/* Initialize `self' from `state'
- * @return: * : Always re-returns `self' */
+/* Initialize `self` from `state`
+ * @return: * : Always re-returns `self` */
 INTDEF NONNULL((1, 2)) struct except_exitinfo_id *DCALL
 except_exitinfo_id_init(struct except_exitinfo_id *__restrict self,
                         struct memstate const *__restrict state);
 
 /* Calculate the "distance" score that determines the complexity of the
- * transitioning code needed to morph from `oldinfo' to `newinfo'. When
+ * transitioning code needed to morph from `oldinfo` to `newinfo`. When
  * ordering exception cleanup code, exit descriptors should be ordered
  * such that the fallthru of one to the next always yields the lowest
  * distance score.
- * @return: * : The distance scrore for morphing from `oldinfo' to `newinfo' */
+ * @return: * : The distance scrore for morphing from `oldinfo` to `newinfo` */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 except_exitinfo_id_distance(struct except_exitinfo_id const *__restrict oldinfo,
                             struct except_exitinfo_id const *__restrict newinfo);
@@ -2137,7 +2137,7 @@ struct inlined_references {
 	 *       by the final host code. When a basic block needs to be re-compiled,
 	 *       or when constants end up unused because they could be propagated
 	 *       further, then they still remain in this set, which is sub-optimal.
-	 * IMPORTANT: Given a constant tuple "t", host text referencing `DeeTuple_ELEM(t)'
+	 * IMPORTANT: Given a constant tuple "t", host text referencing `DeeTuple_ELEM(t)`
 	 *            is *also* a valid usage! */
 	size_t           ir_mask; /* [> ir_size || ir_mask == 0] Allocated set size. */
 	size_t           ir_size; /* [< ir_mask || ir_mask == 0] Amount of non-NULL keys. */
@@ -2153,11 +2153,11 @@ INTDEF NONNULL((1)) void DCALL inlined_references_fini(struct inlined_references
 
 #define inlined_references_hashof(obj)         DeeObject_HashGeneric(obj)
 #define inlined_references_hashst(self, hash)  ((hash) & (self)->ir_mask)
-#define inlined_references_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define inlined_references_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define inlined_references_hashit(self, i)     ((self)->ir_elem + ((i) & (self)->ir_mask))
 
-/* Make sure that `inherit_me' appears in `self', thus inheriting a reference to it.
- * @return: inherit_me: Success: `self' now owns the reference to `inherit_me', and you can use it lazily
+/* Make sure that `inherit_me` appears in `self`, thus inheriting a reference to it.
+ * @return: inherit_me: Success: `self` now owns the reference to `inherit_me`, and you can use it lazily
  * @return: NULL:       Error */
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 inlined_references_ref(struct inlined_references *__restrict self,
@@ -2167,34 +2167,34 @@ inlined_references_ref(struct inlined_references *__restrict self,
 struct function_assembler {
 	DeeFunctionObject        *fa_function;     /* [1..1][const][valid_if(!HOST_CC_F_FUNC)] The function being assembled */
 	DeeCodeObject            *fa_code;         /* [1..1][const][== fa_function->fo_code] The code being assembled */
-	struct host_section       fa_prolog;       /* Function prolog (output even before `fa_blockv[0]'; verify arguments & set-up initial memstate) */
-	DREF struct memstate     *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL' if `function_assembler_compileblocks()' wasn't called, yet) */
-	struct basic_block       *fa_deleted;      /* [0..n][owned] Chain (via `bb_next') of blocks deleted by `function_assembler_trimdead()' (need to keep around because of unused symbols referencing these blocks) */
-	struct basic_block      **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start'). */
+	struct host_section       fa_prolog;       /* Function prolog (output even before `fa_blockv[0]`; verify arguments & set-up initial memstate) */
+	DREF struct memstate     *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL` if `function_assembler_compileblocks()` wasn't called, yet) */
+	struct basic_block       *fa_deleted;      /* [0..n][owned] Chain (via `bb_next`) of blocks deleted by `function_assembler_trimdead()` (need to keep around because of unused symbols referencing these blocks) */
+	struct basic_block      **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start`). */
 	size_t                    fa_blockc;       /* Number of basic blocks. */
 	size_t                    fa_blocka;       /* Allocated number of basic blocks. */
 	struct except_exitinfo   *fa_except_del;   /* [0..n][owned] Chain of deleted exception exits */
-	struct except_exitinfo  **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exits (sorted by `except_exitinfo_id_compare()') */
+	struct except_exitinfo  **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exits (sorted by `except_exitinfo_id_compare()`) */
 	size_t                    fa_except_exitc; /* Number of exception exit basic blocks. */
 	size_t                    fa_except_exita; /* Allocated number of exception exit basic blocks. */
-	struct except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `function_assembler_ordersections()') */
+	struct except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `function_assembler_ordersections()`) */
 	struct host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
 #define FUNCTION_ASSEMBLER_F_NORMAL     0x0000 /* Normal flags */
 #define FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections or inlines) */
-#define FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `Dee_CODE_FASSEMBLY' code) */
-#define FUNCTION_ASSEMBLER_F_NOROINLINE 0x0004 /* Don't inline references to already-bound class members/globals, even if the location is `Dee_CLASS_ATTRIBUTE_FREADONLY' / `Dee_MODSYM_FREADONLY' */
+#define FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `Dee_CODE_FASSEMBLY` code) */
+#define FUNCTION_ASSEMBLER_F_NOROINLINE 0x0004 /* Don't inline references to already-bound class members/globals, even if the location is `Dee_CLASS_ATTRIBUTE_FREADONLY` / `Dee_MODSYM_FREADONLY` */
 #define FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 #define FUNCTION_ASSEMBLER_F_NORTTITYPE 0x0010 /* Don't use RTTI from dex modules and the deemon core for the purpose of figuring out object types (set to work around buggy RTTI) */
 #define FUNCTION_ASSEMBLER_F_NOEARLYERR 0x0020 /* Don't exit early when illegal operations are detected. Instead, generate code that produces the correct runtime error. */
 #ifdef HOSTASM_X86_64
 #define FUNCTION_ASSEMBLER_F_MCLARGE    0x8000 /* Generate code for a large memory model (supporting .text outside the -2Gib+2Gib range) */
 #endif /* !HOSTASM_X86_64 */
-	uint16_t                  fa_flags;        /* [const] Code generation flags (set of `FUNCTION_ASSEMBLER_F_*'). */
+	uint16_t                  fa_flags;        /* [const] Code generation flags (set of `FUNCTION_ASSEMBLER_F_*`). */
 	ulid_t                fa_localc;       /* [const][== fa_code->co_localc] */
 	lid_t                     fa_xlocalc;      /* [const][== fa_code->co_localc + MEMSTATE_XLOCAL_MINCOUNT + (fa_code->co_argc_max - fa_code->co_argc_min)] */
 	host_cc_t                 fa_cc;           /* [const] Calling convention. */
 	struct inlined_references fa_irefs;        /* Inlined object references (must be ) */
-	struct host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link') */
+	struct host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link`) */
 	size_t                    fa_sectsize;     /* Total size of all sections combined */
 };
 
@@ -2229,7 +2229,7 @@ function_assembler_fini(struct function_assembler *__restrict self);
 
 /* ================ Helpers ================ */
 
-/* Ensure that the basic block containing `deemon_addr' also *starts* at that address.
+/* Ensure that the basic block containing `deemon_addr` also *starts* at that address.
  * This function is used during the initial scan-pass where basic blocks are identified
  * and created.
  * @return: * :   The basic block in question.
@@ -2238,7 +2238,7 @@ INTDEF WUNUSED NONNULL((1)) struct basic_block *DCALL
 function_assembler_splitblock(struct function_assembler *__restrict self,
                               Dee_instruction_t const *deemon_addr);
 
-/* Locate the basic block that contains `deemon_addr'
+/* Locate the basic block that contains `deemon_addr`
  * @return: * :   The basic block in question.
  * @return: NULL: Address is out-of-bounds. */
 INTDEF WUNUSED NONNULL((1)) struct basic_block *DCALL
@@ -2246,8 +2246,8 @@ function_assembler_locateblock(struct function_assembler const *__restrict self,
                                Dee_instruction_t const *deemon_addr);
 
 /* Lookup/allocate an exception-exit basic block that can be used to clean
- * up `state' and then return `NULL' to the caller of the generated function.
- * @return: * :   The basic block to which to jump in order to clean up `state'.
+ * up `state` and then return `NULL` to the caller of the generated function.
+ * @return: * :   The basic block to which to jump in order to clean up `state`.
  * @return: NULL: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) struct except_exitinfo *DCALL
 function_assembler_except_exit(struct function_assembler *__restrict self,
@@ -2319,21 +2319,21 @@ struct fungen_exceptinject {
 	WUNUSED_T NONNULL_T((1, 2))         /* [1..1] Function to call in order to produce injected code. */
 	int (DCALL *fei_inject)(struct fungen *__restrict self,
 	                        struct fungen_exceptinject *__restrict inject);
-	vstackaddr_t             fei_stack; /* Expected v-stack depth for `fei_inject' (must do vpop() until reached) */
+	vstackaddr_t             fei_stack; /* Expected v-stack depth for `fei_inject` (must do vpop() until reached) */
 };
 
 struct fungen {
 	struct function_assembler  *fg_assembler;        /* [1..1][const] Assembler. */
 	struct basic_block         *fg_block;            /* [1..1][const] Output basic block. */
-	struct host_section        *fg_sect;             /* [1..1] Output section (usually `fg_block->bb_htext').
+	struct host_section        *fg_sect;             /* [1..1] Output section (usually `fg_block->bb_htext`).
 	                                                          * NOTE: If you alter this, you must also (and *always*) restore it. */
 #ifdef __INTELLISENSE__
 	struct memstate            *fg_state;            /* [1..1] Current memory state. */
 #else /* __INTELLISENSE__ */
 	DREF struct memstate       *fg_state;            /* [1..1] Current memory state. */
 #endif /* !__INTELLISENSE__ */
-	struct memstate const      *fg_state_hstack_res; /* [0..1] State defining some extra reserved hstack locations (s.a. `memstate_hstack_find()'). */
-	struct bb_loclastread      *fg_nextlastloc;      /* [0..1] The next time some local will be read for the last time (only for `fg_geninstr()') */
+	struct memstate const      *fg_state_hstack_res; /* [0..1] State defining some extra reserved hstack locations (s.a. `memstate_hstack_find()`). */
+	struct bb_loclastread      *fg_nextlastloc;      /* [0..1] The next time some local will be read for the last time (only for `fg_geninstr()`) */
 	struct fungen_exceptinject *fg_exceptinject;     /* [0..1] Chain of extra code that needs to be injected for exception handlers. */
 };
 
@@ -2465,11 +2465,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_hstackind(struct fungen *__restri
 #ifndef CONFIG_NO_THREADS
 #define fg_vpush_ATOMIC_RWLOCK_INIT(self) fg_vpush_NULL(self)
 #endif /* !CONFIG_NO_THREADS */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_arg(struct fungen *__restrict self, Dee_instruction_t const *instr, aid_t aid); /* `instr' is needed for `libhostasm_rt_err_unbound_arg' */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_arg(struct fungen *__restrict self, Dee_instruction_t const *instr, aid_t aid); /* `instr` is needed for `libhostasm_rt_err_unbound_arg` */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_arg(struct fungen *__restrict self, aid_t aid);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_arg_present(struct fungen *__restrict self, aid_t aid);
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_local(struct fungen *__restrict self, Dee_instruction_t const *instr, lid_t lid); /* `instr' is needed for `libhostasm_rt_err_unbound_local' (if NULL, no bound-check is done) */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_local(struct fungen *__restrict self, Dee_instruction_t const *instr, lid_t lid); /* `instr' is needed for automatic deletion of unused locals */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_local(struct fungen *__restrict self, Dee_instruction_t const *instr, lid_t lid); /* `instr` is needed for `libhostasm_rt_err_unbound_local` (if NULL, no bound-check is done) */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_local(struct fungen *__restrict self, Dee_instruction_t const *instr, lid_t lid); /* `instr` is needed for automatic deletion of unused locals */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdup_at(struct fungen *__restrict self, vstackaddr_t n);
 #define fg_vdup(self) fg_vdup_at(self, 1)
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop(struct fungen *__restrict self);
@@ -2477,11 +2477,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpopmany(struct fungen *__restrict self
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop_at(struct fungen *__restrict self, vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop_local(struct fungen *__restrict self, lid_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdel_local(struct fungen *__restrict self, lid_t lid);
-INTDEF WUNUSED NONNULL((1)) bool DCALL fg_vallconst(struct fungen *__restrict self, vstackaddr_t n); /* Check if top `n' elements are all `MEMADR_TYPE_CONST' */
-INTDEF WUNUSED NONNULL((1)) bool DCALL fg_vallconst_noref(struct fungen *__restrict self, vstackaddr_t n); /* Check if top `n' elements are all `MEMADR_TYPE_CONST' and have the `MEMOBJ_F_NOREF' flag set. */
+INTDEF WUNUSED NONNULL((1)) bool DCALL fg_vallconst(struct fungen *__restrict self, vstackaddr_t n); /* Check if top `n` elements are all `MEMADR_TYPE_CONST` */
+INTDEF WUNUSED NONNULL((1)) bool DCALL fg_vallconst_noref(struct fungen *__restrict self, vstackaddr_t n); /* Check if top `n` elements are all `MEMADR_TYPE_CONST` and have the `MEMOBJ_F_NOREF` flag set. */
 
 
-/* Generate code needed to drop references held by `mval' (where `mval' must be a vstack item,
+/* Generate code needed to drop references held by `mval` (where `mval` must be a vstack item,
  * or a local variable that is unconditionally bound or non-direct).
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
  *       realloc memstate components. */
@@ -2489,7 +2489,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_vgdecref_vstack(struct fungen *__restrict self,
                    struct memval *mval);
 
-/* Generate code needed to drop references held by `mval' (where `mval' must point into locals)
+/* Generate code needed to drop references held by `mval` (where `mval` must point into locals)
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
  *       realloc memstate components. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -2500,7 +2500,7 @@ fg_vgdecref_local(struct fungen *__restrict self,
 /* Wrapper around:
  * - fg_vgdecref_vstack
  * - fg_vgdecref_local
- * ... that automatically checks if `mval' points into the current mem-state's
+ * ... that automatically checks if `mval` points into the current mem-state's
  * local variable list to see which function needs to be used. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vgdecref(struct fungen *__restrict self,
@@ -2515,23 +2515,23 @@ INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vsettyp_noalias(struct fungen *__restrict self, DeeTypeObject *type);
 
 /* Helpers for invoking certain operators. */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcall(struct fungen *__restrict self, vstackaddr_t argc);       /* func, [args...]           -> result -- Invoke `DeeObject_Call()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallkw(struct fungen *__restrict self, vstackaddr_t argc);     /* func, [args...], kw       -> result -- Invoke `DeeObject_CallKw()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcalltuple(struct fungen *__restrict self);                     /* func, args                -> result -- Invoke `DeeObject_CallTuple()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcalltuplekw(struct fungen *__restrict self);                   /* func, args, kw            -> result -- Invoke `DeeObject_CallTupleKw()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscall(struct fungen *__restrict self, vstackaddr_t argc);   /* func, this, [args...]     -> result -- Invoke `DeeObject_ThisCall()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscallkw(struct fungen *__restrict self, vstackaddr_t argc); /* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscalltuple(struct fungen *__restrict self);                 /* func, this, args          -> result -- Invoke `DeeObject_ThisCallTuple()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscalltuplekw(struct fungen *__restrict self);               /* func, this, args, kw      -> result -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattr(struct fungen *__restrict self, vstackaddr_t argc);   /* this, attr, [args...]     -> result -- Invoke `DeeObject_CallAttr()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrkw(struct fungen *__restrict self, vstackaddr_t argc); /* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrtuple(struct fungen *__restrict self);                 /* this, attr, args          -> result -- Invoke `DeeObject_CallAttrTuple()' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrtuplekw(struct fungen *__restrict self);               /* this, attr, args, kw      -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcall(struct fungen *__restrict self, vstackaddr_t argc);       /* func, [args...]           -> result -- Invoke `DeeObject_Call()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallkw(struct fungen *__restrict self, vstackaddr_t argc);     /* func, [args...], kw       -> result -- Invoke `DeeObject_CallKw()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcalltuple(struct fungen *__restrict self);                     /* func, args                -> result -- Invoke `DeeObject_CallTuple()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcalltuplekw(struct fungen *__restrict self);                   /* func, args, kw            -> result -- Invoke `DeeObject_CallTupleKw()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscall(struct fungen *__restrict self, vstackaddr_t argc);   /* func, this, [args...]     -> result -- Invoke `DeeObject_ThisCall()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscallkw(struct fungen *__restrict self, vstackaddr_t argc); /* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscalltuple(struct fungen *__restrict self);                 /* func, this, args          -> result -- Invoke `DeeObject_ThisCallTuple()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopthiscalltuplekw(struct fungen *__restrict self);               /* func, this, args, kw      -> result -- Invoke `DeeObject_ThisCallTupleKw()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattr(struct fungen *__restrict self, vstackaddr_t argc);   /* this, attr, [args...]     -> result -- Invoke `DeeObject_CallAttr()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrkw(struct fungen *__restrict self, vstackaddr_t argc); /* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrtuple(struct fungen *__restrict self);                 /* this, attr, args          -> result -- Invoke `DeeObject_CallAttrTuple()` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrtuplekw(struct fungen *__restrict self);               /* this, attr, args, kw      -> result -- Invoke `DeeObject_CallAttrTupleKw()` and push the result */
 
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallseq(struct fungen *__restrict self, vstackaddr_t itemc);     /* func, [items...]              -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallmap(struct fungen *__restrict self, vstackaddr_t pairc);     /* func, [[key, value]...]       -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrseq(struct fungen *__restrict self, vstackaddr_t itemc); /* func, attr, [items...]        -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrmap(struct fungen *__restrict self, vstackaddr_t pairc); /* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallseq(struct fungen *__restrict self, vstackaddr_t itemc);     /* func, [items...]              -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallmap(struct fungen *__restrict self, vstackaddr_t pairc);     /* func, [[key, value]...]       -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrseq(struct fungen *__restrict self, vstackaddr_t itemc); /* func, attr, [items...]        -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))` and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopcallattrmap(struct fungen *__restrict self, vstackaddr_t pairc); /* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))` and push the result */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopgetattr(struct fungen *__restrict self);   /* this, attr        -> result */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vophasattr(struct fungen *__restrict self);   /* this, attr        -> hasattr */
@@ -2544,7 +2544,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopbounditem(struct fungen *__restrict 
 
 #define VOPBOOL_F_NORMAL      0x0000 /* Normal flags */
 #define VOPBOOL_F_FORCE_MORPH 0x0001 /* Ensure that vtop is a constant Dee_True/Dee_False or MEMVAL_VMORPH_ISBOOL */
-#define VOPBOOL_F_NOFALLBACK  0x0002 /* Instead of generating a call to `tp_bool' (when not noexcept) or `DeeObject_Bool', return "1" */
+#define VOPBOOL_F_NOFALLBACK  0x0002 /* Instead of generating a call to `tp_bool` (when not noexcept) or `DeeObject_Bool`, return "1" */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopbool(struct fungen *__restrict self, unsigned int flags); /* value -> bool */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopnot(struct fungen *__restrict self);                      /* value -> !bool */
 
@@ -2579,11 +2579,11 @@ fg_vop(struct fungen *__restrict self,
        unsigned int flags);
 #define VOP_F_NORMAL      0x0000 /* Normal flags */
 #define VOP_F_PUSHRES     0x0001 /* Push the operator's result */
-#define VOP_F_ALLOWNATIVE 0x0002 /* Allow (e.g.) use of `DeeObject_SetRangeIndex()' instead of `DeeObject_SetRange()' */
+#define VOP_F_ALLOWNATIVE 0x0002 /* Allow (e.g.) use of `DeeObject_SetRangeIndex()` instead of `DeeObject_SetRange()` */
 
 /* this, args  ->  result (flags == VOP_F_PUSHRES)
  * this, args  ->  N/A    (flags == VOP_F_NORMAL)
- * Same as `fg_vop()', but arguments are given as via what
+ * Same as `fg_vop()`, but arguments are given as via what
  * should be a tuple-object (the type is asserted by this function) in vtop.
  * NOTE: A tuple-type check is only generated if FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -2665,7 +2665,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vcoalesce(struct fungen *__restrict sel
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vcoalesce_c(struct fungen *__restrict self, void const *from, void const *to);
 
 /* Force VTOP to become a direct object. Any memory locations that aliases it is also changed.
- * NOTE: This function is usually called automatically by other `fg_v*' functions. */
+ * NOTE: This function is usually called automatically by other `fg_v*` functions. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdirect1(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vndirect1(struct fungen *__restrict self); /* Also allow NULLABLE */
 
@@ -2689,17 +2689,17 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_vdirect_memval(struct fungen *__restrict self,
                                       struct memval *val);
 
-/* Clear the `MEMOBJ_F_ONEREF' flag for the top `n' v-stack elements,
+/* Clear the `MEMOBJ_F_ONEREF` flag for the top `n` v-stack elements,
  * as well as any other memory location that might be aliasing them. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref(struct fungen *__restrict self, vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_at(struct fungen *__restrict self, vstackaddr_t off);
 
-/* Same as `fg_vnotoneref()', but only clear when the
- * types aren't known, or the type's `operator_name' lets references escape. */
+/* Same as `fg_vnotoneref()`, but only clear when the
+ * types aren't known, or the type's `operator_name` lets references escape. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator(struct fungen *__restrict self, Dee_operator_t operator_name, vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator_at(struct fungen *__restrict self, Dee_operator_t operator_name, vstackaddr_t off);
 
-/* Set the `MEMOBJ_F_ONEREF' flag for VTOP. */
+/* Set the `MEMOBJ_F_ONEREF` flag for VTOP. */
 #define fg_voneref_noalias(self)                    \
 	(Dee_ASSERT(memval_hasobj0(fg_vtop(self))), \
 	 memobj_setoneref(memval_getobj0(fg_vtop(self))), 0)
@@ -2710,7 +2710,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_ulocal(struct fungen *__restrict
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop_ulocal(struct fungen *__restrict self, ulid_t ulid);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdel_ulocal(struct fungen *__restrict self, ulid_t ulid);
 
-/* Helper macros for operating on "extra" locals (s.a. `MEMSTATE_XLOCAL_*') */
+/* Helper macros for operating on "extra" locals (s.a. `MEMSTATE_XLOCAL_*`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_xlocal(struct fungen *__restrict self, Dee_instruction_t const *instr, lid_t xlid);
 #define _fg_vpush_xlocal(self, instr, xlid)  fg_vpush_local(self, instr, (lid_t)(self)->fg_assembler->fa_localc + (xlid))
 #define _fg_vbound_xlocal(self, instr, xlid) fg_vbound_local(self, instr, (lid_t)(self)->fg_assembler->fa_localc + (xlid))
@@ -2728,7 +2728,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_usage(struct fungen *__restrict s
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_except(struct fungen *__restrict self);
 
 /* Class/instance member access helpers.
- * @param: flags: Set of `FG_CIMEMBER_F_*' */
+ * @param: flags: Set of `FG_CIMEMBER_F_*` */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpush_cmember(struct fungen *__restrict self, uint16_t addr, unsigned int flags);  /* type -> value */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_cmember(struct fungen *__restrict self, uint16_t addr, unsigned int flags); /* type -> bound */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop_cmember(struct fungen *__restrict self, uint16_t addr, unsigned int flags);   /* type, value -> N/A */
@@ -2737,7 +2737,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vbound_imember(struct fungen *__restric
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdel_imember(struct fungen *__restrict self, uint16_t addr, unsigned int flags);   /* this, type -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpop_imember(struct fungen *__restrict self, uint16_t addr, unsigned int flags);   /* this, type, value -> N/A */
 #define FG_CIMEMBER_F_NORMAL 0x0000 /* Normal flags */
-#define FG_CIMEMBER_F_REF    0x0001 /* Always push a reference when reading a member (only for `fg_vpush_[ic]member') */
+#define FG_CIMEMBER_F_REF    0x0001 /* Always push a reference when reading a member (only for `fg_vpush_[ic]member`) */
 #define FG_CIMEMBER_F_SAFE   0x0002 /* Force "safe" access if it needs to happen at runtime (verify object type & addr being in-bounds). */
 
 /* test_type, extended_type -> DeeType_Extends(test_type, extended_type) */
@@ -2769,7 +2769,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vcall_DeeObject_AssertTypeOrAbstract(st
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vcall_DeeObject_AssertTypeExact(struct fungen *__restrict self);      /* obj, type -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vcall_DeeObject_TypeAssertFailed(struct fungen *__restrict self);     /* obj, type -> N/A */
 
-/* Perform a conditional jump to `desc' based on `jump_if_true'
+/* Perform a conditional jump to `desc` based on `jump_if_true`
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2779,9 +2779,9 @@ fg_vjcc(struct fungen *__restrict self,
         Dee_instruction_t const *instr,
         bool jump_if_true);
 
-/* Implement a ASM_FOREACH-style jump to `desc'
+/* Implement a ASM_FOREACH-style jump to `desc`
  * @param: instr:               Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
- * @param: always_pop_iterator: When true, the iterator is also popped during the jump to `desc'
+ * @param: always_pop_iterator: When true, the iterator is also popped during the jump to `desc`
  *                              This is needed to implement ASM_FOREACH when used with a prefix.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2799,10 +2799,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vind(struct fungen *__restrict self, pt
  * than "SECOND". */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdep(struct fungen *__restrict self);
 
-/* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph' in SECOND */
+/* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph` in SECOND */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vpopind(struct fungen *__restrict self, ptrdiff_t ind_delta);
 
-/* >> TOP = TOP + val_delta; // NOTE: Ignores `mv_vmorph' */
+/* >> TOP = TOP + val_delta; // NOTE: Ignores `mv_vmorph` */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdelta(struct fungen *__restrict self, ptrdiff_t val_delta);
 
 /* >> temp = *(SECOND + ind_delta);
@@ -2812,7 +2812,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vdelta(struct fungen *__restrict self, 
  * >> PUSH(temp, MEMOBJ_F_NOREF); */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vswapind(struct fungen *__restrict self, ptrdiff_t ind_delta);
 
-/* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
+/* Ensure that the top-most `DeeObject` from the object-stack is a reference. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noconst(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noalias(struct fungen *__restrict self);
@@ -2820,15 +2820,15 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noconst_noalias(struct fungen *__r
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref2(struct fungen *__restrict self, vstackaddr_t dont_steal_from_vtop_n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnoref(struct fungen *__restrict self);
 
-/* Ensure that `mobj' is holding a reference. If said location has aliases,
+/* Ensure that `mobj` is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
  * also contains a second reference.
  * @param: dont_steal_from_vtop_n: Ignore the top n v-stack items when searching for aliases. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gref2(struct fungen *__restrict self, struct memobj *mobj, vstackaddr_t dont_steal_from_vtop_n);
 
-/* Force vtop into a register (ensuring it has type `MEMADR_TYPE_HREG' for all locations used by VTOP) */
+/* Force vtop into a register (ensuring it has type `MEMADR_TYPE_HREG` for all locations used by VTOP) */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vreg(struct fungen *__restrict self, host_regno_t const *not_these);
-/* Force vtop onto the stack (ensuring it has type `MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0' for all locations used by VTOP) */
+/* Force vtop onto the stack (ensuring it has type `MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0` for all locations used by VTOP) */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vflush(struct fungen *__restrict self, bool require_valoff_0);
 
 /* Generate code to push a global variable onto the virtual stack. */
@@ -2868,8 +2868,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vrwlock_endwrite(struct fungen *__restr
 INTDEF WUNUSED NONNULL((1)) int DCALL _fg_vnonullable(struct fungen *__restrict self);
 #define fg_vnonullable(self) (((self)->fg_state->ms_flags & MEMSTATE_F_GOTNULLABLE) ? _fg_vnonullable(self) : 0)
 
-/* Check if `loc' differs from vtop, and if so: move vtop
- * *into* `loc', the assign the *exact* given `loc' to vtop. */
+/* Check if `loc` differs from vtop, and if so: move vtop
+ * *into* `loc`, the assign the *exact* given `loc` to vtop. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_vsetloc(struct fungen *__restrict self,
            struct memloc const *loc);
@@ -2878,8 +2878,8 @@ fg_vsetloc(struct fungen *__restrict self,
  * This function will clear the stack and unbind all local variables. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vret(struct fungen *__restrict self);
 
-/* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc:    One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+/* Generate host text to invoke `api_function` with the top-most `argc` items from the stack.
+ * @param: cc:    One of `VCALL_CC_*`, describing the calling-convention of `api_function`.
  * @param: n_pop: The # of stack items to pop during the call (in case of registers, these won't need to be saved)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2891,7 +2891,7 @@ fg_vcallapi_ex_(struct fungen *__restrict self,
 	fg_vcallapi_ex_(self, (void const *)(api_function), cc, argc, n_pop)
 #define fg_vcallapi(self, api_function, cc, argc) \
 	fg_vcallapi_ex(self, api_function, cc, argc, argc)
-#define VCALL_CC_OBJECT                0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMVAL_VMORPH_NULLABLE'), also MEMOBJ_F_NOREF is clear */
+#define VCALL_CC_OBJECT                0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMVAL_VMORPH_NULLABLE`), also MEMOBJ_F_NOREF is clear */
 #define VCALL_CC_INT                   1 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
 #define VCALL_CC_INTPTR                1 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
 #define VCALL_CC_RAWINT                2 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
@@ -2914,11 +2914,11 @@ fg_vcallapi_ex_(struct fungen *__restrict self,
 
 
 /* [args...], funcaddr -> ...
- * Same as `fg_vcallapi()', but after the normal argument list,
+ * Same as `fg_vcallapi()`, but after the normal argument list,
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'
+ * @param: cc: One of `VCALL_CC_*`, describing the calling-convention of `api_function`
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -2929,9 +2929,9 @@ fg_vcalldynapi_ex(struct fungen *__restrict self,
 	fg_vcalldynapi_ex(self, cc, argc, (argc) + 1)
 
 
-/* After a call to `fg_vcallapi()' with `VCALL_CC_RAWINTPTR',
- * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
- * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
+/* After a call to `fg_vcallapi()` with `VCALL_CC_RAWINTPTR`,
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT`
+ * The difference to directly passing `VCALL_CC_OBJECT` is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  *
  * However: be careful not to do anything that might throw additional exceptions!
@@ -2940,9 +2940,9 @@ fg_vcalldynapi_ex(struct fungen *__restrict self,
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vcheckobj(struct fungen *__restrict self);
 
-/* After a call to `fg_vcallapi()' with `VCALL_CC_RAWINTPTR',
- * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
- * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
+/* After a call to `fg_vcallapi()` with `VCALL_CC_RAWINTPTR`,
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_INT`
+ * The difference to directly passing `VCALL_CC_INT` is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  * NOTE: This function pops one element from the V-stack.
  *
@@ -2952,12 +2952,12 @@ fg_vcheckobj(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vcheckint(struct fungen *__restrict self);
 
-/* Branch to exception handling if `vtop' is equal to `except_val' */
+/* Branch to exception handling if `vtop` is equal to `except_val` */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vcheckerr(struct fungen *__restrict self,
              intptr_t except_val);
 
-/* Generate a call to `DeeObject_MALLOC()' to allocate an uninitialized object that
+/* Generate a call to `DeeObject_MALLOC()` to allocate an uninitialized object that
  * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
  * a slap allocator instead (just like the real DeeObject_MALLOC also does).
  * NOTE: The value pushed onto the V-stack...
@@ -2975,13 +2975,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeGCObject_Malloc(struct fungen *__restrict self,
                             size_t alloc_size, bool do_calloc);
 
-/* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
- * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
+/* Arrange the top `argc` stack-items linearly, such that they all appear somewhere in memory
+ * (probably on the host-stack), in consecutive order (with `vtop` at the greatest address,
  * and STACK[SIZE-argc] appearing at the lowest address). Once that has been accomplished,
- * push a value onto the vstack that describes the base-address (that is a `DeeObject **'
- * pointing to `STACK[SIZE-argc]') of the linear vector.
- * @param: readonly: Special case to allow the `DeeObject **' vector being generated
- *                   as `DeeObject *const *'. This in turn makes it possible to not
+ * push a value onto the vstack that describes the base-address (that is a `DeeObject **`
+ * pointing to `STACK[SIZE-argc]`) of the linear vector.
+ * @param: readonly: Special case to allow the `DeeObject **` vector being generated
+ *                   as `DeeObject *const *`. This in turn makes it possible to not
  *                   have to construct argument vectors on-stack when all arguments
  *                   are (re-)compile-time constants.
  * @return: 0 : Success
@@ -2995,8 +2995,8 @@ fg_vlinear(struct fungen *__restrict self,
 /* Helpers for generating conditional code. */
 struct fg_branch {
 	struct host_section  *fgb_oldtext; /* [1..1] Old .text section. */
-	struct host_symbol   *fgb_skip;    /* [0..1] Symbol for re-entry to `fgb_oldtext'. */
-	DREF struct memstate *fgb_saved;   /* [1..1] Saved memory state (to-be restored by `fg_vjx_leave_noreturn()') */
+	struct host_symbol   *fgb_skip;    /* [0..1] Symbol for re-entry to `fgb_oldtext`. */
+	DREF struct memstate *fgb_saved;   /* [1..1] Saved memory state (to-be restored by `fg_vjx_leave_noreturn()`) */
 };
 #define fg_branch_fini(self) \
 	memstate_decref((self)->fgb_saved)
@@ -3072,7 +3072,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vcold_enter(struct fungen *__restric
 #define fg_vjanz_enter_unlikely(self, branch) fg_vjax_enter(self, branch, VJX_F_JNZ | VJX_F_UNLIKELY)
 
 
-/* Construct a flag for use with `*(uintptr_t *)&((DeeTypeObject *)x)->tp_flags' */
+/* Construct a flag for use with `*(uintptr_t *)&((DeeTypeObject *)x)->tp_flags` */
 #if HOST_BYTEORDER == __ORDER_LITTLE_ENDIAN__
 #define DeeTypeObject_tp_flags_FLAG(f)  (f)
 #else /* HOST_BYTEORDER == __ORDER_LITTLE_ENDIAN__ */
@@ -3085,8 +3085,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vcold_enter(struct fungen *__restric
 /* Pre-defined exception injectors. */
 struct fungen_exceptinject_callvoidapi {
 	struct fungen_exceptinject fei_cva_base; /* Underlying injector */
-	void const             *fei_cva_func; /* [1..1] API function to call (with `VCALL_CC_VOID_NX' semantics) */
-	vstackaddr_t            fei_cva_argc; /* # of arguments taken by `fei_cva_func' */
+	void const             *fei_cva_func; /* [1..1] API function to call (with `VCALL_CC_VOID_NX` semantics) */
+	vstackaddr_t            fei_cva_argc; /* # of arguments taken by `fei_cva_func` */
 };
 #define fg_xinject_push_callvoidapi(self, ij, api_func, argc)         \
 	((ij)->fei_cva_base.fei_inject = &fungen_exceptinject_callvoidapi_f, \
@@ -3096,12 +3096,12 @@ struct fungen_exceptinject_callvoidapi {
 #define fg_xinject_pop_callvoidapi(self, ij) \
 	fg_xinject_pop(self, &(ij)->fei_cva_base)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct fungen_exceptinject_callvoidapi' */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject` value for `struct fungen_exceptinject_callvoidapi` */
 fungen_exceptinject_callvoidapi_f(struct fungen *__restrict self,
                                struct fungen_exceptinject *__restrict inject);
 
 
-/* Clear the `MEMOBJ_F_ONEREF' flag from `mobj', as well
+/* Clear the `MEMOBJ_F_ONEREF` flag from `mobj`, as well
  * as any other memory location that might be aliasing it. */
 INTDEF /*WUNUSED*/ NONNULL((1, 2)) int DCALL
 fg_gnotoneref_impl(struct fungen *__restrict self,
@@ -3113,8 +3113,8 @@ fg_gnotoneref_impl(struct fungen *__restrict self,
 /* Generate a call to a C-function.
  * @param: locv: An argc+1-long vector locations (the first is for the
  *               function to call, the rest are pointer-sized arguments)
- * WARNING: This function is allowed to modify `argv' to keep track of internal temporaries.
- * NOTE: The given `api_function' is assumed to use the `DCALL' calling convention. */
+ * WARNING: This function is allowed to modify `argv` to keep track of internal temporaries.
+ * NOTE: The given `api_function` is assumed to use the `DCALL` calling convention. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_gcallapi(struct fungen *__restrict self,
             struct memloc *locv, size_t argc);
@@ -3142,26 +3142,26 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gxdecref_regx(struct fungen *__res
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gincref_const(struct host_section *__restrict self, DeeObject *value, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gdecref_const(struct host_section *__restrict self, DeeObject *value, Dee_refcnt_t n);
 #ifdef HOSTASM_X86_64
-#define _host_section_gincref_const_MAYFAIL /* `_host_section_gincref_const()' returns `1' if the constant is too large */
-#define _host_section_gdecref_const_MAYFAIL /* `_host_section_gdecref_const()' returns `1' if the constant is too large */
+#define _host_section_gincref_const_MAYFAIL /* `_host_section_gincref_const()` returns `1` if the constant is too large */
+#define _host_section_gdecref_const_MAYFAIL /* `_host_section_gdecref_const()` returns `1` if the constant is too large */
 #endif /* HOSTASM_X86_64 */
 
 #define _fungen_gincref_const(self, value, n) _host_section_gincref_const(fg_gettext(self), value, n)
 #define _fungen_gdecref_const(self, value, n) _host_section_gdecref_const(fg_gettext(self), value, n)
 #ifdef _host_section_gincref_const_MAYFAIL
-#define _fungen_gincref_const_MAYFAIL /* `_fungen_gincref_const()' returns `1' if the constant is too large */
+#define _fungen_gincref_const_MAYFAIL /* `_fungen_gincref_const()` returns `1` if the constant is too large */
 #endif /* _host_section_gincref_const_MAYFAIL */
 #ifdef _host_section_gdecref_const_MAYFAIL
-#define _fungen_gdecref_const_MAYFAIL /* `_fungen_gdecref_const()' returns `1' if the constant is too large */
+#define _fungen_gdecref_const_MAYFAIL /* `_fungen_gdecref_const()` returns `1` if the constant is too large */
 #endif /* _host_section_gdecref_const_MAYFAIL */
 
 #define fg_gincref_const(self, value, n) _fungen_gincref_const(self, value, n)
 #define fg_gdecref_const(self, value, n) _fungen_gdecref_const(self, value, n)
 #ifdef _fungen_gincref_const_MAYFAIL
-#define fg_gincref_const_MAYFAIL /* `fg_gincref_const()' returns `1' if the constant is too large */
+#define fg_gincref_const_MAYFAIL /* `fg_gincref_const()` returns `1` if the constant is too large */
 #endif /* _fungen_gincref_const_MAYFAIL */
 #ifdef _fungen_gdecref_const_MAYFAIL
-#define fg_gdecref_const_MAYFAIL /* `fg_gdecref_const()' returns `1' if the constant is too large */
+#define fg_gdecref_const_MAYFAIL /* `fg_gdecref_const()` returns `1` if the constant is too large */
 #endif /* _fungen_gdecref_const_MAYFAIL */
 
 #define fg_gincref_regx(self, regno, reg_offset, n)         _fungen_gincref_regx(self, regno, reg_offset, n)
@@ -3172,26 +3172,26 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gdecref_const(struct host_se
 #define fg_gdecref_regx_dokill(self, regno, reg_offset)     _fungen_gdecref_regx_dokill(self, regno, reg_offset)
 #define fg_gxdecref_regx(self, regno, reg_offset, n)        _fungen_gxdecref_regx(self, regno, reg_offset, n)
 
-/* Change `loc' into the value of `<result> = *(<loc> + ind_delta)'
- * Note that unlike the `fg_gmov*' functions, this
- * one may use `MEMADR_TYPE_*IND' to defer the indirection until later. */
+/* Change `loc` into the value of `<result> = *(<loc> + ind_delta)`
+ * Note that unlike the `fg_gmov*` functions, this
+ * one may use `MEMADR_TYPE_*IND` to defer the indirection until later. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasind(struct fungen *__restrict self,
           /*in*/ struct memloc const *loc,
           /*out*/ struct memloc *result,
           ptrdiff_t ind_delta);
 
-/* Force `loc' to become a register (`MEMADR_TYPE_HREG'). */
+/* Force `loc` to become a register (`MEMADR_TYPE_HREG`). */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasreg(struct fungen *__restrict self,
           /*in*/ struct memloc const *loc,
           /*out*/ struct memloc *result,
           host_regno_t const *not_these);
 
-/* Force `loc' to reside on the stack, giving it an address
- * (`MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0').
+/* Force `loc` to reside on the stack, giving it an address
+ * (`MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0`).
  * @param: require_valoff_0: When false, forgo the exit requirement
- *                           of `memloc_hstackind_getvaloff = 0' */
+ *                           of `memloc_hstackind_getvaloff = 0` */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasflush(struct fungen *__restrict self,
             /*in*/ struct memloc const *loc,
@@ -3219,10 +3219,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_adjust(struct fungen *__re
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushreg(struct fungen *__restrict self, host_regno_t src_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushregind(struct fungen *__restrict self, host_regno_t src_regno, ptrdiff_t src_delta);
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushconst(struct fungen *__restrict self, void const *value);
-INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushhstackind(struct fungen *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
+INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushhstackind(struct fungen *__restrict self, ptrdiff_t sp_offset); /* `sp_offset` is as it would be *before* the push */
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_popreg(struct fungen *__restrict self, host_regno_t dst_regno);
 #ifdef HAVE__fungen_ghstack_pushhstack_at_cfa_boundary_np
-INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushhstack_at_cfa_boundary_np(struct fungen *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
+INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_ghstack_pushhstack_at_cfa_boundary_np(struct fungen *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset` (as it was before the push) */
 #endif /* HAVE__fungen_ghstack_pushhstack_at_cfa_boundary_np */
 
 
@@ -3240,11 +3240,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gmov_reg2regind(struct fungen *__r
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gmov_constind2reg(struct host_section *__restrict self, void const **p_value, host_regno_t dst_regno);                             /* dst_regno = *<p_value>; */
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gmov_reg2constind(struct host_section *__restrict self, host_regno_t src_regno, void const **p_value);                             /* *<p_value> = src_regno; */
 #ifdef HOSTASM_X86_64
-#define _fungen_gmov_const2regind_MAYFAIL /* `_fungen_gmov_const2regind()' returns `1' if the constant is too large */
-#define _host_section_gmov_const2hstackind_MAYFAIL    /* `_host_section_gmov_const2hstackind()' returns `1' if the constant is too large */
-#define _host_section_gmov_const2constind_MAYFAIL     /* `_host_section_gmov_const2constind()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
-#define _host_section_gmov_constind2reg_MAYFAIL       /* `_host_section_gmov_constind2reg()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
-#define _host_section_gmov_reg2constind_MAYFAIL       /* `_host_section_gmov_reg2constind()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
+#define _fungen_gmov_const2regind_MAYFAIL /* `_fungen_gmov_const2regind()` returns `1` if the constant is too large */
+#define _host_section_gmov_const2hstackind_MAYFAIL    /* `_host_section_gmov_const2hstackind()` returns `1` if the constant is too large */
+#define _host_section_gmov_const2constind_MAYFAIL     /* `_host_section_gmov_const2constind()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
+#define _host_section_gmov_constind2reg_MAYFAIL       /* `_host_section_gmov_constind2reg()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
+#define _host_section_gmov_reg2constind_MAYFAIL       /* `_host_section_gmov_reg2constind()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
 #endif /* HOSTASM_X86_64 */
 
 #define _fungen_gmov_reg2hstackind(self, src_regno, sp_offset)       _host_section_gmov_reg2hstackind(fg_gettext(self), src_regno, sp_offset)
@@ -3258,16 +3258,16 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gmov_reg2constind(struct hos
 #define _fungen_gmov_constind2reg(self, p_value, dst_regno)          _host_section_gmov_constind2reg(fg_gettext(self), p_value, dst_regno)
 #define _fungen_gmov_reg2constind(self, src_regno, p_value)          _host_section_gmov_reg2constind(fg_gettext(self), src_regno, p_value)
 #ifdef _host_section_gmov_const2hstackind_MAYFAIL
-#define _fungen_gmov_const2hstackind_MAYFAIL /* `_fungen_gmov_const2hstackind()' returns `1' if the constant is too large */
+#define _fungen_gmov_const2hstackind_MAYFAIL /* `_fungen_gmov_const2hstackind()` returns `1` if the constant is too large */
 #endif /* _host_section_gmov_const2hstackind_MAYFAIL */
 #ifdef _host_section_gmov_const2constind_MAYFAIL
-#define _fungen_gmov_const2constind_MAYFAIL /* `_fungen_gmov_const2constind()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
+#define _fungen_gmov_const2constind_MAYFAIL /* `_fungen_gmov_const2constind()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
 #endif /* _host_section_gmov_const2constind_MAYFAIL */
 #ifdef _host_section_gmov_constind2reg_MAYFAIL
-#define _fungen_gmov_constind2reg_MAYFAIL /* `_fungen_gmov_constind2reg()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
+#define _fungen_gmov_constind2reg_MAYFAIL /* `_fungen_gmov_constind2reg()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
 #endif /* _host_section_gmov_constind2reg_MAYFAIL */
 #ifdef _host_section_gmov_reg2constind_MAYFAIL
-#define _fungen_gmov_reg2constind_MAYFAIL /* `_host_section_gmov_reg2constind()' returns `1' if "value" is too large, and `2' if "p_value" is too large */
+#define _fungen_gmov_reg2constind_MAYFAIL /* `_host_section_gmov_reg2constind()` returns `1` if "value" is too large, and `2` if "p_value" is too large */
 #endif /* _host_section_gmov_reg2constind_MAYFAIL */
 
 /* Allocate/deallocate memory from the host stack.
@@ -3316,8 +3316,8 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL fg_gmov_const2locind(struct fungen *__r
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fg_gmov_loc2loc(struct fungen *__restrict self, struct memloc const *src_loc, struct memloc const *dst_loc);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fg_gmov_loc2locind(struct fungen *__restrict self, struct memloc const *src_loc, struct memloc const *dst_loc, ptrdiff_t ind_delta);
 
-/* Generate code to return `loc'. No extra code to decref stack/locals is generated. If you
- * want that extra code to be generated, you need to use `fg_vret()'. */
+/* Generate code to return `loc`. No extra code to decref stack/locals is generated. If you
+ * want that extra code to be generated, you need to use `fg_vret()`. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gret(struct fungen *__restrict self, /*inherit_ref*/ struct memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gret(struct fungen *__restrict self);
 
@@ -3331,11 +3331,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gmorph_hstackindCreg2reg01(struct 
 #define _fungen_gmorph_regxCreg2reg01(self, src_regno, src_delta, cmp, rhs_regno, dst_regno) _host_section_gmorph_regxCreg2reg01(fg_gettext(self), src_regno, src_delta, cmp, rhs_regno, dst_regno)
 #define _fungen_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno)           _host_section_gmorph_hstackind2reg01(fg_gettext(self), sp_offset, val_delta, cmp, dst_regno)
 #ifdef HOSTASM_X86_64
-#define _fungen_gmorph_regind2reg01_MAYFAIL /* `_fungen_gmorph_regind2reg01()' returns `1' if "val_delta" is too large */
-#define _host_section_gmorph_hstackind2reg01_MAYFAIL    /* `_host_section_gmorph_hstackind2reg01()' returns `1' if "val_delta" is too large */
+#define _fungen_gmorph_regind2reg01_MAYFAIL /* `_fungen_gmorph_regind2reg01()` returns `1` if "val_delta" is too large */
+#define _host_section_gmorph_hstackind2reg01_MAYFAIL    /* `_host_section_gmorph_hstackind2reg01()` returns `1` if "val_delta" is too large */
 #endif /* HOSTASM_X86_64 */
 #ifdef _host_section_gmorph_hstackind2reg01_MAYFAIL
-#define _fungen_gmorph_hstackind2reg01_MAYFAIL /* `_fungen_gmorph_hstackind2reg01()' returns `1' if "val_delta" is too large */
+#define _fungen_gmorph_hstackind2reg01_MAYFAIL /* `_fungen_gmorph_hstackind2reg01()` returns `1` if "val_delta" is too large */
 #endif /* _host_section_gmorph_hstackind2reg01_MAYFAIL */
 #if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64) && !defined(CONFIG_TRACE_REFCHANGES)
 #define HAVE__host_section_gmorph_reg012regbool
@@ -3386,9 +3386,9 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gjcc_regindCconst(struct fungen *_
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindCreg(struct host_section *__restrict self, ptrdiff_t lhs_sp_offset, host_regno_t rhs_regno, bool signed_cmp, struct host_symbol *dst_lo, struct host_symbol *dst_eq, struct host_symbol *dst_gr);
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindCconst(struct host_section *__restrict self, ptrdiff_t lhs_sp_offset, void const *rhs_value, bool signed_cmp, struct host_symbol *dst_lo, struct host_symbol *dst_eq, struct host_symbol *dst_gr);
 #ifdef HOSTASM_X86_64
-#define _host_section_gjcc_regCconst_MAYFAIL          /* `_host_section_gjcc_regCconst()' returns `1' if "rhs_value" is too large */
-#define _fungen_gjcc_regindCconst_MAYFAIL /* `_fungen_gjcc_regindCconst()' returns `1' if "rhs_value" is too large */
-#define _host_section_gjcc_hstackindCconst_MAYFAIL    /* `_host_section_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
+#define _host_section_gjcc_regCconst_MAYFAIL          /* `_host_section_gjcc_regCconst()` returns `1` if "rhs_value" is too large */
+#define _fungen_gjcc_regindCconst_MAYFAIL /* `_fungen_gjcc_regindCconst()` returns `1` if "rhs_value" is too large */
+#define _host_section_gjcc_hstackindCconst_MAYFAIL    /* `_host_section_gjcc_hstackindCconst()` returns `1` if "rhs_value" is too large */
 #endif /* HOSTASM_X86_64 */
 
 
@@ -3405,7 +3405,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_regAreg(struct host_sec
 #ifdef HAVE__host_section_gjcc_regAconst
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_regAconst(struct host_section *__restrict self, host_regno_t lhs_regno, void const *rhs_value, struct host_symbol *dst_nz, struct host_symbol *dst_z);
 #ifdef HOSTASM_X86_64
-#define _host_section_gjcc_regAconst_MAYFAIL /* `_host_section_gjcc_regAconst()' returns `1' if "rhs_value" is too large */
+#define _host_section_gjcc_regAconst_MAYFAIL /* `_host_section_gjcc_regAconst()` returns `1` if "rhs_value" is too large */
 #endif /* HOSTASM_X86_64 */
 #endif /* HAVE__host_section_gjcc_regAconst */
 #ifdef HAVE__fungen_gjcc_regindAreg
@@ -3414,7 +3414,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gjcc_regindAreg(struct fungen *__r
 #ifdef HAVE__fungen_gjcc_regindAconst
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gjcc_regindAconst(struct fungen *__restrict self, host_regno_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, struct host_symbol *dst_nz, struct host_symbol *dst_z);
 #ifdef HOSTASM_X86_64
-#define _fungen_gjcc_regindAconst_MAYFAIL /* `_fungen_gjcc_regindAconst()' returns `1' if "rhs_value" is too large */
+#define _fungen_gjcc_regindAconst_MAYFAIL /* `_fungen_gjcc_regindAconst()` returns `1` if "rhs_value" is too large */
 #endif /* HOSTASM_X86_64 */
 #endif /* HAVE__fungen_gjcc_regindAconst */
 #ifdef HAVE__host_section_gjcc_hstackindAreg
@@ -3423,7 +3423,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindAreg(struct ho
 #ifdef HAVE__host_section_gjcc_hstackindAconst
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindAconst(struct host_section *__restrict self, ptrdiff_t lhs_sp_offset, void const *rhs_value, struct host_symbol *dst_nz, struct host_symbol *dst_z);
 #ifdef HOSTASM_X86_64
-#define _host_section_gjcc_hstackindAconst_MAYFAIL /* `_host_section_gjcc_hstackindAconst()' returns `1' if "rhs_value" is too large */
+#define _host_section_gjcc_hstackindAconst_MAYFAIL /* `_host_section_gjcc_hstackindAconst()` returns `1` if "rhs_value" is too large */
 #endif /* HOSTASM_X86_64 */
 #endif /* HAVE__host_section_gjcc_hstackindAconst */
 #endif /* HOSTASM_X86 */
@@ -3438,10 +3438,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindAconst(struct 
 #define _fungen_gjcc_hstackindCreg(self, lhs_sp_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)   _host_section_gjcc_hstackindCreg(fg_gettext(self), lhs_sp_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
 #define _fungen_gjcc_hstackindCconst(self, lhs_sp_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _host_section_gjcc_hstackindCconst(fg_gettext(self), lhs_sp_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
 #ifdef _host_section_gjcc_regCconst_MAYFAIL
-#define _fungen_gjcc_regCconst_MAYFAIL /* `_fungen_gjcc_regCconst()' returns `1' if "rhs_value" is too large */
+#define _fungen_gjcc_regCconst_MAYFAIL /* `_fungen_gjcc_regCconst()` returns `1` if "rhs_value" is too large */
 #endif /* _host_section_gjcc_regCconst_MAYFAIL */
 #ifdef _host_section_gjcc_hstackindCconst_MAYFAIL
-#define _fungen_gjcc_hstackindCconst_MAYFAIL /* `_fungen_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
+#define _fungen_gjcc_hstackindCconst_MAYFAIL /* `_fungen_gjcc_hstackindCconst()` returns `1` if "rhs_value" is too large */
 #endif /* _host_section_gjcc_hstackindCconst_MAYFAIL */
 
 #ifdef HAVE__host_section_gjcc_regAreg
@@ -3454,7 +3454,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindAconst(struct 
 #define _fungen_gjcc_regAconst(self, lhs_regno, rhs_value, dst_nz, dst_z) \
 	_host_section_gjcc_regAconst(fg_gettext(self), lhs_regno, rhs_value, dst_nz, dst_z)
 #ifdef _host_section_gjcc_regAconst_MAYFAIL
-#define _fungen_gjcc_regAconst_MAYFAIL /* `_fungen_gjcc_regAconst()' returns `1' if "rhs_value" is too large */
+#define _fungen_gjcc_regAconst_MAYFAIL /* `_fungen_gjcc_regAconst()` returns `1` if "rhs_value" is too large */
 #endif /* _host_section_gjcc_regAconst_MAYFAIL */
 #endif /* HAVE__host_section_gjcc_regAconst */
 #ifdef HAVE__host_section_gjcc_hstackindAreg
@@ -3467,7 +3467,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjcc_hstackindAconst(struct 
 #define _fungen_gjcc_hstackindAconst(self, lhs_sp_offset, rhs_value, dst_nz, dst_z) \
 	_host_section_gjcc_hstackindAconst(fg_gettext(self), lhs_sp_offset, rhs_value, dst_nz, dst_z)
 #ifdef _host_section_gjcc_hstackindAconst_MAYFAIL
-#define _fungen_gjcc_hstackindAconst_MAYFAIL /* `_fungen_gjcc_hstackindAconst()' returns `1' if "rhs_value" is too large */
+#define _fungen_gjcc_hstackindAconst_MAYFAIL /* `_fungen_gjcc_hstackindAconst()` returns `1` if "rhs_value" is too large */
 #endif /* _host_section_gjcc_hstackindAconst_MAYFAIL */
 #endif /* HAVE__host_section_gjcc_hstackindAconst */
 
@@ -3540,13 +3540,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gbitop_regconst2reg(struct h
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gbitop_reghstackind2reg(struct host_section *__restrict self, host_bitop_t op, host_regno_t src1_regno, ptrdiff_t src2_sp_offset, host_regno_t dst_regno);                                          /* dst_regno = src1_regno <op> *(SP + src2_sp_offset); */
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gbitop_regregind2reg(struct fungen *__restrict self, host_bitop_t op, host_regno_t src1_regno, host_regno_t src2_regno, ptrdiff_t src2_ind_delta, host_regno_t dst_regno); /* dst_regno = src1_regno <op> *(src2_regno + src2_ind_delta); */
 #ifdef HOSTASM_X86_64
-#define _host_section_gbitop_regconst2reg_MAYFAIL /* `_host_section_gbitop_regconst2reg()' returns `1' if the constant is too large */
+#define _host_section_gbitop_regconst2reg_MAYFAIL /* `_host_section_gbitop_regconst2reg()` returns `1` if the constant is too large */
 #endif /* HOSTASM_X86_64 */
 #define _fungen_gbitop_regreg2reg(self, op, src1_regno, src2_regno, dst_regno)           _host_section_gbitop_regreg2reg(fg_gettext(self), op, src1_regno, src2_regno, dst_regno)
 #define _fungen_gbitop_regconst2reg(self, op, src1_regno, src2_value, dst_regno)         _host_section_gbitop_regconst2reg(fg_gettext(self), op, src1_regno, src2_value, dst_regno)
 #define _fungen_gbitop_reghstackind2reg(self, op, src1_regno, src2_sp_offset, dst_regno) _host_section_gbitop_reghstackind2reg(fg_gettext(self), op, src1_regno, src2_sp_offset, dst_regno)
 #ifdef _host_section_gbitop_regconst2reg_MAYFAIL
-#define _fungen_gbitop_regconst2reg_MAYFAIL /* `_fungen_gbitop_regconst2reg()' returns `1' if the constant is too large */
+#define _fungen_gbitop_regconst2reg_MAYFAIL /* `_fungen_gbitop_regconst2reg()` returns `1` if the constant is too large */
 #endif /* _host_section_gbitop_regconst2reg_MAYFAIL */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gbitop_regreg2reg(struct fungen *__restrict self, host_bitop_t op, host_regno_t src1_regno, host_regno_t src2_regno, host_regno_t dst_regno);                                 /* dst_regno = src1_regno <op> src2_regno; */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gbitop_reghstackind2reg(struct fungen *__restrict self, host_bitop_t op, host_regno_t src1_regno, host_cfa_t src2_cfa_offset, host_regno_t dst_regno);                                /* dst_regno = src1_regno <op> *(SP ... src2_cfa_offset); */
@@ -3566,13 +3566,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjarith_regconst2reg(struct 
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gjarith_reghstackind2reg(struct host_section *__restrict self, host_arithop_t op, host_regno_t src1_regno, ptrdiff_t src2_sp_offset, host_regno_t dst_regno, struct host_symbol *dst_o, struct host_symbol *dst_no);
 INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gjarith_regregind2reg(struct fungen *__restrict self, host_arithop_t op, host_regno_t src1_regno, host_regno_t src2_regno, ptrdiff_t src2_ind_delta, host_regno_t dst_regno, struct host_symbol *dst_o, struct host_symbol *dst_no);
 #ifdef HOSTASM_X86_64
-#define _host_section_gjarith_regconst2reg_MAYFAIL /* `_host_section_gjarith_regconst2reg()' returns `1' if the constant is too large */
+#define _host_section_gjarith_regconst2reg_MAYFAIL /* `_host_section_gjarith_regconst2reg()` returns `1` if the constant is too large */
 #endif /* HOSTASM_X86_64 */
 #define _fungen_gjarith_regreg2reg(self, op, src1_regno, src2_regno, dst_regno, dst_o, dst_no)           _host_section_gjarith_regreg2reg(fg_gettext(self), op, src1_regno, src2_regno, dst_regno, dst_o, dst_no)
 #define _fungen_gjarith_regconst2reg(self, op, src1_regno, src2_value, dst_regno, dst_o, dst_no)         _host_section_gjarith_regconst2reg(fg_gettext(self), op, src1_regno, src2_value, dst_regno, dst_o, dst_no)
 #define _fungen_gjarith_reghstackind2reg(self, op, src1_regno, src2_sp_offset, dst_regno, dst_o, dst_no) _host_section_gjarith_reghstackind2reg(fg_gettext(self), op, src1_regno, src2_sp_offset, dst_regno, dst_o, dst_no)
 #ifdef _host_section_gjarith_regconst2reg_MAYFAIL
-#define _fungen_gjarith_regconst2reg_MAYFAIL /* `_fungen_gjarith_regconst2reg()' returns `1' if the constant is too large */
+#define _fungen_gjarith_regconst2reg_MAYFAIL /* `_fungen_gjarith_regconst2reg()` returns `1` if the constant is too large */
 #endif /* _host_section_gjarith_regconst2reg_MAYFAIL */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gjarith_regreg2reg(struct fungen *__restrict self, host_bitop_t op, host_regno_t src1_regno, host_regno_t src2_regno, host_regno_t dst_regno, struct host_symbol *dst_o, struct host_symbol *dst_no);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gjarith_reghstackind2reg(struct fungen *__restrict self, host_bitop_t op, host_regno_t src1_regno, host_cfa_t src2_cfa_offset, host_regno_t dst_regno, struct host_symbol *dst_o, struct host_symbol *dst_no);
@@ -3592,7 +3592,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_gjarith_locloc2reg(struct fungen *__res
 #ifdef HAVE__host_section_gadd_const2hstackind
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gadd_const2hstackind(struct host_section *__restrict self, void const *value, ptrdiff_t sp_offset); /* *(SP + sp_offset) = *(SP + sp_offset) + <value>; */
 #ifdef HOSTASM_X86_64
-#define _host_section_gadd_const2hstackind_MAYFAIL /* `_host_section_gadd_const2hstackind()' returns `1' if the constant is too large */
+#define _host_section_gadd_const2hstackind_MAYFAIL /* `_host_section_gadd_const2hstackind()` returns `1` if the constant is too large */
 #endif /* HOSTASM_X86_64 */
 #endif /* HAVE__host_section_gadd_const2hstackind */
 INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gumul_regconst2reg(struct host_section *__restrict self, host_regno_t src_regno, uintptr_t n, host_regno_t dst_regno); /* dst_regno = src_regno * n; */
@@ -3609,24 +3609,24 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gumul_regconst2reg(struct ho
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fg_gjz(struct fungen *__restrict self, struct memloc const *test_loc, struct host_symbol *__restrict dst);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fg_gjnz(struct fungen *__restrict self, struct memloc const *test_loc, struct host_symbol *__restrict dst);
 
-/* Emit conditional jump(s) based on `<lhs> <=> <rhs>'
- * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
+/* Emit conditional jump(s) based on `<lhs> <=> <rhs>`
+ * NOTE: This function may clobber `lhs` and `rhs`, and may flush/shift local/stack locations. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gjcc(struct fungen *__restrict self,
         struct memloc const *lhs, struct memloc const *rhs, bool signed_cmp,
-        struct host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>' */
-        struct host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>' */
-        struct host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>' */
+        struct host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>` */
+        struct host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>` */
+        struct host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>` */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gjca(struct fungen *__restrict self,
         struct memloc const *lhs, struct memloc const *rhs,
-        struct host_symbol *dst_nz, /* Jump here if `(<lhs> & <rhs>) != 0' */
-        struct host_symbol *dst_z); /* Jump here if `(<lhs> & <rhs>) == 0' */
+        struct host_symbol *dst_nz, /* Jump here if `(<lhs> & <rhs>) != 0` */
+        struct host_symbol *dst_z); /* Jump here if `(<lhs> & <rhs>) == 0` */
 
 
 
 /* Allocate at host register, possibly flushing an already used register to stack.
- * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGNO_COUNT'.
+ * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGNO_COUNT`.
  * @return: * : The allocated register
  * @return: >= HOST_REGNO_COUNT: Error */
 INTDEF WUNUSED NONNULL((1)) host_regno_t DCALL
@@ -3635,7 +3635,7 @@ fg_gallocreg(struct fungen *__restrict self,
 #define fg_gtryallocreg(self, not_these) \
 	memstate_hregs_find_unused_ex((self)->fg_state, not_these)
 
-/* Helper that returns a register that's been populated for `usage' */
+/* Helper that returns a register that's been populated for `usage` */
 INTDEF WUNUSED NONNULL((1)) host_regno_t DCALL
 fg_gusagereg(struct fungen *__restrict self,
              host_regusage_t usage,
@@ -3643,7 +3643,7 @@ fg_gusagereg(struct fungen *__restrict self,
 
 
 /* Generate code to flush all registers used by the deemon stack/locals into the host stack.
- * NOTE: Usage-registers are cleared by arch-specific code (e.g. `fg_gcallapi()')
+ * NOTE: Usage-registers are cleared by arch-specific code (e.g. `fg_gcallapi()`)
  * @param: ignore_top_n_stack_if_not_ref: From the top-most N stack locations, ignore any
  *                                        that don't contain object references.
  * @param: only_if_reference: Only flush locations that contain references. */
@@ -3652,17 +3652,17 @@ fg_vflushregs(struct fungen *__restrict self,
               vstackaddr_t ignore_top_n_stack_if_not_ref,
               bool only_if_reference);
 
-/* Flush memory locations that make use of `regno' onto the hstack. */
+/* Flush memory locations that make use of `regno` onto the hstack. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vflushreg(struct fungen *__restrict self,
              vstackaddr_t ignore_top_n_stack_if_not_ref,
              bool only_if_reference, host_regno_t regno);
 
-/* Generate code to assert that location `loc' is non-NULL:
+/* Generate code to assert that location `loc` is non-NULL:
  * >> fg_gassert_bound(self, loc, instr, NULL, lid, NULL, NULL);
  * >> fg_gassert_bound(self, loc, instr, mod, gid, NULL, NULL);
- * @param: opt_endread_before_throw: When non-NULL, emit `fg_grwlock_endread()'
- *                                   before the `fg_gthrow_*_unbound' code. */
+ * @param: opt_endread_before_throw: When non-NULL, emit `fg_grwlock_endread()`
+ *                                   before the `fg_gthrow_*_unbound` code. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_gassert_bound(struct fungen *__restrict self,
                  struct memloc const *loc, Dee_instruction_t const *instr,
@@ -3686,7 +3686,7 @@ fg_gassert_bound(struct fungen *__restrict self,
 #define fg_gassert_global_bound(self, loc, mod, gid)      fg_gassert_bound(self, loc, NULL, mod, gid)
 #endif /* CONFIG_NO_THREADS */
 
-/* Generate code to throw an error indicating that local variable `lid'
+/* Generate code to throw an error indicating that local variable `lid`
  * is unbound. This includes any necessary jump for the purpose of entering
  * an exception handler. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gthrow_arg_unbound(struct fungen *__restrict self, Dee_instruction_t const *instr, aid_t aid);
@@ -3705,13 +3705,13 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gjcmp_except(struct fungen *__restri
 #define fg_gjne_except(self, loc, not_except_val) fg_gjcmp_except(self, loc, not_except_val, FG_GJCMP_EXCEPT_LO | FG_GJCMP_EXCEPT_GR)
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gjmp_except(struct fungen *__restrict self);
 
-/* Generate code in `fg_gettext(self)' to morph `self->fg_state' into `new_state' */
+/* Generate code in `fg_gettext(self)` to morph `self->fg_state` into `new_state` */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_vmorph_no_constrain_equivalences(struct fungen *__restrict self,
                                     struct memstate const *new_state);
 
-/* Same as `fg_vmorph_no_constrain_equivalences()', but also
- * generate code to constrain the equivalences from `new_state' into "self". */
+/* Same as `fg_vmorph_no_constrain_equivalences()`, but also
+ * generate code to constrain the equivalences from `new_state` into "self". */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 fg_vmorph(struct fungen *__restrict self,
           struct memstate const *new_state);
@@ -3723,12 +3723,12 @@ fg_xmorph(struct fungen *__restrict self,
           struct except_exitinfo_id *__restrict newinfo);
 
 
-/* Convert a single deemon instruction `instr' to host assembly and adjust the host memory
+/* Convert a single deemon instruction `instr` to host assembly and adjust the host memory
  * state according to the instruction in question. This is the core function to parse deemon
  * code and convert it to host assembly.
  * @param: p_next_instr: [inout] Pointer to the next instruction (may be overwritten if the
  *                               generated instruction was merged with its successor, as is
- *                               the case for `ASM_REPR' when followed by print-instructions)
+ *                               the case for `ASM_REPR` when followed by print-instructions)
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -3736,7 +3736,7 @@ fg_geninstr(struct fungen *__restrict self,
             Dee_instruction_t const *instr,
             Dee_instruction_t const **p_next_instr);
 
-/* Wrapper around `fg_geninstr()' to generate the entire basic block.
+/* Wrapper around `fg_geninstr()` to generate the entire basic block.
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -3764,7 +3764,7 @@ struct ccall_optimization {
 		uintptr_t       n_opname;  /* Expected operator ID. */
 	}                   tcco_name; /* Name of the attribute/operator being optimized. */
 	ccall_optigen_t tcco_func; /* [1..1] Optimized generator. */
-	vstackaddr_t    tcco_argc; /* Expected argument count, or `CCALL_ARGC_ANY'. */
+	vstackaddr_t    tcco_argc; /* Expected argument count, or `CCALL_ARGC_ANY`. */
 #define CCALL_ARGC_ANY    ((vstackaddr_t)-1)
 #define CCALL_ARGC_GETTER ((vstackaddr_t)-2)
 #define CCALL_ARGC_DELETE ((vstackaddr_t)-3)
@@ -3773,14 +3773,14 @@ struct ccall_optimization {
 #define CCALL_ARGC_MAX    ((vstackaddr_t)-6)
 };
 
-/* Try to find a dedicated optimization for `INSTANCEOF(<type>).<name>(argc...)' */
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).<name>(argc...)` */
 INTDEF WUNUSED NONNULL((1, 2)) struct ccall_optimization const *DCALL
 ccall_find_attr_optimization(DeeTypeObject *__restrict type,
                              char const *name, vstackaddr_t argc);
 
-/* Try to find a dedicated optimization for `INSTANCEOF(<type>).operator <operator_name> (argc...)'
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).operator <operator_name> (argc...)`
  * NOTE: Optimizations returned type this one may or may not push a result onto the stack,
- *       depending on the operator in question (`operator_name')! Because of this, if the
+ *       depending on the operator in question (`operator_name`)! Because of this, if the
  *       operator is generic, the caller needs to check how the vstack depth is altered.
  *       For inplace operators, the same applies, but the "this" argument always remains
  *       on-stack as well! */
@@ -3795,7 +3795,7 @@ ccall_find_operator_optimization(DeeTypeObject *__restrict type,
 /* Type traits                                                          */
 /************************************************************************/
 
-/* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape. */
+/* Check if operator `operator_name` of `self` doesn't let references to the "this" argument escape. */
 #define DeeType_IsOperatorNoRefEscape(self, operator_name) \
 	(DeeType_GetOperatorFlags(self, operator_name) & METHOD_FNOREFESCAPE)
 
@@ -3814,7 +3814,7 @@ struct hostfunc {
 	 *       its prolog. That way, when hostasm code calls another deemon function
 	 *       that has already been re-compiled into hostasm, argument/keyword checks
 	 *       can potentially be performed at (re-)compile-time, rather than having
-	 *       to pack/unpack arguments and go through `DeeObject_Call()' */
+	 *       to pack/unpack arguments and go through `DeeObject_Call()` */
 	/* TODO: Save debug information to encode locations of stack/locals */
 };
 
@@ -3843,10 +3843,10 @@ hostfunc_fini(struct hostfunc *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL
 function_assembler_loadblocks(struct function_assembler *__restrict self);
 
-/* Step #1.1 [optional; disabled by: `FUNCTION_ASSEMBLER_F_NOEARLYDEL']
+/* Step #1.1 [optional; disabled by: `FUNCTION_ASSEMBLER_F_NOEARLYDEL`]
  * Figure out all the instructions that read from a local the last time before
  * the function ends, or the variable gets written to again. By using this info,
- * `fg_geninstr()' emits extra instrumentation in order to
+ * `fg_geninstr()` emits extra instrumentation in order to
  * delete local variables earlier than usual, which in turn significantly lowers
  * the overhead associated with keeping objects alive longer than strictly
  * necessary. When this step is skipped, local simply aren't deleted early.
@@ -3870,7 +3870,7 @@ function_assembler_loadlocuse(struct function_assembler *__restrict self);
  * always identical (or compatible; i.e.: MEMVAL_F_LOCAL_UNKNOWN can
  * be set at the start of a block, but doesn't need to be set at the
  * end of a preceding block). When not compatible, extra block(s) are
- * inserted with `bb_deemon_start==bb_deemon_end', but non-empty host
+ * inserted with `bb_deemon_start==bb_deemon_end`, but non-empty host
  * assembly, which serves the purpose of transforming memory states.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -3896,7 +3896,7 @@ function_assembler_trimdead(struct function_assembler *__restrict self);
  * other basic block with an extra instructions needed for morphing:
  * - self->fa_prolog                                (to transition )
  * - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph
- * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
+ * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start`)
  * - self->fa_except_exitv[*]->exi_block->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
  * - self->fa_except_exitv[*]->exi_block->bb_next   (set if intend is to fall into another exit block)
  * - self->fa_except_first
@@ -3908,10 +3908,10 @@ function_assembler_compilemorph(struct function_assembler *__restrict self);
 /* Step #5: Generate missing unconditional jumps to jump from one block to the next
  * - Find loops of blocks that "fall through" back on each other in a loop, and
  *   append a jump-to-the-start on all blocks that "fall through" to themselves.
- *   For one of these blocks, also generate a call to `DeeThread_CheckInterrupt()'
+ *   For one of these blocks, also generate a call to `DeeThread_CheckInterrupt()`
  * - For all blocks that have more than 1 fallthru predecessors, take all but
  *   1 of those predecessors and append unconditional jumps to them, then set
- *   the `bb_next' field of those blocks to `NULL'.
+ *   the `bb_next` field of those blocks to `NULL`.
  * - Also fills in:
  *   - self->fa_sections
  *   - self->fa_prolog.hs_link+hs_symbols
@@ -3925,7 +3925,7 @@ function_assembler_ordersections(struct function_assembler *__restrict self);
 
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 /* Step #6: Try to shrink large in generated host text with smaller ones.
- * This is an arch-specific step. On x86 it replaces `jmpl' with `jmp8' (if possible) */
+ * This is an arch-specific step. On x86 it replaces `jmpl` with `jmp8` (if possible) */
 INTDEF NONNULL((1)) void DCALL
 function_assembler_shrinkjumps(struct function_assembler *__restrict self);
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
@@ -3938,9 +3938,9 @@ function_assembler_output(struct function_assembler *__restrict self,
                           struct hostfunc *__restrict result);
 
 
-/* High-level wrapper function to fully assemble `function' into its host-asm equivalent.
+/* High-level wrapper function to fully assemble `function` into its host-asm equivalent.
  * @param: cc:    Calling convention of the generated function
- * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*'
+ * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*`
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((2, 3)) int DCALL

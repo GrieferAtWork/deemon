@@ -159,7 +159,7 @@ insert_current_and_again:
 		if (!Thread.supported) {
 			/* Deemon was built without threading support -> execute tasks synchronously
 			 * HINT: This also means that "allTasksDone" is never cleared, meaning that
-			 *       `waitfor()' below will return immediately. */
+			 *       `waitfor()` below will return immediately. */
 			task._run();
 		} else {
 			tasks.append(task);

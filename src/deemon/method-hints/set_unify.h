@@ -84,7 +84,7 @@ err:
 
 
 
-/* Insert `key' if not already present and re-return `key'.
+/* Insert `key` if not already present and re-return `key`.
  * If already present, return the pre-existing (and equal) instance instead.
  * @return: NULL: Error */
 [[wunused]] DREF DeeObject *

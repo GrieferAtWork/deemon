@@ -168,7 +168,7 @@ host_arithop_forconst(host_arithop_t op,
 
 
 
-/* Clear the `MEMOBJ_F_ONEREF' flag from `mobj', as well
+/* Clear the `MEMOBJ_F_ONEREF` flag from `mobj`, as well
  * as any other memory location that might be aliasing it. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_gnotoneref_impl(struct fungen *__restrict self,
@@ -1277,7 +1277,7 @@ fg_gmov_regx2loc(struct fungen *__restrict self,
 		host_cfa_t cfa_offset = memloc_hstackind_getcfa(dst_loc);
 		ptrdiff_t delta_delta = memloc_hstackind_getvaloff(dst_loc) - src_delta;
 		if (delta_delta != 0) {
-			/* Adjust `src_regno' to have the correct value-delta */
+			/* Adjust `src_regno` to have the correct value-delta */
 			if unlikely(fg_gmov_regx2reg(self, src_regno, delta_delta, src_regno))
 				goto err;
 		}
@@ -1798,8 +1798,8 @@ err:
 }
 
 
-/* Generate code to return `loc'. No extra code to decref stack/locals is generated. If you
- * want that extra code to be generated, you need to use `fg_vret()'. */
+/* Generate code to return `loc`. No extra code to decref stack/locals is generated. If you
+ * want that extra code to be generated, you need to use `fg_vret()`. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_gret(struct fungen *__restrict self,
         /*inherit_ref*/ struct memloc const *__restrict loc) {
@@ -2171,7 +2171,7 @@ try_restore_xloc_arg_cfa_offset(struct fungen *__restrict self,
 				if (cc & HOST_CC_F_THIS)
 					++true_argi;
 				break;
-			case MEMSTATE_XLOCAL_A_ARGV: /* or `MEMSTATE_XLOCAL_A_ARGS' */
+			case MEMSTATE_XLOCAL_A_ARGV: /* or `MEMSTATE_XLOCAL_A_ARGS` */
 				if (cc & HOST_CC_F_THIS)
 					++true_argi;
 				if (!(cc & HOST_CC_F_TUPLE))
@@ -2195,7 +2195,7 @@ try_restore_xloc_arg_cfa_offset(struct fungen *__restrict self,
 }
 #endif /* HOSTASM_X86 && !HOSTASM_X86_64 */
 
-/* Push/move `regno' onto the host stack, returning the CFA offset of the target location. */
+/* Push/move `regno` onto the host stack, returning the CFA offset of the target location. */
 PRIVATE WUNUSED NONNULL((1)) host_cfa_t DCALL
 fg_gsavereg(struct fungen *__restrict self,
             host_regno_t regno) {
@@ -2265,7 +2265,7 @@ fg_gflushregind(struct fungen *__restrict self,
 #endif /* HOSTASM_STACK_GROWS_DOWN */
 	}
 
-	/* Convert all locations that use `MEMADR_TYPE_HREGIND:regno:off' to `MEMADR_TYPE_HSTACKIND' */
+	/* Convert all locations that use `MEMADR_TYPE_HREGIND:regno:off` to `MEMADR_TYPE_HSTACKIND` */
 	memstate_foreach(val, state) {
 		struct memobj *obj;
 		memval_foreach_obj(obj, val) {
@@ -2298,7 +2298,7 @@ err:
 }
 
 /* Generate code to flush all registers used by the deemon stack/locals into the host stack.
- * NOTE: Usage-registers are cleared by arch-specific code (e.g. `fg_gcallapi()')
+ * NOTE: Usage-registers are cleared by arch-specific code (e.g. `fg_gcallapi()`)
  * @param: ignore_top_n_stack_if_not_ref: From the top-most N stack locations, ignore any
  *                                        that don't contain object references.
  * @param: only_if_reference: Only flush locations that contain references. */
@@ -2404,7 +2404,7 @@ err:
 	return -1;
 }
 
-/* Flush memory locations that make use of `regno' onto the hstack. */
+/* Flush memory locations that make use of `regno` onto the hstack. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vflushreg(struct fungen *__restrict self,
              vstackaddr_t ignore_top_n_stack_if_not_ref,
@@ -2516,7 +2516,7 @@ nullable_host_register_list_contains(host_regno_t const *list,
 	return false;
 }
 
-/* Assuming that `fg_gtryallocreg()' wasn't able to allocate
+/* Assuming that `fg_gtryallocreg()` wasn't able to allocate
  * an unused register, use this function to pick which register should be picked.
  * When it's impossible to allocate *any* register, return >= HOST_REGNO_COUNT,
  * in which case the caller should throw an exception saying that allocation was
@@ -2582,7 +2582,7 @@ fg_gallocreg_pickreg(struct fungen *__restrict self,
 }
 
 /* Allocate at host register, possibly flushing an already used register to stack.
- * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGNO_COUNT'.
+ * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGNO_COUNT`.
  * @return: * : The allocated register
  * @return: >= HOST_REGNO_COUNT: Error */
 INTERN WUNUSED NONNULL((1)) host_regno_t DCALL
@@ -2622,7 +2622,7 @@ gmov_usage2reg(struct fungen *__restrict self,
 	                       (unsigned int)usage);
 }
 
-/* Helper that returns a register that's been populated for `usage' */
+/* Helper that returns a register that's been populated for `usage` */
 INTERN WUNUSED NONNULL((1)) host_regno_t DCALL
 fg_gusagereg(struct fungen *__restrict self,
              host_regusage_t usage,
@@ -2646,11 +2646,11 @@ err:
 
 
 
-/* Generate code to assert that location `loc' is non-NULL:
+/* Generate code to assert that location `loc` is non-NULL:
  * >> fg_gassert_bound(self, loc, instr, NULL, lid, NULL, NULL);
  * >> fg_gassert_bound(self, loc, instr, mod, gid, NULL, NULL);
- * @param: opt_endread_before_throw: When non-NULL, emit `fg_grwlock_endread()'
- *                                   before the `fg_gthrow_*_unbound' code. */
+ * @param: opt_endread_before_throw: When non-NULL, emit `fg_grwlock_endread()`
+ *                                   before the `fg_gthrow_*_unbound` code. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_gassert_bound(struct fungen *__restrict self,
                  struct memloc const *loc, Dee_instruction_t const *instr,
@@ -2712,7 +2712,7 @@ err:
 	return -1;
 }
 
-/* Generate code to throw an error indicating that local variable `lid'
+/* Generate code to throw an error indicating that local variable `lid`
  * is unbound. This includes any necessary jump for the purpose of entering
  * an exception handler. */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3209,9 +3209,9 @@ err:
 	return -1;
 }
 
-/* Change `loc' into the value of `<result> = *(<loc> + ind_delta)'
- * Note that unlike the `fg_gmov*' functions, this
- * one may use `MEMADR_TYPE_*IND' to defer the indirection until later. */
+/* Change `loc` into the value of `<result> = *(<loc> + ind_delta)`
+ * Note that unlike the `fg_gmov*` functions, this
+ * one may use `MEMADR_TYPE_*IND` to defer the indirection until later. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasind(struct fungen *__restrict self,
           /*in*/ struct memloc const *loc,
@@ -3269,7 +3269,7 @@ err:
 	return -1;
 }
 
-/* Force `loc' to become a register (`MEMADR_TYPE_HREG'). */
+/* Force `loc` to become a register (`MEMADR_TYPE_HREG`). */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasreg(struct fungen *__restrict self,
           /*in*/ struct memloc const *loc,
@@ -3300,7 +3300,7 @@ fg_gasreg(struct fungen *__restrict self,
 		 * >> 9 == RESULT_VAL_DELTA
 		 * >> 7 == memloc_getoff(loc)
 		 * >> 3 == memloc_getoff(&eq->meq_loc)
-		 * >> 5 == memloc_getoff(&reg_eq->meq_loc)   (gets added in `memequiv_asloc()') */
+		 * >> 5 == memloc_getoff(&reg_eq->meq_loc)   (gets added in `memequiv_asloc()`) */
 		val_delta = memloc_getoff(loc);
 		val_delta -= memloc_getoff(&eq->meq_loc);
 		*result = reg_eq->meq_loc;
@@ -3319,17 +3319,17 @@ no_equivalence:
 	if unlikely(fg_gmov_loc2regy(self, loc, regno, &val_delta))
 		goto err;
 
-	/* Remember that `loc' now lies in a register. */
+	/* Remember that `loc` now lies in a register. */
 	memloc_init_hreg(result, regno, val_delta);
 	return 0;
 err:
 	return -1;
 }
 
-/* Force `loc' to reside on the stack, giving it an address
- * (`MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0').
+/* Force `loc` to reside on the stack, giving it an address
+ * (`MEMADR_TYPE_HSTACKIND, memloc_hstackind_getvaloff = 0`).
  * @param: require_valoff_0: When false, forgo the exit requirement
- *                           of `memloc_hstackind_getvaloff = 0' */
+ *                           of `memloc_hstackind_getvaloff = 0` */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gasflush(struct fungen *__restrict self,
             /*in*/ struct memloc const *loc,
@@ -3348,7 +3348,7 @@ handle_hstackind_loc:
 			return 0; /* Caller doesn't care about value offset */
 
 #ifdef HAVE__host_section_gadd_const2hstackind
-		/* emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
+		/* emit `addP $..., sp_offset(%Psp)` to adjust the offset of the stored value
 		 * Afterwards, go through all stack/local variables and adjust value offsets
 		 * wherever the same CFA offset is referenced. */
 		return _host_section_gadd_const2hstackind(fg_gettext(self),
@@ -3378,7 +3378,7 @@ handle_hstackind_loc:
 			     hstackind_eq = memequiv_next(hstackind_eq)) {
 				if (memloc_gettyp(&hstackind_eq->meq_loc) == MEMEQUIV_TYPE_HSTACKIND) {
 					if ((memloc_getoff(&hstackind_eq->meq_loc) + val_delta) == 0) {
-						/* Perfect match: this equivalence allows for `v_hstack.s_off = 0' */
+						/* Perfect match: this equivalence allows for `v_hstack.s_off = 0` */
 						*result = hstackind_eq->meq_loc;
 						ASSERT((memloc_getoff(result) + val_delta) == 0);
 						memloc_setoff(result, 0);
@@ -3421,7 +3421,7 @@ handle_hstackind_loc:
 	}
 
 	/* If the location used to be a writable location, then we must
-	 * also update any other location that used to alias `result'. */
+	 * also update any other location that used to alias `result`. */
 	state = self->fg_state;
 	if (memloc_gettyp(result) == MEMADR_TYPE_HREG ||
 	    memloc_gettyp(result) == MEMADR_TYPE_HREGIND) {
@@ -3447,7 +3447,7 @@ handle_hstackind_loc:
 		}
 	}
 
-	/* Remember that `result' now lies on-stack (with an offset of `val_offset') */
+	/* Remember that `result` now lies on-stack (with an offset of `val_offset`) */
 	memloc_init_hstackind(result, cfa_offset, val_offset);
 	return 0;
 err:
@@ -3455,7 +3455,7 @@ err:
 }
 
 
-/* Check if `src_loc' differs from `dst_loc', and if so: move `src_loc' *into* `dst_loc'. */
+/* Check if `src_loc` differs from `dst_loc`, and if so: move `src_loc` *into* `dst_loc`. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gmov_loc2loc(struct fungen *__restrict self,
                 struct memloc const *src_loc,
@@ -4175,14 +4175,14 @@ err:
 }
 
 
-/* Emit conditional jump(s) based on `<lhs> <=> <rhs>'
- * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
+/* Emit conditional jump(s) based on `<lhs> <=> <rhs>`
+ * NOTE: This function may clobber `lhs` and `rhs`, and may flush/shift local/stack locations. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gjcc(struct fungen *__restrict self,
         struct memloc const *lhs, struct memloc const *rhs, bool signed_cmp,
-        struct host_symbol *dst_lo,   /* Jump here if `<lhs> < <rhs>' */
-        struct host_symbol *dst_eq,   /* Jump here if `<lhs> == <rhs>' */
-        struct host_symbol *dst_gr) { /* Jump here if `<lhs> > <rhs>' */
+        struct host_symbol *dst_lo,   /* Jump here if `<lhs> < <rhs>` */
+        struct host_symbol *dst_eq,   /* Jump here if `<lhs> == <rhs>` */
+        struct host_symbol *dst_gr) { /* Jump here if `<lhs> > <rhs>` */
 	struct memloc rhs_asreg;
 
 	/* Swap operands if "rhs" isn't CONST or REG, or lhs is CONST */
@@ -4240,8 +4240,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gjca(struct fungen *__restrict self,
         struct memloc const *lhs, struct memloc const *rhs,
-        struct host_symbol *dst_nz,  /* Jump here if `(<lhs> & <rhs>) != 0' */
-        struct host_symbol *dst_z) { /* Jump here if `(<lhs> & <rhs>) == 0' */
+        struct host_symbol *dst_nz,  /* Jump here if `(<lhs> & <rhs>) != 0` */
+        struct host_symbol *dst_z) { /* Jump here if `(<lhs> & <rhs>) == 0` */
 	struct memloc rhs_asreg;
 
 	/* Swap operands if "rhs" isn't CONST or REG, or lhs is CONST */

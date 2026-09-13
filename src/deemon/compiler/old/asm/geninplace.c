@@ -333,7 +333,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 				if (DeeInt_Check(end->a_constexpr) &&
 				    DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 				    end_index >= INT16_MIN && end_index <= INT16_MAX) {
-					/* <base>[none:43] += operand; (Uses `asm_ggetrange_ni') */
+					/* <base>[none:43] += operand; (Uses `asm_ggetrange_ni`) */
 					DO(ast_genasm(base, ASM_G_FPUSHRES)); /* base */
 					DO(asm_putddi(ddi_ast));
 					DO(asm_gdup()); /* base, base */
@@ -363,7 +363,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 				}
 			}
 
-			/* <base>[none:<end>] += operand; (Uses `asm_ggetrange_ip') */
+			/* <base>[none:<end>] += operand; (Uses `asm_ggetrange_ip`) */
 			DO(ast_genasm(base, ASM_G_FPUSHRES));
 			DO(asm_putddi(ddi_ast));
 			DO(asm_gdup());
@@ -401,7 +401,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 				if (end->a_type == AST_CONSTEXPR) {
 					int32_t end_index;
 					if (DeeNone_Check(end->a_constexpr)) {
-						/* <base>[42:none] += operand; (Uses `asm_ggetrange_in') */
+						/* <base>[42:none] += operand; (Uses `asm_ggetrange_in`) */
 						DO(ast_genasm(base, ASM_G_FPUSHRES)); /* base */
 						DO(asm_putddi(ddi_ast));
 						DO(asm_gdup()); /* base, base */
@@ -431,7 +431,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 					} else if (DeeInt_Check(end->a_constexpr) &&
 					           DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 					           end_index >= INT16_MIN && end_index <= INT16_MAX) {
-						/* <base>[42:43] += operand; (Uses `asm_ggetrange_ii') */
+						/* <base>[42:43] += operand; (Uses `asm_ggetrange_ii`) */
 						DO(ast_genasm(base, ASM_G_FPUSHRES)); /* base */
 						DO(asm_putddi(ddi_ast));
 						DO(asm_gdup()); /* base, base */
@@ -460,7 +460,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 						goto done;
 					}
 				}
-				/* <base>[42:<end>] += operand; (Uses `asm_ggetrange_ip') */
+				/* <base>[42:<end>] += operand; (Uses `asm_ggetrange_ip`) */
 				DO(ast_genasm(base, ASM_G_FPUSHRES));
 				DO(asm_putddi(ddi_ast));
 				DO(asm_gdup());
@@ -497,7 +497,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 	if (end->a_type == AST_CONSTEXPR) {
 		int32_t end_index;
 		if (DeeNone_Check(end->a_constexpr)) {
-			/* <base>[start:none] += operand; (Uses `asm_ggetrange_pn') */
+			/* <base>[start:none] += operand; (Uses `asm_ggetrange_pn`) */
 			DO(ast_genasm(base, ASM_G_FPUSHRES));
 			DO(asm_putddi(ddi_ast));
 			DO(asm_gdup());
@@ -531,7 +531,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
 		} else if (DeeInt_Check(end->a_constexpr) &&
 		           DeeInt_TryAsInt32(end->a_constexpr, &end_index) &&
 		           end_index >= INT16_MIN && end_index <= INT16_MAX) {
-			/* <base>[start:42] += operand; (Uses `asm_ggetrange_pi') */
+			/* <base>[start:42] += operand; (Uses `asm_ggetrange_pi`) */
 			DO(ast_genasm(base, ASM_G_FPUSHRES));
 			DO(asm_putddi(ddi_ast));
 			DO(asm_gdup());

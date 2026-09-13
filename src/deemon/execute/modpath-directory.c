@@ -50,7 +50,7 @@
 
 DECL_BEGIN
 
-/* Allocate+return the uncached contents of the directory represented by `self'.
+/* Allocate+return the uncached contents of the directory represented by `self`.
  * >> for (local e: opendir(self->mo_absname)) {
  * >>     if (e.d_type == DT_DIR) {
  * >>         yield e.d_name;
@@ -78,7 +78,7 @@ DECL_BEGIN
 #if defined(CONFIG_HOST_WINDOWS)
 #define DeeModule_GetDirectory_USE_FindFirstFileExW
 #define DeeModule_GetDirectory_USE_GetLogicalDrives
-/* TODO: Add another option to implement using `_findfirst()' */
+/* TODO: Add another option to implement using `_findfirst()` */
 #elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
 #define DeeModule_GetDirectory_USE_opendir
 #else /* ... */
@@ -149,7 +149,7 @@ Dee_unicode_writeutf16(/*utf-16*/ uint16_t *__restrict dst, uint32_t ch) {
 
 
 struct module_dir_iterator {
-	char const *mdi_absname; /* [1..1][const] Absolute pathname that is being iterated (s.a. `DeeModuleObject::mo_absname') */
+	char const *mdi_absname; /* [1..1][const] Absolute pathname that is being iterated (s.a. `DeeModuleObject::mo_absname`) */
 	union {
 #ifdef DeeModule_GetDirectory_USE_GetLogicalDrives
 		struct {

@@ -234,7 +234,7 @@ err:
 }
 
 
-/* Sets the `MEMOBJ_F_NOREF' flag */
+/* Sets the `MEMOBJ_F_NOREF` flag */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpush_hreg(struct fungen *__restrict self,
               host_regno_t regno, ptrdiff_t val_delta) {
@@ -387,8 +387,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 delete_unused_local_after_read(struct fungen *__restrict self,
                                Dee_instruction_t const *instr, lid_t lid) {
 	if (self->fg_nextlastloc != NULL /*&& instr*/) {
-		/* If the caller-given `instr' has an entry that says that this is the last
-		 * time `lid' is read from, then automatically delete the local *now*. This
+		/* If the caller-given `instr` has an entry that says that this is the last
+		 * time `lid` is read from, then automatically delete the local *now*. This
 		 * then allows the variable to be deleted earlier than usual:
 		 * >>     call global @getValue
 		 * >>     pop  local @foo
@@ -467,7 +467,7 @@ err:
 	return -1;
 }
 
-/* `instr' is needed for automatic deletion of unused locals */
+/* `instr` is needed for automatic deletion of unused locals */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vbound_local(struct fungen *__restrict self,
                 Dee_instruction_t const *instr, lid_t lid) {
@@ -578,7 +578,7 @@ memstate_hasconstval(struct memstate const *__restrict self,
 	return false;
 }
 
-/* Generate code needed to drop references held by `mval' (where `mval' must be a vstack item,
+/* Generate code needed to drop references held by `mval` (where `mval` must be a vstack item,
  * or a local variable that is unconditionally bound or non-direct).
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
  *       realloc memstate components. */
@@ -647,7 +647,7 @@ err:
 	return -1;
 }
 
-/* Generate code needed to drop references held by `mval' (where `mval' must point into locals)
+/* Generate code needed to drop references held by `mval` (where `mval` must point into locals)
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
  *       realloc memstate components. */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -704,7 +704,7 @@ decref_mval:
 /* Wrapper around:
  * - fg_vgdecref_vstack
  * - fg_vgdecref_local
- * ... that automatically checks if `mval' points into the current mem-state's
+ * ... that automatically checks if `mval` points into the current mem-state's
  * local variable list to see which function needs to be used. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vgdecref(struct fungen *__restrict self,
@@ -856,7 +856,7 @@ err:
 }
 
 
-/* Check if top `n' elements are all `MEMADR_TYPE_CONST' */
+/* Check if top `n` elements are all `MEMADR_TYPE_CONST` */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 fg_vallconst(struct fungen *__restrict self, vstackaddr_t n) {
 	struct memstate *state = self->fg_state;
@@ -871,7 +871,7 @@ fg_vallconst(struct fungen *__restrict self, vstackaddr_t n) {
 	return true;
 }
 
-/* Check if top `n' elements are all `MEMADR_TYPE_CONST' and have the `MEMOBJ_F_NOREF' flag set. */
+/* Check if top `n` elements are all `MEMADR_TYPE_CONST` and have the `MEMOBJ_F_NOREF` flag set. */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 fg_vallconst_noref(struct fungen *__restrict self, vstackaddr_t n) {
 	struct memstate *state = self->fg_state;
@@ -1019,7 +1019,7 @@ fg_veqaddr(struct fungen *__restrict self) {
 	a = b - 1;
 
 	/* If either of the 2 locations is a constant, then
-	 * we can use `fg_veqconstaddr()' */
+	 * we can use `fg_veqconstaddr()` */
 	if (memval_hasobj0(a) && memval_obj0_isconst(a) && a->mv_vmorph == b->mv_vmorph) {
 		DO(fg_vswap(self));
 		goto do_constant;
@@ -1159,7 +1159,7 @@ err:
 	return -1;
 }
 
-/* Clear the `MEMOBJ_F_ONEREF' flag for the top `n' v-stack elements,
+/* Clear the `MEMOBJ_F_ONEREF` flag for the top `n` v-stack elements,
  * as well as any other memory location that might be aliasing them. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vnotoneref(struct fungen *__restrict self, vstackaddr_t n) {
@@ -1430,11 +1430,11 @@ fg_vpushinit_varargs(struct fungen *__restrict self) {
 	uint16_t co_argc_min = self->fg_assembler->fa_code->co_argc_min;
 	uint16_t co_argc_max = self->fg_assembler->fa_code->co_argc_max;
 	/* NOTE: The special "co_argc_max == 0 && HOST_CC_F_TUPLE" case
-	 *       is handled in `fg_vpush_xlocal()'! */
+	 *       is handled in `fg_vpush_xlocal()`! */
 	DO(fg_vpush_argc(self)); /* argc */
 	if (co_argc_min < co_argc_max && self->fg_state->ms_uargc_min < co_argc_max) {
-		/* Special case: If `argc-co_argc_max' rolls over or is 0, then we have to push an empty tuple
-		 *               This is because less than `co_argc_max' may be provided by the caller if the
+		/* Special case: If `argc-co_argc_max` rolls over or is 0, then we have to push an empty tuple
+		 *               This is because less than `co_argc_max` may be provided by the caller if the
 		 *               function also takes default/optional arguments:
 		 * >> function foo(a = 0, b = 1, args...) {
 		 * >>     return args;
@@ -1740,14 +1740,14 @@ fg_vpush_cmember_unsafe_at_runtime(struct fungen *__restrict self,
 	DREF struct memstate *saved_state;
 
 	/* When optimizing for size, generate a (smaller) call to
-	 * `DeeClass_GetMember()', instead of inlining the function. */
+	 * `DeeClass_GetMember()`, instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE) {
 		DO(fg_vpush_const(self, class_type));
 		DO(fg_vpush_imm16(self, addr));
 		return fg_vcallapi(self, &DeeClass_GetMember, VCALL_CC_OBJECT, 2);
 	}
 
-	/* Perform the inline equivalent of `DeeClass_GetMember()':
+	/* Perform the inline equivalent of `DeeClass_GetMember()`:
 	 * >> Dee_class_desc_lock_read(desc);
 	 * >> result = desc->cd_members[addr];
 	 * >> if unlikely(!result) {
@@ -1839,7 +1839,7 @@ fg_vpush_cmember(struct fungen *__restrict self,
 		desc = DeeClass_DESC(class_type);
 		if unlikely(addr >= desc->cd_desc->cd_cmemb_size)
 			return libhostasm_rt_err_invalid_class_addr(class_type, addr);
-		DO(fg_vpop(self)); /* Get rid of the `class_type' v-stack item. */
+		DO(fg_vpop(self)); /* Get rid of the `class_type` v-stack item. */
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOROINLINE)) {
 			DREF DeeObject *member_value;
 			Dee_class_desc_lock_write(desc);
@@ -2032,7 +2032,7 @@ fg_vpush_imember_unsafe_at_runtime(struct fungen *__restrict self,
 	ASSERT(self->fg_state->ms_stackc >= 1);
 
 	/* When optimizing for size, generate a (smaller) call to
-	 * `DeeInstance_GetMember()', instead of inlining the function. */
+	 * `DeeInstance_GetMember()`, instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE) {
 		DO(fg_vpush_const(self, type)); /* this, type */
 		DO(fg_vswap(self));             /* type, this */
@@ -2045,7 +2045,7 @@ fg_vpush_imember_unsafe_at_runtime(struct fungen *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct Dee_instance_desc, id_vtab),
 	                                   addr, sizeof(DREF DeeObject *));
-	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
+	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type` */
 
 	/* TODO: In case of reading members, if one of the next instructions also does a read,
 	 *       keep the lock acquired. The same should also go when it comes to accessing
@@ -2193,7 +2193,7 @@ fg_vdel_or_pop_imember_unsafe_at_runtime(struct fungen *__restrict self,
 	ASSERT(self->fg_state->ms_stackc >= 2);
 
 	/* When optimizing for size, generate a (smaller) call to
-	 * `DeeInstance_GetMember()', instead of inlining the function. */
+	 * `DeeInstance_GetMember()`, instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE) {
 		struct memval *value_mval;
 		DO(fg_vpush_const(self, type)); /* this, value, type */
@@ -2219,7 +2219,7 @@ fg_vdel_or_pop_imember_unsafe_at_runtime(struct fungen *__restrict self,
 #endif /* !CONFIG_NO_THREADS */
 	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct Dee_instance_desc, id_vtab),
 	                                   addr, sizeof(DREF DeeObject *));
-	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
+	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type` */
 
 #ifndef CONFIG_NO_THREADS
 	DO(fg_vswap(self));                               /* ref:value, this */
@@ -2373,7 +2373,7 @@ fg_vcall_DeeType_Implements(struct fungen *__restrict self) {
 	DeeTypeObject *implemented_type;
 
 	/* When "implemented_type" is constant and non-ABSTRACT type,
-	 * can encode as `fg_vcall_DeeType_Extends()' */
+	 * can encode as `fg_vcall_DeeType_Extends()` */
 	DO(fg_vdirect(self, 2)); /* test_type, implemented_type */
 	implemented_type_val = fg_vtop(self);
 	if (memval_isconst(implemented_type_val)) {
@@ -2505,7 +2505,7 @@ fg_vcall_DeeObject_AssertType_c(struct fungen *__restrict self,
 			return 0;
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Expected instance of `%r', but got a `%r' object",
+			                       "Expected instance of `%r`, but got a `%r` object",
 			                       type, vtop_type);
 		}
 	}
@@ -2538,7 +2538,7 @@ fg_vcall_DeeObject_AssertTypeExact_c(struct fungen *__restrict self,
 			return 0;
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Expected exact instance of `%r', but got a `%r' object",
+			                       "Expected exact instance of `%r`, but got a `%r` object",
 			                       type, vtop_type);
 		}
 	}
@@ -2568,7 +2568,7 @@ fg_vcall_DeeObject_AssertType(struct fungen *__restrict self) {
 		/* Assertion always fails because "typeval" isn't a type. */
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Type assertion `? is instance of %r' always fails because %r isn't a type-type",
+			                       "Type assertion `? is instance of %r` always fails because %r isn't a type-type",
 			                       type, type);
 		}
 		return fg_vcall_DeeObject_TypeAssertFailed(self);
@@ -2596,7 +2596,7 @@ fg_vcall_DeeObject_AssertTypeOrAbstract(struct fungen *__restrict self) {
 		/* Assertion always fails because "typeval" isn't a type. */
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Type assertion `? is instance of %r or abstract' always fails because %r isn't a type-type",
+			                       "Type assertion `? is instance of %r or abstract` always fails because %r isn't a type-type",
 			                       type, type);
 		}
 		return fg_vcall_DeeObject_TypeAssertFailed(self);
@@ -2624,7 +2624,7 @@ fg_vcall_DeeObject_AssertTypeExact(struct fungen *__restrict self) {
 		/* Assertion always fails because "typeval" isn't a type. */
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Type assertion `? is exact instance of %r' always fails because %r isn't a type-type",
+			                       "Type assertion `? is exact instance of %r` always fails because %r isn't a type-type",
 			                       type, type);
 		}
 		return fg_vcall_DeeObject_TypeAssertFailed(self);
@@ -2643,7 +2643,7 @@ fg_vcall_DeeObject_TypeAssertFailed(struct fungen *__restrict self) {
 
 
 
-/* Perform a conditional jump to `desc' based on `jump_if_true'
+/* Perform a conditional jump to `desc` based on `jump_if_true`
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2661,7 +2661,7 @@ fg_vjcc(struct fungen *__restrict self,
 	DO(fg_state_unshare(self));
 
 	/* TODO: If this jump might be the result of infinite loops,
-	 *       must emit a call to `DeeThread_CheckInterrupt()' */
+	 *       must emit a call to `DeeThread_CheckInterrupt()` */
 
 	bool_status = fg_vopbool(self, VOPBOOL_F_NOFALLBACK | VOPBOOL_F_FORCE_MORPH);
 	if unlikely(bool_status < 0)
@@ -2690,7 +2690,7 @@ fg_vjcc(struct fungen *__restrict self,
 	    target->bb_mem_start->ms_host_cfa_offset < self->fg_state->ms_host_cfa_offset)
 		DO(reclaim_unused_stack_space(self));
 
-	/* Initialize the symbol for jumping to `desc'. */
+	/* Initialize the symbol for jumping to `desc`. */
 #ifdef DEE_HOST_RELOCVALUE_SECT
 	host_symbol_initcommon_named(&_Ljmp, ".Ljmp");
 	Ljmp = &_Ljmp;
@@ -2701,8 +2701,8 @@ fg_vjcc(struct fungen *__restrict self,
 #endif /* !DEE_HOST_RELOCVALUE_SECT */
 	host_symbol_setjump(Ljmp, desc);
 
-	/* Check for special case: `fg_vopbool()' needed to do its fallback operation.
-	 * Handle this case by doing the call to `DeeObject_Bool()' ourselves, so we can combine the bool
+	/* Check for special case: `fg_vopbool()` needed to do its fallback operation.
+	 * Handle this case by doing the call to `DeeObject_Bool()` ourselves, so we can combine the bool
 	 * branch with the except branch, thus saving on a couple of otherwise redundant instructions. */
 	if (bool_status > 0) {
 		struct memloc cond_mloc;
@@ -2756,7 +2756,7 @@ fg_vjcc(struct fungen *__restrict self,
 			}
 		}
 
-		/* Generate code to branch depending on the value of `loc' */
+		/* Generate code to branch depending on the value of `loc` */
 		memloc_init_const(&zero, (void *)0);
 		DO(fg_gjcc(self, &cond_mloc, &zero, true,
 		           Lexcept,                             /* loc < 0 */
@@ -2794,13 +2794,13 @@ fg_vjcc(struct fungen *__restrict self,
 		struct memloc cmp_lhs, cmp_rhs;
 		struct host_symbol *Llo, *Leq, *Lgr;
 
-		/* In this case, `fg_vopbool()' already created a morph. */
+		/* In this case, `fg_vopbool()` already created a morph. */
 		ASSERT(MEMVAL_VMORPH_ISBOOL(cond_mval->mv_vmorph));
 		ASSERT(!memobj_isref(&cond_mval->mv_obj.mvo_0));
 
 		/* Silently remove the bool-morph location from the v-stack. */
 		ASSERT(self->fg_state->ms_stackc >= 1);
-		/*memval_fini(cond_mval);*/ /* Not needed for `MEMVAL_VMORPH_ISBOOL()' */
+		/*memval_fini(cond_mval);*/ /* Not needed for `MEMVAL_VMORPH_ISBOOL()` */
 		memstate_decrinuse_for_memobj(self->fg_state, &cond_mval->mv_obj.mvo_0);
 		--self->fg_state->ms_stackc;
 
@@ -2896,9 +2896,9 @@ err:
 
 __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
-/* Implement a ASM_FOREACH-style jump to `desc'
+/* Implement a ASM_FOREACH-style jump to `desc`
  * @param: instr:               Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
- * @param: always_pop_iterator: When true, the iterator is also popped during the jump to `desc'
+ * @param: always_pop_iterator: When true, the iterator is also popped during the jump to `desc`
  *                              This is needed to implement ASM_FOREACH when used with a prefix.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2920,7 +2920,7 @@ fg_vforeach(struct fungen *__restrict self,
 	DO(fg_vcallapi(self, &DeeObject_IterNext, VCALL_CC_RAWINTPTR, 1)); /* [if(!always_pop_iterator) iter], UNCHECKED(elem) */
 
 	/* TODO: If this jump might be the result of infinite loops,
-	 *       must emit a call to `DeeThread_CheckInterrupt()' */
+	 *       must emit a call to `DeeThread_CheckInterrupt()` */
 
 	/* If the jump target location already has its starting memory state generated,
 	 * and that state requires a small CFA offset than we currently have, then try
@@ -2956,13 +2956,13 @@ fg_vforeach(struct fungen *__restrict self,
 		goto err;
 	ASSERT(desc_state->ms_stackc >= 1);
 	mval = memstate_vtop(desc_state);
-	--desc_state->ms_stackc; /* Get rid of `UNCHECKED(result)' */
+	--desc_state->ms_stackc; /* Get rid of `UNCHECKED(result)` */
 	ASSERT(memval_isdirect(mval));
 	memstate_decrinuse_for_memloc(desc_state, memval_direct_getloc(mval));
 	memval_direct_fini(mval);
 	memobj_init_local_unbound(&decref_on_iter_done);
 	if (!always_pop_iterator) {
-		/* Pop another vstack item (the iterator) and store it in `MEMSTATE_XLOCAL_POPITER'.
+		/* Pop another vstack item (the iterator) and store it in `MEMSTATE_XLOCAL_POPITER`.
 		 * When the time comes to generate morph-code, the iterator will then be decref'd. */
 		ASSERT(desc_state->ms_stackc >= 1);
 		mval = memstate_vtop(desc_state);
@@ -3175,7 +3175,7 @@ err:
 	return -1;
 }
 
-/* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph' in SECOND */
+/* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph` in SECOND */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpopind(struct fungen *__restrict self, ptrdiff_t ind_delta) {
 	struct memval *mval;
@@ -3196,7 +3196,7 @@ err:
 	return -1;
 }
 
-/* >> TOP = TOP + val_delta; // NOTE: Ignores `mv_vmorph' */
+/* >> TOP = TOP + val_delta; // NOTE: Ignores `mv_vmorph` */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vdelta(struct fungen *__restrict self, ptrdiff_t val_delta) {
 	struct memval *mval;
@@ -3235,7 +3235,7 @@ err:
 	return -1;
 }
 
-/* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
+/* Ensure that the top-most `DeeObject` from the object-stack is a reference. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vref(struct fungen *__restrict self) {
 	struct memval *mval;
@@ -3263,7 +3263,7 @@ fg_vref(struct fungen *__restrict self) {
 		 * one of them!
 		 *
 		 * The reason for that "2" is because as long as there are 2 references, an
-		 * object is guarantied to have `DeeObject_IsShared()', meaning that whatever
+		 * object is guarantied to have `DeeObject_IsShared()`, meaning that whatever
 		 * the caller might need the reference for, the object won't end up getting
 		 * destroyed if the reference ends up being dropped! */
 		did_find_first_alias = false;
@@ -3276,7 +3276,7 @@ fg_vref(struct fungen *__restrict self) {
 				if (memobj_isref(alias_mobj) &&
 				    memobj_sameloc(alias_mobj, memval_direct_getobj(mval))) {
 					if (did_find_first_alias) {
-						/* Steal the reference from `alias_mobj' */
+						/* Steal the reference from `alias_mobj` */
 						memobj_clearref(alias_mobj);
 						memval_direct_setref(mval);
 						return 0;
@@ -3424,7 +3424,7 @@ fg_vnoref(struct fungen *__restrict self) {
 		 * one of them!
 		 *
 		 * The reason for that "2" is because as long as there are 2 references, an
-		 * object is guarantied to have `DeeObject_IsShared()', meaning that whatever
+		 * object is guarantied to have `DeeObject_IsShared()`, meaning that whatever
 		 * the caller might need the reference for, the object won't end up getting
 		 * destroyed if the reference ends up being dropped! */
 		did_find_first_alias = false;
@@ -3437,7 +3437,7 @@ fg_vnoref(struct fungen *__restrict self) {
 				if (!memobj_isref(alias_mobj) &&
 				    memobj_sameloc(alias_mobj, memval_direct_getobj(mval))) {
 					if (did_find_first_alias) {
-						/* Gift the reference to `alias_mobj' */
+						/* Gift the reference to `alias_mobj` */
 						memobj_setref(alias_mobj);
 						memval_direct_clearref(mval);
 						return 0;
@@ -3460,7 +3460,7 @@ err:
 
 
 
-/* Ensure that `mobj' is holding a reference. If said location has aliases,
+/* Ensure that `mobj` is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
  * also contains a second reference.
  * @param: dont_steal_from_vtop_n: Ignore the top n v-stack items when searching for aliases. */
@@ -3542,7 +3542,7 @@ err:
 	return -1;
 }
 
-/* Force vtop into a register (ensuring it has type `MEMADR_TYPE_HREG' for all locations used by VTOP) */
+/* Force vtop into a register (ensuring it has type `MEMADR_TYPE_HREG` for all locations used by VTOP) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vreg(struct fungen *__restrict self,
         host_regno_t const *not_these) {
@@ -3621,7 +3621,7 @@ fg_vpush_mod_global(struct fungen *__restrict self,
 		return err_illegal_gid(mod, gid);
 	sym = DeeModule_GetSymbolID(mod, gid);
 	ASSERT(!sym || Dee_module_symbol_getindex(sym) == gid);
-	/* Global object references can be inlined if they are `final' and bound */
+	/* Global object references can be inlined if they are `final` and bound */
 	if (((sym == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
 	     (sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
 	    !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOROINLINE)) {
@@ -3871,8 +3871,8 @@ err:
 }
 
 
-/* Check if `loc' differs from vtop, and if so: move vtop
- * *into* `loc', the assign the *exact* given `loc' to vtop. */
+/* Check if `loc` differs from vtop, and if so: move vtop
+ * *into* `loc`, the assign the *exact* given `loc` to vtop. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vsetloc(struct fungen *__restrict self,
            struct memloc const *loc) {
@@ -4020,8 +4020,8 @@ err:
 	return -1;
 }
 
-/* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc:    One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+/* Generate host text to invoke `api_function` with the top-most `argc` items from the stack.
+ * @param: cc:    One of `VCALL_CC_*`, describing the calling-convention of `api_function`.
  * @param: n_pop: The # of stack items to pop during the call (in case of registers, these won't need to be saved)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -4048,7 +4048,7 @@ fg_vcallapi_ex_(struct fungen *__restrict self,
 		break;
 	}
 
-	/* Flush registers that don't appear in the top `n_pop' stack locations.
+	/* Flush registers that don't appear in the top `n_pop` stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
 	DO(fg_vflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
@@ -4078,11 +4078,11 @@ err:
 }
 
 /* [args...], funcaddr -> ...
- * Same as `fg_vcallapi()', but after the normal argument list,
+ * Same as `fg_vcallapi()`, but after the normal argument list,
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'
+ * @param: cc: One of `VCALL_CC_*`, describing the calling-convention of `api_function`
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -4102,7 +4102,7 @@ fg_vcalldynapi_ex(struct fungen *__restrict self,
 		return fg_vcallapi(self, api_function, cc, argc);
 	}
 
-	/* Flush registers that don't appear in the top `n_pop' stack locations.
+	/* Flush registers that don't appear in the top `n_pop` stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
 	DO(fg_vflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
@@ -4132,9 +4132,9 @@ err:
 }
 
 
-/* After a call to `fg_vcallapi()' with `VCALL_CC_RAWINTPTR',
- * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
- * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
+/* After a call to `fg_vcallapi()` with `VCALL_CC_RAWINTPTR`,
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT`
+ * The difference to directly passing `VCALL_CC_OBJECT` is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  *
  * However: be careful not to do anything that might throw additional exceptions!
@@ -4166,9 +4166,9 @@ err:
 	return -1;
 }
 
-/* After a call to `fg_vcallapi()' with `VCALL_CC_RAWINTPTR',
- * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
- * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
+/* After a call to `fg_vcallapi()` with `VCALL_CC_RAWINTPTR`,
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_INT`
+ * The difference to directly passing `VCALL_CC_INT` is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  * NOTE: This function pops one element from the V-stack.
  *
@@ -4189,7 +4189,7 @@ err:
 	return -1;
 }
 
-/* Branch to exception handling if `vtop' is equal to `except_val' */
+/* Branch to exception handling if `vtop` is equal to `except_val` */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcheckerr(struct fungen *__restrict self,
              intptr_t except_val) {
@@ -4206,7 +4206,7 @@ err:
 }
 
 
-/* Generate a call to `DeeObject_MALLOC()' to allocate an uninitialized object that
+/* Generate a call to `DeeObject_MALLOC()` to allocate an uninitialized object that
  * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
  * a slap allocator instead (just like the real DeeObject_MALLOC also does).
  * NOTE: The value pushed onto the V-stack...
@@ -4354,9 +4354,9 @@ DummyVector_New(size_t num_items) {
 #define HSTACK_LINEAR_SCORE_MOV_UNRELATED 2 /* Move an unrelated location out of the way */
 
 /* Calculate a score describing the complexity of shifting memory
- * in order to construct a linear vector of `linbase...+=linsize' at `cfa_offset'
- * @param: hstack_inuse:    Cache of currently in-use hstack location (see `LOCAL_hstack_cfa_*' macros)
- * @param: hstack_reserved: Cache of currently reserved hstack location (s.a. `MEMOBJ_F_LINEAR') */
+ * in order to construct a linear vector of `linbase...+=linsize` at `cfa_offset`
+ * @param: hstack_inuse:    Cache of currently in-use hstack location (see `LOCAL_hstack_cfa_*` macros)
+ * @param: hstack_reserved: Cache of currently reserved hstack location (s.a. `MEMOBJ_F_LINEAR`) */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) ATTR_INS(4, 5) size_t DCALL
 hstack_linear_score(bitset_t const *__restrict hstack_inuse,
                     bitset_t const *__restrict hstack_reserved,
@@ -4406,13 +4406,13 @@ memvals_anyhstackind(struct memval const *__restrict base,
 	return false;
 }
 
-/* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
- * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
+/* Arrange the top `argc` stack-items linearly, such that they all appear somewhere in memory
+ * (probably on the host-stack), in consecutive order (with `vtop` at the greatest address,
  * and STACK[SIZE-argc] appearing at the lowest address). Once that has been accomplished,
- * push a value onto the vstack that describes the base-address (that is a `DeeObject **'
- * pointing to `STACK[SIZE-argc]') of the linear vector.
- * @param: readonly: Special case to allow the `DeeObject **' vector being generated
- *                   as `DeeObject *const *'. This in turn makes it possible to not
+ * push a value onto the vstack that describes the base-address (that is a `DeeObject **`
+ * pointing to `STACK[SIZE-argc]`) of the linear vector.
+ * @param: readonly: Special case to allow the `DeeObject **` vector being generated
+ *                   as `DeeObject *const *`. This in turn makes it possible to not
  *                   have to construct argument vectors on-stack when all arguments
  *                   are (re-)compile-time constants.
  * @return: 0 : Success
@@ -4452,7 +4452,7 @@ fg_vlinear(struct fungen *__restrict self,
 		struct memloc *loc = fg_vtopdloc(self);
 		if (memloc_gettyp(loc) == MEMADR_TYPE_HREGIND &&
 		    memloc_hregind_getvaloff(loc) == 0) {
-			/* Special case: address of `*(%reg + off) + 0' is `%reg + off' */
+			/* Special case: address of `*(%reg + off) + 0` is `%reg + off` */
 			return fg_vpush_hreg(self,
 			                     memloc_hregind_getreg(loc),
 			                     memloc_hregind_getindoff(loc));
@@ -4496,7 +4496,7 @@ fg_vlinear(struct fungen *__restrict self,
 			host_cfa_t cfa_offset;
 			struct memval *mval;
 			bitset_t *hstack_inuse;    /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
-			bitset_t *hstack_reserved; /* Bitset of hstack locations that can never be used (because they belong to `MEMOBJ_F_LINEAR' items) */
+			bitset_t *hstack_reserved; /* Bitset of hstack locations that can never be used (because they belong to `MEMOBJ_F_LINEAR` items) */
 			size_t hstack_inuse_sizeof;
 			hstack_inuse_sizeof = BITSET_SIZEOF(state->ms_host_cfa_offset / HOST_SIZEOF_POINTER);
 			hstack_inuse = (bitset_t *)Dee_Calloca(hstack_inuse_sizeof * 2);
@@ -4563,13 +4563,13 @@ fg_vlinear(struct fungen *__restrict self,
 			if unlikely(result_cfa_offset_score == 0) {
 				/* Special case: the score only becomes 0 when no morph is needed.
 				 * This means that everything is already in place such that a linear
-				 * vector is formed at `result_cfa_offset'! */
+				 * vector is formed at `result_cfa_offset`! */
 				return fg_vpush_hstack(self, result_cfa_offset);
 			}
 
 		}
 
-		/* Construct a memstate that puts the linear items along `result_cfa_offset' */
+		/* Construct a memstate that puts the linear items along `result_cfa_offset` */
 		linear_state = memstate_copy(state);
 		if unlikely(!linear_state)
 			goto err;
@@ -4635,7 +4635,7 @@ fg_vlinear(struct fungen *__restrict self,
 			mval->mv_obj.mvo_0.mo_flags |= MEMOBJ_F_LINEAR; /* Not allowed to move until popped */
 		}
 
-		/* Make sure that `linear_state's CFA offset is large enough to hold the linear vector. */
+		/* Make sure that `linear_state`s CFA offset is large enough to hold the linear vector. */
 		{
 #ifdef HOSTASM_STACK_GROWS_DOWN
 			host_cfa_t req_min_host_cfa = result_cfa_offset;
@@ -4646,7 +4646,7 @@ fg_vlinear(struct fungen *__restrict self,
 				linear_state->ms_host_cfa_offset = req_min_host_cfa;
 		}
 
-		/* Generate code to morph the current memory state to that of `linear_state'. */
+		/* Generate code to morph the current memory state to that of `linear_state`. */
 		{
 			int temp = fg_vmorph(self, linear_state);
 			memstate_decref(linear_state);
@@ -5035,7 +5035,7 @@ err:
 
 /* Pre-defined exception injectors. */
 
-/* `fei_inject' value for `struct fungen_exceptinject_callvoidapi' */
+/* `fei_inject` value for `struct fungen_exceptinject_callvoidapi` */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fungen_exceptinject_callvoidapi_f(struct fungen *__restrict self,
                                   struct fungen_exceptinject *__restrict inject) {

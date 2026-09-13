@@ -27,7 +27,7 @@
  *       need to appear in "msm_with_super__" (I think...) */
 
 /************************************************************************/
-/* Core operator definitions for `deemon.Object'                        */
+/* Core operator definitions for `deemon.Object`                        */
 /************************************************************************/
 %[include("object_operator_assign.h")]
 %[include("object_operator_moveassign.h")]
@@ -55,7 +55,7 @@
 %[include("object_operator_setattr.h")]
 
 /************************************************************************/
-/* For `deemon.Sequence'                                                */
+/* For `deemon.Sequence`                                                */
 /************************************************************************/
 %[include("seq_operator_bool.h")]
 %[include("seq_operator_size.h")]
@@ -97,7 +97,7 @@
  *       >> class MyClass: Sequence {
  *       >>     property __seq_first__ = { get() -> 42; }
  *       >> }
- *       >> print MyClass().first; // Should cache `seq_getfirst' in `MyClass.tp_cache["first"]'
+ *       >> print MyClass().first; // Should cache `seq_getfirst` in `MyClass.tp_cache["first"]'
  */
 
 
@@ -150,7 +150,7 @@
 
 
 /************************************************************************/
-/* For `deemon.Set'                                                     */
+/* For `deemon.Set`                                                     */
 /************************************************************************/
 %[include("set_operator_iter.h")]
 %[include("set_operator_size.h")]
@@ -194,7 +194,7 @@
 
 
 /************************************************************************/
-/* For `deemon.Mapping'                                                 */
+/* For `deemon.Mapping`                                                 */
 /************************************************************************/
 
 /* Need a dedicated "map_operator_iter" (using "set_operator_iter" doesn't work):
@@ -256,7 +256,7 @@
 
 
 /************************************************************************/
-/* For `deemon.Iterator'                                                */
+/* For `deemon.Iterator`                                                */
 /************************************************************************/
 //%[include("iter_next.h")]             /* "*iter++" */
 %[include("iter_advance.h")]            /* "iter += step" */
@@ -274,7 +274,7 @@
 
 
 /************************************************************************/
-/* For `deemon.Numeric'                                                 */
+/* For `deemon.Numeric`                                                 */
 /************************************************************************/
 /* TODO: __numeric_add__ (including the "operator + (rhs) { return this - (-rhs); }" alias) */
 /* TODO: __numeric_sub__ (including the "operator - (rhs) { return this + (-rhs); }" alias) */
@@ -291,7 +291,7 @@
 
 
 /************************************************************************/
-/* For `deemon.Object'                                                  */
+/* For `deemon.Object`                                                  */
 /************************************************************************/
 %[include("object_as_timeout_nanoseconds.h")]
 /* TODO: Object.__format__ */

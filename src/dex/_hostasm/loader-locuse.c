@@ -56,8 +56,8 @@ DECL_BEGIN
 
 struct asm_locuse {
 	/* NOTE: When it comes to ordering, *all* reads *always* happen before writes. */
-	lid_t alu_rd[ASM_RDMAX]; /* LIDs read by the instruction (unused slots are set to `(lid_t)-1') */
-	lid_t alu_wr[ASM_WRMAX]; /* LIDs written by the instruction (unused slots are set to `(lid_t)-1') */
+	lid_t alu_rd[ASM_RDMAX]; /* LIDs read by the instruction (unused slots are set to `(lid_t)-1`) */
+	lid_t alu_wr[ASM_WRMAX]; /* LIDs written by the instruction (unused slots are set to `(lid_t)-1`) */
 };
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -112,7 +112,7 @@ scan_instr:
 		result->alu_wr[0] = UNALIGNED_GETLE16(instr + 1);
 		break;
 
-		/* Must also track uses of extended locals (e.g. `MEMSTATE_XLOCAL_A_ARGV' by `ASM_PUSH_ARG') */
+		/* Must also track uses of extended locals (e.g. `MEMSTATE_XLOCAL_A_ARGV` by `ASM_PUSH_ARG`) */
 	case ASM_PUSH_BND_ARG: {
 		uint16_t aid;
 		aid = instr[1];
@@ -223,7 +223,7 @@ scan_instr:
 	case ASM_VARARGS_UNPACK:
 		result->alu_wr[0] = xlid(MEMSTATE_XLOCAL_VARARGS);
 		result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_VARARGS);
-		/* XXX: Below is only needed if `MEMSTATE_XLOCAL_VARARGS'
+		/* XXX: Below is only needed if `MEMSTATE_XLOCAL_VARARGS`
 		 *      isn't unconditionally bound at this point! */
 		if (self->fa_cc & HOST_CC_F_TUPLE) {
 			result->alu_rd[1] = xlid(MEMSTATE_XLOCAL_A_ARGS);
@@ -237,7 +237,7 @@ scan_instr:
 	case ASM_PUSH_VARKWDS_NE:
 		result->alu_wr[0] = xlid(MEMSTATE_XLOCAL_VARKWDS);
 		result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_VARKWDS);
-		/* XXX: Below is only needed if `MEMSTATE_XLOCAL_VARKWDS'
+		/* XXX: Below is only needed if `MEMSTATE_XLOCAL_VARKWDS`
 		 *      isn't unconditionally bound at this point! */
 		result->alu_rd[1] = xlid(MEMSTATE_XLOCAL_A_KW);
 		if (self->fa_cc & HOST_CC_F_TUPLE) {
@@ -412,12 +412,12 @@ scan_instr:
 
 
 /* Pass #1:
- * - Clear `block->bb_locuse'
- * - Have a second bitset `b_written' (cleared by default)
+ * - Clear `block->bb_locuse`
+ * - Have a second bitset `b_written` (cleared by default)
  * - For each instruction:
- *   - If a read happens while `b_written[lid] == 0', do `block->bb_locuse[lid] = 1'
- *   - If a read happens while `b_written[lid] == 1', do nothing
- *   - If a write happens, do `b_written[lid] = 1' */
+ *   - If a read happens while `b_written[lid] == 0`, do `block->bb_locuse[lid] = 1`
+ *   - If a read happens while `b_written[lid] == 1`, do nothing
+ *   - If a write happens, do `b_written[lid] = 1` */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 basic_block_locuse_pass1(struct function_assembler *__restrict fasm,
                          struct basic_block *__restrict block,
@@ -467,11 +467,11 @@ basic_block_locuse_or(struct function_assembler *__restrict fasm,
 }
 
 /* Pass #2:
- * - Have a second bitset `b_written' (cleared by default)
+ * - Have a second bitset `b_written` (cleared by default)
  * - For each instruction:
  *   - NOTE: The unconditional branch at the end of the block also counts as a branch
- *   - If a write happens, do `b_written[lid] = 1'
- *   - If it's a branch-instruction, take the `target' block and do:
+ *   - If a write happens, do `b_written[lid] = 1`
+ *   - If it's a branch-instruction, take the `target` block and do:
  *     >> block->bb_locuse |= target->bb_locuse & ~b_written; */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 basic_block_locuse_pass2(struct function_assembler *__restrict fasm,
@@ -571,12 +571,12 @@ err:
 }
 
 /* Pass #3:
- * - Have a second bitset `b_written' (cleared by default)
- * - Have a map `Dee_instruction_t const *i_lastread[ms_localc]' (all NULL by default)
+ * - Have a second bitset `b_written` (cleared by default)
+ * - Have a map `Dee_instruction_t const *i_lastread[ms_localc]` (all NULL by default)
  * - For each instruction:
- *   - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse'
- *   - NOTE: Unconditional branches shouldn't appear (already removed by `function_assembler_loadblocks()')
- *   - If a read happens, do `i_lastread[lid] = instr'
+ *   - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse`
+ *   - NOTE: Unconditional branches shouldn't appear (already removed by `function_assembler_loadblocks()`)
+ *   - If a read happens, do `i_lastread[lid] = instr`
  *   - If a write happens (but no read for the same lid), do:
  *     >> if (i_lastread[lid] != NULL)
  *     >>     block->bb_locreadv.append(bb_loclastread { i_lastread[lid], lid });
@@ -591,7 +591,7 @@ err:
  *   >>         continue;
  *   >>     block->bb_locreadv.append(bb_loclastread { lr, i });
  *   >> }
- * - Sort `block->bb_locreadv' by `bbl_instr' */
+ * - Sort `block->bb_locreadv` by `bbl_instr` */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 basic_block_locuse_pass3(struct function_assembler *__restrict fasm,
                          struct basic_block *__restrict block,
@@ -693,10 +693,10 @@ err:
 	return -1;
 }
 
-/* Step #1.1 [optional; disabled by: `FUNCTION_ASSEMBLER_F_NOEARLYDEL']
+/* Step #1.1 [optional; disabled by: `FUNCTION_ASSEMBLER_F_NOEARLYDEL`]
  * Figure out all the instructions that read from a local the last time before
  * the function ends, or the variable gets written to again. By using this info,
- * `fg_geninstr()' emits extra instrumentation in order to
+ * `fg_geninstr()` emits extra instrumentation in order to
  * delete local variables earlier than usual, which in turn significantly lowers
  * the overhead associated with keeping objects alive longer than strictly
  * necessary. When this step is skipped, local simply aren't deleted early.
@@ -718,27 +718,27 @@ function_assembler_loadlocuse(struct function_assembler *__restrict self) {
 	if unlikely(!tempbuf.i_lastread)
 		goto err;
 
-	/* - For each `block':
-	 *   - Clear `block->bb_locuse'
-	 *   - Have a second bitset `b_written' (cleared by default)
+	/* - For each `block`:
+	 *   - Clear `block->bb_locuse`
+	 *   - Have a second bitset `b_written` (cleared by default)
 	 *   - For each instruction:
-	 *     - If a read happens while `b_written[lid] == 0', do `block->bb_locuse[lid] = 1'
-	 *     - If a read happens while `b_written[lid] == 1', do nothing
-	 *     - If a write happens, do `b_written[lid] = 1'
-	 * - For each `block' (until nothing changes anymore):
-	 *   - Have a second bitset `b_written' (cleared by default)
+	 *     - If a read happens while `b_written[lid] == 0`, do `block->bb_locuse[lid] = 1`
+	 *     - If a read happens while `b_written[lid] == 1`, do nothing
+	 *     - If a write happens, do `b_written[lid] = 1`
+	 * - For each `block` (until nothing changes anymore):
+	 *   - Have a second bitset `b_written` (cleared by default)
 	 *   - For each instruction:
 	 *     - NOTE: The unconditional branch at the end of the block also counts as a branch
-	 *     - If a write happens, do `b_written[lid] = 1'
-	 *     - If it's a branch-instruction, take the `target' block and do:
+	 *     - If a write happens, do `b_written[lid] = 1`
+	 *     - If it's a branch-instruction, take the `target` block and do:
 	 *       >> block->bb_locuse |= target->bb_locuse & ~b_written;
-	 * - For each `block':
-	 *   - Have a second bitset `b_written' (cleared by default)
-	 *   - Have a map `Dee_instruction_t const *i_lastread[ms_localc]' (all NULL by default)
+	 * - For each `block`:
+	 *   - Have a second bitset `b_written` (cleared by default)
+	 *   - Have a map `Dee_instruction_t const *i_lastread[ms_localc]` (all NULL by default)
 	 *   - For each instruction:
-	 *     - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse'
-	 *     - NOTE: Unconditional branches shouldn't appear (already removed by `function_assembler_loadblocks()')
-	 *     - If a read happens, do `i_lastread[lid] = instr'
+	 *     - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse`
+	 *     - NOTE: Unconditional branches shouldn't appear (already removed by `function_assembler_loadblocks()`)
+	 *     - If a read happens, do `i_lastread[lid] = instr`
 	 *     - If a write happens (but no read for the same lid), do:
 	 *       >> if (i_lastread[lid] != NULL)
 	 *       >>     block->bb_locreadv.append(bb_loclastread { i_lastread[lid], lid });
@@ -753,7 +753,7 @@ function_assembler_loadlocuse(struct function_assembler *__restrict self) {
 	 *     >>         continue;
 	 *     >>     block->bb_locreadv.append(bb_loclastread { lr, i });
 	 *     >> }
-	 *   - Sort `block->bb_locreadv' by `bbl_instr' */
+	 *   - Sort `block->bb_locreadv` by `bbl_instr` */
 	for (i = 0; i < self->fa_blockc; ++i)
 		basic_block_locuse_pass1(self, self->fa_blockv[i], tempbuf.b_written);
 	{

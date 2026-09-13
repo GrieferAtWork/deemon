@@ -243,11 +243,11 @@ test.assertEqualsTyped(exec(r'(x) -> { return x * 2; }')(7), 14);
 test.assertEqualsTyped(exec(r'x -> { return x * 2; }')(7), 14);
 test.assertSequence(exec(r'(x) -> { x * 2 }')(7), {14});
 test.assertSequence(exec(r'x -> { x * 2 }')(7), {14});
-/* Syntactic difference: `[]() { }' is an expression, so `[]() { };' still
- * evaluates to that same expression. `function() { }' is a pseudo-statement
- * that doesn't expect a trailing `;'-character, so `function() { };' are
- * actually 2 statements `function() { }' and `;', with the later (`;')
- * evaluating to `none'! */
+/* Syntactic difference: `[]() { }` is an expression, so `[]() { };` still
+ * evaluates to that same expression. `function() { }` is a pseudo-statement
+ * that doesn't expect a trailing `;`-character, so `function() { };` are
+ * actually 2 statements `function() { }` and `;`, with the later (`;`)
+ * evaluating to `none`! */
 test.assertEqualsTyped(exec(r'[](x) { return x * 2; };')(7), 14);
 test.assertEqualsTyped(exec(r'(x) -> { return x * 2; };')(7), 14);
 test.assertEqualsTyped(exec(r'x -> { return x * 2; };')(7), 14);
@@ -298,7 +298,7 @@ test.assertEqualsTyped(exec(r'x -> { return x * 2; };')(7), 14);
 	assert x.__globals__ === glob;
 
 	/* Modifying globals will affect the jit function,
-	 * because `bar' was linked as a global variable. */
+	 * because `bar` was linked as a global variable. */
 	test.assertEqualsTyped(x(), "foobar");
 	glob["bar"] = 1234;
 	test.assertEqualsTyped(x(), 1234);
@@ -323,8 +323,8 @@ for (local typ: { Tuple, List, Dict, HashSet }) {
 		r'local x = import("deemon").{typ}; x();',
 		r'global x = import("deemon").{typ}; x();',
 		r'x = import("deemon").{typ}; x();',
-		/* NOTE: Double-`{{' and `}}' is only here because that's how
-		 *       `{' and `}' characters are escaped in string.format() */
+		/* NOTE: Double-`{{` and `}}` is only here because that's how
+		 *       `{` and `}` characters are escaped in string.format() */
 		r'({{ local x = import("deemon").{typ}; x(); }})',
 		r'({{ local x = import("deemon").{typ}; x(); }});',
 		r'(import("deemon").{typ})(())',
@@ -435,9 +435,9 @@ test.assertEqualsTyped(exec(r'({ if (true) ; else { return 42; } })'), none);
 //test.assertEqualsTyped(exec(r'({ if (true) { } else return 42; })'), none); // Returns '{}' instead of 'none'
 test.assertEqualsTyped(exec(r'({ if (true) ; else return 42; })'), none);
 
-/* Make sure that `{}' as an expression is an empty sequence,
+/* Make sure that `{}` as an expression is an empty sequence,
  * but when encountered in the context of a statement, it evaluates
- * to `none' the same way an empty statement would */
+ * to `none` the same way an empty statement would */
 assert exec(r';') is none;
 assert exec(r'{}') == {};
 assert exec(r';{}') is none;
@@ -479,11 +479,11 @@ assert exec(r'(10) !!!in [11]');
 
 
 /* XXX: The real deemon compiler also gets this one wrong:
- *   >> `({ if (true) { } else { 42; } })'
+ *   >> `({ if (true) { } else { 42; } })`
  *
- *   Should evaluate to `none', and could be re-written as one of:
- *   >> `({ if (true) ;   else { 42; } })'
- *   >> `({ if (true) ;   else   42;   })'
+ *   Should evaluate to `none`, and could be re-written as one of:
+ *   >> `({ if (true) ;   else { 42; } })`
+ *   >> `({ if (true) ;   else   42;   })`
  *
  *   During parsing it is not yet known if the hybrid-component will
  *   end up as a statement or as an expression, and as such will default
@@ -494,7 +494,7 @@ assert exec(r'(10) !!!in [11]');
  *
  *   This works very well for all existing code constructs, since expression-
  *   like syntax is always allowed in statements (after all: any expression can
- *   be considered a statement when suffixed by `;'), and statements themself
+ *   be considered a statement when suffixed by `;`), and statements themself
  *   only add the additional requirement that certain recursive expressions
  *   be interpreted as statements, rather than expression. e.g.:
  *   Expression: if (EXPR) ttEXPR else ffEXPR
@@ -503,9 +503,9 @@ assert exec(r'(10) !!!in [11]');
  *   The problem appears for the following case:
  *   Statement:  if (EXPR) ttEXPR else ffSTMT
  *
- *   In this case, `ttEXPR' is some piece of code that is valid as both an
- *   expression, as well as a statement (`{}' is one such construct, though
- *   there are others such as `if (foo) {} else {}', or `for (local x: y) {}')
+ *   In this case, `ttEXPR` is some piece of code that is valid as both an
+ *   expression, as well as a statement (`{}` is one such construct, though
+ *   there are others such as `if (foo) {} else {}`, or `for (local x: y) {}`)
  *
  *   In all of these cases, the construct can be converted from what could
  *   initially have been an expression, into something that later ends up
@@ -668,7 +668,7 @@ assert exec("([10, 20, 30] + ...) == 60");
 assert exec("([10, 20, 30] < ...) == 10");
 assert exec("([10, 20, 30] > ...) == 30");
 /* Not really recommended you do this, but operator
- * priorities put `==' above +, < and >, so just to
+ * priorities put `==` above +, < and >, so just to
  * make sure that's also working, also test without
  * the parens. */
 assert [10, 20, 30] + ... == 60;

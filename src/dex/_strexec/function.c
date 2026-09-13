@@ -109,11 +109,11 @@ JITFunction_TryRehashArguments(JITFunction *__restrict self,
 }
 
 
-/* Add a new symbol entry for an argument to `self->jf_args'
- * This is similar to using `JITObjectTable_Create()', however
+/* Add a new symbol entry for an argument to `self->jf_args`
+ * This is similar to using `JITObjectTable_Create()`, however
  * when re-hashing, this function will also update indices contained
- * within the `self->jf_argv' vector, as well as the `self->jf_selfarg',
- * `self->jf_varargs' and `self->jf_varkwds' fields. */
+ * within the `self->jf_argv` vector, as well as the `self->jf_selfarg`,
+ * `self->jf_varargs` and `self->jf_varkwds` fields. */
 PRIVATE WUNUSED NONNULL((1)) struct jit_object_entry *DCALL
 JITFunction_CreateArgument(JITFunction *__restrict self,
                            /*utf-8*/ char const *namestr,
@@ -226,9 +226,9 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 			if (JITCONTEXT_RETVAL_ISSET(ctx.jc_retval)) {
 				result = ctx.jc_retval;
 			} else {
-				/* Exited code via unconventional means, such as `break' or `continue' */
+				/* Exited code via unconventional means, such as `break` or `continue` */
 				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Attempted to use `break' or `continue' outside of a loop");
+				                "Attempted to use `break` or `continue` outside of a loop");
 				JITLValue_Fini(&self->jl_lvalue);
 				self->jl_errpos = self->jl_tokstart;
 				/*result = NULL;*/
@@ -246,11 +246,11 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 /* Create a new JIT function object by parsing the specified
  * parameter list, and executing the given source region.
  * @param: context: The following fields are used:
- *                  - `jc_import'         (for `JITFunctionObject.jf_import')
- *                  - `jc_impbase'        (for `JITFunctionObject.jf_impbase')
- *                  - `jc_globals'        (for `JITFunctionObject.jf_globals')
- *                  - `jc_locals.otp_tab' (to scan for referenced variables)
- * @param: flags: Set of `JIT_FUNCTION_F*', optionally or'd with `JIT_FUNCTION_FTHISCALL' */
+ *                  - `jc_import`         (for `JITFunctionObject.jf_import`)
+ *                  - `jc_impbase`        (for `JITFunctionObject.jf_impbase`)
+ *                  - `jc_globals`        (for `JITFunctionObject.jf_globals`)
+ *                  - `jc_locals.otp_tab` (to scan for referenced variables)
+ * @param: flags: Set of `JIT_FUNCTION_F*`, optionally or'd with `JIT_FUNCTION_FTHISCALL` */
 INTERN WUNUSED NONNULL((5, 6, 7, 8)) DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
@@ -353,7 +353,7 @@ err_varargs_already_defined:
 					if (lex.jl_tok != JIT_KEYWORD) {
 err_no_keyword_for_argument:
 						DeeError_Throwf(&DeeError_SyntaxError,
-						                "Expected a keyword as argument name, but got `%$s'",
+						                "Expected a keyword as argument name, but got `%$s`",
 						                (size_t)(lex.jl_tokend - lex.jl_tokstart), lex.jl_tokstart);
 						goto err_r;
 					}
@@ -383,7 +383,7 @@ err_no_keyword_for_argument:
 						if (result->jf_varargs != (size_t)-1 ||
 						    result->jf_varkwds != (size_t)-1) {
 							DeeError_Throwf(&DeeError_SyntaxError,
-							                "Positional argument `%$s' encountered after varargs or varkwds",
+							                "Positional argument `%$s` encountered after varargs or varkwds",
 							                argent->oe_namelen, argent->oe_namestr);
 							goto err_r;
 						}
@@ -415,14 +415,14 @@ err_no_keyword_for_argument:
 							} else {
 								if (result->jf_argc_min != result->jf_argc_max) {
 									DeeError_Throwf(&DeeError_SyntaxError,
-									                "Mandatory positional argument `%$s' encountered after optional or default argument",
+									                "Mandatory positional argument `%$s` encountered after optional or default argument",
 									                argent->oe_namelen, argent->oe_namestr);
 									goto err_r;
 								}
 								++result->jf_argc_min;
 							}
 						}
-						/* Resize `jf_argv' if necessary. */
+						/* Resize `jf_argv` if necessary. */
 						ASSERT(result->jf_argc_max <= arga);
 						if (result->jf_argc_max >= arga) {
 							uint16_t new_arga;
@@ -459,7 +459,7 @@ err_no_keyword_for_argument:
 				break;
 			if (lex.jl_tok != ',') {
 				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Expected `,' after argument, but got `%$s'",
+				                "Expected `,` after argument, but got `%$s`",
 				                (size_t)(lex.jl_tokend - lex.jl_tokstart), lex.jl_tokstart);
 				break;
 			}
@@ -532,7 +532,7 @@ err_no_keyword_for_argument:
 		if (stmt_start == lex.jl_tokstart) {
 #if 0
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Failed to scan token `%$s'",
+			                "Failed to scan token `%$s`",
 			                (size_t)(lex.jl_tokend - lex.jl_tokstart),
 			                lex.jl_tokstart);
 			goto err_r;
@@ -954,7 +954,7 @@ done_args:
 			ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
 			if unlikely(lexer.jl_tok != TOK_EOF) {
 				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Expected EOF but got `%$s'",
+				                "Expected EOF but got `%$s`",
 				                (size_t)(lexer.jl_end - lexer.jl_tokstart),
 				                lexer.jl_tokstart);
 				lexer.jl_errpos = lexer.jl_tokstart;
@@ -967,9 +967,9 @@ load_return_value:
 				if (JITCONTEXT_RETVAL_ISSET(context.jc_retval)) {
 					result = context.jc_retval;
 				} else {
-					/* Exited code via unconventional means, such as `break' or `continue' */
+					/* Exited code via unconventional means, such as `break` or `continue` */
 					DeeError_Throwf(&DeeError_SyntaxError,
-					                "Attempted to use `break' or `continue' outside of a loop");
+					                "Attempted to use `break` or `continue` outside of a loop");
 					lexer.jl_errpos = lexer.jl_tokstart;
 					goto handle_error;
 				}
@@ -979,7 +979,7 @@ load_return_value:
 handle_error:
 				JITLValue_Fini(&lexer.jl_lvalue);
 				result = NULL;
-				/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
+				/* TODO: Somehow remember that the error happened at `lexer.jl_errpos` */
 			}
 		}
 	} else if unlikely(lexer.jl_tok == TOK_EOF) {

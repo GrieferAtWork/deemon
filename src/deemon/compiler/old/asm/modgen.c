@@ -104,10 +104,10 @@ INTERN DeeTypeObject DeeModuleCurrent_Type = {
  * until someone built deemon with a long-untested build environment.
  *
  * If this was a statically allocated object, it would have a fixed, maximum object size,
- * so when `DeeSerial_GCObject_Calloc()' allocates the dec version of the module, it might
+ * so when `DeeSerial_GCObject_Calloc()` allocates the dec version of the module, it might
  * end up mapping some other (unrelated) statically allocated objects from the deemon core
  * to "current_module_marker" also. And well... that ended up happening (in that case: it
- * ended up overlapping with `DeeCode_Type', which then broke the module root initializer
+ * ended up overlapping with `DeeCode_Type`, which then broke the module root initializer
  * function of any user-code module with a sufficiently great number of global variables,
  * since the size of the root module, und thus "current_module_marker" depends on the #
  * of global variables)
@@ -129,10 +129,10 @@ err:
 	return NULL;
 }
 
-/* Compile a new module, using `current_rootscope' for module information,
+/* Compile a new module, using `current_rootscope` for module information,
  * and the given code object as root code executed when the module is loaded.
  * WARNING: During this process a lot of data is directly inherited from
- *         `current_rootscope' by the returned module object, meaning that the
+ *         `current_rootscope` by the returned module object, meaning that the
  *          root scope will have been reset to an empty (or near empty) state. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,

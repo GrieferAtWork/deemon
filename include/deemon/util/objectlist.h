@@ -74,7 +74,7 @@ struct Dee_objectlist {
 	(void)(Dee_ASSERT((self)->ol_elemv == NULL), \
 	       Dee_ASSERT((self)->ol_elemc == 0))
 
-/* Initialize `self' from the contents of a given `seq' */
+/* Initialize `self` from the contents of a given `seq` */
 #define Dee_objectlist_init_fromseq(self, seq) \
 	__builtin_expect(((self)->ol_elemv = DeeSeq_AsHeapVectorWithAlloc(seq, &(self)->ol_elemc)) != NULL ? 0 : -1, 0)
 
@@ -87,7 +87,7 @@ struct Dee_objectlist {
 #define Dee_objectlist_fini_nodecref(self) \
 	Dee_objectlist_elemv_free((self)->ol_elemv)
 
-/* Initialize a given object-self `self' with the elements of `sequence'
+/* Initialize a given object-self `self` with the elements of `sequence`
  * @return: * :         The number of items appended.
  * @return: (size_t)-1: An error occurred. */
 LOCAL WUNUSED NONNULL((1, 2)) int
@@ -98,10 +98,10 @@ LOCAL WUNUSED NONNULL((1, 2)) int
 }
 
 
-/* Allocate memory for at least `num_objects' entries and return a pointer to
+/* Allocate memory for at least `num_objects` entries and return a pointer to
  * the first of them, leaving it up to the caller to initialize that memory.
- * Upon error, `NULL' is returned instead.
- * The caller is responsible to ensure that `num_objects' is non-zero. */
+ * Upon error, `NULL` is returned instead.
+ * The caller is responsible to ensure that `num_objects` is non-zero. */
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject **DCALL
 Dee_objectlist_alloc(struct Dee_objectlist *__restrict self,
                      size_t num_objects) {
@@ -163,7 +163,7 @@ err:
 	return -1;
 }
 
-/* Append all objects from a given `sequence'
+/* Append all objects from a given `sequence`
  * @return: * :         The number of items appended.
  * @return: (size_t)-1: An error occurred. */
 LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -181,7 +181,7 @@ Dee_objectlist_extendseq(struct Dee_objectlist *__restrict self,
 
 
 /* Pack the given objectlist into a Tuple.
- * Upon success, `self' will have been finalized. */
+ * Upon success, `self` will have been finalized. */
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_objectlist_packtuple(struct Dee_objectlist *__restrict self) {
 	DREF DeeObject *result;
@@ -191,7 +191,7 @@ Dee_objectlist_packtuple(struct Dee_objectlist *__restrict self) {
 	return result;
 }
 
-/* Check if `self' contains the *exact* element `elem' */
+/* Check if `self` contains the *exact* element `elem` */
 LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_objectlist_contains_byid(struct Dee_objectlist *__restrict self, DeeObject *elem) {
 #ifdef memchrp

@@ -230,7 +230,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 
 struct seq_tobytes_foreach_data {
 	byte_t *stbf_dst;       /* [0..stbf_num_bytes] Output buffer */
-	size_t  stbf_num_bytes; /* # of remaining bytes in `stbf_dst' */
+	size_t  stbf_num_bytes; /* # of remaining bytes in `stbf_dst` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -249,19 +249,19 @@ err:
 }
 
 
-/* Unpack the given sequence `seq' into `num_bytes', invoking the
- * `operator int' on each, converting their values into bytes, before
- * storing those bytes in the given `dst' vector.
- * If the length of `seq' doesn't match `num_bytes', an UnpackError is thrown.
- * If `seq' is the none-singleton, `dst...+=num_bytes' is zero-initialized. */
+/* Unpack the given sequence `seq` into `num_bytes`, invoking the
+ * `operator int` on each, converting their values into bytes, before
+ * storing those bytes in the given `dst` vector.
+ * If the length of `seq` doesn't match `num_bytes`, an UnpackError is thrown.
+ * If `seq` is the none-singleton, `dst...+=num_bytes` is zero-initialized. */
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSeq_ItemsToBytes)(byte_t *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq) {
 	if (DeeNone_Check(seq)) {
-		/* Special case: `none' */
+		/* Special case: `none` */
 		bzero(dst, num_bytes);
 	} else if (DeeString_Check(seq)) {
-		/* Special case: `string' */
+		/* Special case: `string` */
 		byte_t const *data = DeeString_AsBytes(seq, false);
 		if unlikely(!data)
 			goto err;
@@ -271,14 +271,14 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		}
 		memcpy(dst, data, num_bytes);
 	} else if (DeeBytes_Check(seq)) {
-		/* Optional optimization for `Bytes' (though this one
+		/* Optional optimization for `Bytes` (though this one
 		 * would also function using the fallback code below). */
 		if (DeeBytes_SIZE(seq) != num_bytes) {
 			DeeRT_ErrUnpackError(seq, num_bytes, DeeBytes_SIZE(seq));
 			goto err;
 		}
 
-		/* Use `memmove', because `seq' may be a view of `dst' */
+		/* Use `memmove`, because `seq` may be a view of `dst` */
 		memmove(dst, DeeBytes_DATA(seq), num_bytes);
 	} else {
 		/* Fallback: use DeeObject_Foreach() */
@@ -332,7 +332,7 @@ err_printer:
 
 
 
-/* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
+/* Construct a bytes-buffer from `self`, using the generic object-buffer interface. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
@@ -396,7 +396,7 @@ err_r:
 	return NULL;
 }
 
-/* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
+/* Construct a writable bytes-buffer, consisting of a total of `num_bytes` bytes. */
 PUBLIC WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	DREF DeeBytesObject *result;
@@ -567,9 +567,9 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict 
 }
 
 
-/* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
- * The given `flags' determines if the view is read-only, or can be modified.
- * @param: flags: Set of `Dee_BUFFER_F*' */
+/* Constructs a byte-view for data in `base...+=num_bytes` held by `owner`.
+ * The given `flags` determines if the view is read-only, or can be modified.
+ * @param: flags: Set of `Dee_BUFFER_F*` */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags) {
@@ -688,7 +688,7 @@ err_args:
 				result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_buffer));
 				if unlikely(!result)
 					goto err;
-				/* Construct a Bytes object using the buffer interface provided by `ob' */
+				/* Construct a Bytes object using the buffer interface provided by `ob` */
 				if unlikely((*buf->tp_getbuf)(ob, &buffer, Dee_BUFFER_FREADONLY))
 					goto err_r;
 				if (start > buffer.bb_size)
@@ -872,7 +872,7 @@ compare_string_bytes(DeeStringObject *lhs,
 
 struct bytes_compare_seq_data {
 	byte_t *bcsd_data;  /* [1..bcsd_size] The LHS byte-block */
-	size_t  bcsd_size;  /* # of bytes in `bcsd_data' */
+	size_t  bcsd_size;  /* # of bytes in `bcsd_data` */
 	size_t  bcsd_index; /* [<= bcsd_size] Index to next byte */
 };
 
@@ -920,7 +920,7 @@ err:
 	return -1;
 }
 
-/* Also accept "rhs" complaying with `{(string | Bytes | int)...}'
+/* Also accept "rhs" complaying with `{(string | Bytes | int)...}`
  * - string: Must be a single latin-1 character
  * - Bytes:  Must be a single byte
  * - int:    Must be in the range [0,256)
@@ -1124,7 +1124,7 @@ bytes_mod(Bytes *self, DeeObject *args) {
 		argc = 1;
 	}
 	/* Use a different printer for format-copy-characters, thus allowing
-	 * us to not need to both encoding the bytes from `self' as UTF-8. */
+	 * us to not need to both encoding the bytes from `self` as UTF-8. */
 	if unlikely(DeeString_CFormat(&Dee_bytes_printer_print,
 	                              (Dee_formatprinter_t)&Dee_bytes_printer_append,
 	                              &printer,
@@ -1922,7 +1922,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         /**/ "print y[0]; /* 102 */\n"
 	                         /**/ "y = copy y;\n"
 	                         /**/ "print y[0]; /* 102 */\n"
-	                         /**/ "y[0] = 42;  /* Only allowed because the `copy' */\n"
+	                         /**/ "y[0] = 42;  /* Only allowed because the `copy` */\n"
 	                         /**/ "print y;    /* *oobar */"
 	                         "}\n"
 	                         "\n"
@@ -2092,7 +2092,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 /*   BYTES PRINTER API                                                               */
 /* ================================================================================= */
 
-/* Same as `Dee_bytes_printer_init()', but try to pre-allocate memory for `hint' bytes. */
+/* Same as `Dee_bytes_printer_init()`, but try to pre-allocate memory for `hint` bytes. */
 PUBLIC NONNULL((1)) void
 (DCALL Dee_bytes_printer_init_ex)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self,
                                   size_t hint) {
@@ -2107,12 +2107,12 @@ PUBLIC NONNULL((1)) void
 
 
 /* _Always_ inherit all byte data (even upon error) saved in
- * `self', and construct a new Bytes object from all that data, before
+ * `self`, and construct a new Bytes object from all that data, before
  * returning a reference to that object.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
- *      ---> Regardless of return value, `self' is finalized and left
+ *      ---> Regardless of return value, `self` is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `Dee_bytes_printer_fini()'
+ *           after a call to `Dee_bytes_printer_fini()`
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2145,7 +2145,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct Dee_bytes_printer *__restrict 
  * -> A far as unicode support goes, this function has _nothing_ to
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
- * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8' */
+ * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8` */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
 Dee_bytes_printer_append(struct Dee_bytes_printer *__restrict self,
                          byte_t const *__restrict data, size_t datalen) {
@@ -2154,7 +2154,7 @@ Dee_bytes_printer_append(struct Dee_bytes_printer *__restrict self,
 	ASSERT(data || !datalen);
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate a bytes when the used length remains ZERO.
-		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
+		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL` */
 		if unlikely(!datalen)
 			return 0;
 
@@ -2262,7 +2262,7 @@ PUBLIC WUNUSED NONNULL((1)) byte_t *
 	byte_t *result;
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate new bytes when the used length remains ZERO.
-		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
+		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL` */
 		if unlikely(!datalen)
 			return 0;
 

@@ -63,7 +63,7 @@ DECL_BEGIN
 
 PRIVATE NONNULL((1)) void DCALL
 mfaki_fini(MapFromAttrIterator *__restrict self) {
-	/* !!! Iterator must be finalized while still holding reference to `self->mfai_obj' */
+	/* !!! Iterator must be finalized while still holding reference to `self->mfai_obj` */
 	Dee_attriter_fini(&self->mfai_iter);
 	Dee_Decref(self->mfai_obj);
 }
@@ -254,7 +254,7 @@ INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 			/* tp_copy_ctor:   */ &mfaki_copy,
 			/* tp_any_ctor:    */ &mfaki_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type') */
+			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type`) */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mfaki_fini,

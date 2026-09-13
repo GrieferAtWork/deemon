@@ -93,17 +93,17 @@ STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_4BYTE) == 4);
 		_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1, /* 0x50-0x5f */ \
 		_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1, /* 0x60-0x6f */ \
 		_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1,_1, /* 0x70-0x7f */ \
-		/* Unicode follow-up word (`0b10??????'). */                     \
+		/* Unicode follow-up word (`0b10??????`). */                     \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x80-0x8f */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x90-0x9f */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xa0-0xaf */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xb0-0xbf */ \
-		/* `0b110?????' */                                               \
+		/* `0b110?????` */                                               \
 		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xc0-0xcf */ \
 		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xd0-0xdf */ \
-		/* `0b1110????' */                                               \
+		/* `0b1110????` */                                               \
 		_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3, /* 0xe0-0xef */ \
-		/* `0b11110???' */                                               \
+		/* `0b11110???` */                                               \
 		_4,_4,_4,_4,_4,_4,_4,_4,                         /* 0xf0-0xf7 */ \
 		_5,_5,_5,_5,                                     /* 0xf8-0xfb */ \
 		_6,_6,                                           /* 0xfc-0xfd */ \
@@ -524,7 +524,7 @@ PUBLIC WUNUSED DREF DeeObject *
 			Dee_Decref(result);
 			return Dee_AsObject(new_result);
 		}
-		Dee_Incref(result); /* The reference stored in `latin1_chars' */
+		Dee_Incref(result); /* The reference stored in `latin1_chars` */
 		latin1_chars[ch] = result;
 		latin1_chars_lock_endwrite();
 	}
@@ -833,10 +833,10 @@ err:
 }
 
 /* Return the given string's characters as a byte-array.
- * Characters above 0xFF either cause `NULL' to be returned, alongside
+ * Characters above 0xFF either cause `NULL` to be returned, alongside
  * a ValueError being thrown, or cause them to be replaced with '?'.
- * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
- *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
+ * @return: * :   The Bytes-data of the given string `self` (encoded as a width-string)
+ *                NOTE: The length of this block also matches `DeeString_WLEN(self)`
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ byte_t const *
 (DCALL DeeString_AsBytes)(DeeObject *__restrict self, bool allow_invalid) {
@@ -865,8 +865,8 @@ PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ byte_t const *
 		return result;
 
 	/* Since strings are allowed to use a wider default width than they
-	 * may actually need, `self' may still only contain characters that
-	 * fit into the 00-FF unicode range, so regardless of `allow_invalid'
+	 * may actually need, `self` may still only contain characters that
+	 * fit into the 00-FF unicode range, so regardless of `allow_invalid`
 	 * (which controls the behavior for characters outside that range) */
 	str.ptr = utf->u_data[utf->u_width];
 	ASSERT(utf->u_width != STRING_WIDTH_1BYTE);
@@ -1136,11 +1136,11 @@ Dee_unicode_printer_printstring(struct Dee_unicode_printer *__restrict self,
 }
 
 
-/* Print the text of `self' to `printer', encoded as a UTF-8 string.
- * NOTE: If `printer' is `&Dee_unicode_printer_print', special optimization
+/* Print the text of `self` to `printer`, encoded as a UTF-8 string.
+ * NOTE: If `printer` is `&Dee_unicode_printer_print`, special optimization
  *       is done, meaning that this is the preferred method of printing
  *       an object to a unicode printer.
- * NOTE: This optimization is also done when `DeeObject_Print' is used. */
+ * NOTE: This optimization is also done when `DeeObject_Print` is used. */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintUtf8(DeeObject *__restrict self,
                     Dee_formatprinter_t printer,
@@ -1149,7 +1149,7 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 	uint8_t const *iter, *end, *flush_start;
 	Dee_ssize_t temp, result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	/* `DeeString_STR()' is the single-byte variant.
+	/* `DeeString_STR()` is the single-byte variant.
 	 * That only means UTF-8 if the string is an ASCII
 	 * string, or if its character with is greater than
 	 * one (in which case the single-byte variant is the
@@ -1249,7 +1249,7 @@ err:
 	return -1;
 }
 
-/* Print the escape-encoded variant of `self' */
+/* Print the escape-encoded variant of `self` */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
@@ -2391,8 +2391,8 @@ err:
 }
 
 
-/* Same as `DeeString_NewUtf8()', but uses `DeeObject_TryMalloc' & friends
- * Given `error_mode' _MUST_ be `Dee_STRING_ERROR_FREPLAC' or `Dee_STRING_ERROR_FIGNORE' */
+/* Same as `DeeString_NewUtf8()`, but uses `DeeObject_TryMalloc` & friends
+ * Given `error_mode` _MUST_ be `Dee_STRING_ERROR_FREPLAC` or `Dee_STRING_ERROR_FIGNORE` */
 #ifdef NDEBUG
 PUBLIC WUNUSED DREF DeeObject *
 (DCALL DeeDbgString_TryNewUtf8)(char const *__restrict str, size_t length,
@@ -2617,12 +2617,12 @@ err:
 }
 
 
-/* Given a string `self' that has previously been allocated as a byte-buffer
- * string (such as `DeeString_NewSized()' or `DeeString_NewBuffer()'), convert
+/* Given a string `self` that has previously been allocated as a byte-buffer
+ * string (such as `DeeString_NewSized()` or `DeeString_NewBuffer()`), convert
  * it into a UTF-8 string, using the byte-buffer data as UTF-8 text.
  *
- * This function _always_ inherits a reference to `self', and will return
- * `NULL' on error. */
+ * This function _always_ inherits a reference to `self`, and will return
+ * `NULL` on error. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode) {
@@ -3290,13 +3290,13 @@ PUBLIC ATTR_INOUT(1) uint32_t
 
 
 
-/* Same as above, but returns "0" and increments `*ptext' by 1 when:
- * - `*IN(*ptext)' is a utf-8 continuation byte
- * - `IN(*ptext)' is a followed by too few utf-8 continuation bytes
- * - `IN(*ptext)' is an over-long utf-8 sequence
+/* Same as above, but returns "0" and increments `*ptext` by 1 when:
+ * - `*IN(*ptext)` is a utf-8 continuation byte
+ * - `IN(*ptext)` is a followed by too few utf-8 continuation bytes
+ * - `IN(*ptext)` is an over-long utf-8 sequence
  *
- * Note however that `0' may also be returned when `*IN(*ptext)' was the NUL
- * character. This you can easily by checking if `OUT(*ptext)[-1] == '\0''. */
+ * Note however that `0` may also be returned when `*IN(*ptext)` was the NUL
+ * character. This you can easily by checking if `OUT(*ptext)[-1] == `\0''. */
 PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
 (DCALL Dee_unicode_readutf8_chk)(char const **__restrict ptext) {
 	char const *iter = *ptext;
@@ -3617,8 +3617,8 @@ err:
 }
 
 
-/* Initialize a unicode printer from a given `string'
- * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString' */
+/* Initialize a unicode printer from a given `string`
+ * The caller must ensure that `!DeeObject_IsShared(string) || string == Dee_EmptyString` */
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_unicode_printer_init_string(struct Dee_unicode_printer *__restrict self,
                                 /*inherit(always)*/ DREF DeeObject *__restrict string) {
@@ -3651,7 +3651,7 @@ inherit_latin1_string:
 		       utf->u_width == STRING_WIDTH_2BYTE ||
 		       utf->u_width == STRING_WIDTH_4BYTE);
 
-		/* Check if it's a latin-1 string (s.a. `DeeString_STR_ISLATIN1()') */
+		/* Check if it's a latin-1 string (s.a. `DeeString_STR_ISLATIN1()`) */
 		if ((utf->u_width == STRING_WIDTH_1BYTE) ||
 		    (utf->u_flags & Dee_STRING_UTF_FASCII)) {
 			/* LATIN-1 string. */
@@ -3684,12 +3684,12 @@ inherit_latin1_string:
 
 
 /* _Always_ inherit all string data (even upon error) saved in
- * `self', and construct a new string from all that data, before
+ * `self`, and construct a new string from all that data, before
  * returning a reference to that string.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
- *      ---> Regardless of return value, `self' is finalized and left
+ *      ---> Regardless of return value, `self` is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `Dee_unicode_printer_fini()'
+ *           after a call to `Dee_unicode_printer_fini()`
  * @return: * :   A reference to the packed string.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3898,8 +3898,8 @@ PUBLIC WUNUSED NONNULL((1)) int
 
 
 /* Append a single character to the given printer.
- * If `ch' can't fit the currently set `up_width', copy already
- * written data into a larger representation before appending `ch'.
+ * If `ch` can't fit the currently set `up_width`, copy already
+ * written data into a larger representation before appending `ch`.
  * @return:  0: Successfully appended the character.
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -4114,7 +4114,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 
 /* Append UTF-8 text to the back of the given printer.
  * An incomplete UTF-8 sequences can be completed by future uses of this function.
- * HINT: This function is intentionally designed as compatible with `Dee_formatprinter_t'
+ * HINT: This function is intentionally designed as compatible with `Dee_formatprinter_t`
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DPRINTER_CC
@@ -4250,9 +4250,9 @@ err:
 
 
 /* Print raw 8, 16 or 32-bit sequences of unicode characters.
- *  - `Dee_unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
- *  - `Dee_unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
- *  - `Dee_unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)
+ *  - `Dee_unicode_printer_print8` prints characters from the range U+0000 .. U+00FF (aka. latin-1)
+ *  - `Dee_unicode_printer_print16` prints characters from the range U+0000 .. U+FFFF
+ *  - `Dee_unicode_printer_print32` prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -4813,7 +4813,7 @@ Dee_unicode_printer_printinto(struct Dee_unicode_printer *__restrict self,
 		dst = (struct Dee_unicode_printer *)arg;
 		if (!dst->up_buffer) {
 			/* The simplest cast: the target buffer is currently empty, and since
-			 * we're allocated to modify `self', we can simply move everything! */
+			 * we're allocated to modify `self`, we can simply move everything! */
 			memcpy(dst, self, sizeof(struct Dee_unicode_printer));
 			self->up_length = 0;
 			self->up_buffer = NULL;
@@ -4931,7 +4931,7 @@ err:
 
 
 
-/* Print a unicode character `ch', encoded as UTF-8 into `printer' */
+/* Print a unicode character `ch`, encoded as UTF-8 into `printer` */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeFormat_Putc(/*utf-8*/ Dee_formatprinter_t printer, void *arg, uint32_t ch) {
 	char utf8_repr[Dee_UNICODE_UTF8_CURLEN];
@@ -4952,7 +4952,7 @@ err:
 
 /* Search for existing occurrences of, or append a new instance of a given string.
  * Upon success, return the index (offset from the base) of the string (in characters).
- * @return: * : The offset from the base of string being printed, where the given `str' can be found.
+ * @return: * : The offset from the base of string being printed, where the given `str` can be found.
  * @return: -1: Failed to allocate the string. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_unicode_printer_reuse(struct Dee_unicode_printer *__restrict self,
@@ -5868,7 +5868,7 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
  * UTF-8 text.
  *  - Surrounding quotation marks should be stripped before calling this function.
  *  - Escaped linefeeds are implicitly parsed, too.
- * @param: error_mode: One of `STRING_ERROR_F*' */
+ * @param: error_mode: One of `STRING_ERROR_F*` */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode) {
@@ -6059,7 +6059,7 @@ err:
 
 
 
-/* Append the given `text' to the end of the Bytes object.
+/* Append the given `text` to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
  * Dee_formatprinter_t-compatible callback for generating data
  * to-be written into a Bytes object. */
@@ -6146,7 +6146,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return unlikely(Dee_bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
 }
 
-/* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
+/* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer`
  * NOTE: 8-bit here refers to the unicode range U+0000 - U+00FF */
 PUBLIC WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_Print8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,

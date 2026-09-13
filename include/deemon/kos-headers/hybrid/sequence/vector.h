@@ -38,17 +38,17 @@ __DECL_BEGIN
  *    (X)(malloc)(realloc)(free)(malloc_usable_size)
  *    (X)(malloc)(try_malloc)(realloc)(try_realloc)(free)
  *    (X)(malloc)(try_malloc)(realloc)(try_realloc)(free)(malloc_usable_size)
- *    The `malloc_usable_size' function is optional!
+ *    The `malloc_usable_size` function is optional!
  *   int X;
  *     - Either 0 or 1.
- *       - When `0', behave like a regular malloc
- *       - When `1', malloc() and realloc() never return `NULL'
+ *       - When `0`, behave like a regular malloc
+ *       - When `1`, malloc() and realloc() never return `NULL`
  *   void *malloc(size_t num_bytes);
  *   void *try_malloc(size_t num_bytes);             // Doesn't throw an error in X=1-mode / always returns normally
  *   void *realloc(void *ptr, size_t num_bytes);
  *   void *try_realloc(void *ptr, size_t num_bytes); // Doesn't throw an error in X=1-mode / always returns normally
  *   void free(void *ptr);
- *   size_t malloc_usable_size(void *ptr);           // Must return 0 when `ptr' is `NULL'
+ *   size_t malloc_usable_size(void *ptr);           // Must return 0 when `ptr` is `NULL`
  * Examples:
  *   DEEMON: (0)(Dee_Malloc)(Dee_TryMalloc)(Dee_Realloc)(Dee_TryRealloc)(Dee_Free)
  *   KOS:    (1)(Malloc)(malloc)(Realloc)(realloc)(free)
@@ -179,7 +179,7 @@ __DECL_BEGIN
 /* >> void VECTOR_CLEAR(VECTOR l, FUNCTIONS f = VECTOR_FUNCTIONS);
  * >> void VECTOR_CLEAR_F(VECTOR l, void clear_elem(T *__restrict elem), FUNCTIONS f = VECTOR_FUNCTIONS);
  * >> void VECTOR_CLEAR_P(VECTOR l, TYPE T, (elem)(expr) clear_elem, FUNCTIONS f = VECTOR_FUNCTIONS);
- * Similar to `vector_fini()', but re-initialize the vector as being empty. */
+ * Similar to `vector_fini()`, but re-initialize the vector as being empty. */
 #define VECTOR_CLEAR(...)                         __HYBRID_SEQ_VECTOR_CLEAR((__VA_ARGS__))
 #define VECTOR_CLEAR_F(...)                       __HYBRID_SEQ_VECTOR_CLEAR_F((__VA_ARGS__))
 #define VECTOR_CLEAR_P(...)                       __HYBRID_SEQ_VECTOR_CLEAR_P((__VA_ARGS__))
@@ -320,7 +320,7 @@ __DECL_BEGIN
 
 
 /* >> void VECTOR_TRUNC(VECTOR l, FUNCTIONS f = VECTOR_FUNCTIONS);
- * Try  to  release  unused  memory  from  the  given  VECTOR  `l' */
+ * Try  to  release  unused  memory  from  the  given  VECTOR  `l` */
 #define VECTOR_TRUNC(...)                       __HYBRID_SEQ_VECTOR_TRUNC((__VA_ARGS__))
 #define __HYBRID_SEQ_VECTOR_TRUNC(args)         __PP_CAT2(__HYBRID_SEQ_VECTOR_TRUNC_IMPL, __HYBRID_PP_VA_NARGS args) args
 #define __HYBRID_SEQ_VECTOR_TRUNC_IMPL1(l)      __HYBRID_SEQ_VECTOR_TRUNC_IMPL2(l, VECTOR_FUNCTIONS)
@@ -541,7 +541,7 @@ __DECL_BEGIN
 /* >> void VECTOR_EAPPEND(VECTOR l, TYPE T, (elem)(expr) pred, LABEL err = <undefined>, FUNCTIONS f = VECTOR_FUNCTIONS);
  * $ VECTOR(int) vec = VECTOR_INIT;
  * $ VECTOR_EAPPEND(vec, int, (elem)(*elem = 42), err);
- * WARNING: `pred' must return normally! */
+ * WARNING: `pred` must return normally! */
 #define VECTOR_EAPPEND(...)                            __HYBRID_VECTOR_EAPPEND((__VA_ARGS__))
 #define __HYBRID_VECTOR_EAPPEND(args)                  __PP_CAT2(__HYBRID_VECTOR_EAPPEND_IMPL, __HYBRID_PP_VA_NARGS args) args
 #define __HYBRID_VECTOR_EAPPEND_IMPL3(l, T, pred)      __HYBRID_VECTOR_EAPPEND_IMPL5(l, T, pred, -, VECTOR_FUNCTIONS)
@@ -575,7 +575,7 @@ __DECL_BEGIN
 /* >> void VECTOR_EINSERT(VECTOR l, TYPE T, size_t index, (elem)(expr) pred, LABEL err = <undefined>, FUNCTIONS f = VECTOR_FUNCTIONS);
  * $ VECTOR(int) vec = VECTOR_INIT;
  * $ VECTOR_EINSERT(vec, int, 0, (elem)(*elem = 42), err);
- * WARNING: `pred' must return normally! */
+ * WARNING: `pred` must return normally! */
 #define VECTOR_EINSERT(...)                                   __HYBRID_VECTOR_EINSERT((__VA_ARGS__))
 #define __HYBRID_VECTOR_EINSERT(args)                         __PP_CAT2(__HYBRID_VECTOR_EINSERT_IMPL, __HYBRID_PP_VA_NARGS args) args
 #define __HYBRID_VECTOR_EINSERT_IMPL4(l, T, index, pred)      __HYBRID_VECTOR_EINSERT_IMPL6(l, T, index, pred, -, VECTOR_FUNCTIONS)

@@ -72,9 +72,9 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
 }
 
 
-/* Construct a frame object owned by `owner'
+/* Construct a frame object owned by `owner`
  * The intended use of this is for tracebacks and yield_function-iterators.
- * @param: flags: Set of `Dee_FRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*` */
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
@@ -113,9 +113,9 @@ DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 
 
 
-/* Acquire locks to the frame that is underlying to `self'
+/* Acquire locks to the frame that is underlying to `self`
  * NOTE: When acquiring for writing, these functions also check
- *       `DeeFrame_CanWrite()' and will throw an error if writing
+ *       `DeeFrame_CanWrite()` and will throw an error if writing
  *       isn't allowed.
  * @return: * :   The underlying code frame.
  * @return: NULL: An error was thrown. */
@@ -197,7 +197,7 @@ again:
 	return result;
 }
 
-/* Same as `DeeFrame_LockWrite()', but also set the "Dee_CODE_FASSEMBLY"
+/* Same as `DeeFrame_LockWrite()`, but also set the "Dee_CODE_FASSEMBLY"
  * flag for the underlying code object (if not set already). */
 PUBLIC WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL
 DeeFrame_LockWriteAssembly(DeeObject *__restrict self) {
@@ -260,8 +260,8 @@ DeeFrame_LockEndWrite(DeeObject *__restrict self) {
 }
 #endif /* !CONFIG_NO_THREADS */
 
-/* Same as above, but return `Dee_CODE_FRAME_DEAD' if the
- * frame is dead, rather than throw a `ReferenceError'.
+/* Same as above, but return `Dee_CODE_FRAME_DEAD` if the
+ * frame is dead, rather than throw a `ReferenceError`.
  * @return: * :                  The underlying code frame.
  * @return: NULL:                An error was thrown.
  * @return: Dee_CODE_FRAME_DEAD: The underlying code frame is dead (no error was thrown). */
@@ -729,10 +729,10 @@ code_frame_revengsp(struct Dee_code_frame const *frame) {
 	return -1;
 }
 
-/* Similar to `frame_revengsp()', but instead of always trying to reverse
+/* Similar to `frame_revengsp()`, but instead of always trying to reverse
  * the stack depth, check if the depth was already know upon entry, returning
- * the stored depth when `Dee_FRAME_FUNDEFSP' isn't set, or always returning
- * `-1' when `Dee_FRAME_FUNDEFSP2' is set.
+ * the stored depth when `Dee_FRAME_FUNDEFSP` isn't set, or always returning
+ * `-1` when `Dee_FRAME_FUNDEFSP2` is set.
  * @return: * : The actual depth of the stack.
  * @return: -1: Information could not be determined. (no error was thrown)
  * @return: -2: An error was thrown */
@@ -782,7 +782,7 @@ frame_setpc(Frame *self, DeeObject *value) {
 	/* To set the PC-pointer to arbitrary values, the code object
 	 * needs to have the "Dee_CODE_FASSEMBLY" flag set. This must be
 	 * done in *ALL* cases, since even when sp/pc match as per DDI
-	 * info, the pc may be altered to point at a `jmp pop' instruction,
+	 * info, the pc may be altered to point at a `jmp pop` instruction,
 	 * when it didn't do so before. */
 	frame = DeeFrame_LockWriteAssembly(Dee_AsObject(self));
 	if unlikely(!frame)
@@ -1249,7 +1249,7 @@ PUBLIC DeeTypeObject DeeFrame_Type = {
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFrame_DecrefShared()') */
+			/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFrame_DecrefShared()`) */
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frame_fini,
 		/* .tp_assign      = */ NULL,

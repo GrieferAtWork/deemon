@@ -57,7 +57,7 @@ DECL_BEGIN
  * #1: Absolute, or relative filesystem names
  *     Used if:
  *        The import string contains a "/" (or "\\") character, or
- *        more specifically: `DeeSystem_SEP' or `DeeSystem_ALTSEP'
+ *        more specifically: `DeeSystem_SEP` or `DeeSystem_ALTSEP`
  *     Type:
  *        If filename ends with ".so" (or ".dll"): DEX module
  *        Else, deemon source file or directory
@@ -124,14 +124,14 @@ DECL_BEGIN
  *        >> import mod = util;          // "{LIBPATH}/util.dee"
  *        >> import mod = rt.gen.unpack; // "{LIBPATH}/rt/gen/unpack.dee"
  *     This type of import string is resolved alongside a list of path names
- *     stored within `DeeModule_GetLibPath()'.
+ *     stored within `DeeModule_GetLibPath()`.
  *        - By default, this list contains only a single element "{DeeExec_GetHome()}/lib"
  *        - The environ variable $DEEMON_PATH can be used to add more paths
  *        - The environ variable $DEEMON_HOME can be used to override "DeeExec_GetHome()"
  *     When resolving LIBPATH-based module names, the list of strings from
- *     `DeeModule_GetLibPath()' is enumerated in ascending order, and filenames
+ *     `DeeModule_GetLibPath()` is enumerated in ascending order, and filenames
  *     are constructed using the same mechanism as documented under #3.2, using
- *     the string from `DeeModule_GetLibPath()' as the "directory", and the
+ *     the string from `DeeModule_GetLibPath()` as the "directory", and the
  *     given import string as-is as the remainder.
  *
  *
@@ -232,7 +232,7 @@ struct Dee_tuple_object;
                                          * is part of the calling module), or attempting to write/delete at
                                          * runtime and a non-NULL value has already been assigned.
                                          *
-                                         * When this flag and `Dee_MODSYM_FCONSTEXPR' are both set, then the
+                                         * When this flag and `Dee_MODSYM_FCONSTEXPR` are both set, then the
                                          * compiler is allowed (but not required) to initialize the module,
                                          * then propagate this symbol's actual value as a compile-time
                                          * constant expression, should that value be one of the following
@@ -249,7 +249,7 @@ struct Dee_tuple_object;
                                          *   - DeeRoDict_Type
                                          *   - DeeRoSet_Type
                                          * NOTE: All white-listed types encode _exact_ matches (aka.
-                                         *       `DeeObject_InstanceOfExact()', rather than `DeeObject_InstanceOf()')
+                                         *       `DeeObject_InstanceOfExact()`, rather than `DeeObject_InstanceOf()`)
                                          * NOTE: Some more additions are made for few more special objects
                                          *       that are not documented here, but the idea should be clear:
                                          *       Nothing that may produce side-effects in an obvious fashion,
@@ -263,14 +263,14 @@ struct Dee_tuple_object;
                                          *          used to modify the value of an external/global symbol,
                                          *          meaning that you must still always assume that any
                                          *          module member no longer contains the proper value. */
-#define Dee_MODSYM_FCONSTEXPR      0x02 /* May be combined with `Dee_MODSYM_FREADONLY' to allow the compiler to
+#define Dee_MODSYM_FCONSTEXPR      0x02 /* May be combined with `Dee_MODSYM_FREADONLY` to allow the compiler to
                                          * propagate this symbol as a constant expression at compile-time,
                                          * so-long as its runtime-value matches the criteria detailed above.
                                          * NOTE: Regardless of this flag, the compiler mustn't propagate the
-                                         *       assigned value when `Dee_MODSYM_FPROPERTY' it set. */
+                                         *       assigned value when `Dee_MODSYM_FPROPERTY` it set. */
 #define Dee_MODSYM_FALIAS          0x04 /* This symbol is aliasing another.
                                          *
-                                         * This flag is handled by `DeeModule_GlobalName()', which will try
+                                         * This flag is handled by `DeeModule_GlobalName()`, which will try
                                          * to continue searching for another member with the same index, but
                                          * without this flag set.
                                          *
@@ -281,38 +281,38 @@ struct Dee_tuple_object;
                                          * name (or take apart the source binary to learn what may be there).
                                          *
                                          * This flag is used by some hidden (and implementation-specific)
-                                         * helper functions found in the `deemon' module which the compiler
+                                         * helper functions found in the `deemon` module which the compiler
                                          * is allowed to generate helper calls to for stuff that doesn't
                                          * deserve its own opcode due to how rarely its used... */
 #define Dee_MODSYM_FPROPERTY       0x10 /* The symbol is a property. */
 #define Dee_MODSYM_FEXTERN         0x20 /* Refers to an global variable slot for a different module
                                          * (allowing for forwarding/aliasing). Using this, one can
                                          * implement something along the lines of:
-                                         * -     `global import foo = bar from baz;'
-                                         * - vs. `local import foo = bar from baz;'
-                                         * (Default visibility would be `local') */
+                                         * -     `global import foo = bar from baz;`
+                                         * - vs. `local import foo = bar from baz;`
+                                         * (Default visibility would be `local`) */
 #define Dee_MODSYM_FMASK           0x3f /* Mask of known Dee_MODSYM_F* flags (those that are allowed by DEC files). */
-#define Dee_MODSYM_FNAMEOBJ        0x40 /* The symbol's name is actually a reference to a string object's `s_str' */
-#define Dee_MODSYM_FDOCOBJ         0x80 /* The symbol's doc is actually a reference to a string object's `s_str'
-                                         * NOTE: When this flag is set, `ss_doc' is always [1..1] */
+#define Dee_MODSYM_FNAMEOBJ        0x40 /* The symbol's name is actually a reference to a string object's `s_str` */
+#define Dee_MODSYM_FDOCOBJ         0x80 /* The symbol's doc is actually a reference to a string object's `s_str`
+                                         * NOTE: When this flag is set, `ss_doc` is always [1..1] */
 
 #define Dee_MODULE_PROPERTY_GET    0 /* Index offset for property get callbacks. */
 #define Dee_MODULE_PROPERTY_DEL    1 /* Index offset for property del callbacks. */
 #define Dee_MODULE_PROPERTY_SET    2 /* Index offset for property set callbacks. */
 
 struct Dee_module_symbol {
-	/* For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
+	/* For the sake of DEX modules, `ss_doc` should be allowed to be a `char const *`, with
 	 * one of the symbol flags being used to indicate if it's actually an object, which must
-	 * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc, DeeStringObject, s_str))' */
+	 * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc, DeeStringObject, s_str))` */
 	char const              *ss_name;  /* [0..1] Name of this symbol (NULL marks the sentinel) */
 	char const              *ss_doc;   /* [0..1] An optional documentation string. */
 	Dee_hash_t               ss_hash;  /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
-	__UINTPTR_QUARTER_TYPE__ ss_flags; /* Set of `Dee_MODSYM_F*'. */
+	__UINTPTR_QUARTER_TYPE__ ss_flags; /* Set of `Dee_MODSYM_F*`. */
 	__UINTPTR_QUARTER_TYPE__ ss_impid; /* [< :mo_importc][valid_if(Dee_MODSYM_FEXTERN)] The index of the referenced module in the import vector. */
-	__UINTPTR_HALF_TYPE__    ss_index; /* [< :mo_globalc][valid_if(!Dee_MODSYM_FEXTERN)] The index of this symbol in the `:mo_globalv' vector.
-	                                    * [< :mo_importv[ss_impid]->mo_globalc][valid_if(Dee_MODSYM_FEXTERN)] The index of this symbol in the module's `:mo_globalv' vector.
+	__UINTPTR_HALF_TYPE__    ss_index; /* [< :mo_globalc][valid_if(!Dee_MODSYM_FEXTERN)] The index of this symbol in the `:mo_globalv` vector.
+	                                    * [< :mo_importv[ss_impid]->mo_globalc][valid_if(Dee_MODSYM_FEXTERN)] The index of this symbol in the module's `:mo_globalv` vector.
 	                                    * NOTE: In the case of a property, either 1 or 3 indices are allocated,
-	                                    *       3 if `Dee_MODSYM_FREADONLY' isn't set, and 1 if it is. */
+	                                    *       3 if `Dee_MODSYM_FREADONLY` isn't set, and 1 if it is. */
 };
 
 #define Dee_module_symbol_getindex(self) ((uint16_t)(self)->ss_index)
@@ -343,27 +343,27 @@ struct Dee_compiler_error_object;
 /* An optional callback that is invoked immediately before a compiler error is thrown.
  * This function's usual purpose is to immediately print the error to stderr,
  * though theoretically, it could also be used to do something different.
- * @param: fatality_mode: One of `COMPILER_ERROR_FATALITY_*'
+ * @param: fatality_mode: One of `COMPILER_ERROR_FATALITY_*`
  * @return: -1: An error occurred during handling.
  * @return:  0: The error was acknowledged and compilation may continue
- *              if `fatality_mode' is `Dee_COMPILER_ERROR_FATALITY_WARNING'
- *              or `Dee_COMPILER_ERROR_FATALITY_ERROR'.
- * @return:  1: Disregard `Dee_COMPILER_ERROR_FATALITY_ERROR' and continue compilation
- *              as though the error model was `Dee_COMPILER_ERROR_FATALITY_WARNING'.
- *              WARNING: This overrules the user-configuration set by `#pragma warning'
- * @return:  2: Disregard both `Dee_COMPILER_ERROR_FATALITY_FATAL' and
- *             `Dee_COMPILER_ERROR_FATALITY_ERROR' and interpret the error
+ *              if `fatality_mode` is `Dee_COMPILER_ERROR_FATALITY_WARNING`
+ *              or `Dee_COMPILER_ERROR_FATALITY_ERROR`.
+ * @return:  1: Disregard `Dee_COMPILER_ERROR_FATALITY_ERROR` and continue compilation
+ *              as though the error model was `Dee_COMPILER_ERROR_FATALITY_WARNING`.
+ *              WARNING: This overrules the user-configuration set by `#pragma warning`
+ * @return:  2: Disregard both `Dee_COMPILER_ERROR_FATALITY_FATAL` and
+ *             `Dee_COMPILER_ERROR_FATALITY_ERROR` and interpret the error
  *              as a warning, only to be included in a multi-compiler-error
  *              if another compiler error is processed fatally at a later point.
- *              WARNING: This overrules the user-configuration set by `#pragma warning'
+ *              WARNING: This overrules the user-configuration set by `#pragma warning`
  * @return:  3: Ignore the error completely, so long as its fatality_mode isn't
- *             `Dee_COMPILER_ERROR_FATALITY_FORCEFATAL'. This means that it won't be
+ *             `Dee_COMPILER_ERROR_FATALITY_FORCEFATAL`. This means that it won't be
  *              thrown or scheduled as a warning, but simply discarded as though
  *              it never happened in the first place.
  * NOTES:
- *   - When no handler is set, the behavior is the same as though it always returned `0'
- *   - Upon entry, `error->ce_mode == fatality_mode'
- *   - Depending on return value, `error->ce_mode' is re-written before being saved. */
+ *   - When no handler is set, the behavior is the same as though it always returned `0`
+ *   - Upon entry, `error->ce_mode == fatality_mode`
+ *   - Depending on return value, `error->ce_mode` is re-written before being saved. */
 typedef WUNUSED_T NONNULL_T((1)) int
 (DCALL *Dee_compiler_error_handler_t)(struct Dee_compiler_error_object *__restrict error,
                                       int fatality_mode, void *arg);
@@ -372,7 +372,7 @@ typedef WUNUSED_T NONNULL_T((1)) int
                                                   * once the function returns.
                                                   * However, should a future error cause the compiler
                                                   * to fail, this warning will still be included in
-                                                  * the resulting `DeeCompileErrorObject' error. */
+                                                  * the resulting `DeeCompileErrorObject` error. */
 #define Dee_COMPILER_ERROR_FATALITY_ERROR      1 /* The error will be fatal to prevent the compiler
                                                   * from successfully generating working user-code.
                                                   * However, compilation will continue for the time
@@ -391,9 +391,9 @@ typedef WUNUSED_T NONNULL_T((1)) int
 struct Dee_compiler_options {
 	struct Dee_compiler_options  *co_inner;             /* [0..1] Options used for compiling modules imported by this one. */
 	char const                   *co_pathname;          /* [0..1] A filename used to resolve #include and relative import directives. */
-	struct Dee_string_object     *co_filename;          /* [0..1] The filename that should appear in debug information when referring to `input_file'.
-	                                                     *        This is also the filename returned by `__FILE__' and `__BASEFILE__',
-	                                                     *        if not otherwise overwritten using `#line' */
+	struct Dee_string_object     *co_filename;          /* [0..1] The filename that should appear in debug information when referring to `input_file`.
+	                                                     *        This is also the filename returned by `__FILE__` and `__BASEFILE__`,
+	                                                     *        if not otherwise overwritten using `#line` */
 	struct Dee_string_object     *co_rootname;          /* [0..1] The name of the root code object (as set in DDI) */
 	WUNUSED_T int         (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
 	                                                     *        This callback can be used to perform additional compiler
@@ -404,20 +404,20 @@ struct Dee_compiler_options {
 	                                                     *              pushed onto the #include-stack, though the first
 	                                                     *              token hasn't been yielded, yet.
 	                                                     * @return: >= 0: Setup was successful.
-	                                                     * @return: < 0: `DeeModule_LoadSourceStream()' will fail with the same error. */
-	void                         *co_setup_arg;         /* [?..?] Argument to `co_setup' */
+	                                                     * @return: < 0: `DeeModule_LoadSourceStream()` will fail with the same error. */
+	void                         *co_setup_arg;         /* [?..?] Argument to `co_setup` */
 	Dee_compiler_error_handler_t  co_error_handler;     /* [0..1] Called before compiler errors are processed.
 	                                                     * This function's usual purpose is to print the error
 	                                                     * during live-compilation mode, but can also be used
 	                                                     * to put a twist on how errors are actually processed. */
-	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler' */
-	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0' to use the hard-coded default. */
-	uint16_t                      co_compiler;          /* Set of `COMPILER_F*' from `<deemon/compiler/old/compiler.h>'. */
-	uint16_t                      co_parser;            /* Set of `PARSE_F*'    from `<deemon/compiler/old/lexer.h>' */
-	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*' from `<deemon/compiler/old/ast.h>' */
+	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler` */
+	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0` to use the hard-coded default. */
+	uint16_t                      co_compiler;          /* Set of `COMPILER_F*` from `<deemon/compiler/old/compiler.h>`. */
+	uint16_t                      co_parser;            /* Set of `PARSE_F*`    from `<deemon/compiler/old/lexer.h>` */
+	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*` from `<deemon/compiler/old/ast.h>` */
 	uint16_t                      co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
 	                                                     * a constant loop may be unwound. (Set to ZERO(0) to disable) */
-	uint16_t                      co_assembler;         /* Set of `ASM_F*'      from `<deemon/compiler/old/assembler.h>' */
+	uint16_t                      co_assembler;         /* Set of `ASM_F*`      from `<deemon/compiler/old/assembler.h>` */
 };
 
 
@@ -511,8 +511,8 @@ union Dee_module_moddata {
 	 *
 	 * Instead, "DeeCodeObject" should be changed such that "co_module" becomes [0..1] (with
 	 * NULL being allowed if the code running inside doesn't make use of the module; though
-	 * the module can still be determined using `DeeModule_OfObject()'), and `mo_rootcode'
-	 * of a user-code module may be set to `DeeCode_Empty' if all initialization can be done
+	 * the module can still be determined using `DeeModule_OfObject()`), and `mo_rootcode`
+	 * of a user-code module may be set to `DeeCode_Empty` if all initialization can be done
 	 * statically (iow: the module's global function doesn't have any side-effects).
 	 *
 	 * Once all that is done, we're automatically at the point where modules that *can* be unloaded
@@ -520,69 +520,68 @@ union Dee_module_moddata {
 	DREF struct Dee_code_object *mo_rootcode; /* [1..1][valid_if(DeeModuleDee_Type)][lock(:mo_lock)] Root code object
 	                                           * If the module is discovered to be unreachable (part of a GC reference
 	                                           * loop), then (alongside clearing of globals), this code is replaced with
-	                                           * `DeeCode_Empty' in order to break reference loops via `co_module'. */
+	                                           * `DeeCode_Empty` in order to break reference loops via `co_module`. */
 };
 
 typedef struct Dee_module_object {
-	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	/*utf-8*/ char                *mo_absname;  /* [0..1][owned][const] Absolute, system-specific path to
-	                                             * directory containing the module, followed by `DeeSystem_SEP',
+	                                             * directory containing the module, followed by `DeeSystem_SEP`,
 	                                             * then followed by the raw name of the module. This string can
 	                                             * also be interpreted as a system filename, which (if it exists)
-	                                             * points at a directory whose `.dee' and `.so/.dll' files, as
+	                                             * points at a directory whose `.dee` and `.so/.dll` files, as
 	                                             * well as other sub-directories (except "." and "..") can be
 	                                             * enumerated as additional attributes of this module.
 	                                             *
 	                                             * This string can be used as the host-global, unique identifier
-	                                             * for this module, but is set to `NULL' if the module is:
+	                                             * for this module, but is set to `NULL` if the module is:
 	                                             * - Anonymous (explicitly created by user-code)
 	                                             * - The special built-in "deemon" module
 	                                             *
 	                                             * When executing a file as deemon code that doesn't end with
-	                                             * `.dee' (e.g. "/opt/foo/somefile.txt"), then this string is
+	                                             * `.dee` (e.g. "/opt/foo/somefile.txt"), then this string is
 	                                             * set to that path as-is (with the extension still in-tact),
 	                                             * but the module is also initialized to do no directory-scanning */
 	struct Dee_module_treenode     mo_absnode;  /* [lock(INTERNAL(module_abstree_lock))][valid_if(mo_absname)]
 	                                             * Node in tree of modules-by-mo_absname */
 	struct Dee_module_libentry     mo_libname;  /* [valid_if(mo_absname != NULL)] Primary lib entry for this module (unused if "mle_name" is "NULL") */
 	DREF struct Dee_tuple_object  *mo_dir;      /* [0..1][lock(WRITE_ONCE)] Tuple of strings (names of possible sub-modules of this module)
-	                                             * Results of interpreting `mo_absname' as a directory and scanning
+	                                             * Results of interpreting `mo_absname` as a directory and scanning
 	                                             * that directory for "*.dee" files, and more directories. */
 #define Dee_MODULE_INIT_UNINITIALIZED ((struct Dee_thread_object *)NULL)
 #define Dee_MODULE_INIT_INITIALIZED   ((struct Dee_thread_object *)ITER_DONE)
-	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*', or the thread doing the init)
-	                                             * NOTE: For module types other than `DeeModuleDee_Type' and `DeeModuleDex_Type',
-	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED' */
+	struct Dee_thread_object      *mo_init;     /* [0..1][lock(ATOMIC)] Module initialization state (one of `Dee_MODULE_INIT_*`, or the thread doing the init)
+	                                             * NOTE: For module types other than `DeeModuleDee_Type` and `DeeModuleDex_Type`,
+	                                             *       this must always be `Dee_MODULE_INIT_INITIALIZED` */
 	union Dee_module_buildid       mo_buildid;  /* [valid_if(Dee_MODULE_FHASBUILDID)][lock(WRITE_ONCE)] Module build ID ({0,0} for DeeModuleDir_Type-modules) */
 #define Dee_MODULE_FNORMAL         0x0000       /* Normal module flags. */
-#define Dee_MODULE_FABSFILE        0x0001       /* [DeeModuleDee_Type][const] `mo_absname' is the actual, absolute filename of this module (which doesn't end with `.dee') */
-#define Dee_MODULE_FHASBUILDID     0x0002       /* [lock(WRITE_ONCE)] Field `mo_buildid' has been initialized */
-#define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init' is set to `Dee_MODULE_INIT_UNINITIALIZED' or `Dee_MODULE_INIT_INITIALIZED', must `DeeFutex_WakeAll(&mo_init)' */
+#define Dee_MODULE_FABSFILE        0x0001       /* [DeeModuleDee_Type][const] `mo_absname` is the actual, absolute filename of this module (which doesn't end with `.dee`) */
+#define Dee_MODULE_FHASBUILDID     0x0002       /* [lock(WRITE_ONCE)] Field `mo_buildid` has been initialized */
+#define Dee_MODULE_FWAITINIT       0x0004       /* [lock(ATOMIC)] When `mo_init` is set to `Dee_MODULE_INIT_UNINITIALIZED` or `Dee_MODULE_INIT_INITIALIZED`, must `DeeFutex_WakeAll(&mo_init)` */
 #ifndef CONFIG_NO_DEC /* Without DEC files, modules are *always* NOSERIAL */
 #define Dee_MODULE_FNOSERIAL       0x0008       /* [const] Indicates that this module could not be serialized during compilation, meaning that anything that depends on it can't be serialized, either. */
 #endif /* !CONFIG_NO_DEC */
-#define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode' */
-#define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode' */
-#define _Dee_MODULE_FNOADDR        0x2000       /* [const] Used for dex modules: "mo_minaddr" and "mo_maxaddr" may not be right. Internally, `dex_byaddr_tree' is used instead of `module_byaddr_tree' */
-#define _Dee_MODULE_FLIBALL        0x4000       /* [lock(ATOMIC)] Used internally by `DeeModule_GetLibName()' */
-#define _Dee_MODULE_FCLEARED       0x8000       /* [lock(ATOMIC)] Used internally by `DeeModule_ClearDexModuleCaches()' */
-	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*') */
+#define Dee_MODULE_FABSRED         0x0100       /* [lock(ATOMIC)] is-red-bit for `mo_absnode` */
+#define Dee_MODULE_FADRRED         0x0200       /* [lock(ATOMIC)] is-red-bit for `mo_adrnode` */
+#define _Dee_MODULE_FNOADDR        0x2000       /* [const] Used for dex modules: "mo_minaddr" and "mo_maxaddr" may not be right. Internally, `dex_byaddr_tree` is used instead of `module_byaddr_tree` */
+#define _Dee_MODULE_FLIBALL        0x4000       /* [lock(ATOMIC)] Used internally by `DeeModule_GetLibName()` */
+#define _Dee_MODULE_FCLEARED       0x8000       /* [lock(ATOMIC)] Used internally by `DeeModule_ClearDexModuleCaches()` */
+	uint16_t                       mo_flags;    /* Module flags (Set of `Dee_MODULE_F*`) */
 	uint16_t                       mo_importc;  /* [const] The total number of other modules imported by this one.
 	                                             * (there may be more than these, but these are the ones accessible
-	                                             * to deemon assembly within this module; s.a. `Dec_Dhdr') */
+	                                             * to deemon assembly within this module; s.a. `Dec_Dhdr`) */
 	uint16_t                       mo_globalc;  /* [const] The total number of globals allocated by this module. */
 	/* Tables for symbols defined by this module. */
-	uint16_t                       mo_bucketm;  /* [const] Mask that should be applied to hash values before indexing `mo_bucketv'. */
+	uint16_t                       mo_bucketm;  /* [const] Mask that should be applied to hash values before indexing `mo_bucketv`. */
 	struct Dee_module_symbol      *mo_bucketv;  /* [1..mo_bucketm+1][owned_if(!= empty_module_buckets)][const]
-	                                             * Hash-vector for translating a string into a `uint16_t' index for `mo_globalv'.
+	                                             * Hash-vector for translating a string into a `uint16_t` index for `mo_globalv`.
 	                                             * This is where module symbol names are stored and also used to
 	                                             * implement symbol access by name at runtime. */
 #define Dee_MODULE_HASHST(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketm)
-#define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t            mo_lock;     /* Lock for accessing `mo_globalv'. */
+	Dee_atomic_rwlock_t            mo_lock;     /* Lock for accessing `mo_globalv`. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 	/* End of common data (the following fields don't exist for DeeModuleDir_Type-type modules) */
@@ -667,7 +666,7 @@ struct Dee_static_module_struct {
 	struct Dee_module_object m_module;
 };
 
-/* The built-in `deemon' module. */
+/* The built-in `deemon` module. */
 #ifndef GUARD_DEEMON_RUNTIME_BUILTIN_C
 #ifdef __INTELLISENSE__
 DDATDEF DeeModuleObject DeeModule_Deemon;
@@ -676,13 +675,13 @@ DDATDEF DeeModuleObject DeeModule_Deemon;
 DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
 #define DeeModule_Deemon DeeModule_Deemon.m_module
 #endif /* !__INTELLISENSE__ */
-/* The module of builtin objects accessible by opening `deemon'. */
+/* The module of builtin objects accessible by opening `deemon`. */
 #define DeeModule_GetDeemon() (&DeeModule_Deemon)
 #endif /* !GUARD_DEEMON_RUNTIME_BUILTIN_C */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef GUARD_DEEMON_EXECUTE_MODULE_C
-/* A stub module-object named `' (empty string), and pointing to `DeeCode_Empty'. */
+/* A stub module-object named `' (empty string), and pointing to `DeeCode_Empty`. */
 #ifdef __INTELLISENSE__
 INTDEF DeeModuleObject DeeModule_Empty;
 #else /* __INTELLISENSE__ */
@@ -694,13 +693,13 @@ INTDEF struct Dee_static_module_struct DeeModule_Empty;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-/* Possible values for `DeeModule_ImportEx()' and `DeeModule_OpenEx()' */
+/* Possible values for `DeeModule_ImportEx()` and `DeeModule_OpenEx()` */
 #define DeeModule_IMPORT_F_NORMAL 0x0000 /* Normal import flags */
 #define DeeModule_IMPORT_F_ENOENT 0x0001 /* Handle file-not-found errors by returning ITER_DONE instead of throwing an error */
 #define DeeModule_IMPORT_F_FILNAM 0x0002 /* The given "import_str" is a system filename that is then loaded as a ".dee" file or directory */
-#define DeeModule_IMPORT_F_CTXDIR 0x0004 /* `context_absname' is the path of the directory to use for relative imports, rather than a file within that directory. */
+#define DeeModule_IMPORT_F_CTXDIR 0x0004 /* `context_absname` is the path of the directory to use for relative imports, rather than a file within that directory. */
 #define DeeModule_IMPORT_F_ANONYM 0x0008 /* Don't look at, or write into the global module tree -- always load anew as an anonymous module (unless it's a dex module). */
-#define DeeModule_IMPORT_F_ERECUR 0x0010 /* Enable return of `DeeModule_IMPORT_ERECUR' when the module in question is currently being compiled by the calling thread */
+#define DeeModule_IMPORT_F_ERECUR 0x0010 /* Enable return of `DeeModule_IMPORT_ERECUR` when the module in question is currently being compiled by the calling thread */
 #ifndef CONFIG_NO_DEX
 #define DeeModule_IMPORT_F_NOLDEX 0x0020 /* Do not attempt to load DEX modules */
 #else /* !CONFIG_NO_DEX */
@@ -714,11 +713,11 @@ INTDEF struct Dee_static_module_struct DeeModule_Empty;
 /* DeeModule_IMPORT_F_NOGDEC: Always the case since ".dec" files are disabled */
 #endif /* CONFIG_NO_DEC */
 
-/* Possible return values for `DeeModule_Open()' and `DeeModule_Import()' */
+/* Possible return values for `DeeModule_Open()` and `DeeModule_Import()` */
 #define DeeModule_IMPORT_ERROR   ((DREF DeeModuleObject *)NULL)      /* An error was thrown */
 #define DeeModule_IMPORT_ENOENT  ((DREF DeeModuleObject *)ITER_DONE) /* DeeModule_IMPORT_F_ENOENT: No such file, or file cannot be opened */
 #define DeeModule_IMPORT_ERECUR  ((DREF DeeModuleObject *)-2L)       /* DeeModule_IMPORT_F_ERECUR: Module is already being compiled */
-#define DeeModule_IMPORT_ISOK(x) (((uintptr_t)(x) - 2) < (uintptr_t)-3l)  /* `x != NULL && x != DeeModule_IMPORT_ENOENT && x != DeeModule_IMPORT_ERECUR' */
+#define DeeModule_IMPORT_ISOK(x) (((uintptr_t)(x) - 2) < (uintptr_t)-3l)  /* `x != NULL && x != DeeModule_IMPORT_ENOENT && x != DeeModule_IMPORT_ERECUR` */
 
 /* Import (DeeModule_Open() + DeeModule_Initialize()) a specific module */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
@@ -744,7 +743,7 @@ DeeModule_ImportChildEx(DeeModuleObject *self,
 
 /* Open a module, given an import string, and another module/path used
  * to resolve relative paths. The given "import_str" can take any of the
- * following forms (assuming that `DeeSystem_SEP' is '/'):
+ * following forms (assuming that `DeeSystem_SEP` is '/'):
  * - [m] "deemon"                    (DeeModule_GetDeemon())
  * - [m] "net.ftp"                   ("${LIBPATH}/net/ftp.dee")
  * - [m] "net"                       ("${LIBPATH}/net.so")
@@ -759,22 +758,22 @@ DeeModule_ImportChildEx(DeeModuleObject *self,
  * - [m] "/opt/deemon/file"          ("/opt/deemon/file.dee")
  * - [f] "/opt/deemon"               ("/opt/deemon")                                           DeeModuleDir_Type
  *
- * NOTE: When `DeeModule_IMPORT_F_FILNAM' is given, **ONLY** examples
+ * NOTE: When `DeeModule_IMPORT_F_FILNAM` is given, **ONLY** examples
  *       marked as [f] can be loaded (that is: "import_str" is treated
  *       as a native filename (**WITH** extension), rather than the
  *       usual combination of module-name/filename).
  *
  * The given "context_absname" should be the mo_absname-style name of
  * the calling file, or (at the very least) be a string ending with a
- * trailing `DeeSystem_SEP' (in this case, import_str="." will throw
+ * trailing `DeeSystem_SEP` (in this case, import_str="." will throw
  * an error). When this string isn't actually absolute, it will be
- * made absolute using `DeeSystem_MakeNormalAndAbsolute()'. When it is NULL or
- * an empty string, `DeeSystem_PrintPwd()' is used instead.
+ * made absolute using `DeeSystem_MakeNormalAndAbsolute()`. When it is NULL or
+ * an empty string, `DeeSystem_PrintPwd()` is used instead.
  *
  * @return: * :                      The newly opened module
  * @return: DeeModule_IMPORT_ERROR:  An error was thrown
- * @return: DeeModule_IMPORT_ENOENT: `DeeModule_IMPORT_F_ENOENT' was set, and no such file exists
- * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR' was set, and module is already being imported */
+ * @return: DeeModule_IMPORT_ENOENT: `DeeModule_IMPORT_F_ENOENT` was set, and no such file exists
+ * @return: DeeModule_IMPORT_ERECUR: `DeeModule_IMPORT_F_ERECUR` was set, and module is already being imported */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_Open(/*String*/ DeeObject *__restrict import_str,
                /*Module|String|Type|None*/ DeeObject *context_absname,
@@ -793,7 +792,7 @@ DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_str_
  * Same as:
  * >> rt_hash = DeeModule_Open("rt.hash", NULL, DeeModule_IMPORT_F_NORMAL);
  *
- * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR' flag! */
+ * NOTE: These functions ignore the `DeeModule_IMPORT_F_CTXDIR` flag! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 DeeModule_OpenChild(DeeModuleObject *self,
                     /*String*/ DeeObject *name,
@@ -819,18 +818,18 @@ DeeModule_Initialize(DeeModuleObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeModule_InitializeImports(DeeModuleObject *__restrict self);
 
-/* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED',
- * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
+/* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED`,
+ * and if so: change it to `Dee_MODULE_INIT_INITIALIZED` (even if the module
  * may not have already been initialized)
- * @return: * : One of `DeeModule_SetInitialized_*' */
+ * @return: * : One of `DeeModule_SetInitialized_*` */
 DFUNDEF NONNULL((1)) unsigned int DCALL
 DeeModule_SetInitialized(DeeModuleObject *__restrict self);
-#define DeeModule_SetInitialized_SUCCESS 0 /* Module was marked as `Dee_MODULE_INIT_INITIALIZED' */
-#define DeeModule_SetInitialized_ALREADY 1 /* Module was already marked as `Dee_MODULE_INIT_INITIALIZED' */
+#define DeeModule_SetInitialized_SUCCESS 0 /* Module was marked as `Dee_MODULE_INIT_INITIALIZED` */
+#define DeeModule_SetInitialized_ALREADY 1 /* Module was already marked as `Dee_MODULE_INIT_INITIALIZED` */
 #define DeeModule_SetInitialized_INPRGRS 2 /* Module is currently being initialized and can't have its status changed */
 
 /* Return the root code object of a given module.
- * The caller must ensure that `self' is an instance of "DeeModuleDee_Type" */
+ * The caller must ensure that `self` is an instance of "DeeModuleDee_Type" */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF struct Dee_code_object *DCALL
 DeeModule_GetRootCode(DeeModuleObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Function*/ DeeObject *DCALL
@@ -860,21 +859,21 @@ DFUNDEF WUNUSED NONNULL((1)) /*Tuple*/ DeeObject *DCALL
 DeeModule_GetDirectory(DeeModuleObject *__restrict self);
 
 /* Return the unique, absolute name used to identify "self" within the filesystem.
- * - This returns "NULL" if the module was loaded with `DeeModule_IMPORT_F_ANONYM'
- *   or was returned by `DeeExec_CompileModuleStream()' (or a related function).
- * - This string (if non-NULL) can be used as-is with `DeeModule_Open' to open
+ * - This returns "NULL" if the module was loaded with `DeeModule_IMPORT_F_ANONYM`
+ *   or was returned by `DeeExec_CompileModuleStream()` (or a related function).
+ * - This string (if non-NULL) can be used as-is with `DeeModule_Open` to open
  *   the module by-name.
  * - This is the absolute, normalized path to the module's directory, followed by
- *   the module's filename with a trailing `.dee' (or `.so' / `.dll') removed. As
+ *   the module's filename with a trailing `.dee` (or `.so` / `.dll`) removed. As
  *   such, it is also **ALWAYS** the path that is searched for sub-modules for the
- *   directory returned by `DeeModule_GetDirectory()'
+ *   directory returned by `DeeModule_GetDirectory()`
  * - When opening a file that does not end with '.dee', the string returned here
  *   will include that trailing extension.
  * Examples:
  * - E:\projects\deemon\lib\rt        (after opening 'E:\projects\deemon\lib\rt.dll')
  * - /opt/deemon/lib/net              (after opening '/opt/deemon/lib/net.so')
  * - /home/me/projects/deemon/script  (after opening '/home/me/projects/deemon/script.dee')
- * - /home/me/projects/readme.txt     (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM')
+ * - /home/me/projects/readme.txt     (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM`)
  *
  * @return: * :   The module's absolute name
  * @return: NULL: Anonymous module */
@@ -887,13 +886,13 @@ DeeModule_GetAbsName(DeeModuleObject *__restrict self);
 #endif /* !__INTELLISENSE__ */
 
 /* Return the module's human-readable "short" name, that is everything after
- * the last '/' (or '\') within `DeeModule_GetAbsName()', or the string
- * "<anonymous module>" if `DeeModule_GetAbsName() == NULL' */
+ * the last '/' (or '\') within `DeeModule_GetAbsName()`, or the string
+ * "<anonymous module>" if `DeeModule_GetAbsName() == NULL` */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 DeeModule_GetShortName(DeeModuleObject *__restrict self);
 
 /* Return the absolute, normalized filename that the module was loaded from,
- * `ITER_DONE' if `DeeModule_GetAbsName() == NULL'. This function combines
+ * `ITER_DONE` if `DeeModule_GetAbsName() == NULL`. This function combines
  * the module's 'Dee_MODULE_FABSFILE' flag together with its typing in order
  * to reconstruct the original filename that the module was loaded from.
  *
@@ -901,7 +900,7 @@ DeeModule_GetShortName(DeeModuleObject *__restrict self);
  * - E:\projects\deemon\lib\rt.dll       (after opening 'E:\projects\deemon\lib\rt.dll')
  * - /opt/deemon/lib/net.so              (after opening '/opt/deemon/lib/net.so')
  * - /home/me/projects/deemon/script.dee (after opening '/home/me/projects/deemon/script.dee')
- * - /home/me/projects/readme.txt        (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM')
+ * - /home/me/projects/readme.txt        (after opening '/home/me/projects/readme.txt' with `DeeModule_IMPORT_F_FILNAM`)
  *
  * @return: * : The module's original, absolute, normalized source filename.
  * @return: ITER_DONE: Module is anonymous and doesn't have a source filename.
@@ -909,36 +908,36 @@ DeeModule_GetShortName(DeeModuleObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetFileName(DeeModuleObject *__restrict self);
 
-/* Return the relative import name of `self' when accessed from a file or module
- * `context_absname'. For more information, see `DeeModule_GetRelNameEx()'.
+/* Return the relative import name of `self` when accessed from a file or module
+ * `context_absname`. For more information, see `DeeModule_GetRelNameEx()`.
  *
- * @param: flags: Set of `DeeModule_RELNAME_F_*'
- * @return: * :        The module's name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
+ * @param: flags: Set of `DeeModule_RELNAME_F_*`
+ * @return: * :        The module's name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE` flag set
  * @return: NULL:      An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelName(DeeModuleObject *__restrict self,
                      /*Module|String|Type|None*/ DeeObject *context_absname,
                      unsigned int flags);
 
-/* Same as `DeeModule_GetRelName()', but allows you to specify the context
- * path in the same manner as can be specified by `DeeModule_OpenEx()':
- * - When `DeeModule_RELNAME_F_CTXDIR' is not given, "context_absname"
+/* Same as `DeeModule_GetRelName()`, but allows you to specify the context
+ * path in the same manner as can be specified by `DeeModule_OpenEx()`:
+ * - When `DeeModule_RELNAME_F_CTXDIR` is not given, "context_absname"
  *   should be the mo_absname-style name of the calling file, or (at
- *   the very least) be a string ending with a trailing `DeeSystem_SEP'.
- * - When `DeeModule_RELNAME_F_CTXDIR' is given, "context_absname" is
+ *   the very least) be a string ending with a trailing `DeeSystem_SEP`.
+ * - When `DeeModule_RELNAME_F_CTXDIR` is given, "context_absname" is
  *   treated as the directory relative to which the returned path will
  *   be printed.
- * - When `self' is anonymous or cannot be opened without the use of
- *   the `DeeModule_IMPORT_F_FILNAM' flag, then `ITER_DONE' is returned.
+ * - When `self` is anonymous or cannot be opened without the use of
+ *   the `DeeModule_IMPORT_F_FILNAM` flag, then `ITER_DONE` is returned.
  * - When the last part of the module name (after the last '/') contains
- *   a '.' (e.g. '/home/me/projects/foo/script.v1.dee'), then `ITER_DONE'
+ *   a '.' (e.g. '/home/me/projects/foo/script.v1.dee'), then `ITER_DONE`
  *   is also returned, since no relative module name can be formed. The
  *   same also happens when any part of the path that would appear within
  *   the relative module path contains a '.'.
  * - When this string isn't actually absolute, it will be made absolute
- *   using `DeeSystem_MakeNormalAndAbsolute()'. When it is NULL or an
- *   empty string, `DeeSystem_PrintPwd()' is used instead.
+ *   using `DeeSystem_MakeNormalAndAbsolute()`. When it is NULL or an
+ *   empty string, `DeeSystem_PrintPwd()` is used instead.
  *
  * Examples:
  * - .rt           (self='E:\projects\deemon\lib\rt.dll', context_absname='E:\projects\deemon\lib\doc.dee' + DeeModule_RELNAME_F_NORMAL)
@@ -947,9 +946,9 @@ DeeModule_GetRelName(DeeModuleObject *__restrict self,
  * - ..foo.script  (self='/home/me/projects/foo/script.dee', context_absname='/home/me/projects/bar/script.dee' + DeeModule_RELNAME_F_NORMAL)
  * - ITER_DONE     (self='/home/me/projects/readme.txt', context_absname='<ignored>' + <ignored>))
  *
- * @param: flags: Set of `DeeModule_RELNAME_F_*'
- * @return: * :        The module's name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set
+ * @param: flags: Set of `DeeModule_RELNAME_F_*`
+ * @return: * :        The module's name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE` flag set
  * @return: NULL:      An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetRelNameEx(DeeModuleObject *__restrict self,
@@ -961,19 +960,19 @@ DeeModule_PrintRelNameEx(DeeModuleObject *__restrict self,
                          /*utf-8*/ char const *context_absname,
                          size_t context_absname_size, unsigned int flags);
 #define DeeModule_RELNAME_F_NORMAL DeeModule_IMPORT_F_NORMAL /* Normal name flags */
-#define DeeModule_RELNAME_F_CTXDIR DeeModule_IMPORT_F_CTXDIR /* `context_absname' is the path of the directory to use for relative imports, rather than a file within that directory. */
-#define DeeModule_RELNAME_F_LIBNAM 0x8000 /* If the module has at least 1 LibName (s.a. `DeeModule_GetLibName()'), return the first of those instead. */
+#define DeeModule_RELNAME_F_CTXDIR DeeModule_IMPORT_F_CTXDIR /* `context_absname` is the path of the directory to use for relative imports, rather than a file within that directory. */
+#define DeeModule_RELNAME_F_LIBNAM 0x8000 /* If the module has at least 1 LibName (s.a. `DeeModule_GetLibName()`), return the first of those instead. */
 
 
-/* Ensure that all possible lib (global) names for `self' have been
- * determined (using paths from `DeeModule_SetLibPath()'), then return
- * the `index'th (0-based) one of them.
- * - A special case is made for the builtin `DeeModule_Deemon',
- *   which always has exactly `1' lib name "deemon".
+/* Ensure that all possible lib (global) names for `self` have been
+ * determined (using paths from `DeeModule_SetLibPath()`), then return
+ * the `index`th (0-based) one of them.
+ * - A special case is made for the builtin `DeeModule_Deemon`,
+ *   which always has exactly `1` lib name "deemon".
  * - When the same module may be accessible from multiple lib paths,
  *   then the order in which its possible absolute names are listed
  *   is undefined.
- * - When `DEEMON_PATH' is set-up such that multiple modules might
+ * - When `DEEMON_PATH` is set-up such that multiple modules might
  *   hold the same lib name, only one of them will (and this function
  *   will also list them for only that one module), though it is
  *   undefined which of those modules that will be.
@@ -984,29 +983,29 @@ DeeModule_PrintRelNameEx(DeeModuleObject *__restrict self,
  * - lib.rt.gen.unpack    (self='/opt/deemon/lib/rt/gen/unpack.dee', DEEMON_PATH="/opt/deemon:/opt/deemon/lib", index=0)
  * - rt.gen.unpack        (self='/opt/deemon/lib/rt/gen/unpack.dee', DEEMON_PATH="/opt/deemon:/opt/deemon/lib", index=1)
  *
- * @return: * :        The module's index'th lib name, written relative to `context_absname'
- * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE'
- *                     flag set, or isn't located in a sub-directory of `DEEMON_PATH',
- *                     or `index' is greater than the module's # of lib names.
+ * @return: * :        The module's index'th lib name, written relative to `context_absname`
+ * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE`
+ *                     flag set, or isn't located in a sub-directory of `DEEMON_PATH`,
+ *                     or `index` is greater than the module's # of lib names.
  * @return: NULL:      An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeModule_GetLibName(DeeModuleObject *__restrict self, size_t index);
 
-/* Return 1+ the greatest index that may be passed to `DeeModule_GetLibName()' for the
- * purpose of querying module lib names. Note that calls to `DeeModule_SetLibPath()'
+/* Return 1+ the greatest index that may be passed to `DeeModule_GetLibName()` for the
+ * purpose of querying module lib names. Note that calls to `DeeModule_SetLibPath()`
  * (even those made from different threads) may cause the return value of this function
  * to fall out-of-date the second this function does return, so be always be prepared
- * for `DeeModule_GetLibName()' to return `ITER_DONE' even before this limit is reached.
+ * for `DeeModule_GetLibName()` to return `ITER_DONE` even before this limit is reached.
  *
- * @return: 0 : The given module is anonymous or has its `Dee_MODULE_FABSFILE'
- *              flag set, or isn't located in a sub-directory of `DEEMON_PATH'.
- * @return: * : The # of lib names that `self' had at the time of this call.
+ * @return: 0 : The given module is anonymous or has its `Dee_MODULE_FABSFILE`
+ *              flag set, or isn't located in a sub-directory of `DEEMON_PATH`.
+ * @return: * : The # of lib names that `self` had at the time of this call.
  * @return: (size_t)-1: An error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeModule_GetLibNameCount(DeeModuleObject *__restrict self);
 
 
-/* Special functions exported by `DeeModule_Deemon'.
+/* Special functions exported by `DeeModule_Deemon`.
  * These are here so that dex modules (like _hostasm) can detect calls to these functions. */
 DDATDEF struct Dee_cmethod_object DeeBuiltin_HasAttr;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_HasItem;
@@ -1021,7 +1020,7 @@ DDATDEF struct Dee_cmethod_object DeeBuiltin_Exec;
  *
  * This object behaves in 1 of 2 ways:
  *
- * - It provides an `operator ()' that can be invoked by passing a string
+ * - It provides an `operator ()` that can be invoked by passing a string
  *   argument that is then interpreted as either an absolute (LIBPATH),
  *   or relative (to the calling module) import string:
  *   >> local relativeModule = import(".sibling"); // Loads "./sibling.dee"
@@ -1034,14 +1033,14 @@ DDATDEF struct Dee_cmethod_object DeeBuiltin_Exec;
  *   Same as:
  *   >> import . as me, deemon;
  *   >> local libModule = deemon.__import__(me, ".sibling");
- * - Note that "deemon.__import__" simply resolves to `DeeBuiltin_Import',
- *   meaning that the built-in `import' keyword is pretty much just there
- *   as (admittedly very necessary, since `deemon.__import__' is actually
+ * - Note that "deemon.__import__" simply resolves to `DeeBuiltin_Import`,
+ *   meaning that the built-in `import` keyword is pretty much just there
+ *   as (admittedly very necessary, since `deemon.__import__` is actually
  *   an implementation-specific symbol) syntax sugar.
  *
- * - It provides an `operator .' and `operator enumattr' that can be used
+ * - It provides an `operator .` and `operator enumattr` that can be used
  *   to enumerate modules of- and import modules from the LIBPATH (as set
- *   by `DeeModule_SetLibPath()'):
+ *   by `DeeModule_SetLibPath()`):
  *   >> local libModule1 = import.deemon;   // import("deemon")
  *   >> local libModule2 = import.rt;       // import("rt")
  *   >> local libModule3 = import.rt.hash;  // import("rt.hash")
@@ -1078,8 +1077,8 @@ DDATDEF DeeObject DeeBuiltin_Import;
 DDATDEF DeeTypeObject DeeBuiltin_ImportType; /* Dee_TYPE(&DeeBuiltin_Import) */
 
 
-/* Return the export address of a native symbol exported from a dex `self'.
- * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
+/* Return the export address of a native symbol exported from a dex `self`.
+ * When `self` isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL`.
  * NOTE: Because native symbols cannot appear in user-defined modules,
  *       in the interest of keeping native functionality to its bare
  *       minimum, any code making using of this function should contain
@@ -1088,7 +1087,7 @@ DDATDEF DeeTypeObject DeeBuiltin_ImportType; /* Dee_TYPE(&DeeBuiltin_Import) */
  * >> static int (*p_add)(int x, int y) = NULL;
  * >> if (!p_add)
  * >>     *(void **)&p_add = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
- * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
+ * >> // Fallback: Invoke a member attribute `add` if the native symbol doesn't exist.
  * >> if (!p_add)
  * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
@@ -1097,35 +1096,35 @@ DFUNDEF WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeModuleObject *__restrict self,
                           char const *__restrict name);
 
-/* Given a pointer `ptr' that is either for some statically allocated variable/symbol
+/* Given a pointer `ptr` that is either for some statically allocated variable/symbol
  * (as in: a pointer to some statically allocated structure), or is part of some user
  * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'
  * that is a constant in user-code), try to return a reference for the module that
  * contains this pointer.
  *
  * @return: * :   A pointer to the module that 'ptr' belongs to.
- * @return: NULL: Given `ptr' is either invalid, heap-allocated, or simply not part
+ * @return: NULL: Given `ptr` is either invalid, heap-allocated, or simply not part
  *                of the deemon core, some dex module, or a some user-code module. */
 DFUNDEF WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OfPointer(void const *ptr);
 
-/* Extension to `DeeModule_OfPointer()' that checks if `ob' is statically allocated
- * within some specific module. But if it isn't, then it looks at the type of `ob'
+/* Extension to `DeeModule_OfPointer()` that checks if `ob` is statically allocated
+ * within some specific module. But if it isn't, then it looks at the type of `ob`
  * and tries to return the associated module via type-specific means:
  * - DeeType_Type: DeeTypeObject::tp_module
  * - DeeCode_Type: DeeCodeObject::co_module */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OfObject(DeeObject *__restrict ob);
 
-/* Check if `DeeModule_OfPointer(ptr) == self' (but is a bit faster than that).
- * Use this function instead of looking at `mo_minaddr' / `mo_maxaddr', because
+/* Check if `DeeModule_OfPointer(ptr) == self` (but is a bit faster than that).
+ * Use this function instead of looking at `mo_minaddr` / `mo_maxaddr`, because
  * this function does some necessarily extra handling for certain types of DEX
  * modules that are loaded in multiple segments (in which case it would not be
- * defined if `mo_minaddr' / `mo_maxaddr' is union of all segments, or only some
+ * defined if `mo_minaddr` / `mo_maxaddr` is union of all segments, or only some
  * (sub-)set of segments)
  *
- * NOTE: Unlike many other functions, this one can actually still be used while `self'
- *       is being finalized (e.g. while inside of `Dee_module_dexdata::mdx_fini'). It
+ * NOTE: Unlike many other functions, this one can actually still be used while `self`
+ *       is being finalized (e.g. while inside of `Dee_module_dexdata::mdx_fini`). It
  *       also guaranties that no user-code will ever be executed (hence the "PURE")
  *
  * @return: true:  Yes, "ptr" is part of "self"
@@ -1134,7 +1133,7 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeModule_ContainsPointer(DeeModuleObject *__restrict self, void const *ptr);
 
 
-/* Callback prototypes for `DeeModule_Enumerate*' functions below.
+/* Callback prototypes for `DeeModule_Enumerate*` functions below.
  * All of these behave in a Dee_formatprinter_t-compatible manner:
  * @return: >= 0: Success (sum of return values is accumulated and returned by caller)
  * @return: < 0:  Error (abort enumeration immediately and propagate return value) */
@@ -1147,52 +1146,52 @@ typedef NONNULL_T((2, 3)) Dee_ssize_t
 /* Enumerate loaded modules using various different means.
  *
  * DeeModule_EnumerateAbsTree:
- *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL').
+ *     Enumerate all non-anonymous modules (i.e. ones with `mo_absname != NULL`).
  *
  * DeeModule_EnumerateLibTree:
  *     Enumerate modules via their "lib" names (e.g. "deemon", "rt", etc.)
  *     Note that this only includes modules whose lib-names are loaded **right now**.
- *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()'
- *     or `DeeModule_RemoveLibPath()' is called), the lib-names of already-loaded
+ *     If any changes are mading to the module LIBPATH (e.g. `DeeModule_AddLibPath()`
+ *     or `DeeModule_RemoveLibPath()` is called), the lib-names of already-loaded
  *     modules will **NOT** be calculated immediatly, but lazily. And a call to
- *     `DeeModule_EnumerateLibTree()' will **NOT** do this lazy calculation.
+ *     `DeeModule_EnumerateLibTree()` will **NOT** do this lazy calculation.
  *
  * DeeModule_EnumerateAdrTree:
  *     Enumerate modules that reside within the address space (i.e.: have an
- *     address range as per `mo_minaddr' / `mo_maxaddr'). This essentially means
- *     that all `DeeModuleDee_Type' and `DeeModuleDex_Type' modules (including
- *     the core `DeeModule_Deemon' module) will be enumerated.
+ *     address range as per `mo_minaddr` / `mo_maxaddr`). This essentially means
+ *     that all `DeeModuleDee_Type` and `DeeModuleDex_Type` modules (including
+ *     the core `DeeModule_Deemon` module) will be enumerated.
  *
  * NOTES:
  * - The order in which modules are enumerated is undefined but will not change
  *   for already-enumerated modules (including modules enumerated during a prior
  *   call to these functions).
- * - Every qualifying module loaded at the time the `DeeModule_Enumerate*' call
- *   started, and still-loaded when this call returns has been passed to `*cb'
+ * - Every qualifying module loaded at the time the `DeeModule_Enumerate*` call
+ *   started, and still-loaded when this call returns has been passed to `*cb`
  *   exactly once. (Modules that are unloaded and then quickly re-loaded may be
  *   enumerated multiple times however)
- * - None of the `DeeModule_Enumerate*' functions can throw errors on their own.
- *   The only way that some negative value can be returned, is from `cb' returning
+ * - None of the `DeeModule_Enumerate*` functions can throw errors on their own.
+ *   The only way that some negative value can be returned, is from `cb` returning
  *   that same negative value.
  * - The "opt_type_filter" argument can either be "NULL", or one of:
  *   - DeeModuleDee_Type
  *   - DeeModuleDir_Type
  *   - DeeModuleDex_Type
  *   ... to only enumerate modules with that specific typing.
- * - The `*cb' callback is allowed to do anything it wants, including invoking any
+ * - The `*cb` callback is allowed to do anything it wants, including invoking any
  *   user-code, as well as load additional modules. It is however undefined if modules
- *   that were loaded after the `DeeModule_Enumerate*' call started will also be
+ *   that were loaded after the `DeeModule_Enumerate*` call started will also be
  *   enumerated.
  *
  * @param: cb:              The callback that should be invoked
  * @param: arg:             Cookie argument that should be passed to
- * @param: start_after:     Start enumeration with whatever module comes after `start_after'.
- *                          When `NULL', start enumeration at the very beginning.
+ * @param: start_after:     Start enumeration with whatever module comes after `start_after`.
+ *                          When `NULL`, start enumeration at the very beginning.
  * @param: opt_type_filter: Only enumerate modules of this type (set to "NULL" to not filter).
  *
- * @return: * : Sum of return values of `*cb'
- * @return: 0 : Either `*cb' always returned `0', or it was never invoked
- * @return: <0: A call to `*cb' returned this same negative value. */
+ * @return: * : Sum of return values of `*cb`
+ * @return: 0 : Either `*cb` always returned `0`, or it was never invoked
+ * @return: <0: A call to `*cb` returned this same negative value. */
 DFUNDEF NONNULL((1)) Dee_ssize_t DCALL
 DeeModule_EnumerateAbsTree(Dee_module_enumerate_cb_t cb, void *arg,
                            DeeModuleObject *start_after,
@@ -1214,7 +1213,7 @@ DeeModule_EnumerateLibTree(Dee_module_enumerate_lib_cb_t cb, void *arg,
 	DeeModule_EnumerateAdrTree(cb, arg, start_after, &DeeModuleDex_Type)
 #endif /* !CONFIG_NO_DEX */
 
-/* Convenience wrappers around `DeeModule_Enumerate*' that return whatever
+/* Convenience wrappers around `DeeModule_Enumerate*` that return whatever
  * module comes after "prev" (if such a module exists), or "NULL" if no such
  * module exists. When "prev" is "NULL", return the first module of that tree. */
 DFUNDEF WUNUSED DREF DeeModuleObject *DCALL
@@ -1228,7 +1227,7 @@ DeeModule_NextLibTree(DeeModuleObject *prev, /*String*/ DeeObject *prev_libname,
 
 
 /* Lookup an external symbol.
- * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)') */
+ * Convenience function (same as `DeeObject_GetAttr(DeeModule_Import(...), ...)`) */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetExtern(/*String*/ DeeObject *module_name,
                     /*String*/ DeeObject *global_name);
@@ -1236,7 +1235,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetExternString(/*utf-8*/ char const *module_name,
                           /*utf-8*/ char const *global_name);
 
-/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)',
+/* Helper wrapper for `DeeObject_Call(DeeModule_GetExternString(...), ...)`,
  * that returns the return value of the call operation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_CallExtern(/*String*/ DeeObject *module_name,
@@ -1247,7 +1246,7 @@ DeeModule_CallExternString(/*utf-8*/ char const *module_name,
                            /*utf-8*/ char const *global_name,
                            size_t argc, DeeObject *const *argv);
 
-/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)',
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExternString(...), ...)`,
  * that returns the return value of the call operation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
 DeeModule_CallExternf(/*String*/ DeeObject *module_name,
@@ -1311,11 +1310,11 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeModule_FindAttrInfoStringLenHash
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Lookup the module symbol associated with a given its name or GID.
- * If the symbol could not be found, return `NULL', but _DONT_ throw an error.
- * WARNING: When `self' could potentially be an interactive module, you
+ * If the symbol could not be found, return `NULL`, but _DONT_ throw an error.
+ * WARNING: When `self` could potentially be an interactive module, you
  *          must surround a call to any of these functions with a lock that
- *          can be acquired / released using `DeeModule_LockSymbols()' /
- *         `DeeModule_UnlockSymbols()'
+ *          can be acquired / released using `DeeModule_LockSymbols()` /
+ *         `DeeModule_UnlockSymbols()`
  *          Additionally, you must be extremely careful, as an interactive
  *          module may arbitrarily modify its global object table! */
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbol(DeeModuleObject const *__restrict self, /*String*/ DeeObject *__restrict name);
@@ -1331,9 +1330,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObjec
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict sym, DeeObject *__restrict value);
 
 /* Return the name of a global variable in the given module.
- * @return: NULL: The given `gid' is not recognized, or the module hasn't finished/started loading yet.
- * @return: * :   The name of the global associated with `gid'.
- *                Note that in the case of aliases existing for `gid', this function prefers not to
+ * @return: NULL: The given `gid` is not recognized, or the module hasn't finished/started loading yet.
+ * @return: * :   The name of the global associated with `gid`.
+ *                Note that in the case of aliases existing for `gid`, this function prefers not to
  *                return the name of an alias, but that of the original symbol itself, so long as that
  *                symbol actually exist, which if it doesn't, it will return the name of a random alias. */
 DFUNDEF WUNUSED NONNULL((1)) char const *DCALL

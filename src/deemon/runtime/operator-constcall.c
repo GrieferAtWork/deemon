@@ -69,9 +69,9 @@ check_foreach_args_kw(size_t argc, DeeObject *const *argv, DeeObject *kw,
 					goto nope;
 			}
 		} else {
-			/* TODO: Support for `DeeKwdsMapping_Type' */
-			/* TODO: Support for `DeeBlackListKwds_Type' */
-			/* TODO: Support for `DeeBlackListKw_Type' */
+			/* TODO: Support for `DeeKwdsMapping_Type` */
+			/* TODO: Support for `DeeBlackListKwds_Type` */
+			/* TODO: Support for `DeeBlackListKw_Type` */
 
 			/* Unknown keywords type (better be safe than sorry) */
 			goto nope;
@@ -311,7 +311,7 @@ ob_is_const_cmp(DeeObject *a, DeeObject *b) {
 	if (tp != Dee_TYPE(b))
 		return false;
 	/* NOTE: No need to check for NE, GR, GE -- those are always present when their
-	 *       logical inverse is present due to `default__ne__with__eq', ... */
+	 *       logical inverse is present due to `default__ne__with__eq`, ... */
 	has_eq = DeeType_HasOperator(tp, OPERATOR_EQ);
 	has_lo = DeeType_HasOperator(tp, OPERATOR_LO);
 	has_le = DeeType_HasOperator(tp, OPERATOR_LE);
@@ -401,7 +401,7 @@ nope:
 }
 
 
-/* Check if the condition from `flags & METHOD_FCONSTCALL_IF_MASK' is
+/* Check if the condition from `flags & METHOD_FCONSTCALL_IF_MASK` is
  * fulfilled when applied to the given argument list (which does not
  * include the "this" argument, if there would have been one). */
 PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool

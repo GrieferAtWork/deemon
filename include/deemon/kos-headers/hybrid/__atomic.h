@@ -442,7 +442,7 @@ __DECL_END
 #define __hybrid_atomic_load        __hybrid_atomic_load
 #define __hybrid_atomic_store       __hybrid_atomic_store
 #define __hybrid_atomic_xch         __hybrid_atomic_xch
-/* @param: fail: Must be `<= succ' and cannot be `__ATOMIC_RELEASE' or `__ATOMIC_ACQ_REL' */
+/* @param: fail: Must be `<= succ` and cannot be `__ATOMIC_RELEASE` or `__ATOMIC_ACQ_REL` */
 #define __hybrid_atomic_cmpxch      __hybrid_atomic_cmpxch
 #define __hybrid_atomic_cmpxch_weak __hybrid_atomic_cmpxch_weak
 #define __hybrid_atomic_cmpxch_val  __hybrid_atomic_cmpxch_val
@@ -936,7 +936,7 @@ template<class __ITS_T> typename ::__intern::____INTELLISENSE_enableif< ::__inte
 #elif __has_builtin(__sync_bool_compare_and_swap) || __has_builtin(__sync_val_compare_and_swap)
 /* __sync_xxx()  (compiler-detected)
  * Note that  for full  support, the  compiler must  at least  provide
- * `__sync_bool_compare_and_swap()' or `__sync_val_compare_and_swap()' */
+ * `__sync_bool_compare_and_swap()` or `__sync_val_compare_and_swap()` */
 #if __has_builtin(__sync_bool_compare_and_swap)
 #define __hybrid_atomic_cmpxch_seq_cst(p, oldval, newval) \
 	__sync_bool_compare_and_swap(p, oldval, newval)
@@ -1064,7 +1064,7 @@ template<class __ITS_T> typename ::__intern::____INTELLISENSE_enableif< ::__inte
 /* Fallback: Emit compiler barriers to implement atomic signal fencing.
  * HINT: If available, compiler barriers are implemented using intrinsic
  *       signal fences, meaning that they are literally the same  thing.
- * e.g.: When hosted by msvc, stuff like `_ReadWriteBarrier()' will appear below. */
+ * e.g.: When hosted by msvc, stuff like `_ReadWriteBarrier()` will appear below. */
 #ifdef __COMPILER_BARRIERS_ALL_IDENTICAL
 #define __hybrid_atomic_signal_fence(order) __COMPILER_BARRIER()
 #else /* __COMPILER_BARRIERS_ALL_IDENTICAL */
@@ -1084,7 +1084,7 @@ template<class __ITS_T> typename ::__intern::____INTELLISENSE_enableif< ::__inte
 #endif /* !__hybrid_atomic_lockfree */
 #endif /* __CC__ */
 
-/* Determine the lock-free-ness of a type with size `x'
+/* Determine the lock-free-ness of a type with size `x`
  * @return: 0: Never lock-free
  * @return: 1: Sometimes lock-free
  * @return: 2: Always lock-free */

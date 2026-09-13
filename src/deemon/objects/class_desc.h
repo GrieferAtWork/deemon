@@ -86,7 +86,7 @@ typedef struct {
 	                                    * NOTE: This may be a super-object, in which case the referenced
 	                                    *       object table refers to the described super-type. */
 	struct Dee_instance_desc *ot_desc; /* [1..1][valid_if(ot_size != 0)][const] The referenced instance descriptor. */
-	uint16_t                  ot_size; /* [const] The length of the object table contained within `ot_desc' */
+	uint16_t                  ot_size; /* [const] The length of the object table contained within `ot_desc` */
 } ObjectTable;
 
 INTDEF DeeTypeObject ObjectTable_Type;

@@ -295,12 +295,12 @@ INTERN WUNUSED NONNULL((1)) int
 			if (begin->a_type == AST_CONSTEXPR) {
 				DeeObject *begin_index = begin->a_constexpr;
 				if (DeeNone_Check(begin_index)) {
-					/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
+					/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop` */
 					if (end->a_type == AST_CONSTEXPR &&
 					    DeeInt_Check(end->a_constexpr) &&
 					    DeeInt_TryAsInt32(end->a_constexpr, &index) &&
 					    index >= INT16_MIN && index <= INT16_MAX) {
-						/* `setrange pop, none, $<Simm16>, pop' */
+						/* `setrange pop, none, $<Simm16>, pop` */
 #ifdef LEAVE
 						DO(asm_putddi(self));
 						if (PUSH_RESULT) {
@@ -311,7 +311,7 @@ INTERN WUNUSED NONNULL((1)) int
 #endif /* LEAVE */
 						goto done;
 					}
-					/* `setrange pop, none, pop, pop' */
+					/* `setrange pop, none, pop, pop` */
 #ifdef ENTER
 					DO(ast_genasm_one(end, ASM_G_FPUSHRES)); /* STACK: base, end */
 #else /* ENTER */
@@ -331,7 +331,7 @@ INTERN WUNUSED NONNULL((1)) int
 						int32_t index2;
 						DeeObject *end_index = end->a_constexpr;
 						if (DeeNone_Check(end_index)) {
-							/* `setrange pop, $<Simm16>, none, pop' */
+							/* `setrange pop, $<Simm16>, none, pop` */
 #ifdef LEAVE
 							DO(asm_putddi(self));
 							if (PUSH_RESULT) {
@@ -345,7 +345,7 @@ INTERN WUNUSED NONNULL((1)) int
 						if (DeeInt_Check(end_index) &&
 						    DeeInt_TryAsInt32(end_index, &index2) &&
 						    index2 >= INT16_MIN && index2 <= INT16_MAX) {
-							/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
+							/* `setrange pop, $<Simm16>, $<Simm16>, pop` */
 #ifdef LEAVE
 							DO(asm_putddi(self));
 							if (PUSH_RESULT) {
@@ -370,10 +370,10 @@ INTERN WUNUSED NONNULL((1)) int
 					goto done;
 				}
 			} else if (end->a_type == AST_CONSTEXPR) {
-				/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop' */
+				/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop` */
 				DeeObject *end_index = end->a_constexpr;
 				if (DeeNone_Check(end_index)) {
-					/* `setrange pop, pop, none, pop' */
+					/* `setrange pop, pop, none, pop` */
 #ifdef ENTER
 					DO(ast_genasm_one(begin, ASM_G_FPUSHRES)); /* STACK: base, begin */
 #else /* ENTER */
@@ -389,7 +389,7 @@ INTERN WUNUSED NONNULL((1)) int
 				if (DeeInt_Check(end_index) &&
 				    DeeInt_TryAsInt32(end_index, &index) &&
 				    index >= INT16_MIN && index <= INT16_MAX) {
-					/* `setrange pop, pop, $<Simm16>, pop' */
+					/* `setrange pop, pop, $<Simm16>, pop` */
 #ifdef ENTER
 					DO(ast_genasm_one(begin, ASM_G_FPUSHRES)); /* STACK: base, begin */
 #else /* ENTER */
@@ -423,7 +423,7 @@ INTERN WUNUSED NONNULL((1)) int
 
 	case AST_CONSTEXPR:
 		/* Check for special case: store into a constant
-		 * expression `none' is the same as `pop' */
+		 * expression `none` is the same as `pop` */
 		if (!DeeNone_Check(self->a_constexpr))
 			goto default_case;
 #ifdef LEAVE

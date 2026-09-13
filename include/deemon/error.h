@@ -52,8 +52,8 @@ DDATDEF DeeTypeObject DeeError_Signal;
 
 /* Interrupt signal (cannot be caught using a normal catch-guard)
  * NOTE: In order for an exception handler to be able to process this
- *       signal, it must have the `Dee_EXCEPTION_HANDLER_FINTERPT' flag
- *       set (which can be added using the `@[interrupt]' tag):
+ *       signal, it must have the `Dee_EXCEPTION_HANDLER_FINTERPT` flag
+ *       set (which can be added using the `@[interrupt]` tag):
  * >> import Signal from deemon;
  * >> try {
  * >>    try {
@@ -84,9 +84,9 @@ DDATDEF DeeTypeObject DeeError_Signal;
  * truly catch everything, but rather only exceptions that would
  * seem obvious.
  * NOTE: To keep things as generic as possible, this behavior isn't actually
- *       specific to the `Signal.Interrupt' builtin type, but rather to any
- *       type that has the `TP_FINTERRUPT' flag set.
- * User-code can define their own interrupt-classes using the `@[interrupt]'
+ *       specific to the `Signal.Interrupt` builtin type, but rather to any
+ *       type that has the `TP_FINTERRUPT` flag set.
+ * User-code can define their own interrupt-classes using the `@[interrupt]`
  * tag (yes: the same tag that's also used to mark interrupt-catch blocks):
  * >> @[interrupt]
  * >> class MyInterrupt { }
@@ -94,16 +94,16 @@ DDATDEF DeeTypeObject DeeError_Signal;
  * >> try {
  * >>     throw MyInterrupt();
  * >> } @[interrupt] catch (e...) {
- * >>     print e; // `MyInterrupt'
+ * >>     print e; // `MyInterrupt`
  * >> }
  * >>
- * Note however that types derived from `Signal.Interrupt' still have a
+ * Note however that types derived from `Signal.Interrupt` still have a
  * minor special behavior in that a thread callback exiting by throwing
  * an instance of it or a derived class will not cause the thread to be
  * considered having crashed, but rather having exited normally, and
- * returning `none'.
+ * returning `none`.
  * WARNING: Be careful how you use interrupts, because the runtime will
- *          attempt to broadcast a `Signal.Interrupt' when trying to
+ *          attempt to broadcast a `Signal.Interrupt` when trying to
  *          terminate any thread that is still running during shutdown. */
 DDATDEF DeeTypeObject /**/ DeeError_Interrupt;
 DDATDEF DeeTypeObject /*    */ DeeError_KeyboardInterrupt;
@@ -171,22 +171,22 @@ DDATDEF DeeTypeObject /*        */ DeeError_BusyFile;
 
 
 /* A very special error type that doesn't actually derive from
- * `Error', or even `object' for that matter. It does however
- * have the `TP_FINTERRUPT' flag set, meaning that it can only
+ * `Error`, or even `object` for that matter. It does however
+ * have the `TP_FINTERRUPT` flag set, meaning that it can only
  * be caught by interrupt-enabled exception handlers.
  *
  * The main purpose of this error is to allow user-code to throw
- * it (the type is accessible as `(Error from deemon).AppExit'),
+ * it (the type is accessible as `(Error from deemon).AppExit`),
  * while also providing for proper stack unwinding and correct
  * destruction of all existing objects.
  *
  * The implementation's main() function should then terminate by
- * returning the contained `ae_exitcode' value. Note that this
+ * returning the contained `ae_exitcode` value. Note that this
  * type is final, meaning that user-classes cannot be further
  * derived from it.
  *
  * Additionally, this type of error is used by the builtin
- * implementation of `exit()' when deemon was built without
+ * implementation of `exit()` when deemon was built without
  * support for a native exit function. */
 DDATDEF DeeTypeObject DeeError_AppExit;
 struct Dee_appexit_object {
@@ -203,9 +203,9 @@ struct Dee_threadexit_object {
 #define DeeThreadExit_Check(ob)  DeeObject_InstanceOfExact(ob, &DeeError_ThreadExit)
 #define DeeThreadExit_Result(ob) Dee_REQUIRES_OBJECT(struct Dee_threadexit_object, ob)->te_result
 
-/* Object header for types derived from `DeeError_Error'
- * Note that types derived from `DeeError_Signal' don't have any special header.
- * Special object heads for other error types can be found in `error_types.h' */
+/* Object header for types derived from `DeeError_Error`
+ * Note that types derived from `DeeError_Signal` don't have any special header.
+ * Special object heads for other error types can be found in `error_types.h` */
 #define Dee_ERROR_OBJECT_HEAD                                          \
 	Dee_OBJECT_HEAD                                                    \
 	DREF DeeObject *e_msg;   /* [0..1][const] Error message string. */ \
@@ -224,7 +224,7 @@ DDATDEF DeeObject DeeError_StopIteration_instance;
 DDATDEF DeeObject DeeError_Interrupt_instance;
 #endif /* !GUARD_DEEMON_OBJECTS_ERROR_TYPES_C */
 
-/* Try to catch (and thereby handle) an instance of `type',
+/* Try to catch (and thereby handle) an instance of `type`,
  * returning true if doing so was possible.
  * Upon success, the actual error object thrown is discarded during this process. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
@@ -232,22 +232,22 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict
  *       such that the original exception becomes the "cause" of
  *       the new exception wherever a different error is thrown */
 
-/* Same as `DeeError_Catch()', but returns the actual, caught
+/* Same as `DeeError_Catch()`, but returns the actual, caught
  * error on success, or "NULL" if no error was thrown, or the
- * currently thrown error doesn't implement `type'. */
+ * currently thrown error doesn't implement `type`. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeError_CatchError(DeeTypeObject *__restrict type);
 
-/* Throw a given object `error' as an error.
- * @return: -1: Always returns `-1' */
+/* Throw a given object `error` as an error.
+ * @return: -1: Always returns `-1` */
 DFUNDEF ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_Throw)(DeeObject *__restrict error);
 DFUNDEF ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_ThrowInherited)(/*inherit(always)*/ DREF DeeObject *__restrict error);
 
-/* Throw a new error of type `tp', using a printf-formatted
- * message passed through `format' and varargs.
- * @return: -1: Always returns `-1'*/
+/* Throw a new error of type `tp`, using a printf-formatted
+ * message passed through `format` and varargs.
+ * @return: -1: Always returns `-1`*/
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DeeError_Throwf)(DeeTypeObject *__restrict tp,
                   char const *__restrict format, ...);
@@ -267,11 +267,11 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 /* Return the currently effective error, or NULL if none is. */
 DFUNDEF WUNUSED DeeObject *DCALL DeeError_Current(void);
 
-/* Check if the current exception is an instance of `tp' */
+/* Check if the current exception is an instance of `tp` */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeError_CurrentIs(DeeTypeObject *__restrict tp);
 
-/* Handle an error and print it, alongside a human-readable message to `stderr'
+/* Handle an error and print it, alongside a human-readable message to `stderr`
  * @param: handle_errors: Describes how (if at all) errors should be handled.
  * @param: reason: When non-NULL, a message explaining the reason for the exception is being handled.
  * @return: true:  The current (or previous) error was printed.
@@ -279,15 +279,15 @@ DeeError_CurrentIs(DeeTypeObject *__restrict tp);
 DFUNDEF bool DCALL
 DeeError_Print(char const *reason, unsigned int handle_errors);
 #define Dee_ERROR_PRINT_DONTHANDLE 0 /* Don't handle errors (only print them) */
-#define Dee_ERROR_PRINT_DOHANDLE   1 /* Handle errors with `ERROR_HANDLED_RESTORE' */
-#define Dee_ERROR_PRINT_HANDLEINTR 2 /* Handle errors with `ERROR_HANDLED_INTERRUPT' */
+#define Dee_ERROR_PRINT_DOHANDLE   1 /* Handle errors with `ERROR_HANDLED_RESTORE` */
+#define Dee_ERROR_PRINT_HANDLEINTR 2 /* Handle errors with `ERROR_HANDLED_INTERRUPT` */
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
 DFUNDEF NONNULL((2)) void DCALL
 DeeError_Display(/*utf-8*/ char const *reason,
                  DeeObject *error, DeeObject *traceback);
 
-/* Underlying function used to implement "DeeError_Display()" and `Error.display()'
+/* Underlying function used to implement "DeeError_Display()" and `Error.display()`
  * This function handles all the formatting / wrapping of errors and-the-like...
  * CAUTION: This function is itself allowed to throw errors! */
 DFUNDEF WUNUSED NONNULL((2, 4)) Dee_ssize_t DCALL
@@ -296,13 +296,13 @@ DeeError_DisplayImpl(/*utf-8*/ char const *reason,
                      Dee_formatprinter_t printer, void *arg);
 
 /* Handle the current error, discarding it in the process.
- * @param: mode:   One of `ERROR_HANDLED_*'
+ * @param: mode:   One of `ERROR_HANDLED_*`
  * @return: true:  The current error was handled.
  * @return: false: No error could be handled. */
 DFUNDEF bool (DCALL DeeError_Handled)(unsigned int mode);
-#define Dee_ERROR_HANDLED_NORMAL    0x0000 /* Only handle non-interrupt exceptions (return `false' if the current error is an interrupt). */
+#define Dee_ERROR_HANDLED_NORMAL    0x0000 /* Only handle non-interrupt exceptions (return `false` if the current error is an interrupt). */
 #define Dee_ERROR_HANDLED_RESTORE   0x0001 /* Handle non-interrupt exceptions normally, and re-schedule interrupt exceptions
-                                            * to-be delivered once again the next time `DeeThread_CheckInterrupt()' is called. */
+                                            * to-be delivered once again the next time `DeeThread_CheckInterrupt()` is called. */
 #define Dee_ERROR_HANDLED_INTERRUPT 0x0002 /* Handle any type of error, including interrupts. */
 
 

@@ -144,7 +144,7 @@ error_ilseq:
 			return (size_t)-1;
 		}
 	}
-	/* Incomplete sequence (but `mbs' may have been updated) */
+	/* Incomplete sequence (but `mbs` may have been updated) */
 	return (size_t)-2;
 done_empty_chk_surrogate:
 	if ((resch >= 0xd800 && resch <= 0xdfff) || (resch >= 0x10000)) {
@@ -269,7 +269,7 @@ error_ilseq:
 			return (size_t)-1;
 		}
 	}
-	/* Incomplete sequence (but `mbs' may have been updated) */
+	/* Incomplete sequence (but `mbs` may have been updated) */
 	return (size_t)-2;
 done_empty:
 	mbs->mb_word = LIBICONV_MBSTATE_TYPE_EMPTY;

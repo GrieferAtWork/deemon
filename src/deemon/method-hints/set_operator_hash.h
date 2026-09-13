@@ -42,7 +42,7 @@ default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #define DEFINED_set_handle_hash_error
 PRIVATE NONNULL((1)) Dee_hash_t DCALL
 set_handle_hash_error(DeeObject *self) {
-	DeeError_Print("Unhandled error in `Set.operator hash'",
+	DeeError_Print("Unhandled error in `Set.operator hash`",
 	               ERROR_PRINT_DOHANDLE);
 	return DeeObject_HashGeneric(self);
 }
@@ -67,7 +67,7 @@ __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 err:
 	return set_handle_hash_error(self);
 }}
-%{$with__map_operator_foreach_pair = /* Map hashing just does `DeeHash_Combine(key, value)',
+%{$with__map_operator_foreach_pair = /* Map hashing just does `DeeHash_Combine(key, value)`,
                                       * which is also what DeeObject_Hash(key_and_value_tuple)
                                       * would do, so we can re-use that hash function here. */
 	"default__map_operator_hash__with__map_operator_foreach_pair"}

@@ -27,15 +27,15 @@ print none;   /* none */
 print true;   /* true */
 print false;  /* false */
 
-/* Both `true' and `false' should be self-explanatory. They are simply
+/* Both `true` and `false` should be self-explanatory. They are simply
  * the 2 possible incarnations of the boolean singleton object, and are
  * commonly used as return values for comparison operators, or function
  * results. */
 
-/* `none' on the other hand is a no-op / placeholder singleton with a
+/* `none` on the other hand is a no-op / placeholder singleton with a
  * variety of special meanings: */
 local x = 42;
-print x is none; /* false -- alias for `x is type none' or `x === none' */
+print x is none; /* false -- alias for `x is type none` or `x === none` */
 
 /* Using none in an unpack-expression always produces the required number of results,
  * which is something that cannot be done using any other kind of object. */
@@ -43,20 +43,20 @@ local x, y, z = none...;
 print x, y, z; /* none none none */
 
 
-/* `none' implements any arbitrary attribute and all operators by
+/* `none` implements any arbitrary attribute and all operators by
  * simply re-returning itself (it's the ultimate no-op after all). */
 print (none.foo.bar.whatever + 7) * 3; /* none */
 
-/* `none' is often used as a placeholder for unassigned variables,
+/* `none` is often used as a placeholder for unassigned variables,
  * or in functions as fallback for default-arguments. */
 
 
-/* Using `none' as the target of a file-targeted print expression
+/* Using `none` as the target of a file-targeted print expression
  * causes the results of the print to be discarded. */
 print none: x, y, z;
 
 
-/* `none' can also be used to discard a specific value in an unpack expression */
+/* `none` can also be used to discard a specific value in an unpack expression */
 local values = (10, 20, 30);
 local x, none, y = values...;
 print x, y; /* 10 30 */
@@ -70,18 +70,18 @@ print x, y; /* 10 30 */
 
 local x = "foobar";
 
-print x.this;  /* Same as `x' */
-print x.super; /* Same as `x as x.class.__base__' */
-print x.class; /* Same as `string' (differs from `type(x)' in that the viewed type is returned for super-wrappers) */
+print x.this;  /* Same as `x` */
+print x.super; /* Same as `x as x.class.__base__` */
+print x.class; /* Same as `string` (differs from `type(x)` in that the viewed type is returned for super-wrappers) */
 print x.operator + ("baz"); /* Same as `x + "baz"' */
 
-/* Note that the `operator' attribute is very special, in that
+/* Note that the `operator` attribute is very special, in that
  * it can be used to construct bound operator functions. */
 local y = x.operator +;
 print y("1234");   /* foobar1234 */
 print y("barfoo"); /* foobarbarfoo */
 
-/* Also note that `operator <name>' can also be used by itself. */
+/* Also note that `operator <name>` can also be used by itself. */
 local opadd = operator +;
 print opadd(x, "1234"); /* foobar1234 */
 

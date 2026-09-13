@@ -87,7 +87,7 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #endif /* _MSC_VER */
 
 #if (defined(EXEC_SAFE) + defined(EXEC_FAST)) != 1
-#error "Invalid configuration. - Must either define `EXEC_SAFE' or `EXEC_FAST'"
+#error "Invalid configuration. - Must either define `EXEC_SAFE` or `EXEC_FAST`"
 #endif /* (EXEC_SAFE + EXEC_FAST) != 1 */
 
 /* Figure out how we want to implement the big instruction jump tables. */
@@ -96,7 +96,7 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #undef exec_dispatch_USE_switch_goto
 #if defined(__GNUC__)
 /* Apparently, just checking __GNUC__ is the most portable way of checking
- * support for `&&foo' and `goto *ptr'. This handles GCC, clang and ICC,
+ * support for `&&foo` and `goto *ptr`. This handles GCC, clang and ICC,
  * and also works for all ancient version of those compilers, too, since
  * addressable labels have been in GCC since the 2.0 days of the early 90s. */
 #define exec_dispatch_USE_goto
@@ -387,7 +387,7 @@ ill_instr:
 }
 
 
-/* NOTE: A reference to `value' is _always_ inherited */
+/* NOTE: A reference to `value` is _always_ inherited */
 #ifdef EXEC_FAST
 #define set_prefix_object(v) unlikely(set_prefix_object_fast(frame, code, sp, v))
 PRIVATE int ATTR_FASTCALL
@@ -580,7 +580,7 @@ ill_instr:
 	return 0;
 }
 
-/* NOTE: A reference to `value' is only inherited upon success (return != NULL) */
+/* NOTE: A reference to `value` is only inherited upon success (return != NULL) */
 #ifdef EXEC_FAST
 #define xch_prefix_object(v) xch_prefix_object_fast(frame, code, sp, v)
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
@@ -775,7 +775,7 @@ ill_instr:
 }
 
 
-/* NOTE: A reference to `newvalue' is only inherited upon success (return > 0)
+/* NOTE: A reference to `newvalue` is only inherited upon success (return > 0)
  * @return: > 0:  Success
  * @return: == 0: Failure
  * @return: < 0:  Error (only in SAFE-mode)
@@ -1048,7 +1048,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	 * >> {
 	 * >>     int y = 5;
 	 * >>     printf("%p\n", &y); // Regardless of optimization level, MSVC refuses to have
-	 * >>                         // `y' share the same memory location with `x', even though
+	 * >>                         // `y` share the same memory location with `x`, even though
 	 * >>                         // the C standard 100% allows a compiler to do this.
 	 * >> }
 	 *
@@ -1069,7 +1069,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	 * Anyways: since I can't change what has already been decided, and since this
 	 * ERROR (Yes, I'd call this an actual compiler Error) probably will never get
 	 * fixed because MS is way too stuck in its ways, the only thing we can do is
-	 * try to use the same variable for all the usage instances of `prefix_ob'
+	 * try to use the same variable for all the usage instances of `prefix_ob`
 	 */
 	DREF DeeObject *prefix_ob;
 #define USING_PREFIX_OBJECT /* nothing */
@@ -1089,7 +1089,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 #endif /* (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
-	/* Limit `this_thread->t_execsz' and throw an
+	/* Limit `this_thread->t_execsz` and throw an
 	 * Error.RuntimeError.StackOverflow' if it exceeds that limit. */
 	if unlikely(this_thread->t_execsz >= DeeExec_StackLimit) {
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
@@ -1326,12 +1326,12 @@ next_instr:
 				Dee_Decref(frame->cf_result);
 			if (code->co_flags & Dee_CODE_FYIELDING) {
 				/* Rewind the instruction pointer to potentially re-execute
-				 * `ASM_RET_NONE' and return `ITER_DONE' once again, should
+				 * `ASM_RET_NONE` and return `ITER_DONE` once again, should
 				 * the caller attempt to invoke us again. */
 				REPEAT_INSTRUCTION();
 				frame->cf_result = ITER_DONE;
 			} else {
-				/* Non-yielding `ASM_RET_NONE': Simply return `none' to the caller. */
+				/* Non-yielding `ASM_RET_NONE`: Simply return `none` to the caller. */
 				frame->cf_result = DeeNone_NewRef();
 			}
 			goto end_return;
@@ -1339,7 +1339,7 @@ next_instr:
 
 		TARGET(ASM_RET, -1, +0) {
 			/* Check if we're overwriting a previous return value
-			 * (which can happen when `return' appears in a finally-block) */
+			 * (which can happen when `return` appears in a finally-block) */
 			if (ITER_ISOK(frame->cf_result))
 				Dee_Decref(frame->cf_result);
 			frame->cf_result = POP();
@@ -2194,8 +2194,8 @@ do_push_module:
 
 		TARGET(ASM_INSTANCEOF, -2, +1) {
 			unsigned int is_instance;
-			/* Special case: The deemon specs allow `none' to be
-			 *               written as the second argument to `is' */
+			/* Special case: The deemon specs allow `none` to be
+			 *               written as the second argument to `is` */
 			if (DeeNone_Check(FIRST)) {
 				is_instance = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
@@ -2212,8 +2212,8 @@ do_push_module:
 
 		TARGET(ASM_IMPLEMENTS, -2, +1) {
 			unsigned int is_implemented;
-			/* Special case: The deemon specs allow `none' to be
-			 *               written as the second argument to `is' */
+			/* Special case: The deemon specs allow `none` to be
+			 *               written as the second argument to `is` */
 			if (DeeNone_Check(FIRST)) {
 				is_implemented = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
@@ -2242,14 +2242,14 @@ do_push_module:
 			DREF DeeObject *temp;
 			switch (*ip.u8) {
 
-			/* Required handling for object repr streaming into a file via `<<' */
+			/* Required handling for object repr streaming into a file via `<<` */
 			case ASM_SHL: {
 				DREF DeeObject *other;
 				DeeNO_shl_t tp_shl;
 				++ip.u8;
 				tp_shl = DeeType_RequireNativeOperator(Dee_TYPE(SECOND), shl);
 				if (tp_shl == &file_shl) {
-					/* Special case: `fp << repr foo'
+					/* Special case: `fp << repr foo`
 					 * In this case, we can do a special optimization
 					 * to directly print the repr to the file. */
 					if (DeeObject_PrintRepr(TOP, (Dee_formatprinter_t)&DeeFile_WriteAll, SECOND) < 0)
@@ -3354,7 +3354,7 @@ do_setitem_c:
 			 *            utility to inspect and/or modify our frame before either
 			 *            raising an exception, or passing control back to running code.
 			 * HINT: The idea for breakpoints is for some utility to replace opcodes
-			 *       that the runtime should pause at with `ASM_BREAKPOINT' instructions,
+			 *       that the runtime should pause at with `ASM_BREAKPOINT` instructions,
 			 *       causing it to halt and pass control over to said utility which
 			 *       will then be able to restore the original byte that was replaced
 			 *       with the breakpoint instruction.
@@ -3363,7 +3363,7 @@ do_setitem_c:
 			 *       instruction with a breakpoint (or in the case of a branch: the next
 			 *       instruction, as well as the branch target), allowing code to be
 			 *       executed an-instruction-at-a-time.
-			 *       Even unpredictable instruction like `ASM_JMP_POP' or `ASM_JMP_POP_POP'
+			 *       Even unpredictable instruction like `ASM_JMP_POP` or `ASM_JMP_POP_POP`
 			 *       become predictable with this, as the debugger can simply evaluate
 			 *       the stack to see where they will branch to! */
 			sp     = frame->cf_sp;
@@ -3402,7 +3402,7 @@ do_setitem_c:
 					frame->cf_result = ITER_DONE;
 				} else {
 					ASSERT(frame->cf_result != ITER_DONE);
-					/* Return `none' when no return value has been set. */
+					/* Return `none` when no return value has been set. */
 					if (!frame->cf_result)
 						frame->cf_result = DeeNone_NewRef();
 				}
@@ -4101,7 +4101,7 @@ do_setattr_this_c:
 
 
 
-		/* Opcodes for misc/rarely used operators (Prefixed by `ASM_EXTENDED1'). */
+		/* Opcodes for misc/rarely used operators (Prefixed by `ASM_EXTENDED1`). */
 		RAW_TARGET(ASM_EXTENDED1) {
 
 #ifdef exec_dispatch_USE_switch
@@ -4131,7 +4131,7 @@ do_setattr_this_c:
 					if (this_thread->t_exceptsz > except_recursion + nth_except + 1) {
 						struct Dee_except_frame **p_except_frame, *Dee_except_frame;
 
-						/* We're allowed to handle the `nth_except' exception. */
+						/* We're allowed to handle the `nth_except` exception. */
 						p_except_frame = &this_thread->t_except;
 						do {
 							Dee_except_frame = *p_except_frame;
@@ -4163,7 +4163,7 @@ do_setattr_this_c:
 					if (frame->cf_result != NULL)
 						goto end_return;
 
-					/* Check for errors, but only handle them if there are more than `min_except+1'. */
+					/* Check for errors, but only handle them if there are more than `min_except+1`. */
 					if (this_thread->t_exceptsz > except_recursion + min_except + 1)
 						HANDLE_EXCEPT();
 					DISPATCH();
@@ -4317,7 +4317,7 @@ do_setattr_this_c:
 				}
 
 				RAW_TARGET(ASM_CALL_SEQ) {
-					/* Sequence constructor invocation (Implemented using `_SharedVector'). */
+					/* Sequence constructor invocation (Implemented using `_SharedVector`). */
 					USING_PREFIX_OBJECT
 					uint8_t n_args = READ_imm8();
 					DREF DeeObject *callback_result;
@@ -4325,9 +4325,9 @@ do_setattr_this_c:
 					prefix_ob = DeeSharedVector_NewShared(n_args, sp - n_args);
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
-					sp -= n_args; /* These operands have been inherited `DeeSharedVector_NewShared' */
+					sp -= n_args; /* These operands have been inherited `DeeSharedVector_NewShared` */
 					/* Invoke the object that is now located in TOP
-					 * For this invocation, we pass only a single argument `prefix_ob' */
+					 * For this invocation, we pass only a single argument `prefix_ob` */
 					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&prefix_ob);
 					DeeSharedVector_Decref(prefix_ob);
 					if unlikely(!callback_result)
@@ -4339,7 +4339,7 @@ do_setattr_this_c:
 				}
 
 				RAW_TARGET(ASM_CALL_MAP) {
-					/* Dict-style sequence constructor invocation (Implemented using `_sharedkeyvector'). */
+					/* Dict-style sequence constructor invocation (Implemented using `_sharedkeyvector`). */
 					USING_PREFIX_OBJECT
 					uint8_t n_args = READ_imm8();
 					DREF DeeObject *callback_result;
@@ -4350,10 +4350,10 @@ do_setattr_this_c:
 					prefix_ob = DeeSharedMap_NewShared(n_args, (DeeSharedItem *)(sp - n_args * 2));
 					if unlikely(!prefix_ob)
 						HANDLE_EXCEPT();
-					sp -= n_args * 2; /* These operands have been inherited `DeeSharedVector_NewShared' */
+					sp -= n_args * 2; /* These operands have been inherited `DeeSharedVector_NewShared` */
 
 					/* Invoke the object that is now located in TOP
-					 * For this invocation, we pass only a single argument `prefix_ob' */
+					 * For this invocation, we pass only a single argument `prefix_ob` */
 					callback_result = DeeObject_Call(TOP, 1, (DeeObject **)&prefix_ob);
 					DeeSharedMap_Decref(prefix_ob);
 					if unlikely(!callback_result)
@@ -4875,11 +4875,11 @@ do_cmpxch_ub_c:
 						if unlikely(!ob_end)
 							HANDLE_EXCEPT();
 #if 1 /* Both versions will result in the same behavior, but this        \
-       * one is faster in the current implementation because `int'       \
+       * one is faster in the current implementation because `int`       \
        * actually doesn't implement inplace operations, meaning          \
-       * that `tp_inc()' would otherwise have to be substitued with      \
-       * a call to `tp_add()' using `DeeInt_One' during every iteration. \
-       * By passing `DeeInt_One' now, we can skip those checks later! */
+       * that `tp_inc()` would otherwise have to be substitued with      \
+       * a call to `tp_add()` using `DeeInt_One` during every iteration. \
+       * By passing `DeeInt_One` now, we can skip those checks later! */
 						range_object = DeeRange_New(DeeInt_Zero, ob_end, DeeInt_One);
 #else
 						range_object = DeeRange_New(DeeInt_Zero, ob_end, NULL);
@@ -5321,7 +5321,7 @@ do_pack_dict:
 						goto err_end_finally_except_no_exception_present;
 #else /* EXEC_SAFE */
 					ASSERTF(except_recursion != this_thread->t_exceptsz,
-					        "No active exception in `ASM_ENDFINALLY_EXCEPT'");
+					        "No active exception in `ASM_ENDFINALLY_EXCEPT`");
 #endif /* !EXEC_SAFE */
 					HANDLE_EXCEPT();
 				}
@@ -6222,7 +6222,7 @@ prefix_do_unpack:
 					DISPATCH();
 				}
 
-				/* Always allow `noop' instructions to be used with a prefix. */
+				/* Always allow `noop` instructions to be used with a prefix. */
 				PREFIX_RAW_TARGET(ASM_DELOP)
 				PREFIX_RAW_TARGET(ASM_NOP)
 					DISPATCH();
@@ -6624,7 +6624,7 @@ do_prefix_push_local:
 					if unlikely(!value)
 						HANDLE_EXCEPT();
 					/* Check if we're overwriting a previous return value
-					 * (which can happen when `return' appears in a finally-block) */
+					 * (which can happen when `return` appears in a finally-block) */
 					if (ITER_ISOK(frame->cf_result))
 						Dee_Decref(frame->cf_result);
 					frame->cf_result = value;
@@ -7261,7 +7261,7 @@ unknown_instruction:
 	}
 
 	/* Opcode handlers must continue execution using
-	 * `DISPATCH()', so we must not be able to get here. */
+	 * `DISPATCH()`, so we must not be able to get here. */
 	__builtin_unreachable();
 
 	{
@@ -7325,7 +7325,7 @@ end_nounhook:
 				uint16_t num_discard = (uint16_t)(this_thread->t_exceptsz - (except_recursion + 1));
 				/* XXX: If we got here because of an interrupt exception,
 				 *      having that exception be re-scheduled as a pending
-				 *      interrupt may trigger `DeeThread_CheckInterrupt()'
+				 *      interrupt may trigger `DeeThread_CheckInterrupt()`
 				 *      of the I/O code used to print the error message,
 				 *      thus causing an infinite loop? */
 				do {
@@ -7434,7 +7434,7 @@ exec_except:
 				while (cur_depth--)
 					POPREF();
 			} else /*if (cur_depth < new_depth)*/ {
-				/* Push `none' to adjust the stack. */
+				/* Push `none` to adjust the stack. */
 				new_depth -= cur_depth;
 				while (new_depth--)
 					PUSHREF(Dee_None);
@@ -7503,7 +7503,7 @@ stack_fault:
 		}
 
 		/* Hook the new stack. */
-		frame->cf_stacksz = new_size; /* A non-zero `cf_stacksz' value indicates a heap stack! */
+		frame->cf_stacksz = new_size; /* A non-zero `cf_stacksz` value indicates a heap stack! */
 		sp                = new_stack + (sp - frame->cf_stack);
 		frame->cf_stack   = new_stack;
 		frame->cf_sp      = sp; /* Set a new frame-sp that is part of the actual stack. */
@@ -7524,7 +7524,7 @@ err_requires_string:
 		required_type = &DeeString_Type;
 illegal_type:
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Instruction requires an instance of `%k'",
+		                "Instruction requires an instance of `%k`",
 		                required_type);
 		HANDLE_EXCEPT();
 	}

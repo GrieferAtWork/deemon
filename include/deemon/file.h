@@ -112,7 +112,7 @@ DECL_BEGIN
 
 #define Dee_FILEIO_FNORMAL      0x0000 /* Normal I/O flags. */
 #define Dee_FILEIO_FNONBLOCKING 0x0001 /* Do not block when reading/writing data. */
-typedef unsigned int Dee_ioflag_t; /* Set of `Dee_FILEIO_F*' */
+typedef unsigned int Dee_ioflag_t; /* Set of `Dee_FILEIO_F*` */
 
 typedef struct Dee_filetype_object DeeFileTypeObject;
 typedef struct Dee_file_object {
@@ -133,19 +133,19 @@ typedef struct Dee_file_object {
 
 
 /* The underlying system file descriptor type. */
-/* When `CONFIG_HOST_WINDOWS' is defined:
+/* When `CONFIG_HOST_WINDOWS` is defined:
  *     HANDLE
- * else: When at least one of [`read', `write', [<some-other-functions-using-fds>]] exist:
+ * else: When at least one of [`read`, `write`, [<some-other-functions-using-fds>]] exist:
  *     int
- * else: When `FILE' is defined in `<stdio.h>':
- *     `FILE *' (stored as a `void *')
+ * else: When `FILE` is defined in `<stdio.h>`:
+ *     `FILE *` (stored as a `void *`)
  * else:
  *     int
  */
 
-#undef Dee_fd_t_IS_HANDLE /* Window's `HANDLE' (~ala `CreateFile()') */
-#undef Dee_fd_t_IS_int    /* Unix's `int'-style file handles (~ala `open(2)') */
-#undef Dee_fd_t_IS_FILE   /* Stdio's `FILE *' (~ala `fopen(3)') */
+#undef Dee_fd_t_IS_HANDLE /* Window's `HANDLE` (~ala `CreateFile()`) */
+#undef Dee_fd_t_IS_int    /* Unix's `int`-style file handles (~ala `open(2)`) */
+#undef Dee_fd_t_IS_FILE   /* Stdio's `FILE *` (~ala `fopen(3)`) */
 #if defined(DeeSystem_FILE_USE_nt_HANDLE)
 #define Dee_fd_t_IS_HANDLE
 #elif defined(DeeSystem_FILE_USE_unix_fd)
@@ -208,17 +208,17 @@ typedef void *Dee_fd_t; /* FILE * */
 
 
 #ifdef DEE_SOURCE
-#define FILE_OPERATOR_READ   OPERATOR_EXTENDED(0x0000) /* `operator read(buf: Bytes): int'  */
-#define FILE_OPERATOR_WRITE  OPERATOR_EXTENDED(0x0001) /* `operator write(buf: Bytes): int' */
-#define FILE_OPERATOR_SEEK   OPERATOR_EXTENDED(0x0002) /* `operator seek(off: int, whence: int): int' */
-#define FILE_OPERATOR_SYNC   OPERATOR_EXTENDED(0x0003) /* `operator sync()' */
-#define FILE_OPERATOR_TRUNC  OPERATOR_EXTENDED(0x0004) /* `operator trunc()'  or  `operator trunc(size: int)' */
-#define FILE_OPERATOR_CLOSE  OPERATOR_EXTENDED(0x0005) /* `operator close()' */
-#define FILE_OPERATOR_PREAD  OPERATOR_EXTENDED(0x0006) /* `operator pread(buf: Bytes, pos: int): int' */
-#define FILE_OPERATOR_PWRITE OPERATOR_EXTENDED(0x0007) /* `operator pwrite(buf: Bytes, pos: int): int' */
-#define FILE_OPERATOR_GETC   OPERATOR_EXTENDED(0x0008) /* `operator getc(): int' */
-#define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009) /* `operator ungetc(ch: int): int' */
-#define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a) /* `operator putc(ch: int): int' */
+#define FILE_OPERATOR_READ   OPERATOR_EXTENDED(0x0000) /* `operator read(buf: Bytes): int`  */
+#define FILE_OPERATOR_WRITE  OPERATOR_EXTENDED(0x0001) /* `operator write(buf: Bytes): int` */
+#define FILE_OPERATOR_SEEK   OPERATOR_EXTENDED(0x0002) /* `operator seek(off: int, whence: int): int` */
+#define FILE_OPERATOR_SYNC   OPERATOR_EXTENDED(0x0003) /* `operator sync()` */
+#define FILE_OPERATOR_TRUNC  OPERATOR_EXTENDED(0x0004) /* `operator trunc()`  or  `operator trunc(size: int)` */
+#define FILE_OPERATOR_CLOSE  OPERATOR_EXTENDED(0x0005) /* `operator close()` */
+#define FILE_OPERATOR_PREAD  OPERATOR_EXTENDED(0x0006) /* `operator pread(buf: Bytes, pos: int): int` */
+#define FILE_OPERATOR_PWRITE OPERATOR_EXTENDED(0x0007) /* `operator pwrite(buf: Bytes, pos: int): int` */
+#define FILE_OPERATOR_GETC   OPERATOR_EXTENDED(0x0008) /* `operator getc(): int` */
+#define FILE_OPERATOR_UNGETC OPERATOR_EXTENDED(0x0009) /* `operator ungetc(ch: int): int` */
+#define FILE_OPERATOR_PUTC   OPERATOR_EXTENDED(0x000a) /* `operator putc(ch: int): int` */
 #define FILE_OPERATOR_COUNT                    0x000b
 
 #define OPERATOR_FILE_0000_READ   FILE_OPERATOR_READ
@@ -239,31 +239,31 @@ struct Dee_filetype_object {
 
 	/* Read data from file
 	 * @param: bufsize: Read at most this many bytes into "buffer"
-	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @param: flags:   Set of `Dee_FILEIO_F*`
 	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer"
-	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING' is given and no data is available right now
+	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING` is given and no data is available right now
 	 * @return: (size_t)-1: An error was thrown */
 	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t
 	(DCALL *ft_read)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
 
 	/* Write data to file
 	 * @param: bufsize: Write at most this many bytes from "buffer"
-	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @param: flags:   Set of `Dee_FILEIO_F*`
 	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer".
-	 *                  When there is insufficient space for all `bufsize' bytes, this may be less
+	 *                  When there is insufficient space for all `bufsize` bytes, this may be less
 	 *                  than that.
 	 * @return: 0 :     Buf is entirely filled up or is unable to serve write-commands for some
 	 *                  other (file-specific) reason, or the file is full right now, but blocking
-	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING' was given.
+	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING` was given.
 	 * @return: (size_t)-1: An error was thrown */
 	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3) size_t
 	(DCALL *ft_write)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
 
-	/* Change position within the file (move pointer with which `ft_read' / `ft_write' interact)
-	 * @param: whence: One of `Dee_SEEK_*'
-	 * @param: off:    Offset added to the position specified by `whence'
+	/* Change position within the file (move pointer with which `ft_read` / `ft_write` interact)
+	 * @param: whence: One of `Dee_SEEK_*`
+	 * @param: off:    Offset added to the position specified by `whence`
 	 * @param: * :     The file's pointer position *after* the seek (as
-	 *                 an absolute offset usable with `Dee_SEEK_SET')
+	 *                 an absolute offset usable with `Dee_SEEK_SET`)
 	 * @param: (pos_t)-1: An error was thrown */
 	WUNUSED_T NONNULL_T((1)) Dee_pos_t
 	(DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
@@ -289,13 +289,13 @@ struct Dee_filetype_object {
 	(DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
 
 	/* Close the file. After a call to this function, behavior of all other
-	 * operators is weak-undefined (e.g. `ft_read' might throw an exception,
+	 * operators is weak-undefined (e.g. `ft_read` might throw an exception,
 	 * or might just indicate EOF).
 	 *
 	 * Note that this operator is *always* optional (any file that is not
 	 * closed explicitly will be closed automatically once its reference
 	 * count drops to zero). Additionally, "File.operator leave()" is
-	 * implemented to automatically call `ft_close'. However, you may still
+	 * implemented to automatically call `ft_close`. However, you may still
 	 * want to explicitly close a file in order to more easily control some
 	 * file-specific behavior related to closing (e.g. ipc.Pipe.Writer.close
 	 * will cause ipc.Pipe.Reader.read to stop blocking and indicate EOF).
@@ -305,29 +305,29 @@ struct Dee_filetype_object {
 	WUNUSED_T NONNULL_T((1)) int
 	(DCALL *ft_close)(DeeFileObject *__restrict self);
 
-	/* Same as `ft_read', but rather than reading data from the file's internal
-	 * pointer, the read happens at the absolute position specific by `pos'.
+	/* Same as `ft_read`, but rather than reading data from the file's internal
+	 * pointer, the read happens at the absolute position specific by `pos`.
 	 * @param: bufsize: Read at most this many bytes into "buffer"
 	 * @param: pos:     Position from which to read data.
-	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @param: flags:   Set of `Dee_FILEIO_F*`
 	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer"
-	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING' is given and no data is available right now
+	 * @return: 0 :     EOF, or `Dee_FILEIO_FNONBLOCKING` is given and no data is available right now
 	 * @return: (size_t)-1: An error was thrown */
 	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t
 	(DCALL *ft_pread)(DeeFileObject *self, void *buffer,
 	                  size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 
-	/* Same as `ft_write', but rather than writing data to the file's internal
-	 * pointer, the write happens at the absolute position specific by `pos'.
+	/* Same as `ft_write`, but rather than writing data to the file's internal
+	 * pointer, the write happens at the absolute position specific by `pos`.
 	 * @param: bufsize: Write at most this many bytes from "buffer"
 	 * @param: pos:     Position to which to write data.
-	 * @param: flags:   Set of `Dee_FILEIO_F*'
+	 * @param: flags:   Set of `Dee_FILEIO_F*`
 	 * @return: * :     Number of bytes read from the file, and consequently copied into "buffer".
-	 *                  When there is insufficient space for all `bufsize' bytes, this may be less
+	 *                  When there is insufficient space for all `bufsize` bytes, this may be less
 	 *                  than that.
 	 * @return: 0 :     Buf is entirely filled up or is unable to serve write-commands for some
 	 *                  other (file-specific) reason, or the file is full right now, but blocking
-	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING' was given.
+	 *                  isn't allowed because `Dee_FILEIO_FNONBLOCKING` was given.
 	 * @return: (size_t)-1: An error was thrown */
 	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3) size_t
 	(DCALL *ft_pwrite)(DeeFileObject *self, void const *buffer,
@@ -382,28 +382,28 @@ DDATDEF DeeFileTypeObject DeeFile_Type;
 
 /* Builtin system file sub-classes.
  * NOTE: When not implemented by the host, attempting to use these
- *       types will cause an `Error.RuntimeError.NotImplemented'. */
-DDATDEF DeeFileTypeObject DeeSystemFile_Type; /* A system file. (Usually contains a generic descriptor, such as `int', `HANDLE' or `FILE *') */
-DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created using `File.open(...)') */
+ *       types will cause an `Error.RuntimeError.NotImplemented`. */
+DDATDEF DeeFileTypeObject DeeSystemFile_Type; /* A system file. (Usually contains a generic descriptor, such as `int`, `HANDLE` or `FILE *`) */
+DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created using `File.open(...)`) */
 #define DeeSystemFile_Check(ob) DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeSystemFile_Type)
 
-/*  A buffering file that is basically what stdio's `FILE' is to a HANDLE/fd.
+/*  A buffering file that is basically what stdio's `FILE` is to a HANDLE/fd.
  * (Providing getc/ungetc and fully/line-buffered I/O operations)
  *  HINT: Any custom attribute of the underlying file is automatically forwarded.
  *  NOTE: Buffered files can be created using the type constructor:
  *        >> buffer(file base_stream, string mode = "write,sync,auto", size_t bufsize = 0);
  *           @param: mode:    One of "auto", "full", "line" or "none", optionally prefixed with:
- *                            - `w', `w-', `w,', `write,' or suffixed with `+' to make the buffer writable.
- *                            - `s', `s-', `s,', `sync,' to cause the underlying file to be synchronized whenever the buffer is.
- *                            When not given, default to `write,full'
+ *                            - `w`, `w-`, `w,`, `write,` or suffixed with `+` to make the buffer writable.
+ *                            - `s`, `s-`, `s,`, `sync,` to cause the underlying file to be synchronized whenever the buffer is.
+ *                            When not given, default to `write,full`
  *           @param: bufsize: Buffer size hint, or ZERO(0) to determine automatically.
- *        Buffering behavior can later be adjusted using `setvbuf()':
+ *        Buffering behavior can later be adjusted using `setvbuf()`:
  *        >> setbuf(string mode, size_t bufsize = 0) -> none;
  *           The argument are the same as for the constructor. */
 DDATDEF DeeFileTypeObject DeeFileBuffer_Type;
 
 
-/* HINT: All operator invocation functions below correctly handle `self' not being a file at all. */
+/* HINT: All operator invocation functions below correctly handle `self` not being a file at all. */
 
 /* File operator invocation.
  * @return: (size_t)-1: Error */
@@ -466,40 +466,40 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TPutcf(DeeTypeObject *tp_self, 
 /* Returns the total size of a given file stream.
  * If the file doesn't support retrieval of its
  * size, a NotImplemented error is thrown.
- * NOTE: This function is equivalent to calling a member function `size()',
+ * NOTE: This function is equivalent to calling a member function `size()`,
  *       which file objects default-implement by temporarily seeking to the
  *       end of the file and determining where that position is located at.
- * @return: * : The size of the given file `self' in bytes.
+ * @return: * : The size of the given file `self` in bytes.
  * @return: (Dee_pos_t)-1: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
 
 /* Check if the given file is an interactive device.
- * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
- *       invokes `self.isatty()' without arguments, casting the return value to bool.
- *       This function is used to implement the auto-buffering mode of `File.Buffer'
+ * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type` and
+ *       invokes `self.isatty()` without arguments, casting the return value to bool.
+ *       This function is used to implement the auto-buffering mode of `File.Buffer`
  * @return: Dee_HAS_YES: The file is a TTY
  * @return: Dee_HAS_NO:  The file isn't a TTY
  * @return: Dee_HAS_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
 
 /* Return the system file descriptor of the given file, or throw
- * an error and return `Dee_fd_INVALID' if the file was closed,
+ * an error and return `Dee_fd_INVALID` if the file was closed,
  * or doesn't refer to a file carrying a descriptor.
- * Note that this function queries the `Dee_fd_GETSET' attribute
- * of the given object, and always fails if `Dee_fd_GETSET' isn't
+ * Note that this function queries the `Dee_fd_GETSET` attribute
+ * of the given object, and always fails if `Dee_fd_GETSET` isn't
  * defined for the configuration used when deemon was built.
- * NOTE: This function doesn't require that `self' actually be
- *       derived from a `deemon.File'!
- * @return: * :             The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * NOTE: This function doesn't require that `self` actually be
+ *       derived from a `deemon.File`!
+ * @return: * :             The used system fD. (either a `HANDLE`, `fd_t` or `FILE *`)
  * @return: Dee_fd_INVALID: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restrict self);
 
 /* Retrieve and return the filename used to open the given file.
- * NOTE: This function automatically asserts that `self'
- *       is a `File', throwing a TypeError if it isn't.
- * For this purpose, `DeeSystemFile_Filename()' is invoked if `self'
- * is a system file, however if it isn't, `self.filename' will be
- * retrieved (using `operator getattr()') and after asserting the
+ * NOTE: This function automatically asserts that `self`
+ *       is a `File`, throwing a TypeError if it isn't.
+ * For this purpose, `DeeSystemFile_Filename()` is invoked if `self`
+ * is a system file, however if it isn't, `self.filename` will be
+ * retrieved (using `operator getattr()`) and after asserting the
  * result to be a string object, its value will be returned instead.
  * This function should be used by library functions that wish to
  * operate on a path, thus allowing them to accept file objects just
@@ -511,13 +511,13 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restri
  * >> } else {
  * >>     Dee_Incref(arg);
  * >> }
- * >> ... // Operate on a filename string `arg'
+ * >> ... // Operate on a filename string `arg`
  * >> Dee_Decref(arg); */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self);
 
 /* Read text from a file, a line or block at a time.
- * @param: readall: When true, keep trying to read data until `DeeFile_Read()'
+ * @param: readall: When true, keep trying to read data until `DeeFile_Read()`
  *                  actually returns ZERO(0), rather than stopping once it returns
  *                  something other than the then effective read buffer size.
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
@@ -536,8 +536,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytesf(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, Dee_ioflag_t flags, bool readall);
 
 
-/* HINT: `DeeFile_Printf' is literally implemented as
- *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
+/* HINT: `DeeFile_Printf` is literally implemented as
+ *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)`
  * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
@@ -574,16 +574,16 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintAllNl)(DeeObject *self, 
 
 
 /* Open a new system file.
- * @param: oflags: Set of `Dee_OPEN_F*'
+ * @param: oflags: Set of `Dee_OPEN_F*`
  * @param: mode:   Permissions that should be applied when a new file is created. (Ignored when not supported by the host)
  * NOTE: If the host doesn't not support a filesystem or the requested open-mode
  *      (like that's ever going to happen... - deemon being used somewhere without
- *       a filesystem, that is), an `Error.SystemError.UnsupportedAPI' is thrown.
+ *       a filesystem, that is), an `Error.SystemError.UnsupportedAPI` is thrown.
  * @return: * :        A new reference to the file in question.
  * @return: NULL:      An error (other than file-not-found) has occurred.
  * @return: ITER_DONE: The specified file does not exist.
- * @return: ITER_DONE: `Dee_OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
- * @return: ITER_DONE: `Dee_OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
+ * @return: ITER_DONE: `Dee_OPEN_FCREAT` has not been given and file could not be found (no error was thrown)
+ * @return: ITER_DONE: `Dee_OPEN_FEXCL` has been given and the file already exists (no error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
@@ -594,7 +594,7 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 #define Dee_OPEN_FRDWR     0x00000002 /* Open for reading + writing. */
 #define Dee_OPEN_FACCMODE  0x00000003 /* Mask for read/write access. */
 #define Dee_OPEN_FCREAT    0x00000040 /* Create the file if it was missing. */
-#define Dee_OPEN_FEXCL     0x00000080 /* Used with `Dee_OPEN_FCREAT': Fail if file already exists. */
+#define Dee_OPEN_FEXCL     0x00000080 /* Used with `Dee_OPEN_FCREAT`: Fail if file already exists. */
 #define Dee_OPEN_FTRUNC    0x00000200 /* Truncate existing files. */
 #define Dee_OPEN_FAPPEND   0x00000400 /* Append to the end of files. */
 #define Dee_OPEN_FNONBLOCK 0x00000800 /* Don't block when attempting to read/write (Ignored if the host doesn't support this) */
@@ -605,7 +605,7 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 #define Dee_OPEN_FCLOEXEC  0x00080000 /* Do not inherit the file in child processes (Ignored if the host doesn't support this) */
 #define Dee_OPEN_FXREAD    0x10000000 /* Request exclusive read access (Ignored if the host doesn't support this) */
 #define Dee_OPEN_FXWRITE   0x20000000 /* Request exclusive write access (Ignored if the host doesn't support this)
-                                       * HINT: This flag is used for opening files for `deemon -F' to prevent
+                                       * HINT: This flag is used for opening files for `deemon -F` to prevent
                                        *       other processes from modifying the file at the same time. */
 #define Dee_OPEN_FHIDDEN   0x80000000 /* If the host's file system implements a hidden-file attribute, set it when creating a new file. */
 
@@ -635,14 +635,14 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 #define Dee_STDOUT 1 /* Standard output */
 #define Dee_STDERR 2 /* Standard error */
 
-/* Return a file stream for a standard file number `id'.
- * @param: id:   One of `Dee_STD*' (Except `Dee_STDDBG')
- * @param: file: The file to use, or `NULL' to unbind that stream.
- * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
+/* Return a file stream for a standard file number `id`.
+ * @param: id:   One of `Dee_STD*` (Except `Dee_STDDBG`)
+ * @param: file: The file to use, or `NULL` to unbind that stream.
+ * `DeeFile_GetStd()` will throw an `UnboundAttribute` error if the stream isn't assigned. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_GetStd(unsigned int id);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_TryGetStd(unsigned int id);
-/* Returns the old stream, `NULL' when none was assigned,
- * or `ITER_DONE' when it hadn't been allocated yet */
+/* Returns the old stream, `NULL` when none was assigned,
+ * or `ITER_DONE` when it hadn't been allocated yet */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_SetStd(unsigned int id, DeeObject *file);
 
 /* Reset all standard stream (called during the cleanup phase prior to shutdown)
@@ -655,10 +655,10 @@ DFUNDEF bool DCALL DeeFile_ResetStd(void);
 DFUNDEF WUNUSED ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int id);
 
 
-/* Dee_STDDBG -- Same as `Dee_STDERR', but on windows, also print to `OutputDebugString()'
+/* Dee_STDDBG -- Same as `Dee_STDERR`, but on windows, also print to `OutputDebugString()`
  * On other platforms, similar system APIs intended for printing debug strings may
  * be linked as well, but in all cases, text will always be printed to stderr, the
- * same way a non-redirected `DeeFile_DefaultStderr' would do. */
+ * same way a non-redirected `DeeFile_DefaultStderr` would do. */
 #ifdef CONFIG_HOST_WINDOWS
 #define Dee_STDDBG_IS_UNIQUE
 #define Dee_STDDBG 3
@@ -682,20 +682,20 @@ extern DeeObject *const DeeFile_DefaultStddbg;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Return the underlying file descriptor for `self', that must be
- * an instance of `DeeSystemFile_Type' (or one of its sub-classes)
- * WARNING: The caller is required not to pass objects nothing matching `DeeSystemFile_Check' */
+/* Return the underlying file descriptor for `self`, that must be
+ * an instance of `DeeSystemFile_Type` (or one of its sub-classes)
+ * WARNING: The caller is required not to pass objects nothing matching `DeeSystemFile_Check` */
 INTDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Open a new filesystem file using the given system file-descriptor.
- * Depending on the underlying technology used, `filename' may be
+ * Depending on the underlying technology used, `filename` may be
  * ignored during this process, or used as a pre-defined cache.
  * NOTE: Even when the filename argument is ignored, passing
- *       a value other than `NULL' may still be interpreted
+ *       a value other than `NULL` may still be interpreted
  *       as the descriptor's filename, meaning that in this
- *       case the given `filename' should be an absolute path.
+ *       case the given `filename` should be an absolute path.
  * HINT: On platforms that ignore the argument, the filename
  *       of an open file descriptor can be determined through
  *       some sort of trick/api.
@@ -708,23 +708,23 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSystemFile_Filename(/*Syste
  *          caching of data prior to said data being passed to the actual
  *          descriptor.
  *          Some very real example of where this may otherwise lead to
- *          problems is the sad fact that `CreateFileMapping()' doesn't
+ *          problems is the sad fact that `CreateFileMapping()` doesn't
  *          work when used on empty files, in which case deemon will
  *          re-open the file for writing without sharing said write-access,
  *          before writing a single byte of data to the stream and creating
  *          the mapping again. Later it will then delete that one byte before
  *          closing the secondary descriptor, synchronizing the whole thing
- *          by keeping a lock to `fo_lock' and assuming that nothing else
+ *          by keeping a lock to `fo_lock` and assuming that nothing else
  *          could potentially be writing to the file as the same time.
  *    HINT: If such caching cannot be done (such as when the passed
  *          descriptor refers to a TTY or some other interactive device),
- *          you may specify `OPEN_FAPPEND' or `OPEN_FDIRECT' in `oflags'
+ *          you may specify `OPEN_FAPPEND` or `OPEN_FDIRECT` in `oflags`
  *          to always suppress such caching being done, although any such
- *          cache implementation will automatically invoke `isatty()' or
+ *          cache implementation will automatically invoke `isatty()` or
  *          the equivalent in order to disable caching at runtime.
- * NOTE: When `inherit_fd' is false, the given `fd' will not be closed,
- *       when either `close()' is invoked, or when the file is destroyed.
- *       Otherwise, the function will inherit the given `fd' upon success.  */
+ * NOTE: When `inherit_fd` is false, the given `fd` will not be closed,
+ *       when either `close()` is invoked, or when the file is destroyed.
+ *       Otherwise, the function will inherit the given `fd` upon success.  */
 DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
                int oflags, bool inherit_fd);

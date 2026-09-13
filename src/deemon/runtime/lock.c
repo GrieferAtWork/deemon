@@ -87,10 +87,10 @@ PUBLIC WUNUSED NONNULL((1)) int
 #endif /* !CONFIG_NO_THREADS */
 }
 
-/* Same as `Dee_shared_lock_acquire()' / `Dee_shared_lock_waitfor()',
+/* Same as `Dee_shared_lock_acquire()` / `Dee_shared_lock_waitfor()`,
  * but also takes an additional timeout in nano-seconds. The special
- * values `0' (try-acquire) and `(uint64_t)-1' (infinite timeout) are
- * also recognized for `timeout_nanoseconds'.
+ * values `0` (try-acquire) and `(uint64_t)-1` (infinite timeout) are
+ * also recognized for `timeout_nanoseconds`.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
@@ -392,7 +392,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 /************************************************************************/
 
 /* Blocking acquire a semaphore ticket, or wait for one to become available.
- * @return: 1 : Timeout expired. (`*_timed' only)
+ * @return: 1 : Timeout expired. (`*_timed` only)
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -505,7 +505,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 /************************************************************************/
 
 /* Blocking wait for an event to become set.
- * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed' only)
+ * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed` only)
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -791,7 +791,7 @@ PUBLIC NONNULL((1)) bool
 #endif /* !CONFIG_NO_THREADS */
 }
 
-/* Acquire a read-lock to `self' (does not check for interrupts) */
+/* Acquire a read-lock to `self` (does not check for interrupts) */
 PUBLIC NONNULL((1)) void
 (DCALL Dee_rshared_rwlock_read_noint)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
@@ -824,7 +824,7 @@ again_lockword_not_UINTPTR_MAX:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-/* Acquire a write-lock to `self' (does not check for interrupts) */
+/* Acquire a write-lock to `self` (does not check for interrupts) */
 PUBLIC NONNULL((1)) void
 (DCALL Dee_rshared_rwlock_write_noint)(Dee_rshared_rwlock_t *__restrict self) {
 #ifdef CONFIG_NO_THREADS
@@ -857,7 +857,7 @@ again_lockword_zero:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-/* Acquire a read-lock to `self'
+/* Acquire a read-lock to `self`
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -896,7 +896,7 @@ again_lockword_not_UINTPTR_MAX:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-/* Acquire a write-lock to `self'
+/* Acquire a write-lock to `self`
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int

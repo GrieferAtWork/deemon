@@ -200,7 +200,7 @@ DeeSystem_DEFINE_memcntl(Dee_libc_memcntl)
 
 
 
-/* ASCII case-insensitive functions (for `Bytes'). */
+/* ASCII case-insensitive functions (for `Bytes`). */
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #undef memcasecmp
@@ -251,10 +251,10 @@ DeeSystem_DEFINE_memcasecnt(Dee_libc_memcasecnt)
 
 struct unicode_foldreader {
 	union Dee_charptr_const ufr_dataptr; /* [0..ufr_datalen] Input data pointer */
-	size_t                  ufr_datalen; /* # of remaining words in `ufr_dataptr' (relevant word-type depends on API usage) */
+	size_t                  ufr_datalen; /* # of remaining words in `ufr_dataptr` (relevant word-type depends on API usage) */
 	uint32_t                ufr_buf[Dee_UNICODE_FOLDED_MAX]; /* Buffer for unread casefold characters */
-	uint8_t                 ufr_len;     /* [<= Dee_UNICODE_FOLDED_MAX] # of characters stored in `ufr_buf' */
-	uint8_t                 ufr_idx;     /* [<= ufr_len] Index of next unread casefold character in `ufr_buf' */
+	uint8_t                 ufr_len;     /* [<= Dee_UNICODE_FOLDED_MAX] # of characters stored in `ufr_buf` */
+	uint8_t                 ufr_idx;     /* [<= ufr_len] Index of next unread casefold character in `ufr_buf` */
 };
 
 #define _unicode_foldreader_init(self, cpX, data, len) \
@@ -377,7 +377,7 @@ typedef DeeStringObject String;
 		if unlikely(OVERFLOW_USUB(*(p_end), *(p_start), p_mylen)) \
 			goto Lnegative_len;                                   \
 	}	__WHILE0
-/* Same as `CLAMP_SUBSTR()', but accepts "Lempty_len" which is
+/* Same as `CLAMP_SUBSTR()`, but accepts "Lempty_len" which is
  * jumped to when OUT(*p_mylen) would end up negative, or zero. */
 #define CLAMP_SUBSTR_NONEMPTY(/*in*/ p_start, /*in|out*/ p_end, \
                               /*in|out*/ p_mylen, Lempty_len)   \
@@ -389,7 +389,7 @@ typedef DeeStringObject String;
 		*(p_mylen) = *(p_end) - *(p_start);                     \
 	}	__WHILE0
 
-/* Same as `CLAMP_SUBSTR()', but set `*p_mylen = 0' when the range
+/* Same as `CLAMP_SUBSTR()`, but set `*p_mylen = 0` when the range
  * underflows, rather than jump to a given label */
 #define CLAMP_SUBSTR_IMPLICIT(/*in*/ p_start, /*in|out*/ p_end,   \
                               /*in|out*/ p_mylen)                 \

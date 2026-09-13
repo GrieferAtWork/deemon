@@ -92,7 +92,7 @@ MODULE_NAME = none;
 typedef union {
 	struct {
 		/* Use our own structure so it gets aligned by 64 bits,
-		 * and `Offset' can be assigned directly, without some
+		 * and `Offset` can be assigned directly, without some
 		 * sh1tty wrapper code. */
 		uintptr_t Internal;
 		uintptr_t InternalHigh;
@@ -109,7 +109,7 @@ typedef union {
 
 
 
-/* Figure out how to implement `read()' */
+/* Figure out how to implement `read()` */
 #undef posix_read_USE_read
 #undef posix_read_USE_STUB
 #ifdef CONFIG_HAVE_read
@@ -120,7 +120,7 @@ typedef union {
 
 
 
-/* Figure out how to implement `lseek()' */
+/* Figure out how to implement `lseek()` */
 #undef posix_lseek_USE_lseek
 #undef posix_lseek_USE_lseek64
 #undef posix_lseek_USE_STUB
@@ -136,7 +136,7 @@ typedef union {
 
 
 
-/* Figure out how to implement `pread()' */
+/* Figure out how to implement `pread()` */
 #undef posix_pread_USE_pread64
 #undef posix_pread_USE_ReadFile
 #undef posix_pread_USE_pread
@@ -178,7 +178,7 @@ typedef union {
 
 
 
-/* Figure out how to implement `write()' */
+/* Figure out how to implement `write()` */
 #undef posix_write_USE_write
 #undef posix_write_USE_STUB
 #ifdef CONFIG_HAVE_write
@@ -189,7 +189,7 @@ typedef union {
 
 
 
-/* Figure out how to implement `pwrite()' */
+/* Figure out how to implement `pwrite()` */
 #undef posix_pwrite_USE_pwrite64
 #undef posix_pwrite_USE_WriteFile
 #undef posix_pwrite_USE_pwrite

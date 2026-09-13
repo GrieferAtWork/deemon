@@ -1094,7 +1094,7 @@ PRIVATE struct type_seq se_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&se_hasitem_string_len_hash,
 };
 
-PRIVATE char const s_unhandled_leave_message[] = "Unhandled exception in `operator leave'";
+PRIVATE char const s_unhandled_leave_message[] = "Unhandled exception in `operator leave`";
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1159,7 +1159,7 @@ se_iterattr_impl(DeeObject *seq, struct Dee_attriter *iterbuf,
                  size_t bufsize, struct Dee_attrhint const *__restrict hint) {
 	(void)seq;
 	(void)hint;
-	/* TODO: Enumerate attributes available to all elements of `seq'. */
+	/* TODO: Enumerate attributes available to all elements of `seq`. */
 	return Dee_attriter_initempty(iterbuf, bufsize);
 }
 
@@ -1170,7 +1170,7 @@ se_findattr_impl(DeeObject *seq,
 	(void)seq;
 	(void)specs;
 	(void)result;
-	/* TODO: Find attributes available to all elements of `seq'. */
+	/* TODO: Find attributes available to all elements of `seq`. */
 	return 1;
 }
 
@@ -1548,7 +1548,7 @@ PRIVATE struct type_math ss_math = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ss_trycompare_eq(SeqEachBase *self, DeeObject *other) {
-	/* `seq.some == other'  <=>  `other in seq' */
+	/* `seq.some == other`  <=>  `other in seq` */
 	int contains = DeeObject_InvokeMethodHint(seq_contains, self->se_seq, other);
 	return Dee_COMPARE_EQ_FROMHAS(contains);
 }
@@ -1777,7 +1777,7 @@ ss_iterattr_impl(DeeObject *seq, struct Dee_attriter *iterbuf,
                  size_t bufsize, struct Dee_attrhint const *__restrict hint) {
 	(void)seq;
 	(void)hint;
-	/* TODO: Enumerate attributes available to at least one element of `seq'. */
+	/* TODO: Enumerate attributes available to at least one element of `seq`. */
 	return Dee_attriter_initempty(iterbuf, bufsize);
 }
 
@@ -1788,7 +1788,7 @@ ss_findattr_impl(DeeObject *seq,
 	(void)seq;
 	(void)specs;
 	(void)result;
-	/* TODO: Find attributes available to at least one element of `seq'. */
+	/* TODO: Find attributes available to at least one element of `seq`. */
 	return 1;
 }
 
@@ -2107,7 +2107,7 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 
 
 
-/* Construct an each-wrapper for `self' */
+/* Construct an each-wrapper for `self` */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Each(DeeObject *__restrict self) {
 	DREF SeqEachBase *result;

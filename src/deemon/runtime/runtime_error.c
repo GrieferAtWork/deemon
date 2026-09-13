@@ -48,7 +48,7 @@ DECL_BEGIN
 #define OPNAME(opname) "operator " opname
 
 
-/* Throw a bad-allocation error for `req_bytes' bytes.
+/* Throw a bad-allocation error for `req_bytes` bytes.
  * @return: -1: Always returns -1. */
 PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	DeeNoMemoryErrorObject *nomem_error;
@@ -72,7 +72,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(required_type);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected instance of `%r', but got a `%r' object: %k",
+	                       "Expected instance of `%r`, but got a `%r` object: %k",
 	                       required_type, Dee_TYPE(self), self);
 }
 
@@ -84,7 +84,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	ASSERT_OBJECT(required_type1);
 	ASSERT_OBJECT(required_type2);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected instance of `%r' or `%r', but got a `%r' object: %k",
+	                       "Expected instance of `%r` or `%r`, but got a `%r` object: %k",
 	                       required_type1, required_type2,
 	                       Dee_TYPE(self), self);
 }
@@ -99,7 +99,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3, 4)) int
 	ASSERT_OBJECT(required_type2);
 	ASSERT_OBJECT(required_type3);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected instance of `%r', `%r' or `%r', but got a `%r' object: %k",
+	                       "Expected instance of `%r`, `%r` or `%r`, but got a `%r` object: %k",
 	                       required_type1, required_type2, required_type3,
 	                       Dee_TYPE(self), self);
 }
@@ -170,7 +170,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT_OBJECT(but_instead_got);
 	ASSERT(!DeeString_Check(but_instead_got));
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected string for attribute, but got instance of `%k': %k",
+	                       "Expected string for attribute, but got instance of `%k`: %k",
 	                       Dee_TYPE(but_instead_got), but_instead_got);
 }
 
@@ -217,7 +217,7 @@ INTERN ATTR_COLD NONNULL((1, 2, 3)) int
                                               char const *__restrict name,
                                               DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Function `%r.%s' does not accept keyword arguments %r",
+	                       "Function `%r.%s` does not accept keyword arguments %r",
 	                       tp_self, name, kw);
 }
 
@@ -227,21 +227,21 @@ INTERN ATTR_COLD NONNULL((1, 2, 4)) int
                                                   size_t namelen,
                                                   DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Function `%r.%$s' does not accept keyword arguments %r",
+	                       "Function `%r.%$s` does not accept keyword arguments %r",
 	                       tp_self, namelen, name, kw);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_keywords_ctor_not_accepted)(DeeTypeObject *tp_self, DeeObject *kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Constructor for `%r' does not accept keyword arguments %r",
+	                       "Constructor for `%r` does not accept keyword arguments %r",
 	                       tp_self, kw);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classmember_requires_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class member `%r.%s' must be called with exactly 1 argument",
+	                       "Class member `%r.%s` must be called with exactly 1 argument",
 	                       tp_self, name);
 }
 
@@ -249,14 +249,14 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classmember_requires_1_argument_string_len)(DeeTypeObject *tp_self,
                                                        char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class member `%r.%$s' must be called with exactly 1 argument",
+	                       "Class member `%r.%$s` must be called with exactly 1 argument",
 	                       tp_self, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classproperty_requires_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class property `%r.%s' must be called with exactly 1 argument",
+	                       "Class property `%r.%s` must be called with exactly 1 argument",
 	                       tp_self, name);
 }
 
@@ -264,14 +264,14 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classproperty_requires_1_argument_string_len)(DeeTypeObject *tp_self,
                                                          char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class property `%r.%$s' must be called with exactly 1 argument",
+	                       "Class property `%r.%$s` must be called with exactly 1 argument",
 	                       tp_self, namelen, name);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classmethod_requires_at_least_1_argument_string)(DeeTypeObject *tp_self, char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class method `%r.%s' must be called with at least 1 argument",
+	                       "Class method `%r.%s` must be called with at least 1 argument",
 	                       tp_self, name);
 }
 
@@ -279,7 +279,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_classmethod_requires_at_least_1_argument_string_len)(DeeTypeObject *tp_self,
                                                                 char const *__restrict name, size_t namelen) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Class method `%r.%$s' must be called with at least 1 argument",
+	                       "Class method `%r.%$s` must be called with at least 1 argument",
 	                       tp_self, namelen, name);
 }
 
@@ -397,7 +397,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	ASSERT(global_index < mod->mo_globalc);
 	name = DeeModule_GlobalName(mod, global_index);
 	return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
-	                       "Unbound global variable `%s' from `%s'",
+	                       "Unbound global variable `%s` from `%s`",
 	                       name ? name : Q3,
 	                       DeeModule_GetShortName(mod));
 }
@@ -423,7 +423,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_UnboundLocal,
-					                "Unbound local variable `%s'%s%s",
+					                "Unbound local variable `%s`%s%s",
 					                local_name,
 					                code_name ? " in function " : "",
 					                code_name ? code_name : "");
@@ -455,7 +455,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	symbol_name = DeeCode_GetRSymbolName(Dee_AsObject(code), static_index);
 	if (symbol_name) {
 		return DeeError_Throwf(&DeeError_UnboundLocal,
-		                       "Unbound static variable `%s'%s%s",
+		                       "Unbound static variable `%s`%s%s",
 		                       symbol_name,
 		                       code_name ? " in function " : "",
 		                       code_name ? code_name : "");
@@ -514,7 +514,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_RuntimeError,
-					                "Cannot modify read-only local variable `%s' %s%s",
+					                "Cannot modify read-only local variable `%s` %s%s",
 					                local_name,
 					                code_name ? "in function " : "",
 					                code_name ? code_name : "");
@@ -653,7 +653,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_changed_sequence)(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,
-	                       "A sequence `%k' has changed while being iterated: `%k'",
+	                       "A sequence `%k` has changed while being iterated: `%k`",
 	                       Dee_TYPE(seq), seq);
 }
 
@@ -661,20 +661,20 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_no_super_class)(DeeTypeObject *__restrict type) {
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Type `%k' has no super-class", type);
+	                       "Type `%k` has no super-class", type);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_file_not_found_string)(char const *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
-	                       "File `%s' could not be found",
+	                       "File `%s` could not be found",
 	                       filename);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_file_not_found)(DeeObject *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
-	                       "File `%k' could not be found",
+	                       "File `%k` could not be found",
 	                       filename);
 }
 

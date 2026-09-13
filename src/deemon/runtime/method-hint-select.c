@@ -1226,7 +1226,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_unpack_ub_t DCALL
 mh_select_seq_unpack_ub(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
 	if (DeeType_HasExplicitTrait(self, DeeType_TRAIT___seq_getitem_always_bound__))
-		return (DeeMH_seq_unpack_ex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex' */
+		return (DeeMH_seq_unpack_ex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_unpack_ex); /* Can just re-use the regular `seq_unpack_ex` */
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_unpack_ub__empty;
@@ -3823,7 +3823,7 @@ mh_select_map_operator_delitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
 			return &default__map_operator_delitem__empty;
 		if ((DeeMH_seq_enumerate_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_enumerate) != &default__seq_enumerate__unsupported)
-			return &default__map_operator_delitem__with__map_remove; /* See selector in `map_remove' */
+			return &default__map_operator_delitem__with__map_remove; /* See selector in `map_remove` */
 	}
 	map_enumerate = (DeeMH_map_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)

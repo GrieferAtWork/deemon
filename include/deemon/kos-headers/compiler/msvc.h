@@ -27,7 +27,7 @@
 #define __P(x)     x
 
 #ifndef __STDC__
-/* We need `__STDC__' to be defined since its the indicator for a modern preprocessor to be available. */
+/* We need `__STDC__` to be defined since its the indicator for a modern preprocessor to be available. */
 #define __STDC__ 1
 #endif /* !__STDC__ */
 
@@ -309,7 +309,7 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 	__if_exists(::__intern::__msvc_static_if<((c))>::__is_true__)
 #define __STATIC_ELSE(c) \
 	__if_not_exists(::__intern::__msvc_static_if<((c))>::__is_true__)
-/* Use our hacky `static_if' to emulate `__builtin_choose_expr' */
+/* Use our hacky `static_if` to emulate `__builtin_choose_expr` */
 #define __builtin_choose_expr(c, tt, ff) (__STATIC_IF(c){tt} __STATIC_ELSE(c){ff})
 #if 0 /* This (kind-of) works, but isn't actually useful since it can
        * only  detect immediate constants (but not inlined constants) */
@@ -397,11 +397,11 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
  *
  * Why do we want this, and why do we care?
  *
- * The reason here is simple: msvc's definition of `offsetof' under
+ * The reason here is simple: msvc's definition of `offsetof` under
  * c++ SUCKS! - It works (technically), and we don't do this  so-as
  * to support some kind of warning. The way in which msvc's version
  * sucks is in that it causes additional code to be generated  when
- * `offsetof' is used in static initializers:
+ * `offsetof` is used in static initializers:
  * >> // Under c++, this initialization happens via a runtime
  * >> // constructor, rather than via proper static initialization
  * >> static size_t off = offsetof(MyStruct, my_field);
@@ -524,7 +524,7 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 #define __NULLPTR ((void *)0)
 #endif /* !__cplusplus */
 
-/* Emulate the `__OPTIMIZE__' predefined macro, used in various headers. */
+/* Emulate the `__OPTIMIZE__` predefined macro, used in various headers. */
 #if defined(RELEASE) || defined(_RELEASE)
 #ifndef _RELEASE
 #define _RELEASE RELEASE /*!export-*/
@@ -609,8 +609,8 @@ extern __declspec(dllimport) void (__cdecl _vacopy)(__builtin_va_list *, __built
 #endif /* !__builtin_va_copy */
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
-/* Help  detect invalid argument count that can easily be caused by copying the `va_start'
- * source line and  replacing `start'  with `end'  without removing  the second  argument.
+/* Help  detect invalid argument count that can easily be caused by copying the `va_start`
+ * source line and  replacing `start`  with `end`  without removing  the second  argument.
  * (The following hack causes the second argument in such use cases to be underlined red). */
 #undef __builtin_va_end
 void __builtin_va_end(__builtin_va_list &__ap);
@@ -628,10 +628,10 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #pragma warning(disable: 4514) /* Unused inline function was removed. */
 #pragma warning(disable: 4574) /* Nonsensical preprocessor warning. */
 #pragma warning(disable: 4710) /* Function not inlined (Emit for local varargs functions...) */
-#pragma warning(disable: 4711) /* Function inlined despite no `inline' keyword */
+#pragma warning(disable: 4711) /* Function inlined despite no `inline` keyword */
 #pragma warning(disable: 4201) /* nonstandard extension used: nameless struct/union (they're standard now...) */
 #ifdef __cplusplus
-#pragma warning(disable: 4644) /* Annoying warning about use of `offsetof' in constant expressions (). */
+#pragma warning(disable: 4644) /* Annoying warning about use of `offsetof` in constant expressions (). */
 #define __SYSDECL_BEGIN __DECL_BEGIN
 #define __SYSDECL_END   __DECL_END
 #else /* __cplusplus */

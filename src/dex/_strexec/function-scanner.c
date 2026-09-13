@@ -122,7 +122,7 @@ do_alias_thisattr:
 				 * >>     }
 				 * >> }
 				 * In this case, we must lookup the this-argument from the scope
-				 * one before `iter' and re-use its value for our own purposes! */
+				 * one before `iter` and re-use its value for our own purposes! */
 				JITObjectTable *before_iter;
 				struct jit_object_entry *effective_this;
 				before_iter = self->jl_scandata.jl_parobtab;
@@ -285,7 +285,7 @@ do_print:
 			    self->jl_tok != JIT_RAWSTRING &&
 			    self->jl_tok != '.' &&
 			    self->jl_tok != TOK_DOTS)
-				break; /* Special case: `.' is a valid name for the current module. */
+				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			JITLexer_Yield(self);
 			if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS)
@@ -461,7 +461,7 @@ do_yield_suffix:
 			if (self->jl_tok == TOK_ARROW) {
 				unsigned int old_flags;
 do_handle_java_lambda:
-				JITLexer_Yield(self); /* Skip over `->' */
+				JITLexer_Yield(self); /* Skip over `->` */
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
 				if (self->jl_tok == '{') {
@@ -769,11 +769,11 @@ do_reference_this_and_class:
 			ssize = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 			if (JITLexer_ISKWD(self, "from")) {
-				/* `foo from bar' */
+				/* `foo from bar` */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipModuleName(self);
 			} else if (self->jl_tok == TOK_ARROW) {
-				/* `x -> x.lower()' */
+				/* `x -> x.lower()` */
 				goto do_handle_java_lambda;
 			} else {
 				JITLexer_ReferenceKeyword(self, sname, ssize);
@@ -1157,7 +1157,7 @@ done_skip_semi:
 }
 
 
-/* Assume that the given source text start/ends with `{' and `}'.
+/* Assume that the given source text start/ends with `{` and `}`.
  * This function trims those characters, before also trimming any
  * additional whitespace next to them. */
 INTERN NONNULL((1, 2)) void DFCALL

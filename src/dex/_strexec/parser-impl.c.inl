@@ -158,7 +158,7 @@ err_cannot_invoke_inplace(DeeObject *base, Dee_operator_t opname) {
 	info = DeeTypeType_GetOperatorById(typetype, opname);
 	if likely(info) {
 		return DeeError_Throwf(&DeeError_TypeError,
-		                       "Cannot invoke inplace `operator %s' (`__%s__') without l-value",
+		                       "Cannot invoke inplace `operator %s` (`__%s__`) without l-value",
 		                       info->oi_uname, info->oi_sname);
 	} else {
 		return DeeError_Throwf(&DeeError_TypeError,
@@ -360,8 +360,8 @@ DEFINE_SECONDARY(CastOperand) {
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
 		 * >> (int)!!!in my_list; // ... vs. this
-		 * After parsing any number of additional `!' tokens, if the token
-		 * thereafter is the keyword `is' or `in', then this isn't a cast
+		 * After parsing any number of additional `!` tokens, if the token
+		 * thereafter is the keyword `is` or `in`, then this isn't a cast
 		 * expression. However if it isn't, then it is a cast expression. */
 		memcpy(&smlex, self, sizeof(JITSmallLexer));
 		for (;;) {
@@ -376,10 +376,10 @@ DEFINE_SECONDARY(CastOperand) {
 		goto not_a_cast;
 	}
 
-	case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
-	case '-': /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
-/*	case '<': /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
-	case '[': /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List(castexpr))' */
+	case '+': /* `(typexpr).operator add(castexpr)` vs. `(typexpr)castexpr.operator pos()` */
+	case '-': /* `(typexpr).operator sub(castexpr)` vs. `(typexpr)castexpr.operator neg()` */
+/*	case '<': /* `(typexpr).operator lo(castexpr)` vs. `(typexpr)(Cell(castexpr))` */
+	case '[': /* `(typexpr).operator [](castexpr)` vs. `(typexpr)(List(castexpr))` */
 not_a_cast:
 		/* Not a cast expression. */
 		result = LHS_OR_OK; /* Inherit reference */
@@ -391,12 +391,12 @@ not_a_cast:
 		uint16_t out_mode;
 		/* Special handling for the following cases:
 		 * >> (float)();                // Call with 0 arguments
-		 * >> (float)(42);              // Call with 1 argument `42'
-		 * >> (float)((42),);           // Call with 1 argument `42'
-		 * >> (float)(10, 20, 30);      // Call with 3 arguments `10, 20, 30'
-		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)'
+		 * >> (float)(42);              // Call with 1 argument `42`
+		 * >> (float)((42),);           // Call with 1 argument `42`
+		 * >> (float)(10, 20, 30);      // Call with 3 arguments `10, 20, 30`
+		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)`
 		 * Without this handling, the 4th line would be compiled as
-		 * `float(pack(10, 20, 30))', when we want it to be `float(10, 20, 30)' */
+		 * `float(pack(10, 20, 30))`, when we want it to be `float(10, 20, 30)` */
 		LOAD_LVALUE(lhs, err);
 		JITLexer_Yield(self);
 		if (self->jl_tok == ')') {
@@ -892,11 +892,11 @@ done_y1:
 #ifdef JIT_EVAL
 			/* FIXME: We can't just blindly skip over what (we think) is an argument list:
 			 * >> true ? ([]) : int -> 42
-			 * This example has to be parsed as `true ? List({}) : [](int) { return 42; }'
+			 * This example has to be parsed as `true ? List({}) : [](int) { return 42; }`
 			 * But because we're skipping over everything inside of arguments, we end up
-			 * trying to parse it as: `true ? []([]): int { return 42; } : none', which
+			 * trying to parse it as: `true ? []([]): int { return 42; } : none`, which
 			 * later causes an error:            ^
-			 *                         Expected a keyword as argument name, but got `['
+			 *                         Expected a keyword as argument name, but got `[`
 			 */
 			param_end = self->jl_tokstart;
 			recursion = 1;
@@ -956,7 +956,7 @@ done_y1:
 				if (is_expression == JIT_AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
 					 * Execution would work the same even with them there, however
-					 * their presence looks weird in `repr', and might make debugging
+					 * their presence looks weird in `repr`, and might make debugging
 					 * harder (because one might not immediately understand where
 					 * they're from) */
 					JITFunction_TrimSurroundingBraces((char const **)&source_start,
@@ -1661,8 +1661,8 @@ skip_rbrck_and_done:
 			}
 			if (name == ENCODE_INT32('s', 'u', 'p', 'e') &&
 			    UNALIGNED_GET8(tok_begin + 4) == 'r') {
-				/* In strexec, `super' is essentially compiled as `this as __identifier(class).base'
-				 * s.a. `JIT_RTSYM_THIS' and `JIT_RTSYM_CLASS' */
+				/* In strexec, `super` is essentially compiled as `this as __identifier(class).base`
+				 * s.a. `JIT_RTSYM_THIS` and `JIT_RTSYM_CLASS` */
 #ifdef JIT_EVAL
 				DeeTypeObject *oo_super;
 				DREF DeeTypeObject *oo_class;
@@ -1820,7 +1820,7 @@ err_oo_class_reinit_lvalue:
 				if (is_expression == JIT_AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
 					 * Execution would work the same even with them there, however
-					 * their presence looks weird in `repr', and might make debugging
+					 * their presence looks weird in `repr`, and might make debugging
 					 * harder (because one might not immediately understand where
 					 * they're from) */
 					JITFunction_TrimSurroundingBraces((char const **)&source_start,
@@ -1859,7 +1859,7 @@ err_oo_class_reinit_lvalue:
 					                                       symbol_hash);
 					if unlikely(!sym) {
 						DeeError_Throwf(&DeeError_SymbolError,
-						                "Symbol `%$s' could not be found in mod `%k'",
+						                "Symbol `%$s` could not be found in mod `%k`",
 						                symbol_size, symbol_name, mod);
 						Dee_Decref(mod);
 						goto err;
@@ -2035,14 +2035,14 @@ err_result_copy:
 				attr_size = JITLexer_TokLen(self);
 				if (lhs == JIT_LVALUE) {
 					if (self->jl_lvalue.lv_kind == JIT_LVALUE_THIS) {
-						/* The deemon specs require that `this.attrib' be evaluated
+						/* The deemon specs require that `this.attrib` be evaluated
 						 * as static-member-access, so-long as the named attribute
 						 * actually exists.
 						 *
-						 * For this purpose, the specs only require that `this.foo' be
+						 * For this purpose, the specs only require that `this.foo` be
 						 * static,  while `this.operator . ("foo")' is allowed to be
 						 * dynamic. Confirming with this requirement, we only check
-						 * for this-attribute-access in the case of `this.foo'! */
+						 * for this-attribute-access in the case of `this.foo`! */
 						DREF DeeTypeObject *oo_class;
 						lhs = self->jl_lvalue.lv_rvalue;
 						JITLValue_Init(&self->jl_lvalue);
@@ -2060,8 +2060,8 @@ err_result_copy:
 						if unlikely(!oo_class)
 							goto err_r;
 						if (DeeType_Check(oo_class) && DeeType_IsClass(oo_class)) {
-							/* Check if `oo_class' contains an instance-member `attr_name'
-							 * that had been declared as `private' or `final'. If it does,
+							/* Check if `oo_class` contains an instance-member `attr_name`
+							 * that had been declared as `private` or `final`. If it does,
 							 * then we _must_ (as per the specs) access that attribute
 							 * statically, rather than dynamically! */
 							struct Dee_class_attribute *attrib;

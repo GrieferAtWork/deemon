@@ -61,7 +61,7 @@ libhostasm_rt_err_unbound_global(DeeModuleObject *__restrict mod,
 	ASSERT(global_index < mod->mo_globalc);
 	name = DeeModule_GlobalName(mod, global_index);
 	return DeeError_Throwf(&DeeError_UnboundLocal, /* XXX: UnboundGlobal? */
-	                       "Unbound global variable `%s' from `%s'",
+	                       "Unbound global variable `%s` from `%s`",
 	                       name ? name : Q3,
 	                       DeeModule_GetShortName(mod));
 }
@@ -87,7 +87,7 @@ libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_in
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_UnboundLocal,
-					                "Unbound local variable `%s' %s%s",
+					                "Unbound local variable `%s` %s%s",
 					                local_name,
 					                code_name ? "in function " : "",
 					                code_name ? code_name : "");
@@ -153,7 +153,7 @@ libhostasm_rt_err_unbound_attribute_string(DeeTypeObject *__restrict tp,
                                            char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "Unbound attribute `%r.%s'",
+	                       "Unbound attribute `%r.%s`",
 	                       tp, name);
 }
 
@@ -277,7 +277,7 @@ INTERN ATTR_COLD NONNULL((1)) int DCALL
 libhostasm_rt_err_unbound_index(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,
-	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
+	                       "Index `%" PRFuSIZ "' of instance of `%k`: %k has not been bound",
 	                       index, Dee_TYPE(self), self);
 }
 
@@ -334,7 +334,7 @@ libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result;
 	DeeNO_shl_t tp_shl = DeeType_RequireNativeOperator(Dee_TYPE(rhs), shl);
 	if (tp_shl == DeeFile_Type.ft_base.tp_math->tp_shl) {
-		/* Special case: `fp << repr foo'
+		/* Special case: `fp << repr foo`
 		 * In this case, we can do a special optimization
 		 * to directly print the repr to the file. */
 		if (DeeObject_PrintRepr(rhs, (Dee_formatprinter_t)&DeeFile_WriteAll, lhs) < 0)

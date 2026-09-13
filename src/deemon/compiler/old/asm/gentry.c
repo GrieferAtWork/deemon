@@ -80,13 +80,13 @@ INTERN WUNUSED NONNULL((1)) int
 	 * ASSEMBLY:
 	 * >>     push    @it
 	 * >>     foreach top, 1f
-	 * >>     pop     @newitem                   // Pushed by `foreach'
+	 * >>     pop     @newitem                   // Pushed by `foreach`
 	 * >>     pop                                // The iterator itself
 	 * >>     jmp     2f
 	 * >> 1:  print   @"Iterator exhausted", nl
 	 * >>     ret
 	 * >> 2:
-	 * The reason this works is because `foreach' as an instruction basically does this:
+	 * The reason this works is because `foreach` as an instruction basically does this:
 	 * >> ITEM = TOP.NEXT()
 	 * >> IF ITEM !IS BOUND THEN
 	 * >>     POP()
@@ -102,14 +102,14 @@ INTERN WUNUSED NONNULL((1)) int
 	 * to needing to keep track of the traceback), when we're just going
 	 * to catch it immediately afterwards irregardless.
 	 *
-	 * -> Implement this by setting some flag to encode `iternext' branches as
-	 *   `foreach' instructions that will jump to the exception handler `HND':
+	 * -> Implement this by setting some flag to encode `iternext` branches as
+	 *   `foreach` instructions that will jump to the exception handler `HND`:
 	 * DEEMON:
 	 * >> x.operator iter();
 	 * ASM:
 	 * >>     push    @x
 	 * >> 1:  foreach top, 2f
-	 * >>     pop     #SP - 2 // `swap; pop' (write the yielded item into the slot still containing `x')
+	 * >>     pop     #SP - 2 // `swap; pop` (write the yielded item into the slot still containing `x`)
 	 * >>
 	 * >>.if $$SECTION == ".cold"
 	 * >>     jmp     3f
@@ -344,7 +344,7 @@ gen_guard:
 					 * because we need to check something at runtime:
 					 * We already know that the finally-handler was not executed
 					 * following a return instruction (because in that case
-					 * execution would not have passed `asm_gendfinally_n'), but
+					 * execution would not have passed `asm_gendfinally_n`), but
 					 * what we don't know is how the finally block was entered.
 					 * Was it:
 					 *   - Entered through normal code flow
@@ -365,16 +365,16 @@ gen_guard:
 					 * >>         } finally { // push addrof(Leaving_inner_finally);
 					 * >>             print "Inner_finally";
 					 * >>             // This is where we are right now.
-					 * >>             //   - If we got here from `break', we must hold
-					 * >>             //     off from jumping to `Loop_end' because of
+					 * >>             //   - If we got here from `break`, we must hold
+					 * >>             //     off from jumping to `Loop_end` because of
 					 * >>             //     the outer finally block, but we can not
 					 * >>             //     blindly jump there all the time, because
-					 * >>             //     then we'd _always_ skip `Leaving_inner_finally'
+					 * >>             //     then we'd _always_ skip `Leaving_inner_finally`
 					 * >>             //   - To fix this, we must compare the address that is
 					 * >>             //     currently located ontop of the stack and contains the
-					 * >>             //     finally-return-address (either `Leaving_inner_finally' or `Loop_end'),
-					 * >>             //     and only jump to `Outter_finally' when it isn't equal
-					 * >>             //     to `Leaving_inner_finally'.
+					 * >>             //     finally-return-address (either `Leaving_inner_finally` or `Loop_end`),
+					 * >>             //     and only jump to `Outter_finally` when it isn't equal
+					 * >>             //     to `Leaving_inner_finally`.
 					 * >>             // ASM:
 					 * >>             //  >> # TOP == finally_return_address
 					 * >>             //  >>     dup
@@ -382,8 +382,8 @@ gen_guard:
 					 * >>             //  >>     cmp  eq
 					 * >>             //  >>     jf   addrof(Outter_finally)
 					 * >>             //  >>     jmp  pop
-					 * >>             // HINT: `Leaving_inner_finally' is named `finally_exit'
-					 * >>             // HINT: `Outter_finally' is named `next_finally'
+					 * >>             // HINT: `Leaving_inner_finally` is named `finally_exit`
+					 * >>             // HINT: `Outter_finally` is named `next_finally`
 					 * >>         }
 					 * >>         print "Leaving_inner_finally";
 					 * >>         print "Entering outer finally normally";
@@ -405,7 +405,7 @@ gen_guard:
 					/* TODO: Must clean up catch-handlers between here and the next finally! */
 					if (asm_gjmp(ASM_JF, next_finally))
 						goto err_hand_frame;
-					asm_decsp(); /* Popped by `ASM_JF' */
+					asm_decsp(); /* Popped by `ASM_JF` */
 				}
 				ASSERT((current_assembler.a_flag & ASM_FSTACKDISP) ||
 				       (current_assembler.a_stackcur == handler_stack));
@@ -422,7 +422,7 @@ gen_guard:
 					goto err_hand_frame;
 			}
 			/* Define the address that is pushed to cause the
-			 * `jmp pop' above to become a no-op when the handler
+			 * `jmp pop` above to become a no-op when the handler
 			 * is entered through regular code-flow. */
 			if (finally_exit)
 				asm_defsym(finally_exit);
@@ -556,7 +556,7 @@ handle_mask_ast:
 								/* Jump to the handler entry point if the mask matches. */
 								if (asm_gjmp(ASM_JT, enter_handler))
 									goto err_hand_frame;
-								asm_decsp(); /* Popped by `ASM_JF' */
+								asm_decsp(); /* Popped by `ASM_JF` */
 							}
 						}
 					}
@@ -608,7 +608,7 @@ handle_mask_ast:
 								/* Jump to the handler entry point if the mask matches. */
 								if (asm_gjmp(ASM_JT, enter_handler))
 									goto err_hand_frame;
-								asm_decsp(); /* Popped by `ASM_JF' */
+								asm_decsp(); /* Popped by `ASM_JF` */
 							}
 						}
 					}
@@ -645,7 +645,7 @@ do_multimask_rethrow:
 						/* Jump to the next handler when it's not a match. */
 						if (asm_gjmp(ASM_JF, next_handler))
 							goto err_hand_frame;
-						asm_decsp(); /* Popped by `ASM_JF' */
+						asm_decsp(); /* Popped by `ASM_JF` */
 					} else {
 						struct asm_sym *is_a_match;
 						is_a_match = asm_newsym();
@@ -654,7 +654,7 @@ do_multimask_rethrow:
 						/* Execute the handler when it's a match. */
 						if (asm_gjmp(ASM_JT, is_a_match))
 							goto err_hand_frame;
-						asm_decsp(); /* Popped by `ASM_JT' */
+						asm_decsp(); /* Popped by `ASM_JT` */
 
 						/* Since there is no next handler, it's up to us to re-throw the exception. */
 						if (asm_grethrow())
@@ -697,10 +697,10 @@ do_multimask_rethrow:
 				}
 			}
 			/* Check if the handler is a so-called ~empty~ handler, that is a
-			 * handler that would not contain any code other than `throw except'
+			 * handler that would not contain any code other than `throw except`
 			 * to re-throw the last error. (or rather continue handling it)
 			 * Such a handler can be optimized by making use of the
-			 * `Dee_EXCEPTION_HANDLER_FHANDLED' flag to let the runtime handle
+			 * `Dee_EXCEPTION_HANDLER_FHANDLED` flag to let the runtime handle
 			 * its associated exception before using the handler's guard
 			 * end address as its entry point, continuing execution after
 			 * the error has been discarded.
@@ -713,7 +713,7 @@ do_multimask_rethrow:
 			 *      this optimization when user-assembly appears in exception
 			 *      handlers.
 			 *      Other than that: Check if the handler contains any use
-			 *      of `SYMBOL_TYPE_EXCEPT' symbols that don't originate from
+			 *      of `SYMBOL_TYPE_EXCEPT` symbols that don't originate from
 			 *      other catch-handlers that may be reachable from inside.
 			 */
 			is_empty_handler = !needs_cleanup && !(gflags & ASM_G_FPUSHRES);
@@ -837,7 +837,7 @@ do_multimask_rethrow:
 			if (!guard[i].b)
 				continue;
 			/* Create new descriptors at the effective priority index.
-			 * Since we're not incrementing `except_index' following this,
+			 * Since we're not incrementing `except_index` following this,
 			 * the effective priority remains the same, meaning that later
 			 * exception handlers have a lower priority than previous ones,
 			 * just as is intended by the deemon specs. */

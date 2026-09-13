@@ -30,13 +30,13 @@
  * >> bool OVERFLOW_SSUB(S lhs, U rhs, T *res);
  * >> bool OVERFLOW_UMUL(S lhs, U rhs, T *res);
  * >> bool OVERFLOW_SMUL(S lhs, U rhs, T *res);
- * @return: true:  Overflow  occurred (unlikely; `*res' contains the truncated result)
- *                 Overflow here means that the finite result stored in `*res' doesn't
+ * @return: true:  Overflow  occurred (unlikely; `*res` contains the truncated result)
+ *                 Overflow here means that the finite result stored in `*res` doesn't
  *                 match a value that would have been produced when infinite precision
  *                 was available.
- *                 e.g.: `UINT_MAX + 42u' and `11u - 19u' overflow, but `32u + 42u'
- *                       or `11 - 19' don't
- * @return: false: `*res' contains the correct result. */
+ *                 e.g.: `UINT_MAX + 42u` and `11u - 19u` overflow, but `32u + 42u`
+ *                       or `11 - 19` don't
+ * @return: false: `*res` contains the correct result. */
 #define OVERFLOW_UADD __hybrid_overflow_uadd
 #define OVERFLOW_SADD __hybrid_overflow_sadd
 #define OVERFLOW_USUB __hybrid_overflow_usub
@@ -47,7 +47,7 @@
 /* >> bool OVERFLOW_SNEG(T x, T *p_result);
  * >> bool OVERFLOW_SNEG_P2N(T x, T *p_result);    -- @assume(x >= 0)
  * >> bool OVERFLOW_SNEG_N2P(T x, T *p_result);    -- @assume(x < 0)
- * Do the operation `*p_result = -x'
+ * Do the operation `*p_result = -x`
  * @return: true:  Overflow happened
  * @return: false: Overflow didn't happen */
 #define OVERFLOW_SENG     __hybrid_overflow_sneg
@@ -57,7 +57,7 @@
 
 /* >> bool OVERFLOW_SCAST(V x, T *p_result);
  * >> bool OVERFLOW_UCAST(V x, T *p_result);
- * Do the operation `*p_result = (T)x'
+ * Do the operation `*p_result = (T)x`
  * @return: true:  Overflow happened
  * @return: false: Overflow didn't happen */
 #define OVERFLOW_UCAST __hybrid_overflow_ucast

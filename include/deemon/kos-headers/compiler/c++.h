@@ -26,7 +26,7 @@
 #define __P(x) x
 #endif /* __NO_PROTOTYPES */
 
-/* TODO: Support for `#define ATTR_WUNUSED [[nodiscard]]' */
+/* TODO: Support for `#define ATTR_WUNUSED [[nodiscard]]` */
 
 #ifndef __has_feature
 #define __NO_has_feature 1
@@ -44,8 +44,8 @@
 
 #define __CXX11_EXPLICIT_OPERATOR explicit
 
-// #define __COMPILER_HAVE_HAS_UNIQUE_OBJECT_REPRESENTATIONS 1 /* `bool __has_unique_object_representations(typename T)' */
-// #define __COMPILER_HAVE_IS_AGGREGATE 1 /* `bool __is_aggregate(typename T)' */
+// #define __COMPILER_HAVE_HAS_UNIQUE_OBJECT_REPRESENTATIONS 1 /* `bool __has_unique_object_representations(typename T)` */
+// #define __COMPILER_HAVE_IS_AGGREGATE 1 /* `bool __is_aggregate(typename T)` */
 
 
 #if (__has_feature(cxx_constexpr) ||                                                                      \
@@ -55,7 +55,7 @@
      (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION_NUM >= 40600 && !defined(__INTELLISENSE__)) || \
      (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026))
 #ifdef _MSC_VER
-/* Some stupid warning about adding `const' even though
+/* Some stupid warning about adding `const` even though
  * we  already  differentiate  with  C++14   constexpr. */
 #pragma warning(disable: 4814)
 #endif /* _MSC_VER */
@@ -131,7 +131,7 @@
 
 #ifndef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTELLISENSE__)
-/* Enable work-arounds for c++'s `using' causing debug information bloat:
+/* Enable work-arounds for c++'s `using` causing debug information bloat:
  * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96417 */
 #define __COMPILER_HAVE_BUG_BLOATY_CXX_USING 1
 #else /* __GNUC__ && !__clang__ && !__INTELLISENSE__ */

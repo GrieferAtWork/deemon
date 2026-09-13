@@ -346,7 +346,7 @@ local _knownIteratorSequenceTypes: {Type: string} = Dict();
 local function getIteratorSequenceTypeDoc(typ: Type): string {
 	local result = _knownIteratorSequenceTypes.get(typ);
 	if (result is none) {
-		/* Check for a member `seq' and have the constructor
+		/* Check for a member `seq` and have the constructor
 		 * take 1 argument that matches that element's typing. */
 		local doc = try typ.seq.__doc__ catch (...) none;
 		if (doc) {
@@ -376,7 +376,7 @@ local function getIteratorElementTypeDoc(typ: Type): string {
 	if (result is none) {
 		/* (try to) Extract generic iterator element type.
 		 * For this purpose, we look at the return type of
-		 * the iterator's `next' operator. If explicitly
+		 * the iterator's `next` operator. If explicitly
 		 * defined, then use that type as the sequence type. */
 		local doc = Type.__doc__(typ);
 		local loc = doc.find("\n\nnext->");
@@ -668,7 +668,7 @@ local function qualifyLegacyTyperef(docnode: WeakRef with Doc, s: string): strin
 		node = node.parent;
 	} while (node !is none);
 
-	/* Search for known sub-classes of `Error' */
+	/* Search for known sub-classes of `Error` */
 	local result = findErrorByName(Error, "?DError", s);
 	if (result !is none)
 		return result;
@@ -2070,11 +2070,11 @@ done:
 				 * >> print d.decls[0].ret.types...; // OK
 				 * >>
 				 * This is required, because in the later case, the compiler is
-				 * required to keep `d' alive for the duration of enumeration of
+				 * required to keep `d` alive for the duration of enumeration of
 				 * the function's return types.
 				 * In the first variant, the compiler isn't required to do this,
 				 * leading to the weak references we use to point back to the
-				 * original doc node to have become stale, causing the `value'
+				 * original doc node to have become stale, causing the `value`
 				 * dereference in the following line to read a dead WeakRef.
 				 */
 				m_cache = docdecl.value.getparambyname(
@@ -2266,15 +2266,15 @@ class Parameter: WeakRefAble {
 		m_isoptional = m_isvarargs = m_iskwargs = false;
 		m_typstring = m_defstring = none;
 		local doclen = #docstring;
-#if 0 /* Disabled, as this breaks for stuff like `filler=!P{ }' */
+#if 0 /* Disabled, as this breaks for stuff like `filler=!P{ }` */
 		/* For backwards-compatibility, check for old-type parameter
-		 * declarations in the form of `int x', something that we
+		 * declarations in the form of `int x`, something that we
 		 * identify by searching for a non-escaped space-character,
 		 * which we then interpret as the delimiter between name & type */
 		local type_end = findNonEscaped(docstring, " ");
 		if (type_end >= 0) {
 			/* Since old-style declarations were sometimes also written
-			 * as `int x, int y', meaning we'd end up with " int y", we
+			 * as `int x, int y`, meaning we'd end up with " int y", we
 			 * must repeat the check after stripping whitespace.
 			 * However, since non-escaped whitespace isn't actually
 			 * allowed as part of the new system, it should already
@@ -2424,7 +2424,7 @@ class Parameter: WeakRefAble {
 					if (#types == 1) {
 						m_typ = types[0];
 						/* An implicit non-argument should not be interpreted
-						 * as the argument requiring to be typed as `none' */
+						 * as the argument requiring to be typed as `none` */
 						if (m_typ.isnone) {
 							m_typstring = "?O";
 							del m_typ;
@@ -2697,7 +2697,7 @@ class Declaration: WeakRefAble {
 				}
 			}
 		} else if (m_parstring is none) {
-			/* Default to returning `Object' when the parameter List was omitted. */
+			/* Default to returning `Object` when the parameter List was omitted. */
 			m_retstring = "";
 			if (isoperator) {
 				local defl = defaultOperatorImpl(opname);
@@ -3169,8 +3169,8 @@ local function generateFunctionParams(fp: File, fun: Function) {
 			} else {
 				local default_value = defl[i];
 				/* Only emit type information when the default value isn't none
-				 * Since `none' is usually used as a placeholder, the user probably
-				 * doesn't expect the user of this function to pass `none' intentionally. */
+				 * Since `none` is usually used as a placeholder, the user probably
+				 * doesn't expect the user of this function to pass `none` intentionally. */
 				if (default_value !is none)
 					fp << ":" << encodeType(type(default_value));
 				local defl = encodeExpression(default_value);
@@ -3477,8 +3477,8 @@ load_type_input:
 				if (docParentOrPath.isclass) {
 					local parob = decl;
 					if (docParentOrPath.isinstance) {
-						/* Use `type.getinstanceattr' to prevent ambiguity
-						 * between stuff like `foo.c:field' and `foo.i:field' */
+						/* Use `type.getinstanceattr` to prevent ambiguity
+						 * between stuff like `foo.c:field` and `foo.i:field` */
 						object = Type.getinstanceattr(parob, name);
 					} else {
 						object = parob.operator . (name);
@@ -3598,8 +3598,8 @@ err_unknown_attribute:
 			if (parob is Type) {
 				if (myAttr.isclass) {
 					if (myAttr.isinstance) {
-						/* Use `type.getinstanceattr' to prevent ambiguity
-						 * between stuff like `foo.c:field' and `foo.i:field' */
+						/* Use `type.getinstanceattr` to prevent ambiguity
+						 * between stuff like `foo.c:field` and `foo.i:field` */
 						object = Type.getinstanceattr(parob, fixedAttributeName);
 					} else {
 						try {
@@ -3621,7 +3621,7 @@ set_is_type:
 			} else if (Type.__issingleton__(type(object))) {
 				/* When accessing the documentation of a singleton object instance
 				 * (as indicated by us having an instance of that singleton, when its
-				 * type offers no way of being constructed; `this = del'), display
+				 * type offers no way of being constructed; `this = del`), display
 				 * documentation for the type instead of the singleton */
 				object = type(object);
 				issingleton = true;
@@ -4110,8 +4110,8 @@ set_is_type:
 				return;
 			if (Type.__isclass__(object)) {
 				local cls = Type.__class__(object);
-				/* Check if `cls' makes any mention of the operator
-				 * For example: `operator str = del;' */
+				/* Check if `cls` makes any mention of the operator
+				 * For example: `operator str = del;` */
 				local opaddr = cls.operators.get(opname);
 				if (opaddr !is none) {
 					/* The operator does indeed get overwritten by this class */
@@ -4145,7 +4145,7 @@ set_is_type:
 				}
 			}
 		} else if (opname == "constructor") {
-			/* Like in `enumerateOperatorSections()': add no-args-constructor if not already seen */
+			/* Like in `enumerateOperatorSections()`: add no-args-constructor if not already seen */
 			if (!sawNoArgsConstructor && object is bound &&
 			    Type.__isnoargconstructible__(object)) {
 				yield DocSection(this, "()");

@@ -252,7 +252,7 @@ Deque_PopBack_unlocked(Deque *__restrict self) {
 
 
 
-/* Rotate the first `num_objects' left. */
+/* Rotate the first `num_objects` left. */
 INTERN NONNULL((1)) void DCALL
 Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
@@ -271,7 +271,7 @@ Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	++self->d_version;
 }
 
-/* Rotate the first `num_objects' right. */
+/* Rotate the first `num_objects` right. */
 INTERN NONNULL((1)) void DCALL
 Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
@@ -292,7 +292,7 @@ Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	++self->d_version;
 }
 
-/* Rotate the last `num_objects' left. */
+/* Rotate the last `num_objects` left. */
 INTERN NONNULL((1)) void DCALL
 Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
@@ -313,7 +313,7 @@ Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	++self->d_version;
 }
 
-/* Rotate the last `num_objects' right. */
+/* Rotate the last `num_objects` right. */
 INTERN NONNULL((1)) void DCALL
 Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
@@ -1178,7 +1178,7 @@ deq_getitem_index_fast(Deque *__restrict self, size_t index) {
 	Deque_LockRead(self);
 	if unlikely(index >= self->d_size) {
 		Deque_LockEndRead(self);
-		return NULL; /* >> The sequence is resizable and `index >= CURRENT_SIZE' */
+		return NULL; /* >> The sequence is resizable and `index >= CURRENT_SIZE` */
 	}
 	result = DEQUE_ITEM(self, index);
 	Dee_Incref(result);

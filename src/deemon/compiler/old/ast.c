@@ -98,7 +98,7 @@ INTERN NONNULL((2)) struct ast *DFCALL
 ast_setddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
-		goto done; /* Special case: Ignore `NULL' for `ast'. */
+		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
@@ -117,7 +117,7 @@ done:
 INTERN struct ast *DFCALL
 ast_sethere(struct ast *self) {
 	if unlikely(!self)
-		goto done; /* Special case: Ignore `NULL' for `ast'. */
+		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
@@ -133,7 +133,7 @@ INTERN NONNULL((2)) struct ast *DFCALL
 ast_putddi(struct ast *self,
            struct ast_loc *__restrict info) {
 	if unlikely(!self)
-		goto done; /* Special case: Ignore `NULL' for `ast'. */
+		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		goto done;
@@ -152,7 +152,7 @@ done:
 INTERN struct ast *DFCALL
 ast_puthere(struct ast *self) {
 	if unlikely(!self)
-		goto done; /* Special case: Ignore `NULL' for `ast'. */
+		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		goto done;
@@ -339,7 +339,7 @@ DEFINE_AST_GENERATOR(, ast_multiple,
 	 * -> ... Because they're literally no-ops that would otherwise
 	 *        confuse the optimizer into not detecting constant
 	 *        expressions, as well as special behavior surrounding
-	 *        `AST_EXPAND' expressions not being triggered. */
+	 *        `AST_EXPAND` expressions not being triggered. */
 	if unlikely(exprc == 1 && flags == AST_FMULTIPLE_KEEPLAST &&
 	            current_scope == exprv[0]->a_scope) {
 		result = exprv[0]; /* Inherit reference. */
@@ -455,7 +455,7 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_tryfinally,
                       struct ast *__restrict finally_expression)) {
 	struct catch_expr *catchv;
 	DREF struct ast *result;
-	/* Allocate the catch-expression vector inherited by `a_try' upon success. */
+	/* Allocate the catch-expression vector inherited by `a_try` upon success. */
 	catchv = (struct catch_expr *)Dee_Mallocc(1, sizeof(struct catch_expr));
 	if unlikely(!catchv)
 		goto err;
@@ -563,9 +563,9 @@ DEFINE_AST_GENERATOR(NONNULL((1)), ast_expand,
                      (struct ast *__restrict expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(expr);
-#if 0 /* This causes problems with code such as `([foo]...)' being \
-       * interpreted as though it was written as `(foo)', rather  \
-       * than as written as `(foo,)' */
+#if 0 /* This causes problems with code such as `([foo]...)` being \
+       * interpreted as though it was written as `(foo)`, rather  \
+       * than as written as `(foo,)` */
 	/* To prevent ambiguity, always expand single-element,
 	 * sequence-multi-expressions without going through an AST_EXPAND. */
 	if (expr->a_type == AST_MULTIPLE &&

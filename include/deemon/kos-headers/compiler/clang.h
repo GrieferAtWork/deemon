@@ -528,7 +528,7 @@
 
 #if __has_attribute(__format__)
 #define __ATTR_FORMAT_PRINTF(fmt, args) __attribute__((__format__(__printf__, fmt, args)))
-#if 0 /* TODO: Only `printf' is supported by everything implementing `__has_attribute(__format__)' */
+#if 0 /* TODO: Only `printf` is supported by everything implementing `__has_attribute(__format__)` */
 #define __ATTR_FORMAT_SCANF(fmt, args)    __attribute__((__format__(__scanf__, fmt, args)))
 #define __ATTR_FORMAT_STRFMON(fmt, args)  __attribute__((__format__(__strfmon__, fmt, args)))
 #define __ATTR_FORMAT_STRFTIME(fmt, args) __attribute__((__format__(__strftime__, fmt, args)))
@@ -771,7 +771,7 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __FORCELOCAL static __ATTR_FORCEINLINE
 
 #ifdef __INTELLISENSE__
-#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))'... */
+#define __NO_EXTERN_INLINE /* Intellisense likes to freeze when parsing `__attribute__((__gnu_inline__))`... */
 #define __EXTERN_INLINE      static
 #define __EXTERN_FORCEINLINE static
 #elif __has_attribute(__gnu_inline__)
@@ -937,7 +937,7 @@ extern void *realloc_in_place(void *, __SIZE_TYPE__);
 #endif /* !__builtin_va_list */
 
 
-/* clang has a broken prototype for `__builtin_bcopy()' */
+/* clang has a broken prototype for `__builtin_bcopy()` */
 #if __has_builtin(__builtin_bcopy) && __has_builtin(__builtin_memcpy)
 #undef __builtin_bcopy
 #define __builtin_bcopy(src, dst, num_bytes) __builtin_memcpy(dst, src, num_bytes)
@@ -970,7 +970,7 @@ extern void *realloc_in_place(void *, __SIZE_TYPE__);
 
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var
 
-/* Delete assumptions the compiler may have made about `var'.
+/* Delete assumptions the compiler may have made about `var`.
  * This includes:
  *  - __builtin_constant_p(var)
  *  - __builtin_object_size(var)

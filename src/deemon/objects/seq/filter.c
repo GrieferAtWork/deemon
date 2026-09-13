@@ -259,7 +259,7 @@ err_r:
 struct filter_foreach_data {
 	DeeObject    *ffd_fun;  /* [1..1] Function used for filtering. */
 	Dee_foreach_t ffd_proc; /* [1..1] Underlying callback. */
-	void         *ffd_arg;  /* [?..?] Cookie for `pfd_proc' */
+	void         *ffd_arg;  /* [?..?] Cookie for `pfd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -291,7 +291,7 @@ filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
 struct filterub_mh_seq_enumerate_data {
 	DeeObject          *faued_fun;  /* [1..1] Function used for filtering. */
 	Dee_seq_enumerate_t faued_proc; /* [1..1] Underlying callback. */
-	void               *faued_arg;  /* [?..?] Cookie for `pfd_proc' */
+	void               *faued_arg;  /* [?..?] Cookie for `pfd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -323,7 +323,7 @@ filterub_mh_seq_enumerate(Filter *self, Dee_seq_enumerate_t proc, void *arg) {
 struct filterub_mh_seq_enumerate_index_data {
 	DeeObject                *faueid_fun;  /* [1..1] Function used for filtering. */
 	Dee_seq_enumerate_index_t faueid_proc; /* [1..1] Underlying callback. */
-	void                     *faueid_arg;  /* [?..?] Cookie for `pfd_proc' */
+	void                     *faueid_arg;  /* [?..?] Cookie for `pfd_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL

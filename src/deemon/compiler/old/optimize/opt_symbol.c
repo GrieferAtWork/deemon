@@ -69,7 +69,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		goto done;
 #endif /* !CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
 	if (!result_used) {
-		OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s'\n",
+		OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s`\n",
 		                 sym->s_name->k_size, sym->s_name->k_name);
 		SYMBOL_DEC_NREAD(sym);
 		self->a_type      = AST_CONSTEXPR;
@@ -113,7 +113,7 @@ set_constant_expression:
 				SYMBOL_DEC_NREAD(self->a_sym); /* Trace read references. */
 				self->a_constexpr = symval;    /* Inherit */
 				self->a_type      = AST_CONSTEXPR;
-				OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r'\n", symval);
+				OPTIMIZE_VERBOSE("Inline constant symbol expression: `%r`\n", symval);
 				goto did_optimize;
 			}
 done_set_constexpr:

@@ -161,13 +161,13 @@ DECL_BEGIN
  * LEAK_DETECTION_METHOD_OOB_RBTREE   time deemon util/test.dee       real    0m1.013s   115%
  * LEAK_DETECTION_METHOD_OOB_LLRBTREE time deemon util/test.dee       real    0m1.207s   137%
  *
- * As you can see, `LEAK_DETECTION_METHOD_IN_TAIL=1' is ****MUCH**** faster than the
+ * As you can see, `LEAK_DETECTION_METHOD_IN_TAIL=1` is ****MUCH**** faster than the
  * old methods of using an out-of-band RBTREE to describe memory leaks. It is however
  * still noticeably slower (but not as painfully so) than LEAK_DETECTION_METHOD_NONE.
  *
  * Inspecting of threads during heavy parallel computation (make computed-operators)
  * reveals that at any moment, about 20% of threads are in the "SLIST_ATOMIC_INSERT"
- * calls in `leak_insert_p()' and `DeeDbg_Free()' (iow: are failing to insert their
+ * calls in `leak_insert_p()` and `DeeDbg_Free()` (iow: are failing to insert their
  * relevant descriptors into the appropriate async-list for the purpose of either
  * inserting, or removing a leak from said list).
  *
@@ -243,7 +243,7 @@ DECL_BEGIN
  *   here is that some IDs may end up going unused.
  *
  * ========== USE_PER_MSPACE_LEAK_OPS
- * Same as `USE_PER_MSPACE_ALLOC_ID', but replaces:
+ * Same as `USE_PER_MSPACE_ALLOC_ID`, but replaces:
  * - "leaks_pending_insert"
  * - "leaks_pending_remove"
  * with per-mspace atomic linked lists, thus also reducing atomic contention on the
@@ -290,7 +290,7 @@ DECL_END
 #define MSTATE_LEAKS_PENDING_NEXT__UNBOUND ((struct malloc_state *)NULL)      /* mstate isn't linked into global list of mstates with pending leaks */
 #define MSTATE_LEAKS_PENDING_NEXT__NONE    ((struct malloc_state *)ITER_DONE) /* mstate is the last element in the global list of mstates with pending leaks */
 #define MSTATE_EXTRA_FIELDS_2                                                                                                    \
-	struct malloc_state     *ms_leaks_pending_next;   /* [lock(ATOMIC)] Next mstate, or one of `MSTATE_LEAKS_PENDING_NEXT__*' */ \
+	struct malloc_state     *ms_leaks_pending_next;   /* [lock(ATOMIC)] Next mstate, or one of `MSTATE_LEAKS_PENDING_NEXT__*` */ \
 	struct leak_footer_slist ms_leaks_pending_insert; /* [lock(ATOMIC)] Pending inserts */                                       \
 	struct leak_footer_slist ms_leaks_pending_remove; /* [lock(ATOMIC)] Pending removes */
 #endif /* USE_PER_MSPACE_LEAK_OPS */
@@ -317,9 +317,9 @@ DECL_END
  * is a chance that alignment requirements ceil this to enough memory such that buffer-
  * overruns don't end up being detected. */
 #if USE_PER_THREAD_MSTATE
-#define FOOTERS 1 /* Needed for `Dee_Free()' to detect source mspace! */
+#define FOOTERS 1 /* Needed for `Dee_Free()` to detect source mspace! */
 #elif LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
-#define FOOTERS 1 /* Needed for `DeeDbg_Malloc()' to store debug info in the tail of heap blocks */
+#define FOOTERS 1 /* Needed for `DeeDbg_Malloc()` to store debug info in the tail of heap blocks */
 #else
 #define FOOTERS 0
 #endif
@@ -371,11 +371,11 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 #define NO_MALLOC_TRIM       0
 
 /* Disable certain mspace-specific functions */
-#define NO_MSPACE_FREE                1 /* 'Dee_Free()' is able to detect mspace chunks (via "FOOTERS"), so mspace_free() isn't needed */
-#define NO_MSPACE_REALLOC             1 /* Like 'Dee_Free()', 'Dee_Realloc()' is also able to detect custom-mspace chunks */
+#define NO_MSPACE_FREE                1 /* 'Dee_Free()` is able to detect mspace chunks (via "FOOTERS"), so mspace_free() isn't needed */
+#define NO_MSPACE_REALLOC             1 /* Like 'Dee_Free()`, `Dee_Realloc()` is also able to detect custom-mspace chunks */
 #define NO_MSPACE_REALLOC_IN_PLACE    1 /* ... */
-#define NO_MSPACE_USABLE_SIZE         1 /* Unnecessary dummy (same as `Dee_MallocUsableSize()') */
-#define NO_MSPACE_TRACK_LARGE_CHUNKS  1 /* Not needed (default init by `create_mspace()' is what we want) */
+#define NO_MSPACE_USABLE_SIZE         1 /* Unnecessary dummy (same as `Dee_MallocUsableSize()`) */
+#define NO_MSPACE_TRACK_LARGE_CHUNKS  1 /* Not needed (default init by `create_mspace()` is what we want) */
 #define NO_CREATE_MSPACE_WITH_BASE    1 /* Unused: only need create_mspace() */
 #define NO_MSPACE_CALLOC              1 /* Unused: the dlcalloc() -> dlmalloc() -> mspace_malloc() chain already does the right thing */
 #define NO_MSPACE_MEMALIGN            1 /* Unused: only dlmemalign() is needed */
@@ -518,7 +518,7 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
 /* Trim the slab page cache (do this first, in case said cache has
- * been implemented in terms of the fallback `Dee_Memalign()' impl) */
+ * been implemented in terms of the fallback `Dee_Memalign()` impl) */
 #define dlmalloc_trim_PREHOOK(p_result, pad) \
 	*(p_result) += Dee_slab_page_rawtrim(pad)
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
@@ -671,9 +671,9 @@ DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCAL
  *
  * ------------------------------------------------------------------------
  *
- * Force-enable `FOOTERS', thus causing dlmalloc to always make space for
+ * Force-enable `FOOTERS`, thus causing dlmalloc to always make space for
  * a pointer-sized field at the tail of an malloc chunk (the address of
- * this tail can easily be calculated as it is `p + Dee_MallocUsableSize(p)').
+ * this tail can easily be calculated as it is `p + Dee_MallocUsableSize(p)`).
  * - Then, allocate another, small heap block that will contain the debug info
  *   needed to track the pointer as a potential memory leak. This struct has
  *   a fixed length (meaning it can also have a dedicated slab-style cache),
@@ -961,12 +961,12 @@ retry:
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'th allocation happened
+ *   at the point where the `id`th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
  *   as well as their Dee_Try* equivalents.
  * - When the deemon heap was not built with this feature, this API
- *   is a no-op, and always returns `0'
+ *   is a no-op, and always returns `0`
  * @return: * : The previously set allocation breakpoint */
 #define DeeHeap_GetAllocBreakpoint_DEFINED
 PUBLIC ATTR_COLD ATTR_PURE WUNUSED size_t DCALL
@@ -1366,7 +1366,7 @@ PRIVATE struct region_leak_list region_leak_flist = LIST_HEAD_INITIALIZER(region
 
 /* [0..n][lock(leaks_lock)][LINK(Dee_heapregion_getnext)]
  * List of heap regions without leak footers (used as fallback
- * when 'DeeDbgHeap_AddHeapRegion()' can't allocate memory, so
+ * when 'DeeDbgHeap_AddHeapRegion()` can't allocate memory, so
  * reachable-semantics can be retained in a sufficient manner) */
 PRIVATE struct Dee_heapregion *region_leak_mlist = NULL;
 
@@ -1482,7 +1482,7 @@ leaks_untrack_chunk_containing(void const *ptr) {
 		size_t size = chunksize(p) - overhead_for(p);
 		if ((byte_t *)ptr >= (byte_t *)mem &&
 		    (byte_t *)ptr < ((byte_t *)mem + size)) {
-			/* Do the same that's done by `Dee_UntrackAlloc()' below. */
+			/* Do the same that's done by `Dee_UntrackAlloc()` below. */
 			leaks_remove(iter);
 			iter->lf_prev = iter;
 			iter->lf_next = iter;
@@ -1501,31 +1501,31 @@ PRIVATE ATTR_MALLOC WUNUSED NONNULL((1)) char *DCALL try_strdup(char const *str)
 }
 
 #define DeeDbgHeap_AddHeapRegion_DEFINED
-/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
- * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
+/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()`,
+ * as well as `DeeHeap_DumpMemoryLeaks_GC` being able to recursively scan the payload areas of
  * reachable heap chunks) to a custom "struct Dee_heapregion"
  *
- * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()' will not
- * be able to inform you about heap chunks from `region' that are never free'd, or be able to
- * identify `Dee_Malloc()' pointers stored in the payload areas of reachable chunks within the
- * given `region' when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC'
+ * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()` will not
+ * be able to inform you about heap chunks from `region` that are never free'd, or be able to
+ * identify `Dee_Malloc()` pointers stored in the payload areas of reachable chunks within the
+ * given `region` when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC`
  *
- * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
- *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
+ * WARNING: `DeeDbgHeap_DelHeapRegion()` is thread-safe, but only in those cases where you can
+ *          guaranty that at least 1 of `region`s heap-chunks has not yet been freed, and will
  *          not be freed by another thread during the call to this function. (iow: it may only
- *          be called when there is no chance that `hr_destroy' has been- or will be called
+ *          be called when there is no chance that `hr_destroy` has been- or will be called
  *          before the call has a chance to return)
  *
  * @param: file:   A filename that should appear when memory leaks are dumped.
  *                 Note that unlike other debug-heap functions, this string is actually
- *                 strdup()'d, meaning it's allowed to point to a dynamically allocated
+ *                 `strdup()`d, meaning it's allowed to point to a dynamically allocated
  *                 memory location.
  * @param: region: The region to register/unregister debug information for.
- *                 Even when not registered, `Dee_Free()' works as it should!
- *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()'!
+ *                 Even when not registered, `Dee_Free()` works as it should!
+ *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()`!
  * @return: * : Always re-returns "region". These APIs are intentionally designed to never fail
  *              (or rather: to fail-safe), never block (indefinitely), and never return an error.
- *              These API *may* however modify the given `region's `hr_tail.ht_zero' field. */
+ *              These API *may* however modify the given `region`s `hr_tail.ht_zero` field. */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
 DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *file) {
 	struct region_leak_footer *footer;
@@ -1535,7 +1535,7 @@ DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *f
 
 	/* Check if "region" is embedded within some larger heap chunk,
 	 * as is the case when it is part of a file mapping that could
-	 * not be mmap'd, and had to be malloc()+read()'d. */
+	 * not be mmap'd, and had to be `malloc()+read()`d. */
 	{
 		struct leak_footer *embedded_leak;
 		embedded_leak = leaks_untrack_chunk_containing((void *)region);
@@ -2504,9 +2504,9 @@ PRIVATE NONNULL((1)) bool DCALL
 gcmove__byaddr__into__nreach_at(struct leak_footer *root) {
 again:
 	/* Check the "LEAK_FOOTER_GCFLAG_SCANNED" flag instead of "LEAK_FOOTER_GCFLAG_REACH".
-	 * This way, when `leak_footer_isregion(root)', we move the region into the set of
+	 * This way, when `leak_footer_isregion(root)`, we move the region into the set of
 	 * unreachable chunks if at least one of the embedded chunk is unreachable, since
-	 * `gcscan__visit__reachable_at()' will only set "LEAK_FOOTER_GCFLAG_SCANNED" if
+	 * `gcscan__visit__reachable_at()` will only set "LEAK_FOOTER_GCFLAG_SCANNED" if
 	 * **all** embedded chunks are reachable. */
 	if (!(root->lf_gcflags & LEAK_FOOTER_GCFLAG_SCANNED)) {
 		gcleak_byaddr_removenode(&gcleak_byaddr_tree, root);
@@ -2723,7 +2723,7 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC_locked(void) {
 	/* #7: Go every element of "gcleak_byaddr_nreach_tree" exactly once, and scan the
 	 *     body of every leak found within for nested pointers to other elements also
 	 *     found within "gcleak_byaddr_nreach_tree". For every such hit, increment the
-	 *     referenced leak's `lf_gcflags' field by 1, but don't increment so far that
+	 *     referenced leak's `lf_gcflags` field by 1, but don't increment so far that
 	 *     "LEAK_FOOTER_GCFLAG_RED" would be modified (stop one short of that
 	 *     potentially happening) */
 	gccount__nreach__crossrefs();
@@ -2738,7 +2738,7 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC_locked(void) {
 	/* #9: Enumerate the elements of "gcleak_byhit_tree" from its minimum to
 	 *     its maximum, and print every encountered element as a leak. Also
 	 *     include info about how often each leak was referenced by some other
-	 *     leak, but otherwise do the same as `do_DeeHeap_DumpMemoryLeaks_ALL()'.
+	 *     leak, but otherwise do the same as `do_DeeHeap_DumpMemoryLeaks_ALL()`.
 	 *     Also like that function, must explicitly check "leaks_pending_remove"
 	 *     for containing discovered leaks **after** reading the "lf_file"
 	 *     pointer to every leak, so-as to exclude leaks that were since freed. */
@@ -2753,8 +2753,8 @@ convert_trees_to_byid:
 	gcmove__byaddr__into__byid();
 
 	/* #11: Convert "gcleak_byid_tree" back into "leaks" such that the most-
-	 *      recently allocated chunk is at `leaks.lf_next', and the least-
-	 *      recently allocated chunk is at `leaks.lf_prev'. */
+	 *      recently allocated chunk is at `leaks.lf_next`, and the least-
+	 *      recently allocated chunk is at `leaks.lf_prev`. */
 	gcmove__byid__into__leaks();
 
 	return result;
@@ -2771,10 +2771,10 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC(void) {
 #endif /* LEAK_DETECTION_GC */
 
 /* Dump info about all heap allocations that were allocated, but
- * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
- * Information about leaks is printed using `Dee_DPRINTF()'.
+ * never `Dee_Free()`d, nor untracked using `Dee_UntrackAlloc()`.
+ * Information about leaks is printed using `Dee_DPRINTF()`.
  *
- * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*`
  * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
@@ -3140,8 +3140,8 @@ PUBLIC void *
 	leaks_remove(leak);
 	leaks_lock_release();
 
-	/* Form a dummy loop that will satisfy `Dee_Free()' and `Dee_Realloc()',
-	 * but won't show up in `DeeHeap_DumpMemoryLeaks()' */
+	/* Form a dummy loop that will satisfy `Dee_Free()` and `Dee_Realloc()`,
+	 * but won't show up in `DeeHeap_DumpMemoryLeaks()` */
 	leak->lf_prev = leak;
 	leak->lf_next = leak;
 	return ptr;
@@ -3160,10 +3160,10 @@ DECL_BEGIN
 
 struct leaknode {
 	/* NOTE: We reference the heap chunks directly. That way, we don't have to do
-	 *       anything extra for `Dee_TryReallocInPlace', since the only way that
+	 *       anything extra for `Dee_TryReallocInPlace`, since the only way that
 	 *       call can succeed if there wouldn't be a node where it wants to expand
 	 *       to, meaning there'd never be any reason to change anything about the
-	 *       leaknode-tree, no matter what `Dee_TryReallocInPlace' ends up doing. */
+	 *       leaknode-tree, no matter what `Dee_TryReallocInPlace` ends up doing. */
 	union {
 #ifdef RBTREE_LEFT_LEANING
 		LLRBTREE_NODE(leaknode) ln_node;    /* [1..1] Node in tree of allocations */
@@ -3178,7 +3178,7 @@ struct leaknode {
 	size_t                      ln_id;      /* Allocation ID */
 	char const                 *ln_file;    /* Allocation source file */
 	__UINTPTR_HALF_TYPE__       ln_line;    /* Allocation source line */
-	__UINTPTR_HALF_TYPE__       ln_flags;   /* Allocation flags (set of `LEAKNODE_F_*') */
+	__UINTPTR_HALF_TYPE__       ln_flags;   /* Allocation flags (set of `LEAKNODE_F_*`) */
 #define LEAKNODE_F_NORMAL 0x0000 /* Default flags */
 #define LEAKNODE_F_RED    0x0001 /* Red node (for LLRBTREE) */
 #define LEAKNODE_F_NOLEAK 0x0002 /* Do not consider as a leak */
@@ -3377,10 +3377,10 @@ again:
 }
 
 /* Dump info about all heap allocations that were allocated, but
- * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
- * Information about leaks is printed using `Dee_DPRINTF()'.
+ * never `Dee_Free()`d, nor untracked using `Dee_UntrackAlloc()`.
+ * Information about leaks is printed using `Dee_DPRINTF()`.
  *
- * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*`
  * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
@@ -3404,12 +3404,12 @@ PRIVATE size_t alloc_id_break = 0;
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'th allocation happened
+ *   at the point where the `id`th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
  *   as well as their Dee_Try* equivalents.
  * - When the deemon heap was not built with this feature, this API
- *   is a no-op, and always returns `0'
+ *   is a no-op, and always returns `0`
  * @return: * : The previously set allocation breakpoint */
 #define DeeHeap_GetAllocBreakpoint_DEFINED
 PUBLIC ATTR_COLD ATTR_PURE WUNUSED size_t DCALL
@@ -3760,15 +3760,15 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) voi
 #endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 
 
-/* Given a heap pointer (as could also be passed to `Dee_Free()' or
- * `Dee_MallocUsableSize()'), check if that pointer belongs to a custom
+/* Given a heap pointer (as could also be passed to `Dee_Free()` or
+ * `Dee_MallocUsableSize()`), check if that pointer belongs to a custom
  * heap region, and if so: return a pointer to said heap region.
- * - If `ptr' is `NULL' or a heap pointer that does not belong
- *   to a custom heap region, `NULL' is returned instead.
- * - If `ptr' isn't a heap pointer, behavior is undefined.
+ * - If `ptr` is `NULL` or a heap pointer that does not belong
+ *   to a custom heap region, `NULL` is returned instead.
+ * - If `ptr` isn't a heap pointer, behavior is undefined.
  *
- * @return: * :   The heap region belonging to `ptr'
- * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
+ * @return: * :   The heap region belonging to `ptr`
+ * @return: NULL: Given `ptr` is `NULL` or does not belong to a custom heap region */
 PUBLIC ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr) {
 #if FLAG4_BIT_HEAP_REGION
@@ -3831,7 +3831,7 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 	tls_mspace_foreach(&lock_and_do_check_malloc_state_foreach_cb, NULL);
 #endif /* USE_PER_THREAD_MSTATE */
 
-	/* Also check slab memory (~ala `slab_chkfree_data()') */
+	/* Also check slab memory (~ala `slab_chkfree_data()`) */
 #ifdef HAVE_DeeSlab_CheckMemory
 	DeeSlab_CheckMemory();
 #endif /* HAVE_DeeSlab_CheckMemory */
@@ -3931,7 +3931,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 
 
 /* Default malloc/free functions used for heap allocation.
- * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory' is thrown. */
+ * NOTE: Upon allocation failure, caches are cleared and an `Error.NoMemory` is thrown. */
 #ifndef Dee_Malloc_DEFINED
 #define Dee_Malloc_DEFINED
 PUBLIC ATTR_HOT_NDEBUG ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *
@@ -4204,10 +4204,10 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 #ifndef DeeHeap_DumpMemoryLeaks_DEFINED
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 /* Dump info about all heap allocations that were allocated, but
- * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
- * Information about leaks is printed using `Dee_DPRINTF()'.
+ * never `Dee_Free()`d, nor untracked using `Dee_UntrackAlloc()`.
+ * Information about leaks is printed using `Dee_DPRINTF()`.
  *
- * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*`
  * @return: * : The total amount of memory leaked (in bytes) */
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
 	(void)method;
@@ -4223,12 +4223,12 @@ PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
  *   an attached debugger to break, allowing you to inspect the stack
- *   at the point where the `id'th allocation happened
+ *   at the point where the `id`th allocation happened
  * - Allocation IDs are assigned in ascending order during every call
  *   to Dee_Malloc(), Dee_Calloc() and Dee_Realloc() (when ptr==NULL),
  *   as well as their Dee_Try* equivalents.
  * - When the deemon heap was not built with this feature, this API
- *   is a no-op, and always returns `0'
+ *   is a no-op, and always returns `0`
  * @return: * : The previously set allocation breakpoint */
 PUBLIC ATTR_COLD ATTR_PURE WUNUSED size_t DCALL
 DeeHeap_GetAllocBreakpoint(void) {
@@ -4246,31 +4246,31 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 
 #ifndef DeeDbgHeap_AddHeapRegion_DEFINED
 #define DeeDbgHeap_AddHeapRegion_DEFINED
-/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()',
- * as well as `DeeHeap_DumpMemoryLeaks_GC' being able to recursively scan the payload areas of
+/* Attach debug info (for the sake of memory leaks as reported by `DeeHeap_DumpMemoryLeaks()`,
+ * as well as `DeeHeap_DumpMemoryLeaks_GC` being able to recursively scan the payload areas of
  * reachable heap chunks) to a custom "struct Dee_heapregion"
  *
- * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()' will not
- * be able to inform you about heap chunks from `region' that are never free'd, or be able to
- * identify `Dee_Malloc()' pointers stored in the payload areas of reachable chunks within the
- * given `region' when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC'
+ * These calls are entirely OPTIONAL, but if not called, `DeeHeap_DumpMemoryLeaks()` will not
+ * be able to inform you about heap chunks from `region` that are never free'd, or be able to
+ * identify `Dee_Malloc()` pointers stored in the payload areas of reachable chunks within the
+ * given `region` when those chunks are reachable and called using `DeeHeap_DumpMemoryLeaks_GC`
  *
- * WARNING: `DeeDbgHeap_DelHeapRegion()' is thread-safe, but only in those cases where you can
- *          guaranty that at least 1 of `region's heap-chunks has not yet been freed, and will
+ * WARNING: `DeeDbgHeap_DelHeapRegion()` is thread-safe, but only in those cases where you can
+ *          guaranty that at least 1 of `region`s heap-chunks has not yet been freed, and will
  *          not be freed by another thread during the call to this function. (iow: it may only
- *          be called when there is no chance that `hr_destroy' has been- or will be called
+ *          be called when there is no chance that `hr_destroy` has been- or will be called
  *          before the call has a chance to return)
  *
  * @param: file:   A filename that should appear when memory leaks are dumped.
  *                 Note that unlike other debug-heap functions, this string is actually
- *                 strdup()'d, meaning it's allowed to point to a dynamically allocated
+ *                 `strdup()`d, meaning it's allowed to point to a dynamically allocated
  *                 memory location.
  * @param: region: The region to register/unregister debug information for.
- *                 Even when not registered, `Dee_Free()' works as it should!
- *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()'!
+ *                 Even when not registered, `Dee_Free()` works as it should!
+ *                 These functions are only necessary for `DeeHeap_DumpMemoryLeaks()`!
  * @return: * : Always re-returns "region". These APIs are intentionally designed to never fail
  *              (or rather: to fail-safe), never block (indefinitely), and never return an error.
- *              These API *may* however modify the given `region's `hr_tail.ht_zero' field. */
+ *              These API *may* however modify the given `region`s `hr_tail.ht_zero` field. */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
 DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *file) {
 	(void)file;

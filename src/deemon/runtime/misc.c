@@ -214,7 +214,7 @@ PUBLIC ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void) {
 	return trim;
 }
 
-/* Same as `Dee_TryReleaseSystemMemory()', but also tries to free
+/* Same as `Dee_TryReleaseSystemMemory()`, but also tries to free
  * @return: * : Amount of memory that was released back to the system.
  * @return: 0 : No memory could be released back to the system (an error was thrown) */
 PUBLIC ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void) {
@@ -252,7 +252,7 @@ debug_printer(void *UNUSED(closure),
 	 * beyond the end of a buffer so long as that memory location
 	 * is located within the same page as the last byte of said
 	 * buffer (Trust me... I've written by own OS) */
-	if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()' here... */
+	if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()` here... */
 	    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) ==
 	    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) &&
 	    (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
@@ -581,7 +581,7 @@ PUBLIC ATTR_CONST WUNUSED size_t
 	size_t result;
 	if (OVERFLOW_UMUL(elem_count, elem_size, &result)) {
 		_DeeAssert_Failf("_Dee_MallococBufsizeDbg(...)", file, line,
-		                 "Unexpected overflow when multiplying `elem_count * elem_size':\n"
+		                 "Unexpected overflow when multiplying `elem_count * elem_size`:\n"
 		                 "elem_count   = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
 		                 "elem_size    = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
 		                 "[base_offset = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")]",
@@ -593,7 +593,7 @@ PUBLIC ATTR_CONST WUNUSED size_t
 	}
 	if (OVERFLOW_UADD(result, base_offset, &result)) {
 		_DeeAssert_Failf("_Dee_MallococBufsizeDbg(...)", file, line,
-		                 "Unexpected overflow when adding `base_offset' to `elem_count * elem_size':\n"
+		                 "Unexpected overflow when adding `base_offset` to `elem_count * elem_size`:\n"
 		                 "base_offset            = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
 		                 "elem_count * elem_size = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
 		                 "[elem_count            = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")]\n"

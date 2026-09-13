@@ -50,7 +50,7 @@ INTDEF instruction_t const operator_instr_table[];
 #define OPCOUNT_PUSHSECOND  0x20 /* You must re-return the second operand. */
 #define OPCOUNT_PUSHTHIRD   0x30 /* You must re-return the third operand. */
 #define OPCOUNT_PUSHFOURTH  0x40 /* You must re-return the fourth operand. */
-#define OPCOUNT_POPPUSHNONE 0x70 /* You must pop one object, the push `none'. */
+#define OPCOUNT_POPPUSHNONE 0x70 /* You must pop one object, the push `none`. */
 #define OPCOUNT_PUSHNONE    0x80 /* You must re-return none. */
 INTDEF uint8_t const operator_opcount_table[OPERATOR_USERCOUNT];
 
@@ -92,7 +92,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	 * >>.cold.1:
 	 * >>   [pop]                 // When the result is used
 	 * >>                         // Stack: foo, bar
-	 * >>    push  @"This is bad" // Stack: foo, bar, message  --- When no message is given, push `none' instead
+	 * >>    push  @"This is bad" // Stack: foo, bar, message  --- When no message is given, push `none` instead
 	 * >>    rrot  #3             // Stack: message, foo, bar
 	 * >>    push  $__eq__        // Stack: message, foo, bar, id  --- Push the operator id as an integer onto the stack.
 	 * >>    rrot  #3             // Stack: message, id, foo, bar
@@ -201,7 +201,7 @@ emit_instruction:
 			case FAKE_OPERATOR_IS:
 				if (argc != 2)
 					goto fallback_generate_goperator;
-				/* Special case: `assert a is b' */
+				/* Special case: `assert a is b` */
 				DO(asm_putddi(expr));
 				error = asm_gimplements();
 				break;
@@ -209,7 +209,7 @@ emit_instruction:
 			case FAKE_OPERATOR_SAME_OBJECT:
 				if (argc != 2)
 					goto fallback_generate_goperator;
-				/* Special case: `assert a === b' */
+				/* Special case: `assert a === b` */
 				DO(asm_putddi(expr));
 				error = asm_gsameobj();
 				break;
@@ -217,7 +217,7 @@ emit_instruction:
 			case FAKE_OPERATOR_DIFF_OBJECT:
 				if (argc != 2)
 					goto fallback_generate_goperator;
-				/* Special case: `assert a !== b' */
+				/* Special case: `assert a !== b` */
 				DO(asm_putddi(expr));
 				error = asm_gdiffobj();
 				break;
@@ -225,7 +225,7 @@ emit_instruction:
 			case FAKE_OPERATOR_NOT:
 				if (argc != 1)
 					goto fallback_generate_goperator;
-				/* Special case: `assert !a' */
+				/* Special case: `assert !a` */
 				jmp_instr = ASM_JX_NOT(jmp_instr);
 				DO(asm_putddi(expr));
 				error = asm_gnoop(); /* XXX: Without this, we get an assert fail: "peephole.c(1240) : Assertion failed : !IS_PROTECTED(instr_pop)" */
@@ -249,24 +249,24 @@ fallback_generate_goperator:
 			/* STACK: a, [b, [c, [d]]], [check_cond] (remember the duplicates we created above) */
 
 			/* Must unify the instruction behavior by fixing the
-			 * stack (`check_cond' must always be present). */
+			 * stack (`check_cond` must always be present). */
 			switch (operand_mode & OPCOUNT_RESULTMASK) {
 
 			case OPCOUNT_PUSHFIRST:
-				DO(argc > 1 ? asm_gdup_n(argc - 2) : asm_gdup()); /* `dup #argc-1' */
+				DO(argc > 1 ? asm_gdup_n(argc - 2) : asm_gdup()); /* `dup #argc-1` */
 				break;
 
 			case OPCOUNT_PUSHSECOND:
-				DO(argc > 2 ? asm_gdup_n(argc - 3) : asm_gdup()); /* `dup #argc-2' */
+				DO(argc > 2 ? asm_gdup_n(argc - 3) : asm_gdup()); /* `dup #argc-2` */
 				break;
 
 			case OPCOUNT_PUSHTHIRD:
-				DO(argc > 3 ? asm_gdup_n(argc - 4) : asm_gdup()); /* `dup #argc-3' */
+				DO(argc > 3 ? asm_gdup_n(argc - 4) : asm_gdup()); /* `dup #argc-3` */
 				break;
 
 			case OPCOUNT_PUSHFOURTH:
 				ASSERT(!(argc > 4));
-				DO(/*argc > 4 ? asm_gdup_n(argc-5) : */ asm_gdup()); /* `dup #argc-4' */
+				DO(/*argc > 4 ? asm_gdup_n(argc-5) : */ asm_gdup()); /* `dup #argc-4` */
 				break;
 
 			case OPCOUNT_POPPUSHNONE:
@@ -282,7 +282,7 @@ fallback_generate_goperator:
 		}
 		DO(asm_putddi(ddi_ast));
 
-		/* Duplicate `condition' to-be re-used as result of the assert expression. */
+		/* Duplicate `condition` to-be re-used as result of the assert expression. */
 		if (gflags & ASM_G_FPUSHRES)
 			DO(asm_gdup());
 
@@ -291,10 +291,10 @@ fallback_generate_goperator:
 		old_section = current_assembler.a_curr;
 		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
 			DO(asm_gjmp(jmp_instr, assert_cleanup));
-			asm_decsp(); /* Adjust for `ASM_JT' */
+			asm_decsp(); /* Adjust for `ASM_JT` */
 		} else {
 			DO(asm_gjmp(ASM_JX_NOT(jmp_instr), assert_enter));
-			asm_decsp(); /* Adjust for `ASM_JF' */
+			asm_decsp(); /* Adjust for `ASM_JF` */
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 			DO(asm_putddi(ddi_ast));
 			asm_defsym(assert_enter);
@@ -302,7 +302,7 @@ fallback_generate_goperator:
 
 		/* STACK: a, [b, [c, [d]]], [condition] */
 		if (gflags & ASM_G_FPUSHRES)
-			DO(asm_gpop()); /* Pop the duplicated `condition' */
+			DO(asm_gpop()); /* Pop the duplicated `condition` */
 
 		/* STACK: a, [b, [c, [d]]] */
 		if (message) {
@@ -323,7 +323,7 @@ fallback_generate_goperator:
 
 		/* STACK: message, operator_name, a, [b, [c, [d]]] */
 
-		/* Add `deemon' to the import list. */
+		/* Add `deemon` to the import list. */
 		deemon_modid = asm_newmodule(DeeModule_GetDeemon());
 		if unlikely(deemon_modid < 0)
 			goto err;
@@ -388,7 +388,7 @@ fallback_generate_goperator:
 		case AST_FACTION_IS:
 		case AST_FACTION_SAMEOBJ:
 		case AST_FACTION_DIFFOBJ:
-			/* Special case: `a is b', `a === b' and `a !== b'. */
+			/* Special case: `a is b`, `a === b` and `a !== b`. */
 			switch (expr->a_flag) {
 			case AST_FACTION_IS:
 				operator_name = FAKE_OPERATOR_IS;
@@ -446,10 +446,10 @@ fallback_generate_goperator:
 	old_section = current_assembler.a_curr;
 	if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
 		DO(asm_gjmp(ASM_JT, assert_leave));
-		asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' */
+		asm_decsp(); /* Adjust for `ASM_JT` / `ASM_JF` */
 	} else {
 		DO(asm_gjmp(ASM_JF, assert_enter));
-		asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' */
+		asm_decsp(); /* Adjust for `ASM_JT` / `ASM_JF` */
 		current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 		DO(asm_putddi(ddi_ast));
 	}
@@ -467,7 +467,7 @@ fallback_generate_goperator:
 		++argc;
 	}
 
-	/* Add `deemon' to the import list. */
+	/* Add `deemon` to the import list. */
 	deemon_modid = asm_newmodule(DeeModule_GetDeemon());
 	if unlikely(deemon_modid < 0)
 		goto err;

@@ -149,7 +149,7 @@ map_operator_delitem = {
 		if (seq_operator_delitem == &default__seq_operator_delitem__empty)
 			return &$empty;
 		if (REQUIRE_ANY(seq_enumerate) != &default__seq_enumerate__unsupported)
-			return &$with__map_remove; /* See selector in `map_remove' */
+			return &$with__map_remove; /* See selector in `map_remove` */
 	}
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)

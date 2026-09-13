@@ -536,7 +536,7 @@ FORCELOCAL WUNUSED DREF CObject *DCALL libctypes_bswap128_f_impl(Dee_uint128_t x
 #define libctypes_htobe128 CUInt128_Type.ct_base
 #define libctypes_betoh128 CUInt128_Type.ct_base
 #else /* __BYTE_ORDER__ == ... */
-#error "Unsupported `__BYTE_ORDER__'"
+#error "Unsupported `__BYTE_ORDER__`"
 #endif /* __BYTE_ORDER__ != ... */
 
 
@@ -648,7 +648,7 @@ DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
 /* TODO: Both Pointer and LValue types need 1 sub-class each: RefPointer and RefLValue
  *       These sub-classes behave the same as the original Pointer/LValue-type, except
  *       that they don't have constructors, and instance have 1 additional field that
- *       follows after the underlying pointer: `DREF DeeObject *ob_ref; // [1..1]'.
+ *       follows after the underlying pointer: `DREF DeeObject *ob_ref; // [1..1]`.
  * This field is a reference to the owning object. These extra types are then used
  * whenever you do a ctypes operation where it is clear which object a pointer/lvalue
  * points into. e.g.:
@@ -661,17 +661,17 @@ DEX_MEMBER_F("union", &libctypes_union, Dee_DEXSYM_READONLY,
  * >> local p2 = ((foo){ .u = 0x40000000 }).s.ptr;
  * >> print p1.ind.hex();
  * >> print p2.ind.hex();
- * Here, both `p1' and `p2' are RefPointer-objects, with `p1' holding a reference
- * to `x', and `p2' holding a reference to `(foo){ .u = 0x40000000 }'. This way,
+ * Here, both `p1` and `p2` are RefPointer-objects, with `p1` holding a reference
+ * to `x`, and `p2` holding a reference to `(foo){ .u = 0x40000000 }`. This way,
  * using ctypes in user-code becomes much easier, as there's no need to make sure
  * that the objects pointed-to by pointer/lvalue instances stay alive for as long
- * as the pointer/lvalue type does (Because currently, `(foo){ .u = 0x40000000 }'
- * has already been destroyed by the time `print p2.ind.hex();' tries to use it)
+ * as the pointer/lvalue type does (Because currently, `(foo){ .u = 0x40000000 }`
+ * has already been destroyed by the time `print p2.ind.hex();` tries to use it)
  */
 
 /* A wrapper around the native shared-library loader. */
 DEX_MEMBER_F_NODOC("ShLib", &ShLib_Type, Dee_DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("dlopen", &ShLib_Type, Dee_DEXSYM_READONLY), /* Convenience alias for `ShLib' */
+DEX_MEMBER_F_NODOC("dlopen", &ShLib_Type, Dee_DEXSYM_READONLY), /* Convenience alias for `ShLib` */
 
 /* Export all the C-types. */
 DEX_MEMBER_F_NODOC("void", CType_AsType(&CVoid_Type), Dee_DEXSYM_READONLY),
@@ -701,9 +701,9 @@ DEX_MEMBER_F_NODOC("bswap_uint32_t", CType_AsType(&CBSwapUInt32_Type), Dee_DEXSY
 DEX_MEMBER_F_NODOC("bswap_uint64_t", CType_AsType(&CBSwapUInt64_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("bswap_uint128_t", CType_AsType(&CBSwapUInt128_Type), Dee_DEXSYM_READONLY),
 
-/* Endian-specific integer types (e.g. `le16' and `be16')
+/* Endian-specific integer types (e.g. `le16` and `be16`)
  * These could be used in structures and always encode/decode
- * the underlying value to/from a regular deemon `int' object
+ * the underlying value to/from a regular deemon `int` object
  * to automatically apply the necessary endian conversion
  *
  * >> import * from ctypes;
@@ -781,7 +781,7 @@ DEX_MEMBER_F("bswap_intfor", &libctypes_bswap_intfor, Dee_DEXSYM_READONLY,
 #define libctypes_beintfor        libctypes_intfor
 #define libctypes_beintfor_params libctypes_intfor_params
 #else /* __BYTE_ORDER__ == ... */
-#error "Unsupported `__BYTE_ORDER__'"
+#error "Unsupported `__BYTE_ORDER__`"
 #endif /* __BYTE_ORDER__ != ... */
 DEX_MEMBER_F("leintfor", &libctypes_leintfor, Dee_DEXSYM_READONLY,
              "(" libctypes_leintfor_params ")->?GCType\n"

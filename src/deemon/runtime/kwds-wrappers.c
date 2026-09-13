@@ -830,8 +830,8 @@ blv_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	}
 	if unlikely(DeeKwds_SIZE(args.kwds) != DeeTuple_SIZE(args.kwargs)) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "`kwargs' tuple has %" PRFuSIZ " elements when "
-		                "`kwds' map requires exactly %" PRFuSIZ " values",
+		                "`kwargs` tuple has %" PRFuSIZ " elements when "
+		                "`kwds` map requires exactly %" PRFuSIZ " values",
 		                DeeTuple_SIZE(args.kwargs), DeeKwds_SIZE(args.kwds));
 		goto err;
 	}
@@ -1026,7 +1026,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
- * The caller must decref the returned object using `DeeBlackListKwds_Decref()'
+ * The caller must decref the returned object using `DeeBlackListKwds_Decref()`
  * -> This function is used to filter keyword arguments from varkwds when
  *    kwargs argument protocol is used:
  *    >> function foo(x, y?, **kwds) {
@@ -1066,8 +1066,8 @@ done:
 
 
 /* Unshare the argument vector from a blacklist-varkwds object, automatically
- * constructing a copy if all contained objects if `self' is being shared,
- * or destroying `self' without touching the argument vector if not. */
+ * constructing a copy if all contained objects if `self` is being shared,
+ * or destroying `self` without touching the argument vector if not. */
 PUBLIC NONNULL((1)) void DCALL
 DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 	DREF DeeBlackListKwdsObject *me;
@@ -1096,7 +1096,7 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 	DeeBlackListKwds_LockEndWrite(me);
 
 	/* Construct references to pointed-to objects (done now, so we could
-	 * skip that step within the `!DeeObject_IsShared(me)' path above) */
+	 * skip that step within the `!DeeObject_IsShared(me)` path above) */
 	Dee_Incref(me->blkd_code);
 	Dee_Incref(me->blkd_kwds);
 
@@ -1520,7 +1520,7 @@ blkw_contains(DeeBlackListKwObject *self,
 struct blkw_foreach_pair_data {
 	DeeBlackListKwObject *bfp_self; /* [1..1] The blacklist controller. */
 	Dee_foreach_pair_t    bfp_proc; /* [1..1] Wrapped callback. */
-	void                 *bfp_arg;  /* Cookie for `bfp_proc' */
+	void                 *bfp_arg;  /* Cookie for `bfp_proc` */
 };
 
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
@@ -1925,8 +1925,8 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
  * -> The returned objects can be used for any kind of mapping, such that in the
- *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))'
- *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)'
+ *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))`
+ *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)`
  * -> This function is used to filter keyword arguments from varkwds when the general
  *    purpose keyword argument protocol is used:
  *    >> function foo(x, y?, **kwds) {

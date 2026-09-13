@@ -223,7 +223,7 @@ do_realloc_list:
 	if unlikely(!result)
 		goto err_list_elemv;
 
-	/* Upon success, `ast_multiple' inherits the element vector. */
+	/* Upon success, `ast_multiple` inherits the element vector. */
 	return result;
 err_list_elemv_result:
 	ast_decref(result);

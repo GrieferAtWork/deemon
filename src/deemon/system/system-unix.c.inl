@@ -57,9 +57,9 @@
 DECL_BEGIN
 
 
-/* Throw an exception alongside an errno error-code `error'
- * When `tp' is `NULL', automatically select an appropriate
- * error type based on the value of `error' */
+/* Throw an exception alongside an errno error-code `error`
+ * When `tp` is `NULL`, automatically select an appropriate
+ * error type based on the value of `error` */
 PUBLIC ATTR_COLD NONNULL((3)) int
 (DCALL DeeUnixSystem_VThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
                                    char const *__restrict format, va_list args) {
@@ -86,7 +86,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 		goto got_tp;
 	}
 
-	/* Check for error types derived from `errors.SystemError' */
+	/* Check for error types derived from `errors.SystemError` */
 got_tp:
 	if (DeeType_Check(tp) &&
 	    DeeType_Extends(tp, &DeeError_SystemError)) {
@@ -153,7 +153,7 @@ _DeeUnixSystem_HandleGenericError(int errno_value) {
 
 
 
-/* Figure out how to implement `DeeUnixSystem_ReadLink()' */
+/* Figure out how to implement `DeeUnixSystem_ReadLink()` */
 #undef DeeUnixSystem_ReadLink_USE_WINDOWS
 #undef DeeUnixSystem_ReadLink_USE_freadlinkat
 #undef DeeUnixSystem_ReadLink_USE_readlink
@@ -312,8 +312,8 @@ DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 
 
 
-/* Figure out how to implement `DeeSystem_GetFilenameOfFD()'
- * NOTE: This listing is duplicated in `src/dex/posix/p-realpath.c.inl' */
+/* Figure out how to implement `DeeSystem_GetFilenameOfFD()`
+ * NOTE: This listing is duplicated in `src/dex/posix/p-realpath.c.inl` */
 #undef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 #undef DeeSystem_PrintFilenameOfFD_USE_frealpath
 #undef DeeSystem_PrintFilenameOfFD_USE_readlink_procfs
@@ -331,7 +331,7 @@ DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 #define DeeSystem_PrintFilenameOfFD_USE_STUB
 #endif /* !... */
 
-/* Determine the filename from a file descriptor, as returned by `open()'
+/* Determine the filename from a file descriptor, as returned by `open()`
  * If the host doesn't support FD-based file descriptors, throw an error. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSystem_GetFilenameOfFD(int fd) {

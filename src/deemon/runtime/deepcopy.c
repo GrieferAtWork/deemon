@@ -58,7 +58,7 @@ DECL_BEGIN
 
 /* Instruct the deepcopy context to replace pointers/objects
  * in [optr,+=num_bytes) with nptr+OFFSET. Used to implement
- * various operators from `struct Dee_serial_type'.
+ * various operators from `struct Dee_serial_type`.
  *
  * @return: 0 : Success
  * @return: -1: Error */
@@ -932,25 +932,25 @@ DeeDeepCopy_AddImmutable(DeeDeepCopyContext *__restrict self, DeeObject *ob) {
 		}
 		self->dcc_immutablev[self->dcc_immutablec++] = ob; /* Reference created below... */
 	}
-	Dee_Incref(ob); /* As stored in `self->dcc_immutable1' / `self->dcc_immutablev' */
+	Dee_Incref(ob); /* As stored in `self->dcc_immutable1` / `self->dcc_immutablev` */
 	return ob;
 err:
 	return NULL;
 }
 
 /* Serialize "ob" into "self" and return a pointer for where "ob" will
- * eventually be initialized once `DeeDeepCopy_Pack()' is called. But
+ * eventually be initialized once `DeeDeepCopy_Pack()` is called. But
  * until that has been done, this pointer must **NOT** be exposed to
  * user-code, and must similarly not be interacted with, either!
  *
  * When "ob" has already been copied by "self", remember that an extra
  * incref needs to happen and return that pre-existing copy (any distinct
- * object (as per `DeeObject_Id()') will always be copied at most once)
+ * object (as per `DeeObject_Id()`) will always be copied at most once)
  *
  * @return: * :   Location where the deep-copy of "ob" will appear
  *                When "ob" is immutable, this function may just re-return "ob"
  *                after storing a special reference to "ob" that is dropped if
- *                `DeeDeepCopy_Fini' is called instead of `DeeDeepCopy_Pack'.
+ *                `DeeDeepCopy_Fini` is called instead of `DeeDeepCopy_Pack`.
  * @return: NULL: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*after(DeeDeepCopy_Pack)*/ DeeObject *DCALL
 DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
@@ -1045,7 +1045,7 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 			goto err;
 	} else {
 		int status;
-		/* Don't use `DeeType_GetInstanceSize()' here -- if the type uses slab
+		/* Don't use `DeeType_GetInstanceSize()` here -- if the type uses slab
 		 * allocators, then we have to call **those** and can't just use default
 		 * allocators instead! */
 		if (tp->tp_init.tp_alloc.tp_free) {
@@ -1138,14 +1138,14 @@ cleanup_uheap(struct Dee_deepcopy_uheap *heap) {
 
 /* Finalize "self" in the sense of doing a COMMIT.
  *
- * This function behaves similar to `DeeDeepCopy_Fini()', but will also
- * (atomically) initialize the return values of `DeeDeepCopy_CopyObject'
+ * This function behaves similar to `DeeDeepCopy_Fini()`, but will also
+ * (atomically) initialize the return values of `DeeDeepCopy_CopyObject`
  * to resemble valid references to deemon objects (which must then be
  * inherited by the caller(s) of that function)
  *
- * IMPORTANT: Do **NOT** call `DeeDeepCopy_Fini(self)' after this function.
+ * IMPORTANT: Do **NOT** call `DeeDeepCopy_Fini(self)` after this function.
  *            If you want to re-use "self" as a different context, you must
- *            first re-initialize it using `DeeDeepCopy_Init(self)' */
+ *            first re-initialize it using `DeeDeepCopy_Init(self)` */
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 	/* Destroy heap links (if used) */
@@ -1165,7 +1165,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 		objv = Dee_weakref_initmany_unlock_and_inherit(self->dcc_weakrefv, self->dcc_weakrefc);
 		Dee_Decrefv_unlikely(objv, self->dcc_weakrefc);
 		ASSERT(objv == (DeeObject **)self->dcc_weakrefv);
-		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)' above */
+		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)` above */
 		DeeGC_CollectAsNecessary();
 	} else if (self->dcc_gc_head) {
 		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail, DeeGC_TRACK_F_NORMAL);

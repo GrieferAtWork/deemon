@@ -233,10 +233,10 @@ err:
 	return -1;
 }
 
-/* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED',
- * and if so: change it to `Dee_MODULE_INIT_INITIALIZED' (even if the module
+/* Check if the given module's current stat is `Dee_MODULE_INIT_UNINITIALIZED`,
+ * and if so: change it to `Dee_MODULE_INIT_INITIALIZED` (even if the module
  * may not have already been initialized)
- * @return: * : One of `DeeModule_SetInitialized_*' */
+ * @return: * : One of `DeeModule_SetInitialized_*` */
 PUBLIC NONNULL((1)) unsigned int DCALL
 DeeModule_SetInitialized(DeeModuleObject *__restrict self) {
 	DeeThreadObject *status;
@@ -256,7 +256,7 @@ DeeModule_SetInitialized(DeeModuleObject *__restrict self) {
 
 
 /* Return the root code object of a given module.
- * The caller must ensure that `self' is an instance of "DeeModuleDee_Type" */
+ * The caller must ensure that `self` is an instance of "DeeModuleDee_Type" */
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF struct Dee_code_object *DCALL
 DeeModule_GetRootCode(DeeModuleObject *__restrict self) {
 	DREF DeeCodeObject *result;
@@ -1224,9 +1224,9 @@ DeeModule_SetAttrStringLenHash(DeeModuleObject *self,
 
 
 /* Return the name of a global variable in the given module.
- * @return: NULL: The given `gid' is not recognized, or the module hasn't finished/started loading yet.
- * @return: * :   The name of the global associated with `gid'.
- *                Note that in the case of aliases existing for `gid', this function prefers not to
+ * @return: NULL: The given `gid` is not recognized, or the module hasn't finished/started loading yet.
+ * @return: * :   The name of the global associated with `gid`.
+ *                Note that in the case of aliases existing for `gid`, this function prefers not to
  *                return the name of an alias, but that of the original symbol itself, so long as that
  *                symbol actually exist, which if it doesn't, it will return the name of a random alias. */
 PUBLIC WUNUSED NONNULL((1)) char const *DCALL
@@ -1283,8 +1283,8 @@ module_printrepr(DeeObject *__restrict self,
 struct module_attriter {
 	Dee_ATTRITER_HEAD
 	DeeModuleObject *mai_mod;  /* [1..1][const] The module whose attributes to enumerate. */
-	size_t           mai_didx; /* [lock(ATOMIC)] Index into `mai_mod->mo_dir->md_files' */
-	uint16_t         mai_hidx; /* [lock(ATOMIC)] Index into `mai_mod->mo_bucketv' */
+	size_t           mai_didx; /* [lock(ATOMIC)] Index into `mai_mod->mo_dir->md_files` */
+	uint16_t         mai_hidx; /* [lock(ATOMIC)] Index into `mai_mod->mo_bucketv` */
 };
 
 INTDEF struct type_attr module_attr;
@@ -1847,7 +1847,7 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	/* TODO: User-code access to "DeeModule_NextLibTree" */
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
+	/* Deprecated aliases to emulate the old `dexmodule` builtin type. */
 	TYPE_GETSET_AB("search_path", &module_class_getpath, NULL, &module_class_setpath,
 	               "->?DTuple\n"
 	               "Deprecated alias for ?#path"),
@@ -1874,7 +1874,7 @@ module_import_with_frame_base(DeeObject *__restrict module_name) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 module_class_open(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
-	/* This is pretty much the same as the builtin `import()' function.
+	/* This is pretty much the same as the builtin `import()` function.
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("open", params: """
@@ -1895,7 +1895,7 @@ err:
 
 
 PRIVATE struct type_method tpconst module_class_methods[] = {
-	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
+	/* Deprecated aliases to emulate the old `dexmodule` builtin type. */
 	TYPE_METHOD("open", &module_class_open,
 	            "(" module_class_open_params ")->?DModule\n"
 	            "Deprecated alias for ?D__import__ and the $import statement"),
@@ -1904,7 +1904,7 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 
 
 /* Unbind "self" from relevant trees.
- * Caller must ensure that `self->mo_absname != NULL' */
+ * Caller must ensure that `self->mo_absname != NULL` */
 INTDEF NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self);
 
@@ -1953,7 +1953,7 @@ module_dee_visit(DeeModuleObject *__restrict self,
 	DeeModule_LockEndRead(self);
 }
 
-/* Unbind from `module_byaddr_tree' */
+/* Unbind from `module_byaddr_tree` */
 INTDEF NONNULL((1)) void DCALL
 module_dee_unbind(DeeModuleObject *__restrict self);
 
@@ -1965,7 +1965,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
 	self = (DeeModuleObject *)DeeGC_Untrack(Dee_AsObject(self));
 
-	/* Unbind from `module_byaddr_tree' */
+	/* Unbind from `module_byaddr_tree` */
 	module_dee_unbind(self);
 
 	/* Destroy Dee-specific data */
@@ -1993,7 +1993,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	/* Destroy common data */
 	module_common_destroy(self);
 
-	/* Free module object. Note that this may-or-may-not also free the `DeeMapFile'
+	/* Free module object. Note that this may-or-may-not also free the `DeeMapFile`
 	 * associated with the .dec image. Said image (and thus the backing storage of
 	 * "self" and all other objects belonging to the module) will be freed once the
 	 * last sub-heap-block apart of the image has been freed.
@@ -2208,9 +2208,9 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	/* Cleanup string object references in the module's symbol table.
 	 * Since "dex_add_symbol()" asserts that DEX modules can't pre-define
 	 * symbols that use string objects as their names, such strings could
-	 * only have been created lazily via `Dee_module_symbol_getnameobj()'
+	 * only have been created lazily via `Dee_module_symbol_getnameobj()`
 	 *
-	 * The same obviously also goes for `Dee_module_symbol_getdocobj()'. */
+	 * The same obviously also goes for `Dee_module_symbol_getdocobj()`. */
 	{
 		struct Dee_module_symbol *buckets = self->mo_bucketv;
 		if (buckets != empty_module_buckets) {
@@ -2265,11 +2265,11 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 * >> void *DCALL Dee_StaticMalloc(void *reference, size_t num_bytes);
 	 *
 	 * Here, "reference" would be a pointer to the "T *" that is being lazily
-	 * allocated, and would be used with `DeeModule_OfPointer(reference)' to
+	 * allocated, and would be used with `DeeModule_OfPointer(reference)` to
 	 * determine which dex module (if any) must free the heap block once that
 	 * module gets unloaded.
 	 *
-	 * However: therein lies the problem: `DeeModule_OfPointer()' is O(log(N))
+	 * However: therein lies the problem: `DeeModule_OfPointer()` is O(log(N))
 	 *          for the # of currently loaded dex modules, which is simply too
 	 *          slow. The overhead added by this additional tracking *MUST*
 	 *          remain O(1), since it's only needed for the case where the
@@ -2281,7 +2281,7 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 *
 	 * NOTES:
 	 * - The only memory leaks affected by this are allocations that
-	 *   currently get piped through `Dee_UntrackAlloc()'.
+	 *   currently get piped through `Dee_UntrackAlloc()`.
 	 * - The reason why these allocations don't qualify as memory leaks is:
 	 *   - the total sum of memory they can allocate is O(1), because...
 	 *   - ... dex modules are never unloaded, so a cache that was allocated

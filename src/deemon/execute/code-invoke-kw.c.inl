@@ -41,7 +41,7 @@
 
 
 #if (CODE_FLAGS & ~(Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)) != 0
-#error "Unsupported code flags for keyword invocation (must be a set of `Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING')"
+#error "Unsupported code flags for keyword invocation (must be a set of `Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING`)"
 #endif /* (CODE_FLAGS & ~(Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)) != 0 */
 
 
@@ -105,10 +105,10 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	size_t i;
 	size_t kw_argc;      /* # of keyword arguments passed (DeeKwds_SIZE(kw)). */
 	size_t ex_argc;      /* # of objects in the keyword-overlay vector (code->co_argc_max - frame.cf_argc) */
-	size_t kw_used;      /* # of keyword arguments that have been loaded from `kw'.
+	size_t kw_used;      /* # of keyword arguments that have been loaded from `kw`.
 	                      * NOTE: Once all provided arguments have been loaded, this is used
 	                      *       to check if _all_ keywords have actually been used, which
-	                      *       is a requirement when `Dee_CODE_FVARKWDS' isn't set. */
+	                      *       is a requirement when `Dee_CODE_FVARKWDS` isn't set. */
 #define err_ex_frame  err
 #endif /* __INTELLISENSE__ */
 #if CODE_FLAGS & Dee_CODE_FYIELDING
@@ -314,7 +314,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	Dee_Incref(kw); /* Always a reference when yielding */
 #elif CODE_FLAGS & Dee_CODE_FVARKWDS
 	ASSERT(frame.cf_kw->fk_kw == kw);
-	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `Dee_CODE_FVARKWDS') */
+	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw` (Only valid when `Dee_CODE_FVARKWDS`) */
 #endif /* CODE_FLAGS & Dee_CODE_FVARKWDS ) */
 	yf->yf_kw = frame.cf_kw; /* Inherit data. */
 	DeeObject_InitStatic(yf, &DeeYieldFunction_Type);
@@ -372,7 +372,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			Dee_Decref(*frame.cf_sp);
 		}
 		/* Safe code execution allows for stack-space extension into heap memory.
-		 * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
+		 * >> Free that memory now that `DeeCode_ExecFrameSafe()` has finished. */
 		if (frame.cf_stacksz)
 			Dee_Free(frame.cf_stack);
 		frame.cf_sp = frame.cf_frame + code->co_localc;

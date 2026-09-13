@@ -70,7 +70,7 @@ print a, b, c, d;
  *       where parenthesis on the left-hand side is the inverse
  *       of an expand-expression on the right-hand size.
  *       For more information, look at the section on this
- *       subject in `/lib/LANGUAGE.txt'
+ *       subject in `/lib/LANGUAGE.txt`
  */
 
 /* Be careful with other operators,

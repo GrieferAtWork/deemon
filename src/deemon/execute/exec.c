@@ -49,9 +49,9 @@
 
 DECL_BEGIN
 
-/* Execute source code from `source_stream' and return the result of invoking it.
+/* Execute source code from `source_stream` and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
- * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
+ * @param: mode:            One of `DeeExec_RUNMODE_*`, optionally or'd with a set of `DeeExec_RUNMODE_F*`
  * @param: argv:            Variable arguments passed to user-code
  * @param: start_line:      The starting line number when compiling code. (zero-based)
  * @param: start_col:       The starting column number when compiling code. (zero-based)
@@ -60,12 +60,12 @@ DECL_BEGIN
  *                          as the fact that peephole and other optimizations are
  *                          forced to be disabled, or DEC files are never generated,
  *                          all for reasons that should be quite obvious.
- * @param: default_symbols: A mapping-like object of type `{string: Object}', that
+ * @param: default_symbols: A mapping-like object of type `{string: Object}`, that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
  *                          variables.
  *                          These are either provided as constants, or as globals,
- *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS' */
+ *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS` */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col, unsigned int mode,
@@ -173,18 +173,18 @@ PRIVATE size_t /*         */ atexit_size = 0;
 PRIVATE struct atexit_entry *atexit_list = NULL;
 
 #define ATEXIT_FNORMAL 0x0000 /* Normal atexit flags. */
-#define ATEXIT_FDIDRUN 0x0001 /* `atexit_callback' has been executed. */
+#define ATEXIT_FDIDRUN 0x0001 /* `atexit_callback` has been executed. */
 #ifdef CONFIG_HAVE_atexit
-#define ATEXIT_FDIDREG 0x0002 /* `atexit_callback' was registered using `atexit()' */
+#define ATEXIT_FDIDREG 0x0002 /* `atexit_callback` was registered using `atexit()` */
 #endif /* CONFIG_HAVE_atexit */
-/* [lock(atexit_lock)] Set of `ATEXIT_F*' */
+/* [lock(atexit_lock)] Set of `ATEXIT_F*` */
 PRIVATE uint16_t atexit_mode = ATEXIT_FNORMAL;
 
 
-/* Run callbacks that have been registered using `Dee_AtExit()'
+/* Run callbacks that have been registered using `Dee_AtExit()`
  * @return:  0: Successfully executed all callbacks.
- * @return: -1: An error occurred (never returned when `Dee_RUNATEXIT_FRUNALL' is passed)
- * NOTE: This function is automatically called when `exit()'
+ * @return: -1: An error occurred (never returned when `Dee_RUNATEXIT_FRUNALL` is passed)
+ * NOTE: This function is automatically called when `exit()`
  *       from stdlib is used to stop execution of the program. */
 PUBLIC int DCALL
 Dee_RunAtExit(uint16_t flags) {
@@ -216,7 +216,7 @@ Dee_RunAtExit(uint16_t flags) {
 					DeeError_Print("Unhandled error in atexit() callback",
 					               ERROR_PRINT_HANDLEINTR);
 				} else {
-					/* Restore the list (Since we've already set `ATEXIT_FDIDRUN'
+					/* Restore the list (Since we've already set `ATEXIT_FDIDRUN`
 					 * flag, we can be sure that there is no way anything was
 					 * able to register additional callbacks, meaning that the
 					 * list must still be empty) */
@@ -252,11 +252,11 @@ PRIVATE void __LIBCCALL atexit_callback(void) {
 
 /* High-level functionality for registering at-exit hooks.
  * When executed, at-exit callbacks are run in order of being registered.
- * NOTE: This function makes use of libc's `atexit()' function (if available).
- * @param args: A tuple object the is used to invoke `callback'
+ * NOTE: This function makes use of libc's `atexit()` function (if available).
+ * @param args: A tuple object the is used to invoke `callback`
  * @return:  0: Successfully registered the given callback.
  * @return: -1: An error occurred or atexit() can no longer be used
- *              because `Dee_RunAtExit()' is being, or had been called. */
+ *              because `Dee_RunAtExit()` is being, or had been called. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 Dee_AtExit(DeeObject *callback, DeeObject *args) {
 	struct atexit_entry *new_list;
@@ -288,7 +288,7 @@ again:
 #ifdef CONFIG_HAVE_atexit
 	/* If the atexit-callback hasn't been registered yet, do that now. */
 	if (!(atexit_mode & ATEXIT_FDIDREG)) {
-		/* Don't bother handling errors returned by `atexit()'... */
+		/* Don't bother handling errors returned by `atexit()`... */
 		atexit(&atexit_callback);
 		atexit_mode |= ATEXIT_FDIDREG;
 	}
@@ -310,12 +310,12 @@ err:
 PRIVATE DREF DeeTupleObject *usercode_argv = (DREF DeeTupleObject *)Dee_EmptyTuple;
 
 /* Get/Set the user-code argument vector that is
- * accessible from module-scope code using `...':
+ * accessible from module-scope code using `...`:
  * >> local argv = [...];
  * >> print repr argv; // ["my_script.dee", "these", "are", "from", "the", "commandline"]
  * With that in mind, module root-code objects are varargs functions that are
  * invoked using the Argv tuple modifiable using this pair of functions.
- * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.
+ * The deemon launcher should call `Dee_SetArgv()` to set the original argument tuple.
  * NOTE: By default, an empty tuple is set for argv. */
 PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
@@ -384,7 +384,7 @@ INTDEF void DCALL gc_dump_all_except_dex(void);
  * This does very little, as most components are designed for lazy initialization,
  * or are simply initialized statically (i.e. already come pre-initialized).
  * However, some components do require some pre-initialization, the most notable
- * here being `DeeThread_SubSystemInit()', as well as allocation of the memory
+ * here being `DeeThread_SubSystemInit()`, as well as allocation of the memory
  * block used by the slab allocator. */
 PUBLIC void DCALL Dee_Initialize(void) {
 

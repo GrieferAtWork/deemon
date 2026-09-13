@@ -114,7 +114,7 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_json_cannot_parse_type_as_type(DeeTypeObject *native_json_type,
                                    DeeTypeObject *into_type) {
 	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Cannot parse instance of `%k' into `%k'",
+	                       "Cannot parse instance of `%k` into `%k`",
 	                       native_json_type, into_type);
 }
 
@@ -1586,28 +1586,28 @@ err_syntax_array_retval:
 
 
 /* Parse a single JSON element and convert it into an object.
- * Upon success, the given parser `self' will point at the first
+ * Upon success, the given parser `self` will point at the first
  * token *after* the just-parsed JSON element (though only when
- * the `must_advance_parser' parameter is set to true).
+ * the `must_advance_parser` parameter is set to true).
  *
  * Json elements are converted to deemon objects as follows:
- * - `null'           ->  `DeeNone_Type'
- * - `true', `false'  ->  `DeeBool_Type'
- * - `123'            ->  `DeeInt_Type'
- * - `123.4'          ->  `DeeFloat_Type'
- * - `"foo"'          ->  `DeeString_Type'
- * - `[x, y, z]'      ->  `DeeJsonSequence_Type'
- * - `{ "foo": 42 }'  ->  `DeeJsonMapping_Type'
+ * - `null`           ->  `DeeNone_Type`
+ * - `true`, `false`  ->  `DeeBool_Type`
+ * - `123`            ->  `DeeInt_Type`
+ * - `123.4`          ->  `DeeFloat_Type`
+ * - `"foo"'          ->  `DeeString_Type`
+ * - `[x, y, z]`      ->  `DeeJsonSequence_Type`
+ * - `{ "foo": 42 }'  ->  `DeeJsonMapping_Type`
  *
  * Note that this covers all valid JSON constructs, and that those
  * constructs that allow for the recursive inclusion of other
  * constructs are parsed and returned as abstract sequence proxies
  * that will parse contained JSON constructs as they are accessed.
  *
- * @param: must_advance_parser: When set to `false', there is no
- *                              need to advance `self', though this
+ * @param: must_advance_parser: When set to `false`, there is no
+ *                              need to advance `self`, though this
  *                              may still be done (meaning that when
- *                              this parameter is `false', `self'
+ *                              this parameter is `false`, `self`
  *                              will be left in an undefined state)
  * @return: * : The equivalent deemon object of the just-parsed JSON
  * @return: NULL: An error was thrown. */
@@ -1726,7 +1726,7 @@ parse_float:
 }
 
 
-/* Check what's the canonical type of whatever is about to be parsed by `self' */
+/* Check what's the canonical type of whatever is about to be parsed by `self` */
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeJson_PeekCanonicalObjectType(struct json_parser const *__restrict self) {
 	int tok = libjson_parser_peeknext(self);
@@ -1774,7 +1774,7 @@ DeeJson_ParseString(struct json_parser *__restrict self) {
 	if (status != JSON_ERROR_OK) {
 		Dee_unicode_printer_fini(&printer);
 		if (status == JSON_ERROR_SYSERR)
-			goto err;    /* `Dee_unicode_printer_print()' returned a negative value. */
+			goto err;    /* `Dee_unicode_printer_print()` returned a negative value. */
 		goto err_syntax; /* Either a *true* syntax error, or current token isn't a string. */
 	}
 	return Dee_unicode_printer_pack(&printer);
@@ -1977,11 +1977,11 @@ parse_float:
 struct type_expression_parser {
 	DeeTypeObject *tep_decl_type; /* [1..1] The type that is declaring the doc-string. */
 	char const    *tep_doc;       /* [1..1] Parser position (points to the first character after the leading '?') */
-	uint32_t       tep_flags;     /* Parser flags (set of `TYPE_EXPRESSION_FLAG_*') */
+	uint32_t       tep_flags;     /* Parser flags (set of `TYPE_EXPRESSION_FLAG_*`) */
 #define TYPE_EXPRESSION_FLAG_NORMAL                 0x0000 /* Normal flags */
-#define TYPE_EXPRESSION_FLAG_GOT_OBJECT             0x0001 /* Encountered `?O', `?DObject', or `?Edeemon:Object' at one point */
-#define TYPE_EXPRESSION_FLAG_NEED_DOC_ON_SUCCESS    0x0002 /* `tep_doc' must be advanced, even on success. */
-#define TYPE_EXPRESSION_FLAG_NEED_DOC_ON_TYPE_ERROR 0x0004 /* `tep_doc' must be advanced, even on type error. */
+#define TYPE_EXPRESSION_FLAG_GOT_OBJECT             0x0001 /* Encountered `?O`, `?DObject`, or `?Edeemon:Object` at one point */
+#define TYPE_EXPRESSION_FLAG_NEED_DOC_ON_SUCCESS    0x0002 /* `tep_doc` must be advanced, even on success. */
+#define TYPE_EXPRESSION_FLAG_NEED_DOC_ON_TYPE_ERROR 0x0004 /* `tep_doc` must be advanced, even on type error. */
 };
 
 struct type_expression_name {
@@ -2036,7 +2036,7 @@ err:
 	return -1;
 }
 
-/* Parse a type-expression `<NAME>' element
+/* Parse a type-expression `<NAME>` element
  * @return: 0 : Success (*result was initialized)
  * @return: -1: An error was thrown (*result is in an undefined state) */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2071,7 +2071,7 @@ err_bad_doc_string:
 	                       self->tep_doc);
 }
 
-/* Decode the referenced type, or return `ITER_DONE' if an extended type expression is used.
+/* Decode the referenced type, or return `ITER_DONE` if an extended type expression is used.
  * This function handles:
  * - ?.
  * - ?N
@@ -2084,7 +2084,7 @@ err_bad_doc_string:
  * - ?A<NAME><TYPE>
  * @return: * :        The referenced type
  * @return: NULL:      An error was thrown
- * @return: ITER_DONE: An extended type expression was used (in this case, `self->tep_doc' is unchanged) */
+ * @return: ITER_DONE: An extended type expression was used (in this case, `self->tep_doc` is unchanged) */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
                                  bool accept_non_type_object) {
@@ -2239,7 +2239,7 @@ err:
 }
 
 
-/* Skip a `<NAME>'-expression.
+/* Skip a `<NAME>`-expression.
  * @return: true:  Success
  * @return: false: Malformed type expression */
 PRIVATE NONNULL((1)) bool DCALL
@@ -2348,12 +2348,12 @@ err:
 
 
 
-/* Parse a JSON-component expression into an object whose typing is described by `tx_parser'
+/* Parse a JSON-component expression into an object whose typing is described by `tx_parser`
  * @return: * :        Success
  * @return: ITER_DONE: Encountered JSON cannot be decoded into the requested type
- *                     In this case, `tx_parser' is updated to point to the end of
+ *                     In this case, `tx_parser` is updated to point to the end of
  *                     the attempted type expression (such that if the caller is
- *                     currently evaluating an `?X<n>' expression, they should try
+ *                     currently evaluating an `?X<n>` expression, they should try
  *                     the next element next)
  * @return: NULL:      An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2361,14 +2361,14 @@ DeeJsonObject_ParseWithTypeAnnotation(DeeJsonParser *__restrict self,
                                       struct type_expression_parser *__restrict tx_parser,
                                       bool throw_error_if_typing_fails);
 
-/* Same as `DeeJsonObject_ParseWithTypeAnnotation()', but if the requested type is
- * `Object', set the `TYPE_EXPRESSION_FLAG_GOT_OBJECT' flag and return `ITER_DONE'. */
+/* Same as `DeeJsonObject_ParseWithTypeAnnotation()`, but if the requested type is
+ * `Object`, set the `TYPE_EXPRESSION_FLAG_GOT_OBJECT` flag and return `ITER_DONE`. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJsonObject_ParseWithTypeAnnotationWithObjectCheck(DeeJsonParser *__restrict self,
                                                      struct type_expression_parser *__restrict tx_parser,
                                                      bool throw_error_if_typing_fails);
 
-/* Same as `DeeJsonObject_ParseWithTypeAnnotation()', but used to handle extended type annotations.
+/* Same as `DeeJsonObject_ParseWithTypeAnnotation()`, but used to handle extended type annotations.
  * @return: * :        Success
  * @return: ITER_DONE: Encountered JSON cannot be decoded into the requested type
  * @return: NULL:      An error was thrown */
@@ -2379,12 +2379,12 @@ DeeJsonObject_ParseWithTypeAnnotationEx(DeeJsonParser *__restrict self,
 
 
 
-/* Parse JSON into an objectlist `result' with custom typing. This function expects
- * the given parser `self' to be situated *after* the opening '[' token, and in
+/* Parse JSON into an objectlist `result` with custom typing. This function expects
+ * the given parser `self` to be situated *after* the opening '[' token, and in
  * case of success, will exit with the parser situated *after* the closing ']'
  * @return: 0 : Success
- * @return: 1 : Typing error and `throw_error_if_typing_fails' is true
- *              In this case, the position of `self' is undefined.
+ * @return: 1 : Typing error and `throw_error_if_typing_fails` is true
+ *              In this case, the position of `self` is undefined.
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeJsonObject_ParseTypedObjectList(DeeJsonParser *__restrict self,
@@ -2497,7 +2497,7 @@ err_json_cannot_decode_as_type_expression(struct json_parser *__restrict self,
 	}
 }
 
-/* Same as `DeeJsonObject_ParseWithTypeAnnotation()', but used to handle extended type annotations.
+/* Same as `DeeJsonObject_ParseWithTypeAnnotation()`, but used to handle extended type annotations.
  * @return: * :        Success
  * @return: ITER_DONE: Encountered JSON cannot be decoded into the requested type
  * @return: NULL:      An error was thrown */
@@ -2511,7 +2511,7 @@ DeeJsonObject_ParseWithTypeAnnotationEx(DeeJsonParser *__restrict self,
 	switch (*tx_parser->tep_doc++) {
 
 	case 'M':
-		/* TODO: Custom mapping types (these are only allowed when the key-type is `?Dstring') */
+		/* TODO: Custom mapping types (these are only allowed when the key-type is `?Dstring`) */
 		break;
 
 	case 'C':   /* Custom sequence with custom element types */
@@ -2582,7 +2582,7 @@ err_seq_type:
 			return ITER_DONE;
 		}
 
-		/* Create a sequence of type `wanted_type' with the elements from `ol' */
+		/* Create a sequence of type `wanted_type` with the elements from `ol` */
 
 		/* Check for special case: Pack everything into a list. */
 		if (seq_type == &DeeList_Type || seq_type == &DeeSeq_Type) {
@@ -2607,7 +2607,7 @@ err_ol:
 			return Dee_AsObject(result);
 		}
 
-		/* Check for special case: Set (which we treat like `HashSet') */
+		/* Check for special case: Set (which we treat like `HashSet`) */
 		if (seq_type == &DeeSet_Type)
 			seq_type = &DeeHashSet_Type; /* TODO: Dedicated optimization for sets */
 
@@ -2790,7 +2790,7 @@ err_r_tuple_i_syntax:
 			}
 		} while (--n_choices);
 
-		/* Special case: Is `Object' is one of the accepted choices? */
+		/* Special case: Is `Object` is one of the accepted choices? */
 		if (tx_parser->tep_flags & TYPE_EXPRESSION_FLAG_GOT_OBJECT) {
 			tx_parser->tep_flags = saved_flags;
 			self->djp_parser.jp_pos = pos;
@@ -2827,12 +2827,12 @@ err_syntax:
 	goto err;
 }
 
-/* Parse a JSON-component expression into an object whose typing is described by `tx_parser'
+/* Parse a JSON-component expression into an object whose typing is described by `tx_parser`
  * @return: * :        Success
  * @return: ITER_DONE: Encountered JSON cannot be decoded into the requested type
- *                     In this case, `tx_parser' is updated to point to the end of
+ *                     In this case, `tx_parser` is updated to point to the end of
  *                     the attempted type expression (such that if the caller is
- *                     currently evaluating an `?X<n>' expression, they should try
+ *                     currently evaluating an `?X<n>` expression, they should try
  *                     the next element next)
  * @return: NULL:      An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -2862,8 +2862,8 @@ err:
 	return NULL;
 }
 
-/* Same as `DeeJsonObject_ParseWithTypeAnnotation()', but if the requested type is
- * `Object', set the `TYPE_EXPRESSION_FLAG_GOT_OBJECT' flag and return `ITER_DONE'. */
+/* Same as `DeeJsonObject_ParseWithTypeAnnotation()`, but if the requested type is
+ * `Object`, set the `TYPE_EXPRESSION_FLAG_GOT_OBJECT` flag and return `ITER_DONE`. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJsonObject_ParseWithTypeAnnotationWithObjectCheck(DeeJsonParser *__restrict self,
                                                      struct type_expression_parser *__restrict tx_parser,
@@ -2876,7 +2876,7 @@ DeeJsonObject_ParseWithTypeAnnotationWithObjectCheck(DeeJsonParser *__restrict s
 	if (ITER_ISOK(wanted_type)) {
 		DREF DeeObject *result;
 
-		/* Special case for `Object' (which is handled differently) */
+		/* Special case for `Object` (which is handled differently) */
 		if unlikely(wanted_type == &DeeObject_Type) {
 			tx_parser->tep_flags |= TYPE_EXPRESSION_FLAG_GOT_OBJECT;
 			Dee_DecrefNokill(wanted_type);
@@ -2899,7 +2899,7 @@ err:
 }
 
 /* Parse a JSON-component expression and assign it to the specified class-attribute
- * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+ * @return: 1 : `throw_error_if_typing_fails` is `false` and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
@@ -2926,7 +2926,7 @@ DeeJsonObject_ParseIntoClassAttribute(DeeJsonParser *__restrict self,
 				goto err;
 
 			/* Check for special case: if we ever encountered
-			 * `Object' as a candidate, parse as generic JSON. */
+			 * `Object` as a candidate, parse as generic JSON. */
 			if (parser.tep_flags & TYPE_EXPRESSION_FLAG_GOT_OBJECT)
 				goto fallback;
 
@@ -2953,8 +2953,8 @@ err:
 	return -1;
 }
 
-/* Parse a JSON-component expression and assign it to `<into>.operator . (<attr_name>)'
- * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+/* Parse a JSON-component expression and assign it to `<into>.operator . (<attr_name>)`
+ * @return: 1 : `throw_error_if_typing_fails` is `false` and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -3004,8 +3004,8 @@ err:
 	return -1;
 }
 
-/* Same as `DeeJson_ParseInto()', but the leading `{' has already been parsed.
- * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+/* Same as `DeeJson_ParseInto()`, but the leading `{` has already been parsed.
+ * @return: 1 : `throw_error_if_typing_fails` is `false` and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3054,11 +3054,11 @@ err:
 }
 
 /* Implement the functionality of parsing JSON *into* the attributes
- * of a given object `into'. Note that for this purpose, it is OK if
- * the object specifies more fields than are provided by `self', but
- * it is not OK if `self' tries to set a non-existent field, or (when
+ * of a given object `into`. Note that for this purpose, it is OK if
+ * the object specifies more fields than are provided by `self`, but
+ * it is not OK if `self` tries to set a non-existent field, or (when
  * the field being set has type annotation) tries to set a field with
- * a type annotation that disallows the type of object given by `self'
+ * a type annotation that disallows the type of object given by `self`
  *
  * Additionally, when type annotation specifies a type other than the
  * standard set of literals supported by JSON (bool, none, string, int,
@@ -3066,9 +3066,9 @@ err:
  * instance of that class will be created and recursively parsed into.
  *
  * NOTE: This function also supports user-defined struct types defined
- *       by the `ctypes' dex.
+ *       by the `ctypes` dex.
  *
- * @return: 1 : `throw_error_if_typing_fails' is `false' and typing failed
+ * @return: 1 : `throw_error_if_typing_fails` is `false` and typing failed
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3082,7 +3082,7 @@ DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
 		                               throw_error_if_typing_fails);
 	}
 
-	/* Check for special type: `null' can be parsed into `none' */
+	/* Check for special type: `null` can be parsed into `none` */
 	if (tok == JSON_PARSER_NULL && DeeNone_Check(into))
 		return 0;
 
@@ -3092,10 +3092,10 @@ DeeJson_ParseInto(DeeJsonParser *__restrict self, DeeObject *into,
 }
 
 
-/* Similar to `DeeJson_ParseInto()', but construct an instance of `into_type' and populate it.
+/* Similar to `DeeJson_ParseInto()`, but construct an instance of `into_type` and populate it.
  * @return: *   : Success
  * @return: NULL: An error was thrown
- * @return: ITER_DONE: `throw_error_if_typing_fails' is `false' and typing failed */
+ * @return: ITER_DONE: `throw_error_if_typing_fails` is `false` and typing failed */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
                       DeeTypeObject *into_type,
@@ -3106,7 +3106,7 @@ DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
 
 	/* Handling for special core types */
 
-	/* None (aka. `null') */
+	/* None (aka. `null`) */
 	if (into_type == &DeeNone_Type) {
 		int tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_NULL) {
@@ -3191,7 +3191,7 @@ check_result_and_maybe_cast_to_into_type:
 		goto err_cannot_parse_into;
 	}
 
-	/* Special case: `Object' means anything goes */
+	/* Special case: `Object` means anything goes */
 	if (into_type == &DeeObject_Type)
 		return DeeJson_ParseObject(self, must_advance_parser);
 
@@ -3238,16 +3238,16 @@ err_syntax:
 	return err_json_syntax();
 }
 
-/* Same as `DeeJson_ParseInto()', but don't actually do any JSON-parsing,
- * but simply read out the elements of `mapping' and assign them to the
- * attributes of `self', whilst doing the same special handling that is
- * also done by `DeeJson_ParseInto()' for type annotations.
+/* Same as `DeeJson_ParseInto()`, but don't actually do any JSON-parsing,
+ * but simply read out the elements of `mapping` and assign them to the
+ * attributes of `self`, whilst doing the same special handling that is
+ * also done by `DeeJson_ParseInto()` for type annotations.
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_PopulateFromMapping(DeeObject *self, DeeObject *mapping) {
-	/* Special handling for when the given `mapping' is a JSON-mapping-wrapper.
+	/* Special handling for when the given `mapping` is a JSON-mapping-wrapper.
 	 * In this case, we can use the dedicated JSON-into-object code-path. */
 	if (DeeObject_InstanceOfExact(mapping, &DeeJsonMapping_Type))
 		return DeeJsonMapping_IntoObject((DeeJsonMappingObject *)mapping, self);
@@ -3344,11 +3344,11 @@ err:
 }
 
 
-/* Convert an object `obj' to JSON and write said JSON to `self'.
+/* Convert an object `obj` to JSON and write said JSON to `self`.
  * This function supports the same set of object types as are supported
- * by the parsing set of functions above, and you can configure `self'
- * to either produce JSON in a compact (`JSON_WRITER_FORMAT_COMPACT')
- * or pretty (`JSON_WRITER_FORMAT_PRETTY') format.
+ * by the parsing set of functions above, and you can configure `self`
+ * to either produce JSON in a compact (`JSON_WRITER_FORMAT_COMPACT`)
+ * or pretty (`JSON_WRITER_FORMAT_PRETTY`) format.
  *
  * @return: 0 : Success
  * @return: -1: An error was thrown */
@@ -3367,7 +3367,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 			goto err;
 		if unlikely(json_print(&self->djw_writer, "null", 4))
 			goto err;
-	} else if (type == &DeeFloat_Type || /* TODO: Support for numeric types from `ctypes' */
+	} else if (type == &DeeFloat_Type || /* TODO: Support for numeric types from `ctypes` */
 	           type == &DeeInt_Type ||
 	           type == &DeeBool_Type) {
 		/* Can just print the object representation as-is */
@@ -3391,10 +3391,10 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 		 * >> }
 		 * This pair of functions (if present) would then be used to convert
 		 * an object to/from JSON-compatible literals. For example, these functions
-		 * could be implemented by `Time from time' to have __into_literal__ return
-		 * strings like "2023-05-29T20:39Z", and `__from_literal__' to parse those
+		 * could be implemented by `Time from time` to have __into_literal__ return
+		 * strings like "2023-05-29T20:39Z", and `__from_literal__` to parse those
 		 * strings once again (in addition to also supporting other formats, which
-		 * would then depend on the actual value of the given `lit')
+		 * would then depend on the actual value of the given `lit`)
 		 *
 		 * NOTE: But before implementing something like this, check if (and how)
 		 *       python might already do something similar to this in its json module.
@@ -3674,7 +3674,7 @@ FORCELOCAL WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL libjson_write_f_impl(De
 		return Dee_ascii_printer_pack(&printer);
 err_ascii_printer:
 		Dee_ascii_printer_fini(&printer);
-		/* fallthru to `err' */
+		/* fallthru to `err` */
 	}
 err:
 	return NULL;
@@ -3683,7 +3683,7 @@ err:
 
 DEX_BEGIN
 
-/* TODO: Add another argument `path' that allows you to only parse certain sub-
+/* TODO: Add another argument `path` that allows you to only parse certain sub-
  *       components of a larger JSON-blob. For this, it's probably best to implement
  *       a sub-set of JsonPath: https://github.com/json-path/JsonPath */
 DEX_MEMBER_F("parse", &libjson_parse, Dee_DEXSYM_READONLY,

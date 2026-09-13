@@ -379,7 +379,7 @@ err:
 struct mapped_foreach_data {
 	DeeObject    *tfd_fun;  /* [1..1] Mapper function. */
 	Dee_foreach_t tfd_proc; /* [1..1] Inner callback. */
-	void         *tfd_arg;  /* [?..?] Cookie for `tfd_proc'. */
+	void         *tfd_arg;  /* [?..?] Cookie for `tfd_proc`. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -417,7 +417,7 @@ mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 struct mapped_mh_seq_enumerate_data {
 	DeeObject          *ted_fun;  /* [1..1] Mapper function. */
 	Dee_seq_enumerate_t ted_proc; /* [1..1] Inner callback. */
-	void               *ted_arg;  /* [?..?] Cookie for `ted_proc'. */
+	void               *ted_arg;  /* [?..?] Cookie for `ted_proc`. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -454,7 +454,7 @@ mapped_mh_seq_enumerate(SeqMapped *self, Dee_seq_enumerate_t proc, void *arg) {
 struct mapped_mh_seq_enumerate_index_data {
 	DeeObject                *teid_fun;  /* [1..1] Mapper function. */
 	Dee_seq_enumerate_index_t teid_proc; /* [1..1] Inner callback. */
-	void                     *teid_arg;  /* [?..?] Cookie for `teid_proc'. */
+	void                     *teid_arg;  /* [?..?] Cookie for `teid_proc`. */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -2054,15 +2054,15 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_max_with_range_and_key, &mapped_mh_seq_max_with_range_and_key),
 #endif /* WANT_mapped_mh_seq_max */
 #ifdef WANT_mapped_mh_seq_locate
-	TYPE_METHOD_HINT(seq_locate, &mapped_mh_seq_locate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_locate_with_range, &mapped_mh_seq_locate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_locate, &mapped_mh_seq_locate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})` as new "match" */
+	TYPE_METHOD_HINT(seq_locate_with_range, &mapped_mh_seq_locate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})` as new "match" */
 #endif /* WANT_mapped_mh_seq_locate */
 #ifdef WANT_mapped_mh_seq_rlocate
-	TYPE_METHOD_HINT(seq_rlocate, &mapped_mh_seq_rlocate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_rlocate_with_range, &mapped_mh_seq_rlocate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_rlocate, &mapped_mh_seq_rlocate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})` as new "match" */
+	TYPE_METHOD_HINT(seq_rlocate_with_range, &mapped_mh_seq_rlocate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})` as new "match" */
 #endif /* WANT_mapped_mh_seq_rlocate */
 #ifdef WANT_mapped_mh_seq_removeif
-	TYPE_METHOD_HINT(seq_removeif, &mapped_mh_seq_removeif), /* Just use `DeeFunctionComposition_Of(2, {should, self->sm_mapper})' as new "should" */
+	TYPE_METHOD_HINT(seq_removeif, &mapped_mh_seq_removeif), /* Just use `DeeFunctionComposition_Of(2, {should, self->sm_mapper})` as new "should" */
 #endif /* WANT_mapped_mh_seq_removeif */
 
 #ifdef WANT_mapped_mh_set_pop

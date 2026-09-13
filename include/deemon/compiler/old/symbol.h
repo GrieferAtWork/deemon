@@ -123,7 +123,7 @@ struct Dee_class_attribute;
  *        >> (:)      // function(none): none { ... }
  *        >> (,)      // function(none, none): none { ... }
  *        >> (:?Dint) // function(none: int): none { ... }
- *        REMINDER: Using `none' as argument name sets the name to be undefined/reserved.
+ *        REMINDER: Using `none` as argument name sets the name to be undefined/reserved.
  *      - When encountered in a member-doc, the member is assumed to be a function
  *      - When encountered in a type-doc, it contains information about the type's constructor operator
  *
@@ -137,9 +137,9 @@ struct Dee_class_attribute;
  *                      isn't implemented in user-code and thus doesn't offset execution
  *                      information. (see EXPR-ENCODING below)
  *    RETURN_TYPE:   An encoded type description of the intended return type of the function
- *                   When "->" is omitted, the programmer intended the function to return `none'
+ *                   When "->" is omitted, the programmer intended the function to return `none`
  *                   When "<RETURN_TYPE>" is omitted but "->" is present, the programmer
- *                   intended the function to return `Object' (aka anything / unspecified)
+ *                   intended the function to return `Object` (aka anything / unspecified)
  *
  *
  * PATTERN: "->"  (Only when the line doesn't match the "<START_OF_LINE>(" pattern)
@@ -157,7 +157,7 @@ struct Dee_class_attribute;
  *
  *    RETURN_TYPE: An encoded type description of the occupant's intended type.
  *                 When "<RETURN_TYPE>" is omitted, the programmer
- *                 intended the field to contain anything (`Object' / aka anything / unspecified)
+ *                 intended the field to contain anything (`Object` / aka anything / unspecified)
  *
  *
  * OPERATOR DECLARATION:
@@ -174,8 +174,8 @@ struct Dee_class_attribute;
  *        "->"    // Like seen in the "->" pattern
  *            ("<RETURN_TYPE>" |  // Operator return type
  *             // NOTE: The following 2 may only be used when no parameter list was given before
- *             "!D" |             // Indicator that the operator gets deleted (intended for `operator str = del;')
- *             "!S"               // Indicator that the operator is explicitly inherited (intended for `this = super;')
+ *             "!D" |             // Indicator that the operator gets deleted (intended for `operator str = del;`)
+ *             "!S"               // Indicator that the operator is explicitly inherited (intended for `this = super;`)
  *             )
  *        "<END_OF_LINE>"
  *    With this, operator declarations are split into 3 sections:
@@ -226,14 +226,14 @@ struct Dee_class_attribute;
  *        enumattr             | ()->?S?DAttribute
  *        enter, leave         | ()
  *    Alternatively to the operator's symbol-like name, one can also use the operators real name,
- *    optionally surrounded by any number of _ (underscores), such that `__le__' is the same as `<='
+ *    optionally surrounded by any number of _ (underscores), such that `__le__` is the same as `<=`
  *    Also note that missing argument type information is also automatically filled in when the type
  *    is known or guarantied to have a certain typing.
- *    This applies to all instances where a type other than `<TYPE>' is listed above, as well as in
+ *    This applies to all instances where a type other than `<TYPE>` is listed above, as well as in
  *    the following special cases:
  *       OPERATOR_NAME   | DEFAULT
  *        deepcopy, copy | (other:<TYPE>)
- *        move :=        | (other:<TYPE>)         // Only when the type doesn't have the `TP_FMOVEANY' flag set.
+ *        move :=        | (other:<TYPE>)         // Only when the type doesn't have the `TP_FMOVEANY` flag set.
  *
  *
  *
@@ -250,10 +250,10 @@ struct Dee_class_attribute;
  *     the declaration pattern is automatically deduced form the documented object, or left
  *     omitted if no object is being documented:
  *       - For types, the doc is appended to the set of strings giving a generic overview of the type
- *       - For a `function foo(x, y, z)' the doc defaults to `(!a,!b,!c)->'
+ *       - For a `function foo(x, y, z)` the doc defaults to `(!a,!b,!c)->`
  *          - Since argument name information is lost during this, names are generated
  *            as abcdefghijklmnopqrstuvwxyz, after which naming continues as aa ab ac, etc...
- *       - For member/variables the declaration defaults to `->' (untyped, object)
+ *       - For member/variables the declaration defaults to `->` (untyped, object)
  *   - Declarations can be grouped by having a section contain more than one line, matching either
  *     the "->" pattern, or the "<START_OF_LINE>(" one.
  *     This may be done to describe available overloads, with the associated human-readable
@@ -265,31 +265,31 @@ struct Dee_class_attribute;
  * TYPE-ENCODING:  (How type/symbol references are encoded)
  *
  *   ?.              --- Referring to the current type in an operator or static/instance member.
- *   ?N              --- Referring to `none' (or in this context: `type none')
- *   ?O              --- Referring to `Object from deemon'
+ *   ?N              --- Referring to `none` (or in this context: `type none`)
+ *   ?O              --- Referring to `Object from deemon`
  *   ?#<NAME>        --- Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
- *   ?D<NAME>        --- Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
+ *   ?D<NAME>        --- Referring to a symbol exported from the `deemon` module (import("deemon").<DECODED_NAME>)
  *   ?U<NAME>        --- Referring to an undefined/private symbol
  *   ?G<NAME>        --- Referring to a global symbol exported from the associated module
  *   ?E<NAME>:<NAME> --- Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
  *   ?A<NAME><TYPE>  --- Referring to an attribute <DECODED_FIRST_NAME> of another TYPE-ENCODING <TYPE>
  *
- * Extended type encodings (Implemented by `doc.TypeExpr', rather than `doc.TypeRef'):
+ * Extended type encodings (Implemented by `doc.TypeExpr`, rather than `doc.TypeRef`):
  *   ?C<TYPE><TYPE>    --- Referring to a Cell <FIRST_TYPE> containing an element of type <SECOND_TYPE> (SECOND_TYPE
  *                         is only there to improve meta-information, whilst FIRST_TYPE should implement an instance-
- *                         attribute `value', with when accessed should yield an element of <SECOND_TYPE>)
- *                         This type of encoding is used to represent `WeakRef with Object',
- *                        `TLS with Object' or `Cell with Object'
+ *                         attribute `value`, with when accessed should yield an element of <SECOND_TYPE>)
+ *                         This type of encoding is used to represent `WeakRef with Object`,
+ *                        `TLS with Object` or `Cell with Object`
  *   ?T<N>(<TYPE> * N) --- A Tuple expression containing <N> (encoded as a decimal) other types
- *                         e.g.: `?T2?Dstring?Dint' --- `(string, int)'
+ *                         e.g.: `?T2?Dstring?Dint` --- `(string, int)`
  *   ?X<N>(<TYPE> * N) --- A set of <N> (encoded as a decimal) alternative type representations
- *                         e.g.: `?X2?Dstring?Dint' --- `string | int'
+ *                         e.g.: `?X2?Dstring?Dint` --- `string | int`
  *   ?S<TYPE>          --- A generic Sequence expression for <TYPE>
- *                         e.g.: `?S?Dstring' --- `{string...}'
+ *                         e.g.: `?S?Dstring` --- `{string...}`
  *   ?M<TYPE><TYPE>    --- A generic Mapping expression for <TYPE> to <TYPE>
- *                         e.g.: `?M?Dstring?Dint' --- `{string: int}'
- *   ?R<EXPR>]         --- Referring to the result of a given <EXPR> can take on (yes: the trailing `]' is intended)
- *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]' is intended)
+ *                         e.g.: `?M?Dstring?Dint` --- `{string: int}`
+ *   ?R<EXPR>]         --- Referring to the result of a given <EXPR> can take on (yes: the trailing `]` is intended)
+ *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]` is intended)
  *
  *   In all of the aforementioned encodings, <NAME> is encoded as follows:
  *   >> if (!name.issymbol()) {
@@ -309,11 +309,11 @@ struct Dee_class_attribute;
  *
  * EXPR-ENCODING:  (How (simple) expressions are encoded)
  *
- *   <EXPR>     --- Where `<EXPR>' contains the actual expression, which is encoded as follows:
+ *   <EXPR>     --- Where `<EXPR>` contains the actual expression, which is encoded as follows:
  *
  *   <EXPR> ::= "!" (
  *       INTEGER_LITERAL |          // 1234 (decimal), 0x12/0X12 (hex), 012 (oct) or 0b10/0B10 (bin)
- *       FLOAT_LITERAL |            // 1.0  (decimal followed by a `.'; prevent ambiguity with decimal-operator)
+ *       FLOAT_LITERAL |            // 1.0  (decimal followed by a `.`; prevent ambiguity with decimal-operator)
  *       "t"                        // The true builtin constant
  *       "f"                        // The false builtin constant
  *       "A" <NAME>                 // Referring to another argument <DECODED_NAME>
@@ -321,7 +321,7 @@ struct Dee_class_attribute;
  *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR, SECOND_EXPR)
  *       "B" <NAME>                 // Referring to true/false indicative of the is-bound state of another argument <DECODED_NAME>
  *       "C" EXPR |                 // copy(EXPR)
- *       "D" <NAME>                 // Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
+ *       "D" <NAME>                 // Referring to a symbol exported from the `deemon` module (import("deemon").<DECODED_NAME>)
  *       "E" <NAME> ":" <NAME>      // Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
  *       "G" <NAME>                 // Referring to a global symbol exported from the associated module
  *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A Dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
@@ -331,13 +331,13 @@ struct Dee_class_attribute;
  *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
  *       "N"                        // The none builtin constant
  *       "O" EXPR |                 // type(EXPR)
- *       "P" <NAME> |               // "foo" (where `foo' is en-/decoded the same way a <NAME> would)
+ *       "P" <NAME> |               // "foo" (where `foo` is en-/decoded the same way a <NAME> would)
  *       "Q" EXPR |                 // EXPR.operator hash()
  *       "R" EXPR |                 // repr(EXPR)
  *       "S" EXPR EXPR |            // FIRST_EXPR is SECOND_EXPR
  *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A Set of <N> (encoded as a decimal) elements
  *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A Tuple of <N> (encoded as a decimal) elements
- *       "U" <NAME>                 // Referring to an undefined/private symbol (in expressions, `none' is used, but if produced as result, it's name is used; getattr() also extends ontop of it)
+ *       "U" <NAME>                 // Referring to an undefined/private symbol (in expressions, `none` is used, but if produced as result, it's name is used; getattr() also extends ontop of it)
  *       "W" EXPR |                 // #(EXPR)
  *       "X" EXPR |                 // deepcopy(EXPR)
  *       "#" <NAME>                 // Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
@@ -385,10 +385,10 @@ struct Dee_class_attribute;
  *     none    --- The none builtin
  *     true    --- The true builtin
  *     false   --- The false builtin
- *     1234    --- Integer constant    (also accepted with radix prefix `0x', `0X', `0b', `0B')
+ *     1234    --- Integer constant    (also accepted with radix prefix `0x`, `0X`, `0b`, `0B`)
  *     1.2     --- Float constant
- *     "foo"   --- String constant     (where `foo' is decoded the same way a <NAME> would, before being decoded again as a C-escaped string)
- *     r"foo"  --- String constant     (where `foo' is decoded the same way a <NAME> would, before being decoded again as a raw string literal)
+ *     "foo"   --- String constant     (where `foo` is decoded the same way a <NAME> would, before being decoded again as a C-escaped string)
+ *     r"foo"  --- String constant     (where `foo` is decoded the same way a <NAME> would, before being decoded again as a raw string literal)
  *
  */
 
@@ -396,22 +396,22 @@ struct Dee_class_attribute;
 
 
 #define DAST_NONE    0x0000 /* No declaration information. */
-#define DAST_SYMBOL  0x0001 /* `int from deemon' Declaration information is provided as a symbol reference. */
-#define DAST_CONST   0x0002 /* `type(0)' Declaration information is provided as a constant type. */
-#define DAST_ALT     0x0003 /* `int | bool' Declaration information has multiple, alternative representations. */
-#define DAST_TUPLE   0x0004 /* `(int, string, float)' Declaration describes an n-element Tuple of values. */
-#define DAST_SEQ     0x0005 /* `{int...}' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_MAP     0x0006 /* `{string: int}' Declaration describes an abstract mapping-type */
-#define DAST_FUNC    0x0007 /* `(x: int, y: int): int' Declaration describes a variable-length sequence of some element-type. */
-#define DAST_ATTR    0x0008 /* `List.Iterator' Access a custom attribute of another declaration. */
-#define DAST_WITH    0x0009 /* `WeakRef with Object' Extended type information to describe Cell-like objects */
+#define DAST_SYMBOL  0x0001 /* `int from deemon` Declaration information is provided as a symbol reference. */
+#define DAST_CONST   0x0002 /* `type(0)` Declaration information is provided as a constant type. */
+#define DAST_ALT     0x0003 /* `int | bool` Declaration information has multiple, alternative representations. */
+#define DAST_TUPLE   0x0004 /* `(int, string, float)` Declaration describes an n-element Tuple of values. */
+#define DAST_SEQ     0x0005 /* `{int...}` Declaration describes a variable-length sequence of some element-type. */
+#define DAST_MAP     0x0006 /* `{string: int}` Declaration describes an abstract mapping-type */
+#define DAST_FUNC    0x0007 /* `(x: int, y: int): int` Declaration describes a variable-length sequence of some element-type. */
+#define DAST_ATTR    0x0008 /* `List.Iterator` Access a custom attribute of another declaration. */
+#define DAST_WITH    0x0009 /* `WeakRef with Object` Extended type information to describe Cell-like objects */
 #define DAST_STRING  0x000a /* __asm__("?T2?O?O") Custom string inserted into the representation. */
 
 #define DAST_FNORMAL 0x0000 /* Normal declaration ast flags */
 
 struct decl_ast {
-	uint16_t     da_type;  /* Decl AST Type (One of `DAST_*') */
-	uint16_t     da_flag;  /* Decl AST Flags (Set of `DAST_F*') */
+	uint16_t     da_type;  /* Decl AST Type (One of `DAST_*`) */
+	uint16_t     da_flag;  /* Decl AST Flags (Set of `DAST_F*`) */
 	union {
 		DREF struct symbol *da_symbol; /* [1..1][DAST_SYMBOL] The referenced type expression symbol. */
 		DREF DeeObject     *da_const;  /* [1..1][DAST_CONST] A constant expression type. */
@@ -425,9 +425,9 @@ struct decl_ast {
 		}                   da_tuple;  /* [DAST_TUPLE] The representation is a fixed-length Tuple containing known types. */
 		struct decl_ast    *da_seq;    /* [1..1][owned][DAST_SEQ] The sequence element */
 		struct {
-			struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL' when `Object' or `none' is returned) */
+			struct decl_ast                *f_ret;   /* [0..1][owned] Function return type (or `NULL` when `Object` or `none` is returned) */
 			Dee_WEAKREF(DeeBaseScopeObject) f_scope; /* [1..1] The scope containing function argument info, as well as associated
-			                                          * type declaration information (through `struct symbol::s_decltype') */
+			                                          * type declaration information (through `struct symbol::s_decltype`) */
 		}                   da_func;   /* [DAST_FUNC] The representation is a function. */
 		struct {
 			struct decl_ast               *a_base; /* [1..1][owned] Attribute base expression. */
@@ -465,7 +465,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
               struct decl_ast const *__restrict other);
 
-/* Check if `a' and `b' are exactly identical. */
+/* Check if `a` and `b` are exactly identical. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_equal(struct decl_ast const *__restrict a,
                struct decl_ast const *__restrict b);
@@ -518,16 +518,16 @@ struct ast_loc {
 
 struct text_label {
 	struct text_label     *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
-	                                 *               the same modulated `s_name->k_id' */
+	                                 *               the same modulated `s_name->k_id` */
 	union {
 #ifdef __INTELLISENSE__
 		     struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
 		                             * Expression of a case-label. NOTE: NULL for the default case.
-		                             * NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		                             * NOTE: Always NULL in `bs_swdefl|s_default` labels. */
 #else /* __INTELLISENSE__ */
 		DREF struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
 		                             * Expression of a case-label. NOTE: NULL for the default case.
-		                             * NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		                             * NOTE: Always NULL in `bs_swdefl|s_default` labels. */
 #endif /* !__INTELLISENSE__ */
 		struct TPPKeyword *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
 	}
@@ -559,7 +559,7 @@ struct symbol {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	DWEAK Dee_refcnt_t    s_refcnt;/* Reference counter */
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
+	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id` */
 	struct TPPKeyword    *s_name;  /* [1..1][const] Name of this symbol. */
 	DeeScopeObject       *s_scope; /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
@@ -571,7 +571,7 @@ struct symbol {
 #define SYMBOL_TYPE_CATTR  0x0006  /* Class attribute. */
 #define SYMBOL_TYPE_ALIAS  0x0007  /* An alias for a different symbol. */
 #define SYMBOL_TYPE_ARG    0x0008  /* An argument passed to a function.
-                                    * NOTE: `s_symid' is the argument index in `s_scope->s_base->bs_argv',
+                                    * NOTE: `s_symid` is the argument index in `s_scope->s_base->bs_argv`,
                                     *        meaning it may also be referring to the varargs, or varkwds
                                     *        special argument objects. */
 #define SYMBOL_TYPE_LOCAL  0x0009  /* A local symbol. */
@@ -580,21 +580,21 @@ struct symbol {
 #define SYMBOL_TYPE_EXCEPT 0x000c  /* The current exception. */
 #define SYMBOL_TYPE_MYFUNC 0x000d  /* The current function. */
 #define SYMBOL_TYPE_THIS   0x000e  /* The this-argument of a function. */
-#define SYMBOL_TYPE_AMBIG  0x000f  /* An ambiguous symbol (caused by `import *' when an overlap occurrs). */
+#define SYMBOL_TYPE_AMBIG  0x000f  /* An ambiguous symbol (caused by `import *` when an overlap occurrs). */
 #define SYMBOL_TYPE_FWD    0x0010  /* A forward-defined symbol. */
 #define SYMBOL_TYPE_CONST  0x0011  /* A symbol that evaluates to a constant expression. */
 #define SYMBOL_TYPE_MAYREF(x)       ((x) >= SYMBOL_TYPE_ARG)
-	uint16_t             s_type;   /* Symbol class. (One of `SYMBOL_TYPE_*')
+	uint16_t             s_type;   /* Symbol class. (One of `SYMBOL_TYPE_*`)
 	                                * This describes how is the variable addressed, and where does it live. */
-	uint16_t             s_flag;   /* Symbol flags (Set of `SYMBOL_F*') */
+	uint16_t             s_flag;   /* Symbol flags (Set of `SYMBOL_F*`) */
 #define SYMBOL_FNORMAL   0x0000    /* Normal symbol flags. */
 #define SYMBOL_FWEAK     0x0001    /* The symbol is defined weakly and can be overwritten by explicit
                                     * declarations, or turned into a non-weak symbol if used. */
 #define SYMBOL_FALLOC    0x0002    /* Used during assembly: the symbol has been allocated. */
 #define SYMBOL_FALLOCREF 0x0004    /* A reference ID for the symbol has been allocated. */
-#define SYMBOL_FFINAL    0x0010    /* The variable was declared as `final' */
-#define SYMBOL_FVARYING  0x0020    /* The variable was declared as `varying' */
-#define SYMBOL_FSTACK_NOUNBIND_OK 0x0100 /* FLAG: If the symbol appears in a `del' expression, and `sym_bound' is non-ZERO,
+#define SYMBOL_FFINAL    0x0010    /* The variable was declared as `final` */
+#define SYMBOL_FVARYING  0x0020    /* The variable was declared as `varying` */
+#define SYMBOL_FSTACK_NOUNBIND_OK 0x0100 /* FLAG: If the symbol appears in a `del` expression, and `sym_bound` is non-ZERO,
                                           *       still don't warn about the fact that a stack variable isn't being unbound,
                                           *       but is only being overwritten. */
 	uint16_t             s_symid;  /* [valid_if(SYMBOL_FALLOC)] The dynamic ID allocated for the symbol.
@@ -674,8 +674,8 @@ struct symbol {
 
 
 
-/* Return the alias of a `SYMBOL_TYPE_ALIAS'-typed symbol
- * `x', or `x' itself if it's some other kind of type. */
+/* Return the alias of a `SYMBOL_TYPE_ALIAS`-typed symbol
+ * `x`, or `x` itself if it's some other kind of type. */
 FORCELOCAL ATTR_PURE WUNUSED NONNULL((1)) struct symbol *DCALL
 SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
 	while (x->s_type == SYMBOL_TYPE_ALIAS) {
@@ -686,7 +686,7 @@ SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
 }
 
 /* Inplace-unwind alias symbol references.
- * -> Same as `x = SYMBOL_UNWIND_ALIAS(x)' */
+ * -> Same as `x = SYMBOL_UNWIND_ALIAS(x)` */
 #define SYMBOL_INPLACE_UNWIND_ALIAS(x)            \
 	do {                                          \
 		if ((x)->s_type == SYMBOL_TYPE_ALIAS)     \
@@ -842,7 +842,7 @@ _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 }
 
 
-/* Return the name of a given symbol `x' as a `char *' pointer. */
+/* Return the name of a given symbol `x` as a `char *` pointer. */
 #define SYMBOL_NAME(x)             ((x)->s_name->k_name)
 
 /* Get/inc/dec the read-, write- and bound- access counters. */
@@ -862,21 +862,21 @@ _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 #define SYMBOL_SUB_NWRITE(x, n)    _priv_symbol_subwrite(x, n)
 #define SYMBOL_SUB_NBOUND(x, n)    _priv_symbol_subbound(x, n)
 
-/* Mark the given symbol `x' as in-use, turning a weakly
+/* Mark the given symbol `x` as in-use, turning a weakly
  * linked symbol into one that is strongly linked.
  * -> Weakly linked symbols can be re-declared retroactively, with
  *    the act of doing so not causing any compiler warnings. */
 #define SYMBOL_MARK_USED(x)        (void)((x)->s_flag &= ~SYMBOL_FWEAK)
 
-/* Check if a given symbol `x' has been declared as a weak symbol. */
+/* Check if a given symbol `x` has been declared as a weak symbol. */
 #define SYMBOL_IS_WEAK(x)          ((x)->s_flag & SYMBOL_FWEAK)
 
-/* Clear the linkage of a given symbol `x', leaving `x->s_type',
+/* Clear the linkage of a given symbol `x`, leaving `x->s_type`,
  * as well as all type-specific fields undefined. */
 #define SYMBOL_CLEAR_WEAK(x) \
 	(symbol_fini(x), (x)->s_flag &= ~SYMBOL_FWEAK)
 
-/* Check if a given symbol `x' must be addressed as a reference */
+/* Check if a given symbol `x` must be addressed as a reference */
 #define SYMBOL_MUST_REFERENCE(x)          \
 	(SYMBOL_TYPE_MAYREF((x)->s_type) &&   \
 	 ((x)->s_type == SYMBOL_TYPE_THIS     \
@@ -887,8 +887,8 @@ _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 	(Dee_ASSERT((x)->s_type == SYMBOL_TYPE_THIS), \
 	 (x) != current_basescope->bs_this)
 
-/* Same as `SYMBOL_MUST_REFERENCE()', but the caller already knows
- * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true') */
+/* Same as `SYMBOL_MUST_REFERENCE()`, but the caller already knows
+ * that the symbol's type may be referenced (`SYMBOL_TYPE_MAYREF(x->s_type) == true`) */
 #define SYMBOL_MUST_REFERENCE_TYPEMAY(x)          \
 	(Dee_ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type)), \
 	 (x)->s_type == SYMBOL_TYPE_THIS              \
@@ -899,7 +899,7 @@ _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 	(Dee_ASSERT(SYMBOL_TYPE_MAYREF((x)->s_type) && (x)->s_type != SYMBOL_TYPE_THIS), \
 	 (x)->s_scope->s_base != current_basescope)
 
-/* Check if a given symbol `x' can be addressed as a reference */
+/* Check if a given symbol `x` can be addressed as a reference */
 #define SYMBOL_MAY_REFERENCE(x)          \
 	((x)->s_type == SYMBOL_TYPE_THIS     \
 	 ? (x) != current_basescope->bs_this \
@@ -929,12 +929,12 @@ INTDEF NONNULL((1)) void DCALL symbol_destroy(struct symbol *__restrict self);
 
 
 /* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
- * When `loc' is NULL, the current location is used. */
+ * When `loc` is NULL, the current location is used. */
 INTDEF NONNULL((1)) void DCALL
 symbol_addambig(struct symbol *__restrict self,
                 struct ast_loc *loc);
 
-/* Check if `self' uses `other' when the specified operation is performed. */
+/* Check if `self` uses `other` when the specified operation is performed. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_del(struct symbol *__restrict self, struct symbol *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, struct symbol *__restrict other);
@@ -950,7 +950,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_set_haseffect(struct symbol *__
 #define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
 #define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT
 
-/* Check if the given symbol `self' is reachable from the given `caller_scope' */
+/* Check if the given symbol `self` is reachable from the given `caller_scope` */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_reachable(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 
 
@@ -965,12 +965,12 @@ struct scope_object {
 	Dee_WEAKREF_SUPPORT
 	DREF DeeScopeObject *s_prev;  /* [0..1][const] Previous scope. */
 	DeeBaseScopeObject  *s_base;  /* [1..1][const] The base scope of the surrounding function.
-	                               * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject'  */
+	                               * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject`  */
 	DeeClassScopeObject *s_class; /* [0..1][const] A pointer to the nearest class scope, or NULL if outside of any. */
 	DREF struct symbol **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
-	                               * HINT: Use the TPP keyword id modulated by `s_mapa' as index. */
-	size_t               s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
-	size_t               s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
+	                               * HINT: Use the TPP keyword id modulated by `s_mapa` as index. */
+	size_t               s_mapc;  /* Amount of symbols defined within the hash-map `s_map`. */
+	size_t               s_mapa;  /* Allocated vector size of the symbol hash-map `s_map`. */
 	DREF struct symbol  *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
 #ifndef NDEBUG
 	uint16_t             s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
@@ -988,7 +988,7 @@ struct class_scope_object {
 	DREF struct symbol *cs_this;  /* [1..1][owned] A symbol describing the this-argument of instances of the class. */
 };
 
-/* Returns a pointer to the previous class scope, or `NULL' if no such scope exists. */
+/* Returns a pointer to the previous class scope, or `NULL` if no such scope exists. */
 #define DeeClassScope_Prev(x) ((x)->cs_scope.s_prev ? (x)->cs_scope.s_prev->s_class : NULL)
 
 
@@ -996,21 +996,21 @@ struct class_scope_object {
 struct base_scope_object {
 	DeeScopeObject      bs_scope;      /* Underlying regular scope. */
 	DeeBaseScopeObject *bs_prev;       /* [0..1] The previous base (function) scope.
-	                                    * NOTE: When `NULL', this scope is actually a `DeeRootScopeObject'. */
+	                                    * NOTE: When `NULL`, this scope is actually a `DeeRootScopeObject`. */
 	DeeRootScopeObject *bs_root;       /* [1..1] The module-local root/global scope.
-	                                    * HINT: If this is a self-pointer, this scope is actually a `DeeRootScopeObject'. */
+	                                    * HINT: If this is a self-pointer, this scope is actually a `DeeRootScopeObject`. */
 	struct TPPKeyword  *bs_name;       /* [0..1][const] Name of the function of this scope.
 	                                    * HINT: During creating of a base-scope, the creator is required
 	                                    *       to register a symbol for function self-referencing.
 	                                    *       With that in mind, unnamed or root-mode functions does have such a symbol. */
 	struct text_label **bs_lbl;        /* [0..1][owned][0..bs_lbla][owned] Hash-map of labels defined in this scope.
-	                                    * HINT: Use the TPP keyword id modulated by `bs_lbla' as index. */
-	size_t              bs_lblc;       /* Amount of labels defined within the hash-map `bs_lbl'. */
-	size_t              bs_lbla;       /* Allocated vector size of the labels hash-map `bs_lbl'. */
+	                                    * HINT: Use the TPP keyword id modulated by `bs_lbla` as index. */
+	size_t              bs_lblc;       /* Amount of labels defined within the hash-map `bs_lbl`. */
+	size_t              bs_lbla;       /* Allocated vector size of the labels hash-map `bs_lbl`. */
 	struct text_label  *bs_swcase;     /* [0..1][CHAIN(->tl_next)][owned] Chain of switch labels.
 	                                    * NOTE: This chain links cases in the reverse order of their appearance. */
 	struct text_label  *bs_swdefl;     /* [0..1][owned] Default label in a switch statement. */
-	struct symbol      *bs_this;       /* [0..1] The `cs_this' of the class which this base-scope's function is implementing a member function for. */
+	struct symbol      *bs_this;       /* [0..1] The `cs_this` of the class which this base-scope's function is implementing a member function for. */
 	DeeCodeObject      *bs_restore;    /* [0..1] Pointer to the generated code object (once that code object has been generated)
 	                                    * In the event that assembler must be reset due to a linker truncation,
 	                                    * this code object will be used to restore inherited (stolen) data. */
@@ -1025,13 +1025,13 @@ struct base_scope_object {
 	                                    * Vector of arguments taken by the function implemented by this scope.
 	                                    * HINT: This vector is also used to track which arguments was written to
 	                                    *      (deemon assembly doesn't allow modifications of arguments), as all
-	                                    *       those that was will have been converted into `SYM_CLASS_LOCAL'.
+	                                    *       those that was will have been converted into `SYM_CLASS_LOCAL`.
 	                                    *       Using this information, the assembly generate will emit code to copy
 	                                    *       all modified arguments into local variables at the start of the function:
 	                                    *   >> function foo(x) { print x; }
 	                                    *   >> function bar(x) { print x; x = 10; print x; }
 	                                    * [[*]->s_index == *] The index in this vector _MUST_ mirror the argument index.
-	                                    * [[*]->s_scope == self] All symbols referenced _MUST_ be associated with `bs_prev'.
+	                                    * [[*]->s_scope == self] All symbols referenced _MUST_ be associated with `bs_prev`.
 	                                    * [[*]->s_class == SYMBOL_TYPE_ARG] All symbols referenced _MUST_ be argument symbols.
 	                                    * Only symbols of the following classes (should) appear as references (because other's don't make sense):
 	                                    * ASSEMBLY:
@@ -1054,11 +1054,11 @@ struct base_scope_object {
 	uint16_t            bs_argc_max;   /* Max amount of argument symbols defined for this scope. */
 	uint16_t            bs_argc;       /* [== bs_argc_max + (bs_varargs ? 1 : 0) + (bs_varkwds ? 1 : 0)]
 	                                    * The actual argument count for this scope. */
-	uint16_t            bs_flags;      /* Scope flags (Set of `CODE_F*'). */
+	uint16_t            bs_flags;      /* Scope flags (Set of `CODE_F*`). */
 #define BASESCOPE_FNORMAL 0x0000       /* Normal base-scope flags. */
 #define BASESCOPE_FRETURN 0x0001       /* A non-empty return statement has been encountered. */
 #define BASESCOPE_FSWITCH 0x0002       /* The parser is currently allowed to generate switch-labels. */
-	uint16_t            bs_cflags;     /* Compile-time scope flags (Set of `BASESCOPE_F*'). */
+	uint16_t            bs_cflags;     /* Compile-time scope flags (Set of `BASESCOPE_F*`). */
 #if __SIZEOF_POINTER__ > 4
 	uint16_t            bs_padding[(sizeof(void *) / 2) - 2];
 #endif /* __SIZEOF_POINTER__ > 4 */
@@ -1072,10 +1072,10 @@ struct root_scope_object {
 	DREF DeeCodeObject            *rs_code;    /* [0..1][LINK(->co_next)] Linked list of all code objects already generated for this module. */
 	DREF struct Dee_module_object**rs_importv; /* [1..1][0..rs_importc|ALLOC(rs_importa)] Vector of other modules imported by this one. */
 	struct Dee_module_symbol      *rs_bucketv; /* [0..rs_bucketm+1][owned_if(!= empty_module_buckets)]
-	                                            * Hash-vector for translating a string into a `uint16_t' index for a global variable.
+	                                            * Hash-vector for translating a string into a `uint16_t` index for a global variable.
 	                                            * This is where module symbol names are stored and also.
 	                                            * HINT: This vector is populated by the assembler during code generation. */
-	uint16_t                       rs_flags;   /* Module flags (Set of `MODULE_F*') */
+	uint16_t                       rs_flags;   /* Module flags (Set of `MODULE_F*`) */
 	uint16_t                       rs_globalc; /* The total number of global variables. */
 	uint16_t                       rs_bucketm; /* Mask applied to symbol buckets. */
 	uint16_t                       rs_importc; /* The total number of other modules imported by this one. */
@@ -1093,7 +1093,7 @@ INTDEF DeeBaseScopeObject  *current_basescope; /* [lock(DeeCompiler_Lock)][1..1]
 INTDEF DeeRootScopeObject  *current_rootscope; /* [lock(DeeCompiler_Lock)][1..1][== current_basescope->bs_root] The current root scope. */
 
 /* Begin/end a new scope.
- * NOTE: The caller should then fill in special information in `current_scope'. */
+ * NOTE: The caller should then fill in special information in `current_scope`. */
 INTDEF WUNUSED int (DCALL scope_push)(void);
 INTDEF void DCALL scope_pop(void);
 
@@ -1102,13 +1102,13 @@ INTDEF WUNUSED int (DCALL classscope_push)(void);
 INTDEF WUNUSED struct symbol *(DCALL get_current_this)(void);
 
 /* Begin/end a new base-scope.
- * NOTE: The caller should then fill in special information in `current_basescope'. */
+ * NOTE: The caller should then fill in special information in `current_basescope`. */
 INTDEF WUNUSED int (DCALL basescope_push)(void);
 INTDEF void DCALL basescope_pop(void);
 INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
 
-/* Lookup a symbol for the given `name', following constraints set by `mode'.
- * @param: mode:     Set of `LOOKUP_SYM_*'
+/* Lookup a symbol for the given `name`, following constraints set by `mode`.
+ * @param: mode:     Set of `LOOKUP_SYM_*`
  * @param: warn_loc: When non-NULL the location to reference in warnings.
  *                   When NULL, the current location is used instead.
  * @return: * :      A new reference to the symbol requested.
@@ -1118,22 +1118,22 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
               struct ast_loc *warn_loc);
 #define LOOKUP_SYM_NORMAL    0x0000
 #define LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
-#define LOOKUP_SYM_VLOCAL    0x0001 /* Lookup rules when `local' is prefixed. */
-#define LOOKUP_SYM_VGLOBAL   0x0002 /* Lookup rules when `global' is prefixed. */
+#define LOOKUP_SYM_VLOCAL    0x0001 /* Lookup rules when `local` is prefixed. */
+#define LOOKUP_SYM_VGLOBAL   0x0002 /* Lookup rules when `global` is prefixed. */
 #define LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
 #define LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
 #define LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
 #define LOOKUP_SYM_FINAL     0x0400 /* Create final (write-once) variables. */
-#define LOOKUP_SYM_VARYING   0x0800 /* Create varying variables (when combined with `LOOKUP_SYM_FINAL': don't
+#define LOOKUP_SYM_VARYING   0x0800 /* Create varying variables (when combined with `LOOKUP_SYM_FINAL`: don't
                                      * assume that the value stays the same between multiple invocations). */
 #define LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
 
-/* Lookup the nth instance of `name' (starting at 1 for the first)
- * Return `NULL' if no such instance exists or if nth is 0 */
+/* Lookup the nth instance of `name` (starting at 1 for the first)
+ * Return `NULL` if no such instance exists or if nth is 0 */
 INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name);
 
-/* Check if `name' is a reserved symbol name. */
+/* Check if `name` is a reserved symbol name. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 is_reserved_symbol_name(struct TPPKeyword *__restrict name);
 
@@ -1142,13 +1142,13 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name);
 INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
 lookup_label(struct TPPKeyword *__restrict name);
 
-/* Create a new case label for `expr'.
- * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set. */
+/* Create a new case label for `expr`.
+ * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH` flag is set. */
 INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
 new_case_label(struct ast *__restrict expr);
 
 /* Ensure existence and return the default label of a switch-statement.
- * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH' flag is set.
+ * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH` flag is set.
  *       Additionally (if this is desired), it is the caller's task to warn if the
  *       default case had already been allocated before. - This function's only
  *       purpose is to lazily allocate a missing default case and initialize it. */
@@ -1164,7 +1164,7 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
                  size_t name_length);
 
-/* Copy argument symbols from the given `other' base-scope into the current,
+/* Copy argument symbols from the given `other` base-scope into the current,
  * alongside defining them as symbols while duplicating default-values and the
  * var-args flag. - Basically, everything that may be inferred from an argument list.
  * This is done when creating superargs class operators. */
@@ -1185,7 +1185,7 @@ INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL get_local_symbol(struct TPPKeyw
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
 
 /* Delete a given local symbol, making it anonymous.
- * NOTE: The given `sym' doesn't necessarily need to be apart of the current scope. */
+ * NOTE: The given `sym` doesn't necessarily need to be apart of the current scope. */
 INTDEF NONNULL((1)) void DCALL del_local_symbol(struct symbol *__restrict sym);
 
 /* Create a new unnamed (aka. deleted) symbol. */

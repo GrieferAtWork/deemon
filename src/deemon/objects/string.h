@@ -34,7 +34,7 @@ typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeStringObject, si_string); /* [1..1][const] The string that is being iterated. */
 	union Dee_charptr_const               si_iter;    /* [1..1][weak] The current iterator position. */
 	union Dee_charptr_const               si_end;     /* [1..1][const] The string end pointer. */
-	unsigned int                          si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
+	unsigned int                          si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*`). */
 } StringIterator;
 
 INTDEF DeeTypeObject StringIterator_Type;

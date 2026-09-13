@@ -57,9 +57,9 @@ DECL_BEGIN
 DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeOne)(void *addr);
 DFUNDEF NONNULL((1)) void (DCALL DeeFutex_WakeAll)(void *addr);
 
-/* Blocking wait if `*(uint32_t *)addr == expected', until someone calls `DeeFutex_Wake*(addr)'
- * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds' expired.
- * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)', or `*addr != expected', or spurious wake-up)
+/* Blocking wait if `*(uint32_t *)addr == expected`, until someone calls `DeeFutex_Wake*(addr)`
+ * @return: 1 : [DeeFutex_Wait32Timed] The given `timeout_nanoseconds` expired.
+ * @return: 0 : Success (someone called `DeeFutex_Wake*(addr)`, or `*addr != expected`, or spurious wake-up)
  * @return: -1: Error (an error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeFutex_Wait32)(void *addr, uint32_t expected);
@@ -85,8 +85,8 @@ DFUNDEF WUNUSED NONNULL((1)) int
 /* Same as above, but don't check for interrupts (WARNING: Don't abuse this,
  * and don't expose this to user-code. If this is abused, CTRL+C may not be
  * able to kill deemon!)
- * @return: 1 : Timeout expired (`*Timed' only)
- * @return: 0 : Success (`*Timed' only) */
+ * @return: 1 : Timeout expired (`*Timed` only)
+ * @return: 0 : Success (`*Timed` only) */
 DFUNDEF NONNULL((1)) void
 (DCALL DeeFutex_Wait32NoInt)(void *addr, uint32_t expected);
 DFUNDEF NONNULL((1)) int

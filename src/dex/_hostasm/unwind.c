@@ -52,7 +52,7 @@ struct host_unwind_ms64_writer {
 	byte_t   *humw_UNWIND_INFO;      /* Writer for "UNWIND_INFO" pointed-to by "RUNTIME_FUNCTION" */
 	byte_t   *humw_image_base;       /* [const] "image base pointer" (used for encoding "image-relative" offsets) */
 	uint32_t *humw_last_EndAddress;  /* [0..1] Pointer to the last-written EndAddress */
-	uint32_t  humw_last_sp_offset;   /* [valid_if(humw_last_EndAddress)] SP offset at `humw_last_EndAddress' */
+	uint32_t  humw_last_sp_offset;   /* [valid_if(humw_last_EndAddress)] SP offset at `humw_last_EndAddress` */
 	uint32_t  humw_function_count;   /* # of generated functions. */
 };
 

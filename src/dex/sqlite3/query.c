@@ -273,7 +273,7 @@ err:
 
 
 
-/* Ensure that `self->q_row' is either dead or NULL.
+/* Ensure that `self->q_row` is either dead or NULL.
  * If it isn't, try to copy row data into "q_row", then clear the weakref. */
 #define QUERY_DETACHROWORUNLOCK_OK       0    /* Success, and locks were never lost */
 #define QUERY_DETACHROWORUNLOCK_UNLOCKED 1    /* Success, but Query+DB lock was released at one point */
@@ -453,7 +453,7 @@ err:
 	return QUERY_DETACHROWORUNLOCK_ERR;
 }
 
-/* Same as `Query_LockDB()', but ensure that `q_row' is unbound,
+/* Same as `Query_LockDB()`, but ensure that `q_row` is unbound,
  * and any potential old row has been detached (given its own copy
  * of cell data)
  * @return: 0 : Success
@@ -544,7 +544,7 @@ query_destroy(Query *__restrict self) {
 	/* Mark query as unused */
 	DB_QueryCache_LockWrite(db);
 
-	/* Add the query to the unused list of `q_db' */
+	/* Add the query to the unused list of `q_db` */
 	ASSERT(!Query_IsUnused(self));
 	DB_querycache_unused_insert(db, self);
 	ASSERT(Query_IsUnused(self));
@@ -673,7 +673,7 @@ err:
 
 
 
-/* Execute `self' until there is no more data present.
+/* Execute `self` until there is no more data present.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of affected rows */
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL
@@ -702,7 +702,7 @@ err:
 	return (uint64_t)-1;
 }
 
-/* Skip at most `count' rows, returning the actual # of skipped rows.
+/* Skip at most `count` rows, returning the actual # of skipped rows.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL

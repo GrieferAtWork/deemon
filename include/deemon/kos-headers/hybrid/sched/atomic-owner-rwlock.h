@@ -96,8 +96,8 @@ __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_owner_rwlock_read_nx)(struct atom
 __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_owner_rwlock_write_nx)(struct atomic_owner_rwlock *__restrict __self);
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 
-/* Same as `atomic_owner_rwlock_trywrite()',  but allow for  the assumption  to
- * be made that the calling thread isn't already holding a write-lock to `self' */
+/* Same as `atomic_owner_rwlock_trywrite()`,  but allow for  the assumption  to
+ * be made that the calling thread isn't already holding a write-lock to `self` */
 __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_owner_rwlock_trywrite_r)(struct atomic_owner_rwlock *__restrict __self);
 __LOCAL void (atomic_owner_rwlock_write_r)(struct atomic_owner_rwlock *__restrict __self);
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
@@ -105,19 +105,19 @@ __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_owner_rwlock_write_r_nx)(struct a
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 
 
-/* Try to upgrade a read-lock to a write-lock. Return `FALSE' upon failure. */
+/* Try to upgrade a read-lock to a write-lock. Return `FALSE` upon failure. */
 __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_owner_rwlock_tryupgrade)(struct atomic_owner_rwlock *__restrict __self);
 
-/* NOTE: The lock is always upgraded, but when `FALSE' is returned, no lock
+/* NOTE: The lock is always upgraded, but when `FALSE` is returned, no lock
  *       may  have been  held temporarily,  meaning that  the caller should
  *       re-load local copies of affected resources. */
 __LOCAL __ATTR_WUNUSED __BOOL (atomic_owner_rwlock_upgrade)(struct atomic_owner_rwlock *__restrict __self);
 
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
-/* NOTE: The lock is always upgraded for `return != 0', but when `2' is returned,
+/* NOTE: The lock is always upgraded for `return != 0`, but when `2` is returned,
  *       no lock may have been held  temporarily, meaning that the caller  should
  *       re-load local copies of affected resources.
- * NOTE: When `0' is returned, the original read-lock created by the caller has
+ * NOTE: When `0` is returned, the original read-lock created by the caller has
  *       already been released. */
 __LOCAL __ATTR_WUNUSED unsigned int __NOTHROW(atomic_owner_rwlock_upgrade_nx)(struct atomic_owner_rwlock *__restrict __self);
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
@@ -163,7 +163,7 @@ __LOCAL __BOOL __NOTHROW(atomic_owner_rwlock_endwrite)(struct atomic_owner_rwloc
 #endif /* !NDEBUG && !NDEBUG_SYNC */
 	} while (!__hybrid_atomic_cmpxch_weak(&__self->aorw_lock, __f, __f & __ATOMIC_OWNER_RWLOCK_NMASK ? __f - 1 : 0,
 	                                      __ATOMIC_RELEASE, __ATOMIC_RELAXED));
-	return __f & __ATOMIC_OWNER_RWLOCK_NMASK ? 0 : 1; /* Return `true' if the lock was released */
+	return __f & __ATOMIC_OWNER_RWLOCK_NMASK ? 0 : 1; /* Return `true` if the lock was released */
 }
 
 __LOCAL __BOOL __NOTHROW(atomic_owner_rwlock_endread)(struct atomic_owner_rwlock *__restrict __self) {
@@ -268,7 +268,7 @@ __NOTHROW(atomic_owner_rwlock_trywrite_r)(struct atomic_owner_rwlock *__restrict
 		__hybrid_assertf(!(__f & __ATOMIC_OWNER_RWLOCK_WFLAG) ||
 		                 !__hybrid_gettid_iscaller(__self->aorw_owner),
 		                 "atomic_owner_rwlock_trywrite_r() cannot be used if you're "
-		                 "already holding a write-lock to `self'\n"
+		                 "already holding a write-lock to `self`\n"
 		                 "Lock:   %#lx\n"
 		                 "Caller: " __HYBRID_GETTID_PRINTF_FMT "\n"
 		                 "Owner:  " __HYBRID_GETTID_PRINTF_FMT "\n",

@@ -248,13 +248,13 @@ MODULE_NAME = none;
 #define POSIX_OPT_O_LARGEFILE 0
 #endif /* !CONFIG_HAVE_O_LARGEFILE */
 
-/* Flags that are automatically passed by `open()' (but not by `_open()'). */
+/* Flags that are automatically passed by `open()` (but not by `_open()`). */
 #undef POSIX_OPEN_DEFAULT_FLAGS
 #if POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE || POSIX_OPT_O_OBTAIN_DIR
 #define POSIX_OPEN_DEFAULT_FLAGS (POSIX_OPT_O_BINARY | POSIX_OPT_O_LARGEFILE | POSIX_OPT_O_OBTAIN_DIR)
 #endif /* POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE || POSIX_OPT_O_OBTAIN_DIR */
 
-/* Flags that are automatically passed by `creat()' (but not by `_creat()'). */
+/* Flags that are automatically passed by `creat()` (but not by `_creat()`). */
 #undef POSIX_CREAT_DEFAULT_FLAGS
 #if POSIX_OPT_O_BINARY || POSIX_OPT_O_LARGEFILE
 #define POSIX_CREAT_DEFAULT_FLAGS (POSIX_OPT_O_BINARY | POSIX_OPT_O_LARGEFILE)
@@ -329,7 +329,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how to implement `open()' */
+/* Figure out how to implement `open()` */
 #undef posix_open_USE_wopen
 #undef posix_open_USE_open
 #undef posix_open_USE_STUB
@@ -349,7 +349,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how to implement `creat()' */
+/* Figure out how to implement `creat()` */
 #undef posix_creat_USE_wcreat
 #undef posix_creat_USE_creat
 #undef posix_creat_USE_open
@@ -369,7 +369,7 @@ for (local f: functions) {
 #endif /* !... */
 
 
-/* Figure out how to implement `openat()' */
+/* Figure out how to implement `openat()` */
 #undef posix_openat_USE_wopenat
 #undef posix_openat_USE_openat
 #undef posix_openat_USE_posix_open

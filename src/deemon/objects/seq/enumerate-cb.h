@@ -77,14 +77,14 @@ map_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
 typedef struct {
 	OBJECT_HEAD
 	union {
-		Dee_seq_enumerate_t       cb_enumerate;       /* For `SeqEnumerateWrapper_Type' */
-		Dee_seq_enumerate_index_t cb_enumerate_index; /* For `SeqEnumerateIndexWrapper_Type' */
+		Dee_seq_enumerate_t       cb_enumerate;       /* For `SeqEnumerateWrapper_Type` */
+		Dee_seq_enumerate_index_t cb_enumerate_index; /* For `SeqEnumerateIndexWrapper_Type` */
 	}                  sew_cb;   /* [1..1][lock(sew_lock)] User-defined callback (unless deleted) */
-	void              *sew_arg;  /* [?..?][lock(sew_lock)] Cookie for `sew_cb' */
+	void              *sew_arg;  /* [?..?][lock(sew_lock)] Cookie for `sew_cb` */
 	Dee_ssize_t        sew_res;  /* [lock(sew_lock)] Result status. */
-	DREF DeeObject    *sew_err;  /* [0..1][lock(sew_lock)] Error that was thrown by the last invocation of "sew_cb" (must be NULL when `sew_res >= 0') */
+	DREF DeeObject    *sew_err;  /* [0..1][lock(sew_lock)] Error that was thrown by the last invocation of "sew_cb" (must be NULL when `sew_res >= 0`) */
 #ifndef CONFIG_NO_THREADS
-	Dee_rshared_lock_t sew_lock; /* Lock for ensuring that `sew_cb' is only called from
+	Dee_rshared_lock_t sew_lock; /* Lock for ensuring that `sew_cb` is only called from
 	                              * **1** thread, and can be deleted, even if shared. */
 #endif /* !CONFIG_NO_THREADS */
 } SeqEnumerateWrapper;

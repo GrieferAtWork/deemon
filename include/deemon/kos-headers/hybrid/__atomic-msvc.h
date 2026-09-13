@@ -25,7 +25,7 @@
 #include "host.h"
 
 #ifndef __GUARD_HYBRID___ATOMIC_H
-#error "Never include this file directly. - Always include `<hybrid/__atomic.h>' instead"
+#error "Never include this file directly. - Always include `<hybrid/__atomic.h>` instead"
 #endif /* !__GUARD_HYBRID___ATOMIC_H */
 
 #define __HYBRID_ATOMIC_LOCKFREE_MAX 8

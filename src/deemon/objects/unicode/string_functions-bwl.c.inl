@@ -1003,7 +1003,7 @@ __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 
 
-/* Returns a pointer into `scan_str', or NULL if no match was found. */
+/* Returns a pointer into `scan_str`, or NULL if no match was found. */
 #ifdef LOCAL_find_match
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) ATTR_INS(5, 6) LOCAL_uchar_t const *DCALL
 LOCAL_find_match(LOCAL_uchar_t const *scan_str, size_t scan_size,

@@ -114,7 +114,7 @@ INTDEF DeeTypeObject YieldFunctionSymbolsByName_Type;
 
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeFrameObject, fa_frame, /* [1..1][const] The frame in question */
-	                      DeeCodeObject,  fa_code); /* [1..1][const] The code running in `fa_frame' (cache) */
+	                      DeeCodeObject,  fa_code); /* [1..1][const] The code running in `fa_frame` (cache) */
 } FrameArgs;
 
 INTDEF DeeTypeObject FrameArgs_Type;
@@ -164,10 +164,10 @@ typedef struct {
 } FrameSymbolsByName;
 
 typedef struct {
-	uint16_t frsbnii_aid; /* [<= frsbni_seq->frsbn_nargs] Next arg to enumerate, or `>= frsbn_nargs' if all were enumerated. */
-	uint16_t frsbnii_rid; /* [>= frsbni_seq->frsbn_rid_start && <= frsbni_seq->frsbn_rid_end] Next ref/static to enumerate, or `>= frsbn_rid_end' if all were enumerated. */
-	uint16_t frsbnii_lid; /* [<= frsbni_seq->frsbn_localc] Next local to enumerate, or `>= frsbn_localc' if all were enumerated. */
-	uint16_t frsbnii_nsp; /* [<= frsbni_seq->frsbn_stackc] NextStackPointer to enumerate, or `>= frsbn_stackc' if all were enumerated. */
+	uint16_t frsbnii_aid; /* [<= frsbni_seq->frsbn_nargs] Next arg to enumerate, or `>= frsbn_nargs` if all were enumerated. */
+	uint16_t frsbnii_rid; /* [>= frsbni_seq->frsbn_rid_start && <= frsbni_seq->frsbn_rid_end] Next ref/static to enumerate, or `>= frsbn_rid_end` if all were enumerated. */
+	uint16_t frsbnii_lid; /* [<= frsbni_seq->frsbn_localc] Next local to enumerate, or `>= frsbn_localc` if all were enumerated. */
+	uint16_t frsbnii_nsp; /* [<= frsbni_seq->frsbn_stackc] NextStackPointer to enumerate, or `>= frsbn_stackc` if all were enumerated. */
 } FrameSymbolsByNameIteratorIndex;
 
 typedef struct {

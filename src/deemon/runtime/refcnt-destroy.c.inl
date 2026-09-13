@@ -117,7 +117,7 @@ DECL_BEGIN
  *                      stored in "Dee_TYPE(self)->tp_init.tp_dtor"
  * LOCAL_HAS_Dtor == 2: Exactly 1 type-specific destructor, which is
  *                      stored in "Dee_TYPE(self)->tp_init.tp_dtor", but
- *                      that dtor takes 2 arguments, ala `Dee_TF_TPVISIT'
+ *                      that dtor takes 2 arguments, ala `Dee_TF_TPVISIT`
  * LOCAL_HAS_Dtor == 3: Destructors may exist in base-classes
  *
  * LOCAL_HAS_Free == 0:      "Dee_TYPE(self)" does not have a custom "tp_free"
@@ -574,7 +574,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 		do {
 			ASSERT(self->ob_refcnt == 0);
 			ASSERTF(type == orig_type || !DeeType_IsFinal(type),
-			        "Final type `%k' with sub-class `%k'",
+			        "Final type `%k` with sub-class `%k`",
 			        type, orig_type);
 			if (type->tp_init.tp_dtor) {
 				if (type->tp_features & Dee_TF_TPVISIT) {
@@ -619,7 +619,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #error "Invalid 'LOCAL_HAS_HeapType'"
 #endif /* LOCAL_HAS_HeapType != ... */
 
-	/* Invoke `tp_free' of `orig_type', and decref `orig_type' */
+	/* Invoke `tp_free` of `orig_type`, and decref `orig_type` */
 #ifndef LOCAL_HAS_Free
 	if (orig_type->tp_init.tp_alloc.tp_free) {
 #if LOCAL_HAS_HeapType

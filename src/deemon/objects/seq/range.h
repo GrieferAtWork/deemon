@@ -31,26 +31,26 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	/* NOTE: Iteration stops only when `index >= ir_end'.
+	/* NOTE: Iteration stops only when `index >= ir_end`.
 	 *       This is feasible because of our infinite-precision integer library,
 	 *       meaning that user-code shouldn't need to worry about overflows in
 	 *       standard arithmetical operations. */
 	DREF DeeObject *r_start; /* [1..1][const] Starting index. */
 	DREF DeeObject *r_end;   /* [1..1][const] Ending index. */
-	DREF DeeObject *r_step;  /* [0..1][const] Step size (or NULL when `tp_inc()' should be used). */
-	bool            r_rev;   /* [const] True if `r_step' is non-NULL and negative. */
+	DREF DeeObject *r_step;  /* [0..1][const] Step size (or NULL when `tp_inc()` should be used). */
+	bool            r_rev;   /* [const] True if `r_step` is non-NULL and negative. */
 } Range;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject     *ri_index; /* [1..1][lock(ri_lock)] The current index operated on using using `tp_inplace_add()' or `tp_inc()'. */
+	DREF DeeObject     *ri_index; /* [1..1][lock(ri_lock)] The current index operated on using using `tp_inplace_add()` or `tp_inc()`. */
 	DREF DeeObject     *ri_end;   /* [1..1][const][== ri_range->r_end] Ending index. */
-	DREF DeeObject     *ri_step;  /* [0..1][const][== ri_range->r_step] Step size (or NULL when `tp_inc()' should be used). */
+	DREF DeeObject     *ri_step;  /* [0..1][const][== ri_range->r_step] Step size (or NULL when `tp_inc()` should be used). */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t ri_lock;  /* Lock for synchronizing access to ri_index. */
 #endif /* !CONFIG_NO_THREADS */
 	bool                ri_first; /* [lock(ri_lock)] Only true during the first iteration to skip the initial modification. */
-	bool                ri_rev;   /* [const][== ri_range->r_rev] True if `r_step' is non-NULL and negative. */
+	bool                ri_rev;   /* [const][== ri_range->r_rev] True if `r_step` is non-NULL and negative. */
 } RangeIterator;
 
 #define RangeIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ri_lock)
@@ -78,8 +78,8 @@ INTDEF DeeTypeObject SeqRange_Type;
 
 typedef struct {
 	OBJECT_HEAD
-	/* NOTE: Iteration stops when `index >= ir_end' (ir_step > 0) / `index <= ir_end' (ir_step < 0) or
-	 *      `index += ir_step' would roll over. (returning `ITER_DONE' immediately) */
+	/* NOTE: Iteration stops when `index >= ir_end` (ir_step > 0) / `index <= ir_end` (ir_step < 0) or
+	 *      `index += ir_step` would roll over. (returning `ITER_DONE` immediately) */
 	Dee_ssize_t ir_start; /* [const] Starting index. */
 	Dee_ssize_t ir_end;   /* [const] Ending index. */
 	Dee_ssize_t ir_step;  /* [const][!0] Step size (may be negative). */

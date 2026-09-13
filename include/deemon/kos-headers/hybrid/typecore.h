@@ -633,7 +633,7 @@
 #endif /* !__KOS_SYSTEM_HEADERS__ */
 
 #ifndef __SIZEOF_POINTER__
-#error "Cannot determine `__SIZEOF_POINTER__'"
+#error "Cannot determine `__SIZEOF_POINTER__`"
 #endif /* !__SIZEOF_POINTER__ */
 #endif /* !__SIZEOF_POINTER__ */
 #endif /* !__SIZEOF_POINTER__ */
@@ -1524,8 +1524,8 @@
 #elif (defined(__cplusplus) &&              \
        defined(__native_wchar_t_defined) && \
        defined(__KOS_SYSTEM_HEADERS__))
-/* g++ seems to pre-define `__WCHAR_TYPE__'  incorrectly as its integral  value
- * (the same way it does in C; `#define __WCHAR_TYPE__ int'), so fix it here... */
+/* g++ seems to pre-define `__WCHAR_TYPE__`  incorrectly as its integral  value
+ * (the same way it does in C; `#define __WCHAR_TYPE__ int`), so fix it here... */
 #undef __WCHAR_TYPE__
 #define __WCHAR_TYPE__ wchar_t
 #endif /* ... */
@@ -1640,7 +1640,7 @@
 #endif /* __SIZEOF_LONG__ != 8 */
 
 /* General-purpose register type.
- * Currently, that is equal to `sizeof(void *)' for all targets. */
+ * Currently, that is equal to `sizeof(void *)` for all targets. */
 #ifndef __SIZEOF_REGISTER__
 #define __SIZEOF_REGISTER__  __SIZEOF_POINTER__
 #define __REGISTER_TYPE__    __ULONGPTR_TYPE__
@@ -1648,7 +1648,7 @@
 #endif /* !__SIZEOF_REGISTER__ */
 
 /* The max integral type that the target's main address bus is optimized
- * for. Currently, that  is equal to  `sizeof(void *)' for all  targets. */
+ * for. Currently, that  is equal to  `sizeof(void *)` for all  targets. */
 #ifndef __SIZEOF_BUSINT__
 #define __SIZEOF_BUSINT__ __SIZEOF_POINTER__
 #define __BUSINT_TYPE__   __INTPTR_TYPE__
@@ -1666,9 +1666,9 @@
 #if !defined(_MSC_VER) && !defined(__INTELLISENSE__)
 #include "host.h"
 #if defined(__i386__) && !defined(__x86_64__)
-/* On i386,  `-mno-align-double' is  the ABI  default, which  causes  `long long'
- * and  `double'  to  have  4-byte  alignment,  rather  than  be  8-byte aligned!
- * s.a. `https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html#index-malign-double' */
+/* On i386,  `-mno-align-double` is  the ABI  default, which  causes  `long long`
+ * and  `double`  to  have  4-byte  alignment,  rather  than  be  8-byte aligned!
+ * s.a. `https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html#index-malign-double` */
 #define __ALIGNOF_INT64__ 4
 #endif /* __i386__ && !__x86_64__ */
 #endif /* !_MSC_VER && !__INTELLISENSE__ */
@@ -1961,7 +1961,7 @@ __NAMESPACE_INT_END
        (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION_NUM >= 40400) ||                                           \
        (defined(__BORLANDC__) && defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__ + 0 >= 0x610) ||                      \
        (defined(__IBMCPP_UTF_LITERAL__) && __IBMCPP_UTF_LITERAL__))))
-/* The compiler is pre-defining the `char16_t' / `char32_t' types. */
+/* The compiler is pre-defining the `char16_t` / `char32_t` types. */
 #undef __CHAR16_TYPE__
 #undef __CHAR32_TYPE__
 #define __CHAR16_TYPE__ char16_t
@@ -1986,13 +1986,13 @@ __NAMESPACE_INT_END
  * in arbitrary source files...) */
 
 #ifdef __x86_64__
-#define __SIZE_TYPE_IS_LONG_LONG__ /* Should be `long' for elf, but isn't */
+#define __SIZE_TYPE_IS_LONG_LONG__ /* Should be `long` for elf, but isn't */
 #define __PTRDIFF_TYPE_IS_LONG_LONG__
-#define __INTPTR_TYPE_IS_LONG_LONG__ /* Should be `long' for elf, but isn't */
+#define __INTPTR_TYPE_IS_LONG_LONG__ /* Should be `long` for elf, but isn't */
 #elif defined(__i386__)
-#define __SIZE_TYPE_IS_INT__ /* Should be `long' for elf, but isn't */
+#define __SIZE_TYPE_IS_INT__ /* Should be `long` for elf, but isn't */
 #define __PTRDIFF_TYPE_IS_INT__
-#define __INTPTR_TYPE_IS_INT__ /* Should be `long' for elf, but isn't */
+#define __INTPTR_TYPE_IS_INT__ /* Should be `long` for elf, but isn't */
 #elif __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 #define __SIZE_TYPE_IS_INT__
 #define __PTRDIFF_TYPE_IS_INT__
@@ -2441,9 +2441,9 @@ __NAMESPACE_INT_END
 /* Since C defines 5  integer types (char, short,  int, long, long long),  which
  * usually only map to 4 types (int8, int16, int32, int64), this macro describes
  * the C name of that fifth type:
- *   - __SIZEOF_FIFTHINT__      (e.g. `4')     The size of the fifth integer
- *   - __FIFTHINT_TYPE__        (e.g. `long')  The C type for the fifth integer
- *   - __FIFTHINT_ALIAS_TYPE__  (e.g. `int')   The alias of the fifth integer used by one of `__INTn_TYPE__'
+ *   - __SIZEOF_FIFTHINT__      (e.g. `4`)     The size of the fifth integer
+ *   - __FIFTHINT_TYPE__        (e.g. `long`)  The C type for the fifth integer
+ *   - __FIFTHINT_ALIAS_TYPE__  (e.g. `int`)   The alias of the fifth integer used by one of `__INTn_TYPE__`
  */
 #if (defined(__INT8_TYPE_IS_CHAR__) || defined(__INT16_TYPE_IS_CHAR__) || \
      defined(__INT32_TYPE_IS_CHAR__) || defined(__INT64_TYPE_IS_CHAR__))
@@ -2647,9 +2647,9 @@ __NAMESPACE_INT_END
  * that are <= __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC are inherently
  * atomic.
  *
- * As a consequence, `__hybrid_atomic_load()' can be used to load
+ * As a consequence, `__hybrid_atomic_load()` can be used to load
  * such words, even if those words are written without the use of
- * `__hybrid_atomic_store()' or similar.
+ * `__hybrid_atomic_store()` or similar.
  *
  * Another way of looking at this option is:
  * >> if (__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC >= sizeof(*p)) {

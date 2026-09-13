@@ -41,7 +41,7 @@ __set_inplace_sub__.set_operator_inplace_sub([[nonnull]] DREF DeeObject **__rest
 %{unsupported({
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_and))(p_self, xrhs->si_set);
 	}
@@ -58,7 +58,7 @@ err:
 %{$empty = "default__set_operator_inplace_sub__unsupported"}
 %{$with__set_operator_foreach__and__set_removeall = {
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a -= ~b' -> `a &= b' */
+		/* Special case: `a -= ~b` -> `a &= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return CALL_DEPENDENCY(set_operator_inplace_and, p_self, xrhs->si_set);
 	}

@@ -60,7 +60,7 @@ __DECL_BEGIN
 		return __result;                          \
 	}
 
-/* Parallel bit deposit (s.a. `https://www.felixcloutier.com/x86/pdep') */
+/* Parallel bit deposit (s.a. `https://www.felixcloutier.com/x86/pdep`) */
 #define __HYBRID_PRIVATE_PDEP_IMPL(T, value, mask)        \
 	{                                                     \
 		T __result             = 0;                       \
@@ -74,7 +74,7 @@ __DECL_BEGIN
 		return __result;                                  \
 	}
 
-/* Parallel bit extract (s.a. `https://www.felixcloutier.com/x86/pext') */
+/* Parallel bit extract (s.a. `https://www.felixcloutier.com/x86/pext`) */
 #define __HYBRID_PRIVATE_PEXT_IMPL(T, value, mask)        \
 	{                                                     \
 		T __result             = 0;                       \

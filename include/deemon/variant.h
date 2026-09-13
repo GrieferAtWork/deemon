@@ -106,7 +106,7 @@ struct Dee_variant {
 		char const     *d_cstr;        /* [1..1][valid_if(var_type == Dee_VARIANT_CSTR)] Statically allocated NUL-terminated C-string */
 		union {
 			char const *sl_str;        /* [0..sl_len] Statically allocated C-string */
-			size_t      sl_len;        /* # of char-s in `sl_str' */
+			size_t      sl_len;        /* # of char-s in `sl_str` */
 		}               d_cstrlen;     /* [valid_if(var_type == Dee_VARIANT_CSTRLEN)] Statically allocated C-string */
 #ifndef CONFIG_NO_FPU
 #if __ALIGNOF_DOUBLE__ <= __ALIGNOF_POINTER__
@@ -286,7 +286,7 @@ Dee_variant_visit(struct Dee_variant *__restrict self,
 
 #ifndef Dee_seraddr_t_DEFINED
 #define Dee_seraddr_t_DEFINED           /*!export-*/
-typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>` for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;
@@ -326,7 +326,7 @@ DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint64_if_unbound(struct Dee_vari
 DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setint128_if_unbound(struct Dee_variant *__restrict self, Dee_int128_t value);
 DFUNDEF NONNULL((1)) bool DCALL Dee_variant_setuint128_if_unbound(struct Dee_variant *__restrict self, Dee_uint128_t value);
 
-/* Compare "self" with "oldval" (asserting identical types and memcmp()'ing "var_data").
+/* Compare "self" with "oldval" (asserting identical types and memcmp()`ing "var_data").
  * If this compare indicates equality, atomically assign "newval" to "self" and return
  * "true". Else, do nothing and return "false".
  *
@@ -392,7 +392,7 @@ Dee_variant_cmpxch(struct Dee_variant *__restrict self,
 
 /* !!!CAUTION!!! -- Only use these functions when "str" is a statically allocated string,
  *                  or if its lifetime **always** (no matter what user-code does) exceeds
- *                  the life-time of `self'. */
+ *                  the life-time of `self`. */
 #define _Dee_variant_get_cstr(self)              (self)->var_data.d_cstr
 #define _Dee_variant_get_cstrlen(self)           (self)->var_data.d_cstrlen.sl_len
 #define _Dee_variant_set_cstr(self, v)           (void)((self)->var_data.d_cstr = (v))
@@ -402,7 +402,7 @@ Dee_variant_cmpxch(struct Dee_variant *__restrict self,
 DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setcstr(struct Dee_variant *__restrict self, char const *str);
 DFUNDEF NONNULL((1)) void DCALL Dee_variant_setcstrlen(struct Dee_variant *__restrict self, char const *str, size_t len);
 
-/* Same as `Dee_variant_init_cstr()', but check at runtime if "str" is guarantied
+/* Same as `Dee_variant_init_cstr()`, but check at runtime if "str" is guarantied
  * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
  * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
  *

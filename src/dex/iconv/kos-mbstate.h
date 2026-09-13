@@ -60,8 +60,8 @@ struct libiconv_mbstate {
  *       But that's OK, since officially UTF-8 only goes up to 4-character sequences,
  *       so  even just supporting 5-character and 6-character sequences is already an
  *       extension! */
-#define LIBICONV_MBSTATE_TYPE_UTF16_LO    0x40000000 /* expect the low-surrogate value of a 2-uint16_t utf-16 sequence. `RESULT_CHAR = ((WORD & 0x000003ff) << 10) + 0x10000 + (SECOND_U16 - 0xdc00);' */
-#define LIBICONV_MBSTATE_TYPE_WR_UTF16_LO 0x44000000 /* Write the low-surrogate value of a 2-uint16_t utf-16 sequence. `OUT_CHAR = 0xdc00 + (WORD & 0x000003ff)' */
+#define LIBICONV_MBSTATE_TYPE_UTF16_LO    0x40000000 /* expect the low-surrogate value of a 2-uint16_t utf-16 sequence. `RESULT_CHAR = ((WORD & 0x000003ff) << 10) + 0x10000 + (SECOND_U16 - 0xdc00);` */
+#define LIBICONV_MBSTATE_TYPE_WR_UTF16_LO 0x44000000 /* Write the low-surrogate value of a 2-uint16_t utf-16 sequence. `OUT_CHAR = 0xdc00 + (WORD & 0x000003ff)` */
 
 /* Reserved for future expansion: there's still a lot of space left for more type codes! */
 /*      LIBICONV_MBSTATE_TYPE_            0x48000000  * ... */

@@ -95,7 +95,7 @@ roset_verify(RoSet *__restrict self) {
 	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->rs_vsize);
 	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_HASH_HIDXIO_COUNT);
 	/* hidxio==0 may differ if "self" was statically initialized in a dex module,
-	 * in which case `self->rs_hidxget' might point into that module's PLT/GOT. */
+	 * in which case `self->rs_hidxget` might point into that module's PLT/GOT. */
 	ASSERT(self->rs_hidxget == Dee_hash_hidxio[hidxio].hxio_get || hidxio == 0);
 	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
 	     Dee_hash_vidx_virt_lt_real(i, self->rs_vsize); ++i) {

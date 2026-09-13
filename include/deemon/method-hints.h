@@ -53,8 +53,8 @@ DECL_BEGIN
 
 /*
  * Method hints are declaration pairs that come in the form of an entry in a
- * type's `tp_methods' array using a pre-defined function pointer (declared
- * in this header), as well as an entry in a type's `tp_method_hints' array,
+ * type's `tp_methods` array using a pre-defined function pointer (declared
+ * in this header), as well as an entry in a type's `tp_method_hints` array,
  * which then points to the low-level C implementation of the function.
  *
  * These method hints are only available for certain, commonly overwritten,
@@ -68,8 +68,8 @@ DECL_BEGIN
  * >> PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
  * >> myob_setdefault(MyObject *self, DeeObject *key, DeeObject *value) {
  * >>     // This gets called by:
- * >>     // - `MyObject().setdefault(...)'
- * >>     // - `Mapping.setdefault(MyObject(), ...)'
+ * >>     // - `MyObject().setdefault(...)`
+ * >>     // - `Mapping.setdefault(MyObject(), ...)`
  * >>     ...
  * >> }
  * >>
@@ -145,7 +145,7 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
  * Do not make use of these IDs if you're developing a DEX module and
  * wish to remain compatible with the deemon core across many version.
  * If that's what you're trying to accomplish, you should instead define
- * regular `tp_methods' with names recognized as method hints. */
+ * regular `tp_methods` with names recognized as method hints. */
 enum Dee_tmh_id {
 	Dee_TMH_seq_operator_bool,
 	Dee_TMH_seq_operator_sizeob,
@@ -1965,38 +1965,38 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_peek__(DeeObject *__rest
 
 /* Master function for looking up method hints, that searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
- * native version for that attribute (or `NULL' if it doesn't have one)
+ * native version for that attribute (or `NULL` if it doesn't have one)
  *
  * This function can also be used to query the optimized, internal
  * implementation of built-in sequence (previously: TSC) functions.
  *
- * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+ * Never returns NULL when `id` has an "%{unsupported}" implementation. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
-/* Same as `DeeType_GetMethodHint', but don't make use of the method-hint cache.
+/* Same as `DeeType_GetMethodHint`, but don't make use of the method-hint cache.
  *
- * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+ * Never returns NULL when `id` has an "%{unsupported}" implementation. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
 
 enum Dee_super_method_hint_cc {
-	Dee_SUPER_METHOD_HINT_CC_WITH_SELF,  /* Invoke the method hint by passing `DeeSuper_SELF(super)' as first argument */
-	Dee_SUPER_METHOD_HINT_CC_WITH_SUPER, /* Invoke the method hint by passing `(DeeObject *)super' as first argument */
-	Dee_SUPER_METHOD_HINT_CC_WITH_TYPE,  /* Invoke the method hint by injecting an additional, leading argument `DeeTypeObject *tp_self = DeeSuper_TYPE(super)' (for the regular self-argument, use `DeeSuper_SELF(super)') */
+	Dee_SUPER_METHOD_HINT_CC_WITH_SELF,  /* Invoke the method hint by passing `DeeSuper_SELF(super)` as first argument */
+	Dee_SUPER_METHOD_HINT_CC_WITH_SUPER, /* Invoke the method hint by passing `(DeeObject *)super` as first argument */
+	Dee_SUPER_METHOD_HINT_CC_WITH_TYPE,  /* Invoke the method hint by injecting an additional, leading argument `DeeTypeObject *tp_self = DeeSuper_TYPE(super)` (for the regular self-argument, use `DeeSuper_SELF(super)`) */
 };
 
 struct Dee_super_method_hint {
 	Dee_funptr_t                  smh_cb; /* [1..1] Function pointer to invoke */
-	enum Dee_super_method_hint_cc smh_cc; /* Calling convention for how to invoke `smh_cb' */
+	enum Dee_super_method_hint_cc smh_cc; /* Calling convention for how to invoke `smh_cb` */
 };
 struct Dee_super_object;
 
-/* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)', but must be used in
+/* Same as `DeeType_GetMethodHint(DeeSuper_TYPE(super), id)`, but must be used in
  * order to lookup information on how to invoke a method hint on a Super-object.
  * @return: true:  Success (always returned for method hints with "%{unsupported}")
- * @return: false: Failure (method it is not supported by `DeeSuper_TYPE(super)',
+ * @return: false: Failure (method it is not supported by `DeeSuper_TYPE(super)`,
  *                          and also has no "%{unsupported}" version) */
 DFUNDEF NONNULL((1, 3)) bool
 (DCALL DeeType_GetMethodHintForSuper)(struct Dee_super_object *__restrict super, enum Dee_tmh_id id,
@@ -2004,8 +2004,8 @@ DFUNDEF NONNULL((1, 3)) bool
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Check if `self' specifically is able to supply the method hint `id'
- * in some form. If not, return `NULL' to indicate this lack of support.
+/* Check if `self` specifically is able to supply the method hint `id`
+ * in some form. If not, return `NULL` to indicate this lack of support.
  *
  * Note that this function doesn't return "%{unsupported}" implementations.
  *
@@ -2015,7 +2015,7 @@ DFUNDEF NONNULL((1, 3)) bool
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHint)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
 
-/* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
+/* Same as `DeeType_GetPrivateMethodHint`, but only check for attributes
  * without doing any additional default substitutions.
  *
  * WARNING: Only call this function for some given "self, orig_type" if
@@ -2031,7 +2031,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
  *   implement the hint), return the "%{unsupported}" impl
  * Otherwise, return "NULL"
  *
- * The caller must ensure that `id' can be used to implement
+ * The caller must ensure that `id` can be used to implement
  * native operators. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
 (DCALL DeeType_MapDefaultMethodHintOperatorImplForInherit)(DeeTypeObject *into,
@@ -2039,19 +2039,19 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
                                                            Dee_funptr_t impl);
 #endif /* CONFIG_BUILDING_DEEMON */
 
-/* Returns a pointer to method hint's entry in `self->tp_method_hints' */
+/* Returns a pointer to method hint's entry in `self->tp_method_hints` */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetExplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
-/* Same as `DeeType_GetExplicitMethodHint()', but also resolves direct
+/* Same as `DeeType_GetExplicitMethodHint()`, but also resolves direct
  * aliases within method hint groups (e.g. when an explicit method hint
- * for `seq_enumerate_index' is defined, but none for `seq_enumerate',
- * then return `default__seq_enumerate__with__seq_enumerate_index') */
+ * for `seq_enumerate_index` is defined, but none for `seq_enumerate`,
+ * then return `default__seq_enumerate__with__seq_enumerate_index`) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetExplicitOrImplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
-/* Returns the "%{unsupported}" implementation of `id'
- * (if it has one). If not, return `NULL' instead. */
+/* Returns the "%{unsupported}" implementation of `id`
+ * (if it has one). If not, return `NULL` instead. */
 DFUNDEF ATTR_CONST WUNUSED Dee_funptr_t
 (DCALL DeeType_GetUnsupportedMethodHint)(enum Dee_tmh_id id);
 
@@ -2091,14 +2091,14 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 
 /* Used to declare type method hints in C */
 struct Dee_type_method_hint {
-	enum Dee_tmh_id tmh_id;    /* Method hint ID (one of `Dee_TMH_*') */
-	unsigned int    tmh_flags; /* Method flags (set of `Dee_METHOD_F*') */
+	enum Dee_tmh_id tmh_id;    /* Method hint ID (one of `Dee_TMH_*`) */
+	unsigned int    tmh_flags; /* Method flags (set of `Dee_METHOD_F*`) */
 	Dee_funptr_t    tmh_func;  /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
 };
 
 #ifdef __INTELLISENSE__
-/* c++ magic to assert that the function pointers passed to `Dee_TYPE_METHOD_HINT_F'
- * and `Dee_TYPE_METHOD_HINT' are binary-compatible with whatever the resp. method
+/* c++ magic to assert that the function pointers passed to `Dee_TYPE_METHOD_HINT_F`
+ * and `Dee_TYPE_METHOD_HINT` are binary-compatible with whatever the resp. method
  * hint expects for its prototype (but note that pointer bases can be exchanged for
  * arbitrary types, meaning this doesn't fail if you use the real object types in
  * function parameters). */
@@ -2133,7 +2133,7 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 #define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
 
 
-/* Link a type method in as part of a type's `tp_method_hints' array.
+/* Link a type method in as part of a type's `tp_method_hints` array.
  * Behavior is undefined/depends-on-the-method-in-question if a type
  * defines a method as a hint reference, but fails to implement all
  * method hints used by the hinted method attribute. */
@@ -2169,7 +2169,7 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 #define DeeType_TRAIT___map_getitem_always_bound__ 0x0002 /* "public static final __map_getitem_always_bound__: bool = true;" (__map_getitem__ never throws UnboundItem) */
 typedef __UINTPTR_HALF_TYPE__ Dee_type_trait_t;
 
-/* Check if a given type `self' supports the specified trait */
+/* Check if a given type `self` supports the specified trait */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool
 (DCALL DeeType_HasTrait)(DeeTypeObject *__restrict self, Dee_type_trait_t trait);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool

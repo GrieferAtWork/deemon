@@ -479,8 +479,8 @@ done:
 	return result;
 }
 
-/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
- * NOTE: `typing' doesn't necessarily need to be a type object!
+/* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing`
+ * NOTE: `typing` doesn't necessarily need to be a type object!
  * @return: (uint16_t)-1: Error. */
 INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
@@ -879,7 +879,7 @@ err:
 	return -1;
 }
 
-/* Unpack and validate a sequence `{(string, ast, ast)...} handlers'.
+/* Unpack and validate a sequence `{(string, ast, ast)...} handlers`.
  * @return: NULL: Error (*p_catch_c != 0), or no catch handlers (*p_catch_c == 0) */
 INTERN WUNUSED NONNULL((1, 2, 3)) struct catch_expr *DCALL
 unpack_catch_expressions(DeeObject *__restrict handlers,
@@ -1280,7 +1280,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 		}
 	} else if unlikely(DeeNone_Check(args.ff)) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Both the true-, as well as the false-branch have been given as `none'");
+		                "Both the true-, as well as the false-branch have been given as `none`");
 		goto done_compiler_end;
 	}
 	if (!DeeNone_Check(args.ff)) {

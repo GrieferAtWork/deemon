@@ -145,10 +145,10 @@ assertAlwaysCorrectlyReferenced3(r'(x,)[0]');
 assertAlwaysCorrectlyReferenced3(r'(x,).first');
 assertAlwaysCorrectlyReferenced3(r'if (1) x');
 
-/* vvv this wouldn't work because `local x = 24; if (1) x else none'
+/* vvv this wouldn't work because `local x = 24; if (1) x else none`
  *     gets compiled as "if (1) local else = x()<compiler-error-here>none".
  *     Furthermore, since JIT executes as it compiles, we wouldn't even get
- *     to see the compiler error, as `x()' will already fail with an error:
- *     >> NotImplemented: Operator `int.__call__' is not implemented */
+ *     to see the compiler error, as `x()` will already fail with an error:
+ *     >> NotImplemented: Operator `int.__call__` is not implemented */
 /* assertAlwaysCorrectlyReferenced3(r'if (1) x else none'); */
 

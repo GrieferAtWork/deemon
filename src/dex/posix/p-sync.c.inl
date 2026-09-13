@@ -44,7 +44,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `fsync()' */
+/* Figure out how to implement `fsync()` */
 #undef posix_fsync_USE_fsync
 #undef posix_fsync_USE_STUB
 #ifdef CONFIG_HAVE_fsync
@@ -55,7 +55,7 @@ DECL_BEGIN
 
 
 
-/* Figure out how to implement `fdatasync()' */
+/* Figure out how to implement `fdatasync()` */
 #undef posix_fdatasync_USE_fdatasync
 #undef posix_fdatasync_USE_posix_fsync
 #undef posix_fdatasync_USE_STUB

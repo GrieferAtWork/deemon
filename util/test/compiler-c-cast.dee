@@ -36,7 +36,7 @@ assert (returnArgsTuple)(10, 20, 30) == (10, 20, 30);
 
 function foo(...) {
 	local x = [10, 20];
-	local a, b = (x)...; /* `unpack(x)' vs. `x((varargs...,),)' */
+	local a, b = (x)...; /* `unpack(x)` vs. `x((varargs...,),)` */
 	assert a == 10;
 	assert b == 20;
 }
@@ -47,17 +47,17 @@ foo(10, 20, 30);
  * NOTE: The first option described in the comments is the one always taken. */
 #pragma warning(push)
 #pragma warning(disable: "-Wquality")
-assert (42) + 7 == 49;    /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
-assert (42) - 7 == 35;    /* `(typexpr).operator sub(castexpr)' vs. `(typexpr)castexpr.operator neg()' */
-assert (42) < 7 == false; /* `(typexpr).operator lo(castexpr)' vs. `(typexpr)(Cell(castexpr))' */
-assert (42,)[0] == 42;    /* `(typexpr).operator [](castexpr)' vs. `(typexpr)(List({ castexpr }))' */
+assert (42) + 7 == 49;    /* `(typexpr).operator add(castexpr)` vs. `(typexpr)castexpr.operator pos()` */
+assert (42) - 7 == 35;    /* `(typexpr).operator sub(castexpr)` vs. `(typexpr)castexpr.operator neg()` */
+assert (42) < 7 == false; /* `(typexpr).operator lo(castexpr)` vs. `(typexpr)(Cell(castexpr))` */
+assert (42,)[0] == 42;    /* `(typexpr).operator [](castexpr)` vs. `(typexpr)(List({ castexpr }))` */
 #pragma warning(pop)
 
 /* Assert special behavior that applies when
- * `!' is encountered in cast expressions. */
+ * `!` is encountered in cast expressions. */
 import bool from deemon;
-assert (bool) !42 == false;          /* `bool(!42)' */
-assert (bool) !!42 == true;          /* `bool(!!42)' */
-assert (bool) !!!in [bool] == false; /* `bool !in [bool]' */
+assert (bool) !42 == false;          /* `bool(!42)` */
+assert (bool) !!42 == true;          /* `bool(!!42)` */
+assert (bool) !!!in [bool] == false; /* `bool !in [bool]` */
 
 

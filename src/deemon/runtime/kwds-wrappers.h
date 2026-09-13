@@ -42,7 +42,7 @@ INTDEF DeeTypeObject DeeBlackListKwdsIterator_Type;
 
 /* ======================== DeeBlackListKwObject ======================== */
 typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,            mi_iter, /* [1..1][const] An iterator for the underlying `mi_map->blkw_kw'. */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,            mi_iter, /* [1..1][const] An iterator for the underlying `mi_map->blkw_kw`. */
 	                      DeeBlackListKwObject, mi_map); /* [1..1][const] The general-purpose blacklist mapping being iterated. */
 } DeeBlackListKwIterator;
 

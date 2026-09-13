@@ -280,7 +280,7 @@ PRIVATE struct type_math bool_math = {
 	/* .tp_shr    = */ &bool_shr, /* 0, 0 -> 0 >> 0 = 0;
 	                               * 0, 1 -> 0 >> 1 = 0;
 	                               * 1, 0 -> 1 >> 0 = 1;
-	                               * 1, 1 -> 1 >> 1 = 0; // No sign extension because `bool' is positive, unsigned. */
+	                               * 1, 1 -> 1 >> 1 = 0; // No sign extension because `bool` is positive, unsigned. */
 	/* .tp_and    = */ &bool_and,
 	/* .tp_or     = */ &bool_or,
 	/* .tp_xor    = */ &bool_xor,
@@ -484,7 +484,7 @@ typedef struct {
 #define DeeBool_Block_FREE_FALSE 1 /* Dee_False of this block was free'd */
 #define DeeBool_Block_FREE_TRUE  2 /* Dee_True of this block was free'd */
 #define DeeBool_Block_FREE_ALL   (DeeBool_Block_FREE_FALSE | DeeBool_Block_FREE_TRUE)
-	unsigned int  bp_free; /* Set of `DeeBool_Block_FREE_*' */
+	unsigned int  bp_free; /* Set of `DeeBool_Block_FREE_*` */
 } DeeBool_Block;
 
 /* The following 2 are defined in "runtime/slab.c" */
@@ -572,7 +572,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &bool_new,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL, /* Static singleton; handling for per-thread objects happens in `decwriter_putobject_ex()' */
+			/* tp_serialize:   */ NULL, /* Static singleton; handling for per-thread objects happens in `decwriter_putobject_ex()` */
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ NULL,
@@ -624,8 +624,8 @@ PUBLIC _DeeBool_Pair Dee_FalseTrue =
 #endif /* !Dee_CONFIG_BOOL_TLS */
 {
 	/* .bp_bools = */ {
-		/* [0] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }, /* `false' */
-		/* [1] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }  /* `true' */
+		/* [0] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }, /* `false` */
+		/* [1] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }  /* `true` */
 	}
 };
 

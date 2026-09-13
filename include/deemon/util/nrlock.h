@@ -131,7 +131,7 @@ DECL_BEGIN
 /* Non-recursive atomic lock                                            */
 /************************************************************************/
 typedef struct {
-	_Dee_nrlock_tid_t nra_tid; /* Lock owner (`_Dee_NRLOCK_TID_INVALID' if not held) */
+	_Dee_nrlock_tid_t nra_tid; /* Lock owner (`_Dee_NRLOCK_TID_INVALID` if not held) */
 } Dee_nratomic_lock_t;
 
 #define Dee_NRATOMIC_LOCK_INIT        { _Dee_NRLOCK_TID_INVALID }
@@ -186,8 +186,8 @@ Dee_nratomic_lock_acquire(Dee_nratomic_lock_t *__restrict self) {
 /* Non-recursive shared lock                                            */
 /************************************************************************/
 typedef struct {
-	Dee_nratomic_lock_t  nrs_lock;    /* Lock owner and futex word (`_Dee_NRLOCK_TID_INVALID' if not held) */
-	_Dee_SHARED_WAITWORD(nrs_waiting) /* Waiting-threads control word for `nrs_lock' */
+	Dee_nratomic_lock_t  nrs_lock;    /* Lock owner and futex word (`_Dee_NRLOCK_TID_INVALID` if not held) */
+	_Dee_SHARED_WAITWORD(nrs_waiting) /* Waiting-threads control word for `nrs_lock` */
 } Dee_nrshared_lock_t;
 
 #define _Dee_nrshared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->nrs_waiting)

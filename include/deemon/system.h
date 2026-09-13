@@ -55,8 +55,8 @@ DECL_BEGIN
 struct Dee_unicode_printer;
 
 #ifdef CONFIG_HOST_WINDOWS
-/* Recognize `STDIN$', `STDOUT$' and `STDERR$' special file names, to
- * go alongside filenames such as `CON', `NUL', `CONIN$', `CONOUT$' */
+/* Recognize `STDIN$`, `STDOUT$` and `STDERR$` special file names, to
+ * go alongside filenames such as `CON`, `NUL`, `CONIN$`, `CONOUT$` */
 #undef CONFIG_WANT_WINDOWS_STD_FILES
 #ifndef CONFIG_NO_WANT_WINDOWS_STD_FILES
 #define CONFIG_WANT_WINDOWS_STD_FILES
@@ -101,14 +101,14 @@ struct Dee_unicode_printer;
 #define DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES
 #endif /* !... */
 
-/* Returns the filename-portion of a given `path'
+/* Returns the filename-portion of a given `path`
  * >> print DeeSystem_BaseName(r"/foo/bar/file.txt");   // "file.txt"
  * >> print DeeSystem_BaseName(r"file.txt");            // "file.txt"
  * >> print DeeSystem_BaseName(r"E:\path\to\file.txt"); // "file.txt"  (Windows-only)
  *
  * This function returns a pointer to 1 character past the
- * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
- * just re-returns `path' when no such character exists. */
+ * last `DeeSystem_SEP` or `DeeSystem_ALTSEP` in `path`, or
+ * just re-returns `path` when no such character exists. */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
 (DFCALL DeeSystem_BaseName)(char const *__restrict path, size_t pathlen);
 
@@ -126,28 +126,28 @@ DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED ATTR_INS(1, 2) char const *
 
 
 
-/* Print the current working directory to the given `printer'
+/* Print the current working directory to the given `printer`
  * @param: include_trailing_sep: A trailing / or \\-character is also printed.
  * @return:  0: Success.
- * @return: -1: An error occurred (s.a. `DeeError_*'). */
+ * @return: -1: An error occurred (s.a. `DeeError_*`). */
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL DeeSystem_PrintPwd)(struct Dee_unicode_printer *__restrict printer,
                            bool include_trailing_sep);
 
-/* Ensure that the given `filename' describes an absolute, normalized path. */
+/* Ensure that the given `filename` describes an absolute, normalized path. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename);
 
-/* Check if the given `filename' can be considered an absolute, normalized
- * path, that is: isn't relative, and doesn't contain `.' or `..' segments. */
+/* Check if the given `filename` can be considered an absolute, normalized
+ * path, that is: isn't relative, and doesn't contain `.` or `..` segments. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_len);
 
 /* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
 
-/* Return the last modified timestamp of `filename'
- * > uses the same format as `DeeSystem_GetWalltime()'
+/* Return the last modified timestamp of `filename`
+ * > uses the same format as `DeeSystem_GetWalltime()`
  * @return: (uint64_t)-1: An error was thrown
  * @return: 0 : Failed to query file timestamp (probably ENOENT) */
 DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
@@ -156,12 +156,12 @@ DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename);
 
 /* Check if the named file (or directory) exists in some way, shape, or form,
- * and return the type of that file. If `filename' refers to a symbolic link,
+ * and return the type of that file. If `filename` refers to a symbolic link,
  * that link is dereferenced, and information about its target is returned.
  *
- * @return: DeeSystem_GetFileType_T_NONE: `filename' does not exist
- * @return: DeeSystem_GetFileType_T_DIR:  `filename' is a directory
- * @return: DeeSystem_GetFileType_T_REG:  `filename' is a regular file
+ * @return: DeeSystem_GetFileType_T_NONE: `filename` does not exist
+ * @return: DeeSystem_GetFileType_T_DIR:  `filename` is a directory
+ * @return: DeeSystem_GetFileType_T_REG:  `filename` is a regular file
  * @return: DeeSystem_GetFileType_ERR:    An error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeSystem_GetFileType(/*String*/ DeeObject *__restrict filename);
@@ -172,14 +172,14 @@ DeeSystem_GetFileTypeString(/*utf-8*/ char const *__restrict filename);
 #define DeeSystem_GetFileType_T_REG  2 /* File is a regular file, a device, or something else (but not a symlink; those are dereferenced) */
 #define DeeSystem_GetFileType_ERR (-1) /* Error was thrown */
 
-/* Try to unlink() the given `filename'
- * WARNING: When `filename' is an empty directory, it is system-specific if
+/* Try to unlink() the given `filename`
+ * WARNING: When `filename` is an empty directory, it is system-specific if
  *          that directory will be removed or not (basically, this function
- *          may be implemented using the STD-C `remove()' function)
+ *          may be implemented using the STD-C `remove()` function)
  * NOTE:    Even upon error, there exists a chance that the file was deleted.
- * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
+ * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error` is `false`)
  * @return: 0 : The unlink() operation was successful
- * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */
+ * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error` is `false`) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
                  bool throw_exception_on_error);
@@ -207,30 +207,30 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
  * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, Dee_fd_osfhandle_GETSET)); catch (AttributeError);
  * >> try return get_osfhandle(DeeObject_AsInt(DeeObject_GetAttr(ob, Dee_fd_fileno_GETSET))); catch (AttributeError);
  * >> return get_osfhandle(DeeObject_AsInt(ob));
- * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
+ * Note that both msvc, as well as cygwin define `get_osfhandle()` as one
  * of the available functions, meaning that in both scenarios we are able
  * to get access to the underlying HANDLE. However, should deemon ever be
  * linked against a windows libc without this function, then only the
- * `Dee_fd_osfhandle_GETSET' variant will be usable.
+ * `Dee_fd_osfhandle_GETSET` variant will be usable.
  * @return: * :                   Success (the actual handle value)
  * @return: INVALID_HANDLE_VALUE: Error (handle translation failed)
  *                                In case the actual handle value stored inside
- *                                of `ob' was `INVALID_HANDLE_VALUE', then an
- *                                `DeeError_FileClosed' error is thrown. */
+ *                                of `ob` was `INVALID_HANDLE_VALUE`, then an
+ *                                `DeeError_FileClosed` error is thrown. */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob);
 
-/* Same as `DeeNTSystem_GetHandleEx()', but also writes to `p_fd' (when non-NULL):
- * - `-1': If `get_osfhandle()' wasn't used
- * - `*':  The file descriptor number passed to `get_osfhandle()' */
+/* Same as `DeeNTSystem_GetHandleEx()`, but also writes to `p_fd` (when non-NULL):
+ * - `-1`: If `get_osfhandle()` wasn't used
+ * - `*`:  The file descriptor number passed to `get_osfhandle()` */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandleEx(DeeObject *__restrict ob, int *p_fd);
 
-/* Similar to `DeeNTSystem_GetHandle()', but allow `ob' to refer to INVALID_HANDLE_VALUE,
- * instead of unconditionally throwing an `DeeError_FileClosed' error when such a handle
+/* Similar to `DeeNTSystem_GetHandle()`, but allow `ob` to refer to INVALID_HANDLE_VALUE,
+ * instead of unconditionally throwing an `DeeError_FileClosed` error when such a handle
  * value is encountered.
- * @return: 0:  Success (the handle value was stored in `*pHandle', and is allowed to be `INVALID_HANDLE_VALUE')
- * @return: -1: Error (a deemon error was thrown; s.a. `DeeError_Throw()') */
+ * @return: 0:  Success (the handle value was stored in `*pHandle`, and is allowed to be `INVALID_HANDLE_VALUE`)
+ * @return: -1: Error (a deemon error was thrown; s.a. `DeeError_Throw()`) */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeNTSystem_TryGetHandle(DeeObject *__restrict ob,
                          /*PHANDLE*/ void **pHandle);
@@ -240,7 +240,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
 
 /* Check if a given error code indicates a UNC-path problem that should be
- * addressed by fixing the path using `DeeNTSystem_FixUncPath()', then trying again. */
+ * addressed by fixing the path using `DeeNTSystem_FixUncPath()`, then trying again. */
 DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsUncError(/*DWORD*/ DeeNT_DWORD dwError);
 
 /* Check for a number of different NT error classes. */
@@ -279,26 +279,26 @@ DFUNDEF WUNUSED unsigned int DCALL _DeeNTSystem_HandleGenericError(/*DWORD*/ Dee
 		}                                                       \
 	}	__WHILE0
 
-/* Translate a given `dwError' into the appropriate `errno' error code.
+/* Translate a given `dwError` into the appropriate `errno` error code.
  * If the translation failed, return a fallback value.
  * Note that (if possible), the implementation of this function is handled by the
- * linked C library, using MSVC's `_dosmaperr()' (if available). Otherwise, the
+ * linked C library, using MSVC's `_dosmaperr()` (if available). Otherwise, the
  * translation is performed identical to what is known to be done by the linked
  * C library, or a combination of CYGWIN and MSVC if some other libc is hosting
  * deemon within a windows environment.
- * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()' to translate
+ * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()` to translate
  *       the given NT error code into an errno. */
 DFUNDEF ATTR_CONST WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError);
 
-/* Do the reverse of `DeeNTSystem_TranslateErrno()' */
+/* Do the reverse of `DeeNTSystem_TranslateErrno()` */
 DFUNDEF ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value);
 
 /* Work around a problem with long path names. (Note: also handles interrupts)
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
- * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()') */
+ * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()`) */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
@@ -308,10 +308,10 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
                        /*HANDLE*/ void *hTemplateFile);
 
-/* Same as `DeeNTSystem_CreateFile()', but try not to modify the file's last-accessed timestamp
+/* Same as `DeeNTSystem_CreateFile()`, but try not to modify the file's last-accessed timestamp
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
- * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()') */
+ * @return: INVALID_HANDLE_VALUE: The system call failed (s.a. `GetLastError()`) */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
                               /*DWORD*/ DeeNT_DWORD dwDesiredAccess,
@@ -321,37 +321,37 @@ DeeNTSystem_CreateFileNoATime(/*String*/ DeeObject *__restrict lpFileName,
                               /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
                               /*HANDLE*/ void *hTemplateFile);
 
-/* Wrapper around `DeeNTSystem_CreateFile()' and `DeeNTSystem_CreateFileNoATime()'
- * that is used to implement `posix.open()' and `File.open()' by taking unix-like
+/* Wrapper around `DeeNTSystem_CreateFile()` and `DeeNTSystem_CreateFileNoATime()`
+ * that is used to implement `posix.open()` and `File.open()` by taking unix-like
  * oflags and mode.
- * @param: oflags: Set of `Dee_OPEN_F*'
- * @param: mode:   When no bits from `0444' are set, use `FILE_ATTRIBUTE_READONLY'
+ * @param: oflags: Set of `Dee_OPEN_F*`
+ * @param: mode:   When no bits from `0444` are set, use `FILE_ATTRIBUTE_READONLY`
  * @return: * :    The new handle.
  * @return: NULL:  A deemon callback failed and an error was thrown.
- * @return: INVALID_HANDLE_VALUE: File not found (`!Dee_OPEN_FCREAT') or already
- *                                exists (`Dee_OPEN_FCREAT | Dee_OPEN_FEXCL') */
+ * @return: INVALID_HANDLE_VALUE: File not found (`!Dee_OPEN_FCREAT`) or already
+ *                                exists (`Dee_OPEN_FCREAT | Dee_OPEN_FEXCL`) */
 DFUNDEF WUNUSED NONNULL((1)) /*HANDLE*/ void *DCALL
 DeeNTSystem_OpenFile(/*String*/ DeeObject *__restrict filename, int oflags, int mode);
 
-/* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
+/* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()` */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile);
 
-/* Same as `DeeNTSystem_GetFilenameOfHandle()', but return `ITER_DONE' rather than
- * throwing a SystemError when `DeeNTSystem_PrintFilenameOfHandle()' returns `1' */
+/* Same as `DeeNTSystem_GetFilenameOfHandle()`, but return `ITER_DONE` rather than
+ * throwing a SystemError when `DeeNTSystem_PrintFilenameOfHandle()` returns `1` */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_TryGetFilenameOfHandle(/*HANDLE*/ void *hFile);
 
-/* @return: 1:  The system call failed (s.a. `GetLastError()').
+/* @return: 1:  The system call failed (s.a. `GetLastError()`).
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeNTSystem_PrintFilenameOfHandle(struct Dee_unicode_printer *__restrict printer,
                                   /*HANDLE*/ void *hFile);
 
-/* Wrapper for the `GetFinalPathNameByHandle()' system call.
+/* Wrapper for the `GetFinalPathNameByHandle()` system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (s.a. `GetLastError()').
+ * @return: 1:  The system call failed (s.a. `GetLastError()`).
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
@@ -359,9 +359,9 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict pr
                                        /*HANDLE*/ void *hFile,
                                        /*DWORD*/ DeeNT_DWORD dwFlags);
 
-/* Wrapper for the `GetMappedFileName()' system call.
+/* Wrapper for the `GetMappedFileName()` system call.
  * @return: 2:  Unsupported.
- * @return: 1:  The system call failed (s.a. `GetLastError()').
+ * @return: 1:  The system call failed (s.a. `GetLastError()`).
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
@@ -370,16 +370,16 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
                                 /*LPVOID*/ void *lpv);
 
 
-/* Wrapper for the `FormatMessageW()' system call.
+/* Wrapper for the `FormatMessageW()` system call.
  * @return: * :        The formatted message.
  * @return: NULL:      A deemon callback failed and an error was thrown.
- * @return: ITER_DONE: The system call failed (s.a. `GetLastError()'). */
+ * @return: ITER_DONE: The system call failed (s.a. `GetLastError()`). */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                           /* va_list * */ void *Arguments);
 
-/* @return: 1:  The system call failed (nothing was printed; s.a. `GetLastError()')
+/* @return: 1:  The system call failed (nothing was printed; s.a. `GetLastError()`)
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
@@ -388,9 +388,9 @@ DeeNTSystem_UPrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
                                 DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                                 /* va_list * */ void *Arguments);
 
-/* @param: p_success: Set to `false' if the system call failed and nothing was printed (s.a. `GetLastError()')
+/* @param: p_success: Set to `false` if the system call failed and nothing was printed (s.a. `GetLastError()`)
  * @return: >= 0: Success.
- * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success' is undefined). */
+ * @return: < 0:  A deemon callback failed and an error was thrown (`*p_success` is undefined). */
 DFUNDEF WUNUSED NONNULL((1, 8)) Dee_ssize_t DCALL
 DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                DeeNT_DWORD dwFlags, void const *lpSource,
@@ -398,7 +398,7 @@ DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                /* va_list * */ void *Arguments,
                                bool *__restrict p_success);
 
-/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error messages.
+/* Convenience wrapper around `DeeNTSystem_FormatMessage()` for getting error messages.
  * When no error message exists, return an empty string.
  * @return: * :   The error message. (or an empty string)
  * @return: NULL: A deemon callback failed and an error was thrown. */
@@ -406,9 +406,9 @@ DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FormatErrorMessage(DeeNT_DWORD dwError);
 
 
-/* Throw NT system errors, given an error code as returned by `GetLastError()'
- * When no error code is given, `GetLastError()' is called internally.
- * When `tp' is `NULL', the proper error type is automatically determined using the `DeeNTSystem_Is*' functions.
+/* Throw NT system errors, given an error code as returned by `GetLastError()`
+ * When no error code is given, `GetLastError()` is called internally.
+ * When `tp` is `NULL`, the proper error type is automatically determined using the `DeeNTSystem_Is*` functions.
  * @return: -1: These functions always return -1 */
 DFUNDEF ATTR_COLD NONNULL((3)) int (DeeNTSystem_ThrowErrorf)(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, ...);
 DFUNDEF ATTR_COLD NONNULL((2)) int (DeeNTSystem_ThrowLastErrorf)(DeeTypeObject *tp, char const *__restrict format, ...);
@@ -445,12 +445,12 @@ DFUNDEF WUNUSED NONNULL((1)) void *DCALL DeeSystem_DlOpenString(/*utf-8*/ char c
 #define DeeSystem_DlOpen_FAILED ((void *)(uintptr_t)-1)
 
 /* Lookup a symbol within a given shared library
- * Returns `NULL' if the symbol could not be found */
+ * Returns `NULL` if the symbol could not be found */
 DFUNDEF WUNUSED NONNULL((2)) void *DCALL DeeSystem_DlSym(void *handle, char const *symbol_name);
 
 /* Try to get a human-readable description on what went wrong during a call
- * to `DeeSystem_DlOpen[String]()' that caused `DeeSystem_DlOpen_FAILED' to
- * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
+ * to `DeeSystem_DlOpen[String]()` that caused `DeeSystem_DlOpen_FAILED` to
+ * be returned, or `DeeSystem_DlSym()` to have caused `NULL` to be returned.
  * @return: * :        The human-readable error description
  * @return: NULL:      A deemon callback failed and an error was thrown.
  * @return: ITER_DONE: No description is available. */
@@ -460,7 +460,7 @@ DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void);
 DFUNDEF void DCALL DeeSystem_DlClose(void *handle);
 
 
-/* Determine the filename from a file descriptor, as returned by `open()'
+/* Determine the filename from a file descriptor, as returned by `open()`
  * If the host doesn't support FD-based file descriptors, throw an error. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeSystem_GetFilenameOfFD(int fd);
 
@@ -491,8 +491,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeUnixSystem_ReadLinkString(
  * >> return DeeObject_AsInt(ob);
  * @return: * : Success (the actual handle value)
  * @return: -1: Error (handle translation failed)
- *              In case the actual handle value stored inside of `ob'
- *              was `-1', then an `DeeError_FileClosed' error is thrown. */
+ *              In case the actual handle value stored inside of `ob`
+ *              was `-1`, then an `DeeError_FileClosed` error is thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 
@@ -516,9 +516,9 @@ DFUNDEF WUNUSED unsigned int DCALL _DeeUnixSystem_HandleGenericError(int errno_v
 		}                                                         \
 	}	__WHILE0
 
-/* Throw an exception alongside an errno error-code `error'
- * When `tp' is `NULL', automatically select an appropriate
- * error type based on the value of `error' */
+/* Throw an exception alongside an errno error-code `error`
+ * When `tp` is `NULL`, automatically select an appropriate
+ * error type based on the value of `error` */
 DFUNDEF ATTR_COLD NONNULL((3)) int
 (DeeUnixSystem_ThrowErrorf)(DeeTypeObject *tp, /*errno_t*/ int errno_value,
                             char const *__restrict format, ...);
@@ -532,7 +532,7 @@ DFUNDEF ATTR_COLD NONNULL((3)) int
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 
-/* Value set for `errno_t' when the error is not known. */
+/* Value set for `errno_t` when the error is not known. */
 #ifndef Dee_SYSTEM_ERROR_UNKNOWN
 #define Dee_SYSTEM_ERROR_UNKNOWN 0
 #endif /* !Dee_SYSTEM_ERROR_UNKNOWN */

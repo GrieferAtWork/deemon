@@ -55,7 +55,7 @@ DECL_BEGIN
 #define DeeInt_NEWSFUNC(n) _Dee_PRIVATE_NEWINT(n)
 #define DeeInt_NEWUFUNC(n) _Dee_PRIVATE_NEWUINT(n)
 
-/* Try to figure out the guarantied runtime object type of `vdirect()' */
+/* Try to figure out the guarantied runtime object type of `vdirect()` */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 memval_typeof(struct memval const *self) {
 	switch (self->mv_vmorph) {
@@ -78,7 +78,7 @@ memval_typeof(struct memval const *self) {
 }
 
 
-/* Possible propagation strategies returned by `fg_vdirect_impl()'
+/* Possible propagation strategies returned by `fg_vdirect_impl()`
  * These affect how/which aliases of the (previously) non-direct value are updated to
  * reflect the (then) direct equivalent of their original value.
  *
@@ -103,7 +103,7 @@ fg_vdirect_impl(struct fungen *__restrict self) {
 	mval = &self->fg_state->ms_stackv[self->fg_state->ms_stackc - 1];
 	ASSERT(!memval_isdirect(mval));
 
-	/* Convert `mval' (which is located in VTOP) into a DIRECT value. */
+	/* Convert `mval` (which is located in VTOP) into a DIRECT value. */
 	switch (mval->mv_vmorph) {
 
 	case MEMVAL_VMORPH_NULLABLE: {
@@ -220,7 +220,7 @@ err:
 }
 
 /* Force VTOP to become a direct object. Any memory locations that aliases it is also changed.
- * NOTE: This function is usually called automatically by other `fg_v*' functions. */
+ * NOTE: This function is usually called automatically by other `fg_v*` functions. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vdirect1(struct fungen *__restrict self) {
 	int propagation_strategy;
@@ -349,9 +349,9 @@ err:
 }
 
 
-/* Force the top `n' elements of the v-stack to use `MEMVAL_VMORPH_ISDIRECT'.
+/* Force the top `n` elements of the v-stack to use `MEMVAL_VMORPH_ISDIRECT`.
  * Any memory locations that might alias one of those locations is also changed.
- * NOTE: This function is usually called automatically by other `fg_v*' functions. */
+ * NOTE: This function is usually called automatically by other `fg_v*` functions. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vdirect(struct fungen *__restrict self, vstackaddr_t n) {
 	vstackaddr_t i;

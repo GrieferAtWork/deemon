@@ -27,9 +27,9 @@
 #define __HYBRID_BSEARCH_LOADMID(result, a, b) \
 	(void)((result) = ((a) + (b)) / 2)
 
-/* Same as `BSEARCH()', but given an ascendingly sorted vector of
- * non-overlapping, inclusive ranges `vector[index] field_lo' ...
- * `vector[index] field_hi', find the one that contains `key' */
+/* Same as `BSEARCH()`, but given an ascendingly sorted vector of
+ * non-overlapping, inclusive ranges `vector[index] field_lo` ...
+ * `vector[index] field_hi`, find the one that contains `key` */
 #define BSEARCH_RANGE(index, vector, count, field_lo, field_hi, key) \
 	for (__SIZE_TYPE__ _bs_lo = 0, _bs_hi = (count);                 \
 	     __HYBRID_BSEARCH_LOADMID(index, _bs_lo, _bs_hi),            \
@@ -39,7 +39,7 @@
 		else if ((key) > ((vector)[index] field_hi))                 \
 			_bs_lo = (index) + 1;                                    \
 		else if ((_bs_lo = _bs_hi, 0))                               \
-			; /* Found it! (element is in `vector[index]') */        \
+			; /* Found it! (element is in `vector[index]`) */        \
 		else
 
 /* >> BSEARCH (size_t &index, T vector[], size_t count,
@@ -61,18 +61,18 @@
  *
  * BSEARCH  is  a  O(log(N))  search  algorithm  for  pre-sorted  arrays,   making
  * it  optimal  in  situations  where   pre-computed  arrays  must  be   searched.
- * This macro behaves the same as the libc function `bsearch(3)' / `bsearch_r(3)',
+ * This macro behaves the same as the libc function `bsearch(3)` / `bsearch_r(3)`,
  * however unlike the libc function, this one doesn't require the use of a compare
  * predicate,  rather allowing you to implement the entire search function in-line
  *
  * Upon success, the statement immediately following this macro will be executed.
- * Upon  failure, that same  statement is skipped as  though pre-fixed by `if(0)'
+ * Upon  failure, that same  statement is skipped as  though pre-fixed by `if(0)`
  *
  * @param: index: [out] The matching vector index (on success)
  * @param: index: [out] The index where the element should go (on failure)
  * @param: vector: [in] The vector to-be searched (must be sorted via field)
- * @param: count:  [in] # of elements in `vector'
- * @param: field:       An optional expression to narrow down a specific field of `vector'
+ * @param: count:  [in] # of elements in `vector`
+ * @param: field:       An optional expression to narrow down a specific field of `vector`
  * @param: key:    [in] The key that's supposed to be found. */
 #define BSEARCH(index, vector, count, field, key) \
 	BSEARCH_RANGE(index, vector, count, field, field, key)

@@ -177,7 +177,7 @@
 #endif /* ... */
 
 
-/* Arguments registers in the `DCALL' ABI */
+/* Arguments registers in the `DCALL` ABI */
 #ifdef HOSTASM_X86_64_MSABI
 #define HOST_REGNO_R_ARG0 HOST_REGNO_RCX
 #define HOST_REGNO_R_ARG1 HOST_REGNO_RDX
@@ -201,14 +201,14 @@ struct Dee_function_object;
 
 typedef uint8_t host_regno_t;
 
-/* Host function assembly calling convention (one of `HOST_CC_*'). */
+/* Host function assembly calling convention (one of `HOST_CC_*`). */
 typedef uint8_t host_cc_t;
 
 /* Possible calling convention flags. */
-#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
-#define HOST_CC_F_TUPLE 2 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
+#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw` parameter for keyword arguments */
+#define HOST_CC_F_TUPLE 2 /* Instead of `size_t argc, DeeObject *const *argv`, take `DeeObject *args` */
 #define HOST_CC_F_FUNC  4 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
-#define HOST_CC_F_THIS  8 /* Take an an extra `DeeObject *thisarg' parameter for "this" */
+#define HOST_CC_F_THIS  8 /* Take an an extra `DeeObject *thisarg` parameter for "this" */
 
 /* Possible calling conventions. */
 #define HOST_CC_CALL                   0  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
@@ -256,7 +256,7 @@ struct host_rawfunc {
 };
 
 #ifdef __CYGWIN__
-/* Cygwin's `getpagesize' is broken in that it returns the
+/* Cygwin's `getpagesize` is broken in that it returns the
  * allocation granularity instead of the actual page-size. */
 #undef getpagesize
 #define getpagesize() 4096

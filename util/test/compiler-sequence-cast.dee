@@ -30,7 +30,7 @@ local a = { _hide("foo"), _hide((10, 20)) };
 
 /* This used to break because it was compiled as "_hide(a) as Sequence",
  * which then meant that the resulting object didn't implement its own
- * `operator iter()' */
+ * `operator iter()` */
 local b = { _hide(a)... };
 
 local it = b.operator iter();

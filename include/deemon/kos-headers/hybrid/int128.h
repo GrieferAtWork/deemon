@@ -1451,7 +1451,7 @@ __DECL_END
 #define __hybrid_uint128_shl32_overflows(var, shift) \
 	((shift) != 0 && (__hybrid_PRIVATE_uint128_vec32_significand(var, 3) >> (32 - (shift))) != 0)
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
-/* Unsigned <<= shift-left for `shift < 64' */
+/* Unsigned <<= shift-left for `shift < 64` */
 #define __hybrid_uint128_shl64(var, shift) (!(shift) ? (void)0 : (void)(                                                        \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 1) <<= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 1) |= __hybrid_PRIVATE_uint128_vec64_significand(var, 0) >> (64 - (shift)), \
@@ -1460,7 +1460,7 @@ __DECL_END
 	((shift) != 0 && (__hybrid_PRIVATE_uint128_vec64_significand(var, 1) >> (64 - (shift))) != 0)
 #define __hybrid_uint128_shl32 __hybrid_uint128_shl64
 #else /* __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
-/* Unsigned <<= shift-left for `shift < 32' */
+/* Unsigned <<= shift-left for `shift < 32` */
 #define __hybrid_uint128_shl32(var, shift) (!(shift) ? (void)0 : (void)(                                                        \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 3) <<= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 3) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 2) >> (32 - (shift)), \
@@ -1469,7 +1469,7 @@ __DECL_END
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 1) <<= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 1) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 0) >> (32 - (shift)), \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 0) <<= (shift)))
-/* Unsigned <<= shift-left for `shift < 64' */
+/* Unsigned <<= shift-left for `shift < 64` */
 #define __hybrid_uint128_shl64(var, shift)                                                                             \
 	((shift) >= 32                                                                                                     \
 	 ? (void)(__hybrid_PRIVATE_uint128_vec32_significand(var, 3) = __hybrid_PRIVATE_uint128_vec32_significand(var, 2), \
@@ -1485,7 +1485,7 @@ __DECL_END
 	 : __hybrid_uint128_shl32_overflows(var, shift))
 #endif /* !__HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
 
-/* Unsigned <<= shift-left for `shift < 128' */
+/* Unsigned <<= shift-left for `shift < 128` */
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
 #define __hybrid_uint128_shl(var, shift)                                                                               \
 	((shift) >= 64                                                                                                     \
@@ -1543,7 +1543,7 @@ __DECL_END
 #define __hybrid_uint128_shr32_overflows(var, shift) \
 	((__hybrid_PRIVATE_int128_vec32_significand(var, 0) & ((__UINT32_C(1) << (shift)) - 1)) != 0)
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
-/* Unsigned >>= shift-right for `shift < 64' */
+/* Unsigned >>= shift-right for `shift < 64` */
 #define __hybrid_uint128_shr64(var, shift) (!(shift) ? (void)0 : (void)(                                                        \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 0) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 0) |= __hybrid_PRIVATE_uint128_vec64_significand(var, 1) << (64 - (shift)), \
@@ -1552,7 +1552,7 @@ __DECL_END
 	((__hybrid_PRIVATE_int128_vec64_significand(var, 0) & ((__UINT64_C(1) << (shift)) - 1)) != 0)
 #define __hybrid_uint128_shr32 __hybrid_uint128_shr64
 #else /* __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
-/* Unsigned >>= shift-right for `shift < 32' */
+/* Unsigned >>= shift-right for `shift < 32` */
 #define __hybrid_uint128_shr32(var, shift) (!(shift) ? (void)0 : (void)(                                                        \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 0) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 0) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 1) << (32 - (shift)), \
@@ -1561,7 +1561,7 @@ __DECL_END
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 2) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 2) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 3) << (32 - (shift)), \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 3) >>= (shift)))
-/* Unsigned >>= shift-right for `shift < 64' */
+/* Unsigned >>= shift-right for `shift < 64` */
 #define __hybrid_uint128_shr64(var, shift)                                                                             \
 	((shift) >= 32                                                                                                     \
 	 ? (void)(__hybrid_PRIVATE_uint128_vec32_significand(var, 0) = __hybrid_PRIVATE_uint128_vec32_significand(var, 1), \
@@ -1577,7 +1577,7 @@ __DECL_END
 	 : __hybrid_uint128_shr32_overflows(var, shift))
 #endif /* !__HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
 
-/* Unsigned >>= shift-right for `shift < 128' */
+/* Unsigned >>= shift-right for `shift < 128` */
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
 #define __hybrid_uint128_shr(var, shift)                                                                               \
 	((shift) >= 64                                                                                                     \
@@ -1630,14 +1630,14 @@ __DECL_END
 #define __hybrid_int128_shr64_overflows __hybrid_uint128_shr64_overflows
 #define __hybrid_int128_shr_overflows   __hybrid_uint128_shr_overflows
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
-/* Unsigned >>= shift-right for `shift < 64' */
+/* Unsigned >>= shift-right for `shift < 64` */
 #define __hybrid_int128_shr64(var, shift) (!(shift) ? (void)0 : (void)(                                                         \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 0) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec64_significand(var, 0) |= __hybrid_PRIVATE_uint128_vec64_significand(var, 1) << (64 - (shift)), \
 	__hybrid_PRIVATE_int128_vec64_significand(var, 1) >>= (shift)))
 #define __hybrid_int128_shr32 __hybrid_int128_shr64
 #else /* __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
-/* Unsigned >>= shift-right for `shift < 32' */
+/* Unsigned >>= shift-right for `shift < 32` */
 #define __hybrid_int128_shr32(var, shift) (!(shift) ? (void)0 : (void)(                                                         \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 0) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 0) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 1) << (32 - (shift)), \
@@ -1646,7 +1646,7 @@ __DECL_END
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 2) >>= (shift),                                                             \
 	__hybrid_PRIVATE_uint128_vec32_significand(var, 2) |= __hybrid_PRIVATE_uint128_vec32_significand(var, 3) << (32 - (shift)), \
 	__hybrid_PRIVATE_int128_vec32_significand(var, 3) >>= (shift)))
-/* Unsigned >>= shift-right for `shift < 64' */
+/* Unsigned >>= shift-right for `shift < 64` */
 #define __hybrid_int128_shr64(var, shift)                                                                              \
 	((shift) >= 32                                                                                                     \
 	 ? (void)(__hybrid_PRIVATE_uint128_vec32_significand(var, 0) = __hybrid_PRIVATE_uint128_vec32_significand(var, 1), \
@@ -1657,7 +1657,7 @@ __DECL_END
 	 __hybrid_int128_shr32(var, (shift) % 32))
 #endif /* !__HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC */
 
-/* Unsigned >>= shift-right for `shift < 128' */
+/* Unsigned >>= shift-right for `shift < 128` */
 #ifdef __HYBRID_INT128_CONFIG_USE_64BIT_ARITHMETIC
 #define __hybrid_int128_shr(var, shift)                                                                                \
 	((shift) >= 64                                                                                                     \
@@ -2905,7 +2905,7 @@ __LOCAL __ATTR_IN(1) __ATTR_IN(2) __ATTR_OUT_OPT(3) __ATTR_OUT_OPT(4) void
 	if (__hybrid_int128_isneg(*__lhs))
 		__hybrid_int128_neg(__u128_mod);
 
-	/* Floor the result (this is what differentiates us from `__hybrid_PRIVATE_int128_divmod128()') */
+	/* Floor the result (this is what differentiates us from `__hybrid_PRIVATE_int128_divmod128()`) */
 	if ((__hybrid_int128_isneg(__u128_mod) && !__hybrid_int128_le8(*__rhs, 0)) ||
 	    (!__hybrid_int128_le8(__u128_mod, 0) && __hybrid_int128_isneg(*__rhs))) {
 		__hybrid_int128_add128(__u128_mod, *__rhs);

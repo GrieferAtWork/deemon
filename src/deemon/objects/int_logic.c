@@ -1,11 +1,11 @@
 /* NOTE: Deemon's integer object implementation is
- *       heavily based on python's `long' data type.
+ *       heavily based on python's `long` data type.
  *       With that in mind, licensing of deemon's integer
  *       implementation must be GPL-compatible, GPL being
  *       the license that python is restricted by.
  *    >> So to simplify this whole deal: I make no claim of having invented the
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
- *       with all algorithms found in `int_logic.c' originating from python
+ *       with all algorithms found in `int_logic.c` originating from python
  *       before being adjusted to fit deemon's runtime.
  *       To further discourage use of code found here, in favor of the original
  *       creator's work, comments have been removed.
@@ -2541,7 +2541,7 @@ int_pext_ex_impl(DeeIntObject *self, DeeIntObject *mask) {
 		ASSERT(mask_carry == 0 || mask_carry == 1);
 		result_nbits += mask_carry;
 
-		/* Special case when the mask is `-1' (iow: when `~mask == 0') */
+		/* Special case when the mask is `-1` (iow: when `~mask == 0`) */
 		if unlikely(!result_nbits)
 			return_reference_(self);
 

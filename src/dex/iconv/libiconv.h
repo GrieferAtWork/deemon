@@ -59,9 +59,9 @@ INTDEF DeeTypeObject StrNulArray_Type;
 typedef struct {
 	/* Encoder: convert UTF-8 --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ive_out;      /* [const][1..1] Output file for output of `ive_encoder' (== ive_encoder.ice_output.ii_arg) */
-	Dee_nrshared_lock_t  ive_lock;     /* Lock for `ive_encoder' */
-	bool                 ive_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+//	DREF DeeObject      *ive_out;      /* [const][1..1] Output file for output of `ive_encoder` (== ive_encoder.ice_output.ii_arg) */
+	Dee_nrshared_lock_t  ive_lock;     /* Lock for `ive_encoder` */
+	bool                 ive_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out` */
 	struct iconv_printer ive_input;    /* [lock(ive_lock)] Input printer */
 	struct iconv_encode  ive_encoder;  /* [lock(ive_lock)] Underlying encoder */
 } IconvEncoder;
@@ -78,9 +78,9 @@ INTDEF DeeFileTypeObject IconvEncoder_Type;
 typedef struct {
 	/* Decode-writer: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ivdw_out;      /* [const][1..1] Output file for output of `ivdw_decoder' (== ivdw_decoder.icd_output.ii_arg) */
-	Dee_nrshared_lock_t  ivdw_lock;     /* Lock for `ivdw_decoder' */
-	bool                 ivdw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+//	DREF DeeObject      *ivdw_out;      /* [const][1..1] Output file for output of `ivdw_decoder` (== ivdw_decoder.icd_output.ii_arg) */
+	Dee_nrshared_lock_t  ivdw_lock;     /* Lock for `ivdw_decoder` */
+	bool                 ivdw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out` */
 	struct iconv_printer ivdw_input;    /* [lock(ivdw_lock)] Input printer */
 	struct iconv_decode  ivdw_decoder;  /* [lock(ivdw_lock)] Underlying decoder */
 } IconvDecodeWriter;
@@ -97,9 +97,9 @@ INTDEF DeeFileTypeObject IconvDecodeWriter_Type;
 typedef struct {
 	/* Transcoder: convert <some codec> --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
-//	DREF DeeObject      *ivtw_out;      /* [const][1..1] Output file for output of `ivtw_encoder' (== ivtw_encoder.ice_output.ii_arg) */
-	Dee_nrshared_lock_t  ivtw_lock;     /* Lock for `ivtw_encoder' */
-	bool                 ivtw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out' */
+//	DREF DeeObject      *ivtw_out;      /* [const][1..1] Output file for output of `ivtw_encoder` (== ivtw_encoder.ice_output.ii_arg) */
+	Dee_nrshared_lock_t  ivtw_lock;     /* Lock for `ivtw_encoder` */
+	bool                 ivtw_closeout; /* [const] Propagate "operator sync()" and "operator close()" to `ive_out` */
 	struct iconv_printer ivtw_input;    /* [lock(ivtw_lock)] Input printer */
 	struct iconv_encode  ivtw_encoder;  /* [lock(ivtw_lock)] Underlying encoder */
 	struct iconv_decode  ivtw_decoder;  /* [lock(ivtw_lock)] Underlying decoder */
@@ -118,14 +118,14 @@ INTDEF DeeFileTypeObject IconvTranscodeWriter_Type;
 typedef struct {
 	/* Decode-reader: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
-	Dee_nrshared_lock_t  ivd_lock;    /* Lock for `ivd_decoder' */
-	bool                 ivd_closein; /* [const] Propagate "operator sync()" and "operator close()" to `ivd_in' */
+	Dee_nrshared_lock_t  ivd_lock;    /* Lock for `ivd_decoder` */
+	bool                 ivd_closein; /* [const] Propagate "operator sync()" and "operator close()" to `ivd_in` */
 	DREF DeeObject      *ivd_in;      /* [const][1..1] Input file containing encoded data */
 	byte_t              *ivd_bufbase; /* [0..ivd_pendsize][owned][lock(ivd_lock)] Buffer for decoded, but not-yet-read data */
-	size_t               ivd_bufsize; /* [lock(ivd_lock)] Allocated size of `ivd_bufbase' */
-	byte_t              *ivd_pndbase; /* [0..ivd_bufbase][lock(ivd_lock)] Pointer to first unread byte in `ivd_bufbase' */
-	size_t               ivd_pndsize; /* [lock(ivd_lock)] # of decoded, but not-yet-read bytes starting at `ivd_pndbase' */
-	size_t               ivd_chnksiz; /* [lock(ivd_lock)] Max. block size when reading from `ivd_in' */
+	size_t               ivd_bufsize; /* [lock(ivd_lock)] Allocated size of `ivd_bufbase` */
+	byte_t              *ivd_pndbase; /* [0..ivd_bufbase][lock(ivd_lock)] Pointer to first unread byte in `ivd_bufbase` */
+	size_t               ivd_pndsize; /* [lock(ivd_lock)] # of decoded, but not-yet-read bytes starting at `ivd_pndbase` */
+	size_t               ivd_chnksiz; /* [lock(ivd_lock)] Max. block size when reading from `ivd_in` */
 	struct iconv_printer ivd_input;   /* [lock(ivd_lock)] Input printer */
 	struct iconv_decode  ivd_decoder; /* [lock(ivd_lock)] Underlying decoder */
 } IconvDecoder;
@@ -142,14 +142,14 @@ INTDEF DeeFileTypeObject IconvDecoder_Type;
 typedef struct {
 	/* Decode-reader: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
-	Dee_nrshared_lock_t  iver_lock;    /* Lock for `iver_decoder' */
-	bool                 iver_closein; /* [const] Propagate "operator sync()" and "operator close()" to `iver_in' */
+	Dee_nrshared_lock_t  iver_lock;    /* Lock for `iver_decoder` */
+	bool                 iver_closein; /* [const] Propagate "operator sync()" and "operator close()" to `iver_in` */
 	DREF DeeObject      *iver_in;      /* [const][1..1] Input file containing encoded data */
 	byte_t              *iver_bufbase; /* [0..iver_pendsize][owned][lock(iver_lock)] Buffer for decoded, but not-yet-read data */
-	size_t               iver_bufsize; /* [lock(iver_lock)] Allocated size of `iver_bufbase' */
-	byte_t              *iver_pndbase; /* [0..iver_bufbase][lock(iver_lock)] Pointer to first unread byte in `iver_bufbase' */
-	size_t               iver_pndsize; /* [lock(iver_lock)] # of decoded, but not-yet-read bytes starting at `iver_pndbase' */
-	size_t               iver_chnksiz; /* [lock(iver_lock)] Max. block size when reading from `iver_in' */
+	size_t               iver_bufsize; /* [lock(iver_lock)] Allocated size of `iver_bufbase` */
+	byte_t              *iver_pndbase; /* [0..iver_bufbase][lock(iver_lock)] Pointer to first unread byte in `iver_bufbase` */
+	size_t               iver_pndsize; /* [lock(iver_lock)] # of decoded, but not-yet-read bytes starting at `iver_pndbase` */
+	size_t               iver_chnksiz; /* [lock(iver_lock)] Max. block size when reading from `iver_in` */
 	struct iconv_printer iver_input;   /* [lock(iver_lock)] Input printer */
 	struct iconv_encode  iver_encoder; /* [lock(iver_lock)] Underlying encoder */
 } IconvEncodeReader;
@@ -165,14 +165,14 @@ INTDEF DeeFileTypeObject IconvEncodeReader_Type;
 typedef struct {
 	/* Decode-reader: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
-	Dee_nrshared_lock_t  ivtr_lock;    /* Lock for `ivtr_decoder' */
-	bool                 ivtr_closein; /* [const] Propagate "operator sync()" and "operator close()" to `ivtr_in' */
+	Dee_nrshared_lock_t  ivtr_lock;    /* Lock for `ivtr_decoder` */
+	bool                 ivtr_closein; /* [const] Propagate "operator sync()" and "operator close()" to `ivtr_in` */
 	DREF DeeObject      *ivtr_in;      /* [const][1..1] Input file containing encoded data */
 	byte_t              *ivtr_bufbase; /* [0..ivtr_pendsize][owned][lock(ivtr_lock)] Buffer for decoded, but not-yet-read data */
-	size_t               ivtr_bufsize; /* [lock(ivtr_lock)] Allocated size of `ivtr_bufbase' */
-	byte_t              *ivtr_pndbase; /* [0..ivtr_bufbase][lock(ivtr_lock)] Pointer to first unread byte in `ivtr_bufbase' */
-	size_t               ivtr_pndsize; /* [lock(ivtr_lock)] # of decoded, but not-yet-read bytes starting at `ivtr_pndbase' */
-	size_t               ivtr_chnksiz; /* [lock(ivtr_lock)] Max. block size when reading from `ivtr_in' */
+	size_t               ivtr_bufsize; /* [lock(ivtr_lock)] Allocated size of `ivtr_bufbase` */
+	byte_t              *ivtr_pndbase; /* [0..ivtr_bufbase][lock(ivtr_lock)] Pointer to first unread byte in `ivtr_bufbase` */
+	size_t               ivtr_pndsize; /* [lock(ivtr_lock)] # of decoded, but not-yet-read bytes starting at `ivtr_pndbase` */
+	size_t               ivtr_chnksiz; /* [lock(ivtr_lock)] Max. block size when reading from `ivtr_in` */
 	struct iconv_printer ivtr_input;   /* [lock(ivtr_lock)] Input printer */
 	struct iconv_encode  ivtr_encoder; /* [lock(ivtr_lock)] Underlying encoder */
 	struct iconv_decode  ivtr_decoder; /* [lock(ivtr_lock)] Underlying decoder */

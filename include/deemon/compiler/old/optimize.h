@@ -54,7 +54,7 @@ DECL_BEGIN
                                     *          branches that would otherwise remain available, thus changing the
                                     *          positions of checkpoints, as well as their number.
                                     *          It is therefor recommended not to set this flag unless also
-                                    *          passing the `ASM_FNODDI' flag to the assembler during the last
+                                    *          passing the `ASM_FNODDI` flag to the assembler during the last
                                     *          phase of code generation. */
 #define OPTIMIZE_FONEPASS   0x0008 /* FLAG: Only perform a single optimization pass. */
 #define OPTIMIZE_FCSE       0x0100 /* FLAG: Perform common-subexpression-elimination. (i.e. moving stuff out of conditional expressions) */
@@ -63,19 +63,19 @@ DECL_BEGIN
 #if 1
 #define OPTIMIZE_FASSUME    0x0800 /* FLAG: Allow assumptions to be made about the value of variables. */
 #endif
-#define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false'. */
+#define OPTIMIZE_FNOCOMPARE 0x4000 /* FLAG: Comparing ASTs always returns `false`. */
 #define OPTIMIZE_FNOPREDICT 0x8000 /* FLAG: Disable type prediction of ASTs.
                                     *       AST type prediction is able to affect code beyond the optimization
                                     *       pass, as certain ASTs need to generate less assembly when the type
                                     *       of an operand is already known at compile-time (or rather assembly-time).
-                                    *       For example: `x = !!y;' When it is known that `y' already is a boolean,
+                                    *       For example: `x = !!y;` When it is known that `y` already is a boolean,
                                     *       then no intermediate code must be generated before assigning its value
-                                    *       to `x'. However when `OPTIMIZE_FNOPREDICT' is set, code to cast `y' to
+                                    *       to `x`. However when `OPTIMIZE_FNOPREDICT` is set, code to cast `y` to
                                     *       a boolean is generated in all cases, regardless of what the actual type
-                                    *       of `y' might be if it was even known at all.
-                                    * NOTE: Unlike other optimization flags, this one is unaffected by `OPTIMIZE_FENABLED'.
-                                    * NOTE: This also causes `ast_has_sideeffects()' to always return `true',
-                                    *       `ast_get_boolean()' to always return `-1', as well as disable other
+                                    *       of `y` might be if it was even known at all.
+                                    * NOTE: Unlike other optimization flags, this one is unaffected by `OPTIMIZE_FENABLED`.
+                                    * NOTE: This also causes `ast_has_sideeffects()` to always return `true`,
+                                    *       `ast_get_boolean()` to always return `-1`, as well as disable other
                                     *       internal ast analyzers that are only used for automatic optimizations
                                     *       during assembly to allow for smaller code generation. */
 #endif /* DEE_SOURCE */
@@ -86,7 +86,7 @@ DECL_BEGIN
 #ifdef OPTIMIZE_FASSUME
 struct ast_symbol_assume {
 	struct symbol      *sa_sym;   /* [0..1] The symbol on which assumptions are made. */
-	DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym', or NULL if unknown. */
+	DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym`, or NULL if unknown. */
 };
 #define AST_SYMBOL_ASSUME_HASH(x) ((x)->sa_sym->s_name->k_id)
 
@@ -96,7 +96,7 @@ struct ast_symbol_assumes {
 	struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
 };
 #define AST_SYMBOL_ASSUMES_HASHST(self, hash)  ((hash) & (self)->sa_mask)
-#define AST_SYMBOL_ASSUMES_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define AST_SYMBOL_ASSUMES_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 #define AST_SYMBOL_ASSUMES_HASHIT(self, i)     ((self)->sa_elem + ((i) & (self)->sa_mask))
 
 struct ast_assumes {
@@ -106,13 +106,13 @@ struct ast_assumes {
 	struct ast_symbol_assumes aa_syms; /* Symbol assumptions. */
 #define AST_ASSUMES_FNORMAL   0x0000   /* Normal assumption flags. */
 #define AST_ASSUMES_FFUNCTION 0x0001   /* These assumptions represent the base of a function. */
-	uint16_t                  aa_flag; /* Assumption flags (Set of `AST_ASSUMES_F*'). */
+	uint16_t                  aa_flag; /* Assumption flags (Set of `AST_ASSUMES_F*`). */
 };
 
 
-/* Add an assumption that the value of `sym' currently is set to `value'.
- * When `value' is `NULL', assume that the value of `sym' is now undefined.
- * NOTE: Depending on the type of `sym', no assumption may be made, such as
+/* Add an assumption that the value of `sym` currently is set to `value`.
+ * When `value` is `NULL`, assume that the value of `sym` is now undefined.
+ * NOTE: Depending on the type of `sym`, no assumption may be made, such as
  *       in the case of external, or global variables, which may arbitrarily
  *       be modified by other threads running independently on the caller.
  * @return:  0: OK.
@@ -122,17 +122,17 @@ INTDEF WUNUSED NONNULL((1, 2)) int
                               struct symbol *__restrict sym,
                               DeeObject *value);
 
-/* Lookup the assumed value of a given symbol `sym', and return a reference to it.
+/* Lookup the assumed value of a given symbol `sym`, and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
- *       unknown, `NULL' is returned, but no error is thrown. */
+ *       unknown, `NULL` is returned, but no error is thrown. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ast_assumes_getsymval(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym);
 
 
-/* Update `self' to be the state of assumptions as it would be
- * if `branch' would have been optimized using those assumptions.
- * However, `branch' will not actually be optimized!
+/* Update `self` to be the state of assumptions as it would be
+ * if `branch` would have been optimized using those assumptions.
+ * However, `branch` will not actually be optimized!
  * This is used in cases where it is necessary to determine changes
  * in assumptions made ahead of time, in order to determine which
  * assumptions will continue to hold, which have changed, etc, such
@@ -140,8 +140,8 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * >> local x = "foobar";
  * >> for (local y: get_items()) {
  * >>     // If we were to blindly optimize the loop with previous assumptions,
- * >>     // this use of `x' would get optimized into a constant `"foobar"',
- * >>     // despite the fact that `x' will be re-written further down below.
+ * >>     // this use of `x` would get optimized into a constant `"foobar"',
+ * >>     // despite the fact that `x` will be re-written further down below.
  * >>     print x;
  * >>     x = y;
  * >> }
@@ -149,7 +149,7 @@ ast_assumes_getsymval(struct ast_assumes *__restrict self,
  * loop ahead of time, before actually going ahead and performing
  * optimizations.
  * Then, knowing the assumptions at the start and end of the loop,
- * we can merge then using `ast_assumes_mergecond()' (the logic here
+ * we can merge then using `ast_assumes_mergecond()` (the logic here
  * being that a loop is a conditional branch in that it will either
  * continue running, in which case the new state will be used, or will
  * exit, in which case the old state will be used), thus meaning that
@@ -184,8 +184,8 @@ INTDEF NONNULL((1)) void DCALL
 ast_assumes_fini(struct ast_assumes *__restrict self);
 
 /* Setup AST assumption at the start of a conditional branch,
- * where the conditionally executed code is located in `child',
- * while assumptions already made until then are in `parent'
+ * where the conditionally executed code is located in `child`,
+ * while assumptions already made until then are in `parent`
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2)) int
@@ -193,15 +193,15 @@ INTDEF WUNUSED NONNULL((1, 2)) int
                              struct ast_assumes const *__restrict parent);
 
 /* Initialize a set of assumptions for a child-function.
- * This also affects the limit of `ast_assumes_undefined_all()' */
+ * This also affects the limit of `ast_assumes_undefined_all()` */
 INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_initfunction)(struct ast_assumes *__restrict child,
                                  struct ast_assumes const *__restrict parent);
 
-/* Merge assumptions made in `child' and `sibling', such that
+/* Merge assumptions made in `child` and `sibling`, such that
  * only assumptions made in both places still hold true, saving
- * that intersection in `child'. Or in other words:
- *   -> Remove all of `child's assumptions, not also made by `sibling'
+ * that intersection in `child`. Or in other words:
+ *   -> Remove all of `child`s assumptions, not also made by `sibling`
  *   -> child = child & sibling;
  * >> local foo = 7;
  * >> if (bar()) {
@@ -213,8 +213,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int
  * >> // ASSUME(foo == 14)
  * Note however that negative assumptions (i.e. assumptions made
  * that state that the value of a symbol currently is unknown),
- * are merged as a union, meaning that it suffices for either `child'
- * or `sibling' to explicitly not know the value of a symbol, which
+ * are merged as a union, meaning that it suffices for either `child`
+ * or `sibling` to explicitly not know the value of a symbol, which
  * is required in cases such as the following:
  * >> local foo = 7;
  * >> if (bar()) {
@@ -222,23 +222,23 @@ INTDEF WUNUSED NONNULL((1, 2)) int
  * >> } else {
  * >>     foo = 14;
  * >> }
- * >> // ASSUME(foo == UNKNOWN) // Even though both branches made assumptions for `foo'
- * When `sibling' is `NULL', only keep negative assumptions.
- * WARNING: `sibling' (when non-NULL) may have its data stolen.
+ * >> // ASSUME(foo == UNKNOWN) // Even though both branches made assumptions for `foo`
+ * When `sibling` is `NULL`, only keep negative assumptions.
+ * WARNING: `sibling` (when non-NULL) may have its data stolen.
  * @return:  0: OK.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL ast_assumes_mergecond)(struct ast_assumes *__restrict child,
                               struct ast_assumes *sibling);
 
-/* Merge the assumptions made by `follower' with `self' in a situation
- * where `follower' is a piece of follow-up code to `self', resulting
+/* Merge the assumptions made by `follower` with `self` in a situation
+ * where `follower` is a piece of follow-up code to `self`, resulting
  * in the same behavior as would have been caused by all assumptions
- * made by `follower' instead having been made in `self'
+ * made by `follower` instead having been made in `self`
  * This is used to merge assumptions from conditional branches onto
  * those made by the parent-branch, after they had been merged with
  * each other.
- * WARNING: `follower' may have its data stolen. */
+ * WARNING: `follower` may have its data stolen. */
 INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assumes_merge)(struct ast_assumes *__restrict self,
                           struct ast_assumes *__restrict follower);
@@ -262,7 +262,7 @@ struct ast_optimize_stack {
  *       Yet in actuality, what can now be considered a constant is really
  *       a variable (symbol) that is initialized once and only ever read
  *       from then on out.
- * NOTE: The caller should test for the `OPTIMIZE_FENABLED' flag before
+ * NOTE: The caller should test for the `OPTIMIZE_FENABLED` flag before
  *       calling this function, and don't call it when it is set.
  * @return:  0: The branch was potentially optimized.
  * @return: -1: An error occurred. */
@@ -283,17 +283,17 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_try)(struct ast_optimize_
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_switch)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL ast_optimize_class)(struct ast_optimize_stack *__restrict stack, struct ast *__restrict self, bool result_used);
 
-INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*' */
+INTDEF uint16_t optimizer_flags;        /* Set of `OPTIMIZE_F*` */
 INTDEF uint16_t optimizer_unwind_limit; /* The max amount of times that a loop may be unwound. */
-INTDEF unsigned int optimizer_count;    /* Incremented each time `ast_optimize' performs an optimization */
+INTDEF unsigned int optimizer_count;    /* Incremented each time `ast_optimize` performs an optimization */
 
-/* Similar to `ast_optimize()', but keeps on doing it's thing while `optimizer_count' changes.
- * NOTE: When the `OPTIMIZE_FONEPASS' flag is set, this function behaves identical to `ast_optimize()' */
+/* Similar to `ast_optimize()`, but keeps on doing it's thing while `optimizer_count` changes.
+ * NOTE: When the `OPTIMIZE_FONEPASS` flag is set, this function behaves identical to `ast_optimize()` */
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_used);
 
-/* Check if `a' and `b' are semantically speaking the same AST.
- * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
+/* Check if `a` and `b` are semantically speaking the same AST.
+ * When the `OPTIMIZE_FNOCOMPARE` flag is set, this always returns `false` */
 INTDEF WUNUSED NONNULL((1, 2)) bool
 (DCALL ast_equal)(struct ast const *a, struct ast const *b);
 
@@ -302,34 +302,34 @@ INTDEF WUNUSED NONNULL((1, 2)) bool
  * This usually means that the first does not have any impact
  * on the latter, nor does it invoke any side-effects that could
  * have any influence on the other.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `false'. */
+ * NOTE: When the `OPTIMIZE_FNOPREDICT` flag is set, the always returns `false`. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 ast_can_exchange(struct ast *__restrict first,
                  struct ast *__restrict second);
 
-/* Check if the given ast `self' makes use of `sym' in any way.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
+/* Check if the given ast `self` makes use of `sym` in any way.
+ * NOTE: When the `OPTIMIZE_FNOPREDICT` flag is set, the always returns `true`. */
 INTDEF WUNUSED NONNULL((1, 2)) bool
 (DCALL ast_uses_symbol)(struct ast *__restrict self,
                         struct symbol *__restrict sym);
 
-/* Do a shallow assignment of `other' onto `self' */
+/* Do a shallow assignment of `other` onto `self` */
 INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL ast_assign)(struct ast *__restrict self,
                    struct ast *__restrict other);
 
-/* Graft `other' onto `self', assigning it if both branches have the same scope,
- * or converting `self' into a single-expression multiple-ast containing `other.' */
+/* Graft `other` onto `self`, assigning it if both branches have the same scope,
+ * or converting `self` into a single-expression multiple-ast containing `other.` */
 INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL ast_graft_onto)(struct ast *__restrict self,
                        struct ast *__restrict other);
 
-/* Finalize the contents of `self', but don't destroy the object itself. */
+/* Finalize the contents of `self`, but don't destroy the object itself. */
 INTDEF NONNULL((1)) void DCALL ast_fini_contents(struct ast *__restrict self);
 
-/* Copy scope and DDI information from `src' and assign them to `ast'.
- * When `ast' is NULL, don't do anything.
- * @return: * : Always re-returns `ast' */
+/* Copy scope and DDI information from `src` and assign them to `ast`.
+ * When `ast` is NULL, don't do anything.
+ * @return: * : Always re-returns `ast` */
 INTDEF WUNUSED NONNULL((2)) struct ast *DCALL
 ast_setscope_and_ddi(struct ast *self,
                      struct ast *__restrict src);
@@ -338,8 +338,8 @@ ast_setscope_and_ddi(struct ast *self,
 INTDEF WUNUSED NONNULL((1)) bool DCALL ast_has_sideeffects(struct ast *__restrict self);
 INTDEF WUNUSED NONNULL((1)) bool DCALL ast_is_nothrow(struct ast *__restrict self, bool result_used);
 
-/* Check if a given ast `self' is, or contains a `goto' branch,
- * or a `break' / `continue' branch when `consider_loopctl' is set. */
+/* Check if a given ast `self` is, or contains a `goto` branch,
+ * or a `break` / `continue` branch when `consider_loopctl` is set. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_NONE     0x00
@@ -347,12 +347,12 @@ ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02
 #define AST_CONTAINS_GOTO_CONSIDER_ALL      0xff
 
-/* Check if a given ast `self' contains a return-statement. */
+/* Check if a given ast `self` contains a return-statement. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
 ast_contains_return(struct ast *__restrict self);
 
 
-/* Checks if a branch _NEVER_ returns normally (e.g. `yield' can return normally; `return' can't)
+/* Checks if a branch _NEVER_ returns normally (e.g. `yield` can return normally; `return` can't)
  * Something like a label is unpredictable, as it can return even if the previous instruction can't.
  * @return  0: does return
  * @return  1: doesn't return
@@ -369,13 +369,13 @@ INTDEF WUNUSED NONNULL((1)) int
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL ast_get_boolean)(struct ast *__restrict self);
 
-/* Same as `ast_get_boolean()', but return `-1' if the ast has side-effects. */
+/* Same as `ast_get_boolean()`, but return `-1` if the ast has side-effects. */
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
- * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
- * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
+ * NOTE: When the `OPTIMIZE_FNOPREDICT` flag is set, this function always returns `NULL`.
+ * @param: flags: Set of `AST_PREDICT_TYPE_F_*` */
 INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DFCALL
 ast_predict_type_ex(struct ast *__restrict self, unsigned int flags);
 #define AST_PREDICT_TYPE_F_NORMAL 0x0000 /* Default: */
@@ -384,11 +384,11 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags);
 /* Predict the type of a given AST at runtime (if predictable) */
 #define ast_predict_type(self) ast_predict_type_ex(self, AST_PREDICT_TYPE_F_NORMAL)
 
-/* Same as `ast_predict_type()', but don't take type annotations into account */
+/* Same as `ast_predict_type()`, but don't take type annotations into account */
 #define ast_predict_type_noanno(self) ast_predict_type_ex(self, AST_PREDICT_TYPE_F_NOANNO)
 
 /* Predict the reference count of a given AST at runtime (if predictable)
- * If not predictable, return `0' (which is never a valid reference count) */
+ * If not predictable, return `0` (which is never a valid reference count) */
 INTDEF WUNUSED NONNULL((1)) Dee_refcnt_t DFCALL
 ast_predict_object_refcnt(struct ast *__restrict self);
 
@@ -400,13 +400,13 @@ ast_predict_object_refcnt(struct ast *__restrict self);
 #define CONSTEXPR_USECOPY 2 /* Use is allowed, but you must work with a deep copy. */
 
 /* Return if the optimizer is allowed to perform
- * operations on/with a constant instance `self'.
- * @return: * : One of `CONSTEXPR_*' */
+ * operations on/with a constant instance `self`.
+ * @return: * : One of `CONSTEXPR_*` */
 INTDEF WUNUSED NONNULL((1)) int
 (DCALL allow_constexpr)(DeeObject *__restrict self);
 
-/* Check if a given object `type' is a type that implements a cast-constructor.
- * When `type' isn't derived from `DeeType_Type', always return `false' */
+/* Check if a given object `type` is a type that implements a cast-constructor.
+ * When `type` isn't derived from `DeeType_Type`, always return `false` */
 INTDEF WUNUSED NONNULL((1)) bool
 (DCALL has_cast_constructor)(DeeObject *__restrict type);
 

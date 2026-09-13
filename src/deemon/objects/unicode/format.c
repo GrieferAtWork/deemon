@@ -70,11 +70,11 @@ DECL_BEGIN
  * >>                         // Template argument spec (when not given, defaults to "!s")
  * >>                         [
  * >>                             ('!' (
- * >>                                 'r' | // Insert `DeeObject_Repr()' of next argument
- * >>                                 's' | // Insert `DeeObject_Str()' of next argument
- * >>                                 'a'   // Insert `DeeObject_Str()' of next argument
+ * >>                                 'r' | // Insert `DeeObject_Repr()` of next argument
+ * >>                                 's' | // Insert `DeeObject_Str()` of next argument
+ * >>                                 'a'   // Insert `DeeObject_Str()` of next argument
  * >>                             )) |
- * >>                             // Insert `DeeObject_PrintFormatString()' of next argument
+ * >>                             // Insert `DeeObject_PrintFormatString()` of next argument
  * >>                             // The format string used CANNOT include other arguments.
  * >>                             (':' [TEXT...])
  * >>                         ]
@@ -90,11 +90,11 @@ DECL_BEGIN
  * >>                           ARGUMENT_EXPR
  * >>                           [
  * >>                               ('!' (
- * >>                                   'r' | // Insert `DeeObject_Repr()' of "ARGUMENT_EXPR"
- * >>                                   's' | // Insert `DeeObject_Str()' of "ARGUMENT_EXPR"
- * >>                                   'a'   // Insert `DeeObject_Str()' of "ARGUMENT_EXPR"
+ * >>                                   'r' | // Insert `DeeObject_Repr()` of "ARGUMENT_EXPR"
+ * >>                                   's' | // Insert `DeeObject_Str()` of "ARGUMENT_EXPR"
+ * >>                                   'a'   // Insert `DeeObject_Str()` of "ARGUMENT_EXPR"
  * >>                               )) |
- * >>                               // Insert `DeeObject_PrintFormatString()' of "ARGUMENT_EXPR"
+ * >>                               // Insert `DeeObject_PrintFormatString()` of "ARGUMENT_EXPR"
  * >>                               // The format string used CAN include other arguments (it is parsed as a recursive template string)
  * >>                               // NOTE: Like with ARGUMENT_EXPR, this part is always interpreted as utf-8
  * >>                               (':' [ADVANCED_TEMPLATE...])
@@ -131,11 +131,11 @@ DECL_BEGIN
  * >>                              );
  * >>
  * >> ARGUMENT_EXPR_UNARY ::= ARGUMENT_EXPR_UNARY_BASE [(
- * >>                             ('.' SYMBOL)                              // Modify `arg = arg.operator . (SYMBOL)'                        // Getattr operation
- * >>                             ('.' '{' ARGUMENT_EXPR '}')               // Modify `arg = arg.operator . (ARGUMENT_EXPR)'                 // Getattr operation
- * >>                           | ('[' ARGUMENT_EXPR ']')                   // Modify `arg = arg.operator [] (ARGUMENT_EXPR)'                // Getitem operation
- * >>                           | ('[' ARGUMENT_EXPR ':' ARGUMENT_EXPR ']') // Modify `arg = arg.operator [] (ARGUMENT_EXPR, ARGUMENT_EXPR)' // Getrange operation
- * >>                           | ('(' ARGUMENT_EXPR_CALL_ARGS ')')         // Modify `arg = arg.operator () (ARGUMENT_EXPR_CALL_ARGS)'      // Call operation
+ * >>                             ('.' SYMBOL)                              // Modify `arg = arg.operator . (SYMBOL)`                        // Getattr operation
+ * >>                             ('.' '{' ARGUMENT_EXPR '}')               // Modify `arg = arg.operator . (ARGUMENT_EXPR)`                 // Getattr operation
+ * >>                           | ('[' ARGUMENT_EXPR ']')                   // Modify `arg = arg.operator [] (ARGUMENT_EXPR)`                // Getitem operation
+ * >>                           | ('[' ARGUMENT_EXPR ':' ARGUMENT_EXPR ']') // Modify `arg = arg.operator [] (ARGUMENT_EXPR, ARGUMENT_EXPR)` // Getrange operation
+ * >>                           | ('(' ARGUMENT_EXPR_CALL_ARGS ')')         // Modify `arg = arg.operator () (ARGUMENT_EXPR_CALL_ARGS)`      // Call operation
  * >>                         )...];
  * >>
  * >> ARGUMENT_EXPR_CALL_ARGS ::= [',' ~~ (ARGUMENT_EXPR_EXP...)] [(
@@ -194,8 +194,8 @@ DECL_BEGIN
  * >>
  * >> NUMBER       ::= ['0x'|'0X'|'0b'|'0B'] ('0'...'9')...;
  * >> SYMBOL       ::= SYMBOL_START [SYMBOL_CONT...];
- * >> SYMBOL_START ::= (('a'...'z')|('A'...'Z')|'_'|'$');  // Anything matching `DeeUni_IsSymStrt()'
- * >> SYMBOL_CONT  ::= SYMBOL_START|('0'...'9');           // Anything matching `DeeUni_IsSymCont()'
+ * >> SYMBOL_START ::= (('a'...'z')|('A'...'Z')|'_'|'$');  // Anything matching `DeeUni_IsSymStrt()`
+ * >> SYMBOL_CONT  ::= SYMBOL_START|('0'...'9');           // Anything matching `DeeUni_IsSymCont()`
  *
  */
 
@@ -240,13 +240,13 @@ PRIVATE ATTR_COLD int DCALL err_unknown_repr_mode_in_advanced(char const *mode) 
 
 PRIVATE ATTR_COLD int DCALL err_invalid_char_after_lbrace_in_simple(char const *ptr) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid character %.1q following `{' in simple format pattern",
+	                       "Invalid character %.1q following `{` in simple format pattern",
 	                       ptr);
 }
 
 PRIVATE ATTR_COLD int DCALL err_invalid_char_after_expr_in_advanced(char const *ptr) {
 	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid character %.1q following `{<expr>' in advanced format pattern",
+	                       "Invalid character %.1q following `{<expr>` in advanced format pattern",
 	                       ptr);
 }
 
@@ -263,7 +263,7 @@ PRIVATE ATTR_COLD int DCALL err_invalid_char_after_lbrace_exclaim_spec_in_advanc
 }
 
 /* Return a pointer to the next '{' or '}' character.
- * If not found, return `NULL' instead. */
+ * If not found, return `NULL` instead. */
 PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 find_next_brace(char const *str, char const *end) {
 	for (; str < end; ++str) {
@@ -322,10 +322,10 @@ struct string_format_advanced {
 	struct string_format_parser sfa_parser;  /* Underlying parser */
 	DeeObject                  *sfa_args;    /* [1..1] Format template arguments */
 	Dee_formatprinter_t         sfa_printer; /* [1..1] Output printer */
-	void                       *sfa_arg;     /* [?..?] Cookie for `sfa_printer' */
-	unsigned int                sfa_exprtok; /* Current expression token (`sfa_parser.sfp_iter' usually points after the
-	                                          * token, expect for `SFA_TOK_CHAR', `SFA_TOK_STRING', `SFA_TOK_INT' and
-	                                          * `SFA_TOK_KEYWORD', where it points to the start) */
+	void                       *sfa_arg;     /* [?..?] Cookie for `sfa_printer` */
+	unsigned int                sfa_exprtok; /* Current expression token (`sfa_parser.sfp_iter` usually points after the
+	                                          * token, expect for `SFA_TOK_CHAR`, `SFA_TOK_STRING`, `SFA_TOK_INT` and
+	                                          * `SFA_TOK_KEYWORD`, where it points to the start) */
 	bool                        sfa_inparen; /* Are we within parenthesis? */
 };
 

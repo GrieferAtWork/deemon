@@ -36,10 +36,10 @@
  *   - Data type for the preemption state flag
  *
  * - void __hybrid_preemption_pushoff(__hybrid_preemption_flag_t *p_flag);
- *   - Store the current preemption state in `*p_flag' and disable preemption
+ *   - Store the current preemption state in `*p_flag` and disable preemption
  *
  * - void __hybrid_preemption_pop(__hybrid_preemption_flag_t *p_flag);
- *   - Restore the current preemption state from `*p_flag'
+ *   - Restore the current preemption state from `*p_flag`
  *   - Be careful  to nest  these two  functions correctly;  don't  skip
  *     elements during restore, and don't restore in an incorrect order.
  *
@@ -47,11 +47,11 @@
  *   - Check if preemption is currently enabled
  *
  * - bool __hybrid_preemption_wason(__hybrid_preemption_flag_t const *p_flag);
- *   - Check if preemption was currently enabled before `p_flag' was
- *     initialized by  a  call  to  `__hybrid_preemption_pushoff()'.
+ *   - Check if preemption was currently enabled before `p_flag` was
+ *     initialized by  a  call  to  `__hybrid_preemption_pushoff()`.
  *
  * - void __hybrid_preemption_tryyield();
- *   - Special  function for safe `sched_yield()', both with preemption
+ *   - Special  function for safe `sched_yield()`, both with preemption
  *     enabled and disabled. Use as loop-hint when acquiring SMP locks.
  *   SEMANTICS:
  *   >> __hybrid_preemption_tryyield() {
@@ -63,24 +63,24 @@
  *   >> }
  *
  * - void __hybrid_preemption_tryyield_f(__hybrid_preemption_flag_t *p_flag);
- *   - If  doing so grants  improved performance (iow: `__hybrid_preemption_tryyield()'
- *     and `__hybrid_preemption_tryyield_nopr()' are different functions), then briefly
- *     restore the  preemption behavior  of `p_flag',  follow this  up with  a call  to
- *     `__hybrid_preemption_tryyield()', before finally disabling preemption once again
- *     with a call to `__hybrid_preemption_pushoff()'.
- *     When `__hybrid_preemption_tryyield()' and `__hybrid_preemption_tryyield_nopr()'
- *     are the same function, `p_flag' is ignored and `__hybrid_preemption_tryyield()'
+ *   - If  doing so grants  improved performance (iow: `__hybrid_preemption_tryyield()`
+ *     and `__hybrid_preemption_tryyield_nopr()` are different functions), then briefly
+ *     restore the  preemption behavior  of `p_flag`,  follow this  up with  a call  to
+ *     `__hybrid_preemption_tryyield()`, before finally disabling preemption once again
+ *     with a call to `__hybrid_preemption_pushoff()`.
+ *     When `__hybrid_preemption_tryyield()` and `__hybrid_preemption_tryyield_nopr()`
+ *     are the same function, `p_flag` is ignored and `__hybrid_preemption_tryyield()`
  *     is called as-is.
  *
  * - void __hybrid_preemption_tryyield_nopr(void);
- *   - A specialized variant of `__hybrid_preemption_tryyield()' that expects preemption
+ *   - A specialized variant of `__hybrid_preemption_tryyield()` that expects preemption
  *     to be disabled at  the moment. This function  will not re-enable preemption,  but
  *     will  instead try to yield execution to another CPU (if doing so is possible), or
  *     to  another thread (in case every thread behaves like it is hosted by a dedicated
  *     CPU, as is the case in user-space).
  *
  * - #define __HYBRID_PREEMPTION_NO_SMP
- *   - Defined if `__hybrid_preemption_pushoff()' results in the calling thread
+ *   - Defined if `__hybrid_preemption_pushoff()` results in the calling thread
  *     to become the only thread that's  still running in the caller's  address
  *     space. (Iow: anything  that's done  at this  point will  appear to  have
  *     happened atomically to other threads)
@@ -93,7 +93,7 @@
  * - #define __HYBRID_PREEMPTION_NO_CONTROL
  *   - Defined if preemption cannot be controlled (in this case, all of the
  *     other  macros are simply no-ops, except for the yield functions, all
- *     of which simply map to `__hybrid_yield(3H)').
+ *     of which simply map to `__hybrid_yield(3H)`).
  *
  *
  * Function mappings for the KOS kernel:
@@ -153,30 +153,30 @@ __hybrid_preemption_flag_t const __HYBRID_PREEMPTION_ON_VALUE  = { 1 };
 /* >> preemption_ison(3H)
  * Check if preemption is currently enabled:
  * - kernelspace: EFLAGS.IF  (x86)
- * - userspace:   at least 1 signal from `sigprocmask(3)' is unmasked */
+ * - userspace:   at least 1 signal from `sigprocmask(3)` is unmasked */
 __ATTR_WUNUSED __BOOL __hybrid_preemption_ison(void);
 #define __hybrid_preemption_ison __hybrid_preemption_ison
 
-/* Check if preemption was enabled when `preemption_pushoff(3H)'
- * was called (s.a. `preemption_ison(3H)'). */
+/* Check if preemption was enabled when `preemption_pushoff(3H)`
+ * was called (s.a. `preemption_ison(3H)`). */
 __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
 __hybrid_preemption_wason(__hybrid_preemption_flag_t const *__restrict __p_flag);
 #define __hybrid_preemption_wason __hybrid_preemption_wason
 
 /* >> preemption_pushoff(3H)
- * Save the current preemption context in `*p_flag' and disable preemption.
- * NOTE: The saved state can later be restored with `preemption_pop(3H)'
- * - kernelspace: `pushfP; cli;'  (x86)
+ * Save the current preemption context in `*p_flag` and disable preemption.
+ * NOTE: The saved state can later be restored with `preemption_pop(3H)`
+ * - kernelspace: `pushfP; cli;`  (x86)
  * - userspace:   setsigmaskfullptr(3) */
 __ATTR_NONNULL((1)) void
 __hybrid_preemption_pushoff(__hybrid_preemption_flag_t *__restrict __p_flag);
 #define __hybrid_preemption_pushoff __hybrid_preemption_pushoff
 
 /* >> preemption_pop(3H)
- * Restore the saved preemption context from `*p_flag'. After a call to this
- * function, the contents of `*p_flag'  become undefined and must either  be
- * discarded, or re-initialized by `preemption_pushoff(3H)'.
- * - kernelspace: `popfP;'  (x86)
+ * Restore the saved preemption context from `*p_flag`. After a call to this
+ * function, the contents of `*p_flag`  become undefined and must either  be
+ * discarded, or re-initialized by `preemption_pushoff(3H)`.
+ * - kernelspace: `popfP;`  (x86)
  * - userspace:   setsigmaskptr(3) */
 __ATTR_NONNULL((1)) void
 __hybrid_preemption_pop(__hybrid_preemption_flag_t *__restrict __p_flag);
@@ -184,7 +184,7 @@ __hybrid_preemption_pop(__hybrid_preemption_flag_t *__restrict __p_flag);
 
 /* >> preemption_tryyield(3H)
  * Safely try to yield execution to another thread if doing is allowed by the
- * current  preemption-state  (s.a.  `preemption_ison(3H)'). If  doing  so is
+ * current  preemption-state  (s.a.  `preemption_ison(3H)`). If  doing  so is
  * allowed,  yield to the next thread like  normal. Else, try to instruct the
  * CPU  to let another  core consume additional processing  power for a while
  * (if possible, as is the case with hyper-threading), or simply do  nothing.
@@ -200,13 +200,13 @@ void __hybrid_preemption_tryyield(void);
 #define __hybrid_preemption_tryyield __hybrid_preemption_tryyield
 
 /* >> preemption_tryyield_f(3H)
- * If `preemption_tryyield(3H)' requires preemption to be enabled in order to do
+ * If `preemption_tryyield(3H)` requires preemption to be enabled in order to do
  * more than instruct the CPU with a loop-hint (x86: "pause"), then restore  the
- * preemption  state saved in  `*p_flag', and call `task_tryyield_or_pause(3H)'.
+ * preemption  state saved in  `*p_flag`, and call `task_tryyield_or_pause(3H)`.
  * Once that function returns, disable preemption once again (possibly modifying
- * the state of `*p_flag' to differ from prior to the call).
- * When `preemption_tryyield(3H)' doesn't care about the preemption state, simply
- * do the same as `__hybrid_preemption_tryyield(3H)'.
+ * the state of `*p_flag` to differ from prior to the call).
+ * When `preemption_tryyield(3H)` doesn't care about the preemption state, simply
+ * do the same as `__hybrid_preemption_tryyield(3H)`.
  *
  * - kernelspace: PREEMPTION_POP([p_flag])
  *                task_tryyield_or_pause()
@@ -320,7 +320,7 @@ __DECL_END
 		struct __sigset_struct __hpio_nss;                         \
 		__libc_sigprocmask(__SIG_SETMASK, __NULLPTR, &__hpio_nss); \
 		__XRETURN !__libc_sigisfullset(&__hpio_nss);               \
-	}) /* TODO: Shouldn't this be `!__libc_sigisfullset(&__hpio_nss)' */
+	}) /* TODO: Shouldn't this be `!__libc_sigisfullset(&__hpio_nss)` */
 #endif /* !__NO_XBLOCK */
 #endif /* ... */
 #endif /* !__libc_setsigmaskfullptr || !__libc_setsigmaskptr */
@@ -328,7 +328,7 @@ __DECL_END
 
 
 #ifndef __hybrid_preemption_flag_t
-/* Optimized implementation for DragonFly's `sigblockall(3)' */
+/* Optimized implementation for DragonFly's `sigblockall(3)` */
 #if (defined(__DragonFly__) || defined(__KOS__) ||                \
      (defined(HAVE_SIGBLOCKALL) && defined(HAVE_SIGUNBLOCKALL) && \
       (defined(HAVE_SYS_SIGNAL_H) || __has_include(<sys/signal.h>))))
@@ -450,7 +450,7 @@ __DECL_END
 #endif /* !__hybrid_preemption_flag_t */
 #endif /* !__hybrid_preemption_flag_t */
 
-#if 0 /* Technically correct, but only if `-pthread' is used correctly and passes `-D_REENTRANT' */
+#if 0 /* Technically correct, but only if `-pthread` is used correctly and passes `-D_REENTRANT` */
 #ifndef _REENTRANT
 #define __HYBRID_PREEMPTION_NO_SMP
 #endif /* !_REENTRANT */
@@ -474,14 +474,14 @@ __DECL_END
 #define __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
 #endif /* !__hybrid_preemption_tryyield */
 
-/* Same as `__hybrid_preemption_tryyield()', but optimized
+/* Same as `__hybrid_preemption_tryyield()`, but optimized
  * for  the  case  where  preemption  has  been  disabled. */
 #ifndef __hybrid_preemption_tryyield_nopr
 #define __hybrid_preemption_tryyield_nopr() __hybrid_preemption_tryyield()
 #endif /* !__hybrid_preemption_tryyield_nopr */
 
-/* Same as `__hybrid_preemption_tryyield()', but allowed to temporarily
- * restore `p_flag'  if doing  so can  make the  yield perform  better. */
+/* Same as `__hybrid_preemption_tryyield()`, but allowed to temporarily
+ * restore `p_flag`  if doing  so can  make the  yield perform  better. */
 #ifndef __hybrid_preemption_tryyield_f
 #ifdef __HYBRID_PREEMPTION_TRYYIELD_IS_HYBRID_YIELD
 #define __hybrid_preemption_tryyield_f(p_flag) __hybrid_preemption_tryyield()

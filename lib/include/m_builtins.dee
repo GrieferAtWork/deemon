@@ -29,7 +29,7 @@ function seq_locate(seq, item, key = none): Object {
 		if (equals(item, key(elem)))
 			return elem;
 	}
-	throw ValueError(f"Could not locate item `{item}' in sequence `{seq}'");
+	throw ValueError(f"Could not locate item `{item}` in sequence `{seq}`");
 }
 
 function seq_rlocate(seq, item, key = none): Object {
@@ -43,7 +43,7 @@ function seq_rlocate(seq, item, key = none): Object {
 	}
 	if (result is bound)
 		return result;
-	throw ValueError(f"Could not locate item `{item}' in sequence `{seq}'");
+	throw ValueError(f"Could not locate item `{item}` in sequence `{seq}`");
 }
 
 function seq_locateall(seq, item, key = none): {Object...} {

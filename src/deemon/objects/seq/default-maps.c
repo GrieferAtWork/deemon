@@ -62,11 +62,11 @@ DECL_BEGIN
 
 struct map_foreach_pair_filter_keys {
 	Dee_foreach_pair_t mfpfk_cb;   /* [1..1] Inner user-callback */
-	void              *mfpfk_arg;  /* [?..?] Cookie for `mfpfk_cb' */
+	void              *mfpfk_arg;  /* [?..?] Cookie for `mfpfk_cb` */
 	DeeObject         *mfpfk_keys; /* [1..1] Keys that should be included/excluded (based on callback used) */
 };
 
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains' */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains` */
 map_foreach_pair_with_setkeys_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct map_foreach_pair_filter_keys *data;
@@ -82,7 +82,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains' */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `seq_contains` */
 map_foreach_pair_without_setkeys_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct map_foreach_pair_filter_keys *data;
@@ -98,7 +98,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `DeeMap_OperatorContainsAsBool' */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL /* Using `DeeMap_OperatorContainsAsBool` */
 map_foreach_pair_without_mapkeys_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct map_foreach_pair_filter_keys *data;
@@ -1756,7 +1756,7 @@ STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_b) == offsetof(MapUnion, mu_a
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bool(MapSymmetricDifference *__restrict self) {
-	/* `(a ^ b) != {}'    <=>    `a.keys != b.keys' */
+	/* `(a ^ b) != {}`    <=>    `a.keys != b.keys` */
 	int result;
 	DREF DeeObject *a_keys, *b_keys;
 	a_keys = DeeObject_InvokeMethodHint(map_keys, self->msd_a);
@@ -2791,7 +2791,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 MapIntersection_NonEmpty(DeeObject *map, DeeObject *keys) {
 	if (SetInversion_CheckExact(keys)) {
 		SetInversion *xb = (SetInversion *)keys;
-		/* `(map & ~keys) != {}'   <=>   `(map - keys) != {}' */
+		/* `(map & ~keys) != {}`   <=>   `(map - keys) != {}` */
 		return MapDifference_NonEmpty(map, xb->si_set);
 	} else {
 		Dee_ssize_t status;
@@ -2857,7 +2857,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 MapDifference_NonEmpty(DeeObject *map, DeeObject *keys) {
 	if (SetInversion_CheckExact(keys)) {
-		/* `(map - ~keys) != {}'   <=>   `(map & keys) != {}' */
+		/* `(map - ~keys) != {}`   <=>   `(map & keys) != {}` */
 		SetInversion *xb = (SetInversion *)keys;
 		return MapIntersection_NonEmpty(map, xb->si_set);
 	} else {

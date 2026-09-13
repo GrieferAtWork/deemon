@@ -50,13 +50,13 @@ typedef struct Dee_bytes_object {
 	                                                   * [const] Base address of the used portion of the buffer. */
 	size_t                                 b_size;    /* [const] Size of the used portion of the buffer */
 	DREF DeeObject                        *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
-	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
+	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*`) */
 	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_buffer); /* [b_size + DeeBytes_GetBufferDataOffset(self)]
 	                                                   * [valid_if(DeeBytes_IsBuffer(self))] Inline buffer data */
 } DeeBytesObject;
 
 
-/* Define a statically initialized Bytes object `name' */
+/* Define a statically initialized Bytes object `name` */
 #define Dee_DEFINE_BYTES(name, flags, num_bytes, ...) \
 	Dee_DEFINE_BYTES_EX(name, flags, __BYTE_TYPE__, num_bytes, __VA_ARGS__)
 #define Dee_DEFINE_BYTES_EX(name, flags, Titem, num_items, ...) \
@@ -96,7 +96,7 @@ typedef struct Dee_bytes_object {
 #define DeeBytes_IsWritable(x) (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_flags & Dee_BUFFER_FWRITABLE)
 #define DeeBytes_IsReadOnly(x) (!DeeBytes_IsWritable(x))
 
-/* The following may only be used when `DeeBytes_IsBuffer()' */
+/* The following may only be used when `DeeBytes_IsBuffer()` */
 #define DeeBytes_BUFFER_DATA(x)         Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer
 #define DeeBytes_GetBufferByte(x, i)    (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_buffer[i])
 #define DeeBytes_SetBufferByte(x, i, v) (void)(Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer[i] = (v))
@@ -108,13 +108,13 @@ typedef struct Dee_bytes_object {
 	       (self)->b_size = (num_bytes))
 
 /* Check for bytes objects... */
-#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
+#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes` is final. */
 #define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
 
-/* The builtin `Bytes' data type.
+/* The builtin `Bytes` data type.
  * This type offers functionality identical to what can also be found in
  * the string API, however in addition, functions to inplace-modify the
- * data of a buffer are provided as well (such as `tolower()')
+ * data of a buffer are provided as well (such as `tolower()`)
  * The bytes data type is a proxy-object designed to provide an extensive
  * API through which user-code can operate with bytes objects. */
 DDATDEF DeeTypeObject DeeBytes_Type;
@@ -143,8 +143,8 @@ DDATDEF struct _Dee_empty_bytes_struct DeeBytes_Empty;
 
 
 
-/* Construct a bytes-buffer from `self', using the generic object-buffer interface.
- * @param: flags: Set of `Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE' */
+/* Construct a bytes-buffer from `self`, using the generic object-buffer interface.
+ * @param: flags: Set of `Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
@@ -155,10 +155,10 @@ DeeObject_TBytes(DeeTypeObject *tp_self,
                  unsigned int flags,
                  size_t start, size_t end);
 
-/* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
+/* Construct a writable bytes-buffer, consisting of a total of `num_bytes` bytes. */
 DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
 
-/* Byte buffer API -- these functions always return `DeeBytes_IsBuffer()' */
+/* Byte buffer API -- these functions always return `DeeBytes_IsBuffer()` */
 DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
 DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_TryNewBufferUninitialized(size_t num_bytes);
 DFUNDEF WUNUSED ATTR_INS(1, 2) DREF DeeBytesObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
@@ -169,9 +169,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL DeeBytes_TryResizeBuffer
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
 
-/* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
- * The given `flags' determines if the view is read-only, or can be modified.
- * @param: flags: Set of `Dee_BUFFER_F*' */
+/* Constructs a byte-view for data in `base...+=num_bytes` held by `owner`.
+ * The given `flags` determines if the view is read-only, or can be modified.
+ * @param: flags: Set of `Dee_BUFFER_F*` */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags);
@@ -207,15 +207,15 @@ DeeBytes_NewViewRo(DeeObject *owner, void const *base, size_t num_bytes);
 #endif /* !__INTELLISENSE__ */
 
 /* Construct a writable bytes-object that is initialized from the
- * items of the given `seq' casted to integers in the range of 00-FF */
+ * items of the given `seq` casted to integers in the range of 00-FF */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_FromSequence(DeeObject *__restrict seq);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Print all bytes from `self' encoded as UTF-8.
+/* Print all bytes from `self` encoded as UTF-8.
  * In other words, bytes that are non-ASCII (aka. 80-FF) are
  * encoded as 2-byte UTF-8 sequences (aka: as LATIN-1), allowing
- * them to be properly interpreted by the given `printer' */
+ * them to be properly interpreted by the given `printer` */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_Print(DeeObject *__restrict self,
                Dee_formatprinter_t printer, void *arg);
@@ -229,11 +229,11 @@ DeeBytes_PrintRepr(DeeObject *__restrict self,
 	DeeObject_PrintRepr(self, printer, arg)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
-/* Unpack the given sequence `seq' into `num_bytes', invoking the
- * `operator int' on each, converting their values into bytes, before
- * storing those bytes in the given `dst' vector.
- * If the length of `seq' doesn't match `num_bytes', an UnpackError is thrown.
- * If `seq' is the none-singleton, `dst...+=num_bytes' is zero-initialized. */
+/* Unpack the given sequence `seq` into `num_bytes`, invoking the
+ * `operator int` on each, converting their values into bytes, before
+ * storing those bytes in the given `dst` vector.
+ * If the length of `seq` doesn't match `num_bytes`, an UnpackError is thrown.
+ * If `seq` is the none-singleton, `dst...+=num_bytes` is zero-initialized. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSeq_ItemsToBytes)(__BYTE_TYPE__ *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq);
@@ -245,16 +245,16 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int
 /*   BYTES PRINTER API                                                               */
 /* ================================================================================= */
 struct Dee_bytes_printer {
-	/* A bytes printer is similar to `Dee_unicode_printer' found in <deemon/string.h>,
+	/* A bytes printer is similar to `Dee_unicode_printer` found in <deemon/string.h>,
 	 * however instead of constructing a unicode object, it creates a writable bytes
 	 * object consisting of unicode characters within the range 00-FF.
 	 * Attempting to print a unicode character outside that range will result in
-	 * a `UnicodeEncodeError' being thrown, following the reasoning that the character
+	 * a `UnicodeEncodeError` being thrown, following the reasoning that the character
 	 * could not be encoded as LATIN-1 (which is the unicode range 00-FF mapping onto
 	 * a single byte)
-	 * As far as API usage goes, a `Dee_bytes_printer' functions very much the same as a
+	 * As far as API usage goes, a `Dee_bytes_printer` functions very much the same as a
 	 * unicode printer, with its UTF-8-enabled & Dee_formatprinter_t-compatible function
-	 * being `Dee_bytes_printer_print'
+	 * being `Dee_bytes_printer_print`
 	 */
 	size_t          bp_length;  /* The number of bytes already printed. */
 	DeeBytesObject *bp_bytes;   /* [0..1][owned] The resulting Bytes object. */
@@ -270,25 +270,25 @@ struct Dee_bytes_printer {
 #define Dee_bytes_printer_fini(self) DeeObject_Free((self)->bp_bytes)
 #endif /* !__INTELLISENSE__ */
 
-/* Same as `Dee_bytes_printer_init()', but try to pre-allocate memory for `hint' bytes. */
+/* Same as `Dee_bytes_printer_init()`, but try to pre-allocate memory for `hint` bytes. */
 DFUNDEF NONNULL((1)) void
 (DCALL Dee_bytes_printer_init_ex)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self,
                                   size_t hint);
 
 
 /* _Always_ inherit all byte data (even upon error) saved in
- * `self', and construct a new Bytes object from all that data, before
+ * `self`, and construct a new Bytes object from all that data, before
  * returning a reference to that object.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
- *      ---> Regardless of return value, `self' is finalized and left
+ *      ---> Regardless of return value, `self` is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `Dee_bytes_printer_fini()'
+ *           after a call to `Dee_bytes_printer_fini()`
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_bytes_printer_pack)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self);
 
-/* Append the given `text' to the end of the Bytes object.
+/* Append the given `text` to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
  * Dee_formatprinter_t-compatible callback for generating data
  * to-be written into a Bytes object. */
@@ -305,7 +305,7 @@ DFUNDEF WUNUSED NONNULL((1)) int
 DFUNDEF WUNUSED NONNULL((1)) int
 (DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, __BYTE_TYPE__ byte);
 
-/* Repeat the given `byte' a total of `count' times. */
+/* Repeat the given `byte` a total of `count` times. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_bytes_printer_repeat)(struct Dee_bytes_printer *__restrict self,
                                  __BYTE_TYPE__ byte, size_t count);
@@ -316,17 +316,17 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
  * -> A far as unicode support goes, this function has _nothing_ to
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
- * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8' */
+ * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8` */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
                                        __BYTE_TYPE__ const *__restrict data,
                                        size_t datalen);
 
-/* Allocate a buffer of `datalen' bytes at the end of the printer. */
+/* Allocate a buffer of `datalen` bytes at the end of the printer. */
 DFUNDEF WUNUSED NONNULL((1)) __BYTE_TYPE__ *
 (DCALL Dee_bytes_printer_alloc)(struct Dee_bytes_printer *__restrict self, size_t datalen);
 
-/* Release the last `datalen' bytes from the printer to be
+/* Release the last `datalen` bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
 DFUNDEF NONNULL((1)) void
 (DCALL Dee_bytes_printer_release)(struct Dee_bytes_printer *__restrict self, size_t datalen);

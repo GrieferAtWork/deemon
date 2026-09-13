@@ -42,7 +42,7 @@
 
 DECL_BEGIN
 
-/* Figure out how we want to implement `cpu_count()' */
+/* Figure out how we want to implement `cpu_count()` */
 #undef posix_cpu_count_USE_GetSystemInfo
 #undef posix_cpu_count_USE_sysconf__SC_NPROCESSORS_ONLN
 #undef posix_cpu_count_USE_sysctl__HW_AVAILCPU__HW_NCPU
@@ -173,7 +173,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 	file = DeeFile_OpenString("/proc/cpuinfo", OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 	if unlikely(!file)
 		goto fallback;
-	/* Count the # of lines that begin with `processor'
+	/* Count the # of lines that begin with `processor`
 	 * The cpuinfo file contains one such line for every configured processor on the system. */
 	for (;;) {
 		PRIVATE char const str_processor[] = "processor";

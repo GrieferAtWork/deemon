@@ -86,7 +86,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_global(struct Dee_code_f
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_extern(struct Dee_code_frame *__restrict frame, uint16_t mid, uint16_t gid);
 
 
-/* @param: operator_name: One of `OPERATOR_*' */
+/* @param: operator_name: One of `OPERATOR_*` */
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);
 
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObject *__restrict but_instead_got);
@@ -96,7 +96,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObj
 #define ATTR_ACCESS_SET  2
 #define ATTR_ACCESS_MASK 3
 
-/* TODO: Get rid of `err_module_*' -- must use DeeRT_Err* functions! */
+/* TODO: Get rid of `err_module_*` -- must use DeeRT_Err* functions! */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global(struct Dee_module_object *self, DeeObject *name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct Dee_module_object *__restrict self, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct Dee_module_object *__restrict self, char const *__restrict name, size_t namelen, int access);

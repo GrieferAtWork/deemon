@@ -106,7 +106,7 @@ INTERN WUNUSED NONNULL((1)) int
 	/* Strip away unnecessary sequence casts. */
 	self = ast_strip_seqcast(self);
 	/* Generate the expression. */
-	/* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_GENERIC':
+	/* TODO: If `ast` is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_GENERIC`:
 	 * >> for (local x: [a, b, c]) ...;
 	 * This doesn't need to be a list and could be compiled as ...
 	 * >> for (local x: { a, b, c }) ...;
@@ -115,17 +115,17 @@ INTERN WUNUSED NONNULL((1)) int
 	return ast_genasm(self, gflags);
 }
 
-/* Same as `DeeRoSet_FromSequence()', but has special handling for when `self' is a Mapping */
+/* Same as `DeeRoSet_FromSequence()`, but has special handling for when `self` is a Mapping */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self) {
 	DREF DeeObject *keys, *result;
 	if (!DeeMap_Check(self))
 		return DeeRoSet_FromSequence(self);
 
-	/* `x in Mapping' checks if `x' is a key.
+	/* `x in Mapping` checks if `x` is a key.
 	 *
-	 * But if we do `x in HashSet.Frozen(Mapping)', the we'd be
-	 * checking if `x' is a tuple `(key, item)'
+	 * But if we do `x in HashSet.Frozen(Mapping)`, the we'd be
+	 * checking if `x` is a tuple `(key, item)`
 	 *
 	 * As such, when checking if a key is apart of a constant
 	 * mapping, we need to construct a set of that mapping's
@@ -172,7 +172,7 @@ restore_error:
 	}
 	/* Generate the expression. */
 push_generic:
-	/* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_HASHSET' */
+	/* TODO: If `ast` is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_HASHSET` */
 	return ast_genasm(self, gflags);
 }
 

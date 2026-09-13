@@ -18,13 +18,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* NOTE: Deemon's integer object implementation is
- *       heavily based on python's `long' data type.
+ *       heavily based on python's `long` data type.
  *       With that in mind, licensing of deemon's integer
  *       implementation must be GPL-compatible, GPL being
  *       the license that python is restricted by.
  *    >> So to simplify this whole deal: I make no claim of having invented the
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
- *       with all algorithms found in `int_logic.c' originating from phython
+ *       with all algorithms found in `int_logic.c` originating from phython
  *       before being adjusted to fit deemon's runtime. */
 #ifndef GUARD_DEEMON_OBJECTS_INT_LOGIC_H
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_H 1

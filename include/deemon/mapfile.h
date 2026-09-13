@@ -44,8 +44,8 @@ DECL_BEGIN
  * - mmap()                               (Unix)
  * - malloc()+read()                      (Fallback)
  */
-#undef DeeMapFile_IS_CreateFileMapping /* Windows's `CreateFileMapping' */
-#undef DeeMapFile_IS_mmap              /* Unix's `mmap(2)' */
+#undef DeeMapFile_IS_CreateFileMapping /* Windows's `CreateFileMapping` */
+#undef DeeMapFile_IS_mmap              /* Unix's `mmap(2)` */
 #undef DeeMapFile_IS_malloc            /* Fallback-only support */
 #if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS)
 #define DeeMapFile_IS_CreateFileMapping
@@ -66,14 +66,14 @@ struct DeeMapFile {
 	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	void  *_dmf_hmap;    /* [0..1] file mapping handle */
-	size_t _dmf_vfre;    /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
+	size_t _dmf_vfre;    /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())` */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_hmap = NULL)
 #define DeeMapFile_UsesMMap(self) ((self)->_dmf_hmap != NULL)
 #elif defined(DeeMapFile_IS_mmap)
 #define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
 	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
-	size_t _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
+	size_t _dmf_mapsize; /* Used internally: the mmap'd file size, or `0` if `dmf_addr` was malloc'd */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_mapsize = 0)
 #define DeeMapFile_UsesMMap(self) ((self)->_dmf_mapsize != 0)
 #else /* ... */
@@ -96,18 +96,18 @@ DFUNDEF NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self);
 #define DeeMapFile_Move(dst, src) (void)(*(dst) = *(src))
 
-/* Try to inplace-realloc-truncate the buffer of `self' ("inplace"
- * meaning that `DeeMapFile_GetAddr(self)' will never change) such
- * that `DeeMapFile_GetSize(self)' will be set to `newsize'.
+/* Try to inplace-realloc-truncate the buffer of `self` ("inplace"
+ * meaning that `DeeMapFile_GetAddr(self)` will never change) such
+ * that `DeeMapFile_GetSize(self)` will be set to `newsize`.
  *
  * Note that this will **NOT** retain trailing NUL-bytes that may
- * have been allocated by `DeeMapFile_InitSysFd()', and that more
- * memory than `newsize' may need to be retained due to pagesize
+ * have been allocated by `DeeMapFile_InitSysFd()`, and that more
+ * memory than `newsize` may need to be retained due to pagesize
  * requirements (though this function will never increase the size
  * of the file mapping).
  *
- * @return: true : Success: `DeeMapFile_GetSize(self)' has been lowered from its
- *                          previous value to some value that is `>= newsize'.
+ * @return: true : Success: `DeeMapFile_GetSize(self)` has been lowered from its
+ *                          previous value to some value that is `>= newsize`.
  * @return: false: Failure: Mapping size could not be reduced. Note that this is
  *                          **NOT** an error (and also should not be treated as
  *                          such), since the mapping is, and remains, up-and-
@@ -121,61 +121,61 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  * @param: fd:        The file that should be loaded into memory.
  * @param: self:      Filled with mapping information. This structure contains at least 2 fields:
  *                     - DeeMapFile_GetAddr: Filled with the base address of a mapping of the file's contents
- *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes')
- *                                           This will always be `>= min_bytes && <= max_bytes'.
+ *                     - DeeMapFile_GetSize: The actual number of mapped bytes (excluding `num_trailing_nulbytes`)
+ *                                           This will always be `>= min_bytes && <= max_bytes`.
  *                     - Other fields are implementation-specific
- *                    Note that the memory located at `DeeMapFile_GetAddr' is writable, though changes to
- *                    it are guarantied not to be written back to `fd'. iow: it behaves like MAP_PRIVATE
+ *                    Note that the memory located at `DeeMapFile_GetAddr` is writable, though changes to
+ *                    it are guarantied not to be written back to `fd`. iow: it behaves like MAP_PRIVATE
  *                    mapped as PROT_READ|PROT_WRITE.
  * @param: offset:    File offset / number of leading bytes that should not be mapped
- *                    When set to `(Dee_pos_t)-1', use the fd's current file position.
+ *                    When set to `(Dee_pos_t)-1`, use the fd's current file position.
  * @param: min_bytes: The  min number of bytes (excluding num_trailing_nulbytes) that should be mapped
- *                    starting  at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    starting  at `offset`. If the file is smaller than this, or indicates EOF before
  *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
- *                    Note that this doesn't include `num_trailing_nulbytes', meaning that (e.g.) when
+ *                    Note that this doesn't include `num_trailing_nulbytes`, meaning that (e.g.) when
  *                    an entirely empty file is mapped you get a buffer like:
  *                    >> mf_addr = calloc(min_bytes + num_trailing_nulbytes);
  *                    >> mf_size = min_bytes;
- *                    This argument essentially acts as if `fd' was at least `min_bytes' bytes large
+ *                    This argument essentially acts as if `fd` was at least `min_bytes` bytes large
  *                    by filling the non-present address range with all zeroes.
  * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped
- *                    starting at `offset'. If the file is smaller than this, or indicates EOF before
+ *                    starting at `offset`. If the file is smaller than this, or indicates EOF before
  *                    this number of bytes has been reached, simply stop there. - The actual number of
- *                    mapped bytes (excluding `num_trailing_nulbytes') is `DeeMapFile_GetSize'.
+ *                    mapped bytes (excluding `num_trailing_nulbytes`) is `DeeMapFile_GetSize`.
  * @param: num_trailing_nulbytes: When non-zero, append this many trailing NUL-bytes at the end of
  *                    the mapping. More bytes than this may be appended if necessary, but at least
  *                    this many are guarantied to be. - Useful if you want to load a file as a
- *                    string, in which case you can specify `1' to always have a trailing '\0' be
+ *                    string, in which case you can specify `1` to always have a trailing '\0' be
  *                    appended:
  *                    >> bzero(DeeMapFile_GetAddr + DeeMapFile_GetSize, num_trailing_nulbytes);
- * @param: flags:     Set of `DeeMapFile_F_*'
- * @return:  1: Both `DeeMapFile_F_MUSTMMAP' and `DeeMapFile_F_TRYMMAP' were set, but mmap failed.
- * @return:  0: Success (`self' must be deleted using `DeeMapFile_Fini(3)')
+ * @param: flags:     Set of `DeeMapFile_F_*`
+ * @return:  1: Both `DeeMapFile_F_MUSTMMAP` and `DeeMapFile_F_TRYMMAP` were set, but mmap failed.
+ * @return:  0: Success (`self` must be deleted using `DeeMapFile_Fini(3)`)
  * @return: -1: Error (an exception was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
                      Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                      size_t num_trailing_nulbytes, unsigned int flags);
 
-/* Same as `DeeMapFile_InitSysFd()', but initialize from a deemon File object. */
+/* Same as `DeeMapFile_InitSysFd()`, but initialize from a deemon File object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
                     DeeObject *__restrict file,
                     Dee_pos_t offset, size_t min_bytes, size_t max_bytes,
                     size_t num_trailing_nulbytes, unsigned int flags);
 
-/* Bits for the `flags' argument of `DeeMapFile_InitSysFd()' and `DeeMapFile_InitFile()' */
+/* Bits for the `flags` argument of `DeeMapFile_InitSysFd()` and `DeeMapFile_InitFile()` */
 #define DeeMapFile_F_NORMAL    0x0000 /* Normal flags */
-#define DeeMapFile_F_READALL   0x0001 /* Flag: use `preadall(3)' / `readall(3)' instead of `pread(2)' / `read(2)' */
+#define DeeMapFile_F_READALL   0x0001 /* Flag: use `preadall(3)` / `readall(3)` instead of `pread(2)` / `read(2)` */
 #define DeeMapFile_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
-#define DeeMapFile_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes' in this case!) */
+#define DeeMapFile_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes` in this case!) */
 #define DeeMapFile_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
-#define DeeMapFile_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1' */
+#define DeeMapFile_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1` */
 
 
 
 
-/* High-level wrapper for `DeeMapFile'
+/* High-level wrapper for `DeeMapFile`
  * NOTE: This type of object implements the buffer interfaces, meaning that
  *       deemon code can access the mapped  */
 typedef struct Dee_map_file_object {
@@ -185,7 +185,7 @@ typedef struct Dee_map_file_object {
 } DeeMapFileObject;
 
 DDATDEF DeeTypeObject DeeMapFile_Type;
-#define DeeMapFile_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeMapFile_Type) /* `_MapFile' is final! */
+#define DeeMapFile_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeMapFile_Type) /* `_MapFile` is final! */
 #define DeeMapFile_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeMapFile_Type)
 
 

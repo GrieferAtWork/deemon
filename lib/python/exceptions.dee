@@ -27,11 +27,11 @@ import Error, Signal from deemon;
  * Also: Some exceptions are bound more than once, since deemon
  *       re-uses exceptions multiple times where python relies
  *       more in their hirarchy.
- * Also: Deemon allows any arbitrary object to be `throw'n, while
+ * Also: Deemon allows any arbitrary object to be `throw`n, while
  *       python only allows classes derived from BaseException.
- *       -> Because of this, `except BaseException as e:' is
- *          translated to `catch (e...)', and `except Exception as e:' is
- *          translated to `catch (Signal from deemon | Error from deemon as e)'
+ *       -> Because of this, `except BaseException as e:` is
+ *          translated to `catch (e...)`, and `except Exception as e:` is
+ *          translated to `catch (Signal from deemon | Error from deemon as e)`
  *          by the py2dee converter module.
  * NOTE: Indentation here indicates the python hirarchy which we're trying
  *       to emulate as closely as possible. */

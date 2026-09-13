@@ -191,7 +191,7 @@ function sorted(iterable: Sequence,
                 reversed: bool = false) {
 	if (cmp is bound) {
 		if (key is bound)
-			throw TypeError("with `cmp' and `key' passed to `sorted'");
+			throw TypeError("with `cmp` and `key` passed to `sorted`");
 		key = functools.predcmp2key(cmp);
 	} else if (key !is bound) {
 		key = none;

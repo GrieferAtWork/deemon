@@ -29,10 +29,10 @@ err:
 }
 
 
-/* Same semantic functionality as `map_setnew_ex': insert if not already present
+/* Same semantic functionality as `map_setnew_ex`: insert if not already present
  * @return: * : The value associated with key after the call:
  *              - if already present and nothing was inserted, its old value
- *              - if used-to-be absent/unbound and was assigned/inserted, `value'
+ *              - if used-to-be absent/unbound and was assigned/inserted, `value`
  * @return: NULL: Error */
 [[wunused]] DREF DeeObject *
 __map_setdefault__.map_setdefault([[nonnull]] DeeObject *self,

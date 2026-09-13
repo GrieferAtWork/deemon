@@ -530,13 +530,13 @@ dict_htab_rebuild(Dict *__restrict self);
  * do so without ever releasing that lock.
  * NOTES:
  * - This function will NEVER rehash the dict or change the contents of d_htab!
- * - The caller must ensure that `_DeeDict_CanGrowVTab(self)' is true
+ * - The caller must ensure that `_DeeDict_CanGrowVTab(self)` is true
  * @return: true:  Success
  * @return: false: Failure */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
 dict_trygrow_vtab(Dict *__restrict self);
 
-/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+/* Same as `dict_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
  * Tries to make it so "d_valloc >= min_valloc"
  * @return: true:  Success: "d_valloc >= min_valloc"
@@ -546,7 +546,7 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
                                 Dee_hash_vidx_t min_valloc,
                                 bool allow_overalloc);
 
-/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+/* Same as `dict_trygrow_vtab()`, but allowed to grow the htab
  * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
  * @return: true:  Success
  * @return: false: Failure */
@@ -589,7 +589,7 @@ dict_grow_htab_and_relock(Dict *__restrict self);
 /* Shrink the vtab and release a lock to "self". Must be called when:
  * - holding a write-lock
  * - _DeeDict_CanShrinkHTab(self) is true
- * - _DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
+ * - _DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true`)
  * NOTE: After a call to this function, the caller must always rebuild the htab! */
 PRIVATE NONNULL((1)) void DCALL
 dict_shrink_htab(Dict *__restrict self, bool fully_shrink);
@@ -597,7 +597,7 @@ dict_shrink_htab(Dict *__restrict self, bool fully_shrink);
 /* Shrink the vtab+htab. Must be called while:
  * - holding a write-lock
  * - _DeeDict_CanShrinkVTab(self) is true
- * - _DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
+ * - _DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true`) */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink);
 
@@ -658,7 +658,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL dict_mh_setdefault(Dict
  *                   "d_vtab", which is the same as this callback returning "d_vsize"
  *                   @param: overwrite_index: When "key" already exists, the index of
  *                                            the item that will be deleted. Else, set
- *                                            to `Dee_HASH_HTAB_EOF' when "key" is new.
+ *                                            to `Dee_HASH_HTAB_EOF` when "key" is new.
  *                   @param: p_value: Pointer to the value that will be written to the key
  *                                    May be changed here to some other value already within
  *                                    the dict, in order to allow atomically assigning some
@@ -1130,8 +1130,8 @@ err:
 	return -1;
 }
 
-/* Given an "index" in range `[0,d_used)', return a value
- * in range `[0,d_size)' that points to the index'th non-
+/* Given an "index" in range `[0,d_used)`, return a value
+ * in range `[0,d_size)` that points to the index'th non-
  * deleted key in "d_vtab" */
 PRIVATE WUNUSED NONNULL((1)) /*real*/ Dee_hash_vidx_t DCALL
 dict_unoptimize_vtab_index(Dict *self, size_t index) {
@@ -2300,7 +2300,7 @@ PRIVATE struct type_operator const dict_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0034_SETITEM, METHOD_FNOREFESCAPE),
 };
 
-/* The main `Dict' container class */
+/* The main `Dict` container class */
 PUBLIC DeeTypeObject DeeDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Dict),

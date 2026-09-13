@@ -173,8 +173,8 @@ DECL_BEGIN
 /* Recursive atomic lock                                                */
 /************************************************************************/
 typedef struct {
-	unsigned int   ra_lock; /* Lock word (when non-zero, # of recursive locks held by `ra_tid') */
-	__hybrid_tid_t ra_tid;  /* [valid_if(ra_lock > 0)] Lock owner (set to `__HYBRID_GETTID_INVALID' after fully releasing lock) */
+	unsigned int   ra_lock; /* Lock word (when non-zero, # of recursive locks held by `ra_tid`) */
+	__hybrid_tid_t ra_tid;  /* [valid_if(ra_lock > 0)] Lock owner (set to `__HYBRID_GETTID_INVALID` after fully releasing lock) */
 } Dee_ratomic_lock_t;
 
 #define Dee_RATOMIC_LOCK_INIT        { 0, __HYBRID_GETTID_INVALID }
@@ -268,7 +268,7 @@ Dee_ratomic_lock_waitfor(Dee_ratomic_lock_t *__restrict self) {
 /************************************************************************/
 typedef struct {
 	Dee_ratomic_lock_t   rs_lock;    /* Underlying atomic lock */
-	_Dee_SHARED_WAITWORD(rs_waiting) /* Waiting-threads control word for `rs_lock' */
+	_Dee_SHARED_WAITWORD(rs_waiting) /* Waiting-threads control word for `rs_lock` */
 } Dee_rshared_lock_t;
 
 #define _Dee_rshared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->rs_waiting)
@@ -373,8 +373,8 @@ Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
 /************************************************************************/
 typedef struct {
 	Dee_atomic_rwlock_t rarw_lock;   /* Underlying atomic read/write lock */
-	__hybrid_tid_t      rarw_tid;    /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Write-lock owner (set to `__HYBRID_GETTID_INVALID' after fully releasing lock) */
-	unsigned int        rarw_nwrite; /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Number of extra write-locks (`0' means that the next `endwrite()' will release the primary write-lock) */
+	__hybrid_tid_t      rarw_tid;    /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Write-lock owner (set to `__HYBRID_GETTID_INVALID` after fully releasing lock) */
+	unsigned int        rarw_nwrite; /* [valid_if(rarw_lock.arw_lock == (uintptr_t)-1)] Number of extra write-locks (`0` means that the next `endwrite()` will release the primary write-lock) */
 } Dee_ratomic_rwlock_t;
 #define Dee_RATOMIC_RWLOCK_INIT \
 	{ Dee_ATOMIC_RWLOCK_INIT, __HYBRID_GETTID_INVALID, 0 }
@@ -394,7 +394,7 @@ typedef struct {
 	       Dee_ASSERT((self)->rarw_nwrite == 0))
 #endif /* !__HYBRID_GETTID_INVALID_IS_ZERO */
 
-/* Try to acquire a read-lock to `self' */
+/* Try to acquire a read-lock to `self` */
 LOCAL WUNUSED NONNULL((1)) bool DCALL
 Dee_ratomic_rwlock_tryread(Dee_ratomic_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -500,7 +500,7 @@ _Dee_ratomic_rwlock_endread_ex_NDEBUG(Dee_ratomic_rwlock_t *__restrict self) {
 }
 
 
-/* Try to acquire a write-lock to `self' */
+/* Try to acquire a write-lock to `self` */
 LOCAL WUNUSED NONNULL((1)) bool DCALL
 Dee_ratomic_rwlock_trywrite(Dee_ratomic_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -563,7 +563,7 @@ Dee_ratomic_rwlock_canendread(Dee_ratomic_rwlock_t *__restrict self) {
 	if (lockword == 0)
 		return false;
 	if (lockword == (uintptr_t)-1) {
-		return self->rarw_nwrite > 0 && /* Only recursive read-after-write can be released with `endread()' */
+		return self->rarw_nwrite > 0 && /* Only recursive read-after-write can be released with `endread()` */
 		       __hybrid_gettid_iscaller(self->rarw_tid);
 	}
 	return true;
@@ -573,7 +573,7 @@ Dee_ratomic_rwlock_canendread(Dee_ratomic_rwlock_t *__restrict self) {
 
 
 
-/* Acquire a write-lock to `self' */
+/* Acquire a write-lock to `self` */
 LOCAL NONNULL((1)) void DCALL
 Dee_ratomic_rwlock_write(Dee_ratomic_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -599,7 +599,7 @@ settid:
 	goto settid;
 }
 
-/* Wait until acquiring a write-lock to `self' is non-blocking */
+/* Wait until acquiring a write-lock to `self` is non-blocking */
 LOCAL NONNULL((1)) void DCALL
 Dee_ratomic_rwlock_waitwrite(Dee_ratomic_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -752,8 +752,8 @@ typedef struct {
 #define _Dee_rshared_rwlock_wwaiting_end(self)   (void)0
 #define _Dee_rshared_rwlock_wake(self)           (DeeFutex_WakeAll(&(self)->rsrw_lock.rarw_lock.arw_lock), 1)
 #elif 1
-	_Dee_SHARED_WAITWORD(rsrw_rwaiting) /* Waiting-read-threads control word for `rsrw_lock' */
-	_Dee_SHARED_WAITWORD(rsrw_wwaiting) /* Waiting-write-threads control word for `rsrw_lock' */
+	_Dee_SHARED_WAITWORD(rsrw_rwaiting) /* Waiting-read-threads control word for `rsrw_lock` */
+	_Dee_SHARED_WAITWORD(rsrw_wwaiting) /* Waiting-write-threads control word for `rsrw_lock` */
 #define _Dee_RSHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT _Dee_SHARED_WAITWORD__INIT
 #define _Dee_rshared_rwlock_waiting_init(self)   (_Dee_shared_waitword_init(&(self)->rsrw_rwaiting), _Dee_shared_waitword_init(&(self)->rsrw_wwaiting))
 #define _Dee_rshared_rwlock_waiting_cinit(self)  (_Dee_shared_waitword_cinit(&(self)->rsrw_rwaiting), _Dee_shared_waitword_cinit(&(self)->rsrw_wwaiting))
@@ -774,7 +774,7 @@ typedef struct {
 	      _Dee_rshared_rwlock_wakeread(self), 1)                    \
 	   : 0)
 #else /* ... */
-	_Dee_SHARED_WAITWORD(rsrw_waiting)  /* Waiting-threads control word for `rsrw_lock' */
+	_Dee_SHARED_WAITWORD(rsrw_waiting)  /* Waiting-threads control word for `rsrw_lock` */
 #define _Dee_RSHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT
 #define _Dee_rshared_rwlock_waiting_init(self)   _Dee_shared_waitword_init(&(self)->rsrw_waiting)
 #define _Dee_rshared_rwlock_waiting_cinit(self)  _Dee_shared_waitword_cinit(&(self)->rsrw_waiting)
@@ -906,27 +906,27 @@ _Dee_rshared_rwlock_end_ex_NDEBUG(Dee_rshared_rwlock_t *__restrict self) {
 }
 
 
-/* Acquire a read-lock to `self' (does not check for interrupts) */
+/* Acquire a read-lock to `self` (does not check for interrupts) */
 DFUNDEF NONNULL((1)) void DCALL
 Dee_rshared_rwlock_read_noint(Dee_rshared_rwlock_t *__restrict self);
 
-/* Acquire a write-lock to `self' (does not check for interrupts) */
+/* Acquire a write-lock to `self` (does not check for interrupts) */
 DFUNDEF NONNULL((1)) void DCALL
 Dee_rshared_rwlock_write_noint(Dee_rshared_rwlock_t *__restrict self);
 
-/* Acquire a read-lock to `self'
+/* Acquire a read-lock to `self`
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_read(Dee_rshared_rwlock_t *__restrict self);
 
-/* Acquire a write-lock to `self'
+/* Acquire a write-lock to `self`
  * @return: 0 : Success
  * @return: -1: An exception was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_write(Dee_rshared_rwlock_t *__restrict self);
 
-/* Wait until acquiring a read-lock to `self' no longer blocks */
+/* Wait until acquiring a read-lock to `self` no longer blocks */
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitread(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -949,7 +949,7 @@ Dee_rshared_rwlock_waitread(Dee_rshared_rwlock_t *__restrict self) {
 	return 0;
 }
 
-/* Wait until acquiring a write-lock to `self' no longer blocks */
+/* Wait until acquiring a write-lock to `self` no longer blocks */
 LOCAL WUNUSED NONNULL((1)) int DCALL
 Dee_rshared_rwlock_waitwrite(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -971,7 +971,7 @@ Dee_rshared_rwlock_waitwrite(Dee_rshared_rwlock_t *__restrict self) {
 	return 0;
 }
 
-/* Wait until acquiring a read-lock to `self' no longer blocks (does not check for interrupts) */
+/* Wait until acquiring a read-lock to `self` no longer blocks (does not check for interrupts) */
 LOCAL NONNULL((1)) void DCALL
 Dee_rshared_rwlock_waitread_noint(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;
@@ -990,7 +990,7 @@ Dee_rshared_rwlock_waitread_noint(Dee_rshared_rwlock_t *__restrict self) {
 	}
 }
 
-/* Wait until acquiring a write-lock to `self' no longer blocks (does not check for interrupts) */
+/* Wait until acquiring a write-lock to `self` no longer blocks (does not check for interrupts) */
 LOCAL NONNULL((1)) void DCALL
 Dee_rshared_rwlock_waitwrite_noint(Dee_rshared_rwlock_t *__restrict self) {
 	uintptr_t lockword;

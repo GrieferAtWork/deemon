@@ -59,7 +59,7 @@ typedef struct Dee_traceback_object {
 	                                                               * [OVERRIDE([*].cf_stack, [(!= NULL) == (cf_stacksz == 0)][0..cf_stacksz][owned])]
 	                                                               * [OVERRIDE([*].cf_stacksz, [(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
 	                                                               * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
-	                                                               *       Frames whose stack has yet to be duplicated have `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
+	                                                               *       Frames whose stack has yet to be duplicated have `cf_sp = cf_stack = NULL`, `cf_stacksz = 0`. */
 } DeeTracebackObject;
 
 #define DeeTraceback_LockAvailable(self)  Dee_atomic_lock_available(&(self)->tb_lock)
@@ -88,24 +88,24 @@ INTDEF DeeTracebackObject DeeTraceback_Empty;
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DDATDEF DeeTypeObject DeeTraceback_Type;
-#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeTraceback_Type) /* `Traceback' is final */
+#define DeeTraceback_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeTraceback_Type) /* `Traceback` is final */
 #define DeeTraceback_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTraceback_Type)
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Fill in stack information in the given traceback for `frame'. */
+/* Fill in stack information in the given traceback for `frame`. */
 INTDEF NONNULL((1, 2)) void DCALL
 DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
                       struct Dee_code_frame *__restrict frame,
                       uint16_t frame_id);
 
 /* Try to create a new traceback, but don't throw
- * an error and return `NULL' if doing so failed.
- * NOTE: The given `thread' must be the caller's. */
+ * an error and return `NULL` if doing so failed.
+ * NOTE: The given `thread` must be the caller's. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct Dee_thread_object *__restrict thread);
 
-/* Same as `DeeTraceback_New()', but throw errors when returning NULL. */
+/* Same as `DeeTraceback_New()`, but throw errors when returning NULL. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread);
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -134,14 +134,14 @@ typedef struct Dee_frame_object {
 #endif /* !CONFIG_NO_THREADS */
 #define Dee_FRAME_FNORMAL   0x0000 /* Normal frame flags. */
 #define Dee_FRAME_FREADONLY 0x0000 /* [const] Contents of the frame may not be modified. */
-#define Dee_FRAME_FNORESULT 0x0010 /* [const] Ignore the value of `cf_result' -- the frame has no return value. */
+#define Dee_FRAME_FNORESULT 0x0010 /* [const] Ignore the value of `cf_result` -- the frame has no return value. */
 #define Dee_FRAME_FWRITABLE 0x1000 /* [lock(READ(f_lock) && CLEAR_ONCE)] Contents of the frame may be modified. */
 #define Dee_FRAME_FUNDEFSP  0x2000 /* [lock(READ(f_lock) && ATOMIC && CLEAR_ONCE)] The stack-pointer of the frame is undefined.
-                                    * When `Dee_FRAME_FUNDEFSP2' isn't set, the correct stack pointer may be
+                                    * When `Dee_FRAME_FUNDEFSP2` isn't set, the correct stack pointer may be
                                     * obtainable from DDI information and the current PC.
-                                    * This flag may NOT be set when `Dee_FRAME_FWRITABLE' is set. */
+                                    * This flag may NOT be set when `Dee_FRAME_FWRITABLE` is set. */
 #define Dee_FRAME_FUNDEFSP2 0x4000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The stack-pointer of the frame could not be determined. */
-#define Dee_FRAME_FREGENGSP 0x8000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The SP pointer was reverse engineered and stored in `f_revsp' */
+#define Dee_FRAME_FREGENGSP 0x8000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The SP pointer was reverse engineered and stored in `f_revsp` */
 #ifndef CONFIG_NO_THREADS
 #define Dee_FRAME_FSHRLOCK  0x0001 /* The frame uses a shared lock. */
 #define Dee_FRAME_FRECLOCK  0x0002 /* The frame uses a recursive lock. */
@@ -230,9 +230,9 @@ typedef struct Dee_frame_object {
 
 DDATDEF DeeTypeObject DeeFrame_Type;
 
-/* Construct a frame object owned by `owner'
+/* Construct a frame object owned by `owner`
  * The intended use of this is for tracebacks and yield_function-iterators.
- * @param: flags: Set of `Dee_FRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*` */
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
@@ -245,9 +245,9 @@ DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 	DeeFrame_NewReferenceWithLock(owner, frame, flags, NULL)
 
 /* Construct a shared frame object, which can be manually
- * invalidated once the caller calls `DeeFrame_DecrefShared()'.
+ * invalidated once the caller calls `DeeFrame_DecrefShared()`.
  * The intended use of this is for user-code handling of breakpoints.
- * @param: flags: Set of `Dee_FRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*` */
 #define DeeFrame_NewSharedWithLock(frame, flags, lock) \
 	DeeFrame_NewReferenceWithLock(NULL, frame, flags, lock)
 #define DeeFrame_NewShared(frame, flags) \
@@ -256,9 +256,9 @@ DFUNDEF NONNULL((1)) void DCALL
 DeeFrame_DecrefShared(DREF DeeObject *__restrict self);
 
 
-/* Acquire locks to the frame that is underlying to `self'
+/* Acquire locks to the frame that is underlying to `self`
  * NOTE: When aquiring for writing, these functions also check
- *       `DeeFrame_CanWrite()' and will throw an error if writing
+ *       `DeeFrame_CanWrite()` and will throw an error if writing
  *       isn't allowed.
  * @return: * :   The underlying code frame.
  * @return: NULL: An error was thrown. */
@@ -272,13 +272,13 @@ DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndRead(DeeObject *__restrict self)
 DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndWrite(DeeObject *__restrict self);
 #endif /* !CONFIG_NO_THREADS */
 
-/* Same as `DeeFrame_LockWrite()', but also set the "Dee_CODE_FASSEMBLY"
+/* Same as `DeeFrame_LockWrite()`, but also set the "Dee_CODE_FASSEMBLY"
  * flag for the underlying code object (if not set already). */
 DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL
 DeeFrame_LockWriteAssembly(DeeObject *__restrict self);
 
-/* Same as above, but return `Dee_CODE_FRAME_DEAD' if the
- * frame is dead, rather than throw a `ReferenceError'.
+/* Same as above, but return `Dee_CODE_FRAME_DEAD` if the
+ * frame is dead, rather than throw a `ReferenceError`.
  * @return: * :                  The underlying code frame.
  * @return: NULL:                An error was thrown.
  * @return: Dee_CODE_FRAME_DEAD: The underlying code frame is dead (no error was thrown). */

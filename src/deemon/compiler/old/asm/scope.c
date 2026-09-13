@@ -35,7 +35,7 @@
 
 DECL_BEGIN
 
-/* Go through all the symbols of `scope' and generate wrapper
+/* Go through all the symbols of `scope` and generate wrapper
  * code for storing symbols of read-only classes, that are still
  * being written to in local variable.
  * This includes symbols such as module references, or exception-variables. */

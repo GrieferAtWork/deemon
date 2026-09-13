@@ -46,9 +46,9 @@ struct Dee_list_object;
 /* Accumulator modes. */
 enum {
 	Dee_ACCU_FIRST,   /* Mode not yet determined (expecting first item) */
-	Dee_ACCU_SECOND,  /* Always comes after `Dee_ACCU_FIRST' and selects which mode to use */
+	Dee_ACCU_SECOND,  /* Always comes after `Dee_ACCU_FIRST` and selects which mode to use */
 	Dee_ACCU_OBJECT,  /* Generic object sum mode (using "operator +") */
-	Dee_ACCU_NONE,    /* First object was `none', so all other objects are ignored and result will also be `none' */
+	Dee_ACCU_NONE,    /* First object was `none`, so all other objects are ignored and result will also be `none` */
 	Dee_ACCU_STRING,  /* Use a unicode printer */
 	Dee_ACCU_BYTES,   /* Use a bytes printer */
 	Dee_ACCU_INT,     /* First object was "int" */
@@ -64,14 +64,14 @@ enum {
 	Dee_ACCU_TUPLE,   /* First object was "Tuple" */
 	Dee_ACCU_LIST,    /* First object was "List" (!DeeObject_IsShared) */
 #endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
-//TODO:	Dee_ACCU_SEQ,     /* First object's `operator +' was identical to `Sequence.__add__' (SeqConcat_Type) */
-//TODO:	Dee_ACCU_SET,     /* First object's `operator +' was identical to `Set.__add__'      (SetUnion_Type) */
-//TODO:	Dee_ACCU_MAP,     /* First object's `operator +' was identical to `Mapping.__add__'  (MapUnion_Type) */
+//TODO:	Dee_ACCU_SEQ,     /* First object's `operator +` was identical to `Sequence.__add__` (SeqConcat_Type) */
+//TODO:	Dee_ACCU_SET,     /* First object's `operator +` was identical to `Set.__add__`      (SetUnion_Type) */
+//TODO:	Dee_ACCU_MAP,     /* First object's `operator +` was identical to `Mapping.__add__`  (MapUnion_Type) */
 };
 
 /* Helper structure for optimized, but still type-generic "operator +" accumulation. */
 struct Dee_accu {
-	uintptr_t acu_mode; /* Accumulator-mode (one of `Dee_ACCU_*') */
+	uintptr_t acu_mode; /* Accumulator-mode (one of `Dee_ACCU_*`) */
 	union {
 		DREF DeeObject              *v_object; /* Dee_ACCU_SECOND, Dee_ACCU_OBJECT */
 		struct Dee_unicode_printer   v_string; /* Dee_ACCU_STRING */
@@ -107,25 +107,25 @@ Dee_accu_visit(struct Dee_accu *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Pack the accumulator and return its final result as an object.
  * This function may only be called once, as it does an implicit
- * `Dee_accu_fini()'. Returns `NULL' if an error was thrown.
+ * `Dee_accu_fini()`. Returns `NULL` if an error was thrown.
  *
- * Hint: if you want `self' to remain valid, you can just re-init it
- *       after the call using `Dee_accu_init_with_first_inherited()'
+ * Hint: if you want `self` to remain valid, you can just re-init it
+ *       after the call using `Dee_accu_init_with_first_inherited()`
  * @return: * :        Result of accumulation
  * @return: NULL:      Error
  * @return: ITER_DONE: Accumulator is empty. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_accu_pack(struct Dee_accu *__restrict self);
 
-/* Add `item' into the accumulator.
- * HINT: This function is `Dee_foreach_t'-compatible. */
+/* Add `item` into the accumulator.
+ * HINT: This function is `Dee_foreach_t`-compatible. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item);
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_add_inherited(/*struct Dee_accu*/ void *self,
                        /*inherit(always)*/ DREF DeeObject *item);
 
-/* Add all elements of `items' into the accumulator. */
+/* Add all elements of `items` into the accumulator. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items);
 

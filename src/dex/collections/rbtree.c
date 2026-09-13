@@ -157,7 +157,7 @@ DECL_END
 DECL_BEGIN
 
 
-/* Return the value of `{ self = copy self; --self; }' */
+/* Return the value of `{ self = copy self; --self; }` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Predecessor(DeeObject *__restrict self) {
 	self = DeeObject_Copy(self);
@@ -168,7 +168,7 @@ DeeObject_Predecessor(DeeObject *__restrict self) {
 	return self;
 }
 
-/* Return the value of `{ self = copy self; ++self; }' */
+/* Return the value of `{ self = copy self; ++self; }` */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Successor(DeeObject *__restrict self) {
 	self = DeeObject_Copy(self);
@@ -651,7 +651,7 @@ no:
 	return false;
 }
 
-/* Check if `elem' is reachable from `subtree' (via its lhs/rhs pointers) */
+/* Check if `elem` is reachable from `subtree` (via its lhs/rhs pointers) */
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 rbtree_node_subtree_contains(struct rbtree_node *subtree,
                              struct rbtree_node *elem) {
@@ -691,7 +691,7 @@ rbtreeiter_lo_impl(RBTreeIterator *self, RBTreeIterator *other) {
 	if unlikely(!RBTreeIterator_VersionOK(other, tree))
 		goto err_changed_unlock;
 
-	/* Check if `rhs_node' is a node that appears before `lhs_node' */
+	/* Check if `rhs_node` is a node that appears before `lhs_node` */
 	for (;;) {
 		struct rbtree_node *par;
 		if (lhs_node->rbtn_lhs &&
@@ -702,19 +702,19 @@ goto_par:
 		if (par == NULL)
 			break; /* Root reached */
 		if (par->rbtn_lhs == lhs_node) {
-			/* We're the left-child of `par', so if `par' is
-			 * `rhs_node', then that node comes *after* us! */
+			/* We're the left-child of `par`, so if `par` is
+			 * `rhs_node`, then that node comes *after* us! */
 			if (par == rhs_node)
 				goto no_unlock;
 
-			/* `lhs_node' is the left-most child of `par',
+			/* `lhs_node` is the left-most child of `par`,
 			 * so can already move on to the next parent. */
 			lhs_node = par;
 			goto goto_par;
 		}
 
-		/* We're the right-child of `par', so if `par' is
-		 * `rhs_node', then that node comes *before* us! */
+		/* We're the right-child of `par`, so if `par` is
+		 * `rhs_node`, then that node comes *before* us! */
 		if (par == rhs_node)
 			goto yes_unlock;
 		lhs_node = par;
@@ -751,7 +751,7 @@ rbtreeiter_le_impl(RBTreeIterator *self, RBTreeIterator *other) {
 	if unlikely(!RBTreeIterator_VersionOK(other, tree))
 		goto err_changed_unlock;
 
-	/* Check if `rhs_node' is a node that appears before `lhs_node' */
+	/* Check if `rhs_node` is a node that appears before `lhs_node` */
 	for (;;) {
 		struct rbtree_node *par;
 		if (lhs_node->rbtn_lhs &&
@@ -762,19 +762,19 @@ goto_par:
 		if (par == NULL)
 			break; /* Root reached */
 		if (par->rbtn_lhs == lhs_node) {
-			/* We're the left-child of `par', so if `par' is
-			 * `rhs_node', then that node comes *after* us! */
+			/* We're the left-child of `par`, so if `par` is
+			 * `rhs_node`, then that node comes *after* us! */
 			if (par == rhs_node)
 				goto no_unlock;
 
-			/* `lhs_node' is the left-most child of `par',
+			/* `lhs_node` is the left-most child of `par`,
 			 * so can already move on to the next parent. */
 			lhs_node = par;
 			goto goto_par;
 		}
 
-		/* We're the right-child of `par', so if `par' is
-		 * `rhs_node', then that node comes *before* us! */
+		/* We're the right-child of `par`, so if `par` is
+		 * `rhs_node`, then that node comes *before* us! */
 		if (par == rhs_node)
 			goto yes_unlock;
 		lhs_node = par;
@@ -1294,10 +1294,10 @@ struct rbtree_minmax {
 	struct rbtree_node *rbtmm_max; /* [1..1] Greatest node */
 };
 
-/* Lookup the node containing a given `key', where `root' is guarantied to overlap with [minkey:maxkey]
- * NOTE: The caller must currently be holding a read-lock to `self'!
+/* Lookup the node containing a given `key`, where `root` is guarantied to overlap with [minkey:maxkey]
+ * NOTE: The caller must currently be holding a read-lock to `self`!
  * @return: 1 : Version changed after (lock is still held)
- * @return: 0 : Success (in this case, a read-lock to `self' is still being held)
+ * @return: 0 : Success (in this case, a read-lock to `self` is still being held)
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *maxkey,
@@ -1310,7 +1310,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 
 	/* Check for special case: when the key-range consists of
 	 * only a single key, then there can only be max. 1 node,
-	 * and that node will always be `root'. */
+	 * and that node will always be `root`. */
 	if (minkey == maxkey) {
 		result->rbtmm_min = root;
 		result->rbtmm_max = root;
@@ -1417,9 +1417,9 @@ again:
 	return 2;
 }
 
-/* Lookup the node containing a given `key'
- * @return: 1 : No nodes overlap with `[minkey:maxkey]'
- * @return: 0 : Success (in this case, a read-lock to `self' is still being held)
+/* Lookup the node containing a given `key`
+ * @return: 1 : No nodes overlap with `[minkey:maxkey]`
+ * @return: 0 : Success (in this case, a read-lock to `self` is still being held)
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 rbtree_do_minmaxlocate_node(RBTree *self, DeeObject *minkey, DeeObject *maxkey,
@@ -1485,11 +1485,11 @@ err:
 
 
 
-/* Lookup the node containing a given `key'
- * @return: * :        The node containing `key' (in this case,
- *                     a read-lock to `self' is still held)
+/* Lookup the node containing a given `key`
+ * @return: * :        The node containing `key` (in this case,
+ *                     a read-lock to `self` is still held)
  * @return: NULL:      Error
- * @return: ITER_DONE: No node containing `key' */
+ * @return: ITER_DONE: No node containing `key` */
 PRIVATE WUNUSED NONNULL((1, 2)) struct rbtree_node *DCALL
 rbtree_trygetitem_node(RBTree *self, DeeObject *key) {
 	struct rbtree_node *node;
@@ -1508,7 +1508,7 @@ again:
 		Dee_Incref(node_maxkey);
 		RBTree_LockEndRead(self);
 
-		/* Check if `key' is located in the left sub-tree */
+		/* Check if `key` is located in the left sub-tree */
 		temp = DeeObject_CmpLoAsBool(key, node_minkey);
 		Dee_Decref_unlikely(node_minkey);
 		if (temp != 0) {
@@ -1522,7 +1522,7 @@ again:
 			continue;
 		}
 
-		/* Check if `key' is located in the right sub-tree */
+		/* Check if `key` is located in the right sub-tree */
 		temp = DeeObject_CmpGrAsBool(key, node_maxkey);
 		Dee_Decref_unlikely(node_maxkey);
 		if (temp != 0) {
@@ -1535,7 +1535,7 @@ again:
 			continue;
 		}
 
-		/* Key is located in `node' */
+		/* Key is located in `node` */
 		RBTree_LockRead(self);
 		if unlikely(self->rbt_version != version)
 			goto again;
@@ -1567,7 +1567,7 @@ struct rbtree_do_insert_overlap_info {
 };
 
 
-/* Check if `key' supports the merging of adjacent nodes. */
+/* Check if `key` supports the merging of adjacent nodes. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 key_supports_adjacent(DeeObject *__restrict key) {
 	DeeTypeObject *typ = Dee_TYPE(key);
@@ -1580,8 +1580,8 @@ int_a_plus_1_equals_b(DeeIntObject *a, DeeIntObject *b) {
 	if (a->ob_size != b->ob_size) {
 		if ((a->ob_size + 1) != b->ob_size)
 			goto nope;
-		/* Special case: `a' should be all FF-bytes, and `b' should
-		 * be all `00' bytes, with the last digit being a `1' */
+		/* Special case: `a` should be all FF-bytes, and `b` should
+		 * be all `00` bytes, with the last digit being a `1` */
 		for (i = 0; i < a_size; ++i) {
 			if (a->ob_digit[i] != Dee_DIGIT_MASK)
 				goto nope;
@@ -1619,14 +1619,14 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 key_adjacent(DeeObject *a, DeeObject *b) {
 	if (Dee_TYPE(a) != Dee_TYPE(b))
 		goto nope;
-	if (Dee_TYPE(a) == &DeeInt_Type) /* return true if `a + 1 == b' */
+	if (Dee_TYPE(a) == &DeeInt_Type) /* return true if `a + 1 == b` */
 		return int_a_plus_1_equals_b((DeeIntObject *)a, (DeeIntObject *)b);
 nope:
 	return false;
 }
 
 
-/* Try to merge `node' with its neighbors */
+/* Try to merge `node` with its neighbors */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 rbtree_do_mergenode(RBTree *self, struct rbtree_node *__restrict node,
                     struct rbtree_node_slist *__restrict removed_nodes) {
@@ -1635,7 +1635,7 @@ rbtree_do_mergenode(RBTree *self, struct rbtree_node *__restrict node,
 		nextnode = rbtree_abi_prevnode(node);
 		if (nextnode && rbtree_node_get_value(nextnode) == rbtree_node_get_value(node) &&
 		    key_adjacent(rbtree_node_get_maxkey(nextnode), rbtree_node_get_minkey(node))) {
-			/* Remove `nextnode' and extend the caller's node.
+			/* Remove `nextnode` and extend the caller's node.
 			 *
 			 * Because we know that this won't change the ordering
 			 * of the tree as a whole, we don't need to re-insert
@@ -1659,7 +1659,7 @@ rbtree_do_mergenode(RBTree *self, struct rbtree_node *__restrict node,
 
 /* Implementation for the node-insert-function
  * @return: 1:  This node overlaps with another node (info for
- *              this node is written to `overlap_info' if non-NULL)
+ *              this node is written to `overlap_info` if non-NULL)
  * @return: 0:  Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1704,7 +1704,7 @@ again_load_root:
 	Dee_Incref(maxkey);
 	RBTree_LockEndRead(self);
 
-	/* Check if `node' must go in the left sub-tree */
+	/* Check if `node` must go in the left sub-tree */
 	temp = DeeObject_CmpLoAsBool(rbtree_node_get_maxkey(node), minkey);
 	Dee_Decref_unlikely(minkey);
 	if (temp != 0) {
@@ -1726,7 +1726,7 @@ again_load_root:
 		}
 		root->rbtn_lhs = node;
 	} else {
-		/* Check if `node' must go in the right sub-tree */
+		/* Check if `node` must go in the right sub-tree */
 		temp = DeeObject_CmpGrAsBool(rbtree_node_get_minkey(node), maxkey);
 		Dee_Decref_unlikely(maxkey);
 		if (temp != 0) {
@@ -1856,7 +1856,7 @@ rbtree_getitem(RBTree *self, DeeObject *key) {
 	return result;
 }
 
-/* Insert `newnode' as the immediate successor of `predecessor' */
+/* Insert `newnode` as the immediate successor of `predecessor` */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 rbtree_insert_after(RBTree *self,
                     struct rbtree_node *__restrict predecessor,
@@ -1876,7 +1876,7 @@ rbtree_insert_after(RBTree *self,
 	rbtree_abi__insert_repair(&self->rbt_root, newnode, predecessor);
 }
 
-/* Insert `newnode' as the immediate predecessor of `successor' */
+/* Insert `newnode` as the immediate predecessor of `successor` */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 rbtree_insert_before(RBTree *self,
                      struct rbtree_node *__restrict successor,
@@ -1924,12 +1924,12 @@ again_insert:
 	if (error <= 0) {
 		if unlikely(error < 0)
 			goto err_newnode;
-		return error; /* No conflicts, so `newnode' was inserted into the tree! */
+		return error; /* No conflicts, so `newnode` was inserted into the tree! */
 	}
 
 	/* In this case, there it at least 1 other pre-existing
 	 * node that overlaps with the caller's key-range, and
-	 * we've already been given one of those nodes in `overlap' */
+	 * we've already been given one of those nodes in `overlap` */
 	RBTree_LockRead(self);
 	if unlikely(self->rbt_version != overlap.rbtdioi_vers) {
 endread_and_again_insert:
@@ -1948,13 +1948,13 @@ endread_and_again_insert:
 	}
 
 	/* At this point, we've got the complete set of nodes that overlap
-	 * with the caller-given key-range saved in `range'. We must now
+	 * with the caller-given key-range saved in `range`. We must now
 	 * check how/where we (might) need to split these nodes.
 	 *
 	 * For this purpose, we must check if the caller's key-range forms
 	 * a full-, or partial overlap with the range of existing nodes.
 	 *
-	 * -> Figure out `minkey_le_minnode_minkey' and `maxkey_ge_maxnode_maxkey' */
+	 * -> Figure out `minkey_le_minnode_minkey` and `maxkey_ge_maxnode_maxkey` */
 	{
 		DREF DeeObject *minnode_minkey;
 		DREF DeeObject *maxnode_maxkey;
@@ -2028,20 +2028,20 @@ endread_and_again_insert:
 				goto again_insert;
 			}
 
-			/* Fill in `hinode' and update `lonode' */
+			/* Fill in `hinode` and update `lonode` */
 			hinode->rbtn_maxkey = rbtree_node_get_maxkey(lonode); /* Inherit reference */
 			hinode->rbtn_minkey = maxkey_succ;                    /* Inherit reference */
 			lonode->rbtn_maxkey = minkey_pred;                    /* Inherit reference */
 			hinode->rbtn_value  = rbtree_node_get_value(lonode);
 			Dee_Incref(hinode->rbtn_value);
 
-			/* Insert `newnode' as the immediate successor of `lonode' */
+			/* Insert `newnode` as the immediate successor of `lonode` */
 			rbtree_insert_after(self, lonode, newnode);
 
-			/* Insert `hinode' as the immediate successor of `newnode' */
+			/* Insert `hinode` as the immediate successor of `newnode` */
 			rbtree_insert_after(self, newnode, hinode);
 
-			/* Try to merge `newnode' with its neighbors. */
+			/* Try to merge `newnode` with its neighbors. */
 			SLIST_INIT(&removed_nodes);
 			rbtree_do_mergenode(self, newnode, &removed_nodes);
 
@@ -2097,19 +2097,19 @@ endread_and_again_insert:
 			}
 		}
 
-		/* Insert `newnode' as the immediate successor of `range.rbtmm_min',
-		 * but only if `range.rbtmm_min' wasn't just removed. If it was,
-		 * then we can assume that `range.rbtmm_max' wasn't removed (since
+		/* Insert `newnode` as the immediate successor of `range.rbtmm_min`,
+		 * but only if `range.rbtmm_min` wasn't just removed. If it was,
+		 * then we can assume that `range.rbtmm_max` wasn't removed (since
 		 * that would be the case where there are no overlaps, which is
 		 * handled below, as it doesn't require nodes being split), which
-		 * means that we can just insert *before* `range.rbtmm_max' */
+		 * means that we can just insert *before* `range.rbtmm_max` */
 		if (minkey_pred) {
 			rbtree_insert_after(self, range.rbtmm_min, newnode);
 		} else {
 			rbtree_insert_before(self, range.rbtmm_max, newnode);
 		}
 
-		/* Try to merge `newnode' with its neighbors. */
+		/* Try to merge `newnode` with its neighbors. */
 		rbtree_do_mergenode(self, newnode, &removed_nodes);
 
 		/* And we're done -> increment the version counter. */
@@ -2203,13 +2203,13 @@ again_minmaxlocate:
 	version = self->rbt_version;
 
 	/* At this point, we've got the complete set of nodes that overlap
-	 * with the caller-given key-range saved in `range'. We must now
+	 * with the caller-given key-range saved in `range`. We must now
 	 * check how/where we (might) need to split these nodes.
 	 *
 	 * For this purpose, we must check if the caller's key-range forms
 	 * a full-, or partial overlap with the range of existing nodes.
 	 *
-	 * -> Figure out `minkey_le_minnode_minkey' and `maxkey_ge_maxnode_maxkey' */
+	 * -> Figure out `minkey_le_minnode_minkey` and `maxkey_ge_maxnode_maxkey` */
 	{
 		DREF DeeObject *minnode_minkey;
 		DREF DeeObject *maxnode_maxkey;
@@ -2286,14 +2286,14 @@ again_minmaxlocate:
 				goto again_minmaxlocate;
 			}
 
-			/* Fill in `hinode' and update `lonode' */
+			/* Fill in `hinode` and update `lonode` */
 			hinode->rbtn_maxkey = rbtree_node_get_maxkey(lonode); /* Inherit reference */
 			hinode->rbtn_minkey = maxkey_succ;                    /* Inherit reference */
 			lonode->rbtn_maxkey = minkey_pred;                    /* Inherit reference */
 			hinode->rbtn_value  = rbtree_node_get_value(lonode);
 			Dee_Incref(hinode->rbtn_value);
 
-			/* Insert `hinode' as the immediate successor of `lonode' */
+			/* Insert `hinode` as the immediate successor of `lonode` */
 			rbtree_insert_after(self, lonode, hinode);
 
 			/* And we're done -> increment the version counter. */
@@ -2846,7 +2846,7 @@ again:
 			goto done_unlock;
 	}
 
-	/* Try to merge `node' with its successor */
+	/* Try to merge `node` with its successor */
 	for (;;) {
 again_nextnode:
 		next = rbtree_abi_nextnode(prev);
@@ -2997,7 +2997,7 @@ err:
 	return -1;
 }
 
-/* Copy triples from `iter' into `self' */
+/* Copy triples from `iter` into `self` */
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 rbtree_insert_foreach_cb(void *arg, DeeObject *item) {
 	int temp;
@@ -3022,7 +3022,7 @@ rbtree_insert_foreach_cb(void *arg, DeeObject *item) {
 		}
 	}
 
-	/* At this point, `items' is {minkey, maxkey, value}
+	/* At this point, `items` is {minkey, maxkey, value}
 	 * Use these values to fill in a range. */
 	temp = rbtree_setrange(self, items[0], items[1], items[2]);
 	Dee_Decrefv_unlikely(items, 3);
@@ -3031,7 +3031,7 @@ err:
 	return -1;
 }
 
-/* Copy triples from `seq' into `self' */
+/* Copy triples from `seq` into `self` */
 #define rbtree_insert_sequence(self, seq) \
 	DeeObject_Foreach(seq, &rbtree_insert_foreach_cb, self)
 
@@ -3166,8 +3166,8 @@ rbtree_ctor(RBTree *__restrict self) {
 	return 0;
 }
 
-/* Copy the sub-tree `tree'. The caller is expected to be holding a read-lock
- * @return: * :        A duplicate of `tree' (lock is still held)
+/* Copy the sub-tree `tree`. The caller is expected to be holding a read-lock
+ * @return: * :        A duplicate of `tree` (lock is still held)
  * @return: NULL:      Error (lock was lost)
  * @return: ITER_DONE: Version error (lock was lost) */
 PRIVATE WUNUSED NONNULL((1, 2)) struct rbtree_node *DCALL
@@ -3244,7 +3244,7 @@ again:
 	}
 	RBTree_LockEndRead(other);
 
-	/* Fill in members of `self' */
+	/* Fill in members of `self` */
 	self->rbt_root    = tree_copy; /* Inherit */
 	self->rbt_version = 0;
 	Dee_atomic_rwlock_init(&self->rbt_lock);

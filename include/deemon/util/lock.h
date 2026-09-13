@@ -423,7 +423,7 @@ for (;;) {
 /************************************************************************/
 typedef struct {
 	Dee_atomic_lock_t    s_lock;    /* Lock word (== 0: available, != 0: held) */
-	_Dee_SHARED_WAITWORD(s_waiting) /* Waiting-threads control word for `s_lock' */
+	_Dee_SHARED_WAITWORD(s_waiting) /* Waiting-threads control word for `s_lock` */
 } Dee_shared_lock_t;
 
 #define _Dee_shared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->s_waiting)
@@ -453,10 +453,10 @@ typedef struct {
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_acquire)(Dee_shared_lock_t *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_lock_waitfor)(Dee_shared_lock_t *__restrict self);
 
-/* Same as `Dee_shared_lock_acquire()' / `Dee_shared_lock_waitfor()',
+/* Same as `Dee_shared_lock_acquire()` / `Dee_shared_lock_waitfor()`,
  * but also takes an additional timeout in nano-seconds. The special
- * values `0' (try-acquire) and `(uint64_t)-1' (infinite timeout) are
- * also recognized for `timeout_nanoseconds'.
+ * values `0` (try-acquire) and `(uint64_t)-1` (infinite timeout) are
+ * also recognized for `timeout_nanoseconds`.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
@@ -514,8 +514,8 @@ typedef struct {
 #define _Dee_shared_rwlock_wwaiting_end(self)   (void)0
 #define _Dee_shared_rwlock_wake(self)           (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1)
 #elif 1
-	_Dee_SHARED_WAITWORD(srw_rwaiting) /* Waiting-read-threads control word for `srw_lock' */
-	_Dee_SHARED_WAITWORD(srw_wwaiting) /* Waiting-write-threads control word for `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_rwaiting) /* Waiting-read-threads control word for `srw_lock` */
+	_Dee_SHARED_WAITWORD(srw_wwaiting) /* Waiting-write-threads control word for `srw_lock` */
 #define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT _Dee_SHARED_WAITWORD__INIT
 #define _Dee_shared_rwlock_waiting_init(self)   (_Dee_shared_waitword_init(&(self)->srw_rwaiting), _Dee_shared_waitword_init(&(self)->srw_wwaiting))
 #define _Dee_shared_rwlock_waiting_cinit(self)  (_Dee_shared_waitword_cinit(&(self)->srw_rwaiting), _Dee_shared_waitword_cinit(&(self)->srw_wwaiting))
@@ -537,7 +537,7 @@ typedef struct {
 	      _Dee_shared_rwlock_wakeread(self), 1)          \
 	   : 0)
 #else /* ... */
-	_Dee_SHARED_WAITWORD(srw_waiting)  /* Waiting-threads control word for `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_waiting)  /* Waiting-threads control word for `srw_lock` */
 #define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT
 #define _Dee_shared_rwlock_waiting_init(self)   _Dee_shared_waitword_init(&(self)->srw_waiting)
 #define _Dee_shared_rwlock_waiting_cinit(self)  _Dee_shared_waitword_cinit(&(self)->srw_waiting)
@@ -620,9 +620,9 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitread)(Dee_shared_r
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite)(Dee_shared_rwlock_t *__restrict self);
 
 
-/* Same as `Dee_shared_rwlock_*', but also takes an additional timeout in nano-seconds.
- * The special values `0' (try-acquire) and `(uint64_t)-1' (infinite timeout) are also
- * recognized for `timeout_nanoseconds'.
+/* Same as `Dee_shared_rwlock_*`, but also takes an additional timeout in nano-seconds.
+ * The special values `0` (try-acquire) and `(uint64_t)-1` (infinite timeout) are also
+ * recognized for `timeout_nanoseconds`.
  * @return: 1 : Timeout expired.
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
@@ -703,7 +703,7 @@ LOCAL NONNULL((1)) void
 /************************************************************************/
 typedef struct {
 	size_t               se_tickets; /* # of tickets currently available (atomic + futex word) */
-	_Dee_SHARED_WAITWORD(se_waiting) /* Waiting-threads control word for `se_tickets' */
+	_Dee_SHARED_WAITWORD(se_waiting) /* Waiting-threads control word for `se_tickets` */
 } Dee_semaphore_t;
 #define _Dee_semaphore_waiting_start(self)       _Dee_shared_waitword_start(&(self)->se_waiting)
 #define _Dee_semaphore_waiting_end(self)         _Dee_shared_waitword_end(&(self)->se_waiting)
@@ -713,7 +713,7 @@ typedef struct {
 	(_Dee_shared_waitword_test(&(self)->se_waiting) &&   \
 	 ((n) <= 1 ? DeeFutex_WakeOne(&(self)->se_tickets)   \
 	           : /* Technically, it'd be enough to only  \
-	              * wake `count' threads, but that can't \
+	              * wake `count` threads, but that can't \
 	              * be done portably... */               \
 	             DeeFutex_WakeAll(&(self)->se_tickets),  \
 	  1))
@@ -742,7 +742,7 @@ LOCAL WUNUSED ATTR_INOUT(1) bool
 }
 
 /* Blocking acquire a semaphore ticket, or wait for one to become available.
- * @return: 1 : Timeout expired. (`*_timed' only)
+ * @return: 1 : Timeout expired. (`*_timed` only)
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int
@@ -820,7 +820,7 @@ typedef struct {
 	__hybrid_atomic_cmpxch(&(self)->ev_state, 0, 1, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 
 /* Blocking wait for an event to become set.
- * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed' only)
+ * @return: 1 : Timeout expired. (`Dee_event_waitfor_timed` only)
  * @return: 0 : Success.
  * @return: -1: An exception was thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int

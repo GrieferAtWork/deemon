@@ -52,7 +52,7 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 
-/* An extension to `Dee_Unpackf', explicitly for unpacking elements from function arguments.
+/* An extension to `Dee_Unpackf`, explicitly for unpacking elements from function arguments.
  * Format language syntax:
  *     using Dee_Unpackf::object;
  *     __main__   ::= [(object  // Process regular objects, writing values to pointers passed through varargs.
@@ -62,7 +62,7 @@ DECL_BEGIN
  *     ;
  * Example usage:
  * >> // function my_function(a: int, b: int, c: int = 5): int;
- * >> // @return: * : The sum of `a', `b' and `c'
+ * >> // @return: * : The sum of `a`, `b` and `c`
  * >> PRIVATE WUNUSED ATTR_INS(2, 1) NONNULL((1)) DREF DeeObject *DCALL
  * >> my_function(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
@@ -298,7 +298,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 #define _Dee_PRIVATE_ArgAssign(p_arg, value) (*(DeeObject **)(p_arg) = (value))
 #endif /* !__COMPILER_HAVE_TYPEOF */
 
-/* Dummy converter function used to encode "o" (object) operands in `DeeArg_Unpack<N>X' */
+/* Dummy converter function used to encode "o" (object) operands in `DeeArg_Unpack<N>X` */
 #define _DeeArg_AsObject(self, p_result) (_Dee_PRIVATE_ArgAssign(p_result, self), 0)
 
 /* Cat with empty string to assert that "function_name" is a compile-time
@@ -669,16 +669,16 @@ struct Dee_keyword {
 
 /* Same as the regular unpack functions above, however these are enabled to
  * support keyword lists in the event that the calling function has been
- * provided with a keyword object (`kw').
- * -> When `DeeKwds_Check(kw)' is true, keyword argument objects are passed
+ * provided with a keyword object (`kw`).
+ * -> When `DeeKwds_Check(kw)` is true, keyword argument objects are passed
  *    through the regular argument vector, located within the range
- *    `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError
- *    is thrown), using names from `kwlist + NUM_POSITIONAL' to match association.
+ *    `argc - kw->kw_size .. argc - 1` (if `kw->kw_size > argc`, a TypeError
+ *    is thrown), using names from `kwlist + NUM_POSITIONAL` to match association.
  * -> Otherwise, positional arguments are also parsed regularly, before
- *    using `DeeObject_GetItemStringHash()' to lookup argument names starting
- *    at `kwlist + NUM_POSITIONAL', counting how may arguments were actually
+ *    using `DeeObject_GetItemStringHash()` to lookup argument names starting
+ *    at `kwlist + NUM_POSITIONAL`, counting how may arguments were actually
  *    found (and failing if a non-optional argument wasn't given), before
- *    finally using `DeeObject_Size()' to see how many keyword-arguments
+ *    finally using `DeeObject_Size()` to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used.
  *
@@ -736,7 +736,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 
 
 
-/* Optimized format sequences for `Dee_Unpackf()' and `DeeArg_Unpack[Kw]()' */
+/* Optimized format sequences for `Dee_Unpackf()` and `DeeArg_Unpack[Kw]()` */
 #define Dee_UNPd8   "I8d"   /* DeeObject_AsInt8(...) */
 #define Dee_UNPu8   "I8u"   /* DeeObject_AsUInt8(...) */
 #define Dee_UNPx8   "I8x"   /* DeeObject_AsUInt8M1(...) */

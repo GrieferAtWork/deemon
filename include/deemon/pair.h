@@ -36,18 +36,18 @@
 #if (!defined(CONFIG_ENABLE_SEQ_ONE_TYPE) && \
      !defined(CONFIG_DISABLE_SEQ_ONE_TYPE))
 #if !defined(CONFIG_TINY_DEEMON) && 1
-#define CONFIG_ENABLE_SEQ_ONE_TYPE /* Use dedicated type for `{item}' */
+#define CONFIG_ENABLE_SEQ_ONE_TYPE /* Use dedicated type for `{item}` */
 #else /* ... */
-#define CONFIG_DISABLE_SEQ_ONE_TYPE /* Use Tuple for `{item}' */
+#define CONFIG_DISABLE_SEQ_ONE_TYPE /* Use Tuple for `{item}` */
 #endif /* !... */
 #endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE && !CONFIG_DISABLE_SEQ_ONE_TYPE */
 
 #if (!defined(CONFIG_ENABLE_SEQ_PAIR_TYPE) && \
      !defined(CONFIG_DISABLE_SEQ_PAIR_TYPE))
 #if !defined(CONFIG_TINY_DEEMON) && 1
-#define CONFIG_ENABLE_SEQ_PAIR_TYPE /* Use dedicated type for `{a, b}' */
+#define CONFIG_ENABLE_SEQ_PAIR_TYPE /* Use dedicated type for `{a, b}` */
 #else /* ... */
-#define CONFIG_DISABLE_SEQ_PAIR_TYPE /* Use Tuple for `{a, b}' */
+#define CONFIG_DISABLE_SEQ_PAIR_TYPE /* Use Tuple for `{a, b}` */
 #endif /* !... */
 #endif /* !CONFIG_ENABLE_SEQ_PAIR_TYPE && !CONFIG_DISABLE_SEQ_PAIR_TYPE */
 
@@ -64,7 +64,7 @@
 DECL_BEGIN
 
 /************************************************************************/
-/* Dedicated type for `{ item }'                                        */
+/* Dedicated type for `{ item }`                                        */
 /************************************************************************/
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
@@ -153,7 +153,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restr
 
 
 /************************************************************************/
-/* Dedicated type for `{ a, b }'                                        */
+/* Dedicated type for `{ a, b }`                                        */
 /************************************************************************/
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE

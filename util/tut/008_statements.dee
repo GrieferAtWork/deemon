@@ -58,21 +58,21 @@ while ((x % 20) != 11) {
 
 if (x == 11)
 	goto next;
-print "Didn't go to `next'";
+print "Didn't go to `next`";
 next:
-print "This is `next'";
+print "This is `next`";
 
 
 
 print x ? "x is true" : "x isn't true";
-print x ? : "x isn't true";      /* Re-use `x' as true-branch */
-print x ? "x is true";           /* Use `none' as false-branch */
-print x ? "x is true" : ;        /* Re-use `x' as false-branch */
+print x ? : "x isn't true";      /* Re-use `x` as true-branch */
+print x ? "x is true";           /* Use `none` as false-branch */
+print x ? "x is true" : ;        /* Re-use `x` as false-branch */
 
 local y = false;
 
-print x || y; /* true  -- Logical or  -- Same as `!!x ? : !!y' */
-print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
+print x || y; /* true  -- Logical or  -- Same as `!!x ? : !!y` */
+print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ` */
 /* Note that in logical or/and, the second branch is not evaluated
  * if it doesn't have to be. */
 
@@ -81,7 +81,7 @@ print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
 /* Since deemon supports exceptions, it has try-catch/finally statements.
  * Also note that any arbitrary object can be thrown as an exception,
  * though builtin functions usually only throw object derived from either
- * `Error from deemon' or `Signal from deemon' */
+ * `Error from deemon` or `Signal from deemon` */
 try {
 	try {
 		print "Reachable";
@@ -97,13 +97,13 @@ try {
 
 /* Catch-expressions can be written in one of the following ways:
  *   - catch (...)               -- Catch any kind of object that isn't an interrupt
- *   - catch (e...)              -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e'
+ *   - catch (e...)              -- Catch any kind of object that isn't an interrupt and store it in a newly created local variable `e`
  *   - @[interrupt] catch (...)  -- Catch any kind of object
- *   - @[interrupt] catch (e...) -- Catch any kind of object and store it in a newly created local variable `e'
- *   - catch (<typeexpr>)        -- Catch any object `x' where `x is <typeexpr>' is true
+ *   - @[interrupt] catch (e...) -- Catch any kind of object and store it in a newly created local variable `e`
+ *   - catch (<typeexpr>)        -- Catch any object `x` where `x is <typeexpr>` is true
  *                                  <typeexpr> is evaluated only when an exception occurs
- *   - catch (<typeexpr> as e)   -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
- * A good example of an @[interrupt] exception should be `Signal.Interrupt.KeyboardInterrupt',
+ *   - catch (<typeexpr> as e)   -- Same as `catch (<typeexpr>)`, but also store it in a newly created local variable `e`
+ * A good example of an @[interrupt] exception should be `Signal.Interrupt.KeyboardInterrupt`,
  * as thrown when you press CTRL+C to terminate a deemon script. This distinction way made to
  * prevent exceptions meant to terminate from being caught by regular catch-all handlers.
  */
@@ -144,9 +144,9 @@ for (local elem: item_pairs) {
 		print key, "=", repr value;
 }
 
-/* Deemon also includes the `continue' and `break' statements which may
- * only appear in loops, with `continue' jumping to the next-, or
- * condition-expression, and `break' jumping just after the loop. */
+/* Deemon also includes the `continue` and `break` statements which may
+ * only appear in loops, with `continue` jumping to the next-, or
+ * condition-expression, and `break` jumping just after the loop. */
 
 
 /* TODO: with */
@@ -154,7 +154,7 @@ for (local elem: item_pairs) {
 
 
 
-/* Some more statements exist, such a `return' and `yield' statement,
- * as well as `function' and `class' however those are handled in
+/* Some more statements exist, such a `return` and `yield` statement,
+ * as well as `function` and `class` however those are handled in
  * the tutorials on functions and classes. */
 

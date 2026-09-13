@@ -644,7 +644,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 	}	break;
 
 	case JIT_STATE_KIND_SKIPELSE:
-		/* Check for `else' and `elif' */
+		/* Check for `else` and `elif` */
 		if (self->ji_lex.jl_tok == JIT_KEYWORD &&
 		    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 			uint32_t name;
@@ -656,7 +656,7 @@ do_skip_else:
 				if unlikely(JITLexer_SkipStatement(&self->ji_lex))
 					goto err;
 			} else if (name == ENCODE_INT32('e', 'l', 'i', 'f')) {
-				self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
+				self->ji_lex.jl_tokstart += 2; /* Transform into an `if` */
 				goto do_skip_else;
 			}
 		}
@@ -686,8 +686,8 @@ err:
 }
 
 
-/* Unwind the active state-stack until `new_curr_state', such that upon
- * successfully return, `new_curr_state' will be the currently active state. */
+/* Unwind the active state-stack until `new_curr_state`, such that upon
+ * successfully return, `new_curr_state` will be the currently active state. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 JITYieldFunctionIterator_UnwindUntil(JITYieldFunctionIterator *__restrict self,
                                      struct jit_state *__restrict new_curr_state) {
@@ -729,7 +729,7 @@ JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self
 	/* Search for the nearest state that can handle the loop control command,
 	 * then proceed to unwind the state stack up to that state and load the
 	 * lexer position to which the jump should be performed.
-	 * Once this is done, return `1' (but remember that in the case of `break',
+	 * Once this is done, return `1` (but remember that in the case of `break`,
 	 * the loop state entry itself must also be removed, as the target location
 	 * exists after the loop itself, meaning that the loop context will have
 	 * ended at that point) */
@@ -1000,14 +1000,14 @@ parse_again_same_statement:
 		st = self->ji_state;
 		if (st->js_flag & JIT_STATE_FLAG_SINGLE) {
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Expected statement before `}' within `yield'-function");
+			                "Expected statement before `}` within `yield`-function");
 			self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
 			self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;
 			goto err;
 		}
 		if (st == &self->ji_bstat) {
 			DeeError_Throwf(&DeeError_SyntaxError,
-			                "Unmatched `}' encountered within `yield'-function");
+			                "Unmatched `}` encountered within `yield`-function");
 			self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
 			self->ji_ctx.jc_flags |= JITCONTEXT_FSYNERR;
 			goto err;
@@ -1083,7 +1083,7 @@ parse_again_same_statement:
 						JITLexer_Yield(&self->ji_lex);
 						goto parse_else_after_if;
 					} else if (next_name == ENCODE_INT32('e', 'l', 'i', 'f')) {
-						self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
+						self->ji_lex.jl_tokstart += 2; /* Transform into an `if` */
 parse_else_after_if:
 #if 1 /* Optimization: No need to push a scope if no declaration was made \
        *               within the condition expression of the if-statement. */
@@ -1168,7 +1168,7 @@ parse_else_after_if:
 					JITLValue elem_lvalue;
 					DREF DeeObject *iter;
 					int temp;
-					/* TODO: Multiple targets (`for (local x, y, z: triples)') */
+					/* TODO: Multiple targets (`for (local x, y, z: triples)`) */
 					/* Initialize the foreach element target. */
 					if (result == JIT_LVALUE) {
 						elem_lvalue = self->ji_lex.jl_lvalue;
@@ -1348,7 +1348,7 @@ err_obj_scope:
 				st = jit_state_alloc();
 				if unlikely(!st)
 					goto err_obj_scope;
-				/* Invoke `operator enter()' on the with-object */
+				/* Invoke `operator enter()` on the with-object */
 				if unlikely(DeeObject_Enter(obj)) {
 					jit_state_free(st);
 					goto err_obj_scope;
@@ -1366,10 +1366,10 @@ err_obj_scope:
 			name = UNALIGNED_GET32(tok_begin);
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
-				/* The thing that we're actually after: `yield' statements! */
+				/* The thing that we're actually after: `yield` statements! */
 				JITLexer_Yield(&self->ji_lex);
 				result = JITLexer_EvalRValue(&self->ji_lex);
-				/* Consume the trailing `;' that is required for yield statements. */
+				/* Consume the trailing `;` that is required for yield statements. */
 				if likely(self->ji_lex.jl_tok == ';') {
 					JITLexer_Yield(&self->ji_lex);
 				} else {
@@ -1476,7 +1476,7 @@ err_obj_scope:
 					syn_foreach_expected_colon_after_foreach(&self->ji_lex);
 					goto err_scope;
 				}
-				/* TODO: Multiple targets (`for (local x, y, z: triples)') */
+				/* TODO: Multiple targets (`for (local x, y, z: triples)`) */
 				/* Initialize the foreach element target. */
 				if (result == JIT_LVALUE) {
 					elem_lvalue = self->ji_lex.jl_lvalue;
@@ -1585,21 +1585,21 @@ err:
 				result                 = self->ji_ctx.jc_retval;
 				self->ji_ctx.jc_retval = JITCONTEXT_RETVAL_UNSET;
 				if (DeeNone_Check(result)) {
-					/* `return;' on its own causes `return none',
+					/* `return;` on its own causes `return none`,
 					 * which we must interpret as stop-iteration. */
 					Dee_Decref(result);
 					result = ITER_DONE;
 				} else {
 					Dee_Decref(result);
 					DeeError_Throwf(&DeeError_SyntaxError,
-					                "`return' statement encountered within `yield'-function");
+					                "`return` statement encountered within `yield`-function");
 					self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
 					goto handle_error;
 				}
 			} else {
-				/* Exited code via unconventional means, such as `break' or `continue' */
+				/* Exited code via unconventional means, such as `break` or `continue` */
 				DeeError_Throwf(&DeeError_SyntaxError,
-				                "Attempted to use `break' or `continue' outside of a loop");
+				                "Attempted to use `break` or `continue` outside of a loop");
 				self->ji_lex.jl_errpos = self->ji_lex.jl_tokstart;
 				goto handle_error;
 			}
@@ -1774,7 +1774,7 @@ handle_error:
 			JITLValue_Fini(&self->ji_lex.jl_lvalue);
 			self->ji_lex.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
 			result                         = NULL;
-			/* TODO: Somehow remember that the error happened at `lexer.jl_errpos' */
+			/* TODO: Somehow remember that the error happened at `lexer.jl_errpos` */
 		}
 		self->ji_lex.jl_tok = TOK_EOF; /* Don't iterate again. */
 	}
@@ -1849,7 +1849,7 @@ err_try:
 		case JIT_STATE_KIND_WITH:
 			if unlikely(DeeObject_Leave(curr->js_with.w_obj)) {
 				/* Dump the unhandled exception! */
-				DeeError_Print("Unhandled exception in `operator leave'",
+				DeeError_Print("Unhandled exception in `operator leave`",
 				               ERROR_PRINT_DOHANDLE);
 			}
 			break;

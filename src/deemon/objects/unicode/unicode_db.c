@@ -80,7 +80,7 @@ PUBLIC ATTR_CONST WUNUSED double
 #define TSYMSTRT  Dee_UNICODE_ISSYMSTRT
 #define TSYMCONT  Dee_UNICODE_ISSYMCONT
 
-/* Representation of a unicode character numerical value (s.a. `unicode_getnumeric(3)')
+/* Representation of a unicode character numerical value (s.a. `unicode_getnumeric(3)`)
  * Because characters exist that represent  fractions (like ½), we  need to be able  to
  * represent  not just whole numbers, but also  fractions. For this purpose, the follow
  * structure  exists, which can either be a whole 63-bit unsigned number, or a fraction
@@ -88,7 +88,7 @@ PUBLIC ATTR_CONST WUNUSED double
 typedef union {
 #define UNIDIGIT_ISFRAC     UINT64_C(0x8000000000000000)
 #define UNIDIGIT_WHOLE_MASK UINT64_C(0x7fffffffffffffff)
-	uint64_t ud_whole;   /* Whole number (masked by `UNIDIGIT_WHOLE_MASK') */
+	uint64_t ud_whole;   /* Whole number (masked by `UNIDIGIT_WHOLE_MASK`) */
 	uint32_t ud_frac[2]; /* Fraction numerator/denominator */
 #define unidigit_iswhole(self)             (!((self)->ud_whole & UNIDIGIT_ISFRAC))
 #define unidigit_getwhole(self)            ((self)->ud_whole /*& UNIDIGIT_WHOLE_MASK*/)

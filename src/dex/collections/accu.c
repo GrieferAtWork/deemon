@@ -46,7 +46,7 @@ DECL_BEGIN
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_accu_already_acquired(AccuObject *__restrict self) {
 	(void)self;
-	return DeeError_Throwf(&DeeError_RuntimeError, "Reentrant calls to `collections.Accu' are not allowed");
+	return DeeError_Throwf(&DeeError_RuntimeError, "Reentrant calls to `collections.Accu` are not allowed");
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

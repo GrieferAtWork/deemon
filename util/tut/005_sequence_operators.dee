@@ -36,17 +36,17 @@ print repr({ 10: 20, 30: 40 }); /* Abstract Mapping -- Context-dependent behavio
  *    form of a List or Tuple (both of which are further elaborated on below),
  *    you are simply telling it that you don't care what their typing will
  *    be at runtime, so long as their types will be derived from
- *      - `Sequence from deemon'  for Abstract sequence expressions
- *      - `Mapping from deemon'   for Abstract mapping expressions
+ *      - `Sequence from deemon`  for Abstract sequence expressions
+ *      - `Mapping from deemon`   for Abstract mapping expressions
  */
 
 /* tuples, and how ambiguity with arithmetic parenthesis is handled. */
-print repr((10, 20, 30)); /* This is a 3-element Tuple `(10, 20, 30)' */
-print repr((10, 20,));    /* This is a 2-element Tuple `(10, 20)' */
-print repr((10, 20));     /* This is a 2-element Tuple `(10, 20)' */
-print repr((10,));        /* This is a 1-element Tuple `(10,)' */
-print repr((10));         /* This isn't a tuple, but regular parenthesis that still evaluates to `10' */
-print repr(());           /* This is an empty Tuple `()' */
+print repr((10, 20, 30)); /* This is a 3-element Tuple `(10, 20, 30)` */
+print repr((10, 20,));    /* This is a 2-element Tuple `(10, 20)` */
+print repr((10, 20));     /* This is a 2-element Tuple `(10, 20)` */
+print repr((10,));        /* This is a 1-element Tuple `(10,)` */
+print repr((10));         /* This isn't a tuple, but regular parenthesis that still evaluates to `10` */
+print repr(());           /* This is an empty Tuple `()` */
 
 /* lists, and how they actually differ from tuples.
  * To anwer this, I have to reach ahead a little bit and quickly
@@ -63,22 +63,22 @@ print repr x; /* [10, 20, 30, 40] */
 /* Sequence length expressions. */
 print #[10, 20, 30];    /* 3 */
 print #"foobar";        /* 6 */
-/* Sequence expressions can be prefixed by `#', which will return the length of that sequence.
- * However, be careful not to have a line of source code start with a `#', as this
+/* Sequence expressions can be prefixed by `#`, which will return the length of that sequence.
+ * However, be careful not to have a line of source code start with a `#`, as this
  * will cause that line to be interpreted as a preprocessor directive.
  * The simplest work-around for this corner-case is to add parenthesis
- * such that `#myseq' becomes `(#myseq)' */
+ * such that `#myseq` becomes `(#myseq)` */
 
-/* You can test for the presence of an item within a sequence by using `in' */
+/* You can test for the presence of an item within a sequence by using `in` */
 print 10 in [10, 20, 30];  /* true */
 print 10 in [40, 50, 60];  /* false */
-print 10 !in [10, 20, 30]; /* false */  // Tests can be negated by writing `!in'
+print 10 !in [10, 20, 30]; /* false */  // Tests can be negated by writing `!in`
 
 /* Index and sub-range expressions. */
 print [10, 20, 30][1];   /* 20 */
-/* An index expression is written as `<sequence>[<index>]'
- * In most cases, `<index>' is an integer expression, and `<sequence>'
- * is the sequence being indexed, in which case `<index>' must be non-negative
+/* An index expression is written as `<sequence>[<index>]`
+ * In most cases, `<index>` is an integer expression, and `<sequence>`
+ * is the sequence being indexed, in which case `<index>` must be non-negative
  * and lower than the length of the sequence (index >= 0 && index < #sequence). */
 
 /* Quite similar to sequence indexing, you may also access a sub-range
@@ -88,17 +88,17 @@ print repr [10, 20, 30, 40][2:];    /* [30, 40] */
 print repr [10, 20, 30, 40][:1];    /* [10] */
 print repr [10, 20, 30, 40][:];     /* [10, 20, 30, 40] */
 print repr [10, 20, 30, 40][:-1];   /* [10, 20, 30] */
-/* Sequence range expressions are written as `<sequence>[<start>:<end>]'
+/* Sequence range expressions are written as `<sequence>[<start>:<end>]`
  * However unlike sequence indexing, they are much more powerful, while
  * also returning another sequence (generally an abstract sequence)
- * Additionally, omission of either `<start>' or `<end>' (which is the same
- * as passing `none', which is explained in a later tutorial), will result
+ * Additionally, omission of either `<start>` or `<end>` (which is the same
+ * as passing `none`, which is explained in a later tutorial), will result
  * in that expression taking the value of either the lowest, or the greatest
- * index, meaning that `seq[2:]' usually behaves the same as `seq[2:#seq]'.
- * Secondly, passing negative values for either `<start>' or `<end>' will
+ * index, meaning that `seq[2:]` usually behaves the same as `seq[2:#seq]`.
+ * Secondly, passing negative values for either `<start>` or `<end>` will
  * have that index be internally transformed to instead refer to that
  * value added to the length of the sequence:
- * In other words: `seq[:-1]' is the same as `seq[:-1 + #seq]' aka. `seq[:#seq - 1]' */
+ * In other words: `seq[:-1]` is the same as `seq[:-1 + #seq]` aka. `seq[:#seq - 1]` */
 
 
 
@@ -109,13 +109,13 @@ print repr [2:10];     /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
 print repr [2:10, 3];  /* { 2, 5, 8 } */
 print repr [10:0, -3]; /* { 10, 7, 4, 1 } */
 
-/* Range expressions are written as `[<start>:<end>, <step>]',
- * with `<start>' defaulting to a default-constructed instance
- * of end (which is usually just `0'), and `<step>' being omit
- * causing `operator ++' to be used (explained later alongside
- * variables), or when present resulting in `operator +' being
+/* Range expressions are written as `[<start>:<end>, <step>]`,
+ * with `<start>` defaulting to a default-constructed instance
+ * of end (which is usually just `0`), and `<step>` being omit
+ * causing `operator ++` to be used (explained later alongside
+ * variables), or when present resulting in `operator +` being
  * used.
- * For integers, you can simply think of `<step>' defaulting to `1' */
+ * For integers, you can simply think of `<step>` defaulting to `1` */
 
 /* Don't get confused from their similarly though. Range expressions
  * are _not_ lists, but abtract sequences themself, meaning you'd have
@@ -127,7 +127,7 @@ print repr [(10, 20, 30)..., 40, [50, 60, 70]...];
 print repr [[:8]..., 4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
 
 /* It should be quite obvious how expand expressions work, but
- * just in case you're not understanding, the 3 dots (`...') are
+ * just in case you're not understanding, the 3 dots (`...`) are
  * what is referred to as an expand modifier that is applied to
  * whatever expression it is following.
  * Its behavior then is to interpret that expression as a sequence
@@ -135,8 +135,8 @@ print repr [[:8]..., 4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
  * written as a list of comma-separated expression at the same
  * location as the expand modifier itself.
  * In other word:
- *    Given a sequence `seq = { 30, 40, 50 };'
- *    Writing `[10, 20, seq..., 60, 70]' results in `[10, 20, 30, 40, 50, 60, 70]'
+ *    Given a sequence `seq = { 30, 40, 50 };`
+ *    Writing `[10, 20, seq..., 60, 70]` results in `[10, 20, 30, 40, 50, 60, 70]`
  */
 print repr((["a", "b", "c"]...)); /* Cast to tuple -- ("a", "b", "c") */
 print repr([("a", "b", "c")...]); /* Cast to list  -- ["a", "b", "c"] */
@@ -159,21 +159,21 @@ print x[14];  /* foobar */
  * lists, or you-get-the-idea-so-lets-move-one
  * As mentioned, deemon includes an abstract syntax for defining a
  * generic mapping-like object, as can be seen in the example above.
- * Mapping-like objects themself then are usually derived from `Mapping from deemon'
+ * Mapping-like objects themself then are usually derived from `Mapping from deemon`
  * Additionally, deemon includes a builtin type for mutable mappings
- * known as `Dict from deemon', which is basically the same as the python
+ * known as `Dict from deemon`, which is basically the same as the python
  * type of the same name. */
 
 
 
-/* Expand expressions (or rather dots `...') can also be used
+/* Expand expressions (or rather dots `...`) can also be used
  * in a couple of other places when working with sequences: */
 local items = { 10, 20, 30, 3, 5, 9, 11, -5, 0 };
-print items < ...;  /* Return the smallest element of a sequence (-5); `none' if empty */
-print items > ...;  /* Return the largest element of a sequence (30); `none' if empty */
-print items + ...;  /* Return the sum of all element in a sequence (88); `none' if empty */
-print items || ...; /* Return true if any sequence element is true (true); `false' if empty */
-print items && ...; /* Return true if all sequence elements are true (false); `true' if empty */
+print items < ...;  /* Return the smallest element of a sequence (-5); `none` if empty */
+print items > ...;  /* Return the largest element of a sequence (30); `none` if empty */
+print items + ...;  /* Return the sum of all element in a sequence (88); `none` if empty */
+print items || ...; /* Return true if any sequence element is true (true); `false` if empty */
+print items && ...; /* Return true if all sequence elements are true (false); `true` if empty */
 
 
 

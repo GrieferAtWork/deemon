@@ -58,7 +58,7 @@ typedef struct Dee_compiler_object DeeCompilerObject;
 	LIST_ENTRY(Dee_compiler_item_object) ci_link;     /* [1..1][lock(co_compiler->cp_item_lock)] Compiler item link. */     \
 	T                                   *ci_value;    /* [0..1][lock(DeeCompiler_Lock)] Pointer to the associated object.   \
 	                                                   * What exactly is pointed to depends on the compiler item type.      \
-	                                                   * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type', \
+	                                                   * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type`, \
 	                                                   *       this field is [DREF][1..1][const] */
 
 typedef struct Dee_compiler_item_object {
@@ -81,7 +81,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
                        DeeTypeObject *__restrict type);
 
-/* Lookup or create a new compiler item for `value' */
+/* Lookup or create a new compiler item for `value` */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetItem(DeeTypeObject *__restrict type,
                     void *__restrict value);
@@ -89,10 +89,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
                        DeeObject *__restrict value);
 
-/* Delete (clear) the compiler item associated with `value'. */
+/* Delete (clear) the compiler item associated with `value`. */
 INTDEF bool DCALL DeeCompiler_DelItem(void *value);
 
-/* Delete (clear) all compiler items matching the given `type'. */
+/* Delete (clear) all compiler items matching the given `type`. */
 INTDEF NONNULL((1)) size_t DCALL
 DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
 
@@ -140,7 +140,7 @@ struct Dee_compiler_object {
 	 *    in various global variables.
 	 * However whenever we need to change which compiler is actually running,
 	 * we need to store the state of the previously active one somewhere, and
-	 * that is where `DeeCompilerObject' comes into place.
+	 * that is where `DeeCompilerObject` comes into place.
 	 * Despite the various very powerful members of this object, it is not meant
 	 * to operate upon them directly, but rather do the following whenever it
 	 * chooses to perform an operation:
@@ -151,15 +151,15 @@ struct Dee_compiler_object {
 	Dee_OBJECT_HEAD
 	DREF DeeCompilerObject *cp_prev;      /* [0..1][lock(DeeCompiler_Lock)]
 	                                       * The compiler that was active before this one and
-	                                       * will be restored when `DeeCompiler_End()' is called. */
-	size_t                  cp_recursion; /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()' was invoked for this compiler. */
+	                                       * will be restored when `DeeCompiler_End()` is called. */
+	size_t                  cp_recursion; /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
 #ifdef DEE_SOURCE
 #define COMPILER_FNORMAL    0x0000        /* Normal compiler flags. */
 #define COMPILER_FKEEPLEXER 0x0001        /* Do not save/restore the active TPP lexer. */
 #define COMPILER_FKEEPERROR 0x0002        /* Do not save/restore the active parser error state. */
 #define COMPILER_FMASK      0x0003        /* Mask of known flags. */
 #endif /* DEE_SOURCE */
-	uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*'). */
+	uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*`). */
 	uint16_t               _cp_pad[(sizeof(void *) / 2) - 1]; /* ... */
 	Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
@@ -184,7 +184,7 @@ struct Dee_compiler_object {
 /* NOTE: Because of how large the user-code interface for the compiler is,
  *       combined with the fact that the internal implementation of the
  *       compiler is completely implementation-defined, the actual compiler
- *       type is not exported from `deemon', but rather exported from `rt',
+ *       type is not exported from `deemon`, but rather exported from `rt`,
  *       thus providing code that wishes to stick to our deemon implementation
  *       the ability to tinker around with the compiler, while still not having
  *       to standardize any aspect about its inner working what-so-ever. */
@@ -193,8 +193,8 @@ DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
 #define DeeCompiler_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeCompiler_Type)
 
 
-/* Construct a new compiler for generating the source for the given `mod'.
- * @param: flags: Set of `COMPILER_F*' (see above) */
+/* Construct a new compiler for generating the source for the given `mod`.
+ * @param: flags: Set of `COMPILER_F*` (see above) */
 DFUNDEF WUNUSED DREF DeeCompilerObject *DCALL DeeCompiler_New(uint16_t flags);
 
 
@@ -233,18 +233,18 @@ DDATDEF Dee_WEAKREF(DeeCompilerObject) const DeeCompiler_Active;
 
 /* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.
  * This variable points to the current compiler while inside a
- * `DeeCompiler_Begin()...DeeCompiler_End()' block. */
+ * `DeeCompiler_Begin()...DeeCompiler_End()` block. */
 DDATDEF DREF DeeCompilerObject *DeeCompiler_Current;
 
 
-/* Ensure that `compiler' describes the currently active compiler context.
- * NOTE: The caller is responsible for holding a lock to `DeeCompiler_Lock'.
+/* Ensure that `compiler` describes the currently active compiler context.
+ * NOTE: The caller is responsible for holding a lock to `DeeCompiler_Lock`.
  * NOTE: It is possible to use sub-compilers, but it is not allowed to
  *       interweave top-level compilers below lower-level ones:
  *       >> DeeCompilerObject *a, *b;
  *       >> DeeCompiler_Begin(a);
  *       >>    DeeCompiler_Begin(b); // OK!
- *       >>       DeeCompiler_Begin(a); // ILLEGAL: `a' is already apart of the ative compiler stack.
+ *       >>       DeeCompiler_Begin(a); // ILLEGAL: `a` is already apart of the ative compiler stack.
  *       >>       DeeCompiler_End();
  *       >>    DeeCompiler_End();
  *       >> DeeCompiler_End();
@@ -253,17 +253,17 @@ DFUNDEF NONNULL((1)) void DCALL
 DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler);
 DFUNDEF void DCALL DeeCompiler_End(void);
 
-/* Check if `compiler' is the currently active one.
+/* Check if `compiler` is the currently active one.
  * If it is, make sure to copy all context-sensitive data into
  * the compiler object and mark the global compiler context as
  * being unassigned.
- * NOTE: `DeeCompiler_Active' is _NOT_ used for this check,
- *        but `DeeCompiler_Current' is instead.
+ * NOTE: `DeeCompiler_Active` is _NOT_ used for this check,
+ *        but `DeeCompiler_Current` is instead.
  *        This is because this function is intended to be called
- *        from the destructor of `DeeCompiler_Type', before the
+ *        from the destructor of `DeeCompiler_Type`, before the
  *        destructor will proceed to delete all compiler sub-components.
- * NOTE:  Unlike with `DeeCompiler_Begin()' and `DeeCompiler_End()', the
- *        caller must not be holding any kind of lock on `DeeCompiler_Lock'
+ * NOTE:  Unlike with `DeeCompiler_Begin()` and `DeeCompiler_End()`, the
+ *        caller must not be holding any kind of lock on `DeeCompiler_Lock`
  *        when calling this function! */
 DFUNDEF NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);

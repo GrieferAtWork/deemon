@@ -67,7 +67,7 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 	end    = iter + length;
 	for (; iter < end; ++iter) {
 		/* TODO: Use case folding to normalize codec names! */
-		/* TODO: When `DeeString_STR_ISUTF8()' is true, must `DeeString_SetUtf8()' the result! */
+		/* TODO: When `DeeString_STR_ISUTF8()` is true, must `DeeString_SetUtf8()` the result! */
 		if (*iter == '_' || DeeUni_IsUpper(*iter)) {
 			char *dst;
 			result = DeeString_NewBuffer(length);
@@ -812,10 +812,10 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
 }
 
 
-/* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
- * These functions will start by normalizing `name', checking if it refers to
+/* Encode/decode `self` (usually a bytes- or string-object) to/from a codec `name`.
+ * These functions will start by normalizing `name`, checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
- * call to `encode from iconv' / `decode from iconv':
+ * call to `encode from iconv` / `decode from iconv`:
  * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
  * >>     name = "iso" + name[4:];
@@ -835,13 +835,13 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
  *  - "utf-32-le", "utf32-le", "u32-le", "utf-32le", "utf32le", "u32le"
  *  - "utf-32-be", "utf32-be", "u32-be", "utf-32be", "utf32be", "u32be"
  *  - "string-escape", "backslash-escape", "c-escape"
- * @throw: ValueError: The given `name' is not a recognized codec name.
- * @param: error_mode: One of `STRING_ERROR_F*'
- * @return: * :   The encoded/decoded variant of `self'
- *                The type of this object is unrelated to `self', but rather
- *                depends on `self' and is usually a bytes, or string object.
- *                In most cases, `DeeCodec_Decode()' returns a string object,
- *                while `DeeCodec_Encode()' returns a Bytes object.
+ * @throw: ValueError: The given `name` is not a recognized codec name.
+ * @param: error_mode: One of `STRING_ERROR_F*`
+ * @return: * :   The encoded/decoded variant of `self`
+ *                The type of this object is unrelated to `self`, but rather
+ *                depends on `self` and is usually a bytes, or string object.
+ *                In most cases, `DeeCodec_Decode()` returns a string object,
+ *                while `DeeCodec_Encode()` returns a Bytes object.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,

@@ -73,7 +73,7 @@ INTDEF DeeTypeObject DB_Type;
 /************************************************************************/
 
 struct query_cache_list {
-	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0' for `query_cache_empty_list_PTR') */
+	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0` for `query_cache_empty_list_PTR`) */
 	COMPILER_FLEXIBLE_ARRAY(Query *, qcl_queries); /* [1..1][lock(:db_querycache_lock)]
 	                                                * Similarly-hashed queries (sorted by "addrof(q_sql) ASC")
 	                                                * NOTE: There may be multiple queries for the same string! */
@@ -118,8 +118,8 @@ INTDEF struct query_cache_empty_list_struct const query_cache_empty_list_;
 	       (self)->qcl_queries[(index)] = (query),       \
 	       ++(self)->qcl_count)
 
-/* Returns an index into `self->qcl_queries' of some query compiled against `string'
- * If no such query exists, `self->qcl_count' is returned. */
+/* Returns an index into `self->qcl_queries` of some query compiled against `string`
+ * If no such query exists, `self->qcl_count` is returned. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 query_cache_list_indexof(struct query_cache_list const *__restrict self,
                          DeeStringObject const *__restrict string);
@@ -132,7 +132,7 @@ query_cache_list_indexof(struct query_cache_list const *__restrict self,
 #define DEFAULT_DB_QUERYCACHE_UNUSED_LIMIT 512
 #endif /* !DEFAULT_DB_QUERYCACHE_UNUSED_LIMIT */
 
-/* Returns an index into `DB::db_querycache' for a given `DeeStringObject *string_ob' */
+/* Returns an index into `DB::db_querycache` for a given `DeeStringObject *string_ob` */
 #define DB_QUERYCACHE_HASHOF(string_ob) \
 	(Dee_HashPointer(string_ob) & (DB_QUERYCACHE_SIZE - 1))
 
@@ -165,30 +165,30 @@ struct db_object {
 	sqlite3                 *db_db;                      /* [?..1][const] Database context */
 	sqlite3_stmt            *db_freelist;                /* [0..N][lock(ATOMIC)] List of statements that should be finalized */
 #ifndef CONFIG_NO_THREADS
-	Dee_shared_lock_t        db_dblock;                  /* Lock for `db_db' */
+	Dee_shared_lock_t        db_dblock;                  /* Lock for `db_db` */
 #endif /* !CONFIG_NO_THREADS */
-	DeeThreadObject         *db_thread;                  /* [0..1][lock(db_dblock)] Thread that is holding `db_dblock' */
+	DeeThreadObject         *db_thread;                  /* [0..1][lock(db_dblock)] Thread that is holding `db_dblock` */
 	size_t                   db_querycache_size;         /* [lock(db_querycache_lock)] Current size of the query cache */
 	struct query_cache_list *db_querycache[DB_QUERYCACHE_SIZE]; /* [1..1][lock(db_querycache_lock)] Query cache. */
 	struct query_tailq       db_querycache_unused;       /* [0..n][lock(db_querycache_lock)] List of queries that aren't in use (sorted by least-recently-used to most-recently-used) */
-	size_t                   db_querycache_unused_count; /* [lock(db_querycache_lock)] # of elements in `db_querycache_unused' */
-	size_t                   db_querycache_unused_limit; /* [lock(db_querycache_lock)] Max value of `db_querycache_unused_count' before old queries are destroyed (even if their SQL strings weren't destroyed, yet) */
+	size_t                   db_querycache_unused_count; /* [lock(db_querycache_lock)] # of elements in `db_querycache_unused` */
+	size_t                   db_querycache_unused_limit; /* [lock(db_querycache_lock)] Max value of `db_querycache_unused_count` before old queries are destroyed (even if their SQL strings weren't destroyed, yet) */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t      db_querycache_lock;         /* Lock for `db_querycache' */
+	Dee_atomic_rwlock_t      db_querycache_lock;         /* Lock for `db_querycache` */
 #endif /* !CONFIG_NO_THREADS */
 	DREF struct db_string_fini_hook      *db_sf_hook;    /* [1..1][const] DeeStringObject finalization hook */
 	DREF struct db_thread_interrupt_hook *db_ti_hook;    /* [1..1][const] Thread interrupt hook */
 	Dee_WEAKREF_SUPPORT                                      /* Weak referencing support */
 };
 
-/* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */
+/* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *`) */
 INTDEF WUNUSED NONNULL((1)) bool DCALL DB_TryLock(DB *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DB_Lock(DB *__restrict self);
 INTDEF NONNULL((1)) void DCALL DB_Unlock(DB *__restrict self);
 #define DB_WaitFor(self) Dee_shared_lock_waitfor(&(self)->db_dblock)
 #define DB_IsInterruptible(self, thread) (atomic_read(&(self)->db_thread) == (thread))
 
-/* Safely call `sqlite3_finalize(stmt)' */
+/* Safely call `sqlite3_finalize(stmt)` */
 INTDEF NONNULL((1)) void DCALL DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt);
 
 #define DB_querycache_unused_insert(self, query) \
@@ -221,43 +221,43 @@ db_free_oldest_unused_query_and_unlock(DB *__restrict self);
 
 /* The main function for compiling strings as SQL code. This function automatically
  * ties for make use the query cache to re-use previously used instances of queries
- * compiled against the same `sql', so-long as `sql' hasn't gotten destroyed in the
+ * compiled against the same `sql`, so-long as `sql` hasn't gotten destroyed in the
  * mean time:
  *
- * - Search `db_querycache' for a pre-existing Query linked against `sql'
- *   - Only consider queries that aren't in use (iow: `!Query_InUse(query)')
- *   - If one such query is found, set its `ob_refcnt = 1' (thus marking it
+ * - Search `db_querycache` for a pre-existing Query linked against `sql`
+ *   - Only consider queries that aren't in use (iow: `!Query_InUse(query)`)
+ *   - If one such query is found, set its `ob_refcnt = 1` (thus marking it
  *     as in-use) and return it.
  *   - If no such query is found, create+compile a new Query and insert it
- *     into the `db_querycache' of the database.
- * - When a query is created, we `DeeString_EnableFiniHook(sql)' so we get notified
- *   if a string that may appear in `Query::q_sql' is destroyed. Only once that has
+ *     into the `db_querycache` of the database.
+ * - When a query is created, we `DeeString_EnableFiniHook(sql)` so we get notified
+ *   if a string that may appear in `Query::q_sql` is destroyed. Only once that has
  *   happened, will we:
- *   - call `sqlite3_finalize()' to destroy `Query::q_stmt'
- *   - Remove the query from the associated DB's `db_querycache'
+ *   - call `sqlite3_finalize()` to destroy `Query::q_stmt`
+ *   - Remove the query from the associated DB's `db_querycache`
  *   - Actually DeeObject_FREE() the query
  * - When the query is destroyed normally (its ob_refcnt hits 0):
- *   - AtomicCompareExchange refcnt of `q_sql' from 1 to 0:
- *     - If successful, decref `q_db' and then destroy `q_sql' (its string-fini-hook
+ *   - AtomicCompareExchange refcnt of `q_sql` from 1 to 0:
+ *     - If successful, decref `q_db` and then destroy `q_sql` (its string-fini-hook
  *       will do all remaining cleanup)
- *     - Otherwise, call `sqlite3_reset()' and `sqlite3_clear_bindings()' on the query
- *     - Lock the query cache of `q_db'
- *     - Add the query to the unused list of `q_db'
- *     - Unlock the query cache of `q_db'
- *     - Decref `q_db'
- *     - Decref `q_sql'
+ *     - Otherwise, call `sqlite3_reset()` and `sqlite3_clear_bindings()` on the query
+ *     - Lock the query cache of `q_db`
+ *     - Add the query to the unused list of `q_db`
+ *     - Unlock the query cache of `q_db`
+ *     - Decref `q_db`
+ *     - Decref `q_sql`
  *
  *
  * NOTE: The "Query" object returned here is *NEVER* DeeObject_IsShared!
- *       iow: `return->ob_refcnt == 1'
+ *       iow: `return->ob_refcnt == 1`
  *
- * @param: p_utf8_offset_of_next_stmt: when non-NULL, given `sql' is allowed to
+ * @param: p_utf8_offset_of_next_stmt: when non-NULL, given `sql` is allowed to
  *                                     contain multiple SQL statements, and this
  *                                     pointer is set to the byte-offset within
- *                                     the UTF-8 representation of `sql', of the
+ *                                     the UTF-8 representation of `sql`, of the
  *                                     start of the next statement. If there was
- *                                     only 1 statement, this is set to `0'.
- *                                     When NULL, an error is thrown if `sql'
+ *                                     only 1 statement, this is set to `0`.
+ *                                     When NULL, an error is thrown if `sql`
  *                                     contains more than 1 statement.
  * @return: DB_NEWQUERY_NOQUERY: Indicates that no SQL was compiled (query is empty or just a comments) */
 INTDEF WUNUSED NONNULL((1, 2)) DREF Query *DCALL
@@ -284,11 +284,11 @@ struct query_object {
 	Dee_WEAKREF_SUPPORT                 /* [valid_if(Query_InUse(self))] Weak references */
 	DREF DB                  *q_db;     /* [ref_if(Query_InUse(self))][1..1][const] Associated database */
 	DREF DeeStringObject     *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
-	Dee_WEAKREF(Row)          q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
+	Dee_WEAKREF(Row)          q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()`, if this weakref is still valid, this row is updated with copies of data from all columns) */
 	DREF RowFmt              *q_rowfmt; /* [valid_if(!WAS_DESTROYED(q_sql))][owned][0..1][lock(READ(ATOMIC), WRITE(q_db->q_db && WRITE_ONCE))] Descriptor for how rows are formatted */
 	sqlite3_stmt             *q_stmt;   /* [valid_if(!WAS_DESTROYED(q_sql))][owned][?..1][const]
-	                                     * Statement context. This only gets finalized when `q_sql' is destroyed */
-	size_t                    q_sql_utf8_nextstmt_offset; /* [const] Byte-offset into UTF-8 repr of `q_sql' to the start some other statement (or `0' if there is none) */
+	                                     * Statement context. This only gets finalized when `q_sql` is destroyed */
+	size_t                    q_sql_utf8_nextstmt_offset; /* [const] Byte-offset into UTF-8 repr of `q_sql` to the start some other statement (or `0` if there is none) */
 	TAILQ_ENTRY(query_object) q_unused; /* [0..1][lock(q_db->db_querycache_lock)][if(Query_InUse(self), [0..0])] Entry in list of unused queries. */
 };
 #define Query_TryLockDB(self) DB_TryLock((self)->q_db)
@@ -332,13 +332,13 @@ struct query_object {
  * as unused, yet, meaning it is still being finalized and pre-pared for re-use) */
 #define Query_InUse(self) (atomic_read(&(self)->ob_refcnt) != 0)
 
-/* Check if the query was marked as unused (caller must be holding `q_db->db_querycache_lock') */
+/* Check if the query was marked as unused (caller must be holding `q_db->db_querycache_lock`) */
 #define Query_IsUnused(self) TAILQ_ISBOUND(self, q_unused)
 
 /* Return (and lazily allocate on first use) the RowFmt descriptor of this query. */
 INTDEF WUNUSED NONNULL((1)) RowFmt *DCALL Query_GetRowFmt(Query *__restrict self);
 
-/* Same as `Query_LockDB()', but ensure that `q_row' is unbound,
+/* Same as `Query_LockDB()`, but ensure that `q_row` is unbound,
  * and any potential old row has been detached (given its own copy
  * of cell data)
  * @return: 0 : Success
@@ -355,12 +355,12 @@ INTDEF WUNUSED NONNULL((1)) DREF Row *DCALL Query_GetRow(Query *__restrict self)
 INTDEF WUNUSED NONNULL((1)) DREF Row *DCALL Query_Step(Query *__restrict self);
 
 
-/* Execute `self' until there is no more data present.
+/* Execute `self` until there is no more data present.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of affected rows */
 INTDEF WUNUSED NONNULL((1)) uint64_t DCALL Query_Exec(Query *__restrict self);
 
-/* Skip at most `count' rows, returning the actual # of skipped rows.
+/* Skip at most `count` rows, returning the actual # of skipped rows.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of skipped rows */
 INTDEF WUNUSED NONNULL((1)) uint64_t DCALL Query_Skip(Query *__restrict self, uint64_t count);
@@ -373,13 +373,13 @@ INTDEF WUNUSED NONNULL((1)) uint64_t DCALL Query_Skip(Query *__restrict self, ui
 /* >>> CELL                                                             */
 /************************************************************************/
 
-/* Possible values for `struct cell::c_type' */
+/* Possible values for `struct cell::c_type` */
 #define CELLTYPE_OBJECT 0
 #define CELLTYPE_NONE   1
 #define CELLTYPE_INT    2
 #define CELLTYPE_FLOAT  3
 struct cell {
-	unsigned int c_type; /* One of `CELLTYPE_*' */
+	unsigned int c_type; /* One of `CELLTYPE_*` */
 	union {
 		DREF DeeObject *d_obj;   /* CELLTYPE_OBJECT */
 		int64_t         d_int;   /* CELLTYPE_INT */
@@ -401,8 +401,8 @@ INTDEF NONNULL((1)) void DCALL cell_destroyrow(struct cell *__restrict data, uns
 INTDEF NONNULL((1, 3)) void DCALL cell_visitrow(struct cell *__restrict data, unsigned int ncol, Dee_visit_t proc, void *arg);
 
 struct cellfmt {
-	DREF DeeStringObject *cfmt_name;     /* [1..1] Name of this column (~ala `sqlite3_column_name()') */
-	DREF DeeStringObject *cfmt_decltype; /* [0..1] Type of this column (~ala `sqlite3_column_decltype()') */
+	DREF DeeStringObject *cfmt_name;     /* [1..1] Name of this column (~ala `sqlite3_column_name()`) */
+	DREF DeeStringObject *cfmt_decltype; /* [0..1] Type of this column (~ala `sqlite3_column_decltype()`) */
 };
 #define cellfmt_fini(self)          \
 	(Dee_Decref((self)->cfmt_name), \
@@ -443,10 +443,10 @@ struct row_object {
 	Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t r_lock;   /* Lock for this row (needed to replace effective data
-	                               * with copy if still alive during `sqlite3_step()') */
+	                               * with copy if still alive during `sqlite3_step()`) */
 #endif /* !CONFIG_NO_THREADS */
 	DREF Query         *r_query;  /* [0..1][lock(r_lock && r_query->q_db->db_dblock && CLEAR_ONCE)]
-	                               * Original query (set to "NULL" when `sqlite3_step()' is called on query) */
+	                               * Original query (set to "NULL" when `sqlite3_step()` is called on query) */
 	DREF RowFmt        *r_rowfmt; /* [0..1][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)]
 	                               * Data-layout of rows (always non-NULL when "r_query == NULL") */
 	struct cell        *r_cells;  /* [0..r_rowfmt->rf_ncol][if(r_query == NULL, [1..1])][lock(r_lock && WRITE_ONCE)][owned]
@@ -491,9 +491,9 @@ INTDEF WUNUSED NONNULL((1, 4)) int DCALL
 dee_sqlite3_bind_object(DB *__restrict db, sqlite3_stmt *stmt, int index, DeeObject *self);
 #define T_SQL_OBJECT "?X6?Dstring?Dint?Dbool?N?Dfloat?DBytes"
 
-/* Bind parameters from `params' to `stmt'. Depending on `stmt' using "?"
+/* Bind parameters from `params` to `stmt`. Depending on `stmt` using "?"
  * or ":foo" for referencing parameters, this function either requires
- * `params' to be `{Object...}' or `{string: Object}'. As such, deemon's
+ * `params` to be `{Object...}` or `{string: Object}`. As such, deemon's
  * sqlite interface requires either all parameters to be named, or all
  * parameters to be unnamed (when there are no parameters, we simply
  * assert that "params" is an empty sequence)
@@ -518,15 +518,15 @@ dee_sqlite3_bind_params(DB *__restrict db, sqlite3_stmt *stmt,
 
 /* Generic SQL error type. -- Only used for SQL-specific errors. If the
  * error code returned by SQL can be explained using a more relevant
- * `DeeError_*' type, that type of error is thrown instead. */
+ * `DeeError_*` type, that type of error is thrown instead. */
 typedef struct {
-	DeeSystemErrorObject  sqe_system;     /* Underlying system error (set to `sqlite3_system_errno()')
-	                                       * Underlying message is set to `sqlite3_errmsg()' / `sqlite3_errstr()' */
+	DeeSystemErrorObject  sqe_system;     /* Underlying system error (set to `sqlite3_system_errno()`)
+	                                       * Underlying message is set to `sqlite3_errmsg()` / `sqlite3_errstr()` */
 	DREF DeeStringObject *sqe_errmsg;     /* [0..1][const] SQL error message */
 	DREF DeeStringObject *sqe_sql;        /* [0..1][const] The failing SQL source code */
 	int                   sqe_sqloffutf8; /* [valid_if(sqe_sql != NULL)][const] Byte offset into utf8-repr of "sqe_sql"
-	                                       * where the error happened (when `sqlite3_error_offset()' would return `-1',
-	                                       * we set `sqe_sql' to `NULL' to indicate that this isn't a SQL parser problem). */
+	                                       * where the error happened (when `sqlite3_error_offset()` would return `-1`,
+	                                       * we set `sqe_sql` to `NULL` to indicate that this isn't a SQL parser problem). */
 	int                   sqe_ecode;      /* [const] SQLite error code (one of `') */
 } SQLError;
 
@@ -551,8 +551,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_multiple_statements(DeeStringObject 
 
 /* These functions are called when a "DB_Type" object is created/destroyed.
  * Internally, these keep a running counter such that:
- * - The first call does `sqlite3_initialize()' and throws an error if something went wrong
- * - The last call does `sqlite3_shutdown()'
+ * - The first call does `sqlite3_initialize()` and throws an error if something went wrong
+ * - The last call does `sqlite3_shutdown()`
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTDEF WUNUSED int DCALL libsqlite3_init(void);

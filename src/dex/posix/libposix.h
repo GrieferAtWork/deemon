@@ -42,7 +42,7 @@
 #include <aclapi.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
- /* MSVC thought it smart to rename `st_birthtime' to `st_ctime' */
+ /* MSVC thought it smart to rename `st_birthtime` to `st_ctime` */
 #undef CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(__CYGWIN__)
 #define CONFIG_STAT_CTIME_IS_ACTUALLY_BIRTHTIME
@@ -62,11 +62,11 @@
 #endif /* !CONFIG_HAVE_close */
 
 
-/* Check for special case where we roll our own `open(2)' function */
+/* Check for special case where we roll our own `open(2)` function */
 #undef posix_open_USE_open_osfhandle__AND__CreateFile
 #if defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 /* On windows, must use open_osfhandle(CreateFile()), else our
- * custom `STDIN$', `STDOUT$', `STDERR$' magic won't work! */
+ * custom `STDIN$`, `STDOUT$`, `STDERR$` magic won't work! */
 #define posix_open_USE_open_osfhandle__AND__CreateFile
 #endif /* !... */
 
@@ -187,7 +187,7 @@ feature("O_HIDDEN",   "Dee_OPEN_FHIDDEN");
 #define O_HIDDEN Dee_OPEN_FHIDDEN
 /*[[[end]]]*/
 
-/* This one needs support from `open_osfhandle()' */
+/* This one needs support from `open_osfhandle()` */
 #ifdef _O_APPEND
 #undef O_APPEND
 #define CONFIG_HAVE_O_APPEND
@@ -198,7 +198,7 @@ feature("O_HIDDEN",   "Dee_OPEN_FHIDDEN");
 
 DECL_BEGIN
 
-/* TODO: Remove all of the following (replaced with `err_unix_*') */
+/* TODO: Remove all of the following (replaced with `err_unix_*`) */
 #define HANDLE_ENOENT(error, err_label, ...)                                   \
 	DeeSystem_IF_E1(error, ENOENT, {                                           \
 		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
@@ -488,15 +488,15 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #define STAT_IWOTH (STAT_IWUSR >> 6) /* Write by other. */
 #define STAT_IXOTH (STAT_IXUSR >> 6) /* Execute by other. */
 
-/* Windows doesn't natively have an `AT_FDCWD', but we
- * need something to check for in `posix_dfd_makepath()' */
+/* Windows doesn't natively have an `AT_FDCWD`, but we
+ * need something to check for in `posix_dfd_makepath()` */
 #ifndef CONFIG_HAVE_AT_FDCWD
 #undef AT_FDCWD
 #define AT_FDCWD (-1)
 #endif /* !CONFIG_HAVE_AT_FDCWD */
 
 /* If the hosting operating system doesn't provide it,
- * we still need a value for `AT_SYMLINK_NOFOLLOW' that
+ * we still need a value for `AT_SYMLINK_NOFOLLOW` that
  * we can then use in requests. */
 #ifndef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
 #undef AT_SYMLINK_NOFOLLOW
@@ -559,7 +559,7 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name);
 
-/* Caller must call: `err_unknown_env_var(Dee_AsObject(name));'  */
+/* Caller must call: `err_unknown_env_var(Dee_AsObject(name));`  */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_environ_trygetenv(DeeStringObject *name);
 
@@ -588,29 +588,29 @@ err_unknown_env_var(DeeObject *__restrict name);
 /* ON-demand helper functions                                           */
 /************************************************************************/
 
-/* Construct a path from `dfd:path'
- * @param: dfd:  Can be a `File', `int', `string', or [nt:`HANDLE']
- * @param: path: Must be a `string' */
+/* Construct a path from `dfd:path`
+ * @param: dfd:  Can be a `File`, `int`, `string`, or [nt:`HANDLE`]
+ * @param: path: Must be a `string` */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags);
-#define POSIX_DFD_MAKEPATH_ATFLAGS_MASK 0 /* Bitset atflags supported by `posix_dfd_makepath' */
+#define POSIX_DFD_MAKEPATH_ATFLAGS_MASK 0 /* Bitset atflags supported by `posix_dfd_makepath` */
 #define POSIX_DFD_MAKEPATH_ATFLAGS_FROM_OFLAGS(x) (0)
 
-/* Construct a path that refers to the file described by `fd'
- * @param: fd: Can be a `File', `int', or [nt:`HANDLE'] */
+/* Construct a path that refers to the file described by `fd`
+ * @param: fd: Can be a `File`, `int`, or [nt:`HANDLE`] */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_fd_makepath(DeeObject *__restrict fd);
 
-/* Construct a path that refers to the file described by `os_fd' */
+/* Construct a path that refers to the file described by `os_fd` */
 INTDEF WUNUSED DREF DeeObject *DCALL
 posix_fd_makepath_fd(int os_fd);
 
-/* Open a HANDLE/fd-compatible object as a `File' */
+/* Open a HANDLE/fd-compatible object as a `File` */
 INTDEF WUNUSED NONNULL((1)) /*File*/ DREF DeeObject *DCALL
 posix_fd_openfile(DeeObject *__restrict fd, int oflags);
 
-/* Copy all data from `src' to `dst', both of with are deemon File objects.
- * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART'
+/* Copy all data from `src` to `dst`, both of with are deemon File objects.
+ * @param: src_mmap_hints: Set of `0 | DeeMapFile_F_ATSTART`
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
@@ -620,7 +620,7 @@ posix_copyfile_fileio(/*File*/ DeeObject *src,
                       DeeObject *bufsize,
                       unsigned int src_mmap_hints);
 
-/* Parse a `chmod(1)'-style mode-string, or convert `mode' into an integer
+/* Parse a `chmod(1)`-style mode-string, or convert `mode` into an integer
  * @return: * : The new st_mode to-be used for the file.
  * @return: (unsigned int)-1: An error was thrown. */
 INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_chmod_getmode(DeeObject *path, DeeObject *mode);
@@ -629,7 +629,7 @@ INTDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL posix_lchmod_getmode(DeeObject
 /* Parse a chmod(1)-style mode-string
  * @return: * : The new file-mode
  * @return: (unsigned int)-1: Error
- * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1', but would be needed. */
+ * @return: (unsigned int)-2: The given `st_mode == (unsigned int)-1`, but would be needed. */
 INTDEF WUNUSED NONNULL((1)) unsigned int DCALL
 posix_chmod_parsemode(char const *__restrict mode_str,
                       unsigned int st_mode);
@@ -650,7 +650,7 @@ posix_chown_unix_parsegid(DeeObject *__restrict gid,
                           gid_t *__restrict p_result);
 
 
-/* For utime() implementations using `utime(2)' */
+/* For utime() implementations using `utime(2)` */
 struct utimbuf;
 struct utimbuf32;
 struct utimbuf64;
@@ -679,7 +679,7 @@ posix_utime_unix_parse_utimbuf_common(int64_t *__restrict p_actime,
                                       DeeObject *path_or_fd,
                                       unsigned int stat_flags);
 
-/* For utime() implementations using `utimes(2)' or `utimens(2)' */
+/* For utime() implementations using `utimes(2)` or `utimens(2)` */
 #ifdef CONFIG_HAVE_AT_CHANGE_BTIME
 #define POSIX_UTIME_TIMESPEC_COUNT 3
 #else /* CONFIG_HAVE_AT_CHANGE_BTIME */
@@ -713,8 +713,8 @@ posix_utime_unix_parse_timespec64_3(struct timespec64 *__restrict p_tsv /*[3]*/,
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval(DeeObject *__restrict self, struct timeval *__restrict result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timeval64(DeeObject *__restrict self, struct timeval64 *__restrict result);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec(DeeObject *__restrict self, struct timespec *__restrict result); /* Note: also accepts `none' */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec64(DeeObject *__restrict self, struct timespec64 *__restrict result); /* Note: also accepts `none' */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec(DeeObject *__restrict self, struct timespec *__restrict result); /* Note: also accepts `none` */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec64(DeeObject *__restrict self, struct timespec64 *__restrict result); /* Note: also accepts `none` */
 
 
 
@@ -728,14 +728,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec64(D
 #endif /* !POSIX_COPYFILE_DEFAULT_SENDFILE_BUFSIZE */
 
 
-/* DTO that is passed to the progress-callback of `copyfile()'
- * The type of this object is exposed as `posix.CopyFileProgress' */
+/* DTO that is passed to the progress-callback of `copyfile()`
+ * The type of this object is exposed as `posix.CopyFileProgress` */
 typedef struct {
 	Dee_OBJECT_HEAD
 	DREF DeeObject *cfp_srcfile; /* [1..1][const] Source file */
 	DREF DeeObject *cfp_dstfile; /* [1..1][const] Destination file */
 	uint64_t        cfp_copied;  /* [lock(WEAK(ATOMIC))] Number of bytes that have been copied */
-	uint64_t        cfp_total;   /* [lock(WRITE_ONCE)] Total size of `cfp_srcfile' (or `(uint64_t)-1' if not yet determined) */
+	uint64_t        cfp_total;   /* [lock(WRITE_ONCE)] Total size of `cfp_srcfile` (or `(uint64_t)-1` if not yet determined) */
 	size_t          cfp_bufsize; /* [lock(WEAK(ATOMIC))] Buffer size used during file copy */
 } DeeCopyFileProgressObject;
 
@@ -866,12 +866,12 @@ INTDEF ATTR_COLD NONNULL((2, 3, 4)) int DCALL err_nt_chown_no_access(DWORD dwErr
 INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_utime(DWORD dwError, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 INTDEF ATTR_COLD NONNULL((2, 3, 4, 5)) int DCALL err_nt_futime(DWORD dwError, DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *birthtime);
 
-/* Helper wrapper around `SetFileTime()' that automatically
+/* Helper wrapper around `SetFileTime()` that automatically
  * does all of the necessary conversion of time arguments
  * from nanoseconds-since-01-01-0000 into NT's FILETIME format.
  * @return:  0: Success
  * @return: -1: An error was thrown
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((2, 3, 4)) int DCALL
 nt_SetFileTime(HANDLE hFile, DeeObject *atime,
                DeeObject *mtime, DeeObject *birthtime);
@@ -891,15 +891,15 @@ typedef struct {
 	DeeInt_FromBytes(sid, NT_SID_GET_SIZEOF(sid), true, false)
 
 /* Decode a deemon integer into an SID
- * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
+ * @return: * :        Success (The caller must `Dee_Free()` the returned pointer)
  * @return: ITER_DONE: An error was thrown */
 INTDEF WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_DecodeSid(/*Int*/ DeeObject *__restrict sid);
 
-/* Similar to `nt_DecodeSid()', but accept more than just strings.
- * @param: argument_is_gid: When false, decode `uid_or_gid' as a UID; else, decode as a GID
- * @return: * :        Success (The caller must `Dee_Free()' the returned pointer)
- * @return: NULL:      Argument was `Dee_None' (NOT AN ERROR)
+/* Similar to `nt_DecodeSid()`, but accept more than just strings.
+ * @param: argument_is_gid: When false, decode `uid_or_gid` as a UID; else, decode as a GID
+ * @return: * :        Success (The caller must `Dee_Free()` the returned pointer)
+ * @return: NULL:      Argument was `Dee_None` (NOT AN ERROR)
  * @return: ITER_DONE: An error was thrown */
 INTDEF WUNUSED NONNULL((1)) NT_SID *DCALL
 nt_QuerySid(DeeObject *__restrict uid_or_gid, bool argument_is_gid);
@@ -912,8 +912,8 @@ nt_GetSecurityInfoOwnerSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
 INTDEF WUNUSED DREF DeeObject *DCALL
 nt_GetSecurityInfoGroupSid(HANDLE Handle, SE_OBJECT_TYPE ObjectType);
 
-/* Wrapper around the system function `SetNamedSecurityInfo()'
- * @return: 1 : System error (`*p_dwError' was populated with the error)
+/* Wrapper around the system function `SetNamedSecurityInfo()`
+ * @return: 1 : System error (`*p_dwError` was populated with the error)
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTDEF WUNUSED NONNULL((1, 8)) int DCALL
@@ -922,8 +922,8 @@ nt_SetNamedSecurityInfo(DeeObject *__restrict pObjectName,
                         NT_SID *psidOwner, NT_SID *psidGroup, PACL pDacl, PACL pSacl,
                         DWORD *__restrict p_dwError);
 
-/* Wrapper around the system function `SetSecurityInfo()'
- * @return: 1 : System error (`*p_dwError' was populated with the error)
+/* Wrapper around the system function `SetSecurityInfo()`
+ * @return: 1 : System error (`*p_dwError` was populated with the error)
  * @return: 0 : Success
  * @return: -1: An error was thrown */
 INTDEF WUNUSED NONNULL((8)) int DCALL
@@ -939,7 +939,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL nt_GetComputerName(void);
  * @param: path: Only used for error messages
  * @return: * :        Symlink contents
  * @return: NULL:      Error
- * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false') */
+ * @return: ITER_DONE: Not a symbolic link (only if `throw_error_if_not_a_link == false`) */
 INTDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL
 nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
              bool throw_error_if_not_a_link);
@@ -947,14 +947,14 @@ nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
                        GET_FILEEX_INFO_LEVELS fInfoLevelId,
@@ -963,7 +963,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD *__restrict p_result);
@@ -971,7 +971,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully set attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_SetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD dwFileAttributes);
@@ -979,7 +979,7 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the new directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_CreateDirectory(DeeObject *__restrict lpPathName,
                    LPSECURITY_ATTRIBUTES lpSecurityAttributes);
@@ -987,21 +987,21 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_RemoveDirectory(DeeObject *__restrict lpPathName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_DeleteFile(DeeObject *__restrict lpFileName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully moved the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_MoveFileEx(DeeObject *lpExistingFileName,
               DeeObject *lpNewFileName,
@@ -1010,7 +1010,7 @@ nt_MoveFileEx(DeeObject *lpExistingFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the hardlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_CreateHardLink(DeeObject *lpFileName,
                   DeeObject *lpExistingFileName,
@@ -1019,16 +1019,16 @@ nt_CreateHardLink(DeeObject *lpFileName,
 /* Work around a problem with long path names.
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLink(DeeObject *lpSymlinkFileName,
                       DeeObject *lpTargetFileName,
                       DWORD dwFlags);
 
-/* Same as `nt_CreateSymbolicLink()', but automatically determine proper `dwFlags'
+/* Same as `nt_CreateSymbolicLink()`, but automatically determine proper `dwFlags`
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
- * @return:  1: The system call failed (s.a. `GetLastError()') */
+ * @return:  1: The system call failed (s.a. `GetLastError()`) */
 INTDEF NONNULL((1, 2)) int DCALL
 nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
                           DeeObject *lpTargetFileName);
@@ -1037,10 +1037,10 @@ nt_CreateSymbolicLinkAuto(DeeObject *lpSymlinkFileName,
 INTDEF BOOL DCALL nt_AcquirePrivilege(LPCWSTR lpName);
 
 
-/* Dynamically loaded functions from `ADVAPI32.dll'
+/* Dynamically loaded functions from `ADVAPI32.dll`
  *
  * We do this because we probably won't actually need these functions, and by
- * loading them lazily, the import of `posix' won't be slowed down by a the
+ * loading them lazily, the import of `posix` won't be slowed down by a the
  * dependency on this library. */
 typedef BOOL (WINAPI *LPOPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
 typedef BOOL (WINAPI *LPLOOKUPPRIVILEGEVALUEW)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);

@@ -666,10 +666,10 @@ err:
 	return NULL;
 }
 
-/* Terminate the application the same way `deemon.Error.AppExit.exit()' would,
- * either through use of `exit()' from <stdlib.h>, or by throwing an exception.
- * NOTE: When available, calling stdlib's `exit()' is identical to this.
- * @return: -1: If this function returns at all, it always returns `-1' */
+/* Terminate the application the same way `deemon.Error.AppExit.exit()` would,
+ * either through use of `exit()` from <stdlib.h>, or by throwing an exception.
+ * NOTE: When available, calling stdlib's `exit()` is identical to this.
+ * @return: -1: If this function returns at all, it always returns `-1` */
 PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 	(void)exitcode;
 	(void)run_atexit;
@@ -743,22 +743,22 @@ PRIVATE struct type_method tpconst appexit_class_methods[] = {
 };
 
 /* A very special error type that doesn't actually derive from
- * `Error', or even `object' for that matter. It does however
- * have the `TP_FINTERRUPT' flag set, meaning that it can only
+ * `Error`, or even `object` for that matter. It does however
+ * have the `TP_FINTERRUPT` flag set, meaning that it can only
  * be caught by interrupt-enabled exception handlers.
  *
  * The main purpose of this error is to allow user-code to throw
- * it (the type is accessible as `(Error from deemon).AppExit'),
+ * it (the type is accessible as `(Error from deemon).AppExit`),
  * while also providing for proper stack unwinding and correct
  * destruction of all existing objects.
  *
  * The implementation's main() function should then terminate by
- * returning the contained `ae_exitcode' value. Note that this
+ * returning the contained `ae_exitcode` value. Note that this
  * type is final, meaning that user-classes cannot be further
  * derived from it.
  *
  * Additionally, this type of error is used by the builtin
- * implementation of `exit()' when deemon was built without
+ * implementation of `exit()` when deemon was built without
  * support for a native exit function. */
 PUBLIC DeeTypeObject DeeError_AppExit = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

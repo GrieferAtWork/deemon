@@ -670,9 +670,9 @@ INTERN bool DCALL asm_rmdelop(void) {
 	end  = sc_main.sec_iter;
 #if 1
 	if (!(current_assembler.a_flag & ASM_FPEEPHOLE)) {
-		/* Without peephole around, still try to optimize the `adjstack' instruction!
-		 * NOTE: The caller will have already run `asm_linkstack()', so we can be
-		 *       save to assume that the operand of any `adjstack' instruction
+		/* Without peephole around, still try to optimize the `adjstack` instruction!
+		 * NOTE: The caller will have already run `asm_linkstack()`, so we can be
+		 *       save to assume that the operand of any `adjstack` instruction
 		 *       is immutable. */
 		while (iter < end) {
 			if (*(iter + 0) == ASM_ADJSTACK) {
@@ -800,12 +800,12 @@ done:
 
 
 /* Assert some special behavior of 16-bit vs. 8-bit jump instructions
- * that is assumed by the implementation of `asm_minjmp()' and peephole.
+ * that is assumed by the implementation of `asm_minjmp()` and peephole.
  *   - All 16-bit jump instructions have the least significant bit set.
  *   - All 8-bit jump instructions have the least significant bit clear.
  *   - Opcodes of all 16-bit variants of jump instructions are equal
  *     to 8-bit variants +1 (or |1 thanks to the 2 rules above)
- *   - All 32-bit jump instructions are prefixed with `ASM_EXTENDED1'
+ *   - All 32-bit jump instructions are prefixed with `ASM_EXTENDED1`
  */
 STATIC_ASSERT((ASM_JMP == ASM_JMP16 - 1) && (ASM_JMP16 & 1));
 STATIC_ASSERT((ASM_JT == ASM_JT16 - 1) && (ASM_JT16 & 1));
@@ -817,14 +817,14 @@ STATIC_ASSERT((ASM_FOREACH_PAIR == ASM_FOREACH_PAIR16 - 1) && (ASM_FOREACH_PAIR1
 STATIC_ASSERT((ASM32_JMP & 0xff00) >> 8 == ASM_EXTENDED1);
 
 /* Assert that our way of testing a conditional jump works.
- *   - All conditional jumps can be inverted by toggling the `ASM_JX_NOTBIT' (bit #2) bit.
+ *   - All conditional jumps can be inverted by toggling the `ASM_JX_NOTBIT` (bit #2) bit.
  *   - The bool/not instructions can be exchanged by toggling the least significant bit.
  */
 STATIC_ASSERT(ASM_JX_NOT(ASM_JT) == ASM_JF);
 STATIC_ASSERT(ASM_JX_NOT(ASM_JF) == ASM_JT);
 STATIC_ASSERT((ASM_BOOL ^ 1) == ASM_NOT);
 
-/* The following relations are assumed by the peephole optimizer for `pop ?; push ?' --> `dup; pop ?' */
+/* The following relations are assumed by the peephole optimizer for `pop ?; push ?` --> `dup; pop ?` */
 STATIC_ASSERT(ASM_POP_STATIC + 0x10 == ASM_PUSH_STATIC);
 STATIC_ASSERT(ASM_POP_EXTERN + 0x10 == ASM_PUSH_EXTERN);
 STATIC_ASSERT(ASM_POP_GLOBAL + 0x10 == ASM_PUSH_GLOBAL);
@@ -984,7 +984,7 @@ INTERN bool DCALL asm_minjmp(void) {
 				if (instr[2] != ((instr[1] & 0x80) ? 0xff : 0x00))
 					break;
 #if 1
-				/* This variant is required because the other overflows if `target == 0xff'
+				/* This variant is required because the other overflows if `target == 0xff`
 				 * If we used the other variant, the assembler would have to loop over and use
 				 * BIGCODE mode (which would produce working code btw.), however doing so not only
 				 * is unnecessary, but also considerably slower because of wrapper assembly:
@@ -993,7 +993,7 @@ INTERN bool DCALL asm_minjmp(void) {
 				 * >>    jt    pop, 2f
 				 * >>    jmp   1f       // 32-bit
 				 * >>2: */
-				*(instr + 2) = *((int8_t *)(instr + 1)) + 1; /* This +1 is negated by the `++iter->ar_addr' below. */
+				*(instr + 2) = *((int8_t *)(instr + 1)) + 1; /* This +1 is negated by the `++iter->ar_addr` below. */
 				*(instr + 1) = *(instr + 0) & ~1;            /* Turn the instruction into its 8-bit counterpart. */
 				*(instr + 0) = ASM_DELOP;                    /* Mark the leading byte for deletion */
 				++iter->ar_addr;                             /* Move the relocation up 1 byte, so it points to the new 8-bit offset. */
@@ -1018,7 +1018,7 @@ INTERN bool DCALL asm_minjmp(void) {
 				uint8_t *instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
 				/* Check if the second byte is a sign extension. */
 				if (instr[2] == 0x00) {
-					/* Convert into a `R_DMN_STCKA8' */
+					/* Convert into a `R_DMN_STCKA8` */
 					if (instr != sc_main.sec_begin && instr[-1] == ASM_EXTENDED1) {
 						*(instr - 1) = ASM_DELOP; /* Mark the unused bytes as a DELOP. */
 						*(instr + 2) = ASM_DELOP;
@@ -1041,7 +1041,7 @@ INTERN bool DCALL asm_minjmp(void) {
 			                (int16_t)UNALIGNED_GETLE16(sc_main.sec_begin + iter->ar_addr));
 			if (stack_offset < INT8_MIN || stack_offset > INT8_MAX)
 				break;
-			/* Convert this into a `R_DMN_STCK8' relocation. */
+			/* Convert this into a `R_DMN_STCK8` relocation. */
 			instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
 			if (instr != sc_main.sec_begin && instr[-1] == ASM_EXTENDED1) {
 				*(instr - 1) = ASM_DELOP; /* Mark the unused bytes as a DELOP. */
@@ -1060,7 +1060,7 @@ INTERN bool DCALL asm_minjmp(void) {
 			stack_offset = (iter->ar_sym->as_stck -
 			                *(int8_t *)(sc_main.sec_begin + iter->ar_addr));
 			if (stack_offset >= -2 && stack_offset <= +2) {
-				/* Optimize to `pop; pop' or `push none; push none', and everything in-between. */
+				/* Optimize to `pop; pop` or `push none; push none`, and everything in-between. */
 				instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
 				if (stack_offset == -2) {
 					instr[0] = ASM_POP;
@@ -1105,7 +1105,7 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		                            current_assembler.a_sect[i].sec_begin);
 		total_rel += (code_addr_t)current_assembler.a_sect[i].sec_relc;
 	}
-	/* Fix symbol addresses by moving them into the `sc_main'. */
+	/* Fix symbol addresses by moving them into the `sc_main`. */
 	{
 		struct asm_sym *sym_iter;
 		SLIST_FOREACH (sym_iter, &current_assembler.a_syms, as_link) {
@@ -1530,7 +1530,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	}
 
 	/* Make the exception handler vector become
-	 * compatible with `struct Dee_except_handler'. */
+	 * compatible with `struct Dee_except_handler`. */
 	if (current_assembler.a_exceptc) {
 		exceptv = asm_pack_exceptv();
 		if unlikely(!exceptv)
@@ -2202,9 +2202,9 @@ asm_do_gjmp(instruction_t instr,
 			if unlikely((data = asm_alloc(10)) == NULL)
 				goto err;
 			*(data + 0)           = ASM_FOREACH;
-			*(int8_t *)(data + 1) = 2; /* `sizeof(ASM_JMP) == 2' */
+			*(int8_t *)(data + 1) = 2; /* `sizeof(ASM_JMP) == 2` */
 			*(data + 2)           = ASM_JMP;
-			*(int8_t *)(data + 3) = 6; /* `sizeof(ASM32_JMP) == 6' */
+			*(int8_t *)(data + 3) = 6; /* `sizeof(ASM32_JMP) == 6` */
 			*(data + 4)           = (instruction_t)((ASM32_JMP & 0xff00) >> 8);
 			*(data + 5)           = (instruction_t)((ASM32_JMP & 0xff));
 			/* -4 to adjust for the ip offset of the immediate value itself. */
@@ -2346,7 +2346,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int
 (DCALL asm_gadjhand)(struct asm_sym *__restrict target) {
 	/* Generate code and a relocation to delete
-	 * unused text once `target' has been linked. */
+	 * unused text once `target` has been linked. */
 	uint16_t depth = current_assembler.a_handlerc;
 	struct handler_frame *iter;
 	struct asm_rel *rel;
@@ -2369,13 +2369,13 @@ INTERN WUNUSED NONNULL((1)) int
 		ASSERT(depth != 0);
 		--depth;
 		/* Generate exception handler cleanup code.
-		 * This is literally the same as `asm_gunwind()' */
+		 * This is literally the same as `asm_gunwind()` */
 		if (iter->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
-			/* Due to the way that the `end finally' instruction is implemented,
+			/* Due to the way that the `end finally` instruction is implemented,
 			 * we are allowed to merge adjacent finally handlers and only emit
 			 * an instruction for the lowest-order one:
 			 *  - To prove this to yourself, you may look at the psuedo
-			 *    code documented for the `ASM_ENDFINALLY' instruction. */
+			 *    code documented for the `ASM_ENDFINALLY` instruction. */
 			if (current_assembler.a_flag & ASM_FOPTIMIZE) {
 				while (iter->hf_prev &&
 				       (iter->hf_prev->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY)) {
@@ -2450,7 +2450,7 @@ INTERN WUNUSED NONNULL((1, 3, 4)) int
 	}
 	if (!(current_assembler.a_flag & ASM_FSTACKDISP))
 		return asm_do_gjcc(cond, instr, target, ddi_ast);
-	/* Generate special code to adjust the stack before jumping to `target'. */
+	/* Generate special code to adjust the stack before jumping to `target`. */
 	/* >>    jnc       1f
 	 * >>    adjstack #target.sp
 	 * >>    jmp       target.ip
@@ -2482,7 +2482,7 @@ err:
 		goto err;
 	if (asm_gjmp(instr, target))
 		goto err;
-	asm_decsp(); /* Adjust for `ASM_JT' / `ASM_JF' popping a condition. */
+	asm_decsp(); /* Adjust for `ASM_JT` / `ASM_JF` popping a condition. */
 	return 0;
 err:
 	return -1;
@@ -2494,13 +2494,13 @@ INTERN WUNUSED NONNULL((2)) int
 	if (!(current_assembler.a_flag & ASM_FSTACKDISP))
 		return asm_do_gjmp(instr, target);
 
-	/* Generate special code to adjust the stack before jumping to `target'. */
+	/* Generate special code to adjust the stack before jumping to `target`. */
 	switch (instr) {
 
 	/*case ASM_JMP:*/
 	default:
 		/* Simple case: Directly generate code to adjust the
-		 *              stack according to `target's wishes. */
+		 *              stack according to `target`s wishes. */
 		if unlikely(asm_gsetstack_s(target))
 			goto err;
 		return asm_do_gjmp(ASM_JMP, target);
@@ -2517,7 +2517,7 @@ INTERN WUNUSED NONNULL((2)) int
 			goto err;
 		if unlikely(asm_do_gjmp(ASM_JX_NOT(instr), temp))
 			goto err;
-		/* Adjust the stack for `jt' / `jf' popping the argument. */
+		/* Adjust the stack for `jt` / `jf` popping the argument. */
 		--current_assembler.a_stackcur;
 		if unlikely(asm_gsetstack_s(target))
 			goto err;
@@ -2545,13 +2545,13 @@ INTERN WUNUSED NONNULL((2)) int
 		if unlikely(asm_do_gjmp(ASM_FOREACH, temp1))
 			goto err;
 		++current_assembler.a_stackcur;
-		/* We get here when `ASM_FOREACH' pushes a new value.. */
+		/* We get here when `ASM_FOREACH` pushes a new value.. */
 		if unlikely(asm_do_gjmp(ASM_JMP, temp2))
 			goto err;
 		ASSERT(current_assembler.a_stackcur >= 2);
-		/* Adjust the stack for `foreach' popping the iterator when done. */
+		/* Adjust the stack for `foreach` popping the iterator when done. */
 		current_assembler.a_stackcur -= 2;
-		asm_defsym(temp1); /* `ASM_FOREACH' will pop the iterator when its done and jump here.
+		asm_defsym(temp1); /* `ASM_FOREACH` will pop the iterator when its done and jump here.
 		                    *  Therefor, we must define this symbol while already having set
 		                    *  the proper stack alignment. */
 		if unlikely(asm_gsetstack_s(target))
@@ -2673,8 +2673,8 @@ err:
 
 /* Create a new static variable ID and return it.
  * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
- * NOTE: The caller must encode the returned index alongside a `R_DMN_STATIC16' relocation.
- *       This can easily be achieved using the `asm_putsid16()' function. */
+ * NOTE: The caller must encode the returned index alongside a `R_DMN_STATIC16` relocation.
+ *       This can easily be achieved using the `asm_putsid16()` function. */
 INTERN WUNUSED int32_t DCALL asm_newstatic(struct symbol *sym) {
 	int32_t result;
 
@@ -2858,15 +2858,15 @@ asm_gsymid(struct symbol *__restrict sym) {
 	/* Figure out the name and hash of this symbol's name.
 	 * NOTE: This is where we stop using TPP's indices for hashing
 	 *       and start relying on deemon's own string hashing algorithm,
-	 *       since the `TPPKeyword' still representing the name of this
+	 *       since the `TPPKeyword` still representing the name of this
 	 *       symbol won't be around anymore once the module itself has
 	 *       been compiled. */
 	name      = sym->s_name;
 	name_hash = Dee_HashPtr(name->k_name, name->k_size);
 
 	/* To prevent multiple-definition problems of the same global variable,
-	 * global variables are stored by name in the `current_rootscope'
-	 * (which will eventually be transformed into what will be a `DeeModuleObject').
+	 * global variables are stored by name in the `current_rootscope`
+	 * (which will eventually be transformed into what will be a `DeeModuleObject`).
 	 * Therefor, despite the fact that this symbol isn't linked against a global
 	 * variable, there is a chance that a global variable with the same name
 	 * already exists, in which case we must assign the _SAME_ index to this symbol,
@@ -2895,7 +2895,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 		}
 	}
 	/* All right! This is a new one, so we have to do all the
-	 * work of creating and adding a new `Dee_module_symbol'... */
+	 * work of creating and adding a new `Dee_module_symbol`... */
 	result = current_rootscope->rs_globalc;
 	if unlikely(result == UINT16_MAX) {
 		/* Make sure not to exceed what can actually be done. */
@@ -3107,7 +3107,7 @@ asm_asymid_r(struct symbol *__restrict sym) {
 	ASSERTF(asm_symbol_accessible(sym),
 	        "Unreachable symbol %s",
 	        sym->s_name->k_name);
-	/* Search for a pre-existing binding for `sym' */
+	/* Search for a pre-existing binding for `sym` */
 	result = current_assembler.a_argrefc;
 	while (result--) {
 		if (current_assembler.a_argrefv[result] == sym)
@@ -3249,12 +3249,12 @@ end:
 	return result;
 }
 
-/* Search the export table of the builtin `deemon' module for `constval'.
- * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN'
- * symbol (allocated as part of `current_rootscope') that is bound to
+/* Search the export table of the builtin `deemon` module for `constval`.
+ * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN`
+ * symbol (allocated as part of `current_rootscope`) that is bound to
  * that specific export.
- * @return: * :                              A `SYMBOL_TYPE_EXTERN' symbol, bound to `constval'
- * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval' wasn't found in `deemon's exports
+ * @return: * :                              A `SYMBOL_TYPE_EXTERN` symbol, bound to `constval`
+ * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval` wasn't found in `deemon`s exports
  * @return: NULL:                            An error occurred. */
 INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
 asm_bind_deemon_export(DeeObject *__restrict constval) {
@@ -3326,7 +3326,7 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 			if unlikely(!ASM_SYM_DEFINED(sym)) {
 				/* Error: User-defined label was never defined. */
 				return DeeError_Throwf(&DeeError_CompilerError,
-				                       "Label `%s' has never been defined",
+				                       "Label `%s` has never been defined",
 				                       tl_iter->tl_name->k_name);
 			}
 		}
@@ -3345,7 +3345,7 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 			        "%s(%d) : Symbol was allocated here",
 			        as_iter->as_file, as_iter->as_line);
 			return DeeError_Throwf(&DeeError_CompilerError,
-			                       "Assembly symbol `%s' has never been defined",
+			                       "Assembly symbol `%s` has never been defined",
 			                       as_iter->as_uname->k_name);
 		}
 	}
@@ -3426,17 +3426,17 @@ do_savearg:
 	 * all relocations concerning stack alignments, as the peephole
 	 * optimizer must be able to keep track of the effective stack
 	 * depth at any given instruction.
-	 * NOTE: In order to allow `asm_rmdelop()' to get rid of
-	 *       unused instruction bytes caused by `R_DMN_DELHAND'
+	 * NOTE: In order to allow `asm_rmdelop()` to get rid of
+	 *       unused instruction bytes caused by `R_DMN_DELHAND`
 	 *       instructions, we also pre-link the stack when
-	 *      `ASM_FOPTIMIZE' will allow `asm_rmdelop()' to do so. */
+	 *      `ASM_FOPTIMIZE` will allow `asm_rmdelop()` to do so. */
 	if (current_assembler.a_flag & (ASM_FPEEPHOLE | ASM_FOPTIMIZE)) {
 		link_error = asm_linkstack();
 		if unlikely(link_error != 0)
 			goto err_link;
 
 		/* Remove unused assembly symbols to improve the
-		 * capabilities of `asm_peephole()'.
+		 * capabilities of `asm_peephole()`.
 		 * This function is not called as apart of the optimization
 		 * cycle below, because peephole optimization will automatically
 		 * remove unused symbols if it manages to get rid of some symbol. */
@@ -3448,7 +3448,7 @@ do_savearg:
 	if unlikely(asm_mergestatic())
 		goto err;
 
-	/* Keep shrinking `jmp', deleting DELOP instructions
+	/* Keep shrinking `jmp`, deleting DELOP instructions
 	 * and doing peephole optimizations while possible. */
 	for (;;) {
 		bool did_something;
@@ -3469,8 +3469,8 @@ do_savearg:
 		 * >>1:  jmp   3f
 		 * >>    // more than 256 bytes of text here
 		 * >>3:
-		 * If the first `jmp' was optimized into an 8-bit jump before peephole
-		 * got around to optimize it into following `jmp 3f', then it wouldn't
+		 * If the first `jmp` was optimized into an 8-bit jump before peephole
+		 * got around to optimize it into following `jmp 3f`, then it wouldn't
 		 * be able to do that follow, and the final code would be less optimized. */
 		if (!did_something) {
 			if (!asm_minjmp())
@@ -3507,7 +3507,7 @@ err_link:
 			                "Failed to link final code: Relocation target is out of bounds");
 			goto err;
 		}
-		/* TODO: Restore the `...->bs_default' vectors and `bs_argc_min' and `bs_argc_max'
+		/* TODO: Restore the `...->bs_default` vectors and `bs_argc_min` and `bs_argc_max`
 		 *       values for all the base-scope objects reachable through DeeCodeObject objects
 		 *       found in our current constant-vector, as well as all those code object's
 		 *       static-variable vectors.
@@ -3517,7 +3517,7 @@ err_link:
 		 */
 
 		/* TODO: Go through all reachable ASTs and for each AST_LABEL delete the associated
-		 *      `struct text_label::tl_asym' by setting it back to `NULL'.
+		 *      `struct text_label::tl_asym` by setting it back to `NULL`.
 		 *    -> This is required to allow the assembler to define user-labels (including
 		 *       case-labels of switch-statements) a second time during the bigcode pass. */
 

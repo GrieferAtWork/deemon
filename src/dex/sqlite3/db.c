@@ -70,8 +70,8 @@ DeeSystem_DEFINE_memsetp(Dee_libc_memsetp)
 
 INTERN_CONST struct query_cache_empty_list_struct const query_cache_empty_list_ = { 0 };
 
-/* Returns an index into `self->qcl_queries' of some query compiled against `string'
- * If no such query exists, `self->qcl_count' is returned. */
+/* Returns an index into `self->qcl_queries` of some query compiled against `string`
+ * If no such query exists, `self->qcl_count` is returned. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 query_cache_list_indexof(struct query_cache_list const *__restrict self,
                          DeeStringObject const *__restrict string) {
@@ -158,7 +158,7 @@ db_free_list_insert(DB *__restrict self, sqlite3_stmt *pStmt) {
 	} while (!atomic_cmpxch_weak(&self->db_freelist, last, pStmt));
 }
 
-/* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */
+/* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *`) */
 INTERN WUNUSED NONNULL((1)) bool DCALL
 DB_TryLock(DB *__restrict self) {
 	bool result = Dee_shared_lock_tryacquire(&self->db_dblock);
@@ -199,7 +199,7 @@ again:
 }
 
 
-/* Safely call `sqlite3_finalize(stmt)' */
+/* Safely call `sqlite3_finalize(stmt)` */
 INTERN NONNULL((1)) void DCALL
 DB_FinalizeStmt(DB *__restrict self, sqlite3_stmt *stmt) {
 	if (DB_TryLock(self)) {
@@ -272,7 +272,7 @@ db_find_unused_query_near(struct query_cache_list *__restrict list,
 	return NULL;
 }
 
-/* Find an unused, cached query for `sql'. Caller must already be holding lock */
+/* Find an unused, cached query for `sql`. Caller must already be holding lock */
 PRIVATE WUNUSED NONNULL((1, 2)) Query *DCALL
 db_find_unused_query(DB *__restrict self, DeeStringObject *__restrict sql) {
 	size_t list_index;
@@ -292,43 +292,43 @@ db_find_unused_query(DB *__restrict self, DeeStringObject *__restrict sql) {
 
 /* The main function for compiling strings as SQL code. This function automatically
  * ties for make use the query cache to re-use previously used instances of queries
- * compiled against the same `sql', so-long as `sql' hasn't gotten destroyed in the
+ * compiled against the same `sql`, so-long as `sql` hasn't gotten destroyed in the
  * mean time:
  *
- * - Search `db_querycache' for a pre-existing Query linked against `sql'
- *   - Only consider queries that aren't in use (iow: `!Query_InUse(query)')
- *   - If one such query is found, set its `ob_refcnt = 1' (thus marking it
+ * - Search `db_querycache` for a pre-existing Query linked against `sql`
+ *   - Only consider queries that aren't in use (iow: `!Query_InUse(query)`)
+ *   - If one such query is found, set its `ob_refcnt = 1` (thus marking it
  *     as in-use) and return it.
  *   - If no such query is found, create+compile a new Query and insert it
- *     into the `db_querycache' of the database.
- * - When a query is created, we `DeeString_EnableFiniHook(sql)' so we get notified
- *   if a string that may appear in `Query::q_sql' is destroyed. Only once that has
+ *     into the `db_querycache` of the database.
+ * - When a query is created, we `DeeString_EnableFiniHook(sql)` so we get notified
+ *   if a string that may appear in `Query::q_sql` is destroyed. Only once that has
  *   happened, will we:
- *   - call `sqlite3_finalize()' to destroy `Query::q_stmt'
- *   - Remove the query from the associated DB's `db_querycache'
+ *   - call `sqlite3_finalize()` to destroy `Query::q_stmt`
+ *   - Remove the query from the associated DB's `db_querycache`
  *   - Actually DeeObject_FREE() the query
  * - When the query is destroyed normally (its ob_refcnt hits 0):
- *   - AtomicCompareExchange refcnt of `q_sql' from 1 to 0:
- *     - If successful, decref `q_db' and then destroy `q_sql' (its string-fini-hook
+ *   - AtomicCompareExchange refcnt of `q_sql` from 1 to 0:
+ *     - If successful, decref `q_db` and then destroy `q_sql` (its string-fini-hook
  *       will do all remaining cleanup)
- *     - Otherwise, call `sqlite3_reset()' and `sqlite3_clear_bindings()' on the query
- *     - Lock the query cache of `q_db'
- *     - Add the query to the unused list of `q_db'
- *     - Unlock the query cache of `q_db'
- *     - Decref `q_db'
- *     - Decref `q_sql'
+ *     - Otherwise, call `sqlite3_reset()` and `sqlite3_clear_bindings()` on the query
+ *     - Lock the query cache of `q_db`
+ *     - Add the query to the unused list of `q_db`
+ *     - Unlock the query cache of `q_db`
+ *     - Decref `q_db`
+ *     - Decref `q_sql`
  *
  *
  * NOTE: The "Query" object returned here is *NEVER* DeeObject_IsShared!
- *       iow: `return->ob_refcnt == 1'
+ *       iow: `return->ob_refcnt == 1`
  *
- * @param: p_utf8_offset_of_next_stmt: when non-NULL, given `sql' is allowed to
+ * @param: p_utf8_offset_of_next_stmt: when non-NULL, given `sql` is allowed to
  *                                     contain multiple SQL statements, and this
  *                                     pointer is set to the byte-offset within
- *                                     the UTF-8 representation of `sql', of the
+ *                                     the UTF-8 representation of `sql`, of the
  *                                     start of the next statement. If there was
- *                                     only 1 statement, this is set to `0'.
- *                                     When NULL, an error is thrown if `sql'
+ *                                     only 1 statement, this is set to `0`.
+ *                                     When NULL, an error is thrown if `sql`
  *                                     contains more than 1 statement.
  * @return: DB_NEWQUERY_NOQUERY: Indicates that no SQL was compiled (query is empty or just a comments) */
 INTERN WUNUSED NONNULL((1, 2)) DREF Query *DCALL
@@ -341,7 +341,7 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 	struct query_cache_list *list;
 	DB_QueryCache_LockRead(self);
 
-	/* Check if we have a cached, unused query for `sql' */
+	/* Check if we have a cached, unused query for `sql` */
 	result = db_find_unused_query(self, sql);
 	if (result) {
 		ASSERT(Query_IsUnused(result));
@@ -552,7 +552,7 @@ again_acquire_write_lock:
 		}
 	}
 
-	/* Check if there are more queries using the same `sql' */
+	/* Check if there are more queries using the same `sql` */
 #define qc_list_min_index 0
 #define qc_list_max_index (qc_list->qcl_count - 1)
 	sql_has_more_queries = (qc_index > qc_list_min_index && qc_list->qcl_queries[qc_index - 1]->q_sql == sql) ||
@@ -837,7 +837,7 @@ again:
 	}
 	DB_QueryCache_LockEndWrite(self);
 
-	/* Also try to invoke `sqlite3_db_release_memory()' */
+	/* Also try to invoke `sqlite3_db_release_memory()` */
 	if (!result) {
 		if (DB_TryLock(self)) {
 			/* Sadly, this function doesn't return if it managed to free
@@ -857,7 +857,7 @@ again:
 
 
 
-/* Execute `stmt' until there is no more data present.
+/* Execute `stmt` until there is no more data present.
  * @return: (uint64_t)-1: Error
  * @return: * : The # of affected rows */
 PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
@@ -1131,7 +1131,7 @@ PRIVATE struct type_method tpconst db_methods[] = {
 	/* TODO: Expose sqlite3_file_control() */
 	/* TODO: Expose sqlite3_get_autocommit() */
 	/* TODO: Expose sqlite3_get_clientdata() + sqlite3_set_clientdata() (these should be usable to encapsulate a single "DeeObject" linked to every database) */
-	/* TODO: Directly expose sqlite3_interrupt() (already gets called during `DeeThread_Wake()') */
+	/* TODO: Directly expose sqlite3_interrupt() (already gets called during `DeeThread_Wake()`) */
 	/* TODO: Directly expose sqlite3_is_interrupted() */
 	/* TODO: Expose sqlite3_limit() */
 	/* TODO: Expose sqlite3_table_column_metadata() */
@@ -1166,7 +1166,7 @@ PRIVATE struct type_getset tpconst db_getsets[] = {
 	               /**/ "with not-yet-destroyed template SQL strings to keep cached\n"
 	               "Deleting this attribute restores the default "
 	               /**/ "$" PP_STR(DEFAULT_DB_QUERYCACHE_UNUSED_LIMIT)),
-	/* TODO: Expose cached queries (in the form of a `{string...}'-Sequence) */
+	/* TODO: Expose cached queries (in the form of a `{string...}`-Sequence) */
 	TYPE_GETSET_END
 };
 

@@ -260,7 +260,7 @@ DECL_BEGIN
 #endif /* !LOCAL_IS_LINES */
 
 
-/* Suppress warning because compilers don't like the way we use `needle':
+/* Suppress warning because compilers don't like the way we use `needle`:
  * >> if (mask) {
  * >>     acquire_needle(&needle, mask);
  * >> }
@@ -309,7 +309,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #endif /* LOCAL_IS_LINES */
 	DeeObject *mask;
 
-	/* In sstrip-mode, the `mask' parameter becomes mandatory. */
+	/* In sstrip-mode, the `mask` parameter becomes mandatory. */
 #ifdef LOCAL_HAVE_max_count
 #ifdef LOCAL_IS_SSTRIP
 	if (DeeArg_UnpackKw(argc, argv, kw, LOCAL_kwlist, "o|" UNPuSIZ ":" LOCAL_bytes_strip_NAME, &mask, &max_count))
@@ -530,7 +530,7 @@ retself_noprinter:
 #endif /* NEED_retself_noprinter */
 			return_reference_(self);
 		}
-		/* Create a sub-view of `self' for the still-selected bytes range. */
+		/* Create a sub-view of `self` for the still-selected bytes range. */
 #ifdef LOCAL_IS_SSTRIP
 		return (DREF Bytes *)DeeBytes_NewSubView(self, begin, size);
 #else /* LOCAL_IS_SSTRIP */

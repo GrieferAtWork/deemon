@@ -30,16 +30,16 @@
  *    - Doesn't depend on any global state
  *    - (may) dereference pointers
  *    - (may) modify memory pointed-to by input arguments
- *    - Example: `memcpy()'
+ *    - Example: `memcpy()`
  * ATTR_PURE:
  *    - Doesn't depend on any global state
  *    - (may) dereference pointers
- *    - Only visible side-effect is return value (therefor mustn't return `void')
- *    - Example: `memcmp()'
+ *    - Only visible side-effect is return value (therefor mustn't return `void`)
+ *    - Example: `memcmp()`
  * ATTR_CONST:
  *    - Doesn't depend on any global state
- *    - Only visible side-effect is return value (therefor mustn't return `void')
- *    - Example: `abs()'
+ *    - Only visible side-effect is return value (therefor mustn't return `void`)
+ *    - Example: `abs()`
  *
  * Implications:
  *    - ATTR_PURE / ATTR_CONST --> WUNUSED

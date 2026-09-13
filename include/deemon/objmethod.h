@@ -101,7 +101,7 @@ template<class _TReturn, class _TObject> Dee_cmethod1_t _Dee_RequiresCMethod1(WU
 
 typedef struct Dee_objmethod_object {
 	Dee_OBJECT_HEAD /* Object-bound member function. */
-	DREF DeeObject   *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
+	DREF DeeObject   *om_this;  /* [1..1][const] The `self` argument passed to `om_func`. */
 	union {
 		Dee_objmethod_t   omf_meth;   /* [1..1][valid_if(ob_type == &DeeObjMethod_Type)][const] Method pointer. */
 		Dee_kwobjmethod_t omf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwObjMethod_Type)][const] Method pointer. */
@@ -112,16 +112,16 @@ DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
 #define DeeObjMethod_SELF(x)         Dee_REQUIRES_OBJECT(DeeObjMethodObject, x)->om_this
 #define DeeObjMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeObjMethodObject, x)->om_func.omf_meth
-#define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `_ObjMethod' is final. */
+#define DeeObjMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeObjMethod_Type) /* `_ObjMethod` is final. */
 #define DeeObjMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeObjMethod_Type)
-#define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod' is final. */
+#define DeeKwObjMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type) /* `_KwObjMethod` is final. */
 #define DeeKwObjMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwObjMethod_Type)
 #define Dee_DEFINE_OBJMETHOD(name, func, self) \
 	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeObjMethod_Type), self, Dee_REQUIRES_OBJMETHOD(func) }
 #define Dee_DEFINE_KWOBJMETHOD(name, func, self) \
 	DeeObjMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwObjMethod_Type), self, Dee_REQUIRES_KWOBJMETHOD(func) }
 
-/* Construct a new `_ObjMethod' object. */
+/* Construct a new `_ObjMethod` object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -129,12 +129,12 @@ DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
 struct Dee_objmethod_origin {
 	DeeTypeObject                *omo_type;  /* [1..1] Declaring type. */
-	struct Dee_type_method const *omo_chain; /* [1..1] Method declaration chain (either `omo_type->tp_methods' or `omo_type->tp_class_methods'). */
+	struct Dee_type_method const *omo_chain; /* [1..1] Method declaration chain (either `omo_type->tp_methods` or `omo_type->tp_class_methods`). */
 	struct Dee_type_method const *omo_decl;  /* [1..1] Method declaration in question. */
 };
 
-/* Lookup the origin of the function bound by the given `_ObjMethod'.
- * @return: true:  Success -- `*result' was populated with origin info on "self"
+/* Lookup the origin of the function bound by the given `_ObjMethod`.
+ * @return: true:  Success -- `*result` was populated with origin info on "self"
  * @return: false: Failure -- original of "self" could not be determined */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
@@ -143,7 +143,7 @@ DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
 	DeeObjMethod_GetOrigin(self, result)
 
 typedef struct Dee_clsmethod_object {
-	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
+	/* Unbound member function (`ClassMethod`) (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *clm_type; /* [1..1] The type that this-arguments must match. */
 	union {
@@ -156,9 +156,9 @@ DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 #define DeeClsMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeClsMethodObject, x)->clm_func.clmf_meth
 #define DeeClsMethod_TYPE(x)         Dee_REQUIRES_OBJECT(DeeClsMethodObject, x)->clm_type
-#define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod' is final. */
+#define DeeClsMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)   /* `_ClassMethod` is final. */
 #define DeeClsMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeClsMethod_Type)
-#define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod' is final. */
+#define DeeKwClsMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type) /* `_KwClassMethod` is final. */
 #define DeeKwClsMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwClsMethod_Type)
 #define Dee_DEFINE_CLSMETHOD(name, func, type) \
 	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsMethod_Type), type, { Dee_REQUIRES_OBJMETHOD(func) } }
@@ -166,14 +166,14 @@ DDATDEF DeeTypeObject DeeKwClsMethod_Type;
 	DeeClsMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwClsMethod_Type), type, { (Dee_objmethod_t)Dee_REQUIRES_KWOBJMETHOD(func) } }
 
 
-/* Construct a new `_ClassMethod' object. */
+/* Construct a new `_ClassMethod` object. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type, Dee_objmethod_t func);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type, Dee_kwobjmethod_t func);
 
 /* Lookup the origin of the function bound by
- * the given `_ClsMethod', or `NULL' if unknown. */
+ * the given `_ClsMethod`, or `NULL` if unknown. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
                        struct Dee_objmethod_origin *__restrict result);
@@ -184,7 +184,7 @@ DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
 
 struct Dee_clsproperty_origin {
 	DeeTypeObject                *cpo_type;  /* [1..1] Declaring type. */
-	struct Dee_type_getset const *cpo_chain; /* [1..1] Method declaration chain (either `cpo_type->tp_methods' or `cpo_type->tp_class_methods'). */
+	struct Dee_type_getset const *cpo_chain; /* [1..1] Method declaration chain (either `cpo_type->tp_methods` or `cpo_type->tp_class_methods`). */
 	struct Dee_type_getset const *cpo_decl;  /* [1..1] Method declaration in question. */
 };
 
@@ -203,7 +203,7 @@ DDATDEF DeeTypeObject DeeClsProperty_Type;
 #define DeeClsProperty_DEL(x)        Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_del
 #define DeeClsProperty_SET(x)        Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_set
 #define DeeClsProperty_BOUND(x)      Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_bound
-#define DeeClsProperty_Check(x)      DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty' is final. */
+#define DeeClsProperty_Check(x)      DeeObject_InstanceOfExact(x, &DeeClsProperty_Type) /* `_ClassProperty` is final. */
 #define DeeClsProperty_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeClsProperty_Type)
 #define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set, bound)              \
 	DeeClsPropertyObject name = { Dee_OBJECT_HEAD_INIT(&DeeClsProperty_Type), \
@@ -228,7 +228,7 @@ DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
 #endif /* !__OPTIMIZE_SIZE__ */
 
 /* Lookup the origin of the function bound by
- * the given `_ClassProperty', or `NULL' if unknown. */
+ * the given `_ClassProperty`, or `NULL` if unknown. */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
                          struct Dee_clsproperty_origin *__restrict result);
@@ -259,16 +259,16 @@ struct Dee_module_object;
 struct Dee_module_symbol;
 struct Dee_cmethod_origin {
 	DREF struct Dee_module_object *cmo_module; /* [0..1] Module containing the C-method. */
-	struct Dee_module_symbol      *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
+	struct Dee_module_symbol      *cmo_modsym; /* [0..1] Module symbol that exposes `func`. */
 	DREF DeeTypeObject            *cmo_type;   /* [0..1] Type containing the C-method. */
-	struct Dee_type_member const  *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
+	struct Dee_type_member const  *cmo_member; /* [0..1] Member of `cmo_type` that exposes the C-method. */
 	char const                    *cmo_name;   /* [1..1] Function name. */
 	char const                    *cmo_doc;    /* [0..1] Function doc string. */
 };
 
-/* Search for the origin of "func", filling in `self'
- * @return: true:  Success (`self' was initialized)
- * @return: false: Failure (origin of `func' could not be determined) */
+/* Search for the origin of "func", filling in `self`
+ * @return: true:  Success (`self` was initialized)
+ * @return: false: Failure (origin of `func` could not be determined) */
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict self,
                         Dee_cmethod_t func);
@@ -283,7 +283,7 @@ Dee_cmethod_origin_fini(struct Dee_cmethod_origin *__restrict self);
 
 typedef struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
-	uintptr_t cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
+	uintptr_t cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*`) */
 	union {
 		Dee_cmethod_t   cmf_meth;   /* [1..1][valid_if(ob_type == &DeeCMethod_Type)][const] Method pointer. */
 		Dee_kwcmethod_t cmf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwCMethod_Type)][const] Method pointer. */
@@ -297,13 +297,13 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 DDATDEF DeeTypeObject DeeCMethod0_Type;
 DDATDEF DeeTypeObject DeeCMethod1_Type;
 #define DeeCMethod_FUNC(x)         Dee_REQUIRES_OBJECT(DeeCMethodObject, x)->cm_func.cmf_meth
-#define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
+#define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod` is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
-#define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
+#define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod` is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
-#define DeeCMethod0_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod0_Type) /* `_CMethod0' is final. */
+#define DeeCMethod0_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod0_Type) /* `_CMethod0` is final. */
 #define DeeCMethod0_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeCMethod0_Type)
-#define DeeCMethod1_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod1_Type) /* `_CMethod1' is final. */
+#define DeeCMethod1_Check(x)       DeeObject_InstanceOfExact(x, &DeeCMethod1_Type) /* `_CMethod1` is final. */
 #define DeeCMethod1_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeCMethod1_Type)
 
 #define Dee_DEFINE_CMETHOD(name, func, flags) \
@@ -322,13 +322,13 @@ DDATDEF DeeTypeObject DeeCMethod1_Type;
  * for portable bindings of the deemon API in languages other
  * than C.
  *
- * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
+ * If at all possible, use `Dee_DEFINE_CMETHOD` instead! */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod0_New(Dee_cmethod0_t func, uintptr_t flags);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod1_New(Dee_cmethod1_t func, uintptr_t flags);
 
-/* Try to figure out information about the origin of `self' */
+/* Try to figure out information about the origin of `self` */
 #define DeeCMethod_GetOrigin(self, result)   Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))
 #define DeeKwCMethod_GetOrigin(self, result) Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))
 #define DeeCMethod0_GetOrigin(self, result)  Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))

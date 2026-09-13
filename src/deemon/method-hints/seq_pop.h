@@ -27,7 +27,7 @@ __seq_pop__(Dee_ssize_t index = -1)->?O {
 }
 
 
-/* When `index' is negative, count from end of sequence */
+/* When `index` is negative, count from end of sequence */
 [[wunused]] DREF DeeObject *
 __seq_pop__.seq_pop([[nonnull]] DeeObject *self, Dee_ssize_t index)
 %{unsupported(auto)}

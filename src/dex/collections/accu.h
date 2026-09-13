@@ -34,7 +34,7 @@ DECL_BEGIN
 typedef struct {
 	Dee_OBJECT_HEAD
 	struct Dee_accu     a_accu; /* [lock(a_lock)] Accumulator */
-	Dee_nrshared_lock_t a_lock; /* Lock for accessing `a_accu' (non-recursive; throws error on reentrancy) */
+	Dee_nrshared_lock_t a_lock; /* Lock for accessing `a_accu` (non-recursive; throws error on reentrancy) */
 } AccuObject;
 
 INTDEF DeeTypeObject Accu_Type;

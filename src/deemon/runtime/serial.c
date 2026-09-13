@@ -32,7 +32,7 @@
 
 DECL_BEGIN
 
-/* Serialize a `DREF DeeObject *' field at `addrof_object' as being populated with a reference to `ob'
+/* Serialize a `DREF DeeObject *` field at `addrof_object` as being populated with a reference to `ob`
  * @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int
@@ -67,12 +67,12 @@ PUBLIC WUNUSED NONNULL((1)) int
 }
 
 
-/* Serialize a `void *' field at `addrof_pointer' as being populated with the address of
- * a static object at `pointer' ("static" here meaning that `DeeModule_OfPointer()' will
- * return a non-NULL pointer for `pointer'), or as pointing into the payload portion of
+/* Serialize a `void *` field at `addrof_pointer` as being populated with the address of
+ * a static object at `pointer` ("static" here meaning that `DeeModule_OfPointer()` will
+ * return a non-NULL pointer for `pointer`), or as pointing into the payload portion of
  * another object or heap block that had already been serialized (iow: "pointer" points
  * into [ref,ref+num_bytes] (yes: closed range; iow: "ref+num_bytes" (1 past last byte) is
- * still recognized and linked) of a prior `DeeSerial_Object_Malloc', `DeeSerial_GCObject_Malloc',
+ * still recognized and linked) of a prior `DeeSerial_Object_Malloc`, `DeeSerial_GCObject_Malloc`,
  * ...). If neither is the case, an error is thrown.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -89,7 +89,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 }
 
 
-/* Helper wrapper for encoding a pointer to the memdup of `data' at `addrof_pointer':
+/* Helper wrapper for encoding a pointer to the memdup of `data` at `addrof_pointer`:
  * >> Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes, data);
  * >> memcpy(DeeSerial_Addr2Mem(self, addrof_dup, void), data, num_bytes);
  * >> return DeeSerial_PutAddr(self, addrof_pointer, addrof_dup); */
@@ -184,7 +184,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return 0;
 }
 
-/* Encode an `DREF DeeObject *addrof_objv[objc]' from "objv" */
+/* Encode an `DREF DeeObject *addrof_objv[objc]` from "objv" */
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeSerial_PutObjectv)(DeeSerial *__restrict self, Dee_seraddr_t addrof_objv,
                              /*1..1*/ DeeObject *const *objv, size_t objc) {
@@ -256,7 +256,7 @@ err:
 
 
 
-/* Helper wrapper around `DeeSerial_PutWeakrefEx()' */
+/* Helper wrapper around `DeeSerial_PutWeakrefEx()` */
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSerial_PutWeakref)(DeeSerial *__restrict self,
                              Dee_seraddr_t addrof_weakref,

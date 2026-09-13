@@ -127,9 +127,9 @@ impl_instance_builtin_compare_eq(DeeTypeObject *tp_self,
 
 /* Same as "tp_compare", but only needs to support equal/not-equal compare:
  * @return: Dee_COMPARE_ERR: An error occurred.
- * @return: -1: `lhs != rhs'
- * @return: 0:  `lhs == rhs'
- * @return: 1:  `lhs != rhs' */
+ * @return: -1: `lhs != rhs`
+ * @return: 0:  `lhs == rhs`
+ * @return: 1:  `lhs != rhs` */
 [[export("DeeObject_{|T}CompareEq")]]
 [[wunused]] int
 tp_cmp->tp_compare_eq([[nonnull]] DeeObject *lhs,
@@ -225,11 +225,11 @@ err:
 
 
 /* Rich-compare operator that can be defined instead
- * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
+ * of `tp_eq`, `tp_ne`, `tp_lo`, `tp_le`, `tp_gr`, `tp_ge`
  * @return: Dee_COMPARE_ERR: An error occurred.
- * @return: -1: `lhs < rhs'
- * @return: 0:  `lhs == rhs'
- * @return: 1:  `lhs > rhs' */
+ * @return: -1: `lhs < rhs`
+ * @return: 0:  `lhs == rhs`
+ * @return: 1:  `lhs > rhs` */
 [[export("DeeObject_{|T}Compare")]]
 [[wunused]] int
 tp_cmp->tp_compare([[nonnull]] DeeObject *lhs,
@@ -456,23 +456,23 @@ err:
 = OPERATOR_LO;
 
 
-/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented', `TypeError' or `ValueError'.
+/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented`, `TypeError` or `ValueError`.
  * Instead of throwing these errors, this implementation should handle these errors by returning
- * either `-1' or `1' to indicate non-equality.
+ * either `-1` or `1` to indicate non-equality.
  *
  * [1] With "shouldn't" I mean *REALLY* shouldn't. As in: unless you *really* want it to throw
  *     one of those errors, you should either use API functions that never throw these errors,
- *     or add `DeeError_Catch()' calls to your function to catch those errors by returning either
- *     `-1' or `1' instead.
+ *     or add `DeeError_Catch()` calls to your function to catch those errors by returning either
+ *     `-1` or `1` instead.
  *
  * !!! THIS OPERATOR CANNOT BE USED TO SUBSTITUTE "tp_compare_eq" !!!
  * -> Defining this operator but not defining "tp_compare_eq" is !NOT VALID!
  *    However, "tp_trycompare_eq" can ITSELF be substituted by "tp_compare_eq"
  *
  * @return: Dee_COMPARE_ERR: An error occurred.
- * @return: -1: `lhs != rhs'
- * @return: 0:  `lhs == rhs'
- * @return: 1:  `lhs != rhs' */
+ * @return: -1: `lhs != rhs`
+ * @return: 0:  `lhs == rhs`
+ * @return: 1:  `lhs != rhs` */
 [[export("DeeObject_{|T}TryCompareEq")]]
 [[custom_unsupported_impl_name(default__trycompare_eq__unsupported)]]
 [[wunused]] int

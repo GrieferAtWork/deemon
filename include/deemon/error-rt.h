@@ -43,39 +43,39 @@ DECL_BEGIN
 /************************************************************************/
 
 
-/* Throws a `DeeError_RuntimeError' indicating that there is no active
+/* Throws a `DeeError_RuntimeError` indicating that there is no active
  * exception. Thrown by user-code "throw;" (re-throw exception) statement
  * when there is no active exception. */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNoActiveException)(void);
 #define DeeRT_ErrNoActiveException() Dee_ASSUMED_VALUE((DeeRT_ErrNoActiveException)(), -1)
 
 
-/* Throws a `DeeError_NotImplemented' indicating that `self' cannot be serialized */
+/* Throws a `DeeError_NotImplemented` indicating that `self` cannot be serialized */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotSerialize)(DeeObject *__restrict self);
 #define DeeRT_ErrCannotSerialize(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotSerialize)(Dee_AsObject(self)), -1)
 
 
-/* Throws a `DeeError_NotImplemented' indicating that `self' has no buffer interface */
+/* Throws a `DeeError_NotImplemented` indicating that `self` has no buffer interface */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNoBufferInterface)(DeeObject *__restrict self);
 #define DeeRT_ErrNoBufferInterface(self) Dee_ASSUMED_VALUE((DeeRT_ErrNoBufferInterface)(Dee_AsObject(self)), -1)
 
 
-/* Throws a `DeeError_CannotWeakReference' indicating that `self' cannot be weak-referenced */
+/* Throws a `DeeError_CannotWeakReference` indicating that `self` cannot be weak-referenced */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotWeakReference)(DeeObject *__restrict self);
 #define DeeRT_ErrCannotWeakReference(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotWeakReference)(Dee_AsObject(self)), -1)
 
 
-/* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
+/* Throws a `DeeError_EmptyWeakReference` indicating that a weak reference is empty */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrEmptyWeakReference)(void);
 
 
-/* Throws a `DeeError_IntegerOverflow' indicating that some an integer
+/* Throws a `DeeError_IntegerOverflow` indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
  * exceeds the maximum supported value bounds within some context-of-use.
  *
  * The unsigned overflow throwing functions will only take the upper
  * bound (greatest) of valid values, and assume that the lower bound
- * is equal to `0'
+ * is equal to `0`
  *
  * @param: positive: When true, assume "value > maxval".
  *                   Else, assume "value < maxval" */
@@ -147,13 +147,13 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU128)(Dee_uint128_t value, 
 #define DeeRT_ErrIntegerOverflowU32(value, maxval)         DeeRT_ErrIntegerOverflowU64(value, maxval)
 #endif /* __SIZEOF_SIZE_T__ < 4 */
 
-/* Same as functions above, but check if the currently thrown error is `IntegerOverflow'
- * If so, wrap it in another nested `IntegerOverflow' that uses the specified minval/maxval
- * values, rather than those of the underlying `IntegerOverflow'
+/* Same as functions above, but check if the currently thrown error is `IntegerOverflow`
+ * If so, wrap it in another nested `IntegerOverflow` that uses the specified minval/maxval
+ * values, rather than those of the underlying `IntegerOverflow`
  *
- * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8',
- * which is implemented in terms of `DeeObject_Get32Bit()'. Now if `DeeObject_Get32Bit()'
- * already fails with an `IntegerOverflow', that error will list 2^32 as its upper limit,
+ * These are needed to properly implement error handling for (e.g.) `DeeObject_AsUInt8`,
+ * which is implemented in terms of `DeeObject_Get32Bit()`. Now if `DeeObject_Get32Bit()`
+ * already fails with an `IntegerOverflow`, that error will list 2^32 as its upper limit,
  * when the caller's limit would have actually been 2^8. */
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflow)(/*Numeric*/ /*0..1*/ DeeObject *minval, /*Numeric*/ /*0..1*/ DeeObject *maxval);
 DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowS)(Dee_ssize_t minval, Dee_ssize_t maxval);
@@ -189,7 +189,7 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU128)(Dee_uint128_t maxval);
 
 
 
-/* Throws an `DeeError_DivideByZero' indicating that a zero-division attempt has taken place. */
+/* Throws an `DeeError_DivideByZero` indicating that a zero-division attempt has taken place. */
 struct Dee_variant;
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZero)(DeeObject *lhs, DeeObject *rhs);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(struct Dee_variant *lhs, struct Dee_variant *rhs);
@@ -197,13 +197,13 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrDivideByZeroEx)(struct Dee
 #define DeeRT_ErrDivideByZeroEx(lhs, rhs) Dee_ASSUMED_VALUE((DeeRT_ErrDivideByZeroEx)(lhs, rhs), -1)
 
 
-/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within a `NegativeShift' (setting it as the `NegativeShift's "cause"), and
- * using `lhs' as the shift's left-hand-side expression.
+/* Check if the currently-thrown exception is an `IntegerOverflow`. If so, wrap that
+ * error within a `NegativeShift` (setting it as the `NegativeShift`s "cause"), and
+ * using `lhs` as the shift's left-hand-side expression.
  *
- * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ * If the currently-thrown exception isn't an `IntegerOverflow`, do nothing.
  *
- * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+ * @return: -1: Always returns `-1`, no matter what this function ended up doing. */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObject *lhs, bool is_left_shift);
 #define DeeRT_ErrNegativeShiftOverflow(lhs, is_left_shift) \
 	Dee_ASSUMED_VALUE((DeeRT_ErrNegativeShiftOverflow)(Dee_AsObject(lhs), is_left_shift), -1)
@@ -211,7 +211,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObj
 
 
 
-/* Throws an `DeeError_UnknownKey' indicating that a given index/key is unknown */
+/* Throws an `DeeError_UnknownKey` indicating that a given index/key is unknown */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnknownKeyWithCause)(DeeObject *map, DeeObject *key, /*inherit(always)*/ DREF DeeObject *cause);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnknownKeyStr)(DeeObject *map, char const *key);
@@ -227,7 +227,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnknownKeyInt)(DeeObject *map
 #define DeeRT_ErrUnknownKeyStrLenWithCause(map, key, keylen, cause) Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyStrLenWithCause)(Dee_AsObject(map), key, keylen, Dee_AsObject(cause)), -1)
 #define DeeRT_ErrUnknownKeyInt(map, key)                            Dee_ASSUMED_VALUE((DeeRT_ErrUnknownKeyInt)(Dee_AsObject(map), key), -1)
 
-/* Throws an `DeeError_ReadOnlyKey' indicating that a given key is read-only */
+/* Throws an `DeeError_ReadOnlyKey` indicating that a given key is read-only */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKey)(DeeObject *map, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrReadOnlyKeyInt)(DeeObject *map, size_t key);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStr)(DeeObject *map, char const *key);
@@ -237,7 +237,7 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrReadOnlyKeyStrLen)(DeeObje
 #define DeeRT_ErrReadOnlyKeyStr(map, key)            Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStr)(Dee_AsObject(map), key), -1)
 #define DeeRT_ErrReadOnlyKeyStrLen(map, key, keylen) Dee_ASSUMED_VALUE((DeeRT_ErrReadOnlyKeyStrLen)(Dee_AsObject(map), key, keylen), -1)
 
-/* Throws an `DeeError_UnboundItem' indicating that a given index/key is unbound */
+/* Throws an `DeeError_UnboundItem` indicating that a given index/key is unbound */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKey)(DeeObject *seq, DeeObject *key);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeRT_ErrUnboundKeyWithCause)(DeeObject *seq, DeeObject *key, /*inherit(always)*/ DREF DeeObject *cause);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundKeyStr)(DeeObject *seq, char const *key);
@@ -257,7 +257,7 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrUnboundIndexObj)(DeeObject
 #define DeeRT_ErrUnboundIndex(seq, index)                           Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndex)(Dee_AsObject(seq), index), -1)
 #define DeeRT_ErrUnboundIndexObj(seq, index)                        Dee_ASSUMED_VALUE((DeeRT_ErrUnboundIndexObj)(Dee_AsObject(seq), Dee_AsObject(index)), -1)
 
-/* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
+/* Throws an `DeeError_IndexError` indicating that a given index is out-of-bounds */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOutOfBounds)(DeeObject *seq, size_t index, size_t length);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeObject *seq, DeeObject *index, /*0..1*/ DeeObject *length);
 #define DeeRT_ErrIndexOutOfBounds(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)(Dee_AsObject(seq), index, length), -1)
@@ -292,8 +292,8 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNestSequenceError)(DeeObject 
 
 
 
-/* Throws an `DeeError_UnpackError' indicating that a sequence `seq'
- * of `actual_size' elements cannot be unpacked to `expected_size'. */
+/* Throws an `DeeError_UnpackError` indicating that a sequence `seq`
+ * of `actual_size` elements cannot be unpacked to `expected_size`. */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackError)(DeeObject *seq, size_t expected_size, size_t actual_size);
 DFUNDEF ATTR_COLD NONNULL((1, 4)) int (DCALL DeeRT_ErrUnpackErrorWithCause)(DeeObject *seq, size_t expected_size, size_t actual_size, /*inherit(always)*/ DREF DeeObject *cause);
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrUnpackErrorEx)(DeeObject *seq, size_t expected_size_min, size_t expected_size_max, size_t actual_size);
@@ -313,22 +313,22 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaUnpackError)(struct Dee_code
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-/* Check if the currently-thrown exception is an `IntegerOverflow'. If so, wrap that
- * error within an `IndexError' (setting it as the `IndexError's "cause"), and using
- * `seq' as the accompanying sequence.
+/* Check if the currently-thrown exception is an `IntegerOverflow`. If so, wrap that
+ * error within an `IndexError` (setting it as the `IndexError`s "cause"), and using
+ * `seq` as the accompanying sequence.
  *
- * If the currently-thrown exception isn't an `IntegerOverflow', do nothing.
+ * If the currently-thrown exception isn't an `IntegerOverflow`, do nothing.
  *
- * @return: -1: Always returns `-1', no matter what this function ended up doing. */
+ * @return: -1: Always returns `-1`, no matter what this function ended up doing. */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq);
 #define DeeRT_ErrIndexOverflow(seq) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOverflow)(Dee_AsObject(seq)), -1)
 
 
-/* Throws an `DeeError_EmptySequence' indicating that a given sequence is empty */
+/* Throws an `DeeError_EmptySequence` indicating that a given sequence is empty */
 DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptySequence)(DeeObject *seq);
 #define DeeRT_ErrEmptySequence(seq) Dee_ASSUMED_VALUE((DeeRT_ErrEmptySequence)(Dee_AsObject(seq)), -1)
 
-/* Throws an `DeeError_ItemNotFound' indicating that a given item could not be found within some sequence */
+/* Throws an `DeeError_ItemNotFound` indicating that a given item could not be found within some sequence */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFound)(DeeObject *seq, DeeObject *item);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject *seq, DeeObject *item, size_t start, size_t end, DeeObject *key);
 #define DeeRT_ErrItemNotFound(seq, item)                    Dee_ASSUMED_VALUE((DeeRT_ErrItemNotFound)(Dee_AsObject(seq), Dee_AsObject(item)), -1)
@@ -336,9 +336,9 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject 
 #define DeeRT_ErrSubstringNotFound(string, substring_or_substrings, start, end) \
 	DeeRT_ErrItemNotFoundEx(string, substring_or_substrings, start, end, NULL)
 
-/* Throws an `DeeError_RegexNotFound' indicating that
+/* Throws an `DeeError_RegexNotFound` indicating that
  * the given "regex" could not be found within "data"
- * @param: eflags: Set of `Dee_RE_EXEC_*' */
+ * @param: eflags: Set of `Dee_RE_EXEC_*` */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
@@ -366,7 +366,7 @@ struct Dee_type_method;
 struct Dee_type_getset;
 struct Dee_type_member;
 
-/* Throws an `DeeError_UnboundAttribute' indicating that some attribute isn't bound
+/* Throws an `DeeError_UnboundAttribute` indicating that some attribute isn't bound
  * @return: NULL: Always returns "NULL" (for easy chaining when called form getters) */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttr)(DeeObject *ob, /*string*/ DeeObject *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ char const *attr);
@@ -387,7 +387,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) DeeObject *(DCALL DeeRT_ErrCUnboundClassMember)(D
 #define DeeRT_ErrCUnboundClassMember(class_type, addr)              Dee_ASSUMED_VALUE((DeeRT_ErrCUnboundClassMember)(class_type, addr), (DeeObject *)NULL)
 #define DeeRT_ErrUnboundInstanceAttrCA(class_type, attr)            DeeRT_ErrCUnboundAttrCA(Dee_AsObject(class_type), attr)
 
-/* Possible values for the "access" of `DeeRT_Err*UnknownAttr*' and `DeeRT_Err*RestrictedAttr*' */
+/* Possible values for the "access" of `DeeRT_Err*UnknownAttr*` and `DeeRT_Err*RestrictedAttr*` */
 #define DeeRT_ATTRIBUTE_ACCESS_GET   1 /* Attempted to get attribute */
 #define DeeRT_ATTRIBUTE_ACCESS_DEL   2 /* Attempted to del attribute */
 #define DeeRT_ATTRIBUTE_ACCESS_SET   4 /* Attempted to set attribute */
@@ -396,7 +396,7 @@ DFUNDEF ATTR_COLD NONNULL((1)) DeeObject *(DCALL DeeRT_ErrCUnboundClassMember)(D
 #define DeeRT_ATTRIBUTE_ACCESS_BOUND DeeRT_ATTRIBUTE_ACCESS_GET /* Bound test (with "allow_missing = false") */
 #define DeeRT_ATTRIBUTE_ACCESS_INIT  DeeRT_ATTRIBUTE_ACCESS_SET /* Initialization */
 
-/* Throws an `DeeError_UnknownAttribute' indicating that some attribute doesn't exist */
+/* Throws an `DeeError_UnknownAttribute` indicating that some attribute doesn't exist */
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob, char const *attr, size_t attrlen, unsigned int access);
@@ -425,7 +425,7 @@ DFUNDEF ATTR_COLD NONNULL((2, 3, 6)) int (DCALL DeeRT_ErrTUnknownAttrStrLenWithC
 #define DeeRT_ErrUnknownAttrStrWithCause(ob, attr, access, cause)                    DeeRT_ErrTUnknownAttrStrWithCause((DeeObject *)NULL, ob, attr, access, cause)
 #define DeeRT_ErrUnknownAttrStrLenWithCause(ob, attr, attrlen, access, cause)        DeeRT_ErrTUnknownAttrStrLenWithCause((DeeObject *)NULL, ob, attr, attrlen, access, cause)
 
-/* Throws an `DeeError_RestrictedAttribute' indicating that the specified attribute access is invalid */
+/* Throws an `DeeError_RestrictedAttribute` indicating that the specified attribute access is invalid */
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr, unsigned int access);

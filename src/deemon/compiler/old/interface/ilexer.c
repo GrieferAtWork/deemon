@@ -63,7 +63,7 @@ DECL_BEGIN
 #endif /* !INT_MAX */
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
- * @return: -2:      A keyword wasn't found (and `create_missing' was false) */
+ * @return: -2:      A keyword wasn't found (and `create_missing` was false) */
 INTERN WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_str(char const *__restrict name, bool create_missing) {
 	switch (name[0]) {
@@ -334,7 +334,7 @@ STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
 
 
 /* @return: NULL:      An error occurred (and was thrown)
- * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
+ * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
 INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
@@ -845,7 +845,7 @@ PRIVATE struct type_getset tpconst keyword_getsets[] = {
 	            "Get, del (set to $0), or set a custom user-value which can be stored within "
 	            /**/ "keyword descriptors. This value must be an unsigned integer that fits into "
 	            /**/ "a single pointer, as used by the host"),
-	/* TODO: Access to keyword assertions (`kr_asserts')? */
+	/* TODO: Access to keyword assertions (`kr_asserts`)? */
 	TYPE_GETSET_END
 };
 

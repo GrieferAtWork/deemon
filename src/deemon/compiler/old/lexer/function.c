@@ -69,7 +69,7 @@ PRIVATE struct symbol *DCALL parse_argument_name(void) {
 		result = new_unnamed_symbol();
 	} else {
 		if (tok == KWD_none) {
-			/* Special case: Allow `none' to be used for placeholder/pending arguments. */
+			/* Special case: Allow `none` to be used for placeholder/pending arguments. */
 create_anon_argument:
 			/* Create a new symbol for the argument. */
 			result = new_unnamed_symbol();
@@ -615,7 +615,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 			*p_need_semi = false;
 	} else {
 		/* Missing function body (this was allowed in deemon 100+, where
-		 * this was interpreted the same way an `{ }'-like empty body would
+		 * this was interpreted the same way an `{ }`-like empty body would
 		 * have been)
 		 *
 		 * Back then, the intend was to go hand-in-hand with the user being
@@ -626,7 +626,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		 * >> local x := function(n) {
 		 * >>     print "x(" + n + ")";
 		 * >>     if (n < 10) {
-		 * >>         // Self-reference via reference (`x' already had
+		 * >>         // Self-reference via reference (`x` already had
 		 * >>         // a value when the function was assigned, thus
 		 * >>         // allowing that value to be referenced like any
 		 * >>         // other referenced variable)
@@ -636,7 +636,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		 * >> x(0);
 		 *
 		 * But that's no longer allowed since functions don't implement the
-		 * `operator assign' anymore (they are immutable once created), and
+		 * `operator assign` anymore (they are immutable once created), and
 		 * self-referencing functions are done by ASM_THIS_FUNCTION which
 		 * will push the current function onto the stack (thus allowing a
 		 * function to reference itself)
@@ -732,7 +732,7 @@ ast_parse_function_noscope_noargs(bool *p_need_semi) {
 			*p_need_semi = false;
 	} else {
 		/* Missing function body (this was allowed in deemon 100+, where
-		 * this was interpreted the same way an `{ }'-like empty body would
+		 * this was interpreted the same way an `{ }`-like empty body would
 		 * have been) */
 		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
@@ -765,7 +765,7 @@ err:
 
 
 
-/* Parse a `() -> 42' or `a -> a+42'-style lambda.
+/* Parse a `() -> 42` or `a -> a+42`-style lambda.
  * In either case, upon entry the current token must be the '->' */
 INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
@@ -891,7 +891,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 	struct TPPLexerPosition pos;
 	if (!TPP_ISKEYWORD(tok)) {
 		if (tok == TOK_POW) {
-			/* `**' can only appear in argument- and parameter lists.
+			/* `**` can only appear in argument- and parameter lists.
 			 * Since out parent is parsing an argument-list, with a
 			 * comma-list as fallback, we know that this is varkwds! */
 			goto yes;
@@ -950,7 +950,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 			if unlikely(yield() < 0)
 				goto err_restore;
 			if (tok == ',' || tok == ')')
-				goto yes_restore; /* Something like `(foo?)' is guarantied to be a paren-lambda. */
+				goto yes_restore; /* Something like `(foo?)` is guarantied to be a paren-lambda. */
 			if (tok == ':') {
 				/* Parse argument declaration information. */
 				if unlikely(yield() < 0)
@@ -959,7 +959,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 					goto err_restore;
 			}
 		} else {
-			if (tok == ':') /* Something like `(foo: int)' is guarantied to be a paren-lambda. */
+			if (tok == ':') /* Something like `(foo: int)` is guarantied to be a paren-lambda. */
 				goto yes_restore;
 		}
 		if unlikely(tok == '=') {

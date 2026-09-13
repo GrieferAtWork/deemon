@@ -299,12 +299,12 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(DefaultIterator_WithNextKey),
 	O(DefaultIterator_WithNextValue),
 
-	/* Default types for `Sequence.reversed()' */
+	/* Default types for `Sequence.reversed()` */
 	O(DefaultReversed_WithGetItemIndex_Type),
 	O(DefaultReversed_WithGetItemIndexFast_Type),
 	O(DefaultReversed_WithTryGetItemIndex_Type),
 
-	/* Default types for `Sequence.distinct()' */
+	/* Default types for `Sequence.distinct()` */
 	O(DistinctIterator_Type),
 	O(DistinctIteratorWithKey_Type),
 	O(DistinctSetWithKey_Type),
@@ -361,7 +361,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(SharedMapIterator_Type),
 	O(RefVector_Type),
 
-	/* Internal types used to drive sequence operations on `Bytes' */
+	/* Internal types used to drive sequence operations on `Bytes` */
 	O(BytesFind_Type),
 	O(BytesFindIterator_Type),
 	O(BytesCaseFind_Type),
@@ -375,7 +375,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(BytesLineSplit_Type),
 	O(BytesLineSplitIterator_Type),
 
-	/* Internal types used to drive sequence operations on `string' */
+	/* Internal types used to drive sequence operations on `string` */
 	O(StringScan_Type),
 	O(StringScanIterator_Type),
 	O(StringFind_Type),
@@ -548,7 +548,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(DeeModule_Deemon),
 	O(DeeModule_Empty),
 	
-	/* Re-exports of standard types also exported from `deemon' */
+	/* Re-exports of standard types also exported from `deemon` */
 	O(DeeInt_Type),
 	O(DeeBool_Type),
 	O(DeeFloat_Type),

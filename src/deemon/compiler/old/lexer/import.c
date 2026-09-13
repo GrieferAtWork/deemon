@@ -134,7 +134,7 @@ ast_parse_module_name(struct Dee_unicode_printer *__restrict printer,
 			    (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
 			     (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)) &&
 			     !TOK_ISDOT(tok)))
-				break; /* Special case: `.' is a valid name for the current module. */
+				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (TPP_ISKEYWORD(tok)) {
 			/* Warn about reserved identifiers.
 			 * -> Reserved identifiers should be written as strings. */
@@ -209,9 +209,9 @@ err:
 
 
 /* Parse a module name and return the associated module object.
- * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
+ * @param: for_alias: Should be `true` if the name is used in `foo = <name>`,
  *                    or if no alias can be used where the name appears,
- *                    else `false'
+ *                    else `false`
  * @return: * :             The named module
  * @return: NULL:           Error was thrown
  * @return: MODULE_CURRENT: The module currently being compiled */
@@ -296,13 +296,13 @@ err:
 
 
 struct import_item {
-	struct ast_loc        ii_import_loc;  /* Parser location of `ii_import_name' */
+	struct ast_loc        ii_import_loc;  /* Parser location of `ii_import_name` */
 	struct TPPKeyword    *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
 	DREF DeeStringObject *ii_import_name; /* [0..1] The name of the object being imported.
-	                                       * When NULL, `ii_symbol_name' is used instead. */
+	                                       * When NULL, `ii_symbol_name` is used instead. */
 };
 
-/* Return `bar' for a module name `.foo.bar', etc. */
+/* Return `bar` for a module name `.foo.bar`, etc. */
 PRIVATE struct TPPKeyword *DCALL
 get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) {
 	char const *utf8_repr, *symbol_start;
@@ -349,7 +349,7 @@ err:
 
 
 /* @return:  2: Nothing was parsed
- * @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
+ * @return:  1: OK (when `allow_module_name` is true, a module import was parsed)
  * @return:  0: OK
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -359,19 +359,19 @@ parse_import_symbol(struct import_item *__restrict result,
 	int return_value = 0;
 	loc_here(&result->ii_import_loc);
 	if (TPP_ISKEYWORD(tok)) {
-		/* - `foo'
-		 * - `foo = bar'
-		 * - `foo = .foo.bar'
+		/* - `foo`
+		 * - `foo = bar`
+		 * - `foo = .foo.bar`
 		 * - `foo = "bar"'
-		 * - `foo as bar'
-		 * - `foo.bar'
-		 * - `foo.bar as foobar' */
+		 * - `foo as bar`
+		 * - `foo.bar`
+		 * - `foo.bar as foobar` */
 		result->ii_symbol_name = token.t_kwd;
 		if unlikely(yield() < 0)
 			goto err;
 		if (tok == '=') {
-			/* - `foo = bar'
-			 * - `foo = .foo.bar'
+			/* - `foo = bar`
+			 * - `foo = .foo.bar`
 			 * - `foo = "bar"' */
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, result->ii_symbol_name))
@@ -394,7 +394,7 @@ parse_import_symbol(struct import_item *__restrict result,
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-			/* - `foo as bar' */
+			/* - `foo as bar` */
 			if (TPP_ISKEYWORD(tok)) {
 				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name->k_name,
 				                                                                   result->ii_symbol_name->k_size,
@@ -413,8 +413,8 @@ parse_import_symbol(struct import_item *__restrict result,
 				result->ii_import_name = NULL;
 			}
 		} else if (TOK_ISDOT(tok) && allow_module_name) {
-			/* - `foo.bar'
-			 * - `foo.bar as foobar' */
+			/* - `foo.bar`
+			 * - `foo.bar as foobar` */
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_MODULE_NAME, result->ii_symbol_name))
 				goto err;
@@ -434,8 +434,8 @@ parse_import_symbol(struct import_item *__restrict result,
 			result->ii_import_name = NULL;
 		}
 	} else if (TOK_ISDOT(tok) && allow_module_name) {
-		/* - `.foo.bar'
-		 * - `.foo.bar as foobar' */
+		/* - `.foo.bar`
+		 * - `.foo.bar as foobar` */
 		Dee_unicode_printer_init(&printer);
 complete_module_name:
 		return_value = 1;
@@ -443,7 +443,7 @@ complete_module_name:
 			goto err_printer;
 		if unlikely(yield() < 0)
 			goto err_printer;
-		/* Make sure to properly parse `import . as me' */
+		/* Make sure to properly parse `import . as me` */
 		if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
 		    TOK_ISDOT(tok) || tok == TOK_STRING ||
 		    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
@@ -454,7 +454,7 @@ complete_module_name:
 		if unlikely(!result->ii_import_name)
 			goto err;
 		if (tok == KWD_as) {
-			/* - `.foo.bar as foobar' */
+			/* - `.foo.bar as foobar` */
 			if unlikely(yield() < 0)
 				goto err_name;
 			if unlikely(!TPP_ISKEYWORD(tok)) {
@@ -470,7 +470,7 @@ complete_module_name:
 			if unlikely(yield() < 0)
 				goto err_name;
 		} else {
-			/* - `.foo.bar' */
+			/* - `.foo.bar` */
 autogenerate_symbol_name:
 			/* Autogenerate the module import symbol name. */
 			result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
@@ -565,13 +565,13 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 			 * symbol ever turns out to be used.
 			 * That way, modules exporting symbols with the same name can still
 			 * both be used in the same namespace, with all symbols from both
-			 * imported using `import *'
-			 * Additionally, `SYMBOL_TYPE_AMBIG' symbols are weak, meaning that
-			 * in a situation where 2 modules `a' and `b' both define `foo', you
+			 * imported using `import *`
+			 * Additionally, `SYMBOL_TYPE_AMBIG` symbols are weak, meaning that
+			 * in a situation where 2 modules `a` and `b` both define `foo`, you
 			 * can write:
 			 * >> import * from a;
 			 * >> import * from b;
-			 * >> import foo from b;  // Explicitly link `foo' to be import from the desired module.
+			 * >> import foo from b;  // Explicitly link `foo` to be import from the desired module.
 			 */
 			if (!SYMBOL_IS_WEAK(sym))
 				continue; /* Not a weakly declared symbol. */
@@ -582,21 +582,21 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 					if (sym->s_extern.e_symbol == iter)
 						continue; /* Same declaration. */
 				} else {
-					/* TODO: Special handling when aliasing `Dee_MODSYM_FEXTERN'-symbols.
+					/* TODO: Special handling when aliasing `Dee_MODSYM_FEXTERN`-symbols.
 					 *       Importing an external symbol that has been aliased should
 					 *       not cause ambiguity if it is the original symbol with which
 					 *       the new one would collide (this goes if at least either the
-					 *       old, or the new symbol has the `Dee_MODSYM_FEXTERN' flag)
+					 *       old, or the new symbol has the `Dee_MODSYM_FEXTERN` flag)
 					 */
 
-					/* Special case: When both the old and new symbol refers to an external `final global'
-					 * variable (with neither being `varying'), then ensure that the modules have been
+					/* Special case: When both the old and new symbol refers to an external `final global`
+					 * variable (with neither being `varying`), then ensure that the modules have been
 					 * initialized, and check if the values bound for the symbols differ.
 					 *
 					 * If they are identical, we're allowed to assume that they simply alias each other,
 					 * in which case it doesn't really matter which one we use for binding. However in the
-					 * interest of minimizing dependencies, if either module is the builtin `deemon' module,
-					 * bind against the symbol as found in `deemon', otherwise check if either module uses
+					 * interest of minimizing dependencies, if either module is the builtin `deemon` module,
+					 * bind against the symbol as found in `deemon`, otherwise check if either module uses
 					 * the other, in which case: bind against the symbol of the module being used (aka.
 					 * further down in the dependency tree) */
 					if ((sym->s_extern.e_symbol->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR |
@@ -607,7 +607,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 					    /*             */ (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)) {
 						/* Both symbols are non-varying (allowing value inlining).
 						 * -> Make sure both modules have been loaded, and compare the values that have been bound.
-						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
+						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b`) */
 						int error = DeeModule_Initialize(mod);
 						if unlikely(error < 0)
 							goto err;
@@ -638,7 +638,7 @@ do_reassign_new_alias:
 										} else {
 											uint16_t i;
 
-											/* Neither module is the builtin `deemon' module.
+											/* Neither module is the builtin `deemon` module.
 											 *
 											 * Check if one of the modules is importing the other, or
 											 * bind the new module if it doesn't have any imports. */
@@ -682,7 +682,7 @@ do_reassign_new_alias:
 
 			/* Define this symbol as an import from this module. */
 			sym->s_type = SYMBOL_TYPE_EXTERN;
-			sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*' are defined weakly. */
+			sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*` are defined weakly. */
 			sym->s_extern.e_module = mod;
 			sym->s_extern.e_symbol = iter;
 			Dee_Incref(mod);
@@ -896,12 +896,12 @@ parse_module_import_list:
 				break;
 		}
 
-		/* Warn if the module import list is followed by a `from' */
+		/* Warn if the module import list is followed by a `from` */
 		if (tok == KWD_from &&
 		    WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
 			goto err;
 	} else if (tok == KWD_from) {
-		/*  - `import foo from bar' */
+		/*  - `import foo from bar` */
 		if unlikely(yield() < 0)
 			goto err_item;
 		mod = parse_module_byname(true);
@@ -937,7 +937,7 @@ import_parse_list:
 				}
 				if unlikely(yield() < 0)
 					goto err_item_v;
-				/* Don't allow modules after `*' confirmed that symbols are being imported.
+				/* Don't allow modules after `*` confirmed that symbols are being imported.
 				 * -> There is no such thing as import-all-modules. */
 				allow_modules = false;
 			} else {
@@ -995,7 +995,7 @@ import_parse_list:
 			if unlikely(!mod)
 				goto err_item_v;
 
-			/* If `*' was apart of the symbol import list,
+			/* If `*` was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
 			if (star_loc.l_file) {
 				if unlikely(ast_import_all_from_module(mod, &star_loc))
@@ -1012,7 +1012,7 @@ import_parse_list:
 		} else {
 			size_t i;
 			if unlikely(!allow_modules) {
-				/* Warn if there is a `from' missing following a symbol import list. */
+				/* Warn if there is a `from` missing following a symbol import list. */
 				if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
 					goto err_item_v;
 			}
@@ -1049,7 +1049,7 @@ err:
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_import_expression_after_import(struct ast_loc *__restrict import_loc);
 
-/* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
+/* Same as `ast_parse_try_hybrid` but for import statements / expressions. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_import_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *result;
@@ -1059,7 +1059,7 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 	if unlikely(yield() < 0)
 		goto err;
 	if (tok == '(' || tok == KWD_pack) {
-		/* `import', as seen in expressions. */
+		/* `import`, as seen in expressions. */
 		result = ast_parse_import_expression_after_import(&import_loc);
 		if unlikely(!result)
 			goto err;
@@ -1119,8 +1119,8 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 	 *  - from deemon import "Object" as MyObject;
 	 *  - from deemon import Object as MyObject, List as MyList;
 	 * ----
-	 *  // NOTE: `keyword' may not be followed by `string', and
-	 *  //       `string' may not be followed by `keyword'
+	 *  // NOTE: `keyword` may not be followed by `string`, and
+	 *  //       `string` may not be followed by `keyword`
 	 *  module_name ::= (
 	 *      (string | '.' | keyword)...
 	 *  );
@@ -1154,11 +1154,11 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 	 * NOTES:
 	 *   - Importing the same symbol under the same
 	 *     name twice is allowed and behaves as a no-op.
-	 *   - A `global' prefix can be used to forward an external
+	 *   - A `global` prefix can be used to forward an external
 	 *     symbol as an export of the current module, which then
 	 *     refers to the same variable as was originally defined
 	 *     by the module from which symbols are being imported.
-	 *     The default is `local', and `global' can only be used
+	 *     The default is `local`, and `global` can only be used
 	 *     which the root scope.
 	 */
 	ASSERT(tok == KWD_import || tok == KWD_from);
@@ -1241,7 +1241,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 		if unlikely(yield() < 0)
 			goto err;
 		if (tok == '(' || tok == KWD_pack) {
-			/* `import', as seen in expressions. */
+			/* `import`, as seen in expressions. */
 			result = ast_parse_import_expression_after_import(&import_loc);
 			if unlikely(!result)
 				goto err;

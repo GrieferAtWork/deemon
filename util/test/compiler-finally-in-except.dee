@@ -48,7 +48,7 @@ try {
 		}
 	} finally {
 		state += "F";
-		/* Even though the `42' thrown above is still part of the active
+		/* Even though the `42` thrown above is still part of the active
 		 * stack of exception, leaving this finally block must not cause
 		 * it to start being propagated again.
 		 * Prior to (now) being fixed, leaving a finally block when there

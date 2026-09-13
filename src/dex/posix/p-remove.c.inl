@@ -43,7 +43,7 @@
 
 DECL_BEGIN
 
-/* Figure out how to implement `unlink()' */
+/* Figure out how to implement `unlink()` */
 #undef posix_unlink_USE_nt_DeleteFile
 #undef posix_unlink_USE_unlink
 #undef posix_unlink_USE_wunlink
@@ -61,7 +61,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
-/* Figure out how to implement `rmdir()' */
+/* Figure out how to implement `rmdir()` */
 #undef posix_rmdir_USE_nt_RemoveDirectory
 #undef posix_rmdir_USE_rmdir
 #undef posix_rmdir_USE_wrmdir
@@ -79,7 +79,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
-/* Figure out how to implement `remove()' */
+/* Figure out how to implement `remove()` */
 #undef posix_remove_USE_nt_DeleteFile_AND_nt_RemoveDirectory
 #undef posix_remove_USE_remove
 #undef posix_remove_USE_wremove
@@ -115,7 +115,7 @@ DECL_BEGIN
 #endif /* !... */
 
 
-/* Figure out how to implement `unlinkat()' */
+/* Figure out how to implement `unlinkat()` */
 #undef posix_unlinkat_USE_posix_unlink
 #undef posix_unlinkat_USE_unlinkat
 #undef posix_unlinkat_USE_STUB
@@ -131,7 +131,7 @@ DECL_BEGIN
 #endif /* ... */
 
 
-/* Figure out how to implement `rmdirat()' */
+/* Figure out how to implement `rmdirat()` */
 #undef posix_rmdirat_USE_posix_rmdir
 #undef posix_rmdirat_USE_rmdirat
 #undef posix_rmdirat_USE_STUB
@@ -145,7 +145,7 @@ DECL_BEGIN
 #endif /* ... */
 
 
-/* Figure out how to implement `removeat()' */
+/* Figure out how to implement `removeat()` */
 #undef posix_removeat_USE_posix_remove
 #undef posix_removeat_USE_removeat
 #undef posix_removeat_USE_STUB
@@ -398,7 +398,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	/* NOTE: DeleteFile() sets `ERROR_ACCESS_DENIED'
+	/* NOTE: DeleteFile() sets `ERROR_ACCESS_DENIED`
 	 *       if the folder is actually a directory. */
 	if (dwError == ERROR_ACCESS_DENIED) {
 #define NEED_nt_RemoveDirectory

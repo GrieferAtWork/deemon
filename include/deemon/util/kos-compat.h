@@ -42,7 +42,7 @@
 /* clang-format on */
 
 #ifndef DEE_SOURCE
-#error "This header should only be used when `DEE_SOURCE' is also enabled"
+#error "This header should only be used when `DEE_SOURCE` is also enabled"
 #endif /* !DEE_SOURCE */
 
 #ifdef CONFIG_NO_UNICODE_H
@@ -53,8 +53,8 @@
 #define CONFIG_HAVE_UNICODE_H
 #endif
 
-/* Must include KOS's `<unicode.h>' first since we kind-of
- * re-define some of its symbols when `DEE_SOURCE' is enabled. */
+/* Must include KOS's `<unicode.h>` first since we kind-of
+ * re-define some of its symbols when `DEE_SOURCE` is enabled. */
 #ifdef CONFIG_HAVE_UNICODE_H
 #include <unicode.h>
 #endif /* CONFIG_HAVE_UNICODE_H */

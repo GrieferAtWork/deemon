@@ -343,7 +343,7 @@ USet_DoInsertTrackedUnlocked(USet *self, DREF DeeObject *ob) {
 }
 
 /* Resize the hash size by a factor of 2 and re-insert all elements.
- * When `sizedir > 0', increase the hash; When `sizedir < 0', decrease it.
+ * When `sizedir > 0`, increase the hash; When `sizedir < 0`, decrease it.
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the set.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
@@ -609,8 +609,8 @@ udict_init_sequence(USet *__restrict self,
 	DeeTypeObject *type = Dee_TYPE(sequence);
 	if (type == &USet_Type)
 		return USet_InitCopy(self, (USet *)sequence);
-	/* TODO: Optimizations for `DeeHashSet_Type' */
-	/* TODO: Optimizations for `DeeRoSet_Type' */
+	/* TODO: Optimizations for `DeeHashSet_Type` */
+	/* TODO: Optimizations for `DeeRoSet_Type` */
 	if (type == &URoSet_Type) {
 		URoSet *src = (URoSet *)sequence;
 		Dee_atomic_rwlock_init(&self->us_lock);
@@ -1791,8 +1791,8 @@ URoSet_FromSequence(DeeObject *__restrict sequence) {
 	if (type == &USet_Type)
 		return URoSet_FromUSet((USet *)sequence);
 
-	/* TODO: Optimizations for `DeeHashSet_Type' */
-	/* TODO: Optimizations for `DeeRoSet_Type' */
+	/* TODO: Optimizations for `DeeHashSet_Type` */
+	/* TODO: Optimizations for `DeeRoSet_Type` */
 
 	return URoSet_FromSequence_fallback(sequence);
 }

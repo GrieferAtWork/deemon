@@ -99,8 +99,8 @@ DECL_BEGIN
  * stack recursion, objects and types used to implement the compiler, as well
  * as other internal types.
  * --------------------------------------------------------------------------------
- * Since the `rt' module as a whole is non-portable, exported symbols are not
- * required to include the `_np' suffix normally required to indicate non-portable. */
+ * Since the `rt` module as a whole is non-portable, exported symbols are not
+ * required to include the `_np` suffix normally required to indicate non-portable. */
 
 
 /*[[[deemon
@@ -687,7 +687,7 @@ librt_get_GCCollectionIterator_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_Code_empty_f(void) {
-	/* The empty-code object is set when `Code()' is called without any arguments. */
+	/* The empty-code object is set when `Code()` is called without any arguments. */
 	return_cached(DeeObject_NewDefault(&DeeCode_Type));
 }
 
@@ -732,8 +732,8 @@ librt_get_BlackListKwIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_DocKwds_uncached_f(void) {
 	/* To implement this, we need to get access to an instance of it,
-	 * which we are doing via `type((compare from deemon).__kwds__)'.
-	 * Because the `import()' function is known to implement keyword
+	 * which we are doing via `type((compare from deemon).__kwds__)`.
+	 * Because the `import()` function is known to implement keyword
 	 * support, we can use it as a reference point for a C-level function
 	 * with a non-empty keyword list, without having to create such an
 	 * object ourself. */
@@ -858,7 +858,7 @@ librt_get_SeqCombinationsView_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSegments_f(void) {
-	/* Since string overrides `segments', we must use a true sequence here! */
+	/* Since string overrides `segments`, we must use a true sequence here! */
 	return_cached(librt_get_sequence_mutation_type(STR_AND_HASH(segments)));
 }
 
@@ -3051,9 +3051,9 @@ MODULE_NAME = none;
 
 
 
-/* NOTE: At first glance, the combination of DEX_GETTER_F + `DEXSYM_CONSTEXPR' may
+/* NOTE: At first glance, the combination of DEX_GETTER_F + `DEXSYM_CONSTEXPR` may
  *       not look like it would make sense, but by using this combination, we prevent
- *       the symbols to be considered properties during enumeration (`Dee_ATTRPERM_F_PROPERTY'
+ *       the symbols to be considered properties during enumeration (`Dee_ATTRPERM_F_PROPERTY`
  *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
 
 #define RT_METHOD(name, mth, doc)  DEX_MEMBER_F(name, mth, DEXSYM_READONLY, doc)
@@ -3255,12 +3255,12 @@ DEX_GETTER_F_NODOC("IterWithNextAndUnpackFilter", &librt_get_IterWithNextAndUnpa
 DEX_GETTER_F_NODOC("IterWithNextKey", &librt_get_IterWithNextKey, DEXSYM_CONSTEXPR),                                         /* DefaultIterator_WithNextKey */
 DEX_GETTER_F_NODOC("IterWithNextValue", &librt_get_IterWithNextValue, DEXSYM_CONSTEXPR),                                     /* DefaultIterator_WithNextValue */
 
-/* Default types for `Sequence.reversed()' */
+/* Default types for `Sequence.reversed()` */
 DEX_GETTER_F_NODOC("SeqReversedWithGetItemIndex", &librt_get_SeqReversedWithGetItemIndex, DEXSYM_CONSTEXPR),         /* DefaultReversed_WithGetItemIndex_Type */
 DEX_GETTER_F_NODOC("SeqReversedWithGetItemIndexFast", &librt_get_SeqReversedWithGetItemIndexFast, DEXSYM_CONSTEXPR), /* DefaultReversed_WithGetItemIndexFast_Type */
 DEX_GETTER_F_NODOC("SeqReversedWithTryGetItemIndex", &librt_get_SeqReversedWithTryGetItemIndex, DEXSYM_CONSTEXPR),   /* DefaultReversed_WithTryGetItemIndex_Type */
 
-/* Default types for `Sequence.distinct()' */
+/* Default types for `Sequence.distinct()` */
 DEX_GETTER_F_NODOC("DistinctIterator", &librt_get_DistinctIterator, DEXSYM_CONSTEXPR),               /* DistinctIterator_Type */
 DEX_GETTER_F_NODOC("DistinctIteratorWithKey", &librt_get_DistinctIteratorWithKey, DEXSYM_CONSTEXPR), /* DistinctIteratorWithKey_Type */
 DEX_GETTER_F_NODOC("DistinctSetWithKey", &librt_get_DistinctSetWithKey, DEXSYM_CONSTEXPR),           /* DistinctSetWithKey_Type */
@@ -3317,7 +3317,7 @@ DEX_MEMBER_F_NODOC("SharedMap", &DeeSharedMap_Type, DEXSYM_READONLY | DEXSYM_CON
 DEX_GETTER_F_NODOC("SharedMapIterator", &librt_get_SharedMapIterator, DEXSYM_CONSTEXPR),       /* SharedMapIterator_Type */
 DEX_GETTER_F_NODOC("RefVector", &librt_get_RefVector, DEXSYM_CONSTEXPR),                       /* RefVector_Type */
 
-/* Internal types used to drive sequence operations on `Bytes' */
+/* Internal types used to drive sequence operations on `Bytes` */
 DEX_GETTER_F_NODOC("BytesFind", &librt_get_BytesFind, DEXSYM_CONSTEXPR),                           /* BytesFind_Type */
 DEX_GETTER_F_NODOC("BytesFindIterator", &librt_get_BytesFindIterator, DEXSYM_CONSTEXPR),           /* BytesFindIterator_Type */
 DEX_GETTER_F_NODOC("BytesCaseFind", &librt_get_BytesCaseFind, DEXSYM_CONSTEXPR),                   /* BytesCaseFind_Type */
@@ -3331,7 +3331,7 @@ DEX_GETTER_F_NODOC("BytesCaseSplitIterator", &librt_get_BytesCaseSplitIterator, 
 DEX_GETTER_F_NODOC("BytesLineSplit", &librt_get_BytesLineSplit, DEXSYM_CONSTEXPR),                 /* BytesLineSplit_Type */
 DEX_GETTER_F_NODOC("BytesLineSplitIterator", &librt_get_BytesLineSplitIterator, DEXSYM_CONSTEXPR), /* BytesLineSplitIterator_Type */
 
-/* Internal types used to drive sequence operations on `string' */
+/* Internal types used to drive sequence operations on `string` */
 DEX_GETTER_F_NODOC("StringScan", &librt_get_StringScan, DEXSYM_CONSTEXPR),                           /* StringScan_Type */
 DEX_GETTER_F_NODOC("StringScanIterator", &librt_get_StringScanIterator, DEXSYM_CONSTEXPR),           /* StringScanIterator_Type */
 DEX_GETTER_F_NODOC("StringFind", &librt_get_StringFind, DEXSYM_CONSTEXPR),                           /* StringFind_Type */
@@ -3561,7 +3561,7 @@ DEX_GETTER_F("Module_empty", &librt_get_Module_empty, DEXSYM_CONSTEXPR,
              "->?GModule\n"
              "The fallback #Iempty module"), /* DeeModule_Empty */
 
-/* Re-exports of standard types also exported from `deemon' */
+/* Re-exports of standard types also exported from `deemon` */
 DEX_MEMBER_F_NODOC("Int", &DeeInt_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Bool", &DeeBool_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Float", &DeeFloat_Type, DEXSYM_READONLY),
@@ -3592,15 +3592,15 @@ DEX_MEMBER_F_NODOC("WeakRef", &DeeWeakRef_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Cell", &DeeCell_Type, DEXSYM_READONLY),
 DEX_MEMBER_F("File", &DeeFile_Type.ft_base, DEXSYM_READONLY,
              "(intended) base class for all file types (is to ?GFileType what ?GObject is to ?GType)."),
-DEX_MEMBER_F_NODOC("FileBuffer", &DeeFileBuffer_Type.ft_base, DEXSYM_READONLY), /* `File.Buffer' */
+DEX_MEMBER_F_NODOC("FileBuffer", &DeeFileBuffer_Type.ft_base, DEXSYM_READONLY), /* `File.Buffer` */
 DEX_MEMBER_F("SystemFile", &DeeSystemFile_Type.ft_base, DEXSYM_READONLY,
              "Base class for file types that are managed by the system."),
 DEX_MEMBER_F("FSFile", &DeeFSFile_Type.ft_base, DEXSYM_READONLY,
              "Derived from ?GSystemFile: A system file that has been opened via the file system."),
 DEX_MEMBER_F("MapFile", &DeeMapFile_Type, DEXSYM_READONLY,
              "Owner type for mmap buffers used during large file reads."),
-DEX_MEMBER_F_NODOC("NoneType", &DeeNone_Type, DEXSYM_READONLY),          /* `type(none)' */
-DEX_MEMBER_F_NODOC("None", Dee_None, DEXSYM_READONLY),                   /* `none' */
+DEX_MEMBER_F_NODOC("NoneType", &DeeNone_Type, DEXSYM_READONLY),          /* `type(none)` */
+DEX_MEMBER_F_NODOC("None", Dee_None, DEXSYM_READONLY),                   /* `none` */
 DEX_MEMBER_F("MemoryFile", &DeeMemoryFile_Type.ft_base, DEXSYM_READONLY, /* An internal file type for streaming from read-only raw memory. */
              "A special file type that may be used by the deemon runtime to temporarily "
              /**/ "allow user-code access to raw memory regions via the file interface, rather "
@@ -3608,13 +3608,13 @@ DEX_MEMBER_F("MemoryFile", &DeeMemoryFile_Type.ft_base, DEXSYM_READONLY, /* An i
              /**/ "constructed from user-code such that it would reference data, and that memory "
              /**/ "files impose special access restrictions to prevent user-code from maintaining "
              /**/ "access to wrapped memory once the file's creator destroys it."),
-DEX_MEMBER_F_NODOC("FileReader", &DeeFileReader_Type.ft_base, DEXSYM_READONLY), /* `File.Reader' */
-DEX_MEMBER_F_NODOC("FileWriter", &DeeFileWriter_Type.ft_base, DEXSYM_READONLY), /* `File.Writer' */
+DEX_MEMBER_F_NODOC("FileReader", &DeeFileReader_Type.ft_base, DEXSYM_READONLY), /* `File.Reader` */
+DEX_MEMBER_F_NODOC("FileWriter", &DeeFileWriter_Type.ft_base, DEXSYM_READONLY), /* `File.Writer` */
 DEX_MEMBER_F("FilePrinter", &DeeFilePrinter_Type.ft_base, DEXSYM_READONLY,
              "Internal file-type for wrapping #Cdformatprinter when invoking user-defined print/printrepr operators"),
-DEX_MEMBER_F_NODOC("Attribute", &DeeAttribute_Type, DEXSYM_READONLY),               /* `Attribute' */
-DEX_MEMBER_F_NODOC("EnumAttr", &DeeEnumAttr_Type, DEXSYM_READONLY),                 /* `enumattr' */
-DEX_MEMBER_F_NODOC("EnumAttrIterator", &DeeEnumAttrIterator_Type, DEXSYM_READONLY), /* `enumattr.Iterator' */
+DEX_MEMBER_F_NODOC("Attribute", &DeeAttribute_Type, DEXSYM_READONLY),               /* `Attribute` */
+DEX_MEMBER_F_NODOC("EnumAttr", &DeeEnumAttr_Type, DEXSYM_READONLY),                 /* `enumattr` */
+DEX_MEMBER_F_NODOC("EnumAttrIterator", &DeeEnumAttrIterator_Type, DEXSYM_READONLY), /* `enumattr.Iterator` */
 
 /* Function wrapper types */
 DEX_GETTER_F_NODOC("FunctionStatics", &librt_get_FunctionStatics, DEXSYM_CONSTEXPR),                                               /* FunctionStatics_Type */

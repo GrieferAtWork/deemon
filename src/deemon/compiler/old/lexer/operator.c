@@ -229,7 +229,7 @@ do_generic:
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbol(function_symbol->s_extern.e_module,
 		                                                         Dee_AsObject(function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
-		        "Missing runtime function `%s'",
+		        "Missing runtime function `%s`",
 		        DeeString_STR(function_name));
 		function_ast = ast_sym(function_symbol);
 		if unlikely(!function_ast)
@@ -340,7 +340,7 @@ do_generic:
 		function_symbol->s_extern.e_symbol = DeeModule_GetSymbol(function_symbol->s_extern.e_module,
 		                                                         Dee_AsObject(function_name));
 		ASSERTF(function_symbol->s_extern.e_symbol,
-		        "Missing runtime function `%s'",
+		        "Missing runtime function `%s`",
 		        DeeString_STR(function_name));
 		function_ast = ast_sym(function_symbol);
 		if unlikely(!function_ast)
@@ -359,8 +359,8 @@ err:
 }
 
 /* Parse and return an operator name.
- * @param: features: Set of `P_OPERATOR_F*'
- * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
+ * @param: features: Set of `P_OPERATOR_F*`
+ * @return: * : One of `OPERATOR_*` or `AST_OPERATOR_*`
  * @return: -1: An error occurred. */
 INTERN WUNUSED int32_t DCALL
 ast_parse_operator_name(uint16_t features) {
@@ -530,7 +530,7 @@ do_operator_gr:
 			goto err;
 		if (TPP_ISKEYWORD(tok) && token.t_kwd->k_size == 4 &&
 		    UNALIGNED_GET32(token.t_kwd->k_name) == ENCODE_INT32('m', 'o', 'v', 'e')) {
-			/* `= move' move-assign operator. */
+			/* `= move` move-assign operator. */
 			result = OPERATOR_MOVEASSIGN;
 			goto done_y1;
 		}
@@ -776,7 +776,7 @@ default_case:
 #endif
 		/* Query an explicit operator by its name.
 		 * NOTE: This is also where a lot of backwards-compatibility lies, as
-		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
+		 *       the old deemon used to only accept e.g.: `operator __contains__`. */
 		{
 			struct Dee_opinfo const *info;
 			/* TODO: Don't hard-code "DeeFileType_Type" here. Instead, hard-code "DeeType_Type"

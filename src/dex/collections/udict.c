@@ -403,9 +403,9 @@ udict_setitem_as_foreach(void *arg, DeeObject *key, DeeObject *value) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_init_sequence(UDict *__restrict self,
                     DeeObject *__restrict sequence) {
-	/* TODO: Optimizations for `DeeDict_Type' */
-	/* TODO: Optimizations for `DeeRoDict_Type' */
-	/* TODO: Optimizations for `URoDict_Type' */
+	/* TODO: Optimizations for `DeeDict_Type` */
+	/* TODO: Optimizations for `DeeRoDict_Type` */
+	/* TODO: Optimizations for `URoDict_Type` */
 
 	self->ud_mask = 0;
 	self->ud_size = 0;
@@ -608,7 +608,7 @@ udict_visit(UDict *__restrict self, Dee_visit_t proc, void *arg) {
 }
 
 /* Resize the hash size by a factor of 2 and re-insert all elements.
- * When `sizedir > 0', increase the hash; When `sizedir < 0', decrease it.
+ * When `sizedir > 0`, increase the hash; When `sizedir < 0`, decrease it.
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the Dict.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
@@ -1749,9 +1749,9 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 	if (seqtype == &URoDict_Type)
 		return_reference_((DREF URoDict *)sequence);
 
-	/* TODO: Optimizations for `DeeDict_Type' */
-	/* TODO: Optimizations for `DeeRoDict_Type' */
-	/* TODO: Optimizations for `UDict_Type' */
+	/* TODO: Optimizations for `DeeDict_Type` */
+	/* TODO: Optimizations for `DeeRoDict_Type` */
+	/* TODO: Optimizations for `UDict_Type` */
 
 	return URoDict_FromSequence_fallback(sequence);
 }

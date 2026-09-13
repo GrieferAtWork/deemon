@@ -90,8 +90,8 @@ DECL_BEGIN
 
 union u_time_repr_kind {
 	struct {
-		uint8_t  t_type; /* Time encoding (One of `TIME_*') */
-		uint8_t  t_kind; /* Time representation (One of `TIME_REPR_*') */
+		uint8_t  t_type; /* Time encoding (One of `TIME_*`) */
+		uint8_t  t_kind; /* Time representation (One of `TIME_REPR_*`) */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 	_dee_astruct
@@ -108,7 +108,7 @@ typedef struct time_object {
 		 * NOTE: 0 was chosen due to the fact that this way time-offsets/timeouts
 		 *       and exact points in time can use the same type internally,
 		 *       making it quite strait-forward to do time-based calculation such
-		 *       as `print (now()+days(5)).wday; // The week day 5 days into the future'
+		 *       as `print (now()+days(5)).wday; // The week day 5 days into the future`
 		 *       Also note that this implementation assumes a flat time-scale which
 		 *       doesn't take leap seconds or daylight-savings into account, meaning
 		 *       that as far as this timer is concerned, it'll just jump back and
@@ -141,8 +141,8 @@ typedef struct time_object {
 	;
 	union {
 		struct {
-			uint8_t  t_type; /* Time encoding (One of `TIME_TYPE_*') */
-			uint8_t  t_kind; /* Time kind (One of `TIME_KIND_*') */
+			uint8_t  t_type; /* Time encoding (One of `TIME_TYPE_*`) */
+			uint8_t  t_kind; /* Time kind (One of `TIME_KIND_*`) */
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 		_dee_astruct
@@ -340,7 +340,7 @@ INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_Check(ob)      DeeObject_InstanceOf(ob, &DeeTime_Type)
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
-/* Return the integer value for the specified representation of `self' */
+/* Return the integer value for the specified representation of `self` */
 INTDEF NONNULL((1, 2)) void DFCALL
 _DeeTime_GetRepr(Dee_int128_t *__restrict p_result,
                  DeeTimeObject const *__restrict self,
@@ -353,15 +353,15 @@ DeeTime_GetRepr8(DeeTimeObject const *__restrict self, uint8_t repr);
 INTDEF WUNUSED NONNULL((1)) uint32_t DFCALL
 DeeTime_GetRepr32(DeeTimeObject const *__restrict self, uint8_t repr);
 
-/* Set the integer value for the specified representation of `self' */
+/* Set the integer value for the specified representation of `self` */
 INTDEF NONNULL((1, 2)) void DFCALL
 DeeTime_SetRepr(DeeTimeObject *__restrict self,
                 Dee_int128_t const *__restrict p_value,
                 uint8_t repr);
 
 
-/* Return the nano-seconds value of `self'. When `self' references months,
- * calculate the number of nanoseconds for those months since `01.0000'. */
+/* Return the nano-seconds value of `self`. When `self` references months,
+ * calculate the number of nanoseconds for those months since `01.0000`. */
 #define DeeTime_AsNano(self, p_result)               \
 	(*(p_result) = (self)->t_nanos,                  \
 	 likely((self)->t_type == TIME_TYPE_NANOSECONDS) \
@@ -387,7 +387,7 @@ INTDEF NONNULL((1)) void DFCALL time_inplace_year2day(Dee_int128_t *__restrict p
 INTDEF NONNULL((1)) void DFCALL time_inplace_nanosecond2month(Dee_int128_t *__restrict p_value);
 INTDEF NONNULL((1)) void DFCALL time_inplace_month2nanosecond(Dee_int128_t *__restrict p_value);
 
-/* Check if the year referenced by the year-counter `*p_year' is a leap-year */
+/* Check if the year referenced by the year-counter `*p_year` is a leap-year */
 INTDEF WUNUSED NONNULL((1)) bool DFCALL
 time_years_isleapyear(Dee_int128_t const *__restrict p_year);
 
@@ -395,7 +395,7 @@ struct month {
 	uint64_t m_start; /* Nano-seconds into the year for when this month starts */
 	uint16_t m_len;   /* == end-start */
 	uint16_t m_name;  /* Offset into month_names to the month's name.
-	                   * NOTE: The full name can be found at `m_name+4' */
+	                   * NOTE: The full name can be found at `m_name+4` */
 };
 #define month_getstart(self)     ((self)[0].m_start)
 #define month_getend(self)       ((self)[1].m_start)
@@ -417,7 +417,7 @@ INTDEF struct month const month_info[2][MONTHS_PER_YEAR + 1];
 #define get_month_abbr(i) month_getname_abbr(&month_info[0][i])
 
 
-/* C-API functions exported by the `time' dex. */
+/* C-API functions exported by the `time` dex. */
 #ifdef CONFIG_BUILDING_LIBTIME
 #define LIBTIME_FUNDEF __EXPDEF
 #else /* CONFIG_BUILDING_LIBTIME */

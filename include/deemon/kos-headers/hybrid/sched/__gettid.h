@@ -139,9 +139,9 @@ __DECL_END
 #ifdef __CC__
 #include <hybrid/typecore.h>
 #ifdef _MSC_VER
-#pragma warning(disable: 4565) /* Needs to be kept off to prevent bogus warning if <Windows.h> re-declares `GetCurrentThreadId()' without `ATTR_CONST' */
+#pragma warning(disable: 4565) /* Needs to be kept off to prevent bogus warning if <Windows.h> re-declares `GetCurrentThreadId()` without `ATTR_CONST` */
 #pragma warning(push)
-#pragma warning(disable: 4559) /* Suppress warning about our addition of `ATTR_CONST' */
+#pragma warning(disable: 4559) /* Suppress warning about our addition of `ATTR_CONST` */
 #endif /* _MSC_VER */
 __DECL_BEGIN
 #define __hybrid_tid_t __ULONG32_TYPE__
@@ -154,7 +154,7 @@ __DECL_END
 #define __hybrid_gettid GetCurrentThreadId
 #endif /* !__hybrid_gettid */
 #elif __has_include(<errno.h>) || (defined(__unix__) && defined(__NO_has_include))
-/* Posix requires that `errno' be thread-local, so we can just use its address as a TID */
+/* Posix requires that `errno` be thread-local, so we can just use its address as a TID */
 #include <errno.h>
 #define __HYBRID_SIZEOF_TID__   __SIZEOF_POINTER__
 #define __hybrid_tid_t          void *

@@ -37,7 +37,7 @@ function bar(x, args...) {
 	/* args is a Tuple containing all variable arguments passed to the function. */
 	print "x =", repr x;
 	print "args =", repr args;
-	/* Without a `return' statement, the function returns `none' */
+	/* Without a `return` statement, the function returns `none` */
 }
 
 bar(1, 2, 3, 4);
@@ -53,7 +53,7 @@ baz(1, 2, 3);
 
 
 function foobar(x, y = 11, z?) {
-	/* A variable can be declared with a trailing `?', marking
+	/* A variable can be declared with a trailing `?`, marking
 	 * it as optional, with its presence then being detectable
 	 * as the symbol either being bound, or not */
 	print "baz(" + x + ", " + y + ", " + (z is bound ? z : "<NOT BOUND>") + ")";
@@ -77,7 +77,7 @@ print lambda(20, 10); /* false */
 
 
 /* Now that we've seen regular functions, their arguments, as well as
- * a function returning a value, let's take a look at what `yield' does. */
+ * a function returning a value, let's take a look at what `yield` does. */
 function yielding_function(items) {
 	for (local x: items) {
 		print "Now yielding value from", x;
@@ -87,7 +87,7 @@ function yielding_function(items) {
 
 /* If you run this tutorial, you will see that the 2 print statments
  * won't output their text all at once, but do so alternatingly.
- * This is because the `yield' above causes execution of the function
+ * This is because the `yield` above causes execution of the function
  * to be suspended, have it return a value to our for-loop here, before
  * our for-loop passes control back to the yield function.
  * Essentially, this means that when wanting to transform a sequence,

@@ -82,7 +82,7 @@ DECL_BEGIN
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 
 
-/* Delete all no-longer-used locals until `next_instr' */
+/* Delete all no-longer-used locals until `next_instr` */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 delete_unused_locals(struct fungen *__restrict self,
                      Dee_instruction_t const *next_instr) {
@@ -211,7 +211,7 @@ fg_vpop_prefix(struct fungen *__restrict self,
 	}
 }
 
-/* Push the prefixed object as a `DREF DeeObject *'. In case of ASM_STACK/ASM_LOCAL,
+/* Push the prefixed object as a `DREF DeeObject *`. In case of ASM_STACK/ASM_LOCAL,
  * make sure that no other memory location is aliasing the prefixed location.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -328,7 +328,7 @@ again:
 	}
 
 	/* Push the addressed location onto the stack, thus creating a singular alias.
-	 * Said alias then gets to inherit the reference currently held in `src_loc'. */
+	 * Said alias then gets to inherit the reference currently held in `src_loc`. */
 	ASSERT(state->ms_stackc < state->ms_stacka);
 	dst_mval = &state->ms_stackv[state->ms_stackc];
 	memval_direct_initcopy(dst_mval, src_mval);
@@ -396,7 +396,7 @@ gen_print_to_file(struct fungen *__restrict self,
 		}
 
 		/* Check for special case: the object being printed is a constant.
-		 * In this case, try to encode a call `DeeFile_WriteAll(file, VALUEOF(str constant))' */
+		 * In this case, try to encode a call `DeeFile_WriteAll(file, VALUEOF(str constant))` */
 		value_mval = fg_vtop(self);
 		print_operator = repr ? OPERATOR_REPR : OPERATOR_STR;
 		if (memval_isconst(value_mval)) {
@@ -413,7 +413,7 @@ gen_print_to_file(struct fungen *__restrict self,
 						goto err;
 				}
 				if (print_after != NULL) {
-					/* XXX: Why not merge the constant string with `print_after'?
+					/* XXX: Why not merge the constant string with `print_after`?
 					 *      And on that note: why not try to merge multiple consecutive
 					 *      constant strings being printed into 1 big one? */
 				}
@@ -431,7 +431,7 @@ gen_print_to_file(struct fungen *__restrict self,
 					/* Special case: printing an empty string does nothing */
 					DO(fg_vpop(self)); /* [File] */
 				} else if (WSTR_LENGTH(utf8) == 1) {
-					/* Special case: printing a single character allows us to use `DeeFile_Putc()' */
+					/* Special case: printing a single character allows us to use `DeeFile_Putc()` */
 					DO(fg_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
 					DO(fg_vpush_immINT(self, utf8[0]));                            /* [File], File, ch */
 					DO(fg_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));      /* [File], status */
@@ -574,14 +574,14 @@ err:
 	return -1;
 }
 
-/* For the non-file-print instructions, load the `stdout' file stream only the first
+/* For the non-file-print instructions, load the `stdout` file stream only the first
  * time a print-like instruction is reached. We then keep that object in a hidden
- * local `MEMSTATE_XLOCAL_STDOUT' until the end of the basic block, or until
- * a chunk of at least `CONFIG_HOSTASM_STDOUT_CACHE_MAXINSTR_N' non-print-to-stdout
+ * local `MEMSTATE_XLOCAL_STDOUT` until the end of the basic block, or until
+ * a chunk of at least `CONFIG_HOSTASM_STDOUT_CACHE_MAXINSTR_N` non-print-to-stdout
  * instructions are about to be compiled.
  *
  * NOTE: Technically, this alters the behavior of instructions, since the
- *       native version of these (re-)loads `deemon.File.stdout' every time
+ *       native version of these (re-)loads `deemon.File.stdout` every time
  *       they are evaluated, but that seems quite overkill if you ask me. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_gen_stdout_print(struct fungen *__restrict self,
@@ -668,11 +668,11 @@ err:
 
 /* Given a vstack that looks like this:
  * >> [...], value
- * Check if whatever instruction eventually pops `value' requires `value' to
+ * Check if whatever instruction eventually pops `value` requires `value` to
  * be a valid deemon object. Now this might sound like something that should
  * always be the case, and you'd be right, but there are situations where
  * it's OK if an object isn't valid (i.e. not safe to dereference), such as
- * in case of `ASM_ISNONE' or `ASM_CMP_SO' and `ASM_CMP_DO', all of which
+ * in case of `ASM_ISNONE` or `ASM_CMP_SO` and `ASM_CMP_DO`, all of which
  * only look at the address of the object in vtop.
  *
  * This special handling makes it so no extra reference is needed for code like:
@@ -705,7 +705,7 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 	 *   >> local y = x === true;   // "x" is never used again after this point
 	 * - At the same time, also detect stack slots that are always popped unconditionally,
 	 *   which then become candidates for early deletion (by replacing their value with a
-	 *   reference-less, constant `Dee_None'). This can then be used to optimize `__stack'
+	 *   reference-less, constant `Dee_None`). This can then be used to optimize `__stack`
 	 *   variables that aren't actually used until the end of their relevant scope.
 	 */
 
@@ -820,12 +820,12 @@ yes:
 }
 
 
-/* Convert a single deemon instruction `instr' to host assembly and adjust the host memory
+/* Convert a single deemon instruction `instr` to host assembly and adjust the host memory
  * state according to the instruction in question. This is the core function to parse deemon
  * code and convert it to host assembly.
  * @param: p_next_instr: [inout] Pointer to the next instruction (may be overwritten if the
  *                               generated instruction was merged with its successor, as is
- *                               the case for `ASM_REPR' when followed by print-instructions)
+ *                               the case for `ASM_REPR` when followed by print-instructions)
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1306,11 +1306,11 @@ do_jcc:
 	TARGET(ASM_CMP_LE)
 	TARGET(ASM_CMP_GR) {
 		/* In the case of the cmp-instructions, check if the next instructions
-		 * is `jf' or `jt', and if so: generate a call to `DeeObject_Compare*'
+		 * is `jf` or `jt`, and if so: generate a call to `DeeObject_Compare*`
 		 * without the *Object suffix. That way, we don't need DeeObject_Bool,
 		 * and also don't have to decref the comparison result!
 		 *
-		 * Similarly, we can do the same if `ASM_BOOL' appears next, in which
+		 * Similarly, we can do the same if `ASM_BOOL` appears next, in which
 		 * case we don't have to make 2 calls, or have the result be a reference */
 		/* TODO: Figure out the instruction that eventually pops the result of the CMP */
 
@@ -1462,7 +1462,7 @@ do_jcc:
 	TARGET(ASM16_FUNCTION_C)
 	TARGET(ASM_FUNCTION_C_16)
 	TARGET(ASM16_FUNCTION_C_16) {
-		/* Implement these by creating the function raw, and then using mov-s to fill in `fo_refv'
+		/* Implement these by creating the function raw, and then using mov-s to fill in `fo_refv`
 		 * That way, we don't even have to push the reference somewhere temporarily, or have to
 		 * do decref when we just want the function to inherit them. */
 		uint32_t refc;
@@ -1521,7 +1521,7 @@ do_jcc:
 		 * >>     local l = [];
 		 * >>     function collect(x) {
 		 * >>         if (x !is none)
-		 * >>             l.append(x); // Here, "l" is always DeeList_Type, so this can directly link to `list_append()'
+		 * >>             l.append(x); // Here, "l" is always DeeList_Type, so this can directly link to `list_append()`
 		 * >>     }
 		 * >>     collect(a());
 		 * >>     collect(b());
@@ -2202,7 +2202,7 @@ do_jcc:
 	TARGET(ASM_CMP_DO)
 		/* TODO: Special handling for when the instruction that eventually pops the
 		 *       value pushed here is ASM_JT/ASM_JF, in which case that jump needs
-		 *       to be implemented using `fg_gjcc()' */
+		 *       to be implemented using `fg_gjcc()` */
 		DO(fg_veqaddr(self));
 		if (opcode == ASM_CMP_DO)
 			return fg_vopnot(self);
@@ -2489,7 +2489,7 @@ do_jcc:
 		TARGET(ASM_JT16) /* jt PREFIX, <Sdisp16> */
 			DO(fg_vpush_prefix(self, instr, prefix_type, id1, id2));
 			opcode = prefix_opcode;
-			/* Need to do this in a special way because `instr' must not become `prefix_instr' here. */
+			/* Need to do this in a special way because `instr` must not become `prefix_instr` here. */
 			goto do_jcc;
 
 		TARGET(ASM_FOREACH)     /* foreach PREFIX, <Sdisp8> */
@@ -2698,7 +2698,7 @@ do_jcc:
 			DREF DeeObject *const_operand;
 			unsigned int vop_flags = VOP_F_NORMAL;
 			DO(fg_vpush_prefix_noalias(self, instr, prefix_type, id1, id2));
-			/* Prefix supports direct addressing (and the `DREF DeeObject **' was already pushed) */
+			/* Prefix supports direct addressing (and the `DREF DeeObject **` was already pushed) */
 			switch (prefix_opcode) {
 			case ASM_ADD_SIMM8: /* add PREFIX, $<Simm8> */
 			case ASM_SUB_SIMM8: /* sub PREFIX, $<Simm8> */
@@ -2798,7 +2798,7 @@ err:
 }
 
 
-/* Wrapper around `fg_geninstr()' to generate the entire basic block.
+/* Wrapper around `fg_geninstr()` to generate the entire basic block.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2809,7 +2809,7 @@ fg_genall(struct fungen *__restrict self) {
 	ASSERT(block->bb_mem_end == NULL);
 
 	/* Generate code to delete all locals that are currently bound,
-	 * but whose values don't matter as per `self->bb_locuse' */
+	 * but whose values don't matter as per `self->bb_locuse` */
 	if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
 		struct memstate *state = self->fg_state;
 		lid_t lid;
@@ -2836,7 +2836,7 @@ fg_genall(struct fungen *__restrict self) {
 
 		/* TODO: If this function throws an exception that isn't an interrupt or BadAlloc,
 		 *       re-wrap that exception as an IllegalInstruction, whilst also appending
-		 *       DDI debug information about the origin of `instr' */
+		 *       DDI debug information about the origin of `instr` */
 		DO(fg_geninstr(self, instr, &next_instr));
 
 		ASSERT(block->bb_mem_end == NULL ||
@@ -2859,8 +2859,8 @@ fg_genall(struct fungen *__restrict self) {
 			return 0;
 		}
 
-		/* Look at `self->fg_block->bb_locreadv' to delete all locals
-		 * for which there are entries for the range `[instr, next_instr)' */
+		/* Look at `self->fg_block->bb_locreadv` to delete all locals
+		 * for which there are entries for the range `[instr, next_instr)` */
 		DO(delete_unused_locals(self, next_instr));
 		instr = next_instr;
 	}
@@ -2870,7 +2870,7 @@ fg_genall(struct fungen *__restrict self) {
 	block->bb_mem_end = self->fg_state;
 	memstate_incref(self->fg_state);
 	if (block->bb_next != NULL) {
-		/* Constrain the starting-state of the fallthru-block with the ending memory-state of `block' */
+		/* Constrain the starting-state of the fallthru-block with the ending memory-state of `block` */
 		struct basic_block *next_block = block->bb_next;
 		Dee_code_addr_t addr = function_assembler_addrof(self->fg_assembler,
 		                                                     next_block->bb_deemon_start);

@@ -41,42 +41,42 @@ DECL_BEGIN
 struct DeeRegexCode {
 	__BYTE_TYPE__ rc_fmap[256]; /* Fast map: take the first byte of input data to match as index:
 	                             * - rc_fmap[input[0]] == 0xff --> input will never match
-	                             * - rc_fmap[input[0]] != 0xff --> Start executing at `PC = rc_code + rc_fmap[input[0]]'
-	                             * Allowed  to be `0x00', even if the regex never accepts input starting with that byte.
-	                             * iow: all 256 possible bytes indicating `0x00' is always valid.
+	                             * - rc_fmap[input[0]] != 0xff --> Start executing at `PC = rc_code + rc_fmap[input[0]]`
+	                             * Allowed  to be `0x00`, even if the regex never accepts input starting with that byte.
+	                             * iow: all 256 possible bytes indicating `0x00` is always valid.
 	                             * The only assumptions that may be made are:
-	                             * -> rc_fmap[X] == 0xff --> `rc_code' always rejects input whose first byte is `X'
-	                             * -> rc_fmap[X] >  0x00 --> `rc_code'  only ever handles a first byte `X' in a branch
+	                             * -> rc_fmap[X] == 0xff --> `rc_code` always rejects input whose first byte is `X`
+	                             * -> rc_fmap[X] >  0x00 --> `rc_code`  only ever handles a first byte `X` in a branch
 	                             *                           that begins at  this offset (e.g.  "abc|def" can set  the
 	                             *                           fmap offset for "d"  to directly point at  `exact "def"')
-	                             *                           Note that this doesn't guaranty that `rc_code' won't just
-	                             *                           always reject input whose first byte is `X'!
-	                             * -> rc_fmap[X] == 0x00 --> `rc_code' may or may not accept input starting with `X' */
-	size_t        rc_minmatch;  /* The smallest input length that can be matched by `rc_code' (or `0' when `rc_code' can match epsilon)
-	                             * NOTE: Allowed to be less than the *true* minimum-match length of `rc_code'; iow: `0' is always valid
+	                             *                           Note that this doesn't guaranty that `rc_code` won't just
+	                             *                           always reject input whose first byte is `X`!
+	                             * -> rc_fmap[X] == 0x00 --> `rc_code` may or may not accept input starting with `X` */
+	size_t        rc_minmatch;  /* The smallest input length that can be matched by `rc_code` (or `0` when `rc_code` can match epsilon)
+	                             * NOTE: Allowed to be less than the *true* minimum-match length of `rc_code`; iow: `0` is always valid
 	                             * -> The only assumption allowed is that input smaller than this will never match. */
 	uint16_t      rc_ngrps;     /* # of groups referenced by code (<= 0x100) */
 	uint16_t      rc_nvars;     /* # of variables referenced by code (<= 0x100) */
-	uint8_t       rc_flags;     /* Regex code flags (set of `RE_CODE_FLAG_*') */
+	uint8_t       rc_flags;     /* Regex code flags (set of `RE_CODE_FLAG_*`) */
 #define Dee_RE_CODE_FLAG_NORMAL     0x00 /* Normal flags. */
-#define Dee_RE_CODE_FLAG_NEEDGROUPS 0x01 /* Groups are expected to be correct (set if `REOP_GROUP_MATCH*' opcodes are used) */
+#define Dee_RE_CODE_FLAG_NEEDGROUPS 0x01 /* Groups are expected to be correct (set if `REOP_GROUP_MATCH*` opcodes are used) */
 #define Dee_RE_CODE_FLAG_OPTGROUPS  0x02 /* The regex code contains optional groups (e.g. "foo(x)?bar" or "foo(|b(a)r)") */
-	__COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, rc_code); /* Code buffer (`REOP_*' instruction stream) */
+	__COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, rc_code); /* Code buffer (`REOP_*` instruction stream) */
 };
 
 
-/* Possible flags for `DeeString_GetRegex()' */
+/* Possible flags for `DeeString_GetRegex()` */
 #define Dee_RE_COMPILE_NORMAL 0x0000 /* Normal regex compiler flags */
 #define Dee_RE_COMPILE_ICASE  0x0001 /* Produce a case-insensitive pattern */
 #define Dee_RE_COMPILE_NOUTF8 0x0002 /* Disable utf-8 processing; pattern is parsed and matched as byte-only */
 
-/* Lazily compile `self' as a deemon regex pattern.
+/* Lazily compile `self` as a deemon regex pattern.
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
- * @param: compile_flags: Set of `Dee_RE_COMPILE_*'
+ * @param: compile_flags: Set of `Dee_RE_COMPILE_*`
  * @param: rules:         When non-NULL, a string containing extra rules
- *                        that are or'd into `compile_flags'. For this purpose,
- *                        each character from `rules' is parsed as a flag:
+ *                        that are or'd into `compile_flags`. For this purpose,
+ *                        each character from `rules` is parsed as a flag:
  *                        - "i": Dee_RE_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
@@ -85,8 +85,8 @@ DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
                    unsigned int compile_flags,
                    DeeObject *rules);
 
-/* Find and return the set of flags that were used to compile `code' for `self'.
- * Behavior is weak-undefined if `code' wasn't compiled from `self'. */
+/* Find and return the set of flags that were used to compile `code` for `self`.
+ * Behavior is weak-undefined if `code` wasn't compiled from `self`. */
 DFUNDEF WUNUSED NONNULL((1, 2)) unsigned int DCALL
 DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
                         struct DeeRegexCode const *__restrict code);
@@ -99,30 +99,30 @@ DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
 
 struct DeeRegexMatch {
 	size_t rm_so; /* [<= rm_eo] Group starting offset (offset of first byte within the group)
-	               * - Set to `(size_t)-1' if the group was never encountered. */
+	               * - Set to `(size_t)-1` if the group was never encountered. */
 	size_t rm_eo; /* [>= rm_so] Group end offset (offset of first byte past the group)
-	               * - Set to `(size_t)-1' if the group was never encountered. */
+	               * - Set to `(size_t)-1` if the group was never encountered. */
 };
 
-/* Flags for `struct DeeRegexExec::rx_eflags' */
+/* Flags for `struct DeeRegexExec::rx_eflags` */
 #define Dee_RE_EXEC_NOTBOL 0x0001 /* '^' (REOP_AT_SOL) doesn't match at the start of the input buffer (but only at an actual begin-of-line) */
 #define Dee_RE_EXEC_NOTEOL 0x0002 /* '$' (REOP_AT_EOL) doesn't match at the end of the input buffer (but only before an actual line-feed) */
 
 struct DeeRegexExec {
 	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
-	size_t                     rx_nmatch;   /* Max # of group matches to write to `rx_pmatch' (at most `rx_code->rc_ngrps' will ever be written) */
+	size_t                     rx_nmatch;   /* Max # of group matches to write to `rx_pmatch` (at most `rx_code->rc_ngrps` will ever be written) */
 	struct DeeRegexMatch      *rx_pmatch;   /* [?..rx_nmatch] Output buffer for group matches
-	                                         * - Up to the first `rx_nmatch' groups are written, but only on success
+	                                         * - Up to the first `rx_nmatch` groups are written, but only on success
 	                                         * - Upon failure, the contents of this buffer are left in an undefined state
-	                                         * - Offsets written INCLUDE `rx_startoff' (i.e. are always `>= rx_startoff') */
+	                                         * - Offsets written INCLUDE `rx_startoff` (i.e. are always `>= rx_startoff`) */
 	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
+	                                         * When `rx_code` was compiled with `Dee_RE_COMPILE_NOUTF8`, this data
 	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
-	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
-	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
-	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
-	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
+	                                         * In either case, `rx_insize` is the # of bytes within this buffer. */
+	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase` */
+	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase` of data to match. */
+	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase` of data to match. */
+	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*`) */
 };
 
 /* Special return values for functions below. */
@@ -131,35 +131,35 @@ struct DeeRegexExec {
 
 
 /* Perform a regex match
- * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff'
+ * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff`
  * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
  * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Match(struct DeeRegexExec const *__restrict exec);
 
-/* Similar to `DeeRegex_Match', try to match a pattern against the given input buffer. Do this
- * with increasing offsets for the first `search_range' bytes, meaning at most `search_range'
+/* Similar to `DeeRegex_Match`, try to match a pattern against the given input buffer. Do this
+ * with increasing offsets for the first `search_range` bytes, meaning at most `search_range`
  * regex matches will be performed.
- * @param: search_range: One plus the max starting  byte offset (from `exec->rx_startoff')  to
- *                       check. Too great values for `search_range' are automatically clamped.
+ * @param: search_range: One plus the max starting  byte offset (from `exec->rx_startoff`)  to
+ *                       check. Too great values for `search_range` are automatically clamped.
  * @param: p_match_size: When non-NULL, set to the # of bytes that were actually matched.
- *                       This would have  been the return  value of  `re_exec_match(3R)'.
- * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)').
+ *                       This would have  been the return  value of  `re_exec_match(3R)`.
+ * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)`).
  * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
  * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Search(struct DeeRegexExec const *__restrict exec,
                 size_t search_range, size_t *p_match_size);
 
-/* Similar to `DeeRegex_Search()', but never matches epsilon.
+/* Similar to `DeeRegex_Search()`, but never matches epsilon.
  * Instead, keep on searching if epsilon happens to be matched. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_SearchNoEpsilon(struct DeeRegexExec const *__restrict exec,
                          size_t search_range, size_t *p_match_size);
 
-/* Same as `DeeRegex_Search', but perform searching with starting
- * offsets in `[exec->rx_endoff - search_range, exec->rx_endoff)'
- * Too great values for `search_range' are automatically clamped.
+/* Same as `DeeRegex_Search`, but perform searching with starting
+ * offsets in `[exec->rx_endoff - search_range, exec->rx_endoff)`
+ * Too great values for `search_range` are automatically clamped.
  * The return value will thus be the greatest byte-offset where
  * the given pattern matches that is still within that range. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t

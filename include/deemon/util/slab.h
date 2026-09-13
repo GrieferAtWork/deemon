@@ -142,7 +142,7 @@
  * >>             }
  * >>         }
  * >>         // Since we were able to increment "sm_used", that also means that the page
- * >>         // is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset!
+ * >>         // is **GUARANTIED** to have at least 1 0-bit in its `sp_used` bitset!
  * >>         return slab_malloc_in_page(page);
  * >>     }
  * >>     Dee_atomic_rwlock_endread(&slab_lock<CHUNK_SIZE>);
@@ -157,7 +157,7 @@
  * >>     result = &page->sp_data[0];
  * >>
  * >>     // In theory, this lock acquire could be made non-
- * >>     // blocking by having a insert-reap-list for `slab_pages'
+ * >>     // blocking by having a insert-reap-list for `slab_pages`
  * >>     Dee_atomic_rwlock_write(&slab_lock<CHUNK_SIZE>);
  * >>     LIST_INSERT_HEAD(&slab_pages<CHUNK_SIZE>, page, sp_meta.sm_link);
  * >>     Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
@@ -223,7 +223,7 @@
  * -> The dec writer can then implement an allocation function for slab memory
  *    that would allocate memory top-down within slab pages, whilst skipping
  *    chunks where previous (possibly differently-sized) allocations already
- *    caused the relevant bit in `sp_used' to be set to `1'
+ *    caused the relevant bit in `sp_used` to be set to `1`
  * -> Since "sp_meta" is stored at the end of a page, its position is always
  *    the same, meaning that differently-sized allocations can still share the
  *    same set meta-data.
@@ -247,7 +247,7 @@
 #endif /* !__ARCH_PAGESIZE_MIN */
 #endif /* !Dee_SLAB_PAGESIZE */
 
-#define Dee_SIZEOF_SLAB_PAGE_META (4 * __SIZEOF_POINTER__) /* `sizeof(struct Dee_slab_page::sp_meta)' */
+#define Dee_SIZEOF_SLAB_PAGE_META (4 * __SIZEOF_POINTER__) /* `sizeof(struct Dee_slab_page::sp_meta)` */
 #define Dee_OFFSET_SLAB_PAGE_META (Dee_SLAB_PAGESIZE - Dee_SIZEOF_SLAB_PAGE_META)
 
 #ifdef __CC__
@@ -297,7 +297,7 @@ union Dee_slab_page_status {
 	                                        * this field doesn't actually change the effective # of chunks fitting into   \
 	                                        * any given page for any of the defined slab sizes (in both 32- and 64-bit    \
 	                                        * mode), when compared to this field missing and metadata being 3 words.      \
-	                                        * Only valid/used in `Dee_slab_page_isnormal()' pages */                      \
+	                                        * Only valid/used in `Dee_slab_page_isnormal()` pages */                      \
 	union Dee_slab_page_status spm_status; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
 	                                        * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
 	union {                                                                                                               \
@@ -305,7 +305,7 @@ union Dee_slab_page_status {
 		                                        * [valid_if(Dee_slab_page_isnormal(:self))]                               \
 		                                        * Link in list of pages with free chunks. */                              \
 		struct {                                                                                                          \
-			/* [1..1][const] Custom callback to free this page once `spm_status.sps_data.spsd_used' hits `0' */           \
+			/* [1..1][const] Custom callback to free this page once `spm_status.sps_data.spsd_used` hits `0` */           \
 			NONNULL_T((1)) void (DCALL *c_free)(struct page_type *__restrict self);                                       \
 			void                       *c_marker; /* [== Dee_SLAB_PAGE_META_CUSTOM_MARKER][const] */                      \
 		}                            t_custom;  /* [valid_if(Dee_slab_page_iscustom(:self))] */                           \
@@ -317,7 +317,7 @@ union Dee_slab_page_status {
 	                   * this field doesn't actually change the effective # of chunks fitting into   \
 	                   * any given page for any of the defined slab sizes (in both 32- and 64-bit    \
 	                   * mode), when compared to this field missing and metadata being 3 words.      \
-	                   * Only valid/used in `Dee_slab_page_isnormal()' pages */                      \
+	                   * Only valid/used in `Dee_slab_page_isnormal()` pages */                      \
 	size_t  spm_used; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
 	                   * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
 	union {                                                                                          \
@@ -325,7 +325,7 @@ union Dee_slab_page_status {
 		                                        * [valid_if(Dee_slab_page_isnormal(:self))]          \
 		                                        * Link in list of pages with free chunks. */         \
 		struct {                                                                                     \
-			/* [1..1][const] Custom callback to free this page once `spm_used' hits `0' */           \
+			/* [1..1][const] Custom callback to free this page once `spm_used` hits `0` */           \
 			NONNULL_T((1)) void (DCALL *c_free)(struct page_type *__restrict self);                  \
 			void                       *c_marker; /* [== Dee_SLAB_PAGE_META_CUSTOM_MARKER][const] */ \
 		}                            t_custom;  /* [valid_if(Dee_slab_page_iscustom(:self))] */      \
@@ -365,8 +365,8 @@ struct Dee_slab_page {
  * >> // Pack the custom slab page into a proper one.
  * >> //
  * >> // This part may only be done when "my_page" is properly aligned,
- * >> // which is something that `Dee_slab_page_buildmalloc()' and its
- * >> // parter `Dee_slab_page_buildfree()' has NOT asserted until this
+ * >> // which is something that `Dee_slab_page_buildmalloc()` and its
+ * >> // parter `Dee_slab_page_buildfree()` has NOT asserted until this
  * >> // point.
  * >> Dee_slab_page_buildpack(my_page, &free_my_page);
  * >>
@@ -397,11 +397,11 @@ struct Dee_slab_page {
  *       area being moved don't require relocations).
  *
  * WARNING: The caller of these functions is responsible to ensure that
- *          `DeeSlab_EXISTS(n)' (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)')
+ *          `DeeSlab_EXISTS(n)` (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)`)
  *          This requirement is asserted internally, so you'll get an assert
  *          failure if you don't comply with this requirement!
  *
- * @return: * :   Pointer into `self->sp_data' to an n-byte payload area
+ * @return: * :   Pointer into `self->sp_data` to an n-byte payload area
  * @return: NULL: Insufficient memory -- given slab page "self" does not
  *                have space for another "n"-byte large slab. (you should
  *                probably allocate another page) */
@@ -420,10 +420,10 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n);
  *       the page back to the underlying page allocator.
  *
  * WARNING: The memory of the pages returned these malloc functions is entirely
- *          uninitialized (similarly, `Dee_slab_page_rawfree()' does not care
+ *          uninitialized (similarly, `Dee_slab_page_rawfree()` does not care
  *          about the contents of memory within the pages it's given). As such,
  *          the caller is responsible for doing all initialization/finalization
- * WARNING: Do not pass custom slab pages to `Dee_slab_page_rawfree()'! These
+ * WARNING: Do not pass custom slab pages to `Dee_slab_page_rawfree()`! These
  *          are just the dumb, low-level page allocation functions. If you want
  *          to support custom free function, that's up to you! */
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
@@ -435,7 +435,7 @@ Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Clear caches kept by the raw slab page allocator.
- * This function is automatically called by `DeeHeap_Trim()'
+ * This function is automatically called by `DeeHeap_Trim()`
  * @param: pad: Try to keep at least this many bytes within the cache
  * @return: * : The # of bytes free'd from the cache. */
 INTDEF size_t DCALL Dee_slab_page_rawtrim(size_t pad);

@@ -99,7 +99,7 @@ again_read_page_status:
 			}
 
 			/* Since we were able to increment "spm_used", that also means that the page
-			 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
+			 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used` bitset! */
 			result = LOCAL_slab_malloc_in_page(page);
 			slab_assert((byte_t *)result >= (page->sp_data));
 			slab_assert((byte_t *)result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
@@ -154,7 +154,7 @@ again_locked:
 		}
 
 		/* Since we were able to increment "spm_used", that also means that the page
-		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
+		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used` bitset! */
 		result = LOCAL_slab_malloc_in_page(page);
 		slab_assert((byte_t *)result >= (page->sp_data));
 		slab_assert((byte_t *)result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
@@ -190,7 +190,7 @@ again_locked:
 #else /* CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 	page->sp_meta.spm_used = 1;
 	/* In theory, this lock acquire could be made non-blocking
-	 * by having a insert-reap-list for `LOCAL_slab_pages'. */
+	 * by having a insert-reap-list for `LOCAL_slab_pages`. */
 	LOCAL_slab_lock_write();
 	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 	slab_assert(Dee_slab_page_isnormal(page));

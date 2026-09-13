@@ -390,7 +390,7 @@ maybe_handle_iconv_error:
 		err_unicode_decode_error(codec, offset);
 	} else {
 		ASSERTF(status == -1, "The used printer 'Dee_unicode_printer_print' "
-		                      "should only ever return `-1' to indicate errors");
+		                      "should only ever return `-1` to indicate errors");
 	}
 	goto err_printer;
 }
@@ -432,7 +432,7 @@ maybe_handle_iconv_error:
 		err_unicode_encode_error(codec, offset);
 	} else {
 		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
-		                      "should only ever return `-1' to indicate errors");
+		                      "should only ever return `-1` to indicate errors");
 	}
 	goto err_printer;
 }
@@ -503,7 +503,7 @@ maybe_handle_iconv_error:
 		err_unicode_reencode_error(outcodec);
 	} else {
 		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
-		                      "should only ever return `-1' to indicate errors");
+		                      "should only ever return `-1` to indicate errors");
 	}
 	goto err_printer;
 }

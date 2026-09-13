@@ -37,10 +37,10 @@
 DECL_BEGIN
 
 STATIC_ASSERT_MSG(offsetof(struct hostfunc, hf_raw.rhf_entry.hfe_addr) == 0,
-                  "The deemon core (in `code.c') expects the pointer-to-the entry "
+                  "The deemon core (in `code.c`) expects the pointer-to-the entry "
                   "point to be located at the start of the hostfunc struct.");
 
-/* Create a host assembly function for `code' */
+/* Create a host assembly function for `code` */
 EXPDEF WUNUSED NONNULL((2)) struct hostfunc *DCALL
 hostasm_hostfunc_new(/*0..1*/ DeeFunctionObject *function,
                      /*1..1*/ DeeCodeObject *code,
@@ -48,7 +48,7 @@ hostasm_hostfunc_new(/*0..1*/ DeeFunctionObject *function,
 EXPDEF NONNULL((1)) void DCALL
 hostasm_hostfunc_destroy(struct hostfunc *func);
 
-/* Create a host assembly function for `code' */
+/* Create a host assembly function for `code` */
 PUBLIC WUNUSED NONNULL((2)) struct hostfunc *DCALL
 hostasm_hostfunc_new(/*0..1*/ DeeFunctionObject *function,
                      /*1..1*/ DeeCodeObject *code,

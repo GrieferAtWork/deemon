@@ -169,7 +169,7 @@ struct type_method_attriter {
 	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_methods" or "tp_class_methods") */
 	struct type_method const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next method to yield. */
 	Dee_attrperm_t            tmai_perm;   /* [const] Chain access base perms. */
-	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_METHOD' or `Dee_ATTRINFO_METHOD' */
+	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_METHOD` or `Dee_ATTRINFO_METHOD` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -203,7 +203,7 @@ struct type_getset_attriter {
 	DeeTypeObject            *tgsai_tpself; /* [1..1][const] The type declaring "tgsai_chain" (either via its "tp_getsets" or "tp_class_getsets") */
 	struct type_getset const *tgsai_chain;  /* [1..1][lock(ATOMIC)] Next getset to yield. */
 	Dee_attrperm_t            tgsai_perm;   /* [const] Chain access base perms. */
-	uint16_t                  tgsai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_GETSET' or `Dee_ATTRINFO_GETSET' */
+	uint16_t                  tgsai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_GETSET` or `Dee_ATTRINFO_GETSET` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -243,7 +243,7 @@ struct type_member_attriter {
 	DeeTypeObject            *tmai_tpself; /* [1..1][const] The type declaring "tmai_chain" (either via its "tp_members" or "tp_class_members") */
 	struct type_member const *tmai_chain;  /* [1..1][lock(ATOMIC)] Next member to yield. */
 	Dee_attrperm_t            tmai_perm;   /* [const] Chain access base perms. */
-	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_MEMBER' or `Dee_ATTRINFO_MEMBER' */
+	uint16_t                  tmai_type;   /* [const] Either `Dee_ATTRINFO_INSTANCE_MEMBER` or `Dee_ATTRINFO_MEMBER` */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -376,7 +376,7 @@ type_obmeth_call(DeeTypeObject *cls_type,
                  size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod `%s' must be called with at least 1 argument",
+		                "classmethod `%s` must be called with at least 1 argument",
 		                desc->m_name);
 		goto err;
 	}
@@ -398,7 +398,7 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
                     DeeObject *kw) {
 	if unlikely(!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod `%s' must be called with at least 1 argument",
+		                "classmethod `%s` must be called with at least 1 argument",
 		                desc->m_name);
 		goto err;
 	}
@@ -442,7 +442,7 @@ type_obmeth_vcallf(DeeTypeObject *cls_type,
 	DREF DeeObject *thisarg, *result;
 	if unlikely(*format == '\0') {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod `%s' must be called with at least 1 argument",
+		                "classmethod `%s` must be called with at least 1 argument",
 		                desc->m_name);
 		goto err;
 	}
@@ -894,7 +894,7 @@ Dee_type_member_bound(struct type_member const *desc,
 
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 	CASE(STRUCT_NONE):
-	CASE(STRUCT_OBJECT_OPT): /* Always bound (because it is `none' when NULL) */
+	CASE(STRUCT_OBJECT_OPT): /* Always bound (because it is `none` when NULL) */
 	CASE(STRUCT_CSTR_OPT):
 	CASE(STRUCT_CSTR_EMPTY):
 	CASE(STRUCT_STRING):

@@ -236,7 +236,7 @@ assert "FOO".rematch("foo", rules: "i");
 assert "Ä".rematch("ä", rules: "i");
 assert "ä".rematch("Ä", rules: "i");
 
-/* Assert that the `rescanf()' function works. */
+/* Assert that the `rescanf()` function works. */
 function assertReScanf(input, pattern, expected) {
 	test.assertSequence(input.rescanf(pattern), expected);
 	test.assertSequence(input.bytes().rescanf(pattern), expected.each.bytes() as Sequence);

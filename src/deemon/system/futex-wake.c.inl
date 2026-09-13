@@ -114,7 +114,7 @@ PUBLIC NONNULL((1)) void
 	default: __builtin_unreachable();
 	}
 
-	/* Drop the reference we got from `futex_ataddr_get' */
+	/* Drop the reference we got from `futex_ataddr_get` */
 	futex_controller_decref(ctrl);
 #elif defined(DeeFutex_USES_CONTROL_STRUCTURE)
 	DREF struct futex_controller *ctrl;
@@ -168,7 +168,7 @@ PUBLIC NONNULL((1)) void
 		if (n_threads > 0)
 			(void)sem_post(&ctrl->fc_sem);
 #else /* LOCAL_IS_ONE */
-		/* We have to wake at least `n_threads' that may be waiting.
+		/* We have to wake at least `n_threads` that may be waiting.
 		 * We don't have to worry about any extra threads that might
 		 * appear while we're waking existing threads, since this is
 		 * only about waking threads that were there at the time of
@@ -194,7 +194,7 @@ PUBLIC NONNULL((1)) void
 	}
 #endif /* ... */
 
-	/* Drop the reference we got from `futex_ataddr_get' */
+	/* Drop the reference we got from `futex_ataddr_get` */
 	futex_controller_decref(ctrl);
 #endif /* !... */
 }

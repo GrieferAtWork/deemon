@@ -147,7 +147,7 @@ INTERN_CONST uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
 #define OPCOUNT_PUSHSECOND  0x20 /* You must re-return the second operand. */
 #define OPCOUNT_PUSHTHIRD   0x30 /* You must re-return the third operand. */
 #define OPCOUNT_PUSHFOURTH  0x40 /* You must re-return the fourth operand. */
-#define OPCOUNT_POPPUSHNONE 0x70 /* You must pop one object, the push `none'. */
+#define OPCOUNT_POPPUSHNONE 0x70 /* You must pop one object, the push `none`. */
 #define OPCOUNT_PUSHNONE    0x80 /* You must re-return none. */
 #define ENTRY(push_mode, opcount) (push_mode | opcount)
 	/* [OPERATOR_CONSTRUCTOR] = */ 0,
@@ -236,7 +236,7 @@ INTERN_TPCONST struct seqops tpconst seqops_info[4] = {
 	/* [AST_FMULTIPLE_DICT    & 3] = */ { &DeeDict_Type,    { ASM_PACK_DICT,    ASM16_PACK_DICT    }, ASM_CAST_DICT    }
 };
 
-/* @param: type: One of `AST_FMULTIPLE_*' */
+/* @param: type: One of `AST_FMULTIPLE_*` */
 PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
 	uint16_t const (*p_opcode)[2];
 	uint16_t op;
@@ -334,14 +334,14 @@ INTERN WUNUSED NONNULL((1)) int
 			if (DeeBaseScope_IsVarargs(current_basescope, sym)) {
 				/* Special case: If the caller accesses the varargs-symbol in a boolean-context,
 				 *               then we can simply check if the number of varargs is non-zero,
-				 *               emulating the behavior of tuple's `operator bool()'. */
+				 *               emulating the behavior of tuple's `operator bool()`. */
 				DO(asm_gcmp_gr_varargs_sz(0));
 				goto done;
 			}
 			if (DeeBaseScope_IsVarkwds(current_basescope, sym)) {
 				/* Special case: If the caller accesses the varkwds-symbol in a boolean-context.
-				 * NOTE: Don't do this when optimizing for size, as `push bool varkwds' takes
-				 *       one additional byte of text when compared to `push varkwds' */
+				 * NOTE: Don't do this when optimizing for size, as `push bool varkwds` takes
+				 *       one additional byte of text when compared to `push varkwds` */
 				if (!(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE)) {
 					DO(asm_gbool_varkwds());
 					goto done;
@@ -394,7 +394,7 @@ done_push_none:
 				goto done;
 			DO(asm_putddi(self));
 			if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
-				/* Simply push `none' */
+				/* Simply push `none` */
 				DO(asm_gpush_none());
 			} else {
 				/* Must push an empty sequence. */
@@ -419,19 +419,19 @@ done_push_none:
 			goto done;
 		}
 
-		/* `{ foo... }' normally compiles as:
+		/* `{ foo... }` normally compiles as:
 		 * >> push   @foo
 		 * >> cast   top, Tuple
 		 *
 		 * However (when not optimizing for size), this can be done more efficiently
-		 * such that we compile the expression as `foo as Sequence from deemon' instead:
+		 * such that we compile the expression as `foo as Sequence from deemon` instead:
 		 * >> push   @foo
 		 * >> push   extern @deemon:@Sequence
 		 * >> super  top, pop
 		 *
 		 * The resulting assembly can then execute in O(1), but would still comply
 		 * with the (only) requirement of generic sequence expressions being that the
-		 * returned object be derived from `Sequence from deemon'!
+		 * returned object be derived from `Sequence from deemon`!
 		 *
 		 * Something similar could be done for practically all generic sequence expression
 		 * containing expand expressions by wrapping them in yield-functions:
@@ -460,7 +460,7 @@ done_push_none:
 			break;
 		}
 
-		/* When `need_all' is true, we must push the results of all elements onto the stack. */
+		/* When `need_all` is true, we must push the results of all elements onto the stack. */
 		need_all    = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
 		active_size = 0;
 		expand_encountered = false;
@@ -533,9 +533,9 @@ done_push_none:
 
 	case AST_RETURN:
 		if (!self->a_return ||
-		    /* NOTE: Don't optimize `return none' --> `return' in yield functions.
-		     *       When yielding, the `ASM_RET_NONE' instruction behaves differently
-		     *       from what a regular `ASM_RET' for `Dee_None' does! */
+		    /* NOTE: Don't optimize `return none` --> `return` in yield functions.
+		     *       When yielding, the `ASM_RET_NONE` instruction behaves differently
+		     *       from what a regular `ASM_RET` for `Dee_None` does! */
 		    (!(current_basescope->bs_flags & Dee_CODE_FYIELDING) &&
 		     self->a_return->a_type == AST_CONSTEXPR &&
 		     DeeNone_Check(self->a_return->a_constexpr))) {
@@ -559,7 +559,7 @@ done_push_none:
 		 *       generation of trailing code still associated with
 		 *       instructions that are known to never return.
 		 *       As is the case now, we only fake pushing something when
-		 *       a `return' expression is supposed to yield something. */
+		 *       a `return` expression is supposed to yield something. */
 done_fake_none:
 		if (PUSH_RESULT)
 			asm_incsp();
@@ -604,10 +604,10 @@ done_fake_none:
 			 *       stack variables having been initialized inside the loop. */
 		ASM_BREAK_SCOPE(0, err);
 
-		/* This is where `break' jumps to. (After the re-aligned stack) */
+		/* This is where `break` jumps to. (After the re-aligned stack) */
 		asm_defsym(loop_break);
 
-		/* Loop expressions simply return `none'. */
+		/* Loop expressions simply return `none`. */
 		/* Because we've already cleaned up after stack variables initialized
 			 * within the loop's scope, we must not allow the code below to do so again! */
 		if (PUSH_RESULT)
@@ -644,18 +644,18 @@ done_fake_none:
 		 *    >> jmp pop
 		 *    Using this, a finally block in a place such as that above
 		 *    must be entered after pushing the address of the instruction
-		 *    it should return to once done, meaning that `break' will
+		 *    it should return to once done, meaning that `break` will
 		 *    push the address of `print "done";', and before entering
 		 *    the finally block during normal code-flow, the address of
 		 *    `print "next";' is pushed instead.
-		 *    HINT: The implementation of this is further documented in `AST_TRY' above.
+		 *    HINT: The implementation of this is further documented in `AST_TRY` above.
 		 */
 		old_stack = current_assembler.a_stackcur;
 		/* Adjust the stack and jump to the proper symbol. */
 		DO(asm_putddi(self));
 		if (current_assembler.a_finsym &&
 		    !(current_assembler.a_finflag & ASM_FINFLAG_NOLOOP)) {
-			/* Special case: Must push `ls_sym', but jump to `ls_fsym'. */
+			/* Special case: Must push `ls_sym`, but jump to `ls_fsym`. */
 			current_assembler.a_finflag |= ASM_FINFLAG_USED;
 			DO(asm_gpush_abs(loopsym));
 			DO(asm_gpush_stk(loopsym));
@@ -734,14 +734,14 @@ do_check_encode_cmpxch:
 do_encode_cmpxch_or_reuse_replace_this_branch:
 						if ((if_equal_to_ast && BRANCHES_IDENTICAL(if_equal_to_ast, with_this)) ||
 						    (if_equal_to && ast_isconstexpr(with_this, if_equal_to))) {
-							/* Special case: `x === y ? y : x'.
+							/* Special case: `x === y ? y : x`.
 							 * Always evaluates to "x", but evaluates "y" as well. */
 							DO(ast_genasm(replace_this_1, gflags));
 							DO(if_equal_to_ast && ast_genasm_one(if_equal_to_ast, gflags & ~ASM_G_FPUSHRES));
 							break;
 						} else if ((if_equal_to_ast && BRANCHES_IDENTICAL(if_equal_to_ast, replace_this_1)) ||
 						           (if_equal_to && ast_isconstexpr(replace_this_1, if_equal_to))) {
-							/* Special case: `y === y ? with_this : ...'.
+							/* Special case: `y === y ? with_this : ...`.
 							 * -> replacement always happens */
 							DO(if_equal_to_ast && ast_genasm(if_equal_to_ast, gflags & ~ASM_G_FPUSHRES));
 							DO(ast_genasm(with_this, gflags));
@@ -909,7 +909,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 				struct asm_sym *cond_end;
 				/* Special case: re-use the condition as true or false branch. */
 
-				/* If the condition will be re-used as result, and `AST_FCOND_BOOL' is set, we
+				/* If the condition will be re-used as result, and `AST_FCOND_BOOL` is set, we
 				 * must first convert the conditional into a boolean if it's not already one. */
 				DO(asm_putddi(self));
 				if (PUSH_RESULT && (self->a_flag & AST_FCOND_BOOL) &&
@@ -921,7 +921,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 
 				/*     push <cond>
 				 *     [dup]
-				 *     jt   pop, 1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
+				 *     jt   pop, 1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)`
 				 *     [pop]
 				 *     [push] <false-branch> / <true-branch>
 				 *1:   */
@@ -936,7 +936,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 				    current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
 					/*     push <cond>
 					 *     [dup]
-					 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
+					 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)`
 					 *2:
 					 *
 					 *.cold.1:
@@ -981,7 +981,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 			           current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
 				/* Special case where one of the branches is placed in cold text. */
 				/*     push <cond>
-				 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ <likely-branch == false-branch>'
+				 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ <likely-branch == false-branch>`
 				 *    [push] <likely-branch>
 				 *2:
 				 *
@@ -1046,7 +1046,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					DO(asm_gbool(false));
 			} else {
 				/*     push <cond>
-				 *     jf   pop, 1f  # Inverted by `invert_condition'
+				 *     jf   pop, 1f  # Inverted by `invert_condition`
 				 *     [push] <true-branch>
 				 *     jmp  pop, 2f
 				 *1:   [push] <false-branch>
@@ -1067,14 +1067,14 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					ff_is_bool = ast_predict_type(self->a_conditional.c_ff) == &DeeBool_Type;
 				DO(asm_putddi(self));
 				DO(asm_gjmp(invert_condition ? ASM_JT : ASM_JF, ff_enter));
-				asm_decsp(); /* Popped by `ASM_JT' / `ASM_JF' */
+				asm_decsp(); /* Popped by `ASM_JT` / `ASM_JF` */
 				DO(ast_genasm(self->a_conditional.c_tt, gflags));
 				DO(asm_putddi(self));
 				if (!tt_is_bool && ff_is_bool)
 					DO(asm_gbool(false));
 				DO(asm_gjmp(ASM_JMP, ff_leave));
 				if (PUSH_RESULT)
-					asm_decsp(); /* Adjust to before `tt' was executed. */
+					asm_decsp(); /* Adjust to before `tt` was executed. */
 				asm_defsym(ff_enter);
 				DO(ast_genasm(self->a_conditional.c_ff, gflags));
 				DO(asm_putddi(self));
@@ -1085,7 +1085,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					DO(asm_gbool(false));
 			}
 		} else {
-			/* Only the one of the branches exists. - the other should return `none'. */
+			/* Only the one of the branches exists. - the other should return `none`. */
 			struct ast *existing_branch;
 			bool invert_boolean = invert_condition;
 			ASSERT(self->a_conditional.c_tt || self->a_conditional.c_ff);
@@ -1105,7 +1105,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 				/*    push <cond>
 				 *    [bool]
 				 *    dup
-				 *    jf   pop, 1f  # Inverted by `existing_branch == ast->a_conditional.c_ff'
+				 *    jf   pop, 1f  # Inverted by `existing_branch == ast->a_conditional.c_ff`
 				 *    pop
 				 *    push none
 				 *1: */
@@ -1130,7 +1130,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 				/*   [push none|false]
 				 *    push <cond>
 				 *   [bool]
-				 *    jf   pop, 1f    # Inverted by `existing_branch == ast->a_conditional.c_ff'
+				 *    jf   pop, 1f    # Inverted by `existing_branch == ast->a_conditional.c_ff`
 				 *   [pop]
 				 *   [push] <existing-branch>
 				 *1: */
@@ -1140,7 +1140,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 				if (PUSH_RESULT) {
 					/* Due to stack displacement, the conditional may leave more
 					 * than just its return value on the stack, meaning that
-					 * we cannot rely on our `none' remaining immediately below
+					 * we cannot rely on our `none` remaining immediately below
 					 * when stack displacement is enabled.
 					 * Instead, we must rely on peephole optimization to then optimize
 					 * text like this:
@@ -1151,7 +1151,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					 * >> push none
 					 * >> push @condition
 					 * HINT: This uses the same facility that optimizes
-					 *      `a in b' --> `b.operator contains(a)'.
+					 *      `a in b` --> `b.operator contains(a)`.
 					 */
 					if (current_assembler.a_flag & ASM_FSTACKDISP) {
 						DO(ast_genasm(condition, ASM_G_FPUSHRES));
@@ -1172,7 +1172,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 					    ast_predict_type(condition) != &DeeBool_Type)
 						DO(asm_gbool(false));
 					DO(asm_gjmp(invert_condition ? ASM_JT : ASM_JF, after_existing));
-					asm_decsp(); /* Adjust for the value popped by `ASM_JT' / `ASM_JF' */
+					asm_decsp(); /* Adjust for the value popped by `ASM_JT` / `ASM_JF` */
 				} else {
 					DO(asm_gjcc(condition,
 					            invert_condition ? ASM_JT : ASM_JF,
@@ -1242,7 +1242,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 			DO(asm_putrel(R_DMN_DISP8, stop, 0));
 			DO(asm_put((instruction_t)(uint8_t)(int8_t) - 1));
 			asm_incsp();
-			DO(asm_gpop()); /* The sequence element pushed by `foreach' */
+			DO(asm_gpop()); /* The sequence element pushed by `foreach` */
 			DO(asm_put(ASM_JMP));
 			DO(asm_putrel(R_DMN_DISP8, loop, 0));
 			DO(asm_put((instruction_t)(uint8_t)(int8_t) - 1));
@@ -1683,7 +1683,7 @@ push_a_if_used:
 				    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 				    (sym->s_flag & SYMBOL_FALLOC) &&
 				    SYMBOL_STACK_OFFSET(sym) == current_assembler.a_stackcur - 1) {
-					/* Special optimization: Since `ASM_ENTER' doesn't modify the top stack item,
+					/* Special optimization: Since `ASM_ENTER` doesn't modify the top stack item,
 					 * if the operand _is_ the top stack item, then we can simply generate the enter
 					 * instruction without the need of any kludge. */
 					DO(asm_putddi(self));
@@ -1700,7 +1700,7 @@ push_a_if_used:
 
 		case OPERATOR_LEAVE:
 			/* NOTE: The case of the operand being stack-top, in which
-			 *       case `dup; leave pop; pop;' is generated, will later
+			 *       case `dup; leave pop; pop;` is generated, will later
 			 *       be optimized away by the peephole optimizer. */
 			DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
 			DO(asm_putddi(self));
@@ -1808,7 +1808,7 @@ push_a_if_used:
 			if (!DeeInt_TryAsUInt8(sizeval, &va_size_val))
 				break;
 
-			/* All right! we can encode this one as `cmp eq, #varargs, $<va_size_val>' */
+			/* All right! we can encode this one as `cmp eq, #varargs, $<va_size_val>` */
 			DO(asm_putddi(self));
 			DO(asm_gcmp_eq_varargs_sz(va_size_val));
 
@@ -2158,7 +2158,7 @@ operator_without_prefix:
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 						struct symbol *typesym;
 						if (self->a_action.a_act1->a_type == AST_SYM) {
-							/* Special optimizations for `this as ...' */
+							/* Special optimizations for `this as ...` */
 							int32_t symid;
 							typesym = self->a_action.a_act1->a_sym;
 							SYMBOL_INPLACE_UNWIND_ALIAS(typesym);
@@ -2275,12 +2275,12 @@ do_this_as_typesym_ref:
 				    (self->a_action.a_act1->a_type == AST_CONSTEXPR &&
 				     (self->a_action.a_act1->a_constexpr == Dee_None ||
 				      self->a_action.a_act1->a_constexpr == Dee_AsObject(&DeeNone_Type)))) {
-					/* Optimization for code like this: `foo is none'.
+					/* Optimization for code like this: `foo is none`.
 					 * A special opcode exists for this case because a lot of code uses
-					 * `none' as placeholder in default arguments, relying on the `is'
+					 * `none` as placeholder in default arguments, relying on the `is`
 					 * operator to check if the argument has a meaningful value.
-					 * In these types of situations, `operator ==' can't be used
-					 * because using it may invoke arbitrary code, while `is' only
+					 * In these types of situations, `operator ==` can't be used
+					 * because using it may invoke arbitrary code, while `is` only
 					 * performs a shallow check that never fails, or invokes other code. */
 					DO(asm_putddi(self));
 					DO(asm_gisnone());
@@ -2527,7 +2527,7 @@ action_in_without_const:
 
 	case AST_SWITCH:
 		DO(ast_genasm_switch(self));
-		/* Switch statements simply return `none',
+		/* Switch statements simply return `none`,
 		 * and cannot be used in expressions. */
 		goto done_push_none;
 

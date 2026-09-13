@@ -46,15 +46,15 @@ enum {
 };
 
 /* Define a second time here since the deemon script below needs it.
- * We internally don't wrap with `#ifndef' since the C standard says
+ * We internally don't wrap with `#ifndef` since the C standard says
  * that a macro can be re-defined with a duplicate definition without
  * causing a compiler warning.
  *
  * So if someone ends up changing the definition in headers, they'll
  * get a compiler warning here (which they have to fix by adjusting
- * this macro here, then running `deemon -F builtin.c') */
+ * this macro here, then running `deemon -F builtin.c`) */
 #define Dee_MODULE_HASHNX(hs, perturb) \
-	(void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+	(void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
 
 
 #ifdef CONFIG_NO_DOC
@@ -95,7 +95,7 @@ local BUILTINS_HASHMASK = (1 << (NUM_BUILTINS_SPC - 1).fls) - 1;
 print("#define NUM_BUILTINS_SYM  ", NUM_BUILTINS_SYM);
 print("#define NUM_BUILTINS_SPC  ", NUM_BUILTINS_SPC);
 print("#define BUILTINS_HASHMASK ", BUILTINS_HASHMASK.hex());
-print("STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == ", NUM_BUILTINS_SYM, ", \"You need to re-run `deemon -F src/deemon/runtime/builtin.c'\");");
+print("STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == ", NUM_BUILTINS_SYM, ", \"You need to re-run `deemon -F src/deemon/runtime/builtin.c`\");");
 print("PRIVATE struct Dee_module_symbol deemon_symbols[", BUILTINS_HASHMASK + 1, "] = {");
 
 // Construct the hash-table of builtin deemon objects.
@@ -156,7 +156,7 @@ print("};");
 #define NUM_BUILTINS_SYM  52
 #define NUM_BUILTINS_SPC  69
 #define BUILTINS_HASHMASK 0x7f
-STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 52, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
+STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 52, "You need to re-run `deemon -F src/deemon/runtime/builtin.c`");
 PRIVATE struct Dee_module_symbol deemon_symbols[128] = {
 #if _Dee_HashSelect(32, 64) == 32
 	MODSYM(DeeString_STR(&str_none), NULL, UINT32_C(0xde6dda00), Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR | Dee_MODSYM_FNAMEOBJ, id_none),
@@ -453,7 +453,7 @@ PUBLIC struct Dee_deemon_module_struct DeeModule_Deemon = {
 		},
 		/* .mo_dir     = */ (DeeTupleObject *)Dee_EmptyTuple,
 		/* .mo_init    = */ Dee_MODULE_INIT_INITIALIZED,
-		/* .mo_buildid = */ { {0} }, /* Lazily initialized (from `DeeExec_GetTimestamp()') */
+		/* .mo_buildid = */ { {0} }, /* Lazily initialized (from `DeeExec_GetTimestamp()`) */
 		/* .mo_flags   = */ Dee_MODULE_FNORMAL | _Dee_MODULE_FLIBALL,
 		/* .mo_importc = */ 0,
 		/* .mo_globalc = */ num_builtins_obj,

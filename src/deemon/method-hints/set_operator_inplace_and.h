@@ -41,7 +41,7 @@ __set_inplace_and__.set_operator_inplace_and([[nonnull]] DREF DeeObject **__rest
 %{unsupported({
 	DREF DeeObject *result;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return (*DeeType_RequireMethodHint(Dee_TYPE(*p_self), set_operator_inplace_sub))(p_self, xrhs->si_set);
 	}
@@ -61,14 +61,14 @@ err:
 	DREF DeeObject *keys_to_remove_proxy;
 	DREF DeeObject *keys_to_remove;
 	if (SetInversion_CheckExact(rhs)) {
-		/* Special case: `a &= ~b' -> `a -= b' */
+		/* Special case: `a &= ~b` -> `a -= b` */
 		SetInversion *xrhs = (SetInversion *)rhs;
 		return CALL_DEPENDENCY(set_operator_inplace_sub, p_self, xrhs->si_set);
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return CALL_DEPENDENCY(seq_clear, *p_self);
 
-	/* `a &= b' -> `(a as Set).removeall((((a as Set) - b) as Set).frozen)' */
+	/* `a &= b` -> `(a as Set).removeall((((a as Set) - b) as Set).frozen)` */
 	keys_to_remove_proxy = DeeObject_InvokeMethodHint(set_operator_sub, *p_self, rhs);
 	if unlikely(!keys_to_remove_proxy)
 		goto err;

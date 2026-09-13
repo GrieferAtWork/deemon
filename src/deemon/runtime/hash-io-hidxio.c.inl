@@ -142,7 +142,7 @@ F(Dee_hash_lwrhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, De
 #endif /* LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__) */
 
 
-/* Insert `it_vidx' (whose associated object has a hash of `it_hash')
+/* Insert `it_vidx` (whose associated object has a hash of `it_hash`)
  * into "HTAB", and return the "htab_idx" where the item was inserted:
  * >> Dee_hash_t hs, perturb;
  * >> for (_DeeHash_HashIdxInit(&hs, &perturb, it_hash, hmask);;
@@ -174,7 +174,7 @@ F(Dee_hash_insert)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 
 
 
-/* Decrement all HTAB elements `>= vtab_threshold':
+/* Decrement all HTAB elements `>= vtab_threshold`:
  * >> Dee_hash_t i;
  * >> for (i = 0; i <= hmask; ++i) {
  * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -192,7 +192,7 @@ F(Dee_hash_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
-/* Increment all HTAB elements `>= vtab_threshold':
+/* Increment all HTAB elements `>= vtab_threshold`:
  * >> Dee_hash_t i;
  * >> for (i = 0; i <= hmask; ++i) {
  * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -210,7 +210,7 @@ F(Dee_hash_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
-/* Decrement all HTAB elements `>= vtab_min && <= vtab_max':
+/* Decrement all HTAB elements `>= vtab_min && <= vtab_max`:
  * >> Dee_hash_t i;
  * >> for (i = 0; i <= hmask; ++i) {
  * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
@@ -229,7 +229,7 @@ F(Dee_hash_decrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
-/* Increment all HTAB elements `>= vtab_min && <= vtab_max':
+/* Increment all HTAB elements `>= vtab_min && <= vtab_max`:
  * >> Dee_hash_t i;
  * >> for (i = 0; i <= hmask; ++i) {
  * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);

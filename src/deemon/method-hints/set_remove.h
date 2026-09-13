@@ -32,8 +32,8 @@ err:
 }
 
 /* Remove a key from a set
- * @return: Dee_HAS_YES: Given `key' was removed
- * @return: Dee_HAS_NO:  Given `key' was wasn't present
+ * @return: Dee_HAS_YES: Given `key` was removed
+ * @return: Dee_HAS_NO:  Given `key` was wasn't present
  * @return: Dee_HAS_ERR: Error */
 [[wunused]] int
 __set_remove__.set_remove([[nonnull]] DeeObject *self,

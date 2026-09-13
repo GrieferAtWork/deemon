@@ -80,7 +80,7 @@ DECL_BEGIN
 
 
 /* value -> bool
- * Implement a fast "operator bool" by checking if `*(void **)((byte_t *)value + offsetof_field) != NULL' */
+ * Implement a fast "operator bool" by checking if `*(void **)((byte_t *)value + offsetof_field) != NULL` */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vbool_field_nonzero(struct fungen *__restrict self,
                     ptrdiff_t offsetof_field) {
@@ -358,7 +358,7 @@ cca_List_append(struct fungen *__restrict self, vstackaddr_t argc) {
 	DO(fg_vnotoneref(self, argc)); /* this, [args...] */
 	while (argc) {
 		/* XXX: Pre-reserve memory when multiple arguments are given? */
-		/* XXX: Use a different function `DeeList_AppendInherted()', so we don't have to decref the appended object? */
+		/* XXX: Use a different function `DeeList_AppendInherted()`, so we don't have to decref the appended object? */
 		DO(fg_vdup_at(self, argc + 1));                          /* this, [args...], this */
 		DO(fg_vlrot(self, argc + 1));                            /* this, [moreargs...], this, arg */
 		DO(fg_vcallapi(self, &DeeList_Append, VCALL_CC_INT, 2)); /* this, [moreargs...] */
@@ -610,7 +610,7 @@ cco_String_add(struct fungen *__restrict self, vstackaddr_t argc) {
 	struct memval *v_this = fg_vtop(self) - 1;
 	(void)argc;
 	if (memval_isconst(v_this) && DeeString_IsEmpty(memval_const_getobj(v_this))) {
-		/* Special case: `"" + foo' same as `str foo' */
+		/* Special case: `"" + foo' same as `str foo` */
 		DO(fg_vpop_at(self, 2)); /* other */
 		return fg_vopstr(self);  /* result */
 	}
@@ -1190,7 +1190,7 @@ PRIVATE struct ccall_optimization tpconst cco_Float[] = {
 
 struct ccall_optimizations_struct {
 	DeeTypeObject             const *tccos_type; /* [1..1] The type to which these optimizations apply. */
-	struct ccall_optimization const *tccos_opts; /* [0..tccos_size] Vector of optimization handlers (sorted lexicographically by `tcco_name'). */
+	struct ccall_optimization const *tccos_opts; /* [0..tccos_size] Vector of optimization handlers (sorted lexicographically by `tcco_name`). */
 	size_t                           tccos_size; /* [1..1][const] # of optimization handlers. */
 };
 
@@ -1229,7 +1229,7 @@ PRIVATE struct ccall_optimizations_struct tpconst cco_optimizations[] = {
 };
 
 
-/* Try to find a dedicated optimization for `INSTANCEOF(<type>).<name>(argc...)' */
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).<name>(argc...)` */
 INTERN WUNUSED NONNULL((1, 2)) struct ccall_optimization const *DCALL
 ccall_find_attr_optimization(DeeTypeObject *__restrict type,
                              char const *name, vstackaddr_t argc) {
@@ -1276,9 +1276,9 @@ no_dedicated_optimization:
 	return NULL;
 }
 
-/* Try to find a dedicated optimization for `INSTANCEOF(<type>).operator <operator_name> (argc...)'
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).operator <operator_name> (argc...)`
  * NOTE: Optimizations returned type this one may or may not push a result onto the stack,
- *       depending on the operator in question (`operator_name')! Because of this, if the
+ *       depending on the operator in question (`operator_name`)! Because of this, if the
  *       operator is generic, the caller needs to check how the vstack depth is altered.
  *       For inplace operators, the same applies, but the "this" argument always remains
  *       on-stack as well! */

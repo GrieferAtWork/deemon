@@ -263,7 +263,7 @@ DECL_BEGIN
  *   - For non-GC objects, this part will need an out-of-band, heap-based mapping to store
  *     the "gcrefs" for such objects (but any allocation failure here can simply be handled
  *     by forgoing the idea of a pre-collect and just doing a full collect instead (iow: by
- *     doing `DeeThread_SuspendAll()' and everything else detailed above))
+ *     doing `DeeThread_SuspendAll()` and everything else detailed above))
  * - Any object where "gi_gcrefs >= ob_refcnt" is *probably* only internally referenced.
  * - Do a second "DeeObject_Visit" of all objects where "gi_gcrefs < ob_refcnt" to find
  *   transitive references (~ala "gc_visit__mark_internally_reachable__cb"). Any GC object
@@ -277,7 +277,7 @@ DECL_BEGIN
  *   generation's "gg_count" is still greater than some secondary threshold should a full collect
  *   actually happen.
  * - NOTES:
- *   - When no secondary threads have been created yet, or when built with `CONFIG_NO_THREADS',
+ *   - When no secondary threads have been created yet, or when built with `CONFIG_NO_THREADS`,
  *     none of this "pre-collect" code is used, and full collects will happen every time.
  */
 struct Dee_gc_head {
@@ -297,7 +297,7 @@ struct Dee_gc_head {
 #define Dee_GC_FLAG_FINALIZED 2 /* Object has already been finalized */
 #define Dee_GC_FLAG_MASK      3 /* Mask of special bits */
 #endif /* DEE_SOURCE */
-		uintptr_t    gi_flag;  /* GC Flags (set of `Dee_GC_FLAG_*') */
+		uintptr_t    gi_flag;  /* GC Flags (set of `Dee_GC_FLAG_*`) */
 	}                gc_info;  /* Misc. data, pending on context */
 	DeeObject       *gc_next;  /* [0..1][lock(INTERNAL(gc_lock))] Next GC object (possibly in pending chain). */
 #if 0
@@ -317,9 +317,9 @@ struct Dee_gc_head {
 #define DeeGC_Object(head)   ((DeeObject *)((__BYTE_TYPE__ *)(head) + Dee_GC_OBJECT_OFFSET))
 #endif /* !__INTELLISENSE__ */
 
-/* Possible flags for `DeeGC_TrackEx()' and `DeeGC_TrackAll()' */
+/* Possible flags for `DeeGC_TrackEx()` and `DeeGC_TrackAll()` */
 #define DeeGC_TRACK_F_NORMAL    0x0000 /* Normal tracking flags */
-#define DeeGC_TRACK_F_NOCOLLECT 0x0001 /* Don't collect garbage as part of tracking (caller must `DeeGC_CollectAsNecessary()' once ready) */
+#define DeeGC_TRACK_F_NOCOLLECT 0x0001 /* Don't collect garbage as part of tracking (caller must `DeeGC_CollectAsNecessary()` once ready) */
 
 /* Begin tracking a given GC-allocated object. */
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL DeeGC_Track(DREF DeeObject *__restrict ob);
@@ -331,22 +331,22 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 #ifdef CONFIG_BUILDING_DEEMON
 /* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
  * locks couldn't be acquired immediately, do the untrack asynchronously, followed
- * by everything else that would have normally been done in `DeeObject_Destroy()'
+ * by everything else that would have normally been done in `DeeObject_Destroy()`
  * @return: ob:   Untrack happened synchronously -- remainder of object destruction must be done by caller
  * @return: NULL: Untrack will happen asynchronously -- caller must not do any further object destruction */
 INTDEF NONNULL((1)) DeeObject *DCALL DeeGC_UntrackAsync(DeeObject *__restrict ob);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct Dee_gc_head'
- * @param: flags: Set of `DeeGC_TRACK_F_*' */
+ * already been linked together using their `struct Dee_gc_head`
+ * @param: flags: Set of `DeeGC_TRACK_F_*` */
 DFUNDEF NONNULL((1, 2)) void DCALL
 DeeGC_TrackAll(DeeObject *first, DeeObject *last, unsigned int flags);
 
-/* Call this function (once no more locks are held) after using `DeeGC_TRACK_F_NOCOLLECT' */
+/* Call this function (once no more locks are held) after using `DeeGC_TRACK_F_NOCOLLECT` */
 DFUNDEF void DCALL DeeGC_CollectAsNecessary(void);
 
-/* Try to collect `max_objects' GC-objects (though more than that
+/* Try to collect `max_objects` GC-objects (though more than that
  * may be collected), returning the actual amount collected.
  *
  * This function really only has 2 valid use-cases:
@@ -358,9 +358,9 @@ DFUNDEF void DCALL DeeGC_CollectAsNecessary(void);
 DFUNDEF WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects);
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Return `true' if any GC objects with a non-zero reference
+/* Return `true` if any GC objects with a non-zero reference
  * counter is being tracked.
- * NOTE: In addition, this function does not return `true' when
+ * NOTE: In addition, this function does not return `true` when
  *       all that's left are dex objects (which are destroyed
  *       at a later point during deemon shutdown, than the point
  *       when this function is called to determine if the GC must
@@ -373,8 +373,8 @@ INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
 /* GC object alloc/free.
  * Don't you think these functions allocate some magical memory
  * that can somehow track what objects it references. - No!
- * All these do is allocate a block of memory of `n_bytes' that
- * includes some storage at negative offsets to hold a `struct Dee_gc_head',
+ * All these do is allocate a block of memory of `n_bytes` that
+ * includes some storage at negative offsets to hold a `struct Dee_gc_head`,
  * as is required for objects that should later be tracked by the GC. */
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);
@@ -600,7 +600,7 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 
 
 /* Same as the regular malloc functions, but use the same allocation methods
- * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC', meaning that
+ * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC`, meaning that
  * pointers returned by these macros have binary compatibility with them. */
 #define DeeGCObject_MALLOC(T)                            ((T *)DeeGCObject_FMalloc(sizeof(T)))
 #define DeeGCObject_CALLOC(T)                            ((T *)DeeGCObject_FCalloc(sizeof(T)))
@@ -622,9 +622,9 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
  * that user-space an invoke to trigger various GC-related
  * functionality:
  *   - collect(max: int = -1): int;
- * Also: remember that this derives from `Sequence', so you
- *       can use all its attributes, like `empty', etc.
- * NOTE: This object is exported as `gc from deemon' */
+ * Also: remember that this derives from `Sequence`, so you
+ *       can use all its attributes, like `empty`, etc.
+ * NOTE: This object is exported as `gc from deemon` */
 DDATDEF DeeObject DeeGCEnumTracked_Singleton;
 
 

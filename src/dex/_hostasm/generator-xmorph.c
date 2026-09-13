@@ -49,7 +49,7 @@ STATIC_ASSERT(offsetof(struct memval, mv_flags) == offsetof(struct memref, _mr_a
 /* Assign a score to the complexity of moving "from" to "to"
  *
  * If the move is impossible (can happen if "to" is CONST and
- * differs from FROM), return `(size_t)-1' */
+ * differs from FROM), return `(size_t)-1` */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 memref_mov_score(struct memref const *__restrict from,
                  struct memref const *__restrict to) {
@@ -162,8 +162,8 @@ find_notdone_oldrefi_for_cfa_boundary(struct memstate const *__restrict self) {
 	return find_notdone_oldrefi_for_memadr(self, &cfa_boundary, false);
 }
 
-/* Re-sort memory locations by `memref_compare()'
- * Also update indices in `oldref_targets' */
+/* Re-sort memory locations by `memref_compare()`
+ * Also update indices in `oldref_targets` */
 PRIVATE NONNULL((1, 2)) void DCALL
 sort_memlocs(struct memstate *__restrict self,
              vstackaddr_t *__restrict oldref_targets) {
@@ -201,7 +201,7 @@ fg_xmorph_impl(struct fungen *__restrict self,
 	vstackaddr_t newrefi, newrefc = newinfo->exi_memrefc;
 	vstackaddr_t *oldref_targets;
 
-	/* Calculate register usage counters in `state'. */
+	/* Calculate register usage counters in `state`. */
 	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
 	bzero(state->ms_rusage, sizeof(state->ms_rusage));
 	for (oldrefi = 0; oldrefi < oldrefc; ++oldrefi) {
@@ -210,8 +210,8 @@ fg_xmorph_impl(struct fungen *__restrict self,
 	}
 	_memstate_verifyrinuse(state);
 
-	/* Indices into `newrefv' detailing which location to use as target for "oldrefv".
-	 * Elements that don't have sources get the `_MEMREF_F_NOSRC' flag set. */
+	/* Indices into `newrefv` detailing which location to use as target for "oldrefv".
+	 * Elements that don't have sources get the `_MEMREF_F_NOSRC` flag set. */
 	oldref_targets = (vstackaddr_t *)Dee_Mallocac(oldrefc, sizeof(vstackaddr_t));
 	if unlikely(!oldref_targets)
 		goto err;
@@ -287,10 +287,10 @@ bind_next_newref:;
 	 *     Also: have special handling when "pop" can be used to load the next source.
 	 * #2: Re-order "oldrefv" to have the same element order as "newrefv"
 	 * #3: Go through "newrefv" and create Dee_None refs for all references that don't
-	 *     have a source in the old state (as per `_MEMREF_F_NOSRC'). At the same time,
+	 *     have a source in the old state (as per `_MEMREF_F_NOSRC`). At the same time,
 	 *     insert these new locations into "oldrefv".
-	 * #4: Construct a fake `memstate' for "newinfo"
-	 * #5: Use `fg_vmorph()' to force any flushed registers/etc back
+	 * #4: Construct a fake `memstate` for "newinfo"
+	 * #5: Use `fg_vmorph()` to force any flushed registers/etc back
 	 *     into their proper place (as well as do some final adjustment of the CFA). */
 	for (;;) {
 		vstackaddr_t initial_oldrefi;
@@ -440,7 +440,7 @@ do_move_source_oldrefi:
 	state->ms_stackv = (struct memval *)new_oldrefv;
 
 	/* #3: Go through "newrefv" and create Dee_None refs for all references that don't
-	 *     have a source in the old state (as per `_MEMREF_F_NOSRC'). At the same time,
+	 *     have a source in the old state (as per `_MEMREF_F_NOSRC`). At the same time,
 	 *     insert these new locations into "oldrefv". */
 	for (newrefi = 0; newrefi < newrefc; ++newrefi) {
 		struct memloc constval;
@@ -465,7 +465,7 @@ do_move_source_oldrefi:
 		void *_newstatebuf[memstate_sizeof_constexpr(1) / sizeof(void *)];
 		struct memstate *newstate = (struct memstate *)_newstatebuf;
 
-		/* #4: Construct a fake `memstate' for "newinfo" */
+		/* #4: Construct a fake `memstate` for "newinfo" */
 		newstate->ms_host_cfa_offset = newinfo->exi_cfa_offset;
 		newstate->ms_refcnt    = 1;
 		newstate->ms_localc    = 1;
@@ -476,7 +476,7 @@ do_move_source_oldrefi:
 		newstate->ms_stackv    = (struct memval *)newrefv;
 		newstate->ms_localv[0] = state->ms_localv[0];
 
-		/* #5: Use `fg_vmorph()' to force any flushed registers/etc back
+		/* #5: Use `fg_vmorph()` to force any flushed registers/etc back
 		 *     into their proper place (as well as do some final adjustment of the CFA). */
 		memequivs_init(&newstate->ms_memequiv);
 		temp = fg_vmorph_no_constrain_equivalences(self, newstate);

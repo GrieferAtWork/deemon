@@ -66,7 +66,7 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
 
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
 /* Enter the atomic-once block
- * @return: * : One of `ATOMIC_ONCE_ENTER_NX_*'. */
+ * @return: * : One of `ATOMIC_ONCE_ENTER_NX_*`. */
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) unsigned int
 __NOTHROW(atomic_once_enter_nx)(struct atomic_once *__restrict __self);
 #define ATOMIC_ONCE_ENTER_NX_MUSTRUN    __ATOMIC_ONCE_PENDING /* Atomic-once successfully entered. */
@@ -75,7 +75,7 @@ __NOTHROW(atomic_once_enter_nx)(struct atomic_once *__restrict __self);
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 
 /* Try to enter the atomic-once block
- * @return: * : One of `ATOMIC_ONCE_TRYENTER_*' */
+ * @return: * : One of `ATOMIC_ONCE_TRYENTER_*` */
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) unsigned int
 __NOTHROW(atomic_once_tryenter)(struct atomic_once *__restrict __self);
 #define ATOMIC_ONCE_TRYENTER_MUSTRUN    __ATOMIC_ONCE_PENDING /* Atomic-once successfully entered. */
@@ -120,7 +120,7 @@ __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
 
 #if defined(__KERNEL__) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
 /* Enter the atomic-once block
- * @return: * : One of `ATOMIC_ONCE_ENTER_NX_*'. */
+ * @return: * : One of `ATOMIC_ONCE_ENTER_NX_*`. */
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) unsigned int
 __NOTHROW(atomic_once_enter_nx)(struct atomic_once *__restrict __self) {
 	unsigned int __state;
@@ -148,7 +148,7 @@ __NOTHROW(atomic_once_enter_nx)(struct atomic_once *__restrict __self) {
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 
 /* Try to enter the atomic-once block
- * @return: * : One of `ATOMIC_ONCE_TRYENTER_*' */
+ * @return: * : One of `ATOMIC_ONCE_TRYENTER_*` */
 __LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) unsigned int
 __NOTHROW(atomic_once_tryenter)(struct atomic_once *__restrict __self) {
 	unsigned int __state;

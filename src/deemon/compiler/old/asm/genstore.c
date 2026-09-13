@@ -286,8 +286,8 @@ check_getattr_sym:
 		    base->a_action.a_act0->a_type == AST_SYM &&
 		    base->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_THIS &&
 		    !SYMBOL_MUST_REFERENCE_THIS(base->a_action.a_act0->a_sym)) {
-			/* `(this as ...).foobar'
-			 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
+			/* `(this as ...).foobar`
+			 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC` instructions. */
 			struct ast *type_expr = base->a_action.a_act1;
 			int32_t type_rid;
 			if (type_expr->a_type == AST_SYM &&
@@ -308,7 +308,7 @@ do_perform_supergetattr:
 			    current_basescope != (DeeBaseScopeObject *)current_rootscope &&
 			    !(current_assembler.a_flag & ASM_FREDUCEREFS)) {
 				/* Check if the type-expression is a constant that had been exported
-				 * from the builtin `deemon' module, in which case we are able to cast
+				 * from the builtin `deemon` module, in which case we are able to cast
 				 * an explicit reference to it. */
 				struct symbol *deemon_symbol;
 				deemon_symbol = asm_bind_deemon_export(type_expr->a_constexpr);
@@ -724,7 +724,7 @@ pop_unused_result:
 	if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 	    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
-			goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop' instruction, so use fallback */
+			goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop` instruction, so use fallback */
 		if (PUSH_RESULT) {
 			DO(ast_genasm(value, ASM_G_FPUSHRES)); /* result */
 			DO(asm_putddi(ddi_ast));
@@ -754,7 +754,7 @@ pop_unused_result:
 		}
 	} else {
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
-			goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop' instruction, so use fallback */
+			goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop` instruction, so use fallback */
 		if (PUSH_RESULT) {
 			DO(ast_genasm(value, ASM_G_FPUSHRES)); /* result */
 			DO(asm_putddi(ddi_ast));
@@ -951,16 +951,16 @@ ast_gen_setrange(struct ast *__restrict sequence,
 	if (begin->a_type == AST_CONSTEXPR) {
 		DeeObject *begin_index = begin->a_constexpr;
 		if (DeeNone_Check(begin_index)) {
-			/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
+			/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop` */
 			if (end->a_type == AST_CONSTEXPR &&
 			    DeeInt_Check(end->a_constexpr) &&
 			    DeeInt_TryAsInt16(end->a_constexpr, &int_index)) {
-				/* `setrange pop, none, $<Simm16>, pop' */
+				/* `setrange pop, none, $<Simm16>, pop` */
 				DO(asm_gpush2_duplast(sequence, value, ddi_ast, gflags));
 				DO(asm_gsetrange_ni(int_index));
 				goto done;
 			}
-			/* `setrange pop, none, pop, pop' */
+			/* `setrange pop, none, pop, pop` */
 			DO(asm_gpush3_duplast(sequence, end, value, ddi_ast, gflags));
 			DO(asm_gsetrange_np());
 			goto done;
@@ -971,14 +971,14 @@ ast_gen_setrange(struct ast *__restrict sequence,
 				int16_t int_index2;
 				DeeObject *end_index = end->a_constexpr;
 				if (DeeNone_Check(end_index)) {
-					/* `setrange pop, $<Simm16>, none, pop' */
+					/* `setrange pop, $<Simm16>, none, pop` */
 					DO(asm_gpush2_duplast(sequence, value, ddi_ast, gflags));
 					DO(asm_gsetrange_in(int_index));
 					goto done;
 				}
 				if (DeeInt_Check(end_index) &&
 				    DeeInt_TryAsInt16(end_index, &int_index2)) {
-					/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
+					/* `setrange pop, $<Simm16>, $<Simm16>, pop` */
 					DO(asm_gpush2_duplast(sequence, value, ddi_ast, gflags));
 					DO(asm_gsetrange_ii(int_index, int_index2));
 					goto done;
@@ -989,16 +989,16 @@ ast_gen_setrange(struct ast *__restrict sequence,
 			goto done;
 		}
 	} else if (end->a_type == AST_CONSTEXPR) {
-		/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop' */
+		/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop` */
 		DeeObject *end_index = end->a_constexpr;
 		if (DeeNone_Check(end_index)) {
-			/* `setrange pop, pop, none, pop' */
+			/* `setrange pop, pop, none, pop` */
 			DO(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags));
 			DO(asm_gsetrange_pn());
 			goto done;
 		}
 		if (DeeInt_Check(end_index) && DeeInt_TryAsInt16(end_index, &int_index)) {
-			/* `setrange pop, pop, $<Simm16>, pop' */
+			/* `setrange pop, pop, $<Simm16>, pop` */
 			DO(asm_gpush3_duplast(sequence, begin, value, ddi_ast, gflags));
 			DO(asm_gsetrange_pi(int_index));
 			goto done;
@@ -1018,9 +1018,9 @@ asm_gunpack_expr(struct ast *__restrict src,
                  struct ast *__restrict ddi_ast) {
 	/* Unwind inner sequence-expand expressions.
 	 * This optimizes:
-	 * >> `(x, y, z) = [(10, 20, 30)...];'
+	 * >> `(x, y, z) = [(10, 20, 30)...];`
 	 * Into:
-	 * >> `(x, y, z) = (10, 20, 30);'
+	 * >> `(x, y, z) = (10, 20, 30);`
 	 */
 	for (;;) {
 		struct ast *inner;
@@ -1051,7 +1051,7 @@ asm_gunpack_expr(struct ast *__restrict src,
 		}
 	}
 
-	/* Fallback: generate regular assembly for `src' and use `ASM_UNPACK' */
+	/* Fallback: generate regular assembly for `src` and use `ASM_UNPACK` */
 	DO(ast_genasm(src, ASM_G_FPUSHRES));
 	DO(asm_putddi(ddi_ast));
 	return asm_gunpack(num_targets);
@@ -1370,7 +1370,7 @@ check_dst_sym_class:
 			 *   >>     }
 			 *   >> }
 			 * - ASM_PUSH_STATIC and Function.__static__ implicitly handle ITER_DONE like NULL
-			 * - ASM_POP_STATIC and ASM_DEL_STATIC call `DeeFutex_WakeAll()'
+			 * - ASM_POP_STATIC and ASM_DEL_STATIC call `DeeFutex_WakeAll()`
 			 */
 			sid = asm_ssymid(dst_sym);
 			if unlikely(sid < 0)
@@ -1657,7 +1657,7 @@ check_dst_sym_class_hybrid:
 
 	case AST_CONSTEXPR:
 		/* Check for special case: store into a constant
-		 * expression `none' is the same as `pop' */
+		 * expression `none` is the same as `pop` */
 		if (!DeeNone_Check(dst->a_constexpr))
 			break;
 		/* Store-to-none is a no-op (so just assembly the source-expression). */
@@ -1693,7 +1693,7 @@ check_dst_sym_class_hybrid:
 		break;
 
 	case AST_MULTIPLE:
-		/* Special handling for unpack expressions (i.e. `(a, b, c) = foo()'). */
+		/* Special handling for unpack expressions (i.e. `(a, b, c) = foo()`). */
 		if (dst->a_flag == AST_FMULTIPLE_KEEPLAST) {
 			size_t i = 0;
 			if (dst->a_multiple.m_astc == 0)
@@ -1725,7 +1725,7 @@ check_dst_sym_class_hybrid:
 			goto done;
 		}
 		if (src->a_type == AST_CONSTEXPR) {
-			/* TODO: Optimizations for `none'. */
+			/* TODO: Optimizations for `none`. */
 			/* TODO: Optimizations for sequence constants. */
 		}
 		break;
@@ -1900,18 +1900,18 @@ asm_gpop_expr(struct ast *__restrict self) {
 			if (start->a_type == AST_CONSTEXPR) {
 				DeeObject *begin_index = start->a_constexpr;
 				if (DeeNone_Check(begin_index)) {
-					/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop' */
+					/* Optimization: `setrange pop, none, [pop | $<Simm16>], pop` */
 					if (end->a_type == AST_CONSTEXPR &&
 					    DeeInt_Check(end->a_constexpr) &&
 					    DeeInt_TryAsInt16(end->a_constexpr, &int_index)) {
-						/* `setrange pop, none, $<Simm16>, pop' */
+						/* `setrange pop, none, $<Simm16>, pop` */
 						DO(asm_putddi(self));
 						DO(asm_gswap()); /* STACK: base, item */
 						DO(asm_gsetrange_ni(int_index));
 						goto done;
 					}
 
-					/* `setrange pop, none, pop, pop' */
+					/* `setrange pop, none, pop, pop` */
 					DO(ast_genasm_one(end, ASM_G_FPUSHRES)); /* STACK: item, base, end */
 					DO(asm_putddi(self));
 					DO(asm_glrot(3));       /* STACK: base, end, item */
@@ -1924,7 +1924,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 						int16_t int_index2;
 						DeeObject *end_index = end->a_constexpr;
 						if (DeeNone_Check(end_index)) {
-							/* `setrange pop, $<Simm16>, none, pop' */
+							/* `setrange pop, $<Simm16>, none, pop` */
 							DO(asm_putddi(self));
 							DO(asm_gswap());                 /* STACK: base, item */
 							DO(asm_gsetrange_in(int_index)); /* STACK: - */
@@ -1932,7 +1932,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 						}
 						if (DeeInt_Check(end_index) &&
 						    DeeInt_TryAsInt16(end_index, &int_index2)) {
-							/* `setrange pop, $<Simm16>, $<Simm16>, pop' */
+							/* `setrange pop, $<Simm16>, $<Simm16>, pop` */
 							DO(asm_putddi(self));
 							DO(asm_gswap());                                      /* STACK: base, item */
 							DO(asm_gsetrange_ii(int_index, (int16_t)int_index2)); /* STACK: - */
@@ -1946,10 +1946,10 @@ asm_gpop_expr(struct ast *__restrict self) {
 					goto done;
 				}
 			} else if (end->a_type == AST_CONSTEXPR) {
-				/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop' */
+				/* Optimization: `setrange pop, pop, [none | $<Simm16>], pop` */
 				DeeObject *end_index = end->a_constexpr;
 				if (DeeNone_Check(end_index)) {
-					/* `setrange pop, pop, none, pop' */
+					/* `setrange pop, pop, none, pop` */
 					DO(ast_genasm_one(start, ASM_G_FPUSHRES)); /* STACK: item, base, begin */
 					DO(asm_putddi(self));
 					DO(asm_glrot(3));       /* STACK: base, begin, item */
@@ -1958,7 +1958,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 				}
 				if (DeeInt_Check(end_index) &&
 				    DeeInt_TryAsInt16(end_index, &int_index)) {
-					/* `setrange pop, pop, $<Simm16>, pop' */
+					/* `setrange pop, pop, $<Simm16>, pop` */
 					DO(ast_genasm_one(start, ASM_G_FPUSHRES)); /* STACK: item, base, begin */
 					DO(asm_putddi(self));
 					DO(asm_glrot(3));                /* STACK: base, begin, item */
@@ -1981,7 +1981,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 
 	case AST_CONSTEXPR:
 		/* Check for special case: store into a constant
-		 * expression `none' is the same as `pop' */
+		 * expression `none` is the same as `pop` */
 		if (!DeeNone_Check(self->a_constexpr))
 			goto default_case;
 		DO(asm_gpop());

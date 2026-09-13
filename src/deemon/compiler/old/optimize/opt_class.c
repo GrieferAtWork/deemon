@@ -39,7 +39,7 @@
 
 DECL_BEGIN
 
-/* Returns the address of a given operator `name' */
+/* Returns the address of a given operator `name` */
 PRIVATE WUNUSED NONNULL((1)) struct Dee_class_operator *DCALL
 DeeClassDescriptorObject_GetOperatorAddr(DeeClassDescriptorObject *__restrict self,
                                          Dee_operator_t name) {
@@ -63,7 +63,7 @@ DeeClassDescriptorObject_GetOperatorAddr(DeeClassDescriptorObject *__restrict se
 
 INTDEF struct Dee_class_operator empty_class_operators[];
 
-/* Rename the name of `slot' to `new_name' */
+/* Rename the name of `slot` to `new_name` */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
                                  struct Dee_class_operator *slot,
@@ -175,7 +175,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	ASSERT(new_operator == Dee_CLASS_OPERATOR_PRINT ||
 	       new_operator == Dee_CLASS_OPERATOR_PRINTREPR);
 
-	/* Find the class member used to initialize `str_addr' */
+	/* Find the class member used to initialize `str_addr` */
 	for (i = 0;; ++i) {
 		if (i >= self->a_class.c_memberc)
 			goto done; /* Special case: operator is never assigned */
@@ -187,7 +187,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	/* Check what kind of expression will be assigned to the str-operator.
 	 * We can only optimize code like:
 	 * >> operator str(): string {
-	 * >>     ... // Any code that doesn't contain a `return' statement
+	 * >>     ... // Any code that doesn't contain a `return` statement
 	 * >>     return EXPRESSION;
 	 * >> }
 	 */
@@ -203,11 +203,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 		goto done;
 	if (str_scope->bs_argc != 0)
 		goto done;
-	ASSERTF(str_scope->bs_argc_min == 0, "Then why is `str_scope->bs_argc == 0'?");
-	ASSERTF(str_scope->bs_argc_max == 0, "Then why is `str_scope->bs_argc == 0'?");
-	ASSERTF(!str_scope->bs_varargs, "Then why is `str_scope->bs_argc == 0'?");
-	ASSERTF(!str_scope->bs_varkwds, "Then why is `str_scope->bs_argc == 0'?");
-	ASSERTF(str_scope->bs_this, "Then why is `str_scope->bs_flags & Dee_CODE_FTHISCALL'?");
+	ASSERTF(str_scope->bs_argc_min == 0, "Then why is `str_scope->bs_argc == 0`?");
+	ASSERTF(str_scope->bs_argc_max == 0, "Then why is `str_scope->bs_argc == 0`?");
+	ASSERTF(!str_scope->bs_varargs, "Then why is `str_scope->bs_argc == 0`?");
+	ASSERTF(!str_scope->bs_varkwds, "Then why is `str_scope->bs_argc == 0`?");
+	ASSERTF(str_scope->bs_this, "Then why is `str_scope->bs_flags & Dee_CODE_FTHISCALL`?");
 
 	/* TODO: Don't require there to be a single return statement.
 	 * Just replace all return statements with prints:
@@ -247,7 +247,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	if (ast_contains_return(str_return_expr))
 		goto done;
 
-	/* Get a symbol which is going to become the `fp' argument. */
+	/* Get a symbol which is going to become the `fp` argument. */
 	fp_arg = new_unnamed_symbol_in_scope(&str_scope->bs_scope);
 	if unlikely(!fp_arg)
 		goto err;
@@ -262,7 +262,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	ASSERT(str_code->a_type == AST_ACTION);
 	ASSERT(str_code->a_flag == AST_FACTION_FPRINT);
 
-	/* Inject the `fp_arg' symbol as an argument. */
+	/* Inject the `fp_arg` symbol as an argument. */
 	{
 		struct symbol **argv;
 		argv = (struct symbol **)Dee_Reallocc(str_scope->bs_argv, 1, sizeof(struct symbol *));
@@ -288,8 +288,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 		char const *cname = desc->cd_name ? DeeString_STR(desc->cd_name) : "<anonymous>";
 		char const *oname = new_operator == Dee_CLASS_OPERATOR_PRINT ? "str" : "repr";
 		OPTIMIZE_VERBOSEAT(str_func,
-		                   "Optimize `%s.operator %s() { [...] return EXPR; }' "
-		                   /* */ "-> `%s.operator %s(<fp>) { [...] print <fp>: (EXPR,)...,; }'\n",
+		                   "Optimize `%s.operator %s() { [...] return EXPR; }` "
+		                   /* */ "-> `%s.operator %s(<fp>) { [...] print <fp>: (EXPR,)...,; }`\n",
 		                   cname, oname, cname, oname);
 	}
 #endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */

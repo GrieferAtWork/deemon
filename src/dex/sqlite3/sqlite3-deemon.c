@@ -72,11 +72,11 @@ dee_sqlite3_bind_string(DB *__restrict db, sqlite3_stmt *stmt,
 	int rc;
 again:
 	if (DeeString_STR_ISUTF8(self)) {
-		/* Simple case: can directly pass `DeeString_STR()' */
+		/* Simple case: can directly pass `DeeString_STR()` */
 		size_t length = DeeString_SIZE(self);
 		if unlikely(DB_Lock(db))
 			goto err;
-		Dee_Incref(self); /* Inherited by `sqlite3_bind_textSIZ()' */
+		Dee_Incref(self); /* Inherited by `sqlite3_bind_textSIZ()` */
 		rc = sqlite3_bind_textSIZ(stmt, index, DeeString_STR(self), length,
 		                          &_dee_sqlite3_bind_string_decref);
 	} else {
@@ -120,7 +120,7 @@ again:
 	data = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
 	if (data == DeeBytes_BUFFER_DATA(self)) {
-		/* Simple case: can directly pass `data' */
+		/* Simple case: can directly pass `data` */
 		Dee_Incref(self);
 		rc = sqlite3_bind_blobSIZ(stmt, index, data, size, &_dee_sqlite3_bind_bytes_decref);
 	} else {
@@ -188,7 +188,7 @@ again:
 		 * >> } */
 		char const *param_name;
 
-		/* HINT: Looking at the impl, `sqlite3_bind_parameter_name()' actually
+		/* HINT: Looking at the impl, `sqlite3_bind_parameter_name()` actually
 		 *       doesn't need to lock the database, so we can call it would the
 		 *       need of locking the DB, and then duplicating the string! */
 		param_name = sqlite3_bind_parameter_name(stmt, index);
@@ -238,8 +238,8 @@ dee_sqlite3_bind_params_indexed(void *arg, size_t index, /*nullable*/ DeeObject 
 }
 
 
-/* Custom function: like `sqlite3_bind_parameter_index', but "zName"
- * doesn't have to include the leading `:', `$' or `@'. */
+/* Custom function: like `sqlite3_bind_parameter_index`, but "zName"
+ * doesn't have to include the leading `:`, `$` or `@`. */
 SQLITE_API int sqlite3_bind_parameter_index__without_prefix(sqlite3_stmt*, const char *zName);
 
 struct dee_sqlite3_bind_params_named_data {
@@ -258,7 +258,7 @@ dee_sqlite3_bind_params_named(void *arg, DeeObject *key, DeeObject *value) {
 	if unlikely(!utf8_name)
 		goto err;
 	data = (struct dee_sqlite3_bind_params_named_data *)arg;
-	/* HINT: Looking at the impl, `sqlite3_bind_parameter_index()' actually
+	/* HINT: Looking at the impl, `sqlite3_bind_parameter_index()` actually
 	 *       doesn't need to lock the database, so we can call it would the
 	 *       need of locking the DB, and then duplicating the string! */
 	param_index = sqlite3_bind_parameter_index__without_prefix(data->sbpnd_stmt, utf8_name);
@@ -271,9 +271,9 @@ err:
 }
 
 
-/* Bind parameters from `params' to `stmt'. Depending on `stmt' using "?"
+/* Bind parameters from `params` to `stmt`. Depending on `stmt` using "?"
  * or ":foo" for referencing parameters, this function either requires
- * `params' to be `{Object...}' or `{string: Object}'. As such, deemon's
+ * `params` to be `{Object...}` or `{string: Object}`. As such, deemon's
  * sqlite interface requires either all parameters to be named, or all
  * parameters to be unnamed (when there are no parameters, we simply
  * assert that "params" is an empty sequence)
@@ -296,7 +296,7 @@ dee_sqlite3_bind_params(DB *__restrict db, sqlite3_stmt *stmt,
 	greatest_name = sqlite3_bind_parameter_name(stmt, greatest_index);
 	if (greatest_name == NULL) {
 		/* Assume (read: require) that params are unnamed/indexed
-		 * -> enumerate+bind using `seq_enumerate_index()' */
+		 * -> enumerate+bind using `seq_enumerate_index()` */
 		struct dee_sqlite3_bind_params_indexed_data data;
 do_enumerate_params:
 		data.sbpid_db   = db;
@@ -312,7 +312,7 @@ do_enumerate_params:
 		goto do_enumerate_params;
 	} else {
 		/* Assume (read: require) that all parameters are named
-		 * -> enumerate+bind using `map_operator_foreach_pair()' */
+		 * -> enumerate+bind using `map_operator_foreach_pair()` */
 		struct dee_sqlite3_bind_params_named_data data;
 		data.sbpnd_db   = db;
 		data.sbpnd_stmt = stmt;

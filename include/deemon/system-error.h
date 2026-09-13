@@ -55,7 +55,7 @@ DECL_BEGIN
 typedef struct {
 #ifdef DeeSystemError_HAVE_GetLastError
 #define DeeSystemError_HAVE_ANY 1
-	DWORD  se_GetLastError; /* Saved `errno' value */
+	DWORD  se_GetLastError; /* Saved `errno` value */
 #define _DeeSystemError_SAVE_GETLASTERROR(st) ((st).se_GetLastError = GetLastError())
 #define _DeeSystemError_LOAD_GETLASTERROR(st) (SetLastError((st).se_GetLastError))
 #else /* DeeSystemError_HAVE_GetLastError */
@@ -65,7 +65,7 @@ typedef struct {
 
 #ifdef DeeSystemError_HAVE_errno
 #define DeeSystemError_HAVE_ANY 1
-	int    se_errno;        /* Saved `errno' value */
+	int    se_errno;        /* Saved `errno` value */
 #define _DeeSystemError_SAVE_ERRNO(st) ((st).se_errno = DeeSystem_GetErrno())
 #define _DeeSystemError_LOAD_ERRNO(st) (DeeSystem_SetErrno((st).se_errno))
 #else /* DeeSystemError_HAVE_errno */
@@ -75,7 +75,7 @@ typedef struct {
 
 #ifdef DeeSystemError_HAVE_doserrno
 #define DeeSystemError_HAVE_ANY 1
-	int    se_doserrno;     /* Saved `doserrno' value */
+	int    se_doserrno;     /* Saved `doserrno` value */
 #define _DeeSystemError_SAVE_DOSERRNO(st) ((st).se_doserrno = doserrno)
 #define _DeeSystemError_LOAD_DOSERRNO(st) (doserrno = (st).se_doserrno)
 #else /* DeeSystemError_HAVE_doserrno */

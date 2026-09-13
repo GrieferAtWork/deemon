@@ -53,7 +53,7 @@ err_flags:
 }
 
 
-/* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
+/* @param: mode: Set of `AST_COMMA_*` - What is allowed and when should we pack values. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 	DREF struct ast *result;
@@ -165,7 +165,7 @@ err:
 
 
 
-/* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
+/* Same as `ast_parse_try_hybrid` but for if statements / expressions. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	DREF struct ast *tt_branch;
@@ -231,7 +231,7 @@ err:
 
 
 
-/* Parse a statement or a brace-expression, with the current token being a `{' */
+/* Parse a statement or a brace-expression, with the current token being a `{` */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 	DREF struct ast *result, **new_elemv;
@@ -326,7 +326,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				goto err_r;
 			}
 
-			/* `ast_multiple()' inherited `new_elemv' on success. */
+			/* `ast_multiple()` inherited `new_elemv` on success. */
 			result = ast_setddi(remainder, &loc);
 			goto parse_remainder_after_rbrace_popscope;
 		}
@@ -376,7 +376,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 		if unlikely(!result)
 			goto err;
 
-		/* Special case: `assert' statements require a trailing `;' token.
+		/* Special case: `assert` statements require a trailing `;` token.
 		 *                If that token exists, we know for sure that this is a statement! */
 		if (tok == ';') {
 			was_expression = AST_PARSE_WASEXPR_NO;
@@ -391,7 +391,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 		result = ast_parse_import_hybrid(&was_expression);
 		if unlikely(!result)
 			goto err;
-		/* Same as `assert': `import' requires a trailing `;' */
+		/* Same as `assert`: `import` requires a trailing `;` */
 		goto parse_remainder_after_semicolon_hybrid_popscope;
 
 	case KWD_for:
@@ -508,7 +508,7 @@ parse_remainder_after_colon_popscope:
 
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
-			/* Consume a `;' token as part of the expression. */
+			/* Consume a `;` token as part of the expression. */
 			if (skip(';', W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err_r;
 		}
@@ -557,7 +557,7 @@ parse_remainder_after_statement:
 					Dee_Free(new_elemv);
 					goto err;
 				}
-				/* `ast_multiple()' inherited `new_elemv' on success. */
+				/* `ast_multiple()` inherited `new_elemv` on success. */
 			}
 			result = ast_setddi(remainder, &loc);
 			if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))

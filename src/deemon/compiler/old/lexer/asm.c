@@ -221,13 +221,13 @@ err:
 
 struct clobber_desc {
 	char     cd_name[12]; /* Name of the clobber-operand. */
-	uint16_t cd_flags;    /* Set of `AST_FASSEMBLY_*' defined for this descriptor. */
+	uint16_t cd_flags;    /* Set of `AST_FASSEMBLY_*` defined for this descriptor. */
 };
 
 PRIVATE struct clobber_desc const clobber_descs[] = {
 	{ "memory",   AST_FASSEMBLY_MEMORY },   /* Memory barrier. */
 	{ "reach",    AST_FASSEMBLY_REACH },    /* User-assembly can be reached through non-conventional means. */
-	{ "noreturn", AST_FASSEMBLY_NORETURN }, /* User-assembly doesn't return normally (i.e. returns using `ret', or `throw').
+	{ "noreturn", AST_FASSEMBLY_NORETURN }, /* User-assembly doesn't return normally (i.e. returns using `ret`, or `throw`).
 	                                         * NOTE: This flag can also be used to hint to the optimizer
 	                                         *       that a branch is not reachable:
 	                                         * >> if (never_true()) {
@@ -239,7 +239,7 @@ PRIVATE struct clobber_desc const clobber_descs[] = {
 	{ "cc", 0 },                            /* Ignored... */
 };
 
-/* Parse the clobber list and return a set of `AST_FASSEMBLY_*' */
+/* Parse the clobber list and return a set of `AST_FASSEMBLY_*` */
 PRIVATE int32_t DCALL asm_parse_clobber(void) {
 	struct TPPString *name;
 	uint16_t result = 0;
@@ -281,7 +281,7 @@ LOCAL bool DCALL is_colon(void) {
 		return true;
 	if (tok == TOK_COLON_COLON ||
 	    tok == TOK_COLON_EQUAL) {
-		/* Convert to a `:'-token and setup the lexer to re-parse
+		/* Convert to a `:`-token and setup the lexer to re-parse
 		 * the remainder of the current token as part of the next. */
 		token.t_id          = ':';
 		token.t_end         = token.t_begin + 1;
@@ -305,7 +305,7 @@ PRIVATE NONNULL((1)) ptrdiff_t
 	ASSERT(buf || !bufsize);
 	if ((string = self->sp_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
-		 * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL' */
+		 * >> Must be done to assure the expectation of `if(sp_length == 0) sp_string == NULL` */
 		if unlikely(!bufsize)
 			return 0;
 
@@ -455,7 +455,7 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 			break;
 		case '\n':
 		case ';':
-			/* Insert DDI directives after line-feeds and `;' tokens. */
+			/* Insert DDI directives after line-feeds and `;` tokens. */
 			is_after_linefeed = true;
 			break;
 		default:
@@ -492,7 +492,7 @@ default_case:
 done:
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= old_flags;
-	/* Yield the final `}'-token. */
+	/* Yield the final `}`-token. */
 	if unlikely(yield() < 0)
 		goto err_printer;
 	return tpp_string_printer_pack(&printer);
@@ -597,13 +597,13 @@ yield_prefix:
 		 *    >>    : "P" (42));
 		 *
 		 * A DDI directive is automatically inserted at the start, as well
-		 * as after every linefeed or `;' character, excluding multiple
-		 * consecutive line-feeds or `;', as well as some that may be
+		 * as after every linefeed or `;` character, excluding multiple
+		 * consecutive line-feeds or `;`, as well as some that may be
 		 * trailing. - In other words: before every actual directive or
 		 * instruction.
 		 *
 		 * Additionally, no DDI directives are inserted before instructions
-		 * that start with a `.' token (i.e. pseudo instructions; aka.
+		 * that start with a `.` token (i.e. pseudo instructions; aka.
 		 * assembler directives). That way, the user may override DDI
 		 * information for a single instruction at a time.
 		 *
@@ -619,7 +619,7 @@ yield_prefix:
 		 *
 		 * Also note that the generated DDI information will even contain
 		 * column information for the exact positions of found instructions.
-		 * Assembly is terminated once a `}' token matching the initial `{'
+		 * Assembly is terminated once a `}` token matching the initial `{`
 		 * is found. */
 		text = parse_brace_text();
 		if unlikely(!text)
@@ -689,7 +689,7 @@ yield_prefix:
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	if unlikely(!result)
 		goto err_ops;
-	/* NOTE: `a_assembly' has inherited the operand vector upon success. */
+	/* NOTE: `a_assembly` has inherited the operand vector upon success. */
 	TPPString_Decref(text);
 	return ast_setddi(result, &loc);
 err_ops:

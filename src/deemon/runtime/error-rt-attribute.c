@@ -254,7 +254,7 @@ typedef struct {
 	                               * NOTE: The "Dee_ATTRPERM_F_NAMEOBJ" flag in "ad_perm" is [const]
 	                               *       and set during object construction.
 	                               * Also: all fields are [lock(WRITE_ONCE)] (with initialization
-	                               *       happening **BEFORE** the relevant `AttributeError_F_*'
+	                               *       happening **BEFORE** the relevant `AttributeError_F_*`
 	                               *       flag is set) */
 #define AttributeError_F_GET DeeRT_ATTRIBUTE_ACCESS_GET /* Attempted to get attribute */
 #define AttributeError_F_DEL DeeRT_ATTRIBUTE_ACCESS_DEL /* Attempted to del attribute */
@@ -270,7 +270,7 @@ typedef struct {
 #ifndef CONFIG_NO_THREADS
 #define AttributeError_F_LOADLOCK 0x8000 /* Lock to ensure only 1 thread does the loading */
 #endif /* !CONFIG_NO_THREADS */
-	unsigned int        ae_flags; /* Set of `AttributeError_F_*' */
+	unsigned int        ae_flags; /* Set of `AttributeError_F_*` */
 
 	/* When "AttributeError_F_LAZYDECL" is set, a second-stage lazy initialization
 	 * takes places whenever the "name" and/or "decl" of the exception is required.
@@ -315,8 +315,8 @@ typedef struct {
 	 *   if "ae_obj" is a type, and "v_member" is one of its "tp_members".
 	 *   Alternatively, you can also set:
 	 *   - struct type_member const  *ae_desc.ad_info.ai_value.v_member = (struct type_member *)Dee_attrdesc__type_member_buffer(&ae_desc);
-	 *   - char const                *Dee_attrdesc__type_member_buffer(&ae_desc)->mb_name = <`m_name' of accessed type_member>;
-	 *   - union Dee_type_member_desc Dee_attrdesc__type_member_buffer(&ae_desc)->mb_desc = <`m_desc' of accessed type_member>;
+	 *   - char const                *Dee_attrdesc__type_member_buffer(&ae_desc)->mb_name = <`m_name` of accessed type_member>;
+	 *   - union Dee_type_member_desc Dee_attrdesc__type_member_buffer(&ae_desc)->mb_desc = <`m_desc` of accessed type_member>;
 	 *   This behaves the same as the above, but also works then you don't have access
 	 *   to the pointer to the original "struct type_member" from the relevant type's
 	 *   "tp_members" or "tp_class_members", as is the case when called from a type's
@@ -333,7 +333,7 @@ typedef struct {
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT:
 	 *   - DREF DeeTypeObject *ae_obj = <Accessed Type (which must be DeeType_IsClass)>;
 	 *   - uintptr_t           ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
-	 *   - uint16_t            ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_class_desc::cd_members'>;
+	 *   - uint16_t            ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_class_desc::cd_members`>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT" is changed to "Dee_ATTRINFO_ATTR"
 	 *   or "Dee_ATTRINFO_INSTANCE_ATTR" as appropriate.
 	 *
@@ -341,12 +341,12 @@ typedef struct {
 	 *   - DREF DeeObject *ae_obj = <Accessed instance object (or a class type)>;
 	 *   - DeeTypeObject  *ae_desc.ad_info.ai_decl = <Accessed Type (which must be DeeType_IsClass)>; // -- !!NOT!! initialized as a reference!
 	 *   - uintptr_t       ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
-	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_instance_desc::id_vtab'>;
+	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_instance_desc::id_vtab`>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT" is changed to "Dee_ATTRINFO_ATTR".
 	 *
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER:
 	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
-	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member'>;
+	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member`>;
 	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER;
 	 *   - struct type_member const *ae_desc.ad_info.ai_value.v_member = <accessed member>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER" is changed to "Dee_ATTRINFO_MEMBER".
@@ -354,7 +354,7 @@ typedef struct {
 	 *
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET:
 	 *   - DREF DeeObject           *ae_obj = <Accessed Object or Type>;
-	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member'>;
+	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member`>;
 	 *   - uintptr_t                 ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_GETSET;
 	 *   - AttributeError_LazyGetSet_SetGetter(., <getter callback>);
 	 *   - AttributeError_LazyGetSet_SetDelete(., <delete callback>);
@@ -364,7 +364,7 @@ typedef struct {
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_OBMETHOD:
 	 *   Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_CLMETHOD:
 	 *   - DREF DeeObject           *ae_obj = <Accessed Object (*LAZY_OBMETHOD) or Type (*LAZY_CLMETHOD)>;
-	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member'>;
+	 *   - DREF DeeObject           *ae_desc.ad_info.ai_decl = <Type (or sub-type thereof) declaring `v_member`>;
 	 *   - uintptr_t                 ae_desc.ad_info.ai_type = <*LAZY_OBMETHOD or *LAZY_CLMETHOD>;
 	 *   - AttributeError_LazyMethod_SetMethod(., <relevant Dee_objmethod_t / Dee_kwobjmethod_t>);
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_*METHOD" is changed to "Dee_ATTRINFO_METHOD".
@@ -2066,7 +2066,7 @@ DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	/* Special case: We might get here from a context where "attr" is a stack-allocated copy
 	 *               of an incomplete (as in: missing the doc string) member descriptor that
-	 *               was previously copied out of `struct Dee_membercache_slot'.
+	 *               was previously copied out of `struct Dee_membercache_slot`.
 	 * To deal with this case, we have to create yet another copy that will then be resolved
 	 * lazily when the attribute error's declaration location is loaded. */
 	type_member_buffer_init(buffer, attr);
@@ -2104,7 +2104,7 @@ INIT_LIKE_ATTRIBUTE_ERROR("UnboundAttribute", "(" UnboundAttribute_init_params "
                           TP_FNORMAL, &DeeError_AttributeError, NULL, &UnboundAttribute_print,
                           NULL, NULL, NULL);
 
-/* Throws an `DeeError_UnboundAttribute' indicating that some attribute isn't bound
+/* Throws an `DeeError_UnboundAttribute` indicating that some attribute isn't bound
  * @return: NULL: Always returns "NULL" (for easy chaining when called form getters) */
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 (DCALL DeeRT_ErrUnboundAttr)(DeeObject *ob, /*string*/ DeeObject *attr) {
@@ -2232,7 +2232,7 @@ INIT_LIKE_ATTRIBUTE_ERROR("UnknownAttribute", "(" AttributeError_init_params ")"
                           TP_FNORMAL, &DeeError_AttributeError, NULL, &UnknownAttribute_print,
                           NULL, NULL, NULL);
 
-/* Throws an `DeeError_UnknownAttribute' indicating that some attribute doesn't exist */
+/* Throws an `DeeError_UnknownAttribute` indicating that some attribute doesn't exist */
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttr)(DeeObject *decl, DeeObject *ob,
                               DeeObject *attr, unsigned int access) {
@@ -2396,7 +2396,7 @@ INIT_LIKE_ATTRIBUTE_ERROR("RestrictedAttribute", "(" AttributeError_init_params 
                           NULL, NULL, NULL);
 
 
-/* Throws an `DeeError_RestrictedAttribute' indicating that the specified attribute access is invalid */
+/* Throws an `DeeError_RestrictedAttribute` indicating that the specified attribute access is invalid */
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTRestrictedAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access) {
 	return DeeRT_ErrAttributeError_impl(&DeeError_RestrictedAttribute, decl,

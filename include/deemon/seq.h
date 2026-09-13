@@ -43,37 +43,37 @@
 
 DECL_BEGIN
 
-/* The following things are required from sub-class of `Sequence':
- *     - Must either implement `tp_iter' or `tp_sizeob' + `tp_getitem'
- * Many things are implemented by `Sequence'.
+/* The following things are required from sub-class of `Sequence`:
+ *     - Must either implement `tp_iter` or `tp_sizeob` + `tp_getitem`
+ * Many things are implemented by `Sequence`.
  * For a full list, see http://localhost:8080/modules/deemon/Sequence
  *
- * HINT: Instantiating `Sequence' as-is will return a copy of `Dee_EmptySeq' */
-DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
+ * HINT: Instantiating `Sequence` as-is will return a copy of `Dee_EmptySeq` */
+DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon` */
 #define DeeSeq_Check(ob) DeeObject_Implements(ob, &DeeSeq_Type)
 
-/* Similar to what `DeeSeq_Type' is for all sequence-style types,
- * `DeeIterator_Type' is the the same for all iterator-type types.
- * The following things are implemented by `Iterator':
+/* Similar to what `DeeSeq_Type` is for all sequence-style types,
+ * `DeeIterator_Type` is the the same for all iterator-type types.
+ * The following things are implemented by `Iterator`:
  *     - Abstraction that automatically defines the following operators:
  *        - tp_bool
  *           - Copy the iterator and return true if invoking tp_iter_next() yields a value.
  *        - tp_repr
  *           - Copy the iterator and print its remaining elements.
  *        - tp_add
- *           - Create a copy of the iterator and invoke `tp_inplace_add' on it.
+ *           - Create a copy of the iterator and invoke `tp_inplace_add` on it.
  *        - tp_inc
- *           - Same as `tp_inplace_add' when the second operand is `1'.
+ *           - Same as `tp_inplace_add` when the second operand is `1`.
  *        - tp_inplace_add
  *           - Advance the iterator by the integer representation of the second operand.
- *             When the second operand is negative, throw an `Error.ValueError.ArithmeticError.IntegerOverflow'
+ *             When the second operand is negative, throw an `Error.ValueError.ArithmeticError.IntegerOverflow`
  *     - Abstraction that automatically defines the following methods:
- *        - `next(): Object'
- *           - Literally the same as invoking `operator __next__()', but has a more userfriendly name.
- *             This function will throw a `Signal.StopIteration' when the iterator has been exhausted.
+ *        - `next(): Object`
+ *           - Literally the same as invoking `operator __next__()`, but has a more userfriendly name.
+ *             This function will throw a `Signal.StopIteration` when the iterator has been exhausted.
  * As should be apparent, in order to use the full auto-API provided for
  * iterators, any iterator sub-class should implement a copy-constructor
- * in addition to the `tp_iter_next()' operator, although it should be
+ * in addition to the `tp_iter_next()` operator, although it should be
  * noted that implementation of the copy-constructor is _NOT_ mandatory,
  * as in some cases it is even impossible to pull off (such as for yield-
  * functions not marked as copyable or using non-copyable local variables).
@@ -81,7 +81,7 @@ DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
  * TODO: The "seq" field of iterators is deprecated (for the sake of performance in order to
  *       allow forwarding of iterators objects from underlying sequences, without needing to
  *       wrap them just so that "seq" returns the correct object type). */
-DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
+DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon` */
 
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
@@ -91,10 +91,10 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
 
 /* An empty instance of a generic sequence object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
- *       calling the constructor of `DeeSeq_Type' with no arguments.
+ *       calling the constructor of `DeeSeq_Type` with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeSeq_Type' should be considered stub/empty,
+ * HINT: Any exact instance of `DeeSeq_Type` should be considered stub/empty,
  *       but obviously something like an empty tuple is also an empty sequence. */
 DDATDEF DeeObject DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
@@ -141,7 +141,7 @@ struct Dee_seq_range {
 };
 
 
-/* Clamp a range, as given to `operator [:]' & friends to the bounds
+/* Clamp a range, as given to `operator [:]` & friends to the bounds
  * accepted by the associated sequence. This handles stuff like negative
  * index over-roll and past-the-end truncation. */
 #define DeeSeqRange_Clamp(prange, istart, iend, size) \
@@ -156,7 +156,7 @@ DFUNDEF ATTR_INOUT(1) void DCALL
 DeeSeqRange_DoClamp(struct Dee_seq_range *__restrict self,
                     size_t size);
 
-/* Specialized version of `DeeSeqRange_DoClamp()' for `[istart:none]' range expressions. */
+/* Specialized version of `DeeSeqRange_DoClamp()` for `[istart:none]` range expressions. */
 #define DeeSeqRange_Clamp_n(istart, size) \
 	((size_t)(istart) <= (size) ? (size_t)(istart) : DeeSeqRange_DoClamp_n(istart, size))
 DFUNDEF ATTR_CONST WUNUSED size_t DCALL
@@ -170,20 +170,20 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 
 /* Functions used to implement special sequence expressions,
- * such as `x + ...' (as `DeeSeq_Sum'), etc. */
+ * such as `x + ...` (as `DeeSeq_Sum`), etc. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self); /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_sum, self) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);             /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_any, self) */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);             /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_all, self) */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_min, self) */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_max, self) */
 
-/* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
- * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+/* Unpack the given sequence `self` into `dst_length` items then stored within the `dst` vector.
+ * This operator follows `DeeObject_Foreach()` semantics, in that unbound items are skipped.
  *
- * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)'
+ * Alias for: `DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst)`
  *
- * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
- * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
+ * @return: 0 : Success (`dst` now contains exactly `dst_length` references to [1..1] objects)
+ * @return: -1: An error was thrown (`dst` may have been modified, but contains no references) */
 DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeSeq_Unpack)(DeeObject *__restrict self, size_t dst_length,
                       /*out*/ DREF DeeObject **__restrict dst);
@@ -191,8 +191,8 @@ DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 
 
 
-/* Possible return values for `DeeType_GetSeqClass()' */
-#define Dee_SEQCLASS_UNKNOWN 0 /* Never returned by `DeeType_GetSeqClass()' (used internally) */
+/* Possible return values for `DeeType_GetSeqClass()` */
+#define Dee_SEQCLASS_UNKNOWN 0 /* Never returned by `DeeType_GetSeqClass()` (used internally) */
 #define Dee_SEQCLASS_NONE    1 /* Type does not inherit from "Sequence" */
 #define Dee_SEQCLASS_SEQ     2 /* Type inherits from "Sequence" */
 #define Dee_SEQCLASS_SET     3 /* Type inherits from "Sequence" and "Set" */
@@ -201,16 +201,16 @@ DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 #define Dee_SEQCLASS_ISSETORMAP(x) ((x) >= Dee_SEQCLASS_SET)
 
 /* Sequence type classification
- * @return: * : One of `Dee_SEQCLASS_*' */
+ * @return: * : One of `Dee_SEQCLASS_*` */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_GetSeqClass(DeeTypeObject const *__restrict self);
 
 
 /* Construct a new reference-vector object that can be iterated
- * and used to potentially modify the elements of a given `vector'.
- * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
+ * and used to potentially modify the elements of a given `vector`.
+ * NOTE: When write-access is granted, `vector` should be `[0..1][0..length]`,
  *       whereas when write-access is not possible, then the disposition of
- *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
+ *       elements of `vector` doesn't matter and can either be `[0..1]` or `[1..1]`. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeRefVector_New)(DeeObject *owner, size_t length,
                  DeeObject **vector,
@@ -243,26 +243,26 @@ DFUNDEF WUNUSED DREF DeeObject *
 #endif /* !CONFIG_NO_THREADS */
 
 
-/* Type of object returned by `DeeSharedVector_NewShared()' */
+/* Type of object returned by `DeeSharedVector_NewShared()` */
 DDATDEF DeeTypeObject DeeSharedVector_Type;
 
 /* Create a new shared vector that will inherit elements
- * from the given vector once `DeeSharedVector_Decref()' is called.
+ * from the given vector once `DeeSharedVector_Decref()` is called.
  * NOTE: This function can implicitly inherit a reference to each item of the
  *       given vector, though does not actually inherit the vector itself:
- *       - DeeSharedVector_Decref:            The `vector' arg here is `DREF DeeObject *const *'
- *       - DeeSharedVector_DecrefNoGiftItems: The `vector' arg here is `DeeObject *const *'
+ *       - DeeSharedVector_Decref:            The `vector` arg here is `DREF DeeObject *const *`
+ *       - DeeSharedVector_DecrefNoGiftItems: The `vector` arg here is `DeeObject *const *`
  * NOTE: The returned object cannot be used to change out the elements
- *       of the given `vector', meaning that _it_ can still be [const] */
+ *       of the given `vector`, meaning that _it_ can still be [const] */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, /*maybe*/ DREF DeeObject *const *vector);
 
-/* Check if the reference counter of `self' is 1. When it is,
- * simply destroy the shared vector without freeing `sv_vector',
+/* Check if the reference counter of `self` is 1. When it is,
+ * simply destroy the shared vector without freeing `sv_vector`,
  * but still decref() all contained objects.
- * Otherwise, try to allocate a new vector with a length of `sv_length'.
- * If doing so fails, don't raise an error but replace `sv_vector' with
- * `NULL' and `sv_length' with `0' before decref()-ing all elements
+ * Otherwise, try to allocate a new vector with a length of `sv_length`.
+ * If doing so fails, don't raise an error but replace `sv_vector` with
+ * `NULL` and `sv_length` with `0` before decref()-ing all elements
  * that that pair of members used to refer to.
  * If allocation does succeed, memcpy() all objects contained in
  * the original vector into the dynamically allocated one, thus
@@ -270,16 +270,16 @@ DeeSharedVector_NewShared(size_t length, /*maybe*/ DREF DeeObject *const *vector
  * to the SharedVector object.
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
- *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
+ *    the `ASM_CALL_SEQ` opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self);
 
-/* Same as `DeeSharedVector_Decref()', but should be used if the caller
+/* Same as `DeeSharedVector_Decref()`, but should be used if the caller
  * does *not* want to gift the vector references to all of its items.
- * s.a.: the "maybe DREF" annotated on the `vector' argument of
- *       `DeeSharedVector_NewShared()' */
+ * s.a.: the "maybe DREF" annotated on the `vector` argument of
+ *       `DeeSharedVector_NewShared()` */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
@@ -289,8 +289,8 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
  * the caller must inherit upon success.
- * @return: * :   A vector of objects (with a length of `*p_length'),
- *                that must be freed using `Dee_Free', before inheriting
+ * @return: * :   A vector of objects (with a length of `*p_length`),
+ *                that must be freed using `Dee_Free`, before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
@@ -300,32 +300,32 @@ DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_length);
 
-/* Same as `DeeSeq_AsHeapVectorWithAlloc()', however also inherit
- * a pre-allocated heap-vector `*p_vector' with an allocated size
- * of `IN(*p_allocated) * sizeof(DeeObject *)', which is updated
+/* Same as `DeeSeq_AsHeapVectorWithAlloc()`, however also inherit
+ * a pre-allocated heap-vector `*p_vector` with an allocated size
+ * of `IN(*p_allocated) * sizeof(DeeObject *)`, which is updated
  * as more memory needs to be allocated.
- * NOTE: `*p_vector' may be updated to point to a new vector, even
+ * NOTE: `*p_vector` may be updated to point to a new vector, even
  *       when the function fails (i.e. (size_t)-1 is returned)
- * @param: p_vector:    A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
- *                      May only point to a `NULL' vector when `IN(*p_allocated)' is ZERO(0).
+ * @param: p_vector:    A pointer to a preallocated object-vector `[0..IN(*p_allocated)]`
+ *                      May only point to a `NULL` vector when `IN(*p_allocated)` is ZERO(0).
  *                      Upon return, this pointer may have been updated to point to a
  *                      realloc()-ated vector, should the need to allocate more memory
  *                      have arisen.
  * @param: p_allocated: A pointer to an information field describing how much pointers
  *                      are allocated upon entry / how much are allocated upon exit.
- *                      Just as `p_vector', this pointer may be updated, even upon error.
- * @return: * :         The amount of filled in objects in `*p_vector'
- * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
+ *                      Just as `p_vector`, this pointer may be updated, even upon error.
+ * @return: * :         The amount of filled in objects in `*p_vector`
+ * @return: (size_t)-1: An error occurred. Note that both `*p_vector` and `*p_allocated`
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector);
 
-/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
- * that `IN(*p_allocated) >= offset', while also leaving the first
- * `offset' vector entries untouched and inserting the first enumerated
- * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
+/* Same as `DeeSeq_AsHeapVectorWithAllocReuse()`, but assume
+ * that `IN(*p_allocated) >= offset`, while also leaving the first
+ * `offset` vector entries untouched and inserting the first enumerated
+ * sequence element at `(*p_vector)[offset]`, rather than `(*p_vector)[0]`
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -337,7 +337,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 
 
 /************************************************************************/
-/* Type for `Sequence.some'                                             */
+/* Type for `Sequence.some`                                             */
 /************************************************************************/
 typedef struct {
 	Dee_OBJECT_HEAD
@@ -349,7 +349,7 @@ DDATDEF DeeTypeObject DeeSeqSome_Type;
 #define DeeSeqSome_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
 #define DeeSeqSome_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
 
-/* Construct a some-wrapper for `self' */
+/* Construct a some-wrapper for `self` */
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */

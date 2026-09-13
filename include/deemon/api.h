@@ -33,7 +33,7 @@
 #endif /* !__KOS__ */
 
 /* Try to expose various UNIX features in headers.
- * These are always enabled, so that `deemon/system-features.h'
+ * These are always enabled, so that `deemon/system-features.h`
  * is always correct, so-long as this header is #included before
  * any system header is #included. */
 #ifndef _ATFILE_SOURCE
@@ -85,7 +85,7 @@
 
 
 /* Expose definitions that don't comply with the deemon C symbol namespace.
- * That namespace being anything matching `DEE_*', `Dee*' or `_Dee*'.
+ * That namespace being anything matching `DEE_*`, `Dee*` or `_Dee*`.
  * TODO: "CONFIG_*" macros are always exposed, but don't match this list
  *       Consider refactoring all of those to "Dee_CONFIG_*" */
 #if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)
@@ -135,13 +135,13 @@
 /* Disable warnings about casting incompatible function pointers (for now)
  * While I really welcome these warnings, they pose one big problem with the
  * way in which I've introduced support for keyword-enabled functions, and
- * with how casts to `Dee_funptr_t' work. */
+ * with how casts to `Dee_funptr_t` work. */
 __pragma_GCC_diagnostic_ignored(Wcast_function_type)
 
 /* When declaring DeeTypeObject objects and the like, we often skip
  * the initializers for various fields that have no reason for being
  * explicitly initialized by the static initializer. This mainly affects
- * `tp_cache' and `tp_class_cache'. However, the default (zero-/NULL-)
+ * `tp_cache` and `tp_class_cache`. However, the default (zero-/NULL-)
  * initializer already does what we need it to do, meaning that
  * initializing it explicitly would just add unnecessary code bloat!
  *
@@ -166,12 +166,12 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* DEE_SOURCE */
 
 
-/* Evaluate `expr' at runtime, and instruct compile-time optimizations
- * under the assumption that it always evaluates to `value'. Used to
+/* Evaluate `expr` at runtime, and instruct compile-time optimizations
+ * under the assumption that it always evaluates to `value`. Used to
  * wrap functions that always return the same value.
  *
  * For example: if the compiler knows that a function's return values
- * is _always_ `-1', it can (rightfully so) assume the contents of the
+ * is _always_ `-1`, it can (rightfully so) assume the contents of the
  * return value register, which can then lead to further optimizations
  * where it won't need to re-load the return value for code like:
  * >> int foo() {
@@ -188,8 +188,8 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * >>      return -1;
  * >> }
  *
- * If the compiler knows that `goto err' is only ever called with the
- * return value register already containing `-1', then it won't have
+ * If the compiler knows that `goto err` is only ever called with the
+ * return value register already containing `-1`, then it won't have
  * to load that value back into the register yet again! */
 #ifndef Dee_ASSUMED_VALUE
 #ifndef __NO_builtin_unreachable
@@ -210,7 +210,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_THREADS
 #endif
 
-/* Disable support for loading- and writing `.dec' files */
+/* Disable support for loading- and writing `.dec` files */
 #if 0
 #define CONFIG_NO_DEC
 #endif
@@ -281,7 +281,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]TINY_DEEMON */
 
 
-/* Config option: provide optimized code-paths for `foo(args...)' expressions */
+/* Config option: provide optimized code-paths for `foo(args...)` expressions */
 #if (!defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && \
      !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
 #if !defined(CONFIG_TINY_DEEMON)
@@ -473,7 +473,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #ifdef __CC__
 
 #if (defined(__INTELLISENSE__) || defined(__VASSISTX_INSPECT__)) && defined(__cplusplus)
-/* Highlight invalid usage of `NULL' in functions returning `int' */
+/* Highlight invalid usage of `NULL` in functions returning `int` */
 #undef NULL
 #define NULL __NULLPTR /*!export-*/
 #endif /* __INTELLISENSE__ && __cplusplus */
@@ -565,7 +565,7 @@ DECL_END
 #endif /* !DCALL */
 
 
-/* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine'). */
+/* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine`). */
 #ifndef DFCALL
 #if defined(__i386__) && !defined(__x86_64__)
 #define DFCALL __ATTR_FASTCALL /* arg0: %ecx, arg1: %edx, argN: 4+N*4(%esp) (callee-cleanup) */
@@ -574,10 +574,10 @@ DECL_END
 #endif /* !__i386__ || __x86_64__ */
 #endif /* !DFCALL */
 
-/* Calling convention for `Dee_formatprinter_t' */
+/* Calling convention for `Dee_formatprinter_t` */
 #ifndef DPRINTER_CC
 #if defined(__KOS__) && __KOS_VERSION__ >= 400
-/* We want to be ABI-compatible with KOS's native `pformatprinter' system. */
+/* We want to be ABI-compatible with KOS's native `pformatprinter` system. */
 #if defined(__KOS_SYSTEM_HEADERS__) || __has_include(<bits/crt/format-printer.h>)
 #include <bits/crt/format-printer.h>
 #define DPRINTER_CC_IS___FORMATPRINTER_CC
@@ -593,7 +593,7 @@ DECL_END
 #endif /* !DPRINTER_CC */
 #endif /* !DPRINTER_CC */
 
-/* TODO: Get rid of `DWEAK' -- code should use comment-annotation "[lock(ATOMIC)]" instead! */
+/* TODO: Get rid of `DWEAK` -- code should use comment-annotation "[lock(ATOMIC)]" instead! */
 #ifndef DWEAK
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */
@@ -617,7 +617,7 @@ extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x
 #define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
 #define Dee_DPRINTER               _Dee_dprinter
 #define Dee_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
-#define Dee_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format' may mandate a decref() operation! */
+#define Dee_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format` may mandate a decref() operation! */
 DDATDEF int _Dee_dprint_enabled;
 DFUNDEF NONNULL((1)) void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF NONNULL((1)) void (_Dee_dprintf)(char const *__restrict format, ...);
@@ -678,7 +678,7 @@ DECL_END
 #define ASSERT  Dee_ASSERT
 #define ASSERTF Dee_ASSERTF
 
-/* Override hooks from `<hybrid/__assert.h>' */
+/* Override hooks from `<hybrid/__assert.h>` */
 #ifndef __GUARD_HYBRID___ASSERT_H
 #define __GUARD_HYBRID___ASSERT_H /*!export-*/
 #endif /* !__GUARD_HYBRID___ASSERT_H */

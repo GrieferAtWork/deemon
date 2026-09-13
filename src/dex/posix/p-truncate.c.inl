@@ -104,7 +104,7 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
-/* Figure out how we want to implement `truncate()' */
+/* Figure out how we want to implement `truncate()` */
 #undef posix_truncate_USE_wtruncate64
 #undef posix_truncate_USE_wtruncate
 #undef posix_truncate_USE_truncate64
@@ -140,7 +140,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `ftruncate()' */
+/* Figure out how we want to implement `ftruncate()` */
 #undef posix_ftruncate_USE_DeeFile_Trunc
 #undef posix_ftruncate_USE_ftruncate64
 #undef posix_ftruncate_USE_ftruncate
@@ -163,7 +163,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `ftruncateat()' */
+/* Figure out how we want to implement `ftruncateat()` */
 #undef posix_ftruncateat_USE_posix_ftruncate
 #undef posix_ftruncateat_USE_posix_truncate
 #undef posix_ftruncateat_USE_STUB
@@ -176,7 +176,7 @@ for (local f: functions) {
 
 
 
-/* Figure out how we want to implement `truncateat()' */
+/* Figure out how we want to implement `truncateat()` */
 #undef posix_truncateat_USE_posix_truncate
 #undef posix_truncateat_USE_posix_ftruncateat
 #undef posix_truncateat_USE_STUB

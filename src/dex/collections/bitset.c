@@ -125,9 +125,9 @@ typedef struct {
 	DREF DeeObject *bsv_owner;    /* [1..1][const] Some object that is providing the buffer whose bits are being enumerated. */
 	DeeBuffer       bsv_buf;      /* [const] The buffer of raw bytes that are being viewed.
 	                               * Unused bits in the first/last byte are undefined. */
-	size_t          bsv_startbit; /* [const][<= bsv_endbit] Starting bit number part of the bitset (based at `bsv_buf.bb_base') */
-	size_t          bsv_endbit;   /* [const][<= bsv_startbit] End bit number part of the bitset (based at `bsv_buf.bb_base') */
-	unsigned int    bsv_bflags;   /* [const] Buffer flags (Set of `Dee_BUFFER_F*'; of relevance is `Dee_BUFFER_FWRITABLE') */
+	size_t          bsv_startbit; /* [const][<= bsv_endbit] Starting bit number part of the bitset (based at `bsv_buf.bb_base`) */
+	size_t          bsv_endbit;   /* [const][<= bsv_startbit] End bit number part of the bitset (based at `bsv_buf.bb_base`) */
+	unsigned int    bsv_bflags;   /* [const] Buffer flags (Set of `Dee_BUFFER_F*`; of relevance is `Dee_BUFFER_FWRITABLE`) */
 } BitsetView;
 
 #define BitsetView_Check(ob) /* BitsetView is final, so exact check */ \
@@ -247,7 +247,7 @@ bitset_flipall_and_zero_unused_bits(bitset_t *self, size_t n_bits) {
 struct bitset_fromseq_data {
 	DREF Bitset *bsfsd_bitset; /* [1..1] The bitset being created. */
 	size_t       bsfsd_abits;  /* Allocated (and 0-initialized) # of bits (max used
-	                            * # of bits is stored in `bsfsd_bitset->bs_nbits') */
+	                            * # of bits is stored in `bsfsd_bitset->bs_nbits`) */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -350,8 +350,8 @@ bs_hash(Bitset *__restrict self) {
 
 struct bitset_ref {
 	bitset_t *bsr_bitset;   /* [1..1] Referenced bitset. */
-	size_t    bsr_startbit; /* Starting bit number part of the bitset (based at `bsr_bitset') */
-	size_t    bsr_endbit;   /* End bit number part of the bitset (based at `bsr_bitset') */
+	size_t    bsr_startbit; /* Starting bit number part of the bitset (based at `bsr_bitset`) */
+	size_t    bsr_endbit;   /* End bit number part of the bitset (based at `bsr_bitset`) */
 };
 
 #define bitset_ref_test(self, bitno) bitset_test((self)->bsr_bitset, (self)->bsr_startbit + (bitno))
@@ -437,7 +437,7 @@ DeeObject_AsBitset(DeeObject const *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
-	/* Check for special case: is `seq' a bitset-like object? */
+	/* Check for special case: is `seq` a bitset-like object? */
 	struct bitset_ref ref;
 	if (DeeObject_AsBitset(seq, &ref)) {
 		DREF Bitset *result;
@@ -1586,7 +1586,7 @@ bs_bitop_bitset(Bitset *self, struct bitset_ref *__restrict ref, unsigned int op
 	bitset_nbitop(result->bs_bitset, 0, ref->bsr_bitset, ref->bsr_startbit, com_bits, op);
 	if (com_bits < res_bits) {
 		if (op == BITSET_OP_AND) {
-			/* This part was already done by the `Bitset_Calloc()' above. */
+			/* This part was already done by the `Bitset_Calloc()` above. */
 			/*bitset_nclear(result->bs_bitset, com_bits, res_bits);*/
 		} else {
 			/* Insert bits from the larger operand */
@@ -1737,7 +1737,7 @@ PRIVATE struct type_math bs_math = {
 	/* .tp_inplace_pow = */ NULL
 };
 
-/* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
+/* Compare operators with optimizations when the operand is another `Bitset` or `BitsetView` */
 PRIVATE struct type_cmp bs_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bs_hash,
 	/* .tp_compare_eq    = */ NULL,
@@ -2168,7 +2168,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 robs_init_fromseq_or_bitset(DeeObject *seq) {
-	/* Check for special case: is `seq' a bitset-like object? */
+	/* Check for special case: is `seq` a bitset-like object? */
 	struct bitset_ref ref;
 	if (DeeObject_AsBitset(seq, &ref)) {
 		DREF Bitset *result;
@@ -2366,7 +2366,7 @@ PRIVATE struct type_math robs_math = {
 	/* .tp_inplace_pow = */ NULL
 };
 
-/* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
+/* Compare operators with optimizations when the operand is another `Bitset` or `BitsetView` */
 PRIVATE struct type_cmp robs_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&robs_hash,
 	/* .tp_compare_eq    = */ NULL,
@@ -3750,7 +3750,7 @@ bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	 *
 	 * This is needed so we're able to load other bitset views,
 	 * even when those views contain unaligned bits (since the
-	 * normal `DeeObject_GetBuf()' interface throws an error if
+	 * normal `DeeObject_GetBuf()` interface throws an error if
 	 * there are unaligned bits) */
 	if (Bitset_Check(ob)) {
 		Bitset *o;
@@ -3954,7 +3954,7 @@ bitset_ref_bitop(struct bitset_ref const *__restrict lhs,
 	              rhs->bsr_startbit, com_bits, op);
 	if (com_bits < res_bits) {
 		if (op == BITSET_OP_AND) {
-			/* This part was already done by the `Bitset_Calloc()' above. */
+			/* This part was already done by the `Bitset_Calloc()` above. */
 			/*bitset_nclear(result->bs_bitset, com_bits, res_bits);*/
 		} else {
 			/* Insert bits from the larger operand */
@@ -4116,7 +4116,7 @@ PRIVATE struct type_math bsv_math = {
 	/* .tp_inplace_pow = */ NULL
 };
 
-/* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
+/* Compare operators with optimizations when the operand is another `Bitset` or `BitsetView` */
 PRIVATE struct type_cmp bsv_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bsv_hash,
 	/* .tp_compare_eq    = */ NULL,

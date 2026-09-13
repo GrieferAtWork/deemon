@@ -168,7 +168,7 @@ encoder_acquire(IconvEncoder *__restrict self) {
 	int error = Dee_nrshared_lock_acquire(&self->ive_lock);
 	if (error == Dee_NRLOCK_ALREADY) {
 		DeeError_Throwf(&DeeError_RuntimeError,
-		                "Reentrant calls to `%s.write' are not allowed",
+		                "Reentrant calls to `%s.write` are not allowed",
 		                DeeType_GetName(&Dee_TYPE(self)->ft_base));
 		error = Dee_NRLOCK_ERR;
 	}
@@ -269,8 +269,8 @@ ive_write(IconvEncoder *self, void const *buffer,
 			err_unicode_encode_error(codec, offset);
 			goto err;
 		}
-		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll', "
-		                      "which should only ever return `-1' on error");
+		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll`, "
+		                      "which should only ever return `-1` on error");
 	}
 	encoder_release(self);
 	/* Return the full "bufsize" instead of "result": "result" is actual the #
@@ -311,8 +311,8 @@ ive_sync_impl(IconvEncoder *__restrict self) {
 	status = libiconv_encode_flush(&self->ive_encoder);
 	encoder_release(self);
 	ASSERTF(status == -1 || status >= 0,
-	        "The underlying printer is `DeeFile_WriteAll', "
-	        "which should only ever return `-1' on error");
+	        "The underlying printer is `DeeFile_WriteAll`, "
+	        "which should only ever return `-1` on error");
 	if unlikely(status < 0)
 		goto err;
 	return 0;
@@ -387,7 +387,7 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &ive_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ive_fini,
 			/* .tp_assign      = */ NULL,
@@ -533,8 +533,8 @@ ivdw_write(IconvDecodeWriter *self, void const *buffer,
 			err_unicode_decode_error(codec, offset);
 			goto err;
 		}
-		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll', "
-		                      "which should only ever return `-1' on error");
+		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll`, "
+		                      "which should only ever return `-1` on error");
 	}
 	ivdw_release(self);
 	/* Return the full "bufsize" instead of "result": "result" is actual the #
@@ -613,7 +613,7 @@ INTERN DeeFileTypeObject IconvDecodeWriter_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &ivdw_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivdw_fini,
 			/* .tp_assign      = */ NULL,
@@ -800,8 +800,8 @@ ivtw_write(IconvTranscodeWriter *self, void const *buffer,
 			err_unicode_reencode_error(outcodec);
 			goto err;
 		}
-		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll', "
-		                      "which should only ever return `-1' on error");
+		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll`, "
+		                      "which should only ever return `-1` on error");
 	}
 	ivtw_release(self);
 	/* Return the full "bufsize" instead of "result": "result" is actual the #
@@ -863,7 +863,7 @@ INTERN DeeFileTypeObject IconvTranscodeWriter_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &ivtw_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivtw_fini,
 			/* .tp_assign      = */ NULL,
@@ -974,7 +974,7 @@ err:
 }
 
 /* Fill decoded data buffer by reading from input file.
- * NOTE: Caller must be holding a lock to `self->ivd_lock'
+ * NOTE: Caller must be holding a lock to `self->ivd_lock`
  *
  * @param: hint: Hint for how many bytes to read from input file
  * @return: 0 :  Input file indicates EOF (no further data was decoded)
@@ -1017,8 +1017,8 @@ ivd_fillbuffer_locked(IconvDecoder *__restrict self,
 				goto err_temp;
 			}
 			ASSERTF(status == -1,
-			        "Underlying printer should be `ivd_buffer_printer', "
-			        "which only return `-1' on error");
+			        "Underlying printer should be `ivd_buffer_printer`, "
+			        "which only return `-1` on error");
 		}
 	}
 	Dee_Freea(temp);
@@ -1277,7 +1277,7 @@ INTERN DeeFileTypeObject IconvDecoder_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &ivd_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivd_fini,
 			/* .tp_assign      = */ NULL,
@@ -1463,8 +1463,8 @@ iver_sync(IconvEncodeReader *__restrict self) {
 	status = libiconv_encode_flush(&self->iver_encoder);
 	iver_release(self);
 	ASSERTF(status == -1 || status >= 0,
-	        "The underlying printer is `iver_buffer_printer', "
-	        "which should only ever return `-1' on error");
+	        "The underlying printer is `iver_buffer_printer`, "
+	        "which should only ever return `-1` on error");
 	if unlikely(status < 0)
 		goto err;
 #if 0 /* Nope: not propagated! */
@@ -1519,7 +1519,7 @@ INTERN DeeFileTypeObject IconvEncodeReader_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &iver_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iver_fini,
 			/* .tp_assign      = */ NULL,
@@ -1721,8 +1721,8 @@ ivtr_sync(IconvTranscodeReader *__restrict self) {
 	status = libiconv_encode_flush(&self->ivtr_encoder);
 	ivtr_release(self);
 	ASSERTF(status == -1 || status >= 0,
-	        "The underlying printer is `ivtr_buffer_printer', "
-	        "which should only ever return `-1' on error");
+	        "The underlying printer is `ivtr_buffer_printer`, "
+	        "which should only ever return `-1` on error");
 	if unlikely(status < 0)
 		goto err;
 #if 0 /* Nope: not propagated! */
@@ -1800,7 +1800,7 @@ INTERN DeeFileTypeObject IconvTranscodeReader_Type = {
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &ivtr_init,
 				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
-				                            * it'd require per-codec handling not provided by `libiconv' */
+				                            * it'd require per-codec handling not provided by `libiconv` */
 			),
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivtr_fini,
 			/* .tp_assign      = */ NULL,

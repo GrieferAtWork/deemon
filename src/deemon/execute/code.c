@@ -111,7 +111,7 @@
 #if defined(EXEC_ALTSTACK_ALLOC_USE_STUB)
 #define EXEC_ALTSTACK_ASM_USE_STUB
 #elif defined(_MSC_VER) && defined(__x86_64__)
-#define EXEC_ALTSTACK_ASM_USE_EXTERNAL /* The x86_64+msvc version is implemented in `asm/altstack.ms-x64.S' */
+#define EXEC_ALTSTACK_ASM_USE_EXTERNAL /* The x86_64+msvc version is implemented in `asm/altstack.ms-x64.S` */
 #elif defined(__COMPILER_HAVE_GCC_ASM) && \
      (defined(__x86_64__) || defined(__i386__))
 #define EXEC_ALTSTACK_ASM_USE_GCC
@@ -212,7 +212,7 @@ DECL_BEGIN
 /************************************************************************/
 #ifndef EXEC_ALTSTACK_ALLOC_USE_STUB
 
-/* Figure out the error return value for `[try]alloc_altstack()' */
+/* Figure out the error return value for `[try]alloc_altstack()` */
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 #define ALTSTACK_ALLOC_FAILED NULL
 #elif defined(EXEC_ALTSTACK_ALLOC_USE_mmap)
@@ -355,7 +355,7 @@ again:
 	        , "r" (new_stack)                                               \
 	        : "memory", "cc")
 #else /* Arch... */
-#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_GCC 1' above)"
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_GCC 1` above)"
 #endif /* !Arch... */
 #endif /* EXEC_ALTSTACK_ASM_USE_GCC */
 
@@ -388,7 +388,7 @@ again:
 		__asm MOV  result, EAX                          \
 	}
 #else /* Arch... */
-#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_MSVC 1' above)"
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_MSVC 1` above)"
 #endif /* !Arch... */
 #endif /* EXEC_ALTSTACK_ASM_USE_MSVC */
 
@@ -442,11 +442,11 @@ DECL_BEGIN
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 
 /* Hidden C-API of _hostasm
- * NOTE: These values must match the definitions from `libhostasm.h' */
-#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
-#define HOST_CC_F_TUPLE 2 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
+ * NOTE: These values must match the definitions from `libhostasm.h` */
+#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw` parameter for keyword arguments */
+#define HOST_CC_F_TUPLE 2 /* Instead of `size_t argc, DeeObject *const *argv`, take `DeeObject *args` */
 #define HOST_CC_F_FUNC  4 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
-#define HOST_CC_F_THIS  8 /* Take an an extra `DeeObject *thisarg' parameter for "this" */
+#define HOST_CC_F_THIS  8 /* Take an an extra `DeeObject *thisarg` parameter for "this" */
 typedef uint8_t host_cc_t;
 
 union host_rawfunc_entry {
@@ -474,7 +474,7 @@ struct hostfunc {
 	/* ... extra fields here... */
 };
 
-/* Create a host assembly function for `code' */
+/* Create a host assembly function for `code` */
 typedef WUNUSED_T NONNULL_T((2)) struct hostfunc *
 (DCALL *LPHOSTASM_HOSTFUNC_NEW)(/*0..1*/ DeeFunctionObject *function,
                                 /*1..1*/ DeeCodeObject *code,
@@ -484,8 +484,8 @@ PRIVATE LPHOSTASM_HOSTFUNC_NEW pdyn_hostasm_hostfunc_new = NULL;
 PRIVATE LPHOSTASM_HOSTFUNC_DESTROY pdyn_hostasm_hostfunc_destroy = NULL;
 
 /* Load the _hostasm API
- * @return: 1 : Unable to load API. In this case, `DeeCode_OptimizeCallThreshold'
- *              has automatically been set to `(size_t)-1'.
+ * @return: 1 : Unable to load API. In this case, `DeeCode_OptimizeCallThreshold`
+ *              has automatically been set to `(size_t)-1`.
  * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
@@ -557,10 +557,10 @@ Dee_hostasm_function_data_destroy(struct Dee_hostasm_function_data *__restrict s
 }
 
 
-/* Lazily re-compile `self' as per `cc'
+/* Lazily re-compile `self` as per `cc`
  * @return: 1 : Unable to recompile (_hostasm wasn't found, or didn't export the correct
- *              functions). In this case, `DeeCode_OptimizeCallThreshold' has automatically
- *              been set to `(size_t)-1'. Alternatively (when `allow_async == true'), the
+ *              functions). In this case, `DeeCode_OptimizeCallThreshold` has automatically
+ *              been set to `(size_t)-1`. Alternatively (when `allow_async == true`), the
  *              function might be getting optimized asynchronously, in which case the
  *              caller should execute it using the normal bytecode interpreter for the
  *              time being (once recomp finishes, it will automatically get hooked in the
@@ -611,7 +611,7 @@ again_read_hfunc:
 		/* Recompile the function in question. */
 		hfunc = (*pdyn_hostasm_hostfunc_new)(cc & HOST_CC_F_FUNC ? NULL : self, code, cc);
 		if unlikely(!hfunc) {
-			/* Check for special case: _hostasm throws `IllegalInstruction' if it's unable
+			/* Check for special case: _hostasm throws `IllegalInstruction` if it's unable
 			 * to re-compile the function due to it using some sort of functionality that
 			 * it is unable to handle (yet). */
 			if (DeeError_Catch(&DeeError_IllegalInstruction)) {
@@ -697,7 +697,7 @@ INTERN size_t DeeCode_OptimizeCallThreshold = DEFAULT_HOSTASM_RECOMPILE_CALL_THR
  * - 0 :         Functions are always optimized immediately.
  * - (size_t)-1: Functions are never optimized (when trying to
  *               optimize a function, and doing so fails because
- *               `_hostasm' can't be loaded, this value gets set
+ *               `_hostasm` can't be loaded, this value gets set
  *               automatically) */
 #undef DeeCode_GetOptimizeCallThreshold
 PUBLIC ATTR_PURE WUNUSED size_t DCALL
@@ -743,7 +743,7 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	(void)self;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	if (args.tuple) {
-		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true`");
 		goto err;
 	}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -794,7 +794,7 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 	(void)self;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	if (args.tuple) {
-		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+		DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true`");
 		goto err;
 	}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -905,7 +905,7 @@ err:
  * - 0 :         Functions are always optimized immediately.
  * - (size_t)-1: Functions are never optimized (when trying to
  *               optimize a function, and doing so fails because
- *               `_hostasm' can't be loaded, this value gets set
+ *               `_hostasm` can't be loaded, this value gets set
  *               automatically) */
 #undef DeeCode_GetOptimizeCallThreshold
 PUBLIC ATTR_PURE WUNUSED size_t DCALL
@@ -925,7 +925,7 @@ DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
 
 
 
-/* Handle a breakpoint having been triggered in `frame'.
+/* Handle a breakpoint having been triggered in `frame`.
  * NOTE: This function is called to deal with an encounter
  *       of a breakpoint during execution of code.
  * @param: frame: [in|out][OVERRIDE(->cf_result, DREF)]
@@ -941,8 +941,8 @@ DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
  *                   following the breakpoint, meaning that no further
  *                   adjustment is required if all that's supposed to
  *                   happen is execution continuing normally.
- *                 - The valid stack size is always stored in `cf_stacksz'
- * @return: * :   One of `Dee_TRIGGER_BREAKPOINT_*' describing how execution
+ *                 - The valid stack size is always stored in `cf_stacksz`
+ * @return: * :   One of `Dee_TRIGGER_BREAKPOINT_*` describing how execution
  *                should continue once the breakpoint has been dealt with. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame) {
@@ -1048,7 +1048,7 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 
-/* Define the special `DeeCode_Empty' object. */
+/* Define the special `DeeCode_Empty` object. */
 INTERN Dee_DEFINE_CODE(DeeCode_Empty,
                        /* co_flags:      */ Dee_CODE_FCOPYABLE,
                        /* co_localc:     */ 0,
@@ -1098,8 +1098,8 @@ frame_chain_contains_code(struct Dee_code_frame *iter, uint16_t count,
  * What the caller should be concerned about however is the error-return case:
  *     In the event that the given code object is actively being executed, either by
  *     the calling, or by any other thread, a ValueError is thrown and -1 is returned.
- *     Otherwise when 0 is returned, the caller may assume that `Dee_CODE_FASSEMBLY' has
- *     been set, and that modifying `co_code' to their liking, while still subject
+ *     Otherwise when 0 is returned, the caller may assume that `Dee_CODE_FASSEMBLY` has
+ *     been set, and that modifying `co_code` to their liking, while still subject
  *     to potential code-tearing, as well as the resulting inconsistencies that may
  *     cause running code to throw errors, but not cause the interpreter to crash.
  * Note that this function may also fail because an interrupt was send to the calling thread!
@@ -1247,7 +1247,7 @@ code_visit(DeeCodeObject *__restrict self,
 	size_t i;
 
 	/* Visit the accompanying module.
-	 * NOTE: We must use `Dee_XVisit()' here because the pointer
+	 * NOTE: We must use `Dee_XVisit()` here because the pointer
 	 *       may still be NULL when it still represents the next
 	 *       element in the chain of code objects associated with
 	 *       the module currently being compiled. */
@@ -1574,7 +1574,7 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * where they must be kept hidden from the basic namespace provided
 	 * for standard-compliant deemon code.
 	 * Properties matching these names can be found in a variety of other
-	 * types, including `Function', `ObjMethod', etc.
+	 * types, including `Function`, `ObjMethod`, etc.
 	 */
 	TYPE_GETTER_BOUND_F(STR___name__, &code_get_name, &code_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -1977,8 +1977,8 @@ err:
 
 struct except_handler_specs {
 	struct Dee_except_handler *exsp_v; /* [0..exsp_c|ALLOC(exsp_a)] Except handler vector */
-	uint16_t               exsp_c; /* # of initialized fields in `exsp_v' */
-	uint16_t               exsp_a; /* Allocated size of `exsp_v' */
+	uint16_t               exsp_c; /* # of initialized fields in `exsp_v` */
+	uint16_t               exsp_a; /* Allocated size of `exsp_v` */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL

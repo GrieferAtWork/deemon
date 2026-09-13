@@ -155,7 +155,7 @@ print "done";
 //      //       while 'operator __iterself__' should return an iterator.
 //      //       >> Technically, there is no such thing as 'operator for',
 //      //          as all it really is, is a compiler-generated wrapper
-//      //          around `operator __iterself__'
+//      //          around `operator __iterself__`
 // 		operator for ();            operator __iterself__();
 // 		                            operator __iternext__();
 // 		operator ++ ();             operator __inc__();

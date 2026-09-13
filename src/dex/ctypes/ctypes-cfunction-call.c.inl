@@ -71,14 +71,14 @@ CFunction_CallFunptr(CFunctionType *__restrict tp_self, Dee_funptr_t self,
 #ifdef VARARGS
 	if (argc < tp_self->cft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Function `(%k)%p' requires at least %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
+		                "Function `(%k)%p` requires at least %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
 		                tp_self, self, tp_self->cft_argc, argc);
 		goto err;
 	}
 #else /* VARARGS */
 	if (argc != tp_self->cft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,
-		                "Function `(%k)%p' requires %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
+		                "Function `(%k)%p` requires %" PRFuSIZ " arguments when %" PRFuSIZ " were given",
 		                tp_self, self, tp_self->cft_argc, argc);
 		goto err;
 	}
@@ -407,7 +407,7 @@ def_var_data:
 
 		/* Construct a new C-object that is returned as result. */
 		ASSERTF(!CType_IsCFunctionType(return_type),
-		        "This should have been prevented by the check in 'CFunctionType_New()'");
+		        "This should have been prevented by the check in 'CFunctionType_New()`");
 		CObject_Init(result_cobject, return_type);
 		result_cobject = (*CType_Operators(return_type)->co_initobject)(result_cobject, ret_mem);
 		result = Dee_AsObject(result_cobject);

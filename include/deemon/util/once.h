@@ -87,15 +87,15 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_once_abort)(Dee_once_t *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_once_trybegin)(Dee_once_t *__restrict self);
 
 #ifndef CONFIG_NO_THREADS
-/* Check if `self' has already been executed to the point where `Dee_once_commit()' has been called. */
+/* Check if `self` has already been executed to the point where `Dee_once_commit()` has been called. */
 #define Dee_once_hasrun(self) \
 	(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) >= _Dee_ONCE_COMPLETED_THRESHOLD)
 
-/* Check if `self' is currently running (`Dee_once_begin()' has been called). */
+/* Check if `self` is currently running (`Dee_once_begin()` has been called). */
 #define Dee_once_isrunning(self) \
 	((uint32_t)(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) - 1) <= (_Dee_ONCE_COMPLETED_THRESHOLD - 2))
 
-/* Check if `self' hasn't even been started yet (`Dee_once_begin()' hasn't been called, yet). */
+/* Check if `self` hasn't even been started yet (`Dee_once_begin()` hasn't been called, yet). */
 #define Dee_once_ispending(self) \
 	(__hybrid_atomic_load(&(self)->oc_didrun, __ATOMIC_ACQUIRE) == 0)
 

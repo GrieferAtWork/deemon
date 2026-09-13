@@ -49,8 +49,8 @@
 }
 
 {
-	/* WARNING: Implicitly declaring `foo' as a local variable.
-	 *          Write `local foo' if this is intended */
+	/* WARNING: Implicitly declaring `foo` as a local variable.
+	 *          Write `local foo` if this is intended */
 	foo;
 	{
 		foo = 7;
@@ -63,11 +63,11 @@
  * - Variables must be declared before they can be used
  * - Variable names can be re-used in sub-scopes
  * - Variables must not necessarily be initialized when being declared
- * - Variables can be assigned using `='
+ * - Variables can be assigned using `=`
  * - Variables of the same name found in outer scopes retain their
  *   values, even if inner scopes re-use that name in declarations.
  * - When variables are referenced, the closest match is used
- * - The `local' prefix should not be omitted when a new variable is declared.
+ * - The `local` prefix should not be omitted when a new variable is declared.
  */
 
 /* With those rules in mind, there are some special rules
@@ -77,7 +77,7 @@
 foobar = 32;   /* No warning here, despite no prefix! */
 print foobar;
 
-/* `foobar' here is more than just a regular local variable.
+/* `foobar` here is more than just a regular local variable.
  * Because it is written as part of the global scope, it becomes a global
  * variable, making is somewhat special, in that other modules may reference
  * it, it's value, as well as being able to re-assign a different value that
@@ -86,23 +86,23 @@ print foobar;
 global barfoo = foobar;
 print barfoo;
 
-/* Global variables can be explicitly defined by being declared as `global',
- * using the same rules as `local' with the exception that a `global' prefix
+/* Global variables can be explicitly defined by being declared as `global`,
+ * using the same rules as `local` with the exception that a `global` prefix
  * in a scope other than the global scope is illegal. */
 {
-	/* WARNING: Declaring global variable `not_really_allowed' outside of the root scope */
+	/* WARNING: Declaring global variable `not_really_allowed` outside of the root scope */
 	global not_really_allowed;
 }
 
 
-/* The following example now introduces the `import' statement, which may be
+/* The following example now introduces the `import` statement, which may be
  * used to access the variables of another module.
- * For this, also take a look at `demo_module.dee'
- * NOTE: Once you run this tutorial file, a new file `.demo_module.dec'
+ * For this, also take a look at `demo_module.dee`
+ * NOTE: Once you run this tutorial file, a new file `.demo_module.dec`
  *       will appear in this folder. - Don't be alarmed, it's a precompiled
- *       cache file for `demo_module.dee'. - You may simply ignore it,
+ *       cache file for `demo_module.dee`. - You may simply ignore it,
  *       or delete it, however it will reappear if you run this tutorial
- *       again, and will be updated if `demo_module.dee' gets modified.
+ *       again, and will be updated if `demo_module.dee` gets modified.
  */
 {
 	local but_im_not = "I wasn't imported";
@@ -140,33 +140,33 @@ print barfoo;
  *     recite python's rules (as far as I understood them, and implemented
  *     them in deemon):
  *       - A module name is the filename of that module without it's extension
- *       - `.' characters seen in a module name act as references to sub-directories
- *       - A leading `.' character means that the import is relative to the
+ *       - `.` characters seen in a module name act as references to sub-directories
+ *       - A leading `.` character means that the import is relative to the
  *         file containing the statement.
- *       - 2 consecutive `..' characters translate to `./../'
- *       - 3 consecutive `...' characters translate to `./../../', etc.
- *       - Names without a leading `.' character will be searched for in the module
- *         search path, which by default contains `/lib' (from the deemon source tree)
+ *       - 2 consecutive `..` characters translate to `./../`
+ *       - 3 consecutive `...` characters translate to `./../../`, etc.
+ *       - Names without a leading `.` character will be searched for in the module
+ *         search path, which by default contains `/lib` (from the deemon source tree)
  *     Examles:
  *       - util       --> "${LIBPATH}/util.dee"
  *       - sys.util   --> "${LIBPATH}/sys/util.dee"
  *       - .bar       --> "${CURRENT_SOURCE_PATH}/bar.dee"
  *       - ..bar      --> "${CURRENT_SOURCE_PATH}/../bar.dee"
  *       - ..foo.bar  --> "${CURRENT_SOURCE_PATH}/../foo/bar.dee"
- *       - .          --> "${CURRENT_SOURCE_FILE}.dee" -- `import foo = .' defines `foo' as the current module
+ *       - .          --> "${CURRENT_SOURCE_FILE}.dee" -- `import foo = .` defines `foo` as the current module
  *   - Modules themself are also objects which can be imported as:
- *       - import foo;                       // Defines a local variable `foo' as the module `foo'
- *       - import foo.bar;                   // Defines a local variable `bar' as the module `foo.bar'
- *       - import foobar = foo.bar;          // Defines a local variable `foobar' as the module `foo.bar'
- *       - import foo.bar as foobar;         // Defines a local variable `foobar' as the module `foo.bar'
- *       - import sym from foo.bar;          // Defines a local symbol `sym' as an alias for `sym from foo.bar'
- *       - import mysym = sym from foo.bar;  // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
- *       - import sym as mysym from foo.bar; // Defines a local symbol `mysym' as an alias for `sym from foo.bar'
+ *       - import foo;                       // Defines a local variable `foo` as the module `foo`
+ *       - import foo.bar;                   // Defines a local variable `bar` as the module `foo.bar`
+ *       - import foobar = foo.bar;          // Defines a local variable `foobar` as the module `foo.bar`
+ *       - import foo.bar as foobar;         // Defines a local variable `foobar` as the module `foo.bar`
+ *       - import sym from foo.bar;          // Defines a local symbol `sym` as an alias for `sym from foo.bar`
+ *       - import mysym = sym from foo.bar;  // Defines a local symbol `mysym` as an alias for `sym from foo.bar`
+ *       - import sym as mysym from foo.bar; // Defines a local symbol `mysym` as an alias for `sym from foo.bar`
  *   - When importing a module with a name containing characters
  *     that are not valid identifiers, the following syntax can be used;
  *       - `import myname = ".foo.1234actual-name"'
  *   - When not wanting to bind a variable from another module to a local symbol,
- *     you are also able to write `symbol from module' in expressions.
+ *     you are also able to write `symbol from module` in expressions.
  */
 
 {
@@ -221,7 +221,7 @@ print barfoo;
 	print sym;
 }
 
-/* One last way of using `import' is when it appears in expressions,
+/* One last way of using `import` is when it appears in expressions,
  * where it becomes a function that can be used to dynamically load
  * modules, given their names as variables. */
 {
@@ -235,11 +235,11 @@ print barfoo;
  * global and local variables can be unbound: */
 {
 	local x;
-//	print x; /* Would cause an error because `x' isn't bound */
+//	print x; /* Would cause an error because `x` isn't bound */
 }
 
-/* In such situations, you can use the `bound(x)' or `x is bound' or `x !is bound'
- * expression to determine if a symbol, attribute, or item `x' is bound. */
+/* In such situations, you can use the `bound(x)` or `x is bound` or `x !is bound`
+ * expression to determine if a symbol, attribute, or item `x` is bound. */
 {
 	local x;
 	print x is bound;  /* false (but may be undefined, because the compiler is allowed re-use a variable from a previous assignment) */
@@ -274,9 +274,9 @@ print barfoo;
 	print x is bound; /* True */
 	{
 		del x; /* >> UNBIND(x);
-		        * Note that the `x' symbol doesn't get deleted here.
-		        * This is because `x' was declared in a different scope,
-		        * and `del' statements always unbind, but only delete
+		        * Note that the `x` symbol doesn't get deleted here.
+		        * This is because `x` was declared in a different scope,
+		        * and `del` statements always unbind, but only delete
 		        * if the variable originates from the current scope. */
 	}
 	print x is bound; /* False */
@@ -289,7 +289,7 @@ print barfoo;
  * as well as how to use them, let's take a quick look at some other
  * special variable types.
  * Static variables cannot be mixed with global variables, and it is
- * recommended to always include a `local' prefix when declaring them,
+ * recommended to always include a `local` prefix when declaring them,
  * so-as to prevent unintended matching against other variables of the
  * same name.
  */
@@ -303,15 +303,15 @@ print barfoo;
  * the surrounding function (see tutorial about functions) */
 
 
-/* Lastly, there are `__stack' variables, an optional extension that may
+/* Lastly, there are `__stack` variables, an optional extension that may
  * simply be ignored by deemon distributions choosing not to implement
  * it, while in those that do referring to variables that should be stored
  * on the execution stack, allowing them to be referenced quicker, and
  * potentially allow store expressions to be omitted from generated code.
- * Just like `static' variables, `__stack' variables can only be used with
- * local visibility, meaning you should always include a `local' prefix
+ * Just like `static` variables, `__stack` variables can only be used with
+ * local visibility, meaning you should always include a `local` prefix
  * when declaring them, too.
- * Use of `__stack' variables is never required, and in certain situations
+ * Use of `__stack` variables is never required, and in certain situations
  * may even break code. Additionally, with optimizations enabled, the compiler
  * may automatically recognize where the use of a stack variable could lead
  * to improved performance, meaning that the manual declaration of a stack
@@ -339,13 +339,13 @@ print barfoo;
 	}
 }
 
-/* `__nth(<intexpr>)' can be prefixed before variable names in order
+/* `__nth(<intexpr>)` can be prefixed before variable names in order
  * to select the n'th match of a given name, rather than the first.
  * This is a lesser used feature which none-the-less finds great
  * use in autogenerated code using scopes and the preprocessor to
  * structure its data tree.
  * For example, KOS's magic.dee uses it to implement the BEGIN-END
- * macros in `.sources' files as:
+ * macros in `.sources` files as:
  * >> #define BEGIN { local options = deepcopy __nth(2) options;
  * >> #define END   }
  * Meaning that every BEGIN-END block has its own options-copy derived
@@ -368,7 +368,7 @@ print barfoo;
 	List e { 9, 8, 7 };
 	print repr e;  /* [9, 8, 7] */
 }
-/* Local variables can also be declared as `<type_expr> <symbol_name>',
+/* Local variables can also be declared as `<type_expr> <symbol_name>`,
  * following C/C++ syntax, while also allowing for the immediate initialization:
  *  - List a = { 10, 20, 30 };  -- local a = List({ 10, 20, 30 });
  *  - List b;                   -- local b = List();
@@ -378,7 +378,7 @@ print barfoo;
  */
 
 
-/* Now that we've seen `=' being used to assign variables, it should
+/* Now that we've seen `=` being used to assign variables, it should
  * be noted that it can also be used in 3 other situations. */
 {
 	local x = [1, 2, 3];
@@ -388,7 +388,7 @@ print barfoo;
 	x[2:] = { 5, 6, 7 };  /* This is a setrange expression. */
 	print repr x;         /* [1, "foo", 5, 6, 7] */
 
-	/* Also note that in all of the examples above, `del'
+	/* Also note that in all of the examples above, `del`
 	 * can also be used to invoke different behavior: */
 	del x[3:];            /* This is a delrange expression. */
 	print repr x;         /* [1, "foo", 5] */
@@ -416,15 +416,15 @@ print barfoo;
 
 /* While they should be fairly self-explanatory, especially to someone who
  * already knows C, it should be mentioned that while inplace operators
- * are their own operators at runtime, an expression such as `x += 20'
- * may also be emulated as `x = x + 20' when the type of `x' is immutable.
+ * are their own operators at runtime, an expression such as `x += 20`
+ * may also be emulated as `x = x + 20` when the type of `x` is immutable.
  *
- * This also applies to `x.y += 20' potentially becoming `x.y = x.y + 20',
- * as well as the same when appearing in `x[y] += 20', which becomes
- * `x[y] = x[y] + 20'.
+ * This also applies to `x.y += 20` potentially becoming `x.y = x.y + 20`,
+ * as well as the same when appearing in `x[y] += 20`, which becomes
+ * `x[y] = x[y] + 20`.
  *
  * Note however that in all cases, the operands found in the left-hand-side
- * are only evaluated once, meaning that in `x[y] += 20', `x' and `y' are
+ * are only evaluated once, meaning that in `x[y] += 20`, `x` and `y` are
  * only evaluated once, and all its side-effects only happen once too.
  *  - It should also be noted that deemon enforces a strong left-to-right
  *    evaluation order, as well as subsequent side-effects caused thereby.

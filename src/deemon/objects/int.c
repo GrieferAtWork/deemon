@@ -18,13 +18,13 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* NOTE: Deemon's integer object implementation is
- *       heavily based on python's `long' data type.
+ *       heavily based on python's `long` data type.
  *       With that in mind, licensing of deemon's integer
  *       implementation must be GPL-compatible, GPL being
  *       the license that python is restricted by.
  *    >> So to simplify this whole deal: I make no claim of having invented the
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
- *       with all algorithms found in `int_logic.c' originating from phython
+ *       with all algorithms found in `int_logic.c` originating from phython
  *       before being adjusted to fit deemon's runtime. */
 #ifndef GUARD_DEEMON_OBJECTS_INT_C
 #define GUARD_DEEMON_OBJECTS_INT_C 1
@@ -139,15 +139,15 @@
 #endif /* ... */
 
 
-/* In order to calculate constants at runtime, we need `log()' from <math.h> */
+/* In order to calculate constants at runtime, we need `log()` from <math.h> */
 #if !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>
 #else /* CONFIG_HAVE_MATH_H */
 #ifdef __PREPROCESSOR_HAVE_WARNING
-#warning "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#warning "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS` requires a working <math.h> header"
 #else /* __PREPROCESSOR_HAVE_WARNING */
-#error "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#error "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS` requires a working <math.h> header"
 #endif /* !__PREPROCESSOR_HAVE_WARNING */
 #undef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
 #define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 1
@@ -159,7 +159,7 @@
 #define DIGIT_BASE Dee_DIGIT_BASE
 #define DIGIT_MASK Dee_DIGIT_MASK
 
-/* Figure out the most efficient way to shift a 128-bit integer by `DIGIT_BITS', both left and right */
+/* Figure out the most efficient way to shift a 128-bit integer by `DIGIT_BITS`, both left and right */
 #if DIGIT_BITS < 8 && defined(__hybrid_uint128_shr8)
 #define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr8(var, DIGIT_BITS)
 #define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl8(var, DIGIT_BITS)
@@ -865,7 +865,7 @@ done:
 
 
 /* Write the value of an integer as signed/unsigned LEB data.
- * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
+ * NOTE: When writing ULEB data, the caller is responsible to ensure that `self` is positive. */
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) byte_t *DCALL
 DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
                byte_t *__restrict writer) {
@@ -1435,7 +1435,7 @@ PRIVATE double const log_base_BASE_[35] = {
 	0.33916418941668930, 0.34195220112966446,
 	0.34466166676282084
 #else /* DIGIT_BITS == ... */
-#error "Unsupported `DIGIT_BITS'"
+#error "Unsupported `DIGIT_BITS`"
 #endif /* DIGIT_BITS != ... */
 };
 
@@ -1449,7 +1449,7 @@ PRIVATE int const convwidth_base_[35] = {
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 2, 2, 2, 2
 #else /* DIGIT_BITS == ... */
-#error "Unsupported `DIGIT_BITS'"
+#error "Unsupported `DIGIT_BITS`"
 #endif /* DIGIT_BITS != ... */
 };
 
@@ -1471,7 +1471,7 @@ PRIVATE digit const convmultmax_base_[35] = {
 	0x4ce3, 0x55c0, 0x5f45, 0x6978, 0x745f,
 	0x8000, 0x0441, 0x0484, 0x04c9, 0x0510
 #else /* DIGIT_BITS == ... */
-#error "Unsupported `DIGIT_BITS'"
+#error "Unsupported `DIGIT_BITS`"
 #endif /* DIGIT_BITS != ... */
 };
 #endif /* CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
@@ -1541,7 +1541,7 @@ parse_ch:
 					}
 					goto handle_backslash_in_text;
 				}
-				--start; /* Account for the additional `++start' inside of for-advance */
+				--start; /* Account for the additional `++start` inside of for-advance */
 			} else if (ch != '\\') {
 				if (ch == '_' && !(flags & Dee_INT_STRING_FNOSEPS)) {
 do_skip_char:
@@ -1617,8 +1617,8 @@ err:
 
 
 /* Convert an integer to/from a string.
- * WARNING: The caller is responsible not to pass a radix equal to `1'.
- *          When a radix equal to `0', it is automatically determined from the passed string. */
+ * WARNING: The caller is responsible not to pass a radix equal to `1`.
+ *          When a radix equal to `0`, it is automatically determined from the passed string. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags) {
@@ -1776,7 +1776,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 #endif /* !DeeInt_PTruncate_IS_NOOP */
 	}
 
-	/* Negate the integer if it was prefixed by `-' */
+	/* Negate the integer if it was prefixed by `-` */
 	if (negative)
 		result->ob_size = -result->ob_size;
 done:
@@ -1897,8 +1897,8 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				/* All any kind of digit/decimal character. - If the caller doesn't
 				 * want to support any kind of digit, have `int("²")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
-				 * decimals by using `string.isdigit()'. As far as this check is
-				 * concerned, we accept anything that applies to `string.isnumeric()' */
+				 * decimals by using `string.isdigit()`. As far as this check is
+				 * concerned, we accept anything that applies to `string.isnumeric()` */
 				if (traits->ut_flags & (Dee_UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;
 					if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
@@ -1952,7 +1952,7 @@ handle_linefeed_in_text:
 			goto done;
 #endif /* !DeeInt_PTruncate_IS_NOOP */
 	}
-	/* Negate the integer if it was prefixed by `-' */
+	/* Negate the integer if it was prefixed by `-` */
 	if (negative)
 		result->ob_size = -result->ob_size;
 done:
@@ -2089,7 +2089,7 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
 			goto err_overflow;
 	}
 
-	/* Negate the integer if it was prefixed by `-' */
+	/* Negate the integer if it was prefixed by `-` */
 	if (negative) {
 		if (result > INT64_MAX)
 			goto err_overflow;
@@ -2183,8 +2183,8 @@ err:
 }
 
 /* @return:  0: Successfully parsed an integer.
- * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY' is set)
- * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY' is set) */
+ * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY` is set)
+ * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY` is set) */
 PUBLIC WUNUSED NONNULL((1, 4)) int
 (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags,
@@ -2389,13 +2389,13 @@ err_pout:
 
 
 #undef DeeInt_Print_USES_UNICODE
-#if 0 /* When defined, `DeeInt_Print()' might print non-ascii characters */
+#if 0 /* When defined, `DeeInt_Print()` might print non-ascii characters */
 #define DeeInt_Print_USES_UNICODE
 #endif
 
 /* Print an integer to a given format-printer.
- * Radix must be one of `2', `4', `8', `10' or `16' and
- * if it isn't, a `NotImplemented' error is thrown.
+ * Radix must be one of `2`, `4`, `8`, `10` or `16` and
+ * if it isn't, a `NotImplemented` error is thrown.
  * This list of supported radices may be extended in the future. */
 PUBLIC WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
@@ -2623,7 +2623,7 @@ err:
  * NOTE: In theory, deemon integers can have arbitrarily large values,
  *       however in deemon's C api, we must limit ourself to only a set
  *       number of bits.
- * @return: One of `INT_*' (See above) */
+ * @return: One of `INT_*` (See above) */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet8Bit(/*Int*/ DeeObject *__restrict self,
                   int8_t *__restrict result) {
@@ -2988,8 +2988,8 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 }
 
 
-/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
- * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and return `-1'. */
+/* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow`
+ * for `INT_POS_OVERFLOW` and `INT_NEG_OVERFLOW` and return `-1`. */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get8Bit)(/*Int*/ DeeObject *__restrict self,
                        int8_t *__restrict result) {
@@ -3800,7 +3800,7 @@ got_total_bits:
 		}
 #if 1
 		if (is_negative) {
-			/* Transform all written bits: `dec();inv();' */
+			/* Transform all written bits: `dec();inv();` */
 			for (digit_index = 0; digit_index < total_digits - 1; ++digit_index) {
 				if ((result->ob_digit[digit_index])-- != 0)
 					goto done_decr;
@@ -3981,7 +3981,7 @@ PRIVATE struct type_math int_math = {
 #error "Unsupported __SIZEOF_SIZE_T__"
 #endif /*  __SIZEOF_SIZE_T__ != ... */
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR` */
 Dee_ssize_compare_int(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
@@ -3994,7 +3994,7 @@ Dee_ssize_compare_int(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	return Dee_COMPARE_EQ;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR` */
 Dee_ssize_compare_int_eq(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
@@ -4005,7 +4005,7 @@ Dee_ssize_compare_int_eq(Dee_ssize_t lhs, DeeIntObject const *rhs) {
 	return Dee_COMPARE_EQ;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR` */
 Dee_size_compare_int(size_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
@@ -4018,7 +4018,7 @@ Dee_size_compare_int(size_t lhs, DeeIntObject const *rhs) {
 	return Dee_COMPARE_EQ;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR` */
 Dee_size_compare_int_eq(size_t lhs, DeeIntObject const *rhs) {
 	Dee_ssize_t rhs_value;
 	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
@@ -4077,7 +4077,7 @@ DeeInt_SSize_TryCompareEq(Dee_ssize_t lhs, DeeObject *rhs) {
 			result = Dee_ssize_compare_int_eq(lhs, rhs_int);
 			Dee_Decref(rhs_int);
 		} else {
-			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented` caught */
 		}
 	}
 	return result;
@@ -4134,7 +4134,7 @@ DeeInt_Size_TryCompareEq(size_t lhs, DeeObject *rhs) {
 			result = Dee_size_compare_int_eq(lhs, rhs_int);
 			Dee_Decref(rhs_int);
 		} else {
-			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented` caught */
 		}
 	}
 	return result;
@@ -4174,7 +4174,7 @@ int_compareint(DeeIntObject const *a, DeeIntObject const *b) {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 int_hash(DeeIntObject *__restrict self) {
-	/* Hash is effectively `(Dee_hash_t)(REINTERPRET_UNSIGNED)SIGNED_TRUNC_TO_SIZEOF_POINTER(self)' */
+	/* Hash is effectively `(Dee_hash_t)(REINTERPRET_UNSIGNED)SIGNED_TRUNC_TO_SIZEOF_POINTER(self)` */
 	Dee_hash_t x;
 	Dee_ssize_t i;
 	int sign;
@@ -4257,7 +4257,7 @@ int_trycompare_eq(DeeIntObject *self, DeeObject *some_object) {
 			compare_value = int_compareint(self, rhs);
 			Dee_Decref(rhs);
 		} else {
-			return Dee_COMPARE_NE; /* Implicit `NotImplemented' caught */
+			return Dee_COMPARE_NE; /* Implicit `NotImplemented` caught */
 		}
 	}
 	return Dee_CompareEqFromDiff(compare_value);
@@ -4496,8 +4496,8 @@ err:
 
 
 /* Return the number of bits needed to represent
- * `self' as a base-2 (possibly signed) integer.
- * When `self' is negative, and `is_signed' is false,
+ * `self` as a base-2 (possibly signed) integer.
+ * When `self` is negative, and `is_signed` is false,
  * an error is thrown, and (size_t)-1 is returned. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
@@ -4513,7 +4513,7 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 	while (digit_count && self->ob_digit[digit_count - 1] == 0)
 		--digit_count;
 	if (!digit_count)
-		return 1; /* Special case: `0' */
+		return 1; /* Special case: `0` */
 
 	/* Account for all of the digits leading up to the last one. */
 	result = (digit_count - 1) * DIGIT_BITS;
@@ -4531,7 +4531,7 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 					goto not_a_limit_int;
 			}
 			if (digit_count == 1 && last_digit == 1) {
-				/* Special case: `-1' (still requires at least 2 bits to be represented) */
+				/* Special case: `-1` (still requires at least 2 bits to be represented) */
 			} else {
 				--result;
 			}

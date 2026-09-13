@@ -62,7 +62,7 @@ local class LinkedListNode {
 @@is fully capable of dealing even with the utterly painful case which doubly-linked
 @@lists represent when it comes to cleaning up after the user.
 @@Also: Don't forget that deemon's main method of destroying objects is reference counting,
-@@so this isn't just any ordinary GC (and neither did I copy python, like I did for `int')
+@@so this isn't just any ordinary GC (and neither did I copy python, like I did for `int`)
 global class LinkedList: Sequence from deemon {
 	private m_front = none;
 	private m_back = none;
@@ -137,7 +137,7 @@ global class LinkedList: Sequence from deemon {
 
 		/* If the list contains itself, then the GC may choose to clear
 		 * some of our member table in order to resolve the reference loop.
-		 * For that reason, check if that happened by seeing if `m_front'
+		 * For that reason, check if that happened by seeing if `m_front`
 		 * is still bound and exit if that is the case. */
 		if (!bound(m_front))
 			return;
@@ -187,7 +187,7 @@ assert gc.collect() == 0;
 /* Delete our demo-list. */
 del l1;
 
-/* Now that the scarily-complex object-tree that was `l1' is no longer
+/* Now that the scarily-complex object-tree that was `l1` is no longer
  * being reference from the outside, the GC is able to clean it up. */
 assert gc.collect() != 0;
 

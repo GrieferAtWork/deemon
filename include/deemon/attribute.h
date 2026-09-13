@@ -51,10 +51,10 @@ typedef struct Dee_enumattr_iterator_object {
 	struct Dee_attriter     ei_iter; /* Attribute enumerator. */
 } DeeEnumAttrIteratorObject;
 
-DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon' */
-DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */
-DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).Iterator' */
-#define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type) /* `enumattr' is final */
+DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon` */
+DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon` */
+DDATDEF DeeTypeObject DeeEnumAttrIterator_Type; /* `(enumattr from deemon).Iterator` */
+#define DeeEnumAttr_Check(x)      DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type) /* `enumattr` is final */
 #define DeeEnumAttr_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeEnumAttr_Type)
 
 DECL_END

@@ -20,16 +20,16 @@
 #ifndef __GUARD_COMPILER_DOCGEN_H
 #define __GUARD_COMPILER_DOCGEN_H 1
 
-/* Function prototypes from system headers prefix argument names with `__'.
+/* Function prototypes from system headers prefix argument names with `__`.
  * While this is necessary for c-compliant behavior, it admittedly does not
  * look too good when appearing in documentation.
  * That is where this header comes in, which is designed to automatically
  * define macros  for renaming  _all_ function  argument names  to  their
  * underscore-less counterparts.
- * HINT: This header is should automatically be included by `__stdinc.h'
+ * HINT: This header is should automatically be included by `__stdinc.h`
  *       when system headers are processed by a documentation generator.
  * NOTE: Argument names are automatically collected using the deemon
- *       script below.  Run `$ deemon -F docgen.h'  to update  them.
+ *       script below.  Run `$ deemon -F docgen.h`  to update  them.
  */
 
 /*[[[deemon
@@ -580,7 +580,7 @@ for (local name: argnames) {
 #define __z z
 /*[[[end]]]*/
 
-/* XXX: Keywords starting with `__' that  should
+/* XXX: Keywords starting with `__` that  should
  *      appear in docs should be #undef'ed here. */
 
 
