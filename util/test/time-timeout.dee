@@ -1,0 +1,46 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from time;
+
+/* Make sure that `Time` can be used in APIs that use `__timeout_nanoseconds__`,
+ * and that it returns the correct values when queried in this manner. */
+
+function verifyTimeout(gen: Callable with int, multiplier: int) {
+	assert gen(0).__timeout_nanoseconds__ == 0 * multiplier;
+	assert gen(1).__timeout_nanoseconds__ == 1 * multiplier;
+	assert gen(999).__timeout_nanoseconds__ == 999 * multiplier;
+}
+
+verifyTimeout(nanoseconds,  multiplier: 1);
+verifyTimeout(microseconds, multiplier: 1_000);
+verifyTimeout(milliseconds, multiplier: 1_000_000);
+verifyTimeout(seconds,      multiplier: 1_000_000_000);
+verifyTimeout(minutes,      multiplier: 60_000_000_000);
+verifyTimeout(hours,        multiplier: 3_600_000_000_000);
+verifyTimeout(days,         multiplier: 86_400_000_000_000);
+verifyTimeout(weeks,        multiplier: 604_800_000_000_000);
+verifyTimeout(months,       multiplier: 2_629_746_000_000_000);
+verifyTimeout(years,        multiplier: 31_556_952_000_000_000);
+verifyTimeout(decades,      multiplier: 315_569_520_000_000_000);
+verifyTimeout(centuries,    multiplier: 3_155_695_200_000_000_000);
+verifyTimeout(millennia,    multiplier: 31_556_952_000_000_000_000);

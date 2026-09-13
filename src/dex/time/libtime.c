@@ -2192,7 +2192,7 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	                 /**/ "algorithms that may be used around the world to determine isdst "
 	                 /**/ "being enabled, or certain countries/timezones that may not even "
 	                 /**/ "have daylight savings time."),
-	TYPE_GETTER_AB_F("__timeout_nanoseconds__ ", &time_as_timeout_nanoseconds_obj, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_AB_F("__timeout_nanoseconds__", &time_as_timeout_nanoseconds_obj, METHOD_FNOREFESCAPE,
 	                 "->?Dint\n"
 	                 "Integration in order to allow ?.-objects to be used as #Ctimeout arguments with "
 	                 /**/ "various APIs. When @this ?#istimestamp, return the number of nanoseconds "
