@@ -1717,27 +1717,31 @@ ItemNotFound_print(ItemNotFound *__restrict self,
                    Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
 	struct Dee_variant active_end;
+	DeeObject *item;
 	if (self->inf_base.e_msg)
 		return DeeObject_Print(self->inf_base.e_msg, printer, arg);
 	Dee_variant_init_copy(&active_end, &self->inf_end);
+	item = self->inf_item;
+	if (item == NULL)
+		item = Dee_None;
 	if ((Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) && self->inf_key) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%k(%Vk)` in sequence `%Vk` [%" PRFuSIZ ",%Vk)",
-		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value,
+		                          "Could not locate item `%k` in sequence `%Vk` with key `%k` [%" PRFuSIZ ",%Vk)",
+		                          item, &self->inf_base.ve_value, self->inf_key,
 		                          self->inf_start, &active_end);
 	} else if (Dee_variant_isbound_nonatomic(&active_end) || self->inf_start) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%Vk` in sequence `%Vk` [%" PRFuSIZ ",%Vk)",
-		                          &self->inf_item, &self->inf_base.ve_value,
+		                          "Could not locate item `%k` in sequence `%Vk` [%" PRFuSIZ ",%Vk)",
+		                          item, &self->inf_base.ve_value,
 		                          self->inf_start, &active_end);
 	} else if (self->inf_key) {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%k(%Vk)` in sequence `%Vk`",
-		                          self->inf_key, &self->inf_item, &self->inf_base.ve_value);
+		                          "Could not locate item `%k` in sequence `%Vk` with key `%k`",
+		                          item, &self->inf_base.ve_value, self->inf_key);
 	} else {
 		result = DeeFormat_Printf(printer, arg,
-		                          "Could not locate item `%Vk` in sequence `%Vk`",
-		                          &self->inf_item, &self->inf_base.ve_value);
+		                          "Could not locate item `%k` in sequence `%Vk`",
+		                          item, &self->inf_base.ve_value);
 	}
 	Dee_variant_fini(&active_end);
 	return result;
