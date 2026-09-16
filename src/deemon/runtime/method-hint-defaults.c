@@ -12011,7 +12011,7 @@ err:
 #ifndef DEFINED_default_seq_rfind_with_key_foreach_cb
 #define DEFINED_default_seq_rfind_with_key_foreach_cb
 struct default_seq_rfind_with_key_foreach_data {
-	DeeObject *dsrfwk_kelem;   /* [1..1] The element to search for */
+	DeeObject *dsrfwk_item;   /* [1..1] The element to search for */
 	size_t     dsrfwk_result; /* The last-matched index. */
 	DeeObject *dsrfwk_key;    /* [1..1] Search key. */
 };
@@ -12023,7 +12023,7 @@ default_seq_rfind_with_key_foreach_cb(void *arg, size_t index, /*nullable*/ DeeO
 	data = (struct default_seq_rfind_with_key_foreach_data *)arg;
 	if (!value)
 		return 0;
-	cmp = DeeObject_TryCompareEq(data->dsrfwk_kelem, value);
+	cmp = DeeObject_TryCompareKeyEq(data->dsrfwk_item, value, data->dsrfwk_key);
 	if (Dee_COMPARE_ISEQ_NO_ERR(cmp)) {
 		data->dsrfwk_result = index;
 	} else if (Dee_COMPARE_ISERR(cmp)) {
@@ -12038,8 +12038,8 @@ INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct default_seq_rfind_with_key_foreach_data data;
-	data.dsrfwk_kelem = item;
-	data.dsrfwk_key   = key;
+	data.dsrfwk_item = item;
+	data.dsrfwk_key  = key;
 	data.dsrfwk_result = (size_t)-1;
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_rfind_with_key_foreach_cb, &data, start, end);
 	ASSERT(status == 0 || status == -1);

@@ -1,0 +1,190 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+local DATA = """
+#define GUARD_DEEMON_API_H 1 /*!export-*/
+#define __NO_KOS_SYSTEM_HEADERS__ 1
+#define _ATFILE_SOURCE 1
+#define _KOS_SOURCE 1
+#define _GNU_SOURCE 1
+#define _XOPEN_SOURCE 700
+#define _POSIX_C_SOURCE 200809L
+#define _LARGEFILE_SOURCE 1
+#define _LARGEFILE64_SOURCE 1
+#define _CTYPE_MACRO_SOURCE 1
+#define _TIME64_SOURCE 1
+#define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE_EXTENDED 1
+#define _DOS_SOURCE 1
+#define __EXTENSIONS__ 1
+#define DEE_SOURCE
+#define _CRT_SECURE_NO_DEPRECATE   1
+#define _CRT_SECURE_NO_WARNINGS    1
+#define _CRT_NONSTDC_NO_WARNINGS   1
+#define _CRT_DECLARE_NONSTDC_NAMES 1
+#define __NO_has_include 1
+#define __has_include(x) 0
+#define DEE_VERSION_API      200
+#define DEE_VERSION_COMPILER 200
+#define DEE_VERSION_REVISION 0
+#define Dee_ASSUMED_VALUE(expr, value) ((expr) == (value) ? (value) : (__builtin_unreachable(), value))
+#define Dee_ASSUMED_VALUE_IS_NOOP 1
+#define Dee_ASSUMED_VALUE(expr, value) (expr)
+#define CONFIG_NO_THREADS
+#define CONFIG_NO_DEC
+#define CONFIG_NO_DEX
+#define CONFIG_TRACE_REFCHANGES
+#define CONFIG_NO_TRACE_REFCHANGES
+#define CONFIG_TINY_DEEMON
+#define CONFIG_NO_TINY_DEEMON
+#define CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#define CONFIG_HOST_WINDOWS
+#define CONFIG_HOST_UNIX
+#define CONFIG_HOST_WINDOWS
+#define CONFIG_HOST_UNIX
+#define CONFIG_EXPERIMENTAL_MY_FEATURE
+#define CONFIG_NO_EXPERIMENTAL_MY_FEATURE
+#define CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#define CONFIG_NO_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#define CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#define CONFIG_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#define CONFIG_NO_EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR
+#define CONFIG_EXPERIMENTAL_USE_TPP3
+#define CONFIG_NO_EXPERIMENTAL_USE_TPP3
+#define _WIN32_WINNT _WIN32_WINNT_WINXP
+#define NULL __NULLPTR /*!export-*/
+#define Dee_BREAKPOINT() __debugbreak()
+#define Dee_BREAKPOINT() XBLOCK({ __asm__ __volatile__(\"int {$}3\" : ); (void)0; })
+#define Dee_BREAKPOINT_IS_NOOP
+#define Dee_BREAKPOINT() (void)0
+#define DFUNDEF __EXPDEF
+#define DDATDEF __EXPDEF
+#define DFUNDEF __IMPDEF
+#define DDATDEF __IMPDEF
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#define Dee_tpconst /* nothing */
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#define Dee_tpconst_IS_const
+#define Dee_tpconst const
+#define tpconst Dee_tpconst
+#define INTERN_TPCONST INTERN_CONST
+#define PUBLIC_TPCONST PUBLIC_CONST
+#define INTERN_TPCONST INTERN
+#define PUBLIC_TPCONST PUBLIC
+#define Dee_HIDDEN_IMPL(...) /* nothing */
+#define DCALL __ATTR_STDCALL
+#define DCALL_RETURN_COMMON
+#define DCALL /* nothing (use default calling convention) */
+#define DCALL_CALLER_CLEANUP /* Known to be the case on these architectures */
+#define DCALL_RETURN_COMMON
+#define DCALL /* nothing (use default calling convention) */
+#define DFCALL __ATTR_FASTCALL /* arg0: %ecx, arg1: %edx, argN: 4+N*4(%esp) (callee-cleanup) */
+#define DFCALL /* nothing (use default calling convention) */
+#define DPRINTER_CC_IS___FORMATPRINTER_CC
+#define DPRINTER_CC __FORMATPRINTER_CC
+#define DPRINTER_CC_IS_FORMATPRINTER_CC
+#define DPRINTER_CC FORMATPRINTER_CC
+#define DPRINTER_CC DCALL
+#define DWEAK /* Annotation for data that is thread-volatile. */
+#define Dee_CHECKMEMORY() DeeHeap_CheckMemory()
+#define Dee_REQUIRES_TYPE(T, x) ____INTELLISENSE_req_type<T>(x)
+#define Dee_REQUIRES_TYPE(T, x) (x)
+#define Dee_DPRINT_SET_ENABLED(is) (void)(_Dee_dprint_enabled = (is) ? 1 : 0)
+#define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
+#define Dee_DPRINTER               _Dee_dprinter
+#define Dee_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
+#define Dee_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format` may mandate a decref() operation! */
+#define _Dee_XFatal(expr)       _DeeAssert_XFail(expr, __FILE__, __LINE__)
+#define _Dee_XFatalf(expr, ...) _DeeAssert_XFailf(expr, __FILE__, __LINE__, __VA_ARGS__)
+#define _Dee_Fatal(expr)       _DeeAssert_XFail(expr, __FILE__, __LINE__)
+#define _Dee_Fatalf(expr, ...) _DeeAssert_XFailf(expr, __FILE__, __LINE__, __VA_ARGS__)
+#define _Dee_Fatal(expr)       (_DeeAssert_Fail(expr, __FILE__, __LINE__), Dee_BREAKPOINT())
+#define _Dee_Fatalf(expr, ...) (_DeeAssert_Failf(expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT())
+#define Dee_Fatal()      _Dee_Fatal(NULL)
+#define Dee_Fatalf(...)  _Dee_Fatalf(NULL, __VA_ARGS__)
+#define Dee_XFatal()     _Dee_XFatal(NULL)
+#define Dee_XFatalf(...) _Dee_XFatalf(NULL, __VA_ARGS__)
+#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_XFail(#expr, __FILE__, __LINE__), 0))
+#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_XFailf(#expr, __FILE__, __LINE__, __VA_ARGS__), 0))
+#define Dee_ASSERT(expr)       (void)((expr) || (_DeeAssert_Fail(#expr, __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERTF(expr, ...) (void)((expr) || (_DeeAssert_Failf(#expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT(expr)       __builtin_assume(expr)
+#define Dee_ASSERTF(expr, ...) __builtin_assume(expr)
+#define Dee_ASSERT(expr)       (void)0
+#define Dee_ASSERTF(expr, ...) (void)0
+#define Dee_ASSERTF(expr, ...) Dee_ASSERT(expr)
+#define ASSERT  Dee_ASSERT
+#define ASSERTF Dee_ASSERTF
+#define __GUARD_HYBRID___ASSERT_H /*!export-*/
+#define __hybrid_assertion_failed  _Dee_Fatal
+#define __hybrid_assertion_failedf _Dee_Fatalf
+#define __hybrid_assert            Dee_ASSERT
+#define __hybrid_assertf           Dee_ASSERTF
+#define Dee_DPRINT_IS_NOOP
+#define Dee_DPRINT_SET_ENABLED(is) (void)0
+#define Dee_DPRINT(message)        (void)0
+#define Dee_DPRINTF(...)           (void)0
+#define Dee_VDPRINTF(format, args) (void)0
+#define Dee_CHECKMEMORY_IS_NOOP
+#define Dee_CHECKMEMORY() (void)0
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
+#define Dee_DOC(x)           x
+#define Dee_DOC_DEF(name, x) INTERN_CONST char const name[] = x
+#define Dee_DOC_REF(name)    INTDEF char const name[]
+#define Dee_DOC_GET(name)    name
+#define Dee_DOC(x)           ((char const *)NULL)
+#define Dee_DOC_DEF(name, x) /* nothing */
+#define Dee_DOC_REF(name)    /* nothing */
+#define Dee_DOC_GET(name)    ((char const *)NULL)
+#define DOC     Dee_DOC
+#define DOC_DEF Dee_DOC_DEF
+#define DOC_REF Dee_DOC_REF
+#define DOC_GET Dee_DOC_GET
+""".bytes();
+
+local MACROS = DATA
+	.reglocateall(r"#\s*define\s+(\w+)[ \t]*([^\n]*)")
+	.map(e -> { e[1].decode("utf-8"), e[2].lstrip().decode("utf-8") })
+	.filter(e -> e.first.startswith("Dee"))
+	.distinct(key: e -> e.first)
+	.cached
+	.map(e -> e);
+
+for (local i, x: MACROS.enumerate()) {
+	assert i == MACROS.index(x.first, key: Sequence.first);
+	assert i == MACROS.rindex(x.first, key: Sequence.first);
+}
