@@ -26,10 +26,10 @@
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>                 /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/object.h>                 /* DREF, Dee_Decref, ITER_ISOK */
-#include <deemon/string.h>                 /* DeeStringObject, DeeString_STR */
-#include <deemon/type.h>                   /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo */
+#include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/object.h>             /* DREF, Dee_Decref, ITER_ISOK */
+#include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
+#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo */
 
 #include "../../runtime/builtin.h"
 #include "../../runtime/strings.h"

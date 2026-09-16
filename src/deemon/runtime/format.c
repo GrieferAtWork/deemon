@@ -26,7 +26,7 @@
 #include <deemon/float.h>           /* DeeFloat_LPrint, DeeFloat_Print, Dee_FLOAT_PRINT_F* */
 #include <deemon/format.h>          /* DeeFormat_* */
 #include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_entry */
-#include <deemon/object.h>          /* DeeObject, DeeObject_*, Dee_Decref, Dee_TYPE, Dee_XDecref, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT, DeeObject, DeeObject_*, Dee_Decref, Dee_TYPE, Dee_XDecref, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include <deemon/string.h>          /* DeeAscii_ItoaDigits, DeeAscii_ItoaUpperDigit, DeeString_PrintUtf8, DeeUni_AsDigitVal, DeeUni_IsPrint, Dee_ascii_printer*, Dee_unicode_printer* */
 #include <deemon/stringutils.h>     /* Dee_unicode_* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strnlen, memcpyc, mempcpyc, memset, strchr */

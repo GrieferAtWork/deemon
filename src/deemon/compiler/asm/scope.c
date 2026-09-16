@@ -26,9 +26,9 @@
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/symbol.h>    /* DeeScopeObject, SYMBOL_*, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/format.h>                 /* PRFu16 */
-#include <deemon/module.h>                 /* DeeModuleObject */
-#include <deemon/object.h>                 /* Dee_Decref */
+#include <deemon/format.h>             /* PRFu16 */
+#include <deemon/module.h>             /* DeeModuleObject */
+#include <deemon/object.h>             /* Dee_Decref */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int16_t, int32_t, uint16_t */

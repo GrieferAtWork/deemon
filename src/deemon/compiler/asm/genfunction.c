@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>                  /* Dee_Free */
-#include <deemon/code.h>                   /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs */
+#include <deemon/alloc.h>              /* Dee_Free */
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs */
 #include <deemon/compiler/assembler.h> /* ASM_FBIGCODE, asm_*, code_compile, current_assembler */
 #include <deemon/compiler/ast.h>       /* AST_FUNCTION, ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeScopeObject, DeeScope_Type, SYMBOL_FALLOC, SYMBOL_FALLOCREF, current_basescope, current_rootscope, current_scope, symbol */
-#include <deemon/module.h>                 /* Dee_compiler_options */
-#include <deemon/object.h>                 /* ASSERT_OBJECT_TYPE, DREF, Dee_Decref */
+#include <deemon/module.h>             /* Dee_compiler_options */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, DREF, Dee_Decref */
 
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL */
