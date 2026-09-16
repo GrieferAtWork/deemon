@@ -449,9 +449,9 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 
 /* Experimental feature switch: Use TPP3 as the compiler backend. */
-/* TODO: Undo the "compiler" refactoring (rename back to "compiler") */
 /* TODO: This feature switch should primarily make it so:
- * - The compiler no longer uses globals
+ * - The lexer no longer uses globals (optimizer / assembler /
+ *   linker will be made non-global in a later step)
  * - The compiler isn't a deemon object (`DeeCompiler_Type` should wrap
  *   "DeeCompiler", which in turn is allocated inline without the need
  *   to be an object)
