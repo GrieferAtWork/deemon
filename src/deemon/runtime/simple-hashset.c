@@ -39,7 +39,7 @@ PRIVATE NONNULL((1)) bool DCALL
 Dee_simple_hashset_tryrehash(struct Dee_simple_hashset *__restrict self) {
 	Dee_hash_t i, j, perturb;
 	struct Dee_simple_hashset_item *new_elem;
-	size_t new_mask = self->shs_mask << 1;
+	size_t new_mask = (self->shs_mask << 1) | 1;
 	new_elem = (struct Dee_simple_hashset_item *)Dee_TryCallocc(new_mask + 1,
 	                                                            sizeof(struct Dee_simple_hashset_item));
 	if unlikely(!new_elem)
