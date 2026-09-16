@@ -626,7 +626,7 @@ LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_compose(SeqMapped *self, DeeObject *key) {
 	DeeObject *mappers[2];
 	mappers[0] = key;
-	mappers[1] = self->sm_seq;
+	mappers[1] = self->sm_mapper;
 	return DeeFunctionComposition_Of(2, mappers);
 }
 
