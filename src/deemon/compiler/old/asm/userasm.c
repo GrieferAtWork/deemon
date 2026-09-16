@@ -865,10 +865,16 @@ next_overload:
 			}
 		}
 	}
+	{
+		DREF DeeObject *invoc_str;
 err_no_overload:
-	DeeError_Throwf(&DeeError_CompilerError,
-	                "No overload of `%s` matches the operands and prefix in `%K`",
-	                instr->am_name, asm_invocation_tostring(invoc, instr));
+		invoc_str = asm_invocation_tostring(invoc, instr);
+		if unlikely(!invoc_str)
+			goto err;
+		DeeError_Throwf(&DeeError_CompilerError,
+		                "No overload of `%s` matches the operands and prefix in `%K`",
+		                instr->am_name, invoc_str);
+	}
 err:
 	return -1;
 	{

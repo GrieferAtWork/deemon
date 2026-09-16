@@ -2399,10 +2399,7 @@ code_printrepr(DeeCodeObject *__restrict self,
 	}
 	if (self->co_codebytes != 0)
 		DO(DeeFormat_PRINT(printer, arg, " "));
-	DO(DeeFormat_Printf(printer, arg,
-	                    "}, module: %r",
-	                    self->co_module));
-
+	DO(DeeFormat_Printf(printer, arg, "}, module: %r", self->co_module));
 	if (self->co_constc > 0) {
 		uint16_t i;
 		DO(DeeFormat_PRINT(printer, arg, ", constants: { "));
@@ -2522,11 +2519,8 @@ code_printrepr(DeeCodeObject *__restrict self,
 			DO(DeeFormat_PRINT(printer, arg, "\""));
 		}
 	}
-	if (self->co_ddi != &DeeDDI_Empty) {
-		DO(DeeFormat_Printf(printer, arg,
-		                    ", ddi: %r",
-		                    self->co_ddi));
-	}
+	if (self->co_ddi != &DeeDDI_Empty)
+		DO(DeeFormat_Printf(printer, arg, ", ddi: %r", self->co_ddi));
 	DO(DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;

@@ -1148,6 +1148,7 @@ IndexError_print(IndexError *__restrict self,
 	result = DeeFormat_Printf(printer, arg,
 	                          "Index %Vr lies outside the valid bounds [0,%Vr) of %K",
 	                          &self->ie_base.ke_key, &length,
+	                          /* `SequenceError_GetSeqType()` never returns "NULL"! */
 	                          SequenceError_GetSeqType(&self->ie_base.ke_base));
 	Dee_variant_fini(&length);
 	return result;
@@ -1234,6 +1235,7 @@ EmptySequence_print(IndexError *__restrict self,
 		return DeeObject_Print(self->ie_base.ke_base.e_msg, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Empty sequence of type `%K` encountered",
+	                        /* `SequenceError_GetSeqType()` never returns "NULL"! */
 	                        SequenceError_GetSeqType(&self->ie_base.ke_base));
 }
 
@@ -1273,6 +1275,7 @@ UnknownKey_print(UnknownKey *__restrict self,
 		return DeeObject_Print(self->ke_base.e_msg, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Could not find key %Vr in %K: %Vk",
+	                        /* `SequenceError_GetSeqType()` never returns "NULL"! */
 	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
 	                        &self->ke_base.ve_value);
 }
@@ -1419,6 +1422,7 @@ ReadOnlyKey_print(ReadOnlyKey *__restrict self,
 		return DeeObject_Print(self->ke_base.e_msg, printer, arg);
 	return DeeFormat_Printf(printer, arg,
 	                        "Key %Vr of instance of %K: %Vk is read-only and cannot be modified",
+	                        /* `SequenceError_GetSeqType()` never returns "NULL"! */
 	                        &self->ke_key, SequenceError_GetSeqType(&self->ke_base),
 	                        &self->ke_base.ve_value);
 }
@@ -1514,6 +1518,7 @@ UnboundItem_print(UnboundItem *__restrict self,
 	return DeeFormat_Printf(printer, arg,
 	                        "%s `%Vr` of instance of `%K`: %Vk has not been bound",
 	                        self->ui_iskey ? "Key" : "Index",
+	                        /* `SequenceError_GetSeqType()` never returns "NULL"! */
 	                        &self->ui_base.ke_key, SequenceError_GetSeqType(&self->ui_base.ke_base),
 	                        &self->ui_base.ke_base.ve_value);
 }

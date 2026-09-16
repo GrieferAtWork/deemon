@@ -242,14 +242,18 @@ ast_getkind(Ast *__restrict self) {
 	return_reference(ast_names[result]);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_ast_type(Ast *__restrict self,
                      uint16_t expected_type) {
+	DREF DeeObject *kind = ast_getkind(self);
 	ASSERT(expected_type < COMPILER_LENOF(ast_names));
+	if unlikely(!kind)
+		goto err;
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Expected a %s ast, but got %K instead",
-	                       ast_names[expected_type],
-	                       ast_getkind(self));
+	                       ast_names[expected_type], kind);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

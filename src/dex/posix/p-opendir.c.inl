@@ -1402,11 +1402,16 @@ again:
 		Dee_Decref(fullname);
 #endif /* !DIR_lstatat || !CONFIG_HAVE_dirfd */
 		DeeUnixSystem_HandleGenericError(error, err, again);
-		DeeUnixSystem_ThrowErrorf(NULL, error,
-		                          "Failed to stat %R in %k",
-		                          diriter_get_d_fullname(self),
-		                          self);
-		goto err;
+		{
+			DREF DeeObject *fullname;
+			fullname = diriter_get_d_fullname(self);
+			if unlikely(!fullname)
+				goto err;
+			DeeUnixSystem_ThrowErrorf(NULL, error,
+			                          "Failed to stat %R in %k",
+			                          fullname, self);
+		}
+		/*goto err;*/
 err:
 		return -1;
 #endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */

@@ -707,16 +707,21 @@ err_no_host(char const *__restrict host,
 PRIVATE ATTR_COLD int DCALL
 err_no_host_data(char const *__restrict host,
                  char const *port, int family, int error) {
+	DREF DeeObject *afname = sock_getafnameorid(family);
+	if unlikely(!afname)
+		goto err;
 	(void)error; /* XXX: New error code class? */
 	if (port) {
-		return DeeError_Throwf(&DeeError_NoHostAddress,
-		                       "Host %q with port %q is valid but has no addresses for family %K associated with it",
-		                       host, port, sock_getafnameorid(family));
+		DeeError_Throwf(&DeeError_NoHostAddress,
+		                "Host %q with port %q is valid but has no addresses for family %K associated with it",
+		                host, port, afname);
 	} else {
-		return DeeError_Throwf(&DeeError_NoHostAddress,
-		                       "Host %q is valid but has no addresses for family %K associated with it",
-		                       host, sock_getafnameorid(family));
+		DeeError_Throwf(&DeeError_NoHostAddress,
+		                "Host %q is valid but has no addresses for family %K associated with it",
+		                host, afname);
 	}
+err:
+	return -1;
 }
 
 
@@ -745,25 +750,43 @@ restart:
 		if (flags & SOCKADDR_STR_FNOFAIL)
 			goto nodns;
 		if (error == HOST_NOT_FOUND) {
+			DREF DeeObject *hostname;
+			DREF DeeObject *afname;
 			(void)error; /* XXX: New error code class? */
+			hostname = sock_gethostbyaddr(data, datalen, family,
+			                              SOCKADDR_STR_FNODNS |
+			                              SOCKADDR_STR_FNOFAIL);
+			if unlikely(!hostname)
+				goto err;
+			afname = sock_getafnameorid(family);
+			if unlikely(!afname) {
+				Dee_Decref(hostname);
+				goto err;
+			}
 			DeeError_Throwf(&DeeError_HostNotFound,
 			                "Host %K with family %K could not be found",
-			                sock_gethostbyaddr(data, datalen, family,
-			                                   SOCKADDR_STR_FNODNS |
-			                                   SOCKADDR_STR_FNOFAIL),
-			                sock_getafnameorid(family));
+			                hostname, afname);
 		} else if (error == NO_ADDRESS
 #if defined(NO_DATA) && NO_DATA != NO_ADDRESS
 		           || error == NO_DATA
 #endif /* NO_DATA && NO_DATA != NO_ADDRESS */
 		           ) {
+			DREF DeeObject *hostname;
+			DREF DeeObject *afname;
 			(void)error; /* XXX: New error code class? */
+			hostname = sock_gethostbyaddr(data, datalen, family,
+			                              SOCKADDR_STR_FNODNS |
+			                              SOCKADDR_STR_FNOFAIL);
+			if unlikely(!hostname)
+				goto err;
+			afname = sock_getafnameorid(family);
+			if unlikely(!afname) {
+				Dee_Decref(hostname);
+				goto err;
+			}
 			DeeError_Throwf(&DeeError_NoHostAddress,
 			                "Host %K with family %K has no addresses associated",
-			                sock_gethostbyaddr(data, datalen, family,
-			                                   SOCKADDR_STR_FNODNS |
-			                                   SOCKADDR_STR_FNOFAIL),
-			                sock_getafnameorid(family));
+			                hostname, afname);
 #ifdef TRY_AGAIN
 		} else if (error == TRY_AGAIN && attempt_counter < 3) {
 			if (DeeThread_Sleep(10000000))
@@ -772,12 +795,16 @@ restart:
 			goto restart;
 #endif /* TRY_AGAIN */
 		} else {
+			DREF DeeObject *hostname;
 			(void)error; /* XXX: New error code class? */
+			hostname = sock_gethostbyaddr(data, datalen, family,
+			                              SOCKADDR_STR_FNODNS |
+			                              SOCKADDR_STR_FNOFAIL);
+			if unlikely(!hostname)
+				goto err;
 			DeeError_Throwf(&DeeError_NetError,
 			                "Failed to get host address for %K",
-			                sock_gethostbyaddr(data, datalen, family,
-			                                   SOCKADDR_STR_FNODNS |
-			                                   SOCKADDR_STR_FNOFAIL));
+			                hostname);
 		}
 		goto err;
 	}
@@ -826,7 +853,12 @@ nodns:
 		                      NTOH16(words[6]), NTOH16(words[7]));
 	}
 #endif /* AF_INET6 */
-	return DeeString_Newf("[%K-sockaddr]", sock_getafnameorid(family));
+	{
+		DREF DeeObject *afname = sock_getafnameorid(family);
+		if unlikely(!afname)
+			goto err;
+		return DeeString_Newf("[%K-sockaddr]", afname);
+	}
 }
 
 
@@ -843,16 +875,22 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 #endif /* AF_RDS */
 	case AF_INET:
 		result = sock_gethostbyaddr(&self->sa_inet.sin_addr, 4, family, flags);
-		if (!(flags & SOCKADDR_STR_FNOPORT))
+		if (!(flags & SOCKADDR_STR_FNOPORT)) {
+			if unlikely(!result)
+				goto err;
 			return DeeString_Newf("%K:%" PRFu16, result, NTOH16(self->sa_inet.sin_port));
+		}
 		break;
 #endif /* AF_INET */
 
 #ifdef AF_INET6
 	case AF_INET6:
 		result = sock_gethostbyaddr(&self->sa_inet6.sin6_addr, 16, family, flags);
-		if (!(flags & SOCKADDR_STR_FNOPORT))
+		if (!(flags & SOCKADDR_STR_FNOPORT)) {
+			if unlikely(!result)
+				goto err;
 			return DeeString_Newf("[%K]:%" PRFu16, result, NTOH16(self->sa_inet6.sin6_port));
+		}
 		break;
 #endif /* AF_INET6 */
 
@@ -868,8 +906,8 @@ SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 		                            SockAddr_Sizeof(family, protocol) -
 		                            offsetof(SockAddr, sa_inet.sin_addr),
 		                            family, flags);
-		if unlikely(!result)
-			goto err;
+		/*if unlikely(!result)
+			goto err;*/
 		break;
 	}
 	return result;
@@ -1106,24 +1144,32 @@ retry_addrinfo:
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
 			sysdb_lock_endread();
-			DeeError_Throwf(&DeeError_NetError,
-			                "Count not find any address for %q using port %q",
-			                host, port);
-			error = -1;
+			error = DeeError_Throwf(&DeeError_NetError,
+			                        "Count not find any address for %q using port %q",
+			                        host, port);
 		} else if (protocol != 0 &&
 		           protocol != info->ai_protocol) {
 			/* If an explicit protocol was specified, ensure that it is being used. */
 			int real_proto = info->ai_protocol;
+			DREF DeeObject *real_proto_name;
+			DREF DeeObject *proto_name;
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
 			sysdb_lock_endread();
-			DeeError_Throwf(&DeeError_NotImplemented,
-			                "Host %q on port %q uses a different protocol %K than %K",
-			                host, port,
-			                sock_getprotonameorid(real_proto),
-			                sock_getprotonameorid(protocol));
+			real_proto_name = sock_getprotonameorid(real_proto);
+			if unlikely(!real_proto_name)
+				goto err;
+			proto_name = sock_getprotonameorid(protocol);
+			if unlikely(!proto_name) {
+				Dee_Decref(real_proto_name);
+				goto err;
+			}
+			error = DeeError_Throwf(&DeeError_NotImplemented,
+			                        "Host %q on port %q uses a different protocol %K than %K",
+			                        host, port, real_proto_name, proto_name);
 		} else if unlikely((size_t)info->ai_addrlen > sizeof(SockAddr)) {
+			DREF DeeObject *afname;
 			sa_family_t info_family = info->ai_addr->sa_family;
 			socklen_t info_len      = (socklen_t)info->ai_addrlen;
 			COMPILER_READ_BARRIER();
@@ -1131,12 +1177,13 @@ retry_addrinfo:
 			freeaddrinfo(info);
 			DBG_ALIGNMENT_ENABLE();
 			sysdb_lock_endread();
-			DeeError_Throwf(&DeeError_NotImplemented,
-			                "Address family %K for %q on port %q is too "
-			                "big (its size %" PRFuSIZ " exceeds the limit of %" PRFuSIZ ")",
-			                sock_getafnameorid(info_family),
-			                host, port, info_len, sizeof(SockAddr));
-			error = -1;
+			afname = sock_getafnameorid(info_family);
+			if unlikely(!afname)
+				goto err;
+			error = DeeError_Throwf(&DeeError_NotImplemented,
+			                        "Address family %K for %q on port %q is too "
+			                        "big (its size %" PRFuSIZ " exceeds the limit of %" PRFuSIZ ")",
+			                        afname, host, port, info_len, sizeof(SockAddr));
 		} else {
 			bzero(self, sizeof(SockAddr));
 			memcpy(self, info->ai_addr, (size_t)info->ai_addrlen);
@@ -1293,12 +1340,16 @@ do_port_inet6:
 		} else
 #endif /* AF_INET6 */
 		{
+			DREF DeeObject *famname;
 			sa_family_t fam = (sa_family_t)hp->h_addrtype;
 			sysdb_lock_endread();
 			(void)error; /* XXX: New error code class? */
+			famname = sock_getafnameorid(fam);
+			if unlikely(!famname)
+				goto err;
 			DeeError_Throwf(&DeeError_NetError,
 			                "Unsupported address family %K for host name %q",
-			                sock_getafnameorid(fam), host);
+			                famname, host);
 			goto err;
 		}
 		goto done;
@@ -1372,10 +1423,18 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 		arg0 = argv[0];
 		if unlikely(family != AF_AUTO &&
 		            family != ((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family) {
+			DREF DeeObject *sa_famname, *famname;
+			sa_famname = sock_getafnameorid(((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family);
+			if unlikely(!sa_famname)
+				goto err;
+			famname = sock_getafnameorid(family);
+			if unlikely(!famname) {
+				Dee_Decref(sa_famname);
+				goto err;
+			}
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unexpected Address Family %K (wanted %K, but got %k)",
-			                sock_getafnameorid(((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family),
-			                sock_getafnameorid(family), arg0);
+			                sa_famname, famname, arg0);
 			goto err;
 		}
 		memcpy(self, &((DeeSockAddrObject *)arg0)->sa_addr, sizeof(SockAddr));
@@ -1495,7 +1554,7 @@ do_generic_string_2:
 			ATTR_FALLTHROUGH
 #endif /* AF_INET */
 
-		default:
+		default: {
 #ifdef AF_INET
 #define SOCKADDR_CTOR_ARGC_LIST "1, 2 or 5"
 #elif defined(AF_INET6)
@@ -1503,13 +1562,16 @@ do_generic_string_2:
 #else /* ... */
 #define SOCKADDR_CTOR_ARGC_LIST "1 or 2"
 #endif /* !... */
+			DREF DeeObject *famname = sock_getafnameorid(family);
+			if unlikely(!famname)
+				goto err;
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family %K requires "
 			                SOCKADDR_CTOR_ARGC_LIST
 			                " arguments, but %" PRFuSIZ " were given",
-			                sock_getafnameorid(family), argc);
+			                famname, argc);
 #undef SOCKADDR_CTOR_ARGC_LIST
-			break;
+		}	break;
 		}
 	}	break;
 
@@ -1648,28 +1710,40 @@ do_generic_string_2:
 		}	break;
 #endif /* !__FreeBSD__ */
 
-		default:
+		default: {
+			DREF DeeObject *protoname;
 			if (argc == 1)
 				goto do_generic_string;
 			if (argc == 2)
 				goto do_generic_string_2;
+			protoname = sock_getprotonameorid(protocol);
+			if unlikely(!protoname)
+				goto err;
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Invalid protocol %K for address family AF_BLUETOOTH",
-			                sock_getprotonameorid(protocol));
+			                protoname);
 			goto err;
+		}	break;
+
 		}
 	}	break;
 #endif /* AF_BLUETOOTH */
 
-	default:
+	default: {
+		DREF DeeObject *famname;
 		if (argc == 1)
 			goto do_generic_string;
 		if (argc == 2)
 			goto do_generic_string_2;
+		famname = sock_getafnameorid(family);
+		if unlikely(!famname)
+			goto err;
 		DeeError_Throwf(&DeeError_NotImplemented,
 		                "Address family %K is not supported",
-		                sock_getafnameorid(family));
+		                famname);
 		goto err;
+	}	break;
+
 	}
 done:
 	DBG_ALIGNMENT_DISABLE();
@@ -1687,9 +1761,12 @@ sockaddr_str(DeeSockAddrObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_repr(DeeSockAddrObject *__restrict self) {
-	return DeeString_Newf("sockaddr(%R)",
-	                      SockAddr_ToString(&self->sa_addr, 0,
-	                                        SOCKADDR_STR_FNOFAIL));
+	DREF DeeObject *sockstr = SockAddr_ToString(&self->sa_addr, 0, SOCKADDR_STR_FNOFAIL);
+	if unlikely(!sockstr)
+		goto err;
+	return DeeString_Newf("sockaddr(%R)", sockstr);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1722,9 +1799,13 @@ PRIVATE struct type_member tpconst sockaddr_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 err_no_such_attribute(DeeSockAddrObject *__restrict self,
                       char const *__restrict name) {
+	DREF DeeObject *famname = sock_getafnameorid(self->sa_addr.sa.sa_family);
+	if unlikely(!famname)
+		goto err;
 	DeeError_Throwf(&DeeError_AttributeError,
 	                "Socket addresses of family %K have no attribute %s",
-	                sock_getafnameorid(self->sa_addr.sa.sa_family), name);
+	                famname, name);
+err:
 	return NULL;
 }
 

@@ -468,12 +468,18 @@ handle_nomem:
 		error->sqe_ecode      = errcode;
 		/* Throw SQL error */
 		result = DeeError_ThrowInherited(&error->sqe_system);
-	} else if (erroffs >= 0) {
+	} else if (errmsg_ob && erroffs >= 0) {
 		result = DeeError_Throwf(type, "SQL error %d: %K [at offset %d in %r]",
 		                         errcode, errmsg_ob, erroffs, sql);
-	} else {
+	} else if (errmsg_ob) {
 		result = DeeError_Throwf(type, "SQL error %d: %K",
 		                         errcode, errmsg_ob);
+	} else if (erroffs >= 0) {
+		result = DeeError_Throwf(type, "SQL error %d [at offset %d in %r]",
+		                         errcode, erroffs, sql);
+	} else {
+		result = DeeError_Throwf(type, "SQL error %d",
+		                         errcode);
 	}
 	return result;
 err:

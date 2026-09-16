@@ -807,13 +807,18 @@ not_allowed:
 		if (operator_result &&
 		    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
 			struct Dee_opinfo const *info;
+			DREF DeeObject *args_tuple;
 			info = DeeTypeType_GetOperatorById(Dee_TYPE(Dee_TYPE(argv[0])), self->a_flag);
-			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r`\n",
-			                 argv[0], info ? info->oi_uname : "?",
-			                 self->a_flag == OPERATOR_CALL && opcount == 2
-			                 ? DeeObject_NewRef(argv[1])
-			                 : DeeTuple_NewVector(opcount - 1, argv + 1),
-			                 operator_result);
+			args_tuple = self->a_flag == OPERATOR_CALL && opcount == 2
+			             ? DeeObject_NewRef(argv[1])
+			             : DeeTuple_NewVector(opcount - 1, argv + 1);
+			if unlikely(!args_tuple) {
+				DeeError_Handled(ERROR_HANDLED_RESTORE);
+			} else {
+				OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r`\n",
+				                 argv[0], info ? info->oi_uname : "?",
+				                 args_tuple, operator_result);
+			}
 		}
 #endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */
 		Dee_Decrefv(argv, opcount);
@@ -905,7 +910,7 @@ generic_operator_optimizations:
 				}
 			}
 			OPTIMIZE_VERBOSE("Propagate cast-style function call to %k "
-			                 "onto expression getting casted\n",
+			                 /**/ "onto expression getting casted\n",
 			                 function);
 			cast_expr->a_flag = new_kind;
 			if (ast_assign(self, cast_expr))

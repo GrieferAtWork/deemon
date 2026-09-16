@@ -937,11 +937,14 @@ nextfmt:
 		/* Print an object representation. */
 		DeeObject *in_ob;
 		in_ob = va_arg(args, DeeObject *);
-		/* Allow propagation of errors if input operands were NULL. */
-		if unlikely(!in_ob) {
-			temp = -1;
-			goto err;
-		}
+
+		/* NULL chaining is no longer allowed:
+		 *    If the object's creation caused an error, and the caller didn't immediately
+		 *    propagate that error, we might have invoked `printer` a couple of times already.
+		 *    When this is done, and `printer` can also throw an error, then we might end up
+		 *    with multiple errors (which isn't supposed to happen normally)! */
+		ASSERT_OBJECT(in_ob);
+
 		/* Create the string/repr object from the given input. */
 		if (ch == 'k' || ch == 'K') {
 			temp = DeeObject_Print(in_ob, printer, arg);

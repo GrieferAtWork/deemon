@@ -613,6 +613,7 @@ extern "C++" template<class __ITS_T> __ITS_T ____INTELLISENSE_req_type(__ITS_T x
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 #if !defined(NDEBUG) && !defined(NDEBUG_DPRINT)
+#define Dee_DPRINT_GET_ENABLED()   (_Dee_dprint_enabled != 0)
 #define Dee_DPRINT_SET_ENABLED(is) (void)(_Dee_dprint_enabled = (is) ? 1 : 0)
 #define Dee_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
 #define Dee_DPRINTER               _Dee_dprinter
@@ -695,6 +696,7 @@ DECL_END
 
 #ifndef Dee_DPRINT
 #define Dee_DPRINT_IS_NOOP
+#define Dee_DPRINT_GET_ENABLED()   0
 #define Dee_DPRINT_SET_ENABLED(is) (void)0
 #define Dee_DPRINT(message)        (void)0
 #define Dee_DPRINTF(...)           (void)0

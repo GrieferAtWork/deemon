@@ -483,8 +483,17 @@ PRIVATE LPGETMODULEINFORMATION DCALL get_GetModuleInformation(void) {
 			goto remember_result;
 		(void)FreeLibrary(hMod);
 	}
-	Dee_DPRINTF("[RT][dex] Warning: Unable to locate 'GetModuleInformation' in 'Kernel32.dll' or 'PsApi.dll': %R",
-	            DeeSystem_DlError());
+#ifndef Dee_DPRINT_IS_NOOP
+	if (Dee_DPRINT_GET_ENABLED()) {
+		DREF DeeObject *dle = DeeSystem_DlError();
+		if unlikely(!dle) {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+		} else {
+			Dee_DPRINTF("[RT][dex] Warning: Unable to locate 'GetModuleInformation' "
+			            /**/ "in 'Kernel32.dll' or 'PsApi.dll': %R", dle);
+		}
+	}
+#endif /* !Dee_DPRINT_IS_NOOP */
 	result = (LPGETMODULEINFORMATION)(Dee_funptr_t)(uintptr_t)(void *)ITER_DONE;
 	atomic_write(&pdyn_GetModuleInformation, result);
 	return NULL;
@@ -5578,7 +5587,10 @@ PRIVATE WUNUSED DREF DeeTupleObject *DCALL DeeModule_NewDefaultPath(void) {
 #else /* CONFIG_DEEMON_PATH */
 	{
 		DREF DeeObject *default_path;
-		default_path = DeeString_Newf("%Klib", DeeExec_GetHome());
+		DREF DeeObject *home = DeeExec_GetHome();
+		if unlikely(!home)
+			goto err_builder;
+		default_path = DeeString_Newf("%Klib", home);
 		if unlikely(!default_path)
 			goto err_builder;
 		if unlikely(Dee_tuple_builder_append_inherited(&builder, default_path) < 0)
@@ -5618,7 +5630,10 @@ err:
 #else /* ... */
 	DREF DeeTupleObject *result;
 	DREF DeeObject *default_path;
-	default_path = DeeString_Newf("%Klib", DeeExec_GetHome());
+	DREF DeeObject *home = DeeExec_GetHome();
+	if unlikely(!home)
+		goto err;
+	default_path = DeeString_Newf("%Klib", home);
 	if unlikely(!default_path)
 		goto err;
 	result = DeeTuple_NewUninitialized(1);
