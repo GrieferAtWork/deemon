@@ -69,7 +69,8 @@ PRIVATE DEFINE_STRING_EX(str_DEEMON_MAXBACKLOG, "DEEMON_MAXBACKLOG", 0x6e07a278,
 
 PRIVATE ATTR_COLD int DCALL
 err_no_af_support(neterrno_t error, sa_family_t af) {
-	DREF DeeObject *afname = sock_getafnameorid(af);
+	DREF DeeObject *afname;
+	afname = sock_getafnameorid(af);
 	if unlikely(!afname)
 		goto err;
 	DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
@@ -127,11 +128,13 @@ socket_ctor(Socket *__restrict self, size_t argc,
 		if (err == EAFNOSUPPORT) {
 			err_no_af_support(err, (sa_family_t)af);
 		} else {
-			DREF DeeObject *protoname = sock_getprotonameorid(proto);
+			DREF DeeObject *protoname;
+			protoname = sock_getprotonameorid(proto);
 			if unlikely(!protoname)
 				goto err;
 			if (err == EPROTONOSUPPORT) {
-				DREF DeeObject *afname = sock_getafnameorid((sa_family_t)af);
+				DREF DeeObject *afname;
+				afname = sock_getafnameorid((sa_family_t)af);
 				if unlikely(!afname) {
 err_protoname:
 					Dee_Decref(protoname);
@@ -141,15 +144,16 @@ err_protoname:
 				                   "Protocol %R is not supported or cannot be used with address family %R",
 				                   protoname, afname);
 			} else if (err == EPROTOTYPE) {
-				DREF DeeObject *typname = sock_gettypenameorid(type);
+				DREF DeeObject *typname;
+				typname = sock_gettypenameorid(type);
 				if unlikely(!typname)
 					goto err_protoname;
 				DeeNet_ThrowErrorf(&DeeError_NoSupport, err,
 				                   "Socket type %R cannot be used with protocol %R",
 				                   typname, protoname);
 			} else {
-				DREF DeeObject *afname = sock_getafnameorid((sa_family_t)af);
-				DREF DeeObject *typname;
+				DREF DeeObject *afname, *typname;
+				afname = sock_getafnameorid((sa_family_t)af);
 				if unlikely(!afname)
 					goto err_protoname;
 				typname = sock_gettypenameorid(type);
@@ -606,8 +610,8 @@ again:
 err_closed:
 			err_socket_closed(error_code, self);
 		} else {
-			DREF DeeObject *afname = sock_getafnameorid(self->s_proto);
-			DREF DeeObject *addrstr;
+			DREF DeeObject *afname, *addrstr;
+			afname = sock_getafnameorid(self->s_proto);
 			if unlikely(!afname)
 				goto err;
 			addrstr = SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS);
@@ -620,7 +624,8 @@ err_closed:
 			                   afname, addrstr);
 		}
 	} else if (error_code == EOPNOTSUPP) {
-		DREF DeeObject *afname = sock_getafnameorid(self->s_proto);
+		DREF DeeObject *afname;
+		afname = sock_getafnameorid(self->s_proto);
 		if unlikely(!afname)
 			goto err;
 		DeeNet_ThrowErrorf(&DeeError_NoSupport, error_code,
@@ -1738,7 +1743,8 @@ maybe_restart:
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 		} else if (error == EAFNOSUPPORT) {
-			DREF DeeObject *afname = sock_getafnameorid(target->sa.sa_family);
+			DREF DeeObject *afname;
+			afname = sock_getafnameorid(target->sa.sa_family);
 			if unlikely(!afname)
 				goto err;
 			DeeNet_ThrowErrorf(&DeeError_NoSupport, error,

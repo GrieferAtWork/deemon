@@ -707,7 +707,8 @@ err_no_host(char const *__restrict host,
 PRIVATE ATTR_COLD int DCALL
 err_no_host_data(char const *__restrict host,
                  char const *port, int family, int error) {
-	DREF DeeObject *afname = sock_getafnameorid(family);
+	DREF DeeObject *afname;
+	afname = sock_getafnameorid(family);
 	if unlikely(!afname)
 		goto err;
 	(void)error; /* XXX: New error code class? */
@@ -854,7 +855,8 @@ nodns:
 	}
 #endif /* AF_INET6 */
 	{
-		DREF DeeObject *afname = sock_getafnameorid(family);
+		DREF DeeObject *afname;
+		afname = sock_getafnameorid(family);
 		if unlikely(!afname)
 			goto err;
 		return DeeString_Newf("[%K-sockaddr]", afname);
