@@ -402,6 +402,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-sequence-asset.dee = ..\util\test\deemon-sequence-asset.dee
 		..\util\test\deemon-sequence-bsearch.dee = ..\util\test\deemon-sequence-bsearch.dee
 		..\util\test\deemon-sequence-cached.dee = ..\util\test\deemon-sequence-cached.dee
+		..\util\test\deemon-sequence-chaining.dee = ..\util\test\deemon-sequence-chaining.dee
 		..\util\test\deemon-sequence-combinations.dee = ..\util\test\deemon-sequence-combinations.dee
 		..\util\test\deemon-sequence-compare.dee = ..\util\test\deemon-sequence-compare.dee
 		..\util\test\deemon-sequence-each-contains.dee = ..\util\test\deemon-sequence-each-contains.dee
@@ -487,6 +488,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\time-month.dee = ..\util\test\time-month.dee
 		..\util\test\time-string-format.dee = ..\util\test\time-string-format.dee
 		..\util\test\time-time.dee = ..\util\test\time-time.dee
+		..\util\test\time-timeout.dee = ..\util\test\time-timeout.dee
 		..\util\test\util-clamprange.dee = ..\util\test\util-clamprange.dee
 	EndProjectSection
 EndProject
@@ -523,6 +525,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assorted", "assorted", "{23
 		..\util\tut\assorted\extern_function.dee = ..\util\tut\assorted\extern_function.dee
 		..\util\tut\assorted\fancy_loading.dee = ..\util\tut\assorted\fancy_loading.dee
 		..\util\tut\assorted\generators.dee = ..\util\tut\assorted\generators.dee
+		..\util\tut\assorted\ipc.dee = ..\util\tut\assorted\ipc.dee
 		..\util\tut\assorted\linked_list.dee = ..\util\tut\assorted\linked_list.dee
 		..\util\tut\assorted\list_env.dee = ..\util\tut\assorted\list_env.dee
 		..\util\tut\assorted\more_class_fun.dee = ..\util\tut\assorted\more_class_fun.dee
@@ -536,7 +539,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assorted", "assorted", "{23
 		..\util\tut\assorted\super_classes.dee = ..\util\tut\assorted\super_classes.dee
 		..\util\tut\assorted\thread_punishment.dee = ..\util\tut\assorted\thread_punishment.dee
 		..\util\tut\assorted\walk_path.dee = ..\util\tut\assorted\walk_path.dee
-		..\util\tut\assorted\win32_process.dee = ..\util\tut\assorted\win32_process.dee
 		..\util\tut\assorted\yield_awesomeness.dee = ..\util\tut\assorted\yield_awesomeness.dee
 		..\util\tut\assorted\yield_iter_copy.dee = ..\util\tut\assorted\yield_iter_copy.dee
 	EndProjectSection
