@@ -22,6 +22,839 @@
 
 #include "../api.h"
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <hybrid/sched/__yield.h>
+#include <hybrid/typecore.h>
+
+#include "../alloc.h"
+#include "../int.h"
+#include "../string.h"
+#include "../stringutils.h"
+#include "../system-features.h"
+#include "../system.h"
+#include "../file.h"
+#include "../thread.h"
+#include "../types.h"
+#include "../util/atomic.h"
+#include "../util/once.h"
+
+#include <stdint.h>
+
+/************************************************************************/
+/* TPP3 API hooks                                                       */
+/************************************************************************/
+/* Generic HARD_ERROR that means that a deemon error was thrown
+ * NOTE: We re-use `TPP_ENOMEM` for this case, since `TPP_ENOMEM`
+ *       is already thrown by TPP3 internally whenever one of our
+ *       `Dee_Malloc()` functions fails (which they only do when
+ *       also throwing an error) */
+#define TPP_EDEEMON TPP_ENOMEM
+
+#define TPP_CONFIG_USERDEFS_FILENAME "../../../../include/deemon/compiler/lexer.def"
+#ifdef CONFIG_HOST_WINDOWS
+#define TPP_OS_WINDOWS 1
+#else /* CONFIG_HOST_WINDOWS */
+#define TPP_OS_WINDOWS 0
+#endif /* !CONFIG_HOST_WINDOWS */
+#ifdef CONFIG_HOST_UNIX
+#define TPP_OS_UNIX 1
+#else /* CONFIG_HOST_UNIX */
+#define TPP_OS_UNIX 0
+#endif /* !CONFIG_HOST_UNIX */
+
+#define TPP_HOST_NO_SYSTEM_INCLUDES 1 /* We do all includes ourselves! */
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
+#define TPP_HOST_HAVE_PP_VARARGS 1
+#else /* __PREPROCESSOR_HAVE_VA_ARGS */
+#define TPP_HOST_HAVE_PP_VARARGS 0
+#endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
+#define TPPCALL           DCALL
+#define TPPVCALL          /* nothing */
+#define TPP_IMPL          __INTERN
+#define TPP_DECL          __INTDEF
+#define TPP_CONST_IMPL    __INTERN_CONST
+#define tpp_assume(expr)  __builtin_assume(expr)
+#define tpp_restrict      __restrict
+#define TPP_NONNULL       __ATTR_NONNULL
+#define TPP_WUNUSED       __ATTR_WUNUSED
+#define TPP_RETNONNULL    __ATTR_RETNONNULL
+#define TPP_PURECALL      __ATTR_PURE
+#define TPP_CONSTCALL     __ATTR_CONST
+#define TPP_COLDCALL      __ATTR_COLD
+#define TPP_NOINLINE      __ATTR_NOINLINE
+#define TPP_FALLTHRU      __ATTR_FALLTHROUGH
+#define TPP_INLINE        __LOCAL
+#define TPP_CHAR_BIT      __CHAR_BIT__
+#define tpp_offsetof      __builtin_offsetof
+#define tpp_container_of  __COMPILER_CONTAINER_OF
+#define tpp_lengthof      __COMPILER_LENOF
+#define tpp_unreachable() __builtin_unreachable()
+#define tpp_expect        __builtin_expect
+#define tpp_likely        __likely
+#define tpp_unlikely      __unlikely
+
+#define tpp_uint_least8       uint_least8_t
+#define tpp_int_least8        int_least8_t
+#define TPP_UINT_LEAST8_MAX   UINT_LEAST8_MAX
+#define TPP_UINT_LEAST8_C(x)  UINT8_C(x)
+#define tpp_uint_least16      uint_least16_t
+#define tpp_int_least16       int_least16_t
+#define TPP_UINT_LEAST16_MAX  UINT_LEAST16_MAX
+#define TPP_UINT_LEAST16_C(x) UINT16_C(x)
+#define tpp_uint_least32      uint_least32_t
+#define tpp_int_least32       int_least32_t
+#define TPP_UINT_LEAST32_MAX  UINT_LEAST32_MAX
+#define TPP_UINT_LEAST32_C(x) UINT32_C(x)
+#define tpp_uint_least64      uint_least64_t
+#define tpp_int_least64       int_least64_t
+#define TPP_UINT_LEAST64_MAX  UINT_LEAST64_MAX
+#define TPP_UINT_LEAST64_C(x) UINT64_C(x)
+#define tpp_uint_fast8        uint_fast8_t
+#define tpp_int_fast8         int_fast8_t
+#define TPP_UINT_FAST8_MAX    UINT_FAST8_MAX
+#define TPP_UINT_FAST8_C(x)   UINT8_C(x)
+#define tpp_uint_fast16       uint_fast16_t
+#define tpp_int_fast16        int_fast16_t
+#define TPP_UINT_FAST16_MAX   UINT_FAST16_MAX
+#define TPP_UINT_FAST16_C(x)  UINT16_C(x)
+#define tpp_uint_fast32       uint_fast32_t
+#define tpp_int_fast32        int_fast32_t
+#define TPP_UINT_FAST32_MAX   UINT_FAST32_MAX
+#define TPP_UINT_FAST32_C(x)  UINT32_C(x)
+#define tpp_intmax            intmax_t
+#define tpp_uintmax           uintmax_t
+#define TPP_UINTMAX_MAX       UINTMAX_MAX
+#define TPP_UINTMAX_C(x)      UINTMAX_C(x)
+#define tpp_size              size_t
+#define TPP_SIZE_MAX          SIZE_MAX
+#define tpp_ssize             ptrdiff_t
+#define TPP_SSIZE_MAX         PTRDIFF_MAX
+#ifdef __LONGDOUBLE
+#define tpp_float __LONGDOUBLE
+#else /* __LONGDOUBLE */
+#define tpp_float double
+#endif /* !__LONGDOUBLE */
+#define TPP_REF               DREF
+#define TPP_STATIC_ASSERT     __STATIC_ASSERT
+#define TPP_STATIC_ASSERT_MSG __STATIC_ASSERT_MSG
+
+#ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
+#define strnlen Dee_libc_strnlen
+DeeSystem_DEFINE_strnlen(Dee_libc_strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp Dee_libc_strcmp
+DeeSystem_DEFINE_strcmp(Dee_libc_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
+#define tpp_strlen(s)        strlen(s)
+#define tpp_strchr(s, c)     strchr(s, c)
+#define _tpp_strnlen(s, n)   strnlen(s, n)
+#define tpp_strcmp(a, b)     strcmp(a, b)
+#define tpp_memcmp(a, b, n)  memcmp(a, b, n)
+#define tpp_memcpy(d, s, n)  memcpy(d, s, n)
+#define tpp_memset(d, c, n)  memset(d, c, n)
+#define tpp_memchr(p, c, n)  memchr(p, c, n)
+#define tpp_memmove(d, s, n) memmove(d, s, n)
+#ifdef CONFIG_HAVE_memmem
+#define tpp_memmem(h, hs, n, ns) memmem(h, hs, n, ns)
+#endif /* CONFIG_HAVE_memmem */
+#define tpp_memmoveup(d, s, n)   memmoveup(d, s, n)
+#define tpp_memmovedown(d, s, n) memmovedown(d, s, n)
+#define tpp_mempcpy(d, s, n)     mempcpy(d, s, n)
+#define tpp_bzero(p, n)          bzero(p, n)
+#ifndef CONFIG_HAVE_qsort
+#define CONFIG_HAVE_qsort
+#define qsort Dee_libc_qsort
+DeeSystem_DEFINE_qsort(Dee_libc_qsort)
+#endif /* !CONFIG_HAVE_qsort */
+#define tpp_qsort(p, elem_count, elem_size, cmp)  qsort(p, elem_count, elem_size, cmp)
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) static int NAME(void const *lhs, void const *rhs)
+
+#define tpp_trymalloc(s)     Dee_TryMalloc(s)
+#define tpp_malloc(s)        Dee_Malloc(s)
+#define tpp_tryrealloc(p, s) Dee_TryRealloc(p, s)
+#define tpp_realloc(p, s)    Dee_Realloc(p, s)
+#define tpp_free(p)          Dee_Free(p)
+#ifdef Dee_Alloca
+#define tpp_alloca(s) Dee_Alloca(s)
+#endif /* Dee_Alloca */
+#define tpp_assert Dee_ASSERT
+#define TPP_SYSCALL(expr, return_error) \
+	do {                                \
+		if (DeeThread_CheckInterrupt()) \
+			return_error(TPP_EIO);      \
+		expr;                           \
+	} while (0)
+#define tpp_formatprinter Dee_formatprinter_t
+#define tpp_formatprinter_print(printer, arg, text, num_bytes) \
+	(*(printer))(arg, (char const *)(text), num_bytes)
+#define tpp_formatprinter_of(NAME) (&NAME)
+#define TPP_FORMATPRINTER_DECL(NAME)                        \
+	TPP_DECL WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define TPP_FORMATPRINTER_IMPL(NAME, arg, text, num_bytes)  \
+	TPP_IMPL WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define TPP_FORMATPRINTER_DEFINE(NAME, arg, text, num_bytes) \
+	PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC   \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	NAME(arg, (char const *)(text), num_bytes)
+#ifdef CONFIG_NO_THREADS
+#define TPP_SINGLE_THREADED 1
+#else /* CONFIG_NO_THREADS */
+#define TPP_SINGLE_THREADED 0
+#endif /* !CONFIG_NO_THREADS */
+#define tpp_atomic32                        uint32_t
+#define TPP_ATOMIC32_INIT(value)            value
+#define tpp_atomic32_init(p_atomic, value)  (void)(*(p_atomic) = (value))
+#define tpp_atomic32_read(p_atomic)         Dee_atomic_read(p_atomic)
+#define tpp_atomic32_xchg(p_atomic, newval) Dee_atomic_xch(p_atomic, newval)
+#define tpp_atomic32_inc(p_atomic)          Dee_atomic_inc(p_atomic)
+#define tpp_atomic32_decfetch(p_atomic)     Dee_atomic_decfetch(p_atomic)
+#define tpp_sched_yield()                   __hybrid_yield()
+#define tpp_once(expr)                      Dee_ONCE({ expr; })
+
+#define TPP_HAVE_ASSUME_ASCII_CTYPE 1
+#define tpp_ascii_issymstrt(ch)     DeeAscii_IsSymStrt(ch)
+#define tpp_ascii_issymcont(ch)     DeeAscii_IsSymCont(ch)
+#define tpp_ascii_isdigit(ch)       DeeAscii_IsDigit(ch)
+#define tpp_ascii_isspace(ch)       DeeAscii_IsSpace(ch)
+#define tpp_ascii_islf(ch)          DeeAscii_IsLF(ch)
+#define tpp_ascii_isspace_nolf(ch)  DeeAscii_IsSpaceNoLf(ch)
+#define tpp_ascii_isxdigit(ch)      DeeAscii_IsXDigit(ch)
+#define tpp_ascii_asxdigit(ch)      DeeAscii_AsDigitVal(ch)
+#define tpp_ascii_tolwrxdigit(v)    DeeAscii_ItoaLowerDigit(v)
+#define tpp_ascii_touprxdigit(v)    DeeAscii_ItoaUpperDigit(v)
+
+#define tpp_unicode_issymstrt(ord)    DeeUni_IsSymStrt(ord)
+#define tpp_unicode_issymcont(ord)    DeeUni_IsSymCont(ord)
+#define tpp_unicode_isspace(ord)      DeeUni_IsSpace(ord)
+#define tpp_unicode_islf(ord)         DeeUni_IsLF(ord)
+#define tpp_unicode_isspace_nolf(ord) DeeUni_IsSpaceNoLf(ord)
+
+#if 0 /* Would return wrong values for over-long utf-8 sequences */
+#define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) Dee_unicode_utf8seqlen[first_utf8_byte]
+#define tpp_unicode_utf8seqlen_getcur(first_utf8_byte)    Dee_unicode_utf8seqlen[first_utf8_byte]
+#endif
+#define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) Dee_unicode_utf8seqlen_safe[first_utf8_byte]
+#define tpp_unicode_utf8seqlen_getmax(first_utf8_byte)    Dee_unicode_utf8seqlen_safe[first_utf8_byte]
+#ifdef CONFIG_HAVE_fuzzy_memcmp /* TODO: Add configure-test for "fuzzy_memcmp" */
+#define tpp_fuzzy_memcmp(lhs, lhs_len, rhs, rhs_len) fuzzy_memcmp(lhs, lhs_len, rhs, rhs_len)
+#endif /* CONFIG_HAVE_fuzzy_memcmp */
+
+#define tpp_intvalue                 DREF DeeIntObject *
+#define tpp_intvalue_fini(self)      Dee_Decref(*(self))
+#define tpp_intvalue_init_zero(self) (*(self) = (DREF DeeIntObject *)DeeInt_NewZero(), TPP_EOK)
+#define tpp_intvalue_init_copy(dst, src) \
+	(*(dst) = *(src), Dee_Incref(*(dst)), TPP_EOK)
+#define tpp_intvalue_asintmax(self, p_result) \
+	(DeeInt_TryAsIntN(__SIZEOF_INTMAX_T__, Dee_AsObject(*(self)), p_result) ? TPP_EOK : TPP_ENOENT)
+
+/* TODO: Proper support for `tpp_intvalue_builder` */
+//TODO:typedef ... tpp_intvalue_builder;
+//TODO:tpp_errno tpp_intvalue_builder_init(tpp_intvalue_builder *self, unsigned int radix);
+//TODO:void tpp_intvalue_builder_fini(tpp_intvalue_builder *self);
+//TODO:tpp_errno tpp_intvalue_builder_pack(/*inherit(always)*/ tpp_intvalue_builder *self,
+//TODO:                                    /*initialize(on_success)*/ tpp_intvalue *p_intvalue);
+//TODO:tpp_errno tpp_intvalue_builder_adddigit(tpp_intvalue_builder *self, unsigned int digit);
+
+#define tpp_intvalue_init_uintmax(self, v) \
+	((*(self) = (DREF DeeIntObject *)_DeeInt_NewU(__SIZEOF_INTMAX_T__, v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_init_one(self)     (*(self) = (DREF DeeIntObject *)DeeInt_NewOne(), TPP_EOK)
+#define tpp_intvalue_init_bool(self, v) (*(self) = (DREF DeeIntObject *)DeeInt_NewSmallInt((v) ? 1 : 0), TPP_EOK)
+#define tpp_intvalue_init_size(self, v) ((*(self) = (DREF DeeIntObject *)DeeInt_NewSize(v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_init_char(self, v) ((*(self) = (DREF DeeIntObject *)DeeInt_NewUInt8(v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_asbool(self)       (DeeInt_IsZero(*(self)) ? TPP_ENOENT : TPP_EOK)
+#define tpp_intvalue_isneg(self)        (DeeInt_IsNeg(*(self)) ? TPP_EOK : TPP_ENOENT)
+#define tpp_intvalue_neg(self, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Neg(Dee_AsObject(*(self)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_inv(self, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Inv(Dee_AsObject(*(self)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_add(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Add(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_sub(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Sub(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_mul(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Mul(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_div(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Div(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_mod(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Mod(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_shl(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Shl(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_shr(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Shr(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_and(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_And(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_xor(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Xor(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_or(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Or(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_cmp(lhs, rhs, p_delta)                                        \
+	((*(p_delta) = DeeObject_Compare(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))), \
+	 Dee_COMPARE_ISERR(*(p_delta)) ? TPP_EDEEMON : TPP_EOK)
+#define tpp_intvalue_printrepr(lexer, self, printer, arg) \
+	DeeInt_Print(Dee_AsObject(*(self)), Dee_INT_PRINT_DEC, 0, printer, arg)
+
+#ifdef DeeSystem_HAVE_FS_DRIVES
+#define TPP_FS_HAVE_DRIVES 1
+#else /* DeeSystem_HAVE_FS_DRIVES */
+#define TPP_FS_HAVE_DRIVES 0
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
+
+#ifdef DeeSystem_HAVE_FS_ICASE
+#define TPP_FS_HAVE_ICASE 1
+#else /* DeeSystem_HAVE_FS_ICASE */
+#define TPP_FS_HAVE_ICASE 0
+#endif /* !DeeSystem_HAVE_FS_ICASE */
+
+#define TPP_FS_SEP    DeeSystem_SEP
+#define TPP_FS_SEP_S  DeeSystem_SEP_S
+#define TPP_FS_DELIM  DeeSystem_DELIM
+#define TPP_FS_ALTSEP DeeSystem_ALTSEP
+#define TPP_FS_ISSEP  DeeSystem_IsSep
+#define TPP_FS_ISABS  DeeSystem_IsAbsN
+
+/************************************************************************/
+/* Configure TPP3                                                       */
+/************************************************************************/
+#define TPP_PROFILE                    TPP_PROFILE_MINIMAL
+#define TPP_TABSIZE                    (-4)
+#define TPP_ERROR_LIMIT                (-16)
+#define TPP_MAX_INCLUDE_DEPTH          (-64)
+#define TPP_MAX_RECURSIVE_MACRO_DEPTH  (-4096)
+#define TPP_HAVE_FILE_NONBLOCK         0 /* Not for now... */
+#define TPP_HAVE_UNICODE               1
+#define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* We provide our own... */
+#define TPP_HAVE_STRERROR              0 /* Not needed -- we do our own mapping */
+#define TPP_HAVE_EUSER                 0 /* Not actually needed */
+#define TPP_HAVE_STRTOKENID            1 /* For `TPP_EMITTER_HAVE_MODE_TYPED` */
+#define TPP_HAVE_KEYWORD_USERDATA      1 /* Needed only for emitter */
+#define TPP_HAVE_KEYWORD_ASSTRING      0
+#define TPP_HAVE_KEYWORD_INCLCOUNT     1
+#define TPP_HAVE_EXTENSIONS            1
+#define TPP_HAVE_EXTENSIONS_PUSH_POP   1
+#define TPP_HAVE_WARNINGS              1
+#define TPP_HAVE_WARNINGS_PUSH_POP     1
+#define TPP_HAVE_WARNING_NUMBERS       1
+#define TPP_HAVE_WARNING_ERROR         1
+#define TPP_HAVE_WARNING_SUPPRESS      1
+#define TPP_HAVE_WARNING_DEFAULT       1
+#define TPP_HAVE_FILE_NOCLOSE          0
+#define TPP_HAVE_FILE_NOKWD            1
+#define TPP_HAVE_FILE_LC_CACHE         1
+#define TPP_HAVE_CR_LF_DETECTION       1
+#define TPP_HAVE_LEXER_COPY            1 /* Needed for `deemon -F` */
+#define TPP_HAVE_LEXER_WARNING_COUNT   0
+
+#define TPP_COMMON_HAVE_TPP_TOK             0
+#define TPP_COMMON_HAVE_TPP_TOK_SPACE       0
+#define TPP_COMMON_HAVE_TPP_TOK_COMMENT     0
+#define TPP_COMMON_HAVE_TPP_TOK_C_GENERIC   TPP_COMMON_HAVE_TPP_TOK
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_STRING  0
+#define TPP_COMMON_HAVE_TPP_TOK_C_TOKENS    0
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS  0
+#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS 0
+#define TPP_COMMON_HAVE_CPP_DIRECTIVES_STD  1
+#define TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT  1
+
+#define TPP_HAVE_BSE                          1
+#define TPP_HAVE_BSE_WHITESPACE               1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_UNI        1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED      1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY 1
+#define TPP_HAVE_CPP_DIRECTIVES               1
+#define TPP_HAVE_CPP_MACROS                   1
+#define TPP_HAVE_MAGIC_WHITESPACE             1
+
+#define TPP_HAVE_CPP_BUILTIN_MACROS    1
+#define TPP_HAVE_CPP_PREDEFINED_MACROS TPP_CONF_EXT1 /* Disabled via `-undef` */
+#define TPP_HAVE_CPP_EXCLAIM           1
+#define TPP_HAVE_CPP_BLANK             1
+#define TPP_HAVE_CPP_DIGIT_LINE        1
+#define TPP_HAVE_LEXER_USERPWD         1
+#define TPP_HAVE_CPP_LINE              1
+#define TPP_HAVE_CPP_INCLUDE           1
+#define TPP_HAVE_CPP_INCLUDE_NEXT      1
+#define TPP_HAVE_CPP_IMPORT            1
+#define TPP_HAVE_CPP_IF_ELSE_ENDIF     1
+#define TPP_HAVE_CPP_DEFINE            1
+#define TPP_HAVE_CPP_ASSERT            1
+#define TPP_HAVE_CPP_ERROR             1
+#define TPP_HAVE_CPP_WARNING           1
+#define TPP_HAVE_CPP_IDENT_SCCS        0 /* No longer supported (used to be ignored in the past) */
+#define TPP_HAVE_CPP_PRAGMA            1
+#define TPP_HAVE_CPP_EMBED             1
+#define TPP_HAVE_CPP_EMBED_OFFSET      1
+
+#define TPP_HAVE_MACRO__Pragma                        1
+#define TPP_HAVE_MACRO___pragma                       1
+#define TPP_HAVE_CLANG_MACRO___has_attribute          0
+#define TPP_HAVE_CLANG_MACRO___has_builtin            0
+#define TPP_HAVE_CLANG_MACRO___has_cpp_attribute      0
+#define TPP_HAVE_CLANG_MACRO___has_declspec_attribute 0
+#define TPP_HAVE_CLANG_MACRO___has_extension          0
+#define TPP_HAVE_CLANG_MACRO___has_feature            0
+#define TPP_HAVE_CLANG_MACRO___has_c_attribute        0
+#define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES        0
+#define TPP_COMMON_HAVE_KEYWORD_FEATURES              0
+#define TPP_HAVE_MACRO___is_identifier                1
+#define TPP_HAVE_MACRO___is_deprecated                1
+#define TPP_HAVE_MACRO___is_poisoned                  1
+#define TPP_HAVE_MACRO___has_extension                1
+#define TPP_HAVE_MACRO___has_known_extension          1
+#define TPP_HAVE_MACRO___has_warning                  1
+#define TPP_HAVE_MACRO___has_known_warning            1
+#define TPP_HAVE_MACRO___has_include                  1
+#define TPP_HAVE_MACRO___has_include_next             1
+#define TPP_HAVE_MACRO___has_embed                    1
+#define TPP_HAVE_MACRO___FILE__                       1
+#define TPP_HAVE_MACRO___LINE__                       1
+#define TPP_HAVE_MACRO___TIME__                       1
+#define TPP_HAVE_MACRO___DATE__                       1
+#define TPP_HAVE_MACRO___COLUMN__                     1
+#define TPP_HAVE_MACRO___BASE_FILE__                  1
+#define TPP_HAVE_MACRO___FILE_NAME__                  1
+#define TPP_HAVE_MACRO___INCLUDE_LEVEL__              1
+#define TPP_HAVE_MACRO___INCLUDE_DEPTH__              1
+#define TPP_HAVE_MACRO___COUNTER__                    1
+#define TPP_HAVE_MACRO___TIMESTAMP__                  1
+#define TPP_HAVE_NUMERIC_DATE_MACROS                  1
+#define TPP_HAVE_NUMERIC_TIME_MACROS                  1
+#define TPP_HAVE_MACRO___TPP_EVAL                     1
+#define TPP_HAVE_MACRO___TPP_EXEC                     1
+#define TPP_HAVE_MACRO___TPP_UNIQUE                   1
+#define TPP_HAVE_MACRO___TPP_LOAD_FILE                1
+#define TPP_HAVE_MACRO___TPP_COUNTER                  1
+#define TPP_HAVE_MACRO___TPP_RANDOM                   1
+#define TPP_HAVE_MACRO___TPP_STR_DECOMPILE            1
+#define TPP_HAVE_MACRO___TPP_STR_PACK                 1
+#define TPP_HAVE_MACRO___TPP_STR_SUBSTR               1
+#define TPP_HAVE_MACRO___TPP_STR_SIZE                 1
+#define TPP_HAVE_MACRO___TPP_COUNT_TOKENS             1
+#define TPP_HAVE_MACRO___TPP_IDENTIFIER               1
+#define TPP_HAVE_MACRO_CXX_OPERATOR_NAMES             0
+
+#define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS TPP_CONF_EXT1
+#define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE     TPP_CONF_EXT1
+#define TPP_HAVE_MACRO_RECURSION               TPP_CONF_EXT0
+#define TPP_HAVE_TRADITIONAL_MACROS            TPP_CONF_EXT1
+#define TPP_HAVE_NAMED_VARARGS_IN_MACROS       1
+#define TPP_HAVE_VA_ARGS_IN_MACROS             1
+#define TPP_HAVE_VA_COMMA_IN_MACROS            1
+#define TPP_HAVE_VA_OPT_IN_MACROS              1
+#define TPP_HAVE_VA_NARGS_IN_MACROS            1
+#define TPP_HAVE_VA_GLUE_COMMA_IN_MACROS       1
+#define TPP_HAVE_STRINGIZE_MACRO_ARGUMENT      1
+#define TPP_HAVE_CHARIZE_MACRO_ARGUMENT        1
+#define TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT    1
+#define TPP_HAVE_GLUE_MACRO_ARGUMENT           1
+
+#define TPP_HAVE_PRAGMA_PUSH_MACRO                      1
+#define TPP_HAVE_PRAGMA_ONCE                            1
+#define TPP_HAVE_PRAGMA_DEPRECATED                      1
+#define TPP_HAVE_PRAGMA_EXTENSION                       1
+#define TPP_HAVE_PRAGMA_WARNING                         1
+#define TPP_HAVE_PRAGMA_MESSAGE                         1
+#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION         TPP_CONF_EXT0
+#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED TPP_CONF_EXT0
+#define TPP_HAVE_PRAGMA_ERROR                           1
+#define TPP_HAVE_PRAGMA_REGION                          1
+#define TPP_HAVE_PRAGMA_TPP_EXEC                        1
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS           0 /* No longer supported */
+#define TPP_HAVE_PRAGMA_GCC_POISON                      1
+#define TPP_HAVE_PRAGMA_GCC_WARNING                     1
+#define TPP_HAVE_PRAGMA_GCC_ERROR                       1
+#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER               1
+#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC                  1
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY                  0 /* TODO: (disabled because of missing "tpp_io_compare_mtime") */
+#define TPP_HAVE_PRAGMA_TPP_WARNING                     1
+#define TPP_HAVE_PRAGMA_TPP_EXTENSION                   1
+#define TPP_HAVE_PRAGMA_TPP_TPP_EXEC                    1
+#define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS       0 /* No longer supported */
+#define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH                1
+#define TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES            0
+
+#define TPP_HAVE_TRIGRAPHS TPP_CONF_EXT0
+#define TPP_HAVE_DIGRAPHS  TPP_CONF_EXT0
+
+#define TPP_HAVE_TOK_LF      TPP_CONF_FEAT0 /* Relevant for `deemon -E` and inline assembly */
+#define TPP_HAVE_TOK_SPACE   TPP_CONF_FEAT0 /* Relevant for `deemon -E` */
+#define TPP_HAVE_TOK_COMMENT TPP_CONF_FEAT0 /* Relevant for `deemon -E` and `deemon -F` (and `TPP_HAVE_TOK_AT_AT_COMMENT`) */
+
+#define TPP_HAVE_TOK_CXX_COMMENT          1
+#define TPP_HAVE_TOK_C_COMMENT            1
+#define TPP_HAVE_TOK_PASCAL_COMMENT       0
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT 0
+#define TPP_HAVE_TOK_HTML_COMMENT         0
+#define TPP_HAVE_TOK_SQL_COMMENT          0
+#define TPP_HAVE_TOK_AT_AT_COMMENT        1 /* For doc strings */
+#define TPP_HAVE_TOK_SHELL_COMMENT        1 /* Relevant in inline assembly */
+#define TPP_HAVE_TOK_SLASH_COMMENT        0
+#define TPP_HAVE_TOK_AT_COMMENT           0
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT    0
+#define TPP_HAVE_TOK_SOL_SLASH_COMMENT    0
+#define TPP_HAVE_TOK_SOL_AT_COMMENT       0
+
+#define TPP_HAVE_TOK_DOLLAR                             TPP_CONF_EXT0
+#define TPP_HAVE_TOK_C_INT                              1
+#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE         1
+#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK         1
+#define TPP_HAVE_TOK_PASCAL_HEX                         0
+#define TPP_HAVE_TOK_C_FLOAT                            1
+#define TPP_HAVE_SMART_FLOAT_TOKENS                     TPP_CONF_EXT1
+#define TPP_HAVE_TOK_C_CHAR                             1
+#define TPP_HAVE_TOK_C_STRING                           1
+#define TPP_HAVE_TOK_RAW_STRING_LITERAL                 1
+#define TPP_HAVE_TOK_RAW_CHAR_LITERAL                   1
+#define TPP_HAVE_TOK_BLOCK_STRING_LITERAL               1 /* New feature under `CONFIG_EXPERIMENTAL_USE_TPP3` */
+#define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL                 1 /* New feature under `CONFIG_EXPERIMENTAL_USE_TPP3` */
+#define TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL       1
+#define TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL         1
+#define TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL 0
+
+#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS             1
+#define TPP_HAVE_INCLUDE_REMAP                     TPP_CONF_EXT0
+#define TPP_HAVE_USER_KEYWORDS                     1
+#define TPP_HAVE_RAW_STRING_BSE                    1
+#define TPP_HAVE_STRING_ESCAPE_E                   1
+#define TPP_HAVE_STRING_ESCAPE_S                   1
+#define TPP_HAVE_STRING_ESCAPE_XML                 1
+#define TPP_HAVE_STRING_ESCAPE_OCT                 1
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_HEX                 1
+#define TPP_HAVE_STRING_ESCAPE_HEX_BIG             0 /* Nope: only 2-nibble is supported */
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_UNI                 1
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_NAMED               1
+#define TPP_HAVE_STRING_ESCAPE_NAMED_MANY          1
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN        0
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET      0
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE        0             /* XXX: Maybe turn this on? */
+#define TPP_HAVE_STRING_ESCAPE_BIGCHAR             0             /* Nope: only 2-nibble is supported */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE            TPP_CONF_EXT1 /* Only exists due to legacy code */
+#define TPP_HAVE_STRING_WARN_MULTILINE             1             /* Warn when legacy code uses this... */
+#define TPP_HAVE_STRING_AUTO_CONCAT                1
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES        1
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD          1
+#define TPP_HAVE_ESCAPE_NAMED_XML                  1
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE       TPP_CONF_EXT1
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE      TPP_CONF_EXT0
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
+
+#define TPP_COMMON_HAVE_HOOK_COOKIES 0 /* Not needed: can use offsets instead! */
+
+#define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_CONST_BUILTIN
+#define TPP_HOOK_DEFAULT_USER    TPP_HOOK_CONST_USER
+#define TPP_HOOK_DEFAULT_NOOP    TPP_HOOK_DISABLED
+
+#define TPP_HAVE_WARNPRINTER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_WARNPRINTER                DeeLexer_TPP_WarnPrinterHook
+#define TPP_HAVE_WARNHANDLER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_WARNHANDLER                DeeLexer_TPP_WarnHandlerHook
+#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK   1
+#define TPP_HAVE_MESGPRINTER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_MESGPRINTER                DeeLexer_TPP_MesgPrinterHook
+/* #define TPP_HOOK_PARSEEXPR TODO: parse a deemon expression */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK        TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK        TPP_HOOK_RT_NOOP_C /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_FILE_PUSHED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_FILE_POPPED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK   TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK     TPP_HOOK_RT_NOOP_C /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_MACRO_DEFINED_HOOK         TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK       TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK   TPP_HOOK_CONST_USER
+#define TPP_HOOK_SYSTEM_INCLUDE_PATH        DeeLexer_TPP_SystemIncludePathHook
+#define TPP_HAVE_RAISE_LEXERROR_HOOK        TPP_HOOK_CONST_USER
+#define TPP_HOOK_RAISE_LEXERROR             DeeLexer_TPP_RaiseLexErrorHook
+
+
+#define TPP_HOOK_ISFLOATSUFFIX(cookie, pos) TPP_ENOENT /* Deemon doesn't have floating-point suffixes */
+
+
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL              1
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL        1
+#define TPP_HAVE_TOK_POUND_POUND                1
+#define TPP_HAVE_TOK_PERCENT_EQUAL              1
+#define TPP_HAVE_TOK_AMP_AMP                    1
+#define TPP_HAVE_TOK_AMP_EQUAL                  1
+#define TPP_HAVE_TOK_STAR_STAR                  1
+#define TPP_HAVE_TOK_STAR_STAR_EQUAL            1
+#define TPP_HAVE_TOK_STAR_EQUAL                 1
+#define TPP_HAVE_TOK_PLUS_PLUS                  1
+#define TPP_HAVE_TOK_PLUS_EQUAL                 1
+#define TPP_HAVE_TOK_MINUS_MINUS                1
+#define TPP_HAVE_TOK_MINUS_EQUAL                1
+#define TPP_HAVE_TOK_MINUS_RANGLE               1
+#define TPP_HAVE_TOK_DOT_DOT_DOT                1
+#define TPP_HAVE_TOK_SLASH_EQUAL                1
+#define TPP_HAVE_TOK_COLON_EQUAL                1
+#define TPP_HAVE_TOK_LANGLE_LANGLE              1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_MINUS        1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE       1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL 1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL        1
+#define TPP_HAVE_TOK_LANGLE_EQUAL               1
+#define TPP_HAVE_TOK_EQUAL_EQUAL                1
+#define TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL          1
+#define TPP_HAVE_TOK_RANGLE_EQUAL               1
+#define TPP_HAVE_TOK_RANGLE_RANGLE              1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL        1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE       1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL 1
+#define TPP_HAVE_TOK_QMARK_QMARK                1
+#define TPP_HAVE_TOK_HAT_EQUAL                  1
+#define TPP_HAVE_TOK_PIPE_EQUAL                 1
+#define TPP_HAVE_TOK_PIPE_PIPE                  1
+
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED                1
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONF_EXT1
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS                1
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS                 1
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    1
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS 1
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            0
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     TPP_CONF_EXT0
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT             0
+#define TPP_HAVE_QUALITY_WARNINGS                    1
+
+#define TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR          1
+#define TPP_HAVE_INCLUDE_PATH_ENVIRON                1
+#define TPP_CONFIG_INCLUDE_PATH_ENVIRON              2("DEEMON_PATH", "CPATH")
+#define TPP_HAVE_INCLUDE_PATH_QUOTE                  1
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR                 1
+#define TPP_HAVE_INCLUDE_PATH_AFTER                  1
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE    1
+#define TPP_HAVE_INCLUDE_PATH_EMBED                  1
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP               1
+#define TPP_HAVE_WERROR                              1
+#define TPP_HAVE_WSYSTEM_HEADERS                     1
+#define TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS           1
+#define TPP_HAVE_FILE_MACRO_TRACKARGS                1
+#define TPP_HAVE_FILE_ENCODING_EMBED                 1
+#define TPP_HAVE_LEXER_SKIP                          1
+#define TPP_HAVE_LEXER_TRYSKIP_RAW                   1
+#define TPP_HAVE_LEXER_REPRTOKENID                   1
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE             0
+#define TPP_HAVE_LEXER_GETKEYWORDDEFINED             1
+#define TPP_HAVE_LEXER_ISIDENTIFIER                  1
+#define TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT          0
+#define TPP_HAVE_MACRO_NAME                          1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS              1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED       1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO    1
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE            1
+#define TPP_HAVE_LEXER_PARSEEMBED                    1
+#define TPP_HAVE_LEXER_DECODEINT                     1
+#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS        1
+#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS     1
+#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS      0 /* Dumb... */
+#define TPP_HAVE_LEXER_DECODEFLOAT                   1
+#define TPP_INTVALUE_MATH_CANOVERFLOW                0 /* Nope: because we use `DeeIntObject` to get arbitrary-length integers */
+#define TPP_INTVALUE_ASINTMAX_CANOVERFLOW            1 /* Yes: because `DeeIntObject` is used, these can get *really* big */
+#define TPP_HAVE_TPP_EXTENSION_NEAREST               1
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST           1
+#define TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE 0
+#define TPP_HAVE_CPP_FEATURE_MACROS                  0
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST             1
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST         1
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST           1
+
+#define TPP_HAVE_CLI                              1
+#define TPP_HAVE_CLI_HELP                         1
+#define TPP_HAVE_CLI_HELP_ALL_SPELLINGS           1
+#define TPP_HAVE_CLI_DASH_DEFINE_MACRO            1
+#define TPP_HAVE_CLI_DASH_UNDEFINE_MACRO          1
+#define TPP_HAVE_CLI_DASH_ASSERT                  1
+#define TPP_HAVE_CLI_DASH_INCLUDE                 1
+#define TPP_HAVE_CLI_DASH_IMACROS                 1
+#define TPP_HAVE_CLI_DASH_UNDEF                   1
+#define TPP_HAVE_CLI_DASH_FEXTENSION              1
+#define TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS 1
+#define TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH      1
+#define TPP_HAVE_CLI_DASH_FTABSTOP                1
+#define TPP_HAVE_CLI_DASH_COMMENTS                1
+#define TPP_HAVE_CLI_DASH_TRADITIONAL             1
+#define TPP_HAVE_CLI_DASH_TRIGRAPHS               1
+#define TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY       1
+#define TPP_HAVE_CLI_DASH_IQUOTE                  1
+#define TPP_HAVE_CLI_DASH_ISYSTEM                 1
+#define TPP_HAVE_CLI_DASH_IDIRAFTER               1
+#define TPP_HAVE_CLI_DASH_EMBED_DIR               1
+#define TPP_HAVE_CLI_DASH_IWITHPREFIX             1
+#define TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE       1
+#define TPP_HAVE_CLI_DASH_IPREFIX                 1
+#define TPP_HAVE_CLI_DASH_ISYSROOT                1
+/*#define TPP_CONFIG_CLI_DEFAULT_SYSROOT TODO:DeeExec_GetHome() ??? */
+#define TPP_HAVE_CLI_DASH_REMAP                   1
+#define TPP_HAVE_CLI_DASH_WERROR                  1
+#define TPP_HAVE_CLI_DASH_WFATAL_ERROR            1
+#define TPP_HAVE_CLI_DASH_FMAX_ERRORS             1
+#define TPP_HAVE_CLI_DASH_WWARNING                1
+#define TPP_HAVE_CLI_DASH_WERROR_WARNING          1
+#define TPP_HAVE_CLI_SETINPUTS                    1
+#define TPP_HAVE_CLI_SETINPUTS_DASH               1
+#define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH    1
+
+#define TPP_HAVE_STATIC_EMPTY_STRING 0
+
+/************************************************************************/
+/* MAKEFILE                                                             */
+/************************************************************************/
+#define TPP_MAKEFILE_PROFILE                         TPP_PROFILE_MINIMAL
+#define TPP_MAKEFILE_HAVE_USER_DEPENDENCIES          TPP_CONF_FEAT0
+#define TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES  1
+#define TPP_MAKEFILE_HAVE_PHONY                      TPP_CONF_FEAT0
+#define TPP_MAKEFILE_HAVE_IO_HANDLE                  1
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO             1
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE     0
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE                1
+#define TPP_MAKEFILE_HAVE_CLI                        1
+#define TPP_MAKEFILE_HAVE_CLI_HELP                   1
+#define TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS     1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_M                 1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MM                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MF                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH           1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MG                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MT                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MQ                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MD                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MMD               1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MP                1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE 1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                1
+#define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX  "."
+#define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION        ".dec"
+
+/************************************************************************/
+/* EMITTER                                                              */
+/************************************************************************/
+#define TPP_EMITTER_PROFILE                                 TPP_PROFILE_MINIMAL
+#define TPP_EMITTER_HAVE_MODE_EMIT                          1
+#define TPP_EMITTER_HAVE_MODE_DISPOSE                       1
+#define TPP_EMITTER_HAVE_MODE_BRACKET                       1
+#define TPP_EMITTER_HAVE_MODE_TYPED                         1
+#define TPP_EMITTER_HAVE_MODE_ZERO                          1
+#define TPP_EMITTER_HAVE_NORMALIZE_SPACE                    TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_LF                       TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING                 TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_C_INT                    TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS                 TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_BSE                      TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS                TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS                 TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NOLINE                             TPP_CONF_FEAT0
+#define TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN               TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT                      TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS                TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY    TPP_CONF_FEAT0
+#define TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA              1
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS           (-1)
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY      TPP_CONF_FEAT0
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_CONF_FEAT0
+#define TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES          (-1)
+#define TPP_EMITTER_HAVE_TRACE_INCLUDES                     TPP_CONF_FEAT0
+#define TPP_EMITTER_CONFIG_LINE_THRESHOLD                   (-4)
+
+#define TPP_EMITTER_HAVE_CLI                             1
+#define TPP_EMITTER_HAVE_CLI_HELP                        1
+#define TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS          1
+#define TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS       1
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_M                 1
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_D                 1
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_N                 1
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_I                 1
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_U                 1
+#define TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES         1
+#define TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN  1
+#define TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA 1
+#define TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY     1
+#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT         1
+#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS   1
+#define TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD         1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE       1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF          1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS     1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT         1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS    1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE         1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS   1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS    1
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE             1
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT              1
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE           1
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET           1
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED             1
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO              1
+
+
+/* I/O Hooks */
+#define tpp_io_handle DREF DeeObject * /* DeeFileObject */
+#define tpp_io_getstdin(p_handle) \
+	((*(p_handle) = DeeFile_GetStd(Dee_STDIN)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define TPP_IO_GETSTDIN_MUST_CLOSE 1
+#define tpp_io_open(filename, p_result)                                                 \
+	((*(p_result) = DeeFile_OpenString(filename, Dee_OPEN_FRDONLY, 0)) == Dee_ITER_DONE \
+	 ? TPP_ENOENT                                                                       \
+	 : (*(p_result) ? TPP_EOK : TPP_EDEEMON))
+#define tpp_io_close(handle) Dee_Decref(handle)
+/* NOTE: `DeeFile_Read()` returns `(size_t)-1` on error, which just so happens to map to `TPP_EDEEMON` */
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_io_read(file, buf, bufsize, nonblock) \
+	((tpp_ssize)DeeFile_Readf(file, buf, bufsize, (nonblock) ? Dee_FILEIO_FNONBLOCKING : Dee_FILEIO_FNORMAL))
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_io_read(file, buf, bufsize) ((tpp_ssize)DeeFile_Read(file, buf, bufsize))
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+#define tpp_makefile_io_handle DREF DeeObject * /* DeeFileObject */
+#define tpp_makefile_io_getstdout(p_handle) \
+	((*(p_handle) = DeeFile_GetStd(Dee_STDOUT)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE 1
+#define tpp_makefile_io_open(filename, p_result)            \
+	((*(p_result) = DeeFile_OpenString(filename,            \
+	                                   Dee_OPEN_FWRONLY |   \
+	                                   Dee_OPEN_FCREAT |    \
+	                                   Dee_OPEN_FTRUNC,     \
+	                                   0)) == Dee_ITER_DONE \
+	 ? TPP_ENOENT                                           \
+	 : (*(p_result) ? TPP_EOK : TPP_EDEEMON))
+#define tpp_makefile_io_close(handle) Dee_Decref(handle)
+/* NOTE: `DeeFile_Write()` returns `(size_t)-1` on error, which just so happens to map to `TPP_ENOMEM` */
+#define tpp_makefile_io_write(file, buf, bufsize) ((tpp_ssize)DeeFile_Write(file, buf, bufsize))
+
+//TODO:tpp_io_skip_blocking
+//TODO:tpp_io_withenv
+//TODO:TPP_CONFIG_HAVE_LOCALTIME_R
+
+//TODO:TPP_KWDIDENTIFIER_*
+//TODO:TPP_EXTNAME_*
+//TODO:TPP_HAVE_TPP_WG_*
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Pull in TPP3 headers */
+/* clang-format off */
+#include "../../../src/external/tpp3/src/tpp-amalgamation.h"
+#include "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"
+#include "../../../src/external/tpp3/src/tpp-emitter-amalgamation.h"
+/* clang-format on */
+
+#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../alloc.h" /* Dee_Free */
 
@@ -137,7 +970,6 @@ struct Dee_file_object;
 
 
 /* Configure non-variable TPP options. */
-#if 1
 /*      TPP_CONFIG_FEATURE_TRIGRAPHS           0 */
 /*      TPP_CONFIG_FEATURE_DIGRAPHS            0 */
 #define TPP_CONFIG_EXTENSION_GCC_VA_ARGS       1
@@ -190,59 +1022,6 @@ struct Dee_file_object;
 #define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    1
 /*      TPP_CONFIG_EXTENSION_EXTENDED_IDENTS   0 */
 /*      TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO 0 */
-#else
-#define TPP_CONFIG_FEATURE_TRIGRAPHS           0
-#define TPP_CONFIG_FEATURE_DIGRAPHS            0
-#define TPP_CONFIG_EXTENSION_GCC_VA_ARGS       0
-#define TPP_CONFIG_EXTENSION_GCC_VA_COMMA      0
-#define TPP_CONFIG_EXTENSION_GCC_IFELSE        0
-#define TPP_CONFIG_EXTENSION_VA_COMMA          0
-#define TPP_CONFIG_EXTENSION_VA_NARGS          0
-#define TPP_CONFIG_EXTENSION_VA_ARGS           0
-#define TPP_CONFIG_EXTENSION_STR_E             0
-#define TPP_CONFIG_EXTENSION_ALTMAC            0
-#define TPP_CONFIG_EXTENSION_RECMAC            0
-#define TPP_CONFIG_EXTENSION_BININTEGRAL       0
-#define TPP_CONFIG_EXTENSION_MSVC_PRAGMA       0
-#define TPP_CONFIG_EXTENSION_STRINGOPS         0
-#define TPP_CONFIG_EXTENSION_HASH_AT           0
-#define TPP_CONFIG_EXTENSION_HASH_XCLAIM       0
-#define TPP_CONFIG_EXTENSION_WARNING           0
-#define TPP_CONFIG_EXTENSION_SHEBANG           0
-#define TPP_CONFIG_EXTENSION_INCLUDE_NEXT      0
-#define TPP_CONFIG_EXTENSION_IMPORT            0
-#define TPP_CONFIG_EXTENSION_IDENT_SCCS        0
-#define TPP_CONFIG_EXTENSION_BASEFILE          0
-#define TPP_CONFIG_EXTENSION_INCLUDE_LEVEL     0
-#define TPP_CONFIG_EXTENSION_COUNTER           0
-#define TPP_CONFIG_EXTENSION_CLANG_FEATURES    0
-#define TPP_CONFIG_EXTENSION_HAS_INCLUDE       0
-#define TPP_CONFIG_EXTENSION_LXOR              0
-#define TPP_CONFIG_EXTENSION_MULTICHAR_CONST   0
-#define TPP_CONFIG_EXTENSION_DATEUTILS         0
-#define TPP_CONFIG_EXTENSION_TIMEUTILS         0
-#define TPP_CONFIG_EXTENSION_TIMESTAMP         0
-#define TPP_CONFIG_EXTENSION_COLUMN            0
-#define TPP_CONFIG_EXTENSION_TPP_EVAL          0
-#define TPP_CONFIG_EXTENSION_TPP_UNIQUE        0
-#define TPP_CONFIG_EXTENSION_TPP_LOAD_FILE     0
-#define TPP_CONFIG_EXTENSION_TPP_COUNTER       0
-#define TPP_CONFIG_EXTENSION_TPP_RANDOM        0
-#define TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE 0
-#define TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR    0
-#define TPP_CONFIG_EXTENSION_TPP_STR_SIZE      0
-#define TPP_CONFIG_EXTENSION_TPP_STR_PACK      0
-#define TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS  0
-#define TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA   0
-#define TPP_CONFIG_EXTENSION_ASSERTIONS        0
-#define TPP_CONFIG_EXTENSION_CANONICAL_HEADERS 0
-#define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES  0
-#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    0
-#define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED 0
-#define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    0
-#define TPP_CONFIG_EXTENSION_EXTENDED_IDENTS   0
-#define TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO 0
-#endif
 
 DECL_END
 
@@ -254,8 +1033,10 @@ DECL_END
 #define TPP_NO_INCLUDE_STDLIB_H 1
 #include "../../../src/tpp/src/tpp.h"
 
-DECL_BEGIN
+/* Forward-compatibility with TPP3 */
+#include "../../../src/external/tpp3/src/tpp2-forward.h"
 
+DECL_BEGIN
 
 #ifdef __INTELLISENSE__
 struct TPPToken token;
@@ -348,5 +1129,65 @@ struct TPPKeyword;
 DECL_END
 
 #endif /* !CONFIG_BUILDING_DEEMON */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#ifdef CONFIG_BUILDING_DEEMON
+DECL_BEGIN
+
+/************************************************************************/
+/* Deemon wrapper for TPP lexer object                                  */
+/************************************************************************/
+
+typedef struct {
+	tpp_lexer dl_lexer; /* TPP lexer */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO: Encountered warnings (to include in `DeeLexer_TPP_RaiseLexErrorHook`) */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+} DeeLexer;
+
+#define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
+#define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
+
+#define DeeLexer_GetTok(lexer)    tpp_lexer_gettok(&(lexer)->dl_lexer)
+#define DeeLexer_Yield(lexer)     tpp_lexer_yield_blocking(&(lexer)->dl_lexer)
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+//#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(&(lexer)->dl_lexer, tid)
+#define DeeLexer_VWarnf(self, id, args)             ((void)(self), parser_vwarnf(id, args))
+#define DeeLexer_Warnf(self, ...)                   ((void)(self), parser_warnf(__VA_ARGS__))
+//#define DeeLexer_VWarnfAt(self, file, pos, args)    ((void)(self), ...)
+#define DeeLexer_WarnfAt(self, file, pos, ...)      ((void)(self), (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
+//#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)(self), ...)
+//#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)(self), ...)
+#else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(&(lexer)->dl_lexer, tid)
+
+#define DeeLexer_VWarnf(self, id, args)             TPP_ISERR(tpp_lexer_vwarnf(&(lexer)->dl_lexer, id, args))
+#define DeeLexer_Warnf(self, ...)                   TPP_ISERR(tpp_lexer_warnf(&(lexer)->dl_lexer, __VA_ARGS__))
+#define DeeLexer_VWarnfAt(self, file, pos, args)    TPP_ISERR(tpp_lexer_vwarnf_at(&(lexer)->dl_lexer, file, pos, args))
+#define DeeLexer_WarnfAt(self, file, pos, ...)      TPP_ISERR(tpp_lexer_warnf_at(&(lexer)->dl_lexer, file, pos, __VA_ARGS__))
+#define DeeLexer_VWarnfLc(self, filename, lc, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(lexer)->dl_lexer, filename, lc, args))
+#define DeeLexer_WarnfLc(self, filename, lc, ...)   TPP_ISERR(tpp_lexer_warnf_lc(&(lexer)->dl_lexer, filename, lc, __VA_ARGS__))
+
+/* Static TPP Hooks */
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+INTDEF Dee_ssize_t TPPCALL DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF Dee_ssize_t TPPCALL DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+_DeeLexer_ParenBegin(DeeLexer *__restrict lexer, bool *__restrict p_has_paren);
+#define DeeLexer_ParenBegin(lexer, p_has_paren)   \
+	(likely(DeeLexer_GetTok(lexer) == TPP_TOK_OFCHAR('('))           \
+	 ? (*(p_has_paren) = true, TPP_TOK_ISERR(DeeLexer_Yield(lexer))) \
+	 : unlikely(_DeeLexer_ParenBegin(lexer, p_has_paren)))
+#define DeeLexer_ParenEnd(lexer, has_paren) \
+	(likely(has_paren) && TPP_TOK_ISERR(DeeLexer_Skip(lexer, TPP_TOK_OFCHAR(')'))))
+
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+DECL_END
+#endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* !GUARD_DEEMON_COMPILER_TPP_H */

@@ -19,9 +19,186 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_TPP_C
 #define GUARD_DEEMON_COMPILER_TPP_C 1
-#define TPP_SYMARRAY_SIZE 1
 
 #include <deemon/api.h>
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <deemon/compiler/tpp.h>
+#include <deemon/module.h>
+#include <deemon/error.h>
+#include <deemon/tuple.h>
+#include <deemon/exec.h>
+
+#if TPP_OS_WINDOWS
+#include <Windows.h>
+#endif /* TPP_OS_WINDOWS */
+
+/* Pull in TPP3 sources */
+#ifndef __INTELLISENSE__
+/* clang-format off */
+#include "../../external/tpp3/src/tpp-amalgamation.c"
+#include "../../external/tpp3/src/tpp-makefile-amalgamation.c"
+#include "../../external/tpp3/src/tpp-emitter-amalgamation.c"
+/* clang-format on */
+#endif /* !__INTELLISENSE__ */
+
+DECL_BEGIN
+
+STATIC_ASSERT_MSG(TPP_EDEEMON == TPP_SSIZE_ASERR((tpp_ssize)(size_t)-1),
+                  "This is required by our impls of `tpp_io_read()`, `tpp_makefile_io_write()`, "
+                  "`DeeLexer_TPP_MesgPrinterHook()` and `DeeLexer_TPP_WarnPrinterHook()`");
+
+/* Static TPP Hooks */
+PRIVATE Dee_ssize_t TPPCALL
+print_to_std_file(unsigned int std_file_id, char const *__restrict text, size_t num_bytes) {
+	size_t result;
+	DREF DeeObject *stdout_file = DeeFile_GetStd(std_file_id);
+	if unlikely(!stdout_file)
+		goto err;
+	result = DeeFile_WriteAll(stdout_file, text, num_bytes);
+	Dee_Decref(stdout_file);
+	return (Dee_ssize_t)result;
+err:
+	return TPP_SSIZE_OFERR(TPP_EDEEMON);
+}
+
+INTERN Dee_ssize_t TPPCALL
+DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes) {
+	(void)arg;
+	return print_to_std_file(Dee_STDERR, text, num_bytes);
+}
+
+INTERN Dee_ssize_t TPPCALL
+DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes) {
+	(void)arg;
+	return print_to_std_file(Dee_STDOUT, text, num_bytes);
+}
+
+INTERN tpp_errno TPPCALL
+DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode,
+                                   tpp_hook_system_include_path_when when,
+                                   tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
+                                                           tpp_lexer_foreach_include_path_flags__PARAM),
+                                   void *arg) {
+	DREF DeeTupleObject *libpath;
+	size_t path_i, path_count;
+	(void)lexer;
+	(void)mode;
+
+	/* Before checking `--include-directory-after`, check $DEEMON_PATH.each + "/lib" */
+	if (when != TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER)
+		return TPP_ENOENT;
+	libpath = (DREF DeeTupleObject *)DeeModule_GetLibPath();
+	if unlikely(!libpath)
+		goto err;
+	path_count = DeeTuple_SIZE(libpath);
+	for (path_i = 0; path_i < path_count; ++path_i) {
+		/* Include a trailing slash here, because "relative_to" describes some file in
+		 * a directory, and if we want to indicate the directory itself, we have to add
+		 * that trailing slash! */
+		static char const include_suffix[] = DeeSystem_SEP_S "include" DeeSystem_SEP_S;
+		char const *utf8_path;
+		char *include_path, *dst;
+		size_t utf8_path_len;
+		size_t include_path_len;
+		DeeStringObject *path = (DeeStringObject *)DeeTuple_GET(libpath, path_i);
+		tpp_errno error;
+		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
+		utf8_path = DeeString_AsUtf8(Dee_AsObject(path));
+		if unlikely(!utf8_path)
+			goto err_libpath;
+		utf8_path_len = WSTR_LENGTH(utf8_path);
+		while (utf8_path_len && DeeSystem_IsSep(utf8_path[utf8_path_len - 1]))
+			--utf8_path_len;
+		include_path_len = utf8_path_len + COMPILER_STRLEN(include_suffix);
+		include_path = (char *)Dee_Malloc((include_path_len + 1) * sizeof(char));
+		if unlikely(!include_path)
+			goto err_libpath;
+		dst = (char *)mempcpyc(include_path, utf8_path, utf8_path_len, sizeof(char));
+		memcpy(dst, include_suffix, sizeof(include_suffix));
+
+		/* Invoke callback on path */
+		error = (*cb)(arg, include_path, TPP_FILE_FLAGS_SYSHDR);
+		Dee_Free(include_path);
+
+		/* Check if callback indicates that the file was found. */
+		if (error != TPP_ENOENT) {
+			Dee_Decref(libpath);
+			return error;
+		}
+	}
+
+	Dee_Decref(libpath);
+	return TPP_ENOENT;
+err_libpath:
+	Dee_Decref(libpath);
+err:
+	return TPP_EDEEMON;
+}
+
+INTERN tpp_errno TPPCALL
+DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info,
+                             tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
+                             tpp_warning_id id, va_list args) {
+	/* TODO: Track emitted warnings in containing `DeeLexer`, so info about them can
+	 *       be included within errors thrown by `DeeLexer_TPP_RaiseLexErrorHook()`. */
+
+	/* Pass info along to TPP3's builtin warning handler. */
+	return _tpp_lexer_builtin_warnhandler(lexer, info, invokeinfo, id, args);
+}
+
+INTERN tpp_errno TPPCALL
+DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
+	/* TODO: Include details of warnings passed to `DeeLexer_TPP_WarnHandlerHook()` */
+	(void)lexer;
+	DeeError_Throwf(&DeeError_CompilerError, "TODO: Include details on triggered warnings");
+	return TPP_EDEEMON;
+}
+
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+_DeeLexer_ParenBegin(DeeLexer *__restrict lexer,
+                     bool *__restrict p_has_paren) {
+	tpp_token_id tid = DeeLexer_GetTok(lexer);
+	ASSERT(tid != '(');
+	if (tid == TPP_KWD_pack) {
+		/* If not inside of a macro, and next token isn't '(', emit a warning */
+		if (!tpp_file_ismacro(tpp_lexer_getfile(&lexer->dl_lexer))) {
+			/* TODO: use `tpp_lexer_tryskip_raw()` instead of this! */
+			tpp_char const *pos = tpp_lexer_gettokenend(&lexer->dl_lexer);
+			do {
+				tid = tpp_lexer_yieldraw_at_blocking(&lexer->dl_lexer, &pos);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tid));
+			if (TPP_TOK_ISERR(tid))
+				goto err;
+			if (tid != '(' && DeeLexer_Warnf(lexer, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+				goto err;
+		}
+		tid = DeeLexer_Yield(lexer);
+		if unlikely(TPP_TOK_ISERR(tid))
+			goto err;
+		*p_has_paren = tid == '(';
+		if (*p_has_paren) {
+			tid = DeeLexer_Yield(lexer);
+			if unlikely(TPP_TOK_ISERR(tid))
+				goto err;
+		}
+	} else {
+		tid = DeeLexer_Skip(lexer, TPP_TOK_OFCHAR('('));
+		if unlikely(TPP_TOK_ISERR(tid))
+			goto err;
+		*p_has_paren = tid == TPP_TOK_OFCHAR('(');
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+DECL_END
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define TPP_SYMARRAY_SIZE 1
 
 #include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Try*alloc* */
 #include <deemon/compiler/ast.h>      /* loc_here */
@@ -961,8 +1138,7 @@ err:
 	return -1;
 }
 
-
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_TPP_C */

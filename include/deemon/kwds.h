@@ -85,7 +85,7 @@ DECL_BEGIN
  *   - Used by the runtime interpreter when "ASM_PUSH_VARKWDS" is used.
  *   - This function figures out how to correctly package argc/argv/kw into
  *     a deemon object that user-code is able to understand, whilst also
- *     filtering and keyword arguments that were loaded into positional args.
+ *     filtering any keyword arguments that were loaded into positional args.
  *   - The returned object must be decref'd using `DeeKwBlackList_Decref()`
  *     before "argc/argv/kw" go out-of-scope. After that call, the object
  *     was either destroyed, or shared caches were unshared (which is the

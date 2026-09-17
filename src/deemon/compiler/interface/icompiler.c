@@ -84,13 +84,13 @@ compiler_init(DeeCompilerObject *__restrict self,
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	if unlikely(!TPPLexer_Init(&self->cp_lexer))
+	if unlikely(!TPPLexer_Init(&self->cp_lexer.dl_lexer))
 		goto err_scope;
 #ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 	/* Mirror MSVC's file-and-line syntax. */
-	self->cp_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
+	self->cp_lexer.dl_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
 #endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
-	self->cp_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
+	self->cp_lexer.dl_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 	parser_errors_init(&self->cp_errors);
 	return 0;
 err_scope:

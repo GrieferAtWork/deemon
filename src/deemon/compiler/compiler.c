@@ -107,7 +107,7 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
 	optimizer_flags        = compiler->cp_optimizer_flags;
 	optimizer_unwind_limit = compiler->cp_unwind_limit;
 	if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
-		memxch(&TPPLexer_Global, &compiler->cp_lexer, sizeof(struct TPPLexer));
+		memxch(&TPPLexer_Global, &compiler->cp_lexer.dl_lexer, sizeof(struct TPPLexer));
 	if (!(compiler->cp_flags & COMPILER_FKEEPERROR))
 		memxch(&current_parser_errors, &compiler->cp_errors, sizeof(struct parser_errors));
 }
@@ -134,7 +134,7 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 	compiler->cp_optimizer_flags = optimizer_flags;
 	compiler->cp_unwind_limit    = optimizer_unwind_limit;
 	if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
-		memxch(&TPPLexer_Global, &compiler->cp_lexer, sizeof(struct TPPLexer));
+		memxch(&TPPLexer_Global, &compiler->cp_lexer.dl_lexer, sizeof(struct TPPLexer));
 	if (!(compiler->cp_flags & COMPILER_FKEEPERROR))
 		memxch(&current_parser_errors, &compiler->cp_errors, sizeof(struct parser_errors));
 }
@@ -259,13 +259,13 @@ DeeCompiler_New(uint16_t flags) {
 	result->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	if (!(flags & COMPILER_FKEEPLEXER)) {
-		if (!TPPLexer_Init(&result->cp_lexer))
+		if (!TPPLexer_Init(&result->cp_lexer.dl_lexer))
 			goto err_scope;
 #ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 		/* Mirror MSVC's file-and-line syntax. */
-		result->cp_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
+		result->cp_lexer.dl_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
 #endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
-		result->cp_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
+		result->cp_lexer.dl_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 	}
 	if (!(flags & COMPILER_FKEEPERROR))
 		parser_errors_init(&result->cp_errors);
@@ -304,13 +304,13 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	 * to warn about stuff like unclosed if-blocks, because now
 	 * that the compiler has been unloaded, we are no longer
 	 * allowed to emit any warnings. */
-	self->cp_lexer.l_flags |= TPPLEXER_FLAG_ERROR;
+	self->cp_lexer.dl_lexer.l_flags |= TPPLEXER_FLAG_ERROR;
 
 	/* Then: Destroy its components. */
 	if (!(self->cp_flags & COMPILER_FKEEPERROR))
 		parser_errors_fini(&self->cp_errors);
 	if (!(self->cp_flags & COMPILER_FKEEPLEXER))
-		TPPLexer_Quit(&self->cp_lexer);
+		TPPLexer_Quit(&self->cp_lexer.dl_lexer);
 	Dee_Decref(self->cp_scope);
 	Dee_Free(self->cp_items.cis_list);
 }
@@ -322,7 +322,7 @@ compiler_visit(DeeCompilerObject *__restrict self, Dee_visit_t proc, void *arg) 
 
 	/* TODO: parser_errors_visit(&self->cp_errors, proc, arg); */
 	// TPP uses DeeObject for its streams, meaning we're holding reference to those!
-	/* TODO: TPPLexer_Visit(&self->cp_lexer, proc, arg); */
+	/* TODO: TPPLexer_Visit(&self->cp_lexer.dl_lexer, proc, arg); */
 	Dee_Visit(self->cp_scope);
 }
 

@@ -98,7 +98,7 @@ struct ddi_gen_state {
 	uint16_t        reg_name; /* The current function name. */
 	int             reg_col;  /* The current column number within the active line. */
 	int             reg_lno;  /* Line number (0-based). */
-	struct TPPFile *tpp_file; /* [0..1] The current TPP file object. */
+	struct TPPFile *rpp_file; /* [0..1] The current TPP file object. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int32_t DCALL
@@ -369,7 +369,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 			text = buffer;
 			ASSERT(iter->dc_loc.l_file);
 			/* Setup the new state. */
-			new_state.tpp_file = iter->dc_loc.l_file;
+			new_state.rpp_file = iter->dc_loc.l_file;
 			new_state.reg_uip  = iter->dc_addr;
 			new_state.reg_usp  = iter->dc_sp;
 			new_state.reg_col  = iter->dc_loc.l_col;
@@ -378,7 +378,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 
 			new_state.reg_path = old_state.reg_path;
 			new_state.reg_file = old_state.reg_file;
-			if (new_state.tpp_file != old_state.tpp_file) {
+			if (new_state.rpp_file != old_state.rpp_file) {
 				/* The source file has changed and we must
 				 * allocate the new one's path & file. */
 				char *filename;
@@ -386,7 +386,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				char *file_begin;
 				uint32_t path_offset, file_offset;
 				int32_t temp;
-				filename   = (char *)TPPFile_Filename(new_state.tpp_file, &length);
+				filename   = (char *)TPPFile_Filename(new_state.rpp_file, &length);
 				file_begin = (char *)DeeSystem_BaseName(filename, length);
 				if (file_begin > filename) {
 					char *tab_str, backup;
@@ -547,7 +547,7 @@ do_realloc_bind:
 				old_state.reg_path      = new_state.reg_path;
 				old_state.reg_file      = new_state.reg_file;
 				old_state.reg_name      = new_state.reg_name;
-				old_state.tpp_file      = new_state.tpp_file;
+				old_state.rpp_file      = new_state.rpp_file;
 				result->d_start.dr_path = old_state.reg_path;
 				result->d_start.dr_file = old_state.reg_file;
 				result->d_start.dr_name = old_state.reg_name;

@@ -168,7 +168,7 @@ struct Dee_compiler_object {
 	DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
 	struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */
 	struct ast_tags              cp_tags;          /* == ::current_tags */
-	struct TPPLexer              cp_lexer;         /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
+	DeeLexer                     cp_lexer;         /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
 	struct parser_errors         cp_errors;        /* [valid_if(!COMPILER_FKEEPERROR)] == ::current_parser_errors */
 	struct Dee_compiler_options *cp_options;       /* [0..1] User-defined compiler options. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
