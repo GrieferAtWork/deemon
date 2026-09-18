@@ -85,7 +85,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 #ifdef CONFIG_HAVE_FPU
 	case TOK_FLOAT:
 #endif /* CONFIG_HAVE_FPU */
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 		goto yes;
 
 	case '!': {
@@ -879,7 +879,7 @@ print_module_name(JITLexer *__restrict self,
                   struct Dee_unicode_printer *printer) {
 	int result = 0;
 	for (;;) {
-		if (self->jl_tok == '.' || self->jl_tok == TOK_DOTS) {
+		if (self->jl_tok == '.' || self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			if (printer &&
 			    Dee_unicode_printer_printascii(printer, "...", self->jl_tok == '.' ? 1 : 3) < 0)
 				goto err_trace;
@@ -889,7 +889,7 @@ print_module_name(JITLexer *__restrict self,
 			    self->jl_tok != JIT_STRING &&
 			    self->jl_tok != JIT_RAWSTRING &&
 			    self->jl_tok != '.' &&
-			    self->jl_tok != TOK_DOTS)
+			    self->jl_tok != TPP_TOK_DOT_DOT_DOT)
 				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			if (printer &&
@@ -898,7 +898,7 @@ print_module_name(JITLexer *__restrict self,
 			                              JITLexer_TokLen(self)) < 0)
 				goto err_trace;
 			JITLexer_Yield(self);
-			if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS)
+			if (self->jl_tok != '.' && self->jl_tok != TPP_TOK_DOT_DOT_DOT)
 				break;
 		} else if (self->jl_tok == JIT_STRING ||
 		           self->jl_tok == JIT_RAWSTRING) {
@@ -918,7 +918,7 @@ print_module_name(JITLexer *__restrict self,
 			}
 			JITLexer_Yield(self);
 			if (self->jl_tok != '.' &&
-			    self->jl_tok != TOK_DOTS &&
+			    self->jl_tok != TPP_TOK_DOT_DOT_DOT &&
 			    self->jl_tok != JIT_STRING &&
 			    self->jl_tok != JIT_RAWSTRING)
 				break;
@@ -1343,7 +1343,7 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
                         DREF DeeObject **__restrict p_typemask,
                         char const **__restrict p_symbol_name,
                         size_t *__restrict p_symbol_size) {
-	if (self->jl_tok == TOK_DOTS) {
+	if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 		/* >> catch (...) */
 		/* >> catch (...var)  (This syntax is allowed, but is rarely ever used;
 		 *                     code usually uses `catch (var...)` instead) */
@@ -1362,7 +1362,7 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 			unsigned char const *start = self->jl_tokstart;
 			unsigned char const *end   = self->jl_tokend;
 			JITLexer_Yield(self);
-			if (self->jl_tok == TOK_DOTS) {
+			if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 				/* `catch (e...)` (catch all into `e`) */
 				*p_typemask    = NULL;
 				*p_symbol_name = (char *)start;

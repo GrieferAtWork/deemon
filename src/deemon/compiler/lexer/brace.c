@@ -35,14 +35,14 @@
 
 DECL_BEGIN
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_mapping(struct ast *__restrict initial_key) {
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 	size_t elema, elemc;
 	DREF struct ast *result;
 	DREF struct ast **elemv, *value;
 
 	/* Parse the associated value. */
-	value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	value = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	if unlikely(!value)
 		goto err;
 	elema = 1;
@@ -88,13 +88,13 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 				goto err_dict_elemv_r;
 		} else {
 			int temp;
-			temp = maybe_expression_begin();
+			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err_dict_elemv;
 				break; /* Allow (and ignore) trailing comma. */
 			}
-			result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_dict_elemv;
 			if (skip(':', W_EXPECTED_COLON_AFTER_DICT_KEY))
@@ -102,7 +102,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 		}
 
 		/* Now parse the associated value. */
-		value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		value = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!value)
 			goto err_dict_elemv_r;
 
@@ -155,8 +155,8 @@ err:
 	goto done;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_brace_list(struct ast *__restrict initial_item) {
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item) {
 	DREF struct ast *result;
 	DREF struct ast **elemv;
 	size_t elema = 1, elemc = 1;
@@ -181,14 +181,14 @@ parse_list_item:
 			goto err_list_elemv;
 		{
 			int temp;
-			temp = maybe_expression_begin();
+			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err_list_elemv;
 				break; /* Allow (and ignore) trailing comma. */
 			}
 		}
-		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err_list_elemv;
 		if (elemc == elema) {
@@ -238,8 +238,8 @@ err:
 
 /* Parse the contents of a brace initializer,
  * starting after the '{' token and ending on '}'. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_brace_items(void) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result, *new_result;
 	/* Parse the initial item. */
 	if (tok == '.') {
@@ -270,26 +270,26 @@ ast_parse_brace_items(void) {
 	/* Check for special case: Empty brace initializer. */
 	{
 		int temp;
-		temp = maybe_expression_begin();
+		temp = maybe_expression_begin(self);
 		if (temp <= 0) {
 			if unlikely(temp < 0)
 				goto err;
 			return ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL);
 		}
 	}
-	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err;
 	if (tok == ':') {
 		if unlikely(yield() < 0)
 			goto err_r;
 parse_dict:
-		new_result = ast_parse_mapping(result);
+		new_result = ast_parse_mapping(self, result);
 		ast_decref(result);
 		result = new_result;
 	} else {
 		/* Parse an list initializer. */
-		new_result = ast_parse_brace_list(result);
+		new_result = ast_parse_brace_list(self, result);
 		ast_decref(result);
 		result = new_result;
 	}

@@ -59,8 +59,8 @@ wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
 	return result;
 }
 
-PRIVATE WUNUSED DREF struct ast *DFCALL
-parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	struct ast_loc loc;
 	uint32_t old_flags;
 	DREF struct ast *result, *other, *merge;
@@ -82,7 +82,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_flags;
 
 		/* NOTE: Allow variable declarations within the condition. */
-		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
+		result = ast_parse_comma(self,
+		                         LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
@@ -93,7 +94,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_r;
 
 		/* Parse the conditional expression. */
-		other = parse_generator_loop(ddi_loc);
+		other = parse_generator_loop(self, ddi_loc);
 		if unlikely(!other)
 			goto err_r;
 
@@ -102,7 +103,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		if (tok == KWD_else) {
 			if unlikely(yield() < 0)
 				goto err_r_other;
-			ff_branch = parse_generator_loop(ddi_loc);
+			ff_branch = parse_generator_loop(self, ddi_loc);
 			if unlikely(!ff_branch)
 				goto err_r_other;
 		}
@@ -123,7 +124,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		result = parse_generator_loop(&loc);
+		result = parse_generator_loop(self, &loc);
 		if unlikely(!result)
 			goto err;
 		if (skip(KWD_while, W_EXPECTED_WHILE_AFTER_DO))
@@ -132,7 +133,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
-		other = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		other = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!other)
 			goto err_r_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -161,7 +162,8 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_flags;
 
 		/* NOTE: Allow variable declarations within the condition. */
-		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
+		result = ast_parse_comma(self,
+		                         LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
@@ -172,7 +174,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_r;
 
 		/* Parse the generator loop. */
-		other = parse_generator_loop(&loc);
+		other = parse_generator_loop(self, &loc);
 		if unlikely(!other)
 			goto err_r;
 		merge = ast_loop(AST_FLOOP_NORMAL, result, NULL, other);
@@ -198,7 +200,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_flags;
 
 		/* Parse the for-header. */
-		type = ast_parse_for_head(&init, &elem_or_cond, &iter_or_next);
+		type = ast_parse_for_head(self, &init, &elem_or_cond, &iter_or_next);
 		if unlikely(type < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -215,7 +217,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err_for_loop;
 
 		/* Parse the loop expression. */
-		result = parse_generator_loop(&loc);
+		result = parse_generator_loop(self, &loc);
 		if unlikely(!result)
 			goto err_for_loop;
 
@@ -268,14 +270,15 @@ err_for_loop:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
-		foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
+		foreach_elem = ast_parse_comma(self,
+		                               AST_COMMA_ALLOWVARDECLS,
 		                               AST_FMULTIPLE_TUPLE,
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
 		if (skip(':', W_EXPECTED_COLON_AFTER_FOREACH))
 			goto err_foreach_elem_flags;
-		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		foreach_iter = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -283,7 +286,7 @@ err_for_loop:
 			goto err_foreach_iter;
 
 		/* Parse the generator loop expression. */
-		foreach_loop = parse_generator_loop(&loc);
+		foreach_loop = parse_generator_loop(self, &loc);
 		if unlikely(!foreach_loop)
 			goto err_foreach_iter;
 		result = ast_loop(AST_FLOOP_FOREACH, foreach_elem, foreach_iter, foreach_loop);
@@ -304,7 +307,7 @@ err_foreach_elem_flags:
 
 	default:
 		/* Fallback: parse a brace expression and wrap it inside a yield-statement. */
-		result = wrap_yield(ast_parse_expr(LOOKUP_SYM_NORMAL), ddi_loc);
+		result = wrap_yield(ast_parse_expr(self, LOOKUP_SYM_NORMAL), ddi_loc);
 		break;
 	}
 	return result;
@@ -322,7 +325,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *DFCALL ast_parse_loopexpr(void) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_loopexpr(DeeLexer *self) {
 	struct ast_loc loc;
 	tok_t mode = tok;
 	DREF struct ast *result, *other, *merge;
@@ -337,7 +341,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_loopexpr(void) {
 	current_basescope->bs_flags |= current_tags.at_code_flags;
 
 	/* Parse the generator loop. */
-	result = parse_generator_loop(&loc);
+	result = parse_generator_loop(self, &loc);
 	if unlikely(!result)
 		goto err_scope;
 
@@ -382,11 +386,11 @@ err:
 
 
 /* Same as `ast_parse_try_hybrid` but for loopexpr statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_loopexpr_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_loopexpr_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	/* TODO */
 	*p_was_expression = AST_PARSE_WASEXPR_NO;
-	return ast_parse_statement(false);
+	return ast_parse_statement(self, false);
 }
 
 

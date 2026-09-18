@@ -226,7 +226,7 @@ JITLexer_ScanCatchMask(JITLexer *__restrict self) {
 	hasparen = self->jl_tok == '(';
 	if (hasparen)
 		JITLexer_Yield(self);
-	if (self->jl_tok == TOK_DOTS) {
+	if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 		JITLexer_Yield(self);
 		if (self->jl_tok == JIT_KEYWORD)
 			JITLexer_Yield(self);
@@ -278,23 +278,23 @@ JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 	}
 do_print:
 	for (;;) {
-		if (self->jl_tok == '.' || self->jl_tok == TOK_DOTS) {
+		if (self->jl_tok == '.' || self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			JITLexer_Yield(self);
 			if (self->jl_tok != JIT_KEYWORD &&
 			    self->jl_tok != JIT_STRING &&
 			    self->jl_tok != JIT_RAWSTRING &&
 			    self->jl_tok != '.' &&
-			    self->jl_tok != TOK_DOTS)
+			    self->jl_tok != TPP_TOK_DOT_DOT_DOT)
 				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			JITLexer_Yield(self);
-			if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS)
+			if (self->jl_tok != '.' && self->jl_tok != TPP_TOK_DOT_DOT_DOT)
 				break;
 		} else if (self->jl_tok == JIT_STRING ||
 		           self->jl_tok == JIT_RAWSTRING) {
 			JITLexer_Yield(self);
 			if (self->jl_tok != '.' &&
-			    self->jl_tok != TOK_DOTS &&
+			    self->jl_tok != TPP_TOK_DOT_DOT_DOT &&
 			    self->jl_tok != JIT_STRING &&
 			    self->jl_tok != JIT_RAWSTRING)
 				break;
@@ -845,7 +845,7 @@ do_scan_call_args:
 		}
 		goto do_suffix;
 
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 	case TOK_INC:
 	case TOK_DEC:
 	case '!':

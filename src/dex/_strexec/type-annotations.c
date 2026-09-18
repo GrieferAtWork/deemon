@@ -78,7 +78,7 @@ do_handle_lparen:
 			JITLexer_Yield(self);
 			if unlikely(JITLexer_SkipTypeAnnotation(self, throw_errors))
 				goto err;
-		} else if (self->jl_tok == TOK_DOTS) {
+		} else if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			JITLexer_Yield(self);
 		} else {
 			return THROW_ERROR(syn_type_annotation_expected_dots_or_colon(self));

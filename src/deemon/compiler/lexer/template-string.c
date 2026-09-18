@@ -100,8 +100,8 @@ find_unescape_quote(char *text, char *end, char quote) {
 
 
 /* Parse a template string. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_template_string(void) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_template_string(DeeLexer *self) {
 	STATIC_ASSERT(TOK_STRING == '"');
 	STATIC_ASSERT(TOK_CHAR == '\'');
 	size_t format_argc            = 0;
@@ -111,9 +111,10 @@ ast_parse_template_string(void) {
 	struct ast *result;
 	struct Dee_unicode_printer format_printer = Dee_UNICODE_PRINTER_INIT;
 	char *flush_start, *text_iter, *text_end, quote;
+	(void)self;
 	loc_here(&loc);
 parse_current_token_as_template_string:
-	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
+	ASSERT(TPP_TOK_ISSTRING_DQUOTE(tok) || TPP_TOK_ISSTRING_SQUOTE(tok));
 	ASSERT(token.t_begin < token.t_end);
 	ASSERT(token.t_begin[0] == '\"' || token.t_begin[0] == '\'');
 	/*ASSERT(token.t_begin[0] == token.t_end[-1]);*/ /* Might not be the case if the user suppressed an EOF-in-string warning */
@@ -153,7 +154,7 @@ err_old_flags:
 				TPPLexer_Current->l_flags = old_flags;
 				goto err;
 			}
-			expr_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			expr_ast = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!expr_ast)
 				goto err_old_flags;
 			TPPLexer_Current->l_flags = old_flags;

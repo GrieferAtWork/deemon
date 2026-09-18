@@ -77,7 +77,7 @@ get_scope_lookupmode(DeeObject *__restrict value,
 			result_ast = head->ci_value;                                       \
 		} else) {                                                              \
 			uint16_t old_exceptsz = DeeThread_Self()->t_exceptsz;              \
-			result_ast            = func(head->ci_value);                      \
+			result_ast = func(_DeeLexer_Current, head->ci_value);              \
 			if unlikely(!result_ast) {                                         \
 				if (old_exceptsz == DeeThread_Self()->t_exceptsz) {            \
 					result = Dee_None;                                         \
@@ -108,7 +108,7 @@ get_scope_lookupmode(DeeObject *__restrict value,
 			goto done;                                                                         \
 		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                        \
 			goto done_compiler_end;                                                            \
-		result_ast   = func(lookup_mode);                                                      \
+		result_ast   = func(_DeeLexer_Current, lookup_mode);                                   \
 		old_exceptsz = DeeThread_Self()->t_exceptsz;                                           \
 		if unlikely(!result_ast) {                                                             \
 			if (old_exceptsz == DeeThread_Self()->t_exceptsz) {                                \
@@ -184,7 +184,7 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	result_ast   = ast_parse_statement(args.nonblocking);
+	result_ast   = ast_parse_statement(_DeeLexer_Current, args.nonblocking);
 	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
 			result = Dee_None;
@@ -226,7 +226,8 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 			goto done_compiler_end;
 	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	result_ast = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST,
+	result_ast = ast_parse_statements_until(_DeeLexer_Current,
+	                                        AST_FMULTIPLE_KEEPLAST,
 	                                        end_token);
 	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {

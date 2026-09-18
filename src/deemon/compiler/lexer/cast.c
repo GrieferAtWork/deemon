@@ -49,8 +49,8 @@ DECL_BEGIN
  *                           ^
  *                           exit
  */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_cast(struct ast *__restrict typeexpr) {
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 	uint32_t old_flags;
 	DREF struct ast *kw_labels;
 	DREF struct ast *result, *merge, **exprv;
@@ -95,7 +95,7 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 		if (WARN(W_UNCLEAR_CAST_INTENT))
 			goto err;
 		ATTR_FALLTHROUGH
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 not_a_cast:
 		/* Not a cast expression. */
 		result = typeexpr;
@@ -137,7 +137,7 @@ not_a_cast:
 		second_paren = tok == '(';
 
 		/* Parse the cast-expression / argument list. */
-		merge = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &kw_labels);
+		merge = ast_parse_argument_list(self, AST_COMMA_FORCEMULTIPLE, &kw_labels);
 		if unlikely(!merge)
 			goto err_flags;
 		ASSERT(merge->a_type == AST_MULTIPLE);
@@ -159,7 +159,7 @@ not_a_cast:
 				 * >> int(float)(get_value());
 				 */
 				result = merge->a_multiple.m_astv[0];
-				result = ast_parse_cast(result);
+				result = ast_parse_cast(self, result);
 				if unlikely(!result)
 					goto err_merge;
 				if (result == merge->a_multiple.m_astv[0]) {
@@ -199,7 +199,7 @@ not_a_cast:
 		 * an expression, then this isn't a cast. */
 		{
 			int temp;
-			temp = maybe_expression_begin();
+			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err;
@@ -208,7 +208,7 @@ not_a_cast:
 		}
 do_a_cast:
 		/* Actually do a cast. */
-		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+		result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
 

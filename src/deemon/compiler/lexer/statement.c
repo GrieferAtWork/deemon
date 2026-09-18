@@ -84,8 +84,9 @@ err:
  * WARNING: The caller is responsible for wrapping `*p_iter_or_next` in an `__iterself__()`
  *          operator call when `AST_FLOOP_FOREACH` is part of the return mask, unless they wish
  *          to enumerate an iterator itself (which is possible using the `__foreach` statement). */
-INTERN WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
-ast_parse_for_head(DREF struct ast **__restrict p_init,
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int32_t DFCALL
+ast_parse_for_head(DeeLexer *self,
+                   DREF struct ast **__restrict p_init,
                    DREF struct ast **__restrict p_elem_or_cond,
                    DREF struct ast **__restrict p_iter_or_next) {
 	int32_t result                = AST_FLOOP_NORMAL;
@@ -93,7 +94,8 @@ ast_parse_for_head(DREF struct ast **__restrict p_init,
 	DREF struct ast *elem_or_cond = NULL;
 	DREF struct ast *iter_or_next = NULL;
 	if (tok != ';') {
-		init = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
+		init = ast_parse_comma(self,
+		                       AST_COMMA_ALLOWVARDECLS,
 		                       AST_FMULTIPLE_TUPLE,
 		                       NULL);
 		if unlikely(!init)
@@ -105,7 +107,7 @@ ast_parse_for_head(DREF struct ast **__restrict p_init,
 			elem_or_cond = init;
 			init         = NULL;
 			result |= AST_FLOOP_FOREACH;
-			iter_or_next = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			iter_or_next = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!iter_or_next)
 				goto err;
 			goto done;
@@ -114,7 +116,7 @@ ast_parse_for_head(DREF struct ast **__restrict p_init,
 	if (skip(';', W_EXPECTED_SEMICOLON1_AFTER_FOR))
 		goto err;
 	if (tok != ';') {
-		elem_or_cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		elem_or_cond = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!elem_or_cond)
 			goto err;
 	}
@@ -123,7 +125,7 @@ ast_parse_for_head(DREF struct ast **__restrict p_init,
 	if (tok == ')') {
 		iter_or_next = NULL;
 	} else {
-		iter_or_next = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		iter_or_next = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!iter_or_next)
 			goto err;
 	}
@@ -152,8 +154,8 @@ err:
  *          returned instead.
  * NOTE: If desired, the caller is responsible to setup
  *       or teardown a new scope before/after this function. */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_statements_until(uint16_t flags, tok_t end_token) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token) {
 	size_t exprc, expra;
 	DREF struct ast **exprv;
 	DREF struct ast *new_expression;
@@ -165,7 +167,7 @@ ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 		if (!tok || tok == end_token)
 			break;
 		token_num      = token.t_num;
-		new_expression = ast_parse_statement(false);
+		new_expression = ast_parse_statement(self, false);
 		if unlikely(!new_expression)
 			goto err;
 		ASSERT(exprc <= expra);
@@ -223,8 +225,8 @@ cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
 
 /* Parse a regular, old statement. */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_statement(bool allow_nonblock) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement(DeeLexer *self, bool allow_nonblock) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;
 	uint32_t old_flags;
@@ -235,7 +237,7 @@ again:
 		/* Parse tags. */
 		if unlikely(yield() < 0)
 			goto err;
-		if (parse_tags())
+		if (parse_tags(self))
 			goto err;
 		goto again;
 
@@ -246,7 +248,7 @@ again:
 		if unlikely(yield() < 0)
 			goto err;
 		/* Enter a new scope and parse expressions. */
-		result = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}');
+		result = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}');
 		result = ast_putddi(result, &loc);
 		if unlikely(!result)
 			goto err;
@@ -288,7 +290,8 @@ again:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
-		result = ast_parse_comma(AST_COMMA_NORMAL |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
@@ -297,7 +300,7 @@ again:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
-		tt_branch = ast_parse_statement(false);
+		tt_branch = ast_parse_statement(self, false);
 		if unlikely(!tt_branch)
 			goto err_r;
 		ff_branch = NULL;
@@ -307,7 +310,7 @@ again:
 			goto err_tt_branch;
 		if unlikely(skip_lf())
 			goto err_tt_branch;
-		if unlikely(parse_tags_block()) {
+		if unlikely(parse_tags_block(self)) {
 err_tt_branch:
 			ast_decref(tt_branch);
 			goto err_r;
@@ -322,7 +325,7 @@ err_tt_branch:
 			if unlikely(yield() < 0)
 				goto err_tt_branch;
 do_else_branch:
-			ff_branch = ast_parse_statement(allow_nonblock);
+			ff_branch = ast_parse_statement(self, allow_nonblock);
 			if unlikely(!ff_branch)
 				goto err_tt_branch;
 		}
@@ -350,7 +353,8 @@ do_else_branch:
 			    WARN(W_RETURN_IN_YIELD_FUNCTION))
 				goto err;
 			current_basescope->bs_cflags |= BASESCOPE_FRETURN;
-			result = ast_parse_comma(AST_COMMA_NORMAL,
+			result = ast_parse_comma(self,
+			                         AST_COMMA_NORMAL,
 			                         AST_FMULTIPLE_TUPLE,
 			                         NULL);
 			if unlikely(!result)
@@ -375,7 +379,8 @@ do_else_branch:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		result = ast_parse_comma(AST_COMMA_NORMAL |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_NORMAL |
 		                         AST_COMMA_FORCEMULTIPLE,
 		                         AST_FMULTIPLE_TUPLE,
 		                         NULL);
@@ -403,7 +408,7 @@ do_else_branch:
 
 	case KWD_from:
 	case KWD_import:
-		result = ast_parse_import();
+		result = ast_parse_import(self);
 		if unlikely(!result)
 			goto err;
 		if unlikely(likely(is_semicolon())
@@ -419,7 +424,8 @@ do_else_branch:
 		if (is_semicolon()) {
 			result = ast_throw(NULL);
 		} else {
-			result = ast_parse_comma(AST_COMMA_NORMAL,
+			result = ast_parse_comma(self,
+			                         AST_COMMA_NORMAL,
 			                         AST_FMULTIPLE_TUPLE,
 			                         NULL);
 			if unlikely(!result)
@@ -461,7 +467,8 @@ do_else_branch:
 		} else {
 			/* NOTE: Use strict comma-rules, because a trailing comma in a print statement
 			 *       causes the generated assembly to omit a terminating linefeed. */
-			result = ast_parse_comma(AST_COMMA_FORCEMULTIPLE |
+			result = ast_parse_comma(self,
+			                         AST_COMMA_FORCEMULTIPLE |
 			                         AST_COMMA_STRICTCOMMA,
 			                         AST_FMULTIPLE_TUPLE,
 			                         NULL);
@@ -484,7 +491,8 @@ do_else_branch:
 					text = ast_constexpr(Dee_EmptyTuple);
 					text = ast_sethere(text);
 				} else {
-					text = ast_parse_comma(AST_COMMA_FORCEMULTIPLE |
+					text = ast_parse_comma(self,
+					                       AST_COMMA_FORCEMULTIPLE |
 					                       AST_COMMA_STRICTCOMMA,
 					                       AST_FMULTIPLE_TUPLE,
 					                       NULL);
@@ -545,7 +553,7 @@ do_else_branch:
 				goto err_flags;
 			has_scope = true;
 		}
-		type = ast_parse_for_head(&init, &elem_or_cond, &iter_or_next);
+		type = ast_parse_for_head(self, &init, &elem_or_cond, &iter_or_next);
 		if unlikely(type < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -563,7 +571,7 @@ do_else_branch:
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_loop;
 
-		loop = ast_parse_statement(allow_nonblock);
+		loop = ast_parse_statement(self, allow_nonblock);
 		if unlikely(!loop)
 			goto err_loop;
 		/* Create the loop branch. */
@@ -618,20 +626,21 @@ err_loop:
 			goto err_flags;
 		if unlikely(scope_push())
 			goto err_flags;
-		foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
+		foreach_elem = ast_parse_comma(self,
+		                               AST_COMMA_ALLOWVARDECLS,
 		                               AST_FMULTIPLE_TUPLE,
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
 		if (skip(':', W_EXPECTED_COLON_AFTER_FOREACH))
 			goto err_foreach_elem;
-		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		foreach_iter = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_foreach_iter;
-		foreach_loop = ast_parse_statement(allow_nonblock);
+		foreach_loop = ast_parse_statement(self, allow_nonblock);
 		if unlikely(!foreach_loop)
 			goto err_foreach_iter;
 		result = ast_loop(AST_FLOOP_FOREACH, foreach_elem, foreach_iter, foreach_loop);
@@ -649,7 +658,7 @@ err_foreach_elem:
 	}	break;
 
 	case KWD_assert:
-		result = ast_parse_assert(false);
+		result = ast_parse_assert(self, false);
 		if unlikely(!result)
 			goto err;
 		if unlikely(likely(is_semicolon())
@@ -664,7 +673,7 @@ err_foreach_elem:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		result = ast_parse_statement(false);
+		result = ast_parse_statement(self, false);
 		if unlikely(!result)
 			goto err;
 
@@ -673,7 +682,7 @@ err_foreach_elem:
 			goto err_r;
 		if unlikely(skip_lf())
 			goto err_r;
-		if unlikely(parse_tags_block())
+		if unlikely(parse_tags_block(self))
 			goto err_r;
 		if unlikely(skip_lf())
 			goto err_r;
@@ -683,7 +692,7 @@ err_foreach_elem:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
-		cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		cond = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
@@ -712,7 +721,8 @@ err_foreach_elem:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_flags;
-		result = ast_parse_comma(AST_COMMA_NORMAL |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
@@ -721,7 +731,7 @@ err_foreach_elem:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
-		loop = ast_parse_statement(allow_nonblock);
+		loop = ast_parse_statement(self, allow_nonblock);
 		if unlikely(!loop)
 			goto err_r;
 		merge = ast_loop(AST_FNORMAL, result, NULL, loop);
@@ -755,11 +765,11 @@ err_foreach_elem:
 	}	break;
 
 	case KWD_with:
-		result = ast_parse_with(true, allow_nonblock);
+		result = ast_parse_with(self, true, allow_nonblock);
 		break;
 
 	case KWD_try:
-		result = ast_parse_try(true);
+		result = ast_parse_try(self, true);
 		/* Don't reset tags after a try-statement,
 		 * because we've already handled tags for the next statement
 		 * before noticing that they in fact weren't designated for
@@ -794,7 +804,7 @@ err_foreach_elem:
 				if unlikely(yield() < 0)
 					goto err_flags;
 			}
-			result = ast_parse_del(LOOKUP_SYM_NORMAL);
+			result = ast_parse_del(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_flags;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -803,7 +813,7 @@ err_foreach_elem:
 					goto err_r;
 			}
 		} else {
-			result = ast_parse_del(LOOKUP_SYM_ALLOWDECL);
+			result = ast_parse_del(self, LOOKUP_SYM_ALLOWDECL);
 			if unlikely(!result)
 				goto err;
 		}
@@ -816,7 +826,7 @@ err_foreach_elem:
 
 	case KWD___asm:
 	case KWD___asm__:
-		result = ast_parse_asm();
+		result = ast_parse_asm(self);
 		if unlikely(likely(is_semicolon())
 		            ? (yield_semicolonnbif(allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASM))
@@ -871,7 +881,8 @@ err_foreach_elem:
 			goto err_flags;
 
 		/* Parse the switch-expression (NOTE: Allow variable declarations). */
-		result = ast_parse_comma(AST_COMMA_NORMAL |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
@@ -889,7 +900,7 @@ err_foreach_elem:
 		current_basescope->bs_swcase = NULL;
 		current_basescope->bs_swdefl = NULL;
 
-		switch_block = ast_parse_statement(allow_nonblock);
+		switch_block = ast_parse_statement(self, allow_nonblock);
 
 		/* Extract switch cases. */
 		switch_cases   = current_basescope->bs_swcase;
@@ -985,7 +996,7 @@ handle_post_label:
 						goto err;
 
 					/* Parse the statement that is prefixed by the label. */
-					result = ast_parse_statement(allow_nonblock);
+					result = ast_parse_statement(self, allow_nonblock);
 					if unlikely(!result) {
 						ast_decref(label_ast);
 						goto err;
@@ -1037,7 +1048,7 @@ err_label_ast:
 					goto err;
 
 				/* Parse the case expression. */
-				result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!result)
 					goto err;
 				if (skip(':', W_EXPECTED_COLON_AFTER_CASE))
@@ -1081,7 +1092,8 @@ err_label_ast:
 		}
 
 		/* Parse a comma-separated expression in style of keep-last. */
-		result = ast_parse_comma(allow_nonblock
+		result = ast_parse_comma(self,
+		                         allow_nonblock
 		                         ? (AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS |
 		                            AST_COMMA_ALLOWTYPEDECL | AST_COMMA_PARSESEMI |
 		                            AST_COMMA_ALLOWNONBLOCK)

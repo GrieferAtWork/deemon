@@ -64,8 +64,8 @@ DECL_BEGIN
 
 /* Parse a with-statement/expression.
  * NOTE: This function expects the current token to be `with` */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_with(bool is_statement, bool allow_nonblock) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;
 	DREF struct ast *result, *other, *merge;
@@ -87,7 +87,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	 * NOTE: We always allow the user to declare variables in here,
 	 *       so-as to make it easier to make use of with-statements
 	 *       where the with-expression is re-used inside the block. */
-	result = ast_parse_comma(AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
+	result = ast_parse_comma(self,
+	                         AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
 	                         AST_FMULTIPLE_TUPLE,
 	                         NULL);
 	if unlikely(!result)
@@ -139,8 +140,8 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	result_v[1] = merge; /* Inherit. */
 
 	/* Finally, parse the content of the wrapped try-statement. */
-	result = is_statement ? ast_parse_statement(allow_nonblock)
-	                      : ast_parse_expr(LOOKUP_SYM_NORMAL);
+	result = is_statement ? ast_parse_statement(self, allow_nonblock)
+	                      : ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err_result_v_1;
 
@@ -201,8 +202,8 @@ err_scope_r:
 
 
 /* Same as `ast_parse_try_hybrid` but for with statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_with_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;
 	DREF struct ast *result, *other, *merge;
@@ -224,7 +225,8 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	 * NOTE: We always allow the user to declare variables in here,
 	 *       so-as to make it easier to make use of with-statements
 	 *       where the with-expression is re-used inside the block. */
-	result = ast_parse_comma(AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
+	result = ast_parse_comma(self,
+	                         AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS,
 	                         AST_FMULTIPLE_TUPLE,
 	                         NULL);
 	if unlikely(!result)
@@ -275,7 +277,7 @@ ast_parse_with_hybrid(unsigned int *p_was_expression) {
 	result_v[1] = merge; /* Inherit. */
 
 	/* Finally, parse the content of the wrapped try-statement. */
-	result = ast_parse_statement_or_expression(p_was_expression);
+	result = ast_parse_statement_or_expression(self, p_was_expression);
 	if unlikely(!result)
 		goto err_result_v_1;
 

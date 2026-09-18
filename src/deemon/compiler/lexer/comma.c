@@ -138,8 +138,9 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-ast_parse_lookup_mode(unsigned int *__restrict p_mode) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+ast_parse_lookup_mode(DeeLexer *self, unsigned int *__restrict p_mode) {
+	(void)self;
 next_modifier:
 	switch (tok) {
 
@@ -243,8 +244,8 @@ err:
  * @param: flags:      Set of `AST_FMULTIPLE_*` - How should multiple values be packaged.
  * @param: p_out_mode: When non-NULL, instead of parsing a `;` when required,
  *                     set to `AST_COMMA_OUT_FNEEDSEMI` indicative of this. */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_comma(DeeLexer *self, uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	struct decl_ast decl;
 	DREF struct ast *current;
 	bool need_semi;
@@ -275,7 +276,7 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 
 	/* Allow explicit visibility modifiers when variable can be declared. */
 	if (mode & AST_COMMA_ALLOWVARDECLS &&
-	    ast_parse_lookup_mode(&lookup_mode))
+	    ast_parse_lookup_mode(self, &lookup_mode))
 		goto err;
 
 	/* Allow `final` variable declarations.
@@ -357,7 +358,8 @@ next_expr:
 			if (!(symbol_mode & LOOKUP_SYM_VARYING))
 				symbol_mode |= LOOKUP_SYM_FINAL;
 		}
-		current = ast_setddi(ast_parse_class(class_flags, class_name,
+		current = ast_setddi(ast_parse_class(self,
+		                                     class_flags, class_name,
 		                                     class_name != NULL,
 		                                     symbol_mode),
 		                     &loc);
@@ -414,7 +416,8 @@ err_function_anno:
 					goto err;
 				}
 				current_basescope->bs_flags |= current_tags.at_code_flags;
-				current = ast_parse_function_noscope(function_name, &need_semi, false,
+				current = ast_parse_function_noscope(self,
+				                                     function_name, &need_semi, false,
 				                                     &loc, &decl, function_symbol);
 				/* Compile documentation text */
 				if (current && unlikely(doctext_compile(&temp.at_doc))) {
@@ -492,7 +495,7 @@ err_function_anno:
 			if (WARN(W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
 				goto err;
 		}
-		current = ast_parse_expr(lookup_mode);
+		current = ast_parse_expr(self, lookup_mode);
 
 		/* Check for errors. */
 		if unlikely(!current)
@@ -508,7 +511,7 @@ err_function_anno:
 				 * While this isn't support anymore, still try to emulate it... */
 				if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
 					goto err_current;
-				if (ast_parse_lookup_mode(&lookup_mode))
+				if (ast_parse_lookup_mode(self, &lookup_mode))
 					goto err;
 			}
 			loc_here(&symbol_name_loc);
@@ -597,7 +600,7 @@ err_function_anno:
 					goto err_current;
 
 				/* Parse a preferred-type brace expression. */
-				args = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				args = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!args)
 					goto err_current;
 
@@ -636,13 +639,14 @@ err_current_flags_in_pack:
 					goto err_current_flags_in_pack;
 
 				/* Empty argument list (Same as none at all). */
-				temp = maybe_expression_begin();
+				temp = maybe_expression_begin(self);
 				if (temp <= 0) {
 					if unlikely(temp < 0)
 						goto err_current_flags_in_pack;
 					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
 				} else {
-					args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+					args = ast_parse_comma(self,
+					                       AST_COMMA_FORCEMULTIPLE,
 					                       AST_FMULTIPLE_TUPLE,
 					                       NULL);
 				}
@@ -665,7 +669,8 @@ do_parse_paren_arg_list:
 					/* Empty argument list (Same as none at all). */
 					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
 				} else {
-					args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
+					args = ast_parse_comma(self,
+					                       AST_COMMA_FORCEMULTIPLE,
 					                       AST_FMULTIPLE_TUPLE,
 					                       NULL);
 				}
@@ -712,7 +717,7 @@ err_args:
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err_current;
-					if unlikely(decl_ast_parse(&decl))
+					if unlikely(decl_ast_parse(self, &decl))
 						goto err_current;
 					if (var_symbol->s_decltype.da_type != DAST_NONE) {
 						bool are_equal;
@@ -743,7 +748,7 @@ err_args:
 		if (mode & AST_COMMA_STRICTCOMMA) {
 			/* Peek the next token to check if it might be an expression. */
 			int temp;
-			temp = maybe_expression_begin_peek();
+			temp = maybe_expression_begin_peek(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err_current;
@@ -763,7 +768,7 @@ continue_at_comma:
 			goto err;
 		{
 			int temp;
-			temp = maybe_expression_begin();
+			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err;
@@ -803,7 +808,8 @@ continue_at_comma:
 			goto err_current;
 
 		/* TODO: Add support for applying annotations here! */
-		store_source = ast_parse_comma(AST_COMMA_PARSESINGLE |
+		store_source = ast_parse_comma(self,
+		                               AST_COMMA_PARSESINGLE |
 		                               (mode & AST_COMMA_STRICTCOMMA),
 		                               AST_FMULTIPLE_KEEPLAST,
 		                               NULL);
@@ -884,7 +890,7 @@ do_append_gen_to_batch:
 				goto continue_at_comma;
 			} else {
 				int temp;
-				temp = maybe_expression_begin_peek();
+				temp = maybe_expression_begin_peek(self);
 				if unlikely(temp < 0)
 					goto err_current;
 				if (temp)

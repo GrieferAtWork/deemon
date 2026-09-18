@@ -37,11 +37,11 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF struct ast *DCALL
-ast_parse_catchmask(void) {
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_catchmask(DeeLexer *self) {
 	size_t exprc, expra;
 	DREF struct ast **exprv, *result;
-	result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+	result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
 	if (tok == '|' && result) {
 		struct ast_loc multi_loc;
 		exprc = 1;
@@ -97,7 +97,7 @@ do_realloc:
 				expra = new_expra;
 				exprv = new_exprv;
 			}
-			result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+			result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_exprv;
 			exprv[exprc++] = result; /* Inherit */
@@ -124,8 +124,8 @@ err_r:
 
 
 /* Parse a try-statement/expression. */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_try(bool is_statement) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_try(DeeLexer *self, bool is_statement) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;
 	size_t catcha, catchc;
@@ -136,8 +136,8 @@ ast_parse_try(bool is_statement) {
 	if unlikely(yield() < 0)
 		goto err;
 	result = is_statement
-	         ? ast_parse_statement(false)
-	         : ast_parse_expr(LOOKUP_SYM_NORMAL);
+	         ? ast_parse_statement(self, false)
+	         : ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err;
 	catcha = 0;
@@ -147,7 +147,7 @@ ast_parse_try(bool is_statement) {
 		tok_t mode = tok;
 		if unlikely(ast_tags_clear())
 			goto err_try;
-		if unlikely(parse_tags_block())
+		if unlikely(parse_tags_block(self))
 			goto err_try;
 		if (tok != KWD_finally && tok != KWD_catch)
 			break;
@@ -188,8 +188,8 @@ do_realloc_catchv:
 		if (mode == KWD_finally) {
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			handler->ce_code = is_statement
-			                   ? ast_parse_statement(false)
-			                   : ast_parse_expr(LOOKUP_SYM_NORMAL);
+			                   ? ast_parse_statement(self, false)
+			                   : ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!handler->ce_code)
 				goto err_try;
 		} else {
@@ -200,7 +200,7 @@ do_realloc_catchv:
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
-			if (tok == TOK_DOTS) {
+			if (tok == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(yield() < 0)
 					goto err_try_flags;
 				if (TPP_ISKEYWORD(tok)) {
@@ -243,7 +243,7 @@ do_realloc_catchv:
 			} else {
 parse_catch_mask:
 				/* Explicit catch mask: `try { ... } catch (get_mask())` */
-				handler->ce_mask = ast_parse_catchmask();
+				handler->ce_mask = ast_parse_catchmask(self);
 				/* NOTE: For some reason I though it would be a good idea to use
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as` in its place is literally a 1-on-1
@@ -282,8 +282,8 @@ end_catch_handler:
 			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = is_statement
-			                   ? ast_parse_statement(false)
-			                   : ast_parse_expr(LOOKUP_SYM_NORMAL);
+			                   ? ast_parse_statement(self, false)
+			                   : ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!handler->ce_code)
 				goto err_try;
 			if (is_new_scope)
@@ -330,8 +330,8 @@ err:
 
 /* With the current token being `try`, parse the construct and
  * try to figure out if it's a statement or an expression. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_try_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;
 	size_t catcha, catchc;
@@ -342,7 +342,7 @@ ast_parse_try_hybrid(unsigned int *p_was_expression) {
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
-	result = ast_parse_hybrid_primary(&was_expression);
+	result = ast_parse_hybrid_primary(self, &was_expression);
 	if unlikely(!result)
 		goto err;
 	catcha = 0;
@@ -352,7 +352,7 @@ ast_parse_try_hybrid(unsigned int *p_was_expression) {
 		tok_t mode = tok;
 		if unlikely(ast_tags_clear())
 			goto err_try;
-		if unlikely(parse_tags_block())
+		if unlikely(parse_tags_block(self))
 			goto err_try;
 		if (tok != KWD_finally && tok != KWD_catch)
 			break;
@@ -391,7 +391,7 @@ do_realloc_catchv:
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
 		if (mode == KWD_finally) {
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
-			handler->ce_code = ast_parse_hybrid_secondary(&was_expression);
+			handler->ce_code = ast_parse_hybrid_secondary(self, &was_expression);
 			if unlikely(!handler->ce_code)
 				goto err_try;
 		} else {
@@ -402,7 +402,7 @@ do_realloc_catchv:
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
-			if (tok == TOK_DOTS) {
+			if (tok == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(yield() < 0)
 					goto err_try_flags;
 				if (TPP_ISKEYWORD(tok)) {
@@ -445,7 +445,7 @@ do_realloc_catchv:
 			} else {
 parse_catch_mask:
 				/* Explicit catch mask: `try { ... } catch (get_mask())` */
-				handler->ce_mask = ast_parse_catchmask();
+				handler->ce_mask = ast_parse_catchmask(self);
 
 				/* NOTE: For some reason I though it would be a good idea to use
 				 *       the arrow token here in the old deemon (like wtf?).
@@ -484,7 +484,7 @@ end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
-			handler->ce_code = ast_parse_hybrid_secondary(&was_expression);
+			handler->ce_code = ast_parse_hybrid_secondary(self, &was_expression);
 			if unlikely(!handler->ce_code)
 				goto err_try;
 			if (is_new_scope)

@@ -91,7 +91,7 @@ check_recursion_after_expression_suffix:
 			}
 			if (self->jl_tok == ':')
 				goto parse_remainder_after_colon_popscope;
-			if (self->jl_tok == ',' || self->jl_tok == TOK_DOTS) {
+			if (self->jl_tok == ',' || self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 parse_remainder_after_comma_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
@@ -125,7 +125,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 #endif /* JIT_EVAL */
 			goto parse_remainder_after_rbrace_popscope;
 		}
-		if (self->jl_tok == ',' || self->jl_tok == TOK_DOTS)
+		if (self->jl_tok == ',' || self->jl_tok == TPP_TOK_DOT_DOT_DOT)
 			goto parse_remainder_after_comma_popscope;
 		if (self->jl_tok == ':')
 			goto parse_remainder_after_colon_popscope;

@@ -588,22 +588,23 @@ INTDEF struct user_assembler current_userasm;
 #define uasm_defsym(sym) (void)(asm_defsym(sym), current_userasm.ua_lasti = ASM_DELOP)
 
 /* Parse (process tokens from TPP) user-define assembly. */
-INTDEF WUNUSED int DFCALL uasm_parse(void);
-INTDEF WUNUSED int DFCALL uasm_parse_instruction(void);
-INTDEF WUNUSED int DFCALL uasm_parse_directive(void);
-INTDEF WUNUSED struct TPPKeyword *DFCALL uasm_parse_symnam(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse(DeeLexer *self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_instruction(DeeLexer *self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_directive(DeeLexer *self);
+INTDEF WUNUSED NONNULL((1)) struct TPPKeyword *DFCALL uasm_parse_symnam(DeeLexer *self);
 /* Parse an operand. NOTE: The caller is responsible for ZERO-initializing `result` beforehand. */
-INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_operand(struct asm_invoke_operand *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL uasm_parse_operand(DeeLexer *self, struct asm_invoke_operand *__restrict result);
 /* Parse an integer expression as found in operands, following a `$` token.
  * @param: features: Set of `UASM_INTEXPR_F*` */
-INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL uasm_parse_intexpr(DeeLexer *self, struct asm_intexpr *result, uint16_t features);
 #define UASM_INTEXPR_FNORMAL 0x0000
 #define UASM_INTEXPR_FHASSP  0x0001 /* Recognize case-insensitive `SP` as expanding to `current_assembler.a_stackcur` */
 
 /* Parse and return a 16-bit unsigned integer.
  * @return: -1: An error was thrown.
  * @param: features: Set of `UASM_INTEXPR_F*` */
-INTDEF WUNUSED int32_t DFCALL uasm_parse_imm16(uint16_t features);
+INTDEF WUNUSED NONNULL((1)) int32_t DFCALL
+uasm_parse_imm16(DeeLexer *self, uint16_t features);
 
 /* Invoke a given `instr` using data from `invoc`.
  * NOTE: This function also sets the `Dee_CODE_FASSEMBLY` flag in the current base scope. */

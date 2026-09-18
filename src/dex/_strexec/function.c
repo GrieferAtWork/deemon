@@ -317,7 +317,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 		while (lex.jl_tok) {
 			/* Special case: unnamed varargs. */
 			struct jit_object_entry *argent;
-			if (lex.jl_tok == TOK_DOTS) {
+			if (lex.jl_tok == TPP_TOK_DOT_DOT_DOT) {
 				if (result->jf_varargs != (size_t)-1) {
 err_varargs_already_defined:
 					DeeError_Throwf(&DeeError_SyntaxError,
@@ -373,7 +373,7 @@ err_no_keyword_for_argument:
 					if unlikely(!argent)
 						goto err_r;
 					JITLexer_Yield(&lex);
-					if (lex.jl_tok == TOK_DOTS) {
+					if (lex.jl_tok == TPP_TOK_DOT_DOT_DOT) {
 						/* Varargs... */
 						if (result->jf_varargs != (size_t)-1)
 							goto err_varargs_already_defined;

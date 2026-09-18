@@ -95,11 +95,12 @@ LOCAL WUNUSED NONNULL((1, 2)) bool Dee_libc_strcaseeq(char *a, char *b) {
 	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
 
 
-PRIVATE WUNUSED DREF DeeObject *DFCALL do_parse_constant(void) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+do_parse_constant(DeeLexer *self) {
 	DREF struct ast *const_ast;
 	DREF DeeObject *result;
 	DO(scope_push());
-	const_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	const_ast = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	scope_pop();
 	if unlikely(!const_ast)
 		goto err;
@@ -123,9 +124,10 @@ err:
 	return NULL;
 }
 
-PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_op(int wid) {
+PRIVATE NONNULL((1)) struct asm_sym *DFCALL
+do_parse_symbol_for_op(DeeLexer *self, int wid) {
 	struct asm_intexpr expr;
-	DO(uasm_parse_intexpr(&expr, UASM_INTEXPR_FHASSP));
+	DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FHASSP));
 	if (!expr.ie_sym) {
 		expr.ie_sym = asm_newsym();
 		asm_defsym(expr.ie_sym);
@@ -145,12 +147,14 @@ err:
 	return NULL;
 }
 
-PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_except(void) {
-	return do_parse_symbol_for_op(W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL);
+PRIVATE WUNUSED NONNULL((1)) struct asm_sym *DFCALL
+do_parse_symbol_for_except(DeeLexer *self) {
+	return do_parse_symbol_for_op(self, W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL);
 }
 
-PRIVATE struct asm_sym *DFCALL do_parse_symbol_for_reloc(void) {
-	return do_parse_symbol_for_op(W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL);
+PRIVATE WUNUSED NONNULL((1)) struct asm_sym *DFCALL
+do_parse_symbol_for_reloc(DeeLexer *self) {
+	return do_parse_symbol_for_op(self, W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL);
 }
 
 
@@ -196,8 +200,8 @@ get_reloc_by_name(char const *__restrict name) {
 /*  ================================  */
 /*  === User-assembly directives ===  */
 /*  ================================  */
-INTERN WUNUSED int DFCALL
-uasm_parse_directive(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+uasm_parse_directive(DeeLexer *self) {
 #define NAMEISKWD(x)                       \
 	(name->k_size == COMPILER_STRLEN(x) && \
 	 MEMCASEEQ(name->k_name, x, sizeof(x) - sizeof(char)))
@@ -205,7 +209,7 @@ uasm_parse_directive(void) {
 	(name->k_size == (len) && \
 	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
 	struct TPPKeyword *name;
-	name = uasm_parse_symnam();
+	name = uasm_parse_symnam(self);
 	if unlikely(!name)
 		goto err;
 	if (tok == ':') {
@@ -304,7 +308,7 @@ do_handle_code:
 	for (;;) {
 		if (tok == '@' && unlikely(yield() < 0))
 			goto err;
-		name = uasm_parse_symnam();
+		name = uasm_parse_symnam(self);
 		if unlikely(!name)
 			goto err;
 		if (NAMEISKWD("yielding")) {
@@ -354,10 +358,10 @@ do_handle_reloc:
 		} else {
 			struct asm_intexpr expr;
 			DO(WARN(W_UASM_RELOC_NEED_DOT));
-			DO(uasm_parse_intexpr(&expr, UASM_INTEXPR_FNORMAL));
+			DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FNORMAL));
 		}
 		DO(skip(',', W_EXPECTED_COMMA));
-		reloc_name  = uasm_parse_symnam();
+		reloc_name  = uasm_parse_symnam(self);
 		reloc_sym   = NULL;
 		reloc_value = 0;
 		reloc_type  = get_reloc_by_name(reloc_name->k_name);
@@ -370,7 +374,7 @@ do_handle_reloc:
 			if unlikely(yield() < 0)
 				goto err;
 			/* Parse the relocation symbol. */
-			reloc_sym = do_parse_symbol_for_reloc();
+			reloc_sym = do_parse_symbol_for_reloc(self);
 			if unlikely(!reloc_sym)
 				goto err;
 			if (tok == ',') {
@@ -378,7 +382,7 @@ do_handle_reloc:
 				if unlikely(yield() < 0)
 					goto err;
 				/* Parse the relocation value. */
-				DO(uasm_parse_intexpr(&rval, UASM_INTEXPR_FNORMAL));
+				DO(uasm_parse_intexpr(self, &rval, UASM_INTEXPR_FNORMAL));
 				if (rval.ie_sym)
 					DO(WARN(W_UASM_RELOC_VALUE_NOT_A_SYMBOL));
 				reloc_value = (uint16_t)rval.ie_val;
@@ -411,11 +415,11 @@ do_handle_except:
 		 *   - `[@]handled`     -- Set the `Dee_EXCEPTION_HANDLER_FHANDLED` bit.
 		 *   - `[@]mask(const)` -- Use `const` as exception handler mask.
 		 */
-		except_start = do_parse_symbol_for_except();
+		except_start = do_parse_symbol_for_except(self);
 		DO(skip(',', W_EXPECTED_COMMA));
-		except_end = do_parse_symbol_for_except();
+		except_end = do_parse_symbol_for_except(self);
 		DO(skip(',', W_EXPECTED_COMMA));
-		except_entry = do_parse_symbol_for_except();
+		except_entry = do_parse_symbol_for_except(self);
 		except_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
 		while (tok == ',') {
@@ -451,7 +455,7 @@ except_unknown_tag:
 					goto except_err;
 				if (skip('(', W_EXPECTED_LPAREN))
 					goto except_err;
-				mask = do_parse_constant();
+				mask = do_parse_constant(self);
 				if (DeeNone_Check(mask)) {
 					/* Special case: `mask(none)` is the same as `mask(type none)` */
 					Dee_Decref(mask);
@@ -513,7 +517,7 @@ do_emit_memory:
 		current_assembler.a_flag &= ~(ASM_FPEEPHOLE);
 		current_basescope->bs_flags |= Dee_CODE_FASSEMBLY;
 		for (;;) {
-			DO(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP));
+			DO(uasm_parse_intexpr(self, &value, UASM_INTEXPR_FHASSP));
 			if (value.ie_sym) {
 				/* Emit a relocation. */
 				uint16_t relo_type;
@@ -624,7 +628,7 @@ do_handle_ddi:
 		/* `.ddi <line:imm>, <col:imm>` */
 		/* `.ddi <filename:string>, <line:imm>` */
 		/* `.ddi <filename:string>, <line:imm>, <col:imm>` */
-		filename = do_parse_constant();
+		filename = do_parse_constant(self);
 		if unlikely(!filename)
 			goto err;
 		if (tok != ',') {
@@ -635,7 +639,7 @@ do_handle_ddi:
 		} else {
 			if unlikely(yield() < 0)
 				goto err_ddi_filename;
-			line = do_parse_constant();
+			line = do_parse_constant(self);
 			if unlikely(!line)
 				goto err_ddi_filename;
 			if (tok != ',') {
@@ -652,7 +656,7 @@ do_handle_ddi:
 				/* `.ddi <filename:string>, <line:imm>, <col:imm>` */
 				if unlikely(yield() < 0)
 					goto err_ddi_line;
-				col = do_parse_constant();
+				col = do_parse_constant(self);
 				if unlikely(!col)
 					goto err_ddi_line;
 			}
@@ -761,7 +765,7 @@ do_handle_adjstack:
 		 * >>               // between this point and the end of it's instruction.
 		 * >> 1:  print @"The current stack depth is 42", nl
 		 */
-		DO(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP));
+		DO(uasm_parse_intexpr(self, &new_depth, UASM_INTEXPR_FHASSP));
 		if unlikely(new_depth.ie_sym)
 			DO(WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION));
 		if unlikely(new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX)

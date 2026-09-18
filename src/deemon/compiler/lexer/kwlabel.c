@@ -38,15 +38,16 @@
 DECL_BEGIN
 
 
-INTERN WUNUSED NONNULL((2)) DREF struct ast *DCALL
-ast_parse_argument_list(uint16_t mode,
+INTERN WUNUSED NONNULL((1, 3)) DREF struct ast *DFCALL
+ast_parse_argument_list(DeeLexer *self, uint16_t mode,
                         /*out*/ DREF struct ast **__restrict p_keyword_labels) {
 	DREF struct ast *result;
 	DREF struct ast *kwdlist_ast;
 	DeeObject *kwdlist;
 	*p_keyword_labels = NULL;
 	ASSERT(mode & AST_COMMA_FORCEMULTIPLE);
-	result = ast_parse_comma(mode |
+	result = ast_parse_comma(self,
+	                         mode |
 	                         AST_COMMA_ALLOWKWDLIST,
 	                         AST_FMULTIPLE_TUPLE,
 	                         NULL);
@@ -62,7 +63,7 @@ ast_parse_argument_list(uint16_t mode,
 			goto err_r;
 
 		/* Parse the keyword invocation AST. */
-		*p_keyword_labels = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		*p_keyword_labels = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!*p_keyword_labels)
 			goto err_r;
 	} else if (TPP_ISKEYWORD(tok)) {
@@ -124,7 +125,7 @@ ast_parse_argument_list(uint16_t mode,
 				}
 
 				/* Parse the expression that is bound to the keyword. */
-				argument_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				argument_value = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!argument_value)
 					goto err_r_kwdlist;
 				result->a_multiple.m_astv[result->a_multiple.m_astc++] = argument_value; /* Inherit reference. */

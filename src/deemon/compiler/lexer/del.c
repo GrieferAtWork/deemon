@@ -34,11 +34,11 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF struct ast *DCALL
-ast_parse_del_single(unsigned int lookup_mode) {
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_del_single(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	DREF struct ast *new_result;
-	result = ast_parse_unary(lookup_mode);
+	result = ast_parse_unary(self, lookup_mode);
 	if unlikely(!result)
 		goto err;
 	switch (result->a_type) {
@@ -141,16 +141,16 @@ err:
  *       unbind variables (deleting only referring to the
  *       compile-time symbol becoming unknown and being added to
  *       the current scope's chain of deleted/anonymous symbols) */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_del(unsigned int lookup_mode) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_del(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	size_t delc, dela;
 	DREF struct ast **delv;
 
 	/* Parse additional lookup modifiers. */
-	if (ast_parse_lookup_mode(&lookup_mode))
+	if (ast_parse_lookup_mode(self, &lookup_mode))
 		goto err;
-	result = ast_parse_del_single(lookup_mode);
+	result = ast_parse_del_single(self, lookup_mode);
 	if unlikely(!result)
 		goto err;
 	if (tok == ',') {
@@ -160,7 +160,7 @@ ast_parse_del(unsigned int lookup_mode) {
 		/* Check for relaxed comma-rules. */
 		{
 			int temp;
-			temp = maybe_expression_begin();
+			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err_r;
@@ -173,7 +173,7 @@ ast_parse_del(unsigned int lookup_mode) {
 		dela = 2, delc = 1;
 		delv[0] = result; /* Inherit */
 		for (;;) {
-			result = ast_parse_del_single(lookup_mode);
+			result = ast_parse_del_single(self, lookup_mode);
 			if unlikely(!result)
 				goto err_delv;
 			if (delc == dela) {
@@ -201,7 +201,7 @@ do_realloc_delv:
 				goto err_delv;
 			{
 				int temp;
-				temp = maybe_expression_begin();
+				temp = maybe_expression_begin(self);
 				if (temp <= 0) {
 					if unlikely(temp < 0)
 						goto err_delv;

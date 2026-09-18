@@ -1378,7 +1378,7 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 		break;
 
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 		/* Anonymous varargs with automatic expansion.
 		 * -> We handle this kind-of cheaty by simply returning the varargs symbol,
 		 *    but not consuming the "..."-token. Thus, our caller will see that same
@@ -2619,7 +2619,7 @@ DEFINE_SECONDARY(SumOperand) {
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		JITLexer_Yield(self);
-		if (self->jl_tok == TOK_DOTS && cmd == '+') {
+		if (self->jl_tok == TPP_TOK_DOT_DOT_DOT && cmd == '+') {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			merge = DeeSeq_Sum(lhs);
@@ -2727,7 +2727,7 @@ DEFINE_SECONDARY(CmpOperand) {
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		JITLexer_Yield(self);
-		if (self->jl_tok == TOK_DOTS && (cmd == '<' || cmd == '>')) {
+		if (self->jl_tok == TPP_TOK_DOT_DOT_DOT && (cmd == '<' || cmd == '>')) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			merge = cmd == '<'
@@ -3145,7 +3145,7 @@ DEFINE_SECONDARY(LandOperand) {
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		JITLexer_Yield(self);
-		if (self->jl_tok == TOK_DOTS) {
+		if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			{
@@ -3217,7 +3217,7 @@ DEFINE_SECONDARY(LorOperand) {
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		JITLexer_Yield(self);
-		if (self->jl_tok == TOK_DOTS) {
+		if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			{
@@ -3580,7 +3580,7 @@ DEFINE_SECONDARY(CommaTupleOperand) {
 again:
 	switch (self->jl_tok) {
 
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 		/* Expand expression */
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL
@@ -3654,7 +3654,7 @@ DEFINE_SECONDARY(CommaListOperand) {
 again:
 	switch (self->jl_tok) {
 
-	case TOK_DOTS:
+	case TPP_TOK_DOT_DOT_DOT:
 		/* Expand expression */
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL

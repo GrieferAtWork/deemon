@@ -162,7 +162,8 @@ do_realloc_symv:
 /* Parse the argument list of a function definition,
  * automatically creating new symbols for arguments,
  * as well as setting code flags for variadic arguments. */
-INTERN WUNUSED int DCALL parse_arglist(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+parse_arglist(DeeLexer *self) {
 	uint16_t defaulta, arga;
 	DREF DeeObject **new_defaultv;
 	struct symbol *arg;
@@ -183,7 +184,7 @@ INTERN WUNUSED int DCALL parse_arglist(void) {
 			uint16_t symbol_flags;
 
 			/* Special case: unnamed varargs. */
-			if (tok == TOK_DOTS) {
+			if (tok == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARARGS) {
 					arg = current_basescope->bs_varargs;
 					if likely(arg) {
@@ -220,7 +221,7 @@ parse_varargs_suffix:
 					if unlikely(yield() < 0)
 						goto err;
 				}
-				if unlikely(tok == TOK_DOTS) {
+				if unlikely(tok == TPP_TOK_DOT_DOT_DOT) {
 					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if unlikely(yield() < 0)
@@ -230,7 +231,7 @@ parse_varargs_suffix:
 					/* Parse argument declaration information. */
 					if unlikely(yield() < 0)
 						goto err;
-					if unlikely(decl_ast_parse_for_symbol(arg))
+					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
 				if unlikely(tok == '=') {
@@ -299,7 +300,7 @@ parse_varargs_suffix:
 			arg = parse_argument_name();
 			if unlikely(!arg)
 				goto err;
-			if (tok == TOK_DOTS) {
+			if (tok == TPP_TOK_DOT_DOT_DOT) {
 				/* Varargs argument. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -326,7 +327,7 @@ set_argument_as_local:
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
-					if unlikely(decl_ast_parse_for_symbol(arg))
+					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
 				if (tok == '=')
@@ -350,7 +351,7 @@ set_argument_as_local:
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
-					if unlikely(decl_ast_parse_for_symbol(arg))
+					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
 				if unlikely(tok == '=') {
@@ -362,7 +363,7 @@ skip_default_suffix:
 						goto err;
 
 					/* Parse & discard the default expression. */
-					default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+					default_expr = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 					if unlikely(!default_expr)
 						goto err;
 					ast_decref(default_expr);
@@ -371,7 +372,7 @@ skip_default_suffix:
 			} else if (tok == ':') { /* Declaration suffix. */
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(decl_ast_parse_for_symbol(arg))
+				if unlikely(decl_ast_parse_for_symbol(self, arg))
 					goto err;
 				if (tok == '=')
 					goto parse_default_suffix;
@@ -382,7 +383,7 @@ skip_default_suffix:
 parse_default_suffix:
 				if unlikely(yield() < 0)
 					goto err;
-				default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				default_expr = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!default_expr)
 					goto err;
 				if (ast_optimize_all(default_expr, true)) {
@@ -483,19 +484,17 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
-                   bool allow_missing_params,
-                   struct ast_loc *name_loc,
-                   struct decl_ast *decl,
-                   /*[0..1]*/ struct symbol *function_symbol) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+                   bool allow_missing_params, struct ast_loc *name_loc,
+                   struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;
 	ast_annotations_get(&annotations);
 	if unlikely(basescope_push())
 		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
-	result = ast_parse_function_noscope(name, p_need_semi, allow_missing_params,
+	result = ast_parse_function_noscope(self, name, p_need_semi, allow_missing_params,
 	                                    name_loc, decl, function_symbol);
 	basescope_pop();
 	if unlikely(!result)
@@ -506,13 +505,10 @@ err_anno:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope(struct TPPKeyword *name,
-                           bool *p_need_semi,
-                           bool allow_missing_params,
-                           struct ast_loc *name_loc,
-                           struct decl_ast *decl,
-                           /*[0..1]*/ struct symbol *function_symbol) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+                           bool allow_missing_params, struct ast_loc *name_loc,
+                           struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol) {
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
 	uint32_t old_flags;
@@ -538,7 +534,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags_decl;
-		if unlikely(parse_arglist())
+		if unlikely(parse_arglist(self))
 			goto err_flags_decl;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
@@ -557,7 +553,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		return_type = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if unlikely(!return_type)
 			goto err_decl;
-		if unlikely(decl_ast_parse(return_type)) {
+		if unlikely(decl_ast_parse(self, return_type)) {
 			Dee_Free(return_type);
 			goto err_decl;
 		}
@@ -588,7 +584,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 			goto err_decl;
 
 		/* Expression function. */
-		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		code = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!code)
 			goto err_decl;
 		result = code->a_type == AST_EXPAND
@@ -606,7 +602,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags_decl;
-		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
+		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
@@ -695,8 +691,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope_noargs(bool *p_need_semi) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	if (tok == TOK_ARROW) {
@@ -705,7 +701,7 @@ ast_parse_function_noscope_noargs(bool *p_need_semi) {
 		if unlikely(yield() < 0)
 			goto err;
 		/* Expression function. */
-		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		code = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!code)
 			goto err;
 		result = code->a_type == AST_EXPAND
@@ -723,7 +719,7 @@ ast_parse_function_noscope_noargs(bool *p_need_semi) {
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags;
-		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
+		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
@@ -767,8 +763,9 @@ err:
 
 /* Parse a `() -> 42` or `a -> a+42`-style lambda.
  * In either case, upon entry the current token must be the '->' */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_java_lambda(DeeLexer *self,
+                               struct TPPKeyword *first_argument_name,
                                struct ast_loc *first_argument_loc) {
 	struct ast_loc arrow_loc;
 	DREF struct ast *result, *code;
@@ -816,7 +813,7 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		int error;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		error = parse_arglist();
+		error = parse_arglist(self);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if unlikely(error)
 			goto err_scope;
@@ -833,7 +830,7 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 		struct decl_ast temp;
 		if unlikely(yield() < 0)
 			goto err_scope;
-		if unlikely(decl_ast_parse(&temp))
+		if unlikely(decl_ast_parse(self, &temp))
 			goto err_scope;
 		decl_ast_fini(&temp);
 	}
@@ -847,11 +844,11 @@ ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
 	 * or the '{' in case it uses statements (or returns a sequence) */
 	if (tok == '{') {
 		unsigned int was_expression;
-		code = ast_parse_statement_or_braces(&was_expression);
+		code = ast_parse_statement_or_braces(self, &was_expression);
 		if (was_expression != AST_PARSE_WASEXPR_NO)
 			goto wrap_code_with_return;
 	} else {
-		code = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		code = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 wrap_code_with_return:
 		if unlikely(!code)
 			goto err_scope;
@@ -887,7 +884,8 @@ err:
  * @return:  1: Yes
  * @return:  0: No
  * @return: -1: Error */
-INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 	struct TPPLexerPosition pos;
 	if (!TPP_ISKEYWORD(tok)) {
 		if (tok == TOK_POW) {
@@ -896,7 +894,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 			 * comma-list as fallback, we know that this is varkwds! */
 			goto yes;
 		}
-		if (tok == TOK_DOTS) {
+		if (tok == TPP_TOK_DOT_DOT_DOT) {
 			/* Special case: there are 4 cases where this can still be an argument list:
 			 * >> (...) -> [...][0];           // anonymous varargs
 			 * >> (...,) -> [...][0];          // *ditto*
@@ -928,7 +926,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 	/* Now try to skip the argument list. */
 	for (;;) {
 		/* Special case: unnamed varargs. */
-		if (tok == TOK_DOTS) {
+		if (tok == TPP_TOK_DOT_DOT_DOT) {
 			if unlikely(yield() < 0)
 				goto err_restore;
 		} else {
@@ -943,7 +941,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 				goto nope_restore;
 			if unlikely(yield() < 0) /* Argument name. */
 				goto err_restore;
-			if (tok == TOK_DOTS && unlikely(yield() < 0))
+			if (tok == TPP_TOK_DOT_DOT_DOT && unlikely(yield() < 0))
 				goto err_restore;
 		}
 		if (tok == '?') {
@@ -955,7 +953,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 				/* Parse argument declaration information. */
 				if unlikely(yield() < 0)
 					goto err_restore;
-				if unlikely(decl_ast_skip())
+				if unlikely(decl_ast_skip(self))
 					goto err_restore;
 			}
 		} else {
@@ -967,7 +965,7 @@ INTERN WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void) {
 			if unlikely(yield() < 0)
 				goto err_restore;
 			/* Parse & discard the default expression. */
-			temp = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			temp = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!temp)
 				goto err_restore;
 			ast_decref(temp);
@@ -988,7 +986,7 @@ check_and_consume_rparen:
 		/* Parse argument declaration information. */
 		if unlikely(yield() < 0)
 			goto err_restore;
-		if unlikely(decl_ast_skip())
+		if unlikely(decl_ast_skip(self))
 			goto err_restore;
 	}
 	if (tok != TOK_ARROW)

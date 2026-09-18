@@ -120,16 +120,17 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
-asm_parse_operands(struct operand_list *__restrict list,
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+asm_parse_operands(DeeLexer *self,
+                   struct operand_list *__restrict list,
                    unsigned int type) {
 	/*ref*/ struct TPPString *operand_type;
 	DREF struct ast *operand_value;
 	struct asm_operand *operand;
 	while ((type == OPERAND_TYPE_LABEL
 	        ? TPP_ISKEYWORD(tok)
-	        : (tok == TOK_STRING ||
-	           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)))) ||
+	        : (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)))) ||
 	       (tok == '[')) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 		struct TPPKeyword *name = NULL;
@@ -175,8 +176,8 @@ asm_parse_operands(struct operand_list *__restrict list,
 			operand->ao_type  = NULL;
 		} else {
 			bool has_paren;
-			if (tok == TOK_STRING ||
-			    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+			if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+			    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 				operand_type = TPPLexer_ParseString();
 				if unlikely(!operand_type)
 					goto err;
@@ -187,7 +188,7 @@ asm_parse_operands(struct operand_list *__restrict list,
 			}
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
 				goto err_type;
-			operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			operand_value = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!operand_value)
 				goto err_type;
 			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
@@ -243,8 +244,8 @@ PRIVATE struct clobber_desc const clobber_descs[] = {
 PRIVATE int32_t DCALL asm_parse_clobber(void) {
 	struct TPPString *name;
 	uint16_t result = 0;
-	while (tok == TOK_STRING ||
-	       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	       (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		name = TPPLexer_ParseString();
 		if unlikely(!name)
 			goto err;
@@ -534,7 +535,8 @@ ok:
 
 
 /* Parse a user-defined assembly block. */
-INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_asm(DeeLexer *self) {
 	struct ast_loc loc;
 	bool is_asm_goto   = false;
 	uint16_t ast_flags = AST_FASSEMBLY_NORMAL;
@@ -572,8 +574,8 @@ yield_prefix:
 	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
 		goto err_flags;
 	loc_here(&loc); /* Use the assembly text for DDI information. */
-	if (tok == TOK_STRING ||
-	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		text = TPPLexer_ParseString();
 		if unlikely(!text)
 			goto err_flags;
@@ -643,12 +645,12 @@ yield_prefix:
 		/* Enable assembly formatting. */
 		ast_flags |= AST_FASSEMBLY_FORMAT;
 		/* Parse operands. */
-		if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_OUTPUT))
+		if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_OUTPUT))
 			goto err_ops;
 		if (is_colon()) {
 			if unlikely(yield() < 0)
 				goto err_ops;
-			if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_INPUT))
+			if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_INPUT))
 				goto err_ops;
 			if (is_colon()) {
 				int32_t clobber;
@@ -661,7 +663,7 @@ yield_prefix:
 				if (is_asm_goto && is_colon()) {
 					if unlikely(yield() < 0)
 						goto err_ops;
-					if unlikely(asm_parse_operands(&operands, OPERAND_TYPE_LABEL))
+					if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_LABEL))
 						goto err_ops;
 				}
 			}

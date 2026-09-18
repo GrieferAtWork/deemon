@@ -36,13 +36,14 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED DREF struct ast *DFCALL ast_do_parse_brace_items(void) {
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_do_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result;
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	if (tok == '\n' && yield() < 0)
 		goto err_flags;
-	result = ast_parse_brace_items();
+	result = ast_parse_brace_items(self);
 	if unlikely(!result)
 		goto err_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -54,21 +55,21 @@ err_flags:
 
 
 /* @param: mode: Set of `AST_COMMA_*` - What is allowed and when should we pack values. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_statement_or_expression(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	unsigned int was_expression;
 	switch (tok) {
 
 	case '{':
-		result = ast_parse_statement_or_braces(&was_expression);
+		result = ast_parse_statement_or_braces(self, &was_expression);
 		if unlikely(!result)
 			goto err;
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
 			unsigned long token_num = token.t_num;
-			result = ast_parse_postexpr(result);
+			result = ast_parse_postexpr(self, result);
 			if (token_num != token.t_num)
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
@@ -77,30 +78,30 @@ ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 		break;
 
 	case KWD_try:
-		result = ast_parse_try_hybrid(p_was_expression);
+		result = ast_parse_try_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_if:
-		result = ast_parse_if_hybrid(p_was_expression);
+		result = ast_parse_if_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_with:
-		result = ast_parse_with_hybrid(p_was_expression);
+		result = ast_parse_with_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_assert:
-		result = ast_parse_assert_hybrid(p_was_expression);
+		result = ast_parse_assert_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_import:
-		result = ast_parse_import_hybrid(p_was_expression);
+		result = ast_parse_import_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_for:
 	case KWD_foreach:
 	case KWD_do:
 	case KWD_while:
-		result = ast_parse_loopexpr_hybrid(p_was_expression);
+		result = ast_parse_loopexpr_hybrid(self, p_was_expression);
 		break;
 
 	case KWD_from:
@@ -119,7 +120,7 @@ ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 	case KWD_default:
 	case '@':
 	case ';':
-		result = ast_parse_statement(false);
+		result = ast_parse_statement(self, false);
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_NO;
 		break;
@@ -129,7 +130,8 @@ ast_parse_statement_or_expression(unsigned int *p_was_expression) {
 		size_t old_varc;
 		old_varc   = current_scope->s_mapc;
 		comma_mode = 0;
-		result = ast_parse_comma(AST_COMMA_PARSESINGLE |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_PARSESINGLE |
 		                         AST_COMMA_NOSUFFIXKWD |
 		                         AST_COMMA_ALLOWVARDECLS |
 		                         AST_COMMA_PARSESEMI,
@@ -166,8 +168,8 @@ err:
 
 
 /* Same as `ast_parse_try_hybrid` but for if statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_if_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *tt_branch;
 	DREF struct ast *ff_branch;
 	DREF struct ast *result, *merge;
@@ -184,7 +186,7 @@ ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 		goto err_flags;
-	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if unlikely(!result)
 		goto err;
@@ -193,7 +195,7 @@ ast_parse_if_hybrid(unsigned int *p_was_expression) {
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;
 	if (tok != KWD_else && tok != KWD_elif) {
-		tt_branch = ast_parse_hybrid_primary(&was_expression);
+		tt_branch = ast_parse_hybrid_primary(self, &was_expression);
 		if unlikely(!tt_branch)
 			goto err_r;
 	}
@@ -206,7 +208,7 @@ ast_parse_if_hybrid(unsigned int *p_was_expression) {
 		if unlikely(yield() < 0)
 			goto err_tt;
 do_else_branch:
-		ff_branch = ast_parse_hybrid_secondary(&was_expression);
+		ff_branch = ast_parse_hybrid_secondary(self, &was_expression);
 		if unlikely(!ff_branch)
 			goto err_tt;
 	}
@@ -232,8 +234,8 @@ err:
 
 
 /* Parse a statement or a brace-expression, with the current token being a `{` */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_statement_or_braces(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result, **new_elemv;
 	DREF struct ast *remainder;
 	struct ast_loc loc;
@@ -257,7 +259,7 @@ ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 		break;
 
 	case '.':
-		result = ast_do_parse_brace_items();
+		result = ast_do_parse_brace_items(self);
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
@@ -270,7 +272,7 @@ ast_parse_statement_or_braces(unsigned int *p_was_expression) {
 	case '{': /* Recursion! */
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_statement_or_braces(&was_expression);
+		result = ast_parse_statement_or_braces(self, &was_expression);
 		ASSERT(!result ||
 		       result->a_type == AST_MULTIPLE ||
 		       result->a_type == AST_CONSTEXPR);
@@ -281,7 +283,7 @@ parse_remainder_after_hybrid_popscope_resok:
 		if (was_expression == AST_PARSE_WASEXPR_NO)
 			goto parse_remainder_after_statement;
 		if (was_expression == AST_PARSE_WASEXPR_YES) {
-			result = ast_parse_postexpr(result);
+			result = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err;
 check_recursion_after_expression_suffix:
@@ -295,7 +297,7 @@ check_recursion_after_expression_suffix:
 			if (tok == ',') {
 parse_remainder_after_comma_popscope:
 				scope_pop();
-				remainder = ast_parse_brace_list(result);
+				remainder = ast_parse_brace_list(self, result);
 				if unlikely(!remainder)
 					goto err_r;
 				ast_decref(result);
@@ -338,7 +340,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 			goto parse_remainder_before_rbrace_popscope_wrap;
 		{
 			unsigned long token_num = token.t_num;
-			result                  = ast_parse_postexpr(result);
+			result                  = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err;
 			if (token_num != token.t_num)
@@ -353,25 +355,25 @@ parse_remainder_before_rbrace_popscope_wrap:
 	case KWD_try:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_try_hybrid(&was_expression);
+		result = ast_parse_try_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_if:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_if_hybrid(&was_expression);
+		result = ast_parse_if_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_with:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_with_hybrid(&was_expression);
+		result = ast_parse_with_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_assert:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_assert_hybrid(&was_expression);
+		result = ast_parse_assert_hybrid(self, &was_expression);
 parse_remainder_after_semicolon_hybrid_popscope:
 		if unlikely(!result)
 			goto err;
@@ -388,7 +390,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 	case KWD_import:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_import_hybrid(&was_expression);
+		result = ast_parse_import_hybrid(self, &was_expression);
 		if unlikely(!result)
 			goto err;
 		/* Same as `assert`: `import` requires a trailing `;` */
@@ -400,7 +402,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 	case KWD_while:
 		if unlikely(scope_push() < 0)
 			goto err;
-		result = ast_parse_loopexpr_hybrid(&was_expression);
+		result = ast_parse_loopexpr_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
 	case KWD_from:
@@ -425,7 +427,7 @@ is_a_statement:
 		/* Enter a new scope and parse expressions. */
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		result = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &loc);
+		result = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(!result)
 			goto err;
@@ -458,7 +460,8 @@ is_a_statement:
 		if unlikely(scope_push() < 0)
 			goto err;
 		comma_mode = 0;
-		result = ast_parse_comma(AST_COMMA_NORMAL |
+		result = ast_parse_comma(self,
+		                         AST_COMMA_NORMAL |
 		                         AST_COMMA_FORCEMULTIPLE |
 		                         AST_COMMA_ALLOWVARDECLS |
 		                         AST_COMMA_ALLOWTYPEDECL |
@@ -493,7 +496,7 @@ parse_remainder_after_colon_popscope:
 				/* mapping-like brace expression. */
 				if unlikely(yield() < 0)
 					goto err_r;
-				remainder = ast_parse_mapping(result);
+				remainder = ast_parse_mapping(self, result);
 				ast_decref(result);
 				if unlikely(!remainder)
 					goto err;
@@ -526,7 +529,7 @@ parse_remainder_after_statement:
 			if unlikely(yield() < 0)
 				goto err_r;
 		} else {
-			remainder = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &loc);
+			remainder = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
 			if unlikely(!remainder)
 				goto err_r;
 			if (remainder->a_type == AST_MULTIPLE &&

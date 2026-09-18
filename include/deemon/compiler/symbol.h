@@ -471,9 +471,9 @@ decl_ast_equal(struct decl_ast const *__restrict a,
                struct decl_ast const *__restrict b);
 
 /* Parse a declaration expression. */
-INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse(struct decl_ast *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse_for_symbol(struct symbol *__restrict self);
-INTDEF WUNUSED int DCALL decl_ast_skip(void);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL decl_ast_parse(DeeLexer *lexer, struct decl_ast *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL decl_ast_parse_for_symbol(DeeLexer *lexer, struct symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DFCALL decl_ast_skip(DeeLexer *lexer);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

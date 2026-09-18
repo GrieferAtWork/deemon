@@ -362,18 +362,18 @@ err:
  * @param: features: Set of `P_OPERATOR_F*`
  * @return: * : One of `OPERATOR_*` or `AST_OPERATOR_*`
  * @return: -1: An error occurred. */
-INTERN WUNUSED int32_t DCALL
-ast_parse_operator_name(uint16_t features) {
+INTERN WUNUSED NONNULL((1)) int32_t DFCALL
+ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 	int32_t result;
 	uint32_t old_flags;
 	switch (tok) {
 
-	case TOK_CHAR: {
+	TPP_CASE_TPP_TOK_STRING_SQUOTE {
 		tint_t intval;
 		if (!HAS(EXT_CHARACTER_LITERALS))
 			goto parse_string;
 		ATTR_FALLTHROUGH
-	case TOK_INT:
+	TPP_CASE_TPP_TOK_INT
 		/* Special case: Invoke an operator using its internal index. */
 		if (TPP_Atoi(&intval) == TPP_ATOI_ERR)
 			goto err;
@@ -548,7 +548,7 @@ do_operator_gr:
 		}
 
 		/* Parenthesis around operator name. */
-		result = ast_parse_operator_name(features);
+		result = ast_parse_operator_name(self, features);
 		if unlikely(result < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -559,7 +559,7 @@ do_operator_gr:
 		}
 		goto done_y1;
 
-	case TOK_STRING:
+	TPP_CASE_TPP_TOK_STRING_DQUOTE
 parse_string:
 		if (advance_wraplf(advance_wraplf(token.t_begin)) != token.t_end &&
 		    WARN(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))

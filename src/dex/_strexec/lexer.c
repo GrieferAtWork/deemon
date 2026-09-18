@@ -171,7 +171,7 @@ handle_decimal_power_suffix:
 		if (likely(iter + 1 < self->jl_end) &&
 		    (iter[0] == '.' && iter[1] == '.')) {
 			iter += 2;
-			self->jl_tok = TOK_DOTS;
+			self->jl_tok = TPP_TOK_DOT_DOT_DOT;
 			break;
 		}
 		goto do_single;

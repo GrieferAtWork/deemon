@@ -2456,7 +2456,8 @@ create_assembly_file:
 			if unlikely(yield() < 0) {
 				result = -1;
 			} else {
-				result = uasm_parse();
+				/* TODO: Use nested lexer under `CONFIG_EXPERIMENTAL_USE_TPP3` */
+				result = uasm_parse(_DeeLexer_Current);
 			}
 			current_userasm.ua_labelc = old_user_label_c;
 			current_userasm.ua_labelv = old_user_label_v;

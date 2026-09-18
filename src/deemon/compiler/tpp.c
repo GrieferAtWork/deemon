@@ -158,34 +158,34 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
-_DeeLexer_ParenBegin(DeeLexer *__restrict lexer,
+_DeeLexer_ParenBegin(DeeLexer *__restrict self,
                      bool *__restrict p_has_paren) {
-	tpp_token_id tid = DeeLexer_GetTok(lexer);
+	tpp_token_id tid = DeeLexer_GetTok(self);
 	ASSERT(tid != '(');
 	if (tid == TPP_KWD_pack) {
 		/* If not inside of a macro, and next token isn't '(', emit a warning */
-		if (!tpp_file_ismacro(tpp_lexer_getfile(&lexer->dl_lexer))) {
+		if (!tpp_file_ismacro(tpp_lexer_getfile(&self->dl_lexer))) {
 			/* TODO: use `tpp_lexer_tryskip_raw()` instead of this! */
-			tpp_char const *pos = tpp_lexer_gettokenend(&lexer->dl_lexer);
+			tpp_char const *pos = tpp_lexer_gettokenend(&self->dl_lexer);
 			do {
-				tid = tpp_lexer_yieldraw_at_blocking(&lexer->dl_lexer, &pos);
+				tid = tpp_lexer_yieldraw_at_blocking(&self->dl_lexer, &pos);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tid));
 			if (TPP_TOK_ISERR(tid))
 				goto err;
-			if (tid != '(' && DeeLexer_Warnf(lexer, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+			if (tid != '(' && DeeLexer_Warnf(self, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
 				goto err;
 		}
-		tid = DeeLexer_Yield(lexer);
+		tid = DeeLexer_Yield(self);
 		if unlikely(TPP_TOK_ISERR(tid))
 			goto err;
 		*p_has_paren = tid == '(';
 		if (*p_has_paren) {
-			tid = DeeLexer_Yield(lexer);
+			tid = DeeLexer_Yield(self);
 			if unlikely(TPP_TOK_ISERR(tid))
 				goto err;
 		}
 	} else {
-		tid = DeeLexer_Skip(lexer, TPP_TOK_OFCHAR('('));
+		tid = DeeLexer_Skip(self, TPP_TOK_OFCHAR('('));
 		if unlikely(TPP_TOK_ISERR(tid))
 			goto err;
 		*p_has_paren = tid == TPP_TOK_OFCHAR('(');

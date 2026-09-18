@@ -345,12 +345,14 @@ err:
 #define TOK_IS_SYMBOL_NAME(x) \
 	(TPP_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
 
-INTERN WUNUSED struct TPPKeyword *DFCALL uasm_parse_symnam(void) {
+INTERN WUNUSED NONNULL((1)) struct TPPKeyword *DFCALL
+uasm_parse_symnam(DeeLexer *self) {
 	struct TPPKeyword *result;
 	char *symbol_start;
 	char *symbol_end;
-	if (tok == TOK_STRING ||
-	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	(void)self;
+	if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		/* Special case: String symbol name. */
 		struct TPPString *strval;
 		strval = TPPLexer_ParseString();
@@ -424,12 +426,11 @@ err:
 }
 
 
-PRIVATE WUNUSED int DFCALL
-uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
 	switch (tok) {
 
-	case TOK_INT:
-	case TOK_FLOAT:
+	TPP_CASE_TPP_TOK_NUMBER
 		/* Integer constant. */
 		if (!result)
 			goto yield_done;
@@ -462,7 +463,7 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 			goto yield_done;
 		}
 		ATTR_FALLTHROUGH
-	case TOK_CHAR:
+	TPP_CASE_TPP_TOK_STRING_SQUOTE
 		/* NOTE: Here, we always interpret character tokens as literals,
 		 *       regardless of what may `EXT_CHARACTER_LITERALS` may be set to. */
 		if (!result)
@@ -478,12 +479,12 @@ yield_done:
 			goto err;
 		goto done;
 
-	case TOK_STRING:
+	TPP_CASE_TPP_TOK_STRING_DQUOTE
 		if (!result) {
 			do {
 				if unlikely(yield() < 0)
 					goto err;
-			} while (tok == TOK_STRING);
+			} while (TPP_TOK_ISSTRING_DQUOTE(tok));
 		} else {
 			struct TPPString *strval;
 			struct TPPKeyword *name;
@@ -510,7 +511,7 @@ yield_done:
 		/* Parenthesis recursion. */
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(uasm_parse_intexpr(result, features))
+		if unlikely(uasm_parse_intexpr(self, result, features))
 			goto err;
 		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
@@ -524,7 +525,7 @@ yield_done:
 		operation = tok;
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(uasm_parse_intexpr(result, features))
+		if unlikely(uasm_parse_intexpr(self, result, features))
 			goto err;
 		if (result->ie_sym && WARN(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
 			goto err;
@@ -562,7 +563,7 @@ yield_done:
 		/* Lookup/defined user-symbols. */
 		if (TOK_IS_SYMBOL_NAME(tok)) {
 			struct TPPKeyword *name;
-			name = uasm_parse_symnam();
+			name = uasm_parse_symnam(self);
 			if unlikely(!name)
 				goto err;
 			if (!result)
@@ -632,9 +633,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int DFCALL
-uasm_parse_intexpr_unary(struct asm_intexpr *result, uint16_t features) {
-	if unlikely(uasm_parse_intexpr_unary_base(result, features))
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+uasm_parse_intexpr_unary(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
+	if unlikely(uasm_parse_intexpr_unary_base(self, result, features))
 		goto err;
 again:
 	switch (tok) {
@@ -697,20 +698,20 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int DFCALL
-uasm_parse_intexpr_sum(struct asm_intexpr *result, uint16_t features) {
-	if unlikely(uasm_parse_intexpr_unary(result, features))
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+uasm_parse_intexpr_sum(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
+	if unlikely(uasm_parse_intexpr_unary(self, result, features))
 		goto err;
 	while (tok == '+' || tok == '-') {
 		tok_t mode = tok;
 		if unlikely(yield() < 0)
 			goto err;
 		if (!result) {
-			if unlikely(uasm_parse_intexpr_unary(NULL, features))
+			if unlikely(uasm_parse_intexpr_unary(self, NULL, features))
 				goto err;
 		} else {
 			struct asm_intexpr other;
-			if unlikely(uasm_parse_intexpr_unary(&other, features))
+			if unlikely(uasm_parse_intexpr_unary(self, &other, features))
 				goto err;
 			/* Combine the 2 operands. */
 			if (mode == '+') {
@@ -783,16 +784,16 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DFCALL
-uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+uasm_parse_intexpr(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
 	/* TODO: All the other expression levels. */
-	return uasm_parse_intexpr_sum(result, features);
+	return uasm_parse_intexpr_sum(self, result, features);
 }
 
-INTERN WUNUSED int32_t DFCALL
-uasm_parse_imm16(uint16_t features) {
+INTERN WUNUSED NONNULL((1)) int32_t DFCALL
+uasm_parse_imm16(DeeLexer *self, uint16_t features) {
 	struct asm_intexpr result;
-	if unlikely(uasm_parse_intexpr(&result, features))
+	if unlikely(uasm_parse_intexpr(self, &result, features))
 		goto err;
 
 	/* Warn if the parsed value is out-of-bounds. */
@@ -809,8 +810,8 @@ err:
 
 
 /* Helper functions for parsing the arguments of symbol class operands. */
-PRIVATE WUNUSED int32_t DFCALL
-do_parse_module_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_module_operands(DeeLexer *self) {
 	int32_t result;
 
 	/* Parse a module by name. */
@@ -818,7 +819,7 @@ do_parse_module_operands(void) {
 		DREF DeeModuleObject *mod;
 		if unlikely(yield() < 0)
 			goto err;
-		mod = parse_module_byname(true);
+		mod = parse_module_byname(self, true);
 		if unlikely(!mod)
 			goto err;
 
@@ -826,15 +827,16 @@ do_parse_module_operands(void) {
 		result = asm_newmodule(mod);
 		Dee_Decref(mod);
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
-do_parse_extern_operands(uint16_t *__restrict pmid,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DFCALL
+do_parse_extern_operands(DeeLexer *self,
+                         uint16_t *__restrict pmid,
                          uint16_t *__restrict pgid) {
 	DREF DeeModuleObject *mod;
 	int32_t temp;
@@ -843,7 +845,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 	if (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;
-		mod = parse_module_byname(true);
+		mod = parse_module_byname(self, true);
 		if unlikely(!mod)
 			goto err;
 
@@ -852,7 +854,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		if unlikely(temp < 0)
 			goto err;
 	} else {
-		temp = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		temp = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 		if unlikely(temp < 0)
 			goto err;
 
@@ -875,7 +877,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		struct Dee_module_symbol *modsym;
 		if unlikely(yield() < 0)
 			goto err_mod;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err_mod;
 		modsym = import_module_symbol(mod, symbol_name);
@@ -889,7 +891,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 			*pgid = Dee_module_symbol_getindex(modsym);
 		}
 	} else {
-		temp = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		temp = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 		if unlikely(temp < 0)
 			goto err_mod;
 		*pgid = (uint16_t)temp;
@@ -909,14 +911,15 @@ err_unknown_symbol(struct TPPKeyword *__restrict name) {
 	                       name->k_name);
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_global_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
 		struct TPPKeyword *symbol_name;
 		if unlikely(yield() < 0)
 			goto err;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err;
 
@@ -938,22 +941,24 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
 		/* Bind the given symbol as a global item. */
 		result = asm_gsymid(sym);
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_stack_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_stack_operands(DeeLexer *self) {
 	if (skip('#', W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
 		goto err;
-	return uasm_parse_imm16(UASM_INTEXPR_FHASSP);
+	return uasm_parse_imm16(self, UASM_INTEXPR_FHASSP);
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_local_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -961,7 +966,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
 			goto err;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err;
 
@@ -995,19 +1000,20 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 		/* Bind the given symbol as a local item. */
 		result = asm_lsymid(sym);
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_constexpr(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_constexpr(DeeLexer *self) {
 	DREF struct ast *imm_const;
 	DREF DeeObject *const_val;
 	if unlikely(scope_push())
 		goto err;
-	imm_const = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	imm_const = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	scope_pop();
 	if unlikely(!imm_const)
 		goto err;
@@ -1031,30 +1037,32 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_const_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_const_operands(DeeLexer *self) {
 	int32_t result;
 	if (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;
 		/* Parse a regular, constant expression. */
-		result = do_parse_constexpr();
+		result = do_parse_constexpr(self);
 	} else {
 		/* Parse the constant index itself. */
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_arg_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
 		struct TPPKeyword *symbol_name;
 		if unlikely(yield() < 0)
 			goto err;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err;
 
@@ -1082,14 +1090,15 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
 		/* Link the symbol's argument index. */
 		result = sym->s_symid;
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_ref_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1097,7 +1106,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
 			goto err;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err;
 
@@ -1121,14 +1130,15 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
 		/* Link and lookup the symbol's reference index. */
 		result = asm_rsymid(sym);
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
+do_parse_static_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (tok == '@') {
@@ -1136,7 +1146,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
 			goto err;
-		symbol_name = uasm_parse_symnam();
+		symbol_name = uasm_parse_symnam(self);
 		if unlikely(!symbol_name)
 			goto err;
 
@@ -1170,7 +1180,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 		/* Bind the given symbol as a static item. */
 		result = asm_ssymid(sym);
 	} else {
-		result = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
+		result = uasm_parse_imm16(self, UASM_INTEXPR_FNORMAL);
 	}
 	return result;
 err:
@@ -1396,12 +1406,12 @@ err:
 /* Parse a deemon-level expression following `@` and
  * try to convert it into an assembly invocation operand.
  * In order words: accept pretty much all symbols, as well as constants. */
-PRIVATE WUNUSED NONNULL((1)) int DFCALL
-do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+do_parse_atoperand(DeeLexer *self, struct asm_invoke_operand *__restrict result) {
 	DREF struct ast *imm_expr;
 	if unlikely(scope_push())
 		goto err;
-	imm_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+	imm_expr = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	scope_pop();
 	if unlikely(!imm_expr)
 		goto err;
@@ -1423,8 +1433,9 @@ err:
 /* @param: recognize_sp: When true, recognize `sp`, as seen as operand of `print`.
  *                       Otherwise, `sp` is recognized as representative of the
  *                       current stack depth. */
-PRIVATE WUNUSED NONNULL((1)) int DFCALL
-do_parse_operand(struct asm_invoke_operand *__restrict result,
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+do_parse_operand(DeeLexer *self,
+                 struct asm_invoke_operand *__restrict result,
                  bool recognize_sp) {
 	/* Parse the actual operand. */
 	switch (tok) {
@@ -1433,7 +1444,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 		/* the value is surrounded by braces. */
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(do_parse_operand(result, false))
+		if unlikely(do_parse_operand(self, result, false))
 			goto err;
 		if (skip('}', W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
 			goto err;
@@ -1446,7 +1457,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 		/* the value is surrounded by braces. */
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(do_parse_operand(result, false))
+		if unlikely(do_parse_operand(self, result, false))
 			goto err;
 		if (skip(']', W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
 			goto err;
@@ -1468,7 +1479,7 @@ parse_stack_operand:
 		if unlikely(yield() < 0)
 			goto err;
 parse_stack_operand_start:
-		if unlikely(do_parse_operand(result, false))
+		if unlikely(do_parse_operand(self, result, false))
 			goto err;
 
 		/* Set the stack-prefix flag. */
@@ -1484,7 +1495,7 @@ parse_stack_operand_start:
 	case '$':
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(do_parse_operand(result, false))
+		if unlikely(do_parse_operand(self, result, false))
 			goto err;
 
 		/* Set the immediate-prefix flag. */
@@ -1498,7 +1509,7 @@ parse_stack_operand_start:
 		/* Immediate constant expression (Very useful for strings). */
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(do_parse_atoperand(result))
+		if unlikely(do_parse_atoperand(self, result))
 			goto err;
 		break;
 
@@ -1507,7 +1518,7 @@ parse_stack_operand_start:
 parse_ref_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_ref_operands();
+		val = do_parse_ref_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_REF;
@@ -1519,7 +1530,7 @@ parse_ref_operand:
 parse_arg_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_arg_operands();
+		val = do_parse_arg_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		if (current_basescope->bs_varargs &&
@@ -1539,7 +1550,7 @@ parse_arg_operand:
 parse_const_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_const_operands();
+		val = do_parse_const_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_CONST;
@@ -1551,7 +1562,7 @@ parse_const_operand:
 parse_static_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_static_operands();
+		val = do_parse_static_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_STATIC;
@@ -1563,7 +1574,7 @@ parse_static_operand:
 parse_module_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_module_operands();
+		val = do_parse_module_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_MODULE;
@@ -1575,7 +1586,8 @@ parse_module_operand:
 parse_extern_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(do_parse_extern_operands(&result->io_extern.io_modid,
+		if unlikely(do_parse_extern_operands(self,
+			                                 &result->io_extern.io_modid,
 		                                     &result->io_extern.io_symid))
 			goto err;
 		result->io_class = OPERAND_CLASS_EXTERN;
@@ -1586,7 +1598,7 @@ parse_extern_operand:
 parse_global_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_global_operands();
+		val = do_parse_global_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_GLOBAL;
@@ -1598,7 +1610,7 @@ parse_global_operand:
 parse_local_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		val = do_parse_local_operands();
+		val = do_parse_local_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		result->io_class = OPERAND_CLASS_LOCAL;
@@ -1801,7 +1813,8 @@ parse_local_operand:
 		}
 
 		/* Fallback: Parse an address expression. */
-		if unlikely(uasm_parse_intexpr(&result->io_intexpr,
+		if unlikely(uasm_parse_intexpr(self,
+		                               &result->io_intexpr,
 		                               recognize_sp ? UASM_INTEXPR_FNORMAL
 		                                            : UASM_INTEXPR_FHASSP))
 			goto err;
@@ -1819,16 +1832,16 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DFCALL
-uasm_parse_operand(struct asm_invoke_operand *__restrict result) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+uasm_parse_operand(DeeLexer *self, struct asm_invoke_operand *__restrict result) {
 	ASSERT(!result->io_class);
 
 	/* Parse the actual operand. */
-	if unlikely(do_parse_operand(result, true))
+	if unlikely(do_parse_operand(self, result, true))
 		goto err;
 
 	/* Check for a dots-suffix. */
-	if (tok == TOK_DOTS) {
+	if (tok == TPP_TOK_DOT_DOT_DOT) {
 		/* Set the dots-flag. */
 		if (result->io_class & OPERAND_CLASS_FDOTSFLAG &&
 		    WARN(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
@@ -1842,12 +1855,12 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int DFCALL
-uasm_parse_instruction(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+uasm_parse_instruction(DeeLexer *self) {
 	struct TPPKeyword *name;
 	struct asm_mnemonic *mnemonic;
 	struct asm_invocation invoc;
-	if (tok == TOK_INT) {
+	if (TPP_TOK_ISINT(tok)) {
 		struct asm_sym *fbsym;
 
 		/* Integer symbol definition. */
@@ -1873,7 +1886,7 @@ uasm_parse_instruction(void) {
 
 read_mnemonic_name:
 	/* Parse the name of the instruction. */
-	name = uasm_parse_symnam();
+	name = uasm_parse_symnam(self);
 	if unlikely(!name)
 		goto err;
 	if (tok == ':') {
@@ -1902,7 +1915,7 @@ read_mnemonic_name:
 do_static_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
-		val = do_parse_static_operands();
+		val = do_parse_static_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		invoc.ai_prefix     = ASM_STATIC;
@@ -1919,7 +1932,7 @@ continue_after_prefix:
 do_global_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
-		val = do_parse_global_operands();
+		val = do_parse_global_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		invoc.ai_prefix     = ASM_GLOBAL;
@@ -1932,7 +1945,7 @@ do_global_prefix:
 do_local_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
-		val = do_parse_local_operands();
+		val = do_parse_local_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		invoc.ai_prefix     = ASM_LOCAL;
@@ -1963,7 +1976,8 @@ do_push_prefix:
 do_extern_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
-		if unlikely(do_parse_extern_operands(&invoc.ai_prefix_id1,
+		if unlikely(do_parse_extern_operands(self,
+			                                 &invoc.ai_prefix_id1,
 		                                     &invoc.ai_prefix_id2))
 			goto err;
 		invoc.ai_prefix = ASM_EXTERN;
@@ -1975,7 +1989,7 @@ do_extern_prefix:
 do_stack_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
 			break;
-		val = do_parse_stack_operands();
+		val = do_parse_stack_operands(self);
 		if unlikely(val < 0)
 			goto err;
 		invoc.ai_prefix     = ASM_STACK;
@@ -2030,7 +2044,7 @@ got_mnemonic:
 	while (tok > 0 && tok != ';' && tok != '\n' &&
 	       invoc.ai_opcount < ASM_MAX_INSTRUCTION_OPERANDS) {
 		/* Parse an operand. */
-		if unlikely(uasm_parse_operand(&invoc.ai_ops[invoc.ai_opcount]))
+		if unlikely(uasm_parse_operand(self, &invoc.ai_ops[invoc.ai_opcount]))
 			goto err;
 		++invoc.ai_opcount;
 		if (tok != ',')
@@ -2053,7 +2067,7 @@ err:
 
 
 /* Parse and compile user-defined assembly until EOF is encountered. */
-INTERN WUNUSED int DFCALL uasm_parse(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL uasm_parse(DeeLexer *self) {
 	int error;
 continue_line:
 	while (tok > 0) {
@@ -2066,10 +2080,10 @@ continue_line:
 				if unlikely(yield() < 0)
 					goto err;
 				/* Parse an assembly directive. */
-				error = uasm_parse_directive();
+				error = uasm_parse_directive(self);
 			} else {
 				/* Parse an assembly instruction. */
-				error = uasm_parse_instruction();
+				error = uasm_parse_instruction(self);
 			}
 			if unlikely(error < 0)
 				goto err;

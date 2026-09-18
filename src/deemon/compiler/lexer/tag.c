@@ -215,7 +215,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL ast_tags_clear)(void) {
+INTERN WUNUSED int DCALL ast_tags_clear(void) {
 	while (current_tags.at_anno.an_annoc) {
 		struct ast_annotation *anno;
 		anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
@@ -241,16 +241,17 @@ err:
 
 
 
-PRIVATE WUNUSED int DCALL append_decl_string(void) {
-	ASSERT(tok == TOK_STRING ||
-	       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+append_decl_string(DeeLexer *self) {
+	ASSERT(TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	       (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
 	do {
-		if unlikely(ast_decode_unicode_string(&current_tags.at_decl))
+		if unlikely(ast_decode_unicode_string(self, &current_tags.at_decl))
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-	} while (tok == TOK_STRING ||
-	         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
+	} while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	         (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
 
 	/* Append a line-feed at the end. */
 	return Dee_unicode_printer_putascii(&current_tags.at_decl, '\n');
@@ -272,7 +273,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int (DCALL parse_tags)(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+parse_tags(DeeLexer *self) {
 	if (tok == '@') {
 		/* Line-style documentation string (terminated by a line-feed) */
 		char *doc_start = token.t_end;
@@ -424,9 +426,9 @@ again_compiler_subtag:
 						if (tok == ',' || tok == ']')
 							goto do_next_compiler_tag;
 					}
-					if likely(tok == TOK_STRING ||
-					          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
-						if unlikely(append_decl_string())
+					if likely(TPP_TOK_ISSTRING_DQUOTE(tok) ||
+					          (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+						if unlikely(append_decl_string(self))
 							goto err;
 					} else {
 						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
@@ -512,7 +514,7 @@ do_next_compiler_tag:
 		flags = AST_ANNOTATION_FNORMAL;
 		if (tok == '(')
 			flags |= AST_ANNOTATION_FNOFUNC;
-		annotation = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		annotation = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!annotation)
 			goto err;
 		error = ast_annotations_add(annotation, flags);
@@ -527,11 +529,12 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int DCALL parse_tags_block(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+parse_tags_block(DeeLexer *self) {
 	while (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(parse_tags())
+		if unlikely(parse_tags(self))
 			goto err;
 	}
 	return 0;

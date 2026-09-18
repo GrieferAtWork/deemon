@@ -138,9 +138,9 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TOK_DOT_STAR;
 		} else if (name[1] == '.') {
 			if (!name[2])
-				return TOK_DOTDOT;
+				return TPP_TOK_DOT_DOT;
 			if (name[2] == '.' && !name[3])
-				return TOK_DOTS;
+				return TPP_TOK_DOT_DOT_DOT;
 		}
 		break;
 
@@ -292,7 +292,7 @@ PRIVATE char const largetok_names[][4] = {
 	/* [TOK_NOT_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '!', '=' },
 	/* [TOK_GREATER_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '=' },
 	/* [TOK_LOWER_EQUAL   - TOK_TWOCHAR_BEGIN] = */ { '<', '=' },
-	/* [TOK_DOTS          - TOK_TWOCHAR_BEGIN] = */ { '.', '.', '.' },
+	/* [TPP_TOK_DOT_DOT_DOT          - TOK_TWOCHAR_BEGIN] = */ { '.', '.', '.' },
 	/* [TOK_ADD_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '+', '=' },
 	/* [TOK_SUB_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '-', '=' },
 	/* [TOK_MUL_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '=' },
@@ -318,7 +318,7 @@ PRIVATE char const largetok_names[][4] = {
 	/* [TOK_NAMESPACE     - TOK_TWOCHAR_BEGIN] = */ { ':', ':' },
 	/* [TOK_ARROW_STAR    - TOK_TWOCHAR_BEGIN] = */ { '-', '>', '*' },
 	/* [TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */ { '.', '*' },
-	/* [TOK_DOTDOT        - TOK_TWOCHAR_BEGIN] = */ { '.', '.' },
+	/* [TPP_TOK_DOT_DOT        - TOK_TWOCHAR_BEGIN] = */ { '.', '.' },
 	/* [TOK_LOGT          - TOK_TWOCHAR_BEGIN] = */ { '<', '>' },
 	/* [TOK_LANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<' },
 	/* [TOK_RANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>' },
@@ -3328,11 +3328,11 @@ lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject 
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err_printer;
 	if (TPPLexer_Current->l_token.t_id != TOK_STRING ||
-	    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		error = DeeError_Throwf(&DeeError_ValueError,
 		                        "The current token isn't a string");
 	} else {
-		error = ast_decode_unicode_string(&printer);
+		error = ast_decode_unicode_string(_DeeLexer_Current, &printer);
 	}
 	COMPILER_END();
 	if unlikely(error)
@@ -3351,10 +3351,10 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 		goto done;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
-	if (TPPLexer_Current->l_token.t_id == TOK_INT) {
+	if (TPP_TOK_ISINT(tpp_lexer_gettok(&self->cw_compiler->cp_lexer.dl_lexer))) {
 		result = DeeInt_FromString(token.t_begin, (size_t)(token.t_end - token.t_begin),
 		                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED));
-	} else if (TPPLexer_Current->l_token.t_id == TOK_CHAR) {
+	} else if (TPP_TOK_ISSTRING_SQUOTE(tpp_lexer_gettok(&self->cw_compiler->cp_lexer.dl_lexer))) {
 		tint_t value;
 		if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
 			goto done_compiler_end;

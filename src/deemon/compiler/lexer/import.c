@@ -48,13 +48,15 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-#define TOK_ISDOT(x) ((x) == '.' || (x) == TOK_DOTDOT || (x) == TOK_DOTS)
+#define TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
 LOCAL unsigned int DCALL dot_count(tok_t tk) {
-	if (tk == TOK_DOTS)
+	if (tk == TPP_TOK_DOT_DOT_DOT)
 		return 3;
-	if (tk == TOK_DOTDOT)
+	if (tk == TPP_TOK_DOT_DOT)
 		return 2;
 	return 1;
 }
@@ -98,7 +100,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
-import_module_symbol(DeeModuleObject *__restrict mod,
+import_module_symbol(struct Dee_module_object *__restrict mod,
                      struct TPPKeyword *__restrict name) {
 	Dee_hash_t i, perturb;
 	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
@@ -119,8 +121,9 @@ import_module_symbol(DeeModuleObject *__restrict mod,
 /* @return:  1: OK (the parsed object most certainly was a module)
  * @return:  0: OK
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ast_parse_module_name(struct Dee_unicode_printer *__restrict printer,
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ast_parse_module_name(DeeLexer *self,
+                      struct Dee_unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
 	for (;;) {
@@ -131,8 +134,8 @@ ast_parse_module_name(struct Dee_unicode_printer *__restrict printer,
 			if unlikely(yield() < 0)
 				goto err;
 			if (Dee_UNICODE_PRINTER_LENGTH(printer) == 1 &&
-			    (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
-			     (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)) &&
+			    (!TPP_ISKEYWORD(tok) && !TPP_TOK_ISSTRING_DQUOTE(tok) &&
+			     (!TPP_TOK_ISSTRING_SQUOTE(tok) || HAS(EXT_CHARACTER_LITERALS)) &&
 			     !TOK_ISDOT(tok)))
 				break; /* Special case: `.` is a valid name for the current module. */
 		} else if (TPP_ISKEYWORD(tok)) {
@@ -151,14 +154,14 @@ ast_parse_module_name(struct Dee_unicode_printer *__restrict printer,
 				goto err;
 			if (!TOK_ISDOT(tok))
 				break;
-		} else if (tok == TOK_STRING ||
-		           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
-			if (ast_decode_unicode_string(printer) < 0)
+		} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+		           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+			if (ast_decode_unicode_string(self, printer) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-			if (!TOK_ISDOT(tok) && tok != TOK_STRING &&
-			    (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)))
+			if (!TOK_ISDOT(tok) && !TPP_TOK_ISSTRING_DQUOTE(tok) &&
+			    (!TPP_TOK_ISSTRING_SQUOTE(tok) || HAS(EXT_CHARACTER_LITERALS)))
 				break;
 		} else {
 			if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
@@ -171,8 +174,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ast_parse_symbol_name(struct Dee_unicode_printer *__restrict printer,
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ast_parse_symbol_name(DeeLexer *self,
+                      struct Dee_unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
 	if (TPP_ISKEYWORD(tok)) {
@@ -189,15 +193,15 @@ ast_parse_symbol_name(struct Dee_unicode_printer *__restrict printer,
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-	} else if (tok == TOK_STRING ||
-	           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		do {
-			if (ast_decode_unicode_string(printer) < 0)
+			if (ast_decode_unicode_string(self, printer) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-		} while (tok == TOK_STRING ||
-		         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
+		} while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+		         (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
 	} else {
 		if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 			goto err;
@@ -215,14 +219,14 @@ err:
  * @return: * :             The named module
  * @return: NULL:           Error was thrown
  * @return: MODULE_CURRENT: The module currently being compiled */
-INTERN WUNUSED DREF DeeModuleObject *DCALL
-parse_module_byname(bool for_alias) {
+INTERN WUNUSED NONNULL((1)) DREF DeeModuleObject *DFCALL
+parse_module_byname(DeeLexer *self, bool for_alias) {
 	DREF DeeModuleObject *result;
 	DREF DeeStringObject *module_name;
 	struct Dee_unicode_printer name = Dee_UNICODE_PRINTER_INIT;
 	struct ast_loc loc;
 	loc_here(&loc);
-	if unlikely(ast_parse_module_name(&name, for_alias) < 0)
+	if unlikely(ast_parse_module_name(self, &name, for_alias) < 0)
 		goto err_printer;
 	module_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&name);
 	if unlikely(!module_name)
@@ -236,14 +240,14 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) struct symbol *DFCALL
-ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
+ast_parse_import_single_sym(DeeLexer *self, struct TPPKeyword *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
 	struct Dee_module_symbol *modsym;
 
 	/* Parse the name of the module from which to import a symbol. */
-	mod = parse_module_byname(true);
+	mod = parse_module_byname(self, true);
 	if unlikely(!mod)
 		goto err;
 
@@ -281,10 +285,10 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_import_single(DeeLexer *self, struct TPPKeyword *__restrict import_name) {
 	struct symbol *extern_symbol;
-	extern_symbol = ast_parse_import_single_sym(import_name);
+	extern_symbol = ast_parse_import_single_sym(self, import_name);
 	if unlikely(!extern_symbol)
 		goto err;
 	/* Return the whole thing as a symbol-ast. */
@@ -352,8 +356,9 @@ err:
  * @return:  1: OK (when `allow_module_name` is true, a module import was parsed)
  * @return:  0: OK
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-parse_import_symbol(struct import_item *__restrict result,
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+parse_import_symbol(DeeLexer *self,
+                    struct import_item *__restrict result,
                     bool allow_module_name) {
 	struct Dee_unicode_printer printer;
 	int return_value = 0;
@@ -381,8 +386,8 @@ parse_import_symbol(struct import_item *__restrict result,
 			Dee_unicode_printer_init(&printer);
 			loc_here(&result->ii_import_loc);
 			return_value = allow_module_name
-			               ? ast_parse_module_name(&printer, true)
-			               : ast_parse_symbol_name(&printer, true);
+			               ? ast_parse_module_name(self, &printer, true)
+			               : ast_parse_symbol_name(self, &printer, true);
 			if unlikely(return_value < 0)
 				goto err_printer;
 			result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
@@ -445,9 +450,9 @@ complete_module_name:
 			goto err_printer;
 		/* Make sure to properly parse `import . as me` */
 		if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
-		    TOK_ISDOT(tok) || tok == TOK_STRING ||
-		    (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
-			if unlikely(ast_parse_module_name(&printer, true) < 0)
+		    TOK_ISDOT(tok) || TPP_TOK_ISSTRING_DQUOTE(tok) ||
+		    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+			if unlikely(ast_parse_module_name(self, &printer, true) < 0)
 				goto err_printer;
 		}
 		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
@@ -485,16 +490,16 @@ autogenerate_symbol_name:
 			           result->ii_symbol_name))
 				goto err_name;
 		}
-	} else if (tok == TOK_STRING ||
-	           (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+	} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
+	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 		/* - `"foo"'
 		 * - `"foo" as foobar'
 		 * - `"foo.bar"'
 		 * - `"foo.bar" as foobar' */
 		Dee_unicode_printer_init(&printer);
 		return_value = allow_module_name
-		               ? ast_parse_module_name(&printer, true)
-		               : ast_parse_symbol_name(&printer, true);
+		               ? ast_parse_module_name(self, &printer, true)
+		               : ast_parse_symbol_name(self, &printer, true);
 		if unlikely(return_value < 0)
 			goto err_printer;
 		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
@@ -821,7 +826,8 @@ err:
 }
 
 
-INTERN int DFCALL ast_parse_post_import(void) {
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+ast_parse_post_import(DeeLexer *self) {
 	/* - import deemon;
 	 * - import deemon, util;
 	 * - import my_deemon = deemon;
@@ -854,7 +860,7 @@ INTERN int DFCALL ast_parse_post_import(void) {
 		if (tok == KWD_from) {
 			if unlikely(yield() < 0)
 				goto err;
-			mod = parse_module_byname(true);
+			mod = parse_module_byname(self, true);
 			if unlikely(!mod)
 				goto err;
 			error = ast_import_all_from_module(mod, &star_loc);
@@ -871,7 +877,7 @@ INTERN int DFCALL ast_parse_post_import(void) {
 			goto err;
 		goto done;
 	}
-	error = parse_import_symbol(&item, true);
+	error = parse_import_symbol(self, &item, true);
 	if unlikely(error < 0)
 		goto err;
 	if unlikely(error == 2)
@@ -889,7 +895,7 @@ parse_module_import_list:
 				break;
 			if unlikely(yield() < 0)
 				goto err;
-			error = parse_import_symbol(&item, true);
+			error = parse_import_symbol(self, &item, true);
 			if unlikely(error < 0)
 				goto err;
 			if unlikely(error == 2)
@@ -904,7 +910,7 @@ parse_module_import_list:
 		/*  - `import foo from bar` */
 		if unlikely(yield() < 0)
 			goto err_item;
-		mod = parse_module_byname(true);
+		mod = parse_module_byname(self, true);
 		if unlikely(!mod)
 			goto err_item;
 		error = ast_import_single_from_module(mod, &item);
@@ -961,7 +967,7 @@ import_parse_list:
 					item_v = new_item_v;
 					item_a = new_item_a;
 				}
-				error = parse_import_symbol(&item_v[item_c], allow_modules);
+				error = parse_import_symbol(self, &item_v[item_c], allow_modules);
 				if unlikely(error < 0)
 					goto err_item_v;
 				if unlikely(error == 2)
@@ -991,7 +997,7 @@ import_parse_list:
 			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
 			if unlikely(yield() < 0)
 				goto err_item_v;
-			mod = parse_module_byname(true);
+			mod = parse_module_byname(self, true);
 			if unlikely(!mod)
 				goto err_item_v;
 
@@ -1046,12 +1052,12 @@ err:
 	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_import_expression_after_import(struct ast_loc *__restrict import_loc);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_import_expression_after_import(DeeLexer *self, struct ast_loc *__restrict import_loc);
 
 /* Same as `ast_parse_try_hybrid` but for import statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_import_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
 	ASSERT(tok == KWD_import);
@@ -1060,10 +1066,10 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 		goto err;
 	if (tok == '(' || tok == KWD_pack) {
 		/* `import`, as seen in expressions. */
-		result = ast_parse_import_expression_after_import(&import_loc);
+		result = ast_parse_import_expression_after_import(self, &import_loc);
 		if unlikely(!result)
 			goto err;
-		result = ast_parse_postexpr(result);
+		result = ast_parse_postexpr(self, result);
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_YES;
 	} else {
@@ -1071,7 +1077,7 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(ast_parse_post_import())
+		if unlikely(ast_parse_post_import(self))
 			goto err_r;
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_NO;
@@ -1084,7 +1090,8 @@ err:
 }
 
 
-INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import(DeeLexer *self) {
 	DREF DeeModuleObject *mod;
 	DREF struct ast *result;
 	struct ast_loc import_loc;
@@ -1180,7 +1187,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
-		mod = parse_module_byname(true);
+		mod = parse_module_byname(self, true);
 		if unlikely(!mod)
 			goto err_r;
 
@@ -1201,7 +1208,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			} else {
 				int error;
 				struct import_item item;
-				error = parse_import_symbol(&item, false);
+				error = parse_import_symbol(self, &item, false);
 				if unlikely(error < 0)
 					goto err_r_module;
 				if unlikely(error == 2)
@@ -1242,10 +1249,10 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			goto err;
 		if (tok == '(' || tok == KWD_pack) {
 			/* `import`, as seen in expressions. */
-			result = ast_parse_import_expression_after_import(&import_loc);
+			result = ast_parse_import_expression_after_import(self, &import_loc);
 			if unlikely(!result)
 				goto err;
-			result = ast_parse_postexpr(result);
+			result = ast_parse_postexpr(self, result);
 			goto done;
 		}
 		if (tok == '.') {
@@ -1271,7 +1278,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 		result = ast_setddi(result, &import_loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(ast_parse_post_import())
+		if unlikely(ast_parse_post_import(self))
 			goto err_r;
 	}
 done:

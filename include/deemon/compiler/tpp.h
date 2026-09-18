@@ -1145,14 +1145,24 @@ typedef struct {
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
 
-#define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
-#define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define DeeLexer_GetLexer(self) (&(self)->dl_lexer)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define DeeLexer_GetLexer(self) ((void)(self), TPPLexer_Current)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-#define DeeLexer_GetTok(lexer)    tpp_lexer_gettok(&(lexer)->dl_lexer)
-#define DeeLexer_Yield(lexer)     tpp_lexer_yield_blocking(&(lexer)->dl_lexer)
+#define DeeLexer_GetTok(self)        tpp_lexer_gettok(DeeLexer_GetLexer(self))
+#define DeeLexer_GetTokenStart(self) tpp_lexer_gettokenstart(DeeLexer_GetLexer(self))
+#define DeeLexer_GetTokenEnd(self)   tpp_lexer_gettokenend(DeeLexer_GetLexer(self))
+#define DeeLexer_YieldRaw(self)      tpp_lexer_yieldraw_blocking(DeeLexer_GetLexer(self))
+#define DeeLexer_YieldPP(self)       tpp_lexer_yieldpp_blocking(DeeLexer_GetLexer(self))
+#define DeeLexer_Yield(self)         tpp_lexer_yield_blocking(DeeLexer_GetLexer(self))
 
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-//#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(&(lexer)->dl_lexer, tid)
+/* Helper to transition into a world where this gets passed along the stack */
+#define _DeeLexer_Current ((DeeLexer *)TPPLexer_Current)
+
+//#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(DeeLexer_GetLexer(lexer), tid)
 #define DeeLexer_VWarnf(self, id, args)             ((void)(self), parser_vwarnf(id, args))
 #define DeeLexer_Warnf(self, ...)                   ((void)(self), parser_warnf(__VA_ARGS__))
 //#define DeeLexer_VWarnfAt(self, file, pos, args)    ((void)(self), ...)
@@ -1160,6 +1170,9 @@ typedef struct {
 //#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)(self), ...)
 //#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)(self), ...)
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
+#define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
+
 #define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(&(lexer)->dl_lexer, tid)
 
 #define DeeLexer_VWarnf(self, id, args)             TPP_ISERR(tpp_lexer_vwarnf(&(lexer)->dl_lexer, id, args))
@@ -1177,13 +1190,13 @@ INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tp
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
 
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-_DeeLexer_ParenBegin(DeeLexer *__restrict lexer, bool *__restrict p_has_paren);
-#define DeeLexer_ParenBegin(lexer, p_has_paren)   \
-	(likely(DeeLexer_GetTok(lexer) == TPP_TOK_OFCHAR('('))           \
-	 ? (*(p_has_paren) = true, TPP_TOK_ISERR(DeeLexer_Yield(lexer))) \
-	 : unlikely(_DeeLexer_ParenBegin(lexer, p_has_paren)))
-#define DeeLexer_ParenEnd(lexer, has_paren) \
-	(likely(has_paren) && TPP_TOK_ISERR(DeeLexer_Skip(lexer, TPP_TOK_OFCHAR(')'))))
+_DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
+#define DeeLexer_ParenBegin(self, p_has_paren)   \
+	(likely(DeeLexer_GetTok(self) == TPP_TOK_OFCHAR('('))           \
+	 ? (*(p_has_paren) = true, TPP_TOK_ISERR(DeeLexer_Yield(self))) \
+	 : unlikely(_DeeLexer_ParenBegin(self, p_has_paren)))
+#define DeeLexer_ParenEnd(self, has_paren) \
+	(likely(has_paren) && TPP_TOK_ISERR(DeeLexer_Skip(self, TPP_TOK_OFCHAR(')'))))
 
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 

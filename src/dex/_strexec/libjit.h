@@ -98,7 +98,7 @@ enum {
 	TOK_NOT_EQUAL,     /* "!=". */
 	TOK_GREATER_EQUAL, /* ">=". */
 	TOK_LOWER_EQUAL,   /* "<=". */
-	TOK_DOTS,          /* "...". */
+	TPP_TOK_DOT_DOT_DOT,          /* "...". */
 	TOK_ADD_EQUAL,     /* "+=". */
 	TOK_SUB_EQUAL,     /* "-=". */
 	TOK_MUL_EQUAL,     /* "*=". */
@@ -124,7 +124,7 @@ enum {
 /*	TOK_NAMESPACE,     /* "::". */
 /*	TOK_ARROW_STAR,    /* "->*". */
 /*	TOK_DOT_STAR,      /* ".*". */
-/*	TOK_DOTDOT,        /* "..". */
+/*	TPP_TOK_DOT_DOT,        /* "..". */
 /*	TOK_LOGT,          /* "<>". */
 /*	TOK_LANGLE3,       /* "<<<". */
 /*	TOK_RANGLE3,       /* ">>>". */
@@ -272,8 +272,8 @@ typedef struct jit_function_object JITFunctionObject;
 
 
 /* Helpers for working with  */
-#define JIT_TOKEN_IS_DOT(self)       ((self)->jl_tok == '.' || (self)->jl_tok == TOK_DOTS)
-#define JIT_TOKEN_IS_DOT_count(self) ((self)->jl_tok == TOK_DOTS ? 3 : 1)
+#define JIT_TOKEN_IS_DOT(self)       ((self)->jl_tok == '.' || (self)->jl_tok == TPP_TOK_DOT_DOT_DOT)
+#define JIT_TOKEN_IS_DOT_count(self) ((self)->jl_tok == TPP_TOK_DOT_DOT_DOT ? 3 : 1)
 
 
 #define JIT_SYMBOL_NONE      0x0000 /* No symbol (unused) */

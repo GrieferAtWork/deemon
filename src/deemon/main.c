@@ -1874,7 +1874,7 @@ compare_escaped_rev(char const *lf_escaped_text_end,
 PRIVATE WUNUSED int DCALL get_comment_type(void) {
 	char const *comment_start;
 	char const *comment_end;
-	if (tok != TOK_COMMENT)
+	if (!TPP_TOK_ISCOMMENT(tok))
 		goto is_other;
 	comment_start = token.t_begin + 1;
 	comment_end   = token.t_end;
@@ -2011,7 +2011,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	bool has_leading_linefeed;
 	DREF DeeBytesObject *script_result;
 	unsigned int scan_recursion;
-	ASSERT(tok == TOK_COMMENT);
+	ASSERT(TPP_TOK_ISCOMMENT(tok));
 	override_start_ptr    = token.t_end;
 	is_file_relative_code = (format_code_start >= file->f_begin &&
 	                         format_code_start < file->f_end);
@@ -2439,7 +2439,7 @@ do_set_ddi_name:
 		char *comment_start;
 		char *comment_end;
 		struct TPPLCInfo lc;
-		if (tok != TOK_COMMENT)
+		if (!TPP_TOK_ISCOMMENT(tok))
 			goto next_token; /* Not a comment. */
 		if (token.t_file != file)
 			goto next_token; /* Located in a different file. */

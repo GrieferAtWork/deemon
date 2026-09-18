@@ -61,54 +61,58 @@ struct Dee_compiler_options;
 struct Dee_module_symbol;
 
 /* Parser flags (Set of `PARSE_F*`) */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTDEF uint16_t parser_flags;
 INTDEF struct Dee_compiler_options *inner_compiler_options;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 /* Parse a string. */
-INTDEF WUNUSED DREF DeeObject *DFCALL ast_parse_string(void);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+ast_parse_string(DeeLexer *self);
 
 /* Parse a template string. */
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_template_string(void);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_template_string(DeeLexer *self);
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-ast_decode_unicode_string(struct Dee_unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+ast_decode_unicode_string(DeeLexer *self, struct Dee_unicode_printer *__restrict printer);
 
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
 /* @param: lookup_mode: Set of `LOOKUP_SYM_*`, optionally or'd with `PARSE_UNARY_DISALLOW_CASTS` */
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_unaryhead(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_unary(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_prod(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_sum(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_shift(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cmp(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cmpeq(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_and(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_xor(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_or(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_as(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_land(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_lor(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_cond(unsigned int lookup_mode);
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_unary(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_prod(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_sum(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_shift(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmp(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmpeq(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_and(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_xor(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_or(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_as(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_land(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_lor(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cond(DeeLexer *self, unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign(DeeLexer *self, unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_prod_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_sum_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_shift_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cmp_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cmpeq_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_and_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_xor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_or_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_as_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_land_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_lor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cond_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_assign_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
 
 /* Check if the given token qualifies for the associated operation parser function. */
 #define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
@@ -142,28 +146,28 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign_operand(/*i
 
 
 /* Parse a top-level expression. */
-#define ast_parse_expr(lookup_mode) ast_parse_assign(lookup_mode)
+#define ast_parse_expr(self, lookup_mode) ast_parse_assign(self, lookup_mode)
 
 /* Given a basic unary expression `ast`, parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 /* Given a unary expression `ast`, parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_postexpr(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 
 /* Given an `key`-expression in `{ key : foo }`, parse the remainder
  * of a brace expression with the current token being the one after the `:` */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_mapping(struct ast *__restrict initial_key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key);
 
 /* Given an `item`-expression in `{ item, foo }`, parse the remainder
  * of a brace expression with the current token being a `,` */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_brace_list(struct ast *__restrict initial_item);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item);
 
 
 
@@ -190,14 +194,15 @@ ast_parse_brace_list(struct ast *__restrict initial_item);
  * >> import <symbol-name> = <import-name> from <module-name>
  * >> import(<expression>)
  */
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_import(void);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import(DeeLexer *self);
 
 /* Parse a module name and generate an AST to reference a single symbol `import_name`. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_import_single(struct TPPKeyword *__restrict import_name);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_import_single(DeeLexer *self, struct TPPKeyword *__restrict import_name);
 
-INTDEF WUNUSED NONNULL((1)) struct symbol *DFCALL
-ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
+ast_parse_import_single_sym(DeeLexer *self, struct TPPKeyword *__restrict import_name);
 
 /* Parse a comma-separated list of expressions,
  * as well as assignment/inplace expressions.
@@ -211,9 +216,8 @@ ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
  * @param: flags:      Set of `AST_FMULTIPLE_*` - How should multiple values be packaged.
  * @param: p_out_mode: When non-NULL, instead of parsing a `;` when required,
  *                     set to `AST_COMMA_OUT_FNEEDSEMI` indicative of this. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_comma(uint16_t mode, uint16_t flags,
-                uint16_t *p_out_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_comma(DeeLexer *self, uint16_t mode, uint16_t flags, uint16_t *p_out_mode);
 #define AST_COMMA_NORMAL        0x0000
 #define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags` */
 #define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,` being followed by another expression.
@@ -237,8 +241,8 @@ ast_parse_comma(uint16_t mode, uint16_t flags,
  * constant ast and returned through `*p_keyword_labels`.
  * If no keyword labels are present, `*p_keyword_labels` is filled in as `NULL`
  * @param: mode: Set of `AST_COMMA_*` - What is allowed and when should we pack values. */
-INTDEF WUNUSED NONNULL((2)) DREF struct ast *DCALL
-ast_parse_argument_list(uint16_t mode,
+INTDEF WUNUSED NONNULL((1, 3)) DREF struct ast *DFCALL
+ast_parse_argument_list(DeeLexer *self, uint16_t mode,
                         /*out*/ DREF struct ast **__restrict p_keyword_labels);
 
 
@@ -246,32 +250,32 @@ ast_parse_argument_list(uint16_t mode,
  * >> local x = 42;
  *    ^     ^
  */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-ast_parse_lookup_mode(unsigned int *__restrict p_mode);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+ast_parse_lookup_mode(DeeLexer *self, unsigned int *__restrict p_mode);
 
 /* Return 1 if the current token may be the begin of an expression.
  * @return: 1:  Yes
  * @return: 0:  No
  * @return: -1: Error */
-INTDEF WUNUSED int DCALL
-maybe_expression_begin(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+maybe_expression_begin(DeeLexer *self);
 
 /* Same as `maybe_expression_begin()`, but for the next (peeked) token. */
-INTDEF WUNUSED int DCALL
-maybe_expression_begin_peek(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+maybe_expression_begin_peek(DeeLexer *self);
 
 /* Parse a try-statement/expression. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_try(bool is_statement);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_try(DeeLexer *self, bool is_statement);
 
 /* Parse a with-statement/expression.
  * NOTE: This function expects the current token to be `with` */
-INTDEF WUNUSED DREF struct ast *DFCALL
-ast_parse_with(bool is_statement, bool allow_nonblock);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock);
 
 /* Parse a regular, old statement. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_statement(bool allow_nonblock);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement(DeeLexer *self, bool allow_nonblock);
 
 /* Parse a sequence of statements until `end_token` is
  * encountered at the start of a statement, or until
@@ -284,15 +288,15 @@ ast_parse_statement(bool allow_nonblock);
  *          returned instead.
  * NOTE: If desired, the caller is responsible to setup
  *       or teardown a new scope before/after this function. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_statements_until(uint16_t flags, tok_t end_token);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token);
 
 /* Parse and return an operator name.
  * @param: features: Set of `P_OPERATOR_F*`
  * @return: * : One of `OPERATOR_*` or `AST_OPERATOR_*`
  * @return: -1: An error occurred. */
-INTDEF WUNUSED int32_t DCALL
-ast_parse_operator_name(uint16_t features);
+INTDEF WUNUSED NONNULL((1)) int32_t DFCALL
+ast_parse_operator_name(DeeLexer *self, uint16_t features);
 
 #define P_OPERATOR_FNORMAL 0x0000 /* Normal features */
 #define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
@@ -333,8 +337,8 @@ ast_build_operator(Dee_operator_t name, uint16_t flags,
  * `KWD_for`, `KWD_foreach`, `KWD_while` or `KWD_do`
  * The returned expression is usually a call-operator
  * on an anonymous lambda function. */
-INTDEF WUNUSED DREF struct ast *DFCALL
-ast_parse_loopexpr(void);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_loopexpr(DeeLexer *self);
 
 /* Parse a new function declaration, starting at either the argument
  * list, or when not present at the following `->` or `{` token.
@@ -343,27 +347,29 @@ ast_parse_loopexpr(void);
  *       scope if the desire is to address the function by name.
  *       This parser function will merely return the `AST_FUNCTION`,
  *       not some wrapper that assigns it to a symbol using `AST_STORE`. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function(struct TPPKeyword *name, bool *p_need_semi,
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
                    struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope(struct TPPKeyword *name, bool *p_need_semi,
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
                            struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_noscope_noargs(bool *p_need_semi);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi);
 
 /* Parse a java-style lambda. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_function_java_lambda(struct TPPKeyword *first_argument_name,
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_function_java_lambda(DeeLexer *self,
+                               struct TPPKeyword *first_argument_name,
                                struct ast_loc *first_argument_loc);
 
 /* Check if the parser is located after the '(' of a java-style lambda.
  * @return:  1: Yes
  * @return:  0: No
  * @return: -1: Error */
-INTDEF WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+ast_is_after_lparen_of_java_lambda(DeeLexer *self);
 
 /* Parse everything following a `del` keyword in a statement, or expression:
  * >> foo = 7;
@@ -381,28 +387,31 @@ INTDEF WUNUSED int DCALL ast_is_after_lparen_of_java_lambda(void);
  *       unbind variables (deleting only referring to the
  *       compile-time symbol becoming unknown and being added to
  *       the current scope's chain of deleted/anonymous symbols) */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_del(unsigned int lookup_mode);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_del(DeeLexer *self, unsigned int lookup_mode);
 
 /* Parse a user-defined assembly block. */
-INTDEF WUNUSED DREF struct ast *DCALL ast_parse_asm(void);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_asm(DeeLexer *self);
 
 /* Parse the argument list of a function definition,
  * automatically creating new symbols for arguments,
  * as well as setting code flags for variadic arguments. */
-INTDEF WUNUSED int DCALL parse_arglist(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+parse_arglist(DeeLexer *self);
 
 /* Parse the contents of a brace initializer,
  * starting after the '{' token and ending on '}'. */
-INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_brace_items(void);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_brace_items(DeeLexer *self);
 
 /* Parse a class definition, starting at the `{` token (or at `:` when a base exists).
  * The returned AST is of type `AST_CLASS` (create_symbol == false) or `AST_STORE` (create_symbol == true).
  * @param: class_flags:   Set of `TP_F* & 0xf`
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
-INTDEF WUNUSED DREF struct ast *DCALL
-ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_class(DeeLexer *self, uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode);
 
 /* Parse the head header of a for-statement, returning the appropriate
@@ -417,14 +426,15 @@ ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
  * WARNING: The caller is responsible for wrapping `*p_iter_or_next` in an `__iterself__()`
  *          operator call when `AST_FLOOP_FOREACH` is part of the return mask, unless they wish
  *          to enumerate an iterator itself (which is possible using the `__foreach` statement). */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int32_t DCALL
-ast_parse_for_head(DREF struct ast **__restrict p_init,
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int32_t DFCALL
+ast_parse_for_head(DeeLexer *self,
+                   DREF struct ast **__restrict p_init,
                    DREF struct ast **__restrict p_elem_or_cond,
                    DREF struct ast **__restrict p_iter_or_next);
 
 /* Parse an assertion statement. (must be started ontop of the `assert` keyword) */
-INTDEF WUNUSED DREF struct ast *DFCALL
-ast_parse_assert(bool needs_parenthesis);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_assert(DeeLexer *self, bool needs_parenthesis);
 
 /* Parse a cast expression suffix following parenthesis, or
  * re-return the given `typeexpr` if there is no cast operand
@@ -438,8 +448,8 @@ ast_parse_assert(bool needs_parenthesis);
  *                           ^
  *                           exit
  */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_cast(struct ast *__restrict typeexpr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr);
 
 
 
@@ -449,24 +459,24 @@ ast_parse_cast(struct ast *__restrict typeexpr);
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 /* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*` */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_statement_or_expression(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
-#define ast_parse_hybrid_primary(p_was_expression) \
-	ast_parse_statement_or_expression(p_was_expression)
-LOCAL WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_hybrid_secondary(unsigned int *__restrict p_was_expression) {
+#define ast_parse_hybrid_primary(self, p_was_expression) \
+	ast_parse_statement_or_expression(self, p_was_expression)
+LOCAL WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_parse_hybrid_secondary(DeeLexer *self, unsigned int *__restrict p_was_expression) {
 	DREF struct ast *result;
 	switch (*p_was_expression) {
 	case AST_PARSE_WASEXPR_NO:
-		result = ast_parse_statement(false);
+		result = ast_parse_statement(self, false);
 		break;
 	case AST_PARSE_WASEXPR_YES:
-		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		break;
 	case AST_PARSE_WASEXPR_MAYBE:
-		result = ast_parse_statement_or_expression(p_was_expression);
+		result = ast_parse_statement_or_expression(self, p_was_expression);
 		break;
 	default: __builtin_unreachable();
 	}
@@ -477,33 +487,33 @@ ast_parse_hybrid_secondary(unsigned int *__restrict p_was_expression) {
 
 
 /* Parse a statement or a brace-expression, with the current token being a `{` */
-INTDEF WUNUSED DREF struct ast *DFCALL
-ast_parse_statement_or_braces(unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression);
 
 /* With the current token being `try`, parse the construct and
  * try to figure out if it's a statement or an expression. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_try_hybrid(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid` but for if statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_if_hybrid(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid` but for with statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_with_hybrid(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid` but for assert statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_assert_hybrid(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid` but for import statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_import_hybrid(unsigned int *p_was_expression);
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 /* Same as `ast_parse_try_hybrid` but for loopexpr statements / expressions. */
-INTDEF WUNUSED DREF struct ast *DFCALL
-ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_loopexpr_hybrid(DeeLexer *self, unsigned int *p_was_expression);
 
 
 
@@ -512,7 +522,7 @@ ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 struct Dee_module_object;
 
 /* Special return value to the module currently being compiled. */
-#define MODULE_CURRENT ((struct Dee_module_object *)ITER_DONE)
+#define MODULE_CURRENT                ((struct Dee_module_object *)ITER_DONE)
 #define decref_parse_module_byname(x) ((x) == MODULE_CURRENT ? (void)0 : Dee_Decref(x))
 
 /* Parse a module name and return the associated module object.
@@ -522,8 +532,8 @@ struct Dee_module_object;
  * @return: * :             The named module
  * @return: NULL:           Error was thrown
  * @return: MODULE_CURRENT: The module currently being compiled */
-INTDEF WUNUSED DREF struct Dee_module_object *DCALL
-parse_module_byname(bool for_alias);
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DFCALL
+parse_module_byname(DeeLexer *self, bool for_alias);
 
 INTDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(struct Dee_module_object *__restrict mod,
@@ -612,7 +622,7 @@ struct ast_tags {
 INTDEF struct ast_tags current_tags;
 
 /* Reset the current set of active tags to an empty (unallocated) state. */
-INTDEF WUNUSED int (DCALL ast_tags_clear)(void);
+INTDEF WUNUSED int DCALL ast_tags_clear(void);
 
 /* Pack together the current documentation string. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -650,18 +660,13 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *
  * Note that for backwards compatibility, deemon still
  * parses `__attribute__`, `__attribute` and `__declspec`
  * using this function. */
-INTDEF WUNUSED int DCALL parse_tags(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+parse_tags(DeeLexer *self);
 
 /* Same as `parse_tags()`, but also parses the leading `@`
  * token and doesn't do anything if that token wasn't found. */
-INTDEF WUNUSED int DCALL parse_tags_block(void);
-
-
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define parse_tags() __builtin_expect(parse_tags(), 0)
-#endif /* !__NO_builtin_expect */
-#endif /* !__INTELLISENSE__ */
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+parse_tags_block(DeeLexer *self);
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

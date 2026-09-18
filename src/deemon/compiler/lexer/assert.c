@@ -37,8 +37,8 @@ DECL_BEGIN
 #define CONFIG_ASSERT_DDI_USES_EXPRESSION
 
 /* Parse an assertion statement. (must be started ontop of the `assert` keyword) */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_assert(bool needs_parenthesis) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	struct ast_loc loc;
@@ -55,11 +55,11 @@ ast_parse_assert(bool needs_parenthesis) {
 		 * >> assert (foo == bar), "Error";
 		 * >> ASSERT(foo == bar, "Error");
 		 */
-		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+		result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
 		if (!needs_parenthesis) {
-			result = ast_parse_postexpr(result);
+			result = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err;
 		}
@@ -67,7 +67,7 @@ ast_parse_assert(bool needs_parenthesis) {
 			/* The message was passed individually. */
 			if unlikely(yield() < 0)
 				goto err_r;
-			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)
 				goto err_r;
 		} else if (result->a_type == AST_MULTIPLE &&
@@ -86,13 +86,13 @@ ast_parse_assert(bool needs_parenthesis) {
 		if (needs_parenthesis &&
 		    WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
 			goto err;
-		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
 		if (tok == ',') {
 			if unlikely(yield() < 0)
 				goto err_r;
-			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)
 				goto err_r;
 		}
@@ -118,8 +118,8 @@ err:
 
 
 /* Same as `ast_parse_try_hybrid` but for assert statements / expressions. */
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_parse_assert_hybrid(unsigned int *p_was_expression) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	struct ast_loc loc;
@@ -136,7 +136,7 @@ ast_parse_assert_hybrid(unsigned int *p_was_expression) {
 		 * >> assert (foo == bar), "Error";
 		 * >> ASSERT(foo == bar, "Error");
 		 */
-		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
+		result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
 		if (result->a_type == AST_MULTIPLE &&
@@ -154,13 +154,13 @@ ast_parse_assert_hybrid(unsigned int *p_was_expression) {
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
 	} else {
-		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
 		if (tok == ',') {
 			if unlikely(yield() < 0)
 				goto err_r;
-			message = ast_parse_expr(LOOKUP_SYM_NORMAL);
+			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)
 				goto err_r;
 		}

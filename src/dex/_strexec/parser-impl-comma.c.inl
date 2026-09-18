@@ -423,7 +423,7 @@ err_currrent_var_symbol:
 		}
 	}
 
-	if (self->jl_tok == TOK_DOTS) {
+	if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 		/* Expand expression (append everything from `current` to the resulting expression) */
 		JITLexer_Yield(self);
 		if (p_out_mode)
@@ -558,7 +558,7 @@ err_current_lvalue:
 		 * we've just parsed is an expand-expression:
 		 * >> a, b, c = get_value()...; // >> (((a, b, c) = get_value())...);
 		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
-		if (self->jl_tok == TOK_DOTS) {
+		if (self->jl_tok == TPP_TOK_DOT_DOT_DOT) {
 			/* Append the last expression (in the example above, that is `c`) */
 			if (p_out_mode)
 				*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;

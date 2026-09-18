@@ -1025,8 +1025,8 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-parse_constructor_initializers(struct class_maker *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict self) {
 	uint32_t old_flags;
 	for (;;) {
 		struct ast_loc loc;
@@ -1074,7 +1074,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 					goto done_superargs;
 				}
 			} else {
-				temp = maybe_expression_begin();
+				temp = maybe_expression_begin(lexer);
 				if (temp <= 0) {
 					if unlikely(temp < 0)
 						goto err_flags;
@@ -1090,7 +1090,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 				goto err_flags;
 
 			/* Now we need to parse the argument list that's going to be provided as super-args. */
-			superargs = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &superkwds);
+			superargs = ast_parse_argument_list(lexer, AST_COMMA_FORCEMULTIPLE, &superkwds);
 			if unlikely(!superargs)
 				goto err_flags;
 			if (superkwds) {
@@ -1155,7 +1155,7 @@ done_superargs:
 			if (tok == '=') {
 				if unlikely(yield() < 0)
 					goto err;
-				initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				initializer_ast = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
 				if unlikely(!initializer_ast)
 					goto err;
 			} else {
@@ -1171,14 +1171,14 @@ constructor_list_none_initializer:
 					initializer_ast = ast_setddi(initializer_ast, &loc);
 				} else {
 					if (!has_paren) {
-						int error = maybe_expression_begin();
+						int error = maybe_expression_begin(lexer);
 						if (error <= 0) {
 							if unlikely(error < 0)
 								goto err_flags;
 							goto constructor_list_none_initializer;
 						}
 					}
-					initializer_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+					initializer_ast = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
 				}
 				if unlikely(!initializer_ast)
 					goto err_flags;
@@ -1257,8 +1257,8 @@ PRIVATE struct callback_name const callback_names[] = {
 
 
 /* Parse the contents of a property declaration. */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-parse_property(DREF struct ast *callbacks[Dee_CLASS_GETSET_COUNT],
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+parse_property(DeeLexer *self, DREF struct ast *callbacks[Dee_CLASS_GETSET_COUNT],
                struct class_maker *__restrict maker, bool is_class_property) {
 	uint16_t callback_id;
 	struct ast_loc loc;
@@ -1382,12 +1382,12 @@ got_callback_id:
 	ast_annotations_get(&annotations);
 	if (is_class_property) {
 		/* Parse a new function in the class scope. */
-		callback = ast_parse_function(NULL, &need_semi, false, &loc, &decl, NULL);
+		callback = ast_parse_function(self, NULL, &need_semi, false, &loc, &decl, NULL);
 	} else {
 		if unlikely(class_maker_push_methscope(maker))
 			goto err;
 		/* Parse a new function in its own member-method scope. */
-		callback = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
+		callback = ast_parse_function_noscope(self, NULL, &need_semi, false, &loc, &decl, NULL);
 		basescope_pop();
 	}
 	if unlikely(!ast_setddi(callback, &loc))
@@ -1419,8 +1419,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF struct ast *DCALL
-ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_class_impl(DeeLexer *self,
+                     uint16_t class_flags, struct TPPKeyword *name,
                      bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct class_maker maker;
@@ -1455,7 +1456,7 @@ do_parse_class_base_after_yield:
 		/* Parse the class's base expression.
 		 * NOTE: We parse it as a unary-base expression, so-as to not
 		 *       parse the `{` token that follows as a brace-initializer. */
-		maker.cm_base = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
+		maker.cm_base = ast_parse_unaryhead(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
 		if (tok == ',') {
@@ -1488,7 +1489,7 @@ do_parse_class_base_after_yield:
 					basea = new_basea;
 					basev = new_basev;
 				}
-				basev[basec] = ast_parse_unaryhead(LOOKUP_SYM_NORMAL);
+				basev[basec] = ast_parse_unaryhead(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!basev[basec])
 					goto err_basev;
 				++basec;
@@ -1517,7 +1518,7 @@ err_basev:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err;
-		maker.cm_base = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		maker.cm_base = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1677,7 +1678,7 @@ next_modifier:
 			/* Allow tags in class blocks. */
 			if unlikely(yield() < 0)
 				goto err;
-			if unlikely(parse_tags())
+			if unlikely(parse_tags(self))
 				goto err;
 			modifiers_encountered = true;
 			goto next_modifier;
@@ -1811,7 +1812,7 @@ set_visibility:
 
 			/* Parse an operator name, also accepting
 			 * class-specific and file-specific operator names. */
-			temp = ast_parse_operator_name(P_OPERATOR_FCLASS);
+			temp = ast_parse_operator_name(self, P_OPERATOR_FCLASS);
 			if unlikely(temp < 0)
 				goto err;
 			operator_name = (Dee_operator_t)temp;
@@ -1915,7 +1916,7 @@ define_operator:
 						goto err_anno;
 					goto yield_semi_after_operator;
 				}
-				operator_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+				operator_ast = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				goto set_operator_ast;
 			}
 			if (operator_name == AST_OPERATOR_FOR) {
@@ -1958,7 +1959,7 @@ define_operator:
 				 *                                                          AST_SYM(this)]))))' */
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;
-				yield_function = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
+				yield_function = ast_parse_function_noscope(self, NULL, &need_semi, false, &loc, &decl, NULL);
 				basescope_pop();
 				if unlikely(!yield_function) {
 err_operator_ast_ddi:
@@ -2035,7 +2036,7 @@ err_yield_function_temp:
 					goto err_anno;
 				/* Parse a new function in its own member-method scope. */
 				current_basescope->bs_name = operator_name_kwd;
-				operator_ast = ast_parse_function_noscope(NULL, &need_semi, false, &loc, &decl, NULL);
+				operator_ast = ast_parse_function_noscope(self, NULL, &need_semi, false, &loc, &decl, NULL);
 			}
 got_operator_ast:
 			basescope_pop();
@@ -2285,7 +2286,7 @@ define_constructor:
 					{
 						DREF struct ast *call_branch, *call_args;
 						DREF struct ast *ctor_expr;
-						ctor_expr = ast_putddi(ast_parse_expr(LOOKUP_SYM_NORMAL), &loc);
+						ctor_expr = ast_putddi(ast_parse_expr(self, LOOKUP_SYM_NORMAL), &loc);
 						if unlikely(!ctor_expr)
 							goto err_anno;
 						if (!current_basescope->bs_argc) {
@@ -2353,7 +2354,7 @@ err_ctor_expr:
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 					if unlikely(yield() < 0)
 						goto err_anno;
-					if unlikely(parse_arglist())
+					if unlikely(parse_arglist(self))
 						goto err_anno;
 					if (parser_flags & PARSE_FLFSTMT)
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
@@ -2369,14 +2370,14 @@ err_ctor_expr:
 					if (tok == '(') {
 						if unlikely(yield() < 0)
 							goto err_anno;
-						if unlikely(parse_arglist())
+						if unlikely(parse_arglist(self))
 							goto err_anno;
 						if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 							goto err_anno;
 					} else {
 						if unlikely(parser_warn_pack_used(&packloc))
 							goto err;
-						if unlikely(parse_arglist())
+						if unlikely(parse_arglist(self))
 							goto err_anno;
 					}
 					if (parser_flags & PARSE_FLFSTMT)
@@ -2392,7 +2393,7 @@ err_ctor_expr:
 					if unlikely(yield() < 0)
 						goto err_anno;
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-					if unlikely(parse_constructor_initializers(&maker))
+					if unlikely(parse_constructor_initializers(self, &maker))
 						goto err_anno;
 					if (parser_flags & PARSE_FLFSTMT)
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
@@ -2405,7 +2406,7 @@ err_ctor_expr:
 					goto err_anno;
 
 				/* NOTE: Don't parse a second argument list here. */
-				maker.cm_ctor = ast_setddi(ast_parse_function_noscope_noargs(&need_semi), &loc);
+				maker.cm_ctor = ast_setddi(ast_parse_function_noscope_noargs(self, &need_semi), &loc);
 				scope_pop();
 				basescope_pop();
 				if unlikely(!maker.cm_ctor)
@@ -2430,7 +2431,7 @@ err_ctor_expr:
 			if (tok == ':') {
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(decl_ast_parse(&decl))
+				if unlikely(decl_ast_parse(self, &decl))
 					goto err;
 			}
 			if (is_semicolon()) {
@@ -2494,7 +2495,7 @@ err_ctor_expr:
 						goto err;
 
 					/* Parse the property declaration. */
-					if unlikely(parse_property(prop_callbacks, &maker, is_class_member))
+					if unlikely(parse_property(self, prop_callbacks, &maker, is_class_member))
 						goto err;
 					if (skip('}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
 						goto err_property;
@@ -2553,12 +2554,12 @@ err_property:
 				/* Member assignment. (part of the initialization) */
 				if (SYM_ISCLASSMEMBER(member_symbol)) {
 					/* Class member. */
-					init_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+					init_ast = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				} else {
 					/* Instance member. */
 					if (class_maker_push_ctorscope(&maker))
 						goto err;
-					init_ast = ast_parse_expr(LOOKUP_SYM_NORMAL);
+					init_ast = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 					basescope_pop();
 				}
 				if unlikely(!init_ast)
@@ -2617,7 +2618,7 @@ err_property:
 					if unlikely(basescope_push())
 						goto err_anno;
 					current_basescope->bs_flags |= current_tags.at_code_flags;
-					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl, NULL);
+					init_ast = ast_parse_function_noscope(self, member_name, &need_semi, false, &loc, &decl, NULL);
 					if (init_ast && unlikely(doctext_compile(&temp.at_doc))) {
 						ast_decref(init_ast);
 						init_ast = NULL;
@@ -2630,7 +2631,7 @@ err_property:
 
 					/* Parse a new function in its own member-method scope. */
 					AST_TAGS_BACKUP_PRINTERS(temp);
-					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl, NULL);
+					init_ast = ast_parse_function_noscope(self, member_name, &need_semi, false, &loc, &decl, NULL);
 					AST_TAGS_RESTORE_PRINTERS(temp);
 					if (init_ast && unlikely(doctext_compile(&current_tags.at_doc))) {
 						ast_decref(init_ast);
@@ -2701,13 +2702,13 @@ err:
  * @param: class_flags:   Set of `TP_F* & 0xf`
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
-INTERN WUNUSED DREF struct ast *DCALL
-ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_class(DeeLexer *self, uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;
 	ast_annotations_get(&annotations);
-	result = ast_parse_class_impl(class_flags, name, create_symbol, symbol_mode);
+	result = ast_parse_class_impl(self, class_flags, name, create_symbol, symbol_mode);
 	if unlikely(!result)
 		goto err_anno;
 	if (annotations.an_annoc && create_symbol &&

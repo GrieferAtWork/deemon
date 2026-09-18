@@ -546,21 +546,22 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 		switch (mode & DeeExec_RUNMODE_MASK) {
 
 		default:
-			code = ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, TOK_EOF);
+			code = ast_parse_statements_until(_DeeLexer_Current, AST_FMULTIPLE_KEEPLAST, TOK_EOF);
 			break;
 
 		case DeeExec_RUNMODE_STMT:
-			code = ast_parse_statement(false);
+			code = ast_parse_statement(_DeeLexer_Current, false);
 			goto pack_code_in_return;
 
 		case DeeExec_RUNMODE_EXPR:
-			code = ast_parse_comma(AST_COMMA_NORMAL,
+			code = ast_parse_comma(_DeeLexer_Current, AST_COMMA_NORMAL,
 			                       AST_FMULTIPLE_KEEPLAST,
 			                       NULL);
 			goto pack_code_in_return;
 
 		case DeeExec_RUNMODE_FULLEXPR:
-			code = ast_parse_comma(AST_COMMA_NORMAL |
+			code = ast_parse_comma(_DeeLexer_Current,
+			                       AST_COMMA_NORMAL |
 			                       AST_COMMA_ALLOWVARDECLS |
 			                       AST_COMMA_ALLOWTYPEDECL,
 			                       AST_FMULTIPLE_KEEPLAST,

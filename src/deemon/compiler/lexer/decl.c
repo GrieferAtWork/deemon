@@ -992,8 +992,8 @@ err2:
 
 
 /* Parse a declaration expression. */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	uint32_t old_flags;
 	switch (tok) {
 
@@ -1011,10 +1011,10 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		 * >> function foo(a: __asm__("?DObject")) {
 		 * >>     ...
 		 * >> } */
-		if likely(tok == TOK_STRING ||
-		          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
+		if likely(TPP_TOK_ISSTRING_DQUOTE(tok) ||
+		          (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
 			DREF DeeStringObject *text;
-			text = (DREF DeeStringObject *)ast_parse_string();
+			text = (DREF DeeStringObject *)ast_parse_string(lexer);
 			if unlikely(!text)
 				goto err_flags;
 			self->da_type   = DAST_STRING;
@@ -1047,10 +1047,11 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		if unlikely(yield() < 0)
 			goto err;
 		if (tok == '(') {
-			type_expr = ast_parse_unaryhead(LOOKUP_SYM_NORMAL |
+			type_expr = ast_parse_unaryhead(lexer,
+			                                LOOKUP_SYM_NORMAL |
 			                                PARSE_UNARY_DISALLOW_CASTS);
 		} else {
-			type_expr = ast_parse_unary(LOOKUP_SYM_NORMAL);
+			type_expr = ast_parse_unary(lexer, LOOKUP_SYM_NORMAL);
 		}
 		if unlikely(!type_expr)
 			goto err;
@@ -1100,7 +1101,7 @@ err_type_expr:
 				goto err_flags;
 		}
 
-		error = decl_ast_parse(self);
+		error = decl_ast_parse(lexer, self);
 		if unlikely(error)
 			goto err_flags;
 
@@ -1125,7 +1126,7 @@ err_type_expr:
 					goto err_elemv;
 				if (tok == ')')
 					break; /* Single-element tuple / trailing comma */
-				error = decl_ast_parse(&elemv[elemc]);
+				error = decl_ast_parse(lexer, &elemv[elemc]);
 				if unlikely(error)
 					goto err_elemv;
 				++elemc;
@@ -1187,7 +1188,7 @@ err_elemv:
 		decl_seq = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if unlikely(!decl_seq)
 			goto err_flags;
-		error = decl_ast_parse(decl_seq);
+		error = decl_ast_parse(lexer, decl_seq);
 		if unlikely(error) {
 err_seq:
 			Dee_Free(decl_seq);
@@ -1208,7 +1209,7 @@ err_elemv_0:
 				Dee_Free(key_value);
 				goto err_flags;
 			}
-			error = decl_ast_parse(&key_value[1]);
+			error = decl_ast_parse(lexer, &key_value[1]);
 			if unlikely(error)
 				goto err_elemv_0;
 			self->da_type = DAST_MAP;
@@ -1218,7 +1219,7 @@ err_elemv_0:
 			self->da_type = DAST_SEQ;
 			self->da_flag = DAST_FNORMAL;
 			self->da_seq  = decl_seq;
-			if (skip(TOK_DOTS, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
+			if (skip(TPP_TOK_DOT_DOT_DOT, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
 				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1238,7 +1239,7 @@ err_elemv_0:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_flags;
-		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
+		nth_expr = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -1299,7 +1300,7 @@ err_nth:
 				/* `Error from deemon` - Short form of `import Error from deemon` */
 				if unlikely(yield() < 0)
 					goto err;
-				sym = ast_parse_import_single_sym(name);
+				sym = ast_parse_import_single_sym(lexer, name);
 			} else {
 				sym = lookup_symbol(LOOKUP_SYM_NORMAL, name, NULL);
 			}
@@ -1330,10 +1331,10 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-decl_ast_parse_unary(struct decl_ast *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	int result;
-	result = decl_ast_parse_unary_head(self);
+	result = decl_ast_parse_unary_head(lexer, self);
 	switch (tok) {
 
 	case '.':
@@ -1409,12 +1410,12 @@ err_r:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-decl_ast_parse_alt(struct decl_ast *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
+decl_ast_parse_alt(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	int result;
 	size_t elema, elemc, i;
 	struct decl_ast *elemv;
-	result = decl_ast_parse_unary(self);
+	result = decl_ast_parse_unary(lexer, self);
 	if unlikely(result)
 		goto err;
 	if (tok == '|') {
@@ -1426,7 +1427,7 @@ decl_ast_parse_alt(struct decl_ast *__restrict self) {
 		for (;;) {
 			if unlikely(yield() < 0)
 				goto err_elemv;
-			result = decl_ast_parse_unary(&elemv[elemc]);
+			result = decl_ast_parse_unary(lexer, &elemv[elemc]);
 			if unlikely(result)
 				goto err_elemv;
 			/* Check if the secondary variant is identical to a previous one.
@@ -1483,14 +1484,14 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-decl_ast_parse_for_symbol(struct symbol *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+decl_ast_parse_for_symbol(DeeLexer *lexer, struct symbol *__restrict self) {
 	if likely(self->s_decltype.da_type == DAST_NONE) {
-		if unlikely(decl_ast_parse(&self->s_decltype))
+		if unlikely(decl_ast_parse(lexer, &self->s_decltype))
 			goto err;
 	} else {
 		struct decl_ast decl;
-		if unlikely(decl_ast_parse(&decl))
+		if unlikely(decl_ast_parse(lexer, &decl))
 			goto err;
 		if unlikely(!decl_ast_equal(&self->s_decltype, &decl) &&
 		            WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, self)) {
@@ -1506,10 +1507,10 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-decl_ast_parse(struct decl_ast *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+decl_ast_parse(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	int result;
-	result = decl_ast_parse_alt(self);
+	result = decl_ast_parse_alt(lexer, self);
 	if unlikely(result)
 		goto err;
 	while (tok == KWD_with) {
@@ -1519,7 +1520,7 @@ decl_ast_parse(struct decl_ast *__restrict self) {
 		inner = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!inner)
 			goto err_r;
-		result = decl_ast_parse_alt(&inner[1]);
+		result = decl_ast_parse_alt(lexer, &inner[1]);
 		if unlikely(result) {
 			Dee_Free(inner);
 			goto err_r;
@@ -1536,11 +1537,11 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int DCALL
-decl_ast_skip(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+decl_ast_skip(DeeLexer *lexer) {
 	int result;
 	struct decl_ast temp;
-	result = decl_ast_parse(&temp);
+	result = decl_ast_parse(lexer, &temp);
 	if (result == 0)
 		decl_ast_fini(&temp);
 	return result;
