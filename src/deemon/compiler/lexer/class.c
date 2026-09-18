@@ -153,8 +153,9 @@ cdesc_find_nonfinal_public_symbol(DeeClassDescriptorObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DFCALL
+warn_nonfinal_public_with_attr_operators(DeeLexer *self,
+                                         struct ast_loc *__restrict loc,
                                          char const *__restrict attr_name,
                                          uint16_t attr_flags) {
 	char const *category_name;
@@ -165,8 +166,12 @@ warn_nonfinal_public_with_attr_operators(struct ast_loc *__restrict loc,
 	} else {
 		category_name = "member";
 	}
-	return WARNAT(loc, W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER,
-	              category_name, attr_name);
+	if (DeeLexer_WarnfLoc(self, loc, TPP_W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER,
+	                      category_name, attr_name))
+		goto err;
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -301,8 +306,8 @@ err:
 }
 
 /* Allocate a new class- or instance-attribute. */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *DCALL
-class_maker_newcattr(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) struct Dee_class_attribute *DFCALL
+class_maker_newcattr(DeeLexer *lexer, struct class_maker *__restrict self,
                      DeeStringObject *__restrict name,
                      struct ast_loc *__restrict loc) {
 	Dee_hash_t i, perturb, hash;
@@ -334,9 +339,8 @@ class_maker_newcattr(struct class_maker *__restrict self,
 			continue;
 
 		/* Duplicate name */
-		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-		           DeeString_SIZE(name),
-		           DeeString_STR(name)))
+		if (DeeLexer_WarnfLoc(lexer, loc, W_CLASS_MEMBER_ALREADY_DEFINED,
+		                      DeeString_SIZE(name), DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -351,8 +355,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *DCALL
-class_maker_newiattr(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) struct Dee_class_attribute *DFCALL
+class_maker_newiattr(DeeLexer *lexer, struct class_maker *__restrict self,
                      DeeStringObject *__restrict name,
                      struct ast_loc *__restrict loc) {
 	Dee_hash_t i, perturb, hash;
@@ -387,9 +391,8 @@ class_maker_newiattr(struct class_maker *__restrict self,
 			continue;
 
 		/* Duplicate name */
-		if (WARNAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-		           DeeString_SIZE(name),
-		           DeeString_STR(name)))
+		if (DeeLexer_WarnfLoc(lexer, loc, W_CLASS_MEMBER_ALREADY_DEFINED,
+		                      DeeString_SIZE(name), DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -406,8 +409,8 @@ err:
 
 /* Bind operator `name` to a function stored
  * in the class member table under `addr` */
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-class_maker_bindoperator(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DFCALL
+class_maker_bindoperator(DeeLexer *lexer, struct class_maker *__restrict self,
                          Dee_operator_t name, uint16_t addr,
                          struct ast_loc *__restrict loc) {
 	Dee_operator_t i, perturb;
@@ -429,8 +432,8 @@ class_maker_bindoperator(struct class_maker *__restrict self,
 		if (result->co_addr != addr) {
 			/* Warn about a duplicate operator */
 			struct Dee_opinfo const *info = DeeTypeType_GetOperatorById(&DeeType_Type, name);
-			if (WARNAT(loc, W_OPERATOR_WAS_ALREADY_DEFINED,
-			           info ? info->oi_sname : "?"))
+			if (DeeLexer_WarnfLoc(lexer, loc, W_OPERATOR_WAS_ALREADY_DEFINED,
+			                      info ? info->oi_sname : "?"))
 				goto err;
 		}
 		result->co_addr = addr; /* Overwrite the old binding. */
@@ -508,8 +511,9 @@ err:
  * @return: * :              A new symbol classified as `SYM_CLASS_MEMBER` that is now stored in the caller's scope.
  *                           The symbol has already been fully initialized, including the `sym_member.sym_member`
  *                           field which contains the member descriptor apart of the either the `cm_cmem` or `cm_imem` table. */
-PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) struct symbol *DCALL
-class_maker_addmember(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3, 6, 7)) struct symbol *DFCALL
+class_maker_addmember(DeeLexer *lexer,
+                      struct class_maker *__restrict self,
                       tpp_keyword *__restrict name,
                       bool is_class_member,
                       uint16_t flags,
@@ -526,18 +530,18 @@ class_maker_addmember(struct class_maker *__restrict self,
 
 	/* Add a new member entry to the specified table. */
 	if (is_class_member) {
-		attr = class_maker_newcattr(self, name_str, loc);
+		attr = class_maker_newcattr(lexer, self, name_str, loc);
 	} else {
 		/* Warn if declaring an attribute operator with non-final, public members. */
 		if (class_attribute_is_nonfinal_public(flags)) {
 			if ((self->cm_features & CLASS_MAKER_FEAT_FATTROPS) &&
-			    warn_nonfinal_public_with_attr_operators(loc, DeeString_STR(name_str), flags)) {
+			    warn_nonfinal_public_with_attr_operators(lexer, loc, DeeString_STR(name_str), flags)) {
 				Dee_Decref(name_str);
 				goto err;
 			}
 			self->cm_features |= CLASS_MAKER_FEAT_FNOFINPUB;
 		}
-		attr = class_maker_newiattr(self, name_str, loc);
+		attr = class_maker_newiattr(lexer, self, name_str, loc);
 	}
 	Dee_Decref(name_str);
 	if unlikely(!attr)
@@ -686,8 +690,9 @@ do_realloc:
  * NOTE: If the symbol describes an instance member, `initializer` must have been generated
  *       in the context of the constructor scope (as it will be run immediately before
  *       the __constructor__ operator) */
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-class_maker_addinit(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DFCALL
+class_maker_addinit(DeeLexer *lexer,
+                    struct class_maker *__restrict self,
                     struct symbol *__restrict sym,
                     struct ast *__restrict initializer,
                     struct ast_loc *__restrict loc) {
@@ -709,8 +714,11 @@ class_maker_addinit(struct class_maker *__restrict self,
 		                             "couldn't have been parsed in its context");
 		ASSERTF(self->cm_ctor_scope == initializer->a_scope->s_base,
 		        "Initializer ASTs must be parsed in the context of the CTOR scope");
-		if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)
-			return WARNAT(loc, W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED);
+		if (self->cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
+			if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED))
+				goto err;
+			goto done;
+		}
 
 		/* Check if we need to allocate more memory for the initializer vector. */
 		if unlikely(priv_reserve_instance_init(self))
@@ -775,8 +783,8 @@ err:
 }
 
 /* Add a new operator function to a given class. */
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-class_maker_addoperator(struct class_maker *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DFCALL
+class_maker_addoperator(DeeLexer *lexer, struct class_maker *__restrict self,
                         Dee_operator_t operator_name,
                         struct ast *__restrict callback) {
 	struct class_member *member;
@@ -792,7 +800,7 @@ class_maker_addoperator(struct class_maker *__restrict self,
 	++self->cm_desc->cd_cmemb_size;
 
 	/* Bind the specified operator to the given address. */
-	if unlikely(class_maker_bindoperator(self, operator_name, addr, &callback->a_ddi))
+	if unlikely(class_maker_bindoperator(lexer, self, operator_name, addr, &callback->a_ddi))
 		goto err;
 
 	/* Allocate an initializer for the operator-bound class member. */
@@ -807,10 +815,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-class_maker_deloperator(struct class_maker *__restrict self,
-                        Dee_operator_t operator_name,
-                        struct ast_loc *__restrict loc) {
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DFCALL
+class_maker_deloperator(DeeLexer *lexer, struct class_maker *__restrict self,
+                        Dee_operator_t operator_name, struct ast_loc *__restrict loc) {
 	/* Deleted operator (e.g. `operator str = del;`) */
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
@@ -823,7 +830,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 
 	/* Operators are deleted by binding them to a class member
 	 * lacking an associated attribute, while always being unbound. */
-	return class_maker_bindoperator(self, operator_name,
+	return class_maker_bindoperator(lexer, self, operator_name,
 	                                self->cm_null_member,
 	                                loc);
 }
@@ -851,8 +858,8 @@ class_maker_fini(struct class_maker *__restrict self) {
 }
 
 /* Pack together an AST to create the class described by `self`. */
-PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DCALL
-class_maker_pack(struct class_maker *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+class_maker_pack(DeeLexer *lexer, struct class_maker *__restrict self) {
 	DREF struct ast *result;
 
 	/* If required, create a class member initializer for the constructor. */
@@ -936,7 +943,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 		}
 
 		/* Add the constructor as an operator to the class initializer list. */
-		if unlikely(class_maker_addoperator(self,
+		if unlikely(class_maker_addoperator(lexer, self,
 		                                    OPERATOR_CONSTRUCTOR,
 		                                    constructor_function)) {
 			ast_decref(constructor_function);
@@ -1031,7 +1038,7 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 		if unlikely(skip_lf(lexer))
 			goto err;
 		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
-			if (WARN(W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
 				goto err;
 			break;
 		}
@@ -1130,7 +1137,7 @@ err_flags_superargs_superkwds:
 				goto err_flags;
 
 			/* All right! now just register the super-args callback as a new class operator. */
-			temp = class_maker_addoperator(self, Dee_CLASS_OPERATOR_SUPERARGS, superargs);
+			temp = class_maker_addoperator(lexer, self, Dee_CLASS_OPERATOR_SUPERARGS, superargs);
 			ast_decref(superargs);
 			if unlikely(temp)
 				goto err_flags;
@@ -1293,17 +1300,19 @@ next:
 		/* Rewind and clear context flags.
 		 * NOTE: If a type prefix (`function` or `operator`)
 		 *       was used, warn about it being discarded. */
-		if (has_name_prefix &&
-		    WARN(W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX))
-			goto err;
+		if (has_name_prefix) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX))
+				goto err;
+		}
 		goto next_callback;
 
 		/* Ignore a `function` / `operator` prefix. */
 	case TPP_KWD_function:
 	case TPP_KWD_operator:
-		if (has_name_prefix &&
-		    WARN(W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN))
-			goto err;
+		if (has_name_prefix) {
+			if (DeeLexer_Warnf(self, TPP_W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN))
+				goto err;
+		}
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		has_name_prefix = true;
@@ -1311,7 +1320,7 @@ next:
 
 		/* Deprecated symbol-based callback naming. */
 	case '.':
-		if (WARN(W_DEPRECATED_PROPERTY_NAME, "get' or `set"))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_PROPERTY_NAME, "get` or `set"))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1344,8 +1353,8 @@ next:
 					/* Warn if the callback name has been marked as deprecated. */
 					if (callback_names[i].cn_depr) {
 warn_deprecated_yield:
-						if (WARN(W_DEPRECATED_PROPERTY_NAME,
-						         callback_names[callback_id].cn_name))
+						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_PROPERTY_NAME,
+						                   callback_names[callback_id].cn_name))
 							goto err;
 					}
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -1354,8 +1363,8 @@ warn_deprecated_yield:
 						/* The old deemon allowed a `.` to follow some property names such as `del .`.
 						 * But since such behavior is now deprecated, just disregard all that and
 						 * consume a `.` token after a keyword and warn about it being ignored. */
-						if (WARN(W_DEPRECATED_PROPERTY_NAME,
-						         callback_names[callback_id].cn_name))
+						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_PROPERTY_NAME,
+						                   callback_names[callback_id].cn_name))
 							goto err;
 						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
@@ -1364,7 +1373,7 @@ warn_deprecated_yield:
 				}
 			}
 		}
-		if (WARN(W_EXPECTED_CALLBACK_NAME_IN_PROPERTY))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CALLBACK_NAME_IN_PROPERTY))
 			goto err;
 		goto done;
 	}
@@ -1372,7 +1381,7 @@ warn_deprecated_yield:
 	/* Warn if the callback had already bee defined. */
 got_callback_id:
 	if (callbacks[callback_id]) {
-		if (WARN(W_PROPERTY_CALLBACK_ALREADY_DEFINED))
+		if (DeeLexer_Warnf(self, TPP_W_PROPERTY_CALLBACK_ALREADY_DEFINED))
 			goto err;
 		/* Clear the callback. */
 		ast_decref(callbacks[callback_id]);
@@ -1404,10 +1413,13 @@ got_callback_id:
 
 	/* Parse a semicolon if one is required. */
 	if (need_semi) {
-		if unlikely(likely(is_semicolon(self))
-		            ? (yield_semicolon(self) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
-			goto err;
+		if likely(is_semicolon(self)) {
+			if unlikely(yield_semicolon(self) < 0)
+				goto err;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+				goto err;
+		}
 	}
 	goto next_callback;
 done:
@@ -1513,7 +1525,7 @@ err_basev:
 		/* Just another syntax for class bases that the old
 		 * deemon supported and we're supporting as well.
 		 * Though I should note that the intended syntax is `class foo: bar { ... }` */
-		if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CLASS_BASE_PARENS))
 			goto err;
 		DeeLexer_NoLf_Push(self);
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
@@ -1536,7 +1548,7 @@ err_basev:
 		     strcmp(DeeLexer_GetTokenKwdCStr(self), "extends") == 0)) {
 			if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				struct ast_loc packloc;
-				if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
+				if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CLASS_BASE_PARENS))
 					goto err;
 				if (DeeLexer_GetLoc(self, &packloc))
 					goto err;
@@ -1546,7 +1558,7 @@ err_basev:
 					goto err;
 				goto do_parse_class_base_after_yield;
 			}
-			if (WARN(W_DEPRECATED_CLASS_BASE_EXTENDS))
+			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CLASS_BASE_EXTENDS))
 				goto err;
 			goto do_parse_class_base;
 		}
@@ -1562,13 +1574,8 @@ err_basev:
 			                                  inner_compiler_options);
 			if unlikely(!ITER_ISOK(rt_d200_module)) {
 				if (rt_d200_module) {
-#if 1
-					if (WARN(W_MODULE_NOT_FOUND, Dee_AsObject(&str_rt_d200)))
+					if (DeeLexer_Warnf(self, TPP_W_MODULE_NOT_FOUND, Dee_AsObject(&str_rt_d200)))
 						goto err;
-#else
-					if (WARN(W_NO_D200_OLD_USER_CLASS))
-						goto err;
-#endif
 					goto use_object_base;
 				}
 				goto err;
@@ -1576,7 +1583,7 @@ err_basev:
 			oldbase_sym = DeeModule_GetSymbolString(rt_d200_module, old_base);
 			if unlikely(!oldbase_sym) {
 				Dee_Decref(rt_d200_module);
-				if (WARN(W_NO_D200_OLD_USER_CLASS))
+				if (DeeLexer_Warnf(self, TPP_W_NO_D200_OLD_USER_CLASS))
 					goto err;
 				goto use_object_base;
 			}
@@ -1676,7 +1683,7 @@ next_member:
 		varying_encountered   = false;
 
 		/* Reset member tags. */
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_lbrace_flags;
 next_modifier:
 		switch (DeeLexer_GetTok(self)) {
@@ -1691,9 +1698,10 @@ next_modifier:
 			goto next_modifier;
 
 		case '}':
-			if (modifiers_encountered &&
-			    WARN(W_CLASS_NO_MEMBER_DEFINED))
-				goto err_lbrace_flags;
+			if (modifiers_encountered) {
+				if (DeeLexer_Warnf(self, TPP_W_CLASS_NO_MEMBER_DEFINED))
+					goto err_lbrace_flags;
+			}
 			DeeLexer_EnableLf_Break(self);
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
@@ -1705,9 +1713,10 @@ next_modifier:
 			goto next_modifier;
 
 		case ';':
-			if (modifiers_encountered &&
-			    WARN(W_CLASS_NO_MEMBER_DEFINED))
-				goto err_lbrace_flags;
+			if (modifiers_encountered) {
+				if (DeeLexer_Warnf(self, TPP_W_CLASS_NO_MEMBER_DEFINED))
+					goto err_lbrace_flags;
+			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_lbrace_flags;
 			goto next_member;
@@ -1753,9 +1762,10 @@ set_visibility:
 
 		case TPP_KWD_class:
 			/* Class field. */
-			if (is_class_member &&
-			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
-				goto err_lbrace_flags;
+			if (is_class_member) {
+				if (DeeLexer_Warnf(self, TPP_W_STATIC_FIELD_ALREADY_SPECIFIED))
+					goto err_lbrace_flags;
+			}
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err_lbrace_flags;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -1765,14 +1775,14 @@ set_visibility:
 				/* A deprecated syntax for defining constructors allowed
 				 * the use of `class` as another alias for `this` and the
 				 * actual name of the class. */
-				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
-				         maker.cm_classsym->s_name->k_name))
+				if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
+				                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 					goto err_lbrace_flags;
 				goto define_constructor;
 			}
 
 			/* Warn about `class` being used to declare static members being deprecated */
-			if (WARN(W_DEPRECATED_USING_CLASS_FOR_STATIC))
+			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_USING_CLASS_FOR_STATIC))
 				goto err_lbrace_flags;
 			is_class_member       = true;
 			modifiers_encountered = true;
@@ -1781,9 +1791,10 @@ set_visibility:
 
 		case TPP_KWD_static:
 			/* Static (aka. class) field. */
-			if (is_class_member &&
-			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
-				goto err_lbrace_flags;
+			if (is_class_member) {
+				if (DeeLexer_Warnf(self, TPP_W_STATIC_FIELD_ALREADY_SPECIFIED))
+					goto err_lbrace_flags;
+			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_lbrace_flags;
 			is_class_member       = true;
@@ -1793,9 +1804,10 @@ set_visibility:
 		case TPP_KWD_function:
 		case TPP_KWD_property:
 		case TPP_KWD_member:
-			if (member_class != MEMBER_CLASS_AUTO &&
-			    WARN(W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED))
-				goto err_lbrace_flags;
+			if (member_class != MEMBER_CLASS_AUTO) {
+				if (DeeLexer_Warnf(self, TPP_W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED))
+					goto err_lbrace_flags;
+			}
 			member_class = (DeeLexer_GetTok(self) == TPP_KWD_function
 			                ? MEMBER_CLASS_METHOD
 			                : DeeLexer_GetTok(self) == TPP_KWD_property
@@ -1855,7 +1867,7 @@ define_operator:
 						member_symbol = get_local_symbol(member_keyword);
 						if unlikely(!member_symbol)
 							continue;
-						if (warn_nonfinal_public_with_attr_operators(&member_symbol->s_decl,
+						if (warn_nonfinal_public_with_attr_operators(self, &member_symbol->s_decl,
 						                                             DeeString_STR(attr->ca_name),
 						                                             attr->ca_flag))
 							goto err_lbrace_flags;
@@ -1867,7 +1879,7 @@ define_operator:
 					if unlikely(!did_warn_any) {
 						struct Dee_class_attribute *attr;
 						attr = cdesc_find_nonfinal_public_symbol(maker.cm_desc);
-						if (warn_nonfinal_public_with_attr_operators(&loc,
+						if (warn_nonfinal_public_with_attr_operators(self, &loc,
 						                                             attr ? DeeString_STR(attr->ca_name) : "?",
 						                                             attr ? attr->ca_flag : Dee_CLASS_ATTRIBUTE_FNORMAL))
 							goto err_lbrace_flags;
@@ -1879,7 +1891,7 @@ define_operator:
 			if (DeeLexer_GetTok(self) == '=') {
 				if (operator_name >= AST_OPERATOR_MIN &&
 				    operator_name <= AST_OPERATOR_MAX_FOR_CLASS) {
-					if (WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT)) {
+					if (DeeLexer_Warnf(self, TPP_W_AMBIGUOUS_OPERATOR_ASSIGNMENT)) {
 err_lbrace_flags_anno:
 						ast_annotations_free(&annotations);
 						goto err_lbrace_flags;
@@ -1919,11 +1931,11 @@ err_lbrace_flags_anno:
 				need_semi = true;
 				if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 					/* Deleted operator (e.g. `operator str = del;`) */
-					if unlikely(class_maker_deloperator(&maker, operator_name, &loc))
+					if unlikely(class_maker_deloperator(self, &maker, operator_name, &loc))
 						goto err_lbrace_flags_anno;
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_lbrace_flags_anno;
-					if unlikely(ast_annotations_clear(&annotations))
+					if unlikely(ast_annotations_clear(self, &annotations))
 						goto err_lbrace_flags_anno;
 					goto yield_semi_after_operator;
 				}
@@ -2118,12 +2130,13 @@ set_operator_ast:
 			/* Warn when attempting to declare an operator as private. */
 			if (member_flags & Dee_CLASS_ATTRIBUTE_FPRIVATE) {
 				struct Dee_opinfo const *info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);
-				if (WARNAT(&loc, W_PRIVATE_OPERATOR_IS_PUBLIC, info ? info->oi_sname : "?"))
+				if (DeeLexer_WarnfLoc(self, &loc, TPP_W_PRIVATE_OPERATOR_IS_PUBLIC,
+				                      info ? info->oi_sname : "?"))
 					goto err_lbrace_flags;
 			}
 
 			/* Add the new operator to the class. */
-			error = class_maker_addoperator(&maker, operator_name, operator_ast);
+			error = class_maker_addoperator(self, &maker, operator_name, operator_ast);
 			ast_decref(operator_ast);
 			if unlikely(error)
 				goto err_lbrace_flags;
@@ -2131,10 +2144,13 @@ set_operator_ast:
 			/* Parse a trailing ';' if required to. */
 			if (need_semi) {
 yield_semi_after_operator:
-				if unlikely(likely(is_semicolon(self))
-				            ? (yield_semicolon(self) < 0)
-				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
-					goto err_lbrace_flags;
+				if likely(is_semicolon(self)) {
+					if unlikely(yield_semicolon(self) < 0)
+						goto err_lbrace_flags;
+				} else {
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+						goto err_lbrace_flags;
+				}
 			}
 			break;
 		case '~':
@@ -2143,19 +2159,21 @@ yield_semi_after_operator:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_lbrace_flags;
 			if unlikely(DeeLexer_GetTok(self) == TPP_KWD_class) {
-				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
-				         maker.cm_classsym->s_name->k_name))
+				if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
+				                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 					goto err_lbrace_flags;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_lbrace_flags;
 			} else {
-				if unlikely(likely(DeeLexer_GetTok(self) == TPP_KWD_this ||
-				                   (DeeLexer_HasTokenKwd(self) &&
-				                    DeeLexer_GetTokenKwd(self) == name))
-				            ? TPP_TOK_ISERR(DeeLexer_Yield(self))
-				            : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
-				                   maker.cm_classsym->s_name->k_name))
-					goto err_lbrace_flags;
+				if likely(DeeLexer_GetTok(self) == TPP_KWD_this ||
+				          (DeeLexer_HasTokenKwd(self) && DeeLexer_GetTokenKwd(self) == name)) {
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+						goto err_lbrace_flags;
+				} else {
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
+					                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
+						goto err_lbrace_flags;
+				}
 			}
 			operator_name = OPERATOR_DESTRUCTOR;
 			goto define_operator;
@@ -2174,16 +2192,18 @@ yield_semi_after_operator:
 			bool need_semi;
 			int error;
 			if (!DeeLexer_HasTokenKwd(self)) {
-				if (WARN(W_UNEXPECTED_TOKEN_IN_CLASS))
+				if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_CLASS))
 					goto err_lbrace_flags;
 				goto break_class_modal;
 			}
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err_lbrace_flags;
 			member_name = DeeLexer_GetTokenKwd(self);
-			if (is_reserved_symbol_name(member_name) &&
-			    WARN(W_RESERVED_MEMBER_NAME, member_name))
-				goto err_lbrace_flags;
+			if (is_reserved_symbol_name(member_name)) {
+				if (DeeLexer_Warnf(self, TPP_W_RESERVED_MEMBER_NAME,
+				                   tpp_keyword_getcstr(member_name)))
+					goto err_lbrace_flags;
+			}
 			if (member_name == name) {
 		case TPP_KWD_this:
 				/* Special case: Constructor. */
@@ -2193,8 +2213,8 @@ yield_semi_after_operator:
 					goto err_lbrace_flags;
 define_constructor:
 				if unlikely(maker.cm_ctor) {
-					if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
-					         maker.cm_classsym->s_name->k_name))
+					if (DeeLexer_Warnf(self, TPP_W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+					                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 						goto err_lbrace_flags;
 					ast_decref(maker.cm_ctor);
 					maker.cm_ctor = NULL;
@@ -2209,14 +2229,14 @@ define_constructor:
 					if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 						if (!(maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)) {
 							if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
-								if (WARN(W_CANNOT_DELETE_INHERITED_CONSTRUCTOR,
-								         maker.cm_classsym->s_name->k_name))
+								if (DeeLexer_Warnf(self, TPP_W_CANNOT_DELETE_INHERITED_CONSTRUCTOR,
+								                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 									goto err_lbrace_flags;
 								maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FSUPER;
 							}
 							if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDEFAULT) {
-								if (WARN(W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR,
-								         maker.cm_classsym->s_name->k_name))
+								if (DeeLexer_Warnf(self, TPP_W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR,
+								                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 									goto err_lbrace_flags;
 								maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
 							}
@@ -2230,12 +2250,12 @@ define_constructor:
 							while (maker.cm_initc) {
 								DREF struct ast *init;
 								init = maker.cm_initv[maker.cm_initc - 1];
-								if (WARNAST(init, W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED))
+								if (DeeLexer_WarnfAst(self, init, TPP_W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED))
 									goto err_lbrace_flags;
 								--maker.cm_initc;
 								ast_decref(init);
 							}
-							if unlikely(class_maker_deloperator(&maker, OPERATOR_CONSTRUCTOR, &loc))
+							if unlikely(class_maker_deloperator(self, &maker, OPERATOR_CONSTRUCTOR, &loc))
 								goto err_lbrace_flags;
 						}
 						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -2248,14 +2268,14 @@ define_constructor:
 						 *   class runtime to implement `Dee_CLASS_OPERATOR_SUPERARGS` in
 						 *   such a way that arguments are forwarded exactly. */
 						if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
-							if (WARNAT(&loc, W_CANNOT_INHERIT_DELETED_CONSTRUCTOR,
-							           maker.cm_classsym->s_name->k_name))
+							if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CANNOT_INHERIT_DELETED_CONSTRUCTOR,
+							                      tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 								goto err_lbrace_flags;
 							maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDELETED;
 						}
 						if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDEFAULT) {
-							if (WARNAT(&loc, W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR,
-							           maker.cm_classsym->s_name->k_name))
+							if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR,
+							                      tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 								goto err_lbrace_flags;
 							maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
 						}
@@ -2267,12 +2287,12 @@ define_constructor:
 					if (DeeLexer_GetTok(self) == TPP_KWD_default) {
 						/* Default constructors. */
 						if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
-							if (WARNAT(&loc, W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR,
-							           maker.cm_classsym->s_name->k_name))
+							if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR,
+							                      tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 								goto err_lbrace_flags;
 						} else if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED) {
-							if (WARNAT(&loc, W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR,
-							           maker.cm_classsym->s_name->k_name))
+							if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR,
+							                      tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 								goto err_lbrace_flags;
 						} else {
 							maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FDEFAULT;
@@ -2282,8 +2302,8 @@ define_constructor:
 						goto do_yield_semicolon;
 					}
 					if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
-						if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
-						         maker.cm_classsym->s_name->k_name))
+						if (DeeLexer_Warnf(self, TPP_W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+						                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 							goto err_lbrace_flags;
 						maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
 					}
@@ -2351,8 +2371,8 @@ err_lbrace_flags_anno_ctor_expr:
 					goto do_yield_semicolon;
 				}
 				if (maker.cm_ctor_flags & (CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER)) {
-					if (WARN(W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
-					         maker.cm_classsym->s_name->k_name))
+					if (DeeLexer_Warnf(self, TPP_W_CLASS_CONSTRUCTOR_ALREADY_DEFINED,
+					                   tpp_keyword_getcstr(maker.cm_classsym->s_name)))
 						goto err_lbrace_flags;
 					maker.cm_ctor_flags &= ~(CLASS_MAKER_CTOR_FDELETED | CLASS_MAKER_CTOR_FSUPER);
 				}
@@ -2403,7 +2423,7 @@ err_lbrace_flags_anno_pack_flags:
 					}
 					DeeLexer_NoLf_Pop(self);
 				} else {
-					if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
+					if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_NO_PARAMETER_LIST))
 						goto err_lbrace_flags_anno;
 				}
 				if (skip_lf(self))
@@ -2458,18 +2478,20 @@ err_lbrace_flags_anno_ctorinit_flags:
 			}
 			if (is_semicolon(self)) {
 				if (member_class == MEMBER_CLASS_AUTO) {
-					if (WARNAT(&loc, W_IMPLICIT_MEMBER_DECLARATION, member_name)) {
+					if (DeeLexer_WarnfLoc(self, &loc, TPP_W_IMPLICIT_MEMBER_DECLARATION,
+					                      tpp_keyword_getcstr(member_name))) {
 err_lbrace_flags_decl:
 						decl_ast_fini(&decl);
 						goto err_lbrace_flags;
 					}
 				} else if (member_class != MEMBER_CLASS_MEMBER) {
-					if (WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, member_name))
+					if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_TYPE_NOT_ASSIGNED,
+					                      tpp_keyword_getcstr(member_name)))
 						goto err_lbrace_flags_decl;
 				}
 
 				/* Uninitialized instance/class member. */
-				if (!class_maker_addmember(&maker,
+				if (!class_maker_addmember(self, &maker,
 				                           member_name,
 				                           is_class_member,
 				                           member_flags,
@@ -2491,12 +2513,16 @@ err_lbrace_flags_decl:
 					DREF struct ast *prop_callbacks[Dee_CLASS_GETSET_COUNT];
 					uint16_t i, prop_addr;
 					if (member_class != MEMBER_CLASS_AUTO &&
-					    member_class != MEMBER_CLASS_GETSET &&
-					    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
-						goto err_lbrace_flags_decl;
-					if (varying_encountered &&
-					    WARNAT(&loc, W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, member_name))
-						goto err_lbrace_flags_decl;
+					    member_class != MEMBER_CLASS_GETSET) {
+						if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED,
+						                      tpp_keyword_getcstr(member_name)))
+							goto err_lbrace_flags_decl;
+					}
+					if (varying_encountered) {
+						if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY,
+						                      tpp_keyword_getcstr(member_name)))
+							goto err_lbrace_flags_decl;
+					}
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_lbrace_flags_decl;
 
@@ -2508,7 +2534,7 @@ err_lbrace_flags_decl:
 						member_flags |= Dee_CLASS_ATTRIBUTE_FMETHOD;
 
 					/* Define the property symbol. */
-					member_symbol = class_maker_addmember(&maker,
+					member_symbol = class_maker_addmember(self, &maker,
 					                                      member_name,
 					                                      is_class_member,
 					                                      member_flags,
@@ -2562,10 +2588,12 @@ err_lbrace_flags_property:
 					goto err_lbrace_flags;
 				}
 				if (member_class != MEMBER_CLASS_AUTO &&
-				    member_class != MEMBER_CLASS_MEMBER &&
-				    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
-					goto err_lbrace_flags_decl;
-				member_symbol = class_maker_addmember(&maker,
+				    member_class != MEMBER_CLASS_MEMBER) {
+					if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED,
+					                      tpp_keyword_getcstr(member_name)))
+						goto err_lbrace_flags_decl;
+				}
+				member_symbol = class_maker_addmember(self, &maker,
 				                                      member_name,
 				                                      is_class_member,
 				                                      member_flags,
@@ -2591,26 +2619,32 @@ err_lbrace_flags_property:
 					goto err_lbrace_flags;
 
 				/* Add an initializer for this symbol. */
-				error = class_maker_addinit(&maker, member_symbol, init_ast, &loc);
+				error = class_maker_addinit(self, &maker, member_symbol, init_ast, &loc);
 				ast_decref(init_ast);
 				if unlikely(error)
 					goto err_lbrace_flags;
 
 				/* Increment the usage-counter to consume the member slot. */
 				++*p_usage_counter;
-				if unlikely(likely(is_semicolon(self))
-				            ? (yield_semicolon(self) < 0)
-				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
-					goto err_lbrace_flags;
+				if likely(is_semicolon(self)) {
+					if unlikely(yield_semicolon(self) < 0)
+						goto err_lbrace_flags;
+				} else {
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+						goto err_lbrace_flags;
+				}
 				break;
 			}
-			if (member_class != MEMBER_CLASS_AUTO &&
-			    member_class != MEMBER_CLASS_METHOD &&
-			    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
-				goto err_lbrace_flags_decl;
-			if (varying_encountered &&
-			    WARNAT(&loc, W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, member_name))
-				goto err_lbrace_flags_decl;
+			if (member_class != MEMBER_CLASS_AUTO && member_class != MEMBER_CLASS_METHOD) {
+				if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED,
+				                      tpp_keyword_getcstr(member_name)))
+					goto err_lbrace_flags_decl;
+			}
+			if (varying_encountered) {
+				if (DeeLexer_WarnfLoc(self, &loc, TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION,
+				                      tpp_keyword_getcstr(member_name)))
+					goto err_lbrace_flags_decl;
+			}
 
 			/* Everything else is parsed as a member function.
 			 * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
@@ -2627,7 +2661,7 @@ err_lbrace_flags_property:
 
 				/* Must load the argument list of the following function
 				 * now, so we can include declaration information. */
-				member_symbol = class_maker_addmember(&maker,
+				member_symbol = class_maker_addmember(self, &maker,
 				                                      member_name,
 				                                      is_class_member,
 				                                      member_flags,
@@ -2686,7 +2720,7 @@ err_lbrace_flags_property:
 				goto err_lbrace_flags;
 
 			/* Add the given AST as an initialization branch to the class. */
-			error = class_maker_addinit(&maker, member_symbol, init_ast, &loc);
+			error = class_maker_addinit(self, &maker, member_symbol, init_ast, &loc);
 			ast_decref(init_ast);
 			if unlikely(error)
 				goto err_lbrace_flags;
@@ -2694,10 +2728,13 @@ err_lbrace_flags_property:
 check_need_semi:
 			if (need_semi) {
 do_yield_semicolon:
-				if unlikely(likely(is_semicolon(self))
-				            ? (yield_semicolon(self) < 0)
-				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
-					goto err_lbrace_flags;
+				if likely(is_semicolon(self)) {
+					if unlikely(yield_semicolon(self) < 0)
+						goto err_lbrace_flags;
+				} else {
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+						goto err_lbrace_flags;
+				}
 			}
 		}	break;
 
@@ -2708,7 +2745,7 @@ break_class_modal:;
 done_class_modal:
 	if unlikely(link_forward_symbols())
 		goto err;
-	result = class_maker_pack(&maker);
+	result = class_maker_pack(self, &maker);
 	scope_pop();
 	class_maker_fini(&maker);
 	return result;

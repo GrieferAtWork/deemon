@@ -3359,8 +3359,10 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 		tint_t value;
 		if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
 			goto done_compiler_end;
-		if (warnchar && WARN(W_DEPRECATED_CHARACTER_INT))
-			goto done_compiler_end;
+		if (warnchar) {
+			if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_DEPRECATED_CHARACTER_INT))
+				goto done_compiler_end;
+		}
 		result = DeeInt_NewInt64(value);
 	} else {
 		DeeError_Throwf(&DeeError_ValueError,

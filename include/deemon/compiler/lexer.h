@@ -621,7 +621,7 @@ struct ast_tags {
 INTDEF struct ast_tags current_tags;
 
 /* Reset the current set of active tags to an empty (unallocated) state. */
-INTDEF WUNUSED int DCALL ast_tags_clear(void);
+INTDEF WUNUSED NONNULL((1)) int DFCALL ast_tags_clear(DeeLexer *self);
 
 /* Pack together the current documentation string. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -633,21 +633,21 @@ INTDEF WUNUSED NONNULL((1)) int DCALL
 doctext_escape(struct Dee_unicode_printer *__restrict doctext);
 
 /* Add a new annotation to the current set of tags. */
-INTDEF WUNUSED NONNULL((1)) int
-(DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_annotations_add(struct ast *__restrict func, uint16_t flag);
 
 /* Capture all currently saved annotations. */
-INTDEF NONNULL((1)) void (DCALL ast_annotations_get)(struct ast_annotations *__restrict result);
-INTDEF NONNULL((1)) void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self);
+INTDEF NONNULL((1)) void DCALL ast_annotations_get(struct ast_annotations *__restrict result);
+INTDEF NONNULL((1)) void DCALL ast_annotations_free(struct ast_annotations *__restrict self);
 
 /* Clear annotations, and warn if some were given. */
-INTDEF WUNUSED NONNULL((1)) int
-(DCALL ast_annotations_clear)(struct ast_annotations *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+ast_annotations_clear(DeeLexer *lexer, struct ast_annotations *__restrict self);
 
 /* Apply & free annotations to the given `input` ast. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *
-(DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
-                              /*inherit(always)*/ DREF struct ast *__restrict input);
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DCALL
+ast_annotations_apply(struct ast_annotations *__restrict self,
+                      /*inherit(always)*/ DREF struct ast *__restrict input);
 
 
 

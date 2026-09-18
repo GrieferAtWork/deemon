@@ -242,7 +242,7 @@ err_old_flags:
 				++TPPLexer_Current->l_token.t_begin;
 			} else {
 				char *rbrace;
-				if unlikely(WARN(W_TEMPLATE_STRING_UNEXPECTED_TOKEN))
+				if (DeeLexer_Warnf(self, TPP_W_TEMPLATE_STRING_UNEXPECTED_TOKEN))
 					goto err_expr_ast;
 				rbrace = (char *)memchr(TPPLexer_Current->l_token.t_begin, '}', (size_t)(text_end - TPPLexer_Current->l_token.t_begin));
 				if (!rbrace) {

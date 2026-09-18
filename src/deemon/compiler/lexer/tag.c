@@ -42,9 +42,9 @@ DECL_BEGIN
 INTERN struct ast_tags current_tags;
 
 /* Apply & free annotations to the given `input` ast. */
-INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *
-(DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
-                              /*inherit(always)*/ DREF struct ast *__restrict input) {
+INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DCALL
+ast_annotations_apply(struct ast_annotations *__restrict self,
+                      /*inherit(always)*/ DREF struct ast *__restrict input) {
 	DREF struct ast *merge, **expr_v, *args;
 	while (self->an_annoc) {
 		struct ast *func = self->an_annov[self->an_annoc - 1].aa_func;
@@ -135,14 +135,14 @@ err:
 
 
 /* Capture all currently saved annotations. */
-INTERN NONNULL((1)) void
-(DCALL ast_annotations_get)(struct ast_annotations *__restrict result) {
+INTERN NONNULL((1)) void DCALL
+ast_annotations_get(struct ast_annotations *__restrict result) {
 	memcpy(result, &current_tags.at_anno, sizeof(struct ast_annotations));
 	bzero(&current_tags.at_anno, sizeof(struct ast_annotations));
 }
 
-INTERN NONNULL((1)) void
-(DCALL ast_annotations_free)(struct ast_annotations *__restrict self) {
+INTERN NONNULL((1)) void DCALL
+ast_annotations_free(struct ast_annotations *__restrict self) {
 	if (!self->an_annov)
 		return;
 	while (self->an_annoc) {
@@ -161,12 +161,12 @@ INTERN NONNULL((1)) void
 }
 
 /* Clear annotations, and warn if some were given. */
-INTERN WUNUSED NONNULL((1)) int
-(DCALL ast_annotations_clear)(struct ast_annotations *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+ast_annotations_clear(DeeLexer *lexer, struct ast_annotations *__restrict self) {
 	if (!self->an_annov)
 		goto done;
 	while (self->an_annoc) {
-		if (WARNAST(self->an_annov[self->an_annoc].aa_func, W_UNUSED_ANNOTATION))
+		if (DeeLexer_WarnfAst(lexer, self->an_annov[self->an_annoc].aa_func, TPP_W_UNUSED_ANNOTATION))
 			goto err;
 		--self->an_annoc;
 		ast_decref(self->an_annov[self->an_annoc].aa_func);
@@ -186,8 +186,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int
-(DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+ast_annotations_add(struct ast *__restrict func, uint16_t flag) {
 	ASSERT(current_tags.at_anno.an_annoc <= current_tags.at_anno.an_annoa);
 	if (current_tags.at_anno.an_annoc >= current_tags.at_anno.an_annoa) {
 		struct ast_annotation *new_anno;
@@ -215,11 +215,11 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int DCALL ast_tags_clear(void) {
+INTERN WUNUSED NONNULL((1)) int DFCALL ast_tags_clear(DeeLexer *self) {
 	while (current_tags.at_anno.an_annoc) {
 		struct ast_annotation *anno;
 		anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
-		if (WARNAST(anno->aa_func, W_UNUSED_ANNOTATION))
+		if (DeeLexer_WarnfAst(self, anno->aa_func, W_UNUSED_ANNOTATION))
 			goto err;
 		ast_decref(anno->aa_func);
 		--current_tags.at_anno.an_annoc;
@@ -262,8 +262,8 @@ convert_dot_tag_namespace(DeeLexer *self, size_t tag_name_len,
                           char const *__restrict tag_name_str) {
 	if unlikely(DeeLexer_GetTok(self) == ':' ||
 	            DeeLexer_GetTok(self) == TOK_COLON_COLON) {
-		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
-		         tag_name_len, tag_name_str))
+		if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
+		                   tag_name_len, tag_name_str))
 			goto err;
 		DeeLexer_SetTokenId(self, '.');
 	}
@@ -325,7 +325,7 @@ again_compiler_tag:
 		is_optional = false;
 again_compiler_subtag:
 		if (!DeeLexer_HasTokenKwd(self)) {
-			if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
+			if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_KEYWORD))
 				goto err;
 		} else {
 			tag_name_str = DeeLexer_GetTokenKwdCStr(self);
@@ -420,7 +420,7 @@ again_compiler_subtag:
 					} else {
 						if (is_optional)
 							goto do_next_compiler_tag;
-						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
+						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
 							goto err;
 						if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ']')
 							goto do_next_compiler_tag;
@@ -429,7 +429,7 @@ again_compiler_subtag:
 						if unlikely(append_decl_string(self))
 							goto err;
 					} else {
-						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
+						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
 							goto err;
 					}
 					if (DeeLexer_Skip2(self, ')', W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
@@ -445,18 +445,22 @@ warn_unknown_tag_yield:
 warn_unknown_tag:
 				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
-				if (!is_optional &&
-				    WARN(DeeLexer_GetTok(self) == '.' ? W_COMPILER_TAG_UNKNOWN_NS
-				                                      : W_COMPILER_TAG_UNKNOWN,
-				         tag_name_len, tag_name_str))
-					goto err;
+				if (!is_optional) {
+					if (DeeLexer_Warnf(self,
+					                   DeeLexer_GetTok(self) == '.'
+					                   ? TPP_W_COMPILER_TAG_UNKNOWN_NS
+					                   : TPP_W_COMPILER_TAG_UNKNOWN,
+					                   tag_name_len, tag_name_str))
+						goto err;
+				}
 again_check_tag_namespace:
 				if (DeeLexer_GetTok(self) == '.') {
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if (!DeeLexer_HasTokenKwd(self)) {
 err_no_keyword_after_dot:
-						if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, tag_name_len, tag_name_str))
+						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT,
+						                   tag_name_len, tag_name_str))
 							goto err;
 					} else {
 						tag_name_str = DeeLexer_GetTokenKwdCStr(self);

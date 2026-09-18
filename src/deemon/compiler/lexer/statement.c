@@ -192,7 +192,7 @@ do_realloc:
 		}
 		exprv[exprc++] = new_expression; /* Inherit reference. */
 		if (token_num == TPPLexer_Current->l_token.t_num) {
-			if unlikely(WARN(W_FAILED_TO_PARSE_STATEMENT))
+			if (DeeLexer_Warnf(self, TPP_W_FAILED_TO_PARSE_STATEMENT))
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
@@ -308,7 +308,7 @@ err_if_flags:
 		ff_branch = NULL;
 
 		/* Allow tags before the `else` keyword (forward-compatibility...) */
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_tt_branch;
 		if unlikely(skip_lf(self))
 			goto err_tt_branch;
@@ -352,9 +352,10 @@ do_else_branch:
 			 *               in both return and yield functions. */
 			result = ast_return(NULL);
 		} else {
-			if ((current_basescope->bs_flags & Dee_CODE_FYIELDING) &&
-			    WARN(W_RETURN_IN_YIELD_FUNCTION))
-				goto err;
+			if ((current_basescope->bs_flags & Dee_CODE_FYIELDING)) {
+				if (DeeLexer_Warnf(self, TPP_W_RETURN_IN_YIELD_FUNCTION))
+					goto err;
+			}
 			current_basescope->bs_cflags |= BASESCOPE_FRETURN;
 			result = ast_parse_comma(self,
 			                         AST_COMMA_NORMAL,
@@ -369,10 +370,13 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_RETURN))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_yield:
@@ -401,13 +405,17 @@ do_else_branch:
 		if unlikely(!result)
 			goto err;
 		current_basescope->bs_flags |= Dee_CODE_FYIELDING;
-		if (current_basescope->bs_cflags & BASESCOPE_FRETURN &&
-		    WARN(W_YIELD_AFTER_RETURN))
-			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_YIELD))
-			goto err_r;
+		if (current_basescope->bs_cflags & BASESCOPE_FRETURN) {
+			if (DeeLexer_Warnf(self, TPP_W_YIELD_AFTER_RETURN))
+				goto err;
+		}
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_from:
@@ -415,10 +423,13 @@ do_else_branch:
 		result = ast_parse_import(self);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_IMPORT))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_throw:
@@ -442,10 +453,13 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_THROW))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_THROW))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_print:
@@ -535,10 +549,13 @@ do_else_branch:
 			}
 		}
 		ast_setddi(result, &loc);
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_PRINT))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_for: {
@@ -680,10 +697,13 @@ err_foreach_iter:
 		result = ast_parse_assert(self, false);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASSERT))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_do: {
@@ -698,7 +718,7 @@ err_foreach_iter:
 			goto err;
 
 		/* Allow tags before the `while` keyword (forward-compatibility...) */
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_r;
 		if unlikely(skip_lf(self))
 			goto err_r;
@@ -725,10 +745,13 @@ err_r_do_flags:
 		if unlikely(!merge)
 			goto err;
 		result = merge;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
+				goto err_r;
+		}
 	}	break;
 
 	case TPP_KWD_while: {
@@ -783,10 +806,13 @@ err_while_flags:
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_r;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_BREAK))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK))
+				goto err_r;
+		}
 	}	break;
 
 	case TPP_KWD_with:
@@ -846,19 +872,25 @@ err_del_flags:
 				goto err;
 		}
 		result = ast_putddi(result, &loc);
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DEL))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_DEL))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD___asm:
 	case TPP_KWD___asm__:
 		result = ast_parse_asm(self);
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASM))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_ASM))
+				goto err_r;
+		}
 		break;
 
 	case TPP_KWD_goto: {
@@ -875,7 +907,7 @@ err_del_flags:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		} else {
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_GOTO))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_GOTO))
 				goto err;
 			goto_label = lookup_label(&TPPKeyword_Empty);
 			if unlikely(!goto_label)
@@ -885,10 +917,13 @@ err_del_flags:
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
-		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
-		            : WARN(W_EXPECTED_SEMICOLON_AFTER_GOTO))
-			goto err_r;
+		if likely(is_semicolon(DeeLexer_GetTok(self))) {
+			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
+				goto err_r;
+		} else {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO))
+				goto err_r;
+		}
 	}	break;
 
 	case TPP_KWD_switch: {
@@ -1015,7 +1050,7 @@ handle_post_label:
 					goto err;
 				if unlikely(DeeLexer_GetTok(self) == '}') {
 					/* Emit a warning and when the next token is a `}` */
-					if unlikely(WARN(W_MISSING_STATEMENT_AFTER_LABEL))
+					if (DeeLexer_Warnf(self, TPP_W_MISSING_STATEMENT_AFTER_LABEL))
 						goto err;
 					result = ast_constexpr(Dee_None);
 					if unlikely(!result)
@@ -1073,7 +1108,7 @@ err_label_ast:
 				break;
 	case TPP_KWD_case:
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
-					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
+					if (DeeLexer_Warnf(self, TPP_W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
 				}
 				if (DeeLexer_GetLoc(self, &loc))
@@ -1101,11 +1136,11 @@ err_label_ast:
 				goto handle_post_label;
 	case TPP_KWD_default:
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
-					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
+					if (DeeLexer_Warnf(self, TPP_W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
 				} else if unlikely(current_basescope->bs_swdefl) {
 					/* Warn if another default label had already been defined. */
-					if (WARN(W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED))
+					if (DeeLexer_Warnf(self, TPP_W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED))
 						goto err;
 				}
 				if (DeeLexer_GetLoc(self, &loc))
@@ -1141,7 +1176,7 @@ err_label_ast:
 		break;
 	}
 	/* Clear tags at the end of each statement. */
-	if unlikely(ast_tags_clear())
+	if unlikely(ast_tags_clear(self))
 		goto err_r;
 done_no_tag_reset:
 	return result;

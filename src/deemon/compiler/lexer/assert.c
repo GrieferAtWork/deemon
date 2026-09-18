@@ -84,9 +84,10 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 			}
 		}
 	} else {
-		if (needs_parenthesis &&
-		    WARN(W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
-			goto err;
+		if (needs_parenthesis) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
+				goto err;
+		}
 		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;

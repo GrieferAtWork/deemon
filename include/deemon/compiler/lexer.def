@@ -398,12 +398,12 @@ TPP_WARNING(TPP_W_CLASS_NO_MEMBER_DEFINED, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WS
 TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_PROPERTY, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[}%] after property, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CALLBACK_NAME_IN_PROPERTY, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected callback name within property declaration, but got %Pt")
 TPP_WARNING(TPP_W_PROPERTY_CALLBACK_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Property callback %[%s%] has already been defined")
-TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Explicitly typed member %Pt was not initialized")
-TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Explicitly typed member %Pt expectation was not met")
-//TODO:TPP_WARNING(TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "%[varying%] modifier ignored for %[property %s%]", KWDNAME())
-//TODO:TPP_WARNING(TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "%[varying%] modifier ignored for %[function %s%]", KWDNAME())
+TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Explicitly typed member %[%s%] was not initialized")
+TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Explicitly typed member %[%s%] expectation was not met")
+TPP_WARNING(TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "%[varying%] modifier ignored for %[property %s%]")
+TPP_WARNING(TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "%[varying%] modifier ignored for %[function %s%]")
 TPP_WARNING(TPP_W_DEPRECATED_PROPERTY_MODIFIER, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Property modifier %Pt is deprecated and ignored")
-TPP_WARNING(TPP_W_DEPRECATED_PROPERTY_NAME, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Property name %Pt is deprecated. Use %[%s%] instead")
+TPP_WARNING(TPP_W_DEPRECATED_PROPERTY_NAME, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Property name %Pt is deprecated. Use `%s` instead") /* XXX: Need to use "`" because caller sometimes passes "get` or `set" */
 TPP_WARNING(TPP_W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected a property callback name, but got %Pt")
 TPP_WARNING(TPP_W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "A property type prefix %Pt had already been given")
 TPP_WARNING(TPP_W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[this%] or %[%s%] after %[~%], but got %Pt")
@@ -442,38 +442,56 @@ TPP_WARNING(TPP_W_UNUSED_ANNOTATION, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_W
 
 /* Symbols */
 /*WARNING_NAMESPACE(WN_SYMBOLS, 2700)*/
-TPP_WARNING(TPP_W_RESERVED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Symbol name %Pt is a reserved identifier")
-TPP_WARNING(TPP_W_RESERVED_ARGUMENT_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Argument name %Pt is a reserved identifier")
-TPP_WARNING(TPP_W_RESERVED_MEMBER_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Member name %Pt is a reserved identifier")
-//TODO:TPP_WARNING(TPP_W_RESERVED_ATTRIBUTE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("A reserved identifier is used in an attribute lookup. Consider using %[.operator . (%q) instead%]", KWDNAME()))
+TPP_WARNING(TPP_W_RESERVED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Symbol name %[%s%] is a reserved identifier")
+TPP_WARNING(TPP_W_RESERVED_ARGUMENT_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Argument name %[%s%] is a reserved identifier")
+TPP_WARNING(TPP_W_RESERVED_MEMBER_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Member name %[%s%] is a reserved identifier")
+TPP_WARNING(TPP_W_RESERVED_ATTRIBUTE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "A reserved identifier is used in an attribute lookup. Consider using %[.operator . (\"%s\") instead%]")
 TPP_WARNING(TPP_W_UNKNOWN_NTH_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown %u-th symbol %Pt")
 TPP_WARNING(TPP_W_ARGUMENT_NAME_ALREADY_IN_USE, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Argument name %Pt is already in use")
 TPP_WARNING(TPP_W_NEED_SYMBOL_FOR_INPLACE_OPERATOR, 1(TPP_WG_VALUE), 0(/*TODO*/), TPP_WSTATE_ERROR, "Only variables can be used with inplace operators")
 //TODO:TPP_WARNING(TPP_W_EXPECTED_STATIC_VARIABLE, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a static variable, but %[%s%] has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 //TODO:TPP_WARNING(TPP_W_EXPECTED_STACK_VARIABLE, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a stack variable, but %[%s%] has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 TPP_WARNING(TPP_W_UNKNOWN_VARIABLE, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown variable %[%s%]")
-TPP_WARNING(TPP_W_VARIABLE_ALREADY_EXISTS, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Local variable %Pt already exists")
-TPP_WARNING(TPP_W_DECLARING_GLOBAL_IN_NONROOT, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Declaring global variable %Pt outside of the root scope")
-//TODO:TPP_WARNING(TPP_W_DECLARING_IMPLICIT_VARIABLE, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("Implicitly declaring %Pt as a local variable. Write %[local %s%] if this is intended", KWDNAME()))
-//TODO:TPP_WARNING(TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, { void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import module %r: %$q is not a valid variable name", a, b, ARG(void *)); })
-//TODO:TPP_WARNING(TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, { void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import symbol %r: %$q is not a valid variable name", a, b, ARG(void *)); })
-TPP_WARNING(TPP_W_IMPORT_ALIAS_IS_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "A symbol with the imported name %Pt has already been defined")
+TPP_WARNING(TPP_W_VARIABLE_ALREADY_EXISTS, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Local variable %[%s%] already exists")
+TPP_WARNING(TPP_W_DECLARING_GLOBAL_IN_NONROOT, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Declaring global variable %[%s%] outside of the root scope")
+TPP_WARNING_EX(TPP_W_DECLARING_IMPLICIT_VARIABLE, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "Implicitly declaring %Pt as a local variable. Write %[local %s%] if this is intended", varname, varname);
+})
+TPP_WARNING(TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Cannot import module %[%s%]: %[%s%] is not a valid variable name")
+TPP_WARNING(TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Cannot import symbol %[%s%]: %[%s%] is not a valid variable name")
+TPP_WARNING(TPP_W_IMPORT_ALIAS_IS_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "A symbol with the imported name %[%s%] has already been defined")
 TPP_WARNING(TPP_W_IMPORT_GLOBAL_FROM_OWN_MODULE, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "You can't import globals from your own module")
 TPP_WARNING(TPP_W_MODULE_IMPORT_NOT_FOUND, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Symbol %[%s%] could not be found in module %[%s%]")
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("A reserved identifier appears as alias for an import. Consider changing the offending alias %[%s%] to something different", KWDNAME()))
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("A reserved identifier appears in a module name. Consider writing the offending portion as a string %[%q%] instead", KWDNAME()))
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a module name. Consider renaming the offending import to %[my_name_for_%s = %q%] instead", s, s); })
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("A reserved identifier appears in a symbol name. Consider writing the offending portion as a string %[%q%] instead", KWDNAME()))
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a symbol name. Consider renaming the offending import to %[my_name_for_%s = %q%] instead", s, s); })
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a symbol or module name. Consider renaming the offending import as %[my_name_for_%s = %q%] instead", s, s); })
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias %[my_name_for_%s = %q%] instead", s, s); })
-//TODO:TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias %[my_name_for_%s = %q%] instead", s, s); })
+TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "A reserved identifier appears as alias for an import. Consider changing the offending alias %[%s%] to something different")
+TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "A reserved identifier appears in a module name. Consider writing the offending portion as a string %[\"%s\"%] instead")
+TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a module name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+})
+TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "A reserved identifier appears in a symbol name. Consider writing the offending portion as a string %[\"%s\"%] instead")
+TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+})
+TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol or module name. Consider renaming the offending import as %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+})
+TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+})
+TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, {
+	char const *varname = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+})
 
 //TODO:TPP_WARNING(TPP_W_CLASS_MEMBER_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, { size_t s = ARG(size_t); WARNF("Class member name %[%$s%] had already been defined", s, ARG(char const *)); })
-//TODO:TPP_WARNING(TPP_W_IMPLICIT_MEMBER_DECLARATION, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, WARNF("Implicit declaration of member %[%s%] without initializer. If this is intended, prefix with %[member%]", KWDNAME()))
+TPP_WARNING(TPP_W_IMPLICIT_MEMBER_DECLARATION, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_WARN, "Implicit declaration of member %[%s%] without initializer. If this is intended, prefix with %[member%]")
 TPP_WARNING(TPP_W_TOO_MANY_CLASS_MEMBER, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Class %[%s%] has too many members")
-//TODO:TPP_WARNING(TPP_W_MODULE_NOT_FOUND, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, WARNF("Module %[%k%] could not be found", ARG(DeeObject *)))
-//TODO:TPP_WARNING(TPP_W_RECURSIVE_MODULE_DEPENDENCY, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, { DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules %[%k%] and %[%q%]", a, ARG(char const *)); })
+TPP_WARNING(TPP_W_MODULE_NOT_FOUND, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Module %[%s%] could not be found")
+TPP_WARNING(TPP_W_RECURSIVE_MODULE_DEPENDENCY, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Recursive dependency between modules %[%s%] and %[%s%]")
 //TODO:TPP_WARNING(TPP_W_VARIABLE_READ_NEVER_WRITTEN, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Read from variable %[%s%] that is never written", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 TPP_WARNING(TPP_W_NO_OPERATOR_SYMBOL, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Module %[operators%] is not exporting a dedicated symbol for %[operator %s%]")
 TPP_WARNING(TPP_W_NO_OPERATOR_FALLBACK_FUNCTION, 1(TPP_WG_SYMBOL), 0(/*TODO*/), TPP_WSTATE_ERROR, "Module %[operators%] is not exporting the fallback %[operator%] function required to implement generic operator support")
@@ -505,8 +523,8 @@ TPP_WGROUP(TPP_WG_ASM_RELOCATION_MODEL, 1("relocation-model"), TPP_WSTATE_FATAL)
 TPP_WARNING(TPP_W_UASM_PARSING_FAILED, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Failed to parse an assembly directive or instruction from %Pt")
 TPP_WARNING(TPP_W_UASM_IGNORING_TRAILING_TOKENS, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Ignoring trailing token %Pt after assembly directive or instruction")
 TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_INTEGER, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[:%] after integer for symbol definition, but got %Pt")
-TPP_WARNING(TPP_W_UASM_UNKNOWN_MNEMONIC, 2(TPP_WG_ASM_UNKNOWN_MNEMONIC, TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown mnemonic %Pt")
-TPP_WARNING(TPP_W_UASM_UNKNOWN_DIRECTIVE, 2(TPP_WG_ASM_UNKNOWN_DIRECTIVE, TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown directive %Pt")
+TPP_WARNING(TPP_W_UASM_UNKNOWN_MNEMONIC, 2(TPP_WG_ASM_UNKNOWN_MNEMONIC, TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown mnemonic %[%s%]")
+TPP_WARNING(TPP_W_UASM_UNKNOWN_DIRECTIVE, 2(TPP_WG_ASM_UNKNOWN_DIRECTIVE, TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Unknown directive %[%s%]")
 TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_PREFIX, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[:%] after storage class prefix, but got %Pt")
 TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[:%] after %[extern%] prefix, but got %Pt")
 TPP_WARNING(TPP_W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_ERROR, "Expected %[}%] after %[{%] in mnemonic operand, but got %Pt")
@@ -1053,10 +1071,10 @@ DEF_WARNING(W_CLASS_NO_MEMBER_DEFINED, (WG_SYNTAX), WSTATE_WARN, WARNF("No membe
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_PROPERTY, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}` after property, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_CALLBACK_NAME_IN_PROPERTY, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected callback name within property declaration, but got " TOK_S, TOK_A))
 DEF_WARNING(W_PROPERTY_CALLBACK_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, WARNF("Property callback `%s` has already been defined", ARG(char const *)))
-DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, (WG_SYMBOL), WSTATE_WARN, WARNF("Explicitly typed member `%s` was not initialized", KWDNAME()))
-DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_MATCHED, (WG_SYMBOL), WSTATE_WARN, WARNF("Explicitly typed member `%s` expectation was not met", KWDNAME()))
-DEF_WARNING(W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, (WG_SYMBOL), WSTATE_WARN, WARNF("`varying` modifier ignored for `property %s`", KWDNAME()))
-DEF_WARNING(W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, (WG_SYMBOL), WSTATE_WARN, WARNF("`varying` modifier ignored for `function %s`", KWDNAME()))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, (WG_SYMBOL), WSTATE_WARN, WARNF("Explicitly typed member `%s` was not initialized", ARG(char const *)))
+DEF_WARNING(W_CLASS_MEMBER_TYPE_NOT_MATCHED, (WG_SYMBOL), WSTATE_WARN, WARNF("Explicitly typed member `%s` expectation was not met", ARG(char const *)))
+DEF_WARNING(W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, (WG_SYMBOL), WSTATE_WARN, WARNF("`varying` modifier ignored for `property %s`", ARG(char const *)))
+DEF_WARNING(W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, (WG_SYMBOL), WSTATE_WARN, WARNF("`varying` modifier ignored for `function %s`", ARG(char const *)))
 DEF_WARNING(W_DEPRECATED_PROPERTY_MODIFIER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Property modifier " TOK_S " is deprecated and ignored", TOK_A))
 DEF_WARNING(W_DEPRECATED_PROPERTY_NAME, (WG_SYNTAX), WSTATE_ERROR, WARNF("Property name " TOK_S " is deprecated. Use `%s` instead", TOK_A, ARG(char const *)))
 DEF_WARNING(W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a property callback name, but got " TOK_S, TOK_A))
@@ -1101,38 +1119,38 @@ DEF_WARNING(W_UNUSED_ANNOTATION, (WG_SYNTAX), WSTATE_WARN, WARNF("Unused annotat
 
 /* Symbols */
 WARNING_NAMESPACE(WN_SYMBOLS, 2700)
-DEF_WARNING(W_RESERVED_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Symbol name `%s` is a reserved identifier", KWDNAME()))
-DEF_WARNING(W_RESERVED_ARGUMENT_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Argument name `%s` is a reserved identifier", KWDNAME()))
-DEF_WARNING(W_RESERVED_MEMBER_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Member name `%s` is a reserved identifier", KWDNAME()))
-DEF_WARNING(W_RESERVED_ATTRIBUTE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier is used in an attribute lookup. Consider using `.operator . (%q) instead`", KWDNAME()))
+DEF_WARNING(W_RESERVED_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Symbol name `%s` is a reserved identifier", ARG(char const *)))
+DEF_WARNING(W_RESERVED_ARGUMENT_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Argument name `%s` is a reserved identifier", ARG(char const *)))
+DEF_WARNING(W_RESERVED_MEMBER_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("Member name `%s` is a reserved identifier", ARG(char const *)))
+DEF_WARNING(W_RESERVED_ATTRIBUTE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier is used in an attribute lookup. Consider using `.operator . (%q) instead`", ARG(char const *)))
 DEF_WARNING(W_UNKNOWN_NTH_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, WARNF("Unknown %u-th symbol " TOK_S, ARG(unsigned int), TOK_A))
 DEF_WARNING(W_ARGUMENT_NAME_ALREADY_IN_USE, (WG_SYMBOL), WSTATE_ERROR, WARNF("Argument name " TOK_S " is already in use", TOK_A))
 DEF_WARNING(W_NEED_SYMBOL_FOR_INPLACE_OPERATOR, (WG_VALUE), WSTATE_ERROR, WARNF("Only variables can be used with inplace operators"))
 DEF_WARNING(W_EXPECTED_STATIC_VARIABLE, (WG_SYMBOL), WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a static variable, but `%s` has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_EXPECTED_STACK_VARIABLE, (WG_SYMBOL), WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a stack variable, but `%s` has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_UNKNOWN_VARIABLE, (WG_SYMBOL), WSTATE_ERROR, WARNF("Unknown variable `%s`", ARG(char const *)))
-DEF_WARNING(W_VARIABLE_ALREADY_EXISTS, (WG_SYMBOL), WSTATE_ERROR, WARNF("Local variable `%s` already exists", KWDNAME()))
-DEF_WARNING(W_DECLARING_GLOBAL_IN_NONROOT, (WG_SYMBOL), WSTATE_WARN, WARNF("Declaring global variable `%s` outside of the root scope", KWDNAME()))
-DEF_WARNING(W_DECLARING_IMPLICIT_VARIABLE, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("Implicitly declaring `%s` as a local variable. Write `local %s` if this is intended", s, s); })
-DEF_WARNING(W_INVALID_NAME_FOR_MODULE_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import module %r: %$q is not a valid variable name", a, b, ARG(void *)); })
-DEF_WARNING(W_INVALID_NAME_FOR_IMPORT_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { void *a = ARG(void *); size_t b = ARG(size_t); WARNF("Cannot import symbol %r: %$q is not a valid variable name", a, b, ARG(void *)); })
-DEF_WARNING(W_IMPORT_ALIAS_IS_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, WARNF("A symbol with the imported name `%s` has already been defined", KWDNAME()))
+DEF_WARNING(W_VARIABLE_ALREADY_EXISTS, (WG_SYMBOL), WSTATE_ERROR, WARNF("Local variable `%s` already exists", ARG(char const *)))
+DEF_WARNING(W_DECLARING_GLOBAL_IN_NONROOT, (WG_SYMBOL), WSTATE_WARN, WARNF("Declaring global variable `%s` outside of the root scope", ARG(char const *)))
+DEF_WARNING(W_DECLARING_IMPLICIT_VARIABLE, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("Implicitly declaring `%s` as a local variable. Write `local %s` if this is intended", s, s); })
+DEF_WARNING(W_INVALID_NAME_FOR_MODULE_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { char const *a = ARG(char const *); WARNF("Cannot import module `%s`: `%s` is not a valid variable name", a, ARG(char const *)); })
+DEF_WARNING(W_INVALID_NAME_FOR_IMPORT_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { char const *a = ARG(char const *); WARNF("Cannot import symbol `%s`: `%s` is not a valid variable name", a, ARG(char const *)); })
+DEF_WARNING(W_IMPORT_ALIAS_IS_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, WARNF("A symbol with the imported name `%s` has already been defined", ARG(char const *)))
 DEF_WARNING(W_IMPORT_GLOBAL_FROM_OWN_MODULE, (WG_SYMBOL), WSTATE_ERROR, WARNF("You can't import globals from your own module"))
 DEF_WARNING(W_MODULE_IMPORT_NOT_FOUND, (WG_SYMBOL), WSTATE_ERROR, { char const *n = ARG(char const *); WARNF("Symbol `%s` could not be found in module `%s`", n, ARG(char const *)); })
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears as alias for an import. Consider changing the offending alias `%s` to something different", KWDNAME()))
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears in a module name. Consider writing the offending portion as a string `%q` instead", KWDNAME()))
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a module name. Consider renaming the offending import to `my_name_for_%s = %q` instead", s, s); })
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears in a symbol name. Consider writing the offending portion as a string `%q` instead", KWDNAME()))
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a symbol name. Consider renaming the offending import to `my_name_for_%s = %q` instead", s, s); })
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier appears in a symbol or module name. Consider renaming the offending import as `my_name_for_%s = %q` instead", s, s); })
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
-DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = KWDNAME(); WARNF("A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears as alias for an import. Consider changing the offending alias `%s` to something different", ARG(char const *)))
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears in a module name. Consider writing the offending portion as a string `%q` instead", ARG(char const *)))
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier appears in a module name. Consider renaming the offending import to `my_name_for_%s = %q` instead", s, s); })
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, WARNF("A reserved identifier appears in a symbol name. Consider writing the offending portion as a string `%q` instead", ARG(char const *)))
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier appears in a symbol name. Consider renaming the offending import to `my_name_for_%s = %q` instead", s, s); })
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier appears in a symbol or module name. Consider renaming the offending import as `my_name_for_%s = %q` instead", s, s); })
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
+DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
 
 DEF_WARNING(W_CLASS_MEMBER_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, { size_t s = ARG(size_t); WARNF("Class member name `%$s` had already been defined", s, ARG(char const *)); })
-DEF_WARNING(W_IMPLICIT_MEMBER_DECLARATION, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, WARNF("Implicit declaration of member `%s` without initializer. If this is intended, prefix with `member`", KWDNAME()))
+DEF_WARNING(W_IMPLICIT_MEMBER_DECLARATION, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, WARNF("Implicit declaration of member `%s` without initializer. If this is intended, prefix with `member`", ARG(char const *)))
 DEF_WARNING(W_TOO_MANY_CLASS_MEMBER, (WG_SYMBOL), WSTATE_ERROR, WARNF("Class `%s` has too many members", ARG(char const *)))
-DEF_WARNING(W_MODULE_NOT_FOUND, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `%k` could not be found", ARG(DeeObject *)))
-DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY, (WG_SYMBOL), WSTATE_ERROR, { DeeObject *a = ARG(DeeObject *); WARNF("Recursive dependency between modules `%k` and `%q`", a, ARG(char const *)); })
+DEF_WARNING(W_MODULE_NOT_FOUND, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `%s` could not be found", ARG(char const *)))
+DEF_WARNING(W_RECURSIVE_MODULE_DEPENDENCY, (WG_SYMBOL), WSTATE_ERROR, { char const *a = ARG(char const *); WARNF("Recursive dependency between modules `%s` and `%s`", a, ARG(char const *)); })
 DEF_WARNING(W_VARIABLE_READ_NEVER_WRITTEN, (WG_SYMBOL), WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Read from variable `%s` that is never written", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_NO_OPERATOR_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators` is not exporting a dedicated symbol for `operator %s`", ARG(char const *)))
 DEF_WARNING(W_NO_OPERATOR_FALLBACK_FUNCTION, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `operators` is not exporting the fallback `operator` function required to implement generic operator support"))
@@ -1164,8 +1182,8 @@ WARNING(W_UNUSED_4100, (WG_VALUE), WSTATE_DISABLED) /* `W_UASM_NOT_SUPPORTED` */
 DEF_WARNING(W_UASM_PARSING_FAILED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Failed to parse an assembly directive or instruction from " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_IGNORING_TRAILING_TOKENS, (WG_SYNTAX), WSTATE_ERROR, WARNF("Ignoring trailing token " TOK_S " after assembly directive or instruction", TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_INTEGER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:` after integer for symbol definition, but got " TOK_S, TOK_A))
-DEF_WARNING(W_UASM_UNKNOWN_MNEMONIC, (WG_ASM_UNKNOWN_MNEMONIC, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown mnemonic `%s`", KWDNAME()))
-DEF_WARNING(W_UASM_UNKNOWN_DIRECTIVE, (WG_ASM_UNKNOWN_DIRECTIVE, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown directive `%s`", KWDNAME()))
+DEF_WARNING(W_UASM_UNKNOWN_MNEMONIC, (WG_ASM_UNKNOWN_MNEMONIC, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown mnemonic `%s`", ARG(char const *)))
+DEF_WARNING(W_UASM_UNKNOWN_DIRECTIVE, (WG_ASM_UNKNOWN_DIRECTIVE, WG_SYNTAX), WSTATE_ERROR, WARNF("Unknown directive `%s`", ARG(char const *)))
 DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:` after storage class prefix, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:` after `extern` prefix, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}` after `{` in mnemonic operand, but got " TOK_S, TOK_A))
@@ -1255,5 +1273,306 @@ DEF_WARNING(W_ASM_LABEL_NEVER_USED, (WG_UNUSED_LABEL), WSTATE_WARN, WARNF("Label
 
 
 WARNING_NAMESPACE(WN_LINKER, 9000)
+
+
+
+#define TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION                             W_UNEXPECTED_TOKEN_IN_EXPRESSION
+#define TPP_W_EXPECTED_LPAREN_AFTER_IF                                   W_EXPECTED_LPAREN_AFTER_IF
+#define TPP_W_EXPECTED_RPAREN_AFTER_IF                                   W_EXPECTED_RPAREN_AFTER_IF
+#define TPP_W_EXPECTED_LPARENT_AFTER_WITH                                W_EXPECTED_LPARENT_AFTER_WITH
+#define TPP_W_EXPECTED_RPARENT_AFTER_WITH                                W_EXPECTED_RPARENT_AFTER_WITH
+#define TPP_W_EXPECTED_RBRACE_AFTER_LBRACE                               W_EXPECTED_RBRACE_AFTER_LBRACE
+#define TPP_W_EXPECTED_RPAREN_AFTER_PACK                                 W_EXPECTED_RPAREN_AFTER_PACK
+#define TPP_W_EXPECTED_RPAREN_AFTER_LPAREN                               W_EXPECTED_RPAREN_AFTER_LPAREN
+#define TPP_W_EXPECTED_RANGLE_AFTER_LANGLE                               W_EXPECTED_RANGLE_AFTER_LANGLE
+#define TPP_W_DEPRECATED_CELL_SYNTAX                                     W_DEPRECATED_CELL_SYNTAX
+#define TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX                                W_DEPRECATED_ATTRIBUTE_SYNTAX
+#define TPP_W_DEPRECATED_GLOBAL_PREFIX                                   W_DEPRECATED_GLOBAL_PREFIX
+#define TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION                            W_DEPRECATED_PREFIX_IN_EXPRESSION
+#define TPP_W_DEPRECATED_NO_PARAMETER_LIST                               W_DEPRECATED_NO_PARAMETER_LIST
+#define TPP_W_DEPRECATED_CHARACTER_INT                                   W_DEPRECATED_CHARACTER_INT
+#define TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION                       W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION
+#define TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION                          W_DEPRECATED_FUNCTION_IN_EXPRESSION
+#define TPP_W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE                      W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE
+#define TPP_W_DEPRECATED_CLASS_BASE_EXTENDS                              W_DEPRECATED_CLASS_BASE_EXTENDS
+#define TPP_W_DEPRECATED_CLASS_BASE_PARENS                               W_DEPRECATED_CLASS_BASE_PARENS
+#define TPP_W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST             W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST
+#define TPP_W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST                  W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST
+#define TPP_W_EXPECTED_KEYWORD_AFTER_AS                                  W_EXPECTED_KEYWORD_AFTER_AS
+#define TPP_W_EXPECTED_IMPORT_AFTER_FROM                                 W_EXPECTED_IMPORT_AFTER_FROM
+#define TPP_W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST          W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST
+#define TPP_W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST                     W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST
+#define TPP_W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST                 W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST
+#define TPP_W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST                   W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST
+#define TPP_W_EXPECTED_LPAREN_AFTER_IMPORT                               W_EXPECTED_LPAREN_AFTER_IMPORT
+#define TPP_W_EXPECTED_RPAREN_AFTER_IMPORT                               W_EXPECTED_RPAREN_AFTER_IMPORT
+#define TPP_W_EXPECTED_RBRACKET_AFTER_LIST                               W_EXPECTED_RBRACKET_AFTER_LIST
+#define TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT                            W_EXPECTED_RBRACE_AFTER_BRACEINIT
+#define TPP_W_EXPECTED_LPAREN_AFTER_NTH                                  W_EXPECTED_LPAREN_AFTER_NTH
+#define TPP_W_EXPECTED_RPAREN_AFTER_NTH                                  W_EXPECTED_RPAREN_AFTER_NTH
+#define TPP_W_EXPECTED_KEYWORD_AFTER_NTH                                 W_EXPECTED_KEYWORD_AFTER_NTH
+#define TPP_W_EXPECTED_CONSTANT_AFTER_NTH                                W_EXPECTED_CONSTANT_AFTER_NTH
+#define TPP_W_DEPRECATED_LAMBDA_MODE                                     W_DEPRECATED_LAMBDA_MODE
+#define TPP_W_EXPECTED_RBRACKET_AFTER_LAMBDA                             W_EXPECTED_RBRACKET_AFTER_LAMBDA
+#define TPP_W_EXPECTED_RBRACKET_AFTER_GETITEM                            W_EXPECTED_RBRACKET_AFTER_GETITEM
+#define TPP_W_EXPECTED_RBRACKET_AFTER_LBRACKET                           W_EXPECTED_RBRACKET_AFTER_LBRACKET
+#define TPP_W_EXPECTED_RPAREN_AFTER_CALL                                 W_EXPECTED_RPAREN_AFTER_CALL
+#define TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM                            W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM
+#define TPP_W_EXPECTED_KEYWORD_AFTER_DOT                                 W_EXPECTED_KEYWORD_AFTER_DOT
+#define TPP_W_EXPECTED_VARIABLE_AFTER_VISIBILITY                         W_EXPECTED_VARIABLE_AFTER_VISIBILITY
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION                        W_EXPECTED_SEMICOLON_AFTER_EXPRESSION
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN                            W_EXPECTED_SEMICOLON_AFTER_RETURN
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD                             W_EXPECTED_SEMICOLON_AFTER_YIELD
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT                            W_EXPECTED_SEMICOLON_AFTER_IMPORT
+#define TPP_W_YIELD_AFTER_RETURN                                         W_YIELD_AFTER_RETURN
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_THROW                             W_EXPECTED_SEMICOLON_AFTER_THROW
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT                             W_EXPECTED_SEMICOLON_AFTER_PRINT
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT                            W_EXPECTED_SEMICOLON_AFTER_ASSERT
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE                           W_EXPECTED_SEMICOLON_AFTER_DOWHILE
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK                             W_EXPECTED_SEMICOLON_AFTER_BREAK
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_DEL                               W_EXPECTED_SEMICOLON_AFTER_DEL
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_ASM                               W_EXPECTED_SEMICOLON_AFTER_ASM
+#define TPP_W_EXPECTED_LPAREN_AFTER_DEL                                  W_EXPECTED_LPAREN_AFTER_DEL
+#define TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL                              W_UNEXPECTED_EXPRESSION_FOR_DEL
+#define TPP_W_EXPECTED_RPAREN_AFTER_DEL                                  W_EXPECTED_RPAREN_AFTER_DEL
+#define TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY                        W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY
+#define TPP_W_EXPECTED_WHILE_AFTER_DO                                    W_EXPECTED_WHILE_AFTER_DO
+#define TPP_W_EXPECTED_LPAREN_AFTER_WHILE                                W_EXPECTED_LPAREN_AFTER_WHILE
+#define TPP_W_EXPECTED_RPAREN_AFTER_WHILE                                W_EXPECTED_RPAREN_AFTER_WHILE
+#define TPP_W_EXPECTED_LPAREN_AFTER_CATCH                                W_EXPECTED_LPAREN_AFTER_CATCH
+#define TPP_W_EXPECTED_RPAREN_AFTER_CATCH                                W_EXPECTED_RPAREN_AFTER_CATCH
+#define TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS                            W_EXPECTED_KEYWORD_AFTER_CATCH_AS
+#define TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION                             W_EXPECTED_LBRACE_AFTER_FUNCTION
+#define TPP_W_EXPECTED_RBRACE_AFTER_FUNCTION                             W_EXPECTED_RBRACE_AFTER_FUNCTION
+#define TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT              W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT
+#define TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS                          W_POSITIONAL_ARGUMENT_AFTER_VARARGS
+#define TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS                          W_POSITIONAL_ARGUMENT_AFTER_VARKWDS
+#define TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED                          W_VARIABLE_ARGUMENT_ALREADY_DEFINED
+#define TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED                           W_KEYWORD_ARGUMENT_ALREADY_DEFINED
+#define TPP_W_EXPECTED_RPAREN_AFTER_ARGLIST                              W_EXPECTED_RPAREN_AFTER_ARGLIST
+#define TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME                         W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME
+#define TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT          W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT
+#define TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS                   W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS
+#define TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS               W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS
+#define TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS                W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS
+#define TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL                          W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL
+#define TPP_W_EXPECTED_LPAREN_AFTER_FOR                                  W_EXPECTED_LPAREN_AFTER_FOR
+#define TPP_W_EXPECTED_SEMICOLON1_AFTER_FOR                              W_EXPECTED_SEMICOLON1_AFTER_FOR
+#define TPP_W_EXPECTED_SEMICOLON2_AFTER_FOR                              W_EXPECTED_SEMICOLON2_AFTER_FOR
+#define TPP_W_EXPECTED_RPAREN_AFTER_FOR                                  W_EXPECTED_RPAREN_AFTER_FOR
+#define TPP_W_EXPECTED_COLON_AFTER_FOREACH                               W_EXPECTED_COLON_AFTER_FOREACH
+#define TPP_W_VARIABLE_MODIFIER_DUPLICATED                               W_VARIABLE_MODIFIER_DUPLICATED
+#define TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE                             W_VARIABLE_MODIFIER_INCOMPATIBLE
+#define TPP_W_VARYING_WITHOUT_FINAL                                      W_VARYING_WITHOUT_FINAL
+#define TPP_W_EXPECTED_CLASS_AFTER_FINAL                                 W_EXPECTED_CLASS_AFTER_FINAL
+#define TPP_W_EXPECTED_LBRACE_AFTER_CLASS                                W_EXPECTED_LBRACE_AFTER_CLASS
+#define TPP_W_EXPECTED_RBRACE_AFTER_CLASS                                W_EXPECTED_RBRACE_AFTER_CLASS
+#define TPP_W_FAILED_TO_PARSE_STATEMENT                                  W_FAILED_TO_PARSE_STATEMENT
+#define TPP_W_RETURN_IN_YIELD_FUNCTION                                   W_RETURN_IN_YIELD_FUNCTION
+#define TPP_W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG                        W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG
+#define TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION                 W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION
+#define TPP_W_EXPECTED_EQUAL_AFTER_BRACE_DOT                             W_EXPECTED_EQUAL_AFTER_BRACE_DOT
+#define TPP_W_EXPECTED_COLON_AFTER_DICT_KEY                              W_EXPECTED_COLON_AFTER_DICT_KEY
+#define TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER                         W_EXPECTED_COMMA_IN_LIST_INITIALIZER
+#define TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME                 W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME
+#define TPP_W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME                     W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME
+#define TPP_W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME                    W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME
+#define TPP_W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME       W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME
+#define TPP_W_EXPECTED_KEYWORD_AFTER_BRACE_DOT                           W_EXPECTED_KEYWORD_AFTER_BRACE_DOT
+#define TPP_W_UNKNOWN_OPERATOR_NAME                                      W_UNKNOWN_OPERATOR_NAME
+#define TPP_W_CANNOT_TEST_EXPRESSION_BINDING                             W_CANNOT_TEST_EXPRESSION_BINDING
+#define TPP_W_EXPECTED_COLON_AFTER_KEYWORD_LABEL                         W_EXPECTED_COLON_AFTER_KEYWORD_LABEL
+#define TPP_W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION                        W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION
+#define TPP_W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION      W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION
+#define TPP_W_EXPECTED_RBRACE_AFTER_SEQUENCE                             W_EXPECTED_RBRACE_AFTER_SEQUENCE
+#define TPP_W_EXPECTED_RPAREN_AFTER_TUPLE                                W_EXPECTED_RPAREN_AFTER_TUPLE
+#define TPP_W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION            W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION
+#define TPP_W_TEMPLATE_STRING_UNMATCHED_LBRACE                           W_TEMPLATE_STRING_UNMATCHED_LBRACE
+#define TPP_W_TEMPLATE_STRING_UNMATCHED_RBRACE                           W_TEMPLATE_STRING_UNMATCHED_RBRACE
+#define TPP_W_TEMPLATE_STRING_UNDEFINED_ESCAPE                           W_TEMPLATE_STRING_UNDEFINED_ESCAPE
+#define TPP_W_TEMPLATE_STRING_UNEXPECTED_TOKEN                           W_TEMPLATE_STRING_UNEXPECTED_TOKEN
+#define TPP_W_TEMPLATE_STRING_NO_DIGIT_OR_HEX_AFTER_BACKSLASH_X_u_U      W_TEMPLATE_STRING_NO_DIGIT_OR_HEX_AFTER_BACKSLASH_X_u_U
+#define TPP_W_UNCLEAR_CAST_INTENT                                        W_UNCLEAR_CAST_INTENT
+#define TPP_W_PROBABLY_MISSING_ARROW                                     W_PROBABLY_MISSING_ARROW
+#define TPP_W_UNCLEAR_SYMBOL_FROM_MODULE                                 W_UNCLEAR_SYMBOL_FROM_MODULE
+#define TPP_W_PACK_USED_OUTSIDE_OF_MACRO                                 W_PACK_USED_OUTSIDE_OF_MACRO
+#define TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS                          W_INCONSISTENT_THOUSANDS_SEPERATORS
+#define TPP_W_INCORRECT_THOUSANDS_SEPERATORS                             W_INCORRECT_THOUSANDS_SEPERATORS
+#define TPP_W_MISSING_STATEMENT_AFTER_LABEL                              W_MISSING_STATEMENT_AFTER_LABEL
+#define TPP_W_EXPECTED_KEYWORD_AFTER_GOTO                                W_EXPECTED_KEYWORD_AFTER_GOTO
+#define TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO                              W_EXPECTED_SEMICOLON_AFTER_GOTO
+#define TPP_W_EXPECTED_LPAREN_AFTER_SWITCH                               W_EXPECTED_LPAREN_AFTER_SWITCH
+#define TPP_W_EXPECTED_RPAREN_AFTER_SWITCH                               W_EXPECTED_RPAREN_AFTER_SWITCH
+#define TPP_W_NOT_INSIDE_A_SWITCH_STATEMENT                              W_NOT_INSIDE_A_SWITCH_STATEMENT
+#define TPP_W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED                     W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED
+#define TPP_W_EXPECTED_COLON_AFTER_DEFAULT                               W_EXPECTED_COLON_AFTER_DEFAULT
+#define TPP_W_EXPECTED_COLON_AFTER_CASE                                  W_EXPECTED_COLON_AFTER_CASE
+#define TPP_W_EXPECTED_LPAREN_AFTER_ASM                                  W_EXPECTED_LPAREN_AFTER_ASM
+#define TPP_W_EXPECTED_STRING_AFTER_ASM                                  W_EXPECTED_STRING_AFTER_ASM
+#define TPP_W_EXPECTED_RPAREN_AFTER_ASM                                  W_EXPECTED_RPAREN_AFTER_ASM
+#define TPP_W_EXPECTED_KEYWORD_FOR_OPERAND_NAME                          W_EXPECTED_KEYWORD_FOR_OPERAND_NAME
+#define TPP_W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME                       W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME
+#define TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE                       W_EXPECTED_STRING_BEFORE_OPERAND_VALUE
+#define TPP_W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE                       W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE
+#define TPP_W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE                        W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE
+#define TPP_W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND                         W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND
+#define TPP_W_UNKNOWN_CLOBBER_NAME                                       W_UNKNOWN_CLOBBER_NAME
+#define TPP_W_STATIC_FIELD_ALREADY_SPECIFIED                             W_STATIC_FIELD_ALREADY_SPECIFIED
+#define TPP_W_UNEXPECTED_TOKEN_IN_CLASS                                  W_UNEXPECTED_TOKEN_IN_CLASS
+#define TPP_W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED                        W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED
+#define TPP_W_CLASS_CONSTRUCTOR_ALREADY_DEFINED                          W_CLASS_CONSTRUCTOR_ALREADY_DEFINED
+#define TPP_W_CLASS_NO_MEMBER_DEFINED                                    W_CLASS_NO_MEMBER_DEFINED
+#define TPP_W_EXPECTED_RBRACE_AFTER_PROPERTY                             W_EXPECTED_RBRACE_AFTER_PROPERTY
+#define TPP_W_EXPECTED_CALLBACK_NAME_IN_PROPERTY                         W_EXPECTED_CALLBACK_NAME_IN_PROPERTY
+#define TPP_W_PROPERTY_CALLBACK_ALREADY_DEFINED                          W_PROPERTY_CALLBACK_ALREADY_DEFINED
+#define TPP_W_CLASS_MEMBER_TYPE_NOT_ASSIGNED                             W_CLASS_MEMBER_TYPE_NOT_ASSIGNED
+#define TPP_W_CLASS_MEMBER_TYPE_NOT_MATCHED                              W_CLASS_MEMBER_TYPE_NOT_MATCHED
+#define TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY                  W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY
+#define TPP_W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION                  W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION
+#define TPP_W_DEPRECATED_PROPERTY_MODIFIER                               W_DEPRECATED_PROPERTY_MODIFIER
+#define TPP_W_DEPRECATED_PROPERTY_NAME                                   W_DEPRECATED_PROPERTY_NAME
+#define TPP_W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX                   W_EXPECTED_PROPERTY_NAME_AFTER_TYPE_PREFIX
+#define TPP_W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN                         W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN
+#define TPP_W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE                     W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE
+#define TPP_W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT                       W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT
+#define TPP_W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR                     W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR
+#define TPP_W_DEPRECATED_USING_CLASS_FOR_STATIC                          W_DEPRECATED_USING_CLASS_FOR_STATIC
+#define TPP_W_EXPECTED_LPAREN_AFTER_SUPER_INIT                           W_EXPECTED_LPAREN_AFTER_SUPER_INIT
+#define TPP_W_EXPECTED_RPAREN_AFTER_SUPER_INIT                           W_EXPECTED_RPAREN_AFTER_SUPER_INIT
+#define TPP_W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT               W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT
+#define TPP_W_EXPECTED_RPAREN_CONSTRUCTOR_INIT                           W_EXPECTED_RPAREN_CONSTRUCTOR_INIT
+#define TPP_W_AMBIGUOUS_OPERATOR_ASSIGNMENT                              W_AMBIGUOUS_OPERATOR_ASSIGNMENT
+#define TPP_W_PRIVATE_OPERATOR_IS_PUBLIC                                 W_PRIVATE_OPERATOR_IS_PUBLIC
+#define TPP_W_OPERATOR_WAS_ALREADY_DEFINED                               W_OPERATOR_WAS_ALREADY_DEFINED
+#define TPP_W_CANNOT_DELETE_INHERITED_CONSTRUCTOR                        W_CANNOT_DELETE_INHERITED_CONSTRUCTOR
+#define TPP_W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR                          W_CANNOT_DELETE_DEFAULT_CONSTRUCTOR
+#define TPP_W_CANNOT_INHERIT_DELETED_CONSTRUCTOR                         W_CANNOT_INHERIT_DELETED_CONSTRUCTOR
+#define TPP_W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR                         W_CANNOT_INHERIT_DEFAULT_CONSTRUCTOR
+#define TPP_W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR                         W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR
+#define TPP_W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR                         W_CANNOT_DEFAULT_DELETED_CONSTRUCTOR
+#define TPP_W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED        W_MEMBER_INITIALIZER_USED_WHEN_CONSTRUCTOR_IS_DELETED
+#define TPP_W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER                  W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER
+#define TPP_W_COMPILER_TAG_UNKNOWN                                       W_COMPILER_TAG_UNKNOWN
+#define TPP_W_COMPILER_TAG_UNKNOWN_NS                                    W_COMPILER_TAG_UNKNOWN_NS
+#define TPP_W_COMPILER_TAG_EXPECTED_KEYWORD                              W_COMPILER_TAG_EXPECTED_KEYWORD
+#define TPP_W_COMPILER_TAG_EXPECTED_RBRACKET                             W_COMPILER_TAG_EXPECTED_RBRACKET
+#define TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL                   W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL
+#define TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD                    W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD
+#define TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT                    W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT
+#define TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC                     W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC
+#define TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC                     W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC
+#define TPP_W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC                     W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC
+#define TPP_W_UNUSED_ANNOTATION                                          W_UNUSED_ANNOTATION
+#define TPP_W_RESERVED_SYMBOL_NAME                                       W_RESERVED_SYMBOL_NAME
+#define TPP_W_RESERVED_ARGUMENT_NAME                                     W_RESERVED_ARGUMENT_NAME
+#define TPP_W_RESERVED_MEMBER_NAME                                       W_RESERVED_MEMBER_NAME
+#define TPP_W_RESERVED_ATTRIBUTE_NAME                                    W_RESERVED_ATTRIBUTE_NAME
+#define TPP_W_UNKNOWN_NTH_SYMBOL                                         W_UNKNOWN_NTH_SYMBOL
+#define TPP_W_ARGUMENT_NAME_ALREADY_IN_USE                               W_ARGUMENT_NAME_ALREADY_IN_USE
+#define TPP_W_NEED_SYMBOL_FOR_INPLACE_OPERATOR                           W_NEED_SYMBOL_FOR_INPLACE_OPERATOR
+#define TPP_W_EXPECTED_STATIC_VARIABLE                                   W_EXPECTED_STATIC_VARIABLE
+#define TPP_W_EXPECTED_STACK_VARIABLE                                    W_EXPECTED_STACK_VARIABLE
+#define TPP_W_UNKNOWN_VARIABLE                                           W_UNKNOWN_VARIABLE
+#define TPP_W_VARIABLE_ALREADY_EXISTS                                    W_VARIABLE_ALREADY_EXISTS
+#define TPP_W_DECLARING_GLOBAL_IN_NONROOT                                W_DECLARING_GLOBAL_IN_NONROOT
+#define TPP_W_DECLARING_IMPLICIT_VARIABLE                                W_DECLARING_IMPLICIT_VARIABLE
+#define TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL                             W_INVALID_NAME_FOR_MODULE_SYMBOL
+#define TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL                             W_INVALID_NAME_FOR_IMPORT_SYMBOL
+#define TPP_W_IMPORT_ALIAS_IS_ALREADY_DEFINED                            W_IMPORT_ALIAS_IS_ALREADY_DEFINED
+#define TPP_W_IMPORT_GLOBAL_FROM_OWN_MODULE                              W_IMPORT_GLOBAL_FROM_OWN_MODULE
+#define TPP_W_MODULE_IMPORT_NOT_FOUND                                    W_MODULE_IMPORT_NOT_FOUND
+#define TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME                          W_RESERVED_IDENTIFIER_IN_ALIAS_NAME
+#define TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME                         W_RESERVED_IDENTIFIER_IN_MODULE_NAME
+#define TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS                 W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS
+#define TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME                         W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
+#define TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS                 W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS
+#define TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME               W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME
+#define TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME           W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME
+#define TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME
+#define TPP_W_CLASS_MEMBER_ALREADY_DEFINED                               W_CLASS_MEMBER_ALREADY_DEFINED
+#define TPP_W_IMPLICIT_MEMBER_DECLARATION                                W_IMPLICIT_MEMBER_DECLARATION
+#define TPP_W_TOO_MANY_CLASS_MEMBER                                      W_TOO_MANY_CLASS_MEMBER
+#define TPP_W_MODULE_NOT_FOUND                                           W_MODULE_NOT_FOUND
+#define TPP_W_RECURSIVE_MODULE_DEPENDENCY                                W_RECURSIVE_MODULE_DEPENDENCY
+#define TPP_W_VARIABLE_READ_NEVER_WRITTEN                                W_VARIABLE_READ_NEVER_WRITTEN
+#define TPP_W_NO_OPERATOR_SYMBOL                                         W_NO_OPERATOR_SYMBOL
+#define TPP_W_NO_OPERATOR_FALLBACK_FUNCTION                              W_NO_OPERATOR_FALLBACK_FUNCTION
+#define TPP_W_NO_D200_OLD_USER_CLASS                                     W_NO_D200_OLD_USER_CLASS
+#define TPP_W_COMPARE_SODO_NONBUILTIN_UNDEFINED                          W_COMPARE_SODO_NONBUILTIN_UNDEFINED
+#define TPP_W_WRITE_TO_FINAL_VARIABLE                                    W_WRITE_TO_FINAL_VARIABLE
+#define TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED                            W_SYMBOL_TYPE_DECLARATION_CHANGED
+#define TPP_W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE                          W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE
+#define TPP_W_COMPARE_SODO_TRUE_UNDEFINED                                W_COMPARE_SODO_TRUE_UNDEFINED
+#define TPP_W_COMPARE_SODO_FALSE_UNDEFINED                               W_COMPARE_SODO_FALSE_UNDEFINED
+#ifdef CONFIG_LANGUAGE_NO_ASM
+#define TPP_W_UASM_NOT_SUPPORTED W_UASM_NOT_SUPPORTED
+#else /* CONFIG_LANGUAGE_NO_ASM */
+#define TPP_W_UASM_PARSING_FAILED                                      W_UASM_PARSING_FAILED
+#define TPP_W_UASM_IGNORING_TRAILING_TOKENS                            W_UASM_IGNORING_TRAILING_TOKENS
+#define TPP_W_UASM_EXPECTED_COLON_AFTER_INTEGER                        W_UASM_EXPECTED_COLON_AFTER_INTEGER
+#define TPP_W_UASM_UNKNOWN_MNEMONIC                                    W_UASM_UNKNOWN_MNEMONIC
+#define TPP_W_UASM_UNKNOWN_DIRECTIVE                                   W_UASM_UNKNOWN_DIRECTIVE
+#define TPP_W_UASM_EXPECTED_COLON_AFTER_PREFIX                         W_UASM_EXPECTED_COLON_AFTER_PREFIX
+#define TPP_W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX                  W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX
+#define TPP_W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND             W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND
+#define TPP_W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND         W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND
+#define TPP_W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT                         W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT
+#define TPP_W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND                   W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND
+#define TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND                   W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND
+#define TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX                    W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX
+#define TPP_W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND                   W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND
+#define TPP_W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND                 W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND
+#define TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION               W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION
+#define TPP_W_UASM_SYMBOL_ALREADY_DEFINED                              W_UASM_SYMBOL_ALREADY_DEFINED
+#define TPP_W_UASM_DOESNT_CLEANUP_STACK                                W_UASM_DOESNT_CLEANUP_STACK
+#define TPP_W_UASM_POPPED_UNRELATED_ITEMS                              W_UASM_POPPED_UNRELATED_ITEMS
+#define TPP_W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL                W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL
+#define TPP_W_UASM_EXPECTED_INTEXPR                                    W_UASM_EXPECTED_INTEXPR
+#define TPP_W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND               W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND
+#define TPP_W_UASM_STACK_VARIABLE_NOT_ALLOCATED                        W_UASM_STACK_VARIABLE_NOT_ALLOCATED
+#define TPP_W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER                    W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER
+#define TPP_W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST         W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST
+#define TPP_W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION
+#define TPP_W_UASM_RELOCATION_MODEL_ALREADY_DEFINED                    W_UASM_RELOCATION_MODEL_ALREADY_DEFINED
+#define TPP_W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL                    W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL
+#define TPP_W_UASM_CANNOT_ADD_2_SYMBOLS                                W_UASM_CANNOT_ADD_2_SYMBOLS
+#define TPP_W_UASM_CANNOT_SUB_2_SYMBOLS                                W_UASM_CANNOT_SUB_2_SYMBOLS
+#define TPP_W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION            W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION
+#define TPP_W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT     W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT
+#define TPP_W_UASM_ILLEGAL_STACK_DEPTH                                 W_UASM_ILLEGAL_STACK_DEPTH
+#define TPP_W_UASM_TRUNCATED_TO_FIT                                    W_UASM_TRUNCATED_TO_FIT
+#define TPP_W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL                         W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL
+#define TPP_W_UASM_EXCEPT_UNKNOWN_TAG                                  W_UASM_EXCEPT_UNKNOWN_TAG
+#define TPP_W_UASM_CODE_UNKNOWN_FLAG                                   W_UASM_CODE_UNKNOWN_FLAG
+#define TPP_W_UASM_RELOC_UNKNOWN_NAME                                  W_UASM_RELOC_UNKNOWN_NAME
+#define TPP_W_UASM_RELOC_NEED_DOT                                      W_UASM_RELOC_NEED_DOT
+#define TPP_W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL                          W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL
+#define TPP_W_UASM_RELOC_NAME_NEEDS_SYMBOL                             W_UASM_RELOC_NAME_NEEDS_SYMBOL
+#define TPP_W_UASM_RELOC_VALUE_NOT_A_SYMBOL                            W_UASM_RELOC_VALUE_NOT_A_SYMBOL
+#define TPP_W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X                  W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+#define TPP_W_ASM_SEQUENCE_TOO_LONG                         W_ASM_SEQUENCE_TOO_LONG
+#define TPP_W_ASM_STORE_TO_RVALUE                           W_ASM_STORE_TO_RVALUE
+#define TPP_W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED             W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED
+#define TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS                W_ASM_CANNOT_PREFIX_SYMBOL_CLASS
+#define TPP_W_ASM_STACK_VARIABLE_NOT_INITIALIZED            W_ASM_STACK_VARIABLE_NOT_INITIALIZED
+#define TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED            W_ASM_STACK_VARIABLE_WAS_DEALLOCATED
+#define TPP_W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE            W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE
+#define TPP_W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE          W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE
+#define TPP_W_ASM_PROPERTY_VARIABLE_NOT_READABLE            W_ASM_PROPERTY_VARIABLE_NOT_READABLE
+#define TPP_W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE            W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE
+#define TPP_W_ASM_AMBIGUOUS_SYMBOL                          W_ASM_AMBIGUOUS_SYMBOL
+#define TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD         W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD
+#define TPP_W_ASM_CANNOT_UNBIND_SYMBOL                      W_ASM_CANNOT_UNBIND_SYMBOL
+#define TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE
+#define TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND       W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND
+#define TPP_W_ASM_CANNOT_WRITE_SYMBOL                       W_ASM_CANNOT_WRITE_SYMBOL
+#define TPP_W_ASM_EXTERNAL_SYMBOL_IS_READONLY               W_ASM_EXTERNAL_SYMBOL_IS_READONLY
+#define TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL                  W_ASM_MULTIPLE_WRITES_TO_FINAL
+#define TPP_W_ASM_UNBIND_FINAL_SYMBOL                       W_ASM_UNBIND_FINAL_SYMBOL
+#define TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE             W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE
+#define TPP_W_ASM_MISSALIGNED_STACK                         W_ASM_MISSALIGNED_STACK
+#define TPP_W_ASM_LABEL_ALREADY_DEFINED                     W_ASM_LABEL_ALREADY_DEFINED
+#define TPP_W_ASM_LABEL_NEVER_USED                          W_ASM_LABEL_NEVER_USED
 
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */

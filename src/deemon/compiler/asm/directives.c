@@ -103,7 +103,7 @@ do_parse_constant(DeeLexer *self) {
 	    asm_allowconst(const_ast->a_constexpr)) {
 		result = const_ast->a_constexpr;
 	} else {
-		if (WARN(W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION))
+		if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_CONSTANT_EXPRESSION_FOR_PSEUDO_INSTRUCTION))
 			goto err_const_ast;
 		result = Dee_None;
 	}
@@ -124,7 +124,7 @@ do_parse_symbol_for_op(DeeLexer *self, int wid) {
 		expr.ie_sym = asm_newsym();
 		asm_defsym(expr.ie_sym);
 warn_symbol:
-		DO(WARN(wid));
+		DO(DeeLexer_Warnf(self, wid));
 	} else {
 		if (expr.ie_rel != ASM_OVERLOAD_FRELABS &&
 		    expr.ie_rel != (uint16_t)-1)
@@ -141,12 +141,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 do_parse_symbol_for_except(DeeLexer *self) {
-	return do_parse_symbol_for_op(self, W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL);
+	return do_parse_symbol_for_op(self, TPP_W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 do_parse_symbol_for_reloc(DeeLexer *self) {
-	return do_parse_symbol_for_op(self, W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL);
+	return do_parse_symbol_for_op(self, TPP_W_UASM_RELOC_NEED_ABSOLUTE_SYMBOL);
 }
 
 
@@ -228,7 +228,7 @@ uasm_parse_directive(DeeLexer *self) {
 			goto err;
 		/* Make sure that the symbol hasn't already been defined. */
 		if unlikely(ASM_SYM_DEFINED(label)) {
-			DO(WARN(W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name));
 		} else {
 			uasm_defsym(label);
 		}
@@ -283,7 +283,7 @@ uasm_parse_directive(DeeLexer *self) {
 		goto do_handle_qword;
 
 	/* Unknown directive... (Discard the remainder of the line) */
-	DO(WARN(W_UASM_UNKNOWN_DIRECTIVE, name));
+	DO(DeeLexer_Warnf(self, TPP_W_UASM_UNKNOWN_DIRECTIVE, tpp_keyword_getcstr(name)));
 	while (DeeLexer_GetTok(self) != TPP_TOK_EOF &&
 	       DeeLexer_GetTok(self) != ';' &&
 	       DeeLexer_GetTok(self) != '\n'
@@ -337,7 +337,7 @@ do_handle_code:
 			current_basescope->bs_flags &= ~Dee_CODE_FASSEMBLY;
 #endif
 		} else {
-			DO(WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
 		}
 		if (DeeLexer_GetTok(self) != ',')
 			break;
@@ -358,7 +358,7 @@ do_handle_reloc:
 				goto err;
 		} else {
 			struct asm_intexpr expr;
-			DO(WARN(W_UASM_RELOC_NEED_DOT));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_NEED_DOT));
 			DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FNORMAL));
 		}
 		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
@@ -368,7 +368,7 @@ do_handle_reloc:
 		reloc_type  = get_reloc_by_name(reloc_name->k_name);
 		/* Check if the relocation name could be determined. */
 		if unlikely(reloc_type == R_DMN_COUNT) {
-			DO(WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name));
 			reloc_type = R_DMN_NONE;
 		}
 		if (DeeLexer_GetTok(self) == ',') {
@@ -385,14 +385,14 @@ do_handle_reloc:
 				/* Parse the relocation value. */
 				DO(uasm_parse_intexpr(self, &rval, UASM_INTEXPR_FNORMAL));
 				if (rval.ie_sym)
-					DO(WARN(W_UASM_RELOC_VALUE_NOT_A_SYMBOL));
+					DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_VALUE_NOT_A_SYMBOL));
 				reloc_value = (uint16_t)rval.ie_val;
 			}
 		}
 	
 		/* Make sure that a relocation making use of a symbol actually has one. */
 		if (REL_HASSYM(reloc_type) && !reloc_sym) {
-			DO(WARN(W_UASM_RELOC_NAME_NEEDS_SYMBOL));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_NAME_NEEDS_SYMBOL));
 			reloc_sym = asm_newsym();
 			asm_defsym(reloc_sym);
 		}
@@ -433,7 +433,7 @@ do_handle_except:
 			}
 			if (!DeeLexer_HasTokenKwd(self)) {
 except_unknown_tag:
-				if (WARN(W_UASM_EXCEPT_UNKNOWN_TAG))
+				if (DeeLexer_Warnf(self, TPP_W_UASM_EXCEPT_UNKNOWN_TAG))
 					goto except_err;
 				break;
 			}
@@ -591,19 +591,19 @@ check_invalid_stack_and_adjust:
 
 			case 1:
 				if (value.ie_val < INT8_MIN || value.ie_val > INT8_MAX)
-					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+					DO(DeeLexer_Warnf(self, TPP_W_UASM_TRUNCATED_TO_FIT));
 				DO(asm_put_data8((uint8_t)(uint64_t)value.ie_val));
 				break;
 
 			case 2:
 				if (value.ie_val < INT16_MIN || value.ie_val > INT16_MAX)
-					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+					DO(DeeLexer_Warnf(self, TPP_W_UASM_TRUNCATED_TO_FIT));
 				DO(asm_put_data16((uint16_t)(uint64_t)value.ie_val));
 				break;
 
 			case 4:
 				if (value.ie_val < INT32_MIN || value.ie_val > INT32_MAX)
-					DO(WARN(W_UASM_TRUNCATED_TO_FIT));
+					DO(DeeLexer_Warnf(self, TPP_W_UASM_TRUNCATED_TO_FIT));
 				DO(asm_put_data32((uint32_t)(uint64_t)value.ie_val));
 				break;
 
@@ -766,16 +766,16 @@ do_handle_adjstack:
 		 */
 		DO(uasm_parse_intexpr(self, &new_depth, UASM_INTEXPR_FHASSP));
 		if unlikely(new_depth.ie_sym)
-			DO(WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION));
 		if unlikely(new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX)
-			DO(WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val));
 		/* Special case: If nothing changed, don't even sweat it. */
 		if (current_assembler.a_stackcur == (uint16_t)new_depth.ie_val &&
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))
 			goto done;
 		/* Warn if the previous instruction does actually return. */
 		if unlikely(!DeeAsm_IsNoreturn(current_userasm.ua_lasti, current_basescope->bs_flags)) {
-			DO(WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT));
 #if 1
 			/* Disable peephole, so-as not to confuse it. */
 			current_assembler.a_flag &= ~(ASM_FPEEPHOLE);

@@ -456,8 +456,9 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-make_bound_expression(struct ast *__restrict base_expr,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF struct ast *DFCALL
+make_bound_expression(DeeLexer *self,
+                      struct ast *__restrict base_expr,
                       struct ast_loc *__restrict loc) {
 	DREF struct ast *result;
 	if (base_expr->a_type == AST_SYM) {
@@ -477,13 +478,15 @@ make_bound_expression(struct ast *__restrict base_expr,
 		result = ast_action2(AST_FACTION_BOUNDITEM,
 		                     base_expr->a_operator.o_op0,
 		                     base_expr->a_operator.o_op1);
-	} else if (WARNAST(base_expr, W_CANNOT_TEST_EXPRESSION_BINDING)) {
-		result = NULL;
 	} else {
+		if (DeeLexer_WarnfAst(self, base_expr, W_CANNOT_TEST_EXPRESSION_BINDING))
+			goto err;
 		/* Fallback-after-warning: Return `true` */
 		result = ast_constexpr(Dee_True);
 	}
 	return ast_putddi(result, loc);
+err:
+	return NULL;
 }
 
 
@@ -733,8 +736,10 @@ verify_consistent_grouping(DeeLexer *self) {
 			continue;
 		offset = count_chars_without_escaped_linefeeds(iter + 1, lastsep);
 		if (offset != interval) {
-			return WARN(W_INCONSISTENT_THOUSANDS_SEPERATORS,
-			            interval, offset);
+			if (DeeLexer_Warnf(self, TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS,
+			                   interval, offset))
+				goto err;
+			return 0;
 		}
 		lastsep = iter;
 	}
@@ -743,11 +748,14 @@ verify_consistent_grouping(DeeLexer *self) {
 	 * For every other radix, the interval should be `4`. */
 	wanted_interval = *tok_start == '0' ? 4 : 3;
 	if (wanted_interval != interval) {
-		return WARN(W_INCORRECT_THOUSANDS_SEPERATORS,
-		            wanted_interval, interval);
+		if (DeeLexer_Warnf(self, TPP_W_INCORRECT_THOUSANDS_SEPERATORS,
+		                   wanted_interval, interval))
+			goto err;
 	}
 
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
@@ -774,7 +782,7 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 
 		/* Check if the integer failed to be parsed. */
 		if unlikely(resval == ITER_DONE) {
-			if (WARN(W_INVALID_INTEGER))
+			if (DeeLexer_Warnf(self, W_INVALID_INTEGER))
 				goto err;
 			goto create_none;
 		}
@@ -794,7 +802,7 @@ create_constexpr:
 			goto decode_string;
 		if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
 			goto err;
-		if (WARN(W_DEPRECATED_CHARACTER_INT))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 			goto err;
 		resval = DeeInt_NewInt64(value);
 		goto create_constexpr;
@@ -876,7 +884,7 @@ mkconst:
 		}
 		if unlikely(!result)
 			goto err;
-		merge = make_bound_expression(result, &loc);
+		merge = make_bound_expression(self, result, &loc);
 		ast_decref(result);
 		if unlikely(!merge)
 			goto err;
@@ -999,14 +1007,14 @@ do_unary_action_kwd:
 	case TPP_TOK_LANGLE_RANGLE:
 		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		if (WARN(W_DEPRECATED_CELL_SYNTAX))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
 			goto err;
 		goto do_empty_cell;
 
 	case '<': /* Cell (deprecated syntax) */
 		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		if (WARN(W_DEPRECATED_CELL_SYNTAX))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1018,8 +1026,10 @@ do_empty_cell:
 			result = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!result)
 				goto err;
-			if (DeeLexer_GetTok(self) != '>' && WARN(W_EXPECTED_RANGLE_AFTER_LANGLE))
-				goto err_r;
+			if (DeeLexer_GetTok(self) != '>') {
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RANGLE_AFTER_LANGLE))
+					goto err_r;
+			}
 			merge = ast_action1(AST_FACTION_CELL1, result);
 			ast_decref(result);
 			result = merge;
@@ -1086,7 +1096,7 @@ do_else_branch:
 
 	case TPP_KWD_function: {
 		tpp_keyword *function_name;
-		if (WARN(W_DEPRECATED_FUNCTION_IN_EXPRESSION))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION))
 			goto err;
 		/* Create a new function */
 		if (DeeLexer_GetLoc(self, &loc))
@@ -1108,9 +1118,10 @@ do_else_branch:
 		class_flags = TP_FFINAL;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
-		if (unlikely(DeeLexer_GetTok(self) != TPP_KWD_class) &&
-		    WARN(W_EXPECTED_CLASS_AFTER_FINAL))
-			goto err;
+		if (unlikely(DeeLexer_GetTok(self) != TPP_KWD_class)) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CLASS_AFTER_FINAL))
+				goto err;
+		}
 		goto do_create_class;
 	case TPP_KWD_class:
 		class_flags = TP_FNORMAL;
@@ -1328,8 +1339,10 @@ err_lparen_flags_r:
 				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 					goto err_r;
 			}
-			if (DeeLexer_GetTok(self) == '{' && !allow_cast && WARN(W_PROBABLY_MISSING_ARROW))
-				goto err_r;
+			if (DeeLexer_GetTok(self) == '{' && !allow_cast) {
+				if (DeeLexer_Warnf(self, TPP_W_PROBABLY_MISSING_ARROW))
+					goto err_r;
+			}
 			goto set_lparen_ddi;
 		}
 
@@ -1517,8 +1530,9 @@ err_lbracket_flags:
 			DeeLexer_NoLf_Break(self);
 			goto err;
 		}
-		if (DeeLexer_GetTok(self) == '&' || DeeLexer_GetTok(self) == '=') {
-			if (WARN(W_DEPRECATED_LAMBDA_MODE))
+		if (DeeLexer_GetTok(self) == '&' ||
+		    DeeLexer_GetTok(self) == '=') {
+			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_LAMBDA_MODE))
 				goto err_lbracket_flags;
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err_lbracket_flags;
@@ -1695,9 +1709,10 @@ err_nth_flags:
 		 * user to write `__nth(5)` or `__nth(__TPP_EVAL(2+3))` */
 		if (ast_optimize_all(result, true))
 			goto err_r;
-		if (result->a_type != AST_CONSTEXPR &&
-		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
-			goto err_r;
+		if (result->a_type != AST_CONSTEXPR) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+				goto err_r;
+		}
 		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_r;
 		if (DeeLexer_HasTokenKwd(self)) {
@@ -1706,7 +1721,7 @@ err_nth_flags:
 			if (result->a_type == AST_CONSTEXPR &&
 			    DeeObject_AsUInt(result->a_constexpr, &nth_symbol)) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				if (WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
 					goto err_r;
 			}
 			ast_decref(result);
@@ -1714,7 +1729,7 @@ err_nth_flags:
 			if likely(sym) {
 				result = ast_sym(sym);
 			} else {
-				if (WARN(W_UNKNOWN_NTH_SYMBOL, nth_symbol))
+				if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_NTH_SYMBOL, nth_symbol))
 					goto err;
 				result = ast_constexpr(Dee_None);
 			}
@@ -1724,14 +1739,14 @@ err_nth_flags:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		} else {
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_NTH))
 				goto err_r;
 		}
 		return result;
 	}	break;
 
 	case TOK_COLON_COLON:
-		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
 		ATTR_FALLTHROUGH
 	case TPP_KWD_global:
@@ -1740,7 +1755,7 @@ err_nth_flags:
 	case TPP_KWD_local:
 		lookup_mode |= LOOKUP_SYM_VLOCAL;
 do_warn_deprecated_modifier:
-		if (WARN(W_DEPRECATED_PREFIX_IN_EXPRESSION))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1816,7 +1831,8 @@ do_keyword:
 							modname = DeeModule_GetShortName(sym->s_extern.e_module);
 						}
 					}
-					if (WARNAT(&loc, W_UNCLEAR_SYMBOL_FROM_MODULE, symname, modname))
+					if (DeeLexer_WarnfLoc(self, &loc, TPP_W_UNCLEAR_SYMBOL_FROM_MODULE,
+					                      symname, modname))
 						goto err;
 				}
 			} else if (DeeLexer_GetTok(self) == TOK_ARROW) {
@@ -1830,7 +1846,7 @@ do_keyword:
 				result = ast_sym(sym);
 			}
 		} else {
-			if (WARN(W_UNEXPECTED_TOKEN_IN_EXPRESSION))
+			if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION))
 				goto err;
 			result = ast_constexpr(Dee_None);
 		}
@@ -1853,7 +1869,7 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 
 		case TOK_COLON_COLON:
 			/* Backwards compatibility with deemon 100+ */
-			if (WARN(W_DEPRECATED_ATTRIBUTE_SYNTAX))
+			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
 				goto err_r;
 			ATTR_FALLTHROUGH
 		case '.': /* Attribute lookup */
@@ -1919,9 +1935,11 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 					result = ast_setddi(merge, &loc);
 					goto got_attr2;
 				} else {
-					if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-					    WARN(W_RESERVED_ATTRIBUTE_NAME, DeeLexer_GetTokenKwd(self)))
-						goto err;
+					if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+						if (DeeLexer_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
+						                   DeeLexer_GetTokenKwdCStr(self)))
+							goto err;
+					}
 					attr_name = DeeString_NewSized(DeeLexer_GetTokenKwdCStr(self),
 					                               DeeLexer_GetTokenKwdLen(self));
 					if unlikely(!attr_name)
@@ -1949,7 +1967,7 @@ got_attr:
 					goto err_r;
 got_attr2:;
 			} else {
-				if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
 					goto err_r;
 			}
 			break;
@@ -2379,7 +2397,7 @@ yield_again:
 					 *
 					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM` warning needs to go away
 					 */
-					if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
 						goto err_r;
 					cmd = TPP_KWD_is;
 				}
@@ -2388,7 +2406,7 @@ yield_again:
 				/* Special cast: `foo is bound` --> `bound(foo)` */
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
-				merge = make_bound_expression(lhs, &loc);
+				merge = make_bound_expression(self, lhs, &loc);
 			} else {
 				rhs = ast_parse_cmp(self, LOOKUP_SYM_SECONDARY);
 				if unlikely(!rhs)
@@ -2585,9 +2603,10 @@ ast_parse_land_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__re
 		if (!TOKEN_IS_LAND(DeeLexer_GetTok(self)))
 			break;
 	}
-	if (DeeLexer_GetTok(self) == TPP_TOK_PIPE_PIPE &&
-	    WARN(W_CONSIDER_PAREN_AROUND_LAND))
-		goto err_r;
+	if (DeeLexer_GetTok(self) == TPP_TOK_PIPE_PIPE) {
+		if (DeeLexer_Warnf(self, W_CONSIDER_PAREN_AROUND_LAND))
+			goto err_r;
+	}
 	return lhs;
 err_r:
 	ast_decref(lhs);
@@ -2616,7 +2635,7 @@ ast_parse_lor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 				goto err_r;
 			if (TOKEN_IS_LAND(DeeLexer_GetTok(self))) {
 				/* Suggest parenthesis around logical-and. */
-				if (WARN(W_CONSIDER_PAREN_AROUND_LAND))
+				if (DeeLexer_Warnf(self, W_CONSIDER_PAREN_AROUND_LAND))
 					goto err_r_rhs;
 				rhs = ast_parse_land_operand(self, rhs);
 				if unlikely(!rhs)

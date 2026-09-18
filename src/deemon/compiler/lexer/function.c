@@ -41,15 +41,16 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 skip_argument_name(DeeLexer *self) {
 	if unlikely(!DeeLexer_HasTokenKwd(self)) {
-		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 	} else {
 		if (DeeLexer_GetTok(self) != TPP_KWD_none) {
 			if (has_local_symbol(DeeLexer_GetTokenKwd(self))) {
-				if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
+				if (DeeLexer_Warnf(self, TPP_W_ARGUMENT_NAME_ALREADY_IN_USE))
 					goto err;
 			} else if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
-				if (WARN(W_RESERVED_ARGUMENT_NAME, DeeLexer_GetTokenKwd(self)))
+				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
+				                   DeeLexer_GetTokenKwdCStr(self)))
 					goto err;
 			}
 		}
@@ -66,7 +67,7 @@ parse_argument_name(DeeLexer *self) {
 	struct symbol *result;
 	struct TPPKeyword *argument_name;
 	if unlikely(!DeeLexer_HasTokenKwd(self)) {
-		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 		result = new_unnamed_symbol();
 	} else {
@@ -84,14 +85,15 @@ create_anon_argument:
 		} else {
 			argument_name = DeeLexer_GetTokenKwd(self);
 			if (has_local_symbol(argument_name)) {
-				if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
+				if (DeeLexer_Warnf(self, TPP_W_ARGUMENT_NAME_ALREADY_IN_USE))
 					goto err;
 				goto create_anon_argument;
 			}
 
 			/* Check if the argument name is a reserved identifier. */
 			if (is_reserved_symbol_name(argument_name)) {
-				if (WARN(W_RESERVED_ARGUMENT_NAME, argument_name))
+				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
+				                   tpp_keyword_getcstr(argument_name)))
 					goto err;
 			}
 
@@ -192,7 +194,7 @@ parse_arglist(DeeLexer *self) {
 				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARARGS) {
 					arg = current_basescope->bs_varargs;
 					if likely(arg) {
-						if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
+						if (DeeLexer_Warnf(self, TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
 						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
@@ -221,13 +223,13 @@ set_arg_as_varargs_argument:
 				current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 parse_varargs_suffix:
 				if unlikely(DeeLexer_GetTok(self) == '?') {
-					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 				}
 				if unlikely(DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
@@ -240,7 +242,7 @@ parse_varargs_suffix:
 						goto err;
 				}
 				if unlikely(DeeLexer_GetTok(self) == '=') {
-					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					goto skip_default_suffix;
 				}
@@ -253,14 +255,16 @@ parse_varargs_suffix:
 				if (DeeLexer_GetTok(self) == TPP_KWD_local) {
 					/* ... */
 				} else if (DeeLexer_GetTok(self) == TPP_KWD_final) {
-					if ((symbol_flags & SYMBOL_FFINAL) &&
-					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-						goto err;
+					if ((symbol_flags & SYMBOL_FFINAL)) {
+						if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+							goto err;
+					}
 					symbol_flags |= SYMBOL_FFINAL;
 				} else if (DeeLexer_GetTok(self) == TPP_KWD_varying) {
-					if ((symbol_flags & SYMBOL_FVARYING) &&
-					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-						goto err;
+					if ((symbol_flags & SYMBOL_FVARYING)) {
+						if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+							goto err;
+					}
 					symbol_flags |= SYMBOL_FVARYING;
 				} else {
 					break;
@@ -274,7 +278,7 @@ parse_varargs_suffix:
 				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARKWDS) {
 					arg = current_basescope->bs_varkwds;
 					if likely(arg) {
-						if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
+						if (DeeLexer_Warnf(self, TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
 						if (skip_argument_name(self))
 							goto err;
@@ -314,15 +318,17 @@ parse_varargs_suffix:
 					goto set_arg_as_varargs_argument;
 				}
 				ASSERT(current_basescope->bs_flags & Dee_CODE_FVARARGS);
-				if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
+				if (DeeLexer_Warnf(self, TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 					goto err;
 				arg->s_type = SYMBOL_TYPE_LOCAL;
 				arg->s_flag = symbol_flags;
 				goto parse_varargs_suffix;
 			} else if (current_basescope->bs_varkwds || current_basescope->bs_varargs) {
 				if (current_basescope->bs_varkwds
-				    ? WARN(W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, arg, current_basescope->bs_varkwds)
-				    : WARN(W_POSITIONAL_ARGUMENT_AFTER_VARARGS, arg, current_basescope->bs_varargs))
+				    ? DeeLexer_Warnf(self, TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS,
+				                     arg, current_basescope->bs_varkwds)
+				    : DeeLexer_Warnf(self, TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS,
+				                     arg, current_basescope->bs_varargs))
 					goto err;
 set_argument_as_local:
 				arg->s_type = SYMBOL_TYPE_LOCAL;
@@ -361,7 +367,7 @@ set_argument_as_local:
 				}
 				if unlikely(DeeLexer_GetTok(self) == '=') {
 					DREF struct ast *default_expr;
-					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
 skip_default_suffix:
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -401,7 +407,7 @@ err_default_expr:
 				if unlikely(resize_default_list(&defaulta))
 					goto err;
 				if (default_expr->a_type != AST_CONSTEXPR) {
-					if (WARNAST(default_expr, W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, arg))
+					if (DeeLexer_WarnfAst(self, default_expr, TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, arg))
 						goto err_default_expr;
 					default_value = DeeNone_NewRef();
 				} else {
@@ -421,7 +427,7 @@ set_arg_as_normal:
 				ASSERT(current_basescope->bs_argc_min <= current_basescope->bs_argc_max);
 				if (current_basescope->bs_argc_min < current_basescope->bs_argc_max) {
 					/* Positional-after-optional */
-					if (WARN(W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, arg))
+					if (DeeLexer_Warnf(self, TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, arg))
 						goto err;
 					goto set_argument_as_local;
 				}
@@ -546,7 +552,7 @@ err_decl_lparen_flags:
 		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_decl;
 	} else if (!allow_missing_params) {
-		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_NO_PARAMETER_LIST))
 			goto err_decl;
 	}
 
@@ -574,7 +580,7 @@ err_decl_lparen_flags:
 			                           &my_decl);
 			decl_ast_fini(&my_decl);
 			if (!are_equal) {
-				if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, funcself_symbol))
+				if (DeeLexer_Warnf(self, TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, funcself_symbol))
 					goto err;
 			}
 		} else {
@@ -648,7 +654,7 @@ err_decl_lparen_flags:
 		 * Still: we *do* parse functions without a body for the sake of
 		 *        syntax compatibility with deemon 100+.
 		 */
-		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
 		/* Make the symbol that the function will be stored
 		 * in as "varying" so it can be reassigned later. */
@@ -733,7 +739,7 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 		/* Missing function body (this was allowed in deemon 100+, where
 		 * this was interpreted the same way an `{ }`-like empty body would
 		 * have been) */
-		if (WARN(W_EXPECTED_LBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
 		code = ast_multiple(AST_FMULTIPLE_KEEPLAST, 0, NULL);
 		if (p_need_semi)
@@ -783,7 +789,8 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		} else {
 			/* Check if the argument name is a reserved identifier. */
 			if (is_reserved_symbol_name(first_argument_name)) {
-				if (WARN(W_RESERVED_ARGUMENT_NAME, first_argument_name))
+				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
+				                   tpp_keyword_getcstr(first_argument_name)))
 					goto err_scope;
 			}
 

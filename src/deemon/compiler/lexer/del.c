@@ -113,7 +113,7 @@ create_2:
 
 	default:
 default_case:
-		if (WARN(W_UNEXPECTED_EXPRESSION_FOR_DEL))
+		if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL))
 			goto err_r;
 		break;
 	}

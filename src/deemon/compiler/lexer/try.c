@@ -145,7 +145,7 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 	catchv = NULL;
 	for (;;) {
 		tpp_token_id mode;
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_try;
 		if unlikely(parse_tags_block(self))
 			goto err_try;
@@ -253,13 +253,14 @@ parse_catch_mask:
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
 				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
-					if (unlikely(DeeLexer_GetTok(self) == TOK_ARROW) &&
-					    WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
-						goto err_try_flags;
+					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW) {
+						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
+							goto err_try_flags;
+					}
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 					if unlikely(!DeeLexer_HasTokenKwd(self)) {
-						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
+						if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;
 					}
@@ -312,9 +313,10 @@ end_catch_handler:
 	result = merge;
 
 	/* Warn if we didn't parse any handlers. */
-	if unlikely(unlikely(!catchc) &&
-	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
-		goto err_r;
+	if unlikely(!catchc) {
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
+			goto err_r;
+	}
 	return result;
 err_try:
 	while (catchc--) {
@@ -352,7 +354,7 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	catchv = NULL;
 	for (;;) {
 		tok_t mode;
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_try;
 		if unlikely(parse_tags_block(self))
 			goto err_try;
@@ -458,13 +460,14 @@ parse_catch_mask:
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
 				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
-					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW &&
-						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
-					goto err_try_flags;
+					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW) {
+						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
+							goto err_try_flags;
+					}
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 					if unlikely(!DeeLexer_HasTokenKwd(self)) {
-						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
+						if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;
 					}
@@ -516,9 +519,10 @@ end_catch_handler:
 	result = merge;
 
 	/* Warn if we didn't parse any handlers. */
-	if unlikely(unlikely(!catchc) &&
-	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
-		goto err_r;
+	if unlikely(!catchc) {
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
+			goto err_r;
+	}
 	if (p_was_expression)
 		*p_was_expression = was_expression;
 	return result;

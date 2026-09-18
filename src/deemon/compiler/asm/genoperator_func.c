@@ -103,7 +103,7 @@ ast_gen_operator_func(struct ast *binding,
 	                                    inner_compiler_options);
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
-			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, &str_operators));
+			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, STR_operators));
 			return asm_gpush_none();
 		}
 		goto err;

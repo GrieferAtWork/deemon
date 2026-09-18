@@ -526,8 +526,10 @@ yield_done:
 			goto err;
 		if unlikely(uasm_parse_intexpr(self, result, features))
 			goto err;
-		if (result->ie_sym && WARN(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
-			goto err;
+		if (result->ie_sym) {
+			if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL))
+				goto err;
+		}
 		if (operation == '!') {
 			result->ie_val = result->ie_val ? 0 : 1;
 		} else if (operation == '~') {
@@ -617,7 +619,7 @@ yield_done:
 			}
 			goto done;
 		}
-		if (WARN(W_UASM_EXPECTED_INTEXPR))
+		if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_INTEXPR))
 			goto err;
 		if (!result)
 			goto done;
@@ -679,15 +681,15 @@ again:
 				goto again;
 			}
 		}
-		if unlikely(WARN(W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT))
+		if unlikely(DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT))
 			goto err;
 		break;
 err_ipsp_no_symbol:
-		if unlikely(WARN(W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL))
+		if unlikely(DeeLexer_Warnf(self, TPP_W_UASM_NEED_SYMBOL_FOR_RELOCATION_MODEL))
 			goto err;
 		goto again;
 err_ipsp_already_defined:
-		if unlikely(WARN(W_UASM_RELOCATION_MODEL_ALREADY_DEFINED))
+		if unlikely(DeeLexer_Warnf(self, TPP_W_UASM_RELOCATION_MODEL_ALREADY_DEFINED))
 			goto err;
 		goto again;
 	default: break;
@@ -718,8 +720,10 @@ uasm_parse_intexpr_sum(DeeLexer *self, struct asm_intexpr *result, uint16_t feat
 				if (result->ie_sym ||
 				    (result->ie_rel != (uint16_t)-1 &&
 				     result->ie_rel != other.ie_rel)) {
-					if (other.ie_sym && WARN(W_UASM_CANNOT_ADD_2_SYMBOLS))
-						goto err;
+					if (other.ie_sym) {
+						if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_ADD_2_SYMBOLS))
+							goto err;
+					}
 				} else {
 					result->ie_rel = other.ie_rel;
 					result->ie_sym = other.ie_sym;
@@ -772,7 +776,7 @@ uasm_parse_intexpr_sum(DeeLexer *self, struct asm_intexpr *result, uint16_t feat
 				                 : ASM_OVERLOAD_FSTKDSP;
 #endif
 			} else {
-				if (WARN(W_UASM_CANNOT_SUB_2_SYMBOLS))
+				if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_SUB_2_SYMBOLS))
 					goto err;
 			}
 			result->ie_val -= other.ie_val;
@@ -799,9 +803,10 @@ uasm_parse_imm16(DeeLexer *self, uint16_t features) {
 	/* Warn if the parsed value is out-of-bounds. */
 	if unlikely((result.ie_sym || result.ie_val < 0 ||
 	             result.ie_val > UINT16_MAX ||
-	             result.ie_rel != (uint16_t)-1) &&
-	            WARN(W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER))
-		goto err;
+	             result.ie_rel != (uint16_t)-1)) {
+		if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER))
+			goto err;
+	}
 	return (int32_t)(uint32_t)(uint16_t)result.ie_val;
 err:
 	return -1;
@@ -882,9 +887,9 @@ do_parse_extern_operands(DeeLexer *self,
 			goto err_mod;
 		modsym = import_module_symbol(mod, symbol_name);
 		if unlikely(!modsym) {
-			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
-			         symbol_name->k_name,
-			         DeeModule_GetShortName(mod)))
+			if (DeeLexer_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
+			                   tpp_keyword_getcstr(symbol_name),
+			                   DeeModule_GetShortName(mod)))
 				goto err_mod;
 			*pgid = 0;
 		} else {
@@ -1028,7 +1033,7 @@ err_imm_const:
 	    asm_allowconst(imm_const->a_constexpr)) {
 		const_val = imm_const->a_constexpr;
 	} else {
-		if (WARN(W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST))
+		if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_CONSTANT_EXPRESSION_AFTER_AT_CONST))
 			goto err_imm_const;
 		const_val = Dee_None;
 	}
@@ -1238,23 +1243,25 @@ asm_invoke_operand_determine_intclass(struct asm_invoke_operand *__restrict self
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
-do_translate_operand_ast(struct asm_invoke_operand *__restrict result,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DFCALL
+do_translate_operand_ast(DeeLexer *self,
+                         struct asm_invoke_operand *__restrict result,
                          struct ast *__restrict expr) {
 	switch (expr->a_type) {
 
 	case AST_MULTIPLE:
 		/* Unwind single-expression multi-branch ASTs, regardless of scope visibility. */
 		if (expr->a_multiple.m_astc == 1)
-			return do_translate_operand_ast(result, expr->a_multiple.m_astv[0]);
+			return do_translate_operand_ast(self, result, expr->a_multiple.m_astv[0]);
 		goto unsupported_expression;
 
 	case AST_EXPAND:
-		if unlikely(do_translate_operand_ast(result, expr->a_expand))
+		if unlikely(do_translate_operand_ast(self, result, expr->a_expand))
 			goto err;
-		if (result->io_class & OPERAND_CLASS_FDOTSFLAG &&
-		    WARN(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
-			goto err;
+		if (result->io_class & OPERAND_CLASS_FDOTSFLAG) {
+			if (DeeLexer_Warnf(self, TPP_W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
+				goto err;
+		}
 		/* Set the dots-flag. */
 		result->io_class |= OPERAND_CLASS_FDOTSFLAG;
 		break;
@@ -1342,7 +1349,7 @@ check_sym_class:
 				result->io_intexpr.ie_sym = NULL;
 				result->io_intexpr.ie_val = SYMBOL_STACK_OFFSET(sym);
 				if (!(sym->s_flag & SYMBOL_FALLOC)) {
-					if (WARN(W_UASM_STACK_VARIABLE_NOT_ALLOCATED))
+					if (DeeLexer_Warnf(self, TPP_W_UASM_STACK_VARIABLE_NOT_ALLOCATED))
 						goto err;
 					result->io_intexpr.ie_val = 0;
 				}
@@ -1394,7 +1401,7 @@ check_sym_class:
 
 	default:
 unsupported_expression:
-		if (WARN(W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND))
+		if (DeeLexer_Warnf(self, TPP_W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND))
 			goto err;
 		break;
 	}
@@ -1419,7 +1426,7 @@ do_parse_atoperand(DeeLexer *self, struct asm_invoke_operand *__restrict result)
 	/* Optimize the constant branch to allow for constant propagation. */
 	if unlikely(ast_optimize_all(imm_expr, true))
 		goto err_imm_expr;
-	if unlikely(do_translate_operand_ast(result, imm_expr))
+	if unlikely(do_translate_operand_ast(self, result, imm_expr))
 		goto err_imm_expr;
 	ast_decref(imm_expr);
 	return 0;
@@ -1470,7 +1477,7 @@ parse_stack_operand:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) != '#') {
-			if (WARN(W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND))
+			if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND))
 				goto err;
 			goto parse_stack_operand_start;
 		}
@@ -1484,9 +1491,10 @@ parse_stack_operand_start:
 
 		/* Set the stack-prefix flag. */
 		if (result->io_class & OPERAND_CLASS_FSTACKFLAG) {
-			if (result->io_class & OPERAND_CLASS_FSTACKFLAG2 &&
-			    WARN(W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND))
-				goto err;
+			if (result->io_class & OPERAND_CLASS_FSTACKFLAG2) {
+				if (DeeLexer_Warnf(self, TPP_W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND))
+					goto err;
+			}
 			result->io_class |= OPERAND_CLASS_FSTACKFLAG2;
 		}
 		result->io_class |= OPERAND_CLASS_FSTACKFLAG;
@@ -1499,9 +1507,10 @@ parse_stack_operand_start:
 			goto err;
 
 		/* Set the immediate-prefix flag. */
-		if (result->io_class & OPERAND_CLASS_FIMMVAL &&
-		    WARN(W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND))
-			goto err;
+		if (result->io_class & OPERAND_CLASS_FIMMVAL) {
+			if (DeeLexer_Warnf(self, TPP_W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND))
+				goto err;
+		}
 		result->io_class |= OPERAND_CLASS_FIMMVAL;
 		break;
 
@@ -1843,9 +1852,10 @@ uasm_parse_operand(DeeLexer *self, struct asm_invoke_operand *__restrict result)
 	/* Check for a dots-suffix. */
 	if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 		/* Set the dots-flag. */
-		if (result->io_class & OPERAND_CLASS_FDOTSFLAG &&
-		    WARN(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
-			goto err;
+		if (result->io_class & OPERAND_CLASS_FDOTSFLAG) {
+			if (DeeLexer_Warnf(self, TPP_W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
+				goto err;
+		}
 		result->io_class |= OPERAND_CLASS_FDOTSFLAG;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1895,7 +1905,8 @@ read_mnemonic_name:
 		if unlikely(!sym)
 			goto err;
 		if unlikely(ASM_SYM_DEFINED(sym)) {
-			if (WARN(W_UASM_SYMBOL_ALREADY_DEFINED, name->k_name))
+			if (DeeLexer_Warnf(self, TPP_W_UASM_SYMBOL_ALREADY_DEFINED,
+			                   tpp_keyword_getcstr(name)))
 				goto err;
 		} else {
 			/* Define the symbol here. */
@@ -2028,7 +2039,8 @@ do_stack_prefix:
 	 * Now use it to lookup a mnemonic. */
 	mnemonic = asm_mnemonic_lookup(name);
 	if unlikely(!mnemonic) {
-		if (WARN(W_UASM_UNKNOWN_MNEMONIC, name))
+		if (DeeLexer_Warnf(self, TPP_W_UASM_UNKNOWN_MNEMONIC,
+		                   tpp_keyword_getcstr(name)))
 			goto err;
 
 		/* Unknown mnemonic... (Discard the remainder of the line) */
@@ -2116,7 +2128,7 @@ continue_line:
 		       && TPPLexer_Current->l_token.t_id > 0
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		       ) {
-			if (WARN(W_UASM_IGNORING_TRAILING_TOKENS))
+			if (DeeLexer_Warnf(self, TPP_W_UASM_IGNORING_TRAILING_TOKENS))
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
@@ -2131,7 +2143,7 @@ continue_line:
 
 		/* Warn if this didn't go anywhere. */
 		if unlikely(old_num == TPPLexer_Current->l_token.t_num) {
-			if (WARN(W_UASM_PARSING_FAILED))
+			if (DeeLexer_Warnf(self, TPP_W_UASM_PARSING_FAILED))
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;

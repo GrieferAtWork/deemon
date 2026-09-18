@@ -2533,13 +2533,14 @@ create_assembly_file:
 			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
 				/* The user broke stack alignment (just evaluate the operand). */
 				if (self->a_assembly.as_opv[count].ao_name) {
-					if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
-					         self->a_assembly.as_opv[count].ao_name->k_name))
+					if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
+					                   self->a_assembly.as_opv[count].ao_name->k_name))
 						goto err;
 				} else {
 					char buffer[32];
 					Dee_sprintf(buffer, "%%%" PRFuSIZ "", (size_t)count);
-					if (WARN(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION, buffer))
+					if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
+					                   buffer))
 						goto err;
 				}
 				if (ast_genasm(operand, ASM_G_FNORMAL))
@@ -2578,12 +2579,14 @@ create_assembly_file:
 		/* NOTE: Don't omit stack miss-alignment warnings when `SP` was specified in the clobber list. */
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
-				if (WARN(W_UASM_DOESNT_CLEANUP_STACK,
-				         (unsigned long)(current_assembler.a_stackcur - old_state.as_stackcur)))
+				if (DeeLexer_Warnf(self, TPP_W_UASM_DOESNT_CLEANUP_STACK,
+				                   (unsigned long)(current_assembler.a_stackcur -
+				                                   old_state.as_stackcur)))
 					goto err;
 			} else {
-				if (WARN(W_UASM_POPPED_UNRELATED_ITEMS,
-				         (unsigned long)(old_state.as_stackcur - current_assembler.a_stackcur)))
+				if (DeeLexer_Warnf(self, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
+				                   (unsigned long)(old_state.as_stackcur -
+				                                   current_assembler.a_stackcur)))
 					goto err;
 			}
 		}

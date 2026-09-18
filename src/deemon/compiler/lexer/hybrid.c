@@ -146,9 +146,10 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 			if (p_was_expression)
 				*p_was_expression = AST_PARSE_WASEXPR_NO;
 		} else if (old_varc != current_scope->s_mapc) {
-			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI) &&
-			    WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
-				goto err;
+			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+					goto err;
+			}
 			if (p_was_expression)
 				*p_was_expression = AST_PARSE_WASEXPR_NO;
 		} else {
@@ -315,7 +316,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
 			} else {
-				if unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 			}
 

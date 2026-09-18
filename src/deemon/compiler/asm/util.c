@@ -1851,7 +1851,7 @@ check_sym_class:
 			 * delete the value that was being stored. */
 			if (sym->s_nbound != 0 &&
 			    !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK) &&
-			    WARN(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
+			    WARNAST(warn_ast, W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
 				goto err;
 			if (!(sym->s_flag & SYMBOL_FALLOC)) {
 				/* If the stack variable hasn't been allocated, but is being written
@@ -1859,7 +1859,7 @@ check_sym_class:
 				 * it, meaning that we can't generate the code that the user would
 				 * expect from us. */
 				if (sym->s_nwrite != 0 &&
-				    WARN(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
+				    WARNAST(warn_ast, W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
 					goto err;
 				return 0;
 			}

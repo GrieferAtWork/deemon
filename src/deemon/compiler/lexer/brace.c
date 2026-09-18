@@ -78,7 +78,7 @@ ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_dict_elemv_r;
 			} else {
-				if (WARN(W_EXPECTED_KEYWORD_AFTER_BRACE_DOT))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_BRACE_DOT))
 					goto err_dict_elemv;
 				result = ast_constexpr(Dee_None);
 				if unlikely(!result)
@@ -168,7 +168,7 @@ ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item) {
 	for (;;) {
 		if (DeeLexer_GetTok(self) != ',') {
 			if (DeeLexer_GetTok(self) == ':') {
-				if (WARN(W_EXPECTED_COMMA_IN_LIST_INITIALIZER))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER))
 					goto err_list_elemv;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_list_elemv;
@@ -257,7 +257,7 @@ ast_parse_brace_items(DeeLexer *self) {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		} else {
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_BRACE_DOT))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_BRACE_DOT))
 				goto err;
 			result = ast_constexpr(Dee_None);
 			if unlikely(!result)

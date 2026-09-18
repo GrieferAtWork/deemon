@@ -520,7 +520,7 @@ do_operator_gr:
 		goto done_y1;
 
 	case '=':
-		if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 			goto err;
 		ATTR_FALLTHROUGH
 	case TPP_TOK_COLON_EQUAL:
@@ -554,7 +554,7 @@ do_operator_gr:
 		if unlikely(result < 0)
 			goto err;
 		if unlikely(DeeLexer_GetTok(self) != ')') {
-			if (WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
 			goto done;
 		}
@@ -563,9 +563,10 @@ do_operator_gr:
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
 parse_string:
 		if (advance_wraplf(advance_wraplf((char const *)DeeLexer_GetTokenStart(self))) !=
-		    (char const *)DeeLexer_GetTokenEnd(self) &&
-		    WARN(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
-			goto err;
+		    (char const *)DeeLexer_GetTokenEnd(self)) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
+				goto err;
+		}
 		ATTR_FALLTHROUGH
 	case TPP_KWD_str:
 		if (features & P_OPERATOR_FCLASS) {
@@ -626,7 +627,7 @@ err_del_lbracket_flags:
 			}
 			DeeLexer_NoLf_Pop(self);
 			if unlikely(DeeLexer_GetTok(self) != ']') {
-				if (WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
 				goto done;
 			}
@@ -634,7 +635,7 @@ err_del_lbracket_flags:
 		}
 		result = OPERATOR_DELATTR;
 		if unlikely(DeeLexer_GetTok(self) != '.') {
-			if (WARN(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME))
 				goto err;
 			goto done;
 		}
@@ -694,10 +695,10 @@ default_case:
 					goto err;
 				result = OPERATOR_MOVEASSIGN;
 				if unlikely(DeeLexer_GetTok(self) == '=') {
-					if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
 				} else if unlikely(DeeLexer_GetTok(self) != TPP_TOK_COLON_EQUAL) {
-					if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
+					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
 						goto err;
 					goto done;
 				}
@@ -837,7 +838,7 @@ default_case:
 unknown:
 		/* TODO: Generic, named operators must be queried at runtime
 		 *       (when the type of the "this" argument is known). */
-		if (WARN(W_UNKNOWN_OPERATOR_NAME))
+		if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_OPERATOR_NAME))
 			goto err;
 		result = (int32_t)0; /* Default to whatever operator #0 is. */
 		goto done;

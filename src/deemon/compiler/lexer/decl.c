@@ -1020,7 +1020,7 @@ err_asm_flags:
 			self->da_type   = DAST_STRING;
 			self->da_string = text; /* Inherit reference */
 		} else {
-			if (WARN(W_EXPECTED_STRING_AFTER_ASM))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_AFTER_ASM))
 				goto err_asm_flags;
 			self->da_type = DAST_NONE;
 		}
@@ -1065,7 +1065,7 @@ err_type_expr:
 		self->da_const = Dee_AsObject(ast_predict_type(type_expr));
 		optimizer_flags |= old_opt_flags & OPTIMIZE_FNOPREDICT;
 		if unlikely(!self->da_const) {
-			if (WARN(W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION))
 				goto err_type_expr;
 			self->da_type = DAST_NONE;
 			self->da_flag = DAST_FNORMAL;
@@ -1266,9 +1266,10 @@ err_nth:
 			ast_decref(nth_expr);
 			goto err;
 		}
-		if (nth_expr->a_type != AST_CONSTEXPR &&
-		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
-			goto err_nth;
+		if (nth_expr->a_type != AST_CONSTEXPR) {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+				goto err_nth;
+		}
 		if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_nth;
 		if (DeeLexer_HasTokenKwd(lexer)) {
@@ -1277,7 +1278,7 @@ err_nth:
 			if (nth_expr->a_type == AST_CONSTEXPR &&
 			    DeeObject_AsUInt(nth_expr->a_constexpr, &nth_symbol)) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				if (WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
 					goto err_nth;
 			}
 			ast_decref(nth_expr);
@@ -1288,7 +1289,7 @@ err_nth:
 				self->da_symbol = sym;
 				symbol_incref(sym);
 			} else {
-				if (WARN(W_UNKNOWN_NTH_SYMBOL, nth_symbol))
+				if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_NTH_SYMBOL, nth_symbol))
 					goto err;
 				self->da_type = DAST_NONE;
 				self->da_flag = DAST_FNORMAL;
@@ -1297,7 +1298,7 @@ err_nth:
 				goto err_r;
 		} else {
 			ast_decref(nth_expr);
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_NTH))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_NTH))
 				goto err;
 			self->da_type = DAST_NONE;
 			self->da_flag = DAST_FNORMAL;
@@ -1327,7 +1328,7 @@ err_nth:
 			symbol_incref(sym);
 			break;
 		}
-		if (WARN(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION))
+		if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION))
 			goto err;
 		self->da_type = DAST_NONE;
 		self->da_flag = DAST_FNORMAL;
@@ -1350,7 +1351,7 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err_r;
 		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
 				goto err_r;
 			break;
 		}
@@ -1359,8 +1360,8 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			attrib = DeeObject_GetAttrString(self->da_const, DeeLexer_GetTokenKwdCStr(lexer));
 			if unlikely(!attrib) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				if (WARN(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,
-				         DeeLexer_GetTokenKwdCStr(lexer), self->da_const))
+				if (DeeLexer_Warnf(self, TPP_W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,
+				                   DeeLexer_GetTokenKwdCStr(lexer), self->da_const))
 					goto err_r;
 			} else {
 				Dee_Decref(self->da_const);
@@ -1384,8 +1385,9 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 				symbol_decref(self->da_symbol);
 				self->da_symbol = new_symbol;
 			} else {
-				if (WARN(W_MODULE_IMPORT_NOT_FOUND, DeeLexer_GetTokenKwdCStr(lexer),
-				         DeeModule_GetShortName(self->da_symbol->s_module)))
+				if (DeeLexer_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
+				                   DeeLexer_GetTokenKwdCStr(lexer),
+				                   DeeModule_GetShortName(self->da_symbol->s_module)))
 					goto err_r;
 			}
 		} else {
@@ -1502,10 +1504,11 @@ decl_ast_parse_for_symbol(DeeLexer *lexer, struct symbol *__restrict self) {
 		struct decl_ast decl;
 		if unlikely(decl_ast_parse(lexer, &decl))
 			goto err;
-		if unlikely(!decl_ast_equal(&self->s_decltype, &decl) &&
-		            WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, self)) {
-			decl_ast_fini(&decl);
-			goto err;
+		if unlikely(!decl_ast_equal(&self->s_decltype, &decl)) {
+			if (DeeLexer_Warnf(self, TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, self)) {
+				decl_ast_fini(&decl);
+				goto err;
+			}
 		}
 		decl_ast_fini(&self->s_decltype);
 		self->s_decltype.da_type = DAST_NONE;

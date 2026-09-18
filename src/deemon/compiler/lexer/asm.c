@@ -144,7 +144,7 @@ asm_parse_operands(DeeLexer *self,
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
-				if (WARN(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
 					goto err;
 			}
 			if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
@@ -160,7 +160,7 @@ asm_parse_operands(DeeLexer *self,
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
-				if (WARN(W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND))
 					goto err;
 				label_value = lookup_label(&TPPKeyword_Empty);
 				if unlikely(!label_value)
@@ -180,7 +180,7 @@ asm_parse_operands(DeeLexer *self,
 				if unlikely(!operand_type)
 					goto err;
 			} else {
-				if (WARN(W_EXPECTED_STRING_BEFORE_OPERAND_VALUE))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE))
 					goto err;
 				operand_type = TPPString_NewEmpty();
 			}
@@ -258,7 +258,7 @@ asm_parse_clobber(DeeLexer *self) {
 				}
 			}
 		}
-		if (WARN(W_UNKNOWN_CLOBBER_NAME, name->s_text))
+		if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_CLOBBER_NAME, name->s_text))
 			goto err_name;
 got_clobber:
 		TPPString_Decref(name);
@@ -643,7 +643,7 @@ err_nolf:
 		if unlikely(!text)
 			goto err_nolf;
 	} else {
-		if (WARN(W_EXPECTED_STRING_AFTER_ASM))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_AFTER_ASM))
 			goto err_nolf;
 		text = TPPString_NewEmpty();
 	}

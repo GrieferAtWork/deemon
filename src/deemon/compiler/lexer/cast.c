@@ -111,7 +111,7 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 	case '-': /* `(typexpr).operator sub(castexpr)` vs. `(typexpr)castexpr.operator neg()` */
 	case '<': /* `(typexpr).operator lo(castexpr)` vs. `(typexpr)(Cell(castexpr))` */
 	case '[': /* `(typexpr).operator [](castexpr)` vs. `(typexpr)(List(castexpr))` */
-		if (WARN(W_UNCLEAR_CAST_INTENT))
+		if (DeeLexer_Warnf(self, TPP_W_UNCLEAR_CAST_INTENT))
 			goto err;
 		ATTR_FALLTHROUGH
 	case TPP_TOK_DOT_DOT_DOT:

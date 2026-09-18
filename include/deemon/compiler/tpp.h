@@ -993,8 +993,6 @@ struct Dee_file_object;
 
 DECL_END
 
-/* TODO: Use `DeeStringObject *` for `struct TPPString` */
-/* TODO: Use `DeeObject *` (String/Int) for `struct TPPConst` */
 /* clang-format off */
 #include <hybrid/typecore.h> /* Needed for better integration of tpp */
 /* clang-format on */
@@ -1207,6 +1205,12 @@ INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
 #define DeeLexer_WarnfAt(self, file, pos, ...)      ((void)(self), (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
 //#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)(self), ...)
 //#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)(self), ...)
+#define DeeLexer_WarnfLoc(self, loc, ...) ((void)(self), parser_warnatf(loc, __VA_ARGS__))
+#define DeeLexer_WarnfAst(self, ast, ...) ((void)(self), parser_warnastf(ast, __VA_ARGS__))
+#define DeeLexer_WarnfSym(self, sym, ...) ((void)(self), parser_warnatrf(&(sym)->s_decl, __VA_ARGS__))
+//#define DeeLexer_VWarnfLoc(self, loc, id, args) ((void)(self), ...)
+//#define DeeLexer_VWarnfAst(self, ast, id, args) ((void)(self), ...)
+//#define DeeLexer_VWarnfSym(self, sym, id, args) ((void)(self), ...)
 
 
 INTDEF WUNUSED NONNULL((1)) int DFCALL
@@ -1224,12 +1228,11 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
 	 ? TPP_TOK_ISERR(DeeLexer_Yield(self))                     \
 	 : unlikely(_parser_skip(self, expected_tok, W_UNEXPECTED_TOKEN)))
 
-#define WARN(...)         parser_warnf(__VA_ARGS__)
-#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)
-#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__)
-#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)
-#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)
-#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
+#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)             /* !!! DEPREACTED -- use `DeeLexer_WarnfLoc()` */
+#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfSym()` */
+#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)            /* !!! DEPREACTED -- use `DeeLexer_WarnfAst()` */
+#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)              /* !!! DEPREACTED -- use `TODO` */
+#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)             /* !!! DEPREACTED -- use `TODO` */
 
 INTDEF struct TPPKeyword TPPKeyword_Empty;
 INTDEF WUNUSED char const *DCALL peek_next_token(struct TPPFile **tok_file);
@@ -1276,6 +1279,12 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__r
 #define DeeLexer_WarnfAt(self, file, pos, ...)      TPP_ISERR(tpp_lexer_warnf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
 #define DeeLexer_VWarnfLc(self, filename, lc, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(self)->dl_lexer, filename, lc, args))
 #define DeeLexer_WarnfLc(self, filename, lc, ...)   TPP_ISERR(tpp_lexer_warnf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
+#define DeeLexer_WarnfLoc(self, loc, ...)           DeeLexer_WarnfLc(self, ast_loc_getname(loc), ast_loc_getlc(loc), __VA_ARGS__)
+#define DeeLexer_VWarnfLoc(self, loc, id, args)     DeeLexer_VWarnfLc(self, ast_loc_getname(loc), ast_loc_getlc(loc), id, args)
+#define DeeLexer_WarnfAst(self, ast, ...)           DeeLexer_WarnfLoc(self, &(ast)->a_ddi, __VA_ARGS__)
+#define DeeLexer_VWarnfAst(self, ast, id, args)     DeeLexer_VWarnfLoc(self, &(ast)->a_ddi, id, args)
+#define DeeLexer_WarnfSym(self, sym, ...)           DeeLexer_WarnfLoc(self, &(ast)->s_decl, __VA_ARGS__)
+#define DeeLexer_VWarnfSym(self, sym, id, args)     DeeLexer_VWarnfLoc(self, &(ast)->s_decl, id, args)
 
 /* Static TPP Hooks */
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);

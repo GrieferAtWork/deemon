@@ -1274,9 +1274,10 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
 	DeeScopeObject *iter = current_scope;
 	ASSERT(iter != NULL);
 	/* Warn if a reserved name is used for a symbol. */
-	if (is_reserved_symbol_name(name) &&
-	    WARNAT(warn_loc, W_RESERVED_SYMBOL_NAME, name))
-		goto err;
+	if (is_reserved_symbol_name(name)) {
+		if (WARNAT(warn_loc, W_RESERVED_SYMBOL_NAME, tpp_keyword_getcstr(name)))
+			goto err;
+	}
 	if ((mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VLOCAL) {
 		/* Only lookup variables in the current scope. */
 seach_single:
@@ -1289,14 +1290,16 @@ seach_single:
 			/* Simple case: If the variable was found, return it. */
 			if (result) {
 				if (mode & LOOKUP_SYM_STACK) {
-					if (result->s_type != SYMBOL_TYPE_STACK &&
-					    WARNAT(warn_loc, W_EXPECTED_STACK_VARIABLE, result))
-						goto err;
+					if (result->s_type != SYMBOL_TYPE_STACK) {
+						if (WARNAT(warn_loc, W_EXPECTED_STACK_VARIABLE, result))
+							goto err;
+					}
 				}
 				if (mode & LOOKUP_SYM_STATIC) {
-					if (result->s_type != SYMBOL_TYPE_STATIC &&
-					    WARNAT(warn_loc, W_EXPECTED_STATIC_VARIABLE, result))
-						goto err;
+					if (result->s_type != SYMBOL_TYPE_STATIC) {
+						if (WARNAT(warn_loc, W_EXPECTED_STATIC_VARIABLE, result))
+							goto err;
+					}
 				}
 				if ((mode & LOOKUP_SYM_ALLOWDECL) && SYMBOL_IS_WEAK(result)) {
 					/* Re-declare this symbol. */
@@ -1365,18 +1368,21 @@ seach_single:
 		}
 	} while ((iter = iter->s_prev) != NULL);
 create_variable:
-	if (!(mode & LOOKUP_SYM_ALLOWDECL) &&
-	    WARNAT(warn_loc, W_UNKNOWN_VARIABLE, name->k_name))
-		goto err;
+	if (!(mode & LOOKUP_SYM_ALLOWDECL)) {
+		if (WARNAT(warn_loc, W_UNKNOWN_VARIABLE, tpp_keyword_getcstr(name)))
+			goto err;
+	}
 	if ((mode & LOOKUP_SYM_VGLOBAL) &&
-	    current_scope != (DeeScopeObject *)current_rootscope &&
-	    WARNAT(warn_loc, W_DECLARING_GLOBAL_IN_NONROOT, name))
-		goto err;
+	    current_scope != (DeeScopeObject *)current_rootscope) {
+		if (WARNAT(warn_loc, W_DECLARING_GLOBAL_IN_NONROOT, tpp_keyword_getcstr(name)))
+			goto err;
+	}
 	/* Warn if a new variable is declared implicitly outside the global scope. */
 	if (!(mode & LOOKUP_SYM_VMASK) &&
-	    current_scope != (DeeScopeObject *)current_rootscope &&
-	    WARNAT(warn_loc, W_DECLARING_IMPLICIT_VARIABLE, name))
-		goto err;
+	    current_scope != (DeeScopeObject *)current_rootscope) {
+		if (WARNAT(warn_loc, W_DECLARING_IMPLICIT_VARIABLE, tpp_keyword_getcstr(name)))
+			goto err;
+	}
 
 	/* Create a new symbol. */
 	if unlikely((result = sym_alloc()) == NULL)

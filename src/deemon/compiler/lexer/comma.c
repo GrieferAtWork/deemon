@@ -145,25 +145,28 @@ next_modifier:
 	switch (DeeLexer_GetTok(self)) {
 
 	case TPP_KWD_final:
-		if (*p_mode & LOOKUP_SYM_FINAL &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_FINAL) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		*p_mode |= LOOKUP_SYM_FINAL;
 		goto continue_modifier;
 
 	case TPP_KWD_varying:
-		if (*p_mode & LOOKUP_SYM_VARYING &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_VARYING) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		*p_mode |= LOOKUP_SYM_VARYING;
 		goto continue_modifier;
 
 	case TPP_KWD_local:
-		if (*p_mode & LOOKUP_SYM_VLOCAL &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_VLOCAL) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		if (*p_mode & LOOKUP_SYM_VGLOBAL) {
-			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_global))
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_global))
 				goto err;
 			*p_mode &= ~LOOKUP_SYM_VGLOBAL;
 		}
@@ -175,15 +178,16 @@ continue_modifier:
 
 	case TOK_COLON_COLON:
 		/* Backwards compatibility with deemon 100+ */
-		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
 		ATTR_FALLTHROUGH
 	case TPP_KWD_global:
-		if (*p_mode & LOOKUP_SYM_VGLOBAL &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_VGLOBAL) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		if (*p_mode & LOOKUP_SYM_VLOCAL) {
-			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_local))
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_local))
 				goto err;
 			*p_mode &= ~LOOKUP_SYM_VLOCAL;
 		}
@@ -191,11 +195,12 @@ continue_modifier:
 		goto continue_modifier;
 
 	case TPP_KWD_static:
-		if (*p_mode & LOOKUP_SYM_STATIC &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_STATIC) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		if (*p_mode & LOOKUP_SYM_STACK) {
-			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, "__stack"))
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, "__stack"))
 				goto err;
 			*p_mode &= ~LOOKUP_SYM_STACK;
 		}
@@ -203,11 +208,12 @@ continue_modifier:
 		goto continue_modifier;
 
 	case TPP_KWD___stack:
-		if (*p_mode & LOOKUP_SYM_STACK &&
-		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
-			goto err;
+		if (*p_mode & LOOKUP_SYM_STACK) {
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
 		if (*p_mode & LOOKUP_SYM_STATIC) {
-			if (WARN(W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_static))
+			if (DeeLexer_Warnf(self, TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, STR_static))
 				goto err;
 			*p_mode &= ~LOOKUP_SYM_STATIC;
 		}
@@ -224,7 +230,7 @@ continue_modifier:
 	     * either `function` or `class`! */
 	    (DeeLexer_GetTok(self) != TPP_KWD_function &&
 	     DeeLexer_GetTok(self) != TPP_KWD_class)) {
-		if (WARN(W_VARYING_WITHOUT_FINAL))
+		if (DeeLexer_Warnf(self, TPP_W_VARYING_WITHOUT_FINAL))
 			goto err;
 	}
 	return 0;
@@ -442,7 +448,7 @@ err_function_anno:
 		if (function_symbol) {
 			if (function_symbol->s_decltype.da_type != DAST_NONE) {
 				if (!decl_ast_equal(&function_symbol->s_decltype, &decl)) {
-					if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, function_symbol))
+					if (DeeLexer_Warnf(self, TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, function_symbol))
 						goto err_decl;
 				}
 				decl_ast_fini(&decl);
@@ -458,7 +464,7 @@ err_function_anno:
 		} else {
 			decl_ast_fini(&decl);
 		}
-		if unlikely(ast_tags_clear())
+		if unlikely(ast_tags_clear(self))
 			goto err_current;
 		if (function_symbol) {
 			DREF struct ast *function_name_ast, *merge;
@@ -495,7 +501,7 @@ err_function_anno:
 		if (!IS_SYMBOL_NAME(DeeLexer_GetTok(self)) &&
 		    (lookup_mode & LOOKUP_SYM_VMASK) != LOOKUP_SYM_VDEFAULT) {
 			/* Warn if an explicit visibility modifier isn't followed by a symbol name. */
-			if (WARN(W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
 				goto err;
 		}
 		current = ast_parse_expr(self, lookup_mode);
@@ -512,7 +518,7 @@ err_function_anno:
 			if (TPP_KWD_IS_D100_VARIABLE_MODIFIER(DeeLexer_GetTok(self))) {
 				/* Deemon 100+ used to allow `int local x;` as alias for `local x = int()`.
 				 * While this isn't support anymore, still try to emulate it... */
-				if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
+				if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
 					goto err_current;
 				if (ast_parse_lookup_mode(self, &lookup_mode))
 					goto err_current;
@@ -521,7 +527,8 @@ err_function_anno:
 				goto err_current;
 			var_symbol = get_local_symbol(DeeLexer_GetTokenKwd(self));
 			if unlikely(var_symbol) {
-				if (WARN(W_VARIABLE_ALREADY_EXISTS, DeeLexer_GetTokenKwd(self)))
+				if (DeeLexer_Warnf(self, TPP_W_VARIABLE_ALREADY_EXISTS,
+				                   DeeLexer_GetTokenKwdCStr(self)))
 					goto err_current;
 			} else {
 				/* Create a new symbol for the initialized variable. */
@@ -572,7 +579,7 @@ err_function_anno:
 					var_symbol->s_type = SYMBOL_TYPE_LOCAL;
 				}
 			}
-			if unlikely(ast_tags_clear())
+			if unlikely(ast_tags_clear(self))
 				goto err_current;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_current;
@@ -727,7 +734,7 @@ err_args:
 						                           &decl);
 						decl_ast_fini(&decl);
 						if (!are_equal) {
-							if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, var_symbol))
+							if (DeeLexer_Warnf(self, TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, var_symbol))
 								goto err_current;
 						}
 					} else {
@@ -960,7 +967,7 @@ done_expression_nomerge:
 					goto err_clear_current_only;
 			} while (DeeLexer_GetTok(self) == '\n');
 		} else {
-			if unlikely(WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
+			if unlikely(DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
 err_clear_current_only:
 				ast_decref(current);
 				current = NULL;

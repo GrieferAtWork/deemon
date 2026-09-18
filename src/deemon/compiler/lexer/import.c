@@ -61,19 +61,23 @@ LOCAL ATTR_CONST WUNUSED unsigned int DCALL dot_count(tok_t tk) {
 	return 1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DFCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeModuleObject *DFCALL
 import_module_by_name(DeeLexer *self,
                       DeeStringObject *__restrict module_name,
-                      struct ast_loc *loc) {
+                      struct ast_loc *__restrict loc) {
 	DREF DeeModuleObject *result;
 	char const *filename;
+	char const *module_name_utf8;
 	if (module_name->s_str[0] == '.' && module_name->s_len == 1) {
 		/* Special case: Import your own module. */
 		return MODULE_CURRENT;
 	}
+	module_name_utf8 = DeeString_AsUtf8(module_name);
+	if unlikely(!module_name_utf8)
+		goto err;
 
 	filename = tpp_file_getrealfilename(DeeLexer_GetFile(self));
-	result = DeeModule_OpenEx(module_name->s_str, module_name->s_len,
+	result = DeeModule_OpenEx(module_name_utf8, WSTR_LENGTH(module_name_utf8),
 	                          filename, filename ? strlen(filename) : 0,
 	                          DeeModule_IMPORT_F_NORMAL |
 	                          DeeModule_IMPORT_F_ENOENT |
@@ -83,12 +87,14 @@ import_module_by_name(DeeLexer *self,
 		if unlikely(result == DeeModule_IMPORT_ERROR)
 			goto err;
 		if (result == DeeModule_IMPORT_ENOENT) {
-			if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
+			if (DeeLexer_WarnfLoc(self, loc, TPP_W_MODULE_NOT_FOUND,
+			                      module_name_utf8))
 				goto err;
 		} else if (result == DeeModule_IMPORT_ERECUR) {
 			struct Dee_import_frame *current = DeeThread_Self()->t_import_curr;
-			char const *current_name = current ? current->if_absfile : NULL;
-			if (WARNAT(loc, W_RECURSIVE_MODULE_DEPENDENCY, module_name, current_name))
+			char const *current_name = current ? current->if_absfile : "?";
+			if (DeeLexer_WarnfLoc(self, loc, TPP_W_RECURSIVE_MODULE_DEPENDENCY,
+			                      module_name_utf8, current_name))
 				goto err;
 		}
 		result = &DeeModule_Empty;
@@ -141,11 +147,13 @@ ast_parse_module_name(DeeLexer *self,
 		} else if (DeeLexer_HasTokenKwd(self)) {
 			/* Warn about reserved identifiers.
 			 * -> Reserved identifiers should be written as strings. */
-			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-			    WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_MODULE_NAME
-			                   : W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
-			         DeeLexer_GetTokenKwd(self)))
-				goto err;
+			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+				if (DeeLexer_Warnf(self,
+				                   for_alias ? TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME
+				                             : TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
+				                   DeeLexer_GetTokenKwdCStr(self)))
+					goto err;
+			}
 			if (Dee_unicode_printer_print(printer,
 			                              DeeLexer_GetTokenKwdCStr(self),
 			                              DeeLexer_GetTokenKwdLen(self)) < 0)
@@ -163,7 +171,7 @@ ast_parse_module_name(DeeLexer *self,
 			    !DeeLexer_IsStringToken(self))
 				break;
 		} else {
-			if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 				goto err;
 			break;
 		}
@@ -181,11 +189,13 @@ ast_parse_symbol_name(DeeLexer *self,
 	if (DeeLexer_HasTokenKwd(self)) {
 		/* Warn about reserved identifiers.
 		 * -> Reserved identifiers should be written as string imports. */
-		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-		    WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
-		                   : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
-		         DeeLexer_GetTokenKwd(self)))
-			goto err;
+		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+			if (DeeLexer_Warnf(self,
+			                   for_alias ? TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
+			                             : TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
+			                   DeeLexer_GetTokenKwdCStr(self)))
+				goto err;
+		}
 		if (Dee_unicode_printer_print(printer,
 		                              DeeLexer_GetTokenKwdCStr(self),
 		                              DeeLexer_GetTokenKwdLen(self)) < 0)
@@ -200,7 +210,7 @@ ast_parse_symbol_name(DeeLexer *self,
 				goto err;
 		} while (DeeLexer_IsStringToken(self));
 	} else {
-		if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 			goto err;
 	}
 	return result;
@@ -257,15 +267,15 @@ ast_parse_import_single_sym(DeeLexer *self, struct TPPKeyword *__restrict import
 
 	/* Lookup the symbol which we're importing. */
 	if (mod == MODULE_CURRENT) {
-		if (WARN(W_IMPORT_GLOBAL_FROM_OWN_MODULE))
+		if (DeeLexer_Warnf(self, TPP_W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
 	} else {
 		modsym = import_module_symbol(mod, import_name);
 		if unlikely(!modsym) {
-			if (WARN(W_MODULE_IMPORT_NOT_FOUND,
-			         import_name->k_name,
-			         DeeModule_GetShortName(mod)))
+			if (DeeLexer_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
+			                   tpp_keyword_getcstr(import_name),
+			                   DeeModule_GetShortName(mod)))
 				goto err_module;
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
 			extern_symbol->s_module = mod; /* Inherit reference. */
@@ -306,8 +316,10 @@ struct import_item {
 };
 
 /* Return `bar` for a module name `.foo.bar`, etc. */
-PRIVATE struct TPPKeyword *DCALL
-get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) {
+PRIVATE WUNUSED NONNULL((1)) struct TPPKeyword *DCALL
+get_module_symbol_name(DeeLexer *self,
+                       DeeStringObject *__restrict module_name,
+                       bool is_module) {
 	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
 	utf8_repr = DeeString_AsUtf8(module_name);
@@ -331,12 +343,12 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			                         : !(flags & Dee_UNICODE_ISSYMCONT)) {
 bad_symbol_name:
 				if (is_module) {
-					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL,
-					         module_name, symbol_length, symbol_start))
+					if (DeeLexer_Warnf(self, TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL,
+					                   utf8_repr, symbol_start))
 						goto err;
 				} else {
-					if (WARN(W_INVALID_NAME_FOR_IMPORT_SYMBOL,
-					         module_name, symbol_length, symbol_start))
+					if (DeeLexer_Warnf(self, TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL,
+					                   utf8_repr, symbol_start))
 						goto err;
 				}
 				break;
@@ -378,9 +390,12 @@ parse_import_symbol(DeeLexer *self,
 			/* - `foo = bar`
 			 * - `foo = .foo.bar`
 			 * - `foo = "bar"' */
-			if (is_reserved_symbol_name(result->ii_symbol_name) &&
-			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, result->ii_symbol_name))
-				goto err;
+			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
+				                      TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
+				                      tpp_keyword_getcstr(result->ii_symbol_name)))
+					goto err;
+			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (DeeLexer_GetLoc(self, &result->ii_import_loc))
@@ -395,9 +410,12 @@ parse_import_symbol(DeeLexer *self,
 			if unlikely(!result->ii_import_name)
 				goto err;
 		} else if (DeeLexer_GetTok(self) == TPP_KWD_as) {
-			if (is_reserved_symbol_name(result->ii_symbol_name) &&
-			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, result->ii_symbol_name))
-				goto err;
+			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
+				                      TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
+				                      tpp_keyword_getcstr(result->ii_symbol_name)))
+					goto err;
+			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			/* - `foo as bar` */
@@ -408,22 +426,27 @@ parse_import_symbol(DeeLexer *self,
 				if unlikely(!result->ii_import_name)
 					goto err;
 				result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
-				if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-				    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
-					goto err;
+				if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+					if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
+					                   DeeLexer_GetTokenKwdCStr(self)))
+						goto err;
+				}
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
-				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err;
 				result->ii_import_name = NULL;
 			}
 		} else if (TPP_TOK_ISDOT(DeeLexer_GetTok(self)) && allow_module_name) {
 			/* - `foo.bar`
 			 * - `foo.bar as foobar` */
-			if (is_reserved_symbol_name(result->ii_symbol_name) &&
-			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_MODULE_NAME, result->ii_symbol_name))
-				goto err;
+			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
+				                      TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME,
+				                      tpp_keyword_getcstr(result->ii_symbol_name)))
+					goto err;
+			}
 			Dee_unicode_printer_init(&printer);
 			if unlikely(Dee_unicode_printer_print(&printer,
 			                                      result->ii_symbol_name->k_name,
@@ -431,12 +454,13 @@ parse_import_symbol(DeeLexer *self,
 				goto err_printer;
 			goto complete_module_name;
 		} else {
-			if (is_reserved_symbol_name(result->ii_symbol_name) &&
-			    WARNAT(&result->ii_import_loc,
-			           allow_module_name ? W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME
-			                             : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
-			           result->ii_symbol_name))
-				goto err;
+			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
+				                      allow_module_name ? TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME
+				                                        : TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
+				                      tpp_keyword_getcstr(result->ii_symbol_name)))
+					goto err;
+			}
 			result->ii_import_name = NULL;
 		}
 	} else if (TPP_TOK_ISDOT(DeeLexer_GetTok(self)) && allow_module_name) {
@@ -463,32 +487,35 @@ complete_module_name:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_name;
 			if unlikely(!DeeLexer_HasTokenKwd(self)) {
-				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err_name;
 				goto autogenerate_symbol_name;
 			}
 			result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 			/* Warn about reserved identifiers */
-			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-			    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
-				goto err_name;
+			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+				if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
+				                   DeeLexer_GetTokenKwdCStr(self)))
+					goto err_name;
+			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_name;
 		} else {
 			/* - `.foo.bar` */
 autogenerate_symbol_name:
 			/* Autogenerate the module import symbol name. */
-			result->ii_symbol_name = get_module_symbol_name(result->ii_import_name,
+			result->ii_symbol_name = get_module_symbol_name(self, result->ii_import_name,
 			                                                return_value != 0);
 			if unlikely(!result->ii_symbol_name)
 				goto err_name;
 			/* Warn about the auto-generated name being a reserved identifiers */
-			if (is_reserved_symbol_name(result->ii_symbol_name) &&
-			    WARNAT(&result->ii_import_loc,
-			           allow_module_name ? W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME
-			                             : W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME,
-			           result->ii_symbol_name))
-				goto err_name;
+			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
+				                      allow_module_name ? TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME
+				                                        : TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME,
+				                      tpp_keyword_getcstr(result->ii_symbol_name)))
+					goto err_name;
+			}
 		}
 	} else if (DeeLexer_IsStringToken(self)) {
 		/* - `"foo"'
@@ -511,20 +538,22 @@ autogenerate_symbol_name:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_name;
 		if (!DeeLexer_HasTokenKwd(self)) {
-			if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_AS))
 				goto err_name;
 			goto autogenerate_symbol_name;
 		}
 		result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 
 		/* Warn about reserved identifiers in alias names. */
-		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
-		    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
-			goto err_name;
+		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+			if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
+			                   DeeLexer_GetTokenKwdCStr(self)))
+				goto err_name;
+		}
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_name;
 	} else {
-		if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 			goto err;
 		return_value = 2;
 	}
@@ -566,13 +595,14 @@ symbol_addambig(struct symbol *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ast_import_all_from_module(DeeModuleObject *__restrict mod,
-                           struct ast_loc *loc) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DFCALL
+ast_import_all_from_module(DeeLexer *self,
+                           DeeModuleObject *__restrict mod,
+                           struct ast_loc *__restrict loc) {
 	struct Dee_module_symbol *iter, *end;
 	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 	if (mod == MODULE_CURRENT) {
-		if (WARNAT(loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
+		if (DeeLexer_WarnfLoc(self, loc, TPP_W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
 	}
@@ -724,31 +754,34 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ast_import_single_from_module(DeeModuleObject *__restrict mod,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DFCALL
+ast_import_single_from_module(DeeLexer *self, DeeModuleObject *__restrict mod,
                               struct import_item *__restrict item) {
 	struct Dee_module_symbol *sym;
 	struct symbol *import_symbol;
 	if (mod == MODULE_CURRENT) {
-		if (WARNAT(&item->ii_import_loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
+		if (DeeLexer_WarnfLoc(self, &item->ii_import_loc,
+		                      TPP_W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
 	}
 	if (item->ii_import_name) {
 		sym = DeeModule_GetSymbol(mod, Dee_AsObject(item->ii_import_name));
 		if (!sym) {
-			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
-			           DeeString_STR(item->ii_import_name),
-			           DeeModule_GetShortName(mod)))
+			if (DeeLexer_WarnfLoc(self, &item->ii_import_loc,
+			                      TPP_W_MODULE_IMPORT_NOT_FOUND,
+			                      DeeString_STR(item->ii_import_name),
+			                      DeeModule_GetShortName(mod)))
 				goto err;
 			goto done;
 		}
 	} else {
 		sym = import_module_symbol(mod, item->ii_symbol_name);
 		if (!sym) {
-			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
-			           item->ii_symbol_name->k_name,
-			           DeeModule_GetShortName(mod)))
+			if (DeeLexer_WarnfLoc(self, &item->ii_import_loc,
+			                      TPP_W_MODULE_IMPORT_NOT_FOUND,
+			                      tpp_keyword_getcstr(item->ii_symbol_name),
+			                      DeeModule_GetShortName(mod)))
 				goto err;
 			goto done;
 		}
@@ -767,9 +800,9 @@ ast_import_single_from_module(DeeModuleObject *__restrict mod,
 			/* It was the same symbol that had been imported before.
 			 * -> Ignore the secondary import! */
 		} else {
-			if (WARNAT(&item->ii_import_loc,
-			           W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
-			           item->ii_symbol_name))
+			if (DeeLexer_WarnfLoc(self, &item->ii_import_loc,
+			                      TPP_W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
+			                      tpp_keyword_getcstr(item->ii_symbol_name)))
 				goto err;
 		}
 	} else {
@@ -823,9 +856,9 @@ ast_import_module(DeeLexer *self, struct import_item *__restrict item) {
 		     import_symbol->s_type == SYMBOL_TYPE_MYMOD)) {
 			/* The same module has already been imported under this name! */
 		} else {
-			if (WARNAT(&item->ii_import_loc,
-			           W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
-			           item->ii_symbol_name))
+			if (DeeLexer_WarnfLoc(self, &item->ii_import_loc,
+			                      TPP_W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
+			                      tpp_keyword_getcstr(item->ii_symbol_name)))
 				goto err_module;
 		}
 		decref_parse_module_byname(mod);
@@ -891,7 +924,7 @@ ast_parse_post_import(DeeLexer *self) {
 			mod = parse_module_byname(self, true);
 			if unlikely(!mod)
 				goto err;
-			error = ast_import_all_from_module(mod, &star_loc);
+			error = ast_import_all_from_module(self, mod, &star_loc);
 			decref_parse_module_byname(mod);
 			goto done;
 		} else if (DeeLexer_GetTok(self) == ',') {
@@ -901,7 +934,7 @@ ast_parse_post_import(DeeLexer *self) {
 			allow_modules = false;
 			goto import_parse_list;
 		}
-		if (WARN(W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST))
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST))
 			goto err;
 		goto done;
 	}
@@ -931,9 +964,10 @@ parse_module_import_list:
 		}
 
 		/* Warn if the module import list is followed by a `from` */
-		if (DeeLexer_GetTok(self) == TPP_KWD_from &&
-		    WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
-			goto err;
+		if (DeeLexer_GetTok(self) == TPP_KWD_from) {
+			if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
+				goto err;
+		}
 	} else if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 		/*  - `import foo from bar` */
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -941,7 +975,7 @@ parse_module_import_list:
 		mod = parse_module_byname(self, true);
 		if unlikely(!mod)
 			goto err_item;
-		error = ast_import_single_from_module(mod, &item);
+		error = ast_import_single_from_module(self, mod, &item);
 		Dee_XDecref(item.ii_import_name);
 		decref_parse_module_byname(mod);
 		if unlikely(error)
@@ -964,7 +998,7 @@ import_parse_list:
 				goto err_item_v;
 			if (DeeLexer_GetTok(self) == '*') {
 				if (has_star) {
-					if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 						goto err_item_v;
 				} else {
 					if (DeeLexer_GetLoc(self, &star_loc))
@@ -1034,13 +1068,13 @@ import_parse_list:
 			/* If `*` was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
 			if (has_star) {
-				if unlikely(ast_import_all_from_module(mod, &star_loc))
+				if unlikely(ast_import_all_from_module(self, mod, &star_loc))
 					goto err_item_v_module;
 			}
 
 			/* Now import all the explicitly defined symbols. */
 			for (i = 0; i < item_c; ++i) {
-				if unlikely(ast_import_single_from_module(mod, &item_v[i]))
+				if unlikely(ast_import_single_from_module(self, mod, &item_v[i]))
 					goto err_item_v_module;
 				Dee_XClear(item_v[i].ii_import_name);
 			}
@@ -1049,7 +1083,7 @@ import_parse_list:
 			size_t i;
 			if unlikely(!allow_modules) {
 				/* Warn if there is a `from` missing following a symbol import list. */
-				if (WARN(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST))
 					goto err_item_v;
 			}
 
@@ -1230,11 +1264,13 @@ ast_parse_import(DeeLexer *self) {
 			/* Parse an entire import list. */
 			if (DeeLexer_GetTok(self) == '*') {
 				struct ast_loc star_loc;
-				if (has_star && WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
-					goto err_r_module;
+				if (has_star) {
+					if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
+						goto err_r_module;
+				}
 				if (DeeLexer_GetLoc(self, &star_loc))
 					goto err_r_module;
-				if unlikely(ast_import_all_from_module(mod, &star_loc))
+				if unlikely(ast_import_all_from_module(self, mod, &star_loc))
 					goto err_r_module;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_module;
@@ -1247,7 +1283,7 @@ ast_parse_import(DeeLexer *self) {
 					goto err_r_module;
 				if unlikely(error == 2)
 					break; /* failed */
-				error = ast_import_single_from_module(mod, &item);
+				error = ast_import_single_from_module(self, mod, &item);
 				Dee_XDecref(item.ii_import_name);
 				if unlikely(error)
 					goto err_r_module;
