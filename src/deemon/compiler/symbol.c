@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* DeeObject_CALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>             /* DeeObject_CALLOC, DeeObject_FREE, Dee_CollectMemory, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
 #include <deemon/code.h>              /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref, loc_here */
+#include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref */
 #include <deemon/compiler/compiler.h> /* DeeCompiler* */
-#include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>            /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
@@ -405,30 +405,6 @@ again:
 }
 
 
-
-INTERN NONNULL((1)) void DCALL
-symbol_addambig(struct symbol *__restrict self,
-                struct ast_loc *loc) {
-	struct ast_loc *new_vec;
-	ASSERT(self->s_type == SYMBOL_TYPE_AMBIG);
-	new_vec = (struct ast_loc *)Dee_TryReallocc(self->s_ambig.a_declv,
-	                                            self->s_ambig.a_declc + 1,
-	                                            sizeof(struct ast_loc));
-	if unlikely(!new_vec)
-		return;
-	self->s_ambig.a_declv = new_vec;
-	new_vec += self->s_ambig.a_declc++;
-	if (loc) {
-		if (!tpp_is_reachable_file(loc->l_file))
-			goto set_default_location;
-		memcpy(new_vec, loc, sizeof(struct ast_loc));
-	} else {
-set_default_location:
-		loc_here(new_vec);
-	}
-	if (new_vec->l_file)
-		TPPFile_Incref(new_vec->l_file);
-}
 
 INTERN NONNULL((1)) void DCALL
 symbol_fini(struct symbol *__restrict self) {
@@ -1443,12 +1419,6 @@ add_result_to_iter:
 		if unlikely(rehash_scope(iter))
 			goto err_r;
 	}
-	/* Insert the new symbol. */
-	ASSERT(iter->s_mapa != 0);
-	bucket          = &iter->s_map[name->k_id % iter->s_mapa];
-	result->s_next  = *bucket;
-	*bucket         = result;
-	result->s_scope = iter;
 	if (warn_loc) {
 		if (!tpp_is_reachable_file(warn_loc->l_file))
 			goto set_default_location;
@@ -1461,6 +1431,13 @@ set_default_location:
 	}
 	if (result->s_decl.l_file)
 		TPPFile_Incref(result->s_decl.l_file);
+
+	/* Insert the new symbol. */
+	ASSERT(iter->s_mapa != 0);
+	bucket          = &iter->s_map[name->k_id % iter->s_mapa];
+	result->s_next  = *bucket;
+	*bucket         = result;
+	result->s_scope = iter;
 	return result;
 err_r:
 	--iter->s_mapc;

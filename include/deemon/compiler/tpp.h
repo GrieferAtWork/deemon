@@ -23,22 +23,24 @@
 #include "../api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include <hybrid/sched/__yield.h>
-#include <hybrid/typecore.h>
+#include <hybrid/sched/__yield.h> /* __hybrid_yield */
+#include <hybrid/typecore.h>      /* __CHAR_BIT__, __SIZEOF_INTMAX_T__ */
 
-#include "../alloc.h"
-#include "../int.h"
-#include "../string.h"
-#include "../stringutils.h"
-#include "../system-features.h"
-#include "../system.h"
-#include "../file.h"
-#include "../thread.h"
-#include "../types.h"
-#include "../util/atomic.h"
-#include "../util/once.h"
+#include "../alloc.h"           /* Dee_*alloc*, Dee_Alloca, Dee_Free */
+#include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
+#include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
+#include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
+#include "../string.h"          /* DeeAscii_*, DeeUni_* */
+#include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
+#include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, bzero, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, strchr, strlen */
+#include "../system.h"          /* DeeSystem_* */
+#include "../thread.h"          /* DeeThread_CheckInterrupt */
+#include "../types.h"           /* DREF, DeeObject, Dee_AsObject, Dee_ITER_DONE, Dee_formatprinter_t, Dee_ssize_t */
+#include "../util/atomic.h"     /* Dee_atomic_* */
+#include "../util/once.h"       /* Dee_ONCE */
+#include "lexer.h"              /* PARSE_FLFSTMT, parser_flags */
 
-#include <stdint.h>
+#include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
 
 /************************************************************************/
 /* TPP3 API hooks                                                       */
@@ -646,6 +648,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_FILE_ENCODING_EMBED                 1
 #define TPP_HAVE_LEXER_SKIP                          1
 #define TPP_HAVE_LEXER_TRYSKIP_RAW                   1
+#define TPP_HAVE_LEXER_PEEK_RAW                      1
 #define TPP_HAVE_LEXER_REPRTOKENID                   1
 #define TPP_HAVE_LEXER_GETKEYWORDFEATURE             0
 #define TPP_HAVE_LEXER_GETKEYWORDDEFINED             1
@@ -860,7 +863,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint32_t */
 
 #ifdef GUARD_TPP_H
@@ -883,45 +886,10 @@ DECL_BEGIN
 #endif
 
 
-struct ast_loc;
-struct ast;
-
-/* Emit a compiler warning/error, given its TPP warning number.
- * The passed var-args are interpreted based on `wnum`,
- * which is one of `W_*` defined by the lexer.
- * @return: -1: TPP had already been set to an error-state.
- * @return: -1: A fatal compiler error was thrown and TPP was set to an error-state.
- * @return:  0: The warning is being ignored.
- * @return:  0: The warning was printed, but is not considered dangerous.
- * @return:  0: The warning caused an error to be thrown, but the
- *              max number of compiler errors has yet to be reached. */
-INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
-INTDEF ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args);
-INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
-INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
-INTDEF ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...);
-
-/* Similar to `parser_warnf()`, but force the warning
- * to be fatal, regardless of its user-defined state.
- * @return: -1: Always returns -1. */
-INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
-INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
-INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
-INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
-
 DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
-
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define parser_errf(...)             Dee_ASSUMED_VALUE(parser_errf(__VA_ARGS__), -1)
-#define parser_erratf(loc, ...)      Dee_ASSUMED_VALUE(parser_erratf(loc, __VA_ARGS__), -1)
-#define parser_erratrf(loc, ...)     Dee_ASSUMED_VALUE(parser_erratrf(loc, __VA_ARGS__), -1)
-#define parser_errastf(loc_ast, ...) Dee_ASSUMED_VALUE(parser_errastf(loc_ast, __VA_ARGS__), -1)
 #define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
-
-/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
-INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
 
 struct TPPFile;
 struct TPPKeyword;
@@ -1058,6 +1026,8 @@ typedef struct {
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
 
+#define DeeLexer_FromTPP(p_tpp_lexer) COMPILER_CONTAINER_OF(p_tpp_lexer, DeeLexer, dl_lexer)
+
 #define DeeLexer_Has(self, feat)                 tpp_lexer_has(&(self)->dl_lexer, feat)
 #define DeeLexer_GetTok(self)                    tpp_lexer_gettok(&(self)->dl_lexer)
 #define DeeLexer_GetToken(self)                  tpp_lexer_gettoken(&(self)->dl_lexer)
@@ -1094,9 +1064,141 @@ typedef struct {
 	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
 	  !DeeLexer_Has(self, CHARACTER_LITERALS)))
 
+
+
+struct ast;
+struct ast_loc {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	char const *l_name; /* [0..1] Filename (either statically allocated, or points into a `tpp_keyword`.
+	                     * In either case, this string remains valid until `tpp_lexer_fini()` is called)
+	                     * When user-code made use of a custom `#line` filename, then a keyword for that
+	                     * filename is lazily allocated here (set to "NULL" if unknown) */
+	tpp_lcinfo  l_lc;   /* Line/column information (0-based) */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	struct TPPFile      *l_file; /* [0..1] Location file. */
+#ifdef CONFIG_BUILDING_DEEMON
+	union {
+		struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
+		struct {
+			int          l_line; /* [valid_if(l_file != NULL)] Location line. */
+			int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define l_lc       _dee_aunion.l_lc /*!export-*/
+#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define l_line     _dee_aunion.l_line /*!export-*/
+#define l_col      _dee_aunion.l_col  /*!export-*/
+#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define l_line     _dee_aunion._dee_astruct.l_line /*!export-*/
+#define l_col      _dee_aunion._dee_astruct.l_col  /*!export-*/
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
+#define l_line     _dee_astruct.l_line /*!export-*/
+#define l_col      _dee_astruct.l_col  /*!export-*/
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+	;
+#else /* CONFIG_BUILDING_DEEMON */
+	int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
+	int                  l_col;  /* [valid_if(l_file != NULL)] Location column. */
+#endif /* !CONFIG_BUILDING_DEEMON */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+};
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define ast_loc_init_empty(self) \
+	((self)->l_name = NULL, tpp_lcinfo_init_invalid(&(self)->l_lc))
+#define ast_loc_getname(self) ((self)->l_name)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define ast_loc_init_empty(self) (void)((self)->l_file = NULL)
+#define ast_loc_getname(self) tpp_file_getfilename((self)->l_file)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define ast_loc_getlc(self)   ((self)->l_lc)
+#define ast_loc_getline(self) tpp_lcinfo_getline((self)->l_lc)
+#define ast_loc_getcol(self)  tpp_lcinfo_getcol((self)->l_lc)
+
+
+/* Fill the given AST location with the current LC source position.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info);
+
+
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
+
 /* Helper to transition into a world where this gets passed along the stack */
-#define _DeeLexer_Current ((DeeLexer *)TPPLexer_Current)
+#define _DeeLexer_Current DeeLexer_FromTPP(TPPLexer_Current)
+
+/* Describe a region of code where `TPPLEXER_FLAG_WANTLF` should be off. */
+#define DeeLexer_NoLf_Push(self)                                 \
+	do {                                                         \
+		uint32_t const _dlnlf_oflags = (self)->dl_lexer.l_flags; \
+		(self)->dl_lexer.l_flags &= ~TPPLEXER_FLAG_WANTLF
+#define DeeLexer_NoLf_Break(self) \
+		(void)((self)->dl_lexer.l_flags |= _dlnlf_oflags & TPPLEXER_FLAG_WANTLF)
+#define DeeLexer_NoLf_Pop(self)    \
+		DeeLexer_NoLf_Break(self); \
+	}	__WHILE0
+
+
+/* Describe a region of code where `TPPLEXER_FLAG_WANTLF` is enabled if `PARSE_FLFSTMT` is set */
+#define DeeLexer_EnableLf_Push(self)                             \
+	do {                                                         \
+		uint32_t const _dlelf_oflags = (self)->dl_lexer.l_flags; \
+		if (!(parser_flags & PARSE_FLFSTMT)) {                   \
+		} else                                                   \
+			(self)->dl_lexer.l_flags |= TPPLEXER_FLAG_WANTLF
+#define DeeLexer_EnableLf_Break(self) \
+		(void)((self)->dl_lexer.l_flags &= _dlelf_oflags & ~TPPLEXER_FLAG_WANTLF)
+#define DeeLexer_EnableLf_Pop(self)    \
+		DeeLexer_EnableLf_Break(self); \
+	}	__WHILE0
+
+
+/* Emit a compiler warning/error, given its TPP warning number.
+ * The passed var-args are interpreted based on `wnum`,
+ * which is one of `W_*` defined by the lexer.
+ * @return: -1: TPP had already been set to an error-state.
+ * @return: -1: A fatal compiler error was thrown and TPP was set to an error-state.
+ * @return:  0: The warning is being ignored.
+ * @return:  0: The warning was printed, but is not considered dangerous.
+ * @return:  0: The warning caused an error to be thrown, but the
+ *              max number of compiler errors has yet to be reached. */
+INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
+INTDEF ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args);
+INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...);
+
+/* Similar to `parser_warnf()`, but force the warning
+ * to be fatal, regardless of its user-defined state.
+ * @return: -1: Always returns -1. */
+INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
+INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
+
+DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define parser_errf(...)             Dee_ASSUMED_VALUE(parser_errf(__VA_ARGS__), -1)
+#define parser_erratf(loc, ...)      Dee_ASSUMED_VALUE(parser_erratf(loc, __VA_ARGS__), -1)
+#define parser_erratrf(loc, ...)     Dee_ASSUMED_VALUE(parser_erratrf(loc, __VA_ARGS__), -1)
+#define parser_errastf(loc_ast, ...) Dee_ASSUMED_VALUE(parser_errastf(loc_ast, __VA_ARGS__), -1)
+#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
+/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
+INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
+
 
 //#define DeeLexer_Skip(self, tid) tpp_lexer_skip(&(self)->dl_lexer, tid)
 #define DeeLexer_VWarnf(self, id, args)             ((void)(self), parser_vwarnf(id, args))
@@ -1142,7 +1244,31 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__r
 #define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
 #define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
 
-#define DeeLexer_Skip(self, expected_tok) tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
+/* Describe a region of code where `TPP_TOK_LF` should not be produced. */
+#define DeeLexer_NoLf_Push(self)                                                            \
+	do {                                                                                    \
+		bool const _dlnlf_olf = !!tpp_lexer_getfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF); \
+		tpp_lexer_disablefeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeLexer_NoLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF, _dlnlf_olf)
+#define DeeLexer_NoLf_Pop(self)    \
+		DeeLexer_NoLf_Break(self); \
+	}	__WHILE0
+
+/* Describe a region of code where `TPP_TOK_LF` is enabled if `PARSE_FLFSTMT` is set */
+#define DeeLexer_EnableLf_Push(self)                             \
+	do {                                                         \
+		bool const _dlelf_olf = !!tpp_lexer_getfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF); \
+		if (!(parser_flags & PARSE_FLFSTMT)) {                   \
+		} else                                                   \
+			tpp_lexer_enablefeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeLexer_EnableLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF, _dlelf_olf)
+#define DeeLexer_EnableLf_Pop(self)    \
+		DeeLexer_EnableLf_Break(self); \
+	}	__WHILE0
+
+
 
 #define DeeLexer_VWarnf(self, id, args)             TPP_ISERR(tpp_lexer_vwarnf(&(self)->dl_lexer, id, args))
 #define DeeLexer_Warnf(self, ...)                   TPP_ISERR(tpp_lexer_warnf(&(self)->dl_lexer, __VA_ARGS__))
@@ -1158,6 +1284,9 @@ INTDEF Dee_ssize_t TPPCALL DeeLexer_TPP_MesgPrinterHook(void *arg, char const *_
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
 
+
+#define DeeLexer_Skip(self, expected_tok) \
+	tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_ParenBegin(self, p_has_paren)   \

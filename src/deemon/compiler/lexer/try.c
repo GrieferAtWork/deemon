@@ -24,16 +24,15 @@
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/code.h>            /* Dee_EXCEPTION_HANDLER_F* */
-#include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_TUPLE, CATCH_EXPR_FNORMAL, ast, ast_*, catch_expr, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_TUPLE, CATCH_EXPR_FNORMAL, ast, ast_*, catch_expr */
 #include <deemon/compiler/lexer.h>  /* ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_EXCEPT, ast_loc, has_local_symbol, new_local_symbol, scope_pop, scope_push, symbol */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_EXCEPT, has_local_symbol, new_local_symbol, scope_pop, scope_push, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* TP_FINTERRUPT */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 
@@ -74,7 +73,8 @@ ast_parse_catchmask(DeeLexer *self) {
 		 * >>     print "So this happened:", err;
 		 * >> }
 		 */
-		loc_here(&multi_loc);
+		if (DeeLexer_GetLoc(self, &multi_loc))
+			goto err_exprv;
 		while (DeeLexer_GetTok(self) == '|') {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_exprv;
@@ -130,9 +130,9 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 	struct ast_loc loc;
 	size_t catcha, catchc;
 	struct catch_expr *catchv, *handler;
-	uint32_t old_flags;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	result = is_statement
@@ -198,10 +198,12 @@ do_realloc_catchv:
 			bool has_paren;
 			bool is_new_scope = false;
 			struct symbol *guard_symbol;
-			old_flags = TPPLexer_Current->l_flags;
-			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
-				goto err_try_flags;
+			DeeLexer_NoLf_Push(self);
+			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH)) {
+err_try_flags:
+				DeeLexer_NoLf_Break(self);
+				goto err_try;
+			}
 			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_try_flags;
@@ -280,7 +282,7 @@ parse_catch_symbol:
 				}
 			}
 end_catch_handler:
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			DeeLexer_NoLf_Pop(self);
 			if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = is_statement
@@ -314,8 +316,6 @@ end_catch_handler:
 	            WARN(W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY))
 		goto err_r;
 	return result;
-err_try_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_try:
 	while (catchc--) {
 		ast_xdecref(catchv[catchc].ce_mask);
@@ -338,10 +338,10 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	size_t catcha, catchc;
 	struct catch_expr *catchv, *handler;
-	uint32_t old_flags;
 	unsigned int was_expression;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	result = ast_parse_hybrid_primary(self, &was_expression);
@@ -402,10 +402,12 @@ do_realloc_catchv:
 			bool has_paren;
 			bool is_new_scope = false;
 			struct symbol *guard_symbol;
-			old_flags = TPPLexer_Current->l_flags;
-			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
-				goto err_try_flags;
+			DeeLexer_NoLf_Push(self);
+			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH)) {
+err_try_flags:
+				DeeLexer_NoLf_Break(self);
+				goto err_try;
+			}
 			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_try_flags;
@@ -485,7 +487,7 @@ parse_catch_symbol:
 				}
 			}
 end_catch_handler:
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			DeeLexer_NoLf_Pop(self);
 			if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = ast_parse_hybrid_secondary(self, &was_expression);
@@ -520,8 +522,6 @@ end_catch_handler:
 	if (p_was_expression)
 		*p_was_expression = was_expression;
 	return result;
-err_try_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_try:
 	while (catchc--) {
 		ast_xdecref(catchv[catchc].ce_mask);

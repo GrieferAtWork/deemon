@@ -24,17 +24,17 @@
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>              /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_*, loc_here */
-#include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, PARSE_FLFSTMT, ast_annotation*, ast_parse_*, current_tags, parser_flags */
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, ast_loc, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint16_t, uint32_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 
@@ -77,7 +77,8 @@ create_anon_argument:
 			result = new_unnamed_symbol();
 			if unlikely(!result)
 				goto err;
-			loc_here(&result->s_decl);
+			if (DeeLexer_GetLoc(self, &result->s_decl))
+				goto err;
 			if (result->s_decl.l_file)
 				TPPFile_Incref(result->s_decl.l_file);
 		} else {
@@ -202,7 +203,8 @@ parse_arglist(DeeLexer *self) {
 				arg = new_unnamed_symbol();
 				if unlikely(!arg)
 					goto err;
-				loc_here(&arg->s_decl);
+				if (DeeLexer_GetLoc(self, &arg->s_decl))
+					goto err;
 				if (arg->s_decl.l_file)
 					TPPFile_Incref(arg->s_decl.l_file);
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -514,7 +516,6 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
                            struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol) {
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
-	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	/* Add information from tags. */
 	if (name) {
@@ -533,13 +534,15 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 
 	if (DeeLexer_GetTok(self) == '(') {
 		/* Argument list. */
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags_decl;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_decl_lparen_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err_decl;
+		}
 		if unlikely(parse_arglist(self))
-			goto err_flags_decl;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err_decl_lparen_flags;
+		DeeLexer_NoLf_Pop(self);
 		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_decl;
 	} else if (!allow_missing_params) {
@@ -582,7 +585,8 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 
 	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
-		loc_here(&arrow_loc);
+		if (DeeLexer_GetLoc(self, &arrow_loc))
+			goto err_decl;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_decl;
 
@@ -599,15 +603,16 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 			*p_need_semi = true;
 	} else if (DeeLexer_GetTok(self) == '{') {
 		struct ast_loc brace_loc;
-		loc_here(&brace_loc);
-		old_flags = TPPLexer_Current->l_flags;
-		if (parser_flags & PARSE_FLFSTMT)
-			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags_decl;
+		if (DeeLexer_GetLoc(self, &brace_loc))
+			goto err_decl;
+		DeeLexer_EnableLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+/*err_decl_lbrace_flags:*/
+			DeeLexer_EnableLf_Break(self);
+			goto err_decl;
+		}
 		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_EnableLf_Pop(self);
 		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_decl_xcode;
 		if (p_need_semi)
@@ -680,12 +685,6 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 		decl_ast_fini(&my_decl);
 	}
 	return ast_setddi(result, name_loc);
-err_flags_decl:
-	decl_ast_fini(&my_decl);
-/*err_flags:*/
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err;
 err_decl_xcode:
 	ast_xdecref(code);
 err_decl:
@@ -696,11 +695,11 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
-	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
-		loc_here(&arrow_loc);
+		if (DeeLexer_GetLoc(self, &arrow_loc))
+			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		/* Expression function. */
@@ -716,15 +715,16 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 			*p_need_semi = true;
 	} else if (DeeLexer_GetTok(self) == '{') {
 		struct ast_loc brace_loc;
-		loc_here(&brace_loc);
-		old_flags = TPPLexer_Current->l_flags;
-		if (parser_flags & PARSE_FLFSTMT)
-			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags;
+		if (DeeLexer_GetLoc(self, &brace_loc))
+			goto err;
+		DeeLexer_EnableLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+/*err_lbrace_flags:*/
+			DeeLexer_EnableLf_Break(self);
+			goto err;
+		}
 		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_EnableLf_Pop(self);
 		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode;
 		if (p_need_semi)
@@ -752,10 +752,6 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 	result->a_scope = current_basescope->bs_scope.s_prev;
 	Dee_Incref(result->a_scope);
 	return result;
-err_flags:
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err;
 err_xcode:
 	ast_xdecref(code);
 err:
@@ -812,12 +808,10 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		current_basescope->bs_argc_max = 1;
 		current_basescope->bs_argc     = 1;
 	} else if (DeeLexer_GetTok(self) != TOK_ARROW && DeeLexer_GetTok(self) != ':') {
-		uint32_t old_flags;
 		int error;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Push(self);
 		error = parse_arglist(self);
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(error)
 			goto err_scope;
 		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
@@ -839,7 +833,8 @@ ast_parse_function_java_lambda(DeeLexer *self,
 	}
 
 	ASSERT(DeeLexer_GetTok(self) == TOK_ARROW);
-	loc_here(&arrow_loc);
+	if (DeeLexer_GetLoc(self, &arrow_loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 

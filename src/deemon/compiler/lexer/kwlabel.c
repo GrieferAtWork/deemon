@@ -83,7 +83,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 			kwdlist = DeeKwds_NewWithHint(1);
 			if unlikely(!kwdlist)
 				goto err_r;
-			kwdlist_ast = ast_sethere(ast_constexpr(kwdlist));
+			kwdlist_ast = ast_sethere(self, ast_constexpr(kwdlist));
 			Dee_Decref_unlikely(kwdlist);
 			if unlikely(!kwdlist_ast)
 				goto err_r;

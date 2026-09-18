@@ -23,16 +23,16 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/compiler/ast.h>    /* ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
-#include <deemon/compiler/symbol.h> /* SYMBOL_*, ast_loc, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_addambig, symbol_fini */
+#include <deemon/compiler/symbol.h> /* SYMBOL_*, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */
 #include <deemon/string.h>          /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, memcpy, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, strlen */
 #include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
@@ -220,9 +220,11 @@ INTERN WUNUSED NONNULL((1)) DREF DeeModuleObject *DFCALL
 parse_module_byname(DeeLexer *self, bool for_alias) {
 	DREF DeeModuleObject *result;
 	DREF DeeStringObject *module_name;
-	struct Dee_unicode_printer name = Dee_UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer name;
 	struct ast_loc loc;
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
+	Dee_unicode_printer_init(&name);
 	if unlikely(ast_parse_module_name(self, &name, for_alias) < 0)
 		goto err_printer;
 	module_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&name);
@@ -359,7 +361,8 @@ parse_import_symbol(DeeLexer *self,
                     bool allow_module_name) {
 	struct Dee_unicode_printer printer;
 	int return_value = 0;
-	loc_here(&result->ii_import_loc);
+	if (DeeLexer_GetLoc(self, &result->ii_import_loc))
+		goto err;
 	if (DeeLexer_HasTokenKwd(self)) {
 		/* - `foo`
 		 * - `foo = bar`
@@ -380,8 +383,9 @@ parse_import_symbol(DeeLexer *self,
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
+			if (DeeLexer_GetLoc(self, &result->ii_import_loc))
+				goto err;
 			Dee_unicode_printer_init(&printer);
-			loc_here(&result->ii_import_loc);
 			return_value = allow_module_name
 			               ? ast_parse_module_name(self, &printer, true)
 			               : ast_parse_symbol_name(self, &printer, true);
@@ -534,7 +538,35 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+/* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
+ * When `loc` is NULL, the current location is used. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+symbol_addambig(struct symbol *__restrict self,
+                struct ast_loc *__restrict loc) {
+	struct ast_loc *new_vec;
+	ASSERT(self->s_type == SYMBOL_TYPE_AMBIG);
+	new_vec = (struct ast_loc *)Dee_Reallocc(self->s_ambig.a_declv,
+	                                         self->s_ambig.a_declc + 1,
+	                                         sizeof(struct ast_loc));
+	if unlikely(!new_vec)
+		return -1;
+	self->s_ambig.a_declv = new_vec;
+	new_vec += self->s_ambig.a_declc++;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	*new_vec = *loc;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	if (tpp_is_reachable_file(loc->l_file)) {
+		*new_vec = *loc;
+	} else {
+		loc_here(new_vec);
+	}
+	if (new_vec->l_file)
+		TPPFile_Incref(new_vec->l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_import_all_from_module(DeeModuleObject *__restrict mod,
                            struct ast_loc *loc) {
 	struct Dee_module_symbol *iter, *end;
@@ -661,19 +693,17 @@ do_reassign_new_alias:
 				/* Turn the symbol into one that is ambiguous. */
 				symbol_fini(sym);
 				sym->s_type = SYMBOL_TYPE_AMBIG;
-				if (loc) {
-					memcpy(&sym->s_ambig.a_decl2, loc,
-					       sizeof(struct ast_loc));
-				} else {
-					loc_here(&sym->s_ambig.a_decl2);
-				}
+				sym->s_ambig.a_decl2 = *loc;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 				if (sym->s_ambig.a_decl2.l_file)
 					TPPFile_Incref(sym->s_ambig.a_decl2.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				sym->s_ambig.a_declc = 0;
 				sym->s_ambig.a_declv = NULL;
 			} else {
 				/* Add another ambiguous symbol declaration location. */
-				symbol_addambig(sym, loc);
+				if (symbol_addambig(sym, loc))
+					goto err;
 			}
 		} else {
 			sym = new_local_symbol(name, loc);
@@ -844,12 +874,15 @@ ast_parse_post_import(DeeLexer *self) {
 	struct import_item item;
 	bool allow_modules = true;
 	struct ast_loc star_loc;
+	bool has_star = false;
 	struct import_item *item_v;
 	size_t item_a, item_c;
 	DREF DeeModuleObject *mod;
-	star_loc.l_file = NULL; /* When non-NULL, import all */
+	ast_loc_init_empty(&star_loc);
 	if (DeeLexer_GetTok(self) == '*') {
-		loc_here(&star_loc);
+		has_star = true;
+		if (DeeLexer_GetLoc(self, &star_loc))
+			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == TPP_KWD_from) {
@@ -930,11 +963,13 @@ import_parse_list:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_item_v;
 			if (DeeLexer_GetTok(self) == '*') {
-				if (star_loc.l_file) {
+				if (has_star) {
 					if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 						goto err_item_v;
 				} else {
-					loc_here(&star_loc);
+					if (DeeLexer_GetLoc(self, &star_loc))
+						goto err_item_v;
+					has_star = true;
 				}
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_item_v;
@@ -998,7 +1033,7 @@ import_parse_list:
 
 			/* If `*` was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
-			if (star_loc.l_file) {
+			if (has_star) {
 				if unlikely(ast_import_all_from_module(mod, &star_loc))
 					goto err_item_v_module;
 			}
@@ -1056,7 +1091,8 @@ ast_parse_import_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_import);
-	loc_here(&import_loc);
+	if (DeeLexer_GetLoc(self, &import_loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == TPP_KWD_pack) {
@@ -1164,7 +1200,8 @@ ast_parse_import(DeeLexer *self) {
 	 *     which the root scope.
 	 */
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_import || DeeLexer_GetTok(self) == TPP_KWD_from);
-	loc_here(&import_loc);
+	if (DeeLexer_GetLoc(self, &import_loc))
+		goto err;
 	if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 		/* - from deemon import *;
 		 * - from deemon import Object;
@@ -1192,10 +1229,12 @@ ast_parse_import(DeeLexer *self) {
 		for (;;) {
 			/* Parse an entire import list. */
 			if (DeeLexer_GetTok(self) == '*') {
-				if (has_star &&
-				    WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
+				struct ast_loc star_loc;
+				if (has_star && WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 					goto err_r_module;
-				if unlikely(ast_import_all_from_module(mod, NULL))
+				if (DeeLexer_GetLoc(self, &star_loc))
+					goto err_r_module;
+				if unlikely(ast_import_all_from_module(mod, &star_loc))
 					goto err_r_module;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_module;

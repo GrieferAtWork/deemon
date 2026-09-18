@@ -478,44 +478,6 @@ INTDEF WUNUSED NONNULL((1)) int DFCALL decl_ast_skip(DeeLexer *lexer);
 
 
 
-struct ast_loc {
-	struct TPPFile      *l_file; /* [0..1] Location file. */
-#ifdef CONFIG_BUILDING_DEEMON
-	union {
-		struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
-		struct {
-			int          l_line; /* [valid_if(l_file != NULL)] Location line. */
-			int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
-		}
-#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
-		_dee_astruct
-#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
-		;
-	}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_dee_aunion
-#define l_lc       _dee_aunion.l_lc /*!export-*/
-#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
-#define l_line     _dee_aunion.l_line /*!export-*/
-#define l_col      _dee_aunion.l_col  /*!export-*/
-#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define l_line     _dee_aunion._dee_astruct.l_line /*!export-*/
-#define l_col      _dee_aunion._dee_astruct.l_col  /*!export-*/
-#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
-#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
-#define l_line     _dee_astruct.l_line /*!export-*/
-#define l_col      _dee_astruct.l_col  /*!export-*/
-#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
-	;
-#else /* CONFIG_BUILDING_DEEMON */
-	int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
-	int                  l_col;  /* [valid_if(l_file != NULL)] Location column. */
-#endif /* !CONFIG_BUILDING_DEEMON */
-};
-
-
-
-
 struct text_label {
 	struct text_label     *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
 	                                 *               the same modulated `s_name->k_id` */
@@ -927,12 +889,6 @@ INTDEF NONNULL((1)) void DCALL symbol_destroy(struct symbol *__restrict self);
 #define symbol_xdecref(x) (void)0
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 
-
-/* Add a 3rd, 4th, etc. ambiguity location to a given symbol.
- * When `loc` is NULL, the current location is used. */
-INTDEF NONNULL((1)) void DCALL
-symbol_addambig(struct symbol *__restrict self,
-                struct ast_loc *loc);
 
 /* Check if `self` uses `other` when the specified operation is performed. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);

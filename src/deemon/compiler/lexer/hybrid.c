@@ -23,35 +23,34 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
-#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, AST_PARSE_WASEXPR_*, PARSE_FLFSTMT, ast_parse_*, current_tags, parser_flags */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc, current_scope, scope_pop, scope_push */
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, AST_PARSE_WASEXPR_*, ast_parse_*, current_tags */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, current_scope, scope_pop, scope_push */
 #include <deemon/compiler/tpp.h>
 #include <deemon/system-features.h> /* memmoveupc, remainder */
 #include <deemon/types.h>           /* DREF */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint16_t, uint32_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_do_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result;
-	uint32_t old_flags = TPPLexer_Current->l_flags;
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Push(self);
 	if (DeeLexer_GetTok(self) == '\n') {
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+/*err_flags:*/
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 	}
 	result = ast_parse_brace_items(self);
-	if unlikely(!result)
-		goto err_flags;
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Pop(self);
 	return result;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+err:
 	return NULL;
 }
 
@@ -177,19 +176,21 @@ ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result, *merge;
 	uint16_t expect;
 	struct ast_loc loc;
-	uint32_t old_flags;
 	unsigned int was_expression;
 	bool has_paren;
 	expect = current_tags.at_expect;
-	loc_here(&loc);
-	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+	if (DeeLexer_GetLoc(self, &loc))
 		goto err;
-	old_flags = TPPLexer_Current->l_flags;
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Push(self);
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_flags:
+		DeeLexer_NoLf_Break(self);
+		goto err;
+	}
 	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 		goto err_flags;
 	result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Pop(self);
 	if unlikely(!result)
 		goto err;
 	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
@@ -209,11 +210,11 @@ ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	}
 	if (DeeLexer_GetTok(self) == TPP_KWD_else) {
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_tt;
+			goto err_r_tt;
 do_else_branch:
 		ff_branch = ast_parse_hybrid_secondary(self, &was_expression);
 		if unlikely(!ff_branch)
-			goto err_tt;
+			goto err_r_tt;
 	}
 	merge = ast_conditional(AST_FCOND_EVAL | expect, result, tt_branch, ff_branch);
 	merge = ast_setddi(merge, &loc);
@@ -223,13 +224,10 @@ do_else_branch:
 	if (p_was_expression)
 		*p_was_expression = was_expression;
 	return merge;
-err_tt:
+err_r_tt:
 	ast_xdecref(tt_branch);
 err_r:
 	ast_decref(result);
-	goto err;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err:
 	return NULL;
 }
@@ -244,7 +242,8 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 	struct ast_loc loc;
 	unsigned int was_expression;
 	ASSERT(DeeLexer_GetTok(self) == '{');
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	switch (DeeLexer_GetTok(self)) {
@@ -428,10 +427,9 @@ is_a_statement:
 		if unlikely(scope_push() < 0)
 			goto err;
 		/* Enter a new scope and parse expressions. */
-		if (parser_flags & PARSE_FLFSTMT)
-			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+		DeeLexer_EnableLf_Push(self);
 		result = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		DeeLexer_EnableLf_Pop(self);
 		if unlikely(!result)
 			goto err;
 		while (DeeLexer_GetTok(self) == '\n') {

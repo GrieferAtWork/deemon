@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_CollectMemoryoc, Dee_Free, Dee_Try*alloc* */
-#include <deemon/compiler/ast.h>    /* AST_FASSEMBLY_*, asm_operand, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_FASSEMBLY_*, asm_operand, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* ast_parse_expr */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc, lookup_label, text_label */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, lookup_label, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>          /* DeeFormat_Printf */
 #include <deemon/string.h>          /* DeeUni_IsSpace */
@@ -404,11 +404,15 @@ parse_brace_text(DeeLexer *self) {
 	unsigned int paren_recursion   = 0;
 	unsigned int bracket_recursion = 0;
 	uint32_t old_flags;
-	bool is_after_linefeed    = true;
+	bool is_after_linefeed = true;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	char const *last_file = NULL;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct TPPFile *last_file = NULL;
-	printer.sp_string         = NULL;
-	printer.sp_length         = 0;
-	old_flags                 = TPPLexer_Current->l_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	printer.sp_string = NULL;
+	printer.sp_length = 0;
+	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS |
 	                              TPPLEXER_FLAG_WANTSPACE |
 	                              TPPLEXER_FLAG_WANTLF |
@@ -461,22 +465,34 @@ parse_brace_text(DeeLexer *self) {
 			if (is_after_linefeed && DeeLexer_HasTokenKwd(self)) {
 				struct ast_loc loc;
 				Dee_ssize_t error;
-				loc_here(&loc);
+				if (DeeLexer_GetLoc(self, &loc))
+					goto err_printer;
+
 				/* Insert an automatic DDI directive, describing
 				 * the location of this instruction token. */
-				if (loc.l_file == last_file) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				if (loc.l_name == last_file)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+				if (loc.l_file == last_file)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+				{
 					error = DeeFormat_Printf(&tpp_string_printer_print, &printer,
 					                         ".ddi %d,%d;\t",
-					                         loc.l_line + 1,
-					                         loc.l_col + 1);
+					                         ast_loc_getline(&loc) + 1,
+					                         ast_loc_getcol(&loc) + 1);
 				} else {
 					last_file = loc.l_file;
 					error = DeeFormat_Printf(&tpp_string_printer_print, &printer,
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+					                         ".ddi %q,%d,%d;\t",
+					                         ast_loc_getname(loc),
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 					                         ".ddi %$q,%d,%d;\t",
 					                         loc.l_file->f_namesize,
 					                         loc.l_file->f_name,
-					                         loc.l_line + 1,
-					                         loc.l_col + 1);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+					                         ast_loc_getline(&loc) + 1,
+					                         ast_loc_getcol(&loc) + 1);
 				}
 				if unlikely(error < 0)
 					goto err_printer;
@@ -541,7 +557,6 @@ ast_parse_asm(DeeLexer *self) {
 	/*REF*/ struct TPPString *text;
 	struct operand_list operands;
 	DREF struct ast *result;
-	uint32_t old_flags;
 	bool has_paren;
 	bzero(&operands, sizeof(struct operand_list));
 	/*ASSERT(DeeLexer_GetTok(self) == TPP_KWD___asm || DeeLexer_GetTok(self) == TPP_KWD___asm__);*/
@@ -567,15 +582,19 @@ yield_prefix:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
-	old_flags = TPPLexer_Current->l_flags;
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
-		goto err_flags;
-	loc_here(&loc); /* Use the assembly text for DDI information. */
+	DeeLexer_NoLf_Push(self);
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM)) {
+err_nolf:
+		DeeLexer_NoLf_Break(self);
+		goto err;
+	}
+	/* Use the assembly text for DDI information. */
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err_nolf;
 	if (DeeLexer_IsStringToken(self)) {
 		text = TPPLexer_ParseString();
 		if unlikely(!text)
-			goto err_flags;
+			goto err_nolf;
 	} else if (DeeLexer_GetTok(self) == '{') {
 		/* Auto-format token-based source code:
 		 *    >> __asm__({
@@ -622,10 +641,10 @@ yield_prefix:
 		 * is found. */
 		text = parse_brace_text(self);
 		if unlikely(!text)
-			goto err_flags;
+			goto err_nolf;
 	} else {
 		if (WARN(W_EXPECTED_STRING_AFTER_ASM))
-			goto err_flags;
+			goto err_nolf;
 		text = TPPString_NewEmpty();
 	}
 
@@ -633,40 +652,43 @@ yield_prefix:
 	/* When user-assembly is disabled, only empty (or
 	 * fully whitespace) strings are allowed as text. */
 	if unlikely(check_empty_assembly_text(text, &loc))
-		goto err_ops;
+		goto err_nolf_text_ops;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 
 	if (is_colon(self)) {
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_ops;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_nolf_text_ops:
+			operand_list_fini(&operands);
+			goto err_nolf;
+		}
 		/* Enable assembly formatting. */
 		ast_flags |= AST_FASSEMBLY_FORMAT;
 		/* Parse operands. */
 		if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_OUTPUT))
-			goto err_ops;
+			goto err_nolf_text_ops;
 		if (is_colon(self)) {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-				goto err_ops;
+				goto err_nolf_text_ops;
 			if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_INPUT))
-				goto err_ops;
+				goto err_nolf_text_ops;
 			if (is_colon(self)) {
 				int32_t clobber;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-					goto err_ops;
+					goto err_nolf_text_ops;
 				clobber = asm_parse_clobber(self);
 				if unlikely(clobber < 0)
-					goto err_ops;
+					goto err_nolf_text_ops;
 				ast_flags |= (uint16_t)clobber;
 				if (is_asm_goto && is_colon(self)) {
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-						goto err_ops;
+						goto err_nolf_text_ops;
 					if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_LABEL))
-						goto err_ops;
+						goto err_nolf_text_ops;
 				}
 			}
 		}
 	}
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Pop(self);
 	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
 		goto err_text;
 	ASSERT(operands.ol_c ==
@@ -687,16 +709,14 @@ yield_prefix:
 	                      operands.ol_v);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	if unlikely(!result)
-		goto err_ops;
+		goto err_text_ops;
 	/* NOTE: `a_assembly` has inherited the operand vector upon success. */
 	TPPString_Decref(text);
 	return ast_setddi(result, &loc);
-err_ops:
+err_text_ops:
 	operand_list_fini(&operands);
 err_text:
 	TPPString_Decref(text);
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err:
 	return NULL;
 }

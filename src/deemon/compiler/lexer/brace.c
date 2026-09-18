@@ -71,7 +71,7 @@ ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 				                                         DeeLexer_GetTokenKwdLen(self));
 				if unlikely(!key)
 					goto err_dict_elemv;
-				result = ast_sethere(ast_constexpr(key));
+				result = ast_sethere(self, ast_constexpr(key));
 				Dee_Decref(key);
 				if unlikely(!result)
 					goto err_dict_elemv;
@@ -250,7 +250,7 @@ ast_parse_brace_items(DeeLexer *self) {
 			                                         DeeLexer_GetTokenKwdLen(self));
 			if unlikely(!key)
 				goto err;
-			result = ast_sethere(ast_constexpr(key));
+			result = ast_sethere(self, ast_constexpr(key));
 			Dee_Decref(key);
 			if unlikely(!result)
 				goto err;

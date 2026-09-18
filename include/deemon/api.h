@@ -448,13 +448,11 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_LOCKLESS_SLAB_ALLOCATOR */
 
 
-/* Experimental feature switch: Use TPP3 as the compiler backend. */
-/* TODO: This feature switch should primarily make it so:
+/* Experimental feature switch: Use TPP3 as the compiler backend.
+ *
+ * This feature switch should primarily make it so:
  * - The lexer no longer uses globals (optimizer / assembler /
  *   linker will be made non-global in a later step)
- * - The compiler isn't a deemon object (`DeeCompiler_Type` should wrap
- *   "DeeCompiler", which in turn is allocated inline without the need
- *   to be an object)
  * - The lexer uses TPP3 instead of TPP2 */
 #if (!defined(CONFIG_EXPERIMENTAL_USE_TPP3) && \
      !defined(CONFIG_NO_EXPERIMENTAL_USE_TPP3))

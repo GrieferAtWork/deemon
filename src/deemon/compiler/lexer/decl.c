@@ -994,7 +994,6 @@ err2:
 /* Parse a declaration expression. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
-	uint32_t old_flags;
 	switch (DeeLexer_GetTok(lexer)) {
 
 	case TPP_KWD___asm:
@@ -1002,10 +1001,12 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		bool has_paren;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
-			goto err_flags;
+		DeeLexer_NoLf_Push(lexer);
+		if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM)) {
+err_asm_flags:
+			DeeLexer_NoLf_Break(lexer);
+			goto err;
+		}
 
 		/* Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?DObject")) {
@@ -1015,15 +1016,15 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			DREF DeeStringObject *text;
 			text = (DREF DeeStringObject *)ast_parse_string(lexer);
 			if unlikely(!text)
-				goto err_flags;
+				goto err_asm_flags;
 			self->da_type   = DAST_STRING;
 			self->da_string = text; /* Inherit reference */
 		} else {
 			if (WARN(W_EXPECTED_STRING_AFTER_ASM))
-				goto err_flags;
+				goto err_asm_flags;
 			self->da_type = DAST_NONE;
 		}
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Pop(lexer);
 		if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
 			goto err_r;
 	}	break;
@@ -1090,19 +1091,20 @@ err_type_expr:
 		has_pack  = DeeLexer_GetTok(lexer) != '(';
 
 		/* Tuple type declaration. */
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
-			goto err_flags;
+		DeeLexer_NoLf_Push(lexer);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+err_lparen_flags:
+			DeeLexer_NoLf_Break(lexer);
+			goto err;
+		}
 		if (!has_paren && DeeLexer_GetTok(lexer) == '(') {
 			has_paren = true;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
-				goto err_flags;
+				goto err_lparen_flags;
 		}
-
 		error = decl_ast_parse(lexer, self);
 		if unlikely(error)
-			goto err_flags;
+			goto err_lparen_flags;
 
 		/* This also functions as regular parenthesis, just like in
 		 * normal expressions, where `()` is the empty tuple, `(foo)`
@@ -1110,24 +1112,33 @@ err_type_expr:
 		 * `(foo, bar)` and `(foo, bar,)` are 2-element tuples. */
 		if (DeeLexer_GetTok(lexer) == ')' && !has_pack) {
 			/* Simple parenthesis. */
-			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
-				goto err_r_flags;
-			break;
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+err_lparen_flags_r:
+				decl_ast_fini(self);
+				goto err_lparen_flags;
+			}
+			DeeLexer_NoLf_Break(lexer);
+			return 0;
 		}
 		elema = 2, elemc = 1;
 		elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!elemv)
-			goto err_r_flags;
+			goto err_lparen_flags_r;
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
 		if (DeeLexer_GetTok(lexer) == ',') {
 			for (;;) {
-				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
-					goto err_elemv;
+				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+err_lparen_flags_elemv:
+					while (elemc--)
+						decl_ast_fini(&elemv[elemc]);
+					Dee_Free(elemv);
+					goto err_lparen_flags;
+				}
 				if (DeeLexer_GetTok(lexer) == ')')
 					break; /* Single-element tuple / trailing comma */
 				error = decl_ast_parse(lexer, &elemv[elemc]);
 				if unlikely(error)
-					goto err_elemv;
+					goto err_lparen_flags_elemv;
 				++elemc;
 				if (DeeLexer_GetTok(lexer) != ',')
 					break;
@@ -1142,7 +1153,7 @@ err_type_expr:
 						new_elemv = (struct decl_ast *)Dee_Reallocc(elemv, elema,
 						                                            sizeof(struct decl_ast));
 						if unlikely(!new_elemv)
-							goto err_elemv;
+							goto err_lparen_flags_elemv;
 					}
 					elemv = new_elemv;
 				}
@@ -1155,11 +1166,13 @@ err_type_expr:
 			if likely(new_elemv)
 				elemv = new_elemv;
 		}
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Pop(lexer);
 		if (has_paren) {
 			if (DeeLexer_Skip2(lexer, ')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
-				old_flags = 0;
-				goto err_elemv;
+				while (elemc--)
+					decl_ast_fini(&elemv[elemc]);
+				Dee_Free(elemv);
+				goto err;
 			}
 		}
 
@@ -1168,49 +1181,46 @@ err_type_expr:
 		self->da_flag          = DAST_FNORMAL;
 		self->da_tuple.t_itemc = elemc;
 		self->da_tuple.t_itemv = elemv; /* Inherit */
-		break;
-err_elemv:
-		while (elemc--)
-			decl_ast_fini(&elemv[elemc]);
-		Dee_Free(elemv);
-		goto err_flags;
 	}	break;
 
 	case '{': {
 		int error;
 		struct decl_ast *decl_seq;
 		/* Sequence type declaration. */
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
-			goto err_flags;
+		DeeLexer_NoLf_Push(lexer);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+err_lbrace_flags:
+			DeeLexer_NoLf_Break(lexer);
+			goto err;
+		}
 		decl_seq = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if unlikely(!decl_seq)
-			goto err_flags;
+			goto err_lbrace_flags;
 		error = decl_ast_parse(lexer, decl_seq);
 		if unlikely(error) {
-err_seq:
+err_lbrace_flags_seq:
 			Dee_Free(decl_seq);
-			goto err_flags;
+			goto err_lbrace_flags;
 		}
 		if (DeeLexer_GetTok(lexer) == ':') {
 			/* Special case: `{x: y}` is an alias for `{(x, y)...}`, as it best represents a mapping */
 			struct decl_ast *key_value;
 			key_value = (struct decl_ast *)Dee_Reallocc(decl_seq, 2, sizeof(struct decl_ast));
 			if unlikely(!key_value) {
-err_seq_0:
+err_lbrace_flags_seq_0:
 				decl_ast_fini(decl_seq);
-				goto err_seq;
+				goto err_lbrace_flags_seq;
 			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
-err_elemv_0:
+err_lbrace_flags_key_value_0:
 				decl_ast_fini(&key_value[0]);
+/*err_lbrace_flags_key_value:*/
 				Dee_Free(key_value);
-				goto err_flags;
+				goto err_lbrace_flags;
 			}
 			error = decl_ast_parse(lexer, &key_value[1]);
 			if unlikely(error)
-				goto err_elemv_0;
+				goto err_lbrace_flags_key_value_0;
 			self->da_type = DAST_MAP;
 			self->da_flag = DAST_FNORMAL;
 			self->da_map.m_key_value = key_value; /* Inherit */
@@ -1219,11 +1229,14 @@ err_elemv_0:
 			self->da_flag = DAST_FNORMAL;
 			self->da_seq  = decl_seq;
 			if (DeeLexer_Skip2(lexer, TPP_TOK_DOT_DOT_DOT, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
-				goto err_seq_0;
+				goto err_lbrace_flags_seq_0;
 		}
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (DeeLexer_Skip2(lexer, '}', W_EXPECTED_RBRACE_AFTER_SEQUENCE))
-			goto err_seq_0;
+		DeeLexer_NoLf_Pop(lexer);
+		if (DeeLexer_Skip2(lexer, '}', W_EXPECTED_RBRACE_AFTER_SEQUENCE)) {
+			decl_ast_fini(decl_seq);
+			Dee_Free(decl_seq);
+			goto err;
+		}
 	}	break;
 
 
@@ -1232,16 +1245,19 @@ err_elemv_0:
 		bool has_paren;
 
 		/* N'th symbol compatibility. */
-		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
+		DeeLexer_NoLf_Push(lexer);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+err_nth_flags:
+			DeeLexer_NoLf_Break(lexer);
 			goto err;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		}
 		if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
-			goto err_flags;
+			goto err_nth_flags;
 		nth_expr = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
+		DeeLexer_NoLf_Pop(lexer);
 		if unlikely(!nth_expr)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err;
+
 		/* Optimize the ast-expression to propagate constant, thus
 		 * allowing the use of `__nth(2+3)` instead of forcing the
 		 * user to write `__nth(5)` or `__nth(__TPP_EVAL(2+3))` */
@@ -1318,14 +1334,8 @@ err_nth:
 		break;
 	}
 	return 0;
-err_r_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err_r:
 	decl_ast_fini(self);
-	goto err;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	/*goto err;*/
 err:
 	return -1;
 }

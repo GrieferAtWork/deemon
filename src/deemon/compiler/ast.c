@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, PRIVATE_AST_GENERATOR_UNPACK_ARGS, asm_operand, ast, ast_*, catch_expr, class_member */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
 #include <deemon/compiler/lexer.h>    /* current_tags */
-#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, ast_loc, current_scope, lbl_free, symbol, text_label */
+#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, current_scope, lbl_free, symbol, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/map.h>               /* Dee_EmptyMap */
 #include <deemon/none.h>              /* Dee_None */
@@ -86,20 +86,14 @@ INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 }
 #endif /* NDEBUG */
 
-INTERN NONNULL((1)) void DFCALL
-loc_here(struct ast_loc *__restrict info) {
-	info->l_file = TPPLexer_Global.l_token.t_file;
-	/* Query line/column information for the current token's start position. */
-	TPPFile_LCAt(info->l_file, &info->l_lc,
-	             TPPLexer_Global.l_token.t_begin);
-}
-
 INTERN NONNULL((2)) struct ast *DFCALL
-ast_setddi(struct ast *self,
-           struct ast_loc *__restrict info) {
+ast_setddi(struct ast *self, struct ast_loc *__restrict info) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	self->a_ddi = *info;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
 	if (tpp_is_reachable_file(info->l_file)) {
@@ -110,33 +104,44 @@ ast_setddi(struct ast *self,
 	ASSERT(self->a_ddi.l_file);
 	/* Keep a reference to the associated file (so we can later read its filename). */
 	TPPFile_Incref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 done:
 	return self;
 }
 
-INTERN struct ast *DFCALL
-ast_sethere(struct ast *self) {
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_sethere(DeeLexer *lexer, /*inherit(always)*/DREF struct ast *self) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if unlikely(DeeLexer_GetLoc(lexer, &self->a_ddi)) {
+		ast_decref(self);
+		self = NULL;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	(void)lexer;
 	if unlikely(self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
 	loc_here(&self->a_ddi);
 	ASSERT(self->a_ddi.l_file);
 	/* Keep a reference to the associated file (so we can later read its filename). */
 	TPPFile_Incref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 done:
 	return self;
 }
 
 INTERN NONNULL((2)) struct ast *DFCALL
-ast_putddi(struct ast *self,
-           struct ast_loc *__restrict info) {
+ast_putddi(struct ast *self, struct ast_loc *__restrict info) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		goto done;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	self->a_ddi = *info;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if (tpp_is_reachable_file(info->l_file)) {
 		self->a_ddi = *info;
 	} else {
@@ -145,21 +150,30 @@ ast_putddi(struct ast *self,
 	ASSERT(self->a_ddi.l_file);
 	/* Keep a reference to the associated file (so we can later read its filename). */
 	TPPFile_Incref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 done:
 	return self;
 }
 
-INTERN struct ast *DFCALL
-ast_puthere(struct ast *self) {
+INTERN WUNUSED NONNULL((1)) struct ast *DFCALL
+ast_puthere(DeeLexer *lexer, struct ast *self) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
 	if unlikely(self->a_ddi.l_file)
 		goto done;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if unlikely(DeeLexer_GetLoc(lexer, &self->a_ddi)) {
+		ast_decref(self);
+		self = NULL;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	(void)lexer;
 	loc_here(&self->a_ddi);
 	ASSERT(self->a_ddi.l_file);
 	/* Keep a reference to the associated file (so we can later read its filename). */
 	TPPFile_Incref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 done:
 	return self;
 }

@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>      /* ast */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
 #include <deemon/compiler/error.h>    /* parser_errors */
-#include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, ast_loc, symbol */
+#include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>             /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/error_types.h>       /* DeeCompilerErrorObject, Dee_compiler_error_loc, Dee_compiler_error_object */

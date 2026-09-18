@@ -25,10 +25,10 @@
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* return_bool */
-#include <deemon/compiler/ast.h>       /* ast, loc_here */
+#include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DR_*, DeeCompiler*, err_compiler_item_deleted, err_invalid_file_compiler */
-#include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, DeeScope_IsClassScope, DeeScope_Type, SYMBOL_TYPE_NONE, ast_loc, del_local_symbol, get_local_symbol_in_scope, new_local_symbol_in_scope, new_unnamed_symbol_in_scope, scope_lookup_str, scope_object, symbol */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, DeeScope_IsClassScope, DeeScope_Type, SYMBOL_TYPE_NONE, del_local_symbol, get_local_symbol_in_scope, new_local_symbol_in_scope, new_unnamed_symbol_in_scope, scope_lookup_str, scope_object, symbol */
 #include <deemon/error-rt.h>           /* DeeRT_ErrItemNotFound */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
@@ -80,13 +80,10 @@ err:
 }
 
 INTERN WUNUSED NONNULL((2)) int DCALL
-get_astloc_from_obj(DeeObject *obj,
-                    struct ast_loc *__restrict result) {
+get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result) {
 	DREF DeeObject *args[3];
-	if (!obj) {
-		loc_here(result);
-		goto done;
-	}
+	if (!obj)
+		return DeeLexer_GetLoc(_DeeLexer_Current, result);
 	if (DeeNone_Check(obj)) {
 		result->l_file = NULL;
 		goto done;

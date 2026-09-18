@@ -365,7 +365,6 @@ err:
 INTERN WUNUSED NONNULL((1)) int32_t DFCALL
 ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 	int32_t result;
-	uint32_t old_flags;
 	switch (DeeLexer_GetTok(self)) {
 
 	TPP_CASE_TPP_TOK_STRING_SQUOTE {
@@ -537,21 +536,23 @@ do_operator_gr:
 		goto done;
 
 	case '(':
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+/*err_lparen_flags:*/
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_GetTok(self) == ')') {
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			DeeLexer_NoLf_Break(self);
 			result = OPERATOR_CALL;
 			goto done_y1;
 		}
 
 		/* Parenthesis around operator name. */
 		result = ast_parse_operator_name(self, features);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(result < 0)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err;
 		if unlikely(DeeLexer_GetTok(self) != ')') {
 			if (WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
@@ -583,17 +584,19 @@ parse_string:
 		goto done_y1;
 
 	case '[':
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_lbracket_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		result = AST_OPERATOR_GETITEM_OR_SETITEM;
 		if (DeeLexer_GetTok(self) == ':') {
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-				goto err_flags;
+				goto err_lbracket_flags;
 		}
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Pop(self);
 		if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
 		if (DeeLexer_GetTok(self) == '=') {
@@ -609,17 +612,19 @@ parse_string:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == '[') {
-			old_flags = TPPLexer_Current->l_flags;
-			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-				goto err_flags;
+			DeeLexer_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_del_lbracket_flags:
+				DeeLexer_NoLf_Break(self);
+				goto err;
+			}
 			result = OPERATOR_DELITEM;
 			if (DeeLexer_GetTok(self) == ':') {
 				result = OPERATOR_DELRANGE;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-					goto err_flags;
+					goto err_del_lbracket_flags;
 			}
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			DeeLexer_NoLf_Pop(self);
 			if unlikely(DeeLexer_GetTok(self) != ']') {
 				if (WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
@@ -845,8 +850,6 @@ done_y1:
 		goto err;
 done:
 	return result;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 err:
 	return -1;
 }

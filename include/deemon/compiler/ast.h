@@ -43,7 +43,7 @@
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
-#include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, ast_loc, symbol, text_label */
+#include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, symbol, text_label */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
@@ -707,12 +707,10 @@ INTDEF DeeTypeObject DeeAst_Type;
  * HINT: This function behaves as a noop when `self` is NULL
  * @return: * : == self */
 INTDEF NONNULL((2)) struct ast *DFCALL ast_setddi(struct ast *self, struct ast_loc *__restrict info);
-INTDEF struct ast *DFCALL ast_sethere(struct ast *self);
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_sethere(DeeLexer *lexer, /*inherit(always)*/DREF struct ast *self);
 /* Same as the set functions above, but don't override existing debug information. */
 INTDEF NONNULL((2)) struct ast *DFCALL ast_putddi(struct ast *self, struct ast_loc *__restrict info);
-INTDEF struct ast *DFCALL ast_puthere(struct ast *self);
-/* Fill the given AST location with the current source position. */
-INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
+INTDEF WUNUSED NONNULL((1)) struct ast *DFCALL ast_puthere(DeeLexer *lexer, struct ast *self);
 
 /* NOTE: Functions below use `current_scope` to initialize `a_scope`, meaning
  *       that all of them expect the caller to be holding the compiler lock.

@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* ast_parse_expr */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_unitraits */
@@ -113,7 +113,8 @@ ast_parse_template_string(DeeLexer *self) {
 	char const *flush_start, *text_iter, *text_end;
 	char quote;
 	(void)self;
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 parse_current_token_as_template_string:
 	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
 	ASSERT(DeeLexer_GetTokenStart(self) < DeeLexer_GetTokenEnd(self));

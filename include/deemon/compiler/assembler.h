@@ -51,7 +51,7 @@
 #include "../type.h"  /* Dee_operator_t */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
 #include "ast.h"      /* asm_operand, ast */
-#include "symbol.h"   /* DeeScopeObject, SYMBOL_MAY_REFERENCE, SYMBOL_MUST_REFERENCE, ast_loc, symbol, symbol_reachable */
+#include "symbol.h"   /* DeeScopeObject, SYMBOL_MAY_REFERENCE, SYMBOL_MUST_REFERENCE, symbol, symbol_reachable */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool */

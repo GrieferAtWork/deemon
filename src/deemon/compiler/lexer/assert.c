@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_MAYBE, AST_PARSE_WASEXPR_NO, ast_parse_* */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/tpp.h>
 #include <deemon/types.h>           /* DREF */
 
@@ -45,7 +45,8 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
@@ -126,7 +127,8 @@ ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;

@@ -23,16 +23,15 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_COMMA_NORMAL, ast_parse_* */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_STACK, ast_loc, new_unnamed_symbol, scope_pop, scope_push, symbol */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_STACK, new_unnamed_symbol, scope_pop, scope_push, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* OPERATOR_ENTER, OPERATOR_LEAVE */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
-#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
 
@@ -70,18 +69,20 @@ ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	struct symbol *expression_sym;
 	DREF struct ast *result, *other, *merge;
 	DREF struct ast **result_v;
-	uint32_t old_flags;
 	bool has_paren;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	if (scope_push())
 		goto err;
-	old_flags = TPPLexer_Current->l_flags;
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
-		goto err_scope_flags;
+	DeeLexer_NoLf_Push(self);
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH)) {
+err_scope_flags:
+		DeeLexer_NoLf_Break(self);
+		goto err_scope;
+	}
 
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -93,7 +94,7 @@ ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	                         NULL);
 	if unlikely(!result)
 		goto err_scope_flags;
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Pop(self);
 	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 
@@ -189,9 +190,6 @@ err_scope:
 	scope_pop();
 err:
 	return NULL;
-err_scope_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err_scope;
 err_result_v_1_r:
 	ast_decref(result);
 	goto err_result_v_1;
@@ -208,18 +206,20 @@ ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	struct symbol *expression_sym;
 	DREF struct ast *result, *other, *merge;
 	DREF struct ast **result_v;
-	uint32_t old_flags;
 	bool has_paren;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	if (scope_push())
 		goto err;
-	old_flags = TPPLexer_Current->l_flags;
-	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
-		goto err_scope_flags;
+	DeeLexer_NoLf_Push(self);
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH)) {
+err_scope_flags:
+		DeeLexer_NoLf_Break(self);
+		goto err_scope;
+	}
 
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -231,7 +231,7 @@ ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	                         NULL);
 	if unlikely(!result)
 		goto err_scope_flags;
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	DeeLexer_NoLf_Pop(self);
 	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 
@@ -325,9 +325,6 @@ err_scope:
 	scope_pop();
 err:
 	return NULL;
-err_scope_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err_scope;
 err_result_v_1_r:
 	ast_decref(result);
 	goto err_result_v_1;

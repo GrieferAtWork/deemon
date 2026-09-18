@@ -23,10 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>            /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
-#include <deemon/compiler/ast.h>     /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>     /* AST_*, ast, ast_* */
 #include <deemon/compiler/doctext.h> /* doctext_compile */
 #include <deemon/compiler/lexer.h>   /* ASTLIST_INIT, AST_COMMA_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, ast_*, astlist, current_tags, maybe_expression_begin, maybe_expression_begin_peek */
-#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, ast_loc, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, lookup_symbol, new_local_symbol, symbol, symbol_incref */
+#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, lookup_symbol, new_local_symbol, symbol, symbol_incref */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>           /* DREF, Dee_Incref */
 #include <deemon/string.h>           /* DeeStringObject */
@@ -38,7 +38,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* uint16_t, uint32_t */
+#include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN
 
@@ -331,7 +331,8 @@ next_expr:
 		if (symbol_mode & LOOKUP_SYM_FINAL)
 			class_flags |= TP_FFINAL;
 		symbol_mode &= ~(LOOKUP_SYM_FINAL | LOOKUP_SYM_VARYING);
-		loc_here(&loc);
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
@@ -376,11 +377,13 @@ next_expr:
 		struct symbol *function_symbol   = NULL;
 		unsigned int symbol_mode         = lookup_mode;
 		struct ast_loc function_name_loc;
-		loc_here(&loc);
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_HasTokenKwd(self)) {
-			loc_here(&function_name_loc);
+			if (DeeLexer_GetLoc(self, &function_name_loc))
+				goto err;
 			function_name = DeeLexer_GetTokenKwd(self);
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
@@ -512,9 +515,10 @@ err_function_anno:
 				if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
 					goto err_current;
 				if (ast_parse_lookup_mode(self, &lookup_mode))
-					goto err;
+					goto err_current;
 			}
-			loc_here(&symbol_name_loc);
+			if (DeeLexer_GetLoc(self, &symbol_name_loc))
+				goto err_current;
 			var_symbol = get_local_symbol(DeeLexer_GetTokenKwd(self));
 			if unlikely(var_symbol) {
 				if (WARN(W_VARIABLE_ALREADY_EXISTS, DeeLexer_GetTokenKwd(self)))
@@ -595,7 +599,8 @@ err_function_anno:
 				/* Single-operand argument list. */
 				DREF struct ast **exprv;
 				struct ast_loc equal_loc;
-				loc_here(&equal_loc);
+				if (DeeLexer_GetLoc(self, &equal_loc))
+					goto err_current;
 				if (DeeLexer_GetTok(self) == '=' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 					goto err_current;
 
@@ -621,29 +626,28 @@ err_function_anno:
 			} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				/* Comma-separated argument list. */
 				int temp;
-				uint32_t old_flags;
 				struct ast_loc packloc;
-				loc_here(&packloc);
-				old_flags      = TPPLexer_Current->l_flags;
-				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+				if (DeeLexer_GetLoc(self, &packloc))
+					goto err_current;
+				DeeLexer_NoLf_Push(self);
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
-err_current_flags_in_pack:
-					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+err_current_pack_flags:
+					DeeLexer_NoLf_Break(self);
 					goto err_current;
 				}
 				if (DeeLexer_GetTok(self) == '(') {
-					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+					DeeLexer_NoLf_Break(self);
 					goto do_parse_paren_arg_list;
 				}
 				if unlikely(parser_warn_pack_used(&packloc))
-					goto err_current_flags_in_pack;
+					goto err_current_pack_flags;
 
 				/* Empty argument list (Same as none at all). */
 				temp = maybe_expression_begin(self);
 				if (temp <= 0) {
 					if unlikely(temp < 0)
-						goto err_current_flags_in_pack;
-					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
+						goto err_current_pack_flags;
+					args = ast_sethere(self, ast_constexpr(Dee_EmptyTuple));
 				} else {
 					args = ast_parse_comma(self,
 					                       AST_COMMA_FORCEMULTIPLE,
@@ -651,23 +655,21 @@ err_current_flags_in_pack:
 					                       NULL);
 				}
 				/* TODO: Add support for applying annotations here! */
-				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				DeeLexer_NoLf_Pop(self);
 				if unlikely(!args)
 					goto err_current;
 			} else if (DeeLexer_GetTok(self) == '(') {
 				/* Comma-separated argument list. */
-				uint32_t old_flags;
 do_parse_paren_arg_list:
-				old_flags = TPPLexer_Current->l_flags;
-				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+				DeeLexer_NoLf_Push(self);
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
-					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+/*err_current_lparen_flags:*/
+					DeeLexer_NoLf_Break(self);
 					goto err_current;
 				}
-
 				if (DeeLexer_GetTok(self) == ')') {
 					/* Empty argument list (Same as none at all). */
-					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
+					args = ast_sethere(self, ast_constexpr(Dee_EmptyTuple));
 				} else {
 					args = ast_parse_comma(self,
 					                       AST_COMMA_FORCEMULTIPLE,
@@ -675,7 +677,7 @@ do_parse_paren_arg_list:
 					                       NULL);
 				}
 				/* TODO: Add support for applying annotations here! */
-				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+				DeeLexer_NoLf_Pop(self);
 				if unlikely(!args)
 					goto err_current;
 				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_CALL)) {
@@ -803,7 +805,8 @@ continue_at_comma:
 
 		/* This is where the magic happens and where we
 		 * assign to expression in the active comma-list. */
-		loc_here(&loc);
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err_current;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_current;
 

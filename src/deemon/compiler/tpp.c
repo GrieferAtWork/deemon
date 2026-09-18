@@ -24,10 +24,10 @@
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>
-#include <deemon/error.h>
-#include <deemon/tuple.h>
-#include <deemon/exec.h>
+#include <deemon/error.h>        /* DeeError_* */
+#include <deemon/exec.h>         /* DeeModule_GetLibPath */
+#include <deemon/module.h>       /* Dee_COMPILER_ERROR_FATALITY_WARNING */
+#include <deemon/tuple.h>        /* DeeTuple* */
 
 #if TPP_OS_WINDOWS
 #include <Windows.h>
@@ -160,62 +160,83 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 _DeeLexer_ParenBegin(DeeLexer *__restrict self,
                      bool *__restrict p_has_paren) {
-	tpp_token_id tid = DeeLexer_GetTok(self);
-	ASSERT(tid != '(');
-	if (tid == TPP_KWD_pack) {
+	tpp_token_id tok = DeeLexer_GetTok(self);
+	ASSERT(tok != '(');
+	if (tok == TPP_KWD_pack) {
 		/* If not inside of a macro, and next token isn't '(', emit a warning */
-		if (!tpp_file_ismacro(tpp_lexer_getfile(&self->dl_lexer))) {
-			/* TODO: use `tpp_lexer_tryskip_raw()` instead of this! */
-			tpp_char const *pos = tpp_lexer_gettokenend(&self->dl_lexer);
-			do {
-				tid = tpp_lexer_yieldraw_at_blocking(&self->dl_lexer, &pos);
-			} while (TPP_TOK_ISSPACE_OR_COMMENT(tid));
-			if (TPP_TOK_ISERR(tid))
+		if (!tpp_file_ismacro(DeeLexer_GetFile(self))) {
+			tok = tpp_lexer_tryskip_raw(&self->dl_lexer, TPP_TOK_OFCHAR('('),
+			                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+			if (TPP_TOK_ISERR(tok))
 				goto err;
-			if (tid != '(' && DeeLexer_Warnf(self, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
-				goto err;
+			if (tok != '(') {
+				if (DeeLexer_Warnf(self, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+					goto err;
+			}
 		}
-		tid = DeeLexer_Yield(self);
-		if unlikely(TPP_TOK_ISERR(tid))
+		tok = DeeLexer_Yield(self);
+		if unlikely(TPP_TOK_ISERR(tok))
 			goto err;
-		*p_has_paren = tid == '(';
+		*p_has_paren = tok == '(';
 		if (*p_has_paren) {
-			tid = DeeLexer_Yield(self);
-			if unlikely(TPP_TOK_ISERR(tid))
+			tok = DeeLexer_Yield(self);
+			if unlikely(TPP_TOK_ISERR(tok))
 				goto err;
 		}
 	} else {
-		tid = DeeLexer_Skip(self, TPP_TOK_OFCHAR('('));
-		if unlikely(TPP_TOK_ISERR(tid))
+		tok = DeeLexer_Skip(self, TPP_TOK_OFCHAR('('));
+		if unlikely(TPP_TOK_ISERR(tok))
 			goto err;
-		*p_has_paren = tid == TPP_TOK_OFCHAR('(');
+		*p_has_paren = tok == TPP_TOK_OFCHAR('(');
 	}
 	return 0;
 err:
 	return -1;
 }
 
+/* Fill the given AST location with the current source position.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info) {
+	tpp_file *file = tpp_lexer_getlcfile(&self->dl_lexer);
+	char const *filename = tpp_file_getfilename(file);
+	if (filename && tpp_file_getfilenamestr(file)) {
+		/* Transform into a keyword */
+		tpp_size filename_len = tpp_strlen(filename);
+		tpp_hash filename_hash = tpp_hashof((tpp_char const *)filename, filename_len);
+		tpp_keyword const *filename_kwd;
+		filename_kwd = tpp_lexer_newkeyword(&self->dl_lexer, (tpp_char const *)filename,
+		                                    filename_len, filename_hash);
+		if unlikely(!filename_kwd)
+			goto err;
+		filename = tpp_keyword_getcstr(filename_kwd);
+	}
+	info->l_name = filename;
+	info->l_lc   = tpp_file_getstartlcinfo(file);
+	return 0;
+err:
+	return -1;
+}
 
 DECL_END
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define TPP_SYMARRAY_SIZE 1
 
-#include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Try*alloc* */
-#include <deemon/compiler/ast.h>      /* loc_here */
+#include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Malloc, Dee_Try*alloc* */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem */
-#include <deemon/compiler/symbol.h>   /* ast_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
-#include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
-#include <deemon/format.h>            /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
-#include <deemon/object.h>            /* DeeObject_Print, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref */
-#include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free */
-#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, mempcpyc */
-#include <deemon/system.h>            /* DeeSystem_* */
-#include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
+#include <deemon/file.h>            /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/format.h>          /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref */
+#include <deemon/string.h>          /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, WSTR_LENGTH */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, memcpy, mempcpyc */
+#include <deemon/system.h>          /* DeeSystem_* */
+#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
-#include <deemon/type.h>              /* DeeObject_InitStatic */
-#include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
+#include <deemon/type.h>  /* DeeObject_InitStatic */
+#include <deemon/types.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
@@ -1024,6 +1045,24 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum) {
 	return 0;
 err:
 	return -1;
+}
+
+INTERN NONNULL((1)) void DFCALL
+loc_here(struct ast_loc *__restrict info) {
+	info->l_file = TPPLexer_Global.l_token.t_file;
+	/* Query line/column information for the current token's start position. */
+	TPPFile_LCAt(info->l_file, &info->l_lc,
+	             TPPLexer_Global.l_token.t_begin);
+}
+
+/* Fill the given AST location with the current source position.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DFCALL
+DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info) {
+	(void)self;
+	loc_here(info);
+	return 0;
 }
 
 DECL_END

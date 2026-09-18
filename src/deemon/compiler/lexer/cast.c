@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/compiler/ast.h>    /* ASSERT_AST, AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* ASSERT_AST, AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_FORCEMULTIPLE, ast_parse_argument_list, ast_parse_unary, maybe_expression_begin */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
@@ -33,9 +33,18 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
-#include <stdint.h>  /* uint32_t */
 
 DECL_BEGIN
+
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE tpp_errno TPPCALL accept_non_exclaim_cb(void *arg, tpp_lexer *self) {
+	if (tpp_lexer_gettok(self) == '!')
+		return TPP_ENOENT;
+	return TPP_EOK;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 
 /* Parse a cast expression suffix following parenthesis, or
  * re-return the given `typeexpr` if there is no cast operand
@@ -51,23 +60,32 @@ DECL_BEGIN
  */
 INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
-	uint32_t old_flags;
 	DREF struct ast *kw_labels;
 	DREF struct ast *result, *merge, **exprv;
 	ASSERT_AST(typeexpr);
 	switch (DeeLexer_GetTok(self)) {
 
 	case '!': {
-		struct TPPFile *tok_file;
-		struct TPPKeyword *kwd;
-		char const *tok_begin;
-
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
 		 * >> (int)!!!in my_list; // ... vs. this
 		 * After parsing any number of additional `!` tokens, if the token
 		 * thereafter is the keyword `is` or `in`, then this isn't a cast
 		 * expression. However if it isn't, then it is a cast expression. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_token_id next_token_id;
+		next_token_id = tpp_lexer_peek_raw(&self->dl_lexer, TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+		                                   NULL, &accept_non_exclaim_cb, NULL);
+		if (TPP_TOK_ISERR(next_token_id))
+			goto err;
+		if (next_token_id == TPP_KWD_is ||
+		    next_token_id == TPP_KWD_in ||
+		    next_token_id == TPP_KWD_as)
+			goto not_a_cast; /* This isn't a cast expression. */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		struct TPPFile *tok_file;
+		struct TPPKeyword *kwd;
+		char const *tok_begin;
 		tok_begin = peek_next_token(&tok_file);
 		for (;;) {
 			if unlikely(!tok_begin)
@@ -85,6 +103,7 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 			if (kwd->k_id == TPP_KWD_is || kwd->k_id == TPP_KWD_in || kwd->k_id == TPP_KWD_as)
 				goto not_a_cast;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		goto do_a_cast;
 	}
 
@@ -105,7 +124,8 @@ not_a_cast:
 	case '(': {
 		struct ast_loc loc;
 		bool second_paren;
-		loc_here(&loc);
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
 		/* Special handling for the following cases:
 		 * >> (float)();                // Call with 0 arguments
 		 * >> (float)(42);              // Call with 1 argument `42`
@@ -114,13 +134,15 @@ not_a_cast:
 		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)`
 		 * Without this handling, the 4th line would be compiled as
 		 * `float(pack(10, 20, 30))`, when we want it to be `float(10, 20, 30)` */
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_flags;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_GetTok(self) == ')') {
 			/* Handle case #0 */
-			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			DeeLexer_NoLf_Break(self);
 			merge = ast_constexpr(Dee_EmptyTuple);
 			merge = ast_setddi(merge, &loc);
 			if unlikely(!merge)
@@ -142,8 +164,8 @@ not_a_cast:
 			goto err_flags;
 		ASSERT(merge->a_type == AST_MULTIPLE);
 		ASSERT(merge->a_flag == AST_FMULTIPLE_TUPLE);
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+		DeeLexer_NoLf_Pop(self);
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err_merge_kwlabels;
 		if (kw_labels) {
 			result = ast_action3(AST_FACTION_CALL_KW, typeexpr, merge, kw_labels);
@@ -232,9 +254,6 @@ do_a_cast:
 	}
 done:
 	return result;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err;
 err_merge_kwlabels:
 	ast_xdecref(kw_labels);
 	goto err_merge;

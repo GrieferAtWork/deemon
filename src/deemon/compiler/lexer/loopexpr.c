@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/code.h>            /* Dee_CODE_FYIELDING */
-#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_PARSE_WASEXPR_NO, ast_parse_*, current_tags */
-#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, ast_loc, basescope_pop, basescope_push, current_basescope, current_scope */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, basescope_pop, basescope_push, current_basescope, current_scope */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
@@ -34,7 +34,7 @@
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */
-#include <stdint.h>  /* int32_t, uint16_t, uint32_t */
+#include <stdint.h>  /* int32_t, uint16_t */
 
 
 /* Loop statements in expressions are compiled as yield-function lambda expressions:
@@ -62,7 +62,6 @@ wrap_yield(DREF struct ast *self, struct ast_loc *__restrict loc) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	struct ast_loc loc;
-	uint32_t old_flags;
 	DREF struct ast *result, *other, *merge;
 	/* Special handling for recursive loops and conditional statements:
 	 * >> print (for (local x: items) if (x > 10) x)...; // Print all items > 10
@@ -73,23 +72,25 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	case TPP_KWD_if: {
 		bool has_paren;
 		DREF struct ast *ff_branch;
-		loc_here(&loc);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_if_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
-			goto err_flags;
-
+			goto err_if_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(self,
 		                         LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(!result)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err;
 		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
 
@@ -121,22 +122,25 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 
 	case TPP_KWD_do: {
 		bool has_paren;
-		loc_here(&loc);
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		result = parse_generator_loop(self, &loc);
 		if unlikely(!result)
 			goto err;
-		if (DeeLexer_Skip2(self, TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO))
+		DeeLexer_NoLf_Push(self);
+		if (DeeLexer_Skip2(self, TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO)) {
+err_r_do_flags:
+			DeeLexer_NoLf_Break(self);
 			goto err_r;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		}
 		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
-			goto err_r_flags;
+			goto err_r_do_flags;
 		other = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(!other)
-			goto err_r_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err_r;
 		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r_other;
 
@@ -151,25 +155,27 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 
 	case TPP_KWD_while: {
 		bool has_paren;
-		loc_here(&loc);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
 
 		/* Parse the while-condition. */
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_while_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
-			goto err_flags;
-
+			goto err_while_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(self,
 		                         LOOKUP_SYM_NORMAL |
 		                         LOOKUP_SYM_ALLOWDECL,
 		                         AST_FMULTIPLE_KEEPLAST,
 		                         NULL);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(!result)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err;
 		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 
@@ -191,19 +197,24 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		DREF struct ast *elem_or_cond;
 		DREF struct ast *iter_or_next;
 		int32_t type;
-		loc_here(&loc);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_for_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
-			goto err_flags;
+			goto err_for_flags;
 
 		/* Parse the for-header. */
 		type = ast_parse_for_head(self, &init, &elem_or_cond, &iter_or_next);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(type < 0)
-			goto err_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err;
+
 		if ((type & AST_FLOOP_FOREACH) && iter_or_next) {
 			/* Wrap the iterator of a foreach-loop with an __iterself__ operator. */
 			merge = ast_operator1(OPERATOR_ITER, AST_OPERATOR_FNORMAL, iter_or_next);
@@ -263,46 +274,49 @@ err_for_loop:
 		DREF struct ast *foreach_elem;
 		DREF struct ast *foreach_iter;
 		DREF struct ast *foreach_loop;
-		loc_here(&loc);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		old_flags = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+		DeeLexer_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_foreach_flags:
+			DeeLexer_NoLf_Break(self);
+			goto err;
+		}
 		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
-			goto err_flags;
+			goto err_foreach_flags;
 		foreach_elem = ast_parse_comma(self,
 		                               AST_COMMA_ALLOWVARDECLS,
 		                               AST_FMULTIPLE_TUPLE,
 		                               NULL);
 		if unlikely(!foreach_elem)
-			goto err_flags;
-		if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_FOREACH))
-			goto err_foreach_elem_flags;
+			goto err_foreach_flags;
+		if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_FOREACH)) {
+/*err_foreach_flags_elem:*/
+			ast_decref(foreach_elem);
+			goto err_foreach_flags;
+		}
 		foreach_iter = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
+		DeeLexer_NoLf_Pop(self);
 		if unlikely(!foreach_iter)
-			goto err_foreach_elem_flags;
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+			goto err_foreach_elem;
 		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
-			goto err_foreach_iter;
+			goto err_foreach_elem_iter;
 
 		/* Parse the generator loop expression. */
 		foreach_loop = parse_generator_loop(self, &loc);
 		if unlikely(!foreach_loop)
-			goto err_foreach_iter;
+			goto err_foreach_elem_iter;
 		result = ast_loop(AST_FLOOP_FOREACH, foreach_elem, foreach_iter, foreach_loop);
 		result = ast_setddi(result, &loc);
 		ast_decref(foreach_loop);
 		ast_decref(foreach_iter);
 		ast_decref(foreach_elem);
 		break;
-err_foreach_iter:
+err_foreach_elem_iter:
 		ast_decref(foreach_iter);
 err_foreach_elem:
 		ast_decref(foreach_elem);
 		goto err;
-err_foreach_elem_flags:
-		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		goto err_foreach_elem;
 	}	break;
 
 	default:
@@ -311,12 +325,6 @@ err_foreach_elem_flags:
 		break;
 	}
 	return result;
-err_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err;
-err_r_flags:
-	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	goto err_r;
 err_r_other:
 	ast_decref(other);
 err_r:
@@ -333,7 +341,8 @@ ast_parse_loopexpr(DeeLexer *self) {
 	       DeeLexer_GetTok(self) == TPP_KWD_while ||
 	       DeeLexer_GetTok(self) == TPP_KWD_for ||
 	       DeeLexer_GetTok(self) == TPP_KWD_foreach);
-	loc_here(&loc);
+	if (DeeLexer_GetLoc(self, &loc))
+		goto err;
 	if (basescope_push())
 		goto err;
 

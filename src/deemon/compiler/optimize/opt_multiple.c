@@ -25,7 +25,6 @@
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Reallocc */
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/optimize.h> /* AST_DOESNT_RETURN_FNORMAL, OPTIMIZE_VERBOSE, OPTIMIZE_VERBOSEAT, ast_*, optimizer_count */
-#include <deemon/compiler/symbol.h>   /* ast_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>              /* DeeDict_New */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
