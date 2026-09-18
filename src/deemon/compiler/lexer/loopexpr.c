@@ -68,9 +68,9 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	 * >> print (for (local x: items) if (x > 10) x)...; // Print all items > 10
 	 * >> print (for (local x: items) for (local y: x) y)...; // Print all items or each item of `items`
 	 */
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
-	case KWD_if: {
+	case TPP_KWD_if: {
 		bool has_paren;
 		DREF struct ast *ff_branch;
 		loc_here(&loc);
@@ -100,7 +100,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 
 		/* Parse an optional false-branch. */
 		ff_branch = NULL;
-		if (tok == KWD_else) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_else) {
 			if unlikely(yield() < 0)
 				goto err_r_other;
 			ff_branch = parse_generator_loop(self, ddi_loc);
@@ -119,7 +119,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		result = merge;
 	}	break;
 
-	case KWD_do: {
+	case TPP_KWD_do: {
 		bool has_paren;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
@@ -127,7 +127,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		result = parse_generator_loop(self, &loc);
 		if unlikely(!result)
 			goto err;
-		if (skip(KWD_while, W_EXPECTED_WHILE_AFTER_DO))
+		if (skip(TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO))
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -149,7 +149,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		result = merge;
 	}	break;
 
-	case KWD_while: {
+	case TPP_KWD_while: {
 		bool has_paren;
 		loc_here(&loc);
 		if unlikely(yield() < 0)
@@ -185,7 +185,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		result = merge;
 	}	break;
 
-	case KWD_for: {
+	case TPP_KWD_for: {
 		bool has_paren;
 		DREF struct ast *init;
 		DREF struct ast *elem_or_cond;
@@ -258,7 +258,7 @@ err_for_loop:
 		goto err;
 	}	break;
 
-	case KWD_foreach: {
+	case TPP_KWD_foreach: {
 		bool has_paren;
 		DREF struct ast *foreach_elem;
 		DREF struct ast *foreach_iter;
@@ -328,10 +328,11 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_loopexpr(DeeLexer *self) {
 	struct ast_loc loc;
-	tok_t mode = tok;
 	DREF struct ast *result, *other, *merge;
-	ASSERT(mode == KWD_do || mode == KWD_while ||
-	       mode == KWD_for || mode == KWD_foreach);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_do ||
+	       DeeLexer_GetTok(self) == TPP_KWD_while ||
+	       DeeLexer_GetTok(self) == TPP_KWD_for ||
+	       DeeLexer_GetTok(self) == TPP_KWD_foreach);
 	loc_here(&loc);
 	if (basescope_push())
 		goto err;

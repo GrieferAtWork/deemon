@@ -195,7 +195,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 	}
 	if likely(result) {
 		ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-		if unlikely(lexer.jl_tok != TOK_EOF) {
+		if unlikely(lexer.jl_tok != TPP_TOK_EOF) {
 			DeeError_Throwf(&DeeError_SyntaxError,
 			                "Expected EOF but got `%$s`",
 			                (size_t)(lexer.jl_end - lexer.jl_tokstart),

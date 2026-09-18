@@ -967,7 +967,7 @@ parse_again:
 parse_again_same_statement:
 	switch (self->ji_lex.jl_tok) {
 
-	case TOK_EOF:
+	case TPP_TOK_EOF:
 		/* The iterator has been exhausted! */
 		result = ITER_DONE;
 		goto done;
@@ -1776,7 +1776,7 @@ handle_error:
 			result                         = NULL;
 			/* TODO: Somehow remember that the error happened at `lexer.jl_errpos` */
 		}
-		self->ji_lex.jl_tok = TOK_EOF; /* Don't iterate again. */
+		self->ji_lex.jl_tok = TPP_TOK_EOF; /* Don't iterate again. */
 	}
 	ASSERT(ts->t_exceptsz >= self->ji_ctx.jc_except);
 	if (ts->t_exceptsz > self->ji_ctx.jc_except) {

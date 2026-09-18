@@ -43,7 +43,7 @@
 DECL_BEGIN
 
 #define IS_SYMBOL_NAME(tok) \
-	(TPP_ISKEYWORD(tok) && (!KWD_ISUNARY(tok) || (tok) == KWD_none))
+	(TPP_TOK_ISKEYWORD(tok) && (!TPP_KWD_ISUNARY(tok) || (tok) == TPP_KWD_none))
 
 
 INTERN NONNULL((1)) void DCALL
@@ -142,23 +142,23 @@ INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 ast_parse_lookup_mode(DeeLexer *self, unsigned int *__restrict p_mode) {
 	(void)self;
 next_modifier:
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
-	case KWD_final:
+	case TPP_KWD_final:
 		if (*p_mode & LOOKUP_SYM_FINAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
 		*p_mode |= LOOKUP_SYM_FINAL;
 		goto continue_modifier;
 
-	case KWD_varying:
+	case TPP_KWD_varying:
 		if (*p_mode & LOOKUP_SYM_VARYING &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
 		*p_mode |= LOOKUP_SYM_VARYING;
 		goto continue_modifier;
 
-	case KWD_local:
+	case TPP_KWD_local:
 		if (*p_mode & LOOKUP_SYM_VLOCAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
@@ -178,7 +178,7 @@ continue_modifier:
 		if (WARN(W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
 		ATTR_FALLTHROUGH
-	case KWD_global:
+	case TPP_KWD_global:
 		if (*p_mode & LOOKUP_SYM_VGLOBAL &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
@@ -190,7 +190,7 @@ continue_modifier:
 		*p_mode |= LOOKUP_SYM_VGLOBAL;
 		goto continue_modifier;
 
-	case KWD_static:
+	case TPP_KWD_static:
 		if (*p_mode & LOOKUP_SYM_STATIC &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
@@ -202,7 +202,7 @@ continue_modifier:
 		*p_mode |= LOOKUP_SYM_STATIC;
 		goto continue_modifier;
 
-	case KWD___stack:
+	case TPP_KWD___stack:
 		if (*p_mode & LOOKUP_SYM_STACK &&
 		    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 			goto err;
@@ -222,7 +222,8 @@ continue_modifier:
 	     * to indicate that the symbol `foo` may be re-assigned at a later point
 	     * in time! As such, don't emit a compiler warning if the next keyword is
 	     * either `function` or `class`! */
-	    (tok != KWD_function && tok != KWD_class)) {
+	    (DeeLexer_GetTok(self) != TPP_KWD_function &&
+	     DeeLexer_GetTok(self) != TPP_KWD_class)) {
 		if (WARN(W_VARYING_WITHOUT_FINAL))
 			goto err;
 	}
@@ -322,7 +323,7 @@ next_expr:
 	need_semi = !!(mode & AST_COMMA_PARSESEMI);
 
 	/* Parse an expression (special handling for functions/classes) */
-	if (tok == KWD_class) {
+	if (DeeLexer_GetTok(self) == TPP_KWD_class) {
 		/* Declare a new class */
 		uint16_t class_flags = current_tags.at_class_flags & 0xf; /* From tags. */
 		struct TPPKeyword *class_name = NULL;
@@ -333,13 +334,13 @@ next_expr:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == KWD_final && !(class_flags & TP_FFINAL)) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
 			class_flags |= TP_FFINAL;
 			if unlikely(yield() < 0)
 				goto err;
 		}
-		if (TPP_ISKEYWORD(tok)) {
-			class_name = token.t_kwd;
+		if (DeeLexer_HasTokenKwd(self)) {
+			class_name = DeeLexer_GetTokenKwd(self);
 			if unlikely(yield() < 0)
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
@@ -367,9 +368,9 @@ next_expr:
 			goto err;
 		need_semi = false; /* Classes always have braces and don't need semicolons. */
 #if 0                      /* TODO: property variable */
-	} else if (tok == KWD_property) {
+	} else if (DeeLexer_GetTok(self) == TPP_KWD_property) {
 #endif
-	} else if (tok == KWD_function) {
+	} else if (DeeLexer_GetTok(self) == TPP_KWD_function) {
 		/* Declare a new function */
 		struct TPPKeyword *function_name = NULL;
 		struct symbol *function_symbol   = NULL;
@@ -378,9 +379,9 @@ next_expr:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(self)) {
 			loc_here(&function_name_loc);
-			function_name = token.t_kwd;
+			function_name = DeeLexer_GetTokenKwd(self);
 			if unlikely(yield() < 0)
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
@@ -471,10 +472,10 @@ err_function_anno:
 		}
 	} else {
 		if (mode & AST_COMMA_ALLOWKWDLIST) {
-			if (TPP_ISKEYWORD(tok)) {
+			if (DeeLexer_HasTokenKwd(self)) {
 				/* If the next token is a `:`, then we`re currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
-				char *next = peek_next_token(NULL);
+				char const *next = peek_next_token(NULL);
 				if unlikely(!next)
 					goto err;
 				if (*next == ':') {
@@ -486,10 +487,10 @@ err_function_anno:
 						goto done_expression_nocurrent;
 				}
 			}
-			if (tok == TOK_POW) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
 				goto done_expression_nocurrent;
 		}
-		if (!IS_SYMBOL_NAME(tok) &&
+		if (!IS_SYMBOL_NAME(DeeLexer_GetTok(self)) &&
 		    (lookup_mode & LOOKUP_SYM_VMASK) != LOOKUP_SYM_VDEFAULT) {
 			/* Warn if an explicit visibility modifier isn't followed by a symbol name. */
 			if (WARN(W_EXPECTED_VARIABLE_AFTER_VISIBILITY))
@@ -500,13 +501,13 @@ err_function_anno:
 		/* Check for errors. */
 		if unlikely(!current)
 			goto err;
-		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && TPP_ISKEYWORD(tok) &&
-		    (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(token.t_kwd))) {
+		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && DeeLexer_HasTokenKwd(self) &&
+		    (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)))) {
 			/* C-style variable declarations. */
 			struct symbol *var_symbol;
 			DREF struct ast *args, *merge;
 			struct ast_loc symbol_name_loc;
-			if (KWD_IS_D100_VARIABLE_MODIFIER(tok)) {
+			if (TPP_KWD_IS_D100_VARIABLE_MODIFIER(DeeLexer_GetTok(self))) {
 				/* Deemon 100+ used to allow `int local x;` as alias for `local x = int()`.
 				 * While this isn't support anymore, still try to emulate it... */
 				if (WARN(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE))
@@ -515,13 +516,13 @@ err_function_anno:
 					goto err;
 			}
 			loc_here(&symbol_name_loc);
-			var_symbol = get_local_symbol(token.t_kwd);
+			var_symbol = get_local_symbol(DeeLexer_GetTokenKwd(self));
 			if unlikely(var_symbol) {
-				if (WARN(W_VARIABLE_ALREADY_EXISTS, token.t_kwd))
+				if (WARN(W_VARIABLE_ALREADY_EXISTS, DeeLexer_GetTokenKwd(self)))
 					goto err_current;
 			} else {
 				/* Create a new symbol for the initialized variable. */
-				var_symbol = new_local_symbol(token.t_kwd, NULL);
+				var_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 				if unlikely(!var_symbol)
 					goto err_current;
 				if (lookup_mode & LOOKUP_SYM_FINAL) {
@@ -591,12 +592,12 @@ err_function_anno:
 			 * >> myThread.start();
 			 * Now that C compatibility is gone, there's no ambiguity to this!
 			 */
-			if (tok == '=' || tok == '{') {
+			if (DeeLexer_GetTok(self) == '=' || DeeLexer_GetTok(self) == '{') {
 				/* Single-operand argument list. */
 				DREF struct ast **exprv;
 				struct ast_loc equal_loc;
 				loc_here(&equal_loc);
-				if (tok == '=' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == '=' && unlikely(yield() < 0))
 					goto err_current;
 
 				/* Parse a preferred-type brace expression. */
@@ -618,7 +619,7 @@ err_function_anno:
 					Dee_Free(exprv);
 					goto err_current;
 				}
-			} else if (tok == KWD_pack) {
+			} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				/* Comma-separated argument list. */
 				int temp;
 				uint32_t old_flags;
@@ -631,7 +632,7 @@ err_current_flags_in_pack:
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
-				if (tok == '(') {
+				if (DeeLexer_GetTok(self) == '(') {
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto do_parse_paren_arg_list;
 				}
@@ -654,7 +655,7 @@ err_current_flags_in_pack:
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				if unlikely(!args)
 					goto err_current;
-			} else if (tok == '(') {
+			} else if (DeeLexer_GetTok(self) == '(') {
 				/* Comma-separated argument list. */
 				uint32_t old_flags;
 do_parse_paren_arg_list:
@@ -665,7 +666,7 @@ do_parse_paren_arg_list:
 					goto err_current;
 				}
 
-				if (tok == ')') {
+				if (DeeLexer_GetTok(self) == ')') {
 					/* Empty argument list (Same as none at all). */
 					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
 				} else {
@@ -714,7 +715,7 @@ err_args:
 			if (current->a_type == AST_SYM &&
 			    (mode & AST_COMMA_ALLOWTYPEDECL)) {
 				struct symbol *var_symbol = current->a_sym;
-				if (tok == ':') {
+				if (DeeLexer_GetTok(self) == ':') {
 					if unlikely(yield() < 0)
 						goto err_current;
 					if unlikely(decl_ast_parse(self, &decl))
@@ -744,7 +745,7 @@ err_args:
 		}
 	}
 
-	if (tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
+	if (DeeLexer_GetTok(self) == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
 		if (mode & AST_COMMA_STRICTCOMMA) {
 			/* Peek the next token to check if it might be an expression. */
 			int temp;
@@ -798,7 +799,7 @@ continue_at_comma:
 		}
 		goto next_expr;
 	}
-	if (tok == '=') {
+	if (DeeLexer_GetTok(self) == '=') {
 		DREF struct ast *store_source;
 
 		/* This is where the magic happens and where we
@@ -879,7 +880,7 @@ err_store_source:
 		}
 
 		/* Check for further comma or store expressions. */
-		if (tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
+		if (DeeLexer_GetTok(self) == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
 			if (!(mode & AST_COMMA_STRICTCOMMA)) {
 do_append_gen_to_batch:
 				/* Append the generated expression to the batch. */
@@ -950,11 +951,11 @@ done_expression_nomerge:
 			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
 		/* Consume a `;` token as part of the expression. */
-		if likely(tok == ';' || tok == '\n') {
+		if likely(DeeLexer_GetTok(self) == ';' || DeeLexer_GetTok(self) == '\n') {
 			do {
 				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
 					goto err_clear_current_only;
-			} while (tok == '\n');
+			} while (DeeLexer_GetTok(self) == '\n');
 		} else {
 			if unlikely(WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
 err_clear_current_only:

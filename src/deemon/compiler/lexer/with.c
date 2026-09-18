@@ -72,7 +72,7 @@ ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	DREF struct ast **result_v;
 	uint32_t old_flags;
 	bool has_paren;
-	ASSERT(tok == KWD_with);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
@@ -210,7 +210,7 @@ ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast **result_v;
 	uint32_t old_flags;
 	bool has_paren;
-	ASSERT(tok == KWD_with);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;

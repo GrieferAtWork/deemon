@@ -52,8 +52,8 @@ DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-#define TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
-LOCAL unsigned int DCALL dot_count(tok_t tk) {
+#define TPP_TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
+LOCAL ATTR_CONST WUNUSED unsigned int DCALL dot_count(tok_t tk) {
 	if (tk == TPP_TOK_DOT_DOT_DOT)
 		return 3;
 	if (tk == TPP_TOK_DOT_DOT)
@@ -127,41 +127,40 @@ ast_parse_module_name(DeeLexer *self,
                       bool for_alias) {
 	int result = 0;
 	for (;;) {
-		if (TOK_ISDOT(tok)) {
-			if (Dee_unicode_printer_printascii(printer, "...", dot_count(tok)) < 0)
+		if (TPP_TOK_ISDOT(DeeLexer_GetTok(self))) {
+			if (Dee_unicode_printer_printascii(printer, "...", dot_count(DeeLexer_GetTok(self))) < 0)
 				goto err;
 			result = 1;
 			if unlikely(yield() < 0)
 				goto err;
 			if (Dee_UNICODE_PRINTER_LENGTH(printer) == 1 &&
-			    (!TPP_ISKEYWORD(tok) && !TPP_TOK_ISSTRING_DQUOTE(tok) &&
-			     (!TPP_TOK_ISSTRING_SQUOTE(tok) || HAS(EXT_CHARACTER_LITERALS)) &&
-			     !TOK_ISDOT(tok)))
+			    (!DeeLexer_HasTokenKwd(self) &&
+			     !DeeLexer_IsStringToken(self) &&
+			     !TPP_TOK_ISDOT(DeeLexer_GetTok(self))))
 				break; /* Special case: `.` is a valid name for the current module. */
-		} else if (TPP_ISKEYWORD(tok)) {
+		} else if (DeeLexer_HasTokenKwd(self)) {
 			/* Warn about reserved identifiers.
 			 * -> Reserved identifiers should be written as strings. */
-			if (is_reserved_symbol_name(token.t_kwd) &&
+			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
 			    WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_MODULE_NAME
 			                   : W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
-			         token.t_kwd))
+			         DeeLexer_GetTokenKwd(self)))
 				goto err;
 			if (Dee_unicode_printer_print(printer,
-			                              token.t_kwd->k_name,
-			                              token.t_kwd->k_size) < 0)
+			                              DeeLexer_GetTokenKwdCStr(self),
+			                              DeeLexer_GetTokenKwdLen(self)) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-			if (!TOK_ISDOT(tok))
+			if (!TPP_TOK_ISDOT(DeeLexer_GetTok(self)))
 				break;
-		} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-		           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+		} else if (DeeLexer_IsStringToken(self)) {
 			if (ast_decode_unicode_string(self, printer) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-			if (!TOK_ISDOT(tok) && !TPP_TOK_ISSTRING_DQUOTE(tok) &&
-			    (!TPP_TOK_ISSTRING_SQUOTE(tok) || HAS(EXT_CHARACTER_LITERALS)))
+			if (!TPP_TOK_ISDOT(DeeLexer_GetTok(self)) &&
+			    !DeeLexer_IsStringToken(self))
 				break;
 		} else {
 			if (WARN(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST))
@@ -179,29 +178,27 @@ ast_parse_symbol_name(DeeLexer *self,
                       struct Dee_unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
-	if (TPP_ISKEYWORD(tok)) {
+	if (DeeLexer_HasTokenKwd(self)) {
 		/* Warn about reserved identifiers.
 		 * -> Reserved identifiers should be written as string imports. */
-		if (is_reserved_symbol_name(token.t_kwd) &&
+		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
 		    WARN(for_alias ? W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
 		                   : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
-		         token.t_kwd))
+		         DeeLexer_GetTokenKwd(self)))
 			goto err;
 		if (Dee_unicode_printer_print(printer,
-		                              token.t_kwd->k_name,
-		                              token.t_kwd->k_size) < 0)
+		                              DeeLexer_GetTokenKwdCStr(self),
+		                              DeeLexer_GetTokenKwdLen(self)) < 0)
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-	} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	} else if (DeeLexer_IsStringToken(self)) {
 		do {
 			if (ast_decode_unicode_string(self, printer) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-		} while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-		         (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
+		} while (DeeLexer_IsStringToken(self));
 	} else {
 		if (WARN(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))
 			goto err;
@@ -363,7 +360,7 @@ parse_import_symbol(DeeLexer *self,
 	struct Dee_unicode_printer printer;
 	int return_value = 0;
 	loc_here(&result->ii_import_loc);
-	if (TPP_ISKEYWORD(tok)) {
+	if (DeeLexer_HasTokenKwd(self)) {
 		/* - `foo`
 		 * - `foo = bar`
 		 * - `foo = .foo.bar`
@@ -371,10 +368,10 @@ parse_import_symbol(DeeLexer *self,
 		 * - `foo as bar`
 		 * - `foo.bar`
 		 * - `foo.bar as foobar` */
-		result->ii_symbol_name = token.t_kwd;
+		result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '=') {
+		if (DeeLexer_GetTok(self) == '=') {
 			/* - `foo = bar`
 			 * - `foo = .foo.bar`
 			 * - `foo = "bar"' */
@@ -393,22 +390,22 @@ parse_import_symbol(DeeLexer *self,
 			result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 			if unlikely(!result->ii_import_name)
 				goto err;
-		} else if (tok == KWD_as) {
+		} else if (DeeLexer_GetTok(self) == TPP_KWD_as) {
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, result->ii_symbol_name))
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
 			/* - `foo as bar` */
-			if (TPP_ISKEYWORD(tok)) {
+			if (DeeLexer_HasTokenKwd(self)) {
 				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name->k_name,
 				                                                                   result->ii_symbol_name->k_size,
 				                                                                   STRING_ERROR_FSTRICT);
 				if unlikely(!result->ii_import_name)
 					goto err;
-				result->ii_symbol_name = token.t_kwd;
-				if (is_reserved_symbol_name(token.t_kwd) &&
-				    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
+				result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
+				if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
+				    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
 					goto err;
 				if unlikely(yield() < 0)
 					goto err;
@@ -417,7 +414,7 @@ parse_import_symbol(DeeLexer *self,
 					goto err;
 				result->ii_import_name = NULL;
 			}
-		} else if (TOK_ISDOT(tok) && allow_module_name) {
+		} else if (TPP_TOK_ISDOT(DeeLexer_GetTok(self)) && allow_module_name) {
 			/* - `foo.bar`
 			 * - `foo.bar as foobar` */
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
@@ -438,39 +435,38 @@ parse_import_symbol(DeeLexer *self,
 				goto err;
 			result->ii_import_name = NULL;
 		}
-	} else if (TOK_ISDOT(tok) && allow_module_name) {
+	} else if (TPP_TOK_ISDOT(DeeLexer_GetTok(self)) && allow_module_name) {
 		/* - `.foo.bar`
 		 * - `.foo.bar as foobar` */
 		Dee_unicode_printer_init(&printer);
 complete_module_name:
 		return_value = 1;
-		if unlikely(Dee_unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, "...", dot_count(DeeLexer_GetTok(self))) < 0)
 			goto err_printer;
 		if unlikely(yield() < 0)
 			goto err_printer;
 		/* Make sure to properly parse `import . as me` */
-		if ((TPP_ISKEYWORD(tok) && tok != KWD_as) ||
-		    TOK_ISDOT(tok) || TPP_TOK_ISSTRING_DQUOTE(tok) ||
-		    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+		if ((DeeLexer_HasTokenKwd(self) && DeeLexer_GetTok(self) != TPP_KWD_as) ||
+		    TPP_TOK_ISDOT(DeeLexer_GetTok(self)) || DeeLexer_IsStringToken(self)) {
 			if unlikely(ast_parse_module_name(self, &printer, true) < 0)
 				goto err_printer;
 		}
 		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
-		if (tok == KWD_as) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_as) {
 			/* - `.foo.bar as foobar` */
 			if unlikely(yield() < 0)
 				goto err_name;
-			if unlikely(!TPP_ISKEYWORD(tok)) {
+			if unlikely(!DeeLexer_HasTokenKwd(self)) {
 				if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 					goto err_name;
 				goto autogenerate_symbol_name;
 			}
-			result->ii_symbol_name = token.t_kwd;
+			result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 			/* Warn about reserved identifiers */
-			if (is_reserved_symbol_name(token.t_kwd) &&
-			    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
+			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
+			    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
 				goto err_name;
 			if unlikely(yield() < 0)
 				goto err_name;
@@ -490,8 +486,7 @@ autogenerate_symbol_name:
 			           result->ii_symbol_name))
 				goto err_name;
 		}
-	} else if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	} else if (DeeLexer_IsStringToken(self)) {
 		/* - `"foo"'
 		 * - `"foo" as foobar'
 		 * - `"foo.bar"'
@@ -505,22 +500,22 @@ autogenerate_symbol_name:
 		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
-		if (tok != KWD_as)
+		if (DeeLexer_GetTok(self) != TPP_KWD_as)
 			goto autogenerate_symbol_name;
 
 		/* An import alias was given. */
 		if unlikely(yield() < 0)
 			goto err_name;
-		if (!TPP_ISKEYWORD(tok)) {
+		if (!DeeLexer_HasTokenKwd(self)) {
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_AS))
 				goto err_name;
 			goto autogenerate_symbol_name;
 		}
-		result->ii_symbol_name = token.t_kwd;
+		result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 
 		/* Warn about reserved identifiers in alias names. */
-		if (is_reserved_symbol_name(token.t_kwd) &&
-		    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, token.t_kwd))
+		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)) &&
+		    WARN(W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, DeeLexer_GetTokenKwd(self)))
 			goto err_name;
 		if unlikely(yield() < 0)
 			goto err_name;
@@ -853,11 +848,11 @@ ast_parse_post_import(DeeLexer *self) {
 	size_t item_a, item_c;
 	DREF DeeModuleObject *mod;
 	star_loc.l_file = NULL; /* When non-NULL, import all */
-	if (tok == '*') {
+	if (DeeLexer_GetTok(self) == '*') {
 		loc_here(&star_loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == KWD_from) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 			if unlikely(yield() < 0)
 				goto err;
 			mod = parse_module_byname(self, true);
@@ -866,7 +861,7 @@ ast_parse_post_import(DeeLexer *self) {
 			error = ast_import_all_from_module(mod, &star_loc);
 			decref_parse_module_byname(mod);
 			goto done;
-		} else if (tok == ',') {
+		} else if (DeeLexer_GetTok(self) == ',') {
 			item_c = 0;
 			item_a = 0;
 			item_v = NULL;
@@ -891,7 +886,7 @@ import_item_as_module:
 			if unlikely(error)
 				goto err;
 parse_module_import_list:
-			if (tok != ',')
+			if (DeeLexer_GetTok(self) != ',')
 				break;
 			if unlikely(yield() < 0)
 				goto err;
@@ -903,10 +898,10 @@ parse_module_import_list:
 		}
 
 		/* Warn if the module import list is followed by a `from` */
-		if (tok == KWD_from &&
+		if (DeeLexer_GetTok(self) == TPP_KWD_from &&
 		    WARN(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST))
 			goto err;
-	} else if (tok == KWD_from) {
+	} else if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 		/*  - `import foo from bar` */
 		if unlikely(yield() < 0)
 			goto err_item;
@@ -918,7 +913,7 @@ parse_module_import_list:
 		decref_parse_module_byname(mod);
 		if unlikely(error)
 			goto err;
-	} else if (tok == ',') {
+	} else if (DeeLexer_GetTok(self) == ',') {
 		item_a = 4;
 		item_v = (struct import_item *)Dee_TryMallocc(4, sizeof(struct import_item));
 		if unlikely(!item_v) {
@@ -931,10 +926,10 @@ parse_module_import_list:
 		item_c    = 1;
 import_parse_list:
 		do {
-			ASSERT(tok == ',');
+			ASSERT(DeeLexer_GetTok(self) == ',');
 			if unlikely(yield() < 0)
 				goto err_item_v;
-			if (tok == '*') {
+			if (DeeLexer_GetTok(self) == '*') {
 				if (star_loc.l_file) {
 					if (WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 						goto err_item_v;
@@ -988,10 +983,10 @@ import_parse_list:
 					goto parse_module_import_list;
 				}
 			}
-		} while (tok == ',');
+		} while (DeeLexer_GetTok(self) == ',');
 
 		/* A multi-item, comma-separated import list has now been parsed. */
-		if (tok == KWD_from) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 			size_t i;
 
 			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
@@ -1060,11 +1055,11 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_import_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
-	ASSERT(tok == KWD_import);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_import);
 	loc_here(&import_loc);
 	if unlikely(yield() < 0)
 		goto err;
-	if (tok == '(' || tok == KWD_pack) {
+	if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == TPP_KWD_pack) {
 		/* `import`, as seen in expressions. */
 		result = ast_parse_import_expression_after_import(self, &import_loc);
 		if unlikely(!result)
@@ -1168,9 +1163,9 @@ ast_parse_import(DeeLexer *self) {
 	 *     The default is `local`, and `global` can only be used
 	 *     which the root scope.
 	 */
-	ASSERT(tok == KWD_import || tok == KWD_from);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_import || DeeLexer_GetTok(self) == TPP_KWD_from);
 	loc_here(&import_loc);
-	if (tok == KWD_from) {
+	if (DeeLexer_GetTok(self) == TPP_KWD_from) {
 		/* - from deemon import *;
 		 * - from deemon import Object;
 		 * - from deemon import Object, List;
@@ -1192,11 +1187,11 @@ ast_parse_import(DeeLexer *self) {
 			goto err_r;
 
 		/* All right! we've got the module. */
-		if (skip(KWD_import, W_EXPECTED_IMPORT_AFTER_FROM))
+		if (skip(TPP_KWD_import, W_EXPECTED_IMPORT_AFTER_FROM))
 			goto err_r_module;
 		for (;;) {
 			/* Parse an entire import list. */
-			if (tok == '*') {
+			if (DeeLexer_GetTok(self) == '*') {
 				if (has_star &&
 				    WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 					goto err_r_module;
@@ -1218,7 +1213,7 @@ ast_parse_import(DeeLexer *self) {
 				if unlikely(error)
 					goto err_r_module;
 			}
-			if (tok != ',')
+			if (DeeLexer_GetTok(self) != ',')
 				break;
 			if unlikely(yield() < 0)
 				goto err_r_module;
@@ -1244,10 +1239,10 @@ ast_parse_import(DeeLexer *self) {
 		 * - import Object as MyObject from deemon;
 		 * - import "Object" as MyObject from deemon;
 		 * - import Object as MyObject, List as MyList from deemon; */
-		ASSERT(tok == KWD_import);
+		ASSERT(DeeLexer_GetTok(self) == TPP_KWD_import);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '(' || tok == KWD_pack) {
+		if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == TPP_KWD_pack) {
 			/* `import`, as seen in expressions. */
 			result = ast_parse_import_expression_after_import(self, &import_loc);
 			if unlikely(!result)
@@ -1255,7 +1250,7 @@ ast_parse_import(DeeLexer *self) {
 			result = ast_parse_postexpr(self, result);
 			goto done;
 		}
-		if (tok == '.') {
+		if (DeeLexer_GetTok(self) == '.') {
 			/* FIXME: Ambiguity:
 			 * >> import .foo.bar.baz;  // same as: local bar = import(".foo.bar");
 			 * vs:

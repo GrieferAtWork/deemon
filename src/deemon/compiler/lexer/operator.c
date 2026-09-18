@@ -366,11 +366,11 @@ INTERN WUNUSED NONNULL((1)) int32_t DFCALL
 ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 	int32_t result;
 	uint32_t old_flags;
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	TPP_CASE_TPP_TOK_STRING_SQUOTE {
 		tint_t intval;
-		if (!HAS(EXT_CHARACTER_LITERALS))
+		if (!DeeLexer_Has(self, CHARACTER_LITERALS))
 			goto parse_string;
 		ATTR_FALLTHROUGH
 	TPP_CASE_TPP_TOK_INT
@@ -416,93 +416,93 @@ ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 		result = OPERATOR_INV;
 		goto done_y1;
 
-	case TOK_SHL:
+	case TPP_TOK_LANGLE_LANGLE:
 		result = OPERATOR_SHL;
 		goto done_y1;
 
-	case TOK_SHR:
+	case TPP_TOK_RANGLE_RANGLE:
 		result = OPERATOR_SHR;
 		goto done_y1;
 
-	case TOK_POW:
+	case TPP_TOK_STAR_STAR:
 		result = OPERATOR_POW;
 		goto done_y1;
 
-	case TOK_ADD_EQUAL:
+	case TPP_TOK_PLUS_EQUAL:
 		result = OPERATOR_INPLACE_ADD;
 		goto done_y1;
 
-	case TOK_SUB_EQUAL:
+	case TPP_TOK_MINUS_EQUAL:
 		result = OPERATOR_INPLACE_SUB;
 		goto done_y1;
 
-	case TOK_MUL_EQUAL:
+	case TPP_TOK_STAR_EQUAL:
 		result = OPERATOR_INPLACE_MUL;
 		goto done_y1;
 
-	case TOK_DIV_EQUAL:
+	case TPP_TOK_SLASH_EQUAL:
 		result = OPERATOR_INPLACE_DIV;
 		goto done_y1;
 
-	case TOK_MOD_EQUAL:
+	case TPP_TOK_PERCENT_EQUAL:
 		result = OPERATOR_INPLACE_MOD;
 		goto done_y1;
 
-	case TOK_SHL_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE_EQUAL:
 		result = OPERATOR_INPLACE_SHL;
 		goto done_y1;
 
-	case TOK_SHR_EQUAL:
+	case TPP_TOK_RANGLE_RANGLE_EQUAL:
 		result = OPERATOR_INPLACE_SHR;
 		goto done_y1;
 
-	case TOK_AND_EQUAL:
+	case TPP_TOK_AMP_EQUAL:
 		result = OPERATOR_INPLACE_AND;
 		goto done_y1;
 
-	case TOK_OR_EQUAL:
+	case TPP_TOK_PIPE_EQUAL:
 		result = OPERATOR_INPLACE_OR;
 		goto done_y1;
 
-	case TOK_XOR_EQUAL:
+	case TPP_TOK_HAT_EQUAL:
 		result = OPERATOR_INPLACE_XOR;
 		goto done_y1;
 
-	case TOK_POW_EQUAL:
+	case TPP_TOK_STAR_STAR_EQUAL:
 		result = OPERATOR_INPLACE_POW;
 		goto done_y1;
 
-	case TOK_INC:
+	case TPP_TOK_PLUS_PLUS:
 		result = OPERATOR_INC;
 		goto done_y1;
 
-	case TOK_DEC:
+	case TPP_TOK_MINUS_MINUS:
 		result = OPERATOR_DEC;
 		goto done_y1;
 
-	case TOK_EQUAL:
+	case TPP_TOK_EQUAL_EQUAL:
 		result = OPERATOR_EQ;
 		goto done_y1;
 
-	case TOK_NOT_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL:
 		result = OPERATOR_NE;
 		goto done_y1;
 
-	case TOK_LOWER:
+	case TPP_TOK_LANGLE:
 do_operator_lo:
 		result = OPERATOR_LO;
 		goto done_y1;
 
-	case TOK_LOWER_EQUAL:
+	case TPP_TOK_LANGLE_EQUAL:
 		result = OPERATOR_LE;
 		goto done_y1;
 
-	case TOK_GREATER:
+	case TPP_TOK_RANGLE:
 do_operator_gr:
 		result = OPERATOR_GR;
 		goto done_y1;
 
-	case TOK_GREATER_EQUAL:
+	case TPP_TOK_RANGLE_EQUAL:
 		result = OPERATOR_GE;
 		goto done_y1;
 
@@ -510,11 +510,11 @@ do_operator_gr:
 		result = OPERATOR_SIZE;
 		goto done_y1;
 
-	case KWD_copy:
+	case TPP_KWD_copy:
 		result = OPERATOR_COPY;
 		goto done_y1;
 
-	case KWD_super:
+	case TPP_KWD_super:
 		if (!(features & P_OPERATOR_FCLASS))
 			goto default_case;
 		result = Dee_CLASS_OPERATOR_SUPERARGS;
@@ -524,12 +524,12 @@ do_operator_gr:
 		if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 			goto err;
 		ATTR_FALLTHROUGH
-	case TOK_COLON_EQUAL:
+	case TPP_TOK_COLON_EQUAL:
 		result = OPERATOR_ASSIGN;
 		if unlikely(yield() < 0)
 			goto err;
-		if (TPP_ISKEYWORD(tok) && token.t_kwd->k_size == 4 &&
-		    UNALIGNED_GET32(token.t_kwd->k_name) == ENCODE_INT32('m', 'o', 'v', 'e')) {
+		if (DeeLexer_HasTokenKwd(self) && DeeLexer_GetTokenKwdLen(self) == 4 &&
+		    UNALIGNED_GET32(DeeLexer_GetTokenKwdCStr(self)) == ENCODE_INT32('m', 'o', 'v', 'e')) {
 			/* `= move` move-assign operator. */
 			result = OPERATOR_MOVEASSIGN;
 			goto done_y1;
@@ -541,7 +541,7 @@ do_operator_gr:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags;
-		if (tok == ')') {
+		if (DeeLexer_GetTok(self) == ')') {
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			result = OPERATOR_CALL;
 			goto done_y1;
@@ -552,7 +552,7 @@ do_operator_gr:
 		if unlikely(result < 0)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(tok != ')') {
+		if unlikely(DeeLexer_GetTok(self) != ')') {
 			if (WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
 			goto done;
@@ -561,11 +561,12 @@ do_operator_gr:
 
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
 parse_string:
-		if (advance_wraplf(advance_wraplf(token.t_begin)) != token.t_end &&
+		if (advance_wraplf(advance_wraplf((char const *)DeeLexer_GetTokenStart(self))) !=
+		    (char const *)DeeLexer_GetTokenEnd(self) &&
 		    WARN(W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
 			goto err;
 		ATTR_FALLTHROUGH
-	case KWD_str:
+	case TPP_KWD_str:
 		if (features & P_OPERATOR_FCLASS) {
 			result = AST_OPERATOR_STR_OR_PRINT;
 			goto done_y1;
@@ -573,7 +574,7 @@ parse_string:
 		result = OPERATOR_STR;
 		goto done_y1;
 
-	case KWD_repr:
+	case TPP_KWD_repr:
 		if (features & P_OPERATOR_FCLASS) {
 			result = AST_OPERATOR_REPR_OR_PRINTREPR;
 			goto done_y1;
@@ -587,7 +588,7 @@ parse_string:
 		if unlikely(yield() < 0)
 			goto err_flags;
 		result = AST_OPERATOR_GETITEM_OR_SETITEM;
-		if (tok == ':') {
+		if (DeeLexer_GetTok(self) == ':') {
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			if unlikely(yield() < 0)
 				goto err_flags;
@@ -595,7 +596,7 @@ parse_string:
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (skip(']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
-		if (tok == '=') {
+		if (DeeLexer_GetTok(self) == '=') {
 			if unlikely(yield() < 0)
 				goto err;
 			result = (result == AST_OPERATOR_GETITEM_OR_SETITEM
@@ -604,22 +605,22 @@ parse_string:
 		}
 		goto done;
 
-	case KWD_del:
+	case TPP_KWD_del:
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '[') {
+		if (DeeLexer_GetTok(self) == '[') {
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if unlikely(yield() < 0)
 				goto err_flags;
 			result = OPERATOR_DELITEM;
-			if (tok == ':') {
+			if (DeeLexer_GetTok(self) == ':') {
 				result = OPERATOR_DELRANGE;
 				if unlikely(yield() < 0)
 					goto err_flags;
 			}
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(tok != ']') {
+			if unlikely(DeeLexer_GetTok(self) != ']') {
 				if (WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
 				goto done;
@@ -627,7 +628,7 @@ parse_string:
 			goto done_y1;
 		}
 		result = OPERATOR_DELATTR;
-		if unlikely(tok != '.') {
+		if unlikely(DeeLexer_GetTok(self) != '.') {
 			if (WARN(W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME))
 				goto err;
 			goto done;
@@ -638,13 +639,13 @@ parse_string:
 		result = AST_OPERATOR_GETATTR_OR_SETATTR;
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '=') {
+		if (DeeLexer_GetTok(self) == '=') {
 			result = OPERATOR_SETATTR;
 			goto done_y1;
 		}
 		goto done;
 
-	case KWD_for:
+	case TPP_KWD_for:
 		if (features & P_OPERATOR_FCLASS) {
 			result = AST_OPERATOR_FOR;
 			goto done_y1;
@@ -656,10 +657,10 @@ parse_string:
 		size_t name_size;
 		uint32_t name;
 default_case:
-		if (!TPP_ISKEYWORD(tok))
+		if (!DeeLexer_HasTokenKwd(self))
 			goto unknown;
-		name_begin = token.t_kwd->k_name;
-		name_size  = token.t_kwd->k_size;
+		name_begin = DeeLexer_GetTokenKwdCStr(self);
+		name_size  = DeeLexer_GetTokenKwdLen(self);
 		/* Other operator names that technically should have their own
 		 * keyword, but since this is the only place that keyword would
 		 * ever get used, the overhead of manually checking for them is
@@ -687,10 +688,10 @@ default_case:
 				if unlikely(yield() < 0)
 					goto err;
 				result = OPERATOR_MOVEASSIGN;
-				if unlikely(tok == '=') {
+				if unlikely(DeeLexer_GetTok(self) == '=') {
 					if (WARN(W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
-				} else if unlikely(tok != TOK_COLON_EQUAL) {
+				} else if unlikely(DeeLexer_GetTok(self) != TPP_TOK_COLON_EQUAL) {
 					if (WARN(W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
 						goto err;
 					goto done;

@@ -50,7 +50,7 @@ struct Dee_string_object;
 
 enum {
 	/* Special tokens. */
-	TOK_EOF       = '\0', /* END-OF-FILE (will always be ZERO) */
+	TPP_TOK_EOF       = '\0', /* END-OF-FILE (will always be ZERO) */
 	TOK_CHAR      = '\'', /* 'f'. */
 	TOK_STRING    = '\"', /* "foobar". (also includes `r"foobar"' when `TPP_CONFIG_RAW_STRING_LITERALS` is enabled) */
 	TOK_INT       = '0',  /* 42 */
@@ -62,99 +62,65 @@ enum {
 /*	TOK_COMMENT   = 'c',  /* like this one! */
 
 	/* Single-character tokens (always equal to that character's ordinal). */
-	TOK_ADD       = '+',
-	TOK_AND       = '&',
-	TOK_ASSIGN    = '=',
-	TOK_AT        = '@',
-	TOK_BACKSLASH = '\\',
-	TOK_COLON     = ':',
-	TOK_COMMA     = ',',
-	TOK_DIV       = '/',
-	TOK_DOT       = '.',
-	TOK_HASH      = '#',
-	TOK_LANGLE    = '<',
-	TOK_LBRACE    = '{',
-	TOK_LBRACKET  = '[',
-	TOK_LPAREN    = '(',
-	TOK_MOD       = '%',
-	TOK_MUL       = '*',
-	TOK_NOT       = '!',
-	TOK_OR        = '|',
-	TOK_QUESTION  = '?',
-	TOK_RANGLE    = '>',
-	TOK_RBRACE    = '}',
-	TOK_RBRACKET  = ']',
-	TOK_RPAREN    = ')',
-	TOK_SEMICOLON = ';',
-	TOK_SUB       = '-',
-	TOK_TILDE     = '~',
-	TOK_XOR       = '^',
+	TPP_TOK_PLUS      = '+',
+	TPP_TOK_AMP       = '&',
+	TPP_TOK_EQUAL     = '=',
+	TPP_TOK_AT        = '@',
+	TPP_TOK_BACKSLASH = '\\',
+	TPP_TOK_COLON     = ':',
+	TPP_TOK_COMMA     = ',',
+	TPP_TOK_SLASH     = '/',
+	TPP_TOK_DOT       = '.',
+	TPP_TOK_POUND     = '#',
+	TPP_TOK_LANGLE    = '<',
+	TPP_TOK_LBRACE    = '{',
+	TPP_TOK_LBRACKET  = '[',
+	TPP_TOK_LPAREN    = '(',
+	TPP_TOK_PERCENT   = '%',
+	TPP_TOK_STAR      = '*',
+	TPP_TOK_EXCLAIM   = '!',
+	TPP_TOK_PIPE      = '|',
+	TPP_TOK_QMARK     = '?',
+	TPP_TOK_RANGLE    = '>',
+	TPP_TOK_RBRACE    = '}',
+	TPP_TOK_RBRACKET  = ']',
+	TPP_TOK_RPAREN    = ')',
+	TPP_TOK_SEMICOLON = ';',
+	TPP_TOK_MINUS     = '-',
+	TPP_TOK_TILDE     = '~',
+	TPP_TOK_HAT       = '^',
 
 	/* Double (or longer) tokens. */
 	TOK_TWOCHAR_BEGIN = 256,
-	TOK_SHL = TOK_TWOCHAR_BEGIN, /* "<<". */
-	TOK_SHR,           /* ">>". */
-	TOK_EQUAL,         /* "==". */
-	TOK_NOT_EQUAL,     /* "!=". */
-	TOK_GREATER_EQUAL, /* ">=". */
-	TOK_LOWER_EQUAL,   /* "<=". */
-	TPP_TOK_DOT_DOT_DOT,          /* "...". */
-	TOK_ADD_EQUAL,     /* "+=". */
-	TOK_SUB_EQUAL,     /* "-=". */
-	TOK_MUL_EQUAL,     /* "*=". */
-	TOK_DIV_EQUAL,     /* "/=". */
-	TOK_MOD_EQUAL,     /* "%=". */
-	TOK_SHL_EQUAL,     /* "<<=". */
-	TOK_SHR_EQUAL,     /* ">>=". */
-	TOK_AND_EQUAL,     /* "&=". */
-	TOK_OR_EQUAL,      /* "|=". */
-	TOK_XOR_EQUAL,     /* "^=". */
-	TOK_POW_EQUAL,     /* "**=". */
-/*	TOK_AT_EQUAL,      /* "@=". */
-/*	TOK_GLUE,          /* "##". */
-	TOK_LAND,          /* "&&". */
-	TOK_LOR,           /* "||". */
-/*	TOK_LXOR,          /* "^^". */
-	TOK_INC,           /* "++". */
-	TOK_DEC,           /* "--". */
-	TOK_POW,           /* "**". */
-/*	TOK_TILDE_TILDE,   /* "~~". */
-	TOK_ARROW,         /* "->". */
-	TOK_COLON_EQUAL,   /* ":=". */
-/*	TOK_NAMESPACE,     /* "::". */
-/*	TOK_ARROW_STAR,    /* "->*". */
-/*	TOK_DOT_STAR,      /* ".*". */
-/*	TPP_TOK_DOT_DOT,        /* "..". */
-/*	TOK_LOGT,          /* "<>". */
-/*	TOK_LANGLE3,       /* "<<<". */
-/*	TOK_RANGLE3,       /* ">>>". */
-/*	TOK_LANGLE3_EQUAL, /* "<<<=". */
-/*	TOK_RANGLE3_EQUAL, /* ">>>=". */
-	TOK_EQUAL3,        /* "===". */
-	TOK_NOT_EQUAL3,    /* "!==". */
-	TOK_QMARK_QMARK,   /* "??". */
+	TPP_TOK_LANGLE_LANGLE = TOK_TWOCHAR_BEGIN, /* "<<". */
+	TPP_TOK_RANGLE_RANGLE,                     /* ">>". */
+	TPP_TOK_EQUAL_EQUAL,                       /* "==". */
+	TPP_TOK_EXCLAIM_EQUAL,                     /* "!=". */
+	TPP_TOK_RANGLE_EQUAL,                      /* ">=". */
+	TPP_TOK_LANGLE_EQUAL,                      /* "<=". */
+	TPP_TOK_DOT_DOT_DOT,                       /* "...". */
+	TPP_TOK_PLUS_EQUAL,                        /* "+=". */
+	TPP_TOK_MINUS_EQUAL,                       /* "-=". */
+	TPP_TOK_STAR_EQUAL,                        /* "*=". */
+	TPP_TOK_SLASH_EQUAL,                       /* "/=". */
+	TPP_TOK_PERCENT_EQUAL,                     /* "%=". */
+	TPP_TOK_LANGLE_LANGLE_EQUAL,               /* "<<=". */
+	TPP_TOK_RANGLE_RANGLE_EQUAL,               /* ">>=". */
+	TPP_TOK_AMP_EQUAL,                         /* "&=". */
+	TPP_TOK_PIPE_EQUAL,                        /* "|=". */
+	TPP_TOK_HAT_EQUAL,                         /* "^=". */
+	TPP_TOK_STAR_STAR_EQUAL,                   /* "**=". */
+	TPP_TOK_AMP_AMP,                           /* "&&". */
+	TPP_TOK_PIPE_PIPE,                         /* "||". */
+	TPP_TOK_PLUS_PLUS,                         /* "++". */
+	TPP_TOK_MINUS_MINUS,                       /* "--". */
+	TPP_TOK_STAR_STAR,                         /* "**". */
+	TOK_ARROW,                                 /* "->". */
+	TPP_TOK_COLON_EQUAL,                       /* ":=". */
+	TPP_TOK_EQUAL_EQUAL_EQUAL,                 /* "===". */
+	TPP_TOK_EXCLAIM_EQUAL_EQUAL,               /* "!==". */
+	TPP_TOK_QMARK_QMARK,                       /* "??". */
 	TOK_KEYWORD_BEGIN, /* KEEP THIS THE LAST TOKEN! */
-
-	TOK_TWOCHAR_END = TOK_KEYWORD_BEGIN,
-
-	/* Name aliases */
-	TOK_POS           = TOK_ADD,
-	TOK_NEG           = TOK_SUB,
-	TOK_LOWER         = TOK_LANGLE,
-	TOK_GREATER       = TOK_RANGLE,
-/*	TOK_COLON_COLON   = TOK_NAMESPACE, */
-/*	TOK_LOWER_GREATER = TOK_LOGT, */
-/*	TOK_LANGLE_RANGLE = TOK_LOGT, */
-	TOK_LANGLE1       = TOK_LANGLE,
-	TOK_LANGLE2       = TOK_SHL,
-	TOK_LANGLE_EQUAL  = TOK_LOWER_EQUAL,
-	TOK_LANGLE1_EQUAL = TOK_LOWER_EQUAL,
-	TOK_LANGLE2_EQUAL = TOK_SHL_EQUAL,
-	TOK_RANGLE1       = TOK_RANGLE,
-	TOK_RANGLE2       = TOK_SHR,
-	TOK_RANGLE_EQUAL  = TOK_GREATER_EQUAL,
-	TOK_RANGLE1_EQUAL = TOK_GREATER_EQUAL,
-	TOK_RANGLE2_EQUAL = TOK_SHR_EQUAL,
 };
 
 /* Special variable names. */
@@ -174,26 +140,26 @@ typedef struct jit_function_object JITFunctionObject;
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
-#define JIT_TOKEN_IS_UNARY(self)                               \
-	((self)->jl_tok == '.' || (self)->jl_tok == '(' ||         \
-	 (self)->jl_tok == '[' || (self)->jl_tok == '{' ||         \
-	 (self)->jl_tok == TOK_INC || (self)->jl_tok == TOK_DEC || \
+#define JIT_TOKEN_IS_UNARY(self)                                                     \
+	((self)->jl_tok == '.' || (self)->jl_tok == '(' ||                               \
+	 (self)->jl_tok == '[' || (self)->jl_tok == '{' ||                               \
+	 (self)->jl_tok == TPP_TOK_PLUS_PLUS || (self)->jl_tok == TPP_TOK_MINUS_MINUS || \
 	 JITLexer_ISKWD(self, "pack"))
 #define JIT_TOKEN_IS_PROD(self)                        \
 	((self)->jl_tok == '*' || (self)->jl_tok == '/' || \
-	 (self)->jl_tok == '%' || (self)->jl_tok == TOK_POW)
+	 (self)->jl_tok == '%' || (self)->jl_tok == TPP_TOK_STAR_STAR)
 #define JIT_TOKEN_IS_SUM(self) \
 	((self)->jl_tok == '+' || (self)->jl_tok == '-')
 #define JIT_TOKEN_IS_SHIFT(self) \
-	((self)->jl_tok == TOK_SHL || (self)->jl_tok == TOK_SHR)
-#define JIT_TOKEN_IS_CMP(self)                                           \
-	((self)->jl_tok == TOK_LOWER || (self)->jl_tok == TOK_LOWER_EQUAL || \
-	 (self)->jl_tok == TOK_GREATER || (self)->jl_tok == TOK_GREATER_EQUAL)
-#define JIT_TOKEN_IS_CMPEQ(self)                                         \
-	((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL ||   \
-	 (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
-	 (self)->jl_tok == TOK_QMARK_QMARK || (self)->jl_tok == '!' ||       \
-	 ((self)->jl_tok == JIT_KEYWORD &&                                   \
+	((self)->jl_tok == TPP_TOK_LANGLE_LANGLE || (self)->jl_tok == TPP_TOK_RANGLE_RANGLE)
+#define JIT_TOKEN_IS_CMP(self)                                                     \
+	((self)->jl_tok == TPP_TOK_LANGLE || (self)->jl_tok == TPP_TOK_LANGLE_EQUAL || \
+	 (self)->jl_tok == TPP_TOK_RANGLE || (self)->jl_tok == TPP_TOK_RANGLE_EQUAL)
+#define JIT_TOKEN_IS_CMPEQ(self)                                                                     \
+	((self)->jl_tok == TPP_TOK_EQUAL_EQUAL || (self)->jl_tok == TPP_TOK_EXCLAIM_EQUAL ||             \
+	 (self)->jl_tok == TPP_TOK_EQUAL_EQUAL_EQUAL || (self)->jl_tok == TPP_TOK_EXCLAIM_EQUAL_EQUAL || \
+	 (self)->jl_tok == TPP_TOK_QMARK_QMARK || (self)->jl_tok == '!' ||                               \
+	 ((self)->jl_tok == JIT_KEYWORD &&                                                               \
 	  (JITLexer_ISTOK(self, "is") || JITLexer_ISTOK(self, "in"))))
 #define JIT_TOKEN_IS_AND(self) \
 	((self)->jl_tok == '&')
@@ -204,44 +170,44 @@ typedef struct jit_function_object JITFunctionObject;
 #define JIT_TOKEN_IS_AS(self) \
 	((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self, "as"))
 #define JIT_TOKEN_IS_LAND(self) \
-	((self)->jl_tok == TOK_LAND)
+	((self)->jl_tok == TPP_TOK_AMP_AMP)
 #define JIT_TOKEN_IS_LOR(self) \
-	((self)->jl_tok == TOK_LOR)
+	((self)->jl_tok == TPP_TOK_PIPE_PIPE)
 #define JIT_TOKEN_IS_COND(self) \
 	((self)->jl_tok == '?')
-#define JIT_TOKEN_IS_ASSIGN(self)         \
-	((self)->jl_tok == TOK_COLON_EQUAL || \
-	 ((self)->jl_tok >= TOK_ADD_EQUAL && (self)->jl_tok <= TOK_POW_EQUAL))
+#define JIT_TOKEN_IS_ASSIGN(self)             \
+	((self)->jl_tok == TPP_TOK_COLON_EQUAL || \
+	 ((self)->jl_tok >= TPP_TOK_PLUS_EQUAL && (self)->jl_tok <= TPP_TOK_STAR_STAR_EQUAL))
 
 #define JIT_CASE_TOKEN_IS_UNARY \
 	case '.':                   \
 	case '(':                   \
 	case '[':                   \
 	case '{':                   \
-	case TOK_INC:               \
-	case TOK_DEC
+	case TPP_TOK_PLUS_PLUS:     \
+	case TPP_TOK_MINUS_MINUS
 #define JIT_CASE_TOKEN_IS_PROD \
 	case '*':                  \
 	case '/':                  \
 	case '%':                  \
-	case TOK_POW
+	case TPP_TOK_STAR_STAR
 #define JIT_CASE_TOKEN_IS_SUM \
 	case '+':                 \
 	case '-'
 #define JIT_CASE_TOKEN_IS_SHIFT \
-	case TOK_SHL:               \
-	case TOK_SHR
-#define JIT_CASE_TOKEN_IS_CMP \
-	case TOK_LOWER:           \
-	case TOK_LOWER_EQUAL:     \
-	case TOK_GREATER:         \
-	case TOK_GREATER_EQUAL
-#define JIT_CASE_TOKEN_IS_CMPEQ \
-	case TOK_EQUAL:             \
-	case TOK_NOT_EQUAL:         \
-	case TOK_EQUAL3:            \
-	case TOK_NOT_EQUAL3:        \
-	case TOK_QMARK_QMARK:       \
+	case TPP_TOK_LANGLE_LANGLE: \
+	case TPP_TOK_RANGLE_RANGLE
+#define JIT_CASE_TOKEN_IS_CMP  \
+	case TPP_TOK_LANGLE:       \
+	case TPP_TOK_LANGLE_EQUAL: \
+	case TPP_TOK_RANGLE:       \
+	case TPP_TOK_RANGLE_EQUAL
+#define JIT_CASE_TOKEN_IS_CMPEQ       \
+	case TPP_TOK_EQUAL_EQUAL:         \
+	case TPP_TOK_EXCLAIM_EQUAL:       \
+	case TPP_TOK_EQUAL_EQUAL_EQUAL:   \
+	case TPP_TOK_EXCLAIM_EQUAL_EQUAL: \
+	case TPP_TOK_QMARK_QMARK:         \
 	case '!'
 #define JIT_CASE_TOKEN_IS_AND \
 	case '&'
@@ -250,24 +216,24 @@ typedef struct jit_function_object JITFunctionObject;
 #define JIT_CASE_TOKEN_IS_OR \
 	case '|'
 #define JIT_CASE_TOKEN_IS_LAND \
-	case TOK_LAND
+	case TPP_TOK_AMP_AMP
 #define JIT_CASE_TOKEN_IS_LOR \
-	case TOK_LOR
+	case TPP_TOK_PIPE_PIPE
 #define JIT_CASE_TOKEN_IS_COND \
 	case '?'
-#define JIT_CASE_TOKEN_IS_ASSIGN \
-	case TOK_COLON_EQUAL:        \
-	case TOK_ADD_EQUAL:          \
-	case TOK_SUB_EQUAL:          \
-	case TOK_MUL_EQUAL:          \
-	case TOK_DIV_EQUAL:          \
-	case TOK_MOD_EQUAL:          \
-	case TOK_SHL_EQUAL:          \
-	case TOK_SHR_EQUAL:          \
-	case TOK_AND_EQUAL:          \
-	case TOK_OR_EQUAL:           \
-	case TOK_XOR_EQUAL:          \
-	case TOK_POW_EQUAL
+#define JIT_CASE_TOKEN_IS_ASSIGN      \
+	case TPP_TOK_COLON_EQUAL:         \
+	case TPP_TOK_PLUS_EQUAL:          \
+	case TPP_TOK_MINUS_EQUAL:         \
+	case TPP_TOK_STAR_EQUAL:          \
+	case TPP_TOK_SLASH_EQUAL:         \
+	case TPP_TOK_PERCENT_EQUAL:       \
+	case TPP_TOK_LANGLE_LANGLE_EQUAL: \
+	case TPP_TOK_RANGLE_RANGLE_EQUAL: \
+	case TPP_TOK_AMP_EQUAL:           \
+	case TPP_TOK_PIPE_EQUAL:          \
+	case TPP_TOK_HAT_EQUAL:           \
+	case TPP_TOK_STAR_STAR_EQUAL
 
 
 

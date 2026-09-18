@@ -115,34 +115,33 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cond_operand(De
 INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_assign_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
 
 /* Check if the given token qualifies for the associated operation parser function. */
-#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
+#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TPP_TOK_STAR_STAR)
 #define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
-#define TOKEN_IS_SHIFT(tok)  ((tok) == TOK_SHL || (tok) == TOK_SHR)
-#define TOKEN_IS_CMP(tok)    ((tok) == TOK_LOWER || (tok) == TOK_LOWER_EQUAL || (tok) == TOK_GREATER || (tok) == TOK_GREATER_EQUAL)
-#define TOKEN_IS_CMPEQ(tok)  ((tok) == TOK_EQUAL || (tok) == TOK_NOT_EQUAL || (tok) == TOK_EQUAL3 || (tok) == TOK_NOT_EQUAL3 || (tok) == TOK_QMARK_QMARK || (tok) == KWD_is || (tok) == KWD_in || (tok) == '!')
+#define TOKEN_IS_SHIFT(tok)  ((tok) == TPP_TOK_LANGLE_LANGLE || (tok) == TPP_TOK_RANGLE_RANGLE)
+#define TOKEN_IS_CMP(tok)    ((tok) == TPP_TOK_LANGLE || (tok) == TPP_TOK_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE || (tok) == TPP_TOK_RANGLE_EQUAL)
+#define TOKEN_IS_CMPEQ(tok)  ((tok) == TPP_TOK_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL || (tok) == TPP_TOK_EQUAL_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL_EQUAL || (tok) == TPP_TOK_QMARK_QMARK || (tok) == TPP_KWD_is || (tok) == TPP_KWD_in || (tok) == '!')
 #define TOKEN_IS_AND(tok)    ((tok) == '&')
 #define TOKEN_IS_XOR(tok)    ((tok) == '^')
 #define TOKEN_IS_OR(tok)     ((tok) == '|')
-#define TOKEN_IS_AS(tok)     ((tok) == KWD_as)
-#define TOKEN_IS_LAND(tok)   ((tok) == TOK_LAND)
-#define TOKEN_IS_LOR(tok)    ((tok) == TOK_LOR)
+#define TOKEN_IS_AS(tok)     ((tok) == TPP_KWD_as)
+#define TOKEN_IS_LAND(tok)   ((tok) == TPP_TOK_AMP_AMP)
+#define TOKEN_IS_LOR(tok)    ((tok) == TPP_TOK_PIPE_PIPE)
 #define TOKEN_IS_COND(tok)   ((tok) == '?')
-#define TOKEN_IS_ASSIGN(tok) ((tok) == TOK_COLON_EQUAL || ((tok) >= TOK_ADD_EQUAL && (tok) <= TOK_POW_EQUAL))
-
-#define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TOK_POW
+#define TOKEN_IS_ASSIGN(tok) ((tok) == TPP_TOK_COLON_EQUAL || (tok) == TPP_TOK_PLUS_EQUAL || (tok) == TPP_TOK_MINUS_EQUAL || (tok) == TPP_TOK_STAR_EQUAL || (tok) == TPP_TOK_SLASH_EQUAL || (tok) == TPP_TOK_PERCENT_EQUAL || (tok) == TPP_TOK_LANGLE_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE_RANGLE_EQUAL || (tok) == TPP_TOK_AMP_EQUAL || (tok) == TPP_TOK_PIPE_EQUAL || (tok) == TPP_TOK_HAT_EQUAL || (tok) == TPP_TOK_STAR_STAR_EQUAL)
+#define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TPP_TOK_STAR_STAR
 #define CASE_TOKEN_IS_SUM    case '+': case '-'
-#define CASE_TOKEN_IS_SHIFT  case TOK_SHL: case TOK_SHR
-#define CASE_TOKEN_IS_CMP    case TOK_LOWER: case TOK_LOWER_EQUAL: case TOK_GREATER: case TOK_GREATER_EQUAL
-#define CASE_TOKEN_IS_CMPEQ  case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case TOK_QMARK_QMARK: case KWD_is: case KWD_in: case '!'
+#define CASE_TOKEN_IS_SHIFT  case TPP_TOK_LANGLE_LANGLE: case TPP_TOK_RANGLE_RANGLE
+#define CASE_TOKEN_IS_CMP    case TPP_TOK_LANGLE: case TPP_TOK_LANGLE_EQUAL: case TPP_TOK_RANGLE: case TPP_TOK_RANGLE_EQUAL
+#define CASE_TOKEN_IS_CMPEQ  case TPP_TOK_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL: case TPP_TOK_EQUAL_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL_EQUAL: case TPP_TOK_QMARK_QMARK: case TPP_KWD_is: case TPP_KWD_in: case '!'
 #define CASE_TOKEN_IS_AND    case '&'
 #define CASE_TOKEN_IS_XOR    case '^'
 #define CASE_TOKEN_IS_OR     case '|'
-#define CASE_TOKEN_IS_AS     case KWD_as
-#define CASE_TOKEN_IS_LAND   case TOK_LAND
-#define CASE_TOKEN_IS_LOR    case TOK_LOR
+#define CASE_TOKEN_IS_AS     case TPP_KWD_as
+#define CASE_TOKEN_IS_LAND   case TPP_TOK_AMP_AMP
+#define CASE_TOKEN_IS_LOR    case TPP_TOK_PIPE_PIPE
 #define CASE_TOKEN_IS_COND   case '?'
-#define CASE_TOKEN_IS_ASSIGN case TOK_COLON_EQUAL: case TOK_ADD_EQUAL: case TOK_SUB_EQUAL: case TOK_MUL_EQUAL: case TOK_DIV_EQUAL: case TOK_MOD_EQUAL: \
-                             case TOK_SHL_EQUAL: case TOK_SHR_EQUAL: case TOK_AND_EQUAL: case TOK_OR_EQUAL: case TOK_XOR_EQUAL: case TOK_POW_EQUAL
+#define CASE_TOKEN_IS_ASSIGN case TPP_TOK_COLON_EQUAL: case TPP_TOK_PLUS_EQUAL: case TPP_TOK_MINUS_EQUAL: case TPP_TOK_STAR_EQUAL: case TPP_TOK_SLASH_EQUAL: case TPP_TOK_PERCENT_EQUAL: \
+                             case TPP_TOK_LANGLE_LANGLE_EQUAL: case TPP_TOK_RANGLE_RANGLE_EQUAL: case TPP_TOK_AMP_EQUAL: case TPP_TOK_PIPE_EQUAL: case TPP_TOK_HAT_EQUAL: case TPP_TOK_STAR_STAR_EQUAL
 
 
 /* Parse a top-level expression. */
@@ -334,7 +333,7 @@ ast_build_operator(Dee_operator_t name, uint16_t flags,
 
 /* Parse a loop statement that appears in an expression:
  * When called, the current token must be one of
- * `KWD_for`, `KWD_foreach`, `KWD_while` or `KWD_do`
+ * `TPP_KWD_for`, `TPP_KWD_foreach`, `TPP_KWD_while` or `TPP_KWD_do`
  * The returned expression is usually a call-operator
  * on an anonymous lambda function. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL

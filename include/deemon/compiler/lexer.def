@@ -617,8 +617,8 @@ DEF_K(for)
 DEF_K(foreach)
 DEF_K(__nth)
 DEF_K(operator)
-#define KWD_ISUNARY(x) \
-	((x) >= KWD_none && (x) <= KWD_operator)
+#define TPP_KWD_ISUNARY(x) \
+	((x) >= TPP_KWD_none && (x) <= TPP_KWD_operator)
 
 DEF_K(final)
 DEF_K(varying)
@@ -738,13 +738,73 @@ DEF_K(global)
 DEF_K(static)
 DEF_K(__stack)
 
-#define KWD_IS_D100_VARIABLE_MODIFIER(x) \
-	((x) >= KWD_local && (x) <= KWD___stack)
+
+#define TPP_KWD_none     KWD_none
+#define TPP_KWD_true     KWD_true
+#define TPP_KWD_false    KWD_false
+#define TPP_KWD_copy     KWD_copy
+#define TPP_KWD_deepcopy KWD_deepcopy
+#define TPP_KWD_assert   KWD_assert
+#define TPP_KWD_import   KWD_import
+#define TPP_KWD_str      KWD_str
+#define TPP_KWD_repr     KWD_repr
+#define TPP_KWD_type     KWD_type
+#define TPP_KWD_function KWD_function
+#define TPP_KWD_with     KWD_with
+#define TPP_KWD_pack     KWD_pack
+#define TPP_KWD_if       KWD_if
+#define TPP_KWD_do       KWD_do
+#define TPP_KWD_while    KWD_while
+#define TPP_KWD_for      KWD_for
+#define TPP_KWD_foreach  KWD_foreach
+#define TPP_KWD___nth    KWD___nth
+#define TPP_KWD_operator KWD_operator
+#define TPP_KWD_final    KWD_final
+#define TPP_KWD_varying  KWD_varying
+#define TPP_KWD_class    KWD_class
+#define TPP_KWD_this     KWD_this
+#define TPP_KWD_super    KWD_super
+#define TPP_KWD_is       KWD_is
+#define TPP_KWD_in       KWD_in
+#define TPP_KWD_as       KWD_as
+#define TPP_KWD_bound    KWD_bound
+#define TPP_KWD_from     KWD_from
+#define TPP_KWD_break    KWD_break
+#define TPP_KWD_continue KWD_continue
+#define TPP_KWD_return   KWD_return
+#define TPP_KWD_yield    KWD_yield
+#define TPP_KWD_throw    KWD_throw
+#define TPP_KWD_try      KWD_try
+#define TPP_KWD_finally  KWD_finally
+#define TPP_KWD_catch    KWD_catch
+#define TPP_KWD_del      KWD_del
+#define TPP_KWD_print    KWD_print
+#define TPP_KWD___asm    KWD___asm
+#define TPP_KWD___asm__  KWD___asm__
+#define TPP_KWD_goto     KWD_goto
+#define TPP_KWD_switch   KWD_switch
+#define TPP_KWD_case     KWD_case
+#define TPP_KWD_default  KWD_default
+#define TPP_KWD_private  KWD_private
+#define TPP_KWD_public   KWD_public
+#define TPP_KWD_property KWD_property
+#define TPP_KWD_member   KWD_member
+#define TPP_KWD_f        KWD_f
+#define TPP_KWD_F        KWD_F
+#define TPP_KWD_local    KWD_local
+#define TPP_KWD_global   KWD_global
+#define TPP_KWD_static   KWD_static
+#define TPP_KWD___stack  KWD___stack
+
+
+#define TPP_KWD_IS_D100_VARIABLE_MODIFIER(x) \
+	((x) >= TPP_KWD_local && (x) <= TPP_KWD___stack)
 
 
 /* Re-implement our own, minimal sub-set of the TPP's builtin
  * system macros. (Since we're configuring to disable those) */
 EXTENSION(EXT_SYSTEM_MACROS, "define-system-macros", 1)
+#define TPP_EXT_SYSTEM_MACROS EXT_SYSTEM_MACROS
 
 /* Old-style classes simply means that any class without an explicitly
  * defined base will be derived from `OldUserClass from d200`, instead
@@ -752,6 +812,7 @@ EXTENSION(EXT_SYSTEM_MACROS, "define-system-macros", 1)
  * operators to emulate a dynamic member table, as expected by old-style
  * code. */
 EXTENSION(EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
+#define TPP_EXT_OLD_STYLE_CLASSES EXT_OLD_STYLE_CLASSES
 
 /* enable/disable the use of `'\x12'' to define an integer
  * contant `0x12` when enabled.
@@ -761,6 +822,7 @@ EXTENSION(EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
  * as well as "foo = 'bar'", without the need of escaping
  * characters */
 EXTENSION(EXT_CHARACTER_LITERALS, "character-literals", 0)
+#define TPP_EXT_CHARACTER_LITERALS EXT_CHARACTER_LITERALS
 
 /* Indicate to user-code that they are running under deemon v200 */
 PREDEFINED_MACRO_IF(__DEEMON__, HAS(EXT_SYSTEM_MACROS), "200")

@@ -1039,10 +1039,9 @@ DECL_END
 DECL_BEGIN
 
 #ifdef __INTELLISENSE__
-struct TPPToken token;
-tok_t tok;
-tok_t yield(void);
-tok_t yieldnb(void);
+struct TPPToken token; /* DEPRECATED! -- Use `DeeLexer_GetToken()` */
+tok_t tok;             /* DEPRECATED! -- Use `DeeLexer_GetTok()` */
+tok_t yield(void);     /* DEPRECATED! -- Use `DeeLexer_Yield()` */
 tok_t yieldnbif(bool allow);
 /* Skip a token `expected_tok`, or warn with `wnum` if the current token didn't match */
 int skip(tok_t expected_tok, int wnum, ...);
@@ -1050,11 +1049,10 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define token             TPPLexer_Global.l_token
 #define tok               TPPLexer_Global.l_token.t_id
 #define yield()           TPPLexer_Yield()
-#define yieldnb()         TPPLexer_YieldNB()
 #define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
 #define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : parser_skip(expected_tok, __VA_ARGS__))
 #endif /* !__INTELLISENSE__ */
-#define HAS(ext)          TPPLexer_HasExtension(ext)
+#define HAS(ext)          TPPLexer_HasExtension(ext) /* DEPRECATED! -- Use `DeeLexer_Has()` */
 #define WARN(...)         parser_warnf(__VA_ARGS__)
 #define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)
 #define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__)
@@ -1113,12 +1111,12 @@ _parser_paren_begin(bool *__restrict p_has_paren, int wnum);
 
 INTDEF struct TPPKeyword TPPKeyword_Empty;
 INTDEF WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void);
-INTDEF WUNUSED char *DCALL peek_next_token(struct TPPFile **tok_file);
-INTDEF WUNUSED NONNULL((1)) char *DCALL peek_next_advance(char *p, struct TPPFile **tok_file);
+INTDEF WUNUSED char const *DCALL peek_next_token(struct TPPFile **tok_file);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, struct TPPFile **tok_file);
 INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
-INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char *__restrict tok_begin, int create_missing);
+INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
 INTDEF WUNUSED struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
-INTDEF WUNUSED NONNULL((1)) char *DCALL advance_wraplf(char *__restrict p);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p);
 INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
 
 DECL_END
@@ -1145,24 +1143,43 @@ typedef struct {
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
 
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#define DeeLexer_GetLexer(self) (&(self)->dl_lexer)
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-#define DeeLexer_GetLexer(self) ((void)(self), TPPLexer_Current)
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define DeeLexer_Has(self, feat)                 tpp_lexer_has(&(self)->dl_lexer, feat)
+#define DeeLexer_GetTok(self)                    tpp_lexer_gettok(&(self)->dl_lexer)
+#define DeeLexer_GetToken(self)                  tpp_lexer_gettoken(&(self)->dl_lexer)
+#define DeeLexer_HasTokenKwd(self)               tpp_lexer_hastokenkwd(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwd(self)               tpp_lexer_gettokenkwd(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdCStr(self)           tpp_lexer_gettokenkwdcstr(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdStr(self)            tpp_lexer_gettokenkwdstr(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdLen(self)            tpp_lexer_gettokenkwdlen(&(self)->dl_lexer)
+#define DeeLexer_GetTokenStart(self)             tpp_lexer_gettokenstart(&(self)->dl_lexer)
+#define DeeLexer_GetTokenEnd(self)               tpp_lexer_gettokenend(&(self)->dl_lexer)
+#define DeeLexer_GetTokenLen(self)               tpp_lexer_gettokenlen(&(self)->dl_lexer)
+#define DeeLexer_SetTokenId(self, id)            tpp_lexer_settokenid(&(self)->dl_lexer, id)
+#define DeeLexer_SetTokenRange(self, start, end) tpp_lexer_settokenrange(&(self)->dl_lexer, start, end)
+#define DeeLexer_SetTokenEnd(self, end)          tpp_lexer_settokenend(&(self)->dl_lexer, end)
 
-#define DeeLexer_GetTok(self)        tpp_lexer_gettok(DeeLexer_GetLexer(self))
-#define DeeLexer_GetTokenStart(self) tpp_lexer_gettokenstart(DeeLexer_GetLexer(self))
-#define DeeLexer_GetTokenEnd(self)   tpp_lexer_gettokenend(DeeLexer_GetLexer(self))
-#define DeeLexer_YieldRaw(self)      tpp_lexer_yieldraw_blocking(DeeLexer_GetLexer(self))
-#define DeeLexer_YieldPP(self)       tpp_lexer_yieldpp_blocking(DeeLexer_GetLexer(self))
-#define DeeLexer_Yield(self)         tpp_lexer_yield_blocking(DeeLexer_GetLexer(self))
+#define DeeLexer_YieldRaw(self)                    tpp_lexer_yieldraw_blocking(&(self)->dl_lexer)
+#define DeeLexer_YieldPP(self)                     tpp_lexer_yieldpp_blocking(&(self)->dl_lexer)
+#define DeeLexer_Yield(self)                       tpp_lexer_yield_blocking(&(self)->dl_lexer)
+#define DeeLexer_YieldRawNB(self)                  tpp_lexer_yieldraw(&(self)->dl_lexer)
+#define DeeLexer_YieldPPNB(self)                   tpp_lexer_yieldpp(&(self)->dl_lexer)
+#define DeeLexer_YieldNB(self)                     tpp_lexer_yield(&(self)->dl_lexer)
+#define DeeLexer_YieldRawXNB(self, allow_nonblock) ((allow_nonblock) ? DeeLexer_YieldRawNB(self) : DeeLexer_YieldRaw(self))
+#define DeeLexer_YieldPPXNB(self, allow_nonblock)  ((allow_nonblock) ? DeeLexer_YieldPPNB(self) : DeeLexer_YieldPP(self))
+#define DeeLexer_YieldXNB(self, allow_nonblock)    ((allow_nonblock) ? DeeLexer_YieldNB(self) : DeeLexer_Yield(self))
+
+
+/* Helper to check if the current token should be considered a string token */
+#define DeeLexer_IsStringToken(self)                    \
+	(TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)) ||  \
+	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
+	  !DeeLexer_Has(self, CHARACTER_LITERALS)))
 
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 /* Helper to transition into a world where this gets passed along the stack */
 #define _DeeLexer_Current ((DeeLexer *)TPPLexer_Current)
 
-//#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(DeeLexer_GetLexer(lexer), tid)
+//#define DeeLexer_Skip(self, tid) tpp_lexer_skip(&(self)->dl_lexer, tid)
 #define DeeLexer_VWarnf(self, id, args)             ((void)(self), parser_vwarnf(id, args))
 #define DeeLexer_Warnf(self, ...)                   ((void)(self), parser_warnf(__VA_ARGS__))
 //#define DeeLexer_VWarnfAt(self, file, pos, args)    ((void)(self), ...)

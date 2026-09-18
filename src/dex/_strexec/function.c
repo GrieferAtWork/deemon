@@ -343,7 +343,7 @@ err_varargs_already_defined:
 				        JITLexer_ISTOK(&lex, "varying")))
 					JITLexer_Yield(&lex);
 				/* Check for keyword arguments parameter. */
-				if (lex.jl_tok == TOK_POW) {
+				if (lex.jl_tok == TPP_TOK_STAR_STAR) {
 					if (result->jf_varkwds != (size_t)-1) {
 						DeeError_Throwf(&DeeError_SyntaxError,
 						                "Variable keywords have already been defined");
@@ -952,7 +952,7 @@ done_args:
 		}
 		if likely(result) {
 			ASSERT(context.jc_retval == JITCONTEXT_RETVAL_UNSET);
-			if unlikely(lexer.jl_tok != TOK_EOF) {
+			if unlikely(lexer.jl_tok != TPP_TOK_EOF) {
 				DeeError_Throwf(&DeeError_SyntaxError,
 				                "Expected EOF but got `%$s`",
 				                (size_t)(lexer.jl_end - lexer.jl_tokstart),
@@ -982,7 +982,7 @@ handle_error:
 				/* TODO: Somehow remember that the error happened at `lexer.jl_errpos` */
 			}
 		}
-	} else if unlikely(lexer.jl_tok == TOK_EOF) {
+	} else if unlikely(lexer.jl_tok == TPP_TOK_EOF) {
 		goto do_return_none;
 	} else {
 		do {
@@ -998,7 +998,7 @@ handle_error:
 			}
 			/* Error, or return encountered. */
 			goto load_return_value;
-		} while (lexer.jl_tok != TOK_EOF);
+		} while (lexer.jl_tok != TPP_TOK_EOF);
 do_return_none:
 		result = DeeNone_NewRef();
 	}
@@ -1087,7 +1087,7 @@ jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
 	JITSmallLexer lhs, rhs;
 	JITSmallLexer_Start(&lhs, lhs_start, lhs_end);
 	JITSmallLexer_Start(&rhs, rhs_start, rhs_end);
-	while (lhs.jl_tok != TOK_EOF && rhs.jl_tok != TOK_EOF) {
+	while (lhs.jl_tok != TPP_TOK_EOF && rhs.jl_tok != TPP_TOK_EOF) {
 		if (lhs.jl_tok > rhs.jl_tok)
 			return Dee_COMPARE_GR;
 		if (lhs.jl_tok < rhs.jl_tok)
@@ -1119,9 +1119,9 @@ jit_compare_tokens(unsigned char const *lhs_start, unsigned char const *lhs_end,
 		JITLexer_Yield((JITLexer *)&lhs);
 		JITLexer_Yield((JITLexer *)&rhs);
 	}
-	if (lhs.jl_tok != TOK_EOF)
+	if (lhs.jl_tok != TPP_TOK_EOF)
 		return 1;
-	if (rhs.jl_tok != TOK_EOF)
+	if (rhs.jl_tok != TPP_TOK_EOF)
 		return -1;
 	return 0;
 }

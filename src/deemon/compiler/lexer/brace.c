@@ -58,15 +58,15 @@ ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 	++elemc;
 
 	/* Parse the remainder of a Dict initializer. */
-	while (tok == ',') {
+	while (DeeLexer_GetTok(self) == ',') {
 		if unlikely(yield() < 0)
 			goto err_dict_elemv;
 
 		/* Parse the key expression. */
-		if (tok == '.') {
+		if (DeeLexer_GetTok(self) == '.') {
 			if unlikely(yield() < 0)
 				goto err_dict_elemv;
-			if (TPP_ISKEYWORD(tok)) {
+			if (DeeLexer_HasTokenKwd(self)) {
 				DREF DeeObject *key = DeeString_NewSized(token.t_kwd->k_name,
 				                                         token.t_kwd->k_size);
 				if unlikely(!key)
@@ -166,8 +166,8 @@ ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item) {
 	ast_incref(initial_item);
 	elemv[0] = initial_item;
 	for (;;) {
-		if (tok != ',') {
-			if (tok == ':') {
+		if (DeeLexer_GetTok(self) != ',') {
+			if (DeeLexer_GetTok(self) == ':') {
 				if (WARN(W_EXPECTED_COMMA_IN_LIST_INITIALIZER))
 					goto err_list_elemv;
 				if unlikely(yield() < 0)
@@ -242,10 +242,10 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result, *new_result;
 	/* Parse the initial item. */
-	if (tok == '.') {
+	if (DeeLexer_GetTok(self) == '.') {
 		if unlikely(yield() < 0)
 			goto err;
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(self)) {
 			DREF DeeObject *key = DeeString_NewSized(token.t_kwd->k_name,
 			                                         token.t_kwd->k_size);
 			if unlikely(!key)
@@ -280,7 +280,7 @@ ast_parse_brace_items(DeeLexer *self) {
 	result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err;
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 		if unlikely(yield() < 0)
 			goto err_r;
 parse_dict:

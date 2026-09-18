@@ -205,7 +205,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DREF struct ast *result_ast;
-	tok_t end_token = TOK_EOF;
+	tok_t end_token = TPP_TOK_EOF;
 	uint16_t old_exceptsz;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("parse_allstmt", params: """
 	DeeStringObject *end:?X2?Dstring?Dint = (DeeStringObject *)Dee_EmptyString;

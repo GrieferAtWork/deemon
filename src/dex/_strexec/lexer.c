@@ -44,7 +44,7 @@ JITLexer_Yield(JITLexer *__restrict self) {
 raw_again:
 	self->jl_tokstart = iter;
 	if unlikely(iter >= self->jl_end) {
-		self->jl_tok    = TOK_EOF;
+		self->jl_tok    = TPP_TOK_EOF;
 		self->jl_tokend = iter;
 		return;
 	}
@@ -128,17 +128,17 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_LOWER_EQUAL;
+				self->jl_tok = TPP_TOK_LANGLE_EQUAL;
 				break;
 			}
 			if (ch == '<') {
 				++iter;
 				if (likely(iter < self->jl_end) && *iter == '=') {
-					self->jl_tok = TOK_SHL_EQUAL;
+					self->jl_tok = TPP_TOK_LANGLE_LANGLE_EQUAL;
 					++iter;
 					break;
 				}
-				self->jl_tok = TOK_SHL;
+				self->jl_tok = TPP_TOK_LANGLE_LANGLE;
 				break;
 			}
 		}
@@ -150,17 +150,17 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_GREATER_EQUAL;
+				self->jl_tok = TPP_TOK_RANGLE_EQUAL;
 				break;
 			}
 			if (ch == '>') {
 				++iter;
 				if (likely(iter < self->jl_end) && *iter == '=') {
-					self->jl_tok = TOK_SHR_EQUAL;
+					self->jl_tok = TPP_TOK_RANGLE_RANGLE_EQUAL;
 					++iter;
 					break;
 				}
-				self->jl_tok = TOK_SHR;
+				self->jl_tok = TPP_TOK_RANGLE_RANGLE;
 				break;
 			}
 		}
@@ -181,12 +181,12 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '&') {
 				++iter;
-				self->jl_tok = TOK_LAND;
+				self->jl_tok = TPP_TOK_AMP_AMP;
 				break;
 			}
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_AND_EQUAL;
+				self->jl_tok = TPP_TOK_AMP_EQUAL;
 				break;
 			}
 		}
@@ -198,12 +198,12 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '|') {
 				++iter;
-				self->jl_tok = TOK_LOR;
+				self->jl_tok = TPP_TOK_PIPE_PIPE;
 				break;
 			}
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_OR_EQUAL;
+				self->jl_tok = TPP_TOK_PIPE_EQUAL;
 				break;
 			}
 		}
@@ -215,7 +215,7 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_DIV_EQUAL;
+				self->jl_tok = TPP_TOK_SLASH_EQUAL;
 				break;
 			}
 			if (ch == '*') {
@@ -266,10 +266,10 @@ handle_decimal_power_suffix:
 			++iter;
 			if (likely(iter < self->jl_end) && *iter == '=') {
 				++iter;
-				self->jl_tok = TOK_EQUAL3;
+				self->jl_tok = TPP_TOK_EQUAL_EQUAL_EQUAL;
 				break;
 			}
-			self->jl_tok = TOK_EQUAL;
+			self->jl_tok = TPP_TOK_EQUAL_EQUAL;
 			break;
 		}
 		goto do_single;
@@ -278,10 +278,10 @@ handle_decimal_power_suffix:
 			++iter;
 			if (likely(iter < self->jl_end) && *iter == '=') {
 				++iter;
-				self->jl_tok = TOK_NOT_EQUAL3;
+				self->jl_tok = TPP_TOK_EXCLAIM_EQUAL_EQUAL;
 				break;
 			}
-			self->jl_tok = TOK_NOT_EQUAL;
+			self->jl_tok = TPP_TOK_EXCLAIM_EQUAL;
 			break;
 		}
 		goto do_single;
@@ -291,12 +291,12 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '+') {
 				++iter;
-				self->jl_tok = TOK_INC;
+				self->jl_tok = TPP_TOK_PLUS_PLUS;
 				break;
 			}
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_ADD_EQUAL;
+				self->jl_tok = TPP_TOK_PLUS_EQUAL;
 				break;
 			}
 		}
@@ -312,12 +312,12 @@ handle_decimal_power_suffix:
 			}
 			if (ch == '-') {
 				++iter;
-				self->jl_tok = TOK_DEC;
+				self->jl_tok = TPP_TOK_MINUS_MINUS;
 				break;
 			}
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_SUB_EQUAL;
+				self->jl_tok = TPP_TOK_MINUS_EQUAL;
 				break;
 			}
 		}
@@ -329,17 +329,17 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_MUL_EQUAL;
+				self->jl_tok = TPP_TOK_STAR_EQUAL;
 				break;
 			}
 			if (ch == '*') {
 				++iter;
 				if (likely(iter < self->jl_end) && *iter == '=') {
 					++iter;
-					self->jl_tok = TOK_POW_EQUAL;
+					self->jl_tok = TPP_TOK_STAR_STAR_EQUAL;
 					break;
 				}
-				self->jl_tok = TOK_POW;
+				self->jl_tok = TPP_TOK_STAR_STAR;
 				break;
 			}
 		}
@@ -351,7 +351,7 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_XOR_EQUAL;
+				self->jl_tok = TPP_TOK_HAT_EQUAL;
 				break;
 			}
 		}
@@ -363,7 +363,7 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_MOD_EQUAL;
+				self->jl_tok = TPP_TOK_PERCENT_EQUAL;
 				break;
 			}
 		}
@@ -375,7 +375,7 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '=') {
 				++iter;
-				self->jl_tok = TOK_COLON_EQUAL;
+				self->jl_tok = TPP_TOK_COLON_EQUAL;
 				break;
 			}
 		}
@@ -421,7 +421,7 @@ handle_decimal_power_suffix:
 	case '?':
 		if (*iter == '?') {
 			++iter;
-			self->jl_tok = TOK_QMARK_QMARK;
+			self->jl_tok = TPP_TOK_QMARK_QMARK;
 			break;
 		}
 		goto do_single;

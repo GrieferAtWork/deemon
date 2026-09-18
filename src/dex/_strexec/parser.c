@@ -77,8 +77,8 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 	case '#':
 	case '[': /* For lists. */
 	case '{': /* Brace initializers. */
-	case TOK_INC:
-	case TOK_DEC:
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_MINUS:
 	case TOK_INT:
 	case JIT_STRING:
 	case JIT_RAWSTRING:
@@ -312,93 +312,93 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
 		result = OPERATOR_INV;
 		goto done_y1;
 
-	case TOK_SHL:
+	case TPP_TOK_LANGLE_LANGLE:
 		result = OPERATOR_SHL;
 		goto done_y1;
 
-	case TOK_SHR:
+	case TPP_TOK_RANGLE_RANGLE:
 		result = OPERATOR_SHR;
 		goto done_y1;
 
-	case TOK_POW:
+	case TPP_TOK_STAR_STAR:
 		result = OPERATOR_POW;
 		goto done_y1;
 
-	case TOK_ADD_EQUAL:
+	case TPP_TOK_PLUS_EQUAL:
 		result = OPERATOR_INPLACE_ADD;
 		goto done_y1;
 
-	case TOK_SUB_EQUAL:
+	case TPP_TOK_MINUS_EQUAL:
 		result = OPERATOR_INPLACE_SUB;
 		goto done_y1;
 
-	case TOK_MUL_EQUAL:
+	case TPP_TOK_STAR_EQUAL:
 		result = OPERATOR_INPLACE_MUL;
 		goto done_y1;
 
-	case TOK_DIV_EQUAL:
+	case TPP_TOK_SLASH_EQUAL:
 		result = OPERATOR_INPLACE_DIV;
 		goto done_y1;
 
-	case TOK_MOD_EQUAL:
+	case TPP_TOK_PERCENT_EQUAL:
 		result = OPERATOR_INPLACE_MOD;
 		goto done_y1;
 
-	case TOK_SHL_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE_EQUAL:
 		result = OPERATOR_INPLACE_SHL;
 		goto done_y1;
 
-	case TOK_SHR_EQUAL:
+	case TPP_TOK_RANGLE_RANGLE_EQUAL:
 		result = OPERATOR_INPLACE_SHR;
 		goto done_y1;
 
-	case TOK_AND_EQUAL:
+	case TPP_TOK_AMP_EQUAL:
 		result = OPERATOR_INPLACE_AND;
 		goto done_y1;
 
-	case TOK_OR_EQUAL:
+	case TPP_TOK_PIPE_EQUAL:
 		result = OPERATOR_INPLACE_OR;
 		goto done_y1;
 
-	case TOK_XOR_EQUAL:
+	case TPP_TOK_HAT_EQUAL:
 		result = OPERATOR_INPLACE_XOR;
 		goto done_y1;
 
-	case TOK_POW_EQUAL:
+	case TPP_TOK_STAR_STAR_EQUAL:
 		result = OPERATOR_INPLACE_POW;
 		goto done_y1;
 
-	case TOK_INC:
+	case TPP_TOK_PLUS_PLUS:
 		result = OPERATOR_INC;
 		goto done_y1;
 
-	case TOK_DEC:
+	case TPP_TOK_MINUS_MINUS:
 		result = OPERATOR_DEC;
 		goto done_y1;
 
-	case TOK_EQUAL:
+	case TPP_TOK_EQUAL_EQUAL:
 		result = OPERATOR_EQ;
 		goto done_y1;
 
-	case TOK_NOT_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL:
 		result = OPERATOR_NE;
 		goto done_y1;
 
-	case TOK_LOWER:
+	case TPP_TOK_LANGLE:
 do_operator_lo:
 		result = OPERATOR_LO;
 		goto done_y1;
 
-	case TOK_LOWER_EQUAL:
+	case TPP_TOK_LANGLE_EQUAL:
 		result = OPERATOR_LE;
 		goto done_y1;
 
-	case TOK_GREATER:
+	case TPP_TOK_RANGLE:
 do_operator_gr:
 		result = OPERATOR_GR;
 		goto done_y1;
 
-	case TOK_GREATER_EQUAL:
+	case TPP_TOK_RANGLE_EQUAL:
 		result = OPERATOR_GE;
 		goto done_y1;
 
@@ -407,7 +407,7 @@ do_operator_gr:
 		goto done_y1;
 
 	case '=':
-	case TOK_COLON_EQUAL:
+	case TPP_TOK_COLON_EQUAL:
 		result = OPERATOR_ASSIGN;
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move")) {
@@ -560,7 +560,7 @@ err_rbrck_after_lbrck:
 				JITLexer_Yield(self);
 				result = OPERATOR_MOVEASSIGN;
 				if unlikely(self->jl_tok != '=' &&
-				            self->jl_tok != TOK_COLON_EQUAL) {
+				            self->jl_tok != TPP_TOK_COLON_EQUAL) {
 					DeeError_Throwf(&DeeError_SyntaxError,
 					                "Expected `:=` or `=` after `move` in operator name, but got `%$s`",
 					                JITLexer_TokLen(self),
@@ -732,33 +732,33 @@ JITLexer_SkipOperatorName(JITLexer *__restrict self) {
 	case '|':
 	case '^':
 	case '~':
-	case TOK_SHL:
-	case TOK_SHR:
-	case TOK_POW:
-	case TOK_ADD_EQUAL:
-	case TOK_SUB_EQUAL:
-	case TOK_MUL_EQUAL:
-	case TOK_DIV_EQUAL:
-	case TOK_MOD_EQUAL:
-	case TOK_SHL_EQUAL:
-	case TOK_SHR_EQUAL:
-	case TOK_AND_EQUAL:
-	case TOK_OR_EQUAL:
-	case TOK_XOR_EQUAL:
-	case TOK_POW_EQUAL:
-	case TOK_INC:
-	case TOK_DEC:
-	case TOK_EQUAL:
-	case TOK_NOT_EQUAL:
-	case TOK_LOWER:
-	case TOK_LOWER_EQUAL:
-	case TOK_GREATER:
-	case TOK_GREATER_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE:
+	case TPP_TOK_RANGLE_RANGLE:
+	case TPP_TOK_STAR_STAR:
+	case TPP_TOK_PLUS_EQUAL:
+	case TPP_TOK_MINUS_EQUAL:
+	case TPP_TOK_STAR_EQUAL:
+	case TPP_TOK_SLASH_EQUAL:
+	case TPP_TOK_PERCENT_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE_EQUAL:
+	case TPP_TOK_RANGLE_RANGLE_EQUAL:
+	case TPP_TOK_AMP_EQUAL:
+	case TPP_TOK_PIPE_EQUAL:
+	case TPP_TOK_HAT_EQUAL:
+	case TPP_TOK_STAR_STAR_EQUAL:
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_MINUS:
+	case TPP_TOK_EQUAL_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL:
+	case TPP_TOK_LANGLE:
+	case TPP_TOK_LANGLE_EQUAL:
+	case TPP_TOK_RANGLE:
+	case TPP_TOK_RANGLE_EQUAL:
 	case '#':
 		goto done_y1;
 
 	case '=':
-	case TOK_COLON_EQUAL:
+	case TPP_TOK_COLON_EQUAL:
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move"))
 			goto done_y1;
@@ -840,7 +840,7 @@ err_rbrck_after_lbrck:
 			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
 				JITLexer_Yield(self);
 				if unlikely(self->jl_tok != '=' &&
-				            self->jl_tok != TOK_COLON_EQUAL) {
+				            self->jl_tok != TPP_TOK_COLON_EQUAL) {
 					DeeError_Throwf(&DeeError_SyntaxError,
 					                "Expected `:=` or `=` after `move` in operator name, but got `%$s`",
 					                JITLexer_TokLen(self),

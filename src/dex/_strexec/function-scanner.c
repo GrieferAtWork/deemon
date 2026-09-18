@@ -319,28 +319,28 @@ JITLexer_QuickSkipOperatorName(JITLexer *__restrict self) {
 	case '|':
 	case '^':
 	case '~':
-	case TOK_SHL:
-	case TOK_SHR:
-	case TOK_POW:
-	case TOK_ADD_EQUAL:
-	case TOK_SUB_EQUAL:
-	case TOK_MUL_EQUAL:
-	case TOK_DIV_EQUAL:
-	case TOK_MOD_EQUAL:
-	case TOK_SHL_EQUAL:
-	case TOK_SHR_EQUAL:
-	case TOK_AND_EQUAL:
-	case TOK_OR_EQUAL:
-	case TOK_XOR_EQUAL:
-	case TOK_POW_EQUAL:
-	case TOK_INC:
-	case TOK_DEC:
-	case TOK_EQUAL:
-	case TOK_NOT_EQUAL:
-	case TOK_LOWER:
-	case TOK_LOWER_EQUAL:
-	case TOK_GREATER:
-	case TOK_GREATER_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE:
+	case TPP_TOK_RANGLE_RANGLE:
+	case TPP_TOK_STAR_STAR:
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_EQUAL:
+	case TPP_TOK_STAR_EQUAL:
+	case TPP_TOK_SLASH_EQUAL:
+	case TPP_TOK_PERCENT_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE_EQUAL:
+	case TPP_TOK_RANGLE_RANGLE_EQUAL:
+	case TPP_TOK_AMP_EQUAL:
+	case TPP_TOK_PIPE_EQUAL:
+	case TPP_TOK_HAT_EQUAL:
+	case TPP_TOK_STAR_STAR_EQUAL:
+	case TPP_TOK_PLUS_EQUAL:
+	case TPP_TOK_MINUS_MINUS:
+	case TPP_TOK_EQUAL_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL:
+	case TPP_TOK_LANGLE:
+	case TPP_TOK_LANGLE_EQUAL:
+	case TPP_TOK_RANGLE:
+	case TPP_TOK_RANGLE_EQUAL:
 	case JIT_RAWSTRING:
 	case JIT_STRING:
 	case '#':
@@ -350,7 +350,7 @@ done_y1:
 		break;
 
 	case '=':
-	case TOK_COLON_EQUAL:
+	case TPP_TOK_COLON_EQUAL:
 		JITLexer_Yield(self);
 		if (JITLexer_ISKWD(self, "move"))
 			goto done_y1;
@@ -433,8 +433,8 @@ do_yield_suffix:
 	case '~':
 	case '!':
 	case '#':
-	case TOK_INC:
-	case TOK_DEC:
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_MINUS:
 		goto do_yield_again_docast;
 
 	case '(': {
@@ -807,7 +807,7 @@ do_suffix:
 do_scan_call_args:
 		JITLexer_ScanExpression(self, true);
 		if (self->jl_tok == ':' ||
-		    self->jl_tok == TOK_POW) {
+		    self->jl_tok == TPP_TOK_STAR_STAR) {
 			JITLexer_Yield(self);
 			goto do_scan_call_args;
 		}
@@ -846,8 +846,8 @@ do_scan_call_args:
 		goto do_suffix;
 
 	case TPP_TOK_DOT_DOT_DOT:
-	case TOK_INC:
-	case TOK_DEC:
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_MINUS:
 	case '!':
 		JITLexer_Yield(self);
 		goto do_suffix;
@@ -864,30 +864,30 @@ do_scan_call_args:
 	case '>':
 	case '-':
 	case '^':
-	case TOK_SHL:
-	case TOK_SHR:
-	case TOK_EQUAL:
-	case TOK_NOT_EQUAL:
-	case TOK_GREATER_EQUAL:
-	case TOK_LOWER_EQUAL:
-	case TOK_ADD_EQUAL:
-	case TOK_SUB_EQUAL:
-	case TOK_MUL_EQUAL:
-	case TOK_DIV_EQUAL:
-	case TOK_MOD_EQUAL:
-	case TOK_SHL_EQUAL:
-	case TOK_SHR_EQUAL:
-	case TOK_AND_EQUAL:
-	case TOK_OR_EQUAL:
-	case TOK_XOR_EQUAL:
-	case TOK_POW_EQUAL:
-	case TOK_LAND:
-	case TOK_LOR:
-	case TOK_POW:
-	case TOK_COLON_EQUAL:
-	case TOK_EQUAL3:
-	case TOK_NOT_EQUAL3:
-	case TOK_QMARK_QMARK:
+	case TPP_TOK_LANGLE_LANGLE:
+	case TPP_TOK_RANGLE_RANGLE:
+	case TPP_TOK_EQUAL_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL:
+	case TPP_TOK_RANGLE_EQUAL:
+	case TPP_TOK_LANGLE_EQUAL:
+	case TPP_TOK_PLUS_EQUAL:
+	case TPP_TOK_MINUS_EQUAL:
+	case TPP_TOK_STAR_EQUAL:
+	case TPP_TOK_SLASH_EQUAL:
+	case TPP_TOK_PERCENT_EQUAL:
+	case TPP_TOK_LANGLE_LANGLE_EQUAL:
+	case TPP_TOK_RANGLE_RANGLE_EQUAL:
+	case TPP_TOK_AMP_EQUAL:
+	case TPP_TOK_PIPE_EQUAL:
+	case TPP_TOK_HAT_EQUAL:
+	case TPP_TOK_STAR_STAR_EQUAL:
+	case TPP_TOK_AMP_AMP:
+	case TPP_TOK_PIPE_PIPE:
+	case TPP_TOK_STAR_STAR:
+	case TPP_TOK_COLON_EQUAL:
+	case TPP_TOK_EQUAL_EQUAL_EQUAL:
+	case TPP_TOK_EXCLAIM_EQUAL_EQUAL:
+	case TPP_TOK_QMARK_QMARK:
 do_yield_again_docast:
 		JITLexer_Yield(self);
 do_again_docast:
@@ -1097,8 +1097,8 @@ do_asm:
 						JITLexer_Yield(self);
 					}
 				}
-				while (self->jl_tok == ':' || self->jl_tok == TOK_COLON_EQUAL) {
-					if (self->jl_tok == TOK_COLON_EQUAL) {
+				while (self->jl_tok == ':' || self->jl_tok == TPP_TOK_COLON_EQUAL) {
+					if (self->jl_tok == TPP_TOK_COLON_EQUAL) {
 						++self->jl_tokstart;
 						self->jl_tok = '=';
 					} else {

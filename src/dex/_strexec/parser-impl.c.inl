@@ -274,7 +274,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 	                            &DeeTuple_Type,
 	                            NULL);
 	LOAD_LVALUE(result, err);
-	if (self->jl_tok == TOK_POW) {
+	if (self->jl_tok == TPP_TOK_STAR_STAR) {
 		JITLexer_Yield(self);
 		/* Parse the keyword invocation AST. */
 		*p_kwds = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
@@ -300,7 +300,7 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 	                            NULL);
 	if (ISERR(result))
 		goto err;
-	if (self->jl_tok == TOK_POW) {
+	if (self->jl_tok == TPP_TOK_STAR_STAR) {
 		JITLexer_Yield(self);
 		if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 			goto err_r;
@@ -423,7 +423,7 @@ not_a_cast:
 		IF_EVAL(ASSERT(DeeTuple_Check(merge));)
 		if likely(self->jl_tok == ')') {
 			JITLexer_Yield(self);
-		} else if (self->jl_tok == TOK_POW) {
+		} else if (self->jl_tok == TPP_TOK_STAR_STAR) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			{
@@ -754,8 +754,8 @@ done_y1:
 #endif /* JIT_EVAL */
 		goto done;
 
-	case TOK_INC:
-	case TOK_DEC: {
+	case TPP_TOK_PLUS_PLUS:
+	case TPP_TOK_MINUS_MINUS: {
 #ifdef JIT_EVAL
 		unsigned int cmd = self->jl_tok;
 		int error;
@@ -768,7 +768,7 @@ done_y1:
 #ifdef JIT_EVAL
 		if (result != JIT_LVALUE) {
 			err_cannot_invoke_inplace(NULL,
-			                          cmd == TOK_INC
+			                          cmd == TPP_TOK_PLUS_PLUS
 			                          ? OPERATOR_INC
 			                          : OPERATOR_DEC);
 			goto err;
@@ -777,7 +777,7 @@ done_y1:
 		                            self->jl_context);
 		if unlikely(!result)
 			goto err;
-		error = cmd == TOK_INC
+		error = cmd == TPP_TOK_PLUS_PLUS
 		        ? DeeObject_Inc(&result)
 		        : DeeObject_Dec(&result);
 		if unlikely(error)
@@ -1928,8 +1928,8 @@ again:
 		IF_EVAL(pos = self->jl_tokstart;)
 		switch (self->jl_tok) {
 
-		case TOK_INC:
-		case TOK_DEC: {
+		case TPP_TOK_PLUS_PLUS:
+		case TPP_TOK_MINUS_MINUS: {
 #ifdef JIT_EVAL
 			DREF DeeObject *result_copy;
 			unsigned int cmd = self->jl_tok;
@@ -1940,7 +1940,7 @@ again:
 #ifdef JIT_EVAL
 			if (lhs != JIT_LVALUE) {
 				err_cannot_invoke_inplace(NULL,
-				                          cmd == TOK_INC
+				                          cmd == TPP_TOK_PLUS_PLUS
 				                          ? OPERATOR_INC
 				                          : OPERATOR_DEC);
 				goto err;
@@ -1952,7 +1952,7 @@ again:
 			result_copy = DeeObject_Copy(lhs);
 			if unlikely(!result_copy)
 				goto err_r;
-			error = cmd == TOK_INC
+			error = cmd == TPP_TOK_PLUS_PLUS
 			        ? DeeObject_Inc((DeeObject **)&lhs)
 			        : DeeObject_Dec((DeeObject **)&lhs);
 			if unlikely(error) {
@@ -2579,7 +2579,7 @@ DEFINE_SECONDARY(ProdOperand) {
 			merge = DeeObject_Mod(lhs, rhs);
 			break;
 
-		case TOK_POW:
+		case TPP_TOK_STAR_STAR:
 			merge = DeeObject_Pow(lhs, rhs);
 			break;
 
@@ -2685,10 +2685,10 @@ DEFINE_SECONDARY(ShiftOperand) {
 		LOAD_LVALUE(rhs, err_r);
 #ifdef JIT_EVAL
 		switch (cmd) {
-		case TOK_SHL:
+		case TPP_TOK_LANGLE_LANGLE:
 			merge = DeeObject_Shl(lhs, rhs);
 			break;
-		case TOK_SHR:
+		case TPP_TOK_RANGLE_RANGLE:
 			merge = DeeObject_Shr(lhs, rhs);
 			break;
 		default: __builtin_unreachable();
@@ -2745,16 +2745,16 @@ DEFINE_SECONDARY(CmpOperand) {
 			LOAD_LVALUE(rhs, err_r);
 #ifdef JIT_EVAL
 			switch (cmd) {
-			case TOK_LOWER:
+			case TPP_TOK_LANGLE:
 				merge = DeeObject_CmpLo(lhs, rhs);
 				break;
-			case TOK_LOWER_EQUAL:
+			case TPP_TOK_LANGLE_EQUAL:
 				merge = DeeObject_CmpLe(lhs, rhs);
 				break;
-			case TOK_GREATER:
+			case TPP_TOK_RANGLE:
 				merge = DeeObject_CmpGr(lhs, rhs);
 				break;
-			case TOK_GREATER_EQUAL:
+			case TPP_TOK_RANGLE_EQUAL:
 				merge = DeeObject_CmpGe(lhs, rhs);
 				break;
 			default: __builtin_unreachable();
@@ -2922,7 +2922,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 		}
 		LOAD_LVALUE(lhs, err);
 #ifdef JIT_EVAL
-		if (cmd == TOK_QMARK_QMARK && !DeeNone_Check(lhs)) {
+		if (cmd == TPP_TOK_QMARK_QMARK && !DeeNone_Check(lhs)) {
 			/* Skip operand expression. */
 			if unlikely(JITLexer_SkipCmp(self, flags | JITLEXER_EVAL_FALLOWISBOUND))
 				goto err_r;
@@ -2935,19 +2935,19 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #ifdef JIT_EVAL
 		LOAD_LVALUE(rhs, err_r);
 		switch (cmd) {
-		case TOK_EQUAL:
+		case TPP_TOK_EQUAL_EQUAL:
 			merge = DeeObject_CmpEq(lhs, rhs);
 			break;
-		case TOK_NOT_EQUAL:
+		case TPP_TOK_EXCLAIM_EQUAL:
 			merge = DeeObject_CmpNe(lhs, rhs);
 			break;
-		case TOK_EQUAL3:
+		case TPP_TOK_EQUAL_EQUAL_EQUAL:
 			merge = DeeBool_New(lhs == rhs);
 			break;
-		case TOK_NOT_EQUAL3:
+		case TPP_TOK_EXCLAIM_EQUAL_EQUAL:
 			merge = DeeBool_New(lhs != rhs);
 			break;
-		case TOK_QMARK_QMARK:
+		case TPP_TOK_QMARK_QMARK:
 			ASSERT(DeeNone_Check(lhs));
 			DeeNone_Decref();
 			lhs = rhs; /* Inherit reference */
@@ -3387,31 +3387,31 @@ err:
 
 #ifndef INPLACE_FOPS_DEFINED
 #define INPLACE_FOPS_DEFINED 1
-#define TOK_INPLACE_MIN TOK_ADD_EQUAL
+#define TOK_INPLACE_MIN TPP_TOK_PLUS_EQUAL
 #define OPERATOR_INPLACE_MIN OPERATOR_INPLACE_ADD
-STATIC_ASSERT((TOK_ADD_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_ADD - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_SUB_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SUB - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_MUL_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MUL - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_DIV_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_DIV - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_MOD_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MOD - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_SHL_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHL - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_SHR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHR - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_AND_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_AND - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_OR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_OR - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_XOR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_XOR - OPERATOR_INPLACE_MIN));
-STATIC_ASSERT((TOK_POW_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_POW - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_PLUS_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_ADD - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_MINUS_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SUB - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_STAR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MUL - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_SLASH_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_DIV - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_PERCENT_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_MOD - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_LANGLE_LANGLE_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHL - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_RANGLE_RANGLE_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_SHR - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_AMP_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_AND - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_PIPE_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_OR - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_HAT_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_XOR - OPERATOR_INPLACE_MIN));
+STATIC_ASSERT((TPP_TOK_STAR_STAR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_POW - OPERATOR_INPLACE_MIN));
 PRIVATE Dee_operator_t const inplace_fops[] = {
-	/* [TOK_ADD_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_ADD,
-	/* [TOK_SUB_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SUB,
-	/* [TOK_MUL_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MUL,
-	/* [TOK_DIV_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_DIV,
-	/* [TOK_MOD_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MOD,
-	/* [TOK_SHL_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SHL,
-	/* [TOK_SHR_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SHR,
-	/* [TOK_AND_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_AND,
-	/* [TOK_OR_EQUAL  - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_OR,
-	/* [TOK_XOR_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_XOR,
-	/* [TOK_POW_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_POW
+	/* [TPP_TOK_PLUS_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_ADD,
+	/* [TPP_TOK_MINUS_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SUB,
+	/* [TPP_TOK_STAR_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MUL,
+	/* [TPP_TOK_SLASH_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_DIV,
+	/* [TPP_TOK_PERCENT_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MOD,
+	/* [TPP_TOK_LANGLE_LANGLE_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SHL,
+	/* [TPP_TOK_RANGLE_RANGLE_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SHR,
+	/* [TPP_TOK_AMP_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_AND,
+	/* [TPP_TOK_PIPE_EQUAL  - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_OR,
+	/* [TPP_TOK_HAT_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_XOR,
+	/* [TPP_TOK_STAR_STAR_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_POW
 };
 #endif /* !INPLACE_FOPS_DEFINED */
 
@@ -3424,7 +3424,7 @@ DEFINE_SECONDARY(AssignOperand) {
 	ASSERT(JIT_TOKEN_IS_ASSIGN(self));
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
-		if (self->jl_tok == TOK_COLON_EQUAL) {
+		if (self->jl_tok == TPP_TOK_COLON_EQUAL) {
 			LOAD_LVALUE(lhs, err);
 			JITLexer_Yield(self);
 			rhs = CALL_PRIMARYF(Cond, flags | JITLEXER_EVAL_FALLOWINPLACE);
@@ -3464,47 +3464,47 @@ err_lvalue:
 			}
 			switch (cmd) {
 
-			case TOK_ADD_EQUAL:
+			case TPP_TOK_PLUS_EQUAL:
 				error = DeeObject_InplaceAdd((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_SUB_EQUAL:
+			case TPP_TOK_MINUS_EQUAL:
 				error = DeeObject_InplaceSub((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_MUL_EQUAL:
+			case TPP_TOK_STAR_EQUAL:
 				error = DeeObject_InplaceMul((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_DIV_EQUAL:
+			case TPP_TOK_SLASH_EQUAL:
 				error = DeeObject_InplaceDiv((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_MOD_EQUAL:
+			case TPP_TOK_PERCENT_EQUAL:
 				error = DeeObject_InplaceMod((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_SHL_EQUAL:
+			case TPP_TOK_LANGLE_LANGLE_EQUAL:
 				error = DeeObject_InplaceShl((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_SHR_EQUAL:
+			case TPP_TOK_RANGLE_RANGLE_EQUAL:
 				error = DeeObject_InplaceShr((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_AND_EQUAL:
+			case TPP_TOK_AMP_EQUAL:
 				error = DeeObject_InplaceAnd((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_OR_EQUAL:
+			case TPP_TOK_PIPE_EQUAL:
 				error = DeeObject_InplaceOr((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_XOR_EQUAL:
+			case TPP_TOK_HAT_EQUAL:
 				error = DeeObject_InplaceXor((DeeObject **)&lhs, rhs);
 				break;
 
-			case TOK_POW_EQUAL:
+			case TPP_TOK_STAR_STAR_EQUAL:
 				error = DeeObject_InplacePow((DeeObject **)&lhs, rhs);
 				break;
 

@@ -42,7 +42,7 @@ ast_parse_catchmask(DeeLexer *self) {
 	size_t exprc, expra;
 	DREF struct ast **exprv, *result;
 	result = ast_parse_unary(self, LOOKUP_SYM_NORMAL);
-	if (tok == '|' && result) {
+	if (DeeLexer_GetTok(self) == '|' && result) {
 		struct ast_loc multi_loc;
 		exprc = 1;
 		expra = 2;
@@ -75,7 +75,7 @@ ast_parse_catchmask(DeeLexer *self) {
 		 * >> }
 		 */
 		loc_here(&multi_loc);
-		while (tok == '|') {
+		while (DeeLexer_GetTok(self) == '|') {
 			if unlikely(yield() < 0)
 				goto err_exprv;
 			if (exprc == expra) {
@@ -131,7 +131,7 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 	size_t catcha, catchc;
 	struct catch_expr *catchv, *handler;
 	uint32_t old_flags;
-	ASSERT(tok == KWD_try);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
@@ -144,12 +144,14 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 	catchc = 0;
 	catchv = NULL;
 	for (;;) {
-		tok_t mode = tok;
+		tpp_token_id mode;
 		if unlikely(ast_tags_clear())
 			goto err_try;
 		if unlikely(parse_tags_block(self))
 			goto err_try;
-		if (tok != KWD_finally && tok != KWD_catch)
+		mode = DeeLexer_GetTok(self);
+		if (mode != TPP_KWD_finally &&
+		    mode != TPP_KWD_catch)
 			break;
 		if unlikely(yield() < 0)
 			goto err_try;
@@ -185,7 +187,7 @@ do_realloc_catchv:
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
-		if (mode == KWD_finally) {
+		if (mode == TPP_KWD_finally) {
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			handler->ce_code = is_statement
 			                   ? ast_parse_statement(self, false)
@@ -200,26 +202,26 @@ do_realloc_catchv:
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
-			if (tok == TPP_TOK_DOT_DOT_DOT) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(yield() < 0)
 					goto err_try_flags;
-				if (TPP_ISKEYWORD(tok)) {
+				if (DeeLexer_HasTokenKwd(self)) {
 					/* Alternative catch-all spelling for backwards
 					 * compatibility: `catch (...error)` */
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
-			} else if (TPP_ISKEYWORD(tok)) {
+			} else if (DeeLexer_HasTokenKwd(self)) {
 				/* Exception guard name: `try { ... } catch (err...) {}` */
-				char *next_token = peek_next_token(NULL);
+				char const *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
 				if (*next_token == '.' && /* Check for `...` */
@@ -228,8 +230,8 @@ do_realloc_catchv:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -248,28 +250,28 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
-					if (unlikely(tok == TOK_ARROW) &&
+				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
+					if (unlikely(DeeLexer_GetTok(self) == TOK_ARROW) &&
 					    WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 						goto err_try_flags;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
-					if unlikely(!TPP_ISKEYWORD(tok)) {
+					if unlikely(!DeeLexer_HasTokenKwd(self)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;
 					}
 					goto parse_catch_symbol;
 				}
-				if (TPP_ISKEYWORD(tok)) {
+				if (DeeLexer_HasTokenKwd(self)) {
 					/* Exception guard name: `try { ... } catch (Error err) {}` */
 parse_catch_symbol:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					ASSERT(!is_new_scope);
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -338,7 +340,7 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	struct catch_expr *catchv, *handler;
 	uint32_t old_flags;
 	unsigned int was_expression;
-	ASSERT(tok == KWD_try);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
@@ -349,12 +351,14 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	catchc = 0;
 	catchv = NULL;
 	for (;;) {
-		tok_t mode = tok;
+		tok_t mode;
 		if unlikely(ast_tags_clear())
 			goto err_try;
 		if unlikely(parse_tags_block(self))
 			goto err_try;
-		if (tok != KWD_finally && tok != KWD_catch)
+		mode = DeeLexer_GetTok(self);
+		if (mode != TPP_KWD_finally &&
+		    mode != TPP_KWD_catch)
 			break;
 		if unlikely(yield() < 0)
 			goto err_try;
@@ -389,7 +393,7 @@ do_realloc_catchv:
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
-		if (mode == KWD_finally) {
+		if (mode == TPP_KWD_finally) {
 			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			handler->ce_code = ast_parse_hybrid_secondary(self, &was_expression);
 			if unlikely(!handler->ce_code)
@@ -402,26 +406,26 @@ do_realloc_catchv:
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
-			if (tok == TPP_TOK_DOT_DOT_DOT) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(yield() < 0)
 					goto err_try_flags;
-				if (TPP_ISKEYWORD(tok)) {
+				if (DeeLexer_HasTokenKwd(self)) {
 					/* Alternative catch-all spelling for backwards
 					 * compatibility: `catch (...error)` */
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
-			} else if (TPP_ISKEYWORD(tok)) {
+			} else if (DeeLexer_HasTokenKwd(self)) {
 				/* Exception guard name: `try { ... } catch (err...) {}` */
-				char *next_token = peek_next_token(NULL);
+				char const *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
 				if (*next_token == '.' && /* Check for `...` */
@@ -430,8 +434,8 @@ do_realloc_catchv:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -451,28 +455,28 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
-					if unlikely(tok == TOK_ARROW &&
+				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
+					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW &&
 						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 					goto err_try_flags;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
-					if unlikely(!TPP_ISKEYWORD(tok)) {
+					if unlikely(!DeeLexer_HasTokenKwd(self)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
 							goto err_try_flags;
 						goto end_catch_handler;
 					}
 					goto parse_catch_symbol;
 				}
-				if (TPP_ISKEYWORD(tok)) {
+				if (DeeLexer_HasTokenKwd(self)) {
 					/* Exception guard name: `try { ... } catch (Error err) {}` */
 parse_catch_symbol:
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					ASSERT(!is_new_scope);
 					is_new_scope = true;
-					ASSERT(!has_local_symbol(token.t_kwd));
-					guard_symbol = new_local_symbol(token.t_kwd, NULL);
+					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
+					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;

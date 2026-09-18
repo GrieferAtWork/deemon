@@ -57,7 +57,7 @@ struct operand_list {
 	size_t              ol_count[OPERAND_TYPE_COUNT]; /* Different operand counts. */
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 operand_list_fini(struct operand_list *__restrict self) {
 	struct asm_operand *iter, *end;
 	ASSERT(self->ol_c <= self->ol_a);
@@ -86,7 +86,7 @@ operand_list_fini(struct operand_list *__restrict self) {
 
 /* Allocate and return a new operand.
  * NOTE: The caller is responsible for safely initializing this operand. */
-PRIVATE struct asm_operand *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct asm_operand *DCALL
 operand_list_add(struct operand_list *__restrict self,
                  unsigned int type) {
 	struct asm_operand *result = self->ol_v;
@@ -128,19 +128,18 @@ asm_parse_operands(DeeLexer *self,
 	DREF struct ast *operand_value;
 	struct asm_operand *operand;
 	while ((type == OPERAND_TYPE_LABEL
-	        ? TPP_ISKEYWORD(tok)
-	        : (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	           (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)))) ||
-	       (tok == '[')) {
+	        ? DeeLexer_HasTokenKwd(self)
+	        : DeeLexer_IsStringToken(self)) ||
+	       (DeeLexer_GetTok(self) == '[')) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 		struct TPPKeyword *name = NULL;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
-		if (tok == '[') {
+		if (DeeLexer_GetTok(self) == '[') {
 			if unlikely(yield() < 0)
 				goto err;
-			if (TPP_ISKEYWORD(tok)) {
+			if (TPP_ISKEYWORD(DeeLexer_GetTok(self))) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-				name = token.t_kwd;
+				name = DeeLexer_GetTokenKwd(self);
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 				if unlikely(yield() < 0)
 					goto err;
@@ -154,8 +153,8 @@ asm_parse_operands(DeeLexer *self,
 		if (type == OPERAND_TYPE_LABEL) {
 			struct text_label *label_value;
 			/* Label operand. */
-			if (TPP_ISKEYWORD(tok)) {
-				label_value = lookup_label(token.t_kwd);
+			if (DeeLexer_HasTokenKwd(self)) {
+				label_value = lookup_label(DeeLexer_GetTokenKwd(self));
 				if unlikely(!label_value)
 					goto err;
 				if unlikely(yield() < 0)
@@ -176,8 +175,7 @@ asm_parse_operands(DeeLexer *self,
 			operand->ao_type  = NULL;
 		} else {
 			bool has_paren;
-			if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-			    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+			if (DeeLexer_IsStringToken(self)) {
 				operand_type = TPPLexer_ParseString();
 				if unlikely(!operand_type)
 					goto err;
@@ -203,7 +201,7 @@ asm_parse_operands(DeeLexer *self,
 		operand->ao_name = name;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 		/* Yield the trailing comma. */
-		if (tok != ',')
+		if (DeeLexer_GetTok(self) != ',')
 			break;
 		if unlikely(yield() < 0)
 			goto err;
@@ -241,11 +239,11 @@ PRIVATE struct clobber_desc const clobber_descs[] = {
 };
 
 /* Parse the clobber list and return a set of `AST_FASSEMBLY_*` */
-PRIVATE int32_t DCALL asm_parse_clobber(void) {
+PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
+asm_parse_clobber(DeeLexer *self) {
 	struct TPPString *name;
 	uint16_t result = 0;
-	while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	       (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	while (DeeLexer_IsStringToken(self)) {
 		name = TPPLexer_ParseString();
 		if unlikely(!name)
 			goto err;
@@ -265,7 +263,7 @@ PRIVATE int32_t DCALL asm_parse_clobber(void) {
 got_clobber:
 		TPPString_Decref(name);
 		/* Yield the trailing comma. */
-		if (tok != ',')
+		if (DeeLexer_GetTok(self) != ',')
 			break;
 		if unlikely(yield() < 0)
 			goto err;
@@ -277,16 +275,15 @@ err:
 	return -1;
 }
 
-LOCAL bool DCALL is_colon(void) {
-	if (tok == ':')
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) bool DCALL is_colon(DeeLexer *self) {
+	if (DeeLexer_GetTok(self) == ':')
 		return true;
-	if (tok == TOK_COLON_COLON ||
-	    tok == TOK_COLON_EQUAL) {
+	if (DeeLexer_GetTok(self) == TOK_COLON_COLON ||
+	    DeeLexer_GetTok(self) == TPP_TOK_COLON_EQUAL) {
 		/* Convert to a `:`-token and setup the lexer to re-parse
 		 * the remainder of the current token as part of the next. */
-		token.t_id          = ':';
-		token.t_end         = token.t_begin + 1;
-		token.t_file->f_pos = token.t_end;
+		DeeLexer_SetTokenId(self, ':');
+		DeeLexer_SetTokenEnd(self, DeeLexer_GetTokenStart(self) + 1);
 		return true;
 	}
 	return false;
@@ -400,7 +397,8 @@ PRIVATE /*REF*/ struct TPPString *
 
 
 
-PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
+PRIVATE WUNUSED NONNULL((1)) /*REF*/ struct TPPString *DCALL
+parse_brace_text(DeeLexer *self) {
 	struct tpp_string_printer printer;
 	unsigned int brace_recursion   = 0;
 	unsigned int paren_recursion   = 0;
@@ -420,11 +418,11 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 	                              TPPLEXER_FLAG_NO_DIRECTIVES |
 	                              TPPLEXER_FLAG_NO_MACROS |
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
-	ASSERT(tok == '{');
+	ASSERT(DeeLexer_GetTok(self) == '{');
 	for (;;) {
 		if unlikely(yield() < 0)
 			goto err_printer;
-		switch (tok) {
+		switch (DeeLexer_GetTok(self)) {
 		case 0:
 			goto done;
 		case '(':
@@ -460,7 +458,7 @@ PRIVATE /*REF*/ struct TPPString *DCALL parse_brace_text(void) {
 			is_after_linefeed = true;
 			break;
 		default:
-			if (is_after_linefeed && TPP_ISKEYWORD(tok)) {
+			if (is_after_linefeed && DeeLexer_HasTokenKwd(self)) {
 				struct ast_loc loc;
 				Dee_ssize_t error;
 				loc_here(&loc);
@@ -546,12 +544,12 @@ ast_parse_asm(DeeLexer *self) {
 	uint32_t old_flags;
 	bool has_paren;
 	bzero(&operands, sizeof(struct operand_list));
-	/*ASSERT(tok == KWD___asm || tok == KWD___asm__);*/
+	/*ASSERT(DeeLexer_GetTok(self) == TPP_KWD___asm || DeeLexer_GetTok(self) == TPP_KWD___asm__);*/
 	if unlikely(yield() < 0)
 		goto err;
-	while (TPP_ISKEYWORD(tok)) {
-		char const *name = token.t_kwd->k_name;
-		size_t size      = token.t_kwd->k_size;
+	while (DeeLexer_HasTokenKwd(self)) {
+		char const *name = tpp_keyword_getcstr(DeeLexer_GetTokenKwd(self));
+		size_t size      = tpp_keyword_getlen(DeeLexer_GetTokenKwd(self));
 		while (size && *name == '_')
 			++name, --size;
 		while (size && name[size - 1] == '_')
@@ -574,12 +572,11 @@ yield_prefix:
 	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
 		goto err_flags;
 	loc_here(&loc); /* Use the assembly text for DDI information. */
-	if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	if (DeeLexer_IsStringToken(self)) {
 		text = TPPLexer_ParseString();
 		if unlikely(!text)
 			goto err_flags;
-	} else if (tok == '{') {
+	} else if (DeeLexer_GetTok(self) == '{') {
 		/* Auto-format token-based source code:
 		 *    >> __asm__({
 		 *    >>    print @"Now throwing", sp
@@ -623,7 +620,7 @@ yield_prefix:
 		 * column information for the exact positions of found instructions.
 		 * Assembly is terminated once a `}` token matching the initial `{`
 		 * is found. */
-		text = parse_brace_text();
+		text = parse_brace_text(self);
 		if unlikely(!text)
 			goto err_flags;
 	} else {
@@ -639,7 +636,7 @@ yield_prefix:
 		goto err_ops;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 
-	if (is_colon()) {
+	if (is_colon(self)) {
 		if unlikely(yield() < 0)
 			goto err_ops;
 		/* Enable assembly formatting. */
@@ -647,20 +644,20 @@ yield_prefix:
 		/* Parse operands. */
 		if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_OUTPUT))
 			goto err_ops;
-		if (is_colon()) {
+		if (is_colon(self)) {
 			if unlikely(yield() < 0)
 				goto err_ops;
 			if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_INPUT))
 				goto err_ops;
-			if (is_colon()) {
+			if (is_colon(self)) {
 				int32_t clobber;
 				if unlikely(yield() < 0)
 					goto err_ops;
-				clobber = asm_parse_clobber();
+				clobber = asm_parse_clobber(self);
 				if unlikely(clobber < 0)
 					goto err_ops;
 				ast_flags |= (uint16_t)clobber;
-				if (is_asm_goto && is_colon()) {
+				if (is_asm_goto && is_colon(self)) {
 					if unlikely(yield() < 0)
 						goto err_ops;
 					if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_LABEL))

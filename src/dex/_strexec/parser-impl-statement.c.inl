@@ -93,7 +93,7 @@ LOCAL WUNUSED bool DFCALL
 JITLexer_IsColumn(JITLexer *__restrict self) {
 	switch (self->jl_tok) {
 	case ':': break;
-	case TOK_COLON_EQUAL:
+	case TPP_TOK_COLON_EQUAL:
 		self->jl_tok = ':';
 		--self->jl_tokend;
 		break;

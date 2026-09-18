@@ -110,17 +110,19 @@ ast_parse_template_string(DeeLexer *self) {
 	struct ast_loc loc;
 	struct ast *result;
 	struct Dee_unicode_printer format_printer = Dee_UNICODE_PRINTER_INIT;
-	char *flush_start, *text_iter, *text_end, quote;
+	char const *flush_start, *text_iter, *text_end;
+	char quote;
 	(void)self;
 	loc_here(&loc);
 parse_current_token_as_template_string:
-	ASSERT(TPP_TOK_ISSTRING_DQUOTE(tok) || TPP_TOK_ISSTRING_SQUOTE(tok));
-	ASSERT(token.t_begin < token.t_end);
-	ASSERT(token.t_begin[0] == '\"' || token.t_begin[0] == '\'');
-	/*ASSERT(token.t_begin[0] == token.t_end[-1]);*/ /* Might not be the case if the user suppressed an EOF-in-string warning */
-	quote       = token.t_begin[0];
-	text_iter   = token.t_begin + 1;
-	text_end    = token.t_end - 1;
+	ASSERT(TPP_TOK_ISSTRING(tok));
+	ASSERT(DeeLexer_GetTokenStart(self) < DeeLexer_GetTokenEnd(self));
+	ASSERT(DeeLexer_GetTokenStart(self)[0] == '\"' ||
+	       DeeLexer_GetTokenStart(self)[0] == '\'');
+	/*ASSERT(DeeLexer_GetTokenStart(self)[0] == DeeLexer_GetTokenEnd(self)[-1]);*/ /* Might not be the case if the user suppressed an EOF-in-string warning */
+	quote       = DeeLexer_GetTokenStart(self)[0];
+	text_iter   = (char const *)DeeLexer_GetTokenStart(self) + 1;
+	text_end    = (char const *)DeeLexer_GetTokenEnd(self) - 1;
 	flush_start = text_iter;
 
 	/* Parse format string */
@@ -143,7 +145,7 @@ parse_current_token_as_template_string:
 				goto err;
 
 			/* Parse an expression at this position. */
-			token.t_file->f_pos = text_iter;
+			token.t_file->f_pos = (char *)text_iter;
 
 			/* Parse the expression. */
 			old_flags = TPPLexer_Current->l_flags;
@@ -211,10 +213,10 @@ err_old_flags:
 			}
 
 			if (tok == '!' || tok == ':') {
-				char *rbrace;
+				char const *rbrace;
 				/* TODO: This needs to support recursive '{' + '}' pairs! */
 				/* TODO: This needs to support \-escape sequences! */
-				rbrace = (char *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
+				rbrace = (char const *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
 				if unlikely(!rbrace) {
 					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
 						goto err_expr_ast;
@@ -231,7 +233,7 @@ err_old_flags:
 					goto err_expr_ast;
 				if (*rbrace == '}')
 					++rbrace;
-				token.t_begin = rbrace;
+				token.t_begin = (char *)rbrace;
 			} else if (tok == '}') {
 				if unlikely(Dee_unicode_printer_print(&format_printer, "{}", 2) < 0)
 					goto err_expr_ast;
@@ -244,7 +246,7 @@ err_old_flags:
 				if (!rbrace) {
 					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
 						goto err_expr_ast;
-					rbrace = text_end;
+					rbrace = (char *)text_end;
 				} else {
 					++rbrace;
 				}
@@ -253,7 +255,7 @@ err_old_flags:
 
 			/* Trick the current token into becoming a string until the next unescaped quote. */
 			token.t_id  = (tok_t)quote; /* TOK_STRING or TOK_CHAR */
-			token.t_end = text_end;
+			token.t_end = (char *)text_end;
 			if (*text_end == quote)
 				++token.t_end; /* Skip over unescaped quote */
 			token.t_file->f_pos = token.t_end;
@@ -358,7 +360,7 @@ parse_hex_integer:
 				while (count < max_digits) {
 					uint32_t ch32;
 					uint8_t val;
-					char *old_iter;
+					char const *old_iter;
 					old_iter = text_iter;
 					ch32     = Dee_unicode_readutf8_n(&text_iter, text_end);
 					if (!DeeUni_AsDigit(ch32, 16, &val)) {
@@ -392,7 +394,7 @@ parse_oct_integer:
 					while (count < 3) {
 						uint32_t ch32;
 						uint8_t digit;
-						char *old_iter;
+						char const *old_iter;
 						old_iter = text_iter;
 						ch32     = Dee_unicode_readutf8_n(&text_iter, text_end);
 						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
@@ -448,8 +450,10 @@ after_escaped_putc:
 		goto err; /* Consume the template string token. */
 
 	/* Check if the next token is another template string. - If so, join the two! */
-	if ((tok == KWD_f || tok == KWD_F) &&
-	    (*token.t_end == '\"' || (*token.t_end == '\'' && !HAS(EXT_CHARACTER_LITERALS)))) {
+	if ((DeeLexer_GetTok(self) == TPP_KWD_f ||
+	     DeeLexer_GetTok(self) == TPP_KWD_F) &&
+	    (*DeeLexer_GetTokenEnd(self) == '\"' ||
+	     (*DeeLexer_GetTokenEnd(self) == '\'' && !DeeLexer_Has(self, CHARACTER_LITERALS)))) {
 		/* Join adjacent template strings */
 		if unlikely(yield() < 0)
 			goto err; /* Consume the template string token. */

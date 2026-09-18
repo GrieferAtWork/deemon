@@ -41,7 +41,7 @@ ast_do_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result;
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (tok == '\n' && yield() < 0)
+	if (DeeLexer_GetTok(self) == '\n' && yield() < 0)
 		goto err_flags;
 	result = ast_parse_brace_items(self);
 	if unlikely(!result)
@@ -59,7 +59,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *result;
 	unsigned int was_expression;
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '{':
 		result = ast_parse_statement_or_braces(self, &was_expression);
@@ -77,47 +77,47 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 			*p_was_expression = was_expression;
 		break;
 
-	case KWD_try:
+	case TPP_KWD_try:
 		result = ast_parse_try_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_if:
+	case TPP_KWD_if:
 		result = ast_parse_if_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_with:
+	case TPP_KWD_with:
 		result = ast_parse_with_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_assert:
+	case TPP_KWD_assert:
 		result = ast_parse_assert_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_import:
+	case TPP_KWD_import:
 		result = ast_parse_import_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_for:
-	case KWD_foreach:
-	case KWD_do:
-	case KWD_while:
+	case TPP_KWD_for:
+	case TPP_KWD_foreach:
+	case TPP_KWD_do:
+	case TPP_KWD_while:
 		result = ast_parse_loopexpr_hybrid(self, p_was_expression);
 		break;
 
-	case KWD_from:
-	case KWD_del: /* TODO: This can also appear in expressions! */
-	case KWD_return:
-	case KWD_yield:
-	case KWD_throw:
-	case KWD_print:
-	case KWD_break:
-	case KWD_continue:
-	case KWD___asm:
-	case KWD___asm__:
-	case KWD_goto:
-	case KWD_switch:
-	case KWD_case:
-	case KWD_default:
+	case TPP_KWD_from:
+	case TPP_KWD_del: /* TODO: This can also appear in expressions! */
+	case TPP_KWD_return:
+	case TPP_KWD_yield:
+	case TPP_KWD_throw:
+	case TPP_KWD_print:
+	case TPP_KWD_break:
+	case TPP_KWD_continue:
+	case TPP_KWD___asm:
+	case TPP_KWD___asm__:
+	case TPP_KWD_goto:
+	case TPP_KWD_switch:
+	case TPP_KWD_case:
+	case TPP_KWD_default:
 	case '@':
 	case ';':
 		result = ast_parse_statement(self, false);
@@ -139,7 +139,7 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 		                         &comma_mode);
 		if unlikely(!result)
 			goto done;
-		if (tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
+		if (DeeLexer_GetTok(self) == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
 			if unlikely(yield() < 0)
 				goto err_r;
 			if (p_was_expression)
@@ -194,17 +194,18 @@ ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 		goto err;
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;
-	if (tok != KWD_else && tok != KWD_elif) {
+	if (DeeLexer_GetTok(self) != TPP_KWD_else &&
+	    DeeLexer_GetTok(self) != TPP_KWD_elif) {
 		tt_branch = ast_parse_hybrid_primary(self, &was_expression);
 		if unlikely(!tt_branch)
 			goto err_r;
 	}
 	ff_branch = NULL;
-	if (tok == KWD_elif) {
-		token.t_id = KWD_if; /* Cheat a bit... */
+	if (DeeLexer_GetTok(self) == TPP_KWD_elif) {
+		token.t_id = TPP_KWD_if; /* Cheat a bit... */
 		goto do_else_branch;
 	}
-	if (tok == KWD_else) {
+	if (DeeLexer_GetTok(self) == TPP_KWD_else) {
 		if unlikely(yield() < 0)
 			goto err_tt;
 do_else_branch:
@@ -240,11 +241,11 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 	DREF struct ast *remainder;
 	struct ast_loc loc;
 	unsigned int was_expression;
-	ASSERT(tok == '{');
+	ASSERT(DeeLexer_GetTok(self) == '{');
 	loc_here(&loc);
 	if unlikely(yield() < 0)
 		goto err;
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '}':
 		/* Special case: empty sequence. */
@@ -287,14 +288,14 @@ parse_remainder_after_hybrid_popscope_resok:
 			if unlikely(!result)
 				goto err;
 check_recursion_after_expression_suffix:
-			if (tok == ';') {
+			if (DeeLexer_GetTok(self) == ';') {
 				if unlikely(yield() < 0)
 					goto err_r;
 				goto parse_remainder_after_statement;
 			}
-			if (tok == ':')
+			if (DeeLexer_GetTok(self) == ':')
 				goto parse_remainder_after_colon_popscope;
-			if (tok == ',') {
+			if (DeeLexer_GetTok(self) == ',') {
 parse_remainder_after_comma_popscope:
 				scope_pop();
 				remainder = ast_parse_brace_list(self, result);
@@ -308,7 +309,7 @@ parse_remainder_after_comma_popscope:
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if likely(tok == '}') {
+			if likely(DeeLexer_GetTok(self) == '}') {
 parse_remainder_before_rbrace_popscope_wrap:
 				if unlikely(yield() < 0)
 					goto err_r;
@@ -332,11 +333,11 @@ parse_remainder_before_rbrace_popscope_wrap:
 			result = ast_setddi(remainder, &loc);
 			goto parse_remainder_after_rbrace_popscope;
 		}
-		if (tok == ',')
+		if (DeeLexer_GetTok(self) == ',')
 			goto parse_remainder_after_comma_popscope;
-		if (tok == ':')
+		if (DeeLexer_GetTok(self) == ':')
 			goto parse_remainder_after_colon_popscope;
-		if (tok == '}')
+		if (DeeLexer_GetTok(self) == '}')
 			goto parse_remainder_before_rbrace_popscope_wrap;
 		{
 			unsigned long token_num = token.t_num;
@@ -352,25 +353,25 @@ parse_remainder_before_rbrace_popscope_wrap:
 #endif
 		goto parse_remainder_after_statement;
 
-	case KWD_try:
+	case TPP_KWD_try:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_try_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
-	case KWD_if:
+	case TPP_KWD_if:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_if_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
-	case KWD_with:
+	case TPP_KWD_with:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_with_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
-	case KWD_assert:
+	case TPP_KWD_assert:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_assert_hybrid(self, &was_expression);
@@ -380,14 +381,14 @@ parse_remainder_after_semicolon_hybrid_popscope:
 
 		/* Special case: `assert` statements require a trailing `;` token.
 		 *                If that token exists, we know for sure that this is a statement! */
-		if (tok == ';') {
+		if (DeeLexer_GetTok(self) == ';') {
 			was_expression = AST_PARSE_WASEXPR_NO;
 			if unlikely(yield() < 0)
 				goto err_r;
 		}
 		goto parse_remainder_after_hybrid_popscope_resok;
 
-	case KWD_import:
+	case TPP_KWD_import:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_import_hybrid(self, &was_expression);
@@ -396,29 +397,29 @@ parse_remainder_after_semicolon_hybrid_popscope:
 		/* Same as `assert`: `import` requires a trailing `;` */
 		goto parse_remainder_after_semicolon_hybrid_popscope;
 
-	case KWD_for:
-	case KWD_foreach:
-	case KWD_do:
-	case KWD_while:
+	case TPP_KWD_for:
+	case TPP_KWD_foreach:
+	case TPP_KWD_do:
+	case TPP_KWD_while:
 		if unlikely(scope_push() < 0)
 			goto err;
 		result = ast_parse_loopexpr_hybrid(self, &was_expression);
 		goto parse_remainder_after_hybrid_popscope;
 
-	case KWD_from:
-	case KWD_del: /* TODO: This can also appear in expressions! */
-	case KWD_return:
-	case KWD_yield:
-	case KWD_throw:
-	case KWD_print:
-	case KWD_break:
-	case KWD_continue:
-	case KWD___asm:
-	case KWD___asm__:
-	case KWD_goto:
-	case KWD_switch:
-	case KWD_case:
-	case KWD_default:
+	case TPP_KWD_from:
+	case TPP_KWD_del: /* TODO: This can also appear in expressions! */
+	case TPP_KWD_return:
+	case TPP_KWD_yield:
+	case TPP_KWD_throw:
+	case TPP_KWD_print:
+	case TPP_KWD_break:
+	case TPP_KWD_continue:
+	case TPP_KWD___asm:
+	case TPP_KWD___asm__:
+	case TPP_KWD_goto:
+	case TPP_KWD_switch:
+	case TPP_KWD_case:
+	case TPP_KWD_default:
 	case '@':
 	case ';':
 is_a_statement:
@@ -431,7 +432,7 @@ is_a_statement:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(!result)
 			goto err;
-		while (tok == '\n') {
+		while (DeeLexer_GetTok(self) == '\n') {
 			if unlikely(yield() < 0)
 				goto err_r;
 		}
@@ -446,8 +447,8 @@ is_a_statement:
 		uint16_t comma_mode;
 
 		/* Check for a label definition. */
-		if (TPP_ISKEYWORD(tok)) {
-			char *next_token = peek_next_token(NULL);
+		if (DeeLexer_HasTokenKwd(self)) {
+			char const *next_token = peek_next_token(NULL);
 			if unlikely(!next_token)
 				goto err;
 			if (*next_token == ':' &&
@@ -473,7 +474,7 @@ is_a_statement:
 		ASSERT(result->a_type == AST_MULTIPLE);
 		ASSERT(result->a_flag == AST_FMULTIPLE_GENERIC);
 		if (!current_scope->s_mapc) {
-			if (tok == '}') {
+			if (DeeLexer_GetTok(self) == '}') {
 /*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
 				if unlikely(yield() < 0)
@@ -484,7 +485,7 @@ parse_remainder_after_rbrace_popscope:
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
 				break;
 			}
-			if (tok == ':' && result->a_multiple.m_astc == 1) {
+			if (DeeLexer_GetTok(self) == ':' && result->a_multiple.m_astc == 1) {
 				/* Use the first expression from the multi-branch. */
 				remainder = result->a_multiple.m_astv[0];
 				ast_incref(remainder);
@@ -524,7 +525,7 @@ parse_remainder_after_colon_popscope:
 			result->a_flag = AST_FMULTIPLE_KEEPLAST;
 		}
 parse_remainder_after_statement:
-		if (tok == '}') {
+		if (DeeLexer_GetTok(self) == '}') {
 			ast_setddi(result, &loc);
 			if unlikely(yield() < 0)
 				goto err_r;

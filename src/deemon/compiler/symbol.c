@@ -1191,96 +1191,96 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	/* White-list of non-reserved builtin keywords. */
 	switch (name->k_id) {
 
-	case KWD_f:
-	case KWD_F:
-	case KWD_ifdef:
-	case KWD_ifndef:
-	case KWD_endif:
-	case KWD_undef:
-	case KWD_include:
-	case KWD_include_next:
-	case KWD_line:
-	case KWD_error:
-	case KWD_warning:
-	case KWD_define:
-	case KWD_defined:
+	case TPP_KWD_f:
+	case TPP_KWD_F:
+	case TPP_KWD_ifdef:
+	case TPP_KWD_ifndef:
+	case TPP_KWD_endif:
+	case TPP_KWD_undef:
+	case TPP_KWD_include:
+	case TPP_KWD_include_next:
+	case TPP_KWD_line:
+	case TPP_KWD_error:
+	case TPP_KWD_warning:
+	case TPP_KWD_define:
+	case TPP_KWD_defined:
 #if !defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) || TPP_CONFIG_EXTENSION_IDENT_SCCS
-	case KWD_ident:
-	case KWD_sccs:
+	case TPP_KWD_ident:
+	case TPP_KWD_sccs:
 #endif /* !defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) || TPP_CONFIG_EXTENSION_IDENT_SCCS */
 #if !defined(TPP_CONFIG_EXTENSION_ASSERTIONS) || TPP_CONFIG_EXTENSION_ASSERTIONS
-	case KWD_unassert:
+	case TPP_KWD_unassert:
 #endif /* !defined(TPP_CONFIG_EXTENSION_ASSERTIONS) || TPP_CONFIG_EXTENSION_ASSERTIONS */
-	case KWD_pragma:
+	case TPP_KWD_pragma:
 #if !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
 #if !defined(TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA) || TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
-	case KWD_tpp_dollar_is_alpha:
+	case TPP_KWD_tpp_dollar_is_alpha:
 #endif /* !defined(TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA) || TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA */
 #if !defined(TPP_CONFIG_EXTENSION_VA_ARGS) || TPP_CONFIG_EXTENSION_VA_ARGS
-	case KWD_tpp_va_args:
+	case TPP_KWD_tpp_va_args:
 #endif /* !defined(TPP_CONFIG_EXTENSION_VA_ARGS) || TPP_CONFIG_EXTENSION_VA_ARGS */
 #if !defined(TPP_CONFIG_EXTENSION_GCC_VA_ARGS) || TPP_CONFIG_EXTENSION_GCC_VA_ARGS
-	case KWD_tpp_named_va_args:
+	case TPP_KWD_tpp_named_va_args:
 #endif /* !defined(TPP_CONFIG_EXTENSION_GCC_VA_ARGS) || TPP_CONFIG_EXTENSION_GCC_VA_ARGS */
 #if !defined(TPP_CONFIG_EXTENSION_VA_COMMA) || TPP_CONFIG_EXTENSION_VA_COMMA
-	case KWD_tpp_va_comma:
+	case TPP_KWD_tpp_va_comma:
 #endif /* !defined(TPP_CONFIG_EXTENSION_VA_COMMA) || TPP_CONFIG_EXTENSION_VA_COMMA */
-	case KWD_tpp_reemit_unknown_pragmas:
+	case TPP_KWD_tpp_reemit_unknown_pragmas:
 #if !defined(TPP_CONFIG_EXTENSION_MSVC_FIXED_INT) || TPP_CONFIG_EXTENSION_MSVC_FIXED_INT
-	case KWD_tpp_msvc_integer_suffix:
+	case TPP_KWD_tpp_msvc_integer_suffix:
 #endif /* !defined(TPP_CONFIG_EXTENSION_MSVC_FIXED_INT) || TPP_CONFIG_EXTENSION_MSVC_FIXED_INT */
 #if !defined(TPP_CONFIG_EXTENSION_HASH_AT) || TPP_CONFIG_EXTENSION_HASH_AT
-	case KWD_tpp_charize_operator:
+	case TPP_KWD_tpp_charize_operator:
 #endif /* !defined(TPP_CONFIG_EXTENSION_HASH_AT) || TPP_CONFIG_EXTENSION_HASH_AT */
 #if !defined(TPP_CONFIG_FEATURE_TRIGRAPHS) || TPP_CONFIG_FEATURE_TRIGRAPHS
-	case KWD_tpp_trigraphs:
+	case TPP_KWD_tpp_trigraphs:
 #endif /* !defined(TPP_CONFIG_FEATURE_TRIGRAPHS) || TPP_CONFIG_FEATURE_TRIGRAPHS */
 #if !defined(TPP_CONFIG_FEATURE_DIGRAPHS) || TPP_CONFIG_FEATURE_DIGRAPHS
-	case KWD_tpp_digraphs:
+	case TPP_KWD_tpp_digraphs:
 #endif /* !defined(TPP_CONFIG_FEATURE_DIGRAPHS) || TPP_CONFIG_FEATURE_DIGRAPHS */
-	case KWD_tpp_pragma_push_macro:
-	case KWD_tpp_pragma_pop_macro:
-	case KWD_tpp_pragma_region:
-	case KWD_tpp_pragma_endregion:
-	case KWD_tpp_pragma_warning:
-	case KWD_tpp_pragma_message:
-	case KWD_tpp_pragma_error:
-	case KWD_tpp_pragma_once:
-	case KWD_tpp_pragma_tpp_exec:
-	case KWD_tpp_pragma_deprecated:
-	case KWD_tpp_pragma_tpp_set_keyword_flags:
+	case TPP_KWD_tpp_pragma_push_macro:
+	case TPP_KWD_tpp_pragma_pop_macro:
+	case TPP_KWD_tpp_pragma_region:
+	case TPP_KWD_tpp_pragma_endregion:
+	case TPP_KWD_tpp_pragma_warning:
+	case TPP_KWD_tpp_pragma_message:
+	case TPP_KWD_tpp_pragma_error:
+	case TPP_KWD_tpp_pragma_once:
+	case TPP_KWD_tpp_pragma_tpp_exec:
+	case TPP_KWD_tpp_pragma_deprecated:
+	case TPP_KWD_tpp_pragma_tpp_set_keyword_flags:
 #if !defined(TPP_CONFIG_EXTENSION_INCLUDE_NEXT) || TPP_CONFIG_EXTENSION_INCLUDE_NEXT
-	case KWD_tpp_directive_include_next:
+	case TPP_KWD_tpp_directive_include_next:
 #endif /* !defined(TPP_CONFIG_EXTENSION_INCLUDE_NEXT) || TPP_CONFIG_EXTENSION_INCLUDE_NEXT */
 #if !defined(TPP_CONFIG_EXTENSION_IMPORT) || TPP_CONFIG_EXTENSION_IMPORT
-	case KWD_tpp_directive_import:
+	case TPP_KWD_tpp_directive_import:
 #endif /* !defined(TPP_CONFIG_EXTENSION_IMPORT) || TPP_CONFIG_EXTENSION_IMPORT */
 #if !defined(TPP_CONFIG_EXTENSION_WARNING) || TPP_CONFIG_EXTENSION_WARNING
-	case KWD_tpp_directive_warning:
+	case TPP_KWD_tpp_directive_warning:
 #endif /* !defined(TPP_CONFIG_EXTENSION_WARNING) || TPP_CONFIG_EXTENSION_WARNING */
 #if !defined(TPP_CONFIG_EXTENSION_LXOR) || TPP_CONFIG_EXTENSION_LXOR
-	case KWD_tpp_lxor:
+	case TPP_KWD_tpp_lxor:
 #endif /* !defined(TPP_CONFIG_EXTENSION_LXOR) || TPP_CONFIG_EXTENSION_LXOR */
-	case KWD_tpp_token_tilde_tilde:
-	case KWD_tpp_token_pow:
-	case KWD_tpp_token_lxor:
-	case KWD_tpp_token_arrow:
-	case KWD_tpp_token_colon_assign:
-	case KWD_tpp_token_colon_colon:
+	case TPP_KWD_tpp_token_tilde_tilde:
+	case TPP_KWD_tpp_token_pow:
+	case TPP_KWD_tpp_token_lxor:
+	case TPP_KWD_tpp_token_arrow:
+	case TPP_KWD_tpp_token_colon_assign:
+	case TPP_KWD_tpp_token_colon_colon:
 #if !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC
-	case KWD_tpp_macro_calling_conventions:
+	case TPP_KWD_tpp_macro_calling_conventions:
 #endif /* !defined(TPP_CONFIG_EXTENSION_ALTMAC) || TPP_CONFIG_EXTENSION_ALTMAC */
-	case KWD_tpp_strict_whitespace:
-	case KWD_tpp_strict_integer_overflow:
-	case KWD_tpp_support_ansi_characters:
-	case KWD_tpp_emit_lf_after_directive:
+	case TPP_KWD_tpp_strict_whitespace:
+	case TPP_KWD_tpp_strict_integer_overflow:
+	case TPP_KWD_tpp_support_ansi_characters:
+	case TPP_KWD_tpp_emit_lf_after_directive:
 #if !defined(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR) || TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
-	case KWD_tpp_if_cond_expression:
+	case TPP_KWD_tpp_if_cond_expression:
 #endif /* !defined(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR) || TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
-	case KWD_tpp_debug:
+	case TPP_KWD_tpp_debug:
 #endif /* !TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS */
 
-	case KWD_this:
+	case TPP_KWD_this:
 		return false;
 
 	default: break;

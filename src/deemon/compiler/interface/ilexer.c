@@ -68,15 +68,15 @@ INTERN WUNUSED NONNULL((1)) tok_t DCALL
 get_token_from_str(char const *__restrict name, bool create_missing) {
 	switch (name[0]) {
 	case 0:
-		return TOK_EOF; /* End-of-file token. */
+		return TPP_TOK_EOF; /* End-of-file token. */
 		/* Tokens containing 2 or more characters. */
 
 	case '<':
 		if (name[1] == '<') {
 			if (!name[2])
-				return TOK_SHL;
+				return TPP_TOK_LANGLE_LANGLE;
 			if (name[2] == '=' && !name[3])
-				return TOK_SHL_EQUAL;
+				return TPP_TOK_LANGLE_LANGLE_EQUAL;
 			if (name[2] == '<') {
 				if (!name[3])
 					return TOK_LANGLE3;
@@ -85,19 +85,19 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 			}
 		} else if (name[1] == '=') {
 			if (!name[2])
-				return TOK_LOWER_EQUAL;
+				return TPP_TOK_LANGLE_EQUAL;
 		} else if (name[1] == '>') {
 			if (!name[2])
-				return TOK_LOGT;
+				return TPP_TOK_LANGLE_RANGLE;
 		}
 		break;
 
 	case '>':
 		if (name[1] == '>') {
 			if (!name[2])
-				return TOK_SHR;
+				return TPP_TOK_RANGLE_RANGLE;
 			if (name[2] == '=' && !name[3])
-				return TOK_SHR_EQUAL;
+				return TPP_TOK_RANGLE_RANGLE_EQUAL;
 			if (name[2] == '>') {
 				if (!name[3])
 					return TOK_RANGLE3;
@@ -106,30 +106,30 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 			}
 		} else if (name[1] == '=') {
 			if (!name[2])
-				return TOK_GREATER_EQUAL;
+				return TPP_TOK_RANGLE_EQUAL;
 		}
 		break;
 
 	case '=':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_EQUAL;
+				return TPP_TOK_EQUAL_EQUAL;
 			if (name[2] == '=' && !name[3])
-				return TOK_EQUAL3;
+				return TPP_TOK_EQUAL_EQUAL_EQUAL;
 		}
 		break;
 	case '!':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_NOT_EQUAL;
+				return TPP_TOK_EXCLAIM_EQUAL;
 			if (name[2] == '=' && !name[3])
-				return TOK_NOT_EQUAL3;
+				return TPP_TOK_EXCLAIM_EQUAL_EQUAL;
 		}
 		break;
 
 	case '?':
 		if (name[1] == '?')
-			return TOK_QMARK_QMARK;
+			return TPP_TOK_QMARK_QMARK;
 		break;
 
 	case '.':
@@ -147,7 +147,7 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	case ':':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_COLON_EQUAL;
+				return TPP_TOK_COLON_EQUAL;
 		} else if (name[1] == ':') {
 			if (!name[2])
 				return TOK_NAMESPACE;
@@ -157,20 +157,20 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	case '+':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_ADD_EQUAL;
+				return TPP_TOK_PLUS_EQUAL;
 		} else if (name[1] == '+') {
 			if (!name[2])
-				return TOK_INC;
+				return TPP_TOK_PLUS_PLUS;
 		}
 		break;
 
 	case '-':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_SUB_EQUAL;
+				return TPP_TOK_MINUS_EQUAL;
 		} else if (name[1] == '-') {
 			if (!name[2])
-				return TOK_DEC;
+				return TPP_TOK_MINUS_MINUS;
 		} else if (name[1] == '>') {
 			if (!name[2])
 				return TOK_ARROW;
@@ -182,53 +182,53 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	case '*':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_MUL_EQUAL;
+				return TPP_TOK_STAR_EQUAL;
 		} else if (name[1] == '*') {
 			if (!name[2])
-				return TOK_POW;
+				return TPP_TOK_STAR_STAR;
 			if (name[2] == '=' && !name[3])
-				return TOK_POW_EQUAL;
+				return TPP_TOK_STAR_STAR_EQUAL;
 		}
 		break;
 
 	case '/':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_DIV_EQUAL;
+				return TPP_TOK_SLASH_EQUAL;
 		}
 		break;
 
 	case '%':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_MOD_EQUAL;
+				return TPP_TOK_PERCENT_EQUAL;
 		}
 		break;
 
 	case '&':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_AND_EQUAL;
+				return TPP_TOK_AMP_EQUAL;
 		} else if (name[1] == '&') {
 			if (!name[2])
-				return TOK_LAND;
+				return TPP_TOK_AMP_AMP;
 		}
 		break;
 
 	case '|':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_OR_EQUAL;
+				return TPP_TOK_PIPE_EQUAL;
 		} else if (name[1] == '|') {
 			if (!name[2])
-				return TOK_LOR;
+				return TPP_TOK_PIPE_PIPE;
 		}
 		break;
 
 	case '^':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_XOR_EQUAL;
+				return TPP_TOK_HAT_EQUAL;
 		} else if (name[1] == '^') {
 			if (!name[2])
 				return TOK_LXOR;
@@ -286,47 +286,47 @@ get_token_from_obj(DeeObject *__restrict obj, bool create_missing) {
 }
 
 PRIVATE char const largetok_names[][4] = {
-	/* [TOK_SHL           - TOK_TWOCHAR_BEGIN] = */ { '<', '<' },
-	/* [TOK_SHR           - TOK_TWOCHAR_BEGIN] = */ { '>', '>' },
-	/* [TOK_EQUAL         - TOK_TWOCHAR_BEGIN] = */ { '=', '=' },
-	/* [TOK_NOT_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '!', '=' },
-	/* [TOK_GREATER_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '=' },
-	/* [TOK_LOWER_EQUAL   - TOK_TWOCHAR_BEGIN] = */ { '<', '=' },
+	/* [TPP_TOK_LANGLE_LANGLE           - TOK_TWOCHAR_BEGIN] = */ { '<', '<' },
+	/* [TPP_TOK_RANGLE_RANGLE           - TOK_TWOCHAR_BEGIN] = */ { '>', '>' },
+	/* [TPP_TOK_EQUAL_EQUAL         - TOK_TWOCHAR_BEGIN] = */ { '=', '=' },
+	/* [TPP_TOK_EXCLAIM_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '!', '=' },
+	/* [TPP_TOK_RANGLE_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '=' },
+	/* [TPP_TOK_LANGLE_EQUAL   - TOK_TWOCHAR_BEGIN] = */ { '<', '=' },
 	/* [TPP_TOK_DOT_DOT_DOT          - TOK_TWOCHAR_BEGIN] = */ { '.', '.', '.' },
-	/* [TOK_ADD_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '+', '=' },
-	/* [TOK_SUB_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '-', '=' },
-	/* [TOK_MUL_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '=' },
-	/* [TOK_DIV_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '/', '=' },
-	/* [TOK_MOD_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '%', '=' },
-	/* [TOK_SHL_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '=' },
-	/* [TOK_SHR_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '=' },
-	/* [TOK_AND_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '&', '=' },
-	/* [TOK_OR_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '|', '=' },
-	/* [TOK_XOR_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '^', '=' },
-	/* [TOK_POW_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '*', '=' },
+	/* [TPP_TOK_PLUS_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '+', '=' },
+	/* [TPP_TOK_MINUS_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '-', '=' },
+	/* [TPP_TOK_STAR_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '=' },
+	/* [TPP_TOK_SLASH_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '/', '=' },
+	/* [TPP_TOK_PERCENT_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '%', '=' },
+	/* [TPP_TOK_LANGLE_LANGLE_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '=' },
+	/* [TPP_TOK_RANGLE_RANGLE_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '=' },
+	/* [TPP_TOK_AMP_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '&', '=' },
+	/* [TPP_TOK_PIPE_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '|', '=' },
+	/* [TPP_TOK_HAT_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '^', '=' },
+	/* [TPP_TOK_STAR_STAR_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '*', '=' },
 	/* [TOK_AT_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '@', '=' },
 	/* [TOK_GLUE          - TOK_TWOCHAR_BEGIN] = */ { '#', '#' },
-	/* [TOK_LAND          - TOK_TWOCHAR_BEGIN] = */ { '&', '&' },
-	/* [TOK_LOR           - TOK_TWOCHAR_BEGIN] = */ { '|', '|' },
+	/* [TPP_TOK_AMP_AMP          - TOK_TWOCHAR_BEGIN] = */ { '&', '&' },
+	/* [TPP_TOK_PIPE_PIPE           - TOK_TWOCHAR_BEGIN] = */ { '|', '|' },
 	/* [TOK_LXOR          - TOK_TWOCHAR_BEGIN] = */ { '^', '^' },
-	/* [TOK_INC           - TOK_TWOCHAR_BEGIN] = */ { '+', '+' },
-	/* [TOK_DEC           - TOK_TWOCHAR_BEGIN] = */ { '-', '-' },
-	/* [TOK_POW           - TOK_TWOCHAR_BEGIN] = */ { '*', '*' },
+	/* [TPP_TOK_PLUS_PLUS           - TOK_TWOCHAR_BEGIN] = */ { '+', '+' },
+	/* [TPP_TOK_MINUS_MINUS           - TOK_TWOCHAR_BEGIN] = */ { '-', '-' },
+	/* [TPP_TOK_STAR_STAR           - TOK_TWOCHAR_BEGIN] = */ { '*', '*' },
 	/* [TOK_TILDE_TILDE   - TOK_TWOCHAR_BEGIN] = */ { '~', '~' },
 	/* [TOK_ARROW         - TOK_TWOCHAR_BEGIN] = */ { '-', '>' },
-	/* [TOK_COLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */ { ':', '=' },
+	/* [TPP_TOK_COLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */ { ':', '=' },
 	/* [TOK_NAMESPACE     - TOK_TWOCHAR_BEGIN] = */ { ':', ':' },
 	/* [TOK_ARROW_STAR    - TOK_TWOCHAR_BEGIN] = */ { '-', '>', '*' },
 	/* [TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */ { '.', '*' },
 	/* [TPP_TOK_DOT_DOT        - TOK_TWOCHAR_BEGIN] = */ { '.', '.' },
-	/* [TOK_LOGT          - TOK_TWOCHAR_BEGIN] = */ { '<', '>' },
+	/* [TPP_TOK_LANGLE_RANGLE          - TOK_TWOCHAR_BEGIN] = */ { '<', '>' },
 	/* [TOK_LANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<' },
 	/* [TOK_RANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>' },
 	/* [TOK_LANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<', '=' },
 	/* [TOK_RANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>', '=' },
-	/* [TOK_EQUAL3        - TOK_TWOCHAR_BEGIN] = */ { '=', '=', '=' },
-	/* [TOK_NOT_EQUAL3    - TOK_TWOCHAR_BEGIN] = */ { '!', '=', '=' },
-	/* [TOK_QMARK_QMARK   - TOK_TWOCHAR_BEGIN] = */ { '?', '?' },
+	/* [TPP_TOK_EQUAL_EQUAL_EQUAL        - TOK_TWOCHAR_BEGIN] = */ { '=', '=', '=' },
+	/* [TPP_TOK_EXCLAIM_EQUAL_EQUAL    - TOK_TWOCHAR_BEGIN] = */ { '!', '=', '=' },
+	/* [TPP_TOK_QMARK_QMARK   - TOK_TWOCHAR_BEGIN] = */ { '?', '?' },
 };
 
 STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
@@ -339,7 +339,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		switch (id) {
-		case TOK_EOF: return DeeString_NewEmpty();
+		case TPP_TOK_EOF: return DeeString_NewEmpty();
 		case TOK_FLOAT: return DeeString_NewSized(".0", 2);
 		case TOK_COMMENT: return DeeString_NewSized("//", 2);
 		default: break;
@@ -376,7 +376,7 @@ get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
 		switch (id) {
-		case TOK_EOF: return Dee_HashStr__;
+		case TPP_TOK_EOF: return Dee_HashStr__;
 		case TOK_FLOAT: return Dee_HashStr_dot_0;
 		case TOK_COMMENT: return Dee_HashStr_slash_slash;
 		default: break;
@@ -3327,8 +3327,7 @@ lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject 
 	DeeArg_Unpack0(err_printer, argc, argv, "decodestring");
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err_printer;
-	if (TPPLexer_Current->l_token.t_id != TOK_STRING ||
-	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	if (!DeeLexer_IsStringToken(_DeeLexer_Current)) {
 		error = DeeError_Throwf(&DeeError_ValueError,
 		                        "The current token isn't a string");
 	} else {

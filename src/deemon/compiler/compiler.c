@@ -546,7 +546,7 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 		switch (mode & DeeExec_RUNMODE_MASK) {
 
 		default:
-			code = ast_parse_statements_until(_DeeLexer_Current, AST_FMULTIPLE_KEEPLAST, TOK_EOF);
+			code = ast_parse_statements_until(_DeeLexer_Current, AST_FMULTIPLE_KEEPLAST, TPP_TOK_EOF);
 			break;
 
 		case DeeExec_RUNMODE_STMT:

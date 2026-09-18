@@ -53,7 +53,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 	                         NULL);
 	if unlikely(!result)
 		goto err;
-	if (tok == TOK_POW) {
+	if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
 		/* XXX: I really don't like using `**` for this.
 		 *      I realize that I _have_ to provide some way
 		 *      of passing arbitrary mappings through keywords,
@@ -66,8 +66,8 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 		*p_keyword_labels = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!*p_keyword_labels)
 			goto err_r;
-	} else if (TPP_ISKEYWORD(tok)) {
-		char *next = peek_next_token(NULL);
+	} else if (DeeLexer_HasTokenKwd(self)) {
+		char const *next = peek_next_token(NULL);
 		if unlikely(!next)
 			goto err_r;
 		if (*next == ':') {
@@ -96,8 +96,8 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 
 				/* Append the argument label. */
 				if (DeeKwds_AppendStringLen(&kwdlist_ast->a_constexpr,
-				                            token.t_kwd->k_name,
-				                            token.t_kwd->k_size))
+				                            DeeLexer_GetTokenKwdCStr(self),
+				                            DeeLexer_GetTokenKwdLen(self)))
 					goto err_r_kwdlist;
 				if unlikely(yield() < 0)
 					goto err_r_kwdlist;
@@ -129,10 +129,10 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 				if unlikely(!argument_value)
 					goto err_r_kwdlist;
 				result->a_multiple.m_astv[result->a_multiple.m_astc++] = argument_value; /* Inherit reference. */
-				if (tok != ',')
+				if (DeeLexer_GetTok(self) != ',')
 					break;
 				if (mode & AST_COMMA_STRICTCOMMA) {
-					char *next_token = peek_next_token(NULL);
+					char const *next_token = peek_next_token(NULL);
 					if unlikely(!next_token)
 						goto err_r_kwdlist;
 					if (!DeeUni_IsSymCont(*next_token)) /* Can't be a label. */
@@ -140,7 +140,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 				}
 				if unlikely(yield() < 0)
 					goto err_r_kwdlist;
-				if (!TPP_ISKEYWORD(tok))
+				if (!DeeLexer_HasTokenKwd(self))
 					break; /* End of argument list. */
 			}
 			ASSERT(result->a_multiple.m_astc <= multiple_a);

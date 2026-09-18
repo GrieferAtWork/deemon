@@ -415,7 +415,6 @@ err:
 #undef token
 #undef tok
 #undef yield
-#undef yieldnb
 #undef yieldnbif
 #undef skip
 
@@ -439,7 +438,7 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
 };
 
 
-INTERN WUNUSED NONNULL((1)) char *DCALL advance_wraplf(char *__restrict p) {
+INTERN WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p) {
 	++p;
 	while (SKIP_WRAPLF(p, token.t_file->f_end))
 		;
@@ -471,16 +470,16 @@ INTERN WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void) {
 INTDEF WUNUSED NONNULL((1, 2)) char *TPPCALL
 skip_whitespace_and_comments(char *iter, char *end);
 
-INTERN WUNUSED char *DCALL
+INTERN WUNUSED char const *DCALL
 peek_next_token(struct TPPFile **tok_file) {
 	if (tok_file)
 		*tok_file = token.t_file;
 	return peek_next_advance(token.t_end, tok_file);
 }
 
-INTERN WUNUSED NONNULL((1)) char *DCALL
-peek_next_advance(char *p, struct TPPFile **tok_file) {
-	char *result, *end, *file_begin;
+INTERN WUNUSED NONNULL((1)) char const *DCALL
+peek_next_advance(char const *p, struct TPPFile **tok_file) {
+	char const *result, *end, *file_begin;
 	result = p;
 	struct TPPFile *curfile;
 	if (tok_file) {
@@ -501,9 +500,9 @@ again:
 			++result;
 		if (*result != '/')
 			goto set_result;
-		result = skip_whitespace_and_comments(result, end);
+		result = skip_whitespace_and_comments((char *)result, (char *)end);
 	} else {
-		result = skip_whitespace_and_comments(result, end);
+		result = skip_whitespace_and_comments((char *)result, (char *)end);
 	}
 	if (result == end) {
 		int extend_error;
@@ -554,11 +553,11 @@ INTERN ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch) {
 
 INTERN WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL
 peek_keyword(struct TPPFile *__restrict tok_file,
-             char *__restrict tok_begin, int create_missing) {
+             char const *__restrict tok_begin, int create_missing) {
 	struct TPPKeyword *kwd_entry;
 	size_t name_escapesize, name_size;
 	uint8_t chflags;
-	char *iter;
+	char const *iter;
 	name_size = 1;
 	chflags   = CH_ISALPHA;
 	iter      = tok_begin;
@@ -610,7 +609,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 INTERN WUNUSED struct TPPKeyword *DCALL
 peek_next_keyword(int create_missing) {
 	struct TPPFile *tok_file;
-	char *tok_begin = peek_next_token(&tok_file);
+	char const *tok_begin = peek_next_token(&tok_file);
 	if unlikely(!tok_begin)
 		return NULL;
 	return peek_keyword(tok_file, tok_begin, create_missing);
@@ -1109,7 +1108,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DFCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 	ASSERT(tok != '(');
-	if (tok == KWD_pack) {
+	if (tok == TPP_KWD_pack) {
 		struct ast_loc packloc;
 		loc_here(&packloc);
 		if unlikely(yield() < 0)

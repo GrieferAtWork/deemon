@@ -43,14 +43,14 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	struct ast_loc loc;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	ASSERT(tok == KWD_assert);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	if unlikely(yield() < 0)
 		goto err;
 	message = NULL;
-	if (tok == '(') {
+	if (DeeLexer_GetTok(self) == '(') {
 		/* Special case: We must be able to handle both of these:
 		 * >> assert (foo == bar), "Error";
 		 * >> ASSERT(foo == bar, "Error");
@@ -63,7 +63,7 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 			if unlikely(!result)
 				goto err;
 		}
-		if (!needs_parenthesis && tok == ',') {
+		if (!needs_parenthesis && DeeLexer_GetTok(self) == ',') {
 			/* The message was passed individually. */
 			if unlikely(yield() < 0)
 				goto err_r;
@@ -89,7 +89,7 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
-		if (tok == ',') {
+		if (DeeLexer_GetTok(self) == ',') {
 			if unlikely(yield() < 0)
 				goto err_r;
 			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
@@ -124,14 +124,14 @@ ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	struct ast_loc loc;
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	ASSERT(tok == KWD_assert);
+	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_assert);
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
 	if unlikely(yield() < 0)
 		goto err;
 	message = NULL;
-	if (tok == '(') {
+	if (DeeLexer_GetTok(self) == '(') {
 		/* Special case: We must be able to handle both of these:
 		 * >> assert (foo == bar), "Error";
 		 * >> ASSERT(foo == bar, "Error");
@@ -157,7 +157,7 @@ ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
-		if (tok == ',') {
+		if (DeeLexer_GetTok(self) == ',') {
 			if unlikely(yield() < 0)
 				goto err_r;
 			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);

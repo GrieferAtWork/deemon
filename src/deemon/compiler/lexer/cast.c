@@ -55,12 +55,12 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 	DREF struct ast *kw_labels;
 	DREF struct ast *result, *merge, **exprv;
 	ASSERT_AST(typeexpr);
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '!': {
 		struct TPPFile *tok_file;
 		struct TPPKeyword *kwd;
-		char *tok_begin;
+		char const *tok_begin;
 
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
@@ -78,11 +78,11 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 		}
 		kwd = peek_keyword(tok_file, tok_begin, 0);
 		if (!kwd) {
-			if unlikely(tok == TOK_ERR)
+			if unlikely(TPPLexer_Current->l_token.t_id == TOK_ERR)
 				goto err;
 		} else {
 			/* This isn't a cast expression. */
-			if (kwd->k_id == KWD_is || kwd->k_id == KWD_in || kwd->k_id == KWD_as)
+			if (kwd->k_id == TPP_KWD_is || kwd->k_id == TPP_KWD_in || kwd->k_id == TPP_KWD_as)
 				goto not_a_cast;
 		}
 		goto do_a_cast;
@@ -118,7 +118,7 @@ not_a_cast:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags;
-		if (tok == ')') {
+		if (DeeLexer_GetTok(self) == ')') {
 			/* Handle case #0 */
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			merge = ast_constexpr(Dee_EmptyTuple);
@@ -134,7 +134,7 @@ not_a_cast:
 				goto err_r;
 			goto done;
 		}
-		second_paren = tok == '(';
+		second_paren = DeeLexer_GetTok(self) == '(';
 
 		/* Parse the cast-expression / argument list. */
 		merge = ast_parse_argument_list(self, AST_COMMA_FORCEMULTIPLE, &kw_labels);

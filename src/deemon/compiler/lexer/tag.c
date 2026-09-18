@@ -243,15 +243,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 append_decl_string(DeeLexer *self) {
-	ASSERT(TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	       (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
 	do {
 		if unlikely(ast_decode_unicode_string(self, &current_tags.at_decl))
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-	} while (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	         (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS)));
+	} while (DeeLexer_IsStringToken(self));
 
 	/* Append a line-feed at the end. */
 	return Dee_unicode_printer_putascii(&current_tags.at_decl, '\n');
@@ -259,14 +257,15 @@ err:
 	return -1;
 }
 
-LOCAL WUNUSED NONNULL((2)) int DCALL
-convert_dot_tag_namespace(size_t tag_name_len,
+LOCAL WUNUSED NONNULL((1, 3)) int DCALL
+convert_dot_tag_namespace(DeeLexer *self, size_t tag_name_len,
                           char const *__restrict tag_name_str) {
-	if unlikely(tok == ':' || tok == TOK_COLON_COLON) {
+	if unlikely(DeeLexer_GetTok(self) == ':' ||
+	            DeeLexer_GetTok(self) == TOK_COLON_COLON) {
 		if (WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
 		         tag_name_len, tag_name_str))
 			goto err;
-		tok = '.';
+		DeeLexer_SetTokenId(self, '.');
 	}
 	return 0;
 err:
@@ -275,11 +274,11 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DFCALL
 parse_tags(DeeLexer *self) {
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		/* Line-style documentation string (terminated by a line-feed) */
-		char *doc_start = token.t_end;
-		char *doc_end   = doc_start;
-		char *file_end  = token.t_file->f_end;
+		char const *doc_start = (char const *)DeeLexer_GetTokenEnd(self);
+		char const *doc_end   = doc_start;
+		char const *file_end  = token.t_file->f_end;
 		while (doc_end < file_end) {
 			char ch = *doc_end;
 			if (ch == '\\') {
@@ -304,7 +303,7 @@ parse_tags(DeeLexer *self) {
 				++doc_end;
 			}
 		}
-		token.t_file->f_pos = doc_end;
+		token.t_file->f_pos = (char *)doc_end;
 		if unlikely(Dee_unicode_printer_print(&current_tags.at_doc, doc_start,
 		                                      (size_t)(doc_end - doc_start)) < 0)
 			goto err;
@@ -312,7 +311,7 @@ parse_tags(DeeLexer *self) {
 			goto err;
 		if (yield() < 0)
 			goto err;
-	} else if (tok == '[') {
+	} else if (DeeLexer_GetTok(self) == '[') {
 		/* Implementation-specific / compile-time tags */
 		char const *tag_name_str;
 		size_t tag_name_len;
@@ -325,12 +324,12 @@ parse_tags(DeeLexer *self) {
 again_compiler_tag:
 		is_optional = false;
 again_compiler_subtag:
-		if (!TPP_ISKEYWORD(tok)) {
+		if (!DeeLexer_HasTokenKwd(self)) {
 			if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD))
 				goto err;
 		} else {
-			tag_name_str = token.t_kwd->k_name;
-			tag_name_len = token.t_kwd->k_size;
+			tag_name_str = DeeLexer_GetTokenKwdCStr(self);
+			tag_name_len = DeeLexer_GetTokenKwdLen(self);
 
 			/* Trim leading/trailing underscores from tag names (prevent ambiguity when macros are used).
 			 * NOTE: Doing this is an extension implemented by the GATW implementation */
@@ -362,7 +361,7 @@ again_compiler_subtag:
 			} else if (IS_TAG("optional")) {
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
 				if (skip('.', W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
 					goto err;
@@ -372,16 +371,16 @@ again_compiler_subtag:
 				/* The annotation namespace used by our implementation (GATW). */
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
-				if (tok != '.')
+				if (DeeLexer_GetTok(self) != '.')
 					goto warn_unknown_tag;
 				if unlikely(yield() < 0)
 					goto err;
-				if (!TPP_ISKEYWORD(tok))
+				if (!DeeLexer_HasTokenKwd(self))
 					goto err_no_keyword_after_dot;
-				tag_name_str = token.t_kwd->k_name;
-				tag_name_len = token.t_kwd->k_size;
+				tag_name_str = DeeLexer_GetTokenKwdCStr(self);
+				tag_name_len = DeeLexer_GetTokenKwdLen(self);
 				while (tag_name_len && *tag_name_str == '_')
 					++tag_name_str, --tag_name_len;
 				while (tag_name_len && tag_name_str[tag_name_len - 1] == '_')
@@ -415,7 +414,7 @@ again_compiler_subtag:
 				} else if (IS_TAG("doc")) {
 					if unlikely(yield() < 0)
 						goto err;
-					if likely(tok == '(') {
+					if likely(DeeLexer_GetTok(self) == '(') {
 						if unlikely(yield() < 0)
 							goto err;
 					} else {
@@ -423,11 +422,10 @@ again_compiler_subtag:
 							goto do_next_compiler_tag;
 						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
 							goto err;
-						if (tok == ',' || tok == ']')
+						if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ']')
 							goto do_next_compiler_tag;
 					}
-					if likely(TPP_TOK_ISSTRING_DQUOTE(tok) ||
-					          (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+					if likely(DeeLexer_IsStringToken(self)) {
 						if unlikely(append_decl_string(self))
 							goto err;
 					} else {
@@ -445,40 +443,40 @@ warn_unknown_tag_yield:
 				if unlikely(yield() < 0)
 					goto err;
 warn_unknown_tag:
-				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
 				if (!is_optional &&
-				    WARN(tok == '.' ? W_COMPILER_TAG_UNKNOWN_NS
-				                    : W_COMPILER_TAG_UNKNOWN,
+				    WARN(DeeLexer_GetTok(self) == '.' ? W_COMPILER_TAG_UNKNOWN_NS
+				                                      : W_COMPILER_TAG_UNKNOWN,
 				         tag_name_len, tag_name_str))
 					goto err;
 again_check_tag_namespace:
-				if (tok == '.') {
+				if (DeeLexer_GetTok(self) == '.') {
 					if unlikely(yield() < 0)
 						goto err;
-					if (!TPP_ISKEYWORD(tok)) {
+					if (!DeeLexer_HasTokenKwd(self)) {
 err_no_keyword_after_dot:
 						if (WARN(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, tag_name_len, tag_name_str))
 							goto err;
 					} else {
-						tag_name_str = token.t_kwd->k_name;
-						tag_name_len = token.t_kwd->k_size;
+						tag_name_str = DeeLexer_GetTokenKwdCStr(self);
+						tag_name_len = DeeLexer_GetTokenKwdLen(self);
 						if unlikely(yield() < 0)
 							goto err;
 					}
-					if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+					if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 						goto err;
 					goto again_check_tag_namespace;
 				}
-				if (tok == '(') {
+				if (DeeLexer_GetTok(self) == '(') {
 					/* Skip tag argument list. */
 					unsigned int recursion = 1;
-					while (tok) {
+					while (DeeLexer_GetTok(self) != TPP_TOK_EOF) {
 						if unlikely(yield() < 0)
 							goto err;
-						if (tok == '(') {
+						if (DeeLexer_GetTok(self) == '(') {
 							++recursion;
-						} else if (tok == ')') {
+						} else if (DeeLexer_GetTok(self) == ')') {
 							if (recursion == 1) {
 								if unlikely(yield() < 0)
 									goto err;
@@ -492,16 +490,16 @@ err_no_keyword_after_dot:
 			}
 			if unlikely(yield() < 0)
 				goto err;
-			if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
+			if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 				goto err;
-			if unlikely(tok == '.')
+			if unlikely(DeeLexer_GetTok(self) == '.')
 				goto warn_unknown_tag;
 		}
 do_next_compiler_tag:
-		if (tok == ',') {
+		if (DeeLexer_GetTok(self) == ',') {
 			if unlikely(yield() < 0)
 				goto err;
-			if (tok != ']')
+			if (DeeLexer_GetTok(self) != ']')
 				goto again_compiler_tag;
 		}
 		if (skip(']', W_COMPILER_TAG_EXPECTED_RBRACKET))
@@ -512,7 +510,7 @@ do_next_compiler_tag:
 		int error;
 		DREF struct ast *annotation;
 		flags = AST_ANNOTATION_FNORMAL;
-		if (tok == '(')
+		if (DeeLexer_GetTok(self) == '(')
 			flags |= AST_ANNOTATION_FNOFUNC;
 		annotation = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!annotation)
@@ -531,7 +529,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DFCALL
 parse_tags_block(DeeLexer *self) {
-	while (tok == '@') {
+	while (DeeLexer_GetTok(self) == '@') {
 		if unlikely(yield() < 0)
 			goto err;
 		if unlikely(parse_tags(self))

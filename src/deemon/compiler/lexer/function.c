@@ -38,21 +38,22 @@
 
 DECL_BEGIN
 
-PRIVATE int DCALL skip_argument_name(void) {
-	if unlikely(!TPP_ISKEYWORD(tok)) {
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+skip_argument_name(DeeLexer *self) {
+	if unlikely(!DeeLexer_HasTokenKwd(self)) {
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 	} else {
-		if (tok != KWD_none) {
-			if (has_local_symbol(token.t_kwd)) {
+		if (DeeLexer_GetTok(self) != TPP_KWD_none) {
+			if (has_local_symbol(DeeLexer_GetTokenKwd(self))) {
 				if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
 					goto err;
-			} else if (is_reserved_symbol_name(token.t_kwd)) {
-				if (WARN(W_RESERVED_ARGUMENT_NAME, token.t_kwd))
+			} else if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+				if (WARN(W_RESERVED_ARGUMENT_NAME, DeeLexer_GetTokenKwd(self)))
 					goto err;
 			}
 		}
-		if unlikely(yield() < 0)
+		if unlikely(DeeLexer_Yield(self) < 0)
 			goto err;
 	}
 	return 0;
@@ -60,15 +61,16 @@ err:
 	return -1;
 }
 
-PRIVATE struct symbol *DCALL parse_argument_name(void) {
+PRIVATE WUNUSED NONNULL((1)) struct symbol *DCALL
+parse_argument_name(DeeLexer *self) {
 	struct symbol *result;
 	struct TPPKeyword *argument_name;
-	if unlikely(!TPP_ISKEYWORD(tok)) {
+	if unlikely(!DeeLexer_HasTokenKwd(self)) {
 		if (WARN(W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
 		result = new_unnamed_symbol();
 	} else {
-		if (tok == KWD_none) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_none) {
 			/* Special case: Allow `none` to be used for placeholder/pending arguments. */
 create_anon_argument:
 			/* Create a new symbol for the argument. */
@@ -179,12 +181,13 @@ parse_arglist(DeeLexer *self) {
 	current_scope     = (DREF DeeScopeObject *)current_basescope;
 	Dee_Incref(current_scope);
 	defaulta = arga = 0;
-	if (tok > 0 && tok != ')') {
+	if (DeeLexer_GetTok(self) != TPP_TOK_EOF &&
+	    DeeLexer_GetTok(self) != ')') {
 		for (;;) {
 			uint16_t symbol_flags;
 
 			/* Special case: unnamed varargs. */
-			if (tok == TPP_TOK_DOT_DOT_DOT) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARARGS) {
 					arg = current_basescope->bs_varargs;
 					if likely(arg) {
@@ -215,26 +218,26 @@ set_arg_as_varargs_argument:
 				current_basescope->bs_varargs = arg;
 				current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 parse_varargs_suffix:
-				if unlikely(tok == '?') {
+				if unlikely(DeeLexer_GetTok(self) == '?') {
 					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if unlikely(yield() < 0)
 						goto err;
 				}
-				if unlikely(tok == TPP_TOK_DOT_DOT_DOT) {
+				if unlikely(DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					if unlikely(yield() < 0)
 						goto err;
 				}
-				if (tok == ':') {
+				if (DeeLexer_GetTok(self) == ':') {
 					/* Parse argument declaration information. */
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
-				if unlikely(tok == '=') {
+				if unlikely(DeeLexer_GetTok(self) == '=') {
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
 					goto skip_default_suffix;
@@ -245,14 +248,14 @@ parse_varargs_suffix:
 			/* Parse variable modifier flags. */
 			symbol_flags = SYMBOL_FNORMAL;
 			for (;;) {
-				if (tok == KWD_local) {
+				if (DeeLexer_GetTok(self) == TPP_KWD_local) {
 					/* ... */
-				} else if (tok == KWD_final) {
+				} else if (DeeLexer_GetTok(self) == TPP_KWD_final) {
 					if ((symbol_flags & SYMBOL_FFINAL) &&
 					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 						goto err;
 					symbol_flags |= SYMBOL_FFINAL;
-				} else if (tok == KWD_varying) {
+				} else if (DeeLexer_GetTok(self) == TPP_KWD_varying) {
 					if ((symbol_flags & SYMBOL_FVARYING) &&
 					    WARN(W_VARIABLE_MODIFIER_DUPLICATED))
 						goto err;
@@ -265,13 +268,13 @@ parse_varargs_suffix:
 			}
 
 			/* Check for keyword arguments parameter. */
-			if (tok == TOK_POW) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
 				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARKWDS) {
 					arg = current_basescope->bs_varkwds;
 					if likely(arg) {
 						if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
-						if (skip_argument_name())
+						if (skip_argument_name(self))
 							goto err;
 						goto parse_varargs_suffix;
 					}
@@ -280,7 +283,7 @@ parse_varargs_suffix:
 					goto err;
 
 				/* Parse the argument name. */
-				arg = parse_argument_name();
+				arg = parse_argument_name(self);
 				if unlikely(!arg)
 					goto err;
 				if unlikely(resize_argument_list(&arga))
@@ -297,10 +300,10 @@ parse_varargs_suffix:
 			}
 
 			/* Parse the argument name. */
-			arg = parse_argument_name();
+			arg = parse_argument_name(self);
 			if unlikely(!arg)
 				goto err;
-			if (tok == TPP_TOK_DOT_DOT_DOT) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				/* Varargs argument. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -322,17 +325,17 @@ parse_varargs_suffix:
 set_argument_as_local:
 				arg->s_type = SYMBOL_TYPE_LOCAL;
 				arg->s_flag = symbol_flags;
-				if (tok == '?' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == '?' && unlikely(yield() < 0))
 					goto err;
-				if (tok == ':') {
+				if (DeeLexer_GetTok(self) == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
-				if (tok == '=')
+				if (DeeLexer_GetTok(self) == '=')
 					goto skip_default_suffix;
-			} else if (tok == '?') { /* Optional argument */
+			} else if (DeeLexer_GetTok(self) == '?') { /* Optional argument */
 				if unlikely(yield() < 0)
 					goto err;
 				arg->s_type  = SYMBOL_TYPE_ARG;
@@ -348,13 +351,13 @@ set_argument_as_local:
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = NULL;
 				++current_basescope->bs_argc_max;
-				if (tok == ':') {
+				if (DeeLexer_GetTok(self) == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
 				}
-				if unlikely(tok == '=') {
+				if unlikely(DeeLexer_GetTok(self) == '=') {
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
@@ -369,15 +372,15 @@ skip_default_suffix:
 					ast_decref(default_expr);
 					goto next_argument;
 				}
-			} else if (tok == ':') { /* Declaration suffix. */
+			} else if (DeeLexer_GetTok(self) == ':') { /* Declaration suffix. */
 				if unlikely(yield() < 0)
 					goto err;
 				if unlikely(decl_ast_parse_for_symbol(self, arg))
 					goto err;
-				if (tok == '=')
+				if (DeeLexer_GetTok(self) == '=')
 					goto parse_default_suffix;
 				goto set_arg_as_normal;
-			} else if (tok == '=') { /* Default argument */
+			} else if (DeeLexer_GetTok(self) == '=') { /* Default argument */
 				DREF DeeObject *default_value;
 				DREF struct ast *default_expr;
 parse_default_suffix:
@@ -434,11 +437,11 @@ set_arg_as_normal:
 				++current_basescope->bs_argc_max;
 			}
 next_argument:
-			if (tok != ',')
+			if (DeeLexer_GetTok(self) != ',')
 				break;
 			if unlikely(yield() < 0)
 				goto err;
-			if (tok == ')')
+			if (DeeLexer_GetTok(self) == ')')
 				break;
 		}
 	}
@@ -528,7 +531,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 	/* Declaration meta-information */
 	decl_ast_initfunc(&my_decl, NULL, current_basescope);
 
-	if (tok == '(') {
+	if (DeeLexer_GetTok(self) == '(') {
 		/* Argument list. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -544,7 +547,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 			goto err_decl;
 	}
 
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 		struct decl_ast *return_type;
 		if unlikely(yield() < 0)
 			goto err_decl;
@@ -577,7 +580,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 		my_decl.da_type = DAST_NONE;
 	}
 
-	if (tok == TOK_ARROW) {
+	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
 		if unlikely(yield() < 0)
@@ -594,7 +597,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 		code = ast_setddi(result, &arrow_loc);
 		if (p_need_semi)
 			*p_need_semi = true;
-	} else if (tok == '{') {
+	} else if (DeeLexer_GetTok(self) == '{') {
 		struct ast_loc brace_loc;
 		loc_here(&brace_loc);
 		old_flags = TPPLexer_Current->l_flags;
@@ -695,7 +698,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 	uint32_t old_flags;
 	DREF struct ast *result, *code;
-	if (tok == TOK_ARROW) {
+	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
 		if unlikely(yield() < 0)
@@ -711,7 +714,7 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 		code = ast_setddi(result, &arrow_loc);
 		if (p_need_semi)
 			*p_need_semi = true;
-	} else if (tok == '{') {
+	} else if (DeeLexer_GetTok(self) == '{') {
 		struct ast_loc brace_loc;
 		loc_here(&brace_loc);
 		old_flags = TPPLexer_Current->l_flags;
@@ -773,7 +776,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		goto err;
 	if (first_argument_name) {
 		struct symbol *arg;
-		if (first_argument_name->k_id == KWD_none) {
+		if (first_argument_name->k_id == TPP_KWD_none) {
 			/* Create a new symbol for the argument. */
 			arg = new_unnamed_symbol();
 			if unlikely(!arg)
@@ -808,7 +811,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		current_basescope->bs_argc_min = 1;
 		current_basescope->bs_argc_max = 1;
 		current_basescope->bs_argc     = 1;
-	} else if (tok != TOK_ARROW && tok != ':') {
+	} else if (DeeLexer_GetTok(self) != TOK_ARROW && DeeLexer_GetTok(self) != ':') {
 		uint32_t old_flags;
 		int error;
 		old_flags = TPPLexer_Current->l_flags;
@@ -826,7 +829,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		ASSERT(current_basescope->bs_argv == NULL);
 	}
 
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 		struct decl_ast temp;
 		if unlikely(yield() < 0)
 			goto err_scope;
@@ -835,14 +838,14 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		decl_ast_fini(&temp);
 	}
 
-	ASSERT(tok == TOK_ARROW);
+	ASSERT(DeeLexer_GetTok(self) == TOK_ARROW);
 	loc_here(&arrow_loc);
 	if (yield() < 0)
 		goto err;
 
 	/* At this point, we're at the start of the lambda expression,
 	 * or the '{' in case it uses statements (or returns a sequence) */
-	if (tok == '{') {
+	if (DeeLexer_GetTok(self) == '{') {
 		unsigned int was_expression;
 		code = ast_parse_statement_or_braces(self, &was_expression);
 		if (was_expression != AST_PARSE_WASEXPR_NO)
@@ -887,14 +890,14 @@ err:
 INTERN WUNUSED NONNULL((1)) int DFCALL
 ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 	struct TPPLexerPosition pos;
-	if (!TPP_ISKEYWORD(tok)) {
-		if (tok == TOK_POW) {
+	if (!DeeLexer_HasTokenKwd(self)) {
+		if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
 			/* `**` can only appear in argument- and parameter lists.
 			 * Since out parent is parsing an argument-list, with a
 			 * comma-list as fallback, we know that this is varkwds! */
 			goto yes;
 		}
-		if (tok == TPP_TOK_DOT_DOT_DOT) {
+		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 			/* Special case: there are 4 cases where this can still be an argument list:
 			 * >> (...) -> [...][0];           // anonymous varargs
 			 * >> (...,) -> [...][0];          // *ditto*
@@ -904,16 +907,16 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 				goto err;
 			if unlikely(yield() < 0)
 				goto err_restore;
-			if (tok == ',' && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == ',' && unlikely(yield() < 0))
 				goto err_restore;
-			if (tok == TOK_POW) {
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
 				if unlikely(yield() < 0)
 					goto err_restore;
-				if (!TPP_ISKEYWORD(tok))
+				if (!DeeLexer_HasTokenKwd(self))
 					goto nope_restore;
 				if unlikely(yield() < 0)
 					goto err_restore;
-				if (tok == ',' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == ',' && unlikely(yield() < 0))
 					goto err_restore;
 			}
 			goto check_and_consume_rparen;
@@ -926,30 +929,30 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 	/* Now try to skip the argument list. */
 	for (;;) {
 		/* Special case: unnamed varargs. */
-		if (tok == TPP_TOK_DOT_DOT_DOT) {
+		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 			if unlikely(yield() < 0)
 				goto err_restore;
 		} else {
 			/* Parse variable modifier flags. */
-			while (tok == KWD_local || tok == KWD_final || tok == KWD_varying) {
+			while (DeeLexer_GetTok(self) == TPP_KWD_local || DeeLexer_GetTok(self) == TPP_KWD_final || DeeLexer_GetTok(self) == TPP_KWD_varying) {
 				if unlikely(yield() < 0)
 					goto err_restore;
 			}
-			if (tok == TOK_POW && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && unlikely(yield() < 0))
 				goto err_restore;
-			if (!TPP_ISKEYWORD(tok))
+			if (!DeeLexer_HasTokenKwd(self))
 				goto nope_restore;
 			if unlikely(yield() < 0) /* Argument name. */
 				goto err_restore;
-			if (tok == TPP_TOK_DOT_DOT_DOT && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && unlikely(yield() < 0))
 				goto err_restore;
 		}
-		if (tok == '?') {
+		if (DeeLexer_GetTok(self) == '?') {
 			if unlikely(yield() < 0)
 				goto err_restore;
-			if (tok == ',' || tok == ')')
+			if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ')')
 				goto yes_restore; /* Something like `(foo?)` is guarantied to be a paren-lambda. */
-			if (tok == ':') {
+			if (DeeLexer_GetTok(self) == ':') {
 				/* Parse argument declaration information. */
 				if unlikely(yield() < 0)
 					goto err_restore;
@@ -957,10 +960,10 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 					goto err_restore;
 			}
 		} else {
-			if (tok == ':') /* Something like `(foo: int)` is guarantied to be a paren-lambda. */
+			if (DeeLexer_GetTok(self) == ':') /* Something like `(foo: int)` is guarantied to be a paren-lambda. */
 				goto yes_restore;
 		}
-		if unlikely(tok == '=') {
+		if unlikely(DeeLexer_GetTok(self) == '=') {
 			struct ast *temp;
 			if unlikely(yield() < 0)
 				goto err_restore;
@@ -970,26 +973,26 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 				goto err_restore;
 			ast_decref(temp);
 		}
-		if (tok != ',')
+		if (DeeLexer_GetTok(self) != ',')
 			break;
 		if unlikely(yield() < 0)
 			goto err_restore;
-		if (tok == ')')
+		if (DeeLexer_GetTok(self) == ')')
 			break;
 	}
 check_and_consume_rparen:
-	if (tok != ')')
+	if (DeeLexer_GetTok(self) != ')')
 		goto nope_restore;
 	if unlikely(yield() < 0)
 		goto err_restore;
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 		/* Parse argument declaration information. */
 		if unlikely(yield() < 0)
 			goto err_restore;
 		if unlikely(decl_ast_skip(self))
 			goto err_restore;
 	}
-	if (tok != TOK_ARROW)
+	if (DeeLexer_GetTok(self) != TOK_ARROW)
 		goto nope_restore;
 yes_restore:
 	TPPLexer_LoadPosition(&pos);

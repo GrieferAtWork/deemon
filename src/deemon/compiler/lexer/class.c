@@ -53,15 +53,15 @@ DECL_BEGIN
 DeeSystem_DEFINE_strcmp(Dee_libc_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
-INTDEF int DCALL skip_lf(void);
-#define is_semicolon() (tok == ';' || tok == '\n')
-PRIVATE tok_t DCALL yield_semicolon(void) {
-	tok_t result = yield();
+INTDEF WUNUSED NONNULL((1)) int DFCALL skip_lf(DeeLexer *self);
+#define is_semicolon(self) (DeeLexer_GetTok(self) == ';' || DeeLexer_GetTok(self) == '\n')
+PRIVATE NONNULL((1)) tok_t DFCALL yield_semicolon(DeeLexer *self) {
+	tok_t result = DeeLexer_Yield(self);
 	if (result == '\n') {
 		uint32_t old_flags;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		result = yield();
+		result = DeeLexer_Yield(self);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	}
 	return result;
@@ -512,7 +512,7 @@ err:
  *                           field which contains the member descriptor apart of the either the `cm_cmem` or `cm_imem` table. */
 PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) struct symbol *DCALL
 class_maker_addmember(struct class_maker *__restrict self,
-                      struct TPPKeyword *__restrict name,
+                      tpp_keyword *__restrict name,
                       bool is_class_member,
                       uint16_t flags,
                       uint16_t **__restrict pp_usage_counter,
@@ -1030,16 +1030,16 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 	uint32_t old_flags;
 	for (;;) {
 		struct ast_loc loc;
-		struct TPPKeyword *initializer_name;
-		if unlikely(skip_lf())
+		tpp_keyword *initializer_name;
+		if unlikely(skip_lf(lexer))
 			goto err;
-		if unlikely(!TPP_ISKEYWORD(tok)) {
+		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
 			if (WARN(W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
 				goto err;
 			break;
 		}
 		loc_here(&loc);
-		initializer_name = token.t_kwd;
+		initializer_name = DeeLexer_GetTokenKwd(lexer);
 		if unlikely(yield() < 0)
 			goto err;
 		/* Super-initializer:
@@ -1054,7 +1054,7 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 		 *     }
 		 * }
 		 */
-		if (self->cm_base && (initializer_name->k_id == KWD_super ||
+		if (self->cm_base && (initializer_name->k_id == TPP_KWD_super ||
 		                      (self->cm_base->a_type == AST_SYM &&
 		                       self->cm_base->a_sym->s_name == initializer_name))) {
 			DREF struct ast *superkwds;
@@ -1066,7 +1066,7 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
 				goto err_flags;
 			if (has_paren) {
-				if (tok == ')') {
+				if (DeeLexer_GetTok(lexer) == ')') {
 					/* Empty super-args argument list.
 					 * Since this is what the runtime will do by default in any case,
 					 * there's no point in us not simply optimizing for this case already
@@ -1152,7 +1152,7 @@ done_superargs:
 				goto err;
 
 			/* Member initializer (c++ style). */
-			if (tok == '=') {
+			if (DeeLexer_GetTok(lexer) == '=') {
 				if unlikely(yield() < 0)
 					goto err;
 				initializer_ast = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
@@ -1164,7 +1164,7 @@ done_superargs:
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if (paren_begin(&has_paren, W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
 					goto err_flags;
-				if (has_paren && tok == ')') {
+				if (has_paren && DeeLexer_GetTok(lexer) == ')') {
 					/* Special case: Same as `= none` (aka: initializer to `none`) */
 constructor_list_none_initializer:
 					initializer_ast = ast_constexpr(Dee_None);
@@ -1208,9 +1208,9 @@ constructor_list_none_initializer:
 		}
 
 		/* Stop if there is no comma to mark the next initializer. */
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(lexer))
 			goto err;
-		if (tok != ',')
+		if (DeeLexer_GetTok(lexer) != ',')
 			break;
 		if unlikely(yield() < 0)
 			goto err;
@@ -1277,14 +1277,14 @@ next:
 
 	/* Remain compatible with the old deemon (which
 	 * accepted/ignored a lot of weird stuff here). */
-	switch (tok) {
-	case TOK_EOF:
+	switch (DeeLexer_GetTok(self)) {
+	case TPP_TOK_EOF:
 	case '}':
 		goto done;
 
 	case '\n':
 		/* Skip empty lines in property declarations. */
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err;
 		goto next;
 
@@ -1298,8 +1298,8 @@ next:
 		goto next_callback;
 
 		/* Ignore a `function` / `operator` prefix. */
-	case KWD_function:
-	case KWD_operator:
+	case TPP_KWD_function:
+	case TPP_KWD_operator:
 		if (has_name_prefix &&
 		    WARN(W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN))
 			goto err;
@@ -1315,7 +1315,7 @@ next:
 		if unlikely(yield() < 0)
 			goto err;
 		callback_id = Dee_CLASS_GETSET_GET;
-		if (tok == '=') {
+		if (DeeLexer_GetTok(self) == '=') {
 			callback_id = Dee_CLASS_GETSET_SET;
 			if unlikely(yield() < 0)
 				goto err;
@@ -1329,10 +1329,10 @@ next:
 		goto warn_deprecated_yield;
 
 	default:
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(self)) {
 			unsigned int i;
-			char const *name = token.t_kwd->k_name;
-			size_t size      = token.t_kwd->k_size;
+			char const *name = DeeLexer_GetTokenKwdCStr(self);
+			size_t size      = DeeLexer_GetTokenKwdLen(self);
 			if (size < MAX_CALLBACK_NAME_LENGTH) {
 				for (i = 0; i < COMPILER_LENOF(callback_names); ++i) {
 					/* Check if this is the property that was named. */
@@ -1349,7 +1349,7 @@ warn_deprecated_yield:
 					}
 					if unlikely(yield() < 0)
 						goto err;
-					if unlikely(tok == '.') {
+					if unlikely(DeeLexer_GetTok(self) == '.') {
 						/* The old deemon allowed a `.` to follow some property names such as `del .`.
 						 * But since such behavior is now deprecated, just disregard all that and
 						 * consume a `.` token after a keyword and warn about it being ignored. */
@@ -1403,8 +1403,8 @@ got_callback_id:
 
 	/* Parse a semicolon if one is required. */
 	if (need_semi) {
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolon() < 0)
+		if unlikely(likely(is_semicolon(self))
+		            ? (yield_semicolon(self) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 			goto err;
 	}
@@ -1421,7 +1421,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_class_impl(DeeLexer *self,
-                     uint16_t class_flags, struct TPPKeyword *name,
+                     uint16_t class_flags, tpp_keyword *name,
                      bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct class_maker maker;
@@ -1448,7 +1448,7 @@ ast_parse_class_impl(DeeLexer *self,
 	maker.cm_null_member         = (uint16_t)-1;
 
 	ASSERT(name || !create_symbol);
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 do_parse_class_base:
 		if unlikely(yield() < 0)
 			goto err;
@@ -1459,7 +1459,7 @@ do_parse_class_base_after_yield:
 		maker.cm_base = ast_parse_unaryhead(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
-		if (tok == ',') {
+		if (DeeLexer_GetTok(self) == ',') {
 			/* Support for multiple bases */
 			DREF struct ast **basev;
 			size_t basec, basea;
@@ -1493,7 +1493,7 @@ do_parse_class_base_after_yield:
 				if unlikely(!basev[basec])
 					goto err_basev;
 				++basec;
-			} while (tok == ',');
+			} while (DeeLexer_GetTok(self) == ',');
 			if (basea > basec) {
 				DREF struct ast **new_basev;
 				new_basev = (DREF struct ast **)Dee_TryReallocc(basev, basec,
@@ -1509,7 +1509,7 @@ err_basev:
 				goto err;
 			}
 		}
-	} else if (tok == '(') {
+	} else if (DeeLexer_GetTok(self) == '(') {
 		/* Just another syntax for class bases that the old
 		 * deemon supported and we're supporting as well.
 		 * Though I should note that the intended syntax is `class foo: bar { ... }` */
@@ -1528,16 +1528,17 @@ err_basev:
 		/* Since this is the only place that `extends` may appear at,
 		 * I decided that it wouldn't merit its own keyword because
 		 * this may there is much less overhead. */
-		if (TPP_ISKEYWORD(tok) &&
-		    (tok == KWD_pack || strcmp(token.t_kwd->k_name, "extends") == 0)) {
-			if (tok == KWD_pack) {
+		if (DeeLexer_HasTokenKwd(self) &&
+		    (DeeLexer_GetTok(self) == TPP_KWD_pack ||
+		     strcmp(DeeLexer_GetTokenKwdCStr(self), "extends") == 0)) {
+			if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				struct ast_loc packloc;
 				if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
 					goto err;
 				loc_here(&packloc);
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(tok != '(' && parser_warn_pack_used(&packloc))
+				if unlikely(DeeLexer_GetTok(self) != '(' && parser_warn_pack_used(&packloc))
 					goto err;
 				goto do_parse_class_base_after_yield;
 			}
@@ -1672,7 +1673,7 @@ next_member:
 		if unlikely(ast_tags_clear())
 			goto err;
 next_modifier:
-		switch (tok) {
+		switch (DeeLexer_GetTok(self)) {
 
 		case '@':
 			/* Allow tags in class blocks. */
@@ -1694,7 +1695,7 @@ next_modifier:
 			goto done_class_modal;
 
 		case '\n':
-			if unlikely(skip_lf())
+			if unlikely(skip_lf(self))
 				goto err;
 			goto next_modifier;
 
@@ -1708,15 +1709,15 @@ next_modifier:
 
 		{
 			uint16_t new_visibility;
-		case KWD_private:
+		case TPP_KWD_private:
 			new_visibility = Dee_CLASS_ATTRIBUTE_FPRIVATE;
 			goto set_visibility;
-		case KWD_public:
+		case TPP_KWD_public:
 			new_visibility = Dee_CLASS_ATTRIBUTE_FPUBLIC;
 set_visibility:
 			if unlikely(yield() < 0)
 				goto err;
-			if (tok == ':') {
+			if (DeeLexer_GetTok(self) == ':') {
 				/* Default visibility override (rather than member-specific visibility). */
 				default_member_flags &= ~Dee_CLASS_ATTRIBUTE_FVISIBILITY;
 				default_member_flags |= new_visibility;
@@ -1728,7 +1729,7 @@ set_visibility:
 			modifiers_encountered = true;
 		}	goto next_modifier;
 
-		case KWD_final:
+		case TPP_KWD_final:
 			if unlikely(yield() < 0)
 				goto err;
 			member_flags |= Dee_CLASS_ATTRIBUTE_FFINAL;
@@ -1737,7 +1738,7 @@ set_visibility:
 			modifiers_encountered = true;
 			goto next_modifier;
 
-		case KWD_varying:
+		case TPP_KWD_varying:
 			if unlikely(yield() < 0)
 				goto err;
 			member_flags &= ~Dee_CLASS_ATTRIBUTE_FREADONLY;
@@ -1745,7 +1746,7 @@ set_visibility:
 			modifiers_encountered = true;
 			goto next_modifier;
 
-		case KWD_class:
+		case TPP_KWD_class:
 			/* Class field. */
 			if (is_class_member &&
 			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
@@ -1753,8 +1754,8 @@ set_visibility:
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err;
-			if (tok == '(' || tok == '{' ||
-			    tok == ':' || tok == TOK_ARROW || tok == KWD_pack) {
+			if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == '{' ||
+			    DeeLexer_GetTok(self) == ':' || DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				/* A deprecated syntax for defining constructors allowed
 				 * the use of `class` as another alias for `this` and the
 				 * actual name of the class. */
@@ -1772,7 +1773,7 @@ set_visibility:
 			goto next_modifier;
 
 
-		case KWD_static:
+		case TPP_KWD_static:
 			/* Static (aka. class) field. */
 			if (is_class_member &&
 			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
@@ -1783,15 +1784,15 @@ set_visibility:
 			modifiers_encountered = true;
 			goto next_modifier;
 
-		case KWD_function:
-		case KWD_property:
-		case KWD_member:
+		case TPP_KWD_function:
+		case TPP_KWD_property:
+		case TPP_KWD_member:
 			if (member_class != MEMBER_CLASS_AUTO &&
 			    WARN(W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED))
 				goto err;
-			member_class = (tok == KWD_function
+			member_class = (DeeLexer_GetTok(self) == TPP_KWD_function
 			                ? MEMBER_CLASS_METHOD
-			                : tok == KWD_property
+			                : DeeLexer_GetTok(self) == TPP_KWD_property
 			                  ? MEMBER_CLASS_GETSET
 			                  : MEMBER_CLASS_MEMBER);
 			if unlikely(yield() < 0)
@@ -1799,11 +1800,11 @@ set_visibility:
 			modifiers_encountered = true;
 			goto next_modifier;
 
-		case KWD_operator: {
+		case TPP_KWD_operator: {
 			Dee_operator_t operator_name;
 			bool need_semi;
 			int error;
-			struct TPPKeyword *operator_name_kwd;
+			tpp_keyword *operator_name_kwd;
 			DREF struct ast *operator_ast;
 			int32_t temp;
 			loc_here(&loc);
@@ -1830,7 +1831,7 @@ define_operator:
 					bool did_warn_any = false;
 					size_t i;
 					for (i = 0; i <= maker.cm_desc->cd_iattr_mask; ++i) {
-						struct TPPKeyword *member_keyword;
+						tpp_keyword *member_keyword;
 						struct Dee_class_attribute *attr;
 						struct symbol *member_symbol;
 						attr = &maker.cm_desc->cd_iattr_list[i];
@@ -1868,7 +1869,7 @@ define_operator:
 				maker.cm_features |= CLASS_MAKER_FEAT_FATTROPS;
 			}
 			ast_annotations_get(&annotations);
-			if (tok == '=') {
+			if (DeeLexer_GetTok(self) == '=') {
 				if (operator_name >= AST_OPERATOR_MIN &&
 				    operator_name <= AST_OPERATOR_MAX_FOR_CLASS) {
 					if (WARN(W_AMBIGUOUS_OPERATOR_ASSIGNMENT))
@@ -1906,7 +1907,7 @@ define_operator:
 				if unlikely(yield() < 0)
 					goto err_anno;
 				need_semi = true;
-				if (tok == KWD_del) {
+				if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 					/* Deleted operator (e.g. `operator str = del;`) */
 					if unlikely(class_maker_deloperator(&maker, operator_name, &loc))
 						goto err_anno;
@@ -2119,8 +2120,8 @@ set_operator_ast:
 			/* Parse a trailing ';' if required to. */
 			if (need_semi) {
 yield_semi_after_operator:
-				if unlikely(likely(is_semicolon())
-				            ? (yield_semicolon() < 0)
+				if unlikely(likely(is_semicolon(self))
+				            ? (yield_semicolon(self) < 0)
 				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 			}
@@ -2129,14 +2130,16 @@ yield_semi_after_operator:
 			loc_here(&loc);
 			if unlikely(yield() < 0)
 				goto err;
-			if unlikely(tok == KWD_class) {
+			if unlikely(DeeLexer_GetTok(self) == TPP_KWD_class) {
 				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
 				         maker.cm_classsym->s_name->k_name))
 					goto err;
 				if unlikely(yield() < 0)
 					goto err;
 			} else {
-				if unlikely(likely(tok == KWD_this || (TPP_ISKEYWORD(tok) && token.t_kwd == name))
+				if unlikely(likely(DeeLexer_GetTok(self) == TPP_KWD_this ||
+				                   (DeeLexer_HasTokenKwd(self) &&
+				                    DeeLexer_GetTokenKwd(self) == name))
 				            ? (yield() < 0)
 				            : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
 				                   maker.cm_classsym->s_name->k_name))
@@ -2145,7 +2148,7 @@ yield_semi_after_operator:
 			operator_name = OPERATOR_DESTRUCTOR;
 			goto define_operator;
 
-		case KWD_copy:
+		case TPP_KWD_copy:
 			if unlikely(yield() < 0)
 				goto err;
 			operator_name = OPERATOR_COPY;
@@ -2153,12 +2156,12 @@ yield_semi_after_operator:
 		}	break;
 
 		default: {
-			struct TPPKeyword *member_name;
+			tpp_keyword *member_name;
 			struct symbol *member_symbol;
 			DREF struct ast *init_ast;
 			bool need_semi;
 			int error;
-			if (!TPP_ISKEYWORD(tok)) {
+			if (!DeeLexer_HasTokenKwd(self)) {
 				if (WARN(W_UNEXPECTED_TOKEN_IN_CLASS))
 					goto err;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -2166,12 +2169,12 @@ yield_semi_after_operator:
 				goto done_class_modal;
 			}
 			loc_here(&loc);
-			member_name = token.t_kwd;
+			member_name = DeeLexer_GetTokenKwd(self);
 			if (is_reserved_symbol_name(member_name) &&
 			    WARN(W_RESERVED_MEMBER_NAME, member_name))
 				goto err;
 			if (member_name == name) {
-		case KWD_this:
+		case TPP_KWD_this:
 				/* Special case: Constructor. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -2184,14 +2187,14 @@ define_constructor:
 					ast_decref(maker.cm_ctor);
 					maker.cm_ctor = NULL;
 				}
-				if (tok == '=') {
+				if (DeeLexer_GetTok(self) == '=') {
 					/* Special cases:
 					 *   - `this = del` (delete the constructor)
 					 *   - `this = super` (inherit the constructor from a super-class)
 					 *   - `this = ...` (Assign a custom callback that is invoked as the constructor) */
 					if unlikely(yield() < 0)
 						goto err;
-					if (tok == KWD_del) {
+					if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 						if (!(maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)) {
 							if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
 								if (WARN(W_CANNOT_DELETE_INHERITED_CONSTRUCTOR,
@@ -2227,7 +2230,7 @@ define_constructor:
 							goto err;
 						goto do_yield_semicolon;
 					}
-					if (tok == KWD_super) {
+					if (DeeLexer_GetTok(self) == TPP_KWD_super) {
 						/* Inherit constructors.
 						 * - Set the `TP_FINHERITCTOR` flag, which will instruct the
 						 *   class runtime to implement `Dee_CLASS_OPERATOR_SUPERARGS` in
@@ -2249,7 +2252,7 @@ define_constructor:
 							goto err;
 						goto do_yield_semicolon;
 					}
-					if (tok == KWD_default) {
+					if (DeeLexer_GetTok(self) == TPP_KWD_default) {
 						/* Default constructors. */
 						if (maker.cm_ctor_flags & CLASS_MAKER_CTOR_FSUPER) {
 							if (WARNAT(&loc, W_CANNOT_DEFAULT_INHERIT_CONSTRUCTOR,
@@ -2349,7 +2352,7 @@ err_ctor_expr:
 
 				/* NOTE: We do the function processing manually so we can
 				 *       correctly handle super-initializer statements. */
-				if (tok == '(') {
+				if (DeeLexer_GetTok(self) == '(') {
 					/* Argument list. */
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 					if unlikely(yield() < 0)
@@ -2360,14 +2363,14 @@ err_ctor_expr:
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 					if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 						goto err_anno;
-				} else if (tok == KWD_pack) {
+				} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 					struct ast_loc packloc;
 					/* Argument list. */
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 					loc_here(&packloc);
 					if unlikely(yield() < 0)
 						goto err_anno;
-					if (tok == '(') {
+					if (DeeLexer_GetTok(self) == '(') {
 						if unlikely(yield() < 0)
 							goto err_anno;
 						if unlikely(parse_arglist(self))
@@ -2386,9 +2389,9 @@ err_ctor_expr:
 					if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
 						goto err_anno;
 				}
-				if (skip_lf())
+				if (skip_lf(self))
 					goto err_anno;
-				if (tok == ':') {
+				if (DeeLexer_GetTok(self) == ':') {
 					/* Constructor initializers (including super-initializers). */
 					if unlikely(yield() < 0)
 						goto err_anno;
@@ -2428,13 +2431,13 @@ err_ctor_expr:
 			if unlikely(yield() < 0)
 				goto err;
 			decl.da_type = DAST_NONE;
-			if (tok == ':') {
+			if (DeeLexer_GetTok(self) == ':') {
 				if unlikely(yield() < 0)
 					goto err;
 				if unlikely(decl_ast_parse(self, &decl))
 					goto err;
 			}
-			if (is_semicolon()) {
+			if (is_semicolon(self)) {
 				if (member_class == MEMBER_CLASS_AUTO) {
 					if (WARNAT(&loc, W_IMPLICIT_MEMBER_DECLARATION, member_name))
 						goto err_decl;
@@ -2454,15 +2457,15 @@ err_ctor_expr:
 					goto err_decl;
 				decl_ast_fini(&decl);
 				++*p_usage_counter;
-				if unlikely(yield_semicolon() < 0)
+				if unlikely(yield_semicolon(self) < 0)
 					goto err;
 				break;
 			}
-			if (tok == '=') {
+			if (DeeLexer_GetTok(self) == '=') {
 				/* Property or member assign. */
 				if unlikely(yield() < 0)
 					goto err_decl;
-				if (tok == '{') {
+				if (DeeLexer_GetTok(self) == '{') {
 					DREF struct ast *prop_callbacks[Dee_CLASS_GETSET_COUNT];
 					uint16_t i, prop_addr;
 					if (member_class != MEMBER_CLASS_AUTO &&
@@ -2573,8 +2576,8 @@ err_property:
 
 				/* Increment the usage-counter to consume the member slot. */
 				++*p_usage_counter;
-				if unlikely(likely(is_semicolon())
-				            ? (yield_semicolon() < 0)
+				if unlikely(likely(is_semicolon(self))
+				            ? (yield_semicolon(self) < 0)
 				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 				break;
@@ -2669,8 +2672,8 @@ err_property:
 check_need_semi:
 			if (need_semi) {
 do_yield_semicolon:
-				if unlikely(likely(is_semicolon())
-				            ? (yield_semicolon() < 0)
+				if unlikely(likely(is_semicolon(self))
+				            ? (yield_semicolon(self) < 0)
 				            : WARN(W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
 			}
@@ -2703,7 +2706,7 @@ err:
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_class(DeeLexer *self, uint16_t class_flags, struct TPPKeyword *name,
+ast_parse_class(DeeLexer *self, uint16_t class_flags, tpp_keyword *name,
                 bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;

@@ -288,7 +288,7 @@ err_var_symbol:
 				if (smlex.jl_tok == ':')
 					goto done_expression_nocurrent;
 			}
-			if (self->jl_tok == TOK_POW) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
+			if (self->jl_tok == TPP_TOK_STAR_STAR) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
 				goto done_expression_nocurrent;
 		}
 		current = CALL_PRIMARYF(Expression, lookup_mode);

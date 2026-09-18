@@ -40,29 +40,31 @@
 
 DECL_BEGIN
 
-#define is_semicolon() (tok == ';' || tok == '\n')
+#define is_semicolon(tok) ((tok) == ';' || (tok) == '\n')
 
-PRIVATE tok_t DCALL yield_semicolonnbif(bool allow_nonblock) {
-	tok_t result = yieldnbif(allow_nonblock);
+PRIVATE WUNUSED NONNULL((1)) tpp_token_id DFCALL
+yield_semicolonnbif(DeeLexer *self, bool allow_nonblock) {
+	tpp_token_id result = DeeLexer_YieldXNB(self, allow_nonblock);
 	if (result == '\n') {
 		uint32_t old_flags;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		result = yieldnbif(allow_nonblock);
+		result = DeeLexer_YieldXNB(self, allow_nonblock);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	}
 	return result;
 }
 
-INTERN int DCALL skip_lf(void) {
-	if (tok == '\n') {
+INTERN WUNUSED NONNULL((1)) int DFCALL
+skip_lf(DeeLexer *self) {
+	if (DeeLexer_GetTok(self) == '\n') {
 		uint32_t old_flags;
-		tok_t error;
+		tpp_token_id error;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		error = yield();
+		error = DeeLexer_Yield(self);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(error < 0)
+		if (TPP_TOK_ISERR(error))
 			goto err;
 	}
 	return 0;
@@ -89,18 +91,18 @@ ast_parse_for_head(DeeLexer *self,
                    DREF struct ast **__restrict p_init,
                    DREF struct ast **__restrict p_elem_or_cond,
                    DREF struct ast **__restrict p_iter_or_next) {
-	int32_t result                = AST_FLOOP_NORMAL;
-	DREF struct ast *init         = NULL;
+	int32_t result = AST_FLOOP_NORMAL;
+	DREF struct ast *init = NULL;
 	DREF struct ast *elem_or_cond = NULL;
 	DREF struct ast *iter_or_next = NULL;
-	if (tok != ';') {
+	if (DeeLexer_GetTok(self) != ';') {
 		init = ast_parse_comma(self,
 		                       AST_COMMA_ALLOWVARDECLS,
 		                       AST_FMULTIPLE_TUPLE,
 		                       NULL);
 		if unlikely(!init)
 			goto err;
-		if (tok == ':') {
+		if (DeeLexer_GetTok(self) == ':') {
 			if unlikely(yield() < 0)
 				goto err;
 			/* foreach-style loop. */
@@ -115,14 +117,14 @@ ast_parse_for_head(DeeLexer *self,
 	}
 	if (skip(';', W_EXPECTED_SEMICOLON1_AFTER_FOR))
 		goto err;
-	if (tok != ';') {
+	if (DeeLexer_GetTok(self) != ';') {
 		elem_or_cond = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!elem_or_cond)
 			goto err;
 	}
 	if (skip(';', W_EXPECTED_SEMICOLON2_AFTER_FOR))
 		goto err;
-	if (tok == ')') {
+	if (DeeLexer_GetTok(self) == ')') {
 		iter_or_next = NULL;
 	} else {
 		iter_or_next = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
@@ -162,9 +164,10 @@ ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token) {
 	unsigned long token_num;
 	exprc = expra = 0, exprv = NULL;
 	for (;;) {
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err;
-		if (!tok || tok == end_token)
+		if (DeeLexer_GetTok(self) == TPP_TOK_EOF ||
+		    DeeLexer_GetTok(self) == end_token)
 			break;
 		token_num      = token.t_num;
 		new_expression = ast_parse_statement(self, false);
@@ -231,7 +234,7 @@ ast_parse_statement(DeeLexer *self, bool allow_nonblock) {
 	struct ast_loc loc;
 	uint32_t old_flags;
 again:
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '@':
 		/* Parse tags. */
@@ -252,7 +255,7 @@ again:
 		result = ast_putddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		while (tok == '\n')
+		while (DeeLexer_GetTok(self) == '\n')
 			if unlikely(yield() < 0)
 		goto err_r;
 		if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
@@ -262,7 +265,7 @@ again:
 
 	case '\n':
 		/* Skip empty, leading lines in statements. */
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err;
 		goto again;
 
@@ -273,7 +276,7 @@ again:
 			goto err;
 		break;
 
-	case KWD_if: {
+	case TPP_KWD_if: {
 		DREF struct ast *tt_branch;
 		DREF struct ast *ff_branch;
 		uint16_t expect;
@@ -308,20 +311,20 @@ again:
 		/* Allow tags before the `else` keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_tt_branch;
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err_tt_branch;
 		if unlikely(parse_tags_block(self)) {
 err_tt_branch:
 			ast_decref(tt_branch);
 			goto err_r;
 		}
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err_tt_branch;
-		if (tok == KWD_elif) {
-			token.t_id = KWD_if; /* Cheat a bit... */
+		if (DeeLexer_GetTok(self) == TPP_KWD_elif) {
+			DeeLexer_SetTokenId(self, TPP_KWD_if); /* Cheat a bit... */
 			goto do_else_branch;
 		}
-		if (tok == KWD_else) {
+		if (DeeLexer_GetTok(self) == TPP_KWD_else) {
 			if unlikely(yield() < 0)
 				goto err_tt_branch;
 do_else_branch:
@@ -340,11 +343,11 @@ do_else_branch:
 		goto done_no_tag_reset;
 	}
 
-	case KWD_return:
+	case TPP_KWD_return:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (is_semicolon()) {
+		if (is_semicolon(DeeLexer_GetTok(self))) {
 			/* Special case: A return without an operator is allowed
 			 *               in both return and yield functions. */
 			result = ast_return(NULL);
@@ -366,13 +369,13 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_RETURN))
 			goto err_r;
 		break;
 
-	case KWD_yield:
+	case TPP_KWD_yield:
 		/* TODO: Warn about use of non-portable extension if this yield
 		 *       statement appears inside of a statement-expression, or
 		 *       a finally/catch block. */
@@ -400,28 +403,28 @@ do_else_branch:
 		if (current_basescope->bs_cflags & BASESCOPE_FRETURN &&
 		    WARN(W_YIELD_AFTER_RETURN))
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_YIELD))
 			goto err_r;
 		break;
 
-	case KWD_from:
-	case KWD_import:
+	case TPP_KWD_from:
+	case TPP_KWD_import:
 		result = ast_parse_import(self);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_IMPORT))
 			goto err_r;
 		break;
 
-	case KWD_throw:
+	case TPP_KWD_throw:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (is_semicolon()) {
+		if (is_semicolon(DeeLexer_GetTok(self))) {
 			result = ast_throw(NULL);
 		} else {
 			result = ast_parse_comma(self,
@@ -437,24 +440,24 @@ do_else_branch:
 		ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_THROW))
 			goto err_r;
 		break;
 
-	case KWD_print:
+	case TPP_KWD_print:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == ',') {
+		if (DeeLexer_GetTok(self) == ',') {
 			/* `print,;` --> `none` */
 			if unlikely(yield() < 0)
 				goto err;
 			result = ast_constexpr(Dee_None);
 			if unlikely(!result)
 				goto err;
-		} else if (is_semicolon()) {
+		} else if (is_semicolon(DeeLexer_GetTok(self))) {
 			/* `print;` --> `print pack()...;` */
 			result = ast_constexpr(Dee_EmptyTuple);
 			if unlikely(!result)
@@ -474,7 +477,7 @@ do_else_branch:
 			                         NULL);
 			if unlikely(!result)
 				goto err;
-			if (tok == ':') {
+			if (DeeLexer_GetTok(self) == ':') {
 				DREF struct ast *text;
 				/* This is actually an fprint-style statement: `print foo: "bar";' */
 				if unlikely(yield() < 0)
@@ -487,7 +490,7 @@ do_else_branch:
 					ast_decref(result);
 					result = merge;
 				}
-				if (is_semicolon()) {
+				if (is_semicolon(DeeLexer_GetTok(self))) {
 					text = ast_constexpr(Dee_EmptyTuple);
 					text = ast_sethere(text);
 				} else {
@@ -499,7 +502,7 @@ do_else_branch:
 				}
 				if unlikely(!text)
 					goto err_r;
-				merge = ast_action2(tok == ','
+				merge = ast_action2(DeeLexer_GetTok(self) == ','
 				                    ? AST_FACTION_FPRINT
 				                    : AST_FACTION_FPRINTLN,
 				                    result, text);
@@ -508,11 +511,11 @@ do_else_branch:
 				if unlikely(!merge)
 					goto err;
 				result = merge;
-				if (tok == ',' && yield() < 0)
+				if (DeeLexer_GetTok(self) == ',' && yield() < 0)
 					goto err_r;
 			} else {
 				/* Print-to-stdout statement. */
-				merge = ast_action1(tok == ','
+				merge = ast_action1(DeeLexer_GetTok(self) == ','
 				                    ? AST_FACTION_PRINT
 				                    : AST_FACTION_PRINTLN,
 				                    result);
@@ -520,18 +523,18 @@ do_else_branch:
 				if unlikely(!merge)
 					goto err;
 				result = merge;
-				if (tok == ',' && yield() < 0)
+				if (DeeLexer_GetTok(self) == ',' && yield() < 0)
 					goto err_r;
 			}
 		}
 		ast_setddi(result, &loc);
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_PRINT))
 			goto err_r;
 		break;
 
-	case KWD_for: {
+	case TPP_KWD_for: {
 		DREF struct ast *init;
 		DREF struct ast *elem_or_cond;
 		DREF struct ast *iter_or_next;
@@ -547,7 +550,7 @@ do_else_branch:
 		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		has_scope = false;
-		if (tok != ';') {
+		if (DeeLexer_GetTok(self) != ';') {
 			/* To save on space, only create a loop scope when an initializer was given. */
 			if unlikely(scope_push())
 				goto err_flags;
@@ -612,7 +615,7 @@ err_loop:
 		goto err;
 	}	break;
 
-	case KWD_foreach: {
+	case TPP_KWD_foreach: {
 		DREF struct ast *foreach_elem;
 		DREF struct ast *foreach_iter;
 		DREF struct ast *foreach_loop;
@@ -657,17 +660,17 @@ err_foreach_elem:
 		goto err_flags;
 	}	break;
 
-	case KWD_assert:
+	case TPP_KWD_assert:
 		result = ast_parse_assert(self, false);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASSERT))
 			goto err_r;
 		break;
 
-	case KWD_do: {
+	case TPP_KWD_do: {
 		DREF struct ast *cond;
 		bool has_paren;
 		loc_here(&loc);
@@ -680,13 +683,13 @@ err_foreach_elem:
 		/* Allow tags before the `while` keyword (forward-compatibility...) */
 		if unlikely(ast_tags_clear())
 			goto err_r;
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err_r;
 		if unlikely(parse_tags_block(self))
 			goto err_r;
-		if unlikely(skip_lf())
+		if unlikely(skip_lf(self))
 			goto err_r;
-		if (skip(KWD_while, W_EXPECTED_WHILE_AFTER_DO))
+		if (skip(TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO))
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -703,13 +706,13 @@ err_foreach_elem:
 		if unlikely(!merge)
 			goto err;
 		result = merge;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
 			goto err_r;
 	}	break;
 
-	case KWD_while: {
+	case TPP_KWD_while: {
 		DREF struct ast *loop;
 		bool has_paren;
 		loc_here(&loc);
@@ -744,31 +747,31 @@ err_foreach_elem:
 		result = merge;
 	}	break;
 
-	case KWD_break:
-	case KWD_continue: {
+	case TPP_KWD_break:
+	case TPP_KWD_continue: {
 #if AST_FLOOPCTL_BRK + 1 == AST_FLOOPCTL_CON
-		STATIC_ASSERT(AST_FLOOPCTL_BRK == (KWD_break - KWD_break));
-		STATIC_ASSERT(AST_FLOOPCTL_CON == (KWD_continue - KWD_break));
-		result = ast_loopctl((uint16_t)(tok - KWD_break));
+		STATIC_ASSERT(AST_FLOOPCTL_BRK == (TPP_KWD_break - TPP_KWD_break));
+		STATIC_ASSERT(AST_FLOOPCTL_CON == (TPP_KWD_continue - TPP_KWD_break));
+		result = ast_loopctl((uint16_t)(DeeLexer_GetTok(self) - TPP_KWD_break));
 #else /* AST_FLOOPCTL_BRK + 1 == AST_FLOOPCTL_CON */
-		result = ast_loopctl(tok == KWD_break ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON);
+		result = ast_loopctl(DeeLexer_GetTok(self) == TPP_KWD_break ? AST_FLOOPCTL_BRK : AST_FLOOPCTL_CON);
 #endif /* AST_FLOOPCTL_BRK + 1 != AST_FLOOPCTL_CON */
 		result = ast_sethere(result);
 		if unlikely(!result)
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_BREAK))
 			goto err_r;
 	}	break;
 
-	case KWD_with:
+	case TPP_KWD_with:
 		result = ast_parse_with(self, true, allow_nonblock);
 		break;
 
-	case KWD_try:
+	case TPP_KWD_try:
 		result = ast_parse_try(self, true);
 		/* Don't reset tags after a try-statement,
 		 * because we've already handled tags for the next statement
@@ -785,21 +788,21 @@ err_foreach_elem:
 		 */
 		goto done_no_tag_reset;
 
-	case KWD_del:
+	case TPP_KWD_del:
 		/* Delete statement. */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '(' || tok == KWD_pack) {
+		if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == TPP_KWD_pack) {
 			bool has_paren;
 			/* Del with parenthesis (like in expressions)
 			 * For that reason, don't allow allow the actual symbols being removed, either. */
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			has_paren = tok == '(';
+			has_paren = DeeLexer_GetTok(self) == '(';
 			if unlikely(yield() < 0)
 				goto err_flags;
-			if (!has_paren && tok == '(') {
+			if (!has_paren && DeeLexer_GetTok(self) == '(') {
 				has_paren = true;
 				if unlikely(yield() < 0)
 					goto err_flags;
@@ -818,29 +821,29 @@ err_foreach_elem:
 				goto err;
 		}
 		result = ast_putddi(result, &loc);
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_DEL))
 			goto err_r;
 		break;
 
-	case KWD___asm:
-	case KWD___asm__:
+	case TPP_KWD___asm:
+	case TPP_KWD___asm__:
 		result = ast_parse_asm(self);
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_ASM))
 			goto err_r;
 		break;
 
-	case KWD_goto: {
+	case TPP_KWD_goto: {
 		struct text_label *goto_label;
 		/* Create a new goto-branch. */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
-		if (TPP_ISKEYWORD(tok)) {
-			goto_label = lookup_label(token.t_kwd);
+		if (DeeLexer_HasTokenKwd(self)) {
+			goto_label = lookup_label(DeeLexer_GetTokenKwd(self));
 			if unlikely(!goto_label)
 				goto err;
 			if unlikely(yield() < 0)
@@ -856,13 +859,13 @@ err_foreach_elem:
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(is_semicolon())
-		            ? (yield_semicolonnbif(allow_nonblock) < 0)
+		if unlikely(likely(is_semicolon(DeeLexer_GetTok(self)))
+		            ? (yield_semicolonnbif(self, allow_nonblock) < 0)
 		            : WARN(W_EXPECTED_SEMICOLON_AFTER_GOTO))
 			goto err_r;
 	}	break;
 
-	case KWD_switch: {
+	case TPP_KWD_switch: {
 		uint16_t old_scope_flags;
 		struct text_label *old_cases;
 		struct text_label *old_default;
@@ -954,8 +957,8 @@ err_r_switch:
 	}	break;
 
 	default:
-		if (TPP_ISKEYWORD(tok)) {
-			char *next_token;
+		if (DeeLexer_HasTokenKwd(self)) {
+			char const *next_token;
 			next_token = peek_next_token(NULL);
 			if unlikely(!next_token)
 				goto err;
@@ -967,20 +970,20 @@ err_r_switch:
 				DREF struct ast *label_ast;
 				uint16_t label_flags;
 				loc_here(&loc);
-				def_label   = lookup_label(token.t_kwd);
+				def_label   = lookup_label(DeeLexer_GetTokenKwd(self));
 				label_flags = AST_FLABEL_NORMAL;
 				if unlikely(!def_label)
 					goto err;
 				if unlikely(yield() < 0)
 					goto err; /* Label name */
-				if unlikely(skip_lf())
+				if unlikely(skip_lf(self))
 					goto err;
 				if unlikely(yield() < 0)
 					goto err; /* `:` token. */
 handle_post_label:
-				if unlikely(skip_lf())
+				if unlikely(skip_lf(self))
 					goto err;
-				if unlikely(tok == '}') {
+				if unlikely(DeeLexer_GetTok(self) == '}') {
 					/* Emit a warning and when the next token is a `}` */
 					if unlikely(WARN(W_MISSING_STATEMENT_AFTER_LABEL))
 						goto err;
@@ -1038,7 +1041,7 @@ err_label_ast:
 					result = merge;
 				}
 				break;
-	case KWD_case:
+	case TPP_KWD_case:
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;
@@ -1065,7 +1068,7 @@ err_label_ast:
 					goto err;
 				label_flags = AST_FLABEL_CASE;
 				goto handle_post_label;
-	case KWD_default:
+	case TPP_KWD_default:
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					if (WARN(W_NOT_INSIDE_A_SWITCH_STATEMENT))
 						goto err;

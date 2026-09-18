@@ -548,7 +548,7 @@ switch_symbol_type:
 			return decl_ast_print_const_type(sym->s_const, printer);
 
 		case SYMBOL_TYPE_FWD: {
-			struct TPPKeyword *symbol_name;
+			tpp_keyword *symbol_name;
 			DeeScopeObject *iter;
 			/* Search for the symbol that was actually intended.
 			 * TODO: We really should only do this _after_ a class
@@ -995,10 +995,10 @@ err2:
 PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	uint32_t old_flags;
-	switch (tok) {
+	switch (DeeLexer_GetTok(lexer)) {
 
-	case KWD___asm:
-	case KWD___asm__: {
+	case TPP_KWD___asm:
+	case TPP_KWD___asm__: {
 		bool has_paren;
 		if unlikely(yield() < 0)
 			goto err;
@@ -1011,8 +1011,7 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		 * >> function foo(a: __asm__("?DObject")) {
 		 * >>     ...
 		 * >> } */
-		if likely(TPP_TOK_ISSTRING_DQUOTE(tok) ||
-		          (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+		if likely(DeeLexer_IsStringToken(lexer)) {
 			DREF DeeStringObject *text;
 			text = (DREF DeeStringObject *)ast_parse_string(lexer);
 			if unlikely(!text)
@@ -1029,7 +1028,7 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			goto err_r;
 	}	break;
 
-	case KWD_none:
+	case TPP_KWD_none:
 		/* None-type. */
 		if unlikely(yield() < 0)
 			goto err;
@@ -1040,13 +1039,13 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		break;
 
 #if 1
-	case KWD_type: {
+	case TPP_KWD_type: {
 		DREF struct ast *type_expr;
 		uint16_t old_opt_flags;
 		/* Type-of-expression declaration. */
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok == '(') {
+		if (DeeLexer_GetTok(lexer) == '(') {
 			type_expr = ast_parse_unaryhead(lexer,
 			                                LOOKUP_SYM_NORMAL |
 			                                PARSE_UNARY_DISALLOW_CASTS);
@@ -1078,7 +1077,7 @@ err_type_expr:
 	}	break;
 #endif
 
-	case KWD_pack:
+	case TPP_KWD_pack:
 		/* support for "pack"
 		 * >> local x: pack int, int, string;
 		 * >> local y: (int, int, string); // Same as this */
@@ -1087,15 +1086,15 @@ err_type_expr:
 		size_t elema, elemc;
 		struct decl_ast *elemv;
 		bool has_pack, has_paren;
-		has_paren = tok == '(';
-		has_pack  = tok != '(';
+		has_paren = DeeLexer_GetTok(lexer) == '(';
+		has_pack  = DeeLexer_GetTok(lexer) != '(';
 
 		/* Tuple type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(yield() < 0)
 			goto err_flags;
-		if (!has_paren && tok == '(') {
+		if (!has_paren && DeeLexer_GetTok(lexer) == '(') {
 			has_paren = true;
 			if unlikely(yield() < 0)
 				goto err_flags;
@@ -1109,7 +1108,7 @@ err_type_expr:
 		 * normal expressions, where `()` is the empty tuple, `(foo)`
 		 * is regular parenthesis, `(foo,)` is a 1-element tuple, and
 		 * `(foo, bar)` and `(foo, bar,)` are 2-element tuples. */
-		if (tok == ')' && !has_pack) {
+		if (DeeLexer_GetTok(lexer) == ')' && !has_pack) {
 			/* Simple parenthesis. */
 			if unlikely(yield() < 0)
 				goto err_r_flags;
@@ -1120,17 +1119,17 @@ err_type_expr:
 		if unlikely(!elemv)
 			goto err_r_flags;
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
-		if (tok == ',') {
+		if (DeeLexer_GetTok(lexer) == ',') {
 			for (;;) {
 				if unlikely(yield() < 0)
 					goto err_elemv;
-				if (tok == ')')
+				if (DeeLexer_GetTok(lexer) == ')')
 					break; /* Single-element tuple / trailing comma */
 				error = decl_ast_parse(lexer, &elemv[elemc]);
 				if unlikely(error)
 					goto err_elemv;
 				++elemc;
-				if (tok != ',')
+				if (DeeLexer_GetTok(lexer) != ',')
 					break;
 				ASSERT(elemc <= elema);
 				if (elemc >= elema) {
@@ -1194,7 +1193,7 @@ err_seq:
 			Dee_Free(decl_seq);
 			goto err_flags;
 		}
-		if (tok == ':') {
+		if (DeeLexer_GetTok(lexer) == ':') {
 			/* Special case: `{x: y}` is an alias for `{(x, y)...}`, as it best represents a mapping */
 			struct decl_ast *key_value;
 			key_value = (struct decl_ast *)Dee_Reallocc(decl_seq, 2, sizeof(struct decl_ast));
@@ -1228,7 +1227,7 @@ err_elemv_0:
 	}	break;
 
 
-	case KWD___nth: {
+	case TPP_KWD___nth: {
 		DREF struct ast *nth_expr;
 		bool has_paren;
 
@@ -1256,7 +1255,7 @@ err_nth:
 			goto err_nth;
 		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_nth;
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(lexer)) {
 			unsigned int nth_symbol = 0;
 			struct symbol *sym;
 			if (nth_expr->a_type == AST_CONSTEXPR &&
@@ -1266,7 +1265,7 @@ err_nth:
 					goto err_nth;
 			}
 			ast_decref(nth_expr);
-			sym = lookup_nth(nth_symbol, token.t_kwd);
+			sym = lookup_nth(nth_symbol, DeeLexer_GetTokenKwd(lexer));
 			if likely(sym) {
 				self->da_type   = DAST_SYMBOL;
 				self->da_flag   = DAST_FNORMAL;
@@ -1290,13 +1289,13 @@ err_nth:
 	}	break;
 
 	default:
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(lexer)) {
 			/* Lookup a symbol-like expression. */
 			DREF struct symbol *sym; /* Perform a regular symbol lookup. */
-			struct TPPKeyword *name = token.t_kwd;
+			tpp_keyword *name = DeeLexer_GetTokenKwd(lexer);
 			if unlikely(yield() < 0)
 				goto err;
-			if (tok == KWD_from) {
+			if (DeeLexer_GetTok(lexer) == TPP_KWD_from) {
 				/* `Error from deemon` - Short form of `import Error from deemon` */
 				if unlikely(yield() < 0)
 					goto err;
@@ -1335,23 +1334,23 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	int result;
 	result = decl_ast_parse_unary_head(lexer, self);
-	switch (tok) {
+	switch (DeeLexer_GetTok(lexer)) {
 
 	case '.':
 		if unlikely(yield() < 0)
 			goto err_r;
-		if unlikely(!TPP_ISKEYWORD(tok)) {
+		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
 				goto err_r;
 			break;
 		}
 		if (self->da_type == DAST_CONST) {
 			DREF DeeObject *attrib;
-			attrib = DeeObject_GetAttrString(self->da_const, token.t_kwd->k_name);
+			attrib = DeeObject_GetAttrString(self->da_const, DeeLexer_GetTokenKwdCStr(lexer));
 			if unlikely(!attrib) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
 				if (WARN(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE,
-				         token.t_kwd->k_name, self->da_const))
+				         DeeLexer_GetTokenKwdCStr(lexer), self->da_const))
 					goto err_r;
 			} else {
 				Dee_Decref(self->da_const);
@@ -1361,7 +1360,7 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		           self->da_symbol->s_type == SYMBOL_TYPE_MODULE) {
 			struct Dee_module_symbol *modsym;
 			modsym = DeeModule_GetSymbolString(self->da_symbol->s_module,
-			                                   token.t_kwd->k_name);
+			                                   DeeLexer_GetTokenKwdCStr(lexer));
 			if likely(modsym) {
 				struct symbol *new_symbol;
 				new_symbol = new_unnamed_symbol_in_scope(self->da_symbol->s_scope);
@@ -1375,15 +1374,15 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 				symbol_decref(self->da_symbol);
 				self->da_symbol = new_symbol;
 			} else {
-				if (WARN(W_MODULE_IMPORT_NOT_FOUND, token.t_kwd->k_name,
+				if (WARN(W_MODULE_IMPORT_NOT_FOUND, DeeLexer_GetTokenKwdCStr(lexer),
 				         DeeModule_GetShortName(self->da_symbol->s_module)))
 					goto err_r;
 			}
 		} else {
 			struct decl_ast *inner_ast;
 			DREF DeeStringObject *attr_name;
-			attr_name = (DREF DeeStringObject *)DeeString_NewUtf8(token.t_kwd->k_name,
-			                                                      token.t_kwd->k_size,
+			attr_name = (DREF DeeStringObject *)DeeString_NewUtf8(DeeLexer_GetTokenKwdCStr(lexer),
+			                                                      DeeLexer_GetTokenKwdLen(lexer),
 			                                                      STRING_ERROR_FIGNORE);
 			if unlikely(!attr_name)
 				goto err_r;
@@ -1418,7 +1417,7 @@ decl_ast_parse_alt(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	result = decl_ast_parse_unary(lexer, self);
 	if unlikely(result)
 		goto err;
-	if (tok == '|') {
+	if (DeeLexer_GetTok(lexer) == '|') {
 		elema = 2, elemc = 1;
 		elemv = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!elemv)
@@ -1441,7 +1440,7 @@ decl_ast_parse_alt(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			}
 			++elemc;
 after_inc_elemc:
-			if (tok != '|')
+			if (DeeLexer_GetTok(lexer) != '|')
 				break;
 			ASSERT(elemc <= elema);
 			if (elemc >= elema) {
@@ -1513,7 +1512,7 @@ decl_ast_parse(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	result = decl_ast_parse_alt(lexer, self);
 	if unlikely(result)
 		goto err;
-	while (tok == KWD_with) {
+	while (DeeLexer_GetTok(lexer) == TPP_KWD_with) {
 		struct decl_ast *inner;
 		if unlikely(yield() < 0)
 			goto err;

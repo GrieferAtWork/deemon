@@ -153,7 +153,7 @@ ast_parse_del(DeeLexer *self, unsigned int lookup_mode) {
 	result = ast_parse_del_single(self, lookup_mode);
 	if unlikely(!result)
 		goto err;
-	if (tok == ',') {
+	if (DeeLexer_GetTok(self) == ',') {
 		/* Delete-multiple expression. */
 		if unlikely(yield() < 0)
 			goto err_r;
@@ -195,7 +195,7 @@ do_realloc_delv:
 				dela = new_dela;
 			}
 			delv[delc++] = result; /* Inherit */
-			if (tok != ',')
+			if (DeeLexer_GetTok(self) != ',')
 				break;
 			if unlikely(yield() < 0)
 				goto err_delv;

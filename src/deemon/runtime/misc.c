@@ -56,7 +56,6 @@
 #undef token
 #undef tok
 #undef yield
-#undef yieldnb
 #undef yieldnbif
 #undef skip
 

@@ -86,14 +86,16 @@ LOCAL WUNUSED NONNULL((1, 2)) bool Dee_libc_strcaseeq(char *a, char *b) {
 }
 #endif /* !CONFIG_HAVE_strcasecmp */
 
-#define IS_KWD(str)                                 \
-	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 bcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
-#define IS_KWD_NOCASE(str)                          \
-	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
-#define IS_KWD_NOCASE_S(len, s) \
-	((len) == token.t_kwd->k_size && MEMCASEEQ(token.t_kwd->k_name, s, (len) * sizeof(char)))
+#define IS_KWD(self, str)                                     \
+	(COMPILER_STRLEN(str) == DeeLexer_GetTokenKwdLen(self) && \
+	 bcmp(DeeLexer_GetTokenKwdCStr(self), str, sizeof(str) - sizeof(char)) == 0)
+#define IS_KWD_NOCASE(self, str)                              \
+	(COMPILER_STRLEN(str) == DeeLexer_GetTokenKwdLen(self) && \
+	 MEMCASEEQ(DeeLexer_GetTokenKwdCStr(self), str, sizeof(str) - sizeof(char)))
+#define IS_KWD_NOCASE_S(self, len, s)          \
+	((len) == DeeLexer_GetTokenKwdLen(self) && \
+	 MEMCASEEQ(DeeLexer_GetTokenKwdCStr(self), \
+	           s, (len) * sizeof(char)))
 
 
 
@@ -343,7 +345,7 @@ err:
 	((x) == '$' || (x) == '.' || (x) == '@' || \
 	 /*(x) == ':' ||*/ (x) == '%' || (x) == '&')
 #define TOK_IS_SYMBOL_NAME(x) \
-	(TPP_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
+	(TPP_TOK_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
 
 INTERN WUNUSED NONNULL((1)) struct TPPKeyword *DFCALL
 uasm_parse_symnam(DeeLexer *self) {
@@ -351,8 +353,7 @@ uasm_parse_symnam(DeeLexer *self) {
 	char *symbol_start;
 	char *symbol_end;
 	(void)self;
-	if (TPP_TOK_ISSTRING_DQUOTE(tok) ||
-	    (TPP_TOK_ISSTRING_SQUOTE(tok) && !HAS(EXT_CHARACTER_LITERALS))) {
+	if (DeeLexer_IsStringToken(self)) {
 		/* Special case: String symbol name. */
 		struct TPPString *strval;
 		strval = TPPLexer_ParseString();
@@ -367,12 +368,12 @@ uasm_parse_symnam(DeeLexer *self) {
 		goto done;
 	}
 
-	if (TPP_ISKEYWORD(tok) &&
+	if (DeeLexer_HasTokenKwd(self) &&
 	    !TOK_IS_SYMBOL_NAME_CH(*token.t_end) &&
 	    !DeeUni_IsSymCont(*token.t_end)) {
 		/* Simple case: the following character doesn't continue the symbol's name.
 		 * In this case, we don't need to re-validate the symbol name. */
-		result = token.t_kwd;
+		result = DeeLexer_GetTokenKwd(self);
 		if unlikely(yield() < 0)
 			goto err;
 		goto done;
@@ -428,7 +429,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	TPP_CASE_TPP_TOK_NUMBER
 		/* Integer constant. */
@@ -436,8 +437,8 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 			goto yield_done;
 		{
 			/* Check for a token like this: `1f.SP` */
-			char *int_end = (char *)memchr(token.t_begin, '.',
-			                               (size_t)(token.t_end - token.t_begin));
+			char *int_end = (char *)memchr(DeeLexer_GetTokenStart(self), '.',
+			                               DeeLexer_GetTokenLen(self));
 			if (int_end) {
 				/* Truncate the integer token to not include the dot or anything thereafter. */
 				while (SKIP_WRAPLF_REV(int_end, token.t_begin))
@@ -450,9 +451,8 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 		    (token.t_end[-1] == 'b' || token.t_end[-1] == 'f')) {
 			/* Forward/backward symbol reference. */
 			struct TPPKeyword *name;
-			name = TPPLexer_LookupEscapedKeyword(token.t_begin,
-			                                     (size_t)((token.t_end - token.t_begin) - 1),
-			                                     1);
+			name = TPPLexer_LookupEscapedKeyword((char const *)DeeLexer_GetTokenStart(self),
+			                                     DeeLexer_GetTokenLen(self) - 1, 1);
 			if unlikely(!name)
 				goto err;
 			result->ie_sym = uasm_fbsymbol(name, token.t_end[-1] == 'b');
@@ -465,7 +465,7 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 		ATTR_FALLTHROUGH
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
 		/* NOTE: Here, we always interpret character tokens as literals,
-		 *       regardless of what may `EXT_CHARACTER_LITERALS` may be set to. */
+		 *       regardless of what `TPP_EXT_CHARACTER_LITERALS` is set to. */
 		if (!result)
 			goto yield_done;
 
@@ -484,7 +484,7 @@ yield_done:
 			do {
 				if unlikely(yield() < 0)
 					goto err;
-			} while (TPP_TOK_ISSTRING_DQUOTE(tok));
+			} while (TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)));
 		} else {
 			struct TPPString *strval;
 			struct TPPKeyword *name;
@@ -522,7 +522,7 @@ yield_done:
 	case '-': {
 		tok_t operation;
 		/* Unary operators. */
-		operation = tok;
+		operation = DeeLexer_GetTok(self);
 		if unlikely(yield() < 0)
 			goto err;
 		if unlikely(uasm_parse_intexpr(self, result, features))
@@ -540,7 +540,7 @@ yield_done:
 
 	default:
 		if ((features & UASM_INTEXPR_FHASSP) &&
-		    TPP_ISKEYWORD(tok) && IS_KWD_NOCASE("sp")) {
+		    DeeLexer_HasTokenKwd(self) && IS_KWD_NOCASE(self, "sp")) {
 			if unlikely(yield() < 0)
 				goto err;
 			if (!result)
@@ -561,7 +561,7 @@ yield_done:
 		}
 
 		/* Lookup/defined user-symbols. */
-		if (TOK_IS_SYMBOL_NAME(tok)) {
+		if (TOK_IS_SYMBOL_NAME(DeeLexer_GetTok(self))) {
 			struct TPPKeyword *name;
 			name = uasm_parse_symnam(self);
 			if unlikely(!name)
@@ -638,12 +638,12 @@ uasm_parse_intexpr_unary(DeeLexer *self, struct asm_intexpr *result, uint16_t fe
 	if unlikely(uasm_parse_intexpr_unary_base(self, result, features))
 		goto err;
 again:
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '.':
 		if unlikely(yield() < 0)
 			goto err;
-		if (TPP_ISKEYWORD(tok)) {
+		if (DeeLexer_HasTokenKwd(self)) {
 			/* Explicitly define the relocation mode:
 			 * >>    push $1f.PC    // Push the address
 			 * >>    push $1f.SP    // Push the stack-depth
@@ -651,7 +651,7 @@ again:
 			 * >>.setstack 42       // Set the absolute stack-depth prior to the following instruction.
 			 * >>1:
 			 */
-			if (IS_KWD_NOCASE("PC") || IS_KWD_NOCASE("IP")) {
+			if (IS_KWD_NOCASE(self, "PC") || IS_KWD_NOCASE(self, "IP")) {
 				if unlikely(yield() < 0)
 					goto err;
 				if (!result)
@@ -663,7 +663,7 @@ again:
 				result->ie_rel = ASM_OVERLOAD_FRELABS;
 				goto again;
 			}
-			if (IS_KWD_NOCASE("SP")) {
+			if (IS_KWD_NOCASE(self, "SP")) {
 				if unlikely(yield() < 0)
 					goto err;
 				if (!result)
@@ -702,8 +702,9 @@ PRIVATE WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_intexpr_sum(DeeLexer *self, struct asm_intexpr *result, uint16_t features) {
 	if unlikely(uasm_parse_intexpr_unary(self, result, features))
 		goto err;
-	while (tok == '+' || tok == '-') {
-		tok_t mode = tok;
+	while (DeeLexer_GetTok(self) == '+' ||
+	       DeeLexer_GetTok(self) == '-') {
+		tok_t mode = DeeLexer_GetTok(self);
 		if unlikely(yield() < 0)
 			goto err;
 		if (!result) {
@@ -815,7 +816,7 @@ do_parse_module_operands(DeeLexer *self) {
 	int32_t result;
 
 	/* Parse a module by name. */
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		DREF DeeModuleObject *mod;
 		if unlikely(yield() < 0)
 			goto err;
@@ -842,7 +843,7 @@ do_parse_extern_operands(DeeLexer *self,
 	int32_t temp;
 	/* Parse a module b
 	 * y name. */
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		if unlikely(yield() < 0)
 			goto err;
 		mod = parse_module_byname(self, true);
@@ -872,7 +873,7 @@ do_parse_extern_operands(DeeLexer *self,
 		goto err;
 
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
-	if (tok == '@' && mod) {
+	if (DeeLexer_GetTok(self) == '@' && mod) {
 		struct TPPKeyword *symbol_name;
 		struct Dee_module_symbol *modsym;
 		if unlikely(yield() < 0)
@@ -915,7 +916,7 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_global_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		struct TPPKeyword *symbol_name;
 		if unlikely(yield() < 0)
 			goto err;
@@ -961,7 +962,7 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_local_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		struct TPPKeyword *symbol_name;
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
@@ -1040,7 +1041,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_const_operands(DeeLexer *self) {
 	int32_t result;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		if unlikely(yield() < 0)
 			goto err;
 		/* Parse a regular, constant expression. */
@@ -1058,7 +1059,7 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_arg_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		struct TPPKeyword *symbol_name;
 		if unlikely(yield() < 0)
 			goto err;
@@ -1101,7 +1102,7 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_ref_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		struct TPPKeyword *symbol_name;
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
@@ -1141,7 +1142,7 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_static_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
-	if (tok == '@') {
+	if (DeeLexer_GetTok(self) == '@') {
 		struct TPPKeyword *symbol_name;
 		DeeScopeObject *scope_iter;
 		if unlikely(yield() < 0)
@@ -1438,7 +1439,7 @@ do_parse_operand(DeeLexer *self,
                  struct asm_invoke_operand *__restrict result,
                  bool recognize_sp) {
 	/* Parse the actual operand. */
-	switch (tok) {
+	switch (DeeLexer_GetTok(self)) {
 
 	case '{':
 		/* the value is surrounded by braces. */
@@ -1469,7 +1470,7 @@ do_parse_operand(DeeLexer *self,
 parse_stack_operand:
 		if unlikely(yield() < 0)
 			goto err;
-		if (tok != '#') {
+		if (DeeLexer_GetTok(self) != '#') {
 			if (WARN(W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND))
 				goto err;
 			goto parse_stack_operand_start;
@@ -1557,7 +1558,7 @@ parse_const_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-	case KWD_static: {
+	case TPP_KWD_static: {
 		int32_t val;
 parse_static_operand:
 		if unlikely(yield() < 0)
@@ -1593,7 +1594,7 @@ parse_extern_operand:
 		result->io_class = OPERAND_CLASS_EXTERN;
 	}	break;
 
-	case KWD_global: {
+	case TPP_KWD_global: {
 		int32_t val;
 parse_global_operand:
 		if unlikely(yield() < 0)
@@ -1605,7 +1606,7 @@ parse_global_operand:
 		result->io_symid = (uint16_t)val;
 	}	break;
 
-	case KWD_local: {
+	case TPP_KWD_local: {
 		int32_t val;
 parse_local_operand:
 		if unlikely(yield() < 0)
@@ -1618,195 +1619,195 @@ parse_local_operand:
 	}	break;
 
 	default:
-		if (TPP_ISKEYWORD(tok)) {
-			if (IS_KWD_NOCASE_S(3, STR_pop)) {
+		if (DeeLexer_HasTokenKwd(self)) {
+			if (IS_KWD_NOCASE_S(self, 3, STR_pop)) {
 				result->io_class = OPERAND_CLASS_POP;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("top")) {
+			if (IS_KWD_NOCASE(self, "top")) {
 				result->io_class = OPERAND_CLASS_TOP;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("ref"))
+			if (IS_KWD_NOCASE(self, "ref"))
 				goto parse_ref_operand;
-			if (IS_KWD_NOCASE_S(3, STR_arg))
+			if (IS_KWD_NOCASE_S(self, 3, STR_arg))
 				goto parse_arg_operand;
-			if (IS_KWD_NOCASE_S(5, STR_const))
+			if (IS_KWD_NOCASE_S(self, 5, STR_const))
 				goto parse_const_operand;
-			if (IS_KWD_NOCASE_S(6, STR_static))
+			if (IS_KWD_NOCASE_S(self, 6, STR_static))
 				goto parse_static_operand;
-			if (IS_KWD_NOCASE_S(6, STR_module))
+			if (IS_KWD_NOCASE_S(self, 6, STR_module))
 				goto parse_module_operand;
-			if (IS_KWD_NOCASE_S(6, STR_extern))
+			if (IS_KWD_NOCASE_S(self, 6, STR_extern))
 				goto parse_extern_operand;
-			if (IS_KWD_NOCASE_S(6, STR_global))
+			if (IS_KWD_NOCASE_S(self, 6, STR_global))
 				goto parse_global_operand;
-			if (IS_KWD_NOCASE_S(5, STR_local))
+			if (IS_KWD_NOCASE_S(self, 5, STR_local))
 				goto parse_local_operand;
-			if (IS_KWD_NOCASE_S(5, STR_stack))
+			if (IS_KWD_NOCASE_S(self, 5, STR_stack))
 				goto parse_stack_operand;
-			if (IS_KWD_NOCASE_S(4, STR_none)) {
-	case KWD_none:
+			if (IS_KWD_NOCASE_S(self, 4, STR_none)) {
+	case TPP_KWD_none:
 				result->io_class = OPERAND_CLASS_NONE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("foreach")) {
+			if (IS_KWD_NOCASE(self, "foreach")) {
 				result->io_class = OPERAND_CLASS_FOREACH;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(6, STR_except)) {
+			if (IS_KWD_NOCASE_S(self, 6, STR_except)) {
 				result->io_class = OPERAND_CLASS_EXCEPT;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("catch")) {
-	case KWD_catch:
+			if (IS_KWD_NOCASE(self, "catch")) {
+	case TPP_KWD_catch:
 				result->io_class = OPERAND_CLASS_CATCH;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("finally")) {
-	case KWD_finally:
+			if (IS_KWD_NOCASE(self, "finally")) {
+	case TPP_KWD_finally:
 				result->io_class = OPERAND_CLASS_FINALLY;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(4, STR_this)) {
-	case KWD_this:
+			if (IS_KWD_NOCASE_S(self, 4, STR_this)) {
+	case TPP_KWD_this:
 				result->io_class = OPERAND_CLASS_THIS;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(11, STR_this_module)) {
+			if (IS_KWD_NOCASE_S(self, 11, STR_this_module)) {
 				result->io_class = OPERAND_CLASS_THIS_MODULE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(13, STR_this_function)) {
+			if (IS_KWD_NOCASE_S(self, 13, STR_this_function)) {
 				result->io_class = OPERAND_CLASS_THIS_FUNCTION;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(4, STR_true)) {
-	case KWD_true:
+			if (IS_KWD_NOCASE_S(self, 4, STR_true)) {
+	case TPP_KWD_true:
 				result->io_class = OPERAND_CLASS_TRUE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(5, STR_false)) {
-	case KWD_false:
+			if (IS_KWD_NOCASE_S(self, 5, STR_false)) {
+	case TPP_KWD_false:
 				result->io_class = OPERAND_CLASS_FALSE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(4, STR_List)) {
+			if (IS_KWD_NOCASE_S(self, 4, STR_List)) {
 				result->io_class = OPERAND_CLASS_LIST;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(5, STR_Tuple)) {
+			if (IS_KWD_NOCASE_S(self, 5, STR_Tuple)) {
 				result->io_class = OPERAND_CLASS_TUPLE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(7, STR_HashSet)) {
+			if (IS_KWD_NOCASE_S(self, 7, STR_HashSet)) {
 				result->io_class = OPERAND_CLASS_HASHSET;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(4, STR_Dict)) {
+			if (IS_KWD_NOCASE_S(self, 4, STR_Dict)) {
 				result->io_class = OPERAND_CLASS_DICT;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(8, STR_Sequence)) {
+			if (IS_KWD_NOCASE_S(self, 8, STR_Sequence)) {
 				result->io_class = OPERAND_CLASS_SEQUENCE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(3, STR_int)) {
+			if (IS_KWD_NOCASE_S(self, 3, STR_int)) {
 				result->io_class = OPERAND_CLASS_INT;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE_S(4, STR_bool)) {
+			if (IS_KWD_NOCASE_S(self, 4, STR_bool)) {
 				result->io_class = OPERAND_CLASS_BOOL;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("eq")) {
+			if (IS_KWD_NOCASE(self, "eq")) {
 				result->io_class = OPERAND_CLASS_EQ;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("ne")) {
+			if (IS_KWD_NOCASE(self, "ne")) {
 				result->io_class = OPERAND_CLASS_NE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("lo")) {
+			if (IS_KWD_NOCASE(self, "lo")) {
 				result->io_class = OPERAND_CLASS_LO;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("le")) {
+			if (IS_KWD_NOCASE(self, "le")) {
 				result->io_class = OPERAND_CLASS_LE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("gr")) {
+			if (IS_KWD_NOCASE(self, "gr")) {
 				result->io_class = OPERAND_CLASS_GR;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("ge")) {
+			if (IS_KWD_NOCASE(self, "ge")) {
 				result->io_class = OPERAND_CLASS_GE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("so")) {
+			if (IS_KWD_NOCASE(self, "so")) {
 				result->io_class = OPERAND_CLASS_SO;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("do")) {
-	case KWD_do:
+			if (IS_KWD_NOCASE(self, "do")) {
+	case TPP_KWD_do:
 				result->io_class = OPERAND_CLASS_DO;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("break")) {
-	case KWD_break:
+			if (IS_KWD_NOCASE(self, "break")) {
+	case TPP_KWD_break:
 				result->io_class = OPERAND_CLASS_BREAK;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("min")) {
+			if (IS_KWD_NOCASE(self, "min")) {
 				result->io_class = OPERAND_CLASS_MIN;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("max")) {
+			if (IS_KWD_NOCASE(self, "max")) {
 				result->io_class = OPERAND_CLASS_MAX;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("sum")) {
+			if (IS_KWD_NOCASE(self, "sum")) {
 				result->io_class = OPERAND_CLASS_SUM;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("any")) {
+			if (IS_KWD_NOCASE(self, "any")) {
 				result->io_class = OPERAND_CLASS_ANY;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("all")) {
+			if (IS_KWD_NOCASE(self, "all")) {
 				result->io_class = OPERAND_CLASS_ALL;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("sp") && recognize_sp) {
+			if (IS_KWD_NOCASE(self, "sp") && recognize_sp) {
 				result->io_class = OPERAND_CLASS_SP;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("nl")) {
+			if (IS_KWD_NOCASE(self, "nl")) {
 				result->io_class = OPERAND_CLASS_NL;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("move")) {
+			if (IS_KWD_NOCASE(self, "move")) {
 				result->io_class = OPERAND_CLASS_MOVE;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("default")) {
-	case KWD_default:
+			if (IS_KWD_NOCASE(self, "default")) {
+	case TPP_KWD_default:
 				result->io_class = OPERAND_CLASS_DEFAULT;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("varargs")) {
+			if (IS_KWD_NOCASE(self, "varargs")) {
 				result->io_class = OPERAND_CLASS_VARARGS;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("varkwds")) {
+			if (IS_KWD_NOCASE(self, "varkwds")) {
 				result->io_class = OPERAND_CLASS_VARKWDS;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("unbound")) {
+			if (IS_KWD_NOCASE(self, "unbound")) {
 				result->io_class = OPERAND_CLASS_UNBOUND;
 				goto done_yield_1;
 			}
-			if (IS_KWD_NOCASE("lock")) {
+			if (IS_KWD_NOCASE(self, "lock")) {
 				result->io_class = OPERAND_CLASS_LOCK;
 				goto done_yield_1;
 			}
@@ -1841,7 +1842,7 @@ uasm_parse_operand(DeeLexer *self, struct asm_invoke_operand *__restrict result)
 		goto err;
 
 	/* Check for a dots-suffix. */
-	if (tok == TPP_TOK_DOT_DOT_DOT) {
+	if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 		/* Set the dots-flag. */
 		if (result->io_class & OPERAND_CLASS_FDOTSFLAG &&
 		    WARN(W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND))
@@ -1860,12 +1861,12 @@ uasm_parse_instruction(DeeLexer *self) {
 	struct TPPKeyword *name;
 	struct asm_mnemonic *mnemonic;
 	struct asm_invocation invoc;
-	if (TPP_TOK_ISINT(tok)) {
+	if (TPP_TOK_ISINT(DeeLexer_GetTok(self))) {
 		struct asm_sym *fbsym;
 
 		/* Integer symbol definition. */
-		name = TPPLexer_LookupEscapedKeyword(token.t_begin,
-		                                     (size_t)(token.t_end - token.t_begin), 1);
+		name = TPPLexer_LookupEscapedKeyword((char const *)DeeLexer_GetTokenStart(self),
+		                                     DeeLexer_GetTokenLen(self), 1);
 		if unlikely(!name)
 			goto err;
 		if unlikely(yield() < 0)
@@ -1889,7 +1890,7 @@ read_mnemonic_name:
 	name = uasm_parse_symnam(self);
 	if unlikely(!name)
 		goto err;
-	if (tok == ':') {
+	if (DeeLexer_GetTok(self) == ':') {
 		/* This is actually a label definition. */
 		struct asm_sym *sym = uasm_symbol(name);
 		if unlikely(!sym)
@@ -1910,7 +1911,7 @@ read_mnemonic_name:
 
 	switch (name->k_id) {
 
-	case KWD_static: {
+	case TPP_KWD_static: {
 		int32_t val;
 do_static_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
@@ -1927,7 +1928,7 @@ continue_after_prefix:
 		goto read_mnemonic_name;
 	}	break;
 
-	case KWD_global: {
+	case TPP_KWD_global: {
 		int32_t val;
 do_global_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
@@ -1940,7 +1941,7 @@ do_global_prefix:
 		goto continue_after_prefix;
 	}	break;
 
-	case KWD_local: {
+	case TPP_KWD_local: {
 		int32_t val;
 do_local_prefix:
 		if (invoc.ai_flags & INVOKE_FPREFIX)
@@ -1954,16 +1955,16 @@ do_local_prefix:
 	}	break;
 
 #if 0
-	case KWD_push:
+	case TPP_KWD_push:
 #endif
 	{
 do_push_prefix:
 		/* Special case: either the push prefix, or the push instruction itself. */
-		if (TPP_ISKEYWORD(tok)) {
-			mnemonic = asm_mnemonic_lookup(token.t_kwd);
+		if (DeeLexer_HasTokenKwd(self)) {
+			mnemonic = asm_mnemonic_lookup(DeeLexer_GetTokenKwd(self));
 			if (mnemonic != NULL) {
 				/* It's the push prefix. */
-				name = token.t_kwd;
+				name = DeeLexer_GetTokenKwd(self);
 				invoc.ai_flags |= INVOKE_FPUSH; /* Set the push-prefix flag. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -2032,7 +2033,13 @@ do_stack_prefix:
 			goto err;
 
 		/* Unknown mnemonic... (Discard the remainder of the line) */
-		while (tok > 0 && tok != ';' && tok != '\n') {
+		while (DeeLexer_GetTok(self) != TPP_TOK_EOF &&
+		       DeeLexer_GetTok(self) != ';' &&
+		       DeeLexer_GetTok(self) != '\n'
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+		       && TPPLexer_Current->l_token.t_id > 0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		       ) {
 			if (yield() < 0)
 				goto err;
 		}
@@ -2041,13 +2048,19 @@ do_stack_prefix:
 got_mnemonic:
 
 	/* Time to start building the invocation. */
-	while (tok > 0 && tok != ';' && tok != '\n' &&
-	       invoc.ai_opcount < ASM_MAX_INSTRUCTION_OPERANDS) {
+	while (DeeLexer_GetTok(self) != TPP_TOK_EOF &&
+	       DeeLexer_GetTok(self) != ';' &&
+	       DeeLexer_GetTok(self) != '\n' &&
+	       invoc.ai_opcount < ASM_MAX_INSTRUCTION_OPERANDS
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	       && TPPLexer_Current->l_token.t_id > 0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	       ) {
 		/* Parse an operand. */
 		if unlikely(uasm_parse_operand(self, &invoc.ai_ops[invoc.ai_opcount]))
 			goto err;
 		++invoc.ai_opcount;
-		if (tok != ',')
+		if (DeeLexer_GetTok(self) != ',')
 			break;
 		if unlikely(yield() < 0)
 			goto err;
@@ -2070,13 +2083,18 @@ err:
 INTERN WUNUSED NONNULL((1)) int DFCALL uasm_parse(DeeLexer *self) {
 	int error;
 continue_line:
-	while (tok > 0) {
+	while (DeeLexer_GetTok(self) != TPP_TOK_EOF 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	       && TPPLexer_Current->l_token.t_id > 0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	       ) {
 		unsigned long old_num;
 		old_num = token.t_num;
-		if (tok == ';' || tok == '\n') {
+		if (DeeLexer_GetTok(self) == ';' ||
+		    DeeLexer_GetTok(self) == '\n') {
 			/* Empty line. */
 		} else {
-			if (tok == '.') {
+			if (DeeLexer_GetTok(self) == '.') {
 				if unlikely(yield() < 0)
 					goto err;
 				/* Parse an assembly directive. */
@@ -2092,7 +2110,13 @@ continue_line:
 		}
 
 		/* Discard any trailing tokens before a new-line or semicolon. */
-		while (tok > 0 && tok != ';' && tok != '\n') {
+		while (DeeLexer_GetTok(self) != TPP_TOK_EOF  &&
+		       DeeLexer_GetTok(self) != ';' &&
+		       DeeLexer_GetTok(self) != '\n'
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+		       && TPPLexer_Current->l_token.t_id > 0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		       ) {
 			if (WARN(W_UASM_IGNORING_TRAILING_TOKENS))
 				goto err;
 			if unlikely(yield() < 0)
@@ -2100,7 +2124,8 @@ continue_line:
 		}
 
 		/* Consume the `;` or `\n' token. */
-		if likely(tok == ';' || tok == '\n') {
+		if likely(DeeLexer_GetTok(self) == ';' ||
+		          DeeLexer_GetTok(self) == '\n') {
 			if unlikely(yield() < 0)
 				goto err;
 		}

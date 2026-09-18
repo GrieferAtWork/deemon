@@ -2049,7 +2049,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
 			for (;;) {
 				next = TPPLexer_YieldRaw();
-				if (next == '\n' || next < 0 || next == TOK_EOF)
+				if (next == '\n' || next < 0 || next == TPP_TOK_EOF)
 					break;
 			}
 			TPPLexer_Current->l_flags = old_flags;
@@ -2058,7 +2058,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		}
 		if (next < 0)
 			goto err;
-		if (next == TOK_EOF)
+		if (next == TPP_TOK_EOF)
 			goto done; /* Block-end not found prior to end-of-file.
 			            * TODO: Emit a warning, telling the user that the end is missing. */
 
@@ -2174,7 +2174,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		 * of a config-file. */
 		memcpy(&old_token, &TPPLexer_Current->l_token, sizeof(struct TPPToken));
 		TPPFile_Incref(&TPPFile_Empty);
-		TPPLexer_Current->l_token.t_id    = TOK_EOF;
+		TPPLexer_Current->l_token.t_id    = TPP_TOK_EOF;
 		TPPLexer_Current->l_token.t_num   = 0;
 		TPPLexer_Current->l_token.t_file  = &TPPFile_Empty;
 		TPPLexer_Current->l_token.t_begin = TPPFile_Empty.f_begin;
@@ -2182,7 +2182,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		memcpy(&old_ifdef, &TPPLexer_Current->l_ifdef, sizeof(struct TPPIfdefStack));
 		bzero(&TPPLexer_Current->l_ifdef, sizeof(struct TPPIfdefStack));
 		old_l_noerror                 = TPPLexer_Current->l_noerror;
-		TPPLexer_Current->l_noerror   = TOK_EOF;
+		TPPLexer_Current->l_noerror   = TPP_TOK_EOF;
 		old_l_eof_paren               = TPPLexer_Current->l_eof_paren;
 		TPPLexer_Current->l_eof_paren = 0;
 		old_l_flags                   = TPPLexer_Current->l_flags;
