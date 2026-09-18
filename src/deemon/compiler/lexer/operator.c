@@ -526,7 +526,7 @@ do_operator_gr:
 		ATTR_FALLTHROUGH
 	case TPP_TOK_COLON_EQUAL:
 		result = OPERATOR_ASSIGN;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_HasTokenKwd(self) && DeeLexer_GetTokenKwdLen(self) == 4 &&
 		    UNALIGNED_GET32(DeeLexer_GetTokenKwdCStr(self)) == ENCODE_INT32('m', 'o', 'v', 'e')) {
@@ -539,7 +539,7 @@ do_operator_gr:
 	case '(':
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags;
 		if (DeeLexer_GetTok(self) == ')') {
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -585,19 +585,19 @@ parse_string:
 	case '[':
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags;
 		result = AST_OPERATOR_GETITEM_OR_SETITEM;
 		if (DeeLexer_GetTok(self) == ':') {
 			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_flags;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
+		if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
 		if (DeeLexer_GetTok(self) == '=') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			result = (result == AST_OPERATOR_GETITEM_OR_SETITEM
 			          ? OPERATOR_SETITEM
@@ -606,17 +606,17 @@ parse_string:
 		goto done;
 
 	case TPP_KWD_del:
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == '[') {
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_flags;
 			result = OPERATOR_DELITEM;
 			if (DeeLexer_GetTok(self) == ':') {
 				result = OPERATOR_DELRANGE;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_flags;
 			}
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
@@ -637,7 +637,7 @@ parse_string:
 
 	case '.':
 		result = AST_OPERATOR_GETATTR_OR_SETATTR;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == '=') {
 			result = OPERATOR_SETATTR;
@@ -685,7 +685,7 @@ default_case:
 				goto done_y1;
 			}
 			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				result = OPERATOR_MOVEASSIGN;
 				if unlikely(DeeLexer_GetTok(self) == '=') {
@@ -841,7 +841,7 @@ unknown:
 	}
 
 done_y1:
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 done:
 	return result;

@@ -74,13 +74,13 @@ ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	bool has_paren;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	if (scope_push())
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
 		goto err_scope_flags;
 
 	/* Parse the expression for the with.
@@ -94,7 +94,7 @@ ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 
 	/* Create the symbol that's going to contain the with-expression. */
@@ -212,13 +212,13 @@ ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	bool has_paren;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_with);
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	if (scope_push())
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (paren_begin(&has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPARENT_AFTER_WITH))
 		goto err_scope_flags;
 
 	/* Parse the expression for the with.
@@ -232,7 +232,7 @@ ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (paren_end(has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
+	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 
 	/* Create the symbol that's going to contain the with-expression. */

@@ -59,7 +59,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 		 *      of passing arbitrary mappings through keywords,
 		 *      however this just feels too python-esque to me...
 		 */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_r;
 
 		/* Parse the keyword invocation AST. */
@@ -99,9 +99,9 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 				                            DeeLexer_GetTokenKwdCStr(self),
 				                            DeeLexer_GetTokenKwdLen(self)))
 					goto err_r_kwdlist;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_kwdlist;
-				if (skip(':', W_EXPECTED_COLON_AFTER_KEYWORD_LABEL))
+				if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_KEYWORD_LABEL))
 					goto err_r_kwdlist;
 
 				/* Make sure that we have allocated sufficient memory for the keyword list. */
@@ -138,7 +138,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 					if (!DeeUni_IsSymCont(*next_token)) /* Can't be a label. */
 						break;
 				}
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_kwdlist;
 				if (!DeeLexer_HasTokenKwd(self))
 					break; /* End of argument list. */

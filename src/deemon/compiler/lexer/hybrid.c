@@ -41,8 +41,10 @@ ast_do_parse_brace_items(DeeLexer *self) {
 	DREF struct ast *result;
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (DeeLexer_GetTok(self) == '\n' && yield() < 0)
-		goto err_flags;
+	if (DeeLexer_GetTok(self) == '\n') {
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err_flags;
+	}
 	result = ast_parse_brace_items(self);
 	if unlikely(!result)
 		goto err_flags;
@@ -68,9 +70,9 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
-			unsigned long token_num = token.t_num;
+			unsigned long token_num = TPPLexer_Current->l_token.t_num;
 			result = ast_parse_postexpr(self, result);
-			if (token_num != token.t_num)
+			if (token_num != TPPLexer_Current->l_token.t_num)
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
 		if (p_was_expression)
@@ -140,7 +142,7 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 		if unlikely(!result)
 			goto done;
 		if (DeeLexer_GetTok(self) == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			if (p_was_expression)
 				*p_was_expression = AST_PARSE_WASEXPR_NO;
@@ -180,17 +182,17 @@ ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	bool has_paren;
 	expect = current_tags.at_expect;
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 		goto err_flags;
 	result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if unlikely(!result)
 		goto err;
-	if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
+	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 		goto err;
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;
@@ -202,11 +204,11 @@ ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	}
 	ff_branch = NULL;
 	if (DeeLexer_GetTok(self) == TPP_KWD_elif) {
-		token.t_id = TPP_KWD_if; /* Cheat a bit... */
+		DeeLexer_SetTokenId(self, TPP_KWD_if); /* Cheat a bit... */
 		goto do_else_branch;
 	}
 	if (DeeLexer_GetTok(self) == TPP_KWD_else) {
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_tt;
 do_else_branch:
 		ff_branch = ast_parse_hybrid_secondary(self, &was_expression);
@@ -243,7 +245,7 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 	unsigned int was_expression;
 	ASSERT(DeeLexer_GetTok(self) == '{');
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	switch (DeeLexer_GetTok(self)) {
 
@@ -253,7 +255,7 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_r;
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
@@ -264,7 +266,7 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -289,7 +291,7 @@ parse_remainder_after_hybrid_popscope_resok:
 				goto err;
 check_recursion_after_expression_suffix:
 			if (DeeLexer_GetTok(self) == ';') {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
 				goto parse_remainder_after_statement;
 			}
@@ -303,7 +305,7 @@ parse_remainder_after_comma_popscope:
 					goto err_r;
 				ast_decref(result);
 				result = ast_setddi(remainder, &loc);
-				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (p_was_expression)
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -311,7 +313,7 @@ parse_remainder_after_comma_popscope:
 			}
 			if likely(DeeLexer_GetTok(self) == '}') {
 parse_remainder_before_rbrace_popscope_wrap:
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
 			} else {
 				if unlikely(WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
@@ -340,11 +342,11 @@ parse_remainder_before_rbrace_popscope_wrap:
 		if (DeeLexer_GetTok(self) == '}')
 			goto parse_remainder_before_rbrace_popscope_wrap;
 		{
-			unsigned long token_num = token.t_num;
-			result                  = ast_parse_postexpr(self, result);
+			unsigned long token_num = TPPLexer_Current->l_token.t_num;
+			result = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err;
-			if (token_num != token.t_num)
+			if (token_num != TPPLexer_Current->l_token.t_num)
 				goto check_recursion_after_expression_suffix;
 		}
 #if 0
@@ -383,7 +385,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 		 *                If that token exists, we know for sure that this is a statement! */
 		if (DeeLexer_GetTok(self) == ';') {
 			was_expression = AST_PARSE_WASEXPR_NO;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		}
 		goto parse_remainder_after_hybrid_popscope_resok;
@@ -433,10 +435,10 @@ is_a_statement:
 		if unlikely(!result)
 			goto err;
 		while (DeeLexer_GetTok(self) == '\n') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		}
-		if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
+		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
 		if (p_was_expression)
@@ -477,7 +479,7 @@ is_a_statement:
 			if (DeeLexer_GetTok(self) == '}') {
 /*parse_remainder_before_rbrace_popscope:*/
 				/* Sequence-like brace expression. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 parse_remainder_after_rbrace_popscope:
 				scope_pop();
@@ -495,14 +497,14 @@ parse_remainder_after_colon_popscope:
 				scope_pop();
 
 				/* mapping-like brace expression. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
 				remainder = ast_parse_mapping(self, result);
 				ast_decref(result);
 				if unlikely(!remainder)
 					goto err;
 				result = ast_setddi(remainder, &loc);
-				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (p_was_expression)
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -513,7 +515,7 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;` token as part of the expression. */
-			if (skip(';', W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+			if (DeeLexer_Skip2(self, ';', W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err_r;
 		}
 		if (result->a_multiple.m_astc == 1) {
@@ -527,7 +529,7 @@ parse_remainder_after_colon_popscope:
 parse_remainder_after_statement:
 		if (DeeLexer_GetTok(self) == '}') {
 			ast_setddi(result, &loc);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		} else {
 			remainder = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
@@ -564,7 +566,7 @@ parse_remainder_after_statement:
 				/* `ast_multiple()` inherited `new_elemv` on success. */
 			}
 			result = ast_setddi(remainder, &loc);
-			if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
+			if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 				goto err_r;
 		}
 		scope_pop();

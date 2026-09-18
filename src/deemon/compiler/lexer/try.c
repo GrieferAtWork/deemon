@@ -76,7 +76,7 @@ ast_parse_catchmask(DeeLexer *self) {
 		 */
 		loc_here(&multi_loc);
 		while (DeeLexer_GetTok(self) == '|') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_exprv;
 			if (exprc == expra) {
 				/* Must allocate more memory. */
@@ -133,7 +133,7 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 	uint32_t old_flags;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	result = is_statement
 	         ? ast_parse_statement(self, false)
@@ -153,7 +153,7 @@ ast_parse_try(DeeLexer *self, bool is_statement) {
 		if (mode != TPP_KWD_finally &&
 		    mode != TPP_KWD_catch)
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_try;
 		ASSERT(catchc <= catcha);
 
@@ -200,10 +200,10 @@ do_realloc_catchv:
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_try_flags;
 				if (DeeLexer_HasTokenKwd(self)) {
 					/* Alternative catch-all spelling for backwards
@@ -216,7 +216,7 @@ do_realloc_catchv:
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 				}
 			} else if (DeeLexer_HasTokenKwd(self)) {
@@ -235,9 +235,9 @@ do_realloc_catchv:
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags; /* Yield the exception addressing keyword. */
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags; /* Yield `...`. */
 				} else {
 					goto parse_catch_mask;
@@ -254,7 +254,7 @@ parse_catch_mask:
 					if (unlikely(DeeLexer_GetTok(self) == TOK_ARROW) &&
 					    WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 						goto err_try_flags;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 					if unlikely(!DeeLexer_HasTokenKwd(self)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
@@ -275,13 +275,13 @@ parse_catch_symbol:
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 				}
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = is_statement
 			                   ? ast_parse_statement(self, false)
@@ -342,7 +342,7 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	unsigned int was_expression;
 	ASSERT(DeeLexer_GetTok(self) == TPP_KWD_try);
 	loc_here(&loc);
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	result = ast_parse_hybrid_primary(self, &was_expression);
 	if unlikely(!result)
@@ -360,7 +360,7 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 		if (mode != TPP_KWD_finally &&
 		    mode != TPP_KWD_catch)
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_try;
 		ASSERT(catchc <= catcha);
 		/* Most of the time a try-statement only has a single handler,
@@ -404,10 +404,10 @@ do_realloc_catchv:
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_try_flags;
 				if (DeeLexer_HasTokenKwd(self)) {
 					/* Alternative catch-all spelling for backwards
@@ -420,7 +420,7 @@ do_realloc_catchv:
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 				}
 			} else if (DeeLexer_HasTokenKwd(self)) {
@@ -439,9 +439,9 @@ do_realloc_catchv:
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags; /* Yield the exception addressing keyword. */
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags; /* Yield `...`. */
 				} else {
 					goto parse_catch_mask;
@@ -459,7 +459,7 @@ parse_catch_mask:
 					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW &&
 						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 					goto err_try_flags;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 					if unlikely(!DeeLexer_HasTokenKwd(self)) {
 						if (WARN(W_EXPECTED_KEYWORD_AFTER_CATCH_AS))
@@ -480,13 +480,13 @@ parse_catch_symbol:
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_try_flags;
 				}
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = ast_parse_hybrid_secondary(self, &was_expression);
 			if unlikely(!handler->ce_code)

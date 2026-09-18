@@ -60,12 +60,6 @@
 #include <stddef.h>  /* offsetof, size_t, wchar_t */
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
 
-#undef token
-#undef tok
-#undef yield
-#undef yieldnbif
-#undef skip
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

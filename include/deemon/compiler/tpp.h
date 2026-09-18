@@ -1035,91 +1035,6 @@ DECL_END
 
 /* Forward-compatibility with TPP3 */
 #include "../../../src/external/tpp3/src/tpp2-forward.h"
-
-DECL_BEGIN
-
-#ifdef __INTELLISENSE__
-struct TPPToken token; /* DEPRECATED! -- Use `DeeLexer_GetToken()` */
-tok_t tok;             /* DEPRECATED! -- Use `DeeLexer_GetTok()` */
-tok_t yield(void);     /* DEPRECATED! -- Use `DeeLexer_Yield()` */
-tok_t yieldnbif(bool allow);
-/* Skip a token `expected_tok`, or warn with `wnum` if the current token didn't match */
-int skip(tok_t expected_tok, int wnum, ...);
-#else /* __INTELLISENSE__ */
-#define token             TPPLexer_Global.l_token
-#define tok               TPPLexer_Global.l_token.t_id
-#define yield()           TPPLexer_Yield()
-#define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
-#define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : parser_skip(expected_tok, __VA_ARGS__))
-#endif /* !__INTELLISENSE__ */
-#define HAS(ext)          TPPLexer_HasExtension(ext) /* DEPRECATED! -- Use `DeeLexer_Has()` */
-#define WARN(...)         parser_warnf(__VA_ARGS__)
-#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)
-#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__)
-#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)
-#define PERR(...)         parser_errf(__VA_ARGS__)
-#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)
-#define PERRSYM(sym, ...) parser_erratrf(&(sym)->s_decl, __VA_ARGS__)
-#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
-#define TPP_PUSHF()       do { uint32_t _old_flags = TPPLexer_Current->l_flags
-#define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
-#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
-
-INTDEF WUNUSED int DFCALL
-parser_skip(tok_t expected_tok, int wnum, ...);
-
-
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-_parser_paren_begin(bool *__restrict p_has_paren, int wnum);
-#define paren_begin(p_has_paren, W_EXPECTED_LPAREN)   \
-	(likely(tok == '(')                               \
-	 ? (*(p_has_paren) = true, unlikely(yield() < 0)) \
-	 : unlikely(_parser_paren_begin(p_has_paren, W_EXPECTED_LPAREN)))
-#define paren_end(has_paren, W_EXPECTED_RPAREN) \
-	(likely(has_paren) && skip(')', W_EXPECTED_RPAREN))
-
-
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define parser_warnf(...)             __builtin_expect(parser_warnf(__VA_ARGS__), 0)
-#define parser_warnatf(loc, ...)      __builtin_expect(parser_warnatf(loc, __VA_ARGS__), 0)
-#define parser_warnastf(loc_ast, ...) __builtin_expect(parser_warnastf(loc_ast, __VA_ARGS__), 0)
-#endif /* !__NO_builtin_expect */
-#endif /* !__INTELLISENSE__ */
-
-
-#define SKIP_WRAPLF(iter, end)                                  \
-	(*(iter) == '\\' && (iter) + 1 < (end)                      \
-	 ? ((iter)[1] == '\n'                                       \
-	    ? ((iter) += 2, 1)                                      \
-	    : (iter)[1] == '\r'                                     \
-	      ? ((iter) +=                                          \
-	         ((iter) + 2 < (end) && (iter)[2] == '\n') ? 3 : 2, \
-	         1)                                                 \
-	      : 0)                                                  \
-	 : 0)
-#define SKIP_WRAPLF_REV(iter, begin)                                       \
-	((iter)[-1] == '\n' && (iter)-1 > (begin)                              \
-	 ? ((iter)[-2] == '\\'                                                 \
-	    ? ((iter) -= 2, 1)                                                 \
-	    : ((iter)[-2] == '\r' && (iter)-2 > (begin) && (iter)[-3] == '\\') \
-	      ? ((iter) -= 3, 1)                                               \
-	      : 0)                                                             \
-	 : (((iter)[-1] == '\r' && (iter)-1 > (begin) && (iter)[-2] == '\\')   \
-	    ? ((iter) -= 2, 1)                                                 \
-	    : 0))
-
-INTDEF struct TPPKeyword TPPKeyword_Empty;
-INTDEF WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void);
-INTDEF WUNUSED char const *DCALL peek_next_token(struct TPPFile **tok_file);
-INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, struct TPPFile **tok_file);
-INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
-INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
-INTDEF WUNUSED struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
-INTDEF WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p);
-INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
-
-DECL_END
 #else /* CONFIG_BUILDING_DEEMON */
 
 DECL_BEGIN
@@ -1146,6 +1061,7 @@ typedef struct {
 #define DeeLexer_Has(self, feat)                 tpp_lexer_has(&(self)->dl_lexer, feat)
 #define DeeLexer_GetTok(self)                    tpp_lexer_gettok(&(self)->dl_lexer)
 #define DeeLexer_GetToken(self)                  tpp_lexer_gettoken(&(self)->dl_lexer)
+#define DeeLexer_GetFile(self)                   tpp_lexer_getfile(&(self)->dl_lexer)
 #define DeeLexer_HasTokenKwd(self)               tpp_lexer_hastokenkwd(&(self)->dl_lexer)
 #define DeeLexer_GetTokenKwd(self)               tpp_lexer_gettokenkwd(&(self)->dl_lexer)
 #define DeeLexer_GetTokenKwdCStr(self)           tpp_lexer_gettokenkwdcstr(&(self)->dl_lexer)
@@ -1168,6 +1084,9 @@ typedef struct {
 #define DeeLexer_YieldPPXNB(self, allow_nonblock)  ((allow_nonblock) ? DeeLexer_YieldPPNB(self) : DeeLexer_YieldPP(self))
 #define DeeLexer_YieldXNB(self, allow_nonblock)    ((allow_nonblock) ? DeeLexer_YieldNB(self) : DeeLexer_Yield(self))
 
+#define DeeLexer_PreparseSkipBseFwd(self, pos, end)   tpp_preparse_skipbse_fwd(&(self)->dl_lexer, pos, end)
+#define DeeLexer_PreparseSkipBseBck(self, start, pos) tpp_preparse_skipbse_bck(&(self)->dl_lexer, start, pos)
+
 
 /* Helper to check if the current token should be considered a string token */
 #define DeeLexer_IsStringToken(self)                    \
@@ -1186,18 +1105,51 @@ typedef struct {
 #define DeeLexer_WarnfAt(self, file, pos, ...)      ((void)(self), (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
 //#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)(self), ...)
 //#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)(self), ...)
+
+
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+_parser_skip(DeeLexer *self, tpp_token_id expected_tok, int wnum);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+_parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
+#define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN)  \
+	(likely(DeeLexer_GetTok(self) == '(')                           \
+	 ? (*(p_has_paren) = true, TPP_TOK_ISERR(DeeLexer_Yield(self))) \
+	 : unlikely(_parser_paren_begin(self, p_has_paren, W_EXPECTED_LPAREN)))
+#define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN) \
+	(likely(has_paren) && DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN))
+#define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN) \
+	(likely(DeeLexer_GetTok(self) == (expected_tok))           \
+	 ? TPP_TOK_ISERR(DeeLexer_Yield(self))                     \
+	 : unlikely(_parser_skip(self, expected_tok, W_UNEXPECTED_TOKEN)))
+
+#define WARN(...)         parser_warnf(__VA_ARGS__)
+#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)
+#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__)
+#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)
+#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)
+#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
+
+INTDEF struct TPPKeyword TPPKeyword_Empty;
+INTDEF WUNUSED char const *DCALL peek_next_token(struct TPPFile **tok_file);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, struct TPPFile **tok_file);
+INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
+INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
+INTDEF WUNUSED struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p);
+INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
+
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
 #define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
 
-#define DeeLexer_Skip(lexer, tid) tpp_lexer_skip(&(lexer)->dl_lexer, tid)
+#define DeeLexer_Skip(self, expected_tok) tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
 
-#define DeeLexer_VWarnf(self, id, args)             TPP_ISERR(tpp_lexer_vwarnf(&(lexer)->dl_lexer, id, args))
-#define DeeLexer_Warnf(self, ...)                   TPP_ISERR(tpp_lexer_warnf(&(lexer)->dl_lexer, __VA_ARGS__))
-#define DeeLexer_VWarnfAt(self, file, pos, args)    TPP_ISERR(tpp_lexer_vwarnf_at(&(lexer)->dl_lexer, file, pos, args))
-#define DeeLexer_WarnfAt(self, file, pos, ...)      TPP_ISERR(tpp_lexer_warnf_at(&(lexer)->dl_lexer, file, pos, __VA_ARGS__))
-#define DeeLexer_VWarnfLc(self, filename, lc, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(lexer)->dl_lexer, filename, lc, args))
-#define DeeLexer_WarnfLc(self, filename, lc, ...)   TPP_ISERR(tpp_lexer_warnf_lc(&(lexer)->dl_lexer, filename, lc, __VA_ARGS__))
+#define DeeLexer_VWarnf(self, id, args)             TPP_ISERR(tpp_lexer_vwarnf(&(self)->dl_lexer, id, args))
+#define DeeLexer_Warnf(self, ...)                   TPP_ISERR(tpp_lexer_warnf(&(self)->dl_lexer, __VA_ARGS__))
+#define DeeLexer_VWarnfAt(self, file, pos, args)    TPP_ISERR(tpp_lexer_vwarnf_at(&(self)->dl_lexer, file, pos, args))
+#define DeeLexer_WarnfAt(self, file, pos, ...)      TPP_ISERR(tpp_lexer_warnf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
+#define DeeLexer_VWarnfLc(self, filename, lc, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(self)->dl_lexer, filename, lc, args))
+#define DeeLexer_WarnfLc(self, filename, lc, ...)   TPP_ISERR(tpp_lexer_warnf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
 
 /* Static TPP Hooks */
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
@@ -1215,6 +1167,10 @@ _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_ParenEnd(self, has_paren) \
 	(likely(has_paren) && TPP_TOK_ISERR(DeeLexer_Skip(self, TPP_TOK_OFCHAR(')'))))
 
+/* Backwards compat... */
+#define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN)     DeeLexer_Skip(self, expected_tok)
+#define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN) DeeLexer_ParenBegin(self, p_has_paren)
+#define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN)     DeeLexer_ParenEnd(self, has_paren)
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 DECL_END

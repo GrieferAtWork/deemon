@@ -1040,7 +1040,7 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 		}
 		loc_here(&loc);
 		initializer_name = DeeLexer_GetTokenKwd(lexer);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		/* Super-initializer:
 		 * class MyList: List {
@@ -1063,7 +1063,7 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 			bool has_paren;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
+			if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
 				goto err_flags;
 			if (has_paren) {
 				if (DeeLexer_GetTok(lexer) == ')') {
@@ -1140,7 +1140,7 @@ err_flags_superargs_superkwds:
 				goto err_flags;
 done_superargs:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
+			if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
 				goto err;
 		} else {
 			struct symbol *init_symbol;
@@ -1153,7 +1153,7 @@ done_superargs:
 
 			/* Member initializer (c++ style). */
 			if (DeeLexer_GetTok(lexer) == '=') {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 					goto err;
 				initializer_ast = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
 				if unlikely(!initializer_ast)
@@ -1162,7 +1162,7 @@ done_superargs:
 				bool has_paren;
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if (paren_begin(&has_paren, W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
+				if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
 					goto err_flags;
 				if (has_paren && DeeLexer_GetTok(lexer) == ')') {
 					/* Special case: Same as `= none` (aka: initializer to `none`) */
@@ -1183,7 +1183,7 @@ constructor_list_none_initializer:
 				if unlikely(!initializer_ast)
 					goto err_flags;
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if (paren_end(has_paren, W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
+				if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
 					ast_decref(initializer_ast);
 					goto err;
 				}
@@ -1212,7 +1212,7 @@ constructor_list_none_initializer:
 			goto err;
 		if (DeeLexer_GetTok(lexer) != ',')
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 	}
 	return 0;
@@ -1303,7 +1303,7 @@ next:
 		if (has_name_prefix &&
 		    WARN(W_PROPERTY_TYPE_PREFIX_ALREADY_GIVEN))
 			goto err;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		has_name_prefix = true;
 		goto next;
@@ -1312,12 +1312,12 @@ next:
 	case '.':
 		if (WARN(W_DEPRECATED_PROPERTY_NAME, "get' or `set"))
 			goto err;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		callback_id = Dee_CLASS_GETSET_GET;
 		if (DeeLexer_GetTok(self) == '=') {
 			callback_id = Dee_CLASS_GETSET_SET;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		}
 		goto got_callback_id;
@@ -1347,7 +1347,7 @@ warn_deprecated_yield:
 						         callback_names[callback_id].cn_name))
 							goto err;
 					}
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if unlikely(DeeLexer_GetTok(self) == '.') {
 						/* The old deemon allowed a `.` to follow some property names such as `del .`.
@@ -1356,7 +1356,7 @@ warn_deprecated_yield:
 						if (WARN(W_DEPRECATED_PROPERTY_NAME,
 						         callback_names[callback_id].cn_name))
 							goto err;
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 					}
 					goto got_callback_id;
@@ -1450,7 +1450,7 @@ ast_parse_class_impl(DeeLexer *self,
 	ASSERT(name || !create_symbol);
 	if (DeeLexer_GetTok(self) == ':') {
 do_parse_class_base:
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 do_parse_class_base_after_yield:
 		/* Parse the class's base expression.
@@ -1471,7 +1471,7 @@ do_parse_class_base_after_yield:
 			basea    = 2;
 			do {
 				/* Consume the `,` */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_basev;
 				if (basec >= basea) {
 					DREF struct ast **new_basev;
@@ -1516,13 +1516,13 @@ err_basev:
 		if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
 			goto err;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		maker.cm_base = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!maker.cm_base)
 			goto err;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 	} else {
 		/* Since this is the only place that `extends` may appear at,
@@ -1536,7 +1536,7 @@ err_basev:
 				if (WARN(W_DEPRECATED_CLASS_BASE_PARENS))
 					goto err;
 				loc_here(&packloc);
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if unlikely(DeeLexer_GetTok(self) != '(' && parser_warn_pack_used(&packloc))
 					goto err;
@@ -1548,7 +1548,7 @@ err_basev:
 		}
 
 		/* Automatically use `Object` as base class when `-fold-style-classes` is active. */
-		if (HAS(EXT_OLD_STYLE_CLASSES)) {
+		if (DeeLexer_Has(self, OLD_STYLE_CLASSES)) {
 			DREF DeeModuleObject *rt_d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
 			struct Dee_module_symbol *oldbase_sym;
@@ -1607,7 +1607,7 @@ use_object_base:
 	}
 	if (parser_flags & PARSE_FLFSTMT)
 		TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-	if (skip('{', W_EXPECTED_LBRACE_AFTER_CLASS))
+	if (DeeLexer_Skip2(self, '{', W_EXPECTED_LBRACE_AFTER_CLASS))
 		goto err;
 
 	/* Create the symbol to assign the class to. */
@@ -1677,7 +1677,7 @@ next_modifier:
 
 		case '@':
 			/* Allow tags in class blocks. */
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if unlikely(parse_tags(self))
 				goto err;
@@ -1690,7 +1690,7 @@ next_modifier:
 				goto err;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			goto done_class_modal;
 
@@ -1703,7 +1703,7 @@ next_modifier:
 			if (modifiers_encountered &&
 			    WARN(W_CLASS_NO_MEMBER_DEFINED))
 				goto err;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			goto next_member;
 
@@ -1715,13 +1715,13 @@ next_modifier:
 		case TPP_KWD_public:
 			new_visibility = Dee_CLASS_ATTRIBUTE_FPUBLIC;
 set_visibility:
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (DeeLexer_GetTok(self) == ':') {
 				/* Default visibility override (rather than member-specific visibility). */
 				default_member_flags &= ~Dee_CLASS_ATTRIBUTE_FVISIBILITY;
 				default_member_flags |= new_visibility;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			}
 			member_flags &= ~Dee_CLASS_ATTRIBUTE_FVISIBILITY;
@@ -1730,7 +1730,7 @@ set_visibility:
 		}	goto next_modifier;
 
 		case TPP_KWD_final:
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			member_flags |= Dee_CLASS_ATTRIBUTE_FFINAL;
 			if (!varying_encountered)
@@ -1739,7 +1739,7 @@ set_visibility:
 			goto next_modifier;
 
 		case TPP_KWD_varying:
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			member_flags &= ~Dee_CLASS_ATTRIBUTE_FREADONLY;
 			varying_encountered   = true;
@@ -1752,7 +1752,7 @@ set_visibility:
 			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
 				goto err;
 			loc_here(&loc);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == '{' ||
 			    DeeLexer_GetTok(self) == ':' || DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_pack) {
@@ -1778,7 +1778,7 @@ set_visibility:
 			if (is_class_member &&
 			    WARN(W_STATIC_FIELD_ALREADY_SPECIFIED))
 				goto err;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			is_class_member       = true;
 			modifiers_encountered = true;
@@ -1795,7 +1795,7 @@ set_visibility:
 			                : DeeLexer_GetTok(self) == TPP_KWD_property
 			                  ? MEMBER_CLASS_GETSET
 			                  : MEMBER_CLASS_MEMBER);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			modifiers_encountered = true;
 			goto next_modifier;
@@ -1808,7 +1808,7 @@ set_visibility:
 			DREF struct ast *operator_ast;
 			int32_t temp;
 			loc_here(&loc);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 
 			/* Parse an operator name, also accepting
@@ -1904,14 +1904,14 @@ define_operator:
 				}
 
 				/* Operator callback assignment. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_anno;
 				need_semi = true;
 				if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 					/* Deleted operator (e.g. `operator str = del;`) */
 					if unlikely(class_maker_deloperator(&maker, operator_name, &loc))
 						goto err_anno;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_anno;
 					if unlikely(ast_annotations_clear(&annotations))
 						goto err_anno;
@@ -2128,19 +2128,19 @@ yield_semi_after_operator:
 			break;
 		case '~':
 			loc_here(&loc);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if unlikely(DeeLexer_GetTok(self) == TPP_KWD_class) {
 				if (WARN(W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR,
 				         maker.cm_classsym->s_name->k_name))
 					goto err;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
 				if unlikely(likely(DeeLexer_GetTok(self) == TPP_KWD_this ||
 				                   (DeeLexer_HasTokenKwd(self) &&
 				                    DeeLexer_GetTokenKwd(self) == name))
-				            ? (yield() < 0)
+				            ? TPP_TOK_ISERR(DeeLexer_Yield(self))
 				            : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
 				                   maker.cm_classsym->s_name->k_name))
 					goto err;
@@ -2149,7 +2149,7 @@ yield_semi_after_operator:
 			goto define_operator;
 
 		case TPP_KWD_copy:
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			operator_name = OPERATOR_COPY;
 			goto define_operator;
@@ -2176,7 +2176,7 @@ yield_semi_after_operator:
 			if (member_name == name) {
 		case TPP_KWD_this:
 				/* Special case: Constructor. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				loc_here(&loc);
 define_constructor:
@@ -2192,7 +2192,7 @@ define_constructor:
 					 *   - `this = del` (delete the constructor)
 					 *   - `this = super` (inherit the constructor from a super-class)
 					 *   - `this = ...` (Assign a custom callback that is invoked as the constructor) */
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if (DeeLexer_GetTok(self) == TPP_KWD_del) {
 						if (!(maker.cm_ctor_flags & CLASS_MAKER_CTOR_FDELETED)) {
@@ -2226,7 +2226,7 @@ define_constructor:
 							if unlikely(class_maker_deloperator(&maker, OPERATOR_CONSTRUCTOR, &loc))
 								goto err;
 						}
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 						goto do_yield_semicolon;
 					}
@@ -2248,7 +2248,7 @@ define_constructor:
 							maker.cm_ctor_flags &= ~CLASS_MAKER_CTOR_FDEFAULT;
 						}
 						maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FSUPER;
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 						goto do_yield_semicolon;
 					}
@@ -2265,7 +2265,7 @@ define_constructor:
 						} else {
 							maker.cm_ctor_flags |= CLASS_MAKER_CTOR_FDEFAULT;
 						}
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 						goto do_yield_semicolon;
 					}
@@ -2355,27 +2355,27 @@ err_ctor_expr:
 				if (DeeLexer_GetTok(self) == '(') {
 					/* Argument list. */
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_anno;
 					if unlikely(parse_arglist(self))
 						goto err_anno;
 					if (parser_flags & PARSE_FLFSTMT)
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-					if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+					if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 						goto err_anno;
 				} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 					struct ast_loc packloc;
 					/* Argument list. */
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 					loc_here(&packloc);
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_anno;
 					if (DeeLexer_GetTok(self) == '(') {
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err_anno;
 						if unlikely(parse_arglist(self))
 							goto err_anno;
-						if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+						if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 							goto err_anno;
 					} else {
 						if unlikely(parser_warn_pack_used(&packloc))
@@ -2393,7 +2393,7 @@ err_ctor_expr:
 					goto err_anno;
 				if (DeeLexer_GetTok(self) == ':') {
 					/* Constructor initializers (including super-initializers). */
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_anno;
 					TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 					if unlikely(parse_constructor_initializers(self, &maker))
@@ -2428,11 +2428,11 @@ err_ctor_expr:
 			 * >>     property_member = { ... }
 			 * >>     function_member() { ... }
 			 * >> }; */
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			decl.da_type = DAST_NONE;
 			if (DeeLexer_GetTok(self) == ':') {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if unlikely(decl_ast_parse(self, &decl))
 					goto err;
@@ -2463,7 +2463,7 @@ err_ctor_expr:
 			}
 			if (DeeLexer_GetTok(self) == '=') {
 				/* Property or member assign. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_decl;
 				if (DeeLexer_GetTok(self) == '{') {
 					DREF struct ast *prop_callbacks[Dee_CLASS_GETSET_COUNT];
@@ -2475,7 +2475,7 @@ err_ctor_expr:
 					if (varying_encountered &&
 					    WARNAT(&loc, W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, member_name))
 						goto err_decl;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_decl;
 
 					/* Properties are always allocated in class memory and have the FPROPERTY flag set. */
@@ -2500,7 +2500,7 @@ err_ctor_expr:
 					/* Parse the property declaration. */
 					if unlikely(parse_property(self, prop_callbacks, &maker, is_class_member))
 						goto err;
-					if (skip('}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
+					if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
 						goto err_property;
 
 					/* Keep track of VTABLE slots used by the property and its callbacks. */

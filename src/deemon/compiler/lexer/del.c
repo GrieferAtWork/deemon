@@ -155,7 +155,7 @@ ast_parse_del(DeeLexer *self, unsigned int lookup_mode) {
 		goto err;
 	if (DeeLexer_GetTok(self) == ',') {
 		/* Delete-multiple expression. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_r;
 		/* Check for relaxed comma-rules. */
 		{
@@ -197,7 +197,7 @@ do_realloc_delv:
 			delv[delc++] = result; /* Inherit */
 			if (DeeLexer_GetTok(self) != ',')
 				break;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_delv;
 			{
 				int temp;

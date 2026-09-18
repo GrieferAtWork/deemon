@@ -825,8 +825,8 @@ EXTENSION(EXT_CHARACTER_LITERALS, "character-literals", 0)
 #define TPP_EXT_CHARACTER_LITERALS EXT_CHARACTER_LITERALS
 
 /* Indicate to user-code that they are running under deemon v200 */
-PREDEFINED_MACRO_IF(__DEEMON__, HAS(EXT_SYSTEM_MACROS), "200")
-PREDEFINED_MACRO_IF(__DEEMON_VARIANT__, HAS(EXT_SYSTEM_MACROS), "\"gatw\"")
+PREDEFINED_MACRO_IF(__DEEMON__, TPPLexer_HasExtension(EXT_SYSTEM_MACROS), "200")
+PREDEFINED_MACRO_IF(__DEEMON_VARIANT__, TPPLexer_HasExtension(EXT_SYSTEM_MACROS), "\"gatw\"")
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 /* Feature-check for user-code to see if deemon was
@@ -839,12 +839,12 @@ HAS_FEATURE_IF(deemon_inline_assembly, 1)
  * However, you _really_ shouldn't use them because they will confuse deemon
  * when you move your code between platforms without deleting the `.*.dec` files. */
 #ifdef CONFIG_HOST_WINDOWS
-DEF_M_IF(__WINDOWS__, HAS(EXT_SYSTEM_MACROS))
+DEF_M_IF(__WINDOWS__, TPPLexer_HasExtension(EXT_SYSTEM_MACROS))
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_HOST_UNIX
-DEF_M_IF(__POSIX__, HAS(EXT_SYSTEM_MACROS)) /* DEPRECATED! */
-DEF_M_IF(__unix__, HAS(EXT_SYSTEM_MACROS))
+DEF_M_IF(__POSIX__, TPPLexer_HasExtension(EXT_SYSTEM_MACROS)) /* DEPRECATED! */
+DEF_M_IF(__unix__, TPPLexer_HasExtension(EXT_SYSTEM_MACROS))
 #endif /* CONFIG_HOST_UNIX */
 
 WGROUP(WG_SYMBOL, "symbol", WSTATE_FATAL)
@@ -878,7 +878,7 @@ DEF_WARNING(W_DEPRECATED_ATTRIBUTE_SYNTAX, (WG_D200, WG_SYNTAX), WSTATE_WARN, WA
 DEF_WARNING(W_DEPRECATED_GLOBAL_PREFIX, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `::` as global prefix is deprecated. Remove the prefix and rename other variables with the same name, or use `__nth`"))
 DEF_WARNING(W_DEPRECATED_PREFIX_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Lookup modifiers other than `__nth` in expressions are no longer allowed since deemon 200"))
 DEF_WARNING(W_DEPRECATED_NO_PARAMETER_LIST, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("A missing parameter list in a function declaration is deprecated since deemon 200 for non-lambda-functions. Add an empty one by inserting `()`"))
-DEF_WARNING(W_DEPRECATED_CHARACTER_INT, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Writing integers as characters is deprecated since deemon 200. Consider writing `\"%$s\".ord()` instead", (size_t)(token.t_end-token.t_begin)-2, token.t_begin+1))
+DEF_WARNING(W_DEPRECATED_CHARACTER_INT, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Writing integers as characters is deprecated since deemon 200. Consider writing `\"%$s\".ord()` instead", DeeLexer_GetTokenLen(_DeeLexer_Current) - 2, DeeLexer_GetTokenStart(_DeeLexer_Current) + 1))
 DEF_WARNING(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `->` to assign an exception symbol is deprecated since deemon 200. Consider using `as` instead"))
 DEF_WARNING(W_DEPRECATED_FUNCTION_IN_EXPRESSION, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Using `function` to define lambdas in expressions is deprecated. Consider using `() ->` instead"))
 DEF_WARNING(W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE, (WG_D200, WG_SYNTAX), WSTATE_WARN, WARNF("Lookup mode modifier after C-like declaration type is deprecated since deemon 200. Consider moving the modifier before the type expression, or removing the modifier to have the variable always be declared as `local`"))

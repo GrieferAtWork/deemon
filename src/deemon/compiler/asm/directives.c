@@ -87,14 +87,6 @@ LOCAL WUNUSED NONNULL((1, 2)) bool Dee_libc_strcaseeq(char *a, char *b) {
 #endif /* !CONFIG_HAVE_strcasecmp */
 
 
-#define IS_KWD(str)                                 \
-	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 bcmp(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)) == 0)
-#define IS_KWD_NOCASE(str)                          \
-	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
-	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 do_parse_constant(DeeLexer *self) {
 	DREF struct ast *const_ast;
@@ -208,16 +200,16 @@ uasm_parse_directive(DeeLexer *self) {
 #define NAMEISKWD_S(len, s)   \
 	(name->k_size == (len) && \
 	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
-	struct TPPKeyword *name;
+	tpp_keyword *name;
 	name = uasm_parse_symnam(self);
 	if unlikely(!name)
 		goto err;
-	if (tok == ':') {
-		struct TPPKeyword *label_name;
+	if (DeeLexer_GetTok(self) == ':') {
+		tpp_keyword *label_name;
 		char backup;
 		struct asm_sym *label;
 		/* Actually a label definition. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		/* Cheat a bit... */
 #if 1 /* GCC doesn't like us writing outside of the array's bounds, so work around that warning */
@@ -225,9 +217,9 @@ uasm_parse_directive(DeeLexer *self) {
 #else
 #define ONE_CHAR_BEFORE_NAME (name->k_name - 1)
 #endif
-		backup                = *ONE_CHAR_BEFORE_NAME;
+		backup = *ONE_CHAR_BEFORE_NAME;
 		*ONE_CHAR_BEFORE_NAME = '.';
-		label_name            = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME, name->k_size + 1, 1);
+		label_name = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME, name->k_size + 1, 1);
 		*ONE_CHAR_BEFORE_NAME = backup;
 		if unlikely(!label_name)
 			goto err;
@@ -292,9 +284,16 @@ uasm_parse_directive(DeeLexer *self) {
 
 	/* Unknown directive... (Discard the remainder of the line) */
 	DO(WARN(W_UASM_UNKNOWN_DIRECTIVE, name));
-	while (tok > 0 && tok != ';' && tok != '\n')
-		if (yield() < 0)
+	while (DeeLexer_GetTok(self) != TPP_TOK_EOF &&
+	       DeeLexer_GetTok(self) != ';' &&
+	       DeeLexer_GetTok(self) != '\n'
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	       && TPPLexer_Current->l_token.t_id > 0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	       ) {
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
+	}
 done:
 	return 0;
 done_continue:
@@ -306,8 +305,10 @@ do_handle_code:
 	/* `.code @yielding, @copyable, @assembly, @lenient, @varargs,
 	 *        @varkwds, @thiscall, @heapframe, @finally, @constructor' */
 	for (;;) {
-		if (tok == '@' && unlikely(yield() < 0))
-			goto err;
+		if (DeeLexer_GetTok(self) == '@') {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+		}
 		name = uasm_parse_symnam(self);
 		if unlikely(!name)
 			goto err;
@@ -338,29 +339,29 @@ do_handle_code:
 		} else {
 			DO(WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
 		}
-		if (tok != ',')
+		if (DeeLexer_GetTok(self) != ',')
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	goto done;
 
 	{
-		struct TPPKeyword *reloc_name;
+		tpp_keyword *reloc_name;
 		struct asm_sym *reloc_sym;
 		uint16_t reloc_type;
 		uint16_t reloc_value;
 do_handle_reloc:
 		/* `.reloc ., <name> [, <symbol> [, <value>]]`  */
-		if likely(tok == '.') {
-			if unlikely(yield() < 0)
+		if likely(DeeLexer_GetTok(self) == '.') {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		} else {
 			struct asm_intexpr expr;
 			DO(WARN(W_UASM_RELOC_NEED_DOT));
 			DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FNORMAL));
 		}
-		DO(skip(',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
 		reloc_name  = uasm_parse_symnam(self);
 		reloc_sym   = NULL;
 		reloc_value = 0;
@@ -370,16 +371,16 @@ do_handle_reloc:
 			DO(WARN(W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name));
 			reloc_type = R_DMN_NONE;
 		}
-		if (tok == ',') {
-			if unlikely(yield() < 0)
+		if (DeeLexer_GetTok(self) == ',') {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			/* Parse the relocation symbol. */
 			reloc_sym = do_parse_symbol_for_reloc(self);
 			if unlikely(!reloc_sym)
 				goto err;
-			if (tok == ',') {
+			if (DeeLexer_GetTok(self) == ',') {
 				struct asm_intexpr rval;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				/* Parse the relocation value. */
 				DO(uasm_parse_intexpr(self, &rval, UASM_INTEXPR_FNORMAL));
@@ -416,26 +417,28 @@ do_handle_except:
 		 *   - `[@]mask(const)` -- Use `const` as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except(self);
-		DO(skip(',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
 		except_end = do_parse_symbol_for_except(self);
-		DO(skip(',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
 		except_entry = do_parse_symbol_for_except(self);
 		except_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
-		while (tok == ',') {
+		while (DeeLexer_GetTok(self) == ',') {
 			char const *tag_start, *tag_end;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto except_err;
-			if (tok == '@' && unlikely(yield() < 0))
-				goto except_err;
-			if (!TPP_ISKEYWORD(tok)) {
+			if (DeeLexer_GetTok(self) == '@') {
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto except_err;
+			}
+			if (!DeeLexer_HasTokenKwd(self)) {
 except_unknown_tag:
 				if (WARN(W_UASM_EXCEPT_UNKNOWN_TAG))
 					goto except_err;
 				break;
 			}
-			tag_start = token.t_kwd->k_name;
-			tag_end   = tag_start + token.t_kwd->k_size;
+			tag_start = (char const *)DeeLexer_GetTokenStart(self);
+			tag_end   = (char const *)DeeLexer_GetTokenEnd(self);
 			while (tag_start < tag_end && tag_start[0] == '_')
 				++tag_start;
 			while (tag_end > tag_start && tag_end[-1] == '_')
@@ -451,9 +454,9 @@ except_unknown_tag:
 				except_flags |= Dee_EXCEPTION_HANDLER_FHANDLED;
 			} else if (IS_TAG("mask")) {
 				DREF DeeObject *mask;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto except_err;
-				if (skip('(', W_EXPECTED_LPAREN))
+				if (DeeLexer_Skip2(self, '(', W_EXPECTED_LPAREN))
 					goto except_err;
 				mask = do_parse_constant(self);
 				if (DeeNone_Check(mask)) {
@@ -467,7 +470,7 @@ except_err_mask:
 					Dee_Decref(mask);
 					goto except_err;
 				}
-				if (skip(')', W_EXPECTED_RPAREN))
+				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN))
 					goto except_err_mask;
 				Dee_XDecref(except_mask);
 				except_mask = (DREF DeeTypeObject *)mask;
@@ -476,7 +479,7 @@ except_err_mask:
 				goto except_unknown_tag;
 			}
 #undef IS_TAG
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto except_err;
 		}
 		except = asm_newexc();
@@ -611,9 +614,9 @@ check_invalid_stack_and_adjust:
 			default:
 				__builtin_unreachable();
 			}
-			if (tok != ',')
+			if (DeeLexer_GetTok(self) != ',')
 				break;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		}
 		goto done;
@@ -631,18 +634,18 @@ do_handle_ddi:
 		filename = do_parse_constant(self);
 		if unlikely(!filename)
 			goto err;
-		if (tok != ',') {
+		if (DeeLexer_GetTok(self) != ',') {
 			/* `.ddi <line:imm>` */
 			line     = filename;
 			filename = NULL;
 			col      = NULL;
 		} else {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_ddi_filename;
 			line = do_parse_constant(self);
 			if unlikely(!line)
 				goto err_ddi_filename;
-			if (tok != ',') {
+			if (DeeLexer_GetTok(self) != ',') {
 				if (DeeString_Check(filename)) {
 					/* `.ddi <filename:string>, <line:imm>` */
 					col = NULL;
@@ -654,7 +657,7 @@ do_handle_ddi:
 				}
 			} else {
 				/* `.ddi <filename:string>, <line:imm>, <col:imm>` */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_ddi_line;
 				col = do_parse_constant(self);
 				if unlikely(!col)
@@ -675,11 +678,7 @@ do_handle_ddi:
 			} else if (current_assembler.a_ddi.da_checkc) {
 				file = current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc - 1].dc_loc.l_file;
 			} else {
-#if 1
 				file = ddi_newfile("", 0);
-#else
-				file = token.t_file;
-#endif
 			}
 			if (current_assembler.a_ddi.da_checkc) {
 				ddi = &current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc - 1];

@@ -169,7 +169,7 @@ next_modifier:
 		}
 		*p_mode |= LOOKUP_SYM_VLOCAL;
 continue_modifier:
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		goto next_modifier;
 
@@ -332,16 +332,16 @@ next_expr:
 			class_flags |= TP_FFINAL;
 		symbol_mode &= ~(LOOKUP_SYM_FINAL | LOOKUP_SYM_VARYING);
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
 			class_flags |= TP_FFINAL;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		}
 		if (DeeLexer_HasTokenKwd(self)) {
 			class_name = DeeLexer_GetTokenKwd(self);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
@@ -377,12 +377,12 @@ next_expr:
 		unsigned int symbol_mode         = lookup_mode;
 		struct ast_loc function_name_loc;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (DeeLexer_HasTokenKwd(self)) {
 			loc_here(&function_name_loc);
 			function_name = DeeLexer_GetTokenKwd(self);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
@@ -480,9 +480,8 @@ err_function_anno:
 					goto err;
 				if (*next == ':') {
 					/* Make sure it isn't a `::` or `:=` token. */
-					++next;
-					while (SKIP_WRAPLF(next, token.t_file->f_end))
-						;
+					next = (char const *)DeeLexer_PreparseSkipBseFwd(self, (tpp_char const *)next + 1,
+					                                                 (tpp_char const *)TPPLexer_Current->l_token.t_file->f_end);
 					if (*next != ':' && *next != '=')
 						goto done_expression_nocurrent;
 				}
@@ -571,7 +570,7 @@ err_function_anno:
 			}
 			if unlikely(ast_tags_clear())
 				goto err_current;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_current;
 
 			/* Allow syntax like this:
@@ -597,7 +596,7 @@ err_function_anno:
 				DREF struct ast **exprv;
 				struct ast_loc equal_loc;
 				loc_here(&equal_loc);
-				if (DeeLexer_GetTok(self) == '=' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == '=' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 					goto err_current;
 
 				/* Parse a preferred-type brace expression. */
@@ -627,7 +626,7 @@ err_function_anno:
 				loc_here(&packloc);
 				old_flags      = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if unlikely(yield() < 0) {
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
 err_current_flags_in_pack:
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
@@ -661,7 +660,7 @@ err_current_flags_in_pack:
 do_parse_paren_arg_list:
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if unlikely(yield() < 0) {
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
@@ -679,7 +678,7 @@ do_parse_paren_arg_list:
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				if unlikely(!args)
 					goto err_current;
-				if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL)) {
+				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
 					ast_decref(args);
 					goto err_current;
@@ -716,7 +715,7 @@ err_args:
 			    (mode & AST_COMMA_ALLOWTYPEDECL)) {
 				struct symbol *var_symbol = current->a_sym;
 				if (DeeLexer_GetTok(self) == ':') {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_current;
 					if unlikely(decl_ast_parse(self, &decl))
 						goto err_current;
@@ -765,7 +764,7 @@ err_args:
 
 		/* Yield the ',' token. */
 continue_at_comma:
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		{
 			int temp;
@@ -805,7 +804,7 @@ continue_at_comma:
 		/* This is where the magic happens and where we
 		 * assign to expression in the active comma-list. */
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_current;
 
 		/* TODO: Add support for applying annotations here! */
@@ -951,9 +950,10 @@ done_expression_nomerge:
 			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi && (mode & AST_COMMA_PARSESEMI)) {
 		/* Consume a `;` token as part of the expression. */
-		if likely(DeeLexer_GetTok(self) == ';' || DeeLexer_GetTok(self) == '\n') {
+		if likely(DeeLexer_GetTok(self) == ';' ||
+		          DeeLexer_GetTok(self) == '\n') {
 			do {
-				if (yieldnbif(mode & AST_COMMA_ALLOWNONBLOCK) < 0)
+				if (TPP_TOK_ISERR(DeeLexer_YieldXNB(self, mode & AST_COMMA_ALLOWNONBLOCK)))
 					goto err_clear_current_only;
 			} while (DeeLexer_GetTok(self) == '\n');
 		} else {

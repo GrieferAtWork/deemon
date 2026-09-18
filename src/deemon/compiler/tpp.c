@@ -412,12 +412,6 @@ err:
 #define NO_INCLUDE_MALLOC_H   1
 #define NO_INCLUDE_ALLOCA_H   1
 
-#undef token
-#undef tok
-#undef yield
-#undef yieldnbif
-#undef skip
-
 #ifndef __INTELLISENSE__
 #include "../../tpp/src/tpp.c"
 #endif /* !__INTELLISENSE__ */
@@ -438,33 +432,12 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
 };
 
 
-INTERN WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p) {
-	++p;
-	while (SKIP_WRAPLF(p, token.t_file->f_end))
-		;
-	return p;
-}
-
-INTERN WUNUSED struct TPPKeyword *DCALL tok_without_underscores(void) {
-	struct TPPKeyword *result = NULL;
-	if (TPP_ISKEYWORD(tok)) {
-		result = token.t_kwd;
-		if (result->k_name[0] == '_' ||
-		    result->k_name[result->k_size - 1] == '_') {
-			char const *begin, *end;
-			/* Keyword has leading/terminating underscores.
-			 * >> Remove them and use that keyword instead! */
-			end = (begin = result->k_name) + result->k_size;
-			while (begin < end && *begin == '_')
-				++begin;
-			while (end > begin && end[-1] == '_')
-				--end;
-			/* NOTE: Don't create the keyword if it doesn't exist!
-			 *    >> Callers only use this function to unify attribute names & arguments! */
-			result = TPPLexer_LookupKeyword(begin, (size_t)(end - begin), 0);
-		}
-	}
-	return result;
+INTERN WUNUSED NONNULL((1)) char const *DCALL
+advance_wraplf(char const *__restrict p) {
+	char const *file_end = TPPLexer_Current->l_token.t_file->f_end;
+	return (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current,
+	                                                 (tpp_char const *)p + 1,
+	                                                 (tpp_char const *)file_end);
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) char *TPPCALL
@@ -473,8 +446,8 @@ skip_whitespace_and_comments(char *iter, char *end);
 INTERN WUNUSED char const *DCALL
 peek_next_token(struct TPPFile **tok_file) {
 	if (tok_file)
-		*tok_file = token.t_file;
-	return peek_next_advance(token.t_end, tok_file);
+		*tok_file = TPPLexer_Current->l_token.t_file;
+	return peek_next_advance(TPPLexer_Current->l_token.t_end, tok_file);
 }
 
 INTERN WUNUSED NONNULL((1)) char const *DCALL
@@ -486,7 +459,7 @@ peek_next_advance(char const *p, struct TPPFile **tok_file) {
 		curfile = *tok_file;
 		ASSERT(curfile != NULL);
 	} else {
-		curfile = token.t_file;
+		curfile = TPPLexer_Current->l_token.t_file;
 	}
 	ASSERT(p >= curfile->f_begin &&
 	       p <= curfile->f_end);
@@ -509,9 +482,9 @@ again:
 		file_begin = curfile->f_begin;
 		/* Special case: Must extend the file. */
 		extend_error = TPPFile_NextChunk(curfile, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
-		if (curfile == token.t_file) {
-			token.t_begin = curfile->f_begin + (token.t_begin - file_begin);
-			token.t_end   = curfile->f_begin + (token.t_end - file_begin);
+		if (curfile == TPPLexer_Current->l_token.t_file) {
+			TPPLexer_Current->l_token.t_begin = curfile->f_begin + (TPPLexer_Current->l_token.t_begin - file_begin);
+			TPPLexer_Current->l_token.t_end   = curfile->f_begin + (TPPLexer_Current->l_token.t_end - file_begin);
 		}
 		result = curfile->f_begin + (result - file_begin);
 		/* If the file was extended, search for the next token again. */
@@ -563,8 +536,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	iter      = tok_begin;
 	ASSERT(tok_begin >= tok_file->f_begin);
 	ASSERT(tok_begin <= tok_file->f_end);
-	while (SKIP_WRAPLF(iter, tok_file->f_end))
-		;
+	iter = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)iter,
+	                                                 (tpp_char const *)tok_file->f_end);
 	if (iter >= tok_file->f_end)
 		return NULL; /* EOF */
 	/* Set the ANSI flag if we're supporting those characters. */
@@ -579,8 +552,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	/* keyword: scan until a non-alnum character is found. */
 	if (HAVE_EXTENSION_DOLLAR_IS_ALPHA) {
 		for (;;) {
-			while (SKIP_WRAPLF(iter, tok_file->f_end))
-				;
+			iter = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)iter,
+			                                                 (tpp_char const *)tok_file->f_end);
 			if (!(chrattr[(uint8_t)*iter] & chflags))
 				break;
 			++iter;
@@ -588,8 +561,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 		}
 	} else {
 		for (;;) {
-			while (SKIP_WRAPLF(iter, tok_file->f_end))
-				;
+			iter = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)iter,
+			                                                 (tpp_char const *)tok_file->f_end);
 			if (!(chrattr[(uint8_t)*iter] & chflags) || *iter == '$')
 				break;
 			++iter;
@@ -614,86 +587,6 @@ peek_next_keyword(int create_missing) {
 		return NULL;
 	return peek_keyword(tok_file, tok_begin, create_missing);
 }
-
-#if 0
-INTERN ATTR_PURE WUNUSED NONNULL((1)) hash_t DCALL
-hashof_lower(void const *data, size_t size) {
-	hash_t result = 1;
-	unsigned char const *iter, *end;
-	end = (iter = (unsigned char const *)data) + size;
-	for (; iter < end; ++iter)
-		result = result * 263 + tolower(*iter);
-	return result;
-}
-
-
-INTERN WUNUSED NONNULL((1)) struct TPPKeyword *DCALL
-lowercase_keyword(char const *__restrict name,
-                  size_t namelen, int create_missing) {
-	hash_t namehash;
-	struct TPPKeyword *kwd_entry, **bucket;
-	namehash = hashof_lower(name, namelen);
-	/* Try to rehash the keyword map. */
-	if (TPPKeywordMap_SHOULDHASH(&CURRENT.l_keywords)) {
-		ASSERTF(CURRENT.l_keywords.km_entryc > CURRENT.l_keywords.km_bucketc,
-		        ("New size %lu isn't greater than old size %lu",
-		         (unsigned long)CURRENT.l_keywords.km_entryc,
-		         (unsigned long)CURRENT.l_keywords.km_bucketc));
-		rehash_keywords(CURRENT.l_keywords.km_entryc);
-	}
-	ASSERT(CURRENT.l_keywords.km_bucketc);
-	ASSERT(CURRENT.l_keywords.km_bucketv);
-	bucket = &CURRENT.l_keywords.km_bucketv[namehash %
-	                                        CURRENT.l_keywords.km_bucketc];
-	kwd_entry = *bucket;
-	while (kwd_entry) {
-		if (kwd_entry->k_hash == namehash &&
-		    kwd_entry->k_size == namelen &&
-		    !memcasecmp(kwd_entry->k_name, name, namelen * sizeof(char)))
-			return kwd_entry; /* Found it! */
-		kwd_entry = kwd_entry->k_next;
-	}
-	if unlikely(!create_missing)
-		return NULL;
-	/* Must allocate a new keyword entry. */
-	kwd_entry = (struct TPPKeyword *)malloc(TPP_OFFSETOF(struct TPPKeyword, k_name) +
-	                                        (namelen + 1) * sizeof(char));
-	if unlikely(!kwd_entry)
-		return NULL;
-	/* Setup the new keyword entry. */
-	kwd_entry->k_rare  = NULL;
-	kwd_entry->k_macro = NULL;
-	kwd_entry->k_id    = _KWD_BACK + (CURRENT.l_keywords.km_entryc++); /* Unique user-keyword ID. */
-	kwd_entry->k_size  = namelen;
-	kwd_entry->k_hash  = namehash;
-	memcpyc(kwd_entry->k_name, name, namelen, sizeof(char));
-	{
-		char *iter, *end;
-		end = (iter = kwd_entry->k_name) + namelen;
-		for (; iter < end; ++iter)
-			*iter = tolower(*iter);
-	}
-	kwd_entry->k_name[namelen] = '\0';
-	kwd_entry->k_next          = *bucket;
-	return *bucket             = kwd_entry;
-}
-
-INTERN bool DCALL
-token_replace_lowercase(int create_missing) {
-	struct TPPKeyword *lowername;
-	if (!TPP_ISKEYWORD(tok))
-		return false;
-	lowername = lowercase_keyword(token.t_kwd->k_name,
-	                              token.t_kwd->k_size,
-	                              create_missing);
-	if (token.t_kwd == lowername)
-		return false;
-	token.t_kwd = lowername;
-	token.t_id  = lowername->k_id;
-	return true;
-}
-#endif
-
 
 /* Return the error type used by a given warning number. */
 INTERN ATTR_CONST WUNUSED DeeTypeObject *DCALL
@@ -1050,7 +943,7 @@ err_r_path:
 /* Warn about use of `pack` (but only if we're not currently inside of a macro) */
 INTERN WUNUSED int DCALL
 parser_warn_pack_used(struct ast_loc *loc) {
-	struct TPPFile *file = token.t_file;
+	struct TPPFile *file = TPPLexer_Current->l_token.t_file;
 	if (loc && loc->l_file)
 		file = loc->l_file;
 	if (file->f_kind != TPPFILE_KIND_TEXT)
@@ -1059,22 +952,22 @@ parser_warn_pack_used(struct ast_loc *loc) {
 
 }
 
-PRIVATE WUNUSED int DCALL
-parser_skip_maybe_seek(tok_t expected_tok) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+parser_skip_maybe_seek(DeeLexer *self, tpp_token_id expected_tok) {
 	/* Depending on which token was expected, and what the current token is,
 	 * skip ahead a couple of tokens in search of what we're looking for. */
 again:
-	if (tok == expected_tok) {
-		if unlikely(yield() < 0)
+	if (DeeLexer_GetTok(self) == expected_tok) {
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		return 1;
 	}
-	if (tok == 0)
+	if (DeeLexer_GetTok(self) == TPP_TOK_EOF)
 		return 0;
-	if (TPP_ISKEYWORD(tok) && !TPP_ISKEYWORD(expected_tok)) {
+	if (DeeLexer_HasTokenKwd(self) && !TPP_TOK_ISKEYWORD(expected_tok)) {
 		/* Skip unexpected keywords */
 /*yield_and_again:*/
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		goto again;
 	}
@@ -1083,20 +976,16 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED int DFCALL
-parser_skip(tok_t expected_tok, int wnum, ...) {
-	if likely(tok != expected_tok) {
-		va_list args;
-		int result;
-		va_start(args, wnum);
-		result = parser_vwarnf(wnum, args);
-		va_end(args);
+INTERN WUNUSED NONNULL((1)) int DFCALL
+_parser_skip(DeeLexer *self, tpp_token_id expected_tok, int wnum) {
+	if likely(DeeLexer_GetTok(self) != expected_tok) {
+		int result = parser_warnf(wnum);
 		if (result != 0)
 			return result;
-		if unlikely(parser_skip_maybe_seek(expected_tok) < 0)
+		if unlikely(parser_skip_maybe_seek(self, expected_tok) < 0)
 			goto err;
 	} else {
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	return 0;
@@ -1105,17 +994,17 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1)) int DFCALL
-_parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
-	ASSERT(tok != '(');
-	if (tok == TPP_KWD_pack) {
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+_parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum) {
+	ASSERT(DeeLexer_GetTok(self) != '(');
+	if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 		struct ast_loc packloc;
 		loc_here(&packloc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
-		*p_has_paren = tok == '(';
+		*p_has_paren = DeeLexer_GetTok(self) == '(';
 		if (*p_has_paren) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		} else {
 			/* Warn about use of `pack` (if done so outside
@@ -1127,7 +1016,7 @@ _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 		int temp;
 		if unlikely(parser_warnf(wnum))
 			goto err;
-		temp = parser_skip_maybe_seek('(');
+		temp = parser_skip_maybe_seek(self, '(');
 		if unlikely(temp < 0)
 			goto err;
 		*p_has_paren = temp > 0;

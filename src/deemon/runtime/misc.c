@@ -53,12 +53,6 @@
 #include <hybrid/host.h>   /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h> /* MIN */
 
-#undef token
-#undef tok
-#undef yield
-#undef yieldnbif
-#undef skip
-
 #include <Windows.h> /* OutputDebugStringA */
 #ifndef __ARCH_PAGESIZE_MIN
 #ifdef __ARCH_PAGESIZE

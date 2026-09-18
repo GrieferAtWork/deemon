@@ -247,7 +247,7 @@ append_decl_string(DeeLexer *self) {
 	do {
 		if unlikely(ast_decode_unicode_string(self, &current_tags.at_decl))
 			goto err;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	} while (DeeLexer_IsStringToken(self));
 
@@ -278,7 +278,7 @@ parse_tags(DeeLexer *self) {
 		/* Line-style documentation string (terminated by a line-feed) */
 		char const *doc_start = (char const *)DeeLexer_GetTokenEnd(self);
 		char const *doc_end   = doc_start;
-		char const *file_end  = token.t_file->f_end;
+		char const *file_end  = TPPLexer_Current->l_token.t_file->f_end;
 		while (doc_end < file_end) {
 			char ch = *doc_end;
 			if (ch == '\\') {
@@ -303,13 +303,13 @@ parse_tags(DeeLexer *self) {
 				++doc_end;
 			}
 		}
-		token.t_file->f_pos = (char *)doc_end;
+		TPPLexer_Current->l_token.t_file->f_pos = (char *)doc_end;
 		if unlikely(Dee_unicode_printer_print(&current_tags.at_doc, doc_start,
 		                                      (size_t)(doc_end - doc_start)) < 0)
 			goto err;
 		if unlikely(Dee_unicode_printer_putascii(&current_tags.at_doc, '\n'))
 			goto err;
-		if (yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	} else if (DeeLexer_GetTok(self) == '[') {
 		/* Implementation-specific / compile-time tags */
@@ -319,7 +319,7 @@ parse_tags(DeeLexer *self) {
 #define IS_TAG(x)                              \
 		(tag_name_len == COMPILER_STRLEN(x) && \
 		 bcmpc(tag_name_str, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 again_compiler_tag:
 		is_optional = false;
@@ -359,23 +359,23 @@ again_compiler_subtag:
 				 * to be advantageous.
 				 * Compilers are allowed to simply ignore this tag. */
 			} else if (IS_TAG("optional")) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
-				if (skip('.', W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
+				if (DeeLexer_Skip2(self, '.', W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
 					goto err;
 				is_optional = true;
 				goto again_compiler_subtag;
 			} else if (IS_TAG("gatw")) {
 				/* The annotation namespace used by our implementation (GATW). */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 					goto err;
 				if (DeeLexer_GetTok(self) != '.')
 					goto warn_unknown_tag;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if (!DeeLexer_HasTokenKwd(self))
 					goto err_no_keyword_after_dot;
@@ -412,10 +412,10 @@ again_compiler_subtag:
 				} else if (IS_TAG("constructor")) {
 					current_tags.at_code_flags |= Dee_CODE_FCONSTRUCTOR;
 				} else if (IS_TAG("doc")) {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if likely(DeeLexer_GetTok(self) == '(') {
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 					} else {
 						if (is_optional)
@@ -432,7 +432,7 @@ again_compiler_subtag:
 						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
 							goto err;
 					}
-					if (skip(')', W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
+					if (DeeLexer_Skip2(self, ')', W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
 						goto err;
 					goto do_next_compiler_tag;
 				} else {
@@ -440,7 +440,7 @@ again_compiler_subtag:
 				}
 			} else {
 warn_unknown_tag_yield:
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 warn_unknown_tag:
 				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
@@ -452,7 +452,7 @@ warn_unknown_tag:
 					goto err;
 again_check_tag_namespace:
 				if (DeeLexer_GetTok(self) == '.') {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if (!DeeLexer_HasTokenKwd(self)) {
 err_no_keyword_after_dot:
@@ -461,7 +461,7 @@ err_no_keyword_after_dot:
 					} else {
 						tag_name_str = DeeLexer_GetTokenKwdCStr(self);
 						tag_name_len = DeeLexer_GetTokenKwdLen(self);
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 					}
 					if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
@@ -472,13 +472,13 @@ err_no_keyword_after_dot:
 					/* Skip tag argument list. */
 					unsigned int recursion = 1;
 					while (DeeLexer_GetTok(self) != TPP_TOK_EOF) {
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 						if (DeeLexer_GetTok(self) == '(') {
 							++recursion;
 						} else if (DeeLexer_GetTok(self) == ')') {
 							if (recursion == 1) {
-								if unlikely(yield() < 0)
+								if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 									goto err;
 								break;
 							}
@@ -488,7 +488,7 @@ err_no_keyword_after_dot:
 				}
 				goto do_next_compiler_tag;
 			}
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
 				goto err;
@@ -497,12 +497,12 @@ err_no_keyword_after_dot:
 		}
 do_next_compiler_tag:
 		if (DeeLexer_GetTok(self) == ',') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (DeeLexer_GetTok(self) != ']')
 				goto again_compiler_tag;
 		}
-		if (skip(']', W_COMPILER_TAG_EXPECTED_RBRACKET))
+		if (DeeLexer_Skip2(self, ']', W_COMPILER_TAG_EXPECTED_RBRACKET))
 			goto err;
 #undef IS_TAG
 	} else {
@@ -530,7 +530,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DFCALL
 parse_tags_block(DeeLexer *self) {
 	while (DeeLexer_GetTok(self) == '@') {
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if unlikely(parse_tags(self))
 			goto err;

@@ -135,19 +135,19 @@ asm_parse_operands(DeeLexer *self,
 		struct TPPKeyword *name = NULL;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 		if (DeeLexer_GetTok(self) == '[') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (TPP_ISKEYWORD(DeeLexer_GetTok(self))) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 				name = DeeLexer_GetTokenKwd(self);
 #endif /* CONFIG_LANGUAGE_NO_ASM */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
 					goto err;
 			}
-			if (skip(']', W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
+			if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
 				goto err;
 		}
 		if (type == OPERAND_TYPE_LABEL) {
@@ -157,7 +157,7 @@ asm_parse_operands(DeeLexer *self,
 				label_value = lookup_label(DeeLexer_GetTokenKwd(self));
 				if unlikely(!label_value)
 					goto err;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			} else {
 				if (WARN(W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND))
@@ -184,12 +184,12 @@ asm_parse_operands(DeeLexer *self,
 					goto err;
 				operand_type = TPPString_NewEmpty();
 			}
-			if (paren_begin(&has_paren, W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
+			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
 				goto err_type;
 			operand_value = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!operand_value)
 				goto err_type;
-			if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
+			if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
 				goto err_value;
 			operand = operand_list_add(list, type);
 			if unlikely(!operand)
@@ -203,7 +203,7 @@ asm_parse_operands(DeeLexer *self,
 		/* Yield the trailing comma. */
 		if (DeeLexer_GetTok(self) != ',')
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	return 0;
@@ -265,7 +265,7 @@ got_clobber:
 		/* Yield the trailing comma. */
 		if (DeeLexer_GetTok(self) != ',')
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	return result;
@@ -420,7 +420,7 @@ parse_brace_text(DeeLexer *self) {
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
 	ASSERT(DeeLexer_GetTok(self) == '{');
 	for (;;) {
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_printer;
 		switch (DeeLexer_GetTok(self)) {
 		case 0:
@@ -492,7 +492,7 @@ done:
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= old_flags;
 	/* Yield the final `}`-token. */
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err_printer;
 	return tpp_string_printer_pack(&printer);
 err_printer:
@@ -545,7 +545,7 @@ ast_parse_asm(DeeLexer *self) {
 	bool has_paren;
 	bzero(&operands, sizeof(struct operand_list));
 	/*ASSERT(DeeLexer_GetTok(self) == TPP_KWD___asm || DeeLexer_GetTok(self) == TPP_KWD___asm__);*/
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	while (DeeLexer_HasTokenKwd(self)) {
 		char const *name = tpp_keyword_getcstr(DeeLexer_GetTokenKwd(self));
@@ -564,12 +564,12 @@ ast_parse_asm(DeeLexer *self) {
 		}
 		break;
 yield_prefix:
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
+	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
 		goto err_flags;
 	loc_here(&loc); /* Use the assembly text for DDI information. */
 	if (DeeLexer_IsStringToken(self)) {
@@ -637,7 +637,7 @@ yield_prefix:
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 
 	if (is_colon(self)) {
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_ops;
 		/* Enable assembly formatting. */
 		ast_flags |= AST_FASSEMBLY_FORMAT;
@@ -645,20 +645,20 @@ yield_prefix:
 		if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_OUTPUT))
 			goto err_ops;
 		if (is_colon(self)) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_ops;
 			if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_INPUT))
 				goto err_ops;
 			if (is_colon(self)) {
 				int32_t clobber;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_ops;
 				clobber = asm_parse_clobber(self);
 				if unlikely(clobber < 0)
 					goto err_ops;
 				ast_flags |= (uint16_t)clobber;
 				if (is_asm_goto && is_colon(self)) {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err_ops;
 					if unlikely(asm_parse_operands(self, &operands, OPERAND_TYPE_LABEL))
 						goto err_ops;
@@ -667,7 +667,7 @@ yield_prefix:
 		}
 	}
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
+	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
 		goto err_text;
 	ASSERT(operands.ol_c ==
 	       operands.ol_count[OPERAND_TYPE_OUTPUT] +

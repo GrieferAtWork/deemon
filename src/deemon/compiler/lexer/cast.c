@@ -116,7 +116,7 @@ not_a_cast:
 		 * `float(pack(10, 20, 30))`, when we want it to be `float(10, 20, 30)` */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags;
 		if (DeeLexer_GetTok(self) == ')') {
 			/* Handle case #0 */
@@ -130,7 +130,7 @@ not_a_cast:
 			ast_decref(merge);
 			if unlikely(!result)
 				goto err;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			goto done;
 		}
@@ -143,7 +143,7 @@ not_a_cast:
 		ASSERT(merge->a_type == AST_MULTIPLE);
 		ASSERT(merge->a_flag == AST_FMULTIPLE_TUPLE);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err_merge_kwlabels;
 		if (kw_labels) {
 			result = ast_action3(AST_FACTION_CALL_KW, typeexpr, merge, kw_labels);

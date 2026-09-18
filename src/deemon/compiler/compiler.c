@@ -539,7 +539,7 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 	parser_start();
 
 	/* Yield the initial token. */
-	if unlikely(yield() < 0) {
+	if (TPP_TOK_ISERR(DeeLexer_Yield(_DeeLexer_Current))) {
 		code = NULL;
 	} else {
 		/* Parse statements until the end of the source stream. */

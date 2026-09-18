@@ -81,7 +81,7 @@ create_anon_argument:
 			if (result->s_decl.l_file)
 				TPPFile_Incref(result->s_decl.l_file);
 		} else {
-			argument_name = token.t_kwd;
+			argument_name = DeeLexer_GetTokenKwd(self);
 			if (has_local_symbol(argument_name)) {
 				if (WARN(W_ARGUMENT_NAME_ALREADY_IN_USE))
 					goto err;
@@ -97,7 +97,7 @@ create_anon_argument:
 			/* Create a new symbol for the argument. */
 			result = new_local_symbol(argument_name, NULL);
 		}
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 	}
 	return result;
@@ -193,7 +193,7 @@ parse_arglist(DeeLexer *self) {
 					if likely(arg) {
 						if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 							goto err;
-						if unlikely(yield() < 0)
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 						goto parse_varargs_suffix;
 					}
@@ -205,7 +205,7 @@ parse_arglist(DeeLexer *self) {
 				loc_here(&arg->s_decl);
 				if (arg->s_decl.l_file)
 					TPPFile_Incref(arg->s_decl.l_file);
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				arg->s_flag = SYMBOL_FALLOC;
 set_arg_as_varargs_argument:
@@ -221,18 +221,18 @@ parse_varargs_suffix:
 				if unlikely(DeeLexer_GetTok(self) == '?') {
 					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 				}
 				if unlikely(DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 					if (WARN(W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 				}
 				if (DeeLexer_GetTok(self) == ':') {
 					/* Parse argument declaration information. */
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
@@ -263,7 +263,7 @@ parse_varargs_suffix:
 				} else {
 					break;
 				}
-				if (yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 			}
 
@@ -279,7 +279,7 @@ parse_varargs_suffix:
 						goto parse_varargs_suffix;
 					}
 				}
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 
 				/* Parse the argument name. */
@@ -305,7 +305,7 @@ parse_varargs_suffix:
 				goto err;
 			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
 				/* Varargs argument. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if likely(!current_basescope->bs_varargs) {
 					arg->s_flag = SYMBOL_FALLOC | symbol_flags;
@@ -325,10 +325,10 @@ parse_varargs_suffix:
 set_argument_as_local:
 				arg->s_type = SYMBOL_TYPE_LOCAL;
 				arg->s_flag = symbol_flags;
-				if (DeeLexer_GetTok(self) == '?' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == '?' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 					goto err;
 				if (DeeLexer_GetTok(self) == ':') {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
@@ -336,7 +336,7 @@ set_argument_as_local:
 				if (DeeLexer_GetTok(self) == '=')
 					goto skip_default_suffix;
 			} else if (DeeLexer_GetTok(self) == '?') { /* Optional argument */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				arg->s_type  = SYMBOL_TYPE_ARG;
 				arg->s_flag  = SYMBOL_FALLOC | symbol_flags;
@@ -352,7 +352,7 @@ set_argument_as_local:
 				                              current_basescope->bs_argc_min] = NULL;
 				++current_basescope->bs_argc_max;
 				if (DeeLexer_GetTok(self) == ':') {
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(self, arg))
 						goto err;
@@ -362,7 +362,7 @@ set_argument_as_local:
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
 						goto err;
 skip_default_suffix:
-					if unlikely(yield() < 0)
+					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
 
 					/* Parse & discard the default expression. */
@@ -373,7 +373,7 @@ skip_default_suffix:
 					goto next_argument;
 				}
 			} else if (DeeLexer_GetTok(self) == ':') { /* Declaration suffix. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if unlikely(decl_ast_parse_for_symbol(self, arg))
 					goto err;
@@ -384,7 +384,7 @@ skip_default_suffix:
 				DREF DeeObject *default_value;
 				DREF struct ast *default_expr;
 parse_default_suffix:
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				default_expr = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!default_expr)
@@ -439,7 +439,7 @@ set_arg_as_normal:
 next_argument:
 			if (DeeLexer_GetTok(self) != ',')
 				break;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 			if (DeeLexer_GetTok(self) == ')')
 				break;
@@ -535,12 +535,12 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 		/* Argument list. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags_decl;
 		if unlikely(parse_arglist(self))
 			goto err_flags_decl;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_decl;
 	} else if (!allow_missing_params) {
 		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
@@ -549,7 +549,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 
 	if (DeeLexer_GetTok(self) == ':') {
 		struct decl_ast *return_type;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_decl;
 		/* Function return type information. */
 		ASSERT(!my_decl.da_func.f_ret);
@@ -583,7 +583,7 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_decl;
 
 		/* Expression function. */
@@ -603,12 +603,12 @@ ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need
 		old_flags = TPPLexer_Current->l_flags;
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags_decl;
 		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_decl_xcode;
 		if (p_need_semi)
 			*p_need_semi = false;
@@ -701,7 +701,7 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 	if (DeeLexer_GetTok(self) == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		/* Expression function. */
 		code = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
@@ -720,12 +720,12 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 		old_flags = TPPLexer_Current->l_flags;
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_flags;
 		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode;
 		if (p_need_semi)
 			*p_need_semi = false;
@@ -820,7 +820,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if unlikely(error)
 			goto err_scope;
-		if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_scope;
 	} else {
 		/* No arguments */
@@ -831,7 +831,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 
 	if (DeeLexer_GetTok(self) == ':') {
 		struct decl_ast temp;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_scope;
 		if unlikely(decl_ast_parse(self, &temp))
 			goto err_scope;
@@ -840,7 +840,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 
 	ASSERT(DeeLexer_GetTok(self) == TOK_ARROW);
 	loc_here(&arrow_loc);
-	if (yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 
 	/* At this point, we're at the start of the lambda expression,
@@ -905,18 +905,18 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 			 * >> (..., **kwds,) -> [...][0];  // *ditto* */
 			if unlikely(!TPPLexer_SavePosition(&pos))
 				goto err;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
-			if (DeeLexer_GetTok(self) == ',' && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == ',' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 				goto err_restore;
 			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
 				if (!DeeLexer_HasTokenKwd(self))
 					goto nope_restore;
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
-				if (DeeLexer_GetTok(self) == ',' && unlikely(yield() < 0))
+				if (DeeLexer_GetTok(self) == ',' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 					goto err_restore;
 			}
 			goto check_and_consume_rparen;
@@ -930,31 +930,31 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 	for (;;) {
 		/* Special case: unnamed varargs. */
 		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 		} else {
 			/* Parse variable modifier flags. */
 			while (DeeLexer_GetTok(self) == TPP_KWD_local || DeeLexer_GetTok(self) == TPP_KWD_final || DeeLexer_GetTok(self) == TPP_KWD_varying) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
 			}
-			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 				goto err_restore;
 			if (!DeeLexer_HasTokenKwd(self))
 				goto nope_restore;
-			if unlikely(yield() < 0) /* Argument name. */
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) /* Argument name. */
 				goto err_restore;
-			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && unlikely(yield() < 0))
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
 				goto err_restore;
 		}
 		if (DeeLexer_GetTok(self) == '?') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 			if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ')')
 				goto yes_restore; /* Something like `(foo?)` is guarantied to be a paren-lambda. */
 			if (DeeLexer_GetTok(self) == ':') {
 				/* Parse argument declaration information. */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
 				if unlikely(decl_ast_skip(self))
 					goto err_restore;
@@ -965,7 +965,7 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 		}
 		if unlikely(DeeLexer_GetTok(self) == '=') {
 			struct ast *temp;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 			/* Parse & discard the default expression. */
 			temp = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
@@ -975,7 +975,7 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 		}
 		if (DeeLexer_GetTok(self) != ',')
 			break;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_restore;
 		if (DeeLexer_GetTok(self) == ')')
 			break;
@@ -983,11 +983,11 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 check_and_consume_rparen:
 	if (DeeLexer_GetTok(self) != ')')
 		goto nope_restore;
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err_restore;
 	if (DeeLexer_GetTok(self) == ':') {
 		/* Parse argument declaration information. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_restore;
 		if unlikely(decl_ast_skip(self))
 			goto err_restore;

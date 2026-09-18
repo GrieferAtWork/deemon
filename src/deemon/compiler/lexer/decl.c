@@ -1000,11 +1000,11 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	case TPP_KWD___asm:
 	case TPP_KWD___asm__: {
 		bool has_paren;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
+		if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_ASM))
 			goto err_flags;
 
 		/* Custom, user-defined encoding:
@@ -1024,13 +1024,13 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			self->da_type = DAST_NONE;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
+		if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_AFTER_ASM))
 			goto err_r;
 	}	break;
 
 	case TPP_KWD_none:
 		/* None-type. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		self->da_type  = DAST_CONST;
 		self->da_flag  = DAST_FNORMAL;
@@ -1043,7 +1043,7 @@ decl_ast_parse_unary_head(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		DREF struct ast *type_expr;
 		uint16_t old_opt_flags;
 		/* Type-of-expression declaration. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		if (DeeLexer_GetTok(lexer) == '(') {
 			type_expr = ast_parse_unaryhead(lexer,
@@ -1092,11 +1092,11 @@ err_type_expr:
 		/* Tuple type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err_flags;
 		if (!has_paren && DeeLexer_GetTok(lexer) == '(') {
 			has_paren = true;
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				goto err_flags;
 		}
 
@@ -1110,7 +1110,7 @@ err_type_expr:
 		 * `(foo, bar)` and `(foo, bar,)` are 2-element tuples. */
 		if (DeeLexer_GetTok(lexer) == ')' && !has_pack) {
 			/* Simple parenthesis. */
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				goto err_r_flags;
 			break;
 		}
@@ -1121,7 +1121,7 @@ err_type_expr:
 		memcpy(&elemv[0], self, sizeof(struct decl_ast));
 		if (DeeLexer_GetTok(lexer) == ',') {
 			for (;;) {
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 					goto err_elemv;
 				if (DeeLexer_GetTok(lexer) == ')')
 					break; /* Single-element tuple / trailing comma */
@@ -1157,7 +1157,7 @@ err_type_expr:
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if (has_paren) {
-			if (skip(')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
+			if (DeeLexer_Skip2(lexer, ')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
 				old_flags = 0;
 				goto err_elemv;
 			}
@@ -1182,7 +1182,7 @@ err_elemv:
 		/* Sequence type declaration. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err_flags;
 		decl_seq = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));
 		if unlikely(!decl_seq)
@@ -1202,7 +1202,7 @@ err_seq_0:
 				decl_ast_fini(decl_seq);
 				goto err_seq;
 			}
-			if unlikely(yield() < 0) {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
 err_elemv_0:
 				decl_ast_fini(&key_value[0]);
 				Dee_Free(key_value);
@@ -1218,11 +1218,11 @@ err_elemv_0:
 			self->da_type = DAST_SEQ;
 			self->da_flag = DAST_FNORMAL;
 			self->da_seq  = decl_seq;
-			if (skip(TPP_TOK_DOT_DOT_DOT, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
+			if (DeeLexer_Skip2(lexer, TPP_TOK_DOT_DOT_DOT, W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION))
 				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (skip('}', W_EXPECTED_RBRACE_AFTER_SEQUENCE))
+		if (DeeLexer_Skip2(lexer, '}', W_EXPECTED_RBRACE_AFTER_SEQUENCE))
 			goto err_seq_0;
 	}	break;
 
@@ -1232,11 +1232,11 @@ err_elemv_0:
 		bool has_paren;
 
 		/* N'th symbol compatibility. */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
+		if (DeeLexer_ParenBegin2(lexer, &has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_flags;
 		nth_expr = ast_parse_expr(lexer, LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)
@@ -1253,7 +1253,7 @@ err_nth:
 		if (nth_expr->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_nth;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
+		if (DeeLexer_ParenEnd2(lexer, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_nth;
 		if (DeeLexer_HasTokenKwd(lexer)) {
 			unsigned int nth_symbol = 0;
@@ -1277,7 +1277,7 @@ err_nth:
 				self->da_type = DAST_NONE;
 				self->da_flag = DAST_FNORMAL;
 			}
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				goto err_r;
 		} else {
 			ast_decref(nth_expr);
@@ -1293,11 +1293,11 @@ err_nth:
 			/* Lookup a symbol-like expression. */
 			DREF struct symbol *sym; /* Perform a regular symbol lookup. */
 			tpp_keyword *name = DeeLexer_GetTokenKwd(lexer);
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				goto err;
 			if (DeeLexer_GetTok(lexer) == TPP_KWD_from) {
 				/* `Error from deemon` - Short form of `import Error from deemon` */
-				if unlikely(yield() < 0)
+				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 					goto err;
 				sym = ast_parse_import_single_sym(lexer, name);
 			} else {
@@ -1337,7 +1337,7 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 	switch (DeeLexer_GetTok(lexer)) {
 
 	case '.':
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err_r;
 		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
 			if (WARN(W_EXPECTED_KEYWORD_AFTER_DOT))
@@ -1397,7 +1397,7 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			self->da_attr.a_base = inner_ast; /* Inherit reference. */
 			self->da_attr.a_name = attr_name; /* Inherit reference. */
 		}
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err_r;
 		break;
 
@@ -1424,7 +1424,7 @@ decl_ast_parse_alt(DeeLexer *lexer, struct decl_ast *__restrict self) {
 			goto err_r;
 		decl_ast_move(&elemv[0], self);
 		for (;;) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				goto err_elemv;
 			result = decl_ast_parse_unary(lexer, &elemv[elemc]);
 			if unlikely(result)
@@ -1514,7 +1514,7 @@ decl_ast_parse(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		goto err;
 	while (DeeLexer_GetTok(lexer) == TPP_KWD_with) {
 		struct decl_ast *inner;
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 			goto err;
 		inner = (struct decl_ast *)Dee_Mallocc(2, sizeof(struct decl_ast));
 		if unlikely(!inner)

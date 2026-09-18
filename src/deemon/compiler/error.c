@@ -110,7 +110,7 @@ print_warning_message(struct Dee_unicode_printer *__restrict _printer,
 #define MARK(x)    "`" x "'"
 #define Q(x)       MARK(x)
 #define TOK_S      MARK("%$s")
-#define TOK_A      (size_t)(token.t_end - token.t_begin), token.t_begin
+#define TOK_A      DeeLexer_GetTokenLen(_DeeLexer_Current), DeeLexer_GetTokenStart(_DeeLexer_Current)
 #define ARG(T)     va_arg(_args, T)
 #define FILENAME() (ARG(struct TPPFile *)->f_name)
 #define KWDNAME()  (ARG(struct TPPKeyword *)->k_name)
@@ -479,11 +479,11 @@ capture_compiler_location(struct TPPFile *__restrict file,
 	ASSERT(file != &TPPFile_Empty);
 	for (;;) {
 		struct TPPLCInfo info;
-		if (token.t_file == file &&
-		    token.t_begin >= file->f_begin &&
-		    token.t_begin <= file->f_end) {
+		if (TPPLexer_Current->l_token.t_file == file &&
+		    TPPLexer_Current->l_token.t_begin >= file->f_begin &&
+		    TPPLexer_Current->l_token.t_begin <= file->f_end) {
 			/* For better debug information, prefer the start of the current token. */
-			TPPFile_LCAt(file, &info, token.t_begin);
+			TPPFile_LCAt(file, &info, TPPLexer_Current->l_token.t_begin);
 		} else {
 			TPPFile_LCAt(file, &info, file->f_pos);
 		}
@@ -556,11 +556,11 @@ err:
 			result->cl_prev = extension;
 		}
 	}
-	if (token.t_file == file &&
-	    token.t_begin >= file->f_begin &&
-	    token.t_begin <= file->f_end) {
+	if (TPPLexer_Current->l_token.t_file == file &&
+	    TPPLexer_Current->l_token.t_begin >= file->f_begin &&
+	    TPPLexer_Current->l_token.t_begin <= file->f_end) {
 		/* For better debug information, prefer the start of the current token. */
-		TPPFile_LCAt(file, &info, token.t_begin);
+		TPPFile_LCAt(file, &info, TPPLexer_Current->l_token.t_begin);
 	} else {
 		TPPFile_LCAt(file, &info, file->f_pos);
 	}
@@ -584,7 +584,7 @@ get_warning_error_class(int wnum);
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
 tpp_is_reachable_file(struct TPPFile *__restrict file) {
-	struct TPPFile *iter = token.t_file;
+	struct TPPFile *iter = TPPLexer_Current->l_token.t_file;
 	/* Make sure that the given file is still valid. */
 	for (;;) {
 		if (!iter)
@@ -677,7 +677,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		TPPFile_Incref(error->ce_locs.cl_file);
 	} else {
 		/* Capture the current file location. */
-		struct TPPFile *file = token.t_file;
+		struct TPPFile *file = TPPLexer_Current->l_token.t_file;
 		while (file->f_kind == TPPFILE_KIND_EXPLICIT &&
 		       file->f_prev)
 			file = file->f_prev;
@@ -765,7 +765,7 @@ INTERN ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...) {
 	va_start(args, wnum);
 	if (ptr) {
 		struct ast_loc loc;
-		loc.l_file = token.t_file;
+		loc.l_file = TPPLexer_Current->l_token.t_file;
 		ASSERT(ptr >= loc.l_file->f_begin &&
 		       ptr <= loc.l_file->f_end);
 		TPPFile_LCAt(loc.l_file, &loc.l_lc, ptr);

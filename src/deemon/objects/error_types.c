@@ -47,12 +47,6 @@
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintptr_t */
 
-#undef token
-#undef tok
-#undef yield
-#undef yieldnbif
-#undef skip
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

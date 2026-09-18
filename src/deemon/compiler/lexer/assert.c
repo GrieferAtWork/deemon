@@ -47,7 +47,7 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	message = NULL;
 	if (DeeLexer_GetTok(self) == '(') {
@@ -65,7 +65,7 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 		}
 		if (!needs_parenthesis && DeeLexer_GetTok(self) == ',') {
 			/* The message was passed individually. */
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)
@@ -90,7 +90,7 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 		if unlikely(!result)
 			goto err;
 		if (DeeLexer_GetTok(self) == ',') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)
@@ -128,7 +128,7 @@ ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
 	loc_here(&loc);
 #endif /* !CONFIG_ASSERT_DDI_USES_EXPRESSION */
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	message = NULL;
 	if (DeeLexer_GetTok(self) == '(') {
@@ -158,7 +158,7 @@ ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 		if unlikely(!result)
 			goto err;
 		if (DeeLexer_GetTok(self) == ',') {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			message = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!message)

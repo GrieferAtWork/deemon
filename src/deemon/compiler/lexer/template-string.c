@@ -115,7 +115,7 @@ ast_parse_template_string(DeeLexer *self) {
 	(void)self;
 	loc_here(&loc);
 parse_current_token_as_template_string:
-	ASSERT(TPP_TOK_ISSTRING(tok));
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
 	ASSERT(DeeLexer_GetTokenStart(self) < DeeLexer_GetTokenEnd(self));
 	ASSERT(DeeLexer_GetTokenStart(self)[0] == '\"' ||
 	       DeeLexer_GetTokenStart(self)[0] == '\'');
@@ -145,13 +145,13 @@ parse_current_token_as_template_string:
 				goto err;
 
 			/* Parse an expression at this position. */
-			token.t_file->f_pos = (char *)text_iter;
+			TPPLexer_Current->l_token.t_file->f_pos = (char *)text_iter;
 
 			/* Parse the expression. */
 			old_flags = TPPLexer_Current->l_flags;
-			text_iter = (char *)0 + (text_iter - token.t_file->f_begin); /* To deal with a buffer realloc() */
+			text_iter = (char *)0 + (text_iter - TPPLexer_Current->l_token.t_file->f_begin); /* To deal with a buffer realloc() */
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_EXTENDFILE;       /* So we don't loose our file position */
-			if unlikely(yield() < 0) {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
 err_old_flags:
 				TPPLexer_Current->l_flags = old_flags;
 				goto err;
@@ -160,7 +160,7 @@ err_old_flags:
 			if unlikely(!expr_ast)
 				goto err_old_flags;
 			TPPLexer_Current->l_flags = old_flags;
-			text_iter = token.t_file->f_begin + (text_iter - (char *)0); /* To deal with a buffer realloc() */
+			text_iter = TPPLexer_Current->l_token.t_file->f_begin + (text_iter - (char *)0); /* To deal with a buffer realloc() */
 
 			/* Ensure that TPP has loaded the file until the next unescaped quote
 			 * This is required because tpp normally sees something like:
@@ -190,33 +190,34 @@ err_old_flags:
 
 			for (;;) {
 				int error;
-				text_end = find_unescape_quote(token.t_file->f_pos,
-				                               token.t_file->f_end,
+				text_end = find_unescape_quote(TPPLexer_Current->l_token.t_file->f_pos,
+				                               TPPLexer_Current->l_token.t_file->f_end,
 				                               quote);
 				if (text_end)
 					break;
-				text_iter     = (char *)0 + (text_iter - token.t_file->f_begin);
-				token.t_begin = (char *)0 + (token.t_begin - token.t_file->f_begin);
-				token.t_end   = (char *)0 + (token.t_end - token.t_file->f_begin);
-				error         = TPPFile_NextChunk(token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
-				text_iter     = token.t_file->f_begin + (text_iter - (char *)0);
-				token.t_begin = token.t_file->f_begin + (token.t_begin - (char *)0);
-				token.t_end   = token.t_file->f_begin + (token.t_end - (char *)0);
+				text_iter                         = (char *)0 + (text_iter - TPPLexer_Current->l_token.t_file->f_begin);
+				TPPLexer_Current->l_token.t_begin = (char *)0 + (TPPLexer_Current->l_token.t_begin - TPPLexer_Current->l_token.t_file->f_begin);
+				TPPLexer_Current->l_token.t_end   = (char *)0 + (TPPLexer_Current->l_token.t_end - TPPLexer_Current->l_token.t_file->f_begin);
+				error                             = TPPFile_NextChunk(TPPLexer_Current->l_token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
+				text_iter                         = TPPLexer_Current->l_token.t_file->f_begin + (text_iter - (char *)0);
+				TPPLexer_Current->l_token.t_begin = TPPLexer_Current->l_token.t_file->f_begin + (TPPLexer_Current->l_token.t_begin - (char *)0);
+				TPPLexer_Current->l_token.t_end   = TPPLexer_Current->l_token.t_file->f_begin + (TPPLexer_Current->l_token.t_end - (char *)0);
 				if unlikely(error < 0)
 					goto err_expr_ast;
 				if unlikely(error == 0) {
 					if (parser_warnatptrf(text_iter, W_STRING_TERMINATED_BY_EOF))
 						goto err_expr_ast;
-					text_end = token.t_file->f_end;
+					text_end = TPPLexer_Current->l_token.t_file->f_end;
 					break;
 				}
 			}
 
-			if (tok == '!' || tok == ':') {
+			if (DeeLexer_GetTok(self) == '!' ||
+			    DeeLexer_GetTok(self) == ':') {
 				char const *rbrace;
 				/* TODO: This needs to support recursive '{' + '}' pairs! */
 				/* TODO: This needs to support \-escape sequences! */
-				rbrace = (char const *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
+				rbrace = (char const *)memchr(TPPLexer_Current->l_token.t_begin, '}', (size_t)(text_end - TPPLexer_Current->l_token.t_begin));
 				if unlikely(!rbrace) {
 					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
 						goto err_expr_ast;
@@ -226,23 +227,23 @@ err_old_flags:
 				/* The remainder of the expression is the format-argument */
 				if unlikely(Dee_unicode_printer_put8(&format_printer, '{'))
 					goto err_expr_ast;
-				if unlikely(Dee_unicode_printer_print(&format_printer, token.t_begin,
-				                                      (size_t)(rbrace - token.t_begin)) < 0)
+				if unlikely(Dee_unicode_printer_print(&format_printer, TPPLexer_Current->l_token.t_begin,
+				                                      (size_t)(rbrace - TPPLexer_Current->l_token.t_begin)) < 0)
 					goto err_expr_ast;
 				if unlikely(Dee_unicode_printer_put8(&format_printer, '}'))
 					goto err_expr_ast;
 				if (*rbrace == '}')
 					++rbrace;
-				token.t_begin = (char *)rbrace;
-			} else if (tok == '}') {
+				TPPLexer_Current->l_token.t_begin = (char *)rbrace;
+			} else if (DeeLexer_GetTok(self) == '}') {
 				if unlikely(Dee_unicode_printer_print(&format_printer, "{}", 2) < 0)
 					goto err_expr_ast;
-				++token.t_begin;
+				++TPPLexer_Current->l_token.t_begin;
 			} else {
 				char *rbrace;
 				if unlikely(WARN(W_TEMPLATE_STRING_UNEXPECTED_TOKEN))
 					goto err_expr_ast;
-				rbrace = (char *)memchr(token.t_begin, '}', (size_t)(text_end - token.t_begin));
+				rbrace = (char *)memchr(TPPLexer_Current->l_token.t_begin, '}', (size_t)(text_end - TPPLexer_Current->l_token.t_begin));
 				if (!rbrace) {
 					if (parser_warnatptrf(text_iter - 1, W_TEMPLATE_STRING_UNMATCHED_LBRACE))
 						goto err_expr_ast;
@@ -250,19 +251,19 @@ err_old_flags:
 				} else {
 					++rbrace;
 				}
-				token.t_begin = rbrace;
+				TPPLexer_Current->l_token.t_begin = rbrace;
 			}
 
 			/* Trick the current token into becoming a string until the next unescaped quote. */
-			token.t_id  = (tok_t)quote; /* TOK_STRING or TOK_CHAR */
-			token.t_end = (char *)text_end;
+			TPPLexer_Current->l_token.t_id  = (tok_t)quote; /* TOK_STRING or TOK_CHAR */
+			TPPLexer_Current->l_token.t_end = (char *)text_end;
 			if (*text_end == quote)
-				++token.t_end; /* Skip over unescaped quote */
-			token.t_file->f_pos = token.t_end;
+				++TPPLexer_Current->l_token.t_end; /* Skip over unescaped quote */
+			TPPLexer_Current->l_token.t_file->f_pos = TPPLexer_Current->l_token.t_end;
 
 			/* Continue parsing the template-string after the closing '}' */
-			text_iter   = token.t_begin;
-			flush_start = token.t_begin;
+			text_iter   = TPPLexer_Current->l_token.t_begin;
+			flush_start = TPPLexer_Current->l_token.t_begin;
 
 			/* Append `expr_ast` to `format_argv` */
 			ASSERT(format_argc <= format_arga);
@@ -446,7 +447,7 @@ after_escaped_putc:
 	if unlikely(Dee_unicode_printer_print(&format_printer, flush_start,
 	                                  (size_t)(text_end - flush_start)) < 0)
 		goto err;
-	if unlikely(yield() < 0)
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err; /* Consume the template string token. */
 
 	/* Check if the next token is another template string. - If so, join the two! */
@@ -455,7 +456,7 @@ after_escaped_putc:
 	    (*DeeLexer_GetTokenEnd(self) == '\"' ||
 	     (*DeeLexer_GetTokenEnd(self) == '\'' && !DeeLexer_Has(self, CHARACTER_LITERALS)))) {
 		/* Join adjacent template strings */
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err; /* Consume the template string token. */
 		goto parse_current_token_as_template_string;
 	}

@@ -74,11 +74,11 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		bool has_paren;
 		DREF struct ast *ff_branch;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IF))
+		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 
 		/* NOTE: Allow variable declarations within the condition. */
@@ -90,7 +90,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_IF))
+		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
 
 		/* Parse the conditional expression. */
@@ -101,7 +101,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		/* Parse an optional false-branch. */
 		ff_branch = NULL;
 		if (DeeLexer_GetTok(self) == TPP_KWD_else) {
-			if unlikely(yield() < 0)
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r_other;
 			ff_branch = parse_generator_loop(self, ddi_loc);
 			if unlikely(!ff_branch)
@@ -122,22 +122,22 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	case TPP_KWD_do: {
 		bool has_paren;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		result = parse_generator_loop(self, &loc);
 		if unlikely(!result)
 			goto err;
-		if (skip(TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO))
+		if (DeeLexer_Skip2(self, TPP_KWD_while, W_EXPECTED_WHILE_AFTER_DO))
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
 		other = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!other)
 			goto err_r_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r_other;
 
 		/* Pack together the loop expression. */
@@ -152,13 +152,13 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 	case TPP_KWD_while: {
 		bool has_paren;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 
 		/* Parse the while-condition. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_flags;
 
 		/* NOTE: Allow variable declarations within the condition. */
@@ -170,7 +170,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 
 		/* Parse the generator loop. */
@@ -192,11 +192,11 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 		DREF struct ast *iter_or_next;
 		int32_t type;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
+		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 
 		/* Parse the for-header. */
@@ -213,7 +213,7 @@ parse_generator_loop(DeeLexer *self, struct ast_loc *__restrict ddi_loc) {
 			ast_decref(iter_or_next);
 			iter_or_next = merge;
 		}
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
+		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_for_loop;
 
 		/* Parse the loop expression. */
@@ -264,11 +264,11 @@ err_for_loop:
 		DREF struct ast *foreach_iter;
 		DREF struct ast *foreach_loop;
 		loc_here(&loc);
-		if unlikely(yield() < 0)
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
+		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		foreach_elem = ast_parse_comma(self,
 		                               AST_COMMA_ALLOWVARDECLS,
@@ -276,13 +276,13 @@ err_for_loop:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
-		if (skip(':', W_EXPECTED_COLON_AFTER_FOREACH))
+		if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_FOREACH))
 			goto err_foreach_elem_flags;
 		foreach_iter = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if (paren_end(has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
+		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_foreach_iter;
 
 		/* Parse the generator loop expression. */

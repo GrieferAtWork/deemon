@@ -3117,9 +3117,10 @@ token_str(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	result = get_token_name(tok, token.t_kwd);
+	result = get_token_name(DeeLexer_GetTok(_DeeLexer_Current),
+	                        DeeLexer_GetTokenKwd(_DeeLexer_Current));
 	if unlikely(result == ITER_DONE)
-		result = DeeString_Chr((uint32_t)tok); /* Shouldn't normally happen (but may after a partial reset) */
+		result = DeeString_Chr((uint32_t)DeeLexer_GetTok(_DeeLexer_Current)); /* Shouldn't normally happen (but may after a partial reset) */
 	COMPILER_END();
 	return result;
 err:
@@ -3351,7 +3352,8 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
 	if (TPP_TOK_ISINT(tpp_lexer_gettok(&self->cw_compiler->cp_lexer.dl_lexer))) {
-		result = DeeInt_FromString(token.t_begin, (size_t)(token.t_end - token.t_begin),
+		result = DeeInt_FromString((char const *)DeeLexer_GetTokenStart(_DeeLexer_Current),
+		                           DeeLexer_GetTokenLen(_DeeLexer_Current),
 		                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED));
 	} else if (TPP_TOK_ISSTRING_SQUOTE(tpp_lexer_gettok(&self->cw_compiler->cp_lexer.dl_lexer))) {
 		tint_t value;
@@ -3391,7 +3393,8 @@ token_hash(DeeCompilerWrapperObject *__restrict self) {
 	Dee_hash_t result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	result = get_token_namehash(tok, token.t_kwd);
+	result = get_token_namehash(DeeLexer_GetTok(_DeeLexer_Current),
+	                            DeeLexer_GetTokenKwd(_DeeLexer_Current));
 	COMPILER_END();
 	return result;
 err:
@@ -3412,7 +3415,7 @@ token_compare_eq(DeeCompilerWrapperObject *self, DeeObject *other) {
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
 	other_id = get_token_from_str(other_utf8, false);
-	result   = tok == other_id;
+	result   = DeeLexer_GetTok(_DeeLexer_Current) == other_id;
 	COMPILER_END();
 	return result ? 0 : 1;
 err:

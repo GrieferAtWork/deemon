@@ -1874,41 +1874,38 @@ compare_escaped_rev(char const *lf_escaped_text_end,
 PRIVATE WUNUSED int DCALL get_comment_type(void) {
 	char const *comment_start;
 	char const *comment_end;
-	if (!TPP_TOK_ISCOMMENT(tok))
+	if (!TPP_TOK_ISCOMMENT(TPPLexer_Current->l_token.t_id))
 		goto is_other;
-	comment_start = token.t_begin + 1;
-	comment_end   = token.t_end;
-	while (SKIP_WRAPLF(comment_start, comment_end))
-		;
-	if (*token.t_begin == '/') {
+	comment_start = TPPLexer_Current->l_token.t_begin + 1;
+	comment_end   = TPPLexer_Current->l_token.t_end;
+	comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+	                                                          (tpp_char const *)comment_end);
+	if (*TPPLexer_Current->l_token.t_begin == '/') {
 		++comment_start;
 		if (comment_start[-1] == '*') {
-			while (SKIP_WRAPLF(comment_start, comment_end))
-				;
+			comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+			                                                          (tpp_char const *)comment_end);
 			if (compare_escaped(comment_start, dformat_code_head))
 				return COMMENT_TYPE_BLOCK_START;
 			comment_start = compare_escaped(comment_start, dformat_stop);
 			if (comment_start) {
 				/* Strictly check for slash-start end-comments. - No whitespace allowed! */
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+				comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				--comment_end; /* /*[[[end]]]* */
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+				comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				--comment_end; /* /*[[[end]]] */
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+								comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				if (comment_start == comment_end)
 					return COMMENT_TYPE_BLOCK_END;
 			}
 		} else {
 			ASSERT(comment_start[-1] == '/');
-			while (SKIP_WRAPLF(comment_start, comment_end))
-				;
+			comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+			                                                          (tpp_char const *)comment_end);
 			goto check_single_line;
 		}
 	} else {
-		ASSERT(*token.t_begin == '#');
+		ASSERT(*TPPLexer_Current->l_token.t_begin == '#');
 check_single_line:
 		if (compare_escaped(comment_start, dformat_code_head))
 			return COMMENT_TYPE_BLOCK_START;
@@ -1997,12 +1994,13 @@ err:
  * in order to re-sync it with the updated source file. */
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 try_exec_format_impl(DeeObject *__restrict stream,
-                     char *filename, char *ddi_filename,
-                     char *format_code_start,
-                     char *format_code_end,
+                     char const *filename,
+                     char const *ddi_filename,
+                     char const *format_code_start,
+                     char const *format_code_end,
                      line_t format_code_start_line,
                      col_t format_code_start_col) {
-	struct TPPFile *file = token.t_file;
+	struct TPPFile *file = TPPLexer_Current->l_token.t_file;
 	bool is_file_relative_code;
 	int error;
 	Dee_pos_t override_start_pos;
@@ -2011,16 +2009,16 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	bool has_leading_linefeed;
 	DREF DeeBytesObject *script_result;
 	unsigned int scan_recursion;
-	ASSERT(TPP_TOK_ISCOMMENT(tok));
-	override_start_ptr    = token.t_end;
+	ASSERT(TPP_TOK_ISCOMMENT(TPPLexer_Current->l_token.t_id));
+	override_start_ptr    = TPPLexer_Current->l_token.t_end;
 	is_file_relative_code = (format_code_start >= file->f_begin &&
 	                         format_code_start < file->f_end);
 	if (is_file_relative_code) {
 		PTR_isub(char, format_code_start, (uintptr_t)file->f_begin);
 		PTR_isub(char, format_code_end, (uintptr_t)file->f_begin);
 	}
-	PTR_isub(char, token.t_begin, (uintptr_t)file->f_begin);
-	PTR_isub(char, token.t_end, (uintptr_t)file->f_begin);
+	PTR_isub(char, TPPLexer_Current->l_token.t_begin, (uintptr_t)file->f_begin);
+	PTR_isub(char, TPPLexer_Current->l_token.t_end, (uintptr_t)file->f_begin);
 	PTR_isub(char, override_start_ptr, (uintptr_t)file->f_begin);
 	/* Load the remainder of the current file. */
 	do {
@@ -2030,8 +2028,8 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		PTR_iadd(char, format_code_start, (uintptr_t)file->f_begin);
 		PTR_iadd(char, format_code_end, (uintptr_t)file->f_begin);
 	}
-	PTR_iadd(char, token.t_begin, (uintptr_t)file->f_begin);
-	PTR_iadd(char, token.t_end, (uintptr_t)file->f_begin);
+	PTR_iadd(char, TPPLexer_Current->l_token.t_begin, (uintptr_t)file->f_begin);
+	PTR_iadd(char, TPPLexer_Current->l_token.t_end, (uintptr_t)file->f_begin);
 	PTR_iadd(char, override_start_ptr, (uintptr_t)file->f_begin);
 	if (error < 0)
 		goto err;
@@ -2043,7 +2041,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	scan_recursion = 0;
 	for (;;) {
 		tok_t next = TPPLexer_YieldRaw();
-		while (next == '#' && token.t_file->f_kind != TPPFILE_KIND_MACRO && TPPLexer_AtStartOfLine()) {
+		while (next == '#' && TPPLexer_Current->l_token.t_file->f_kind != TPPFILE_KIND_MACRO && TPPLexer_AtStartOfLine()) {
 			/* Skip preprocessor directive */
 			uint32_t old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
@@ -2062,7 +2060,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			goto done; /* Block-end not found prior to end-of-file.
 			            * TODO: Emit a warning, telling the user that the end is missing. */
 
-		if (token.t_file == file) {
+		if (TPPLexer_Current->l_token.t_file == file) {
 			int type = get_comment_type();
 			if (type == COMMENT_TYPE_BLOCK_START) {
 				/* Another block-start found prior to the end of the current.
@@ -2077,7 +2075,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 			}
 		}
 	}
-	override_end_ptr = token.t_begin;
+	override_end_ptr = TPPLexer_Current->l_token.t_begin;
 
 	/* Do some special checking to skip a single leading line-feed
 	 * within the data block which is going to get overwritten.
@@ -2313,9 +2311,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 try_exec_format(DeeObject *__restrict stream,
-                char *filename, char *ddi_filename,
-                char *format_code_start,
-                char *format_code_end,
+                char const *filename,
+                char const *ddi_filename,
+                char const *format_code_start,
+                char const *format_code_end,
                 line_t format_code_start_line,
                 col_t format_code_start_col) {
 	int result;
@@ -2436,42 +2435,39 @@ do_set_ddi_name:
 	/* Scan for comment tokens. */
 	parser_start();
 	for (;;) {
-		char *comment_start;
-		char *comment_end;
+		char const *comment_start;
+		char const *comment_end;
 		struct TPPLCInfo lc;
-		if (!TPP_TOK_ISCOMMENT(tok))
+		if (!TPP_TOK_ISCOMMENT(TPPLexer_Current->l_token.t_id))
 			goto next_token; /* Not a comment. */
-		if (token.t_file != file)
+		if (TPPLexer_Current->l_token.t_file != file)
 			goto next_token; /* Located in a different file. */
 
 		/* Found a token that may be what we're looking for. */
-		comment_start = token.t_begin + 1;
-		comment_end   = token.t_end;
-		while (SKIP_WRAPLF(comment_start, comment_end))
-			;
-		if (token.t_begin[0] == '/') {
+		comment_start = TPPLexer_Current->l_token.t_begin + 1;
+		comment_end   = TPPLexer_Current->l_token.t_end;
+		comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+		                                                          (tpp_char const *)comment_end);
+		if (TPPLexer_Current->l_token.t_begin[0] == '/') {
 			if (*comment_start == '*') {
 				/* Multi-line comment. */
 				++comment_start;
-				while (SKIP_WRAPLF(comment_start, comment_end))
-					;
+				comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+				                                                          (tpp_char const *)comment_end);
 				comment_start = compare_escaped(comment_start, dformat_code_head);
 				if (!comment_start)
 					goto next_token;
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+				comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				--comment_end; /* /*foo* */
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+				comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				--comment_end; /* /*foo */
-				while (SKIP_WRAPLF_REV(comment_end, comment_start))
-					;
+				comment_end = (char const *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)comment_start, (tpp_char const *)comment_end);
 				comment_end = compare_escaped_rev(comment_end,
 				                                  COMPILER_STREND(dformat_code_tail),
 				                                  dformat_code_tail);
 				if (!comment_end)
 					goto next_token;
-				TPPFile_LCAt(token.t_file, &lc, comment_start);
+				TPPFile_LCAt(TPPLexer_Current->l_token.t_file, &lc, comment_start);
 				if (try_exec_format((DeeObject *)filestream,
 				                    filename,
 				                    ddi_filename,
@@ -2484,8 +2480,8 @@ do_set_ddi_name:
 				/* Single-line comment (allow continuation in the next line) */
 				ASSERT(*comment_start == '/');
 				++comment_start;
-				while (SKIP_WRAPLF(comment_start, comment_end))
-					;
+				comment_start = (char const *)DeeLexer_PreparseSkipBseFwd(_DeeLexer_Current, (tpp_char const *)comment_start,
+				                                                          (tpp_char const *)comment_end);
 				comment_start = compare_escaped(comment_start, dformat_code_head);
 				if (!comment_start)
 					goto next_token;
@@ -2500,7 +2496,7 @@ do_set_ddi_name:
 			}
 		} else {
 			/* Assembly-style comment. */
-			ASSERT(token.t_begin[0] == '#');
+			ASSERT(TPPLexer_Current->l_token.t_begin[0] == '#');
 			comment_start = compare_escaped(comment_start, dformat_code_head);
 			if (!comment_start)
 				goto next_token;
@@ -2514,7 +2510,7 @@ do_set_ddi_name:
 			}
 		}
 next_token:
-		if (yield() <= 0)
+		if (TPPLexer_Yield() <= 0)
 			break;
 	}
 	Dee_Decref(filestream);

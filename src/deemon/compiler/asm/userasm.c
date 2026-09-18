@@ -2453,7 +2453,7 @@ create_assembly_file:
 			                            (self->a_assembly.as_num_i +
 			                             self->a_assembly.as_num_o);
 			parser_start();
-			if unlikely(yield() < 0) {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(_DeeLexer_Current))) {
 				result = -1;
 			} else {
 				/* TODO: Use nested lexer under `CONFIG_EXPERIMENTAL_USE_TPP3` */
