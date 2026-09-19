@@ -450,12 +450,14 @@ symbol_fini(struct symbol *__restrict self) {
 
 	case SYMBOL_TYPE_AMBIG: {
 		size_t i;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (self->s_ambig.a_decl2.l_file)
 			TPPFile_Decref(self->s_ambig.a_decl2.l_file);
 		for (i = 0; i < self->s_ambig.a_declc; ++i) {
 			if (self->s_ambig.a_declv[i].l_file)
 				TPPFile_Decref(self->s_ambig.a_declv[i].l_file);
 		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		Dee_Free(self->s_ambig.a_declv);
 	}	break;
 
@@ -478,8 +480,10 @@ delsym(struct symbol *__restrict self)
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 {
 	DeeCompiler_DelItem(self);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (self->s_decl.l_file)
 		TPPFile_Decref(self->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	symbol_fini(self);
 	sym_free(self);
 }
@@ -919,7 +923,11 @@ INTERN WUNUSED int (DCALL classscope_push)(void) {
 #endif /* DAST_NONE != 0 */
 	this_sym->s_type  = SYMBOL_TYPE_THIS;
 	this_sym->s_scope = &new_scope->cs_scope;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	this_sym->s_name  = tpp_builtin_getkeyword_byid(TPP_KWD_this);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	this_sym->s_name  = TPPLexer_LookupKeyword(STR_this, 4, 0);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	ASSERT(this_sym->s_name);
 	new_scope->cs_scope.s_class = new_scope;
 	new_scope->cs_scope.s_prev  = current_scope; /* Inherit reference */
@@ -1029,9 +1037,12 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 		for (i = 0; i < count; ++i) {
 			struct symbol *sym, *other_sym;
 			other_sym = other->bs_argv[i];
-			sym = other_sym->s_name == &TPPKeyword_Empty
-			      ? new_unnamed_symbol()
-			      : new_local_symbol(other_sym->s_name, &other_sym->s_decl);
+			if (tpp_keyword_getlen(other_sym->s_name) == 0) {
+				sym = new_unnamed_symbol();
+			} else {
+				sym = new_local_symbol(DeeLexer_OfCompiler(DeeCompiler_Current),
+				                       other_sym->s_name, &other_sym->s_decl);
+			}
 			if unlikely(!sym)
 				goto err;
 			sym->s_type = SYMBOL_TYPE_ARG;
@@ -1087,7 +1098,7 @@ link_forward_symbol(struct symbol *__restrict self) {
 		symbol_incref(outer_match);
 		return 0;
 	}
-	if (WARNSYM(self, W_UNKNOWN_VARIABLE, SYMBOL_NAME(self)))
+	if (WARNSYM(self, TPP_W_UNKNOWN_VARIABLE, SYMBOL_NAME(self)))
 		goto err;
 	self->s_type = SYMBOL_TYPE_NONE; /* Prevent the assembler from crashing later... */
 	return 0;
@@ -1158,8 +1169,11 @@ rehash_realloc:
 	return 0;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN WUNUSED NONNULL((1)) bool DCALL
-is_reserved_symbol_name(tpp_keyword const *__restrict name) {
+DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name) {
+	(void)self;
+
 	/* Quick check: any keywords not registered as builtin are allowed. */
 	if (TPP_ISUSERKEYWORD(tpp_keyword_getid(name)))
 		return false;
@@ -1265,17 +1279,19 @@ is_reserved_symbol_name(tpp_keyword const *__restrict name) {
 	/* Default case: the builtin keyword is reserved. */
 	return true;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
-INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_symbol(unsigned int mode, tpp_keyword const *__restrict name,
+INTERN WUNUSED NONNULL((1, 3)) struct symbol *DCALL
+lookup_symbol(DeeLexer *self, unsigned int mode,
+              tpp_keyword const *__restrict name,
               struct ast_loc *warn_loc) {
 	struct symbol *result, **bucket;
 	DeeScopeObject *iter = current_scope;
 	ASSERT(iter != NULL);
 	/* Warn if a reserved name is used for a symbol. */
-	if (is_reserved_symbol_name(name)) {
-		if (WARNAT(warn_loc, W_RESERVED_SYMBOL_NAME, tpp_keyword_getcstr(name)))
+	if (DeeLexer_IsIdentifier(self, name)) {
+		if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_RESERVED_SYMBOL_NAME, tpp_keyword_getcstr(name)))
 			goto err;
 	}
 	if ((mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VLOCAL) {
@@ -1291,13 +1307,13 @@ seach_single:
 			if (result) {
 				if (mode & LOOKUP_SYM_STACK) {
 					if (result->s_type != SYMBOL_TYPE_STACK) {
-						if (WARNAT(warn_loc, W_EXPECTED_STACK_VARIABLE, result))
+						if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_EXPECTED_STACK_VARIABLE, result))
 							goto err;
 					}
 				}
 				if (mode & LOOKUP_SYM_STATIC) {
 					if (result->s_type != SYMBOL_TYPE_STATIC) {
-						if (WARNAT(warn_loc, W_EXPECTED_STATIC_VARIABLE, result))
+						if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_EXPECTED_STATIC_VARIABLE, result))
 							goto err;
 					}
 				}
@@ -1369,18 +1385,18 @@ seach_single:
 	} while ((iter = iter->s_prev) != NULL);
 create_variable:
 	if (!(mode & LOOKUP_SYM_ALLOWDECL)) {
-		if (WARNAT(warn_loc, W_UNKNOWN_VARIABLE, tpp_keyword_getcstr(name)))
+		if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_UNKNOWN_VARIABLE, tpp_keyword_getcstr(name)))
 			goto err;
 	}
 	if ((mode & LOOKUP_SYM_VGLOBAL) &&
 	    current_scope != (DeeScopeObject *)current_rootscope) {
-		if (WARNAT(warn_loc, W_DECLARING_GLOBAL_IN_NONROOT, tpp_keyword_getcstr(name)))
+		if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_DECLARING_GLOBAL_IN_NONROOT, tpp_keyword_getcstr(name)))
 			goto err;
 	}
 	/* Warn if a new variable is declared implicitly outside the global scope. */
 	if (!(mode & LOOKUP_SYM_VMASK) &&
 	    current_scope != (DeeScopeObject *)current_rootscope) {
-		if (WARNAT(warn_loc, W_DECLARING_IMPLICIT_VARIABLE, tpp_keyword_getcstr(name)))
+		if (DeeLexer_WarnfLoc(self, warn_loc, TPP_W_DECLARING_IMPLICIT_VARIABLE, tpp_keyword_getcstr(name)))
 			goto err;
 	}
 
@@ -1420,11 +1436,19 @@ create_variable:
 		}
 	}
 add_result_to_iter:
-	if (++iter->s_mapc > iter->s_mapa) {
+	if (iter->s_mapc >= iter->s_mapa) {
 		/* Must rehash this scope. */
 		if unlikely(rehash_scope(iter))
 			goto err_r;
 	}
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if (warn_loc) {
+		result->s_decl = *warn_loc;
+	} else {
+		if (DeeLexer_GetLoc(self, &result->s_decl))
+			goto err_r;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if (warn_loc) {
 		if (!tpp_is_reachable_file(warn_loc->l_file))
 			goto set_default_location;
@@ -1437,8 +1461,10 @@ set_default_location:
 	}
 	if (result->s_decl.l_file)
 		TPPFile_Incref(result->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Insert the new symbol. */
+	++iter->s_mapc;
 	ASSERT(iter->s_mapa != 0);
 	bucket = &iter->s_map[tpp_keyword_getid(name) % iter->s_mapa];
 	result->s_next  = *bucket;
@@ -1452,9 +1478,10 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_nth(unsigned int nth, tpp_keyword const *__restrict name) {
+INTERN WUNUSED NONNULL((1, 3)) struct symbol *DCALL
+lookup_nth(DeeLexer *self, unsigned int nth, tpp_keyword const *__restrict name) {
 	DeeScopeObject *iter;
+	(void)self;
 	/* Make sure to return `NULL` when `nth` was zero. */
 	if unlikely(!nth--)
 		goto nope;
@@ -1481,8 +1508,8 @@ nope:
 }
 
 
-INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
-new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc) {
+INTERN WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
+new_local_symbol(DeeLexer *self, tpp_keyword const *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	result = sym_alloc();
 	if unlikely(!result)
@@ -1492,20 +1519,20 @@ new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc) {
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_name = name;
-	if (++current_scope->s_mapc > current_scope->s_mapa) {
+	if (current_scope->s_mapc >= current_scope->s_mapa) {
 		if unlikely(rehash_scope(current_scope))
 			goto err_r;
 	}
-	ASSERT(current_scope->s_mapa != 0);
-	bucket = &current_scope->s_map[tpp_keyword_getid(name) % current_scope->s_mapa];
-	result->s_next = *bucket;
-	*bucket = result;
-	result->s_decltype.da_type = DAST_NONE;
-	result->s_flag   = SYMBOL_FNORMAL;
-	result->s_nread  = 0;
-	result->s_nwrite = 0;
-	result->s_nbound = 0;
-	result->s_scope  = current_scope;
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if (loc) {
+		result->s_decl = *loc;
+	} else {
+		if (DeeLexer_GetLoc(self, &result->s_decl))
+			goto err_r;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	(void)self;
 	if (loc) {
 		if (!tpp_is_reachable_file(loc->l_file))
 			goto set_default_location;
@@ -1516,6 +1543,19 @@ set_default_location:
 	}
 	if (result->s_decl.l_file)
 		TPPFile_Incref(result->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+	++current_scope->s_mapc;
+	ASSERT(current_scope->s_mapa != 0);
+	bucket = &current_scope->s_map[tpp_keyword_getid(name) % current_scope->s_mapa];
+	result->s_next = *bucket;
+	*bucket = result;
+	result->s_decltype.da_type = DAST_NONE;
+	result->s_flag   = SYMBOL_FNORMAL;
+	result->s_nread  = 0;
+	result->s_nwrite = 0;
+	result->s_nbound = 0;
+	result->s_scope  = current_scope;
 	return result;
 err_r:
 	--current_scope->s_mapc;
@@ -1534,15 +1574,15 @@ INTERN WUNUSED struct symbol *DCALL new_unnamed_symbol(void) {
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_decltype.da_type = DAST_NONE;
-	result->s_name        = &TPPKeyword_Empty;
-	result->s_next        = current_scope->s_del;
-	current_scope->s_del  = result;
-	result->s_flag        = SYMBOL_FNORMAL;
-	result->s_nread       = 0;
-	result->s_nwrite      = 0;
-	result->s_nbound      = 0;
-	result->s_scope       = current_scope;
-	result->s_decl.l_file = NULL;
+	result->s_name       = tpp_builtin_getkeyword_empty();
+	result->s_next       = current_scope->s_del;
+	current_scope->s_del = result;
+	result->s_flag       = SYMBOL_FNORMAL;
+	result->s_nread      = 0;
+	result->s_nwrite     = 0;
+	result->s_nbound     = 0;
+	result->s_scope      = current_scope;
+	ast_loc_init_empty(&result->s_decl);
 	return result;
 err:
 	return NULL;
@@ -1559,24 +1599,23 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope) {
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_decltype.da_type = DAST_NONE;
-	result->s_name        = &TPPKeyword_Empty;
-	result->s_next        = scope->s_del;
-	scope->s_del          = result;
-	result->s_flag        = SYMBOL_FNORMAL;
-	result->s_nread       = 0;
-	result->s_nwrite      = 0;
-	result->s_nbound      = 0;
-	result->s_scope       = scope;
-	result->s_decl.l_file = NULL;
+	result->s_name   = tpp_builtin_getkeyword_empty();
+	result->s_next   = scope->s_del;
+	scope->s_del     = result;
+	result->s_flag   = SYMBOL_FNORMAL;
+	result->s_nread  = 0;
+	result->s_nwrite = 0;
+	result->s_nbound = 0;
+	result->s_scope  = scope;
+	ast_loc_init_empty(&result->s_decl);
 	return result;
 err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
-new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
-                          tpp_keyword const *__restrict name,
-                          struct ast_loc *loc) {
+INTERN WUNUSED NONNULL((1, 2, 3)) struct symbol *DFCALL
+new_local_symbol_in_scope(DeeLexer *self, DeeScopeObject *__restrict scope,
+                          tpp_keyword const *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	result = sym_alloc();
 	if unlikely(!result)
@@ -1586,20 +1625,19 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	result->s_name = name;
-	if (++scope->s_mapc > scope->s_mapa) {
+	if (scope->s_mapc >= scope->s_mapa) {
 		if unlikely(rehash_scope(scope))
 			goto err_r;
 	}
-	ASSERT(scope->s_mapa != 0);
-	result->s_decltype.da_type = DAST_NONE;
-	bucket = &scope->s_map[tpp_keyword_getid(name) % scope->s_mapa];
-	result->s_next = *bucket;
-	*bucket = result;
-	result->s_flag   = SYMBOL_FNORMAL;
-	result->s_nread  = 0;
-	result->s_nwrite = 0;
-	result->s_nbound = 0;
-	result->s_scope  = scope;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if (loc) {
+		result->s_decl = *loc;
+	} else {
+		if (DeeLexer_GetLoc(self, &result->s_decl))
+			goto err_r;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	(void)self;
 	if (loc) {
 		if (!tpp_is_reachable_file(loc->l_file))
 			goto set_default_location;
@@ -1610,6 +1648,19 @@ set_default_location:
 	}
 	if (result->s_decl.l_file)
 		TPPFile_Incref(result->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+	++scope->s_mapc;
+	ASSERT(scope->s_mapa != 0);
+	result->s_decltype.da_type = DAST_NONE;
+	bucket = &scope->s_map[tpp_keyword_getid(name) % scope->s_mapa];
+	result->s_next = *bucket;
+	*bucket = result;
+	result->s_flag   = SYMBOL_FNORMAL;
+	result->s_nread  = 0;
+	result->s_nwrite = 0;
+	result->s_nbound = 0;
+	result->s_scope  = scope;
 	return result;
 err_r:
 	--scope->s_mapc;
@@ -1646,7 +1697,6 @@ get_local_symbol(tpp_keyword const *__restrict name) {
 INTERN NONNULL((1)) void DCALL
 del_local_symbol(struct symbol *__restrict sym) {
 	struct symbol **p_bucket, *bucket;
-	ASSERT(sym->s_name != &TPPKeyword_Empty);
 	ASSERT(sym->s_scope->s_mapa != 0);
 	p_bucket = &sym->s_scope->s_map[tpp_keyword_getid(sym->s_name) % sym->s_scope->s_mapa];
 	while ((bucket = *p_bucket, bucket && bucket != sym))
@@ -1683,7 +1733,8 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
 	tpp_keyword const *keyword;
 	if (!scope->s_mapa)
 		goto done;
-	keyword = TPPLexer_LookupKeyword(name, name_length, 0);
+	keyword = DeeLexer_GetKeyword(DeeLexer_OfCompiler(DeeCompiler_Current),
+	                              (tpp_char const *)name, name_length);
 	if (!keyword)
 		goto done;
 	result = scope->s_map[tpp_keyword_getid(keyword) % scope->s_mapa];

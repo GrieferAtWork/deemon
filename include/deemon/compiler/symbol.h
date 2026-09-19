@@ -1068,8 +1068,9 @@ INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict 
  *                   When NULL, the current location is used instead.
  * @return: * :      A new reference to the symbol requested.
  * @return: NULL:    An error occurred. */
-INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_symbol(unsigned int mode, tpp_keyword const *__restrict name,
+INTDEF WUNUSED NONNULL((1, 3)) struct symbol *DCALL
+lookup_symbol(DeeLexer *self, unsigned int mode,
+              tpp_keyword const *__restrict name,
               struct ast_loc *warn_loc);
 #define LOOKUP_SYM_NORMAL    0x0000
 #define LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
@@ -1085,13 +1086,8 @@ lookup_symbol(unsigned int mode, tpp_keyword const *__restrict name,
 
 /* Lookup the nth instance of `name` (starting at 1 for the first)
  * Return `NULL` if no such instance exists or if nth is 0 */
-INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_nth(unsigned int nth, tpp_keyword const *__restrict name);
-
-/* Check if `name` is a reserved symbol name. */
-INTDEF WUNUSED NONNULL((1)) bool DCALL
-is_reserved_symbol_name(tpp_keyword const *__restrict name);
-
+INTDEF WUNUSED NONNULL((1, 3)) struct symbol *DCALL
+lookup_nth(DeeLexer *self, unsigned int nth, tpp_keyword const *__restrict name);
 
 /* Lookup or create a label, given its name in the current base-scope. */
 INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
@@ -1135,7 +1131,7 @@ INTDEF WUNUSED int DCALL link_forward_symbols(void);
  *       only one of which will actually be addressable.
  * NOTE: The caller is also required to initialize the returned
  *       symbol, who's class is undefined up until that point. */
-INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc);
+INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DFCALL new_local_symbol(DeeLexer *self, tpp_keyword const *__restrict name, struct ast_loc *loc);
 INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL get_local_symbol(tpp_keyword const *__restrict name);
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
 
@@ -1149,8 +1145,9 @@ new_unnamed_symbol(void);
 INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL
 new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope);
 
-INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
-new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct symbol *DFCALL
+new_local_symbol_in_scope(DeeLexer *self,
+                          DeeScopeObject *__restrict scope,
                           tpp_keyword const *__restrict name,
                           struct ast_loc *loc);
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL

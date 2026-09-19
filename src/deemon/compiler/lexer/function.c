@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, DeeLexer_IsIdentifier, new_local_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
@@ -48,7 +48,7 @@ skip_argument_name(DeeLexer *self) {
 			if (has_local_symbol(DeeLexer_GetTokenKwd(self))) {
 				if (DeeLexer_Warnf(self, TPP_W_ARGUMENT_NAME_ALREADY_IN_USE))
 					goto err;
-			} else if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+			} else if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
 				                   DeeLexer_GetTokenKwdCStr(self)))
 					goto err;
@@ -80,8 +80,10 @@ create_anon_argument:
 				goto err;
 			if (DeeLexer_GetLoc(self, &result->s_decl))
 				goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 			if (result->s_decl.l_file)
 				TPPFile_Incref(result->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		} else {
 			argument_name = DeeLexer_GetTokenKwd(self);
 			if (has_local_symbol(argument_name)) {
@@ -91,14 +93,14 @@ create_anon_argument:
 			}
 
 			/* Check if the argument name is a reserved identifier. */
-			if (is_reserved_symbol_name(argument_name)) {
+			if (DeeLexer_IsIdentifier(self, argument_name)) {
 				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
 				                   tpp_keyword_getcstr(argument_name)))
 					goto err;
 			}
 
 			/* Create a new symbol for the argument. */
-			result = new_local_symbol(argument_name, NULL);
+			result = new_local_symbol(self, argument_name, NULL);
 		}
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -529,7 +531,7 @@ ast_parse_function_noscope(DeeLexer *self, tpp_keyword const *name, bool *p_need
 		current_basescope->bs_name = name;
 
 		/* Create a new symbol to allow for function-self-referencing. */
-		funcself_symbol = new_local_symbol(name, name_loc);
+		funcself_symbol = new_local_symbol(self, name, name_loc);
 		if unlikely(!funcself_symbol)
 			goto err;
 		funcself_symbol->s_type = SYMBOL_TYPE_MYFUNC;
@@ -788,14 +790,14 @@ ast_parse_function_java_lambda(DeeLexer *self,
 				TPPFile_Incref(arg->s_decl.l_file);
 		} else {
 			/* Check if the argument name is a reserved identifier. */
-			if (is_reserved_symbol_name(first_argument_name)) {
+			if (DeeLexer_IsIdentifier(self, first_argument_name)) {
 				if (DeeLexer_Warnf(self, TPP_W_RESERVED_ARGUMENT_NAME,
 				                   tpp_keyword_getcstr(first_argument_name)))
 					goto err_scope;
 			}
 
 			/* Create a new symbol for the argument. */
-			arg = new_local_symbol(first_argument_name, first_argument_loc);
+			arg = new_local_symbol(self, first_argument_name, first_argument_loc);
 		}
 		if unlikely(!arg)
 			goto err_scope;

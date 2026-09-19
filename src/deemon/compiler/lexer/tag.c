@@ -261,7 +261,7 @@ LOCAL WUNUSED NONNULL((1, 3)) int DCALL
 convert_dot_tag_namespace(DeeLexer *self, size_t tag_name_len,
                           char const *__restrict tag_name_str) {
 	if unlikely(DeeLexer_GetTok(self) == ':' ||
-	            DeeLexer_GetTok(self) == TOK_COLON_COLON) {
+	            DeeLexer_GetTok(self) == TPP_TOK_COLON_COLON) {
 		if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
 		                   tag_name_len, tag_name_str))
 			goto err;

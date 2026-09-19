@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>             /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/compiler/ast.h>      /* ast */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
@@ -821,7 +822,7 @@ INTERN ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, 
 	return result;
 }
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_ERROR_C */

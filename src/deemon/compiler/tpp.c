@@ -157,9 +157,8 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 
 
 
-INTERN WUNUSED NONNULL((1, 2)) int DFCALL
-_DeeLexer_ParenBegin(DeeLexer *__restrict self,
-                     bool *__restrict p_has_paren) {
+INTERN WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+_DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren) {
 	tpp_token_id tok = DeeLexer_GetTok(self);
 	ASSERT(tok != '(');
 	if (tok == TPP_KWD_pack) {
@@ -168,30 +167,31 @@ _DeeLexer_ParenBegin(DeeLexer *__restrict self,
 			tok = tpp_lexer_tryskip_raw(&self->dl_lexer, TPP_TOK_OFCHAR('('),
 			                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
 			if (TPP_TOK_ISERR(tok))
-				goto err;
+				goto done;
 			if (tok != '(') {
-				if (DeeLexer_Warnf(self, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
-					goto err;
+				tpp_errno error;
+				error = tpp_lexer_warnf(&self->dl_lexer, TPP_W_PACK_USED_OUTSIDE_OF_MACRO);
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
 			}
 		}
 		tok = DeeLexer_Yield(self);
-		if unlikely(TPP_TOK_ISERR(tok))
-			goto err;
+		if (TPP_TOK_ISERR(tok))
+			goto done;
 		*p_has_paren = tok == '(';
 		if (*p_has_paren) {
 			tok = DeeLexer_Yield(self);
-			if unlikely(TPP_TOK_ISERR(tok))
-				goto err;
+			if (TPP_TOK_ISERR(tok))
+				goto done;
 		}
 	} else {
 		tok = DeeLexer_Skip(self, TPP_TOK_OFCHAR('('));
-		if unlikely(TPP_TOK_ISERR(tok))
-			goto err;
+		if (TPP_TOK_ISERR(tok))
+			goto done;
 		*p_has_paren = tok == TPP_TOK_OFCHAR('(');
 	}
-	return 0;
-err:
-	return -1;
+done:
+	return tok;
 }
 
 /* Fill the given AST location with the current source position.
@@ -204,10 +204,7 @@ DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info) {
 	if (filename && tpp_file_getfilenamestr(file)) {
 		/* Transform into a keyword */
 		tpp_size filename_len = tpp_strlen(filename);
-		tpp_hash filename_hash = tpp_hashof((tpp_char const *)filename, filename_len);
-		tpp_keyword const *filename_kwd;
-		filename_kwd = tpp_lexer_newkeyword(&self->dl_lexer, (tpp_char const *)filename,
-		                                    filename_len, filename_hash);
+		tpp_keyword const *filename_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)filename, filename_len);
 		if unlikely(!filename_kwd)
 			goto err;
 		filename = tpp_keyword_getcstr(filename_kwd);
@@ -217,6 +214,33 @@ DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info) {
 	return 0;
 err:
 	return -1;
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_DeeLexer_WarnfLoc(DeeLexer *self, void const *loc,
+                   ptrdiff_t loc_offset, tpp_warning_id id, ...) {
+	int result;
+	va_list args;
+	va_start(args, id);
+	result = _DeeLexer_VWarnfLoc(self, loc, loc_offset, id, args);
+	va_end(args);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_DeeLexer_VWarnfLoc(DeeLexer *self, void const *loc,
+                    ptrdiff_t loc_offset,
+                    tpp_warning_id id, va_list args) {
+	if (loc) {
+		struct ast_loc const *warn_here;
+		warn_here = (struct ast_loc const *)((char *)loc + loc_offset);
+		if (!ast_loc_isempty(warn_here)) {
+			return DeeLexer_VWarnfLc(self, ast_loc_getname(warn_here),
+			                         ast_loc_getlc(warn_here), id, args);
+		}
+	}
+	return DeeLexer_VWarnf(self, id, args);
 }
 
 DECL_END

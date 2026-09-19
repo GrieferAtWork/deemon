@@ -297,7 +297,7 @@ err_var_symbol:
 		if (ISERR(current))
 			goto err;
 		if ((lookup_mode & JIT_LOOKUP_SYM_ALLOWDECL) && self->jl_tok == JIT_KEYWORD &&
-		    (!(mode & JIT_AST_COMMA_NOSUFFIXKWD) /* TODO: || !is_reserved_symbol_name(token.t_kwd)*/)) {
+		    (!(mode & JIT_AST_COMMA_NOSUFFIXKWD) /* TODO: || !DeeLexer_IsIdentifier(token.t_kwd)*/)) {
 			/* C-style variable declarations. */
 			RETURN_TYPE args;
 #ifdef JIT_EVAL

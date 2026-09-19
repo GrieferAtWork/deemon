@@ -38,10 +38,19 @@ DECL_BEGIN
 
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-PRIVATE tpp_errno TPPCALL accept_non_exclaim_cb(void *arg, tpp_lexer *self) {
-	if (tpp_lexer_gettok(self) == '!')
+PRIVATE tpp_errno TPPCALL
+tpp_lexer_peek_accept_non_exclaim(void *arg, tpp_lexer *self) {
+	(void)arg;
+	if (tpp_lexer_gettok(self) == '!' ||
+	    TPP_TOK_MC_STARTSWITH_EXCLAIM(tpp_lexer_gettok(self)))
 		return TPP_ENOENT;
 	return TPP_EOK;
+}
+
+INTERN WUNUSED NONNULL((1)) tpp_token_id TPPCALL
+tpp_peek_next_non_exclaim(tpp_lexer *__restrict self) {
+	return tpp_lexer_peek_raw(self, TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+	                          NULL, &tpp_lexer_peek_accept_non_exclaim, NULL);
 }
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
@@ -74,8 +83,7 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 		 * expression. However if it isn't, then it is a cast expression. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 		tpp_token_id next_token_id;
-		next_token_id = tpp_lexer_peek_raw(&self->dl_lexer, TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
-		                                   NULL, &accept_non_exclaim_cb, NULL);
+		next_token_id = tpp_peek_next_non_exclaim(&self->dl_lexer);
 		if (TPP_TOK_ISERR(next_token_id))
 			goto err;
 		if (next_token_id == TPP_KWD_is ||

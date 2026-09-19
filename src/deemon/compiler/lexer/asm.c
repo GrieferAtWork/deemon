@@ -46,6 +46,23 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE WUNUSED NONNULL((1)) TPP_REF tpp_string *DFCALL
+DeeLexer_ParseString(DeeLexer *self) {
+	tpp_errno error;
+	TPP_REF tpp_string *result;
+	error = tpp_lexer_parsestring(&self->dl_lexer, &result,
+	                              TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	if (TPP_ISERR(error))
+		return NULL;
+	return result;
+}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define DeeLexer_ParseString(self) ((void)(self), TPPLexer_ParseString())
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
 #define OPERAND_TYPE_OUTPUT 0
 #define OPERAND_TYPE_INPUT  1
 #define OPERAND_TYPE_LABEL  2
@@ -162,7 +179,7 @@ asm_parse_operands(DeeLexer *self,
 			} else {
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND))
 					goto err;
-				label_value = lookup_label(&TPPKeyword_Empty);
+				label_value = lookup_label(tpp_builtin_getkeyword_empty());
 				if unlikely(!label_value)
 					goto err;
 			}
@@ -176,13 +193,15 @@ asm_parse_operands(DeeLexer *self,
 		} else {
 			bool has_paren;
 			if (DeeLexer_IsStringToken(self)) {
-				operand_type = TPPLexer_ParseString();
+				operand_type = DeeLexer_ParseString(self);
 				if unlikely(!operand_type)
 					goto err;
 			} else {
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE))
 					goto err;
-				operand_type = TPPString_NewEmpty();
+				operand_type = tpp_string_newempty();
+				if unlikely(!operand_type)
+					goto err;
 			}
 			if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
 				goto err_type;
@@ -244,7 +263,7 @@ asm_parse_clobber(DeeLexer *self) {
 	TPP_REF tpp_string *name;
 	uint16_t result = 0;
 	while (DeeLexer_IsStringToken(self)) {
-		name = TPPLexer_ParseString();
+		name = DeeLexer_ParseString(self);
 		if unlikely(!name)
 			goto err;
 		if (tpp_string_len(name) < COMPILER_LENOF(clobber_descs[0].cd_name)) {
@@ -281,7 +300,7 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) bool DCALL is_colon(DeeLexer *self) {
 	if (TPP_TOK_MC_STARTSWITH_COLON(DeeLexer_GetTok(self))) {
 		/* Convert to a `:`-token and setup the lexer to re-parse
 		 * the remainder of the current token as part of the next. */
-		DeeLexer_SetTokenId(self, ':');
+		DeeLexer_SetTokenId(self, TPP_TOK_OFCHAR(':'));
 		DeeLexer_SetTokenEnd(self, DeeLexer_GetTokenStart(self) + 1);
 		return true;
 	}
@@ -289,6 +308,7 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) bool DCALL is_colon(DeeLexer *self) {
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 struct tpp_string_printer {
 	struct TPPString *sp_string; /* [0..1][owned] String buffer. */
 	size_t            sp_length; /* Used string length. */
@@ -374,7 +394,7 @@ PRIVATE TPP_REF tpp_string *
 (TPPCALL tpp_string_printer_pack)(struct tpp_string_printer *__restrict self) {
 	TPP_REF tpp_string *result = (struct TPPString *)self->sp_string;
 	if unlikely(!result)
-		return TPPString_NewEmpty();
+		return tpp_string_newempty();
 	/* Deallocate unused memory. */
 	if likely(self->sp_length != result->s_size) {
 		DREF struct TPPString *reloc;
@@ -393,24 +413,43 @@ PRIVATE TPP_REF tpp_string *
 	DBG_memset(self, 0xcc, sizeof(*self));
 	return result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 
 PRIVATE WUNUSED NONNULL((1)) TPP_REF tpp_string *DCALL
 parse_brace_text(DeeLexer *self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_string_builder builder;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct tpp_string_printer printer;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	unsigned int brace_recursion   = 0;
 	unsigned int paren_recursion   = 0;
 	unsigned int bracket_recursion = 0;
-	uint32_t old_flags;
 	bool is_after_linefeed = true;
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	char const *last_file = NULL;
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct TPPFile *last_file = NULL;
+	uint32_t old_flags;
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_string_builder_init(&builder);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	printer.sp_string = NULL;
 	printer.sp_length = 0;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_lexer_pushfeatures(&self->dl_lexer);
+	tpp_lexer_alltokens_pushon(&self->dl_lexer);
+	/* Disable directory+macros inside here! */
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_MACROS);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS |
 	                              TPPLEXER_FLAG_WANTSPACE |
@@ -421,10 +460,20 @@ parse_brace_text(DeeLexer *self) {
 	                              TPPLEXER_FLAG_NO_DIRECTIVES |
 	                              TPPLEXER_FLAG_NO_MACROS |
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	ASSERT(DeeLexer_GetTok(self) == '{');
 	for (;;) {
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_printer;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+err_builder_flags:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			tpp_lexer_alltokens_break(&self->dl_lexer);
+			tpp_lexer_breakfeatures(&self->dl_lexer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+			TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
+			TPPLexer_Current->l_flags |= old_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			goto err_builder;
+		}
 		switch (DeeLexer_GetTok(self)) {
 		case 0:
 			goto done;
@@ -465,16 +514,26 @@ parse_brace_text(DeeLexer *self) {
 				struct ast_loc loc;
 				Dee_ssize_t error;
 				if (DeeLexer_GetLoc(self, &loc))
-					goto err_printer;
+					goto err_builder_flags;
 
 				/* Insert an automatic DDI directive, describing
 				 * the location of this instruction token. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-				if (loc.l_name == last_file)
+				if (ast_loc_getname(&loc) == last_file) {
+					error = DeeFormat_Printf(&tpp_string_builder_print, &builder,
+					                         ".ddi %d,%d;\t",
+					                         ast_loc_getline(&loc) + 1,
+					                         ast_loc_getcol(&loc) + 1);
+				} else {
+					last_file = ast_loc_getname(&loc);
+					error = DeeFormat_Printf(&tpp_string_builder_print, &builder,
+					                         ".ddi %q,%d,%d;\t",
+					                         last_file,
+					                         ast_loc_getline(&loc) + 1,
+					                         ast_loc_getcol(&loc) + 1);
+				}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-				if (loc.l_file == last_file)
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
-				{
+				if (loc.l_file == last_file) {
 					error = DeeFormat_Printf(&tpp_string_printer_print, &printer,
 					                         ".ddi %d,%d;\t",
 					                         ast_loc_getline(&loc) + 1,
@@ -482,38 +541,53 @@ parse_brace_text(DeeLexer *self) {
 				} else {
 					last_file = loc.l_file;
 					error = DeeFormat_Printf(&tpp_string_printer_print, &printer,
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-					                         ".ddi %q,%d,%d;\t",
-					                         ast_loc_getname(loc),
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 					                         ".ddi %$q,%d,%d;\t",
 					                         loc.l_file->f_namesize,
 					                         loc.l_file->f_name,
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 					                         ast_loc_getline(&loc) + 1,
 					                         ast_loc_getcol(&loc) + 1);
 				}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				if unlikely(error < 0)
-					goto err_printer;
+					goto err_builder_flags;
 			}
 default_case:
 			is_after_linefeed = false;
 			break;
 		}
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if unlikely(tpp_string_builder_doprint(&builder,
+		                                       DeeLexer_GetTokenStart(self),
+		                                       DeeLexer_GetTokenLen(self)))
+			goto err_builder_flags;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(TPP_PrintToken((printer_t)&tpp_string_printer_append, &printer))
-			goto err_printer;
+			goto err_builder_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 done:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_lexer_alltokens_pop(&self->dl_lexer);
+	tpp_lexer_popfeatures(&self->dl_lexer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
 	TPPLexer_Current->l_flags |= old_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 	/* Yield the final `}`-token. */
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-		goto err_printer;
+		goto err_builder;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	return tpp_string_builder_pack(&builder);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return tpp_string_printer_pack(&printer);
-err_printer:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+err_builder:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_string_builder_fini(&builder);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	Dee_Free(printer.sp_string);
-	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
-	TPPLexer_Current->l_flags |= old_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return NULL;
 }
 
@@ -591,7 +665,7 @@ err_nolf:
 	if (DeeLexer_GetLoc(self, &loc))
 		goto err_nolf;
 	if (DeeLexer_IsStringToken(self)) {
-		text = TPPLexer_ParseString();
+		text = DeeLexer_ParseString(self);
 		if unlikely(!text)
 			goto err_nolf;
 	} else if (DeeLexer_GetTok(self) == '{') {
@@ -639,13 +713,13 @@ err_nolf:
 		 * Assembly is terminated once a `}` token matching the initial `{`
 		 * is found. */
 		text = parse_brace_text(self);
-		if unlikely(!text)
-			goto err_nolf;
 	} else {
 		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_AFTER_ASM))
 			goto err_nolf;
-		text = TPPString_NewEmpty();
+		text = tpp_string_newempty();
 	}
+	if unlikely(!text)
+		goto err_nolf;
 
 #ifdef CONFIG_LANGUAGE_NO_ASM
 	/* When user-assembly is disabled, only empty (or

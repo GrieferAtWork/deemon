@@ -28,7 +28,7 @@
 #include <deemon/compiler/ast.h>     /* ASSERT_AST, AST_*, ast, ast_*, class_member */
 #include <deemon/compiler/doctext.h> /* doctext_compile */
 #include <deemon/compiler/lexer.h>   /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags */
-#include <deemon/compiler/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
+#include <deemon/compiler/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, DeeLexer_IsIdentifier, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>           /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>             /* Dee_None */
@@ -339,8 +339,8 @@ class_maker_newcattr(DeeLexer *lexer, struct class_maker *__restrict self,
 			continue;
 
 		/* Duplicate name */
-		if (DeeLexer_WarnfLoc(lexer, loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-		                      DeeString_SIZE(name), DeeString_STR(name)))
+		if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_CLASS_MEMBER_ALREADY_DEFINED,
+		                      DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -391,8 +391,8 @@ class_maker_newiattr(DeeLexer *lexer, struct class_maker *__restrict self,
 			continue;
 
 		/* Duplicate name */
-		if (DeeLexer_WarnfLoc(lexer, loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-		                      DeeString_SIZE(name), DeeString_STR(name)))
+		if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_CLASS_MEMBER_ALREADY_DEFINED,
+		                      DeeString_STR(name)))
 			goto err;
 		Dee_Decref(result->ca_name);
 		Dee_XClear(result->ca_doc);
@@ -432,7 +432,7 @@ class_maker_bindoperator(DeeLexer *lexer, struct class_maker *__restrict self,
 		if (result->co_addr != addr) {
 			/* Warn about a duplicate operator */
 			struct Dee_opinfo const *info = DeeTypeType_GetOperatorById(&DeeType_Type, name);
-			if (DeeLexer_WarnfLoc(lexer, loc, W_OPERATOR_WAS_ALREADY_DEFINED,
+			if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_OPERATOR_WAS_ALREADY_DEFINED,
 			                      info ? info->oi_sname : "?"))
 				goto err;
 		}
@@ -577,7 +577,7 @@ class_maker_addmember(DeeLexer *lexer,
 		size_t addr = **pp_usage_counter;
 		/* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
 		if unlikely(addr > UINT16_MAX - 2) {
-			PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
+			PERRAT(loc, TPP_W_TOO_MANY_CLASS_MEMBER,
 			       tpp_keyword_getcstr(self->cm_classsym->s_name));
 			goto err;
 		}
@@ -594,14 +594,13 @@ class_maker_addmember(DeeLexer *lexer,
 		} else if (result->s_type == SYMBOL_TYPE_FWD) {
 			/* Define a forward-referenced class symbol. */
 		} else {
-			PERRAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-			       tpp_keyword_getlen(name),
+			PERRAT(loc, TPP_W_CLASS_MEMBER_ALREADY_DEFINED,
 			       tpp_keyword_getcstr(name));
 			goto err;
 		}
 	} else {
 		/* Create a new local symbol for this member. */
-		result = new_local_symbol(name, loc);
+		result = new_local_symbol(lexer, name, loc);
 		if unlikely(!result)
 			goto err;
 	}
@@ -793,7 +792,7 @@ class_maker_addoperator(DeeLexer *lexer, struct class_maker *__restrict self,
 	/* Allocate a new class member address for the operator. */
 	addr = self->cm_desc->cd_cmemb_size;
 	if unlikely(addr == UINT16_MAX) {
-		PERRAST(callback, W_TOO_MANY_CLASS_MEMBER,
+		PERRAST(callback, TPP_W_TOO_MANY_CLASS_MEMBER,
 		        tpp_keyword_getcstr(self->cm_classsym->s_name));
 		goto err;
 	}
@@ -822,7 +821,7 @@ class_maker_deloperator(DeeLexer *lexer, struct class_maker *__restrict self,
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
 		if unlikely(self->cm_null_member == (uint16_t)-1) {
-			return PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
+			return PERRAT(loc, TPP_W_TOO_MANY_CLASS_MEMBER,
 			              tpp_keyword_getcstr(self->cm_classsym->s_name));
 		}
 		++self->cm_desc->cd_cmemb_size;
@@ -1155,7 +1154,7 @@ done_superargs:
 			DREF struct ast *initializer_ast, *store_ast, *symbol_ast;
 
 			/* Lookup the initializer symbol. */
-			init_symbol = lookup_symbol(LOOKUP_SYM_NORMAL, initializer_name, &loc);
+			init_symbol = lookup_symbol(lexer, LOOKUP_SYM_NORMAL, initializer_name, &loc);
 			if unlikely(!init_symbol)
 				goto err;
 
@@ -1418,7 +1417,7 @@ got_callback_id:
 			if unlikely(yield_semicolon(self) < 0)
 				goto err;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err;
 		}
 	}
@@ -1538,7 +1537,7 @@ err_basev:
 		DeeLexer_NoLf_Pop(self);
 		if unlikely(!maker.cm_base)
 			goto err;
-		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 	} else {
 		/* Since this is the only place that `extends` may appear at,
@@ -1570,7 +1569,7 @@ err_basev:
 		}
 
 		/* Automatically use `Object` as base class when `-fold-style-classes` is active. */
-		if (DeeLexer_Has(self, OLD_STYLE_CLASSES)) {
+		if (DeeLexer_GetExtension(self, TPP_EXT_OLD_STYLE_CLASSES)) {
 			DREF DeeModuleObject *rt_d200_module;
 			PRIVATE char const old_base[] = "OldUserClass";
 			struct Dee_module_symbol *oldbase_sym;
@@ -1622,7 +1621,7 @@ use_object_base:
 		maker.cm_desc->cd_name = name_str; /* Inherit reference. */
 	}
 	DeeLexer_EnableLf_Push(self);
-	if (DeeLexer_Skip2(self, '{', W_EXPECTED_LBRACE_AFTER_CLASS)) {
+	if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('{'), TPP_W_EXPECTED_LBRACE_AFTER_CLASS)) {
 err_lbrace_flags:
 		DeeLexer_EnableLf_Break(self);
 		goto err;
@@ -1630,7 +1629,7 @@ err_lbrace_flags:
 
 	/* Create the symbol to assign the class to. */
 	if (create_symbol) {
-		maker.cm_classsym = lookup_symbol(symbol_mode, name, NULL);
+		maker.cm_classsym = lookup_symbol(self, symbol_mode, name, NULL);
 		if unlikely(!maker.cm_classsym)
 			goto err_lbrace_flags;
 		if (classscope_push())
@@ -1858,15 +1857,19 @@ define_operator:
 						tpp_keyword const *member_keyword;
 						struct Dee_class_attribute *attr;
 						struct symbol *member_symbol;
+						char const *attr_name_utf8;
 						attr = &maker.cm_desc->cd_iattr_list[i];
 						if (!attr->ca_name)
 							continue;
 						if (!class_attribute_is_nonfinal_public(attr->ca_flag))
 							continue;
+						attr_name_utf8 = DeeString_AsUtf8(attr->ca_name);
+						if unlikely(!attr_name_utf8)
+							goto err_lbrace_flags;
+
 						/* Find the declaration location of this symbol. */
-						member_keyword = TPPLexer_LookupKeyword(DeeString_STR(attr->ca_name),
-						                                        DeeString_SIZE(attr->ca_name),
-						                                        0);
+						member_keyword = DeeLexer_GetKeyword(self, (tpp_char const *)attr_name_utf8,
+						                                     WSTR_LENGTH(attr_name_utf8));
 						if unlikely(!member_keyword)
 							continue;
 						member_symbol = get_local_symbol(member_keyword);
@@ -1970,7 +1973,11 @@ err_lbrace_flags_anno:
 				 * >>         yield 30;
 				 * >>     }
 				 * >> }; */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				operator_name_kwd = tpp_builtin_getkeyword_byid(TPP_KWD_for);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				operator_name_kwd = TPPLexer_LookupKeyword("for", 3, 0);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				ASSERT(operator_name_kwd != NULL);
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_lbrace_flags_anno;
@@ -2057,7 +2064,7 @@ err_lbrace_flags_anno_operator_ast_ddi_yield_function_temp:
 					*p++ = '_';
 					*p++ = '_';
 					*p++ = '\0';
-					operator_name_kwd = TPPLexer_LookupKeyword(opname, opnamelen + 4, 1);
+					operator_name_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)opname, opnamelen + 4);
 					if unlikely(!operator_name_kwd)
 						goto err_lbrace_flags_anno;
 				}
@@ -2153,7 +2160,7 @@ yield_semi_after_operator:
 					if unlikely(yield_semicolon(self) < 0)
 						goto err_lbrace_flags;
 				} else {
-					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 						goto err_lbrace_flags;
 				}
 			}
@@ -2204,7 +2211,7 @@ yield_semi_after_operator:
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err_lbrace_flags;
 			member_name = DeeLexer_GetTokenKwd(self);
-			if (is_reserved_symbol_name(member_name)) {
+			if (DeeLexer_IsIdentifier(self, member_name)) {
 				if (DeeLexer_Warnf(self, TPP_W_RESERVED_MEMBER_NAME,
 				                   tpp_keyword_getcstr(member_name)))
 					goto err_lbrace_flags;
@@ -2400,7 +2407,7 @@ err_lbrace_flags_anno_lparen_flags:
 					if unlikely(parse_arglist(self))
 						goto err_lbrace_flags_anno_lparen_flags;
 					DeeLexer_NoLf_Pop(self);
-					if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_ARGLIST))
 						goto err_lbrace_flags_anno;
 				} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 					struct ast_loc packloc;
@@ -2421,7 +2428,7 @@ err_lbrace_flags_anno_pack_flags:
 							goto err_lbrace_flags_anno_pack_flags;
 						if unlikely(parse_arglist(self))
 							goto err_lbrace_flags_anno_pack_flags;
-						if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+						if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_ARGLIST))
 							goto err_lbrace_flags_anno_pack_flags;
 					} else {
 						if (!ast_loc_isempty(&packloc)) {
@@ -2558,7 +2565,7 @@ err_lbrace_flags_decl:
 					/* Parse the property declaration. */
 					if unlikely(parse_property(self, prop_callbacks, &maker, is_class_member))
 						goto err_lbrace_flags;
-					if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_PROPERTY))
 						goto err_lbrace_flags_property;
 
 					/* Keep track of VTABLE slots used by the property and its callbacks. */
@@ -2640,7 +2647,7 @@ err_lbrace_flags_property:
 					if unlikely(yield_semicolon(self) < 0)
 						goto err_lbrace_flags;
 				} else {
-					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 						goto err_lbrace_flags;
 				}
 				break;
@@ -2742,7 +2749,7 @@ do_yield_semicolon:
 					if unlikely(yield_semicolon(self) < 0)
 						goto err_lbrace_flags;
 				} else {
-					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 						goto err_lbrace_flags;
 				}
 			}

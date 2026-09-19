@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>     /* AST_*, ast, ast_* */
 #include <deemon/compiler/doctext.h> /* doctext_compile */
 #include <deemon/compiler/lexer.h>   /* ASTLIST_INIT, AST_COMMA_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, ast_*, astlist, current_tags, maybe_expression_begin, maybe_expression_begin_peek */
-#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, is_reserved_symbol_name, lookup_symbol, new_local_symbol, symbol, symbol_incref */
+#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, DeeLexer_IsIdentifier, lookup_symbol, new_local_symbol, symbol, symbol_incref */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>           /* DREF, Dee_Incref */
 #include <deemon/string.h>           /* DeeStringObject */
@@ -176,7 +176,7 @@ continue_modifier:
 			goto err;
 		goto next_modifier;
 
-	case TOK_COLON_COLON:
+	case TPP_TOK_COLON_COLON:
 		/* Backwards compatibility with deemon 100+ */
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
@@ -409,7 +409,7 @@ next_expr:
 				symbol_mode |= LOOKUP_SYM_FINAL;
 
 			/* Create the symbol that will be used by the function. */
-			function_symbol = lookup_symbol(symbol_mode, function_name, &loc);
+			function_symbol = lookup_symbol(self, symbol_mode, function_name, &loc);
 			if unlikely(!function_symbol)
 				goto err;
 		}
@@ -484,6 +484,15 @@ err_function_anno:
 			if (DeeLexer_HasTokenKwd(self)) {
 				/* If the next token is a `:`, then we`re currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_token_id next_token;
+				next_token = tpp_lexer_peek_raw(&self->dl_lexer, TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+				                                NULL, NULL, NULL);
+				if (TPP_TOK_ISERR(next_token))
+					goto err;
+				if (next_token == ':')
+					goto done_expression_nocurrent;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				char const *next = peek_next_token(NULL);
 				if unlikely(!next)
 					goto err;
@@ -494,9 +503,12 @@ err_function_anno:
 					if (*next != ':' && *next != '=')
 						goto done_expression_nocurrent;
 				}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			}
-			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) /* foo(**bar) --> Invoke using `bar` for keyword arguments. */
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
+				/* foo(**bar) --> Invoke using `bar` for keyword arguments. */
 				goto done_expression_nocurrent;
+			}
 		}
 		if (!IS_SYMBOL_NAME(DeeLexer_GetTok(self)) &&
 		    (lookup_mode & LOOKUP_SYM_VMASK) != LOOKUP_SYM_VDEFAULT) {
@@ -510,7 +522,7 @@ err_function_anno:
 		if unlikely(!current)
 			goto err;
 		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && DeeLexer_HasTokenKwd(self) &&
-		    (!(mode & AST_COMMA_NOSUFFIXKWD) || !is_reserved_symbol_name(DeeLexer_GetTokenKwd(self)))) {
+		    (!(mode & AST_COMMA_NOSUFFIXKWD) || !DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self)))) {
 			/* C-style variable declarations. */
 			struct symbol *var_symbol;
 			DREF struct ast *args, *merge;
@@ -532,7 +544,7 @@ err_function_anno:
 					goto err_current;
 			} else {
 				/* Create a new symbol for the initialized variable. */
-				var_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+				var_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 				if unlikely(!var_symbol)
 					goto err_current;
 				if (lookup_mode & LOOKUP_SYM_FINAL) {
@@ -692,7 +704,7 @@ do_parse_paren_arg_list:
 				DeeLexer_NoLf_Pop(self);
 				if unlikely(!args)
 					goto err_current;
-				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_CALL)) {
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
 					ast_decref(args);
 					goto err_current;
@@ -972,7 +984,7 @@ done_expression_nomerge:
 					goto err_clear_current_only;
 			} while (DeeLexer_GetTok(self) == '\n');
 		} else {
-			if unlikely(DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION)) {
 err_clear_current_only:
 				ast_decref(current);
 				current = NULL;

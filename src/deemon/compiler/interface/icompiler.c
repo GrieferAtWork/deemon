@@ -84,6 +84,10 @@ compiler_init(DeeCompilerObject *__restrict self,
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer_Init(&self->cp_lexer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!TPPLexer_Init(&self->cp_lexer.dl_lexer))
 		goto err_scope;
 #ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
@@ -92,9 +96,12 @@ compiler_init(DeeCompilerObject *__restrict self,
 #endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 	self->cp_lexer.dl_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 	parser_errors_init(&self->cp_errors);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 err_scope:
 	Dee_Decref(self->cp_scope);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 err:
 	return -1;
 }
@@ -242,7 +249,12 @@ ast_new(DeeLexer *self, DeeScopeObject *__restrict scope, DeeObject *loc)
 	result = ast_alloc();
 #endif /* NDEBUG */
 	if likely(result) {
-		if unlikely(set_astloc_from_obj(self, loc, result)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if unlikely(get_astloc_from_obj(self, loc, &result->a_ddi))
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		if unlikely(set_astloc_from_obj(self, loc, result))
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		{
 			ast_free(result);
 			result = NULL;
 		} else {
@@ -251,8 +263,7 @@ ast_new(DeeLexer *self, DeeScopeObject *__restrict scope, DeeObject *loc)
 #else /* CONFIG_AST_IS_STRUCT */
 			DeeObject_InitStatic(result, &DeeAst_Type);
 #endif /* !CONFIG_AST_IS_STRUCT */
-			result->a_scope      = scope;
-			result->a_ddi.l_file = NULL;
+			result->a_scope = scope;
 			Dee_Incref(scope);
 		}
 	}

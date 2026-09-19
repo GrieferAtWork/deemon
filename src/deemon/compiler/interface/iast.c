@@ -3334,7 +3334,7 @@ print_symbol(struct symbol *__restrict sym,
              DeeScopeObject *__restrict ref_scope,
              Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result = 0;
-	if (sym->s_name == &TPPKeyword_Empty) {
+	if (tpp_keyword_getlen(sym->s_name) == 0) {
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
 			PRINT("(");
 			DO((*printer)(arg, sym->s_extern.e_symbol->ss_name,
@@ -3353,7 +3353,7 @@ print_symbol(struct symbol *__restrict sym,
 		}
 	}
 	(void)ref_scope; /* TODO: __nth symbols? */
-	if (sym->s_name == &TPPKeyword_Empty) {
+	if (tpp_keyword_getlen(sym->s_name) == 0) {
 		PRINT("__TPP_IDENTIFIER(\"\")"); /* ??? */
 	} else {
 		print(tpp_keyword_getcstr(sym->s_name),

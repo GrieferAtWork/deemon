@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/ast.h>    /* ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
-#include <deemon/compiler/symbol.h> /* SYMBOL_*, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
+#include <deemon/compiler/symbol.h> /* SYMBOL_*, get_local_symbol, DeeLexer_IsIdentifier, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/none.h>            /* Dee_None */
@@ -148,7 +148,7 @@ ast_parse_module_name(DeeLexer *self,
 		} else if (DeeLexer_HasTokenKwd(self)) {
 			/* Warn about reserved identifiers.
 			 * -> Reserved identifiers should be written as strings. */
-			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+			if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 				if (DeeLexer_Warnf(self,
 				                   for_alias ? TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME
 				                             : TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
@@ -190,7 +190,7 @@ ast_parse_symbol_name(DeeLexer *self,
 	if (DeeLexer_HasTokenKwd(self)) {
 		/* Warn about reserved identifiers.
 		 * -> Reserved identifiers should be written as string imports. */
-		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+		if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 			if (DeeLexer_Warnf(self,
 			                   for_alias ? TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME
 			                             : TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
@@ -391,7 +391,7 @@ parse_import_symbol(DeeLexer *self,
 			/* - `foo = bar`
 			 * - `foo = .foo.bar`
 			 * - `foo = "bar"' */
-			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+			if (DeeLexer_IsIdentifier(self, result->ii_symbol_name)) {
 				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
 				                      TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
 				                      tpp_keyword_getcstr(result->ii_symbol_name)))
@@ -411,7 +411,7 @@ parse_import_symbol(DeeLexer *self,
 			if unlikely(!result->ii_import_name)
 				goto err;
 		} else if (DeeLexer_GetTok(self) == TPP_KWD_as) {
-			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+			if (DeeLexer_IsIdentifier(self, result->ii_symbol_name)) {
 				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
 				                      TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
 				                      tpp_keyword_getcstr(result->ii_symbol_name)))
@@ -425,7 +425,7 @@ parse_import_symbol(DeeLexer *self,
 				if unlikely(!result->ii_import_name)
 					goto err;
 				result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
-				if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+				if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 					if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
 					                   DeeLexer_GetTokenKwdCStr(self)))
 						goto err;
@@ -440,7 +440,7 @@ parse_import_symbol(DeeLexer *self,
 		} else if (TPP_TOK_ISDOT(DeeLexer_GetTok(self)) && allow_module_name) {
 			/* - `foo.bar`
 			 * - `foo.bar as foobar` */
-			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+			if (DeeLexer_IsIdentifier(self, result->ii_symbol_name)) {
 				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
 				                      TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME,
 				                      tpp_keyword_getcstr(result->ii_symbol_name)))
@@ -453,7 +453,7 @@ parse_import_symbol(DeeLexer *self,
 				goto err_printer;
 			goto complete_module_name;
 		} else {
-			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+			if (DeeLexer_IsIdentifier(self, result->ii_symbol_name)) {
 				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
 				                      allow_module_name ? TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME
 				                                        : TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME,
@@ -492,7 +492,7 @@ complete_module_name:
 			}
 			result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 			/* Warn about reserved identifiers */
-			if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+			if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 				if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
 				                   DeeLexer_GetTokenKwdCStr(self)))
 					goto err_name;
@@ -508,7 +508,7 @@ autogenerate_symbol_name:
 			if unlikely(!result->ii_symbol_name)
 				goto err_name;
 			/* Warn about the auto-generated name being a reserved identifiers */
-			if (is_reserved_symbol_name(result->ii_symbol_name)) {
+			if (DeeLexer_IsIdentifier(self, result->ii_symbol_name)) {
 				if (DeeLexer_WarnfLoc(self, &result->ii_import_loc,
 				                      allow_module_name ? TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME
 				                                        : TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME,
@@ -544,7 +544,7 @@ autogenerate_symbol_name:
 		result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
 
 		/* Warn about reserved identifiers in alias names. */
-		if (is_reserved_symbol_name(DeeLexer_GetTokenKwd(self))) {
+		if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
 			if (DeeLexer_Warnf(self, TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME,
 			                   DeeLexer_GetTokenKwdCStr(self)))
 				goto err_name;
@@ -735,7 +735,7 @@ do_reassign_new_alias:
 					goto err;
 			}
 		} else {
-			sym = new_local_symbol(name, loc);
+			sym = new_local_symbol(self, name, loc);
 			if unlikely(!sym)
 				goto err;
 
@@ -805,7 +805,7 @@ ast_import_single_from_module(DeeLexer *self, DeeModuleObject *__restrict mod,
 				goto err;
 		}
 	} else {
-		import_symbol = new_local_symbol(item->ii_symbol_name,
+		import_symbol = new_local_symbol(self, item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if unlikely(!import_symbol)
 			goto err;
@@ -860,7 +860,7 @@ ast_import_module(DeeLexer *self, struct import_item *__restrict item) {
 		}
 		decref_parse_module_byname(mod);
 	} else {
-		import_symbol = new_local_symbol(item->ii_symbol_name,
+		import_symbol = new_local_symbol(self, item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if unlikely(!import_symbol)
 			goto err_module;
@@ -1255,7 +1255,7 @@ ast_parse_import(DeeLexer *self) {
 			goto err_r;
 
 		/* All right! we've got the module. */
-		if (DeeLexer_Skip2(self, TPP_KWD_import, W_EXPECTED_IMPORT_AFTER_FROM))
+		if (DeeLexer_Skip2(self, TPP_KWD_import, TPP_W_EXPECTED_IMPORT_AFTER_FROM))
 			goto err_r_module;
 		for (;;) {
 			/* Parse an entire import list. */

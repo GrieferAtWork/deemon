@@ -147,11 +147,13 @@ struct Dee_unicode_printer;
 INTDEF WUNUSED NONNULL((1, 3)) int DFCALL
 get_astloc_from_obj(DeeLexer *self, DeeObject *obj, struct ast_loc *__restrict result);
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 /* Helper functions for setting the DDI location of a given ast `dst`
  * WARNING: Previously set DDI information is overwritten,
  *          and the old DDI file will _NOT_ be decref'ed! */
 INTDEF WUNUSED NONNULL((1, 3)) int DFCALL
 set_astloc_from_obj(DeeLexer *self, DeeObject *obj, struct ast *__restrict result);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)` */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL

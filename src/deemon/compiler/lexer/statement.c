@@ -380,7 +380,7 @@ do_else_branch:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN))
 				goto err_r;
 		}
 		break;
@@ -419,7 +419,7 @@ do_else_branch:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD))
 				goto err_r;
 		}
 		break;
@@ -433,7 +433,7 @@ do_else_branch:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT))
 				goto err_r;
 		}
 		break;
@@ -463,7 +463,7 @@ do_else_branch:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_THROW))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_THROW))
 				goto err_r;
 		}
 		break;
@@ -559,7 +559,7 @@ do_else_branch:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT))
 				goto err_r;
 		}
 		break;
@@ -707,7 +707,7 @@ err_foreach_iter:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT))
 				goto err_r;
 		}
 		break;
@@ -755,7 +755,7 @@ err_r_do_flags:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE))
 				goto err_r;
 		}
 	}	break;
@@ -816,7 +816,7 @@ err_while_flags:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK))
 				goto err_r;
 		}
 	}	break;
@@ -882,7 +882,7 @@ err_del_flags:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_DEL))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_DEL))
 				goto err_r;
 		}
 		break;
@@ -894,7 +894,7 @@ err_del_flags:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_ASM))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_ASM))
 				goto err_r;
 		}
 		break;
@@ -915,11 +915,7 @@ err_del_flags:
 		} else {
 			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_GOTO))
 				goto err;
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-			goto_label = lookup_label(tpp_builtin_getkeyword_byid(TPP_KWD_));
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-			goto_label = lookup_label(&TPPKeyword_Empty);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			goto_label = lookup_label(tpp_builtin_getkeyword_empty());
 			if unlikely(!goto_label)
 				goto err;
 		}
@@ -931,7 +927,7 @@ err_del_flags:
 			if unlikely(yield_semicolonnbif(self, allow_nonblock) < 0)
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO))
 				goto err_r;
 		}
 	}	break;

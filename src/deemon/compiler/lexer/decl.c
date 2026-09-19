@@ -1020,8 +1020,13 @@ err_asm_flags:
 			self->da_type   = DAST_STRING;
 			self->da_string = text; /* Inherit reference */
 		} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if (DeeLexer_Warnf(lexer, TPP_W_EXPECTED_STRING))
+				goto err_asm_flags;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (DeeLexer_Warnf(lexer, TPP_W_EXPECTED_STRING_AFTER_ASM))
 				goto err_asm_flags;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			self->da_type = DAST_NONE;
 		}
 		DeeLexer_NoLf_Pop(lexer);
@@ -1168,7 +1173,7 @@ err_lparen_flags_elemv:
 		}
 		DeeLexer_NoLf_Pop(lexer);
 		if (has_paren) {
-			if (DeeLexer_Skip2(lexer, ')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
+			if (DeeLexer_Skip2(lexer, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_TUPLE)) {
 				while (elemc--)
 					decl_ast_fini(&elemv[elemc]);
 				Dee_Free(elemv);
@@ -1232,7 +1237,7 @@ err_lbrace_flags_key_value_0:
 				goto err_lbrace_flags_seq_0;
 		}
 		DeeLexer_NoLf_Pop(lexer);
-		if (DeeLexer_Skip2(lexer, '}', W_EXPECTED_RBRACE_AFTER_SEQUENCE)) {
+		if (DeeLexer_Skip2(lexer, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_SEQUENCE)) {
 			decl_ast_fini(decl_seq);
 			Dee_Free(decl_seq);
 			goto err;
@@ -1282,7 +1287,7 @@ err_nth:
 					goto err_nth;
 			}
 			ast_decref(nth_expr);
-			sym = lookup_nth(nth_symbol, DeeLexer_GetTokenKwd(lexer));
+			sym = lookup_nth(lexer, nth_symbol, DeeLexer_GetTokenKwd(lexer));
 			if likely(sym) {
 				self->da_type   = DAST_SYMBOL;
 				self->da_flag   = DAST_FNORMAL;
@@ -1318,7 +1323,7 @@ err_nth:
 					goto err;
 				sym = ast_parse_import_single_sym(lexer, name);
 			} else {
-				sym = lookup_symbol(LOOKUP_SYM_NORMAL, name, NULL);
+				sym = lookup_symbol(lexer, LOOKUP_SYM_NORMAL, name, NULL);
 			}
 			if unlikely(!sym)
 				goto err;

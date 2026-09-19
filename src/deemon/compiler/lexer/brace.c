@@ -84,7 +84,7 @@ ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 				if unlikely(!result)
 					goto err_dict_elemv;
 			}
-			if (DeeLexer_Skip2(self, '=', W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('='), W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
 				goto err_dict_elemv_r;
 		} else {
 			int temp;
@@ -97,7 +97,7 @@ ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key) {
 			result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_dict_elemv;
-			if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_DICT_KEY))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_DICT_KEY))
 				goto err_dict_elemv_r;
 		}
 
@@ -263,7 +263,7 @@ ast_parse_brace_items(DeeLexer *self) {
 			if unlikely(!result)
 				goto err;
 		}
-		if (DeeLexer_Skip2(self, '=', W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('='), W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
 			goto err_r;
 		goto parse_dict;
 	}

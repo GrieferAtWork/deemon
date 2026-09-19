@@ -2216,7 +2216,7 @@ done_special:
 	if (!self->af_printer.ap_length) {
 		DeeObject_Free(self->af_printer.ap_string);
 		self->af_printer.ap_string = NULL;
-		return TPPString_NewEmpty();
+		return tpp_string_newempty();
 	}
 
 #ifdef CONFIG_OBJECT_HEAP_ISNT_MALLOC

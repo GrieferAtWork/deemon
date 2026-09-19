@@ -19,48 +19,59 @@
  */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 
+/* Define a keyword and mark it as an identifier */
+#define DEE_KWD_IDENTIFIER(id, str) \
+	TPP_KWD(id, str)                \
+	TPP_KWD_IS_IDENTIFIER(id, true)
+
 TPP_KWD(TPP_KWD_, "") /* Special case for *empty* keyword */
 
 /* Unary expression keywords. */
-TPP_KWD(TPP_KWD_none, "none")
-TPP_KWD(TPP_KWD_true, "true")
-TPP_KWD(TPP_KWD_false, "false")
-TPP_KWD(TPP_KWD_copy, "copy")
-TPP_KWD(TPP_KWD_deepcopy, "deepcopy")
+DEE_KWD_IDENTIFIER(TPP_KWD_none, "none")
+DEE_KWD_IDENTIFIER(TPP_KWD_true, "true")
+DEE_KWD_IDENTIFIER(TPP_KWD_false, "false")
+DEE_KWD_IDENTIFIER(TPP_KWD_copy, "copy")
+DEE_KWD_IDENTIFIER(TPP_KWD_deepcopy, "deepcopy")
 #ifndef TPP_KWD_assert
-TPP_KWD(TPP_KWD_assert, "assert")
+DEE_KWD_IDENTIFIER(TPP_KWD_assert, "assert")
 #endif /* !TPP_KWD_assert */
 #ifndef TPP_KWD_import
-TPP_KWD(TPP_KWD_import, "import")
+DEE_KWD_IDENTIFIER(TPP_KWD_import, "import")
 #endif /* !TPP_KWD_import */
-TPP_KWD(TPP_KWD_str, "str")
-TPP_KWD(TPP_KWD_repr, "repr")
-TPP_KWD(TPP_KWD_type, "type")
-TPP_KWD(TPP_KWD_function, "function")
-TPP_KWD(TPP_KWD_with, "with")
-TPP_KWD(TPP_KWD_pack, "pack")
+DEE_KWD_IDENTIFIER(TPP_KWD_str, "str")
+DEE_KWD_IDENTIFIER(TPP_KWD_repr, "repr")
+DEE_KWD_IDENTIFIER(TPP_KWD_type, "type")
+DEE_KWD_IDENTIFIER(TPP_KWD_function, "function")
+DEE_KWD_IDENTIFIER(TPP_KWD_with, "with")
+DEE_KWD_IDENTIFIER(TPP_KWD_pack, "pack")
 #ifndef TPP_KWD_if
-TPP_KWD(TPP_KWD_if, "if")
+DEE_KWD_IDENTIFIER(TPP_KWD_if, "if")
 #endif /* !TPP_KWD_if */
-TPP_KWD(TPP_KWD_do, "do")
-TPP_KWD(TPP_KWD_while, "while")
-TPP_KWD(TPP_KWD_for, "for")
-TPP_KWD(TPP_KWD_foreach, "foreach")
-TPP_KWD(TPP_KWD___nth, "__nth")
-TPP_KWD(TPP_KWD_operator, "operator")
+#ifndef TPP_KWD_else
+DEE_KWD_IDENTIFIER(TPP_KWD_else, "else")
+#endif /* !TPP_KWD_else */
+#ifndef TPP_KWD_elif
+DEE_KWD_IDENTIFIER(TPP_KWD_elif, "elif")
+#endif /* !TPP_KWD_elif */
+DEE_KWD_IDENTIFIER(TPP_KWD_do, "do")
+DEE_KWD_IDENTIFIER(TPP_KWD_while, "while")
+DEE_KWD_IDENTIFIER(TPP_KWD_for, "for")
+DEE_KWD_IDENTIFIER(TPP_KWD_foreach, "foreach")
+DEE_KWD_IDENTIFIER(TPP_KWD___nth, "__nth")
+DEE_KWD_IDENTIFIER(TPP_KWD_operator, "operator")
 #define TPP_KWD_ISUNARY(x) \
 	((x) >= TPP_KWD_none && (x) <= TPP_KWD_operator)
 
-TPP_KWD(TPP_KWD_final, "final")
-TPP_KWD(TPP_KWD_varying, "varying")
-TPP_KWD(TPP_KWD_class, "class")
-TPP_KWD(TPP_KWD_this, "this")
-TPP_KWD(TPP_KWD_super, "super")
-TPP_KWD(TPP_KWD_is, "is")
-TPP_KWD(TPP_KWD_in, "in")
+DEE_KWD_IDENTIFIER(TPP_KWD_final, "final")
+DEE_KWD_IDENTIFIER(TPP_KWD_varying, "varying")
+DEE_KWD_IDENTIFIER(TPP_KWD_class, "class")
+DEE_KWD_IDENTIFIER(TPP_KWD_this, "this")
+DEE_KWD_IDENTIFIER(TPP_KWD_super, "super")
+DEE_KWD_IDENTIFIER(TPP_KWD_is, "is")
+DEE_KWD_IDENTIFIER(TPP_KWD_in, "in")
 
 /* New keyword: Create a super-wrapper: `<expression> as <type>` */
-TPP_KWD(TPP_KWD_as, "as")
+DEE_KWD_IDENTIFIER(TPP_KWD_as, "as")
 
 /* New keyword: Check if a symbol is bound: `local x; if (bound(x)) { ... }`
  * This function-like builtin keyword can be used to determine if a
@@ -78,34 +89,34 @@ TPP_KWD(TPP_KWD_as, "as")
  * >>     }
  * >> }
  */
-TPP_KWD(TPP_KWD_bound, "bound")
+DEE_KWD_IDENTIFIER(TPP_KWD_bound, "bound")
 
 /* Statement keywords. */
-TPP_KWD(TPP_KWD_from, "from")
-TPP_KWD(TPP_KWD_break, "break") /* WARNING: Next token must be `continue` (keep these together) */
-TPP_KWD(TPP_KWD_continue, "continue")
-TPP_KWD(TPP_KWD_return, "return")
-TPP_KWD(TPP_KWD_yield, "yield")
-TPP_KWD(TPP_KWD_throw, "throw")
-TPP_KWD(TPP_KWD_try, "try")
-TPP_KWD(TPP_KWD_finally, "finally")
-TPP_KWD(TPP_KWD_catch, "catch")
-TPP_KWD(TPP_KWD_del, "del")
-TPP_KWD(TPP_KWD_print, "print")
-TPP_KWD(TPP_KWD___asm, "__asm")
-TPP_KWD(TPP_KWD___asm__, "__asm__")
-TPP_KWD(TPP_KWD_goto, "goto")
-TPP_KWD(TPP_KWD_switch, "switch")
-TPP_KWD(TPP_KWD_case, "case")
+DEE_KWD_IDENTIFIER(TPP_KWD_from, "from")
+DEE_KWD_IDENTIFIER(TPP_KWD_break, "break") /* WARNING: Next token must be `continue` (keep these together) */
+DEE_KWD_IDENTIFIER(TPP_KWD_continue, "continue")
+DEE_KWD_IDENTIFIER(TPP_KWD_return, "return")
+DEE_KWD_IDENTIFIER(TPP_KWD_yield, "yield")
+DEE_KWD_IDENTIFIER(TPP_KWD_throw, "throw")
+DEE_KWD_IDENTIFIER(TPP_KWD_try, "try")
+DEE_KWD_IDENTIFIER(TPP_KWD_finally, "finally")
+DEE_KWD_IDENTIFIER(TPP_KWD_catch, "catch")
+DEE_KWD_IDENTIFIER(TPP_KWD_del, "del")
+DEE_KWD_IDENTIFIER(TPP_KWD_print, "print")
+DEE_KWD_IDENTIFIER(TPP_KWD___asm, "__asm")
+DEE_KWD_IDENTIFIER(TPP_KWD___asm__, "__asm__")
+DEE_KWD_IDENTIFIER(TPP_KWD_goto, "goto")
+DEE_KWD_IDENTIFIER(TPP_KWD_switch, "switch")
+DEE_KWD_IDENTIFIER(TPP_KWD_case, "case")
 #ifndef TPP_KWD_default
-TPP_KWD(TPP_KWD_default, "default")
+DEE_KWD_IDENTIFIER(TPP_KWD_default, "default")
 #endif /* !TPP_KWD_default */
 
 /* Class scope & related keywords. */
-TPP_KWD(TPP_KWD_private, "private")
-TPP_KWD(TPP_KWD_public, "public")
-TPP_KWD(TPP_KWD_property, "property")
-TPP_KWD(TPP_KWD_member, "member")
+DEE_KWD_IDENTIFIER(TPP_KWD_private, "private")
+DEE_KWD_IDENTIFIER(TPP_KWD_public, "public")
+DEE_KWD_IDENTIFIER(TPP_KWD_property, "property")
+DEE_KWD_IDENTIFIER(TPP_KWD_member, "member")
 
 
 /* Variable scope modifiers.
@@ -159,10 +170,10 @@ TPP_KWD(TPP_KWD_member, "member")
  * >>     print __nth(2) x; // 20
  * >> }
  */
-TPP_KWD(TPP_KWD_local, "local")
-TPP_KWD(TPP_KWD_global, "global")
-TPP_KWD(TPP_KWD_static, "static")
-TPP_KWD(TPP_KWD___stack, "__stack")
+DEE_KWD_IDENTIFIER(TPP_KWD_local, "local")
+DEE_KWD_IDENTIFIER(TPP_KWD_global, "global")
+DEE_KWD_IDENTIFIER(TPP_KWD_static, "static")
+DEE_KWD_IDENTIFIER(TPP_KWD___stack, "__stack")
 
 #define TPP_KWD_IS_D100_VARIABLE_MODIFIER(x) \
 	((x) >= TPP_KWD_local && (x) <= TPP_KWD___stack)
@@ -204,6 +215,8 @@ TPP_MACRO(TPP_KWD___POSIX__, 1)
 TPP_PREDEFINED_MACRO(TPP_KWD___POSIX__, "1")
 #endif /* CONFIG_HOST_UNIX */
 
+#undef DEE_KWD_IDENTIFIER
+
 TPP_WGROUP(TPP_WG_SYMBOL, 1("symbol"), TPP_WSTATE_ERROR)
 TPP_WGROUP(TPP_WG_IMPLICIT, 1("implicit"), TPP_WSTATE_ERROR)
 TPP_WGROUP(TPP_WG_READONLY, 1("readonly"), TPP_WSTATE_ERROR)
@@ -214,126 +227,117 @@ TPP_WGROUP(TPP_WG_UNUSED_LABEL, 1("unused-label"), TPP_WSTATE_ERROR)
 TPP_WGROUP(TPP_WG_VALUE, 1("value"), TPP_WSTATE_ERROR)
 
 /* Syntax */
-//TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected token %Pt in expression")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_IF, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[if%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_IF, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[if%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPARENT_AFTER_WITH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[with%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPARENT_AFTER_WITH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[with%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_LBRACE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[{%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_PACK, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[pack(%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_LPAREN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[(%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RANGLE_AFTER_LANGLE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[>%] after %[<%], but got %Pt")
-
 TPP_WARNING(TPP_W_DEPRECATED_CELL_SYNTAX, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[<...>%] for constructing cells is deprecated. Use %[(Cell from deemon)(...)%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[::%] to lookup attributes is deprecated. Use %[.%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_GLOBAL_PREFIX, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[::%] as global prefix is deprecated. Remove the prefix and rename other variables with the same name, or use %[__nth%]")
 TPP_WARNING(TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Lookup modifiers other than %[__nth%] in expressions are no longer allowed since deemon 200")
 TPP_WARNING(TPP_W_DEPRECATED_NO_PARAMETER_LIST, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "A missing parameter list in a function declaration is deprecated since deemon 200 for non-lambda-functions. Add an empty one by inserting %[()%]")
+TPP_WARNING(TPP_W_DEPRECATED_CHARACTER_INT, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Writing integers as characters is deprecated since deemon 200. Consider writing %[%Pt.ord()%] instead") /* FIXME: "%Pt" already opens a quote-block, so this does a double-open! */
 TPP_WARNING(TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[->%] to assign an exception symbol is deprecated since deemon 200. Consider using %[as%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[function%] to define lambdas in expressions is deprecated. Consider using %[() ->%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_LOOKUP_MODE_AFTER_VAR_TYPE, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Lookup mode modifier after C-like declaration type is deprecated since deemon 200. Consider moving the modifier before the type expression, or removing the modifier to have the variable always be declared as %[local%]")
 TPP_WARNING(TPP_W_DEPRECATED_CLASS_BASE_EXTENDS, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[MyClass extends Super%] to specify class base is deprecated. Use %[MyClass: Super%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_CLASS_BASE_PARENS, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Using %[MyClass(Super)%] to specify class base is deprecated. Use %[MyClass: Super%] instead")
 
-TPP_WARNING(W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[.%], a keyword or a string in a module- or symbol-import list, but got %Pt")
-TPP_WARNING(W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword or a string in a symbol-import list, but got %Pt")
-TPP_WARNING(W_EXPECTED_KEYWORD_AFTER_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[as%] in a module- or symbol-import list, but got %Pt")
-TPP_WARNING(W_EXPECTED_IMPORT_AFTER_FROM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[import%] after %[from%], but got %Pt")
-TPP_WARNING(W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[,%] or %[from%] after %[*%] in symbol import list, but got %Pt")
-TPP_WARNING(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[from%] after symbol import list, but got %Pt")
-TPP_WARNING(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected %[*%] in import list, when %[*%] had already been encountered before")
-TPP_WARNING(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected %[from%] following a module import list")
-TPP_WARNING(W_EXPECTED_LPAREN_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[import%] in expression, but got %Pt")
-TPP_WARNING(W_EXPECTED_RPAREN_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[import%] in expression, but got %Pt")
+TPP_WARNING(TPP_W_EXPECTED_DOTS_KEYWORD_OR_STRING_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[.%], a keyword or a string in a module- or symbol-import list, but got %Pt")
+TPP_WARNING(TPP_W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword or a string in a symbol-import list, but got %Pt")
+TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[as%] in a module- or symbol-import list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_IMPORT_AFTER_FROM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[import%] after %[from%], but got %Pt")
+TPP_WARNING(TPP_W_EXPECTED_COMMA_OR_FROM_AFTER_START_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[,%] or %[from%] after %[*%] in symbol import list, but got %Pt")
+TPP_WARNING(TPP_W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[from%] after symbol import list, but got %Pt")
+TPP_WARNING(TPP_W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected %[*%] in import list, when %[*%] had already been encountered before")
+TPP_WARNING(TPP_W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected %[from%] following a module import list")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[import%] in expression, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[import%] in expression, but got %Pt")
 
-TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to end list, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end a brace initializer, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_NTH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[__nth%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_NTH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[__nth%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to end list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end a brace initializer, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_NTH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[__nth%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_NTH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[__nth%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_NTH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[__nth(...)%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CONSTANT_AFTER_NTH, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Expected a constant expression as argument for %[__nth%]")
 TPP_WARNING(TPP_W_DEPRECATED_LAMBDA_MODE, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Specifying %[=%] or %[&%] within lambda brackets is deprecated. Consider removing the modifer, which has historically always been a no-op")
-TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LAMBDA, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to begin lambda expression, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_GETITEM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to end %[getitem%] operator, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LBRACKET, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_CALL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] to end call operation, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LAMBDA, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to begin lambda expression, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_GETITEM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] to end %[getitem%] operator, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_LBRACKET, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_CALL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] to end call operation, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[is%] or %[in%] after %[!%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[.%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_VARIABLE_AFTER_VISIBILITY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected variable name after %[global%] or %[local%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after expression, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[return%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[yield%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[import%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after expression, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_RETURN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[return%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_YIELD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[yield%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_IMPORT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[import%], but got %Pt")
 TPP_WARNING(TPP_W_YIELD_AFTER_RETURN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[yield%] statements are illegal after a non-empty %[return%] statement")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_THROW, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[throw%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[print%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[assert%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[do ... while%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[break%] or %[continue%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[del%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[__asm__%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[del%] in expression, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_THROW, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[throw%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_PRINT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[print%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_ASSERT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[assert%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_DOWHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[do ... while%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_BREAK, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[break%] or %[continue%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[del%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[__asm__%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[del%] in expression, but got %Pt")
 TPP_WARNING(TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[del%] expects a symbol-, attribute-, item-, or range-expression")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[del%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[del%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[catch%] or %[finally%] after %[try%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_WHILE_AFTER_DO, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[while%] after %[do%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_WHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[while%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_WHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[while%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_CATCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[catch%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_CATCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[catch%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_WHILE_AFTER_DO, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[while%] after %[do%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_WHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[while%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_WHILE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[while%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_CATCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[catch%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_CATCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[catch%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[as%] in %[catch%], but got %Pt")
 
-TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[{%] or %[->%] after %[function%] or %[[](...)%], but got %Pt (Missing function bodies are deprecated in deemon 200)")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end function code, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[{%] or %[->%] after %[function%] or %[[](...)%], but got %Pt (Missing function bodies are deprecated in deemon 200)")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end function code, but got %Pt")
 
-//TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following an optional or default argument", SYMBOL_NAME(sym)); /*PRINT_SYMBOL_DECLARATION(sym);*/ })
-//TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following variable arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
-//TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following keyword arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
-//TPP_WARNING(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TPP_WARNING(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Keyword arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_ARGLIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, WARNF("Expected %[)%] to end argument list, but got %Pt"))
+//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following an optional or default argument", SYMBOL_NAME(sym)); /*PRINT_SYMBOL_DECLARATION(sym);*/ })
+//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following variable arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
+//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following keyword arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
+//TODO:TPP_WARNING(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Keyword arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_ARGLIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, WARNF("Expected %[)%] to end argument list, but got %Pt"))
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, WARNF("Expected a keyword as argument name, but got %Pt"))
-//TPP_WARNING(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a constant expression as default value for %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TPP_WARNING(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TPP_WARNING(TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Optional argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for optional argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a constant expression as default value for %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Optional argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for optional argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[for%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON1_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[for%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON2_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a second %[;%] after %[for%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[for%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_FOREACH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[foreach%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[for%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON1_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[for%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON2_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a second %[;%] after %[for%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[for%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_FOREACH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[foreach%], but got %Pt")
 TPP_WARNING(TPP_W_VARIABLE_MODIFIER_DUPLICATED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "The variable modifier %Pt has already been used")
 TPP_WARNING(TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Variable modifier %Pt is incompatible with %[%s%]")
 TPP_WARNING(TPP_W_VARYING_WITHOUT_FINAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[varying%] used without %[final%]")
-TPP_WARNING(TPP_W_EXPECTED_CLASS_AFTER_FINAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[class%] after %[final%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[{%] after %[class%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[class%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_CLASS_AFTER_FINAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[class%] after %[final%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[{%] after %[class%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[class%], but got %Pt")
 TPP_WARNING(TPP_W_RETURN_IN_YIELD_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Return statement encountered in yield function")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[(%] in tag, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[assert%] in expression, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_EQUAL_AFTER_BRACE_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[=%] after %[.%] in mapping-like brace initializer, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_DICT_KEY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after key in mapping-like brace initializer, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[,%] within list initializer, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:=%] after %[move%] in operator name, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[(%] in tag, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[assert%] in expression, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_EQUAL_AFTER_BRACE_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[=%] after %[.%] in mapping-like brace initializer, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_DICT_KEY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after key in mapping-like brace initializer, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[,%] within list initializer, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:=%] after %[move%] in operator name, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME, 1(TPP_WG_D200), 0(), TPP_WSTATE_WARN, "Expected %[:=%] in operator name instead of %[=%]")
 TPP_WARNING(TPP_W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected an empty string for %[operator str%]")
 TPP_WARNING(TPP_W_EXPECTED_LBRACKET_OR_DOT_AFTER_DEL_FOR_OPERATOR_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[[%] or %[.%] after %[del%] in operator name, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_BRACE_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected keyword after %[.%] in brace initializer, but got %Pt")
 TPP_WARNING(TPP_W_UNKNOWN_OPERATOR_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unknown operator name %Pt")
 TPP_WARNING(TPP_W_CANNOT_TEST_EXPRESSION_BINDING, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Cannot test binding of expression. Expected a symbol, or attribute expression")
-TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_KEYWORD_LABEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after keyword label in argument list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_KEYWORD_LABEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after keyword label in argument list, but got %Pt")
 TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected token %Pt encountered within declaration expression")
 TPP_WARNING(TPP_W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[...%] or %[:%] after %[{type%] in type annotation, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_SEQUENCE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after sequence or mapping declaration, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_TUPLE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after Tuple declaration or parenthesis, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_SEQUENCE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after sequence or mapping declaration, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_TUPLE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after Tuple declaration or parenthesis, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Expected a constant expression as argument for %[type%] inside of a declaration expression")
-TPP_WARNING(TPP_W_TEMPLATE_STRING_UNMATCHED_LBRACE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unmatched %[{%] in template string")
-TPP_WARNING(TPP_W_TEMPLATE_STRING_UNMATCHED_RBRACE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unmatched %[}%] in template string")
-TPP_WARNING(TPP_W_TEMPLATE_STRING_UNDEFINED_ESCAPE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unknown escape character %[%c%] in template string")
-TPP_WARNING(TPP_W_TEMPLATE_STRING_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected token %Pt at end of template string expression")
-TPP_WARNING(TPP_W_TEMPLATE_STRING_NO_DIGIT_OR_HEX_AFTER_BACKSLASH_X_u_U, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "No digits, or hex-chars found after %[\\x', %[\\u' or %[\\U'")
+//Unused:TPP_WARNING(TPP_W_TEMPLATE_STRING_UNMATCHED_LBRACE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unmatched %[{%] in template string")
+//Unused:TPP_WARNING(TPP_W_TEMPLATE_STRING_UNMATCHED_RBRACE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unmatched %[}%] in template string")
+//Unused:TPP_WARNING(TPP_W_TEMPLATE_STRING_UNDEFINED_ESCAPE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unknown escape character %[%c%] in template string")
+//Unused:TPP_WARNING(TPP_W_TEMPLATE_STRING_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unexpected token %Pt at end of template string expression")
+//Unused:TPP_WARNING(TPP_W_TEMPLATE_STRING_NO_DIGIT_OR_HEX_AFTER_BACKSLASH_X_u_U, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "No digits, or hex-chars found after %[\\x', %[\\u' or %[\\U'")
 
 
 /*WARNING_NAMESPACE(WN_QUALITY, 2250)*/
@@ -348,43 +352,30 @@ TPP_WARNING(TPP_W_UNCLEAR_SYMBOL_FROM_MODULE, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE
             "Consider writing %[(%s from %s)%] to prevent confusion on where the module name ends")
 TPP_WARNING(TPP_W_PACK_USED_OUTSIDE_OF_MACRO, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN,
             "Using %[pack%] outside of macros makes code harder to read. Consider using parenthesis instead")
-//TODO:TPP_WARNING(TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, {
-//TODO:	size_t s1 = ARG(size_t);
-//TODO:	size_t s2 = ARG(size_t);
-//TODO:	WARNF("Thousands/grouping character %[_%] is used inconsistently in %Pt: "
-//TODO:	      "groupings of width %" PRFuSIZ " and %" PRFuSIZ " are present",
-//TODO:	      TOK_A, s1, s2);
-//TODO:})
-//TODO:TPP_WARNING(TPP_W_INCORRECT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, {
-//TODO:	size_t expected = ARG(size_t);
-//TODO:	size_t actual   = ARG(size_t);
-//TODO:	WARNF("Thousands/grouping character %[_%] is used incorrectly in %Pt: "
-//TODO:	      "a separator should appear every %" PRFuSIZ " digits, but actually appears every %" PRFuSIZ " digits",
-//TODO:	      TOK_A, expected, actual);
-//TODO:})
-
+TPP_WARNING(TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, "Thousands/grouping character %[_%] is used inconsistently in %Pt: groupings of width %u and %u are present")
+TPP_WARNING(TPP_W_INCORRECT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, "Thousands/grouping character %[_%] is used incorrectly in %Pt: a separator should appear every %u digits, but actually appears every %u digits")
 
 
 /*WARNING_NAMESPACE(WN_GOTO_LABEL, 2380)*/
 TPP_WARNING(TPP_W_MISSING_STATEMENT_AFTER_LABEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected a statement after a label, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_GOTO, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[goto%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[goto%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_SWITCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[switch%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_SWITCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[switch%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON_AFTER_GOTO, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[goto%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_SWITCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[switch%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_SWITCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[switch%], but got %Pt")
 TPP_WARNING(TPP_W_NOT_INSIDE_A_SWITCH_STATEMENT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[case%] and %[default%] labels are only allowed while inside of a switch-statement")
 TPP_WARNING(TPP_W_DEFAULT_LABEL_HAD_ALREADY_BEEN_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Another %[default%] label had already been defined")
-TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[default%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_CASE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[case%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[default%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_COLON_AFTER_CASE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[case%], but got %Pt")
 
 /*WARNING_NAMESPACE(WN_ASM_PARSER, 2400)*/
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[__asm__%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_STRING_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string after %[__asm__%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[__asm__%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[__asm__%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_STRING_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string after %[__asm__%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_ASM, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[__asm__%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_OPERAND_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword as operand name after %[[%], but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%] followed by an operand name, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string before the operand value, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] before an assembly operand value, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after an assembly operand value, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%] followed by an operand name, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string before the operand value, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] before an assembly operand value, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after an assembly operand value, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_LABEL_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword as label operand, but got %Pt")
 TPP_WARNING(TPP_W_UNKNOWN_CLOBBER_NAME, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "Unknown clobber name %[%s%]")
 
@@ -396,7 +387,7 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_E
 TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_ALREADY_SPECIFIED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "An explicit member type has already been specified")
 TPP_WARNING(TPP_W_CLASS_CONSTRUCTOR_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "A constructor for class %[%s%] has already been defined")
 TPP_WARNING(TPP_W_CLASS_NO_MEMBER_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "No member has been defined when %[;%] was encountered")
-TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_PROPERTY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after property, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_PROPERTY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after property, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CALLBACK_NAME_IN_PROPERTY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected callback name within property declaration, but got %Pt")
 TPP_WARNING(TPP_W_PROPERTY_CALLBACK_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Property callback %[%s%] has already been defined")
 TPP_WARNING(TPP_W_CLASS_MEMBER_TYPE_NOT_ASSIGNED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Explicitly typed member %[%s%] was not initialized")
@@ -411,10 +402,10 @@ TPP_WARNING(TPP_W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE, 1(TPP_WG_SYNTAX), 0(),
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword in the constructor initializer list, but got %Pt")
 TPP_WARNING(TPP_W_DEPRECATED_USING_CLASS_FOR_CONSTRUCTOR, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Use of %[class%] to introduce a constructor or destructor is deprecated. Use %[this%] or %[%s%] instead")
 TPP_WARNING(TPP_W_DEPRECATED_USING_CLASS_FOR_STATIC, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Use of %[class%] to declare static fields is deprecated. Use %[static%] instead")
-TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_SUPER_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[super%] in constructor initializer list, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_SUPER_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[super(...%] in constructor initializer list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_SUPER_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[super%] in constructor initializer list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_SUPER_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[super(...%] in constructor initializer list, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] or %[=%] after member name in constructor initializer list, but got %Pt")
-TPP_WARNING(TPP_W_EXPECTED_RPAREN_CONSTRUCTOR_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after initializer expression in constructor initializer list, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_CONSTRUCTOR_INIT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after initializer expression in constructor initializer list, but got %Pt")
 TPP_WARNING(TPP_W_AMBIGUOUS_OPERATOR_ASSIGNMENT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Cannot assign callback to ambiguous operator")
 TPP_WARNING(TPP_W_PRIVATE_OPERATOR_IS_PUBLIC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Private %[operator %s%] is exposed as public")
 TPP_WARNING(TPP_W_OPERATOR_WAS_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Redefining %[operator %s%], after it had already been defined")
@@ -436,9 +427,9 @@ TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_RBRACKET, 1(TPP_WG_SYNTAX), 0(), TPP_WST
 TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[.%] after %[@[optional%], but got %Pt")
 //TODO:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Expected %[.%] or %[(%] after %[@[%$s%], but got " TOK_S, len, ARG(char const *), TOK_A); })
 //TODO:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { size_t len = ARG(size_t); WARNF("Expected a keyword after %[@[...%$s.%], but got " TOK_S, len, ARG(char const *), TOK_A); })
-TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[@[gatw.doc%], but got %Pt")
-TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string after %[@[gatw.doc(%], but got %Pt")
-TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[@[gatw.doc(\"...\"', but got %Pt")
+//Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[@[gatw.doc%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string after %[@[gatw.doc(%], but got %Pt")
+//Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[@[gatw.doc(\"...\"', but got %Pt")
 TPP_WARNING(TPP_W_UNUSED_ANNOTATION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Unused annotation")
 
 /* Symbols */
@@ -488,7 +479,7 @@ TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME,
 	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead", varname, varname);
 })
 
-//TODO:TPP_WARNING(TPP_W_CLASS_MEMBER_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { size_t s = ARG(size_t); WARNF("Class member name %[%$s%] had already been defined", s, ARG(char const *)); })
+TPP_WARNING(TPP_W_CLASS_MEMBER_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Class member name %[%s%] had already been defined")
 TPP_WARNING(TPP_W_IMPLICIT_MEMBER_DECLARATION, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Implicit declaration of member %[%s%] without initializer. If this is intended, prefix with %[member%]")
 TPP_WARNING(TPP_W_TOO_MANY_CLASS_MEMBER, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Class %[%s%] has too many members")
 TPP_WARNING(TPP_W_MODULE_NOT_FOUND, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Module %[%s%] could not be found")
@@ -523,17 +514,17 @@ TPP_WGROUP(TPP_WG_ASM_RELOCATION_MODEL, 1("relocation-model"), TPP_WSTATE_FATAL)
 //WARNING(W_UNUSED_4100, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_DISABLED) /* %[W_UASM_NOT_SUPPORTED%] */
 TPP_WARNING(TPP_W_UASM_PARSING_FAILED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Failed to parse an assembly directive or instruction from %Pt")
 TPP_WARNING(TPP_W_UASM_IGNORING_TRAILING_TOKENS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Ignoring trailing token %Pt after assembly directive or instruction")
-TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_INTEGER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after integer for symbol definition, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_INTEGER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after integer for symbol definition, but got %Pt")
 TPP_WARNING(TPP_W_UASM_UNKNOWN_MNEMONIC, 2(TPP_WG_ASM_UNKNOWN_MNEMONIC, TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unknown mnemonic %[%s%]")
 TPP_WARNING(TPP_W_UASM_UNKNOWN_DIRECTIVE, 2(TPP_WG_ASM_UNKNOWN_DIRECTIVE, TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Unknown directive %[%s%]")
-TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after storage class prefix, but got %Pt")
-TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[extern%] prefix, but got %Pt")
-TPP_WARNING(TPP_W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[{%] in mnemonic operand, but got %Pt")
-TPP_WARNING(TPP_W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%] in mnemonic operand, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after storage class prefix, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[:%] after %[extern%] prefix, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[{%] in mnemonic operand, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[[%] in mnemonic operand, but got %Pt")
 TPP_WARNING(TPP_W_UASM_EXPECTED_PC_OR_SP_AFTER_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[PC%] or %[SP%] after %[.%] following an assembly expression, but got %Pt")
 TPP_WARNING(TPP_W_UASM_DOTS_FLAG_ALREADY_SET_FOR_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[...%] (dots) have already been used in this operand")
-TPP_WARNING(TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[#%] after %[stack%] operand introduction, but got %Pt")
-TPP_WARNING(TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[#%] after %[stack%] instruction prefix, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[#%] after %[stack%] operand introduction, but got %Pt")
+//Unused:TPP_WARNING(TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[#%] after %[stack%] instruction prefix, but got %Pt")
 TPP_WARNING(TPP_W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[#%] has already been used twice by this operand")
 TPP_WARNING(TPP_W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[$%] has already been used by this operand")
 TPP_WARNING(TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "User-assembly does not provide a value for output operand %[%s%]")
@@ -1022,17 +1013,17 @@ DEF_WARNING(W_UNCLEAR_SYMBOL_FROM_MODULE, (WG_QUALITY), WSTATE_WARN, {
 DEF_WARNING(W_PACK_USED_OUTSIDE_OF_MACRO, (WG_QUALITY), WSTATE_WARN,
             WARNF("Using `pack` outside of macros makes code harder to read. Consider using parenthesis instead"))
 DEF_WARNING(W_INCONSISTENT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
-	size_t s1 = ARG(size_t);
-	size_t s2 = ARG(size_t);
+	unsigned int s1 = ARG(unsigned int);
+	unsigned int s2 = ARG(unsigned int);
 	WARNF("Thousands/grouping character `_` is used inconsistently in " TOK_S ": "
-	      "groupings of width %" PRFuSIZ " and %" PRFuSIZ " are present",
+	      "groupings of width %u and %u are present",
 	      TOK_A, s1, s2);
 })
 DEF_WARNING(W_INCORRECT_THOUSANDS_SEPERATORS, (WG_QUALITY), WSTATE_WARN, {
-	size_t expected = ARG(size_t);
-	size_t actual   = ARG(size_t);
+	unsigned int expected = ARG(unsigned int);
+	unsigned int actual   = ARG(unsigned int);
 	WARNF("Thousands/grouping character `_` is used incorrectly in " TOK_S ": "
-	      "a separator should appear every %" PRFuSIZ " digits, but actually appears every %" PRFuSIZ " digits",
+	      "a separator should appear every %u digits, but actually appears every %u digits",
 	      TOK_A, expected, actual);
 })
 
@@ -1147,7 +1138,7 @@ DEF_WARNING(W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYM
 DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
 DEF_WARNING(W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, (WG_RESERVED, WG_SYMBOL), WSTATE_WARN, { char const *s = ARG(char const *); WARNF("A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias `my_name_for_%s = %q` instead", s, s); })
 
-DEF_WARNING(W_CLASS_MEMBER_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, { size_t s = ARG(size_t); WARNF("Class member name `%$s` had already been defined", s, ARG(char const *)); })
+DEF_WARNING(W_CLASS_MEMBER_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, { WARNF("Class member name `%s` had already been defined", ARG(char const *)); })
 DEF_WARNING(W_IMPLICIT_MEMBER_DECLARATION, (WG_IMPLICIT, WG_SYMBOL), WSTATE_WARN, WARNF("Implicit declaration of member `%s` without initializer. If this is intended, prefix with `member`", ARG(char const *)))
 DEF_WARNING(W_TOO_MANY_CLASS_MEMBER, (WG_SYMBOL), WSTATE_ERROR, WARNF("Class `%s` has too many members", ARG(char const *)))
 DEF_WARNING(W_MODULE_NOT_FOUND, (WG_SYMBOL), WSTATE_ERROR, WARNF("Module `%s` could not be found", ARG(char const *)))

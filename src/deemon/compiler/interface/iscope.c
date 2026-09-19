@@ -67,6 +67,7 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN WUNUSED NONNULL((1, 3)) int DFCALL
 set_astloc_from_obj(DeeLexer *self, DeeObject *obj,
                     struct ast *__restrict result) {
@@ -78,6 +79,7 @@ set_astloc_from_obj(DeeLexer *self, DeeObject *obj,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 INTERN WUNUSED NONNULL((1, 3)) int DFCALL
 get_astloc_from_obj(DeeLexer *self, DeeObject *obj,
@@ -86,20 +88,24 @@ get_astloc_from_obj(DeeLexer *self, DeeObject *obj,
 	if (!obj)
 		return DeeLexer_GetLoc(self, result);
 	if (DeeNone_Check(obj)) {
-		result->l_file = NULL;
+		ast_loc_init_empty(result);
 		goto done;
 	}
 	if (DeeSeq_Unpack(obj, 3, args))
 		goto err;
 	if (DeeNone_Check(args[0])) {
-		result->l_file = NULL;
+		ast_loc_init_empty(result);
 	} else {
-		if (DeeObject_AsInt(args[2], &result->l_col))
+		tpp_file *file;
+		tpp_line line;
+		tpp_column col;
+		if (DeeObject_AsIntX(args[2], &col))
 			goto err_args_2;
 		Dee_Decref(args[2]);
-		if (DeeObject_AsInt(args[1], &result->l_line))
+		if (DeeObject_AsInt(args[1], &line))
 			goto err_args_1;
 		Dee_Decref(args[1]);
+		tpp_lcinfo_init(&result->l_lc, line - 1, col - 1);
 		if (DeeObject_AssertTypeExact(args[0], &DeeCompilerFile_Type))
 			goto err_args_0;
 		if (((DeeCompilerItemObject *)args[0])->ci_compiler != DeeCompiler_Current) {
@@ -110,8 +116,21 @@ get_astloc_from_obj(DeeLexer *self, DeeObject *obj,
 			err_compiler_item_deleted((DeeCompilerItemObject *)args[0]);
 			goto err_args_0;
 		}
-		result->l_file = (struct TPPFile *)((DeeCompilerItemObject *)args[0])->ci_value;
+		file = (tpp_file *)((DeeCompilerItemObject *)args[0])->ci_value;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		result->l_name = tpp_file_getfilename(file);
+		if (result->l_name && tpp_file_getfilenamestr(file)) {
+			/* Transform into a keyword */
+			tpp_size filename_len = tpp_strlen(result->l_name);
+			tpp_keyword const *filename_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)result->l_name, filename_len);
+			if unlikely(!filename_kwd)
+				goto err_args_0;
+			result->l_name = tpp_keyword_getcstr(filename_kwd);
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		result->l_file = file;
 		TPPFile_Incref(result->l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 	Dee_Decref(args[0]);
 done:
@@ -389,7 +408,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	name_utf8 = DeeString_AsUtf8(args.name);
 	if unlikely(!name_utf8)
 		goto done_compiler_end;
-	kwd = tpp_lexer_newkeyword(lexer, name_utf8, WSTR_LENGTH(name_utf8));
+	kwd = DeeLexer_NewKeyword(lexer, (tpp_char const *)name_utf8, WSTR_LENGTH(name_utf8));
 	if unlikely(!kwd)
 		goto done_compiler_end;
 	sym = get_local_symbol_in_scope(self->ci_value, kwd);
@@ -405,7 +424,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		struct ast_loc symloc;
 		if unlikely(get_astloc_from_obj(lexer, args.loc, &symloc))
 			goto done_compiler_end;
-		sym = new_local_symbol_in_scope(self->ci_value, kwd, &symloc);
+		sym = new_local_symbol_in_scope(lexer, self->ci_value, kwd, &symloc);
 		if unlikely(!sym)
 			goto done_compiler_end;
 		sym->s_type = SYMBOL_TYPE_NONE;

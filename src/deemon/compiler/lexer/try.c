@@ -214,7 +214,7 @@ err_try_flags:
 						goto err_try_flags;
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -244,7 +244,7 @@ err_try_flags:
 						goto err_try_flags;
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -286,7 +286,7 @@ parse_catch_symbol:
 					ASSERT(!is_new_scope);
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -432,7 +432,7 @@ err_try_flags:
 						goto err_try_flags;
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -451,7 +451,7 @@ err_try_flags:
 						goto err_try_flags;
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
@@ -493,7 +493,7 @@ parse_catch_symbol:
 					ASSERT(!is_new_scope);
 					is_new_scope = true;
 					ASSERT(!has_local_symbol(DeeLexer_GetTokenKwd(self)));
-					guard_symbol = new_local_symbol(DeeLexer_GetTokenKwd(self), NULL);
+					guard_symbol = new_local_symbol(self, DeeLexer_GetTokenKwd(self), NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
 					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;

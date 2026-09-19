@@ -171,6 +171,27 @@ struct ast {
 		                                    * NOTE: When set to `none`, this AST can be used as a noop expression. */
 
 #define AST_SYM              0x0001        /* `foo` */
+		/* TODO: Once `CONFIG_EXPERIMENTAL_USE_TPP3` has become mandatory, do another re-work of
+		 *       how symbols work: during parsing, symbol references here should only consist of:
+		 * - A symbol name (tpp_keyword)
+		 * - Creation description (how the variable should be created if it doesn't already exist)
+		 *
+		 * Once a source file has been parsed, there needs to be another step prior to optimization
+		 * that links symbol references to actual symbols (this is the step that *actually* creates
+		 * scopes and adds symbols to them)
+		 *
+		 * Also: scopes must live *within* the AST tree, rather than outside of it (any AST-type
+		 *       that wants to create additional scope(s) must do so by having a field `struct scope`
+		 *       or something similar right here, within the AST tree)
+		 *
+		 * Once all of that has been done, it will become possible for this "symbol linker" to add
+		 * support for forward-declarations of *any* kind of symbol (namely: by having the symbol
+		 * linker perform 2 passes: 1. create symbols for references with "Creation description",
+		 * and 2. link all symbols that aren't already linked to the nearest scope with a matching
+		 * symbol name)
+		 *
+		 * Additionally, there must be a special `struct function_scope` that is derived from `scope`,
+		 * but also keeps track of all symbols that need to be passed to the function as references! */
 		struct symbol       *a_sym;        /* [1..1][REF(->s_nread) | REF(->s_wread)] Symbol referenced by this AST.
 		                                    * NOTE: When a_flag is non-zero, then the symbol is being written to.
 		                                    * NOTE: This symbol is guarantied to be reachable from `a_scope` */

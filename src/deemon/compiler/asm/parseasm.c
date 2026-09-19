@@ -521,8 +521,18 @@ yield_done:
 					goto err;
 			} while (TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)));
 		} else {
-			struct TPPString *strval;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			tpp_errno error;
+			union uasm_parse_symnam_from_string_data data;
+			data.upsnfsd_lexer = &self->dl_lexer;
+			error = tpp_lexer_parsestring_cb(&self->dl_lexer, &uasm_parse_symnam_from_string_cb,
+			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+			if (TPP_ISERR(error))
+				goto err;
+			result->ie_sym = uasm_symbol(data.upsnfsd_keyword);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			tpp_keyword const *name;
+			TPP_REF tpp_string *strval;
 			strval = TPPLexer_ParseString();
 			if unlikely(!strval)
 				goto err;
@@ -534,11 +544,12 @@ yield_done:
 			tpp_string_decref(strval);
 			if unlikely(!name)
 				goto err;
-			result->ie_rel = (uint16_t)-1;
-			result->ie_val = 0;
 			result->ie_sym = uasm_symbol(name);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if unlikely(!result->ie_sym)
 				goto err;
+			result->ie_rel = (uint16_t)-1;
+			result->ie_val = 0;
 		}
 		goto done;
 
@@ -911,7 +922,7 @@ do_parse_extern_operands(DeeLexer *self,
 	*pmid = (uint16_t)temp;
 
 	/* Now parse the symbol that is imported from this module. */
-	if (DeeLexer_Skip2(self, ':', W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX))
+	if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX))
 		goto err;
 
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
@@ -993,7 +1004,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
 do_parse_stack_operands(DeeLexer *self) {
-	if (DeeLexer_Skip2(self, '#', W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
+	if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('#'), W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
 		goto err;
 	return uasm_parse_imm16(self, UASM_INTEXPR_FHASSP);
 err:
@@ -1491,7 +1502,7 @@ do_parse_operand(DeeLexer *self,
 			goto err;
 		if unlikely(do_parse_operand(self, result, false))
 			goto err;
-		if (DeeLexer_Skip2(self, '}', W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
 			goto err;
 
 		/* Set the brace flag in the operand class. */
@@ -1504,7 +1515,7 @@ do_parse_operand(DeeLexer *self,
 			goto err;
 		if unlikely(do_parse_operand(self, result, false))
 			goto err;
-		if (DeeLexer_Skip2(self, ']', W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
 			goto err;
 
 		/* Set the brace flag in the operand class. */
@@ -1912,13 +1923,14 @@ uasm_parse_instruction(DeeLexer *self) {
 		struct asm_sym *fbsym;
 
 		/* Integer symbol definition. */
-		name = TPPLexer_LookupEscapedKeyword((char const *)DeeLexer_GetTokenStart(self),
-		                                     DeeLexer_GetTokenLen(self), 1);
+		name = DeeLexer_NewKeywordEsc(self,
+		                              DeeLexer_GetTokenStart(self),
+		                              DeeLexer_GetTokenLen(self));
 		if unlikely(!name)
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
-		if (DeeLexer_Skip2(self, ':', W_UASM_EXPECTED_COLON_AFTER_INTEGER))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_UASM_EXPECTED_COLON_AFTER_INTEGER))
 			goto err;
 		fbsym = uasm_fbsymbol_def(name);
 		if unlikely(!fbsym)
@@ -1971,7 +1983,7 @@ do_static_prefix:
 		invoc.ai_prefix_id1 = (uint16_t)val;
 continue_after_prefix:
 		invoc.ai_flags |= INVOKE_FPREFIX;
-		if (DeeLexer_Skip2(self, ':', W_UASM_EXPECTED_COLON_AFTER_PREFIX))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_UASM_EXPECTED_COLON_AFTER_PREFIX))
 			goto err;
 		goto read_mnemonic_name;
 	}	break;
@@ -2211,6 +2223,9 @@ asm_mnemonic_lookup_str(char const *__restrict name) {
 
 INTERN WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup(tpp_keyword const *__restrict name) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	return asm_mnemonic_lookup_str(tpp_keyword_getcstr(name));
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct asm_mnemonic *result;
 	if (name->k_rare) {
 		/* Check if the mnemonic has already been cached. */
@@ -2232,6 +2247,7 @@ asm_mnemonic_lookup(tpp_keyword const *__restrict name) {
 		name->k_rare->kr_user = (void *)result;
 done:
 	return result;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 DECL_END
