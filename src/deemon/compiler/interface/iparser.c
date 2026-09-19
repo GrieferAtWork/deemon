@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* DeeBool_For */
@@ -160,8 +161,8 @@ DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_lortail, ast_parse_lor_operand, IF_TR
 DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_condtail, ast_parse_cond_operand, IF_TRUE, TOKEN_IS_COND(DeeLexer_GetTok(lexer)))
 DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_assigntail, ast_parse_assign_operand, IF_TRUE, TOKEN_IS_ASSIGN(DeeLexer_GetTok(lexer)))
 DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_exprtail, ast_parse_postexpr, IF_FALSE, )
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_maptail, ast_parse_mapping, IF_TRUE, DeeLexer_GetTok(lexer) == (tok_t)':')
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_seqtail, ast_parse_brace_list, IF_TRUE, DeeLexer_GetTok(lexer) == (tok_t)',')
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_maptail, ast_parse_mapping, IF_TRUE, DeeLexer_GetTok(lexer) == ':')
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_seqtail, ast_parse_brace_list, IF_TRUE, DeeLexer_GetTok(lexer) == ',')
 #undef IF_FALSE
 #undef IF_TRUE
 #undef DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION
@@ -210,7 +211,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DREF struct ast *result_ast;
-	tok_t end_token = TPP_TOK_EOF;
+	tpp_token_id end_token = TPP_TOK_EOF;
 	uint16_t old_exceptsz;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("parse_allstmt", params: """
 	DeeStringObject *end:?X2?Dstring?Dint = (DeeStringObject *)Dee_EmptyString;
@@ -519,5 +520,6 @@ INTERN DeeTypeObject DeeCompilerParser_Type = {
 };
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_IPARSER_C */

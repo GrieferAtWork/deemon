@@ -141,14 +141,25 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 		if unlikely(!result)
 			goto done;
 		if (DeeLexer_GetTok(self) == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+at_semi_after_expression:
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 			if (p_was_expression)
 				*p_was_expression = AST_PARSE_WASEXPR_NO;
 		} else if (old_varc != current_scope->s_mapc) {
-			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
+			if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_token_id got = DeeLexer_Require(self, TPP_TOK_OFCHAR(';'));
+				if (TPP_TOK_ISERR(got))
+					goto err;
+				if (got == ';')
+					goto at_semi_after_expression;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 					goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			}
 			if (p_was_expression)
 				*p_was_expression = AST_PARSE_WASEXPR_NO;
@@ -266,7 +277,7 @@ ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression) {
 		result = ast_setddi(result, &loc);
 		if unlikely(!result)
 			goto err;
-		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
 		if (p_was_expression)
 			*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -305,7 +316,7 @@ parse_remainder_after_comma_popscope:
 					goto err_r;
 				ast_decref(result);
 				result = ast_setddi(remainder, &loc);
-				if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (p_was_expression)
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -316,7 +327,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r;
 			} else {
-				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), TPP_W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 			}
 
@@ -429,7 +440,8 @@ is_a_statement:
 			goto err;
 		/* Enter a new scope and parse expressions. */
 		DeeLexer_EnableLf_Push(self);
-		result = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
+		result = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, TPP_TOK_OFCHAR('}'));
+		result = ast_putddi(result, &loc);
 		DeeLexer_EnableLf_Pop(self);
 		if unlikely(!result)
 			goto err;
@@ -437,7 +449,7 @@ is_a_statement:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		}
-		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_LBRACE))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
 		if (p_was_expression)
@@ -449,6 +461,16 @@ is_a_statement:
 
 		/* Check for a label definition. */
 		if (DeeLexer_HasTokenKwd(self)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			tpp_token_id next_token;
+			next_token = tpp_lexer_peek_raw(&self->dl_lexer,
+			                                TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+			                                NULL, NULL, NULL);
+			if (TPP_TOK_ISERR(next_token))
+				goto err;
+			if (next_token == ':')
+				goto is_a_statement; /* label */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			char const *next_token = peek_next_token(NULL);
 			if unlikely(!next_token)
 				goto err;
@@ -456,6 +478,7 @@ is_a_statement:
 			    (next_token = advance_wraplf(next_token),
 			     *next_token != ':' && *next_token != '='))
 				goto is_a_statement; /* label */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		}
 
 		/* Figure out what we're dealing with as we go. */
@@ -503,7 +526,7 @@ parse_remainder_after_colon_popscope:
 				if unlikely(!remainder)
 					goto err;
 				result = ast_setddi(remainder, &loc);
-				if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (p_was_expression)
 					*p_was_expression = AST_PARSE_WASEXPR_YES;
@@ -514,7 +537,7 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;` token as part of the expression. */
-			if (DeeLexer_Skip2(self, ';', W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), W_EXPECTED_SEMICOLON_AFTER_EXPRESSION))
 				goto err_r;
 		}
 		if (result->a_multiple.m_astc == 1) {
@@ -531,7 +554,8 @@ parse_remainder_after_statement:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_r;
 		} else {
-			remainder = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &loc);
+			remainder = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, TPP_TOK_OFCHAR('}'));
+			remainder = ast_putddi(remainder, &loc);
 			if unlikely(!remainder)
 				goto err_r;
 			if (remainder->a_type == AST_MULTIPLE &&
@@ -565,7 +589,7 @@ parse_remainder_after_statement:
 				/* `ast_multiple()` inherited `new_elemv` on success. */
 			}
 			result = ast_setddi(remainder, &loc);
-			if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_LBRACE))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_LBRACE))
 				goto err_r;
 		}
 		scope_pop();

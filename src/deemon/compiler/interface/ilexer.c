@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_Calloc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* DeeBool_For, return_bool */
@@ -5094,7 +5095,7 @@ INTERN DeeTypeObject DeeCompilerFile_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_ILEXER_C */

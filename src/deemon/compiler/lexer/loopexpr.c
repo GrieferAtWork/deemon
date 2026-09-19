@@ -290,7 +290,7 @@ err_foreach_flags:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_foreach_flags;
-		if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_FOREACH)) {
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_FOREACH)) {
 /*err_foreach_flags_elem:*/
 			ast_decref(foreach_elem);
 			goto err_foreach_flags;

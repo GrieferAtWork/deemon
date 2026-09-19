@@ -219,7 +219,7 @@ INTERN WUNUSED NONNULL((1)) int DFCALL ast_tags_clear(DeeLexer *self) {
 	while (current_tags.at_anno.an_annoc) {
 		struct ast_annotation *anno;
 		anno = &current_tags.at_anno.an_annov[current_tags.at_anno.an_annoc - 1];
-		if (DeeLexer_WarnfAst(self, anno->aa_func, W_UNUSED_ANNOTATION))
+		if (DeeLexer_WarnfAst(self, anno->aa_func, TPP_W_UNUSED_ANNOTATION))
 			goto err;
 		ast_decref(anno->aa_func);
 		--current_tags.at_anno.an_annoc;
@@ -257,15 +257,14 @@ err:
 	return -1;
 }
 
-LOCAL WUNUSED NONNULL((1, 3)) int DCALL
-convert_dot_tag_namespace(DeeLexer *self, size_t tag_name_len,
-                          char const *__restrict tag_name_str) {
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+convert_dot_tag_namespace(DeeLexer *self, char const *__restrict tag_name_str) {
 	if unlikely(DeeLexer_GetTok(self) == ':' ||
 	            DeeLexer_GetTok(self) == TPP_TOK_COLON_COLON) {
 		if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD,
-		                   tag_name_len, tag_name_str))
+		                   tag_name_str))
 			goto err;
-		DeeLexer_SetTokenId(self, '.');
+		DeeLexer_SetTokenId(self, TPP_TOK_OFCHAR('.'));
 	}
 	return 0;
 err:
@@ -361,9 +360,9 @@ again_compiler_subtag:
 			} else if (IS_TAG("optional")) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
-				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_str))
 					goto err;
-				if (DeeLexer_Skip2(self, '.', W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('.'), W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
 					goto err;
 				is_optional = true;
 				goto again_compiler_subtag;
@@ -371,7 +370,7 @@ again_compiler_subtag:
 				/* The annotation namespace used by our implementation (GATW). */
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
-				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_str))
 					goto err;
 				if (DeeLexer_GetTok(self) != '.')
 					goto warn_unknown_tag;
@@ -414,25 +413,40 @@ again_compiler_subtag:
 				} else if (IS_TAG("doc")) {
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 						goto err;
-					if likely(DeeLexer_GetTok(self) == '(') {
-						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					if (DeeLexer_GetTok(self) != '(' && is_optional)
+						goto do_next_compiler_tag;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+					{
+						tpp_token_id tok = DeeLexer_Require(self, TPP_TOK_OFCHAR('('));
+						if (TPP_TOK_ISERR(tok))
 							goto err;
-					} else {
-						if (is_optional)
+						if (tok == ',' || tok == ']')
 							goto do_next_compiler_tag;
+					}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+					if (DeeLexer_GetTok(self) != '(') {
 						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC))
 							goto err;
 						if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ']')
 							goto do_next_compiler_tag;
+					} else {
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+							goto err;
 					}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 					if likely(DeeLexer_IsStringToken(self)) {
 						if unlikely(append_decl_string(self))
 							goto err;
 					} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+						if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING))
+							goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
 							goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 					}
-					if (DeeLexer_Skip2(self, ')', W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
+					if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
 						goto err;
 					goto do_next_compiler_tag;
 				} else {
@@ -443,14 +457,14 @@ warn_unknown_tag_yield:
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 warn_unknown_tag:
-				if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
+				if unlikely(convert_dot_tag_namespace(self, tag_name_str))
 					goto err;
 				if (!is_optional) {
 					if (DeeLexer_Warnf(self,
 					                   DeeLexer_GetTok(self) == '.'
 					                   ? TPP_W_COMPILER_TAG_UNKNOWN_NS
 					                   : TPP_W_COMPILER_TAG_UNKNOWN,
-					                   tag_name_len, tag_name_str))
+					                   tag_name_str))
 						goto err;
 				}
 again_check_tag_namespace:
@@ -460,7 +474,7 @@ again_check_tag_namespace:
 					if (!DeeLexer_HasTokenKwd(self)) {
 err_no_keyword_after_dot:
 						if (DeeLexer_Warnf(self, TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT,
-						                   tag_name_len, tag_name_str))
+						                   tag_name_str))
 							goto err;
 					} else {
 						tag_name_str = DeeLexer_GetTokenKwdCStr(self);
@@ -468,7 +482,7 @@ err_no_keyword_after_dot:
 						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 							goto err;
 					}
-					if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
+					if unlikely(convert_dot_tag_namespace(self, tag_name_str))
 						goto err;
 					goto again_check_tag_namespace;
 				}
@@ -494,7 +508,7 @@ err_no_keyword_after_dot:
 			}
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
-			if unlikely(convert_dot_tag_namespace(self, tag_name_len, tag_name_str))
+			if unlikely(convert_dot_tag_namespace(self, tag_name_str))
 				goto err;
 			if unlikely(DeeLexer_GetTok(self) == '.')
 				goto warn_unknown_tag;
@@ -506,7 +520,7 @@ do_next_compiler_tag:
 			if (DeeLexer_GetTok(self) != ']')
 				goto again_compiler_tag;
 		}
-		if (DeeLexer_Skip2(self, ']', W_COMPILER_TAG_EXPECTED_RBRACKET))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_COMPILER_TAG_EXPECTED_RBRACKET))
 			goto err;
 #undef IS_TAG
 	} else {

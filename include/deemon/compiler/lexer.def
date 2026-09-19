@@ -287,7 +287,7 @@ TPP_WARNING(TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY, 1(TPP_WG_SYNTAX), 0(), TP
 //Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_CATCH, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[catch%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[as%] in %[catch%], but got %Pt")
 
-//Unused:TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[{%] or %[->%] after %[function%] or %[[](...)%], but got %Pt (Missing function bodies are deprecated in deemon 200)")
+TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[{%] or %[->%] after %[function%] or %[[](...)%], but got %Pt (Missing function bodies are deprecated in deemon 200)")
 //Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end function code, but got %Pt")
 
 //TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following an optional or default argument", SYMBOL_NAME(sym)); /*PRINT_SYMBOL_DECLARATION(sym);*/ })
@@ -420,13 +420,13 @@ TPP_WARNING(TPP_W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER, 1(TPP_WG_SYNTAX), 0
 
 /* Annotations */
 /*WARNING_NAMESPACE(WN_ANNOTATIONS, 2600)*/
-//TODO:TPP_WARNING(TPP_W_COMPILER_TAG_UNKNOWN, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Unknown compiler annotation %[%$s%]", len, ARG(char const *)); })
-//TODO:TPP_WARNING(TPP_W_COMPILER_TAG_UNKNOWN_NS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Unknown compiler annotation namespace %[%$s%]", len, ARG(char const *)); })
+TPP_WARNING(TPP_W_COMPILER_TAG_UNKNOWN, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "Unknown compiler annotation %[%s%]")
+TPP_WARNING(TPP_W_COMPILER_TAG_UNKNOWN_NS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "Unknown compiler annotation namespace %[%s%]")
 TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_KEYWORD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected a keyword after %[@[%], but got %Pt")
 TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_RBRACKET, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[]%] after %[@[...%], but got %Pt")
 TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[.%] after %[@[optional%], but got %Pt")
-//TODO:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Expected %[.%] or %[(%] after %[@[%$s%], but got " TOK_S, len, ARG(char const *), TOK_A); })
-//TODO:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { size_t len = ARG(size_t); WARNF("Expected a keyword after %[@[...%$s.%], but got " TOK_S, len, ARG(char const *), TOK_A); })
+TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[.%] or %[(%] after %[@[%s%], but got %Pt")
+TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[@[...%$s.%], but got %Pt")
 //Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[@[gatw.doc%], but got %Pt")
 //Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a string after %[@[gatw.doc(%], but got %Pt")
 //Unused:TPP_WARNING(TPP_W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[@[gatw.doc(\"...\"', but got %Pt")
@@ -1097,13 +1097,13 @@ DEF_WARNING(W_ATTR_OPERATOR_WITH_NONFINAL_PUBLIC_MEMBER, (WG_SYNTAX), WSTATE_WAR
 
 /* Annotations */
 WARNING_NAMESPACE(WN_ANNOTATIONS, 2600)
-DEF_WARNING(W_COMPILER_TAG_UNKNOWN, (WG_VALUE), WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Unknown compiler annotation `%$s`", len, ARG(char const *)); })
-DEF_WARNING(W_COMPILER_TAG_UNKNOWN_NS, (WG_VALUE), WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Unknown compiler annotation namespace `%$s`", len, ARG(char const *)); })
+DEF_WARNING(W_COMPILER_TAG_UNKNOWN, (WG_VALUE), WSTATE_WARN, { WARNF("Unknown compiler annotation `%s`", ARG(char const *)); })
+DEF_WARNING(W_COMPILER_TAG_UNKNOWN_NS, (WG_VALUE), WSTATE_WARN, { WARNF("Unknown compiler annotation namespace `%s`", ARG(char const *)); })
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD, (WG_SYNTAX), WSTATE_WARN, WARNF("Expected a keyword after `@[`, but got " TOK_S, TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_RBRACKET, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `]` after `@[...`, but got " TOK_S, TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `.` after `@[optional`, but got " TOK_S, TOK_A))
-DEF_WARNING(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, (WG_SYNTAX), WSTATE_WARN, { size_t len = ARG(size_t); WARNF("Expected `.` or `(` after `@[%$s`, but got " TOK_S, len, ARG(char const *), TOK_A); })
-DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, (WG_SYNTAX), WSTATE_ERROR, { size_t len = ARG(size_t); WARNF("Expected a keyword after `@[...%$s.`, but got " TOK_S, len, ARG(char const *), TOK_A); })
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_DOT_AFTER_KEYWORD, (WG_SYNTAX), WSTATE_WARN, { WARNF("Expected `.` or `(` after `@[%s`, but got " TOK_S, ARG(char const *), TOK_A); })
+DEF_WARNING(W_COMPILER_TAG_EXPECTED_KEYWORD_AFTER_DOT, (WG_SYNTAX), WSTATE_ERROR, { WARNF("Expected a keyword after `@[...%s.`, but got " TOK_S, ARG(char const *), TOK_A); })
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_LPAREN_AFTER_DOC, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(` after `@[gatw.doc`, but got " TOK_S, TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected a string after `@[gatw.doc(`, but got " TOK_S, TOK_A))
 DEF_WARNING(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)` after `@[gatw.doc(\"...\"', but got " TOK_S, TOK_A))

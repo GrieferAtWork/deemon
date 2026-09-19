@@ -52,6 +52,8 @@ DECL_BEGIN
 typedef struct Dee_compiler_object DeeCompilerObject;
 
 #ifdef CONFIG_BUILDING_DEEMON
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #define Dee_COMPILER_ITEM_OBJECT_HEAD(T)                                                                                    \
 	Dee_OBJECT_HEAD                                                                                                         \
 	DREF DeeCompilerObject              *ci_compiler; /* [1..1][const] The associated compiler. */                          \
@@ -129,6 +131,7 @@ struct Dee_compiler_items {
 #define Dee_compiler_items_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cis_lock)
 #define Dee_compiler_items_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->cis_lock)
 #define Dee_compiler_items_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cis_lock)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 struct Dee_compiler_options;
@@ -165,8 +168,10 @@ struct Dee_compiler_object {
 	uint16_t               _cp_pad[(sizeof(void *) / 2) - 1]; /* ... */
 	Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* [OVERRIDE(*, [valid_if(self != DeeCompiler_Active.wr_obj)])] */
 	struct Dee_compiler_items    cp_items;         /* Hash-map of user-code compiler item wrappers. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
 	struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */
 	struct ast_tags              cp_tags;          /* == ::current_tags */

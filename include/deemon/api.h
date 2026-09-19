@@ -453,7 +453,11 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * This feature switch should primarily make it so:
  * - The lexer no longer uses globals (optimizer / assembler /
  *   linker will be made non-global in a later step)
- * - The lexer uses TPP3 instead of TPP2 */
+ * - The lexer uses TPP3 instead of TPP2
+ * - Get rid of the `DeeCompilerItemObject` interface (primarily
+ *   because its `Lexer` component would have to be re-written
+ *   from scratch, combined with the fact that nothing's actually
+ *   using the user-code compiler interface) */
 #if (!defined(CONFIG_EXPERIMENTAL_USE_TPP3) && \
      !defined(CONFIG_NO_EXPERIMENTAL_USE_TPP3))
 #if 0
@@ -462,6 +466,12 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_USE_TPP3
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TPP3 */
+
+/* TODO: Once `CONFIG_EXPERIMENTAL_USE_TPP3` is finished, move on to:
+ * - Add CONFIG_EXPERIMENTAL_* to get rid of all other globals used by compilation
+ * - Add CONFIG_EXPERIMENTAL_* to remove `DeeCompiler_Type` (making it so compilers
+ *   are no longer deemon objects, allowing them to be stack-allocated)
+ */
 /************************************************************************/
 
 #ifdef CONFIG_HOST_WINDOWS

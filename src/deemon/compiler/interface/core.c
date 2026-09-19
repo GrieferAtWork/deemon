@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN_NOINT, COMPILER_END, DeeCompiler*, Dee_COMPILER_ITEM_HASH, Dee_compiler_items* */
 #include <deemon/compiler/interface.h> /* DR_Compiler, DeeCompilerWrapper_Members, DeeCompilerWrapper_Visit */
@@ -496,7 +497,7 @@ DeeCompilerItem_GetValue(DeeObject *__restrict self) {
 	return result;
 }
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_CORE_C */

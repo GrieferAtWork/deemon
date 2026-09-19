@@ -296,7 +296,8 @@ assertRtTypeName("ModuleDee");
 assertRtTypeName("ModuleDir");
 if (hasattr(rt, "ModuleDex"))
 	assertRtTypeName("ModuleDex");
-assertRtTypeName("Compiler");
+if (hasattr(rt, "Compiler")) /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	assertRtTypeName("Compiler");
 assertRtTypeName("ClassDescriptor");
 assertRtTypeName("InstanceMember");
 assertRtTypeName("CMethod");

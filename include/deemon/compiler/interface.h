@@ -26,6 +26,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include "../type.h"  /* Dee_visit_t, type_member */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
 #include "compiler.h" /* DeeCompiler*, Dee_COMPILER_ITEM_OBJECT_HEAD */
@@ -239,6 +240,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 #define DR_CRootScope  "?ARootScope" DR_Compiler /* DeeCompilerRootScope_Type */
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_H */

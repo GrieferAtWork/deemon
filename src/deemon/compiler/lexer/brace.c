@@ -166,17 +166,17 @@ ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item) {
 	ast_incref(initial_item);
 	elemv[0] = initial_item;
 	for (;;) {
-		if (DeeLexer_GetTok(self) != ',') {
-			if (DeeLexer_GetTok(self) == ':') {
-				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER))
-					goto err_list_elemv;
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-					goto err_list_elemv;
-				goto parse_list_item;
-			}
-			break;
+		if (DeeLexer_GetTok(self) == ':') {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if (DeeLexer_Require(self, TPP_TOK_OFCHAR(',')))
+				goto err_list_elemv;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COMMA_IN_LIST_INITIALIZER))
+				goto err_list_elemv;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		}
-parse_list_item:
+		if (DeeLexer_GetTok(self) != ',')
+			break;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_list_elemv;
 		{

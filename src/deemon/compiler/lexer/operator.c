@@ -358,6 +358,18 @@ err:
 	return ast_operator2(name, flags | AST_OPERATOR_FVARARGS, self, args);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE tpp_errno TPPCALL
+get_length_of_string_cb(void *arg, tpp_string *chunk,
+                        tpp_char const *str, tpp_size length) {
+	(void)chunk;
+	(void)str;
+	*(tpp_size *)arg = length;
+	return TPP_EOK;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
 /* Parse and return an operator name.
  * @param: features: Set of `P_OPERATOR_F*`
  * @return: * : One of `OPERATOR_*` or `AST_OPERATOR_*`
@@ -367,6 +379,42 @@ ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 	int32_t result;
 	switch (DeeLexer_GetTok(self)) {
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	TPP_CASE_TPP_TOK_STRING_SQUOTE {
+		tpp_uintmax intval;
+		tpp_errno error;
+		if (!DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
+			goto parse_string;
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+			goto err;
+		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &intval,
+		                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (TPP_ISERR(error))
+			goto err;
+		result = (int32_t)(uint16_t)intval;
+	}	break;
+
+	TPP_CASE_TPP_TOK_INT {
+		/* Special case: Invoke an operator using its internal index. */
+		int cast_error;
+		DREF DeeIntObject *intval;
+		tpp_char const *suffix_start;
+		uint16_t operator_name;
+		tpp_errno error = tpp_lexer_decodeint_ex(&self->dl_lexer, &intval, &suffix_start);
+		if (TPP_ISERR(error))
+			goto err;
+		cast_error = DeeInt_AsUInt16(Dee_AsObject(intval), &operator_name);
+		Dee_Decref(intval);
+		if unlikely(cast_error)
+			goto err;
+		if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+			if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER))
+				goto err;
+		}
+		result = (int32_t)operator_name;
+		goto done_y1;
+	}	break;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPP_CASE_TPP_TOK_STRING_SQUOTE {
 		tint_t intval;
 		if (!DeeLexer_Has(self, CHARACTER_LITERALS))
@@ -378,6 +426,7 @@ ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 			goto err;
 		result = (int32_t)(uint16_t)intval;
 	}	goto done_y1;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	case '+':
 		result = AST_OPERATOR_POS_OR_ADD;
@@ -553,21 +602,49 @@ do_operator_gr:
 		DeeLexer_NoLf_Pop(self);
 		if unlikely(result < 0)
 			goto err;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		{
+			tpp_token_id tok = DeeLexer_Require(self, TPP_TOK_OFCHAR(')'));
+			if (TPP_TOK_ISERR(tok))
+				goto err;
+			if (tok != ')')
+				goto done;
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(DeeLexer_GetTok(self) != ')') {
 			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RPAREN_AFTER_LPAREN))
 				goto err;
 			goto done;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		goto done_y1;
 
-	TPP_CASE_TPP_TOK_STRING_DQUOTE
+	TPP_CASE_TPP_TOK_STRING_DQUOTE {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		struct ast_loc string_loc;
+		tpp_size string_length;
+		tpp_errno parse_error;
+parse_string:
+		if (DeeLexer_GetLoc(self, &string_loc))
+			goto err;
+		parse_error = tpp_lexer_parsestring_cb(&self->dl_lexer,
+		                                       &get_length_of_string_cb, &string_length,
+		                                       TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		if (TPP_ISERR(parse_error))
+			goto err;
+		if (string_length != 0) {
+			if (DeeLexer_WarnfLoc(self, &string_loc, TPP_W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
+				goto err;
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 parse_string:
 		if (advance_wraplf(advance_wraplf((char const *)DeeLexer_GetTokenStart(self))) !=
 		    (char const *)DeeLexer_GetTokenEnd(self)) {
 			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_EMPTY_STRING_FOR_OPERATOR_NAME))
 				goto err;
 		}
-		ATTR_FALLTHROUGH
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	}	ATTR_FALLTHROUGH
 	case TPP_KWD_str:
 		if (features & P_OPERATOR_FCLASS) {
 			result = AST_OPERATOR_STR_OR_PRINT;
@@ -598,7 +675,7 @@ err_lbracket_flags:
 				goto err_lbracket_flags;
 		}
 		DeeLexer_NoLf_Pop(self);
-		if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
 		if (DeeLexer_GetTok(self) == '=') {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -626,11 +703,16 @@ err_del_lbracket_flags:
 					goto err_del_lbracket_flags;
 			}
 			DeeLexer_NoLf_Pop(self);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if (TPP_TOK_ISERR(DeeLexer_Require(self, TPP_TOK_OFCHAR(']'))))
+				goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if unlikely(DeeLexer_GetTok(self) != ']') {
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 					goto err;
 				goto done;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			goto done_y1;
 		}
 		result = OPERATOR_DELATTR;
@@ -697,10 +779,21 @@ default_case:
 				if unlikely(DeeLexer_GetTok(self) == '=') {
 					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_COLON_EQUALS_AS_OPERATOR_NAME))
 						goto err;
-				} else if unlikely(DeeLexer_GetTok(self) != TPP_TOK_COLON_EQUAL) {
-					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
-						goto err;
-					goto done;
+				} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+					tpp_token_id tok = DeeLexer_Require(self, TPP_TOK_COLON_EQUAL);
+					if (tok != TPP_TOK_COLON_EQUAL) {
+						if (TPP_TOK_ISERR(tok))
+							goto err;
+						goto done;
+					}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+					if unlikely(DeeLexer_GetTok(self) != TPP_TOK_COLON_EQUAL) {
+						if (DeeLexer_Warnf(self, TPP_W_EXPECTED_EQUAL_AFTER_MOVE_IN_OPERATOR_NAME))
+							goto err;
+						goto done;
+					}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				}
 				goto done_y1;
 			}

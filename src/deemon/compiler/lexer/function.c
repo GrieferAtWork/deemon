@@ -209,8 +209,10 @@ parse_arglist(DeeLexer *self) {
 					goto err;
 				if (DeeLexer_GetLoc(self, &arg->s_decl))
 					goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 				if (arg->s_decl.l_file)
 					TPPFile_Incref(arg->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				arg->s_flag = SYMBOL_FALLOC;
@@ -409,7 +411,9 @@ err_default_expr:
 				if unlikely(resize_default_list(&defaulta))
 					goto err;
 				if (default_expr->a_type != AST_CONSTEXPR) {
-					if (DeeLexer_WarnfAst(self, default_expr, TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, arg))
+					if (DeeLexer_WarnfAst(self, default_expr,
+					                      TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT,
+					                      arg))
 						goto err_default_expr;
 					default_value = DeeNone_NewRef();
 				} else {
@@ -551,7 +555,7 @@ err_decl_lparen_flags:
 		if unlikely(parse_arglist(self))
 			goto err_decl_lparen_flags;
 		DeeLexer_NoLf_Pop(self);
-		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_decl;
 	} else if (!allow_missing_params) {
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_NO_PARAMETER_LIST))
@@ -619,9 +623,10 @@ err_decl_lparen_flags:
 			DeeLexer_EnableLf_Break(self);
 			goto err_decl;
 		}
-		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
+		code = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, TPP_TOK_OFCHAR('}'));
+		code = ast_putddi(code, &brace_loc);
 		DeeLexer_EnableLf_Pop(self);
-		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_decl_xcode;
 		if (p_need_semi)
 			*p_need_semi = false;
@@ -658,6 +663,7 @@ err_decl_lparen_flags:
 		 */
 		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION))
 			goto err;
+
 		/* Make the symbol that the function will be stored
 		 * in as "varying" so it can be reassigned later. */
 		if (function_symbol) {
@@ -731,9 +737,10 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 			DeeLexer_EnableLf_Break(self);
 			goto err;
 		}
-		code = ast_putddi(ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
+		code = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, TPP_TOK_OFCHAR('}'));
+		code = ast_putddi(code, &brace_loc);
 		DeeLexer_EnableLf_Pop(self);
-		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode;
 		if (p_need_semi)
 			*p_need_semi = false;
@@ -786,8 +793,10 @@ ast_parse_function_java_lambda(DeeLexer *self,
 			if unlikely(!arg)
 				goto err_scope;
 			arg->s_decl = *first_argument_loc;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 			if (arg->s_decl.l_file)
 				TPPFile_Incref(arg->s_decl.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		} else {
 			/* Check if the argument name is a reserved identifier. */
 			if (DeeLexer_IsIdentifier(self, first_argument_name)) {
@@ -823,7 +832,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		DeeLexer_NoLf_Pop(self);
 		if unlikely(error)
 			goto err_scope;
-		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_scope;
 	} else {
 		/* No arguments */

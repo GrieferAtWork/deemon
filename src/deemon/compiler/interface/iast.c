@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/bool.h>               /* DeeBool_For */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
@@ -3442,8 +3443,8 @@ print_asm_operator(struct asm_operand *__restrict operand,
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	ASSERT(operand->ao_type);
 	printf("%$q (",
-	       operand->ao_type->s_size,
-	       operand->ao_type->s_text);
+	       tpp_string_len(operand->ao_type),
+	       tpp_string_str(operand->ao_type));
 	DO(print_ast_code(operand->ao_expr, printer, arg, true, caller_scope, indent));
 	PRINT(")");
 	return result;
@@ -4764,8 +4765,8 @@ class_member_in_class:
 		PRINT("\"\"");
 #else /* CONFIG_LANGUAGE_NO_ASM */
 		printf("%$q",
-		       self->a_assembly.as_text.at_text->s_size,
-		       self->a_assembly.as_text.at_text->s_text);
+		       tpp_string_len(self->a_assembly.as_text.at_text),
+		       tpp_string_str(self->a_assembly.as_text.at_text));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 		if (self->a_assembly.as_opc ||
 		    (self->a_flag & (AST_FASSEMBLY_FORMAT | AST_FASSEMBLY_MEMORY |
@@ -5268,13 +5269,20 @@ print_single_expr:
 	}
 	PRINT(", scope: ");
 	DO(print_scope_repr(self->a_scope, printer, arg));
-	if (self->a_ddi.l_file) {
+	if (!ast_loc_isempty(&self->a_ddi)) {
 		PRINT(", loc: (");
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		printf("<file %q>, %d, %d",
+		       self->a_ddi.l_name,
+		       ast_loc_getline(&self->a_ddi),
+		       ast_loc_getcol(&self->a_ddi));
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		printf("<file %$q>, %d, %d",
 		       self->a_ddi.l_file->f_namesize,
 		       self->a_ddi.l_file->f_name,
 		       self->a_ddi.l_line,
 		       self->a_ddi.l_col);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		PRINT(")");
 	}
 	PRINT(")");
@@ -5724,7 +5732,7 @@ INTERN DeeTypeObject DeeCompilerAst_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_IAST_C */

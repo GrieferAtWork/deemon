@@ -67,10 +67,21 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 		if unlikely(!*p_keyword_labels)
 			goto err_r;
 	} else if (DeeLexer_HasTokenKwd(self)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_token_id next_token;
+		next_token = tpp_lexer_peek_raw(&self->dl_lexer,
+		                                TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+		                                NULL, NULL, NULL);
+		if (TPP_TOK_ISERR(next_token))
+			goto err_r;
+		if (next_token == ':')
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		char const *next = peek_next_token(NULL);
 		if unlikely(!next)
 			goto err_r;
-		if (*next == ':') {
+		if (*next == ':')
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		{
 			size_t multiple_a;
 			if (result->a_type == AST_CONSTEXPR) {
 				ASSERT(result->a_constexpr == Dee_EmptyTuple);
@@ -101,7 +112,7 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 					goto err_r_kwdlist;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_kwdlist;
-				if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_KEYWORD_LABEL))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_KEYWORD_LABEL))
 					goto err_r_kwdlist;
 
 				/* Make sure that we have allocated sufficient memory for the keyword list. */
@@ -132,11 +143,22 @@ ast_parse_argument_list(DeeLexer *self, uint16_t mode,
 				if (DeeLexer_GetTok(self) != ',')
 					break;
 				if (mode & AST_COMMA_STRICTCOMMA) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+					tpp_token_id after_comma;
+					after_comma = tpp_lexer_peek_raw(&self->dl_lexer,
+					                                 TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+					                                 NULL, NULL, NULL);
+					if (TPP_TOK_ISERR(after_comma))
+						goto err_r;
+					if (!TPP_TOK_ISKEYWORD(after_comma))
+						break; /* Can't be a(nother) label. */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 					char const *next_token = peek_next_token(NULL);
 					if unlikely(!next_token)
 						goto err_r_kwdlist;
-					if (!DeeUni_IsSymCont(*next_token)) /* Can't be a label. */
+					if (!DeeUni_IsSymCont(*next_token)) /* Can't be a(nother) label. */
 						break;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				}
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_r_kwdlist;

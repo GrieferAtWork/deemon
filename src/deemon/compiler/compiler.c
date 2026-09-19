@@ -252,7 +252,9 @@ DeeCompiler_New(uint16_t flags) {
 		goto err_r;
 	Dee_weakref_support_init(result);
 	bzero(&result->cp_tags, sizeof(result->cp_tags));
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	bzero(&result->cp_items, sizeof(result->cp_items));
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	result->cp_flags           = flags;
 	result->cp_prev            = NULL;
 	result->cp_recursion       = 0;
@@ -328,7 +330,9 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 		TPPLexer_Quit(&self->cp_lexer.dl_lexer);
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	Dee_Decref(self->cp_scope);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	Dee_Free(self->cp_items.cis_list);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL

@@ -50,12 +50,18 @@ DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 
 INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define TPP_TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define TPP_TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
-LOCAL ATTR_CONST WUNUSED unsigned int DCALL dot_count(tok_t tk) {
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+LOCAL ATTR_CONST WUNUSED unsigned int DCALL dot_count(tpp_token_id tk) {
 	if (tk == TPP_TOK_DOT_DOT_DOT)
 		return 3;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (tk == TPP_TOK_DOT_DOT)
 		return 2;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 1;
 }
 
@@ -358,7 +364,7 @@ bad_symbol_name:
 	}
 
 	/* Lookup/create a keyword for the module's symbol name. */
-	return TPPLexer_LookupKeyword(symbol_start, symbol_length, 1);
+	return DeeLexer_NewKeyword(self, (tpp_char const *)symbol_start, symbol_length);
 err:
 	return NULL;
 }
@@ -613,9 +619,9 @@ ast_import_all_from_module(DeeLexer *self,
 			continue; /* Empty slot. */
 		if (iter->ss_flags & Dee_MODSYM_FHIDDEN)
 			continue; /* Hidden symbol. */
-		name = TPPLexer_LookupKeyword(Dee_MODULE_SYMBOL_GETNAMESTR(iter),
-		                              Dee_MODULE_SYMBOL_GETNAMELEN(iter),
-		                              1);
+		name = DeeLexer_NewKeyword(self,
+		                           (tpp_char const *)Dee_MODULE_SYMBOL_GETNAMESTR(iter),
+		                           Dee_MODULE_SYMBOL_GETNAMELEN(iter));
 		if unlikely(!name)
 			goto err;
 		sym = get_local_symbol(name);

@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* return_bool */
@@ -105,7 +106,7 @@ get_astloc_from_obj(DeeLexer *self, DeeObject *obj,
 		if (DeeObject_AsInt(args[1], &line))
 			goto err_args_1;
 		Dee_Decref(args[1]);
-		tpp_lcinfo_init(&result->l_lc, line - 1, col - 1);
+		tpp_lcinfo_init(&result->l_lc, line, col);
 		if (DeeObject_AssertTypeExact(args[0], &DeeCompilerFile_Type))
 			goto err_args_0;
 		if (((DeeCompilerItemObject *)args[0])->ci_compiler != DeeCompiler_Current) {
@@ -625,7 +626,7 @@ INTERN DeeTypeObject DeeCompilerRootScope_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_ISCOPE_C */

@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_Unpack1 */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompilerItem*, DeeCompiler_Current */
@@ -176,9 +177,9 @@ symbol_setkind(DeeCompilerSymbolObject *__restrict self,
 				sym->s_getset.gs_set = NULL;
 				break;
 			case SYMBOL_TYPE_AMBIG:
-				sym->s_ambig.a_decl2.l_file = NULL;
-				sym->s_ambig.a_declc        = 0;
-				sym->s_ambig.a_declv        = NULL;
+				ast_loc_init_empty(&sym->s_ambig.a_decl2);
+				sym->s_ambig.a_declc = 0;
+				sym->s_ambig.a_declv = NULL;
 				break;
 			case SYMBOL_TYPE_CONST:
 				sym->s_const = DeeNone_NewRef();
@@ -519,7 +520,7 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_ISYMBOL_C */

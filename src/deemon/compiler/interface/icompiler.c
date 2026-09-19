@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F* */
@@ -2479,7 +2480,7 @@ INTERN_TPCONST struct type_member tpconst compiler_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_ICOMPILER_C */

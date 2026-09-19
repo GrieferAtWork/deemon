@@ -51,6 +51,17 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err;
 	message = NULL;
+	if (needs_parenthesis) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if (TPP_TOK_ISERR(DeeLexer_Require(self, TPP_TOK_OFCHAR('('))))
+			goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		if (DeeLexer_GetTok(self) != '(') {
+			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
+				goto err;
+		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	}
 	if (DeeLexer_GetTok(self) == '(') {
 		/* Special case: We must be able to handle both of these:
 		 * >> assert (foo == bar), "Error";
@@ -84,10 +95,6 @@ ast_parse_assert(DeeLexer *self, bool needs_parenthesis) {
 			}
 		}
 	} else {
-		if (needs_parenthesis) {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION))
-				goto err;
-		}
 		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err;
