@@ -1109,12 +1109,13 @@ struct ast_loc {
 };
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#define ast_loc_init_empty(self) \
-	((self)->l_name = NULL, tpp_lcinfo_init_invalid(&(self)->l_lc))
-#define ast_loc_getname(self) ((self)->l_name)
+#define ast_loc_init_empty(self) ((self)->l_name = NULL, tpp_lcinfo_init_invalid(&(self)->l_lc))
+#define ast_loc_isempty(self)    ((self)->l_name == NULL && !tpp_lcinfo_isvalid(&(self)->l_lc))
+#define ast_loc_getname(self)    ((self)->l_name)
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define ast_loc_init_empty(self) (void)((self)->l_file = NULL)
-#define ast_loc_getname(self) tpp_file_getfilename((self)->l_file)
+#define ast_loc_isempty(self)    ((self)->l_file == NULL)
+#define ast_loc_getname(self)    tpp_file_getfilename((self)->l_file)
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define ast_loc_getlc(self)   ((self)->l_lc)
 #define ast_loc_getline(self) tpp_lcinfo_getline((self)->l_lc)
@@ -1133,6 +1134,9 @@ INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
 
 /* Helper to transition into a world where this gets passed along the stack */
 #define _DeeLexer_Current DeeLexer_FromTPP(TPPLexer_Current)
+
+/* Returns the lexer active for a given `DeeCompilerObject *self` */
+#define DeeLexer_OfCompiler(self) _DeeLexer_Current
 
 /* Describe a region of code where `TPPLEXER_FLAG_WANTLF` should be off. */
 #define DeeLexer_NoLf_Push(self)                                 \
@@ -1170,7 +1174,6 @@ INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
  * @return:  0: The warning caused an error to be thrown, but the
  *              max number of compiler errors has yet to be reached. */
 INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
-INTDEF ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
@@ -1184,33 +1187,26 @@ INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
 INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
 
-DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
-
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
 #define parser_errf(...)             Dee_ASSUMED_VALUE(parser_errf(__VA_ARGS__), -1)
 #define parser_erratf(loc, ...)      Dee_ASSUMED_VALUE(parser_erratf(loc, __VA_ARGS__), -1)
 #define parser_erratrf(loc, ...)     Dee_ASSUMED_VALUE(parser_erratrf(loc, __VA_ARGS__), -1)
 #define parser_errastf(loc_ast, ...) Dee_ASSUMED_VALUE(parser_errastf(loc_ast, __VA_ARGS__), -1)
-#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
-/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
-INTDEF WUNUSED int DCALL parser_warn_pack_used(struct ast_loc *loc);
-
-
-//#define DeeLexer_Skip(self, tid) tpp_lexer_skip(&(self)->dl_lexer, tid)
-#define DeeLexer_VWarnf(self, id, args)             ((void)(self), parser_vwarnf(id, args))
-#define DeeLexer_Warnf(self, ...)                   ((void)(self), parser_warnf(__VA_ARGS__))
-//#define DeeLexer_VWarnfAt(self, file, pos, args)    ((void)(self), ...)
-#define DeeLexer_WarnfAt(self, file, pos, ...)      ((void)(self), (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
-//#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)(self), ...)
-//#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)(self), ...)
-#define DeeLexer_WarnfLoc(self, loc, ...) ((void)(self), parser_warnatf(loc, __VA_ARGS__))
-#define DeeLexer_WarnfAst(self, ast, ...) ((void)(self), parser_warnastf(ast, __VA_ARGS__))
-#define DeeLexer_WarnfSym(self, sym, ...) ((void)(self), parser_warnatrf(&(sym)->s_decl, __VA_ARGS__))
-//#define DeeLexer_VWarnfLoc(self, loc, id, args) ((void)(self), ...)
-//#define DeeLexer_VWarnfAst(self, ast, id, args) ((void)(self), ...)
-//#define DeeLexer_VWarnfSym(self, sym, id, args) ((void)(self), ...)
+//#define DeeLexer_Skip(self, tid)                    tpp_lexer_skip(&(self)->dl_lexer, tid)
+//#define DeeLexer_VWarnf(self, id, args)             ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_Warnf(self, ...)                     ((void)&(self)->dl_lexer, parser_warnf(__VA_ARGS__))
+//#define DeeLexer_VWarnfAt(self, file, pos, args)    ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfAt(self, file, pos, ...)        ((void)&(self)->dl_lexer, (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
+//#define DeeLexer_VWarnfLc(self, filename, lc, args) ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_WarnfLc(self, filename, lc, ...)   ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VWarnfLoc(self, loc, id, args)     ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfLoc(self, loc, ...)             ((void)&(self)->dl_lexer, parser_warnatf(loc, __VA_ARGS__))
+//#define DeeLexer_VWarnfAst(self, ast, id, args)     ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfAst(self, ast, ...)             ((void)&(self)->dl_lexer, parser_warnastf(ast, __VA_ARGS__))
+//#define DeeLexer_VWarnfSym(self, sym, id, args)     ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfSym(self, sym, ...)             ((void)&(self)->dl_lexer, parser_warnatrf(&(sym)->s_decl, __VA_ARGS__))
 
 
 INTDEF WUNUSED NONNULL((1)) int DFCALL
@@ -1246,6 +1242,9 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__r
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
 #define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
+
+/* Returns the lexer active for a given `DeeCompilerObject *self` */
+#define DeeLexer_OfCompiler(self) (&(self)->cp_lexer)
 
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
 #define DeeLexer_NoLf_Push(self)                                                            \

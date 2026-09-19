@@ -514,7 +514,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3, 6, 7)) struct symbol *DFCALL
 class_maker_addmember(DeeLexer *lexer,
                       struct class_maker *__restrict self,
-                      tpp_keyword *__restrict name,
+                      tpp_keyword const *__restrict name,
                       bool is_class_member,
                       uint16_t flags,
                       uint16_t **__restrict pp_usage_counter,
@@ -1034,11 +1034,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DFCALL
 parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict self) {
 	for (;;) {
 		struct ast_loc loc;
-		tpp_keyword *initializer_name;
+		tpp_keyword const *initializer_name;
 		if unlikely(skip_lf(lexer))
 			goto err;
 		if unlikely(!DeeLexer_HasTokenKwd(lexer)) {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
+			if (DeeLexer_Warnf(lexer, TPP_W_EXPECTED_KEYWORD_IN_CONSTRUCTOR_INIT))
 				goto err;
 			break;
 		}
@@ -1434,7 +1434,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_class_impl(DeeLexer *self,
-                     uint16_t class_flags, tpp_keyword *name,
+                     uint16_t class_flags, tpp_keyword const *name,
                      bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct class_maker maker;
@@ -1550,12 +1550,17 @@ err_basev:
 				struct ast_loc packloc;
 				if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CLASS_BASE_PARENS))
 					goto err;
-				if (DeeLexer_GetLoc(self, &packloc))
-					goto err;
+				ast_loc_init_empty(&packloc);
+				if (!tpp_file_ismacro(DeeLexer_GetFile(self))) {
+					if (DeeLexer_GetLoc(self, &packloc))
+						goto err;
+				}
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
-				if unlikely(DeeLexer_GetTok(self) != '(' && parser_warn_pack_used(&packloc))
-					goto err;
+				if unlikely(DeeLexer_GetTok(self) != '(' && !ast_loc_isempty(&packloc)) {
+					if (DeeLexer_WarnfLoc(self, &packloc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+						goto err;
+				}
 				goto do_parse_class_base_after_yield;
 			}
 			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CLASS_BASE_EXTENDS))
@@ -1822,7 +1827,7 @@ set_visibility:
 			Dee_operator_t operator_name;
 			bool need_semi;
 			int error;
-			tpp_keyword *operator_name_kwd;
+			tpp_keyword const *operator_name_kwd;
 			DREF struct ast *operator_ast;
 			int32_t temp;
 			if (DeeLexer_GetLoc(self, &loc))
@@ -1850,7 +1855,7 @@ define_operator:
 					bool did_warn_any = false;
 					size_t i;
 					for (i = 0; i <= maker.cm_desc->cd_iattr_mask; ++i) {
-						tpp_keyword *member_keyword;
+						tpp_keyword const *member_keyword;
 						struct Dee_class_attribute *attr;
 						struct symbol *member_symbol;
 						attr = &maker.cm_desc->cd_iattr_list[i];
@@ -2186,7 +2191,7 @@ yield_semi_after_operator:
 		}	break;
 
 		default: {
-			tpp_keyword *member_name;
+			tpp_keyword const *member_name;
 			struct symbol *member_symbol;
 			DREF struct ast *init_ast;
 			bool need_semi;
@@ -2400,8 +2405,11 @@ err_lbrace_flags_anno_lparen_flags:
 				} else if (DeeLexer_GetTok(self) == TPP_KWD_pack) {
 					struct ast_loc packloc;
 					/* Argument list. */
-					if (DeeLexer_GetLoc(self, &loc))
-						goto err_lbrace_flags_anno;
+					ast_loc_init_empty(&packloc);
+					if (!tpp_file_ismacro(DeeLexer_GetFile(self))) {
+						if (DeeLexer_GetLoc(self, &packloc))
+							goto err_lbrace_flags_anno;
+					}
 					DeeLexer_NoLf_Push(self);
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
 err_lbrace_flags_anno_pack_flags:
@@ -2416,8 +2424,10 @@ err_lbrace_flags_anno_pack_flags:
 						if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 							goto err_lbrace_flags_anno_pack_flags;
 					} else {
-						if unlikely(parser_warn_pack_used(&packloc))
-							goto err_lbrace_flags_anno_pack_flags;
+						if (!ast_loc_isempty(&packloc)) {
+							if (DeeLexer_WarnfLoc(self, &packloc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+								goto err_lbrace_flags_anno_pack_flags;
+						}
 						if unlikely(parse_arglist(self))
 							goto err_lbrace_flags_anno_pack_flags;
 					}
@@ -2760,7 +2770,7 @@ err:
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_class(DeeLexer *self, uint16_t class_flags, tpp_keyword *name,
+ast_parse_class(DeeLexer *self, uint16_t class_flags, tpp_keyword const *name,
                 bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;

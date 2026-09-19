@@ -961,18 +961,6 @@ err_r_path:
 
 
 
-/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
-INTERN WUNUSED int DCALL
-parser_warn_pack_used(struct ast_loc *loc) {
-	struct TPPFile *file = TPPLexer_Current->l_token.t_file;
-	if (loc && loc->l_file)
-		file = loc->l_file;
-	if (file->f_kind != TPPFILE_KIND_TEXT)
-		return 0; /* Only warn inside of regular files */
-	return parser_warnatf(loc, W_PACK_USED_OUTSIDE_OF_MACRO);
-
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 parser_skip_maybe_seek(DeeLexer *self, tpp_token_id expected_tok) {
 	/* Depending on which token was expected, and what the current token is,
@@ -1015,6 +1003,7 @@ err:
 }
 
 
+/* Warn about use of `pack` (but only if we're not currently inside of a macro) */
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum) {
 	ASSERT(DeeLexer_GetTok(self) != '(');
@@ -1030,8 +1019,10 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum) {
 		} else {
 			/* Warn about use of `pack` (if done so outside
 			 * of a macro, and only if not followed by a `(`) */
-			if unlikely(parser_warn_pack_used(&packloc))
-				goto err;
+			if (packloc.l_file && packloc.l_file->f_kind != TPPFILE_KIND_TEXT) {
+				if (DeeLexer_WarnfLoc(self, &packloc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+					goto err;
+			}
 		}
 	} else {
 		int temp;

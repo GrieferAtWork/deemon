@@ -198,10 +198,10 @@ ast_parse_import(DeeLexer *self);
 
 /* Parse a module name and generate an AST to reference a single symbol `import_name`. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_import_single(DeeLexer *self, struct TPPKeyword *__restrict import_name);
+ast_parse_import_single(DeeLexer *self, tpp_keyword const *__restrict import_name);
 
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
-ast_parse_import_single_sym(DeeLexer *self, struct TPPKeyword *__restrict import_name);
+ast_parse_import_single_sym(DeeLexer *self, tpp_keyword const *__restrict import_name);
 
 /* Parse a comma-separated list of expressions,
  * as well as assignment/inplace expressions.
@@ -347,11 +347,11 @@ ast_parse_loopexpr(DeeLexer *self);
  *       This parser function will merely return the `AST_FUNCTION`,
  *       not some wrapper that assigns it to a symbol using `AST_STORE`. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+ast_parse_function(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
                    struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+ast_parse_function_noscope(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
                            struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
@@ -360,7 +360,7 @@ ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi);
 /* Parse a java-style lambda. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_function_java_lambda(DeeLexer *self,
-                               struct TPPKeyword *first_argument_name,
+                               tpp_keyword const *first_argument_name,
                                struct ast_loc *first_argument_loc);
 
 /* Check if the parser is located after the '(' of a java-style lambda.
@@ -410,7 +410,7 @@ ast_parse_brace_items(DeeLexer *self);
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_class(DeeLexer *self, uint16_t class_flags, struct TPPKeyword *name,
+ast_parse_class(DeeLexer *self, uint16_t class_flags, tpp_keyword const *name,
                 bool create_symbol, unsigned int symbol_mode);
 
 /* Parse the head header of a for-statement, returning the appropriate
@@ -536,7 +536,7 @@ parse_module_byname(DeeLexer *self, bool for_alias);
 
 INTDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(struct Dee_module_object *__restrict mod,
-                     struct TPPKeyword *__restrict name);
+                     tpp_keyword const *__restrict name);
 
 
 

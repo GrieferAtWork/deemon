@@ -332,7 +332,7 @@ next_expr:
 	if (DeeLexer_GetTok(self) == TPP_KWD_class) {
 		/* Declare a new class */
 		uint16_t class_flags = current_tags.at_class_flags & 0xf; /* From tags. */
-		struct TPPKeyword *class_name = NULL;
+		tpp_keyword const *class_name = NULL;
 		unsigned int symbol_mode      = lookup_mode;
 		if (symbol_mode & LOOKUP_SYM_FINAL)
 			class_flags |= TP_FFINAL;
@@ -379,7 +379,7 @@ next_expr:
 #endif
 	} else if (DeeLexer_GetTok(self) == TPP_KWD_function) {
 		/* Declare a new function */
-		struct TPPKeyword *function_name = NULL;
+		tpp_keyword const *function_name = NULL;
 		struct symbol *function_symbol   = NULL;
 		unsigned int symbol_mode         = lookup_mode;
 		struct ast_loc function_name_loc;
@@ -634,8 +634,11 @@ err_function_anno:
 				/* Comma-separated argument list. */
 				int temp;
 				struct ast_loc packloc;
-				if (DeeLexer_GetLoc(self, &packloc))
-					goto err_current;
+				ast_loc_init_empty(&packloc);
+				if (!tpp_file_ismacro(DeeLexer_GetFile(self))) {
+					if (DeeLexer_GetLoc(self, &packloc))
+						goto err_current;
+				}
 				DeeLexer_NoLf_Push(self);
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
 err_current_pack_flags:
@@ -646,8 +649,10 @@ err_current_pack_flags:
 					DeeLexer_NoLf_Break(self);
 					goto do_parse_paren_arg_list;
 				}
-				if unlikely(parser_warn_pack_used(&packloc))
-					goto err_current_pack_flags;
+				if (!ast_loc_isempty(&packloc)) {
+					if (DeeLexer_WarnfLoc(self, &packloc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+						goto err_current_pack_flags;
+				}
 
 				/* Empty argument list (Same as none at all). */
 				temp = maybe_expression_begin(self);

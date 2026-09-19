@@ -200,12 +200,12 @@ uasm_parse_directive(DeeLexer *self) {
 #define NAMEISKWD_S(len, s)   \
 	(name->k_size == (len) && \
 	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
-	tpp_keyword *name;
+	tpp_keyword const *name;
 	name = uasm_parse_symnam(self);
 	if unlikely(!name)
 		goto err;
 	if (DeeLexer_GetTok(self) == ':') {
-		tpp_keyword *label_name;
+		tpp_keyword const *label_name;
 		char backup;
 		struct asm_sym *label;
 		/* Actually a label definition. */
@@ -347,7 +347,7 @@ do_handle_code:
 	goto done;
 
 	{
-		tpp_keyword *reloc_name;
+		tpp_keyword const *reloc_name;
 		struct asm_sym *reloc_sym;
 		uint16_t reloc_type;
 		uint16_t reloc_value;

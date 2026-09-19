@@ -58,6 +58,7 @@ get_scope_lookupmode(DeeObject *__restrict value,
 		DREF DeeObject *result = NULL;                                         \
 		DeeCompilerAstObject *head;                                            \
 		DREF struct ast *result_ast;                                           \
+		DeeLexer *lexer;                                                       \
 		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__head, "o:" #name, &head)) \
 			goto done;                                                         \
 		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
@@ -73,11 +74,12 @@ get_scope_lookupmode(DeeObject *__restrict value,
 			goto done_compiler_end;                                            \
 		}                                                                      \
 		ast_incref(head->ci_value);                                            \
+		lexer = DeeLexer_OfCompiler(self->cw_compiler);                        \
 		IF_SUFFIX(if (!(is_suffix)) {                                          \
 			result_ast = head->ci_value;                                       \
 		} else) {                                                              \
 			uint16_t old_exceptsz = DeeThread_Self()->t_exceptsz;              \
-			result_ast = func(_DeeLexer_Current, head->ci_value);              \
+			result_ast = func(lexer, head->ci_value);                          \
 			if unlikely(!result_ast) {                                         \
 				if (old_exceptsz == DeeThread_Self()->t_exceptsz) {            \
 					result = Dee_None;                                         \
@@ -102,13 +104,15 @@ get_scope_lookupmode(DeeObject *__restrict value,
 		unsigned int lookup_mode;                                                              \
 		DeeObject *lookup_mode_ob = Dee_EmptyString;                                           \
 		uint16_t old_exceptsz;                                                                 \
+		DeeLexer *lexer;                                                                       \
 		if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__lookupmode, "|o:" #name, &lookup_mode_ob)) \
 			goto done;                                                                         \
 		if (COMPILER_BEGIN(self->cw_compiler))                                                 \
 			goto done;                                                                         \
 		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                        \
 			goto done_compiler_end;                                                            \
-		result_ast   = func(_DeeLexer_Current, lookup_mode);                                   \
+		lexer = DeeLexer_OfCompiler(self->cw_compiler);                                        \
+		result_ast   = func(lexer, lookup_mode);                                               \
 		old_exceptsz = DeeThread_Self()->t_exceptsz;                                           \
 		if unlikely(!result_ast) {                                                             \
 			if (old_exceptsz == DeeThread_Self()->t_exceptsz) {                                \
@@ -142,22 +146,22 @@ DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(parse_assign, ast_parse_assign)
 #define IF_TRUE(x) x
 #define IF_FALSE(x)
 DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_unarytail, ast_parse_unary_operand, IF_FALSE, )
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_prodtail, ast_parse_prod_operand, IF_TRUE, TOKEN_IS_PROD(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_sumtail, ast_parse_sum_operand, IF_TRUE, TOKEN_IS_SUM(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_shifttail, ast_parse_shift_operand, IF_TRUE, TOKEN_IS_SHIFT(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_cmptail, ast_parse_cmp_operand, IF_TRUE, TOKEN_IS_CMP(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_cmpeqtail, ast_parse_cmpeq_operand, IF_TRUE, TOKEN_IS_CMPEQ(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_andtail, ast_parse_and_operand, IF_TRUE, TOKEN_IS_AND(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_xortail, ast_parse_xor_operand, IF_TRUE, TOKEN_IS_XOR(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_ortail, ast_parse_or_operand, IF_TRUE, TOKEN_IS_OR(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_astail, ast_parse_as_operand, IF_TRUE, TOKEN_IS_AS(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_landtail, ast_parse_land_operand, IF_TRUE, TOKEN_IS_LAND(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_lortail, ast_parse_lor_operand, IF_TRUE, TOKEN_IS_LOR(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_condtail, ast_parse_cond_operand, IF_TRUE, TOKEN_IS_COND(DeeLexer_GetTok(_DeeLexer_Current)))
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_assigntail, ast_parse_assign_operand, IF_TRUE, TOKEN_IS_ASSIGN(DeeLexer_GetTok(_DeeLexer_Current)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_prodtail, ast_parse_prod_operand, IF_TRUE, TOKEN_IS_PROD(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_sumtail, ast_parse_sum_operand, IF_TRUE, TOKEN_IS_SUM(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_shifttail, ast_parse_shift_operand, IF_TRUE, TOKEN_IS_SHIFT(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_cmptail, ast_parse_cmp_operand, IF_TRUE, TOKEN_IS_CMP(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_cmpeqtail, ast_parse_cmpeq_operand, IF_TRUE, TOKEN_IS_CMPEQ(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_andtail, ast_parse_and_operand, IF_TRUE, TOKEN_IS_AND(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_xortail, ast_parse_xor_operand, IF_TRUE, TOKEN_IS_XOR(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_ortail, ast_parse_or_operand, IF_TRUE, TOKEN_IS_OR(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_astail, ast_parse_as_operand, IF_TRUE, TOKEN_IS_AS(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_landtail, ast_parse_land_operand, IF_TRUE, TOKEN_IS_LAND(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_lortail, ast_parse_lor_operand, IF_TRUE, TOKEN_IS_LOR(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_condtail, ast_parse_cond_operand, IF_TRUE, TOKEN_IS_COND(DeeLexer_GetTok(lexer)))
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_assigntail, ast_parse_assign_operand, IF_TRUE, TOKEN_IS_ASSIGN(DeeLexer_GetTok(lexer)))
 DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_exprtail, ast_parse_postexpr, IF_FALSE, )
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_maptail, ast_parse_mapping, IF_TRUE, DeeLexer_GetTok(_DeeLexer_Current) == (tok_t)':')
-DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_seqtail, ast_parse_brace_list, IF_TRUE, DeeLexer_GetTok(_DeeLexer_Current) == (tok_t)',')
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_maptail, ast_parse_mapping, IF_TRUE, DeeLexer_GetTok(lexer) == (tok_t)':')
+DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_seqtail, ast_parse_brace_list, IF_TRUE, DeeLexer_GetTok(lexer) == (tok_t)',')
 #undef IF_FALSE
 #undef IF_TRUE
 #undef DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION
@@ -184,7 +188,8 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	result_ast   = ast_parse_statement(_DeeLexer_Current, args.nonblocking);
+	result_ast   = ast_parse_statement(DeeLexer_OfCompiler(self->cw_compiler),
+	                                   args.nonblocking);
 	if unlikely(!result_ast) {
 		if (old_exceptsz == DeeThread_Self()->t_exceptsz) {
 			result = Dee_None;
@@ -226,7 +231,7 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 			goto done_compiler_end;
 	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
-	result_ast = ast_parse_statements_until(_DeeLexer_Current,
+	result_ast = ast_parse_statements_until(DeeLexer_OfCompiler(self->cw_compiler),
 	                                        AST_FMULTIPLE_KEEPLAST,
 	                                        end_token);
 	if unlikely(!result_ast) {

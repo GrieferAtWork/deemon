@@ -107,7 +107,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(struct Dee_module_object *__restrict mod,
-                     struct TPPKeyword *__restrict name) {
+                     tpp_keyword const *__restrict name) {
 	Dee_hash_t i, perturb;
 	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
 	perturb = i = Dee_MODULE_HASHST(mod, hash);
@@ -250,7 +250,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
-ast_parse_import_single_sym(DeeLexer *self, struct TPPKeyword *__restrict import_name) {
+ast_parse_import_single_sym(DeeLexer *self, tpp_keyword const *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
 	struct Dee_module_symbol *modsym;
@@ -295,7 +295,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_import_single(DeeLexer *self, struct TPPKeyword *__restrict import_name) {
+ast_parse_import_single(DeeLexer *self, tpp_keyword const *__restrict import_name) {
 	struct symbol *extern_symbol;
 	extern_symbol = ast_parse_import_single_sym(self, import_name);
 	if unlikely(!extern_symbol)
@@ -310,13 +310,13 @@ err:
 
 struct import_item {
 	struct ast_loc        ii_import_loc;  /* Parser location of `ii_import_name` */
-	struct TPPKeyword    *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
+	tpp_keyword const    *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
 	DREF DeeStringObject *ii_import_name; /* [0..1] The name of the object being imported.
 	                                       * When NULL, `ii_symbol_name` is used instead. */
 };
 
 /* Return `bar` for a module name `.foo.bar`, etc. */
-PRIVATE WUNUSED NONNULL((1)) struct TPPKeyword *DCALL
+PRIVATE WUNUSED NONNULL((1)) tpp_keyword const *DCALL
 get_module_symbol_name(DeeLexer *self,
                        DeeStringObject *__restrict module_name,
                        bool is_module) {
@@ -609,7 +609,7 @@ ast_import_all_from_module(DeeLexer *self,
 	end = (iter = mod->mo_bucketv) + (mod->mo_bucketm + 1);
 	for (; iter < end; ++iter) {
 		struct symbol *sym;
-		struct TPPKeyword *name;
+		tpp_keyword const *name;
 		if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			continue; /* Empty slot. */
 		if (iter->ss_flags & Dee_MODSYM_FHIDDEN)

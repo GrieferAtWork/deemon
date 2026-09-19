@@ -273,7 +273,7 @@ maybe_expression_begin(DeeLexer *self) {
 
 	case '!': {
 		struct TPPFile *tok_file;
-		tpp_keyword *kwd;
+		tpp_keyword const *kwd;
 		char const *tok_begin;
 		/* Check if this ! is eventually followed by `is` or `in`
 		 * If this is the case, then this can't be the start of an
@@ -380,7 +380,7 @@ maybe_expression_begin_peek(DeeLexer *self) {
 		goto yes; /* :: */
 
 	case '!': {
-		tpp_keyword *kwd;
+		tpp_keyword const *kwd;
 		/* Check if this ! is eventually followed by `is` or `in`
 		 * If this is the case, then this can't be the start of an
 		 * expression! */
@@ -405,7 +405,7 @@ maybe_expression_begin_peek(DeeLexer *self) {
 	}	break;
 
 	default: {
-		tpp_keyword *kwd;
+		tpp_keyword const *kwd;
 		if (!tpp_is_keyword_start(peek))
 			goto no;
 		kwd = peek_keyword(tok_file, tok_begin, 0);
@@ -1095,7 +1095,7 @@ do_else_branch:
 		return ast_parse_assert(self, true);
 
 	case TPP_KWD_function: {
-		tpp_keyword *function_name;
+		tpp_keyword const *function_name;
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION))
 			goto err;
 		/* Create a new function */
@@ -1113,7 +1113,7 @@ do_else_branch:
 	}	break;
 
 	case TPP_KWD_final: {
-		tpp_keyword *class_name;
+		tpp_keyword const *class_name;
 		uint16_t class_flags;
 		class_flags = TP_FFINAL;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -1153,6 +1153,7 @@ do_create_class:
 
 	case TPP_KWD_pack: {
 		int has_paren;
+		bool inside_macro = tpp_file_ismacro(DeeLexer_GetFile(self));
 		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -1166,8 +1167,8 @@ err_pack_flags:
 				goto err;
 			}
 			has_paren = DeeLexer_GetTok(self) == '(' ? 2 : 1;
-		} else {
-			if unlikely(parser_warn_pack_used(&loc))
+		} else if (!inside_macro) {
+			if (DeeLexer_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
 				goto err_pack_flags;
 		}
 		if (DeeLexer_GetTok(self) == '{') {
@@ -1793,7 +1794,7 @@ do_warn_deprecated_modifier:
 default_case:
 		if (DeeLexer_HasTokenKwd(self)) {
 			/* Perform a regular symbol lookup. */
-			tpp_keyword *name;
+			tpp_keyword const *name;
 do_keyword:
 			name = DeeLexer_GetTokenKwd(self);
 			if (DeeLexer_GetLoc(self, &loc))
@@ -2053,6 +2054,7 @@ err_other:
 		case TPP_KWD_pack: {
 			int temp;
 			DREF struct ast *kw_labels;
+			bool inside_macro = tpp_file_ismacro(DeeLexer_GetFile(self));
 			/* Call expression without parenthesis. */
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err_r;
@@ -2060,8 +2062,10 @@ err_other:
 				goto err_r;
 			if (DeeLexer_GetTok(self) == '(')
 				goto do_normal_call_with_loc;
-			if unlikely(parser_warn_pack_used(&loc))
-				goto err_r;
+			if (!inside_macro) {
+				if (DeeLexer_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+					goto err_r;
+			}
 			temp = maybe_expression_begin(self);
 			if (temp <= 0) {
 				if unlikely(temp < 0)

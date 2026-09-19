@@ -223,13 +223,13 @@ INTERN_TPCONST struct type_getset tpconst compiler_getsets[] = {
 
 
 #ifndef NDEBUG
-#define ast_new(scope, loc) ast_dbgnew(scope, loc, __FILE__, __LINE__)
-PRIVATE WUNUSED DREF struct ast *DCALL
-ast_dbgnew(DeeScopeObject *__restrict scope,
+#define ast_new(self, scope, loc) ast_dbgnew(self, scope, loc, __FILE__, __LINE__)
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DCALL
+ast_dbgnew(DeeLexer *self, DeeScopeObject *__restrict scope,
            DeeObject *loc, char const *file, int line)
 #else /* !NDEBUG */
-PRIVATE WUNUSED DREF struct ast *DCALL
-ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ast *DCALL
+ast_new(DeeLexer *self, DeeScopeObject *__restrict scope, DeeObject *loc)
 #endif /* NDEBUG */
 {
 	DREF struct ast *result;
@@ -242,7 +242,7 @@ ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
 	result = ast_alloc();
 #endif /* NDEBUG */
 	if likely(result) {
-		if unlikely(set_astloc_from_obj(loc, result)) {
+		if unlikely(set_astloc_from_obj(self, loc, result)) {
 			ast_free(result);
 			result = NULL;
 		} else {
@@ -302,7 +302,7 @@ ast_makeconstexpr(DeeCompilerObject *self, size_t argc,
 	ast_scope = get_scope(args.scope);
 	if unlikely(!ast_scope)
 		goto done_compiler_end;
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type      = AST_CONSTEXPR;
@@ -356,7 +356,7 @@ ast_makesym(DeeCompilerObject *self, size_t argc,
 		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_SYM;
@@ -411,7 +411,7 @@ ast_makeunbind(DeeCompilerObject *self, size_t argc,
 		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_UNBIND;
@@ -465,7 +465,7 @@ ast_makebound(DeeCompilerObject *self, size_t argc,
 		err_symbol_not_reachable(ast_scope, args.sym->ci_value);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_BOUND;
@@ -568,7 +568,7 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
 		Dee_Decref(branch_v[i]);
 		branch_v[i] = (DREF DeeCompilerAstObject *)branch_ast;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto err_branch_v;
 	result_ast->a_type            = AST_MULTIPLE;
@@ -627,7 +627,7 @@ ast_makereturn(DeeCompilerObject *self, size_t argc,
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type   = AST_RETURN;
@@ -680,7 +680,7 @@ ast_makeyield(DeeCompilerObject *self, size_t argc,
 		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type  = AST_YIELD;
@@ -733,7 +733,7 @@ ast_makethrow(DeeCompilerObject *self, size_t argc,
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type  = AST_THROW;
@@ -955,7 +955,7 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 		err_invalid_ast_basescope(args.guard, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	/* Unpack the given handler expressions vector. */
@@ -1107,7 +1107,7 @@ check_next:
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type        = AST_LOOP;
@@ -1161,7 +1161,7 @@ ast_makeloopctl(DeeCompilerObject *self, size_t argc,
 		goto done;
 	if unlikely((ast_scope = get_scope(args.scope)) == NULL)
 		goto done_compiler_end;
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_LOOPCTL;
@@ -1295,7 +1295,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type               = AST_CONDITIONAL;
@@ -1360,7 +1360,7 @@ ast_makebool(DeeCompilerObject *self, size_t argc,
 		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_BOOL;
@@ -1411,7 +1411,7 @@ ast_makeexpand(DeeCompilerObject *self, size_t argc,
 		err_invalid_ast_basescope(args.expr, ast_scope->s_base);
 		goto done_compiler_end;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_EXPAND;
@@ -1486,7 +1486,7 @@ ast_makefunction(DeeCompilerObject *self, size_t argc,
 	if unlikely(check_function_code_scope(code_scope, ast_scope->s_base))
 		goto done_compiler_end;
 	/* Setup a new function branch. */
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type             = AST_FUNCTION;
@@ -1611,7 +1611,7 @@ ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_OPERATOR_FUNC;
@@ -1785,7 +1785,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 		break;
 	default: break;
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type              = AST_OPERATOR;
@@ -2113,7 +2113,7 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 			goto done_compiler_end;
 		}
 	}
-	result_ast = ast_new(ast_scope, args.loc);
+	result_ast = ast_new(DeeLexer_OfCompiler(self), ast_scope, args.loc);
 	if unlikely(!result_ast)
 		goto done_compiler_end;
 	result_ast->a_type = AST_ACTION;

@@ -156,7 +156,7 @@ rehash_realloc:
 }
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_label_symbol(tpp_keyword *__restrict name) {
+uasm_label_symbol(tpp_keyword const *__restrict name) {
 	char const *text = name->k_name;
 	size_t size      = name->k_size;
 	size_t label_number;
@@ -194,7 +194,7 @@ not_a_label:
 
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_symbol(tpp_keyword *__restrict name) {
+uasm_symbol(tpp_keyword const *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
@@ -224,7 +224,7 @@ err:
 
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_fbsymbol(tpp_keyword *__restrict name,
+uasm_fbsymbol(tpp_keyword const *__restrict name,
               bool return_back_symbol) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
@@ -287,7 +287,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_fbsymbol_def(tpp_keyword *__restrict name) {
+uasm_fbsymbol_def(tpp_keyword const *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
@@ -347,9 +347,9 @@ err:
 #define TOK_IS_SYMBOL_NAME(x) \
 	(TPP_TOK_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
 
-INTERN WUNUSED NONNULL((1)) tpp_keyword *DFCALL
+INTERN WUNUSED NONNULL((1)) tpp_keyword const *DFCALL
 uasm_parse_symnam(DeeLexer *self) {
-	tpp_keyword *result;
+	tpp_keyword const *result;
 	char *symbol_start;
 	char *symbol_end;
 	(void)self;
@@ -449,7 +449,7 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 		if (TPPLexer_Current->l_token.t_begin[0] != '0' && /* Check leading ZERO for 0xbbff */
 		    (TPPLexer_Current->l_token.t_end[-1] == 'b' || TPPLexer_Current->l_token.t_end[-1] == 'f')) {
 			/* Forward/backward symbol reference. */
-			tpp_keyword *name;
+			tpp_keyword const *name;
 			name = TPPLexer_LookupEscapedKeyword((char const *)DeeLexer_GetTokenStart(self),
 			                                     DeeLexer_GetTokenLen(self) - 1, 1);
 			if unlikely(!name)
@@ -486,7 +486,7 @@ yield_done:
 			} while (TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)));
 		} else {
 			struct TPPString *strval;
-			tpp_keyword *name;
+			tpp_keyword const *name;
 			strval = TPPLexer_ParseString();
 			if unlikely(!strval)
 				goto err;
@@ -563,7 +563,7 @@ yield_done:
 
 		/* Lookup/defined user-symbols. */
 		if (TOK_IS_SYMBOL_NAME(DeeLexer_GetTok(self))) {
-			tpp_keyword *name;
+			tpp_keyword const *name;
 			name = uasm_parse_symnam(self);
 			if unlikely(!name)
 				goto err;
@@ -878,7 +878,7 @@ do_parse_extern_operands(DeeLexer *self,
 
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
 	if (DeeLexer_GetTok(self) == '@' && mod) {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		struct Dee_module_symbol *modsym;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err_mod;
@@ -910,7 +910,7 @@ err:
 }
 
 PRIVATE ATTR_COLD int DFCALL
-err_unknown_symbol(tpp_keyword *__restrict name) {
+err_unknown_symbol(tpp_keyword const *__restrict name) {
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Unknown symbol `%s`",
 	                       name->k_name);
@@ -921,7 +921,7 @@ do_parse_global_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (DeeLexer_GetTok(self) == '@') {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		symbol_name = uasm_parse_symnam(self);
@@ -967,7 +967,7 @@ do_parse_local_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (DeeLexer_GetTok(self) == '@') {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		DeeScopeObject *scope_iter;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1064,7 +1064,7 @@ do_parse_arg_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (DeeLexer_GetTok(self) == '@') {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		symbol_name = uasm_parse_symnam(self);
@@ -1107,7 +1107,7 @@ do_parse_ref_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (DeeLexer_GetTok(self) == '@') {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		DeeScopeObject *scope_iter;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1147,7 +1147,7 @@ do_parse_static_operands(DeeLexer *self) {
 	int32_t result;
 	struct symbol *sym;
 	if (DeeLexer_GetTok(self) == '@') {
-		tpp_keyword *symbol_name;
+		tpp_keyword const *symbol_name;
 		DeeScopeObject *scope_iter;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -1867,7 +1867,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_instruction(DeeLexer *self) {
-	tpp_keyword *name;
+	tpp_keyword const *name;
 	struct asm_mnemonic *mnemonic;
 	struct asm_invocation invoc;
 	if (TPP_TOK_ISINT(DeeLexer_GetTok(self))) {
@@ -2172,7 +2172,7 @@ asm_mnemonic_lookup_str(char const *__restrict name) {
 }
 
 INTERN WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
-asm_mnemonic_lookup(tpp_keyword *__restrict name) {
+asm_mnemonic_lookup(tpp_keyword const *__restrict name) {
 	struct asm_mnemonic *result;
 	if (name->k_rare) {
 		/* Check if the mnemonic has already been cached. */
@@ -2190,7 +2190,7 @@ asm_mnemonic_lookup(tpp_keyword *__restrict name) {
 	/* Try to cache the mnemonic in the keyword. */
 #undef calloc
 #define calloc(n, s) Dee_Callocc(n, s)
-	if (TPPKeyword_MAKERARE(name) && !name->k_rare->kr_user)
+	if (TPPKeyword_MAKERARE((tpp_keyword *)name) && !name->k_rare->kr_user)
 		name->k_rare->kr_user = (void *)result;
 done:
 	return result;

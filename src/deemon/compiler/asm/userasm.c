@@ -173,7 +173,7 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 	case OPERAND_CLASS_DISP8_HALF:
 	case OPERAND_CLASS_DISP16_HALF:
 		if (self->io_intexpr.ie_sym) {
-			struct TPPKeyword *name;
+			tpp_keyword const *name;
 			char const *mode   = ".PC";
 			char const *suffix = " + ";
 			name = self->io_intexpr.ie_sym->as_uname;
@@ -2112,7 +2112,7 @@ next:
 			/* Determine the referenced operand. */
 			if (ch == '[') {
 				char const *name_start;
-				struct TPPKeyword *name;
+				tpp_keyword const *name;
 				struct asm_operand *op_iter, *op_end;
 				iter = Dee_unicode_skipspaceutf8_n(iter, end);
 				ch   = *iter++;
@@ -2533,13 +2533,15 @@ create_assembly_file:
 			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
 				/* The user broke stack alignment (just evaluate the operand). */
 				if (self->a_assembly.as_opv[count].ao_name) {
-					if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
+					if (DeeLexer_Warnf(_DeeLexer_Current,
+					                   TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
 					                   self->a_assembly.as_opv[count].ao_name->k_name))
 						goto err;
 				} else {
 					char buffer[32];
 					Dee_sprintf(buffer, "%%%" PRFuSIZ "", (size_t)count);
-					if (DeeLexer_Warnf(self, TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
+					if (DeeLexer_Warnf(_DeeLexer_Current,
+					                   TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
 					                   buffer))
 						goto err;
 				}
@@ -2579,12 +2581,12 @@ create_assembly_file:
 		/* NOTE: Don't omit stack miss-alignment warnings when `SP` was specified in the clobber list. */
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
-				if (DeeLexer_Warnf(self, TPP_W_UASM_DOESNT_CLEANUP_STACK,
+				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_DOESNT_CLEANUP_STACK,
 				                   (unsigned long)(current_assembler.a_stackcur -
 				                                   old_state.as_stackcur)))
 					goto err;
 			} else {
-				if (DeeLexer_Warnf(self, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
+				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
 				                   (unsigned long)(old_state.as_stackcur -
 				                                   current_assembler.a_stackcur)))
 					goto err;

@@ -44,13 +44,11 @@
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
 #include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, symbol, text_label */
+#include "tpp.h"
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
-#ifdef CONFIG_BUILDING_DEEMON
-#include "tpp.h"
-#endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_BEGIN
 
@@ -121,9 +119,6 @@ struct class_member {
 	uint16_t         cm_pad[(sizeof(void *) / 2) - 1]; /* ... */
 };
 
-struct TPPFile;
-struct TPPKeyword;
-
 #ifndef CONFIG_LANGUAGE_NO_ASM
 struct TPPString;
 struct asm_text {
@@ -133,7 +128,7 @@ struct asm_text {
 
 struct asm_operand {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	struct TPPKeyword        *ao_name;  /* [0..1] User-defined name for this operand. */
+	tpp_keyword const        *ao_name;  /* [0..1] User-defined name for this operand. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	/*REF*/ struct TPPString *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i, [1..1])]
 	                                     *       [if((self - :as_opv) >= :as_num_o+:as_num_i, [0..0])]

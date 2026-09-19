@@ -68,7 +68,6 @@ typedef struct class_scope_object DeeClassScopeObject;
 typedef struct base_scope_object  DeeBaseScopeObject;
 typedef struct root_scope_object  DeeRootScopeObject;
 
-struct TPPKeyword;
 struct ast;
 struct Dee_string_object;
 struct Dee_module_object;
@@ -491,7 +490,7 @@ struct text_label {
 		                             * Expression of a case-label. NOTE: NULL for the default case.
 		                             * NOTE: Always NULL in `bs_swdefl|s_default` labels. */
 #endif /* !__INTELLISENSE__ */
-		struct TPPKeyword *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
+		tpp_keyword const *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -522,7 +521,7 @@ struct symbol {
 	DWEAK Dee_refcnt_t    s_refcnt;/* Reference counter */
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id` */
-	struct TPPKeyword    *s_name;  /* [1..1][const] Name of this symbol. */
+	tpp_keyword const    *s_name;  /* [1..1][const] Name of this symbol. */
 	DeeScopeObject       *s_scope; /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
 #define SYMBOL_TYPE_GLOBAL 0x0001  /* A global symbol. */
@@ -955,7 +954,7 @@ struct base_scope_object {
 	                                    * NOTE: When `NULL`, this scope is actually a `DeeRootScopeObject`. */
 	DeeRootScopeObject *bs_root;       /* [1..1] The module-local root/global scope.
 	                                    * HINT: If this is a self-pointer, this scope is actually a `DeeRootScopeObject`. */
-	struct TPPKeyword  *bs_name;       /* [0..1][const] Name of the function of this scope.
+	tpp_keyword const  *bs_name;       /* [0..1][const] Name of the function of this scope.
 	                                    * HINT: During creating of a base-scope, the creator is required
 	                                    *       to register a symbol for function self-referencing.
 	                                    *       With that in mind, unnamed or root-mode functions does have such a symbol. */
@@ -1070,7 +1069,7 @@ INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict 
  * @return: * :      A new reference to the symbol requested.
  * @return: NULL:    An error occurred. */
 INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
+lookup_symbol(unsigned int mode, tpp_keyword const *__restrict name,
               struct ast_loc *warn_loc);
 #define LOOKUP_SYM_NORMAL    0x0000
 #define LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
@@ -1087,16 +1086,16 @@ lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
 /* Lookup the nth instance of `name` (starting at 1 for the first)
  * Return `NULL` if no such instance exists or if nth is 0 */
 INTDEF WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name);
+lookup_nth(unsigned int nth, tpp_keyword const *__restrict name);
 
 /* Check if `name` is a reserved symbol name. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL
-is_reserved_symbol_name(struct TPPKeyword *__restrict name);
+is_reserved_symbol_name(tpp_keyword const *__restrict name);
 
 
 /* Lookup or create a label, given its name in the current base-scope. */
 INTDEF WUNUSED NONNULL((1)) struct text_label *DCALL
-lookup_label(struct TPPKeyword *__restrict name);
+lookup_label(tpp_keyword const *__restrict name);
 
 /* Create a new case label for `expr`.
  * NOTE: The caller is responsible to ensure that the `BASESCOPE_FSWITCH` flag is set. */
@@ -1114,7 +1113,7 @@ INTDEF WUNUSED struct text_label *DCALL new_default_label(void);
 /* Lookup a symbol in the given scope. */
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
-             struct TPPKeyword *__restrict name);
+             tpp_keyword const *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
@@ -1136,8 +1135,8 @@ INTDEF WUNUSED int DCALL link_forward_symbols(void);
  *       only one of which will actually be addressable.
  * NOTE: The caller is also required to initialize the returned
  *       symbol, who's class is undefined up until that point. */
-INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc);
-INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL get_local_symbol(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc);
+INTDEF WUNUSED NONNULL((1)) struct symbol *DCALL get_local_symbol(tpp_keyword const *__restrict name);
 #define has_local_symbol(name) (get_local_symbol(name) != NULL)
 
 /* Delete a given local symbol, making it anonymous.
@@ -1152,11 +1151,11 @@ new_unnamed_symbol_in_scope(DeeScopeObject *__restrict scope);
 
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
-                          struct TPPKeyword *__restrict name,
+                          tpp_keyword const *__restrict name,
                           struct ast_loc *loc);
 INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
-                          struct TPPKeyword *__restrict name);
+                          tpp_keyword const *__restrict name);
 
 
 #ifndef __INTELLISENSE__

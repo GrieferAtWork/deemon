@@ -132,12 +132,12 @@ asm_parse_operands(DeeLexer *self,
 	        : DeeLexer_IsStringToken(self)) ||
 	       (DeeLexer_GetTok(self) == '[')) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-		struct TPPKeyword *name = NULL;
+		tpp_keyword const *name = NULL;
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 		if (DeeLexer_GetTok(self) == '[') {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
-			if (TPP_ISKEYWORD(DeeLexer_GetTok(self))) {
+			if (DeeLexer_HasTokenKwd(self)) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 				name = DeeLexer_GetTokenKwd(self);
 #endif /* CONFIG_LANGUAGE_NO_ASM */

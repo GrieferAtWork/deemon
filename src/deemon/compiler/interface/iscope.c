@@ -67,10 +67,10 @@ DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 
 
 
-INTERN WUNUSED NONNULL((2)) int DCALL
-set_astloc_from_obj(DeeObject *obj,
+INTERN WUNUSED NONNULL((1, 3)) int DFCALL
+set_astloc_from_obj(DeeLexer *self, DeeObject *obj,
                     struct ast *__restrict result) {
-	if unlikely(get_astloc_from_obj(obj, &result->a_ddi))
+	if unlikely(get_astloc_from_obj(self, obj, &result->a_ddi))
 		goto err;
 	if likely(result->a_ddi.l_file)
 		TPPFile_Incref(result->a_ddi.l_file);
@@ -79,11 +79,12 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((2)) int DCALL
-get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result) {
+INTERN WUNUSED NONNULL((1, 3)) int DFCALL
+get_astloc_from_obj(DeeLexer *self, DeeObject *obj,
+                    struct ast_loc *__restrict result) {
 	DREF DeeObject *args[3];
 	if (!obj)
-		return DeeLexer_GetLoc(_DeeLexer_Current, result);
+		return DeeLexer_GetLoc(self, result);
 	if (DeeNone_Check(obj)) {
 		result->l_file = NULL;
 		goto done;
@@ -361,8 +362,9 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
-	struct TPPKeyword *kwd;
+	tpp_keyword const *kwd;
 	char const *name_utf8;
+	DeeLexer *lexer;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("newlocal", params: """
 	DeeStringObject *name:?Dstring;
 	bool requirenew = true;
@@ -383,10 +385,11 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
+	lexer = DeeLexer_OfCompiler(self->ci_compiler);
 	name_utf8 = DeeString_AsUtf8(args.name);
 	if unlikely(!name_utf8)
 		goto done_compiler_end;
-	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);
+	kwd = tpp_lexer_newkeyword(lexer, name_utf8, WSTR_LENGTH(name_utf8));
 	if unlikely(!kwd)
 		goto done_compiler_end;
 	sym = get_local_symbol_in_scope(self->ci_value, kwd);
@@ -399,7 +402,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		}
 	} else {
 		struct ast_loc symloc;
-		if unlikely(get_astloc_from_obj(args.loc, &symloc))
+		if unlikely(get_astloc_from_obj(lexer, args.loc, &symloc))
 			goto done_compiler_end;
 		sym = new_local_symbol_in_scope(self->ci_value, kwd, &symloc);
 		if unlikely(!sym)

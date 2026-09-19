@@ -65,7 +65,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) struct symbol *DCALL
 parse_argument_name(DeeLexer *self) {
 	struct symbol *result;
-	struct TPPKeyword *argument_name;
+	tpp_keyword const *argument_name;
 	if unlikely(!DeeLexer_HasTokenKwd(self)) {
 		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME))
 			goto err;
@@ -496,7 +496,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+ast_parse_function(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
                    bool allow_missing_params, struct ast_loc *name_loc,
                    struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol) {
 	DREF struct ast *result;
@@ -517,7 +517,7 @@ err_anno:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function_noscope(DeeLexer *self, struct TPPKeyword *name, bool *p_need_semi,
+ast_parse_function_noscope(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
                            bool allow_missing_params, struct ast_loc *name_loc,
                            struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol) {
 	struct decl_ast my_decl;
@@ -770,7 +770,7 @@ err:
  * In either case, upon entry the current token must be the '->' */
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_function_java_lambda(DeeLexer *self,
-                               struct TPPKeyword *first_argument_name,
+                               tpp_keyword const *first_argument_name,
                                struct ast_loc *first_argument_loc) {
 	struct ast_loc arrow_loc;
 	DREF struct ast *result, *code;

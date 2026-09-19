@@ -819,7 +819,7 @@
  *  x            - Reference to another rule (imagine it being replaced with the other rule's content, similar to how a macro would)
  *  'x'          - x is a character / character-keyword-sequence
  *  ?x?          - `x' should be interpreted as a human-readable exception to other rules.
- *  <x>          - `x' describes a wildcard-enabled expression describing a token as named by TPP (e.g.: `<TOK_STRING>' or `<TPP_ISKEYWORD(*)>').
+ *  <x>          - `x' describes a wildcard-enabled expression describing a token as named by TPP (e.g.: `<TOK_STRING>' or `<TPP_TOK_ISKEYWORD(*)>').
  *  (x)          - Parenthesis to prevent ambiguity
  *  [x]          - `x' is optional
  *  a b          - `a' and `b' follow each other, but are whitespace separated
@@ -843,7 +843,7 @@
 #define WITHOUT_UNDERSCORE(x) (['_'...] ## x ## ['_'...])
 #define DDI(x)  x /* HINT: DDI information for this expression points to the start of `x' */
 
-_keyword ::= <TPP_ISKEYWORD(*)>;
+_keyword ::= <TPP_TOK_ISKEYWORD(*)>;
 
 TOK_INT ::= (
 	/* NOTE: _-characters should be ignored in integers. Their only purpose is to

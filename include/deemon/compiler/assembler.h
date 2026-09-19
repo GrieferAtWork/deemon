@@ -125,7 +125,7 @@ struct asm_sym {
 	SLIST_ENTRY(asm_sym) as_link;  /* [0..1][owned] Next symbol. */
 	code_addr_t          as_addr;  /* [valid_if(as_sect != SECTION_INVALID)] Address at which this symbol is defined. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	tpp_keyword         *as_uname; /* [0..1] Symbol name. */
+	tpp_keyword const   *as_uname; /* [0..1] Symbol name. */
 	struct asm_sym      *as_uhnxt; /* [0..1] Next symbol with the same hash. */
 	struct asm_sym      *as_uprev; /* [0..1] Previous iteration of this symbol (used by symbols that can be re-defined; aka. indexed symbols) */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -209,9 +209,9 @@ struct asm_sec {
 struct ddi_binding {
 #define DDI_BINDING_CLASS_LOCAL 0x0000 /* The binding refers to a local variable. */
 #define DDI_BINDING_CLASS_STACK 0x0001 /* The binding refers to a stack variable. */
-	uint16_t     db_class; /* The symbol binding class (One of `DDI_BINDING_CLASS_*`) */
-	uint16_t     db_index; /* The symbol binding index (stack-address, or LID) */
-	tpp_keyword *db_name;  /* [0..1][const] Name of the symbol (when `NULL`, the symbol must be unbound). */
+	uint16_t           db_class; /* The symbol binding class (One of `DDI_BINDING_CLASS_*`) */
+	uint16_t           db_index; /* The symbol binding index (stack-address, or LID) */
+	tpp_keyword const *db_name;  /* [0..1][const] Name of the symbol (when `NULL`, the symbol must be unbound). */
 };
 
 struct ddi_checkpoint {
@@ -572,7 +572,7 @@ INTDEF size_t const asm_mnemonics_size;
 INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup_str(char const *__restrict name);
 INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
-asm_mnemonic_lookup(tpp_keyword *__restrict name);
+asm_mnemonic_lookup(tpp_keyword const *__restrict name);
 
 
 INTDEF void DCALL userassembler_init(void);
@@ -591,7 +591,7 @@ INTDEF struct user_assembler current_userasm;
 INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse(DeeLexer *self);
 INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_instruction(DeeLexer *self);
 INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_directive(DeeLexer *self);
-INTDEF WUNUSED NONNULL((1)) tpp_keyword *DFCALL uasm_parse_symnam(DeeLexer *self);
+INTDEF WUNUSED NONNULL((1)) tpp_keyword const *DFCALL uasm_parse_symnam(DeeLexer *self);
 /* Parse an operand. NOTE: The caller is responsible for ZERO-initializing `result` beforehand. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL uasm_parse_operand(DeeLexer *self, struct asm_invoke_operand *__restrict result);
 /* Parse an integer expression as found in operands, following a `$` token.
@@ -620,20 +620,20 @@ uasm_invoke(struct asm_mnemonic const *__restrict instr,
  * integer is greater than `current_userasm.ua_labelc`, NULL is
  * returned, but no error is set. */
 INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_label_symbol(tpp_keyword *__restrict name);
+uasm_label_symbol(tpp_keyword const *__restrict name);
 
 /* Lookup a user-assembly symbol, given its name.
  * If the symbol doesn't already exist, it is automatically created. */
 INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_symbol(tpp_keyword *__restrict name);
+uasm_symbol(tpp_keyword const *__restrict name);
 
 /* Same as `uasm_symbol`, but create/lookup symbols using forward/backward semantics. */
 INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_fbsymbol(tpp_keyword *__restrict name, bool return_back_symbol);
+uasm_fbsymbol(tpp_keyword const *__restrict name, bool return_back_symbol);
 
 /* Return an F/B symbol suitable to be defined at some specific address. */
 INTDEF WUNUSED NONNULL((1)) struct asm_sym *DFCALL
-uasm_fbsymbol_def(tpp_keyword *__restrict name);
+uasm_fbsymbol_def(tpp_keyword const *__restrict name);
 
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
@@ -855,7 +855,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL asm_putddi_dbg(struct ast *__restrict self
 #endif /* !NDEBUG */
 
 /* Generate symbol binding information as part of the next DDI checkpoint. */
-INTDEF WUNUSED int DCALL asm_putddi_bind(uint16_t ddi_class, uint16_t index, tpp_keyword *name);
+INTDEF WUNUSED int DCALL asm_putddi_bind(uint16_t ddi_class, uint16_t index, tpp_keyword const *name);
 #define asm_putddi_sbind(index, name) asm_putddi_bind(DDI_BINDING_CLASS_STACK, index, name)
 #define asm_putddi_lbind(index, name) asm_putddi_bind(DDI_BINDING_CLASS_LOCAL, index, name)
 #define asm_putddi_sunbind(index)     asm_putddi_sbind(index, NULL)

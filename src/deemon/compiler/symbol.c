@@ -1159,7 +1159,7 @@ rehash_realloc:
 }
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
-is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
+is_reserved_symbol_name(tpp_keyword const *__restrict name) {
 	/* Quick check: any keywords not registered as builtin are allowed. */
 	if (TPP_ISUSERKEYWORD(name->k_id))
 		return false;
@@ -1268,7 +1268,7 @@ is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 
 
 INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_symbol(unsigned int mode, struct TPPKeyword *__restrict name,
+lookup_symbol(unsigned int mode, tpp_keyword const *__restrict name,
               struct ast_loc *warn_loc) {
 	struct symbol *result, **bucket;
 	DeeScopeObject *iter = current_scope;
@@ -1453,7 +1453,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((2)) struct symbol *DCALL
-lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name) {
+lookup_nth(unsigned int nth, tpp_keyword const *__restrict name) {
 	DeeScopeObject *iter;
 	/* Make sure to return `NULL` when `nth` was zero. */
 	if unlikely(!nth--)
@@ -1482,7 +1482,7 @@ nope:
 
 
 INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
-new_local_symbol(struct TPPKeyword *__restrict name, struct ast_loc *loc) {
+new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	result = sym_alloc();
 	if unlikely(!result)
@@ -1575,7 +1575,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
-                          struct TPPKeyword *__restrict name,
+                          tpp_keyword const *__restrict name,
                           struct ast_loc *loc) {
 	struct symbol *result, **bucket;
 	result = sym_alloc();
@@ -1620,7 +1620,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
-                          struct TPPKeyword *__restrict name) {
+                          tpp_keyword const *__restrict name) {
 	struct symbol *bucket;
 	if (!scope->s_mapc)
 		return false;
@@ -1632,7 +1632,7 @@ get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 }
 
 INTERN WUNUSED NONNULL((1)) struct symbol *DCALL
-get_local_symbol(struct TPPKeyword *__restrict name) {
+get_local_symbol(tpp_keyword const *__restrict name) {
 	struct symbol *bucket;
 	if (!current_scope->s_mapc)
 		return false;
@@ -1664,7 +1664,7 @@ del_local_symbol(struct symbol *__restrict sym) {
 
 INTERN WUNUSED NONNULL((1, 2)) struct symbol *DCALL
 scope_lookup(DeeScopeObject *__restrict scope,
-             struct TPPKeyword *__restrict name) {
+             tpp_keyword const *__restrict name) {
 	struct symbol *result = NULL;
 	if (!scope->s_mapa)
 		goto done;
@@ -1680,7 +1680,7 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
                  char const *__restrict name,
                  size_t name_length) {
 	struct symbol *result = NULL;
-	struct TPPKeyword *keyword;
+	tpp_keyword const *keyword;
 	if (!scope->s_mapa)
 		goto done;
 	keyword = TPPLexer_LookupKeyword(name, name_length, 0);
@@ -1733,7 +1733,7 @@ rehash_realloc:
 }
 
 INTERN WUNUSED NONNULL((1)) struct text_label *DCALL
-lookup_label(struct TPPKeyword *__restrict name) {
+lookup_label(tpp_keyword const *__restrict name) {
 	struct text_label *result, **p_result;
 	if likely(current_basescope->bs_lbla) {
 		result = current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];

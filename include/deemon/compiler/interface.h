@@ -77,7 +77,7 @@ INTDEF DeeTypeObject DeeCompilerRootScope_Type;       /* objitem (extends `DeeCo
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetScope(struct scope_object *__restrict scope);
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetKeyword(struct TPPKeyword *__restrict kwd);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetKeyword(tpp_keyword const *__restrict kwd);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetSymbol(struct symbol *__restrict sym);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetFile(struct TPPFile *__restrict file);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexer(DeeCompilerObject *__restrict self);
@@ -90,7 +90,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeC
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetParser(DeeCompilerObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 #else /* __INTELLISENSE__ */
-#define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type, kwd)
+#define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type, (void *)(kwd))
 #define DeeCompiler_GetSymbol(sym)           DeeCompiler_GetItem(&DeeCompilerSymbol_Type, sym)
 #define DeeCompiler_GetFile(file)            DeeCompiler_GetItem(&DeeCompilerFile_Type, file)
 #define DeeCompiler_GetLexer(self)           DeeCompiler_GetWrapper(self, &DeeCompilerLexer_Type)
@@ -145,14 +145,14 @@ struct Dee_unicode_printer;
 
 /* @return: 0:  OK
  * @return: -1: Error. */
-INTDEF WUNUSED NONNULL((2)) int DCALL
-get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict result);
+INTDEF WUNUSED NONNULL((1, 3)) int DFCALL
+get_astloc_from_obj(DeeLexer *self, DeeObject *obj, struct ast_loc *__restrict result);
 
 /* Helper functions for setting the DDI location of a given ast `dst`
  * WARNING: Previously set DDI information is overwritten,
  *          and the old DDI file will _NOT_ be decref'ed! */
-INTDEF WUNUSED NONNULL((2)) int DCALL
-set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
+INTDEF WUNUSED NONNULL((1, 3)) int DFCALL
+set_astloc_from_obj(DeeLexer *self, DeeObject *obj, struct ast *__restrict result);
 
 /* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)` */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -168,8 +168,8 @@ get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
 
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
-INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
-INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, tpp_keyword const *kwd);
+INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tok_t id, tpp_keyword const *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing`
  * NOTE: `typing` doesn't necessarily need to be a type object!

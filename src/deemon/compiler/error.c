@@ -579,9 +579,6 @@ err:
 #endif
 }
 
-INTDEF ATTR_CONST WUNUSED DeeTypeObject *DCALL
-get_warning_error_class(int wnum);
-
 INTERN WUNUSED NONNULL((1)) bool DCALL
 tpp_is_reachable_file(struct TPPFile *__restrict file) {
 	struct TPPFile *iter = TPPLexer_Current->l_token.t_file;
@@ -600,6 +597,8 @@ nope:
 	return false;
 }
 
+INTDEF ATTR_CONST WUNUSED DeeTypeObject *DCALL
+get_warning_error_class(int wnum);
 
 PRIVATE int DCALL
 handle_compiler_warning(struct ast_loc *loc,
@@ -734,10 +733,6 @@ INTERN ATTR_COLD int (parser_warnf)(int wnum, ...) {
 	result = handle_compiler_warning(NULL, false, false, wnum, args);
 	va_end(args);
 	return result;
-}
-
-INTERN ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args) {
-	return handle_compiler_warning(NULL, false, false, wnum, args);
 }
 
 INTERN ATTR_COLD int (parser_errf)(int wnum, ...) {

@@ -360,9 +360,8 @@ err:
 }
 
 INTERN WUNUSED int DCALL
-asm_putddi_bind(uint16_t ddi_class,
-                uint16_t index,
-                struct TPPKeyword *name) {
+asm_putddi_bind(uint16_t ddi_class, uint16_t index,
+                tpp_keyword const *name) {
 	struct ddi_binding *binding;
 	size_t i;
 	/* Check for simple case: DDI is disabled. */
@@ -1547,7 +1546,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 		if unlikely(!kwds)
 			goto err_ddi;
 		for (i = 0; i < size; ++i) {
-			struct TPPKeyword *name;
+			tpp_keyword const *name;
 			name = current_basescope->bs_argv[i]->s_name;
 			if (!name->k_size) {
 				kwds[i] = (DREF DeeStringObject *)DeeString_NewEmpty();
@@ -2847,7 +2846,7 @@ INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_gsymid(struct symbol *__restrict sym) {
 	uint16_t result;
 	Dee_hash_t name_hash;
-	struct TPPKeyword *name;
+	tpp_keyword const *name;
 	struct Dee_module_symbol *iter;
 	Dee_hash_t perturb, i;
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
