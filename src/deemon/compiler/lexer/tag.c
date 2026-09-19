@@ -245,7 +245,7 @@ PRIVATE WUNUSED NONNULL((1)) int DFCALL
 append_decl_string(DeeLexer *self) {
 	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
 	do {
-		if unlikely(ast_decode_unicode_string(self, &current_tags.at_decl))
+		if unlikely(ast_parse_string_const_printer(self, &current_tags.at_decl))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;

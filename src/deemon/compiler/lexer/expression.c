@@ -579,100 +579,6 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeString_DecodeLFEscaped(struct Dee_unicode_printer *__restrict printer,
-                          /*utf-8*/ char const *__restrict start,
-                          size_t length) {
-	/* Still allow escaped line-feeds! */
-	char *flush_start = (char *)start;
-	char *end         = (char *)start + length;
-	for (;;) {
-		char *candidate;
-		uint32_t ch;
-		candidate = (char *)memchr(start, '\\', (size_t)(end - (char *)start));
-		if (!candidate)
-			break;
-		if (Dee_unicode_printer_printutf8(printer, flush_start,
-		                                  (size_t)(candidate - flush_start)) < 0)
-			goto err;
-		flush_start = candidate;
-		++candidate;
-		start = (char *)candidate;
-		ASSERT(start <= end);
-		if (start < end) {
-			ch = Dee_unicode_readutf8_n(&candidate, end);
-			if (DeeUni_IsLF(ch)) {
-				if (ch == '\r' && candidate < end && *candidate == '\n')
-					++candidate; /* CRLF */
-				start = flush_start = candidate;
-			}
-		}
-	}
-	if (Dee_unicode_printer_printutf8(printer, flush_start,
-	                                  (size_t)(end - flush_start)) < 0)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-
-INTERN WUNUSED NONNULL((1, 2)) int DFCALL
-ast_decode_unicode_string(DeeLexer *self, struct Dee_unicode_printer *__restrict printer) {
-	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
-	char const *escape_start = (char const *)DeeLexer_GetTokenStart(self);
-	char const *escape_end   = (char const *)DeeLexer_GetTokenEnd(self);
-	(void)self;
-	if (escape_start < escape_end && escape_start[0] == 'r') {
-		++escape_start;
-		if (escape_start < escape_end &&
-		    (escape_start[0] == '\"' || escape_start[0] == '\''))
-			++escape_start;
-		if (escape_end > escape_start &&
-		    (escape_end[-1] == '\"' || escape_end[-1] == '\''))
-			--escape_end;
-		if unlikely(escape_end < escape_start)
-			escape_end = escape_start;
-		if unlikely(DeeString_DecodeLFEscaped(printer,
-		                                      escape_start,
-		                                      (size_t)(escape_end - escape_start)))
-			goto err;
-	} else {
-		if (escape_start < escape_end &&
-		    (escape_start[0] == '\"' || escape_start[0] == '\''))
-			++escape_start;
-		if (escape_end > escape_start &&
-		    (escape_end[-1] == '\"' || escape_end[-1] == '\''))
-			--escape_end;
-		if unlikely(escape_end < escape_start)
-			escape_end = escape_start;
-		if unlikely(DeeString_DecodeBackslashEscaped(printer,
-		                                             escape_start,
-		                                             (size_t)(escape_end - escape_start),
-		                                             STRING_ERROR_FSTRICT))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
-ast_parse_string(DeeLexer *self) {
-	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
-	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
-	do {
-		if unlikely(ast_decode_unicode_string(self, &printer))
-			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err;
-	} while (DeeLexer_IsStringToken(self));
-	return Dee_unicode_printer_pack(&printer);
-err:
-	Dee_unicode_printer_fini(&printer);
-	return NULL;
-}
-
 PRIVATE WUNUSED DREF struct ast *DFCALL
 ast_sym___import___from_deemon(void) {
 	struct symbol *import_symbol;
@@ -877,27 +783,42 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 	switch (DeeLexer_GetTok(self)) {
 
 	TPP_CASE_TPP_TOK_INT {
-		tint_t value;
 		DREF DeeObject *resval;
-		size_t toklen;
 
 		/* Verify that thousands-separators (if present) are used consistently. */
 		if unlikely(verify_consistent_grouping(self))
 			goto err;
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		{
+			tpp_errno error;
+			tpp_char const *suffix_start;
+			error = tpp_lexer_decodeint_ex(&self->dl_lexer, (DeeIntObject **)&resval, &suffix_start);
+			if (TPP_ISERR(error))
+				goto err;
+			if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+				if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER)) {
+					Dee_Decref(resval);
+					goto err;
+				}
+			}
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		/* Use our own integer parser, so we can process arbitrary-precision integers. */
-		toklen = DeeLexer_GetTokenLen(self);
-		resval = DeeInt_FromString((char const *)DeeLexer_GetTokenStart(self), toklen,
-		                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED |
-		                                            Dee_INT_STRING_FTRY));
-
+		{
+			size_t toklen = DeeLexer_GetTokenLen(self);
+			resval = DeeInt_FromString((char const *)DeeLexer_GetTokenStart(self), toklen,
+			                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED |
+			                                             Dee_INT_STRING_FTRY));
+		}
 		/* Check if the integer failed to be parsed. */
 		if unlikely(resval == ITER_DONE) {
-			if (DeeLexer_Warnf(self, W_INVALID_INTEGER))
+			if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER))
 				goto err;
 			goto create_none;
 		}
 create_constexpr:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(!resval)
 			goto err;
 		result = ast_sethere(self, ast_constexpr(resval));
@@ -908,35 +829,71 @@ create_constexpr:
 			goto err_r;
 		return result;
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-		if (!DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
+		if (!DeeLexer_Has(self, CHARACTER_LITERALS)) {
 			goto decode_string;
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-		if (!DeeLexer_Has(self, CHARACTER_LITERALS))
-			goto decode_string;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
-		if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
-			goto err;
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
-			goto err;
-		resval = DeeInt_NewInt64(value);
+		} else {
+			tint_t value;
+			if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
+				goto err;
+			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+				goto err;
+			resval = DeeInt_NewInt64(value);
+		}
 		goto create_constexpr;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}	break;
 
-	TPP_CASE_TPP_TOK_STRING_DQUOTE {
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	TPP_CASE_TPP_TOK_STRING_SQUOTE {
+		tpp_errno error;
+		tpp_uintmax value;
 		DREF DeeObject *resval;
-decode_string:
 		if (DeeLexer_GetLoc(self, &loc))
 			goto err;
-		resval = ast_parse_string(self);
+		if (!DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
+			goto decode_string;
+		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+			goto err;
+		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &value,
+		                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (TPP_ISERR(error))
+			goto err;
+		resval = DeeInt_NEWU(value);
 		if unlikely(!resval)
 			goto err;
 		result = ast_setddi(ast_constexpr(resval), &loc);
 		Dee_Decref(resval);
+		if unlikely(!result)
+			goto err;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err_r;
 		return result;
 	}	break;
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
+
+	TPP_CASE_TPP_TOK_STRING_DQUOTE {
+decode_string:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		return ast_parse_string_ast(self);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
+		{
+			DREF DeeObject *resval = ast_parse_string_const(self);
+			if unlikely(!resval)
+				goto err;
+			result = ast_setddi(ast_constexpr(resval), &loc);
+			Dee_Decref(resval);
+		}
+		return result;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	}	break;
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	case TPP_KWD_f:
 	case TPP_KWD_F:
 		/* Check if this might be a template string. */
@@ -948,12 +905,25 @@ decode_string:
 			return ast_parse_template_string(self);
 		}
 		goto do_keyword;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	TPP_CASE_TPP_TOK_FLOAT {
 		tpp_float value;
 		DREF DeeObject *resval;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_errno error;
+		tpp_char const *suffix_start;
+		error = tpp_lexer_decodefloat_ex(&self->dl_lexer, &value, &suffix_start);
+		if (TPP_ISERR(error))
+			goto err;
+		if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+			if (DeeLexer_Warnf(self, TPP_W_INVALID_FLOAT))
+				goto err;
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (TPP_Atof(&value) == TPP_ATOF_ERR)
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		resval = DeeFloat_New((double)value);
 		if unlikely(!resval)
 			goto err;

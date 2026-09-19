@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* DeeBool_For, return_bool */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DR_*, DeeCompiler* */
-#include <deemon/compiler/lexer.h>     /* ast_decode_unicode_string */
+#include <deemon/compiler/lexer.h>     /* ast_parse_string_const_printer */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE */
@@ -3383,7 +3383,7 @@ lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject 
 		error = DeeError_Throwf(&DeeError_ValueError,
 		                        "The current token isn't a string");
 	} else {
-		error = ast_decode_unicode_string(lexer, &printer);
+		error = ast_parse_string_const_printer(lexer, &printer);
 	}
 	COMPILER_END();
 	if unlikely(error)

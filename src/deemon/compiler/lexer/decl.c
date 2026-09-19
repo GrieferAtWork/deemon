@@ -1014,7 +1014,7 @@ err_asm_flags:
 		 * >> } */
 		if likely(DeeLexer_IsStringToken(lexer)) {
 			DREF DeeStringObject *text;
-			text = (DREF DeeStringObject *)ast_parse_string(lexer);
+			text = (DREF DeeStringObject *)ast_parse_string_const(lexer);
 			if unlikely(!text)
 				goto err_asm_flags;
 			self->da_type   = DAST_STRING;

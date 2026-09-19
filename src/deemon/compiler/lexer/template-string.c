@@ -40,6 +40,463 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeString_DecodeLFEscaped(struct Dee_unicode_printer *__restrict printer,
+                          /*utf-8*/ char const *__restrict start,
+                          size_t length) {
+	/* Still allow escaped line-feeds! */
+	char *flush_start = (char *)start;
+	char *end         = (char *)start + length;
+	for (;;) {
+		char *candidate;
+		uint32_t ch;
+		candidate = (char *)memchr(start, '\\', (size_t)(end - (char *)start));
+		if (!candidate)
+			break;
+		if (Dee_unicode_printer_printutf8(printer, flush_start,
+		                                  (size_t)(candidate - flush_start)) < 0)
+			goto err;
+		flush_start = candidate;
+		++candidate;
+		start = (char *)candidate;
+		ASSERT(start <= end);
+		if (start < end) {
+			ch = Dee_unicode_readutf8_n(&candidate, end);
+			if (DeeUni_IsLF(ch)) {
+				if (ch == '\r' && candidate < end && *candidate == '\n')
+					++candidate; /* CRLF */
+				start = flush_start = candidate;
+			}
+		}
+	}
+	if (Dee_unicode_printer_printutf8(printer, flush_start,
+	                                  (size_t)(end - flush_start)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+ast_parse_string_const_printer(DeeLexer *self, struct Dee_unicode_printer *__restrict printer) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_ssize status;
+	tpp_lexer_decodestring_config config;
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
+	tpp_lexer_decodestring_config_init_simple(&config, &Dee_unicode_printer_print, printer);
+	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	if (TPP_SSIZE_ISERR(status))
+		goto err;
+	return 0;
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
+	char const *escape_start = (char const *)DeeLexer_GetTokenStart(self);
+	char const *escape_end   = (char const *)DeeLexer_GetTokenEnd(self);
+	(void)self;
+	if (escape_start < escape_end && escape_start[0] == 'r') {
+		++escape_start;
+		if (escape_start < escape_end &&
+		    (escape_start[0] == '\"' || escape_start[0] == '\''))
+			++escape_start;
+		if (escape_end > escape_start &&
+		    (escape_end[-1] == '\"' || escape_end[-1] == '\''))
+			--escape_end;
+		if unlikely(escape_end < escape_start)
+			escape_end = escape_start;
+		if unlikely(DeeString_DecodeLFEscaped(printer,
+		                                      escape_start,
+		                                      (size_t)(escape_end - escape_start)))
+			goto err;
+	} else {
+		if (escape_start < escape_end &&
+		    (escape_start[0] == '\"' || escape_start[0] == '\''))
+			++escape_start;
+		if (escape_end > escape_start &&
+		    (escape_end[-1] == '\"' || escape_end[-1] == '\''))
+			--escape_end;
+		if unlikely(escape_end < escape_start)
+			escape_end = escape_start;
+		if unlikely(DeeString_DecodeBackslashEscaped(printer,
+		                                             escape_start,
+		                                             (size_t)(escape_end - escape_start),
+		                                             STRING_ERROR_FSTRICT))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+ast_parse_string_const(DeeLexer *self) {
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
+	do {
+		if unlikely(ast_parse_string_const_printer(self, &printer))
+			goto err;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err;
+	} while (DeeLexer_IsStringToken(self));
+	return Dee_unicode_printer_pack(&printer);
+err:
+	Dee_unicode_printer_fini(&printer);
+	return NULL;
+}
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+struct string_parser {
+	struct Dee_unicode_printer sp_printer; /* String printer */
+	struct ast                *sp_params;  /* [0..1] Format-string params (or "NULL" if `sp_printer` is a string constant).
+	                                        * When non-NULL, this is the `AST_MULTIPLE` that will be used ast the first argument
+	                                        * in the call to `string.format`. It also means that `{` and `}` must be escaped in
+	                                        * `sp_printer`. */
+	struct ast_loc             sp_loc;     /* String start location */
+};
+
+/* Escape existing `{` and `}` characters in `self` */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+string_parser_escape_braces(struct string_parser *__restrict self) {
+	char const *current_str, *current_end, *current_iter;
+	DREF DeeStringObject *current;
+	current = (DREF DeeStringObject *)Dee_unicode_printer_pack(&self->sp_printer);
+	if unlikely(!current)
+		goto err_reinit_printer;
+
+	/* Can use `DeeString_STR` because we're only looking for `{` and `}` */
+	current_str = DeeString_STR(current);
+	current_end = current_str + WSTR_LENGTH(current_str);
+
+	/* Search for `{` and `}` */
+	for (current_iter = current_str;; ++current_iter) {
+		char ch;
+		if (current_iter >= current_end)
+			goto no_braces_found;
+		ch = *current_iter;
+		if (ch == '{')
+			break;
+		if (ch == '}')
+			break;
+	}
+
+	/* String *does* contain (at least 1) brace character
+	 * -> really have to escape. */
+	Dee_unicode_printer_init(&self->sp_printer);
+	current_str = DeeString_AsUtf8(current);
+	if unlikely(!current_str)
+		goto err_current;
+	current_end = current_str + WSTR_LENGTH(current_str);
+
+	for (current_iter = current_str;
+	     current_iter < current_end; ++current_iter) {
+		char ch = *current_iter;
+		if (ch == '{' || ch == '}') {
+			/* Flush up to (and including) the brace character */
+			if (Dee_unicode_printer_printutf8(&self->sp_printer, current_str,
+			                                  (size_t)((current_iter + 1) - current_str)) < 0)
+				goto err_current;
+			/* Reset flush base to brace character (thus causing
+			 * it to be printed twice, which is how it needs to
+			 * be escaped) */
+			current_str = current_iter;
+		}
+	}
+
+	/* Flush remainder */
+	if (Dee_unicode_printer_printutf8(&self->sp_printer, current_str,
+	                                  (size_t)(current_end - current_str)) < 0)
+		goto err_current;
+	Dee_Decref_likely(current);
+	return 0;
+no_braces_found:
+	Dee_unicode_printer_init_string(&self->sp_printer, Dee_AsObject(current));
+	return 0;
+err_current:
+	Dee_Decref_likely(current);
+	return -1;
+/*err_reinit_printer_with_current:
+	Dee_unicode_printer_init_string(&self->sp_printer, Dee_AsObject(current));
+	return -1;*/
+err_reinit_printer:
+	Dee_unicode_printer_init(&self->sp_printer);
+	return -1;
+}
+
+PRIVATE tpp_ssize DPRINTER_CC
+string_parser_printutf8(void *arg, char const *__restrict data, size_t len) {
+	char const *iter, *end;
+	struct string_parser *me = (struct string_parser *)arg;
+
+	/* Check for simple case: no template params -> no need to do any escaping. */
+	if (me->sp_params == NULL)
+		return Dee_unicode_printer_printutf8(&me->sp_printer, data, len);
+
+	/* Must double-escape `{` and `}` characters from `data` */
+	end = (iter = data) + len;
+	for (; iter < end; ++iter) {
+		char ch = *iter;
+		if (ch == '{' || ch == '}') {
+			/* Must escape! */
+			if (Dee_unicode_printer_printutf8(&me->sp_printer, data, (size_t)((iter + 1) - data)) < 0)
+				goto err;
+
+			/* Set flush start o print `ch` a second time. */
+			data = iter;
+		}
+	}
+
+	/* Flush remainder */
+	if (Dee_unicode_printer_printutf8(&me->sp_printer, data, (size_t)(end - data)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+/* parse the actual expression that is embedded within a template string. */
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *TPPCALL
+string_parser_printexpr_parse(DeeLexer *self) {
+	return ast_parse_expr(self, LOOKUP_SYM_NORMAL);
+}
+
+PRIVATE tpp_ssize TPPCALL
+string_parser_printexpr(void *arg, tpp_lexer *tpp_restrict lexer) {
+	struct string_parser *me = (struct string_parser *)arg;
+	struct ast *params;
+	DREF struct ast **param_v;
+	DREF struct ast *expr;
+	DeeLexer *self = DeeLexer_OfTPP(lexer);
+
+	/* Parse expression */
+	expr = string_parser_printexpr_parse(self);
+	if unlikely(!expr)
+		goto err;
+
+	/* Check for special case: first time we get
+	 * here, we must escape already-printed text,
+	 * as well as allocate the params-sequence! */
+	params = me->sp_params;
+	if (params == NULL) {
+		if unlikely(string_parser_escape_braces(me))
+			goto err_expr;
+		param_v = (DREF struct ast **)Dee_Malloc(1, sizeof(DREF struct ast *));
+		if unlikely(!param_v)
+			goto err_expr;
+		param_v[0] = expr; /* Inherit */
+		params = ast_multiple(AST_FMULTIPLE_GENERIC, 1, param_v);
+		params = ast_setddi(params, &me->sp_loc);
+		if unlikely(!params)
+			goto err_expr_param_v;
+		me->sp_params = params;
+	} else {
+		/* Second parameter */
+		size_t param_c;
+		ASSERT(params->a_type == AST_MULTIPLE);
+		ASSERT(params->a_flag == AST_FMULTIPLE_GENERIC);
+		param_c = params->a_multiple.m_astc;
+		param_v = params->a_multiple.m_astv;
+		param_v = (DREF struct ast **)Dee_Realloc(param_v, param_c + 1,
+		                                          sizeof(DREF struct ast *));
+		if unlikely(!param_v)
+			goto err_expr;
+		params->a_multiple.m_astv = param_v;
+		params->a_multiple.m_astc = param_c + 1;
+		param_v[param_c] = expr; /* Inherit */
+	}
+
+	/* Print the template parameter marker
+	 * HINT: When `expr` is something like `repr`,
+	 *       this will be optimized to `{!r}` later! */
+	switch (DeeLexer_GetTok(self)) {
+
+	case '!':
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
+	case ':':
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_COLON {
+		/* Special case: remainder of current file (which is a special
+		 * sub-file pushed by the TPP engine) must be used as-is as the
+		 * template string format arguments:
+		 * >> local x = f"foo = {foo!r}";
+		 * >> local x = "foo = {!r}".format({foo}); // Same as this
+		 *
+		 * Because the template expression may also contain macros, we
+		 * must also unwind the #include-stack until its very bottom
+		 * (our caller will have made it so we can't pop beyond the
+		 * fake file used to describe the template expression):
+		 *
+		 * >> #define EXCLAIM() !
+		 * >> local x = f"foo = {foo EXCLAIM()r}";
+		 * >> local x = "foo = {!r}".format({foo}); // Same as this
+		 */
+		tpp_file *const file = DeeLexer_GetFile(self);
+		tpp_char const *params_start;
+		tpp_char const *params_end;
+		if (Dee_unicode_printer_putascii(&me->sp_printer, '{'))
+			goto err;
+		for (;;) {
+			params_start = tpp_file_getlastpos(file);
+			params_end   = tpp_file_getend(file);
+			if (Dee_unicode_printer_printutf8(&me->sp_printer, (char const *)params_start,
+				                              (size_t)(params_end - params_start)) < 0)
+				goto err;
+			if (!tpp_lexer_canpopfile(&self->dl_lexer))
+				break;
+			tpp_lexer_popfile(&self->dl_lexer);
+		}
+
+		/* Consume all input */
+		DeeLexer_SetTokenRange(self, params_end, params_end);
+		DeeLexer_SetTokenId(self, TPP_TOK_EOF);
+		return Dee_unicode_printer_putascii(&me->sp_printer, '}');
+	}	break;
+
+	default: break;
+	}
+	return Dee_UNICODE_PRINTER_PRINT(&me->sp_printer, "{}");
+err_expr_param_v:
+	Dee_Free(param_v);
+err_expr:
+	ast_decref_likely(expr);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF struct ast *TPPCALL
+string_parser_pack(/*inherit(always)*/ struct string_parser *__restrict self) {
+	DREF struct ast *ast__result;
+	DREF struct ast *ast__template;
+	DREF struct ast *ast__constexpr_format;
+	DREF struct ast *ast__template_getattr_format;
+	DREF struct ast *ast__params_tuple;
+	DREF struct ast **ast__params_tuple__argv;
+	DREF DeeObject *template_str;
+
+	/* Pack string template (or constant string if there aren't any params) */
+	template_str = Dee_unicode_printer_pack(&self->sp_printer);
+	if unlikely(!template_str)
+		goto err__xexpr;
+
+	/* Pack string template into an AST */
+	ast__template = ast_constexpr(template_str);
+	ast__template = ast_setddi(ast__template, &self->sp_loc);
+	Dee_Decref_unlikely(template_str);
+	if unlikely(!ast__template)
+		goto err__xexpr;
+
+	/* Check for simple case: without any format-params, we're already done! */
+	if likely(!self->sp_params)
+		return ast__template;
+	ASSERT(self->sp_params->a_type == AST_MULTIPLE);
+	ASSERT(self->sp_params->a_flag == AST_FMULTIPLE_GENERIC);
+
+	/* Form an AST tree like this (and set `self->sp_loc` as DDI for all):
+	 * >> ast_operator2(                  // ast__result
+	 * >>     OPERATOR_CALL,
+	 * >>     ast_operator2(              // ast__template_getattr_format
+	 * >>         OPERATOR_GETATTR,
+	 * >>         {ast__template},
+	 * >>         ast_constexpr("format") // ast__constexpr_format
+	 * >>     ),
+	 * >>     ast_multiple(               // ast__params_tuple
+	 * >>         AST_FMULTIPLE_TUPLE,
+	 * >>         1,
+	 * >>         {self->sp_params}       // ast__params_tuple__argv
+	 * >>     )
+	 * >> ) */
+	ast__constexpr_format = ast_constexpr(Dee_AsObject(&str_format));
+	ast__constexpr_format = ast_setddi(ast__constexpr_format, &self->sp_loc);
+	if unlikely(!ast__constexpr_format)
+		goto err__expr__template;
+
+	ast__template_getattr_format = ast_operator2(OPERATOR_GETATTR, AST_OPERATOR_FNORMAL,
+	                                             ast__template, ast__constexpr_format);
+	ast__template_getattr_format = ast_setddi(ast__template_getattr_format, &self->sp_loc);
+	ast_decref_unlikely(ast__constexpr_format);
+	ast_decref_unlikely(ast__template);
+	if unlikely(!ast__constexpr_format)
+		goto err__expr;
+
+	ast__params_tuple__argv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+	if unlikely(!ast__params_tuple__argv)
+		goto err__expr__template_getattr_format;
+	ast__params_tuple__argv[0] = self->sp_params;
+	ast__params_tuple = ast_multiple(AST_FMULTIPLE_TUPLE, 1, ast__params_tuple__argv);
+	ast__params_tuple = ast_setddi(ast__params_tuple, &self->sp_loc);
+	if unlikely(!ast__params_tuple)
+		goto err__expr__template_getattr_format__params_tuple_argv;
+
+	ast__result = ast_operator2(OPERATOR_CALL, AST_OPERATOR_FNORMAL,
+	                            ast__template_getattr_format,
+	                            ast__params_tuple);
+	ast__result = ast_setddi(ast__result, &self->sp_loc);
+	ast_decref_unlikely(ast__template_getattr_format);
+	ast_decref_unlikely(ast__params_tuple);
+	return ast__result;
+err:
+	return NULL;
+
+err__template_getattr_format__params_tuple:
+	ast_decref(ast__template_getattr_format);
+	ast_decref(ast__params_tuple);
+	goto err;
+err__expr__template_getattr_format__params_tuple_argv:
+	Dee_Free(ast__params_tuple__argv);
+err__expr__template_getattr_format:
+	ast_decref(ast__template_getattr_format);
+	goto err__expr;
+err__expr__template:
+	ast_decref(ast__template);
+err__expr:
+err__xexpr:
+	ast_xdecref(self->sp_params);
+err:
+	return NULL;
+}
+
+
+/* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_string_ast(DeeLexer *self) {
+	tpp_ssize status;
+	tpp_lexer_decodestring_config config;
+	struct string_parser parser;
+	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
+
+	/* Setup string parser. */
+	if (DeeLexer_GetLoc(self, &parser.sp_loc))
+		goto err;
+	Dee_unicode_printer_init(&parser.sp_printer);
+	parser.sp_params = NULL;
+
+	/* Setup decode config. */
+	config.tldsc_dataprinter = &string_parser_printutf8;
+	config.tldsc_utf8printer = &string_parser_printutf8;
+	config.tldsc_formatexpr  = &string_parser_printexpr;
+	config.tldsc_arg         = &parser;
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+#error "Deemon doesn't support `tldsc_bigprinter`"
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+
+	/* Parse string... */
+	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	if (TPP_SSIZE_ISERR(status))
+		goto err_parser;
+
+	/* Pack parser into a string AST */
+	return string_parser_pack(&parser);
+err_parser:
+	Dee_unicode_printer_fini(&parser.sp_printer);
+	ast_xdecref(parser.sp_params);
+err:
+	return NULL;
+}
+
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 add_getattr_format(struct ast *__restrict self) {
 	DREF struct ast *attr, *result;
@@ -505,6 +962,7 @@ err_noprinter:
 	Dee_Free(format_argv);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 DECL_END
 

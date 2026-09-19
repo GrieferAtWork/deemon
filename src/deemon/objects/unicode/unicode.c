@@ -5887,6 +5887,10 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
                                  /*utf-8*/ char const *__restrict start,
                                  size_t length, unsigned int error_mode) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO: Make use of string escape parser from TPP (to include
+	 *       support for unicode character names \N{...} and-the-like) */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	char const *iter, *end, *flush_start;
 	end         = (iter = start) + length;
 	flush_start = iter;

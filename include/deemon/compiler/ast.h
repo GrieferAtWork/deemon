@@ -751,7 +751,7 @@ DECLARE_AST_GENERATOR(NONNULL((1)), ast_unbind, (struct symbol * __restrict sym)
 /* [AST_BOUND] */
 DECLARE_AST_GENERATOR(NONNULL((1)), ast_bound, (struct symbol * __restrict sym));
 /* [AST_MULTIPLE] WARNING: Inherits a heap-allocated vector `exprv` upon success; @param: flags: Set of `AST_FMULTIPLE_*` */
-DECLARE_AST_GENERATOR(, ast_multiple, (uint16_t flags, size_t exprc, /*inherit*/ DREF struct ast **__restrict exprv));
+DECLARE_AST_GENERATOR(, ast_multiple, (uint16_t flags, size_t exprc, /*inherit(on_success)*/ DREF struct ast **__restrict exprv));
 /* [AST_RETURN] NOTE: `return_expr` may be `NULL` */
 DECLARE_AST_GENERATOR(, ast_return, (struct ast *return_expr));
 /* [AST_YIELD] */

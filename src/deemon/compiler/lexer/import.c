@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/ast.h>    /* ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
+#include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_parse_string_const_printer, ast_parse_postexpr, decref_parse_module_byname */
 #include <deemon/compiler/symbol.h> /* SYMBOL_*, get_local_symbol, DeeLexer_IsIdentifier, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
@@ -164,7 +164,7 @@ ast_parse_module_name(DeeLexer *self,
 			if (!TPP_TOK_ISDOT(DeeLexer_GetTok(self)))
 				break;
 		} else if (DeeLexer_IsStringToken(self)) {
-			if (ast_decode_unicode_string(self, printer) < 0)
+			if (ast_parse_string_const_printer(self, printer) < 0)
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
@@ -205,7 +205,7 @@ ast_parse_symbol_name(DeeLexer *self,
 			goto err;
 	} else if (DeeLexer_IsStringToken(self)) {
 		do {
-			if (ast_decode_unicode_string(self, printer) < 0)
+			if (ast_parse_string_const_printer(self, printer) < 0)
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;

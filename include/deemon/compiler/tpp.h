@@ -1088,6 +1088,7 @@ typedef struct {
 #define DeeLexer_PreparseSkipBseFwd(self, pos, end)   tpp_preparse_skipbse_fwd(&(self)->dl_lexer, pos, end)
 #define DeeLexer_PreparseSkipBseBck(self, start, pos) tpp_preparse_skipbse_bck(&(self)->dl_lexer, start, pos)
 
+#define DeeLexer_GetErrorCount(self) tpp_lexer_geterrorcount(&(self)->dl_lexer)
 
 /* Helper to check if the current token should be considered a string token */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3

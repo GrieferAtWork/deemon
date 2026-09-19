@@ -365,7 +365,7 @@ ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 	catchc = 0;
 	catchv = NULL;
 	for (;;) {
-		tok_t mode;
+		tpp_token_id mode;
 		if unlikely(ast_tags_clear(self))
 			goto err_try;
 		if unlikely(parse_tags_block(self))
@@ -441,12 +441,22 @@ err_try_flags:
 				}
 			} else if (DeeLexer_HasTokenKwd(self)) {
 				/* Exception guard name: `try { ... } catch (err...) {}` */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_token_id next_token;
+				next_token = tpp_lexer_peek_raw(&self->dl_lexer, TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+				                                NULL, NULL, NULL);
+				if (TPP_TOK_ISERR(next_token))
+					goto err_try_flags;
+				if (next_token == TPP_TOK_DOT_DOT_DOT)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				char const *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
 				if (*next_token == '.' && /* Check for `...` */
 				    (next_token = advance_wraplf(next_token), *next_token == '.') &&
-				    (next_token = advance_wraplf(next_token), *next_token == '.')) {
+				    (next_token = advance_wraplf(next_token), *next_token == '.'))
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+				{
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;

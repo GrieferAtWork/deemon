@@ -98,7 +98,11 @@ struct ddi_gen_state {
 	uint16_t        reg_name; /* The current function name. */
 	int             reg_col;  /* The current column number within the active line. */
 	int             reg_lno;  /* Line number (0-based). */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	char const     *rpp_file; /* [0..1] The current filename */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct TPPFile *rpp_file; /* [0..1] The current TPP file object. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int32_t DCALL
@@ -368,13 +372,22 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 			if (iter->dc_addr == old_state.reg_uip && !is_first)
 				continue;
 			text = buffer;
-			ASSERT(iter->dc_loc.l_file);
+			ASSERT(!ast_loc_isempty(&iter->dc_loc));
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if (iter->dc_loc.l_name == NULL)
+				iter->dc_loc.l_name = old_state.rpp_file;
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 			/* Setup the new state. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			new_state.rpp_file = iter->dc_loc.l_name;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			new_state.rpp_file = iter->dc_loc.l_file;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			new_state.reg_uip  = iter->dc_addr;
 			new_state.reg_usp  = iter->dc_sp;
-			new_state.reg_col  = iter->dc_loc.l_col;
-			new_state.reg_lno  = iter->dc_loc.l_line;
+			new_state.reg_col  = ast_loc_getcol(&iter->dc_loc);
+			new_state.reg_lno  = ast_loc_getline(&iter->dc_loc);
 			new_state.reg_name = old_state.reg_name; /* XXX: This needs to change for inline functions... */
 
 			new_state.reg_path = old_state.reg_path;
@@ -382,26 +395,43 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 			if (new_state.rpp_file != old_state.rpp_file) {
 				/* The source file has changed and we must
 				 * allocate the new one's path & file. */
-				char *filename;
+				char const *filename;
 				size_t length;
-				char *file_begin;
+				char const *file_begin;
 				uint32_t path_offset, file_offset;
 				int32_t temp;
-				filename   = (char *)TPPFile_Filename(new_state.rpp_file, &length);
-				file_begin = (char *)DeeSystem_BaseName(filename, length);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				filename = new_state.rpp_file;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+				filename = TPPFile_Filename(new_state.rpp_file, &length);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+				file_begin = DeeSystem_BaseName(filename, length);
 				if (file_begin > filename) {
-					char *tab_str, backup;
+					char *tab_str;
 					tab_str = Dee_ascii_printer_allocstr(&strtab, file_begin,
 					                                     (size_t)(length - (file_begin - filename)) + 1);
 					if unlikely(!tab_str)
 						goto err_result_printer;
 					file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					/* Now to allocate the path. */
-					backup         = file_begin[-1];
-					file_begin[-1] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
-					tab_str = Dee_ascii_printer_allocstr(&strtab, filename,
-					                                     (size_t)(file_begin - filename));
-					file_begin[-1] = backup;
+					{
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+						/* TODO: Make this more efficient via `Dee_ascii_printer_allocstrnul()` */
+						tpp_size path_len = (size_t)(file_begin - filename);
+						char *path_copy = (char *)Dee_Mallocc(path_len, sizeof(char));
+						if unlikely(!path_copy)
+							goto err_result_printer;
+						*(char *)mempcpyc(path_copy, filename, path_len - 1, sizeof(char)) = '\0';
+						tab_str = Dee_ascii_printer_allocstr(&strtab, path_copy, path_len);
+						Dee_Free(path_copy);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+						char backup = file_begin[-1];
+						((char *)file_begin)[-1] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
+						tab_str = Dee_ascii_printer_allocstr(&strtab, filename,
+						                                     (size_t)(file_begin - filename));
+						((char *)file_begin)[-1] = backup;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+					}
 					if unlikely(!tab_str)
 						goto err_result_printer;
 					path_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);

@@ -649,13 +649,18 @@ pack_code_in_return:
 
 	/* Rethrow all errors that may have occurred during parsing. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	/* TODO */
+	if unlikely(!code)
+		goto err_compiler_files;
+	if (DeeLexer_GetErrorCount(lexer)) {
+		DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
+		goto err_compiler_files;
+	}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(parser_rethrow(code == NULL))
 		goto err_compiler_files_code;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!code)
 		goto err_compiler_files;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Run an additional optimization pass on the
 	 * AST before passing it off to the assembler. */
@@ -663,13 +668,18 @@ pack_code_in_return:
 		int error = ast_optimize_all(code, false);
 		/* Rethrow all errors that may have occurred during optimization. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-		/* TODO */
+		if (error)
+			goto err_compiler_files_code;
+		if (DeeLexer_GetErrorCount(lexer)) {
+			DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
+			goto err_compiler_files_code;
+		}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (parser_rethrow(error != 0))
 			error = -1;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (error)
 			goto err_compiler_files_code;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 
 	assembler_flags = ASM_FNORMAL;
@@ -688,17 +698,24 @@ pack_code_in_return:
 	}
 	ast_decref(code);
 
-	/* Rethrow all errors that may have occurred during text assembly. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	/* TODO */
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-	if (parser_rethrow(root_code == NULL))
-		Dee_XClear(root_code);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
-
 	/* Check for errors during assembly. */
 	if unlikely(!root_code)
 		goto err_compiler_files;
+
+	/* Rethrow all errors that may have occurred during text assembly. */
+	if (DeeLexer_GetErrorCount(lexer)) {
+		DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
+		Dee_Clear(root_code);
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	/* Rethrow all errors that may have occurred during text assembly. */
+	if (parser_rethrow(root_code == NULL))
+		Dee_XClear(root_code);
+	/* Check for errors during assembly. */
+	if unlikely(!root_code)
+		goto err_compiler_files;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Finally, put together the module itself. */
 	result = module_compile(writer, root_code);
@@ -717,7 +734,11 @@ pack_code_in_return:
 	DeeCompiler_LockEndWrite();
 	return result;
 err_compiler_files_code:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	ast_decref(code);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	ast_xdecref(code);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 err_compiler_files:
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	tpp_lexer_finifile(&lexer->dl_lexer);

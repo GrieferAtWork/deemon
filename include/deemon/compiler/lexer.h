@@ -65,17 +65,23 @@ INTDEF uint16_t parser_flags;
 INTDEF struct Dee_compiler_options *inner_compiler_options;
 
 
-/* Parse a string. */
+/* Parse a constant string. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
-ast_parse_string(DeeLexer *self);
+ast_parse_string_const(DeeLexer *self);
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_string_ast(DeeLexer *self);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 /* Parse a template string. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_template_string(DeeLexer *self);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-ast_decode_unicode_string(DeeLexer *self, struct Dee_unicode_printer *__restrict printer);
+ast_parse_string_const_printer(DeeLexer *self, struct Dee_unicode_printer *__restrict printer);
 
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 

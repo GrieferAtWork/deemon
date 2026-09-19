@@ -152,7 +152,7 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 	/* TODO: Include details of warnings passed to `DeeLexer_TPP_WarnHandlerHook()` */
 	(void)lexer;
 	DeeError_Throwf(&DeeError_CompilerError, "TODO: Include details on triggered warnings");
-	return TPP_EDEEMON;
+	return TPP_ELEXERROR;
 }
 
 
