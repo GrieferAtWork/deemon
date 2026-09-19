@@ -88,7 +88,7 @@ struct ast_symbol_assume {
 	struct symbol      *sa_sym;   /* [0..1] The symbol on which assumptions are made. */
 	DREF DeeObject     *sa_value; /* [0..1][valid_if(sa_sym)] The assumed value of `sa_sym`, or NULL if unknown. */
 };
-#define AST_SYMBOL_ASSUME_HASH(x) ((x)->sa_sym->s_name->k_id)
+#define AST_SYMBOL_ASSUME_HASH(x) tpp_keyword_getid((x)->sa_sym->s_name)
 
 struct ast_symbol_assumes {
 	size_t                    sa_size; /* Number of symbol assumptions. */

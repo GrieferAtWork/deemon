@@ -19,6 +19,8 @@
  */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 
+TPP_KWD(TPP_KWD_, "") /* Special case for *empty* keyword */
+
 /* Unary expression keywords. */
 TPP_KWD(TPP_KWD_none, "none")
 TPP_KWD(TPP_KWD_true, "true")
@@ -308,7 +310,6 @@ TPP_WARNING(TPP_W_VARYING_WITHOUT_FINAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR
 TPP_WARNING(TPP_W_EXPECTED_CLASS_AFTER_FINAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[class%] after %[final%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[{%] after %[class%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_CLASS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] after %[class%], but got %Pt")
-TPP_WARNING(TPP_W_FAILED_TO_PARSE_STATEMENT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_FATAL, "Failed to parse a statement from %Pt")
 TPP_WARNING(TPP_W_RETURN_IN_YIELD_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Return statement encountered in yield function")
 TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_LPAREN_IN_TAG, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[)%] after %[(%] in tag, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_ASSERT_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[assert%] in expression, but got %Pt")
@@ -552,7 +553,7 @@ TPP_WARNING(TPP_W_UASM_CANNOT_ADD_2_SYMBOLS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ER
 TPP_WARNING(TPP_W_UASM_CANNOT_SUB_2_SYMBOLS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Cannot subtract 2 operands both containing undefined, or ip-relative symbols")
 TPP_WARNING(TPP_W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Cannot set a stack depth depending on a symbol")
 TPP_WARNING(TPP_W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_DISABLED, "Stack depth adjustment potentially leaves the stack in an undefined state")
-//TODO:TPP_WARNING(TPP_W_UASM_ILLEGAL_STACK_DEPTH, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, WARNF("New stack-depth value %ld is illegal", ARG(long)))
+TPP_WARNING(TPP_W_UASM_ILLEGAL_STACK_DEPTH, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "New stack-depth value %d is illegal")
 TPP_WARNING(TPP_W_UASM_TRUNCATED_TO_FIT, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Integer argument was truncated to fit")
 TPP_WARNING(TPP_W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "The %[.except%] pseudo op requires absolute symbols operands without offsets")
 TPP_WARNING(TPP_W_UASM_EXCEPT_UNKNOWN_TAG, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Unknown tag is not recognized by the %[.except%] pseudo op")
@@ -1211,7 +1212,7 @@ DEF_WARNING(W_UASM_CANNOT_ADD_2_SYMBOLS, (WG_VALUE), WSTATE_ERROR, WARNF("Cannot
 DEF_WARNING(W_UASM_CANNOT_SUB_2_SYMBOLS, (WG_VALUE), WSTATE_ERROR, WARNF("Cannot subtract 2 operands both containing undefined, or ip-relative symbols"))
 DEF_WARNING(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION, (WG_VALUE), WSTATE_ERROR, WARNF("Cannot set a stack depth depending on a symbol"))
 DEF_WARNING(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT, (WG_USAGE), WSTATE_DISABLED, WARNF("Stack depth adjustment potentially leaves the stack in an undefined state"))
-DEF_WARNING(W_UASM_ILLEGAL_STACK_DEPTH, (WG_VALUE), WSTATE_ERROR, WARNF("New stack-depth value %ld is illegal", ARG(long)))
+DEF_WARNING(W_UASM_ILLEGAL_STACK_DEPTH, (WG_VALUE), WSTATE_ERROR, WARNF("New stack-depth value %d is illegal", ARG(int)))
 DEF_WARNING(W_UASM_TRUNCATED_TO_FIT, (WG_VALUE), WSTATE_ERROR, WARNF("Integer argument was truncated to fit"))
 DEF_WARNING(W_UASM_EXCEPT_NEED_ABSOLUTE_SYMBOL, (WG_VALUE), WSTATE_ERROR, WARNF("The `.except` pseudo op requires absolute symbols operands without offsets"))
 DEF_WARNING(W_UASM_EXCEPT_UNKNOWN_TAG, (WG_VALUE), WSTATE_ERROR, WARNF("Unknown tag is not recognized by the `.except` pseudo op"))

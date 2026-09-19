@@ -221,7 +221,7 @@ err:
 
 DECL_END
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-#define TPP_SYMARRAY_SIZE 1
+#define TPP_SYMARRAY_SIZE 1 /* For `TPPKeyword_Empty` */
 
 #include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Malloc, Dee_Try*alloc* */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem */
@@ -439,7 +439,7 @@ err:
 
 DECL_BEGIN
 
-INTERN struct TPPKeyword TPPKeyword_Empty = {
+INTERN tpp_keyword TPPKeyword_Empty = {
 	/* .k_next  = */ NULL,
 	/* .k_macro = */ NULL,
 	/* .k_rare  = */ NULL,
@@ -531,7 +531,7 @@ err:
 
 
 #ifndef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1)) struct TPPKeyword *TPPCALL
+INTDEF WUNUSED NONNULL((1)) tpp_keyword *TPPCALL
 lookup_escaped_keyword(char const *__restrict name, size_t namelen,
                        size_t unescaped_size, int create_missing);
 
@@ -545,10 +545,10 @@ INTERN ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch) {
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL
+INTERN WUNUSED NONNULL((1, 2)) tpp_keyword *DCALL
 peek_keyword(struct TPPFile *__restrict tok_file,
              char const *__restrict tok_begin, int create_missing) {
-	struct TPPKeyword *kwd_entry;
+	tpp_keyword *kwd_entry;
 	size_t name_escapesize, name_size;
 	uint8_t chflags;
 	char const *iter;
@@ -600,7 +600,7 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	return kwd_entry;
 }
 
-INTERN WUNUSED struct TPPKeyword *DCALL
+INTERN WUNUSED tpp_keyword *DCALL
 peek_next_keyword(int create_missing) {
 	struct TPPFile *tok_file;
 	char const *tok_begin = peek_next_token(&tok_file);
@@ -761,12 +761,12 @@ PRIVATE char const include_prefix[] = "include/";
 INTERN WUNUSED NONNULL((2)) struct TPPFile *DCALL
 tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
-                 struct TPPKeyword **p_keyword_entry) {
+                 tpp_keyword **p_keyword_entry) {
 	DeeStringObject *buffer, *new_buffer;
 	size_t buflen;
 	DREF DeeTupleObject *libpath;
 	size_t i;
-	struct TPPKeyword *keyword_entry;
+	tpp_keyword *keyword_entry;
 	DREF DeeObject *path, *stream;
 	struct TPPFile *result;
 

@@ -48,9 +48,7 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #define TPP_TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
 LOCAL ATTR_CONST WUNUSED unsigned int DCALL dot_count(tok_t tk) {
@@ -109,7 +107,8 @@ INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(struct Dee_module_object *__restrict mod,
                      tpp_keyword const *__restrict name) {
 	Dee_hash_t i, perturb;
-	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
+	Dee_hash_t hash = Dee_HashUtf8(tpp_keyword_getcstr(name),
+	                               tpp_keyword_getlen(name));
 	perturb = i = Dee_MODULE_HASHST(mod, hash);
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(mod, i);
@@ -117,7 +116,9 @@ import_module_symbol(struct Dee_module_object *__restrict mod,
 			break; /* Not found */
 		if (item->ss_hash != hash)
 			continue; /* Non-matching hash */
-		if (!Dee_MODULE_SYMBOL_EQUALS(item, name->k_name, name->k_size))
+		if (!Dee_MODULE_SYMBOL_EQUALS(item,
+		                              tpp_keyword_getcstr(name),
+		                              tpp_keyword_getlen(name)))
 			continue; /* Differing strings. */
 		return item;  /* Found it! */
 	}
@@ -420,9 +421,7 @@ parse_import_symbol(DeeLexer *self,
 				goto err;
 			/* - `foo as bar` */
 			if (DeeLexer_HasTokenKwd(self)) {
-				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name->k_name,
-				                                                                   result->ii_symbol_name->k_size,
-				                                                                   STRING_ERROR_FSTRICT);
+				result->ii_import_name = (DREF DeeStringObject *)DeeString_FromTppKeyword(result->ii_symbol_name);
 				if unlikely(!result->ii_import_name)
 					goto err;
 				result->ii_symbol_name = DeeLexer_GetTokenKwd(self);
@@ -448,9 +447,9 @@ parse_import_symbol(DeeLexer *self,
 					goto err;
 			}
 			Dee_unicode_printer_init(&printer);
-			if unlikely(Dee_unicode_printer_print(&printer,
-			                                      result->ii_symbol_name->k_name,
-			                                      result->ii_symbol_name->k_size) < 0)
+			if unlikely(Dee_unicode_printer_printutf8(&printer,
+			                                           tpp_keyword_getcstr(result->ii_symbol_name),
+			                                           tpp_keyword_getlen(result->ii_symbol_name)) < 0)
 				goto err_printer;
 			goto complete_module_name;
 		} else {
@@ -831,9 +830,7 @@ ast_import_module(DeeLexer *self, struct import_item *__restrict item) {
 		                            &item->ii_import_loc);
 	} else {
 		DREF DeeStringObject *module_name;
-		module_name = (DREF DeeStringObject *)DeeString_NewUtf8(item->ii_symbol_name->k_name,
-		                                                        item->ii_symbol_name->k_size,
-		                                                        STRING_ERROR_FSTRICT);
+		module_name = (DREF DeeStringObject *)DeeString_FromTppKeyword(item->ii_symbol_name);
 		if unlikely(!module_name)
 			goto err;
 		mod = import_module_by_name(self, module_name,

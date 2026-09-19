@@ -117,7 +117,7 @@ err:
 }
 
 PRIVATE NONNULL((1)) struct asm_sym *DFCALL
-do_parse_symbol_for_op(DeeLexer *self, int wid) {
+do_parse_symbol_for_op(DeeLexer *self, tpp_warning_id wid) {
 	struct asm_intexpr expr;
 	DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FHASSP));
 	if (!expr.ie_sym) {
@@ -194,12 +194,12 @@ get_reloc_by_name(char const *__restrict name) {
 /*  ================================  */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_directive(DeeLexer *self) {
-#define NAMEISKWD(x)                       \
-	(name->k_size == COMPILER_STRLEN(x) && \
-	 MEMCASEEQ(name->k_name, x, sizeof(x) - sizeof(char)))
-#define NAMEISKWD_S(len, s)   \
-	(name->k_size == (len) && \
-	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
+#define NAMEISKWD(x)                                   \
+	(tpp_keyword_getlen(name) == COMPILER_STRLEN(x) && \
+	 MEMCASEEQ(tpp_keyword_getstr(name), x, sizeof(x) - sizeof(char)))
+#define NAMEISKWD_S(len, s)               \
+	(tpp_keyword_getlen(name) == (len) && \
+	 MEMCASEEQ(tpp_keyword_getstr(name), s, (len) * sizeof(char)))
 	tpp_keyword const *name;
 	name = uasm_parse_symnam(self);
 	if unlikely(!name)
@@ -228,7 +228,8 @@ uasm_parse_directive(DeeLexer *self) {
 			goto err;
 		/* Make sure that the symbol hasn't already been defined. */
 		if unlikely(ASM_SYM_DEFINED(label)) {
-			DO(DeeLexer_Warnf(self, TPP_W_UASM_SYMBOL_ALREADY_DEFINED, label_name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_SYMBOL_ALREADY_DEFINED,
+			                  tpp_keyword_getcstr(label_name)));
 		} else {
 			uasm_defsym(label);
 		}
@@ -337,7 +338,8 @@ do_handle_code:
 			current_basescope->bs_flags &= ~Dee_CODE_FASSEMBLY;
 #endif
 		} else {
-			DO(DeeLexer_Warnf(self, TPP_W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_CODE_UNKNOWN_FLAG,
+			                  tpp_keyword_getcstr(name)));
 		}
 		if (DeeLexer_GetTok(self) != ',')
 			break;
@@ -361,14 +363,15 @@ do_handle_reloc:
 			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_NEED_DOT));
 			DO(uasm_parse_intexpr(self, &expr, UASM_INTEXPR_FNORMAL));
 		}
-		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, TPP_TOK_OFCHAR(','), W_EXPECTED_COMMA));
 		reloc_name  = uasm_parse_symnam(self);
 		reloc_sym   = NULL;
 		reloc_value = 0;
-		reloc_type  = get_reloc_by_name(reloc_name->k_name);
+		reloc_type  = get_reloc_by_name(tpp_keyword_getcstr(reloc_name));
 		/* Check if the relocation name could be determined. */
 		if unlikely(reloc_type == R_DMN_COUNT) {
-			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_UNKNOWN_NAME, reloc_name->k_name));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_RELOC_UNKNOWN_NAME,
+			                  tpp_keyword_getcstr(reloc_name)));
 			reloc_type = R_DMN_NONE;
 		}
 		if (DeeLexer_GetTok(self) == ',') {
@@ -417,9 +420,9 @@ do_handle_except:
 		 *   - `[@]mask(const)` -- Use `const` as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except(self);
-		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, TPP_TOK_OFCHAR(','), W_EXPECTED_COMMA));
 		except_end = do_parse_symbol_for_except(self);
-		DO(DeeLexer_Skip2(self, ',', W_EXPECTED_COMMA));
+		DO(DeeLexer_Skip2(self, TPP_TOK_OFCHAR(','), W_EXPECTED_COMMA));
 		except_entry = do_parse_symbol_for_except(self);
 		except_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
@@ -456,7 +459,7 @@ except_unknown_tag:
 				DREF DeeObject *mask;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto except_err;
-				if (DeeLexer_Skip2(self, '(', W_EXPECTED_LPAREN))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('('), W_EXPECTED_LPAREN))
 					goto except_err;
 				mask = do_parse_constant(self);
 				if (DeeNone_Check(mask)) {
@@ -470,7 +473,7 @@ except_err_mask:
 					Dee_Decref(mask);
 					goto except_err;
 				}
-				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
 					goto except_err_mask;
 				Dee_XDecref(except_mask);
 				except_mask = (DREF DeeTypeObject *)mask;
@@ -669,16 +672,44 @@ do_handle_ddi:
 			goto err_ddi_col;
 		ASSERT(line != NULL);
 		if (!(current_assembler.a_flag & ASM_FNODDI)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			char const *file;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			DREF struct TPPFile *file;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			struct ddi_checkpoint *ddi;
 			struct asm_sym *sym;
 			if (filename) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_keyword const *file_kwd;
+				char const *filename_utf8 = DeeString_AsUtf8(filename);
+				if unlikely(!filename_utf8)
+					goto err_ddi_col;
+				file_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)filename_utf8,
+				                               WSTR_LENGTH(filename_utf8));
+				if unlikely(!file_kwd)
+					goto err_ddi_col;
+				file = tpp_keyword_getcstr(file_kwd);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				file = ddi_newfile(DeeString_STR(filename),
 				                   DeeString_SIZE(filename));
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			} else if (current_assembler.a_ddi.da_checkc) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				file = current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc - 1].dc_loc.l_name;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				file = current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc - 1].dc_loc.l_file;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_keyword const *file_kwd;
+				file_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)"", 0);
+				if unlikely(!file_kwd)
+					goto err_ddi_col;
+				file = tpp_keyword_getcstr(file_kwd);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				file = ddi_newfile("", 0);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			}
 			if (current_assembler.a_ddi.da_checkc) {
 				ddi = &current_assembler.a_ddi.da_checkv[current_assembler.a_ddi.da_checkc - 1];
@@ -714,8 +745,27 @@ do_handle_ddi:
 ddi_update:
 
 			/* Fill in the checkpoint. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			ddi->dc_loc.l_name = file;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			ddi->dc_loc.l_file = file;
-			ddi->dc_sp         = current_assembler.a_stackcur;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			ddi->dc_sp = current_assembler.a_stackcur;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			{
+				tpp_line lineval;
+				tpp_column colval = 0;
+				if (DeeObject_AsIntX(line, &lineval))
+					goto err_ddi_col;
+				--line;
+				if (col) {
+					if (DeeObject_AsIntX(col, &colval))
+						goto err_ddi_col;
+					--colval;
+				}
+				tpp_lcinfo_init(&ddi->dc_loc.l_lc, line, col);
+			}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (DeeObject_AsInt(line, &ddi->dc_loc.l_line))
 				goto err_ddi_col;
 			--ddi->dc_loc.l_line;
@@ -727,10 +777,16 @@ ddi_update:
 				if (ddi->dc_loc.l_col)
 					--ddi->dc_loc.l_col;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #ifndef NDEBUG
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			sym->as_file = file;
+			sym->as_line = ast_loc_getline(&ddi->dc_loc) + 1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			sym->as_file = file->f_name;
 			sym->as_line = ddi->dc_loc.l_line + 1;
-#endif
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* !NDEBUG */
 
 			/* Save the current text position to discard early uses of the same checkpoint. */
 			current_assembler.a_ddi.da_last  = sym->as_addr;
@@ -768,7 +824,7 @@ do_handle_adjstack:
 		if unlikely(new_depth.ie_sym)
 			DO(DeeLexer_Warnf(self, TPP_W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION));
 		if unlikely(new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX)
-			DO(DeeLexer_Warnf(self, TPP_W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val));
+			DO(DeeLexer_Warnf(self, TPP_W_UASM_ILLEGAL_STACK_DEPTH, (int)new_depth.ie_val));
 		/* Special case: If nothing changed, don't even sweat it. */
 		if (current_assembler.a_stackcur == (uint16_t)new_depth.ie_val &&
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))

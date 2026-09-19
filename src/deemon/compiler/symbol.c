@@ -1145,11 +1145,11 @@ rehash_realloc:
 	for (; biter < bend; ++biter) {
 		sym_iter = *biter;
 		while (sym_iter) {
-			s_next           = sym_iter->s_next;
-			bucket           = &new_map[sym_iter->s_name->k_id % new_size];
+			s_next = sym_iter->s_next;
+			bucket = &new_map[tpp_keyword_getid(sym_iter->s_name) % new_size];
 			sym_iter->s_next = *bucket;
-			*bucket          = sym_iter;
-			sym_iter         = s_next;
+			*bucket = sym_iter;
+			sym_iter = s_next;
 		}
 	}
 	Dee_Free(iter->s_map);
@@ -1161,11 +1161,11 @@ rehash_realloc:
 INTERN WUNUSED NONNULL((1)) bool DCALL
 is_reserved_symbol_name(tpp_keyword const *__restrict name) {
 	/* Quick check: any keywords not registered as builtin are allowed. */
-	if (TPP_ISUSERKEYWORD(name->k_id))
+	if (TPP_ISUSERKEYWORD(tpp_keyword_getid(name)))
 		return false;
 
 	/* White-list of non-reserved builtin keywords. */
-	switch (name->k_id) {
+	switch (tpp_keyword_getid(name)) {
 
 	case TPP_KWD_f:
 	case TPP_KWD_F:
@@ -1284,8 +1284,8 @@ seach_single:
 		ASSERT(iter->s_mapc <= iter->s_mapa);
 		result = NULL;
 		if (iter->s_mapa) {
-			result = iter->s_map[name->k_id % iter->s_mapa];
-			while (result && result->s_name != name)
+			result = iter->s_map[tpp_keyword_getid(name) % iter->s_mapa];
+			while (result && !tpp_keyword_equals(result->s_name, name))
 				result = result->s_next;
 			/* Simple case: If the variable was found, return it. */
 			if (result) {
@@ -1338,8 +1338,8 @@ seach_single:
 		/* Look through all scopes. */
 		ASSERT(iter->s_mapc <= iter->s_mapa);
 		if (iter->s_mapa) {
-			result = iter->s_map[name->k_id % iter->s_mapa];
-			while (result && result->s_name != name)
+			result = iter->s_map[tpp_keyword_getid(name) % iter->s_mapa];
+			while (result && !tpp_keyword_equals(result->s_name, name))
 				result = result->s_next;
 			if (result) {
 				SYMBOL_MARK_USED(result);
@@ -1440,9 +1440,9 @@ set_default_location:
 
 	/* Insert the new symbol. */
 	ASSERT(iter->s_mapa != 0);
-	bucket          = &iter->s_map[name->k_id % iter->s_mapa];
+	bucket = &iter->s_map[tpp_keyword_getid(name) % iter->s_mapa];
 	result->s_next  = *bucket;
-	*bucket         = result;
+	*bucket = result;
 	result->s_scope = iter;
 	return result;
 err_r:
@@ -1463,9 +1463,9 @@ lookup_nth(unsigned int nth, tpp_keyword const *__restrict name) {
 		struct symbol *result;
 		if (!iter->s_mapa)
 			continue;
-		result = iter->s_map[name->k_id % iter->s_mapa];
+		result = iter->s_map[tpp_keyword_getid(name) % iter->s_mapa];
 		while (result) {
-			if (result->s_name == name) {
+			if (tpp_keyword_equals(result->s_name, name)) {
 				/* Return this instance if it is the one that was requested. */
 				if (!nth--) {
 					SYMBOL_MARK_USED(result);
@@ -1497,9 +1497,9 @@ new_local_symbol(tpp_keyword const *__restrict name, struct ast_loc *loc) {
 			goto err_r;
 	}
 	ASSERT(current_scope->s_mapa != 0);
-	bucket         = &current_scope->s_map[name->k_id % current_scope->s_mapa];
+	bucket = &current_scope->s_map[tpp_keyword_getid(name) % current_scope->s_mapa];
 	result->s_next = *bucket;
-	*bucket        = result;
+	*bucket = result;
 	result->s_decltype.da_type = DAST_NONE;
 	result->s_flag   = SYMBOL_FNORMAL;
 	result->s_nread  = 0;
@@ -1592,9 +1592,9 @@ new_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 	}
 	ASSERT(scope->s_mapa != 0);
 	result->s_decltype.da_type = DAST_NONE;
-	bucket           = &scope->s_map[name->k_id % scope->s_mapa];
-	result->s_next   = *bucket;
-	*bucket          = result;
+	bucket = &scope->s_map[tpp_keyword_getid(name) % scope->s_mapa];
+	result->s_next = *bucket;
+	*bucket = result;
 	result->s_flag   = SYMBOL_FNORMAL;
 	result->s_nread  = 0;
 	result->s_nwrite = 0;
@@ -1625,8 +1625,8 @@ get_local_symbol_in_scope(DeeScopeObject *__restrict scope,
 	if (!scope->s_mapc)
 		return false;
 	ASSERT(scope->s_mapa != 0);
-	bucket = scope->s_map[name->k_id % scope->s_mapa];
-	while (bucket && bucket->s_name != name)
+	bucket = scope->s_map[tpp_keyword_getid(name) % scope->s_mapa];
+	while (bucket && !tpp_keyword_equals(bucket->s_name, name))
 		bucket = bucket->s_next;
 	return bucket;
 }
@@ -1637,8 +1637,8 @@ get_local_symbol(tpp_keyword const *__restrict name) {
 	if (!current_scope->s_mapc)
 		return false;
 	ASSERT(current_scope->s_mapa != 0);
-	bucket = current_scope->s_map[name->k_id % current_scope->s_mapa];
-	while (bucket && bucket->s_name != name)
+	bucket = current_scope->s_map[tpp_keyword_getid(name) % current_scope->s_mapa];
+	while (bucket && !tpp_keyword_equals(bucket->s_name, name))
 		bucket = bucket->s_next;
 	return bucket;
 }
@@ -1648,7 +1648,7 @@ del_local_symbol(struct symbol *__restrict sym) {
 	struct symbol **p_bucket, *bucket;
 	ASSERT(sym->s_name != &TPPKeyword_Empty);
 	ASSERT(sym->s_scope->s_mapa != 0);
-	p_bucket = &sym->s_scope->s_map[sym->s_name->k_id % sym->s_scope->s_mapa];
+	p_bucket = &sym->s_scope->s_map[tpp_keyword_getid(sym->s_name) % sym->s_scope->s_mapa];
 	while ((bucket = *p_bucket, bucket && bucket != sym))
 		p_bucket = &bucket->s_next;
 	if (!bucket)
@@ -1668,8 +1668,8 @@ scope_lookup(DeeScopeObject *__restrict scope,
 	struct symbol *result = NULL;
 	if (!scope->s_mapa)
 		goto done;
-	result = scope->s_map[name->k_id % scope->s_mapa];
-	while (result && result->s_name != name)
+	result = scope->s_map[tpp_keyword_getid(name) % scope->s_mapa];
+	while (result && !tpp_keyword_equals(result->s_name, name))
 		result = result->s_next;
 done:
 	return result;
@@ -1686,8 +1686,8 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
 	keyword = TPPLexer_LookupKeyword(name, name_length, 0);
 	if (!keyword)
 		goto done;
-	result = scope->s_map[keyword->k_id % scope->s_mapa];
-	while (result && result->s_name != keyword)
+	result = scope->s_map[tpp_keyword_getid(keyword) % scope->s_mapa];
+	while (result && !tpp_keyword_equals(result->s_name, keyword))
 		result = result->s_next;
 done:
 	return result;
@@ -1719,11 +1719,11 @@ rehash_realloc:
 	for (; biter < bend; ++biter) {
 		lbl_iter = *biter;
 		while (lbl_iter) {
-			s_next            = lbl_iter->tl_next;
-			bucket            = &new_map[lbl_iter->tl_name->k_id % new_size];
+			s_next = lbl_iter->tl_next;
+			bucket = &new_map[tpp_keyword_getid(lbl_iter->tl_name) % new_size];
 			lbl_iter->tl_next = *bucket;
-			*bucket           = lbl_iter;
-			lbl_iter          = s_next;
+			*bucket = lbl_iter;
+			lbl_iter = s_next;
 		}
 	}
 	Dee_Free(current_basescope->bs_lbl);
@@ -1736,9 +1736,9 @@ INTERN WUNUSED NONNULL((1)) struct text_label *DCALL
 lookup_label(tpp_keyword const *__restrict name) {
 	struct text_label *result, **p_result;
 	if likely(current_basescope->bs_lbla) {
-		result = current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
+		result = current_basescope->bs_lbl[tpp_keyword_getid(name) % current_basescope->bs_lbla];
 		while (result) {
-			if (result->tl_name == name)
+			if (tpp_keyword_equals(result->tl_name, name))
 				return result;
 			result = result->tl_next;
 		}
@@ -1748,7 +1748,7 @@ lookup_label(tpp_keyword const *__restrict name) {
 			goto err;
 	}
 	ASSERT(current_basescope->bs_lbla);
-	p_result = &current_basescope->bs_lbl[name->k_id % current_basescope->bs_lbla];
+	p_result = &current_basescope->bs_lbl[tpp_keyword_getid(name) % current_basescope->bs_lbla];
 	result   = lbl_alloc();
 	if unlikely(!result)
 		goto err;

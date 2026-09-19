@@ -523,8 +523,7 @@ class_maker_addmember(DeeLexer *lexer,
 	struct symbol *result;
 	DREF DeeStringObject *name_str;
 	struct Dee_class_attribute *attr;
-	name_str = (DREF DeeStringObject *)DeeString_NewSized(name->k_name,
-	                                                      name->k_size);
+	name_str = (DREF DeeStringObject *)DeeString_FromTppKeyword(name);
 	if unlikely(!name_str)
 		goto err;
 
@@ -579,7 +578,7 @@ class_maker_addmember(DeeLexer *lexer,
 		/* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
 		if unlikely(addr > UINT16_MAX - 2) {
 			PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
-			       self->cm_classsym->s_name->k_name);
+			       tpp_keyword_getcstr(self->cm_classsym->s_name));
 			goto err;
 		}
 		/* Save the starting VTABLE address of this member. */
@@ -596,7 +595,8 @@ class_maker_addmember(DeeLexer *lexer,
 			/* Define a forward-referenced class symbol. */
 		} else {
 			PERRAT(loc, W_CLASS_MEMBER_ALREADY_DEFINED,
-			       name->k_size, name->k_name);
+			       tpp_keyword_getlen(name),
+			       tpp_keyword_getcstr(name));
 			goto err;
 		}
 	} else {
@@ -794,7 +794,7 @@ class_maker_addoperator(DeeLexer *lexer, struct class_maker *__restrict self,
 	addr = self->cm_desc->cd_cmemb_size;
 	if unlikely(addr == UINT16_MAX) {
 		PERRAST(callback, W_TOO_MANY_CLASS_MEMBER,
-		        self->cm_classsym->s_name->k_name);
+		        tpp_keyword_getcstr(self->cm_classsym->s_name));
 		goto err;
 	}
 	++self->cm_desc->cd_cmemb_size;
@@ -823,7 +823,7 @@ class_maker_deloperator(DeeLexer *lexer, struct class_maker *__restrict self,
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
 		if unlikely(self->cm_null_member == (uint16_t)-1) {
 			return PERRAT(loc, W_TOO_MANY_CLASS_MEMBER,
-			              self->cm_classsym->s_name->k_name);
+			              tpp_keyword_getcstr(self->cm_classsym->s_name));
 		}
 		++self->cm_desc->cd_cmemb_size;
 	}
@@ -1059,9 +1059,10 @@ parse_constructor_initializers(DeeLexer *lexer, struct class_maker *__restrict s
 		 *     }
 		 * }
 		 */
-		if (self->cm_base && (initializer_name->k_id == TPP_KWD_super ||
+		if (self->cm_base && (tpp_keyword_getid(initializer_name) == TPP_KWD_super ||
 		                      (self->cm_base->a_type == AST_SYM &&
-		                       self->cm_base->a_sym->s_name == initializer_name))) {
+		                       tpp_keyword_equals(self->cm_base->a_sym->s_name,
+		                                          initializer_name)))) {
 			DREF struct ast *superkwds;
 			DREF struct ast *superargs, *merge;
 			int temp;
@@ -1615,8 +1616,7 @@ use_object_base:
 
 	if (name) {
 		DREF DeeStringObject *name_str;
-		name_str = (DREF DeeStringObject *)DeeString_NewSized(name->k_name,
-		                                                      name->k_size);
+		name_str = (DREF DeeStringObject *)DeeString_FromTppKeyword(name);
 		if unlikely(!name_str)
 			goto err;
 		maker.cm_desc->cd_name = name_str; /* Inherit reference. */
@@ -1776,7 +1776,7 @@ set_visibility:
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_lbrace_flags;
 			if (DeeLexer_GetTok(self) == '(' || DeeLexer_GetTok(self) == '{' ||
-			    DeeLexer_GetTok(self) == ':' || DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_pack) {
+			    DeeLexer_GetTok(self) == ':' || DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE || DeeLexer_GetTok(self) == TPP_KWD_pack) {
 				/* A deprecated syntax for defining constructors allowed
 				 * the use of `class` as another alias for `this` and the
 				 * actual name of the class. */

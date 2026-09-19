@@ -65,6 +65,7 @@ PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = Dee_RSHARED_RWLOCK_INIT;
 PUBLIC Dee_WEAKREF(DeeCompilerObject) DeeCompiler_Active = Dee_WEAKREF_INIT;
 PRIVATE DeeCompilerObject *compiler_loaded = NULL; /* == DeeCompiler_Active */
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 PRIVATE void *DCALL
 memxch(void *a, void *b, size_t num_bytes) {
 	typedef __REGISTER_TYPE__ wordtype;
@@ -89,6 +90,7 @@ memxch(void *a, void *b, size_t num_bytes) {
 	}
 	return a;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 /* compiler --> GLOBAL */
@@ -106,10 +108,12 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
 	parser_flags           = compiler->cp_parser_flags;
 	optimizer_flags        = compiler->cp_optimizer_flags;
 	optimizer_unwind_limit = compiler->cp_unwind_limit;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
 		memxch(&TPPLexer_Global, &compiler->cp_lexer.dl_lexer, sizeof(struct TPPLexer));
 	if (!(compiler->cp_flags & COMPILER_FKEEPERROR))
 		memxch(&current_parser_errors, &compiler->cp_errors, sizeof(struct parser_errors));
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 
@@ -133,10 +137,12 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 	compiler->cp_parser_flags    = parser_flags;
 	compiler->cp_optimizer_flags = optimizer_flags;
 	compiler->cp_unwind_limit    = optimizer_unwind_limit;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (!(compiler->cp_flags & COMPILER_FKEEPLEXER))
 		memxch(&TPPLexer_Global, &compiler->cp_lexer.dl_lexer, sizeof(struct TPPLexer));
 	if (!(compiler->cp_flags & COMPILER_FKEEPERROR))
 		memxch(&current_parser_errors, &compiler->cp_errors, sizeof(struct parser_errors));
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 
@@ -258,6 +264,9 @@ DeeCompiler_New(uint16_t flags) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	result->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer_Init(&result->cp_lexer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if (!(flags & COMPILER_FKEEPLEXER)) {
 		if (!TPPLexer_Init(&result->cp_lexer.dl_lexer))
 			goto err_scope;
@@ -269,11 +278,14 @@ DeeCompiler_New(uint16_t flags) {
 	}
 	if (!(flags & COMPILER_FKEEPERROR))
 		parser_errors_init(&result->cp_errors);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DeeObject_InitStatic(result, &DeeCompiler_Type);
 done:
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 err_scope:
 	Dee_Decref(result->cp_scope);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
@@ -300,6 +312,9 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	Dee_unicode_printer_fini(&self->cp_tags.at_decl);
 	Dee_unicode_printer_fini(&self->cp_tags.at_doc);
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer_Fini(&self->cp_lexer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* Always set the error-flag to prevent TPP from attempting
 	 * to warn about stuff like unclosed if-blocks, because now
 	 * that the compiler has been unloaded, we are no longer
@@ -311,6 +326,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 		parser_errors_fini(&self->cp_errors);
 	if (!(self->cp_flags & COMPILER_FKEEPLEXER))
 		TPPLexer_Quit(&self->cp_lexer.dl_lexer);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	Dee_Decref(self->cp_scope);
 	Dee_Free(self->cp_items.cis_list);
 }
@@ -392,6 +408,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
                                  int start_line, int start_col) {
@@ -407,7 +424,7 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 			goto err;
 		/* Use space characters to pad text. */
 		memset(pad_text->s_text, ' ', pad_text->s_size);
-		TPPString_Decref(self->f_text);
+		tpp_string_decref(self->f_text);
 		self->f_text  = pad_text; /* Inherit reference */
 		self->f_begin = pad_text->s_text;
 		self->f_end   = pad_text->s_text + pad_text->s_size;
@@ -418,6 +435,7 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /* Similar to `DeeExec_RunStream()`, but rather than directly executing it,
  * return the module used to describe the code that is being executed, or
@@ -431,10 +449,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject *source_stream,
                                  int start_line, int start_col, unsigned int mode,
                                  struct Dee_compiler_options *options, DeeObject *default_symbols) {
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	struct TPPFile *base_file;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DREF DeeCodeObject *root_code;
 	DREF DeeCompilerObject *compiler;
 	DREF struct ast *code;
+	DeeLexer *lexer;
 	int result;
 	uint16_t assembler_flags;
 
@@ -443,6 +464,27 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 		goto err;
 	if (COMPILER_BEGIN(compiler))
 		goto err_compiler_not_locked;
+	lexer = DeeLexer_OfCompiler(compiler);
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* Initialize file-stack */
+#if TPP_HAVE_FILE_NOCLOSE
+	tpp_lexer_initfile_io_ex2(&lexer->dl_lexer,
+	                          options ? options->co_pathname : NULL,
+	                          source_stream, TPP_FILE_FLAGS_NOCLOSE,
+	                          tpp_lcinfo_of(start_line, start_col),
+	                          TPP_FILE_ENCODING_UTF8);
+#else /* TPP_HAVE_FILE_NOCLOSE */
+	Dee_Incref(source_stream); /* Inherited by `tpp_lexer_initfile_io_ex2()` */
+	tpp_lexer_initfile_io_ex2(&lexer->dl_lexer,
+	                          options ? options->co_pathname : NULL,
+	                          source_stream, TPP_FILE_FLAGS_NORMAL,
+	                          tpp_lcinfo_of(start_line, start_col),
+	                          TPP_FILE_ENCODING_UTF8);
+#endif /* !TPP_HAVE_FILE_NOCLOSE */
+
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	/* Push base file */
 	base_file = TPPFile_OpenStream((stream_t)source_stream,
 	                               (options && options->co_pathname)
 	                               ? options->co_pathname
@@ -459,18 +501,29 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 	/* Push the initial source file onto the #include-stack,
 	 * and TPP inherit our reference to it. */
 	TPPLexer_PushFileInherited(base_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Override the name that is used as the
 	 * effective display/DDI string of the file. */
 	if (options && options->co_filename) {
-		struct TPPString *used_name;
+		TPP_REF tpp_string *used_name;
+		char const *filename_utf8;
 		ASSERT_OBJECT_TYPE_EXACT(options->co_filename, &DeeString_Type);
-		used_name = TPPString_New(DeeString_STR(options->co_filename),
-		                          DeeString_SIZE(options->co_filename));
+		filename_utf8 = DeeString_AsUtf8(options->co_filename);
+		if unlikely(!filename_utf8)
+			goto err_compiler_files;
+		used_name = tpp_string_malloc(WSTR_LENGTH(filename_utf8));
 		if unlikely(!used_name)
-			goto err_compiler;
+			goto err_compiler_files;
+		memcpyc(tpp_string_str(used_name), filename_utf8,
+		        WSTR_LENGTH(filename_utf8), sizeof(char));
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_file_setfilename(DeeLexer_GetFile(lexer), used_name);
+		tpp_string_decref_nokill(used_name);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		ASSERT(!base_file->f_textfile.f_usedname);
 		base_file->f_textfile.f_usedname = used_name; /* Inherit */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 	ASSERT(!current_basescope->bs_name);
 
@@ -488,12 +541,17 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 		/* Set the name of the current base-scope, which
 		 * describes the function of the module's root code. */
 		if (options->co_rootname) {
+			char const *rootname_utf8;
+			tpp_keyword const *rootname_kwd;
 			ASSERT_OBJECT_TYPE_EXACT(options->co_rootname, &DeeString_Type);
-			current_basescope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(options->co_rootname),
-			                                                    DeeString_SIZE(options->co_rootname),
-			                                                    1);
-			if unlikely(!current_basescope->bs_name)
-				goto err_compiler;
+			rootname_utf8 = DeeString_AsUtf8(options->co_rootname);
+			if unlikely(!rootname_utf8)
+				goto err_compiler_files;
+			rootname_kwd = DeeLexer_NewKeyword(lexer, (tpp_char const *)rootname_utf8,
+			                                   WSTR_LENGTH(rootname_utf8));
+			if unlikely(!rootname_kwd)
+				goto err_compiler_files;
+			current_basescope->bs_name = rootname_kwd;
 		}
 
 		compiler->cp_options   = options;
@@ -501,14 +559,19 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 		parser_flags           = options->co_parser;
 		optimizer_flags        = options->co_optimizer;
 		optimizer_unwind_limit = options->co_unwind_limit;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if (parser_flags & PARSE_FLFSTMT)
+			tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_LF);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (options->co_tabwidth)
 			TPPLexer_Current->l_tabsize = (size_t)options->co_tabwidth;
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (options->co_setup) {
 			/* Run a custom setup protocol. */
 			if unlikely((*options->co_setup)(options->co_setup_arg) < 0)
-				goto err_compiler;
+				goto err_compiler_files;
 		}
 	}
 
@@ -516,10 +579,10 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 	{
 		struct symbol *dots = new_unnamed_symbol();
 		if unlikely(!dots)
-			goto err_compiler;
+			goto err_compiler_files;
 		current_basescope->bs_argv = (struct symbol **)Dee_Mallocc(1, sizeof(struct symbol *));
 		if unlikely(!current_basescope->bs_argv)
-			goto err_compiler;
+			goto err_compiler_files;
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -535,32 +598,34 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
 
 	(void)default_symbols; /* TODO */
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* Save the current exception context. */
 	parser_start();
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Yield the initial token. */
-	if (TPP_TOK_ISERR(DeeLexer_Yield(_DeeLexer_Current))) {
+	if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
 		code = NULL;
 	} else {
 		/* Parse statements until the end of the source stream. */
 		switch (mode & DeeExec_RUNMODE_MASK) {
 
 		default:
-			code = ast_parse_statements_until(_DeeLexer_Current, AST_FMULTIPLE_KEEPLAST, TPP_TOK_EOF);
+			code = ast_parse_statements_until(lexer, AST_FMULTIPLE_KEEPLAST, TPP_TOK_EOF);
 			break;
 
 		case DeeExec_RUNMODE_STMT:
-			code = ast_parse_statement(_DeeLexer_Current, false);
+			code = ast_parse_statement(lexer, false);
 			goto pack_code_in_return;
 
 		case DeeExec_RUNMODE_EXPR:
-			code = ast_parse_comma(_DeeLexer_Current, AST_COMMA_NORMAL,
+			code = ast_parse_comma(lexer, AST_COMMA_NORMAL,
 			                       AST_FMULTIPLE_KEEPLAST,
 			                       NULL);
 			goto pack_code_in_return;
 
 		case DeeExec_RUNMODE_FULLEXPR:
-			code = ast_parse_comma(_DeeLexer_Current,
+			code = ast_parse_comma(lexer,
 			                       AST_COMMA_NORMAL |
 			                       AST_COMMA_ALLOWVARDECLS |
 			                       AST_COMMA_ALLOWTYPEDECL,
@@ -576,24 +641,35 @@ pack_code_in_return:
 			break;
 		}
 	}
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (!(TPPLexer_Current->l_flags & TPPLEXER_FLAG_ERROR))
 		TPPLexer_ClearIfdefStack();
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Rethrow all errors that may have occurred during parsing. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(parser_rethrow(code == NULL))
-		goto err_compiler_code;
+		goto err_compiler_files_code;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!code)
-		goto err_compiler;
+		goto err_compiler_files;
 
 	/* Run an additional optimization pass on the
 	 * AST before passing it off to the assembler. */
 	if (optimizer_flags & OPTIMIZE_FENABLED) {
 		int error = ast_optimize_all(code, false);
 		/* Rethrow all errors that may have occurred during optimization. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		/* TODO */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (parser_rethrow(error != 0))
 			error = -1;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (error)
-			goto err_compiler_code;
+			goto err_compiler_files_code;
 	}
 
 	assembler_flags = ASM_FNORMAL;
@@ -613,12 +689,16 @@ pack_code_in_return:
 	ast_decref(code);
 
 	/* Rethrow all errors that may have occurred during text assembly. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if (parser_rethrow(root_code == NULL))
 		Dee_XClear(root_code);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Check for errors during assembly. */
 	if unlikely(!root_code)
-		goto err_compiler;
+		goto err_compiler_files;
 
 	/* Finally, put together the module itself. */
 	result = module_compile(writer, root_code);
@@ -629,13 +709,22 @@ pack_code_in_return:
 		Dee_Clear(result);
 #endif
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_lexer_finifile(&lexer->dl_lexer);
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DeeCompiler_End();
 	Dee_Decref(compiler);
 	DeeCompiler_LockEndWrite();
 	return result;
-err_compiler_code:
+err_compiler_files_code:
 	ast_xdecref(code);
+err_compiler_files:
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_lexer_finifile(&lexer->dl_lexer);
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 err_compiler:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	COMPILER_END();
 err_compiler_not_locked:
 	Dee_Decref(compiler);

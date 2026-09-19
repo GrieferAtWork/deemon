@@ -278,7 +278,9 @@ again:
 			/* The label was never used. - Ergo: it should not exist.
 			 * To signify this, we simply convert this branch to `none`. */
 			if (WARNAST(self, W_ASM_LABEL_NEVER_USED,
-			            self->a_flag & AST_FLABEL_CASE ? (self->a_label.l_label->tl_expr ? "case" : "default") : self->a_label.l_label->tl_name->k_name))
+			            (self->a_flag & AST_FLABEL_CASE)
+			            ? (self->a_label.l_label->tl_expr ? "case" : "default")
+			            : tpp_keyword_getcstr(self->a_label.l_label->tl_name)))
 				goto err;
 			Dee_Decref(&self->a_label.l_base->bs_scope);
 			self->a_type      = AST_CONSTEXPR;

@@ -924,7 +924,7 @@ done_y1:
 				if (JITLexer_SkipTypeAnnotation(self, false) != 0)
 					goto not_a_java_lambda;
 			}
-			if (self->jl_tok == TOK_ARROW) {
+			if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 				IF_EVAL(unsigned char const *source_start);
 				IF_EVAL(unsigned char const *source_end);
 				IF_EVAL(unsigned int is_expression);
@@ -1048,7 +1048,7 @@ not_a_java_lambda:
 				if (JITLexer_SkipPair(self, '(', ')'))
 					goto err;
 #endif /* !JIT_EVAL */
-				if (self->jl_tok == TOK_ARROW) {
+				if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 #ifdef JIT_EVAL
 					/* Lambda function. */
 					unsigned char const *source_start;
@@ -1135,7 +1135,7 @@ not_a_java_lambda:
 				saved_jl_tokend   = self->jl_tokend;
 				JITLexer_Yield(self);
 				if (JITLexer_SkipTypeAnnotation(self, false) == 0 &&
-				    (self->jl_tok == TOK_ARROW || self->jl_tok == '{')) {
+				    (self->jl_tok == TPP_TOK_MINUS_RANGLE || self->jl_tok == '{')) {
 					/* Jup: this must be a lambda! */
 
 					/* fallthru to the proper handler below. */
@@ -1147,7 +1147,7 @@ not_a_java_lambda:
 				}
 			}
 
-			if (self->jl_tok == TOK_ARROW) {
+			if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 #ifdef JIT_EVAL
 				/* Lambda function. */
 				unsigned char const *source_start;
@@ -1789,7 +1789,7 @@ err_oo_class_reinit_lvalue:
 			IF_EVAL(char const *symbol_name  = JITLexer_TokPtr(self));
 			IF_EVAL(size_t symbol_size = JITLexer_TokLen(self));
 			JITLexer_Yield(self);
-			if (self->jl_tok == TOK_ARROW) {
+			if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 				/* Single-argument java-style lambda. */
 				IF_EVAL(unsigned char const *source_start);
 				IF_EVAL(unsigned char const *source_end);

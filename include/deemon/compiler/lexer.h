@@ -61,10 +61,8 @@ struct Dee_compiler_options;
 struct Dee_module_symbol;
 
 /* Parser flags (Set of `PARSE_F*`) */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTDEF uint16_t parser_flags;
 INTDEF struct Dee_compiler_options *inner_compiler_options;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 /* Parse a string. */
@@ -288,7 +286,7 @@ ast_parse_statement(DeeLexer *self, bool allow_nonblock);
  * NOTE: If desired, the caller is responsible to setup
  *       or teardown a new scope before/after this function. */
 INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token);
+ast_parse_statements_until(DeeLexer *self, uint16_t flags, tpp_token_id end_token);
 
 /* Parse and return an operator name.
  * @param: features: Set of `P_OPERATOR_F*`

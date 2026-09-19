@@ -220,10 +220,11 @@ done:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1)) struct TPPFile *DCALL
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+INTERN WUNUSED NONNULL((1)) tpp_file *DCALL
 ddi_newfile(char const *__restrict filename,
             size_t filename_length) {
-	struct TPPFile *result;
+	tpp_file *result;
 	/* Search for older DDI checkpoints using this filename. */
 	result = current_assembler.a_ddi.da_files;
 	for (; result; result = result->f_prev) {
@@ -236,7 +237,7 @@ ddi_newfile(char const *__restrict filename,
 	}
 
 	/* Construct a new fake TPP file. */
-	result = (DREF struct TPPFile *)Dee_Calloc(sizeof(struct TPPFile));
+	result = (DREF tpp_file *)Dee_Calloc(sizeof(tpp_file));
 	if unlikely(!result)
 		goto err;
 	result->f_refcnt = 1;
@@ -266,6 +267,7 @@ done:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 
@@ -287,7 +289,7 @@ INTERN WUNUSED NONNULL((1)) int
 		goto done;
 
 	/* Check if there even is DDI information to save. */
-	if (!self->a_ddi.l_file)
+	if (ast_loc_isempty(&self->a_ddi))
 		goto done;
 
 	/* Discard redundant debug information early on to save on memory. */
@@ -507,13 +509,15 @@ INTERN void DCALL assembler_fini(void) {
 		Dee_Free(current_assembler.a_ddi.da_checkv[i].dc_bndv);
 	Dee_Free(current_assembler.a_ddi.da_checkv);
 	Dee_Free(current_assembler.a_ddi.da_bndv);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	while (current_assembler.a_ddi.da_files) {
-		struct TPPFile *next;
+		tpp_file *next;
 		next = current_assembler.a_ddi.da_files->f_prev;
 		current_assembler.a_ddi.da_files->f_prev = NULL;
 		TPPFile_Decref(current_assembler.a_ddi.da_files);
 		current_assembler.a_ddi.da_files = next;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 
@@ -1548,12 +1552,12 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 		for (i = 0; i < size; ++i) {
 			tpp_keyword const *name;
 			name = current_basescope->bs_argv[i]->s_name;
-			if (!name->k_size) {
+			if (tpp_keyword_getlen(name) == 0) {
 				kwds[i] = (DREF DeeStringObject *)DeeString_NewEmpty();
 			} else {
 				DREF DeeStringObject *nameob;
-				nameob = (DREF DeeStringObject *)DeeString_NewUtf8(name->k_name,
-				                                                   name->k_size,
+				nameob = (DREF DeeStringObject *)DeeString_NewUtf8(tpp_keyword_getcstr(name),
+				                                                   tpp_keyword_getlen(name),
 				                                                   STRING_ERROR_FIGNORE);
 				if unlikely(!nameob) {
 					Dee_Decrefv(kwds, i);
@@ -2045,7 +2049,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
-              tint_t addend, uint16_t mode) {
+              intptr_t addend, uint16_t mode) {
 	DREF DeeRelIntObject *result;
 	result = DeeObject_MALLOC(DeeRelIntObject);
 	if unlikely(!result)
@@ -2061,12 +2065,12 @@ done:
 
 INTERN WUNUSED int32_t DCALL
 asm_newrelint(struct asm_sym *sym,
-              tint_t addend, uint16_t mode) {
+              intptr_t addend, uint16_t mode) {
 	DREF DeeObject *obj;
 	if likely(sym) {
 		obj = DeeRelInt_New(sym, addend, mode);
 	} else {
-		obj = DeeInt_NewInt64(addend);
+		obj = DeeInt_NewIntptr(addend);
 	}
 	if unlikely(!obj)
 		goto err;
@@ -2077,7 +2081,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fix_relint(DeeObject **__restrict p_obj) {
-	tint_t value;
+	intptr_t value;
 	DREF DeeObject *intob;
 	DeeRelIntObject *relint = (DeeRelIntObject *)*p_obj;
 	ASSERT(!DeeObject_IsShared(relint));
@@ -2089,7 +2093,7 @@ fix_relint(DeeObject **__restrict p_obj) {
 	} else {
 		value += relint->ri_sym->as_stck;
 	}
-	intob = DeeInt_NewInt64(value);
+	intob = DeeInt_NewIntptr(value);
 	if unlikely(!intob)
 		goto err;
 	/* Replace the constant slot with this value. */
@@ -2604,7 +2608,7 @@ do_realloc:
 
 
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
-asm_newconst_string(char const *__restrict str, size_t len) {
+asm_newconst_string_utf8(/*utf-8*/ char const *__restrict str, size_t len) {
 	uint16_t result;
 	DREF DeeObject *value;
 	if (!(current_assembler.a_flag & ASM_FNOREUSECONST)) {
@@ -2612,14 +2616,14 @@ asm_newconst_string(char const *__restrict str, size_t len) {
 			DeeObject *ob = current_assembler.a_constv[result];
 			if (!DeeString_Check(ob))
 				continue;
-			if (!DeeString_EqualsBuf(ob, str, len))
+			if (!DeeString_EqualsBuf(ob, str, len)) /* TODO: EqualsUtf8 */
 				continue;
 			return result; /* Found it! */
 		}
 	}
 	if unlikely(check_resize_constants())
 		goto err;
-	value = DeeString_NewSized(str, len);
+	value = DeeString_NewUtf8(str, len, Dee_STRING_ERROR_FIGNORE);
 	if unlikely(!value)
 		goto err;
 	result = current_assembler.a_constc;
@@ -2857,11 +2861,12 @@ asm_gsymid(struct symbol *__restrict sym) {
 	/* Figure out the name and hash of this symbol's name.
 	 * NOTE: This is where we stop using TPP's indices for hashing
 	 *       and start relying on deemon's own string hashing algorithm,
-	 *       since the `TPPKeyword` still representing the name of this
+	 *       since the `tpp_keyword` still representing the name of this
 	 *       symbol won't be around anymore once the module itself has
 	 *       been compiled. */
 	name      = sym->s_name;
-	name_hash = Dee_HashPtr(name->k_name, name->k_size);
+	name_hash = Dee_HashUtf8(tpp_keyword_getcstr(name),
+	                         tpp_keyword_getlen(name));
 
 	/* To prevent multiple-definition problems of the same global variable,
 	 * global variables are stored by name in the `current_rootscope`
@@ -2877,7 +2882,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 		if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			break;
 		if (iter->ss_hash == name_hash &&
-		    Dee_MODULE_SYMBOL_EQUALS(iter, name->k_name, name->k_size)) {
+		    Dee_MODULE_SYMBOL_EQUALS(iter, tpp_keyword_getcstr(name), tpp_keyword_getlen(name))) {
 			/* Found a match! - This global variable had already been defined. */
 			result       = Dee_module_symbol_getindex(iter);
 			sym->s_symid = result;
@@ -2917,12 +2922,12 @@ asm_gsymid(struct symbol *__restrict sym) {
 		iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
 		if (Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			continue;
-		name_obj = DeeString_NewSized(name->k_name, name->k_size);
+		name_obj = DeeString_FromTppKeyword(name);
 		if unlikely(!name_obj)
 			goto err;
-		Dee_MODULE_SYMBOL_GETNAMESTR(iter)        = DeeString_STR(name_obj);
+		Dee_MODULE_SYMBOL_GETNAMESTR(iter) = DeeString_STR(name_obj);
 		((DeeStringObject *)name_obj)->s_hash = name_hash;
-		iter->ss_flags                        = Dee_MODSYM_FNAMEOBJ;
+		iter->ss_flags = Dee_MODSYM_FNAMEOBJ;
 		if (sym->s_global.g_doc) {
 			/* Assign a documentation string. */
 			iter->ss_doc = DeeString_STR(sym->s_global.g_doc);
@@ -3005,9 +3010,10 @@ asm_gsymid_for_read(struct symbol *__restrict sym,
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	if (!sym->s_nwrite &&
-	    WARNAST(warn_ast, W_VARIABLE_READ_NEVER_WRITTEN, sym))
-		goto err;
+	if (!sym->s_nwrite) {
+		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+			goto err;
+	}
 	return asm_gsymid(sym);
 err:
 	return -1;
@@ -3020,9 +3026,10 @@ asm_lsymid_for_read(struct symbol *__restrict sym,
 	ASSERT(sym->s_type == SYMBOL_TYPE_LOCAL);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	if (!sym->s_nwrite &&
-	    WARNAST(warn_ast, W_VARIABLE_READ_NEVER_WRITTEN, sym))
-		goto err;
+	if (!sym->s_nwrite) {
+		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+			goto err;
+	}
 	return asm_lsymid(sym);
 err:
 	return -1;
@@ -3035,9 +3042,10 @@ asm_ssymid_for_read(struct symbol *__restrict sym,
 	ASSERT(sym->s_type == SYMBOL_TYPE_STATIC);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	if (!sym->s_nwrite &&
-	    WARNAST(warn_ast, W_VARIABLE_READ_NEVER_WRITTEN, sym))
-		goto err;
+	if (!sym->s_nwrite) {
+		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+			goto err;
+	}
 	return asm_ssymid(sym);
 err:
 	return -1;
@@ -3050,7 +3058,7 @@ asm_rsymid(struct symbol *__restrict sym) {
 	ASSERT(SYMBOL_MAY_REFERENCE(sym));
 	ASSERTF(asm_symbol_accessible(sym),
 	        "Unreachable symbol %s",
-	        sym->s_name->k_name);
+	        tpp_keyword_getcstr(sym->s_name));
 	result = current_assembler.a_refc;
 	if ((sym->s_flag & SYMBOL_FALLOCREF) &&
 	    (sym->s_refid < result) &&
@@ -3105,7 +3113,7 @@ asm_asymid_r(struct symbol *__restrict sym) {
 	        "Not operating in ARGREF mode");
 	ASSERTF(asm_symbol_accessible(sym),
 	        "Unreachable symbol %s",
-	        sym->s_name->k_name);
+	        tpp_keyword_getcstr(sym->s_name));
 	/* Search for a pre-existing binding for `sym` */
 	result = current_assembler.a_argrefc;
 	while (result--) {
@@ -3326,7 +3334,7 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 				/* Error: User-defined label was never defined. */
 				return DeeError_Throwf(&DeeError_CompilerError,
 				                       "Label `%s` has never been defined",
-				                       tl_iter->tl_name->k_name);
+				                       tpp_keyword_getcstr(tl_iter->tl_name));
 			}
 		}
 	}
@@ -3345,7 +3353,7 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 			        as_iter->as_file, as_iter->as_line);
 			return DeeError_Throwf(&DeeError_CompilerError,
 			                       "Assembly symbol `%s` has never been defined",
-			                       as_iter->as_uname->k_name);
+			                       tpp_keyword_getcstr(as_iter->as_uname));
 		}
 	}
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -3382,7 +3390,7 @@ do_savearg:
 			} else if (sym->s_nwrite != 0) {
 				/* Must convert this one into a local variable. */
 				if (sym->s_flag & SYMBOL_FFINAL) {
-					if (ASM_WARN(W_WRITE_TO_FINAL_VARIABLE, sym))
+					if (ASM_WARN(TPP_W_WRITE_TO_FINAL_VARIABLE, sym))
 						goto err;
 				}
 				sym->s_type = SYMBOL_TYPE_LOCAL;

@@ -1025,13 +1025,65 @@
 #define DEE_CXX_END }
 #define DEE_CXX_NOTHROW noexcept
 
-#define TPPCALL
-#define TPPVCALL
+/* BEGIN: DEPRECATED AFTER CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define TPPFUN
 #define TPP_LOCAL
 #define TPP(x) x
 #define TPPSTRING_DEF(name, value) struct{refcnt_t _r;size_t _s;char _t[1];}name={}
 #define PRIVDEF
+/* END: DEPRECATED AFTER CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#define TPPCALL
+#define TPPVCALL
+#define TPP_DECL extern
+#define TPP_IMPL
+#define TPP_CONST_DECL extern
+#define TPP_CONST_IMPL
+#define TPP_INTERN_DECL extern
+#define TPP_INTERN_IMPL
+#define tpp_restrict
+#define TPP_NONNULL(x)
+#define TPP_WUNUSED
+#define TPP_NOINLINE
+#define TPP_RETNONNULL
+#define TPP_FLEX_ARRAY
+#define TPP_INLINE static
+#define TPP_PURECALL
+#define TPP_CONSTCALL
+#define TPP_COLDCALL
+#define TPP_DECL_BEGIN extern "C" {
+#define TPP_DECL_END }
+#define TPP_REF
+#define TPP_STATIC_ASSERT(expr)
+#define TPP_FALLTHRU
+#define TPP_INTERNAL(x) x
+#define TPP_DEFINE_PX_PARSER(tpp_px_prev, tpp_px_this, tpp_px_this_suffix, TPP_TEST_PX_THIS_SUFFIX) \
+	static tpp_errno tpp_px_this(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {}
+#define TPP_KWD(id, string) enum{id};
+#define TPP_EXTENSION(id, name, default) enum{id};
+#define TPP_WGROUP(wgroup_id, names, default) enum{wgroup_id};
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) enum{warning_id};
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) enum{warning_id};
+#define TPP_MACRO(keyword_id, if_expr)
+#define TPP_PREDEFINED_MACRO(keyword_id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_FEATURE(id, expansion_expr)
+#define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(id, expansion_expr)
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) \
+	static int NAME(void const *lhs, void const *rhs)
+#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
+	static tpp_ssize name(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_FORMATPRINTER_DECL(name) \
+	extern tpp_ssize name(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_FORMATPRINTER_IMPL(name, arg, text, num_bytes) \
+	tpp_ssize name(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_EMITTER_INTERNAL(x) x
+#define TPP_MAKEFILE_INTERNAL(x) x
+
 
 #define Dee_ob_type_const
 #define OBJECT_HEAD               Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
@@ -1351,7 +1403,6 @@
 #define IF_SKIP(...)
 #define IFELSE(a,b) a
 #define RETURN_TYPE int
-#define TPPCALL
 #define TRY
 #define EXCEPT
 #define CASE(x) case x

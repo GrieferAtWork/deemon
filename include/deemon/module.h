@@ -411,7 +411,9 @@ struct Dee_compiler_options {
 	                                                     * during live-compilation mode, but can also be used
 	                                                     * to put a twist on how errors are actually processed. */
 	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler` */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0` to use the hard-coded default. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	uint16_t                      co_compiler;          /* Set of `COMPILER_F*` from `<deemon/compiler/compiler.h>`. */
 	uint16_t                      co_parser;            /* Set of `PARSE_F*`    from `<deemon/compiler/lexer.h>` */
 	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*` from `<deemon/compiler/ast.h>` */

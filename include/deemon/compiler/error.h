@@ -37,6 +37,7 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 struct Dee_compiler_error_object;
 struct parser_errors {
 	size_t                                  pe_errora; /* Allocated vector size. */
@@ -93,6 +94,7 @@ INTDEF void DCALL parser_start(void);
 		parser_errors_fini(&current_parser_errors);                                 \
 		memcpy(&current_parser_errors, &_old_errors, sizeof(struct parser_errors)); \
 	}	__WHILE0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

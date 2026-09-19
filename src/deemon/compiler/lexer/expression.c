@@ -219,9 +219,7 @@ for (local x: util::range(128)) {
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
 
 /* Parser flags (Set of `PARSE_F*`) */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /* Return 1 if the current token may be the begin of an expression.
  * @return: 1:  Yes
@@ -414,7 +412,7 @@ maybe_expression_begin_peek(DeeLexer *self) {
 				goto err;
 			goto yes; /* First-time-used user-defined keyword token. */
 		}
-		switch (kwd->k_id) {
+		switch (tpp_keyword_getid(kwd)) {
 
 			/* Keywords that can only appear inside of expressions */
 		case TPP_KWD_as:
@@ -1264,7 +1262,7 @@ err_lparen_flags:
 					goto err;
 
 				/* Support for java-style lambda with empty argument list. */
-				if (DeeLexer_GetTok(self) == TOK_ARROW) {
+				if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 					result = ast_parse_function_java_lambda(self, NULL, NULL);
 					result = ast_setddi(result, &loc);
 					return result;
@@ -1281,7 +1279,7 @@ err_restore_pos:
 					}
 					if unlikely(decl_ast_skip(self))
 						goto err_restore_pos;
-					isarrow = DeeLexer_GetTok(self) == TOK_ARROW;
+					isarrow = DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE;
 					TPPLexer_LoadPosition(&pos);
 					if (isarrow) {
 						result = ast_parse_function_java_lambda(self, NULL, NULL);
@@ -1564,12 +1562,12 @@ err_restore_pos_in_old_lambda:
 					goto err_restore_pos_in_old_lambda;
 				token_after = DeeLexer_GetTok(self);
 				TPPLexer_LoadPosition(&saved);
-				if (token_after == '{' || token_after == TOK_ARROW)
+				if (token_after == '{' || token_after == TPP_TOK_MINUS_RANGLE)
 					goto do_lambda; /* Yup: it's a lambda! */
 			}
 			if (DeeLexer_GetTok(self) == '(' ||
 			    DeeLexer_GetTok(self) == '{' ||
-			    DeeLexer_GetTok(self) == TOK_ARROW)
+			    DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE)
 				goto do_lambda;
 			result = ast_multiple(AST_FMULTIPLE_LIST, 0, NULL);
 			goto set_list_loc;
@@ -1836,7 +1834,7 @@ do_keyword:
 					                      symname, modname))
 						goto err;
 				}
-			} else if (DeeLexer_GetTok(self) == TOK_ARROW) {
+			} else if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 				/* Support for java-style lambda with singular argument. */
 				result = ast_parse_function_java_lambda(self, name, &loc);
 			} else {

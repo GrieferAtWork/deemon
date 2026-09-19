@@ -112,8 +112,8 @@ print_warning_message(struct Dee_unicode_printer *__restrict _printer,
 #define TOK_S      MARK("%$s")
 #define TOK_A      DeeLexer_GetTokenLen(_DeeLexer_Current), DeeLexer_GetTokenStart(_DeeLexer_Current)
 #define ARG(T)     va_arg(_args, T)
-#define FILENAME() (ARG(struct TPPFile *)->f_name)
-#define KWDNAME()  (ARG(struct TPPKeyword *)->k_name)
+#define FILENAME() (ARG(tpp_file *)->f_name)
+#define KWDNAME()  tpp_keyword_getcstr(ARG(tpp_keyword const *))
 #define CONST_STR() \
 	(_temp_string = TPPConst_ToString(ARG(struct TPPConst *)), _temp_string ? _temp_string->s_text : NULL)
 
@@ -150,7 +150,7 @@ print_warning_message(struct Dee_unicode_printer *__restrict _printer,
 #endif /* !__INTELLISENSE__ */
 _warnf_end:
 	if (_temp_string)
-		TPPString_Decref(_temp_string);
+		tpp_string_decref(_temp_string);
 	return _warnf_result;
 _warnf_err:
 	_warnf_result = _warnf_temp;
@@ -469,7 +469,7 @@ PRIVATE int const tpp_warning_mode_matrix[3] = {
 
 
 PRIVATE int DCALL
-capture_compiler_location(struct TPPFile *__restrict file,
+capture_compiler_location(tpp_file *__restrict file,
                           struct Dee_compiler_error_loc *__restrict result,
                           struct Dee_compiler_error_loc **__restrict p_main_loc) {
 #if 1 /* ORDER: low --> high */
@@ -538,7 +538,7 @@ err:
 	/* NOTE: Generate a traceback not just for macro invocations,
 	 *       but for the entirety of the #include-stack also! */
 	if (file->f_prev) {
-		struct TPPFile *next_file = file->f_prev;
+		tpp_file *next_file = file->f_prev;
 		while (next_file->f_kind == TPPFILE_KIND_EXPLICIT &&
 		       next_file->f_prev)
 			next_file = next_file->f_prev;
@@ -580,8 +580,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
-tpp_is_reachable_file(struct TPPFile *__restrict file) {
-	struct TPPFile *iter = TPPLexer_Current->l_token.t_file;
+tpp_is_reachable_file(tpp_file *__restrict file) {
+	tpp_file *iter = TPPLexer_Current->l_token.t_file;
 	/* Make sure that the given file is still valid. */
 	for (;;) {
 		if (!iter)
@@ -676,7 +676,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		TPPFile_Incref(error->ce_locs.cl_file);
 	} else {
 		/* Capture the current file location. */
-		struct TPPFile *file = TPPLexer_Current->l_token.t_file;
+		tpp_file *file = TPPLexer_Current->l_token.t_file;
 		while (file->f_kind == TPPFILE_KIND_EXPLICIT &&
 		       file->f_prev)
 			file = file->f_prev;

@@ -38,7 +38,9 @@
 #include "../types.h"           /* DREF, DeeObject, Dee_AsObject, Dee_ITER_DONE, Dee_formatprinter_t, Dee_ssize_t */
 #include "../util/atomic.h"     /* Dee_atomic_* */
 #include "../util/once.h"       /* Dee_ONCE */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include "lexer.h"              /* PARSE_FLFSTMT, parser_flags */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
 
@@ -50,7 +52,9 @@
  *       is already thrown by TPP3 internally whenever one of our
  *       `Dee_Malloc()` functions fails (which they only do when
  *       also throwing an error) */
-#define TPP_EDEEMON TPP_ENOMEM
+#define TPP_EDEEMON     TPP_ENOMEM
+#define TPP_TOK_EDEEMON TPP_TOK_ENOMEM
+#define TPP_TOK_ENOENT  TPP_TOK_OFERR(TPP_ENOENT) /* Not used by TPP itself -- only used by some deemon APIs */
 
 #define TPP_CONFIG_USERDEFS_FILENAME "../../../../include/deemon/compiler/lexer.def"
 #ifdef CONFIG_HOST_WINDOWS
@@ -349,7 +353,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_WARNING_ERROR         1
 #define TPP_HAVE_WARNING_SUPPRESS      1
 #define TPP_HAVE_WARNING_DEFAULT       1
-#define TPP_HAVE_FILE_NOCLOSE          0
+#define TPP_HAVE_FILE_NOCLOSE          1
 #define TPP_HAVE_FILE_NOKWD            1
 #define TPP_HAVE_FILE_LC_CACHE         1
 #define TPP_HAVE_CR_LF_DETECTION       1
@@ -1001,11 +1005,16 @@ DECL_END
 
 /* Forward-compatibility with TPP3 */
 #include "../../../src/external/tpp3/src/tpp2-forward.h"
+
+#define TPP_TOK_EDEEMON TOK_ERR
+#define TPP_TOK_ENOMEM  TOK_ERR
+#define TPP_TOK_ENOENT  ((tpp_token_id)-2) /* Not used by TPP itself -- only used by some deemon APIs */
 #else /* CONFIG_BUILDING_DEEMON */
 
 DECL_BEGIN
 struct TPPKeyword;
 DECL_END
+#define tpp_keyword struct TPPKeyword
 
 #endif /* !CONFIG_BUILDING_DEEMON */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -1052,16 +1061,38 @@ typedef struct {
 #define DeeLexer_YieldPPXNB(self, allow_nonblock)  ((allow_nonblock) ? DeeLexer_YieldPPNB(self) : DeeLexer_YieldPP(self))
 #define DeeLexer_YieldXNB(self, allow_nonblock)    ((allow_nonblock) ? DeeLexer_YieldNB(self) : DeeLexer_Yield(self))
 
+#define DeeLexer_GetKeywordById(self, id)              tpp_lexer_getkeyword_byid(&(self)->dl_lexer, id)
+#define DeeLexer_GetKeyword(self, kwd, len)            tpp_lexer_getkeyword(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_GetKeywordEx(self, kwd, len, hash)    tpp_lexer_getkeyword_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_NewKeyword(self, kwd, len)            tpp_lexer_newkeyword(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_NewKeywordEx(self, kwd, len, hash)    tpp_lexer_newkeyword_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_GetKeywordEsc(self, kwd, len)         tpp_lexer_getkeyword_esc(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_GetKeywordEscEx(self, kwd, len, hash) tpp_lexer_getkeyword_esc_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_NewKeywordEsc(self, kwd, len)         tpp_lexer_newkeyword_esc(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_NewKeywordEscEx(self, kwd, len, hash) tpp_lexer_newkeyword_esc_ex(&(self)->dl_lexer, kwd, len, hash)
+
 #define DeeLexer_PreparseSkipBseFwd(self, pos, end)   tpp_preparse_skipbse_fwd(&(self)->dl_lexer, pos, end)
 #define DeeLexer_PreparseSkipBseBck(self, start, pos) tpp_preparse_skipbse_bck(&(self)->dl_lexer, start, pos)
 
 
 /* Helper to check if the current token should be considered a string token */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define DeeLexer_IsStringToken(self)                    \
+	(TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)) ||  \
+	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
+	  !DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS)))
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define DeeLexer_IsStringToken(self)                    \
 	(TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)) ||  \
 	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
 	  !DeeLexer_Has(self, CHARACTER_LITERALS)))
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
+
+#define DeeString_FromTppKeyword(kwd)           \
+	DeeString_NewUtf8(tpp_keyword_getcstr(kwd), \
+	                  tpp_keyword_getlen(kwd),  \
+	                  Dee_STRING_ERROR_FIGNORE)
 
 
 struct ast;
@@ -1073,7 +1104,7 @@ struct ast_loc {
 	                     * filename is lazily allocated here (set to "NULL" if unknown) */
 	tpp_lcinfo  l_lc;   /* Line/column information (0-based) */
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-	struct TPPFile      *l_file; /* [0..1] Location file. */
+	tpp_file            *l_file; /* [0..1] Location file. */
 #ifdef CONFIG_BUILDING_DEEMON
 	union {
 		struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
@@ -1110,7 +1141,7 @@ struct ast_loc {
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #define ast_loc_init_empty(self) ((self)->l_name = NULL, tpp_lcinfo_init_invalid(&(self)->l_lc))
-#define ast_loc_isempty(self)    ((self)->l_name == NULL && !tpp_lcinfo_isvalid(&(self)->l_lc))
+#define ast_loc_isempty(self)    ((self)->l_name == NULL && !tpp_lcinfo_isvalid((self)->l_lc))
 #define ast_loc_getname(self)    ((self)->l_name)
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define ast_loc_init_empty(self) (void)((self)->l_file = NULL)
@@ -1136,7 +1167,8 @@ INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
 #define _DeeLexer_Current DeeLexer_FromTPP(TPPLexer_Current)
 
 /* Returns the lexer active for a given `DeeCompilerObject *self` */
-#define DeeLexer_OfCompiler(self) _DeeLexer_Current
+#define DeeLexer_OfCompiler(comp) _DeeLexer_Current
+#define DeeLexer_AsCompiler(self) DeeCompiler_Current
 
 /* Describe a region of code where `TPPLEXER_FLAG_WANTLF` should be off. */
 #define DeeLexer_NoLf_Push(self)                                 \
@@ -1230,21 +1262,24 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
 #define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)              /* !!! DEPREACTED -- use `TODO` */
 #define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)             /* !!! DEPREACTED -- use `TODO` */
 
-INTDEF struct TPPKeyword TPPKeyword_Empty;
-INTDEF WUNUSED char const *DCALL peek_next_token(struct TPPFile **tok_file);
-INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, struct TPPFile **tok_file);
+INTDEF tpp_keyword TPPKeyword_Empty;
+INTDEF WUNUSED char const *DCALL peek_next_token(tpp_file **tok_file);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, tpp_file **tok_file);
 INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
-INTDEF WUNUSED NONNULL((1, 2)) struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
-INTDEF WUNUSED struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
+INTDEF WUNUSED NONNULL((1, 2)) tpp_keyword *DCALL peek_keyword(tpp_file *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
+INTDEF WUNUSED tpp_keyword *DCALL peek_next_keyword(int create_missing);
 INTDEF WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p);
-INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
+INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(tpp_file *__restrict file);
 
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+/* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
+ * and `tpp_lexer_finifile()` must be called as the lexer is used! */
 #define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
 #define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
 
 /* Returns the lexer active for a given `DeeCompilerObject *self` */
-#define DeeLexer_OfCompiler(self) (&(self)->cp_lexer)
+#define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
+#define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompilerObject, cp_lexer)
 
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
 #define DeeLexer_NoLf_Push(self)                                                            \
@@ -1308,6 +1343,12 @@ _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN)     DeeLexer_Skip(self, expected_tok)
 #define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN) DeeLexer_ParenBegin(self, p_has_paren)
 #define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN)     DeeLexer_ParenEnd(self, has_paren)
+
+
+#define WARNAT(loc, ...)  DeeLexer_WarnfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), loc, __VA_ARGS__)
+#define WARNSYM(sym, ...) DeeLexer_WarnfSym(DeeLexer_OfCompiler(DeeCompiler_Current), sym, __VA_ARGS__)
+#define WARNAST(ast, ...) DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__)
+
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 DECL_END

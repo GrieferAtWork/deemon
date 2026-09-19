@@ -474,8 +474,8 @@ switch_symbol_type:
 			/* Global symbol reference. */
 			if (Dee_UNICODE_PRINTER_PRINT(printer, "?G") < 0)
 				goto err;
-			if (decl_ast_escapename(sym->s_name->k_name,
-			                        sym->s_name->k_size,
+			if (decl_ast_escapename(tpp_keyword_getcstr(sym->s_name),
+			                        tpp_keyword_getlen(sym->s_name),
 			                        printer) < 0)
 				goto err;
 			break;
@@ -569,8 +569,8 @@ switch_symbol_type:
 print_undefined_symbol_name:
 			if (Dee_UNICODE_PRINTER_PRINT(printer, "?U") < 0)
 				goto err;
-			if (decl_ast_escapename(sym->s_name->k_name,
-			                        sym->s_name->k_size,
+			if (decl_ast_escapename(tpp_keyword_getcstr(sym->s_name),
+			                        tpp_keyword_getlen(sym->s_name),
 			                        printer) < 0)
 				goto err;
 			return 0;
@@ -736,9 +736,9 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			arg = argv[i];
 			if (arg == scope->bs_varargs ||
 			    arg == scope->bs_varkwds) {
-				if (Dee_unicode_printer_print(printer,
-				                          arg->s_name->k_name,
-				                          arg->s_name->k_size) < 0)
+				if (Dee_unicode_printer_printutf8(printer,
+				                                  tpp_keyword_getcstr(arg->s_name),
+				                                  tpp_keyword_getlen(arg->s_name)) < 0)
 					goto err;
 			} else {
 				/* Since we always generate keyword information, the names of

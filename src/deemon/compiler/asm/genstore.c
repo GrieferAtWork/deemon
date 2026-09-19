@@ -229,7 +229,7 @@ check_getattr_sym:
 
 			case SYMBOL_TYPE_MYMOD: {
 				struct symbol *globsym;
-				struct TPPKeyword *kwd;
+				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
 				kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
@@ -386,7 +386,7 @@ check_boundattr_sym:
 
 			case SYMBOL_TYPE_MYMOD: {
 				struct symbol *globsym;
-				struct TPPKeyword *kwd;
+				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
 				kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
@@ -509,7 +509,7 @@ check_delattr_sym:
 
 			case SYMBOL_TYPE_MYMOD: {
 				struct symbol *globsym;
-				struct TPPKeyword *kwd;
+				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
 				kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),
@@ -834,7 +834,7 @@ check_base_symbol_class:
 
 			case SYMBOL_TYPE_MYMOD: {
 				struct symbol *globsym;
-				struct TPPKeyword *kwd;
+				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> pop global ... */
 				kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),

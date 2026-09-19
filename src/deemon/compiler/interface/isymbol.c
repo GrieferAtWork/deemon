@@ -105,8 +105,8 @@ PRIVATE NONNULL((1)) int DCALL
 err_symbol_readonly(struct symbol *__restrict sym) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Cannot modify argument symbol %$q",
-	                       sym->s_name->k_size,
-	                       sym->s_name->k_name);
+	                       tpp_keyword_getlen(sym->s_name),
+	                       tpp_keyword_getcstr(sym->s_name));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -202,11 +202,8 @@ symbol_name(DeeCompilerSymbolObject *__restrict self) {
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
-	if likely(sym) {
-		result = DeeString_NewUtf8(sym->s_name->k_name,
-		                           sym->s_name->k_size,
-		                           STRING_ERROR_FIGNORE);
-	}
+	if likely(sym)
+		result = DeeString_FromTppKeyword(sym->s_name);
 /*done_compiler_end:*/
 	COMPILER_END();
 done:
@@ -223,8 +220,8 @@ symbol_print(DeeCompilerSymbolObject *__restrict self,
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		result = DeeFormat_Print(printer, arg,
-		                         sym->s_name->k_name,
-		                         sym->s_name->k_size);
+		                         tpp_keyword_getcstr(sym->s_name),
+		                         tpp_keyword_getlen(sym->s_name));
 	}
 /*done_compiler_end:*/
 	COMPILER_END();
@@ -242,8 +239,8 @@ symbol_printrepr(DeeCompilerSymbolObject *__restrict self,
 	sym = DeeCompilerItem_VALUE(self, struct symbol);
 	if likely(sym) {
 		result = DeeFormat_Printf(printer, arg, "<symbol %$q>",
-		                          sym->s_name->k_size,
-		                          sym->s_name->k_name);
+		                          tpp_keyword_getlen(sym->s_name),
+		                          tpp_keyword_getcstr(sym->s_name));
 	}
 /*done_compiler_end:*/
 	COMPILER_END();
@@ -392,8 +389,8 @@ symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *ar
 			if unlikely(iter == sym) {
 				DeeError_Throwf(&DeeError_ReferenceError,
 				                "Symbol alias loop with %$q",
-				                sym->s_name->k_size,
-				                sym->s_name->k_name);
+				                tpp_keyword_getlen(sym->s_name),
+				                tpp_keyword_getcstr(sym->s_name));
 				goto done_compiler_end;
 			}
 			if (iter->s_type != SYMBOL_TYPE_ALIAS)

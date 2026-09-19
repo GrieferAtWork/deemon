@@ -479,7 +479,7 @@ INTDEF WUNUSED NONNULL((1)) int DFCALL decl_ast_skip(DeeLexer *lexer);
 
 struct text_label {
 	struct text_label     *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
-	                                 *               the same modulated `s_name->k_id` */
+	                                 *               the same modulated `tpp_keyword_getid(s_name)` */
 	union {
 #ifdef __INTELLISENSE__
 		     struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
@@ -509,7 +509,7 @@ struct text_label {
 #define text_label_name(self, is_case)        \
 	((is_case)                                \
 	 ? ((self)->tl_expr ? "case" : "default") \
-	 : (self)->tl_name->k_name)
+	 : tpp_keyword_getcstr((self)->tl_name))
 
 
 #undef CONFIG_SYMBOL_HAS_REFCNT
@@ -520,7 +520,7 @@ struct symbol {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	DWEAK Dee_refcnt_t    s_refcnt;/* Reference counter */
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id` */
+	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `tpp_keyword_getid(s_name)` */
 	tpp_keyword const    *s_name;  /* [1..1][const] Name of this symbol. */
 	DeeScopeObject       *s_scope; /* [1..1][const] The scope declaring this symbol. */
 #define SYMBOL_TYPE_NONE   0x0000  /* Undefined symbol type. */
@@ -804,7 +804,7 @@ _priv_symbol_subbound(struct symbol *__restrict x, uint32_t n) {
 
 
 /* Return the name of a given symbol `x` as a `char *` pointer. */
-#define SYMBOL_NAME(x)             ((x)->s_name->k_name)
+#define SYMBOL_NAME(x) tpp_keyword_getcstr((x)->s_name)
 
 /* Get/inc/dec the read-, write- and bound- access counters. */
 #define SYMBOL_NREAD(x)            ((uint32_t const)(x)->s_nread)

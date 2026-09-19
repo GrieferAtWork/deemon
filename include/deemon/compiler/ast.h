@@ -120,24 +120,23 @@ struct class_member {
 };
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-struct TPPString;
 struct asm_text {
-	/*REF*/ struct TPPString *at_text; /* [0..1] Assembly text string. */
+	TPP_REF tpp_string *at_text; /* [0..1] Assembly text string. */
 };
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 struct asm_operand {
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	tpp_keyword const        *ao_name;  /* [0..1] User-defined name for this operand. */
+	tpp_keyword const     *ao_name;  /* [0..1] User-defined name for this operand. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-	/*REF*/ struct TPPString *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i, [1..1])]
-	                                     *       [if((self - :as_opv) >= :as_num_o+:as_num_i, [0..0])]
-	                                     * Allowed operand types (A string of `ASM_OP_*` from `genasm-userasm.c`).
-	                                     * NOTE: Only, and always `NULL` for label operands. */
+	TPP_REF tpp_string    *ao_type;  /* [0..1][if((self - :as_opv) <  :as_num_o+:as_num_i, [1..1])]
+	                                  *       [if((self - :as_opv) >= :as_num_o+:as_num_i, [0..0])]
+	                                  * Allowed operand types (A string of `ASM_OP_*` from `genasm-userasm.c`).
+	                                  * NOTE: Only, and always `NULL` for label operands. */
 	union {
-		DREF struct ast      *ao_expr;  /* [1..1][valid_if((self - :as_opv) < :as_num_o+:as_num_i)] Input/output operand expression. */
-		struct text_label    *ao_label; /* [1..1][valid_if((self - :as_opv) >= :as_num_o+:as_num_i)] Label operand.
-		                                 * NOTE: Also holds a reference to `tl_goto` */
+		DREF struct ast   *ao_expr;  /* [1..1][valid_if((self - :as_opv) < :as_num_o+:as_num_i)] Input/output operand expression. */
+		struct text_label *ao_label; /* [1..1][valid_if((self - :as_opv) >= :as_num_o+:as_num_i)] Label operand.
+		                              * NOTE: Also holds a reference to `tl_goto` */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -146,7 +145,7 @@ struct asm_operand {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
-#define ASM_OPERAND_IS_INOUT(x) ((x)->ao_type->s_text[0] == '+')
+#define ASM_OPERAND_IS_INOUT(x) (tpp_string_str((x)->ao_type)[0] == '+')
 
 
 struct ast {
@@ -787,7 +786,7 @@ DECLARE_AST_GENERATOR(NONNULL((2, 3)), ast_switch, (uint16_t flags, struct ast *
 #ifdef CONFIG_LANGUAGE_NO_ASM
 DECLARE_AST_GENERATOR(, ast_assembly, (uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *opv));
 #else /* !CONFIG_LANGUAGE_NO_ASM */
-DECLARE_AST_GENERATOR(NONNULL((2)), ast_assembly, (uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *opv));
+DECLARE_AST_GENERATOR(NONNULL((2)), ast_assembly, (uint16_t flags, tpp_string *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *opv));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #undef DECLARE_AST_GENERATOR

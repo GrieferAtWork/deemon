@@ -93,7 +93,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_getsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
 	Dee_hash_t i, perturb, hash;
-	hash = sym->s_name->k_id;
+	hash = tpp_keyword_getid(sym->s_name);
 	if (!self->aa_syms.sa_elem)
 		goto nope;
 	i = perturb = hash & self->aa_syms.sa_mask;
@@ -113,7 +113,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) struct ast_symbol_assume *DCALL
 ast_assumes_newsymbol(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym) {
 	Dee_hash_t i, perturb, hash;
-	hash = sym->s_name->k_id;
+	hash = tpp_keyword_getid(sym->s_name);
 	if (!self->aa_syms.sa_elem) {
 		if unlikely(ast_assumes_rehashsymbol(self))
 			goto err;

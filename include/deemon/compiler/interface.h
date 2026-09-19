@@ -38,9 +38,8 @@
 
 DECL_BEGIN
 
-struct TPPKeyword;
 typedef struct compiler_keyword_object {
-	Dee_COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword)
+	Dee_COMPILER_ITEM_OBJECT_HEAD(tpp_keyword)
 } DeeCompilerKeywordObject;
 
 struct symbol;
@@ -159,17 +158,17 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 print_ast_loc_repr(struct ast_loc *__restrict self,
                    struct Dee_unicode_printer *__restrict printer);
 
-/* @return: TOK_ERR: An error occurred (and was thrown)
- * @return: -2:      A keyword wasn't found (and `create_missing` was false) */
-INTDEF WUNUSED NONNULL((1)) tok_t DCALL
-get_token_from_str(char const *__restrict name, bool create_missing);
-INTDEF WUNUSED NONNULL((1)) tok_t DCALL
-get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
+/* @return: TPP_TOK_ISERR(*): An error occurred (and was thrown)
+ * @return: TPP_TOK_ENOENT:   Cannot parse a (single) token from `name` */
+INTDEF WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+get_token_from_str(DeeLexer *self, char const *__restrict name);
+INTDEF WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+get_token_from_obj(DeeLexer *self, DeeObject *__restrict obj);
 
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
-INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, tpp_keyword const *kwd);
-INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tok_t id, tpp_keyword const *kwd);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tpp_token_id id, tpp_keyword const *kwd);
+INTDEF WUNUSED Dee_hash_t DCALL get_token_namehash(tpp_token_id id, tpp_keyword const *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing`
  * NOTE: `typing` doesn't necessarily need to be a type object!

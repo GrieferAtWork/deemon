@@ -396,8 +396,9 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	if unlikely(sym) {
 		if (args.requirenew) {
 			DeeError_Throwf(&DeeError_ValueError,
-			                "Local symbol %q has already been defined",
-			                kwd->k_name);
+			                "Local symbol %$q has already been defined",
+			                tpp_keyword_getlen(kwd),
+			                tpp_keyword_getcstr(kwd));
 			goto done_compiler_end;
 		}
 	} else {

@@ -589,7 +589,7 @@ err_decl_lparen_flags:
 		my_decl.da_type = DAST_NONE;
 	}
 
-	if (DeeLexer_GetTok(self) == TOK_ARROW) {
+	if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 		struct ast_loc arrow_loc;
 		if (DeeLexer_GetLoc(self, &arrow_loc))
 			goto err_decl;
@@ -702,7 +702,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi) {
 	DREF struct ast *result, *code;
-	if (DeeLexer_GetTok(self) == TOK_ARROW) {
+	if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 		struct ast_loc arrow_loc;
 		if (DeeLexer_GetLoc(self, &arrow_loc))
 			goto err;
@@ -778,7 +778,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		goto err;
 	if (first_argument_name) {
 		struct symbol *arg;
-		if (first_argument_name->k_id == TPP_KWD_none) {
+		if (tpp_keyword_getid(first_argument_name) == TPP_KWD_none) {
 			/* Create a new symbol for the argument. */
 			arg = new_unnamed_symbol();
 			if unlikely(!arg)
@@ -814,7 +814,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		current_basescope->bs_argc_min = 1;
 		current_basescope->bs_argc_max = 1;
 		current_basescope->bs_argc     = 1;
-	} else if (DeeLexer_GetTok(self) != TOK_ARROW && DeeLexer_GetTok(self) != ':') {
+	} else if (DeeLexer_GetTok(self) != TPP_TOK_MINUS_RANGLE && DeeLexer_GetTok(self) != ':') {
 		int error;
 		DeeLexer_NoLf_Push(self);
 		error = parse_arglist(self);
@@ -839,7 +839,7 @@ ast_parse_function_java_lambda(DeeLexer *self,
 		decl_ast_fini(&temp);
 	}
 
-	ASSERT(DeeLexer_GetTok(self) == TOK_ARROW);
+	ASSERT(DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE);
 	if (DeeLexer_GetLoc(self, &arrow_loc))
 		goto err;
 	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -994,7 +994,7 @@ check_and_consume_rparen:
 		if unlikely(decl_ast_skip(self))
 			goto err_restore;
 	}
-	if (DeeLexer_GetTok(self) != TOK_ARROW)
+	if (DeeLexer_GetTok(self) != TPP_TOK_MINUS_RANGLE)
 		goto nope_restore;
 yes_restore:
 	TPPLexer_LoadPosition(&pos);

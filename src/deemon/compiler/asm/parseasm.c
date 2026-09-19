@@ -142,11 +142,11 @@ rehash_realloc:
 		sym_iter = *biter;
 		while (sym_iter) {
 			struct asm_sym *s_next, **bucket;
-			s_next             = sym_iter->as_uhnxt;
-			bucket             = &new_map[sym_iter->as_uname->k_id % new_size];
+			s_next = sym_iter->as_uhnxt;
+			bucket = &new_map[tpp_keyword_getid(sym_iter->as_uname) % new_size];
 			sym_iter->as_uhnxt = *bucket;
-			*bucket            = sym_iter;
-			sym_iter           = s_next;
+			*bucket = sym_iter;
+			sym_iter = s_next;
 		}
 	}
 	Dee_Free(symtab.st_map);
@@ -157,8 +157,8 @@ rehash_realloc:
 
 INTERN WUNUSED NONNULL((1)) struct asm_sym *DFCALL
 uasm_label_symbol(tpp_keyword const *__restrict name) {
-	char const *text = name->k_name;
-	size_t size      = name->k_size;
+	char const *text = tpp_keyword_getcstr(name);
+	size_t size      = tpp_keyword_getlen(name);
 	size_t label_number;
 	struct text_label *textlbl;
 
@@ -198,9 +198,9 @@ uasm_symbol(tpp_keyword const *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
-		result = symtab.st_map[name->k_id % symtab.st_alloc];
+		result = symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 		for (; result; result = result->as_uhnxt)
-			if (result->as_uname == name)
+			if (tpp_keyword_equals(result->as_uname, name))
 				goto done;
 	}
 
@@ -211,7 +211,7 @@ uasm_symbol(tpp_keyword const *__restrict name) {
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result = &symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 	result->as_uname = name;
 	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
@@ -229,9 +229,9 @@ uasm_fbsymbol(tpp_keyword const *__restrict name,
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
-		p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
+		p_result = &symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 		while ((result = *p_result) != NULL) {
-			if (result->as_uname == name) {
+			if (tpp_keyword_equals(result->as_uname, name)) {
 				if (!return_back_symbol) {
 					/* Forward reference (if it was already defined, replace the symbol with a copy) */
 					if (ASM_SYM_DEFINED(result)) {
@@ -264,7 +264,7 @@ uasm_fbsymbol(tpp_keyword const *__restrict name,
 		 * backward referencing is illegal. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Cannot cast backward reference to undefined symbol `%$s`",
-		                name->k_size, name->k_name);
+		                tpp_keyword_getlen(name), tpp_keyword_getcstr(name));
 		goto err;
 	}
 
@@ -275,11 +275,11 @@ uasm_fbsymbol(tpp_keyword const *__restrict name,
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result = &symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 	result->as_uname = name;
 	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*p_result        = result;
+	*p_result = result;
 done:
 	return result;
 err:
@@ -291,9 +291,9 @@ uasm_fbsymbol_def(tpp_keyword const *__restrict name) {
 	struct asm_sym *result, **p_result;
 	if (symtab.st_alloc) {
 		/* Search for the symbol. */
-		p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
+		p_result = &symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 		while ((result = *p_result) != NULL) {
-			if (result->as_uname == name) {
+			if (tpp_keyword_equals(result->as_uname, name)) {
 				/* If the symbol has already been defined, create a new one. */
 				if (ASM_SYM_DEFINED(result)) {
 					struct asm_sym *new_result;
@@ -322,11 +322,11 @@ uasm_fbsymbol_def(tpp_keyword const *__restrict name) {
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result = &symtab.st_map[tpp_keyword_getid(name) % symtab.st_alloc];
 	result->as_uname = name;
 	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*p_result        = result;
+	*p_result = result;
 done:
 	return result;
 err:
@@ -341,11 +341,33 @@ err:
 
 
 
-#define TOK_IS_SYMBOL_NAME_CH(x)               \
+#define TPP_TOK_IS_SYMBOL_NAME_CH(x)           \
 	((x) == '$' || (x) == '.' || (x) == '@' || \
 	 /*(x) == ':' ||*/ (x) == '%' || (x) == '&')
-#define TOK_IS_SYMBOL_NAME(x) \
-	(TPP_TOK_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
+#define TPP_TOK_IS_SYMBOL_NAME(x) \
+	(TPP_TOK_ISKEYWORD(x) || TPP_TOK_IS_SYMBOL_NAME_CH(x))
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+union uasm_parse_symnam_from_string_data {
+	tpp_lexer         *upsnfsd_lexer;   /* [1..1][in] Lexer */
+	tpp_keyword const *upsnfsd_keyword; /* [1..1][out] Keyword */
+};
+
+static tpp_errno TPPCALL
+uasm_parse_symnam_from_string_cb(void *arg, tpp_string *chunk,
+                                 tpp_char const *str, tpp_size length) {
+	tpp_keyword const *kwd;
+	union uasm_parse_symnam_from_string_data *data;
+	data = (union uasm_parse_symnam_from_string_data *)arg;
+	kwd = tpp_lexer_newkeyword(data->upsnfsd_lexer, str, length);
+	if unlikely(!kwd)
+		goto err;
+	data->upsnfsd_keyword = kwd;
+	return TPP_EOK;
+err:
+	return TPP_ENOMEM;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 INTERN WUNUSED NONNULL((1)) tpp_keyword const *DFCALL
 uasm_parse_symnam(DeeLexer *self) {
@@ -355,21 +377,31 @@ uasm_parse_symnam(DeeLexer *self) {
 	(void)self;
 	if (DeeLexer_IsStringToken(self)) {
 		/* Special case: String symbol name. */
-		struct TPPString *strval;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_errno error;
+		union uasm_parse_symnam_from_string_data data;
+		data.upsnfsd_lexer = &self->dl_lexer;
+		error = tpp_lexer_parsestring_cb(&self->dl_lexer, &uasm_parse_symnam_from_string_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		if (TPP_ISERR(error))
+			goto err;
+		result = data.upsnfsd_keyword;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		TPP_REF tpp_string *strval;
 		strval = TPPLexer_ParseString();
 		if unlikely(!strval)
 			goto err;
 
 		/* Reinterpret the parsed string as a keyword that is then used as
 		 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
-		result = TPPLexer_LookupKeyword(strval->s_text,
-		                                strval->s_size, 1);
-		TPPString_Decref(strval);
+		result = DeeLexer_NewKeyword(self, strval->s_text, strval->s_size);
+		tpp_string_decref(strval);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		goto done;
 	}
 
 	if (DeeLexer_HasTokenKwd(self) &&
-	    !TOK_IS_SYMBOL_NAME_CH(*TPPLexer_Current->l_token.t_end) &&
+	    !TPP_TOK_IS_SYMBOL_NAME_CH(*TPPLexer_Current->l_token.t_end) &&
 	    !DeeUni_IsSymCont(*TPPLexer_Current->l_token.t_end)) {
 		/* Simple case: the following character doesn't continue the symbol's name.
 		 * In this case, we don't need to re-validate the symbol name. */
@@ -400,7 +432,7 @@ continue_without_inc:
 
 		/* We allow unicode symbol characters, as well as
 		 * some special characters, but no whitespace! */
-		if (TOK_IS_SYMBOL_NAME_CH(*symbol_end))
+		if (TPP_TOK_IS_SYMBOL_NAME_CH(*symbol_end))
 			continue;
 		if (DeeUni_IsSymCont(*symbol_end))
 			continue;
@@ -471,8 +503,12 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 		/* Character constant. */
 		result->ie_sym = NULL;
 		result->ie_rel = (uint16_t)-1;
-		if unlikely(TPP_Atoi(&result->ie_val) == TPP_ATOF_ERR)
-			goto err;
+		{
+			tint_t intval;
+			if unlikely(TPP_Atoi(&intval) == TPP_ATOF_ERR)
+				goto err;
+			result->ie_val = (intptr_t)intval;
+		}
 yield_done:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
@@ -495,7 +531,7 @@ yield_done:
 			 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
 			name = TPPLexer_LookupKeyword(strval->s_text,
 			                              strval->s_size, 1);
-			TPPString_Decref(strval);
+			tpp_string_decref(strval);
 			if unlikely(!name)
 				goto err;
 			result->ie_rel = (uint16_t)-1;
@@ -562,7 +598,7 @@ yield_done:
 		}
 
 		/* Lookup/defined user-symbols. */
-		if (TOK_IS_SYMBOL_NAME(DeeLexer_GetTok(self))) {
+		if (TPP_TOK_IS_SYMBOL_NAME(DeeLexer_GetTok(self))) {
 			tpp_keyword const *name;
 			name = uasm_parse_symnam(self);
 			if unlikely(!name)
@@ -570,7 +606,7 @@ yield_done:
 			if (!result)
 				goto done;
 			result->ie_rel = ASM_OVERLOAD_FRELABS;
-			if (name->k_size == 1 && name->k_name[0] == '.') {
+			if (tpp_keyword_getlen(name) == 1 && tpp_keyword_getcstr(name)[0] == '.') {
 				/* Special symbol: The current text address. */
 				result->ie_val = 0;
 				if (!SLIST_EMPTY(&current_assembler.a_syms) &&
@@ -584,14 +620,14 @@ yield_done:
 				goto done;
 			}
 			result->ie_val = 0;
-			if (name->k_size > 3 && (features & UASM_INTEXPR_FHASSP) &&
-			    name->k_name[name->k_size - 3] == '.' &&
-			    (name->k_name[name->k_size - 2] == 's' || name->k_name[name->k_size - 2] == 'S' ||
-			     name->k_name[name->k_size - 2] == 'i' || name->k_name[name->k_size - 2] == 'I') &&
-			    (name->k_name[name->k_size - 1] == 'p' || name->k_name[name->k_size - 1] == 'P')) {
+			if (tpp_keyword_getlen(name) > 3 && (features & UASM_INTEXPR_FHASSP) &&
+			    tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 3] == '.' &&
+			    (tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 's' || tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 'S' ||
+			     tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 'i' || tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 'I') &&
+			    (tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 1] == 'p' || tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 1] == 'P')) {
 				/* Special case: this expression actually refers to the stack-address of a given symbol. */
-				if (name->k_name[name->k_size - 2] == 'i' ||
-				    name->k_name[name->k_size - 2] == 'I') {
+				if (tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 'i' ||
+				    tpp_keyword_getstr(name)[tpp_keyword_getlen(name) - 2] == 'I') {
 					result->ie_rel = ASM_OVERLOAD_FRELABS;
 				} else {
 					result->ie_rel = ASM_OVERLOAD_FSTKABS;
@@ -602,7 +638,9 @@ yield_done:
 					result->ie_sym = NULL;
 				}
 #endif
-				name = TPPLexer_LookupKeyword(name->k_name, name->k_size - 3, 1);
+				name = tpp_lexer_newkeyword(&self->dl_lexer,
+				                            tpp_keyword_getstr(name),
+				                            tpp_keyword_getlen(name) - 3);
 				if unlikely(!name)
 					goto err;
 			}
@@ -705,7 +743,7 @@ uasm_parse_intexpr_sum(DeeLexer *self, struct asm_intexpr *result, uint16_t feat
 		goto err;
 	while (DeeLexer_GetTok(self) == '+' ||
 	       DeeLexer_GetTok(self) == '-') {
-		tok_t mode = DeeLexer_GetTok(self);
+		tpp_token_id mode = DeeLexer_GetTok(self);
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		if (!result) {
@@ -909,11 +947,11 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD int DFCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DFCALL
 err_unknown_symbol(tpp_keyword const *__restrict name) {
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Unknown symbol `%s`",
-	                       name->k_name);
+	                       tpp_keyword_getcstr(name));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int32_t DFCALL
@@ -939,7 +977,7 @@ do_parse_global_operands(DeeLexer *self) {
 		if (sym->s_type != SYMBOL_TYPE_GLOBAL) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Symbol `%s` is not a global symbol",
-			                symbol_name->k_name);
+			                tpp_keyword_getcstr(symbol_name));
 			goto err;
 		}
 
@@ -998,7 +1036,7 @@ do_parse_local_operands(DeeLexer *self) {
 		    SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Symbol `%s` is not a local symbol",
-			                symbol_name->k_name);
+			                tpp_keyword_getcstr(symbol_name));
 			goto err;
 		}
 
@@ -1082,13 +1120,13 @@ do_parse_arg_operands(DeeLexer *self) {
 		if (sym->s_type != SYMBOL_TYPE_ARG) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Symbol `%s` is not an argument symbol",
-			                symbol_name->k_name);
+			                tpp_keyword_getcstr(symbol_name));
 			goto err;
 		}
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Argument `%s` cannot be addressed as a regular argument",
-			                symbol_name->k_name);
+			                tpp_keyword_getcstr(symbol_name));
 			goto err;
 		}
 
@@ -1178,7 +1216,7 @@ do_parse_static_operands(DeeLexer *self) {
 		    SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Symbol `%s` is not a static symbol",
-			                symbol_name->k_name);
+			                tpp_keyword_getcstr(symbol_name));
 			goto err;
 		}
 
@@ -1919,7 +1957,7 @@ read_mnemonic_name:
 		goto done_continue;
 	}
 
-	switch (name->k_id) {
+	switch (tpp_keyword_getid(name)) {
 
 	case TPP_KWD_static: {
 		int32_t val;
@@ -2009,12 +2047,12 @@ do_stack_prefix:
 	}	break;
 
 
-#define NAMEISKWD(x)                       \
-	(name->k_size == COMPILER_STRLEN(x) && \
-	 MEMCASEEQ(name->k_name, x, sizeof(x) - sizeof(char)))
-#define NAMEISKWD_S(len, s)   \
-	(name->k_size == (len) && \
-	 MEMCASEEQ(name->k_name, s, (len) * sizeof(char)))
+#define NAMEISKWD(x)                                   \
+	(tpp_keyword_getlen(name) == COMPILER_STRLEN(x) && \
+	 MEMCASEEQ(tpp_keyword_getstr(name), x, sizeof(x) - sizeof(char)))
+#define NAMEISKWD_S(len, s)               \
+	(tpp_keyword_getlen(name) == (len) && \
+	 MEMCASEEQ(tpp_keyword_getstr(name), s, (len) * sizeof(char)))
 	default:
 		if (NAMEISKWD("push"))
 			goto do_push_prefix;
@@ -2183,7 +2221,7 @@ asm_mnemonic_lookup(tpp_keyword const *__restrict name) {
 	}
 
 	/* Do a string lookup. */
-	result = asm_mnemonic_lookup_str(name->k_name);
+	result = asm_mnemonic_lookup_str(tpp_keyword_getcstr(name));
 	if unlikely(!result)
 		goto done;
 

@@ -186,7 +186,8 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 				suffix = "";
 			if (name) {
 				temp = Dee_ascii_printer_printf(printer, "%s%s%s",
-				                                name->k_name, mode, suffix);
+				                                tpp_keyword_getcstr(name),
+				                                mode, suffix);
 			} else {
 				temp = Dee_ascii_printer_printf(printer, ".L<%p>%s%s",
 				                                self->io_intexpr.ie_sym,
@@ -499,7 +500,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) bool DFCALL
 compatible_operand(struct asm_invoke_operand const *__restrict iop,
                    struct asm_overload_operand const *__restrict oop,
                    uint16_t ao_flags) {
-	tint_t imm_val;
+	intptr_t imm_val;
 	uint16_t imm_rel;
 #define OPERAND_CLASS_FFLAGMASK \
 	(~OPERAND_CLASS_FMASK & ~(OPERAND_CLASS_FSUBSP | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_FSPADD))
@@ -1080,7 +1081,7 @@ do_emit_instruction:
 
 		/* Now emit operands in ascending order. */
 		for (i = 0; i < iter->ao_opcount; ++i) {
-			tint_t imm_val;
+			intptr_t imm_val;
 			struct asm_sym *imm_sym;
 			uint16_t imm_rel;
 			imm_val = invoc->ai_ops[i].io_intexpr.ie_val;
@@ -2051,7 +2052,7 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) /*ref*/ struct TPPString *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) TPP_REF tpp_string *DCALL
 assembly_formatter_format(struct assembly_formatter *__restrict self,
                           struct TPPString const *__restrict input) {
 #define print(p, s)                                                       \
@@ -2066,7 +2067,7 @@ assembly_formatter_format(struct assembly_formatter *__restrict self,
 	}	__WHILE0
 	char const *iter, *end, *flush_start;
 	char ch;
-	/*ref*/ struct TPPString *result;
+	TPP_REF tpp_string *result;
 	bool has_paren;
 	end = (iter = flush_start = input->s_text) + input->s_size;
 next:
@@ -2255,7 +2256,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 ast_genasm_userasm(struct ast *__restrict self) {
 	struct assembler_state old_state;
 	int result;
-	/*ref*/ struct TPPString *assembly_text;
+	TPP_REF tpp_string *assembly_text;
 	/*ref*/ struct TPPFile *assembly_file;
 	/*ref*/ struct TPPFile *old_eob;
 	struct asm_operand *iter;
@@ -2378,7 +2379,7 @@ err_formatter:
 		goto err;
 
 	assembly_text = self->a_assembly.as_text.at_text;
-	TPPString_Incref(assembly_text);
+	tpp_string_incref(assembly_text);
 create_assembly_file:
 	assembly_file = TPPFile_NewExplicitInherited(assembly_text);
 	if unlikely(!assembly_file)
@@ -2535,7 +2536,7 @@ create_assembly_file:
 				if (self->a_assembly.as_opv[count].ao_name) {
 					if (DeeLexer_Warnf(_DeeLexer_Current,
 					                   TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
-					                   self->a_assembly.as_opv[count].ao_name->k_name))
+					                   tpp_keyword_getcstr(self->a_assembly.as_opv[count].ao_name)))
 						goto err;
 				} else {
 					char buffer[32];
@@ -2598,7 +2599,7 @@ create_assembly_file:
 	Dee_Free(cleanup_actions);
 	return result;
 err_text:
-	TPPString_Decref(assembly_text);
+	tpp_string_decref(assembly_text);
 err:
 	Dee_Free(cleanup_actions);
 	return -1;

@@ -111,14 +111,14 @@ ast_parse_for_head(DeeLexer *self,
 			goto done;
 		}
 	}
-	if (DeeLexer_Skip2(self, ';', W_EXPECTED_SEMICOLON1_AFTER_FOR))
+	if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), W_EXPECTED_SEMICOLON1_AFTER_FOR))
 		goto err;
 	if (DeeLexer_GetTok(self) != ';') {
 		elem_or_cond = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 		if unlikely(!elem_or_cond)
 			goto err;
 	}
-	if (DeeLexer_Skip2(self, ';', W_EXPECTED_SEMICOLON2_AFTER_FOR))
+	if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(';'), W_EXPECTED_SEMICOLON2_AFTER_FOR))
 		goto err;
 	if (DeeLexer_GetTok(self) == ')') {
 		iter_or_next = NULL;
@@ -153,11 +153,13 @@ err:
  * NOTE: If desired, the caller is responsible to setup
  *       or teardown a new scope before/after this function. */
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token) {
+ast_parse_statements_until(DeeLexer *self, uint16_t flags, tpp_token_id end_token) {
 	size_t exprc, expra;
 	DREF struct ast **exprv;
 	DREF struct ast *new_expression;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	unsigned long token_num;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	exprc = expra = 0, exprv = NULL;
 	for (;;) {
 		if unlikely(skip_lf(self))
@@ -165,7 +167,9 @@ ast_parse_statements_until(DeeLexer *self, uint16_t flags, tok_t end_token) {
 		if (DeeLexer_GetTok(self) == TPP_TOK_EOF ||
 		    DeeLexer_GetTok(self) == end_token)
 			break;
-		token_num      = TPPLexer_Current->l_token.t_num;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+		token_num = TPPLexer_Current->l_token.t_num;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		new_expression = ast_parse_statement(self, false);
 		if unlikely(!new_expression)
 			goto err;
@@ -191,12 +195,14 @@ do_realloc:
 			expra = new_expra;
 		}
 		exprv[exprc++] = new_expression; /* Inherit reference. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (token_num == TPPLexer_Current->l_token.t_num) {
 			if (DeeLexer_Warnf(self, TPP_W_FAILED_TO_PARSE_STATEMENT))
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 	/* Truncate the expression buffer to what is actually being used. */
 	if (exprc != expra) {
@@ -247,14 +253,14 @@ again:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		/* Enter a new scope and parse expressions. */
-		result = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, '}');
+		result = ast_parse_statements_until(self, AST_FMULTIPLE_KEEPLAST, TPP_TOK_OFCHAR('}'));
 		result = ast_putddi(result, &loc);
 		if unlikely(!result)
 			goto err;
 		while (DeeLexer_GetTok(self) == '\n')
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 		goto err_r;
-		if (DeeLexer_Skip2(self, '}', W_EXPECTED_RBRACE_AFTER_LBRACE))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
 		break;
@@ -665,7 +671,7 @@ err_foreach_flags:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_foreach_flags;
-		if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_FOREACH)) {
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_FOREACH)) {
 err_foreach_flags_elem:
 			DeeLexer_NoLf_Break(self);
 			goto err_foreach_flags;
@@ -863,7 +869,7 @@ err_del_flags:
 			if unlikely(!result)
 				goto err;
 			if (has_paren) {
-				if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_DEL))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_DEL))
 					goto err_r;
 			}
 		} else {
@@ -909,7 +915,11 @@ err_del_flags:
 		} else {
 			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_GOTO))
 				goto err;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			goto_label = lookup_label(tpp_builtin_getkeyword_byid(TPP_KWD_));
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			goto_label = lookup_label(&TPPKeyword_Empty);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if unlikely(!goto_label)
 				goto err;
 		}
@@ -1022,13 +1032,24 @@ err_r_switch:
 
 	default:
 		if (DeeLexer_HasTokenKwd(self)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			tpp_token_id next_token;
+			next_token = tpp_lexer_peek_raw(&self->dl_lexer,
+			                                TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+			                                NULL, NULL, NULL);
+			if (TPP_TOK_ISERR(next_token))
+				goto err;
+			if (next_token == ':')
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			char const *next_token;
 			next_token = peek_next_token(NULL);
 			if unlikely(!next_token)
 				goto err;
 			if (*next_token == ':' &&
 			    (next_token = advance_wraplf(next_token),
-			     *next_token != ':' && *next_token != '=')) {
+			     *next_token != ':' && *next_token != '='))
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			{
 				/* Define a label. */
 				struct text_label *def_label;
 				DREF struct ast *label_ast;
@@ -1120,7 +1141,7 @@ err_label_ast:
 				result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
 				if unlikely(!result)
 					goto err;
-				if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_CASE))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_CASE))
 					goto err_r;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					ast_decref(result);
@@ -1147,7 +1168,7 @@ err_label_ast:
 					goto err;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
-				if (DeeLexer_Skip2(self, ':', W_EXPECTED_COLON_AFTER_DEFAULT))
+				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(':'), W_EXPECTED_COLON_AFTER_DEFAULT))
 					goto err;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
 					goto again;

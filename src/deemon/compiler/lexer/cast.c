@@ -84,7 +84,7 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 			goto not_a_cast; /* This isn't a cast expression. */
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		struct TPPFile *tok_file;
-		struct TPPKeyword *kwd;
+		tpp_keyword const *kwd;
 		char const *tok_begin;
 		tok_begin = peek_next_token(&tok_file);
 		for (;;) {
@@ -100,7 +100,9 @@ ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr) {
 				goto err;
 		} else {
 			/* This isn't a cast expression. */
-			if (kwd->k_id == TPP_KWD_is || kwd->k_id == TPP_KWD_in || kwd->k_id == TPP_KWD_as)
+			if (tpp_keyword_getid(kwd) == TPP_KWD_is ||
+			    tpp_keyword_getid(kwd) == TPP_KWD_in ||
+			    tpp_keyword_getid(kwd) == TPP_KWD_as)
 				goto not_a_cast;
 		}
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */

@@ -248,8 +248,10 @@ struct ddi_assembler {
 	                                   *       time, but since we're creating a lot of these internally,
 	                                   *       it shouldn't hurt to get rid of some of them early on. */
 	struct asm_sec        *da_slast;  /* The section associated with `da_last`. */
-	DREF struct TPPFile   *da_files;  /* [0..1][CHAIN(->f_prev)]
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	DREF tpp_file         *da_files;  /* [0..1][CHAIN(->f_prev)]
 	                                   * Chain of fake DDI files used to implement custom file names. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	uint16_t               da_bndc;   /* The number of symbol bindings. */
 	uint16_t               da_bnda;   /* The allocated number of symbol bindings. */
 	struct ddi_binding    *da_bndv;   /* [0..dc_bndc|ALLOC(da_bnda)][owned] Vector of symbol bindings. */
@@ -264,10 +266,12 @@ struct ddi_assembler {
  *       debug information provided by the one created first is used. */
 INTDEF WUNUSED struct ddi_checkpoint *DCALL asm_newddi(void);
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 /* Lookup, or construct a fake TPP file for use in DDI checkpoints. */
-INTDEF WUNUSED NONNULL((1)) struct TPPFile *DCALL
+INTDEF WUNUSED NONNULL((1)) tpp_file *DCALL
 ddi_newfile(char const *__restrict filename,
             size_t filename_length);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 struct handler_frame {
 	struct handler_frame *hf_prev;  /* [0..1] Previous exception handler descriptor, or NULL when not set. */
@@ -304,7 +308,7 @@ struct user_assembler {
 };
 
 struct asm_intexpr {
-	tint_t          ie_val; /* Constant expression addend. */
+	intptr_t        ie_val; /* Constant expression addend. */
 	struct asm_sym *ie_sym; /* [0..1] Symbol who's address is added to the result. */
 	uint16_t        ie_rel; /* Relocation mode / value type (One of `ASM_OVERLOAD_FREL*` or
 	                         * `ASM_OVERLOAD_FSTK`, or (uint16_t)-1 if not defined) */
@@ -1038,7 +1042,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_stk(struct asm_sym *__restrict s
  * of the constant variable, its index is returned instead.
  * NOTE: The return type is 32-bits to allow for -1 to be returned on error. */
 INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst)(DeeObject *__restrict constvalue);
-INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst_string)(char const *__restrict str, size_t len);
+INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst_string_utf8)(/*utf-8*/ char const *__restrict str, size_t len);
 INTDEF WUNUSED NONNULL((1)) int32_t (DCALL asm_newconst_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict constvalue);
 #define asm_newconst(constvalue)           asm_newconst(Dee_AsObject(constvalue))
 #define asm_newconst_inherited(constvalue) asm_newconst_inherited(Dee_AsObject(constvalue))
@@ -2100,7 +2104,7 @@ ast_genprint_repr(instruction_t mode,
 typedef struct {
 	OBJECT_HEAD
 	struct asm_sym *ri_sym;  /* [1..1][REF(->as_used)] Symbol added to relocation integer. */
-	tint_t          ri_add;  /* Addend added to the value of `ri_sym`. */
+	intptr_t        ri_add;  /* Addend added to the value of `ri_sym`. */
 #define RELINT_MODE_FADDR 0x0000 /* Use the address of `ri_sym` */
 #define RELINT_MODE_FSTCK 0x0001 /* Use the stack-depth of `ri_sym` */
 	uint16_t        ri_mode; /* The mode in which `ri_sym` is used. (One of `RELINT_MODE_F*`) */
@@ -2111,10 +2115,10 @@ INTDEF DeeTypeObject DeeRelInt_Type;
 /* Construct and register a new relocation-integer as a constant.
  * If `sym` is NULL, a regular integer is created instead. */
 INTDEF WUNUSED int32_t DCALL
-asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
+asm_newrelint(struct asm_sym *sym, intptr_t addend, uint16_t mode);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
-              tint_t addend, uint16_t mode);
+              intptr_t addend, uint16_t mode);
 
 
 DECL_END

@@ -223,12 +223,23 @@ err_try_flags:
 				}
 			} else if (DeeLexer_HasTokenKwd(self)) {
 				/* Exception guard name: `try { ... } catch (err...) {}` */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				tpp_token_id next_token;
+				next_token = tpp_lexer_peek_raw(&self->dl_lexer,
+				                                TPP_LEXER_PEEK_RAW_FLAG_NORMAL,
+				                                NULL, NULL, NULL);
+				if (TPP_TOK_ISERR(next_token))
+					goto err_try_flags;
+				if (next_token == TPP_TOK_DOT_DOT_DOT)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				char const *next_token = peek_next_token(NULL);
 				if unlikely(!next_token)
 					goto err_try_flags;
 				if (*next_token == '.' && /* Check for `...` */
 				    (next_token = advance_wraplf(next_token), *next_token == '.') &&
-				    (next_token = advance_wraplf(next_token), *next_token == '.')) {
+				    (next_token = advance_wraplf(next_token), *next_token == '.'))
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+				{
 					if unlikely(scope_push() < 0)
 						goto err_try_flags;
 					is_new_scope = true;
@@ -252,8 +263,9 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
-					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW) {
+				if unlikely(DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE ||
+				            DeeLexer_GetTok(self) == TPP_KWD_as) {
+					if unlikely(DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 							goto err_try_flags;
 					}
@@ -459,8 +471,8 @@ parse_catch_mask:
 				 *       the arrow token here in the old deemon (like wtf?).
 				 *       But since using `as` in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
-				if unlikely(DeeLexer_GetTok(self) == TOK_ARROW || DeeLexer_GetTok(self) == TPP_KWD_as) {
-					if unlikely(DeeLexer_GetTok(self) == TOK_ARROW) {
+				if unlikely(DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE || DeeLexer_GetTok(self) == TPP_KWD_as) {
+					if unlikely(DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 						if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
 							goto err_try_flags;
 					}

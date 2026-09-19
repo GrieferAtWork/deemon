@@ -115,7 +115,7 @@ enum {
 	TPP_TOK_PLUS_PLUS,                         /* "++". */
 	TPP_TOK_MINUS_MINUS,                       /* "--". */
 	TPP_TOK_STAR_STAR,                         /* "**". */
-	TOK_ARROW,                                 /* "->". */
+	TPP_TOK_MINUS_RANGLE,                                 /* "->". */
 	TPP_TOK_COLON_EQUAL,                       /* ":=". */
 	TPP_TOK_EQUAL_EQUAL_EQUAL,                 /* "===". */
 	TPP_TOK_EXCLAIM_EQUAL_EQUAL,               /* "!==". */

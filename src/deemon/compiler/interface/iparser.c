@@ -226,8 +226,11 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
 	if (args.end != (DeeStringObject *)Dee_EmptyString) {
-		end_token = get_token_from_obj(Dee_AsObject(args.end), true);
-		if unlikely(end_token == TOK_ERR)
+		end_token = get_token_from_obj(DeeLexer_OfCompiler(self->cw_compiler),
+		                               Dee_AsObject(args.end));
+		if (end_token == TPP_TOK_ENOENT)
+			end_token = TPP_TOK_EOF; /* ??? */
+		if (TPP_TOK_ISERR(end_token))
 			goto done_compiler_end;
 	}
 	old_exceptsz = DeeThread_Self()->t_exceptsz;

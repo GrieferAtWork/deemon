@@ -71,7 +71,7 @@ operand_list_fini(struct operand_list *__restrict self) {
 	for (; iter < end; ++iter) {
 		ASSERT(iter->ao_type);
 		ASSERT(iter->ao_expr);
-		TPPString_Decref(iter->ao_type);
+		tpp_string_decref(iter->ao_type);
 		ast_decref(iter->ao_expr);
 	}
 	end = self->ol_v + self->ol_c;
@@ -124,7 +124,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 asm_parse_operands(DeeLexer *self,
                    struct operand_list *__restrict list,
                    unsigned int type) {
-	/*ref*/ struct TPPString *operand_type;
+	TPP_REF tpp_string *operand_type;
 	DREF struct ast *operand_value;
 	struct asm_operand *operand;
 	while ((type == OPERAND_TYPE_LABEL
@@ -147,7 +147,7 @@ asm_parse_operands(DeeLexer *self,
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
 					goto err;
 			}
-			if (DeeLexer_Skip2(self, ']', W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
+			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
 				goto err;
 		}
 		if (type == OPERAND_TYPE_LABEL) {
@@ -210,7 +210,7 @@ asm_parse_operands(DeeLexer *self,
 err_value:
 	ast_decref(operand_value);
 err_type:
-	TPPString_Decref(operand_type);
+	tpp_string_decref(operand_type);
 err:
 	return -1;
 }
@@ -241,27 +241,27 @@ PRIVATE struct clobber_desc const clobber_descs[] = {
 /* Parse the clobber list and return a set of `AST_FASSEMBLY_*` */
 PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
 asm_parse_clobber(DeeLexer *self) {
-	struct TPPString *name;
+	TPP_REF tpp_string *name;
 	uint16_t result = 0;
 	while (DeeLexer_IsStringToken(self)) {
 		name = TPPLexer_ParseString();
 		if unlikely(!name)
 			goto err;
-		if (name->s_size < COMPILER_LENOF(clobber_descs[0].cd_name)) {
+		if (tpp_string_len(name) < COMPILER_LENOF(clobber_descs[0].cd_name)) {
 			struct clobber_desc const *iter = clobber_descs;
 			for (; iter < COMPILER_ENDOF(clobber_descs); ++iter) {
-				if (bcmpc(name->s_text, iter->cd_name, name->s_size, sizeof(char)) == 0 &&
-				    iter->cd_name[name->s_size] == '\0') {
+				if (bcmpc(tpp_string_str(name), iter->cd_name, tpp_string_len(name), sizeof(char)) == 0 &&
+				    iter->cd_name[tpp_string_len(name)] == '\0') {
 					/* Found it! Set the proper flags and continue. */
 					result |= iter->cd_flags;
 					goto got_clobber;
 				}
 			}
 		}
-		if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_CLOBBER_NAME, name->s_text))
+		if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_CLOBBER_NAME, tpp_string_cstr(name)))
 			goto err_name;
 got_clobber:
-		TPPString_Decref(name);
+		tpp_string_decref(name);
 		/* Yield the trailing comma. */
 		if (DeeLexer_GetTok(self) != ',')
 			break;
@@ -270,7 +270,7 @@ got_clobber:
 	}
 	return result;
 err_name:
-	TPPString_Decref(name);
+	tpp_string_decref(name);
 err:
 	return -1;
 }
@@ -278,8 +278,7 @@ err:
 LOCAL ATTR_PURE WUNUSED NONNULL((1)) bool DCALL is_colon(DeeLexer *self) {
 	if (DeeLexer_GetTok(self) == ':')
 		return true;
-	if (DeeLexer_GetTok(self) == TOK_COLON_COLON ||
-	    DeeLexer_GetTok(self) == TPP_TOK_COLON_EQUAL) {
+	if (TPP_TOK_MC_STARTSWITH_COLON(DeeLexer_GetTok(self))) {
 		/* Convert to a `:`-token and setup the lexer to re-parse
 		 * the remainder of the current token as part of the next. */
 		DeeLexer_SetTokenId(self, ':');
@@ -371,9 +370,9 @@ err:
 	return -1;
 }
 
-PRIVATE /*REF*/ struct TPPString *
+PRIVATE TPP_REF tpp_string *
 (TPPCALL tpp_string_printer_pack)(struct tpp_string_printer *__restrict self) {
-	/*REF*/ struct TPPString *result = (struct TPPString *)self->sp_string;
+	TPP_REF tpp_string *result = (struct TPPString *)self->sp_string;
 	if unlikely(!result)
 		return TPPString_NewEmpty();
 	/* Deallocate unused memory. */
@@ -397,7 +396,7 @@ PRIVATE /*REF*/ struct TPPString *
 
 
 
-PRIVATE WUNUSED NONNULL((1)) /*REF*/ struct TPPString *DCALL
+PRIVATE WUNUSED NONNULL((1)) TPP_REF tpp_string *DCALL
 parse_brace_text(DeeLexer *self) {
 	struct tpp_string_printer printer;
 	unsigned int brace_recursion   = 0;
@@ -554,7 +553,7 @@ ast_parse_asm(DeeLexer *self) {
 	struct ast_loc loc;
 	bool is_asm_goto   = false;
 	uint16_t ast_flags = AST_FASSEMBLY_NORMAL;
-	/*REF*/ struct TPPString *text;
+	TPP_REF tpp_string *text;
 	struct operand_list operands;
 	DREF struct ast *result;
 	bool has_paren;
@@ -711,12 +710,12 @@ err_nolf_text_ops:
 	if unlikely(!result)
 		goto err_text_ops;
 	/* NOTE: `a_assembly` has inherited the operand vector upon success. */
-	TPPString_Decref(text);
+	tpp_string_decref(text);
 	return ast_setddi(result, &loc);
 err_text_ops:
 	operand_list_fini(&operands);
 err_text:
-	TPPString_Decref(text);
+	tpp_string_decref(text);
 err:
 	return NULL;
 }

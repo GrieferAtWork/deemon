@@ -70,7 +70,8 @@ INTERN WUNUSED NONNULL((1, 2)) int
 #endif /* !CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT */
 	if (!result_used) {
 		OPTIMIZE_VERBOSE("Remove unused read from symbol `%$s`\n",
-		                 sym->s_name->k_size, sym->s_name->k_name);
+		                 tpp_keyword_getlen(sym->s_name),
+		                 tpp_keyword_getcstr(sym->s_name));
 		SYMBOL_DEC_NREAD(sym);
 		self->a_type      = AST_CONSTEXPR;
 		self->a_constexpr = DeeNone_NewRef();

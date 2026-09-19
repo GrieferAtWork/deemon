@@ -96,7 +96,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	(void)scope;
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Symbol %$q is not reachable from the specified scope",
-	                       sym->s_name->k_size, sym->s_name->k_name);
+	                       tpp_keyword_getlen(sym->s_name),
+	                       tpp_keyword_getcstr(sym->s_name));
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool
@@ -3234,29 +3235,29 @@ print_enter_scope(DeeScopeObject *caller_scope,
 				switch (sym->s_type) {
 				case SYMBOL_TYPE_EXTERN:
 					if (Dee_MODULE_SYMBOL_EQUALS(sym->s_extern.e_symbol,
-					                             sym->s_name->k_name,
-					                             sym->s_name->k_size)) {
+					                             tpp_keyword_getcstr(sym->s_name),
+					                             tpp_keyword_getlen(sym->s_name))) {
 						printf("import %s from %q",
 						       sym->s_extern.e_symbol->ss_name,
 						       sym->s_extern.e_module->mo_absname);
 					} else {
 						printf("import %$s = %s from %q",
-						       sym->s_name->k_size,
-						       sym->s_name->k_name,
+						       tpp_keyword_getlen(sym->s_name),
+						       tpp_keyword_getcstr(sym->s_name),
 						       sym->s_extern.e_symbol->ss_name,
 						       sym->s_extern.e_module->mo_absname);
 					}
 					break;
 				case SYMBOL_TYPE_MODULE:
 					printf("import %$s = %q",
-					       sym->s_name->k_size,
-					       sym->s_name->k_name,
+					       tpp_keyword_getlen(sym->s_name),
+					       tpp_keyword_getcstr(sym->s_name),
 					       sym->s_module->mo_absname);
 					break;
 				case SYMBOL_TYPE_MYMOD:
 					printf("import %$s = .",
-					       sym->s_name->k_size,
-					       sym->s_name->k_name);
+					       tpp_keyword_getlen(sym->s_name),
+					       tpp_keyword_getcstr(sym->s_name));
 					break;
 				case SYMBOL_TYPE_GLOBAL:
 					PRINT("global ");
@@ -3270,7 +3271,8 @@ print_enter_scope(DeeScopeObject *caller_scope,
 				case SYMBOL_TYPE_STATIC:
 					PRINT("static local ");
 print_symbol_name:
-					print(sym->s_name->k_name, sym->s_name->k_size);
+					print(tpp_keyword_getcstr(sym->s_name),
+					      tpp_keyword_getlen(sym->s_name));
 					break;
 				default: break;
 				}
@@ -3354,7 +3356,8 @@ print_symbol(struct symbol *__restrict sym,
 	if (sym->s_name == &TPPKeyword_Empty) {
 		PRINT("__TPP_IDENTIFIER(\"\")"); /* ??? */
 	} else {
-		print(sym->s_name->k_name, sym->s_name->k_size);
+		print(tpp_keyword_getcstr(sym->s_name),
+		      tpp_keyword_getlen(sym->s_name));
 	}
 done:
 	return result;
@@ -3402,7 +3405,8 @@ print_function_atargs(struct ast *__restrict self,
 			PRINT(", ");
 		if (argsym == function_scope->bs_varkwds)
 			PRINT("**");
-		print(argsym->s_name->k_name, argsym->s_name->k_size);
+		print(tpp_keyword_getcstr(argsym->s_name),
+		      tpp_keyword_getlen(argsym->s_name));
 		if (argsym == function_scope->bs_varargs) {
 			PRINT("...");
 		} else if (argsym == function_scope->bs_varkwds) {
@@ -3430,8 +3434,11 @@ print_asm_operator(struct asm_operand *__restrict operand,
                    size_t indent) {
 	Dee_ssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	if (operand->ao_name)
-		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
+	if (operand->ao_name) {
+		printf("[%$s] ",
+		       tpp_keyword_getlen(operand->ao_name),
+		       tpp_keyword_getcstr(operand->ao_name));
+	}
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	ASSERT(operand->ao_type);
 	printf("%$q (",
@@ -3449,12 +3456,15 @@ print_asm_label_operator(struct asm_operand *__restrict operand,
                          Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	if (operand->ao_name)
-		printf("[%$s] ", operand->ao_name->k_size, operand->ao_name->k_name);
+	if (operand->ao_name) {
+		printf("[%$s] ",
+		       tpp_keyword_getlen(operand->ao_name),
+		       tpp_keyword_getcstr(operand->ao_name));
+	}
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	ASSERT(!operand->ao_type);
-	print(operand->ao_label->tl_name->k_name,
-	      operand->ao_label->tl_name->k_size);
+	print(tpp_keyword_getcstr(operand->ao_label->tl_name),
+	      tpp_keyword_getlen(operand->ao_label->tl_name));
 	return result;
 err:
 	return temp;
@@ -3673,12 +3683,12 @@ got_except_symbol:
 					DO(print_ast_code(handler->ce_mask, printer, arg, true, self->a_scope, indent));
 					if (except_symbol) {
 						PRINT(" ");
-						print(except_symbol->s_name->k_name,
-						      except_symbol->s_name->k_size);
+						print(tpp_keyword_getcstr(except_symbol->s_name),
+						      tpp_keyword_getlen(except_symbol->s_name));
 					}
 				} else {
-					print(except_symbol->s_name->k_name,
-					      except_symbol->s_name->k_size);
+					print(tpp_keyword_getcstr(except_symbol->s_name),
+					      tpp_keyword_getlen(except_symbol->s_name));
 					PRINT("...");
 				}
 				PRINT(") ");
@@ -4720,16 +4730,16 @@ class_member_in_class:
 				PRINT("default");
 			}
 		} else {
-			print(self->a_label.l_label->tl_name->k_name,
-			      self->a_label.l_label->tl_name->k_size);
+			print(tpp_keyword_getcstr(self->a_label.l_label->tl_name),
+			      tpp_keyword_getlen(self->a_label.l_label->tl_name));
 		}
 		PRINT(":");
 		break;
 
 	case AST_GOTO:
 		printf("goto %$s",
-		       self->a_goto.g_label->tl_name->k_size,
-		       self->a_goto.g_label->tl_name->k_name);
+		       tpp_keyword_getlen(self->a_goto.g_label->tl_name),
+		       tpp_keyword_getcstr(self->a_goto.g_label->tl_name));
 		break;
 
 	case AST_SWITCH:
@@ -4927,20 +4937,20 @@ print_ast_repr(struct ast *__restrict self,
 
 	case AST_SYM:
 		printf("makesym(sym: <symbol %$q>",
-		       self->a_sym->s_name->k_size,
-		       self->a_sym->s_name->k_name);
+		       tpp_keyword_getlen(self->a_sym->s_name),
+		       tpp_keyword_getcstr(self->a_sym->s_name));
 		break;
 
 	case AST_UNBIND:
 		printf("makeunbind(sym: <symbol %$q>",
-		       self->a_sym->s_name->k_size,
-		       self->a_sym->s_name->k_name);
+		       tpp_keyword_getlen(self->a_sym->s_name),
+		       tpp_keyword_getcstr(self->a_sym->s_name));
 		break;
 
 	case AST_BOUND:
 		printf("makebound(sym: <symbol %$q>",
-		       self->a_sym->s_name->k_size,
-		       self->a_sym->s_name->k_name);
+		       tpp_keyword_getlen(self->a_sym->s_name),
+		       tpp_keyword_getcstr(self->a_sym->s_name));
 		break;
 
 	case AST_MULTIPLE: {

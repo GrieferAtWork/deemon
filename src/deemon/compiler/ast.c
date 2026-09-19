@@ -64,8 +64,8 @@ ast_dbgnew(char const *file, int line) {
 #else /* CONFIG_AST_IS_STRUCT */
 		DeeObject_InitStatic(result, &DeeAst_Type);
 #endif /* !CONFIG_AST_IS_STRUCT */
-		result->a_scope      = current_scope;
-		result->a_ddi.l_file = NULL;
+		result->a_scope = current_scope;
+		ast_loc_init_empty(&result->a_ddi);
 		Dee_Incref(result->a_scope);
 	}
 	return result;
@@ -137,7 +137,7 @@ ast_putddi(struct ast *self, struct ast_loc *__restrict info) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
-	if unlikely(self->a_ddi.l_file)
+	if unlikely(!ast_loc_isempty(&self->a_ddi))
 		goto done;
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	self->a_ddi = *info;
@@ -160,7 +160,7 @@ ast_puthere(DeeLexer *lexer, struct ast *self) {
 	if unlikely(!self)
 		goto done; /* Special case: Ignore `NULL` for `ast`. */
 	ASSERT_AST(self);
-	if unlikely(self->a_ddi.l_file)
+	if unlikely(!ast_loc_isempty(&self->a_ddi))
 		goto done;
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	if unlikely(DeeLexer_GetLoc(lexer, &self->a_ddi)) {
@@ -909,7 +909,7 @@ DEFINE_AST_GENERATOR(NONNULL((2, 3)), ast_switch,
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 DEFINE_AST_GENERATOR(NONNULL((2)), ast_assembly,
-                     (uint16_t flags, struct TPPString *__restrict text,
+                     (uint16_t flags, tpp_string *__restrict text,
                       size_t num_o, size_t num_i, size_t num_l,
                       /*inherit*/ struct asm_operand *opv))
 #else /* !CONFIG_LANGUAGE_NO_ASM */
@@ -936,7 +936,7 @@ DEFINE_AST_GENERATOR(, ast_assembly,
 		result->a_flag = flags;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 		result->a_assembly.as_text.at_text = text;
-		TPPString_Incref(text);
+		tpp_string_incref(text);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 		result->a_assembly.as_num_o = num_o;
 		result->a_assembly.as_num_i = num_i;
@@ -1107,7 +1107,7 @@ do_xdecref_3:
 		for (; iter < end; ++iter) {
 			ASSERT(iter->ao_type);
 			ASSERT(iter->ao_expr);
-			TPPString_Decref(iter->ao_type);
+			tpp_string_decref(iter->ao_type);
 			ast_decref(iter->ao_expr);
 		}
 		end += self->a_assembly.as_num_l;
@@ -1119,7 +1119,7 @@ do_xdecref_3:
 		}
 		Dee_Free(self->a_assembly.as_opv);
 #ifndef CONFIG_LANGUAGE_NO_ASM
-		TPPString_Decref(self->a_assembly.as_text.at_text);
+		tpp_string_decref(self->a_assembly.as_text.at_text);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	}	break;
 
@@ -1237,8 +1237,10 @@ PRIVATE NONNULL((1)) void DCALL ast_fini(struct ast *__restrict self)
 {
 	ASSERT(DeeCompiler_LockReading());
 	DeeCompiler_DelItem(self);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	ast_fini_contents(self);
 	/* NOTE: Must destroy the scope _AFTER_ the AST contents, in case the
 	 *       ast itself references some symbol that is owned by this scope. */

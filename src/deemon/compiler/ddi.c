@@ -300,7 +300,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	DeeDDIObject *result;
 	size_t result_size;
 	uint8_t *code_iter;
-	struct Dee_ascii_printer strtab;
+	struct Dee_ascii_printer strtab; /* TODO: Unicode */
 	/* Check for simple case: no DDI information needs to be generated. */
 	if (current_assembler.a_flag & ASM_FNODDI)
 		return_reference_(&DeeDDI_Empty);
@@ -337,8 +337,9 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	if (current_basescope->bs_name) {
 		/* Allocate the name of the current function. */
 		ASSERT(strtab.ap_length == 0);
-		if (Dee_ascii_printer_print(&strtab, current_basescope->bs_name->k_name,
-		                        current_basescope->bs_name->k_size + 1) < 0)
+		if (Dee_ascii_printer_print(&strtab,
+		                            tpp_keyword_getcstr(current_basescope->bs_name),
+		                            tpp_keyword_getlen(current_basescope->bs_name) + 1) < 0)
 			goto err_result_printer;
 		/* Link the initial symbol name for the main function. */
 		result->d_strings = (uint32_t *)Dee_Malloc(sizeof(uint32_t));
@@ -443,8 +444,8 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 						ASSERT(binding->db_index < current_assembler.a_localc);
 						if (binding->db_name) {
 							symbol_name_str = Dee_ascii_printer_allocstr(&strtab,
-							                                             binding->db_name->k_name,
-							                                             binding->db_name->k_size + 1);
+							                                             tpp_keyword_getcstr(binding->db_name),
+							                                             tpp_keyword_getlen(binding->db_name) + 1);
 							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
@@ -466,8 +467,8 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 						/* Stack-binding */
 						if (binding->db_name) {
 							symbol_name_str = Dee_ascii_printer_allocstr(&strtab,
-							                                             binding->db_name->k_name,
-							                                             binding->db_name->k_size + 1);
+							                                             tpp_keyword_getcstr(binding->db_name),
+							                                             tpp_keyword_getlen(binding->db_name) + 1);
 							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
@@ -629,11 +630,11 @@ do_realloc:
 		for (i = 0; i < current_assembler.a_refc; ++i) {
 			char *namebuf;
 			sym = current_assembler.a_refv[i].sr_sym;
-			if (sym->s_name->k_size == 0)
+			if (tpp_keyword_getlen(sym->s_name) == 0)
 				continue; /* Anonymous reference. */
 			namebuf = Dee_ascii_printer_allocstr(&strtab,
-			                                     sym->s_name->k_name,
-			                                     sym->s_name->k_size + 1);
+			                                     tpp_keyword_getcstr(sym->s_name),
+			                                     tpp_keyword_getlen(sym->s_name) + 1);
 			if unlikely(!namebuf)
 				goto err_xwriter;
 			if unlikely(xddi_putsymbol(&writer, Dee_DDI_EXDAT_O_RNAM, i,
@@ -648,11 +649,11 @@ do_realloc:
 				sym = current_assembler.a_staticv[i].ss_sym;
 				if (!sym)
 					continue; /* Anonymous symbol (asm-level). */
-				if (sym->s_name->k_size == 0)
+				if (tpp_keyword_getlen(sym->s_name) == 0)
 					continue; /* Anonymous symbol (ast-level). */
 				namebuf = Dee_ascii_printer_allocstr(&strtab,
-				                                     sym->s_name->k_name,
-				                                     sym->s_name->k_size + 1);
+				                                     tpp_keyword_getcstr(sym->s_name),
+				                                     tpp_keyword_getlen(sym->s_name) + 1);
 				if unlikely(!namebuf)
 					goto err_xwriter;
 				if unlikely(xddi_putsymbol(&writer, Dee_DDI_EXDAT_O_RNAM, offset + i,

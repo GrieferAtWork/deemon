@@ -62,10 +62,37 @@ DECL_BEGIN
 #define INT_MAX __INT_MAX__
 #endif /* !INT_MAX */
 
-/* @return: TOK_ERR: An error occurred (and was thrown)
- * @return: -2:      A keyword wasn't found (and `create_missing` was false) */
-INTERN WUNUSED NONNULL((1)) tok_t DCALL
-get_token_from_str(char const *__restrict name, bool create_missing) {
+/* @return: TPP_TOK_ISERR(*): An error occurred (and was thrown)
+ * @return: TPP_TOK_ENOENT:   Cannot parse a (single) token from `name` */
+INTERN WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+get_token_from_str(DeeLexer *self, char const *__restrict name) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_lexer_seek_backup backup;
+	tpp_file *const file = tpp_lexer_getfile(&self->dl_lexer);
+	tpp_char const *iter;
+	tpp_token_id tok1, tok2 = TPP_TOK_EOF;
+
+	/* Force the lexer to parse our custom string (in a way that restores all data later) */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk(file, NULL, (tpp_char const *)name,
+	                          (tpp_char const *)(name + strlen(name)));
+	tpp_lexer_nowarnings_pushon(&self->dl_lexer);
+	iter = tpp_lexer_seek_start(&self->dl_lexer, &backup);
+	tok1 = tpp_lexer_yieldraw_at(&self->dl_lexer, &iter);
+	if (!TPP_TOK_ISERR(tok1))
+		tok2 = tpp_lexer_yieldraw_at(&self->dl_lexer, &iter);
+	tpp_lexer_nowarnings_pop(&self->dl_lexer);
+	tpp_lexer_seek_rollback(&self->dl_lexer, &backup);
+	tpp_file_subtext_pop(file);
+	if (TPP_TOK_ISERR(tok1))
+		return tok1;
+	if (TPP_TOK_ISERR(tok2))
+		return tok2;
+	if (tok2 != TPP_TOK_EOF)
+		return TPP_TOK_ENOENT; /*  */
+	return tok1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 	switch (name[0]) {
 	case 0:
 		return TPP_TOK_EOF; /* End-of-file token. */
@@ -79,9 +106,9 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TPP_TOK_LANGLE_LANGLE_EQUAL;
 			if (name[2] == '<') {
 				if (!name[3])
-					return TOK_LANGLE3;
+					return TPP_TOK_LANGLE_LANGLE_LANGLE;
 				if (name[3] == '=' && !name[4])
-					return TOK_LANGLE3_EQUAL;
+					return TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL;
 			}
 		} else if (name[1] == '=') {
 			if (!name[2])
@@ -100,9 +127,9 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TPP_TOK_RANGLE_RANGLE_EQUAL;
 			if (name[2] == '>') {
 				if (!name[3])
-					return TOK_RANGLE3;
+					return TPP_TOK_RANGLE_RANGLE_RANGLE;
 				if (name[3] == '=' && !name[4])
-					return TOK_RANGLE3_EQUAL;
+					return TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL;
 			}
 		} else if (name[1] == '=') {
 			if (!name[2])
@@ -135,7 +162,7 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	case '.':
 		if (name[1] == '*') {
 			if (!name[2])
-				return TOK_DOT_STAR;
+				return TPP_TOK_DOT_STAR;
 		} else if (name[1] == '.') {
 			if (!name[2])
 				return TPP_TOK_DOT_DOT;
@@ -150,7 +177,7 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TPP_TOK_COLON_EQUAL;
 		} else if (name[1] == ':') {
 			if (!name[2])
-				return TOK_NAMESPACE;
+				return TPP_TOK_COLON_COLON;
 		}
 		break;
 
@@ -173,9 +200,9 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TPP_TOK_MINUS_MINUS;
 		} else if (name[1] == '>') {
 			if (!name[2])
-				return TOK_ARROW;
+				return TPP_TOK_MINUS_RANGLE;
 			if (name[2] == '*' && !name[3])
-				return TOK_ARROW_STAR;
+				return TPP_TOK_MINUS_RANGLE_STAR;
 		}
 		break;
 
@@ -231,28 +258,28 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 				return TPP_TOK_HAT_EQUAL;
 		} else if (name[1] == '^') {
 			if (!name[2])
-				return TOK_LXOR;
+				return TPP_TOK_HAT_HAT;
 		}
 		break;
 
 	case '@':
 		if (name[1] == '=') {
 			if (!name[2])
-				return TOK_AT_EQUAL;
+				return TPP_TOK_AT_EQUAL;
 		}
 		break;
 
 	case '#':
 		if (name[1] == '#') {
 			if (!name[2])
-				return TOK_GLUE;
+				return TPP_TOK_POUND_POUND;
 		}
 		break;
 
 	case '~':
 		if (name[1] == '~') {
 			if (!name[2])
-				return TOK_TILDE_TILDE;
+				return TPP_TOK_TILDE_TILDE;
 		}
 		break;
 
@@ -260,31 +287,46 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 	}
 	/* Simple case: single-character token. */
 	if (!name[1])
-		return (tok_t)name[0];
+		return (tpp_token_id)name[0];
+
 	/* Fallback: lookup a keyword for the token. */
 	{
 		tpp_keyword const *keyword;
-		keyword = TPPLexer_LookupKeyword(name, strlen(name), create_missing);
-		if (keyword)
-			return keyword->k_id;
-		return create_missing ? TOK_ERR : -2;
+		keyword = DeeLexer_NewKeyword(self, (tpp_char const *)name, strlen(name));
+		if unlikely(!keyword)
+			return TPP_TOK_ENOMEM;
+		return tpp_keyword_getid(keyword);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
-INTERN WUNUSED NONNULL((1)) tok_t DCALL
-get_token_from_obj(DeeObject *__restrict obj, bool create_missing) {
+INTDEF WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+get_token_from_obj(DeeLexer *self, DeeObject *__restrict obj) {
 	unsigned int result;
 	if (DeeString_Check(obj))
-		return get_token_from_str(DeeString_STR(obj), create_missing);
+		return get_token_from_str(self, DeeString_STR(obj));
 	if (DeeObject_AsUInt(obj, &result))
-		return TOK_ERR;
-	if unlikely((tok_t)result < 0) {
-		DeeRT_ErrIntegerOverflowS((tok_t)result, 0, INT_MAX);
-		result = (unsigned int)TOK_ERR;
+		return TPP_TOK_EDEEMON;
+	if unlikely((tpp_token_id)result < 0) {
+		DeeRT_ErrIntegerOverflowS((tpp_token_id)result, 0, INT_MAX);
+		return TPP_TOK_EDEEMON;
 	}
-	return (tok_t)result;
+	return (tpp_token_id)result;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* @return: NULL:      An error occurred (and was thrown)
+ * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
+INTERN WUNUSED DREF DeeObject *DCALL
+get_token_name(tpp_token_id id, tpp_keyword const *kwd) {
+	char const *result = tpp_reprtokenid(id);
+	if (result != NULL)
+		return DeeString_New(result);
+	if (kwd != NULL)
+		return DeeString_FromTppKeyword(kwd);
+	return ITER_DONE;
+}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 PRIVATE char const largetok_names[][4] = {
 	/* [TPP_TOK_LANGLE_LANGLE           - TOK_TWOCHAR_BEGIN] = */ { '<', '<' },
 	/* [TPP_TOK_RANGLE_RANGLE           - TOK_TWOCHAR_BEGIN] = */ { '>', '>' },
@@ -304,26 +346,26 @@ PRIVATE char const largetok_names[][4] = {
 	/* [TPP_TOK_PIPE_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '|', '=' },
 	/* [TPP_TOK_HAT_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '^', '=' },
 	/* [TPP_TOK_STAR_STAR_EQUAL     - TOK_TWOCHAR_BEGIN] = */ { '*', '*', '=' },
-	/* [TOK_AT_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '@', '=' },
-	/* [TOK_GLUE          - TOK_TWOCHAR_BEGIN] = */ { '#', '#' },
+	/* [TPP_TOK_AT_EQUAL      - TOK_TWOCHAR_BEGIN] = */ { '@', '=' },
+	/* [TPP_TOK_POUND_POUND          - TOK_TWOCHAR_BEGIN] = */ { '#', '#' },
 	/* [TPP_TOK_AMP_AMP          - TOK_TWOCHAR_BEGIN] = */ { '&', '&' },
 	/* [TPP_TOK_PIPE_PIPE           - TOK_TWOCHAR_BEGIN] = */ { '|', '|' },
-	/* [TOK_LXOR          - TOK_TWOCHAR_BEGIN] = */ { '^', '^' },
+	/* [TPP_TOK_HAT_HAT          - TOK_TWOCHAR_BEGIN] = */ { '^', '^' },
 	/* [TPP_TOK_PLUS_PLUS           - TOK_TWOCHAR_BEGIN] = */ { '+', '+' },
 	/* [TPP_TOK_MINUS_MINUS           - TOK_TWOCHAR_BEGIN] = */ { '-', '-' },
 	/* [TPP_TOK_STAR_STAR           - TOK_TWOCHAR_BEGIN] = */ { '*', '*' },
-	/* [TOK_TILDE_TILDE   - TOK_TWOCHAR_BEGIN] = */ { '~', '~' },
-	/* [TOK_ARROW         - TOK_TWOCHAR_BEGIN] = */ { '-', '>' },
+	/* [TPP_TOK_TILDE_TILDE   - TOK_TWOCHAR_BEGIN] = */ { '~', '~' },
+	/* [TPP_TOK_MINUS_RANGLE         - TOK_TWOCHAR_BEGIN] = */ { '-', '>' },
 	/* [TPP_TOK_COLON_EQUAL  - TOK_TWOCHAR_BEGIN] = */ { ':', '=' },
-	/* [TOK_NAMESPACE     - TOK_TWOCHAR_BEGIN] = */ { ':', ':' },
-	/* [TOK_ARROW_STAR    - TOK_TWOCHAR_BEGIN] = */ { '-', '>', '*' },
-	/* [TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */ { '.', '*' },
+	/* [TPP_TOK_COLON_COLON     - TOK_TWOCHAR_BEGIN] = */ { ':', ':' },
+	/* [TPP_TOK_MINUS_RANGLE_STAR    - TOK_TWOCHAR_BEGIN] = */ { '-', '>', '*' },
+	/* [TPP_TOK_DOT_STAR      - TOK_TWOCHAR_BEGIN] = */ { '.', '*' },
 	/* [TPP_TOK_DOT_DOT        - TOK_TWOCHAR_BEGIN] = */ { '.', '.' },
 	/* [TPP_TOK_LANGLE_RANGLE          - TOK_TWOCHAR_BEGIN] = */ { '<', '>' },
-	/* [TOK_LANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<' },
-	/* [TOK_RANGLE3       - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>' },
-	/* [TOK_LANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<', '=' },
-	/* [TOK_RANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>', '=' },
+	/* [TPP_TOK_LANGLE_LANGLE_LANGLE       - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<' },
+	/* [TPP_TOK_RANGLE_RANGLE_RANGLE       - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>' },
+	/* [TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '<', '<', '<', '=' },
+	/* [TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>', '=' },
 	/* [TPP_TOK_EQUAL_EQUAL_EQUAL        - TOK_TWOCHAR_BEGIN] = */ { '=', '=', '=' },
 	/* [TPP_TOK_EXCLAIM_EQUAL_EQUAL    - TOK_TWOCHAR_BEGIN] = */ { '!', '=', '=' },
 	/* [TPP_TOK_QMARK_QMARK   - TOK_TWOCHAR_BEGIN] = */ { '?', '?' },
@@ -336,7 +378,7 @@ STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id` does not refer to a valid token id. */
 INTERN WUNUSED DREF DeeObject *DCALL
-get_token_name(tok_t id, tpp_keyword const *kwd) {
+get_token_name(tpp_token_id id, tpp_keyword const *kwd) {
 	if ((unsigned int)id <= 255) {
 		switch (id) {
 		case TPP_TOK_EOF: return DeeString_NewEmpty();
@@ -355,10 +397,9 @@ get_token_name(tok_t id, tpp_keyword const *kwd) {
 		kwd = TPPLexer_LookupKeywordID(id);
 	if unlikely(!kwd)
 		return ITER_DONE;
-	return DeeString_NewUtf8(kwd->k_name,
-	                         kwd->k_size,
-	                         STRING_ERROR_FIGNORE);
+	return DeeString_FromTppKeyword(kwd);
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /*[[[deemon
 import define_Dee_HashStr, _Dee_HashSelect from rt.gen.hash;
@@ -372,7 +413,7 @@ print "#define Dee_HashStr_slash_slash", _Dee_HashSelect("//");
 /*[[[end]]]*/
 
 INTERN WUNUSED Dee_hash_t DCALL
-get_token_namehash(tok_t id, tpp_keyword const *kwd) {
+get_token_namehash(tpp_token_id id, tpp_keyword const *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
 		switch (id) {
@@ -393,7 +434,8 @@ get_token_namehash(tok_t id, tpp_keyword const *kwd) {
 		kwd = TPPLexer_LookupKeywordID(id);
 	if unlikely(!kwd)
 		return (Dee_hash_t)-1;
-	return Dee_HashUtf8(kwd->k_name, kwd->k_size);
+	return Dee_HashUtf8(tpp_keyword_getcstr(kwd),
+	                    tpp_keyword_getlen(kwd));
 }
 
 
@@ -406,7 +448,7 @@ keyword_str(DeeCompilerItemObject *__restrict self) {
 		goto done;
 	item = DeeCompilerItem_VALUE(self, tpp_keyword);
 	if likely(item)
-		result = DeeString_NewUtf8(item->k_name, item->k_size, STRING_ERROR_FIGNORE);
+		result = DeeString_FromTppKeyword(item);
 	COMPILER_END();
 done:
 	return result;
@@ -420,8 +462,11 @@ keyword_print(DeeCompilerItemObject *__restrict self,
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
 	item = DeeCompilerItem_VALUE(self, tpp_keyword);
-	if likely(item)
-		result = DeeFormat_Print(printer, arg, item->k_name, item->k_size);
+	if likely(item) {
+		result = DeeFormat_Print(printer, arg,
+		                         tpp_keyword_getcstr(item),
+		                         tpp_keyword_getlen(item));
+	}
 	COMPILER_END();
 done:
 	return result;
@@ -525,7 +570,7 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 		goto done;
 	item = DeeCompilerItem_VALUE(self, tpp_keyword);
 	if likely(item)
-		result = DeeInt_NewUInt(item->k_id);
+		result = DeeInt_NewUInt(tpp_keyword_getid(item));
 	COMPILER_END();
 done:
 	return result;
@@ -3275,9 +3320,9 @@ token_setkeyword(DeeCompilerWrapperObject *__restrict self,
 	} else {
 		kwd = DeeCompilerItem_VALUE(value, tpp_keyword);
 		if likely(kwd) {
-			TPPLexer_Current->l_token.t_kwd = kwd;
-			TPPLexer_Current->l_token.t_id  = kwd->k_id;
-			result                          = 0;
+			DeeLexer *lexer = DeeLexer_OfCompiler(self->cw_compiler);
+			tpp_lexer_settokenkwd(&lexer->dl_lexer, kwd);
+			result = 0;
 		}
 	}
 	COMPILER_END();
@@ -3416,7 +3461,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 token_compare_eq(DeeCompilerWrapperObject *self, DeeObject *other) {
-	bool result;
+	int result;
 	char const *other_utf8;
 	tok_t other_id;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -3426,10 +3471,17 @@ token_compare_eq(DeeCompilerWrapperObject *self, DeeObject *other) {
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	other_id = get_token_from_str(other_utf8, false);
-	result   = DeeLexer_GetTok(DeeLexer_OfCompiler(self->cw_compiler)) == other_id;
+	other_id = get_token_from_str(DeeLexer_OfCompiler(self->cw_compiler), other_utf8);
+	if (other_id == TPP_TOK_ENOENT) {
+		result = Dee_COMPARE_NE;
+	} else if (TPP_TOK_ISERR(other_id)) {
+		result = Dee_COMPARE_ERR;
+	} else {
+		tpp_token_id cur = DeeLexer_GetTok(DeeLexer_OfCompiler(self->cw_compiler));
+		result = cur == other_id ? Dee_COMPARE_EQ : Dee_COMPARE_NE;
+	}
 	COMPILER_END();
-	return result ? 0 : 1;
+	return result;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -3739,7 +3791,7 @@ file_delfilename(DeeCompilerItemObject *__restrict self) {
 			err_not_a_textfile(file);
 		} else {
 			if (file->f_textfile.f_usedname) {
-				TPPString_Decref(file->f_textfile.f_usedname);
+				tpp_string_decref(file->f_textfile.f_usedname);
 				file->f_textfile.f_usedname = NULL;
 			}
 			result = 0;
@@ -3772,7 +3824,7 @@ file_setfilename(DeeCompilerItemObject *__restrict self,
 			new_used_name = TPPString_New(utf8, WSTR_LENGTH(utf8));
 			if likely(new_used_name) {
 				if (file->f_textfile.f_usedname)
-					TPPString_Decref(file->f_textfile.f_usedname);
+					tpp_string_decref(file->f_textfile.f_usedname);
 				file->f_textfile.f_usedname = new_used_name; /* Inherit reference. */
 				result                      = 0;
 			}

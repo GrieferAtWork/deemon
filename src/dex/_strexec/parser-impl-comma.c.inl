@@ -186,7 +186,7 @@ err_var_symbol:
 #endif /* JIT_EVAL */
 			goto err;
 		}
-		if (self->jl_tok == TOK_ARROW) {
+		if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 #ifdef JIT_EVAL
 			unsigned char const *source_start;
 			unsigned char const *source_end;

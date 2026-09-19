@@ -458,7 +458,7 @@ do_yield_suffix:
 			unsigned char const *saved;
 			saved = self->jl_tokstart;
 			JITLexer_SkipParamList(self);
-			if (self->jl_tok == TOK_ARROW) {
+			if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 				unsigned int old_flags;
 do_handle_java_lambda:
 				JITLexer_Yield(self); /* Skip over `->` */
@@ -476,7 +476,7 @@ do_handle_java_lambda:
 			if (self->jl_tok == ':') {
 				JITLexer_Yield(self);
 				if (JITLexer_SkipTypeAnnotation(self, false) == 0 &&
-				    self->jl_tok == TOK_ARROW)
+				    self->jl_tok == TPP_TOK_MINUS_RANGLE)
 					goto do_handle_java_lambda;
 			}
 			JITLexer_YieldAt(self, saved);
@@ -517,7 +517,7 @@ do_parse_function_arglist:
 do_parse_function:
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
-				if (self->jl_tok == TOK_ARROW) {
+				if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 					JITLexer_Yield(self);
 					JITLexer_ScanExpression(self, true);
 				} else if (self->jl_tok == '{') {
@@ -527,11 +527,11 @@ do_parse_function:
 				self->jl_scandata.jl_flags |= old_flags & JIT_SCANDATA_FINCHILD;
 				break;
 			}
-			if (self->jl_tok == TOK_ARROW || self->jl_tok == '{') {
+			if (self->jl_tok == TPP_TOK_MINUS_RANGLE || self->jl_tok == '{') {
 				unsigned int old_flags;
 				old_flags = self->jl_scandata.jl_flags;
 				self->jl_scandata.jl_flags |= JIT_SCANDATA_FINCHILD;
-				if (self->jl_tok == TOK_ARROW) {
+				if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 					JITLexer_Yield(self);
 					JITLexer_ScanExpression(self, true);
 				} else {
@@ -772,7 +772,7 @@ do_reference_this_and_class:
 				/* `foo from bar` */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipModuleName(self);
-			} else if (self->jl_tok == TOK_ARROW) {
+			} else if (self->jl_tok == TPP_TOK_MINUS_RANGLE) {
 				/* `x -> x.lower()` */
 				goto do_handle_java_lambda;
 			} else {

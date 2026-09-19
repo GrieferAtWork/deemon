@@ -780,7 +780,9 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	 * >> }
 	 */
 	return PERRAST(warn_ast, W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, sym,
-	               current_basescope->bs_name ? current_basescope->bs_name->k_name : "?");
+	               current_basescope->bs_name
+	               ? tpp_keyword_getcstr(current_basescope->bs_name)
+	               : "?");
 }
 
 /* Generate a call to `function` that pops `num_args` arguments from the stack,
@@ -1262,8 +1264,8 @@ check_sym_class:
 	case SYMBOL_TYPE_FWD:
 		return DeeError_Throwf(&DeeError_SymbolError,
 		                       "Unresolved forward symbol %$q",
-		                       sym->s_name->k_size,
-		                       sym->s_name->k_name);
+		                       tpp_keyword_getlen(sym->s_name),
+		                       tpp_keyword_getcstr(sym->s_name));
 
 	case SYMBOL_TYPE_CONST:
 		return asm_gpush_constexpr(sym->s_const);
@@ -2079,8 +2081,8 @@ check_sym_class:
 			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
 				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
-				symid = asm_newconst_string(sym->s_name->k_name,
-				                            sym->s_name->k_size);
+				symid = asm_newconst_string_utf8(tpp_keyword_getcstr(sym->s_name),
+				                                 tpp_keyword_getlen(sym->s_name));
 
 				/* Must ensure that the write is only written once! */
 				if (asm_gpush_this_module())                /* value, this_module */

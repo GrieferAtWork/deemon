@@ -307,7 +307,7 @@ handle_decimal_power_suffix:
 			ch = *iter;
 			if (ch == '>') {
 				++iter;
-				self->jl_tok = TOK_ARROW;
+				self->jl_tok = TPP_TOK_MINUS_RANGLE;
 				break;
 			}
 			if (ch == '-') {

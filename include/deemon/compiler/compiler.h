@@ -155,8 +155,10 @@ struct Dee_compiler_object {
 	size_t                  cp_recursion; /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
 #ifdef DEE_SOURCE
 #define COMPILER_FNORMAL    0x0000        /* Normal compiler flags. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #define COMPILER_FKEEPLEXER 0x0001        /* Do not save/restore the active TPP lexer. */
 #define COMPILER_FKEEPERROR 0x0002        /* Do not save/restore the active parser error state. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define COMPILER_FMASK      0x0003        /* Mask of known flags. */
 #endif /* DEE_SOURCE */
 	uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*`). */
@@ -168,8 +170,12 @@ struct Dee_compiler_object {
 	DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
 	struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */
 	struct ast_tags              cp_tags;          /* == ::current_tags */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer                     cp_lexer;         /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DeeLexer                     cp_lexer;         /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
 	struct parser_errors         cp_errors;        /* [valid_if(!COMPILER_FKEEPERROR)] == ::current_parser_errors */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct Dee_compiler_options *cp_options;       /* [0..1] User-defined compiler options. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	size_t                   cp_uasm_unique;     /* Unique user-assembly ID. */
