@@ -271,10 +271,32 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DFCALL
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
 parse_tags(DeeLexer *self) {
 	if (DeeLexer_GetTok(self) == '@') {
 		/* Line-style documentation string (terminated by a line-feed) */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_unichar uc;
+		tpp_errno error;
+		tpp_char const *doc_end = DeeLexer_GetTokenEnd(self);
+		tpp_file *const file = DeeLexer_GetFile(self);
+		for (;;) {
+			/* NOTE: `tpp_lexer_readunichar()` already handles BSE and-the-like,
+			 *       so we don't have to do anything other than watching out for
+			 *       line-feed characters, and writing unicode characters as we
+			 *       read them. */
+			error = tpp_lexer_readunichar(&self->dl_lexer, &doc_end, &uc);
+			if (TPP_ISERR(error))
+				goto err;
+			if (tpp_unicode_islf(uc) || (uc == 0 && doc_end == tpp_file_getend(file)))
+				break;
+			if unlikely(Dee_unicode_printer_putc(&current_tags.at_doc, uc))
+				goto err;
+		}
+		/* Set file pointer to parse the next token after
+		 * the terminating line-feed (see the yield below) */
+		tpp_file_setpos(file, doc_end);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		char const *doc_start = (char const *)DeeLexer_GetTokenEnd(self);
 		char const *doc_end   = doc_start;
 		char const *file_end  = TPPLexer_Current->l_token.t_file->f_end;
@@ -306,6 +328,7 @@ parse_tags(DeeLexer *self) {
 		if unlikely(Dee_unicode_printer_print(&current_tags.at_doc, doc_start,
 		                                      (size_t)(doc_end - doc_start)) < 0)
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(Dee_unicode_printer_putascii(&current_tags.at_doc, '\n'))
 			goto err;
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -545,6 +568,11 @@ err:
 	return -1;
 }
 
+/* Parse tags at the current lexer position, starting
+ * immediately at the `@` token.
+ * >> @doc("foo"), doc("bar")
+ *    ^                      ^
+ *    entry                  exit */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 parse_tags_block(DeeLexer *self) {
 	while (DeeLexer_GetTok(self) == '@') {

@@ -33,18 +33,18 @@
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
-#include <deemon/int.h>                /* DeeInt_NewInt64 */
+#include <deemon/int.h>                /* DeeInt_NewIntptr */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FIGNORE, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_*, DeeType_Check, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
-#include <deemon/util/hash.h>          /* Dee_HashPtr */
+#include <deemon/util/hash.h>          /* Dee_HashPtr, Dee_HashUtf8 */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_* */
@@ -55,7 +55,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t */
+#include <stdint.h>  /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, intptr_t, uintN_t */
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a, b) a##b

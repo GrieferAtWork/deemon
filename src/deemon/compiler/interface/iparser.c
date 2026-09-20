@@ -40,7 +40,7 @@
 
 #include "../../runtime/kwlist.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint16_t */
 

@@ -24,6 +24,7 @@
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/symbol.h>
 #include <deemon/error.h>        /* DeeError_* */
 #include <deemon/exec.h>         /* DeeModule_GetLibPath */
 #include <deemon/module.h>       /* Dee_COMPILER_ERROR_FATALITY_WARNING */
@@ -49,7 +50,7 @@ STATIC_ASSERT_MSG(TPP_EDEEMON == TPP_SSIZE_ASERR((tpp_ssize)(size_t)-1),
                   "`DeeLexer_TPP_MesgPrinterHook()` and `DeeLexer_TPP_WarnPrinterHook()`");
 
 /* Static TPP Hooks */
-PRIVATE Dee_ssize_t TPPCALL
+PRIVATE Dee_ssize_t DPRINTER_CC
 print_to_std_file(unsigned int std_file_id, char const *__restrict text, size_t num_bytes) {
 	size_t result;
 	DREF DeeObject *stdout_file = DeeFile_GetStd(std_file_id);
@@ -62,13 +63,13 @@ err:
 	return TPP_SSIZE_OFERR(TPP_EDEEMON);
 }
 
-INTERN Dee_ssize_t TPPCALL
+INTERN Dee_ssize_t DPRINTER_CC
 DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes) {
 	(void)arg;
 	return print_to_std_file(Dee_STDERR, text, num_bytes);
 }
 
-INTERN Dee_ssize_t TPPCALL
+INTERN Dee_ssize_t DPRINTER_CC
 DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes) {
 	(void)arg;
 	return print_to_std_file(Dee_STDOUT, text, num_bytes);
@@ -153,6 +154,37 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 	(void)lexer;
 	DeeError_Throwf(&DeeError_CompilerError, "TODO: Include details on triggered warnings");
 	return TPP_ELEXERROR;
+}
+
+
+/* Print a line `{tpp_lexer_getfileandlineformat}note: see declaration of {SYMBOL_NAME(sym)}\n`,
+ * but only if `!ast_loc_isempty(&sym->s_decl)`. Returns the usual sum-of-calls-to-printer.
+ *
+ * Used by custom warning printers to allow them to reference symbol declaration locations. */
+INTERN WUNUSED NONNULL((1, 2)) tpp_ssize TPPCALL
+DeeLexer_PrintSymbolDeclaration(tpp_lexer const *self, struct symbol const *__restrict sym,
+                                tpp_formatprinter printer, void *arg) {
+	tpp_ssize result, temp;
+	tpp_lexer_printf_info info;
+	if (ast_loc_isempty(&sym->s_decl))
+		return 0; /* No declaration information... */
+	tpp_lexer_printf_info_init_lc(&info,
+	                              ast_loc_getname(&sym->s_decl),
+	                              ast_loc_getlc(&sym->s_decl));
+	result = tpp_lexer_printf_warning(self, &info, printer, arg,
+	                                  tpp_lexer_getfileandlineformat(self));
+	if (result < 0)
+		goto done;
+	temp = tpp_lexer_printf_warning(self, &info, printer, arg,
+	                                "note: see declaration of %[%s%]\n",
+	                                SYMBOL_NAME(sym));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
 }
 
 
@@ -266,7 +298,7 @@ DECL_END
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint8_t */
 
 

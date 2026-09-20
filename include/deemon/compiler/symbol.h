@@ -608,8 +608,8 @@ struct symbol {
 		              ? &(self)->s_decl                     \
 		              : (i) == 1                            \
 		                ? &(self)->s_ambig.a_decl2          \
-		                : &(self)->s_ambig.a_declv[(i)-2])  \
-		    ->l_file == NULL)                               \
+		                : &(self)->s_ambig.a_declv[(i)-2],  \
+		    ast_loc_isempty(decl)))                         \
 			;                                               \
 		else
 

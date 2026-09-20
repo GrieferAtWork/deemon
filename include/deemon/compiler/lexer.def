@@ -290,18 +290,60 @@ TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WS
 TPP_WARNING(TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION, 2(TPP_WG_D200, TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Expected %[{%] or %[->%] after %[function%] or %[[](...)%], but got %Pt (Missing function bodies are deprecated in deemon 200)")
 //Unused:TPP_WARNING(TPP_W_EXPECTED_RBRACE_AFTER_FUNCTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[}%] to end function code, but got %Pt")
 
-//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following an optional or default argument", SYMBOL_NAME(sym)); /*PRINT_SYMBOL_DECLARATION(sym);*/ })
-//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following variable arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
-//TODO:TPP_WARNING(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); struct symbol const *vsym = ARG(struct symbol const *); WARNF("Positional argument %[%s%] following keyword arguments %[%s%]", SYMBOL_NAME(sym), SYMBOL_NAME(vsym)); PRINT_SYMBOL_DECLARATION(vsym); })
-//TODO:TPP_WARNING(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Keyword arguments have already been defined as %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING_EX(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Positional argument %[%s%] following an optional or default argument\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARARGS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	struct symbol const *vsym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Positional argument %[%s%] following variable arguments %[%s%]\n", SYMBOL_NAME(sym), SYMBOL_NAME(vsym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), vsym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	struct symbol const *vsym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Positional argument %[%s%] following keyword arguments %[%s%]\n", SYMBOL_NAME(sym), SYMBOL_NAME(vsym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), vsym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Variable arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Keyword arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 //Unused:TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_ARGLIST, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, WARNF("Expected %[)%] to end argument list, but got %Pt"))
-TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, WARNF("Expected a keyword as argument name, but got %Pt"))
-//TODO:TPP_WARNING(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a constant expression as default value for %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Variable argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Optional argument modifier used after variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for variable- or keyword argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Default value specified for optional argument %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword as argument name, but got %Pt")
+TPP_WARNING_EX(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Expected a constant expression as default value for %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Variable argument modifier used after variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Optional argument modifier used after variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Default value specified for variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Default value specified for optional argument %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 
 //Unused:TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[(%] after %[for%], but got %Pt")
 //Unused:TPP_WARNING(TPP_W_EXPECTED_SEMICOLON1_AFTER_FOR, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[;%] after %[for%], but got %Pt")
@@ -441,14 +483,22 @@ TPP_WARNING(TPP_W_RESERVED_ATTRIBUTE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(
 TPP_WARNING(TPP_W_UNKNOWN_NTH_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Unknown %u-th symbol %Pt")
 TPP_WARNING(TPP_W_ARGUMENT_NAME_ALREADY_IN_USE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Argument name %Pt is already in use")
 TPP_WARNING(TPP_W_NEED_SYMBOL_FOR_INPLACE_OPERATOR, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Only variables can be used with inplace operators")
-//TODO:TPP_WARNING(TPP_W_EXPECTED_STATIC_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a static variable, but %[%s%] has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_EXPECTED_STACK_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Expected a stack variable, but %[%s%] has already been defined with a different storage class", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING_EX(TPP_W_EXPECTED_STATIC_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Expected a static variable, but %[%s%] has already been defined with a different storage class\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_EXPECTED_STACK_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Expected a stack variable, but %[%s%] has already been defined with a different storage class\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 TPP_WARNING(TPP_W_UNKNOWN_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Unknown variable %[%s%]")
 TPP_WARNING(TPP_W_VARIABLE_ALREADY_EXISTS, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Local variable %[%s%] already exists")
 TPP_WARNING(TPP_W_DECLARING_GLOBAL_IN_NONROOT, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Declaring global variable %[%s%] outside of the root scope")
 TPP_WARNING_EX(TPP_W_DECLARING_IMPLICIT_VARIABLE, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "Implicitly declaring %Pt as a local variable. Write %[local %s%] if this is intended", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "Implicitly declaring %Pt as a local variable. Write %[local %s%] if this is intended\n", varname, varname);
 })
 TPP_WARNING(TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Cannot import module %[%s%]: %[%s%] is not a valid variable name")
 TPP_WARNING(TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Cannot import symbol %[%s%]: %[%s%] is not a valid variable name")
@@ -459,24 +509,24 @@ TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_ALIAS_NAME, 2(TPP_WG_RESERVED, TPP_WG_S
 TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "A reserved identifier appears in a module name. Consider writing the offending portion as a string %[\"%s\"%] instead")
 TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a module name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a module name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead\n", varname, varname);
 })
 TPP_WARNING(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "A reserved identifier appears in a symbol name. Consider writing the offending portion as a string %[\"%s\"%] instead")
 TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol name. Consider renaming the offending import to %[my_name_for_%s = \"%s\"%] instead\n", varname, varname);
 })
 TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol or module name. Consider renaming the offending import as %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier appears in a symbol or module name. Consider renaming the offending import as %[my_name_for_%s = \"%s\"%] instead\n", varname, varname);
 })
 TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead\n", varname, varname);
 })
 TPP_WARNING_EX(TPP_W_RESERVED_IDENTIFIER_IN_AUTOGENERATED_SYMBOL_OR_MODULE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "A reserved identifier was produced by the autogenerated name of a symbol or module import. Consider using an import alias %[my_name_for_%s = \"%s\"%] instead\n", varname, varname);
 })
 
 TPP_WARNING(TPP_W_CLASS_MEMBER_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Class member name %[%s%] had already been defined")
@@ -484,17 +534,35 @@ TPP_WARNING(TPP_W_IMPLICIT_MEMBER_DECLARATION, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL)
 TPP_WARNING(TPP_W_TOO_MANY_CLASS_MEMBER, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Class %[%s%] has too many members")
 TPP_WARNING(TPP_W_MODULE_NOT_FOUND, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Module %[%s%] could not be found")
 TPP_WARNING(TPP_W_RECURSIVE_MODULE_DEPENDENCY, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Recursive dependency between modules %[%s%] and %[%s%]")
-//TODO:TPP_WARNING(TPP_W_VARIABLE_READ_NEVER_WRITTEN, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Read from variable %[%s%] that is never written", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING_EX(TPP_W_VARIABLE_READ_NEVER_WRITTEN, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Read from variable %[%s%] that is never written\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 TPP_WARNING(TPP_W_NO_OPERATOR_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Module %[operators%] is not exporting a dedicated symbol for %[operator %s%]")
 TPP_WARNING(TPP_W_NO_OPERATOR_FALLBACK_FUNCTION, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Module %[operators%] is not exporting the fallback %[operator%] function required to implement generic operator support")
 TPP_WARNING(TPP_W_NO_D200_OLD_USER_CLASS, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Module %[rt.d200%] is not exporting %[OldUserClass%] required to implement legacy user-classes")
 
 TPP_WARNING(TPP_W_COMPARE_SODO_NONBUILTIN_UNDEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Comparing compiler-generated constants with %[===%] or %[!==%] produces undefined results")
 
-//TODO:TPP_WARNING(TPP_W_WRITE_TO_FINAL_VARIABLE, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot write to variable %[%s%] declared as final", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING_EX(TPP_W_WRITE_TO_FINAL_VARIABLE, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Cannot write to variable %[%s%] declared as final\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 
-//TODO:TPP_WARNING(TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Type declaration for symbol %[%s%] differs from previous definition", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, { char const *name = ARG(char const *); WARNF("Unknown attribute %[%s%] of constant expressions %[%r%]", name, ARG(DeeObject *)); })
+TPP_WARNING_EX(TPP_W_SYMBOL_TYPE_DECLARATION_CHANGED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Type declaration for symbol %[%s%] differs from previous definition\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	char const *name = tpp_current_va_arg(char const *);
+	DeeObject *constant = tpp_current_va_arg(DeeObject *);
+	tpp_warn_printf1(tpp_current_info(), "Unknown attribute %[%s%] of constant expressions %[", name);
+	tpp_do(DeeObject_PrintRepr(constant, tpp_current_printer(), tpp_current_printer_arg()));
+	tpp_warn_printf0(tpp_current_info(), "%]\n");
+})
 
 TPP_WARNING(TPP_W_COMPARE_SODO_TRUE_UNDEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Comparing %[=== true%] or %[!== true%] produces undefined results. Consider using %[bool.istrue()%] instead")
 TPP_WARNING(TPP_W_COMPARE_SODO_FALSE_UNDEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Comparing %[=== false%] or %[!== false%] produces undefined results. Consider using %[bool.isfalse()%] instead")
@@ -529,8 +597,8 @@ TPP_WARNING(TPP_W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND, 1(TPP_WG_SYNTAX), 0(),
 TPP_WARNING(TPP_W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[$%] has already been used by this operand")
 TPP_WARNING(TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "User-assembly does not provide a value for output operand %[%s%]")
 TPP_WARNING(TPP_W_UASM_SYMBOL_ALREADY_DEFINED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Assembly symbol %[%s%] has already been defined")
-//TODO:TPP_WARNING(TPP_W_UASM_DOESNT_CLEANUP_STACK, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, WARNF("User-assembly ends without popping %lu stack entries", ARG(unsigned long)))
-//TODO:TPP_WARNING(TPP_W_UASM_POPPED_UNRELATED_ITEMS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, WARNF("User-assembly popped %lu unrelated stack entries", ARG(unsigned long)))
+TPP_WARNING(TPP_W_UASM_DOESNT_CLEANUP_STACK, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_WARN, "User-assembly ends without popping %u stack entries")
+TPP_WARNING(TPP_W_UASM_POPPED_UNRELATED_ITEMS, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "User-assembly popped %u unrelated stack entries")
 TPP_WARNING(TPP_W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Cannot perform operation with symbol")
 TPP_WARNING(TPP_W_UASM_EXPECTED_INTEXPR, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Expected an integer assembly expression, but got %Pt")
 TPP_WARNING(TPP_W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Unsupported expression for %[@%] in mnemonic operand")
@@ -563,41 +631,106 @@ TPP_WARNING(TPP_W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X, 1(TPP_WG_DEPRECATED),
 TPP_WARNING(TPP_W_ASM_SEQUENCE_TOO_LONG, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Sequence is too long")
 TPP_WARNING(TPP_W_ASM_STORE_TO_RVALUE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_WARN, "Store to r-value is assembled as an assignment. If this is intended, replace %[=%] with %[:=%]")
 TPP_WARNING(TPP_W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "%[break%] or %[continue%] are not allowed outside of a loop")
-//TODO:TPP_WARNING(TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_FATAL, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Symbol %[%s%] of class %[%s%] cannot be used in inplace operations", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_STACK_VARIABLE_NOT_INITIALIZED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Stack variable %[%s%] has not been initialized", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Stack variable %[%s%] initialized in another scope is no longer allocated", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Stack variable %[%s%] is not allocated within the proper scope", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("The owner scope of stack variable %[%s%] is not reachable", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_PROPERTY_VARIABLE_NOT_READABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Property %[%s%] cannot be read from", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Property %[%s%] cannot be written to", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_AMBIGUOUS_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
-//TODO:	size_t i;
-//TODO:	struct ast_loc const *altloc;
-//TODO:	struct symbol const *sym = ARG(struct symbol const *);
-//TODO:	char const *decl_format = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-//TODO:	                          ? "\n%s(%d,%d) : "
-//TODO:	                          : "\n%s:%d:%d: ";
-//TODO:	WARNF("Symbol %[%s%] has been declared ambiguously", SYMBOL_NAME(sym));
-//TODO:	symbol_ambig_foreach_decl(i, altloc, sym) {
-//TODO:		/*static char const nth[4][3] = { "st", "nd", "rd", "th" };*/
-//TODO:		WARNF(decl_format,
-//TODO:		      TPPFile_Filename(altloc->l_file, NULL),
-//TODO:		      altloc->l_line + 1,
-//TODO:		      altloc->l_col + 1);
-//TODO:		WARNF("See reference to %lu%s declaration",
-//TODO:		      (unsigned long)i + 1,
-//TODO:		      nth[i < 3 ? i : 3]);
-//TODO:	}
-//TODO:})
-//TODO:TPP_WARNING(TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_FATAL, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Instance member %[%k%] cannot be accessed from static function %[%s%]", sym->s_attr.a_attr->ca_name, ARG(char const *)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_CANNOT_UNBIND_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot unbind symbol %[%s%] of class %[%s%]", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot unbind undesignated stack variable %[%s%] at this time", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Deleting stack variable %[%s%] will not cause the symbol to become unbound", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_CANNOT_WRITE_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot write to symbol %[%s%] of class %[%s%]", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_EXTERNAL_SYMBOL_IS_READONLY, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot modify read-only external symbol %[%s from %s%]", SYMBOL_EXTERN_SYMBOL(sym)->ss_name, DeeModule_GetShortName(sym->s_extern.e_module)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_DISABLED, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Multiple writes to final variable %[%s%] generate additional checks", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_UNBIND_FINAL_SYMBOL, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_WARN, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Cannot delete final variable %[%s%]", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-//TODO:TPP_WARNING(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Multiple writes to final symbol %[%s%] of type %[%s%] cannot be handled", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
+TPP_WARNING_EX(TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_FATAL, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Symbol %[%s%] of class %[%s%] cannot be used in inplace operations\n",
+	                 SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_STACK_VARIABLE_NOT_INITIALIZED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Stack variable %[%s%] has not been initialized\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Stack variable %[%s%] initialized in another scope is no longer allocated\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Stack variable %[%s%] is not allocated within the proper scope\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "The owner scope of stack variable %[%s%] is not reachable\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_PROPERTY_VARIABLE_NOT_READABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Property %[%s%] cannot be read from\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Property %[%s%] cannot be written to\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_AMBIGUOUS_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	size_t i;
+	struct ast_loc const *altloc;
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Symbol %[%s%] has been declared ambiguously\n", SYMBOL_NAME(sym));
+	symbol_ambig_foreach_decl(i, altloc, sym) {
+		static char const nth[] = "st\0nd\0rd\0th";
+		tpp_lexer_printf_info info;
+		tpp_lexer_printf_info_init_lc(&info, ast_loc_getname(altloc), ast_loc_getlc(altloc));
+		tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), &info,
+		                                tpp_current_printer(), tpp_current_printer_arg(),
+		                                tpp_lexer_getfileandlineformat(tpp_current_lexer())));
+		tpp_warn_printf2(tpp_current_info(), "note: see %u%s declaration\n",
+		                 (unsigned int)i + 1, nth + (3 * (i < 3 ? i : 3)));
+	}
+})
+TPP_WARNING_EX(TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_FATAL, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	char const *function_name = tpp_current_va_arg(char const *);
+	tpp_warn_printf2(tpp_current_info(), "Instance member %[%s%] cannot be accessed from static function %[%s%]\n",
+	                 DeeString_STR(sym->s_attr.a_attr), function_name);
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_CANNOT_UNBIND_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Cannot unbind symbol %[%s%] of class %[%s%]\n", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Cannot unbind undesignated stack variable %[%s%] at this time\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Deleting stack variable %[%s%] will not cause the symbol to become unbound\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_CANNOT_WRITE_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Cannot write to symbol %[%s%] of class %[%s%]\n", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_EXTERNAL_SYMBOL_IS_READONLY, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Cannot modify read-only external symbol %[%s from %s%]\n",
+	                 SYMBOL_EXTERN_SYMBOL(sym)->ss_name, DeeModule_GetShortName(sym->s_extern.e_module));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_DISABLED, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Multiple writes to final variable %[%s%] generate additional checks\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_UNBIND_FINAL_SYMBOL, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_WARN, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Cannot delete final variable %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, 1(TPP_WG_READONLY), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf2(tpp_current_info(), "Multiple writes to final symbol %[%s%] of type %[%s%] cannot be handled\n", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 TPP_WARNING(TPP_W_ASM_MISSALIGNED_STACK, 1(TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Miss-aligned stack after expression (this might happen due to incorrectly placed initializers for %[__stack%] variables)")
 
 /*WARNING_NAMESPACE(WN_ASSEMBLER_LABLES, 8120)*/
@@ -1188,8 +1321,8 @@ DEF_WARNING(W_UASM_HASH_FLAG_ALREADY_SET_FOR_OPERAND, (WG_SYNTAX), WSTATE_ERROR,
 DEF_WARNING(W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND, (WG_SYNTAX), WSTATE_ERROR, WARNF("`$` has already been used by this operand"))
 DEF_WARNING(W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION, (WG_VALUE), WSTATE_WARN, WARNF("User-assembly does not provide a value for output operand `%s`", ARG(char const *)))
 DEF_WARNING(W_UASM_SYMBOL_ALREADY_DEFINED, (WG_SYMBOL), WSTATE_ERROR, WARNF("Assembly symbol `%s` has already been defined", ARG(char const *)))
-DEF_WARNING(W_UASM_DOESNT_CLEANUP_STACK, (WG_VALUE), WSTATE_WARN, WARNF("User-assembly ends without popping %lu stack entries", ARG(unsigned long)))
-DEF_WARNING(W_UASM_POPPED_UNRELATED_ITEMS, (WG_VALUE), WSTATE_ERROR, WARNF("User-assembly popped %lu unrelated stack entries", ARG(unsigned long)))
+DEF_WARNING(W_UASM_DOESNT_CLEANUP_STACK, (WG_VALUE), WSTATE_WARN, WARNF("User-assembly ends without popping %u stack entries", ARG(unsigned int)))
+DEF_WARNING(W_UASM_POPPED_UNRELATED_ITEMS, (WG_VALUE), WSTATE_ERROR, WARNF("User-assembly popped %u unrelated stack entries", ARG(unsigned int)))
 DEF_WARNING(W_UASM_CANNOT_PERFORM_OPERATION_WITH_SYMBOL, (WG_VALUE), WSTATE_ERROR, WARNF("Cannot perform operation with symbol"))
 DEF_WARNING(W_UASM_EXPECTED_INTEXPR, (WG_VALUE), WSTATE_ERROR, WARNF("Expected an integer assembly expression, but got " TOK_S, TOK_A))
 DEF_WARNING(W_UASM_UNSUPPORTED_EXPRESSION_FOR_AT_OPERAND, (WG_VALUE), WSTATE_ERROR, WARNF("Unsupported expression for `@` in mnemonic operand"))

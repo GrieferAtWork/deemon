@@ -27,13 +27,13 @@
 #include <deemon/code.h>             /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>     /* ASSERT_AST, AST_*, ast, ast_*, class_member */
 #include <deemon/compiler/doctext.h> /* doctext_compile */
-#include <deemon/compiler/lexer.h>   /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags */
-#include <deemon/compiler/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, DeeLexer_IsIdentifier, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
+#include <deemon/compiler/lexer.h>   /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags_block */
+#include <deemon/compiler/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>           /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>             /* Dee_None */
 #include <deemon/object.h>           /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */
-#include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
+#include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
 #include <deemon/type.h>             /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
@@ -1694,9 +1694,7 @@ next_modifier:
 
 		case '@':
 			/* Allow tags in class blocks. */
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-				goto err_lbrace_flags;
-			if unlikely(parse_tags(self))
+			if unlikely(parse_tags_block(self))
 				goto err_lbrace_flags;
 			modifiers_encountered = true;
 			goto next_modifier;

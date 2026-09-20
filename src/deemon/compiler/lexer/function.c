@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, DeeLexer_IsIdentifier, new_local_symbol, new_unnamed_symbol, symbol */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, new_local_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
@@ -902,6 +902,16 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO: Since this is its own stand-alone function, it should not use the
+	 *       same trick as `peek_token_after_decl_ast_skip()` -- instead, it
+	 *       should be re-implemented as a state machine built into a callback
+	 *       used with `tpp_lexer_peek_raw()` -- that way, this'll also work
+	 *       when popping out of macros (it'll only be unable to deal with
+	 *       going into macros)
+	 */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct TPPLexerPosition pos;
 	if (!DeeLexer_HasTokenKwd(self)) {
 		if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {

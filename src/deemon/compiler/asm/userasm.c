@@ -39,7 +39,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, int32_t, int64_t, intptr_t, uintN_t, uintptr_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>         /* ASM_*, DeeAsm_NextInstrEf, instruction_t */
@@ -2583,13 +2583,13 @@ create_assembly_file:
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
 				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_DOESNT_CLEANUP_STACK,
-				                   (unsigned long)(current_assembler.a_stackcur -
-				                                   old_state.as_stackcur)))
+				                   (unsigned int)(current_assembler.a_stackcur -
+				                                  old_state.as_stackcur)))
 					goto err;
 			} else {
 				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
-				                   (unsigned long)(old_state.as_stackcur -
-				                                   current_assembler.a_stackcur)))
+				                   (unsigned int)(old_state.as_stackcur -
+				                                  current_assembler.a_stackcur)))
 					goto err;
 			}
 		}

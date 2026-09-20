@@ -30,7 +30,7 @@
 #include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
 #include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
 #include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
-#include "../string.h"          /* DeeAscii_*, DeeUni_* */
+#include "../string.h"          /* DeeAscii_*, DeeString_NewUtf8, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
 #include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
 #include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, bzero, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, strchr, strlen */
 #include "../system.h"          /* DeeSystem_* */
@@ -39,7 +39,9 @@
 #include "../util/atomic.h"     /* Dee_atomic_* */
 #include "../util/once.h"       /* Dee_ONCE */
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "lexer.h"              /* PARSE_FLFSTMT, parser_flags */
+#include "compiler.h" /* DeeCompilerObject, DeeCompiler_Current */
+#include "lexer.h"    /* PARSE_FLFSTMT, parser_flags */
+#include "symbol.h"   /* symbol */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
@@ -678,6 +680,8 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_XML_ENTITY_PRINTNEAREST             1
 #define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST         1
 #define TPP_HAVE_DECODE_NAMED_PRINTNEAREST           1
+#define TPP_HAVE_TOKEN_NUMBER                        1
+#define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
 
 #define TPP_HAVE_CLI                              1
 #define TPP_HAVE_CLI_HELP                         1
@@ -714,8 +718,6 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_CLI_SETINPUTS                    1
 #define TPP_HAVE_CLI_SETINPUTS_DASH               1
 #define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH    1
-
-#define TPP_HAVE_STATIC_EMPTY_STRING 0
 
 /************************************************************************/
 /* MAKEFILE                                                             */
@@ -877,7 +879,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, true */
-#include <stddef.h>  /* NULL, ptrdiff_t, size_t */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint32_t */
 
 #ifdef GUARD_TPP_H
@@ -1329,7 +1331,8 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 	}	__WHILE0
 
 
-
+struct ast;
+struct symbol;
 #define DeeLexer_Warnf(self, ...)                       TPP_ISERR(tpp_lexer_warnf(&(self)->dl_lexer, __VA_ARGS__))
 #define DeeLexer_VWarnf(self, id, args)                 TPP_ISERR(tpp_lexer_vwarnf(&(self)->dl_lexer, id, args))
 #define DeeLexer_WarnfAt(self, file, pos, ...)          TPP_ISERR(tpp_lexer_warnf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
@@ -1347,11 +1350,18 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void c
 
 /* Static TPP Hooks */
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
-INTDEF Dee_ssize_t TPPCALL DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
-INTDEF Dee_ssize_t TPPCALL DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
 
+/* Print a line `{tpp_lexer_getfileandlineformat}note: see declaration of {SYMBOL_NAME(sym)}\n`,
+ * but only if `!ast_loc_isempty(&sym->s_decl)`. Returns the usual sum-of-calls-to-printer.
+ *
+ * Used by custom warning printers to allow them to reference symbol declaration locations. */
+INTDEF WUNUSED NONNULL((1, 2)) tpp_ssize TPPCALL
+DeeLexer_PrintSymbolDeclaration(tpp_lexer const *self, struct symbol const *__restrict sym,
+                                tpp_formatprinter printer, void *arg);
 
 #define DeeLexer_Skip(self, expected_tok) \
 	tpp_lexer_skip(&(self)->dl_lexer, expected_tok)

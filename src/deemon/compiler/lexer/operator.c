@@ -29,8 +29,9 @@
 #include <deemon/compiler/symbol.h> /* SYMBOL_TYPE_EXTERN, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_AsUInt16 */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */
-#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Incref */
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeTypeType_GetOperatorByNameLen, Dee_operator_t, Dee_opinfo, OPERATOR_* */

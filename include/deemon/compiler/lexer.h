@@ -656,18 +656,10 @@ ast_annotations_apply(struct ast_annotations *__restrict self,
 
 
 /* Parse tags at the current lexer position, starting
- * immediately after the (probably) `@` token.
+ * immediately at the `@` token.
  * >> @doc("foo"), doc("bar")
- *     ^                     ^
- *     entry                 exit
- * Note that for backwards compatibility, deemon still
- * parses `__attribute__`, `__attribute` and `__declspec`
- * using this function. */
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-parse_tags(DeeLexer *self);
-
-/* Same as `parse_tags()`, but also parses the leading `@`
- * token and doesn't do anything if that token wasn't found. */
+ *    ^                      ^
+ *    entry                  exit */
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 parse_tags_block(DeeLexer *self);
 

@@ -27,17 +27,17 @@
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>    /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, current_basescope, current_scope, decl_ast_skip, get_current_this, DeeLexer_IsIdentifier, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
+#include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* DeeFloat_New */
-#include <deemon/int.h>               /* DeeInt_FromString, DeeInt_NewInt64, Dee_INT_STRING* */
+#include <deemon/int.h>               /* DeeIntObject, DeeInt_*, Dee_INT_STRING* */
 #include <deemon/module.h>            /* DeeModule* */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_AsUInt, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_DONE */
-#include <deemon/string.h>            /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
+#include <deemon/string.h>            /* DeeString_NewSized */
 #include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memchr, memmoveupc */
+#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memmoveupc */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
 #include <deemon/type.h>              /* Dee_operator_t, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
 
@@ -755,8 +755,80 @@ err:
 	return -1;
 }
 
+/* Peek the token that comes after `decl_ast_skip()` */
 PRIVATE WUNUSED NONNULL((1)) tpp_token_id DFCALL
 peek_token_after_decl_ast_skip(DeeLexer *self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_token_id result;
+	tpp_char const *colon_ptr;
+	tpp_file *const file = DeeLexer_GetFile(self);
+	tpp_size rel_colon_ptr;
+
+	/* Prevent going out of the current file */
+	tpp_lexer_autopopfile_pushoff(&self->dl_lexer);
+
+	/* Prevent macro expansion and directives (essentially
+	 * turning `tpp_lexer_yield()` into `tpp_lexer_yieldraw()`) */
+	tpp_lexer_pushfeatures(&self->dl_lexer);
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_MACROS);
+
+	/* Prevent warnings being emitted */
+	tpp_lexer_nowarnings_pushon(&self->dl_lexer);
+
+	/* Save the current token number. */
+	tpp_lexer_pushtokennum(&self->dl_lexer);
+
+	/* Ensure that text doesn't get unloaded (so we can always roll back)
+	 * At the same time, configure the file to keep everything that makes
+	 * up the currently loaded token (which is a `:`-token) in-memory. */
+	colon_ptr = DeeLexer_GetTokenStart(self);
+	ASSERT(colon_ptr == tpp_file_getlastpos(file));
+	ASSERT(*colon_ptr == ':');
+	ASSERT(DeeLexer_GetTok(self) == ':');
+	ASSERT(DeeLexer_GetTokenLen(self) == 1);
+	tpp_file_pushkeep(file, colon_ptr);
+
+	/* Get a persistent descriptor for the in-memory offset of the `:`-token,
+	 * which we can later use to restore the current token once all is said
+	 * and done. */
+	rel_colon_ptr = tpp_file_keep_ptr2rel(file, colon_ptr);
+
+	/* Yield to whatever comes after the `:`-token.
+	 * Still use `DeeLexer_Yield()` since we need its (or rather:  */
+	result = DeeLexer_Yield(self);
+	if (!TPP_TOK_ISERR(result)) {
+		/* Actually do the job of skipping a decl-ast token-sequence. */
+		if unlikely(decl_ast_skip(self)) {
+			result = TPP_TOK_EDEEMON;
+		} else {
+			/* decl-ast sequence skipped -> see what the current token is! */
+			result = DeeLexer_GetTok(self);
+		}
+	}
+
+	/* At the end, restore the current token as a 1-byte `:`-token
+	 * located at `tpp_file_keep_rel2ptr(rel_collon_ptr)` (do this
+	 * using `tpp_token_setrange()`)
+	 *
+	 * With all of this, we're able to temporarily pre-parse the contents
+	 * of the current file to check what's up ahead. However, this doesn't
+	 * support the case where (syntactically relevant) parts of the decl
+	 * expression are hidden inside of macros :(  (i.e. you could still
+	 * use macros where keywords are also accepted in decl expressions,
+	 * but not for stuff like substituting unmatched `)` or-the-like) */
+	colon_ptr = tpp_file_keep_rel2ptr(file, rel_colon_ptr);
+	DeeLexer_SetTokenRange(self, colon_ptr, colon_ptr + 1);
+	DeeLexer_SetTokenId(self, TPP_TOK_OFCHAR(':'));
+
+	/* Pop context... */
+	tpp_file_popkeep(file);
+	tpp_lexer_poptokennum(&self->dl_lexer);
+	tpp_lexer_nowarnings_pop(&self->dl_lexer);
+	tpp_lexer_popfeatures(&self->dl_lexer);
+	tpp_lexer_autopopfile_pop(&self->dl_lexer);
+	return result;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	tpp_token_id result;
 	struct TPPLexerPosition pos;
 	if unlikely(!TPPLexer_SavePosition(&pos))
@@ -772,6 +844,7 @@ err_restore_pos:
 	TPPLexer_LoadPosition(&pos);
 err:
 	return TPP_TOK_EDEEMON;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 

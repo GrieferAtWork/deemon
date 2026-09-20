@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>     /* AST_*, ast, ast_* */
 #include <deemon/compiler/doctext.h> /* doctext_compile */
 #include <deemon/compiler/lexer.h>   /* ASTLIST_INIT, AST_COMMA_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, ast_*, astlist, current_tags, maybe_expression_begin, maybe_expression_begin_peek */
-#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, DeeLexer_IsIdentifier, lookup_symbol, new_local_symbol, symbol, symbol_incref */
+#include <deemon/compiler/symbol.h>  /* DAST_*, DeeScopeObject, LOOKUP_SYM_*, SYMBOL_*, basescope_pop, basescope_push, current_basescope, current_rootscope, current_scope, decl_ast*, get_local_symbol, lookup_symbol, new_local_symbol, symbol, symbol_incref */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>           /* DREF, Dee_Incref */
 #include <deemon/string.h>           /* DeeStringObject */

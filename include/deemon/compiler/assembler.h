@@ -56,7 +56,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INT8_MIN, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* INT8_MIN, UINT16_MAX, int8_t, int16_t, int32_t, intptr_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

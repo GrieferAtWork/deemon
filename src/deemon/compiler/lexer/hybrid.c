@@ -69,9 +69,9 @@ ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
-			unsigned long token_num = TPPLexer_Current->l_token.t_num;
+			tpp_token_num token_num = tpp_lexer_gettokennum(&self->dl_lexer);
 			result = ast_parse_postexpr(self, result);
-			if (token_num != TPPLexer_Current->l_token.t_num)
+			if (token_num != tpp_lexer_gettokennum(&self->dl_lexer))
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
 		if (p_was_expression)
@@ -353,11 +353,11 @@ parse_remainder_before_rbrace_popscope_wrap:
 		if (DeeLexer_GetTok(self) == '}')
 			goto parse_remainder_before_rbrace_popscope_wrap;
 		{
-			unsigned long token_num = TPPLexer_Current->l_token.t_num;
+			tpp_token_num token_num = tpp_lexer_gettokennum(&self->dl_lexer);
 			result = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err;
-			if (token_num != TPPLexer_Current->l_token.t_num)
+			if (token_num != tpp_lexer_gettokennum(&self->dl_lexer))
 				goto check_recursion_after_expression_suffix;
 		}
 #if 0

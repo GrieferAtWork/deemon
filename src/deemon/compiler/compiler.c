@@ -36,10 +36,10 @@
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
 #include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
-#include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
-#include <deemon/system-features.h>    /* bzero, memcpy, memset */
+#include <deemon/string.h>             /* DeeString_AsUtf8, DeeString_Type, Dee_unicode_printer_fini, WSTR_LENGTH */
+#include <deemon/system-features.h>    /* bzero, memcpy*, memset */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, type_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
 #include <deemon/util/weakref.h>       /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */

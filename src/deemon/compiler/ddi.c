@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemoryoc, Dee_Free, Dee_Malloc, Dee_Reallocc */
+#include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemoryoc, Dee_Free */
 #include <deemon/asm.h>                /* DDI_* */
 #include <deemon/code.h>               /* DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, Dee_DDI_EXDAT_*, Dee_ddi_exdat, code_addr_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, DDI_BINDING_CLASS_LOCAL, current_assembler, ddi_binding, ddi_checkpoint */
@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/object.h>             /* DREF, return_reference_ */
 #include <deemon/string.h>             /* DeeStringObject, Dee_ascii_printer* */
-#include <deemon/system-features.h>    /* DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy* */
 #include <deemon/system.h>             /* DeeSystem_BaseName */
 #include <deemon/type.h>               /* DeeObject_InitStatic */
 #include <deemon/util/bytewriter.h>    /* Dee_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_*, bytewriter_fini */
