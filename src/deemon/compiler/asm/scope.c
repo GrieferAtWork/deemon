@@ -61,7 +61,7 @@ check_symbol:
 		//case SYMBOL_TYPE_MYFUNC:
 		//case SYMBOL_TYPE_THIS:
 		if (sym->s_flag & SYMBOL_FFINAL) {
-			if (ASM_WARN(W_WRITE_TO_FINAL_VARIABLE, sym))
+			if (ASM_WARN(TPP_W_WRITE_TO_FINAL_VARIABLE, sym))
 				goto err;
 		}
 		lid = asm_newlocal();
@@ -411,7 +411,7 @@ INTERN WUNUSED NONNULL((1)) int
 		++wnt_sp;
 	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
-		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
+		result = WARNAST(self, TPP_W_ASM_MISSALIGNED_STACK);
 		if (result)
 			goto done;
 		result = readjust_stack_after_bad_init(wnt_sp);
@@ -433,7 +433,7 @@ INTERN WUNUSED NONNULL((1)) int
 		++wnt_sp;
 	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
-		result = WARNAST(self, W_ASM_MISSALIGNED_STACK);
+		result = WARNAST(self, TPP_W_ASM_MISSALIGNED_STACK);
 		if (result)
 			goto done;
 		result = readjust_stack_after_bad_init(wnt_sp);

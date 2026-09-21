@@ -31,7 +31,7 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
 #include <deemon/compiler/assembler.h> /* ASM_* */
-#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt, _DeeLexer_Current */
 #include <deemon/compiler/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
 #include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */

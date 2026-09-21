@@ -25,7 +25,7 @@
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>             /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/compiler/ast.h>      /* ast */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_Current, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* parser_errors */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, symbol */
 #include <deemon/compiler/tpp.h>

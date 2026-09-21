@@ -26,6 +26,7 @@
 #include <deemon/code.h>               /* Dee_CODE_FASSEMBLY, Dee_CODE_FYIELDING, code_addr_t, instruction_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, INVOKE_FPREFIX, INVOKE_FPUSH, OPERAND_CLASS_*, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, R_DMN_*, USERLABEL_PREFIX, USER_ASM_FSTKINV, asm_*, ast_genasm, ast_genasm_one, current_assembler, current_userasm, uasm_parse */
 #include <deemon/compiler/ast.h>       /* AST_*, asm_operand, ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/error.h>     /* BEGIN_PARSER_CALLBACK, END_PARSER_CALLBACK, parser_rethrow, parser_start */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
 #include <deemon/compiler/tpp.h>
@@ -45,7 +46,7 @@
 #include <deemon/asm.h>         /* ASM_*, DeeAsm_NextInstrEf, instruction_t */
 #include <deemon/bool.h>        /* DeeBool* */
 #include <deemon/dict.h>        /* DeeDictObject, DeeDict_*, _DeeDict_GetVirtVTab */
-#include <deemon/format.h>      /* Dee_sprintf, PRF* */
+#include <deemon/format.h>      /* DeeFormat_Printf, Dee_sprintf, PRF* */
 #include <deemon/hashset.h>     /* DeeHashSet_Type */
 #include <deemon/int.h>         /* DeeInt_* */
 #include <deemon/list.h>        /* DeeList_Type */
@@ -1370,7 +1371,7 @@ struct cleanup_mode {
 	DBG_memset(sym, 0xcc, sizeof(struct symbol))
 #define INITIALIZE_FAKE_LOCAL_SYMBOL(sym, lid)               \
 	(DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym),                  \
-	 (sym)->s_decl.l_file = NULL,                            \
+	 ast_loc_init_empty(&(sym)->s_decl),                     \
 	 (sym)->s_scope   = (DeeScopeObject *)current_basescope, \
 	 (sym)->s_nread   = (sym)->s_nwrite = 1,                 \
 	 (sym)->s_nbound  = 0,                                   \
@@ -1996,7 +1997,7 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_ANYTHING_OLD:
-		if (WARNAST(self, W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X))
+		if (WARNAST(self, TPP_W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X))
 			goto err;
 		ATTR_FALLTHROUGH
 	case ASM_OP_ANYTHING:
@@ -2030,10 +2031,14 @@ err_undefined_mode:
 }
 
 struct assembly_formatter {
-	struct ast            *af_ast;     /* [1..1] The user-assembly ast. */
-	struct Dee_ascii_printer   af_printer; /* Printer for the resulting assembly text. */
-	DREF DeeStringObject **af_opreprv; /* [1..1][af_ast->a_assembly.as_opc][owned]
-	                                    * Vector of pre-allocated operand representations. */
+	struct ast              *af_ast;     /* [1..1] The user-assembly ast. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_string_builder       af_printer; /* Printer for the resulting assembly text. */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	struct Dee_ascii_printer af_printer; /* Printer for the resulting assembly text. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	DREF DeeStringObject   **af_opreprv; /* [1..1][af_ast->a_assembly.as_opc][owned]
+	                                      * Vector of pre-allocated operand representations. */
 };
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2046,15 +2051,33 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 	for (; iter < end; ++iter)
 		Dee_XDecref(*iter);
 	Dee_Free(self->af_opreprv);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_string_builder_fini(&self->af_printer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	Dee_ascii_printer_fini(&self->af_printer);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) TPP_REF tpp_string *DCALL
-assembly_formatter_format(struct assembly_formatter *__restrict self,
-                          struct TPPString const *__restrict input) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) TPP_REF tpp_string *DCALL
+assembly_formatter_format(DeeLexer *lexer,
+                          struct assembly_formatter *__restrict self,
+                          tpp_string const *__restrict input) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define print(p, s)                                                          \
+	do {                                                                     \
+		if unlikely(tpp_string_builder_doprint(&self->af_printer, p, s) < 0) \
+			goto err;                                                        \
+	}	__WHILE0
+#define printf(...)                                                       \
+	do {                                                                  \
+		if unlikely(DeeFormat_Printf(&tpp_string_builder_print,           \
+		                             &self->af_printer, __VA_ARGS__) < 0) \
+			goto err;                                                     \
+	}	__WHILE0
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define print(p, s)                                                       \
 	do {                                                                  \
 		if unlikely(Dee_ascii_printer_print(&self->af_printer, p, s) < 0) \
@@ -2065,11 +2088,13 @@ assembly_formatter_format(struct assembly_formatter *__restrict self,
 		if unlikely(Dee_ascii_printer_printf(&self->af_printer, __VA_ARGS__) < 0) \
 			goto err;                                                             \
 	}	__WHILE0
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	char const *iter, *end, *flush_start;
 	char ch;
 	TPP_REF tpp_string *result;
 	bool has_paren;
-	end = (iter = flush_start = input->s_text) + input->s_size;
+	iter = flush_start = tpp_string_cstr(input);
+	end = iter + tpp_string_len(input);
 next:
 	ASSERT(iter <= end);
 	ch = *iter++;
@@ -2128,7 +2153,8 @@ next:
 				} while (DeeUni_IsSymCont(ch));
 
 				/* Lookup the name of the operand. */
-				name = TPPLexer_LookupKeyword(name_start, (size_t)(iter - name_start) - 1, 0);
+				name = DeeLexer_GetKeyword(lexer, (tpp_char const *)name_start,
+				                           (size_t)(iter - name_start) - 1);
 				if unlikely(!name) {
 err_unknown_operand:
 					DeeError_Throwf(&DeeError_CompilerError,
@@ -2212,6 +2238,14 @@ done_special:
 	if (flush_start < iter)
 		print(flush_start, (size_t)(iter - flush_start));
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	{
+		TPP_REF tpp_string *result;
+		result = tpp_string_builder_pack(&self->af_printer);
+		tpp_string_builder_init(&self->af_printer); /* Re-init because caller always finalizes */
+		return result;
+	}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* Special case: empty assembly text. */
 	if (!self->af_printer.ap_length) {
 		DeeObject_Free(self->af_printer.ap_string);
@@ -2224,27 +2258,28 @@ done_special:
 	                     self->af_printer.ap_length);
 #else /* CONFIG_OBJECT_HEAP_ISNT_MALLOC */
 	/* Convert the string printer into a TPP-style string. */
-	result = (struct TPPString *)self->af_printer.ap_string;
-	__STATIC_IF(offsetof(struct TPPString, s_text) > offsetof(DeeStringObject, s_str)) {
-		memmoveupc((void *)((uintptr_t)result + offsetof(struct TPPString, s_text)),
+	result = (tpp_string *)self->af_printer.ap_string;
+	__STATIC_IF(offsetof(tpp_string, s_text) > offsetof(DeeStringObject, s_str)) {
+		memmoveupc((void *)((uintptr_t)result + offsetof(tpp_string, s_text)),
 		           (void *)((uintptr_t)result + offsetof(DeeStringObject, s_str)),
 		           self->af_printer.ap_length + 1, sizeof(char));
 	}
-	__STATIC_IF(offsetof(struct TPPString, s_text) < offsetof(DeeStringObject, s_str)) {
-		memmovedownc((void *)((uintptr_t)result + offsetof(struct TPPString, s_text)),
+	__STATIC_IF(offsetof(tpp_string, s_text) < offsetof(DeeStringObject, s_str)) {
+		memmovedownc((void *)((uintptr_t)result + offsetof(tpp_string, s_text)),
 		             (void *)((uintptr_t)result + offsetof(DeeStringObject, s_str)),
 		             self->af_printer.ap_length + 1, sizeof(char));
 	}
 	result->s_refcnt = 1;
 	result->s_size = self->af_printer.ap_length;
-	result = (struct TPPString *)Dee_TryReallococ(result, offsetof(struct TPPString, s_text),
+	result = (tpp_string *)Dee_TryReallococ(result, offsetof(tpp_string, s_text),
 	                                              self->af_printer.ap_length + 1, sizeof(char));
 	if unlikely(!result)
-		result = (struct TPPString *)self->af_printer.ap_string;
+		result = (tpp_string *)self->af_printer.ap_string;
 	self->af_printer.ap_string = NULL;
 	result->s_text[result->s_size] = '\0';
 	return result;
 #endif /* !CONFIG_OBJECT_HEAP_ISNT_MALLOC */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 err:
 	return NULL;
 #undef printf
@@ -2257,19 +2292,19 @@ ast_genasm_userasm(struct ast *__restrict self) {
 	struct assembler_state old_state;
 	int result;
 	TPP_REF tpp_string *assembly_text;
-	/*ref*/ struct TPPFile *assembly_file;
-	/*ref*/ struct TPPFile *old_eob;
 	struct asm_operand *iter;
 	size_t i, count;
 	struct cleanup_mode *cleanup_actions = NULL, *cleanup_dst;
-	uint32_t old_lexer_flags, old_lexer_tokens;
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
 
 	/* Save the assembler state before user-assembly is processed. */
 	old_state.as_handlerc = current_assembler.a_handlerc;
 	old_state.as_stackcur = current_assembler.a_stackcur;
 	ASSERT(self->a_type == AST_ASSEMBLY);
 	ASSERT(self->a_assembly.as_text.at_text);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	ASSERT(self->a_assembly.as_text.at_text->s_refcnt);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Keep track of operands that must be popped during cleanup. */
 	if (self->a_assembly.as_num_o ||
@@ -2291,7 +2326,11 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		                                                            sizeof(DREF DeeStringObject *));
 		if unlikely(!formatter.af_opreprv)
 			goto err;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		tpp_string_builder_init(&formatter.af_printer);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		Dee_ascii_printer_init(&formatter.af_printer);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 		/* Generate text representations of assembly operands. */
 		dst         = formatter.af_opreprv;
@@ -2302,7 +2341,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		/* Format output operands. */
 		for (; count; --count, ++dst, ++iter, ++cleanup_dst) {
 			*dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
-			                                                             iter->ao_type->s_text,
+			                                                             tpp_string_cstr(iter->ao_type),
 			                                                             OPTION_MODE_UNDEF,
 			                                                             cleanup_dst, &old_state);
 			if unlikely(!*dst)
@@ -2313,7 +2352,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		count = self->a_assembly.as_num_i;
 		for (; count; --count, ++dst, ++iter, ++cleanup_dst) {
 			*dst = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
-			                                                             iter->ao_type->s_text,
+			                                                             tpp_string_cstr(iter->ao_type),
 			                                                             OPTION_MODE_INPUT,
 			                                                             cleanup_dst, &old_state);
 			if unlikely(!*dst)
@@ -2329,11 +2368,11 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		}
 
 		/* Format the input text to what will then be processed. */
-		assembly_text = assembly_formatter_format(&formatter,
+		assembly_text = assembly_formatter_format(lexer, &formatter,
 		                                          self->a_assembly.as_text.at_text);
 		assembly_formatter_fini(&formatter);
 		if unlikely(!assembly_text)
-			goto err;
+			goto err_formatter;
 		goto create_assembly_file;
 err_formatter:
 		assembly_formatter_fini(&formatter);
@@ -2353,7 +2392,7 @@ err_formatter:
 	for (; count; --count, ++iter, ++cleanup_dst) {
 		DREF DeeStringObject *temp;
 		temp = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
-		                                                             iter->ao_type->s_text,
+		                                                             tpp_string_cstr(iter->ao_type),
 		                                                             OPTION_MODE_UNDEF,
 		                                                             cleanup_dst, &old_state);
 		if unlikely(!temp)
@@ -2366,7 +2405,7 @@ err_formatter:
 	for (; count; --count, ++iter, ++cleanup_dst) {
 		DREF DeeStringObject *temp;
 		temp = (DREF DeeStringObject *)get_assembly_formatter_oprepr(iter->ao_expr,
-		                                                             iter->ao_type->s_text,
+		                                                             tpp_string_cstr(iter->ao_type),
 		                                                             OPTION_MODE_INPUT,
 		                                                             cleanup_dst, &old_state);
 		if unlikely(!temp)
@@ -2380,140 +2419,150 @@ err_formatter:
 
 	assembly_text = self->a_assembly.as_text.at_text;
 	tpp_string_incref(assembly_text);
-create_assembly_file:
-	assembly_file = TPPFile_NewExplicitInherited(assembly_text);
-	if unlikely(!assembly_file)
-		goto err_text;
-
-	/* Push out assembly file. */
-	TPPLexer_PushFileInherited(assembly_file);
-
-	/* Configure the lexer so that it will not attempt to pop our file, or
-	 * even try to read more data from it (considering it isn't a stream). */
-	old_eob                      = TPPLexer_Current->l_eob_file;
-	TPPLexer_Current->l_eob_file = assembly_file;
-
-	/* Configure the lexer for assembly mode. */
-	old_lexer_flags  = TPPLexer_Current->l_flags;
-	old_lexer_tokens = TPPLexer_Current->l_extokens;
-	TPPLexer_Current->l_flags &= (TPPLEXER_FLAG_MSVC_MESSAGEFORMAT |
-	                              TPPLEXER_FLAG_MERGEMASK);
-	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTLF |
-	                              TPPLEXER_FLAG_TERMINATE_STRING_LF |
-	                              /*TPPLEXER_FLAG_NO_MACROS|
-	                              TPPLEXER_FLAG_NO_DIRECTIVES|*/
-	                              TPPLEXER_FLAG_ASM_COMMENTS);
-
-	/* Enable the $-token, as well as C and C++ comments. */
-	TPPLexer_Current->l_extokens = (TPPLEXER_TOKEN_DOLLAR |
-	                                TPPLEXER_TOKEN_C_COMMENT |
-	                                TPPLEXER_TOKEN_CPP_COMMENT);
-
-	/* Reset various parts of the active lexer
-	 * context, such as user-defined macros, etc.
-	 * NOTE: Since the caller won't actually be using macros and the like
-	 *       any more, we are safe to do this without concerns about other
-	 *       parts of the compilation process (which are already done)
-	 *       With that in mind, resetting all of that stuff here will
-	 *       make it look like every user-assembly component is being
-	 *       executed in a kind-of sub-space that is independent from
-	 *       all the other parts. */
-	TPPLexer_Reset(TPPLexer_Current,
-	               (TPPLEXER_RESET_ESTATE | TPPLEXER_RESET_ESTACK |
-	                TPPLEXER_RESET_WSTATE | TPPLEXER_RESET_WSTACK |
-	                TPPLEXER_RESET_MACRO | TPPLEXER_RESET_ASSERT |
-	                TPPLEXER_RESET_KWDFLAGS | TPPLEXER_RESET_COUNTER |
-	                TPPLEXER_RESET_FONCE));
-
-	/* Clear out the last-written user-assembly instruction. */
-	current_userasm.ua_lasti = ASM_DELOP;
-
-	/* Actually parse user-assembly. */
-	BEGIN_PARSER_CALLBACK();
 	{
-		/* Configure to use user-labels defined through operands. */
-		struct asm_sec *old_section;
-		uint16_t old_flags        = current_userasm.ua_flags;
-		DeeScopeObject *old_scope = current_scope;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		/* TODO: Must still re-use the host compiler's lexer because `tpp_keyword`
+		 *       inside of custom assembly must share the same namespace (and
+		 *       lifetime) as the actual lexer! */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		/*ref*/ struct TPPFile *assembly_file;
+		/*ref*/ struct TPPFile *old_eob;
+		uint32_t old_lexer_flags, old_lexer_tokens;
+create_assembly_file:
+		assembly_file = TPPFile_NewExplicitInherited(assembly_text);
+		if unlikely(!assembly_file)
+			goto err_text;
 
-		/* Re-activate the scope of this branch. */
-		current_scope = self->a_scope;
-		ASSERT(current_basescope == current_scope->s_base);
-		ASSERT(current_rootscope == current_basescope->bs_root);
-		current_userasm.ua_flags = self->a_flag;
+		/* Push out assembly file. */
+		TPPLexer_PushFileInherited(assembly_file);
 
-		/* Save the old current-section. */
-		old_section = current_assembler.a_curr;
+		/* Configure the lexer so that it will not attempt to pop our file, or
+		 * even try to read more data from it (considering it isn't a stream). */
+		old_eob = TPPLexer_Current->l_eob_file;
+		TPPLexer_Current->l_eob_file = assembly_file;
+
+		/* Configure the lexer for assembly mode. */
+		old_lexer_flags  = TPPLexer_Current->l_flags;
+		old_lexer_tokens = TPPLexer_Current->l_extokens;
+		TPPLexer_Current->l_flags &= (TPPLEXER_FLAG_MSVC_MESSAGEFORMAT |
+		                              TPPLEXER_FLAG_MERGEMASK);
+		TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTLF |
+		                              TPPLEXER_FLAG_TERMINATE_STRING_LF |
+		                              /*TPPLEXER_FLAG_NO_MACROS|
+		                              TPPLEXER_FLAG_NO_DIRECTIVES|*/
+		                              TPPLEXER_FLAG_ASM_COMMENTS);
+
+		/* Enable the $-token, as well as C and C++ comments. */
+		TPPLexer_Current->l_extokens = (TPPLEXER_TOKEN_DOLLAR |
+		                                TPPLEXER_TOKEN_C_COMMENT |
+		                                TPPLEXER_TOKEN_CPP_COMMENT);
+
+		/* Reset various parts of the active lexer
+		 * context, such as user-defined macros, etc.
+		 * NOTE: Since the caller won't actually be using macros and the like
+		 *       any more, we are safe to do this without concerns about other
+		 *       parts of the compilation process (which are already done)
+		 *       With that in mind, resetting all of that stuff here will
+		 *       make it look like every user-assembly component is being
+		 *       executed in a kind-of sub-space that is independent from
+		 *       all the other parts. */
+		TPPLexer_Reset(TPPLexer_Current,
+		               (TPPLEXER_RESET_ESTATE | TPPLEXER_RESET_ESTACK |
+		                TPPLEXER_RESET_WSTATE | TPPLEXER_RESET_WSTACK |
+		                TPPLEXER_RESET_MACRO | TPPLEXER_RESET_ASSERT |
+		                TPPLEXER_RESET_KWDFLAGS | TPPLEXER_RESET_COUNTER |
+		                TPPLEXER_RESET_FONCE));
+
+		/* Clear out the last-written user-assembly instruction. */
+		current_userasm.ua_lasti = ASM_DELOP;
+
+		/* Actually parse user-assembly. */
+		BEGIN_PARSER_CALLBACK();
 		{
-			size_t old_user_label_c;
-			struct asm_operand *old_user_label_v;
-			old_user_label_c          = current_userasm.ua_labelc;
-			old_user_label_v          = current_userasm.ua_labelv;
-			current_userasm.ua_labelc = self->a_assembly.as_num_l;
-			current_userasm.ua_labelv = self->a_assembly.as_opv +
-			                            (self->a_assembly.as_num_i +
-			                             self->a_assembly.as_num_o);
-			parser_start();
-			if (TPP_TOK_ISERR(DeeLexer_Yield(_DeeLexer_Current))) {
-				result = -1;
-			} else {
-				/* TODO: Use nested lexer under `CONFIG_EXPERIMENTAL_USE_TPP3` */
-				result = uasm_parse(_DeeLexer_Current);
-			}
-			current_userasm.ua_labelc = old_user_label_c;
-			current_userasm.ua_labelv = old_user_label_v;
-		}
+			/* Configure to use user-labels defined through operands. */
+			struct asm_sec *old_section;
+			uint16_t old_flags        = current_userasm.ua_flags;
+			DeeScopeObject *old_scope = current_scope;
 
-		/* Emit one last symbol to prevent peephole at the end
-		 * of user-assembly when the `volatile` bit is set. */
-		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
-		    (current_assembler.a_flag & ASM_FPEEPHOLE) && !result) {
-			struct asm_sym *volatile_sym = asm_newsym();
-			if unlikely(!volatile_sym)
-				result = -1;
-			asm_defsym(volatile_sym);
-			++volatile_sym->as_used; /* Intentionally left dangling. */
-		}
-		if (!result &&
-		    current_assembler.a_curr != old_section) {
-			/* Generate a jump to the proper section. */
-			struct asm_sym *temp = asm_newsym();
-			if unlikely(!temp) {
-				result = -1;
-			} else {
-				result = asm_gjmp(ASM_JMP, temp);
-				current_assembler.a_curr = old_section;
-				asm_defsym(temp);
+			/* Re-activate the scope of this branch. */
+			current_scope = self->a_scope;
+			ASSERT(current_basescope == current_scope->s_base);
+			ASSERT(current_rootscope == current_basescope->bs_root);
+			current_userasm.ua_flags = self->a_flag;
+
+			/* Save the old current-section. */
+			old_section = current_assembler.a_curr;
+			{
+				size_t old_user_label_c;
+				struct asm_operand *old_user_label_v;
+				old_user_label_c          = current_userasm.ua_labelc;
+				old_user_label_v          = current_userasm.ua_labelv;
+				current_userasm.ua_labelc = self->a_assembly.as_num_l;
+				current_userasm.ua_labelv = self->a_assembly.as_opv +
+				                            (self->a_assembly.as_num_i +
+				                             self->a_assembly.as_num_o);
+				parser_start();
+				if (TPP_TOK_ISERR(DeeLexer_Yield(lexer))) {
+					result = -1;
+				} else {
+					result = uasm_parse(lexer);
+				}
+				current_userasm.ua_labelc = old_user_label_c;
+				current_userasm.ua_labelv = old_user_label_v;
 			}
+
+			/* Emit one last symbol to prevent peephole at the end
+			 * of user-assembly when the `volatile` bit is set. */
+			if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
+			    (current_assembler.a_flag & ASM_FPEEPHOLE) && !result) {
+				struct asm_sym *volatile_sym = asm_newsym();
+				if unlikely(!volatile_sym)
+					result = -1;
+				asm_defsym(volatile_sym);
+				++volatile_sym->as_used; /* Intentionally left dangling. */
+			}
+			if (!result &&
+			    current_assembler.a_curr != old_section) {
+				/* Generate a jump to the proper section. */
+				struct asm_sym *temp = asm_newsym();
+				if unlikely(!temp) {
+					result = -1;
+				} else {
+					result = asm_gjmp(ASM_JMP, temp);
+					current_assembler.a_curr = old_section;
+					asm_defsym(temp);
+				}
+			}
+			current_userasm.ua_flags = old_flags;
+			current_scope            = old_scope;
 		}
-		current_userasm.ua_flags = old_flags;
-		current_scope            = old_scope;
+		if (parser_rethrow(result != 0))
+			result = -1;
+		END_PARSER_CALLBACK();
+
+		/* Restore old lexer flags. */
+		TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
+		TPPLexer_Current->l_flags |= old_lexer_flags;
+		TPPLexer_Current->l_extokens = old_lexer_tokens;
+
+		/* Pop all files leading up to our assembly file. */
+		while (TPPLexer_GetFile() != assembly_file &&
+		       TPPLexer_GetFile() != old_eob &&
+		       TPPLexer_GetFile() != &TPPFile_Empty)
+			TPPLexer_PopFile();
+
+		/* Restore the old end-of-block file. */
+		TPPLexer_Current->l_eob_file = old_eob;
+
+		/* Pop our assembly file. */
+		if (TPPLexer_GetFile() == assembly_file)
+			TPPLexer_PopFile();
+
+		/* Check for errors during processing of user-assembly. */
+		if unlikely(result)
+			goto err;
 	}
-	if (parser_rethrow(result != 0))
-		result = -1;
-	END_PARSER_CALLBACK();
-
-	/* Restore old lexer flags. */
-	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
-	TPPLexer_Current->l_flags |= old_lexer_flags;
-	TPPLexer_Current->l_extokens = old_lexer_tokens;
-
-	/* Pop all files leading up to our assembly file. */
-	while (TPPLexer_GetFile() != assembly_file &&
-	       TPPLexer_GetFile() != old_eob &&
-	       TPPLexer_GetFile() != &TPPFile_Empty)
-		TPPLexer_PopFile();
-
-	/* Restore the old end-of-block file. */
-	TPPLexer_Current->l_eob_file = old_eob;
-
-	/* Pop our assembly file. */
-	if (TPPLexer_GetFile() == assembly_file)
-		TPPLexer_PopFile();
-
-	/* Check for errors during processing of user-assembly. */
-	if unlikely(result)
-		goto err;
 
 	/* Check if the assembler is still in an undefined state. */
 	if (current_userasm.ua_mode & USER_ASM_FSTKINV) {
@@ -2534,14 +2583,14 @@ create_assembly_file:
 			if unlikely(current_assembler.a_stackcur <= old_state.as_stackcur) {
 				/* The user broke stack alignment (just evaluate the operand). */
 				if (self->a_assembly.as_opv[count].ao_name) {
-					if (DeeLexer_Warnf(_DeeLexer_Current,
+					if (DeeLexer_Warnf(lexer,
 					                   TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
 					                   tpp_keyword_getcstr(self->a_assembly.as_opv[count].ao_name)))
 						goto err;
 				} else {
 					char buffer[32];
 					Dee_sprintf(buffer, "%%%" PRFuSIZ "", (size_t)count);
-					if (DeeLexer_Warnf(_DeeLexer_Current,
+					if (DeeLexer_Warnf(lexer,
 					                   TPP_W_UASM_CANNOT_POP_ASSEMBLY_OUTPUT_EXPRESSION,
 					                   buffer))
 						goto err;
@@ -2582,12 +2631,12 @@ create_assembly_file:
 		/* NOTE: Don't omit stack miss-alignment warnings when `SP` was specified in the clobber list. */
 		if (!(self->a_flag & AST_FASSEMBLY_CLOBSP)) {
 			if (old_state.as_stackcur < current_assembler.a_stackcur) {
-				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_DOESNT_CLEANUP_STACK,
+				if (DeeLexer_Warnf(lexer, TPP_W_UASM_DOESNT_CLEANUP_STACK,
 				                   (unsigned int)(current_assembler.a_stackcur -
 				                                  old_state.as_stackcur)))
 					goto err;
 			} else {
-				if (DeeLexer_Warnf(_DeeLexer_Current, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
+				if (DeeLexer_Warnf(lexer, TPP_W_UASM_POPPED_UNRELATED_ITEMS,
 				                   (unsigned int)(old_state.as_stackcur -
 				                                  current_assembler.a_stackcur)))
 					goto err;

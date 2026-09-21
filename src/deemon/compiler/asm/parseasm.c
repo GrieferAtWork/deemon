@@ -358,6 +358,7 @@ uasm_parse_symnam_from_string_cb(void *arg, tpp_string *chunk,
                                  tpp_char const *str, tpp_size length) {
 	tpp_keyword const *kwd;
 	union uasm_parse_symnam_from_string_data *data;
+	(void)chunk;
 	data = (union uasm_parse_symnam_from_string_data *)arg;
 	kwd = tpp_lexer_newkeyword(data->upsnfsd_lexer, str, length);
 	if unlikely(!kwd)
@@ -372,9 +373,6 @@ err:
 INTERN WUNUSED NONNULL((1)) tpp_keyword const *DFCALL
 uasm_parse_symnam(DeeLexer *self) {
 	tpp_keyword const *result;
-	char *symbol_start;
-	char *symbol_end;
-	(void)self;
 	if (DeeLexer_IsStringToken(self)) {
 		/* Special case: String symbol name. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
@@ -396,63 +394,100 @@ uasm_parse_symnam(DeeLexer *self) {
 		 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
 		result = DeeLexer_NewKeyword(self, strval->s_text, strval->s_size);
 		tpp_string_decref(strval);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		goto done;
-	}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+	} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		/* Expand the current token to include all `TPP_TOK_IS_SYMBOL_NAME_CH()` +
+		 * `tpp_unicode_issymcont()` charactesr that may immediately follow it. */
+		tpp_file *const file = DeeLexer_GetFile(self);
+		tpp_char const *kwd_end = DeeLexer_GetTokenEnd(self);
+		tpp_size rel_kwd_end = tpp_file_ptr2rel(file, kwd_end);
+		DeeLexer_SetTokenEnd(self, DeeLexer_GetTokenStart(self)); /* So start of keyword isn't unloaded! */
 
-	if (DeeLexer_HasTokenKwd(self) &&
-	    !TPP_TOK_IS_SYMBOL_NAME_CH(*TPPLexer_Current->l_token.t_end) &&
-	    !DeeUni_IsSymCont(*TPPLexer_Current->l_token.t_end)) {
-		/* Simple case: the following character doesn't continue the symbol's name.
-		 * In this case, we don't need to re-validate the symbol name. */
-		result = DeeLexer_GetTokenKwd(self);
+		/* Read upcoming characters... */
+		for (;;) {
+			tpp_unichar uc;
+			tpp_errno error;
+			error = tpp_lexer_readunichar(&self->dl_lexer, &kwd_end, &uc);
+			if (TPP_ISERR(error)) {
+				kwd_end = tpp_file_rel2ptr(file, rel_kwd_end);
+				DeeLexer_SetTokenRange(self, DeeLexer_GetTokenStart(self), kwd_end);
+				goto err;
+			}
+			if (!TPP_TOK_IS_SYMBOL_NAME_CH(uc) &&
+			    !tpp_unicode_issymcont(uc))
+				break; /* Stop here! */
+			rel_kwd_end = tpp_file_ptr2rel(file, kwd_end);
+		}
+		kwd_end = tpp_file_rel2ptr(file, rel_kwd_end);
+		DeeLexer_SetTokenRange(self, DeeLexer_GetTokenStart(self), kwd_end);
+		result = DeeLexer_NewKeywordEsc(self, DeeLexer_GetTokenStart(self),
+		                                DeeLexer_GetTokenLen(self));
+		if unlikely(!result)
+			goto err;
+		DeeLexer_SetTokenKwd(self, result);
+
+		/* Parse the next token following the symbol name. */
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
-		goto done;
-	}
-	symbol_start = TPPLexer_Current->l_token.t_begin;
-	symbol_end   = TPPLexer_Current->l_token.t_end;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		char *symbol_start;
+		char *symbol_end;
+		if (DeeLexer_HasTokenKwd(self) &&
+		    !TPP_TOK_IS_SYMBOL_NAME_CH(*TPPLexer_Current->l_token.t_end) &&
+		    !DeeUni_IsSymCont(*TPPLexer_Current->l_token.t_end)) {
+			/* Simple case: the following character doesn't continue the symbol's name.
+			 * In this case, we don't need to re-validate the symbol name. */
+			result = DeeLexer_GetTokenKwd(self);
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			goto done;
+		}
+		symbol_start = TPPLexer_Current->l_token.t_begin;
+		symbol_end   = TPPLexer_Current->l_token.t_end;
 continue_without_inc:
-	for (;; ++symbol_end) {
-		symbol_end = (char *)DeeLexer_PreparseSkipBseFwd(self, (tpp_char const *)symbol_end,
-		                                                 (tpp_char const *)TPPLexer_Current->l_token.t_file->f_end);
-		if (symbol_end == TPPLexer_Current->l_token.t_file->f_end) {
-			int chunk_state;
+		for (;; ++symbol_end) {
+			symbol_end = (char *)DeeLexer_PreparseSkipBseFwd(self, (tpp_char const *)symbol_end,
+			                                                 (tpp_char const *)TPPLexer_Current->l_token.t_file->f_end);
+			if (symbol_end == TPPLexer_Current->l_token.t_file->f_end) {
+				int chunk_state;
 
-			/* Load more input text. */
-			PTR_isub(char, symbol_start, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
-			PTR_isub(char, symbol_end, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
-			chunk_state = TPPFile_NextChunk(TPPLexer_Current->l_token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
-			PTR_iadd(char, symbol_start, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
-			PTR_iadd(char, symbol_end, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
-			if (!chunk_state)
-				break;
-			goto continue_without_inc;
+				/* Load more input text. */
+				PTR_isub(char, symbol_start, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
+				PTR_isub(char, symbol_end, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
+				chunk_state = TPPFile_NextChunk(TPPLexer_Current->l_token.t_file, TPPFILE_NEXTCHUNK_FLAG_EXTEND);
+				PTR_iadd(char, symbol_start, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
+				PTR_iadd(char, symbol_end, (uintptr_t)TPPLexer_Current->l_token.t_file->f_begin);
+				if (!chunk_state)
+					break;
+				goto continue_without_inc;
+			}
+
+			/* We allow unicode symbol characters, as well as
+			 * some special characters, but no whitespace! */
+			if (TPP_TOK_IS_SYMBOL_NAME_CH(*symbol_end))
+				continue;
+			if (DeeUni_IsSymCont(*symbol_end))
+				continue;
+			break;
 		}
 
-		/* We allow unicode symbol characters, as well as
-		 * some special characters, but no whitespace! */
-		if (TPP_TOK_IS_SYMBOL_NAME_CH(*symbol_end))
-			continue;
-		if (DeeUni_IsSymCont(*symbol_end))
-			continue;
-		break;
+		/* Lookup the keyword for the symbol's name. */
+		result = DeeLexer_NewKeywordEsc(self, (tpp_char const *)symbol_start,
+		                                (size_t)(symbol_end - symbol_start));
+		if unlikely(!result)
+			goto err;
+
+		/* Set the file point to continue parsing after the symbol name. */
+		DeeLexer_SetTokenEnd(self, (tpp_char const *)symbol_end);
+
+		/* Parse the next token following the symbol name. */
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err;
+done:;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
-
-	/* Lookup the keyword for the symbol's name. */
-	result = TPPLexer_LookupEscapedKeyword(symbol_start,
-	                                       (size_t)(symbol_end - symbol_start),
-	                                       1);
-	if unlikely(!result)
-		goto err;
-
-	/* Set the file point to continue parsing after the symbol name. */
-	TPPLexer_Current->l_token.t_file->f_pos = symbol_end;
-
-	/* Parse the next token following the symbol name. */
-	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-		goto err;
-done:
 	return result;
 err:
 	return NULL;
@@ -465,28 +500,34 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 
 	TPP_CASE_TPP_TOK_NUMBER
 		/* Integer constant. */
-		if (!result)
-			goto yield_done;
 		{
 			/* Check for a token like this: `1f.SP` */
-			char *int_end = (char *)memchr(DeeLexer_GetTokenStart(self), '.',
-			                               DeeLexer_GetTokenLen(self));
+			tpp_char const *int_end = (tpp_char const *)memchr(DeeLexer_GetTokenStart(self), '.',
+			                                                   DeeLexer_GetTokenLen(self));
 			if (int_end) {
 				/* Truncate the integer token to not include the dot or anything thereafter. */
-				int_end = (char *)DeeLexer_PreparseSkipBseBck(_DeeLexer_Current, (tpp_char const *)TPPLexer_Current->l_token.t_begin, (tpp_char const *)int_end);
-				TPPLexer_Current->l_token.t_end         = int_end;
-				TPPLexer_Current->l_token.t_file->f_pos = int_end;
+				int_end = DeeLexer_PreparseSkipBseBck(self, DeeLexer_GetTokenStart(self), int_end);
+				DeeLexer_SetTokenEnd(self, int_end);
 			}
 		}
-		if (TPPLexer_Current->l_token.t_begin[0] != '0' && /* Check leading ZERO for 0xbbff */
-		    (TPPLexer_Current->l_token.t_end[-1] == 'b' || TPPLexer_Current->l_token.t_end[-1] == 'f')) {
+		if (!result) {
+yield_done:
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			goto done;
+		}
+		if (DeeLexer_GetTokenStart(self)[0] != '0' && /* Check leading ZERO for 0xbbff */
+		    (DeeLexer_GetTokenEnd(self)[-1] == 'b' || DeeLexer_GetTokenEnd(self)[-1] == 'f')) {
 			/* Forward/backward symbol reference. */
 			tpp_keyword const *name;
-			name = TPPLexer_LookupEscapedKeyword((char const *)DeeLexer_GetTokenStart(self),
-			                                     DeeLexer_GetTokenLen(self) - 1, 1);
+			tpp_char const *before_marker;
+			before_marker = DeeLexer_PreparseSkipBseBck(self, DeeLexer_GetTokenStart(self),
+			                                            DeeLexer_GetTokenEnd(self) - 1);
+			name = DeeLexer_NewKeywordEsc(self, DeeLexer_GetTokenStart(self),
+			                              (tpp_size)(before_marker - DeeLexer_GetTokenStart(self)));
 			if unlikely(!name)
 				goto err;
-			result->ie_sym = uasm_fbsymbol(name, TPPLexer_Current->l_token.t_end[-1] == 'b');
+			result->ie_sym = uasm_fbsymbol(name, DeeLexer_GetTokenEnd(self)[-1] == 'b');
 			if unlikely(!result->ie_sym)
 				goto err;
 			result->ie_val = 0;
@@ -504,15 +545,21 @@ uasm_parse_intexpr_unary_base(DeeLexer *self, struct asm_intexpr *result, uint16
 		result->ie_sym = NULL;
 		result->ie_rel = (uint16_t)-1;
 		{
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			tpp_errno error;
+			tpp_uintmax intval;
+			error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &intval,
+			                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+			if (TPP_ISERR(error))
+				goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			tint_t intval;
 			if unlikely(TPP_Atoi(&intval) == TPP_ATOF_ERR)
 				goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			result->ie_val = (intptr_t)intval;
 		}
-yield_done:
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err;
-		goto done;
+		goto yield_done;
 
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
 		if (!result) {
@@ -559,14 +606,14 @@ yield_done:
 			goto err;
 		if unlikely(uasm_parse_intexpr(self, result, features))
 			goto err;
-		if (DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 		break;
 
 	case '!':
 	case '~':
 	case '-': {
-		tok_t operation;
+		tpp_token_id operation;
 		/* Unary operators. */
 		operation = DeeLexer_GetTok(self);
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -1525,11 +1572,21 @@ do_parse_operand(DeeLexer *self,
 parse_stack_operand:
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		{
+			tpp_token_id tok = DeeLexer_Require(self, TPP_TOK_OFCHAR('#'));
+			if (TPP_TOK_ISERR(tok))
+				goto err;
+			if (tok != '#')
+				goto parse_stack_operand_start;
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (DeeLexer_GetTok(self) != '#') {
 			if (DeeLexer_Warnf(self, TPP_W_UASM_EXPECTED_HASH_AFTER_STACK_OPERAND))
 				goto err;
 			goto parse_stack_operand_start;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		ATTR_FALLTHROUGH
 	case '#':
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -2098,7 +2155,7 @@ do_stack_prefix:
 		       DeeLexer_GetTok(self) != ';' &&
 		       DeeLexer_GetTok(self) != '\n'
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-		       && TPPLexer_Current->l_token.t_id > 0
+		       && TPPLexer_Current->l_token.t_id != TOK_ERR
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		       ) {
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -2114,7 +2171,7 @@ got_mnemonic:
 	       DeeLexer_GetTok(self) != '\n' &&
 	       invoc.ai_opcount < ASM_MAX_INSTRUCTION_OPERANDS
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-	       && TPPLexer_Current->l_token.t_id > 0
+	       && TPPLexer_Current->l_token.t_id != TOK_ERR
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	       ) {
 		/* Parse an operand. */
@@ -2146,11 +2203,11 @@ INTERN WUNUSED NONNULL((1)) int DFCALL uasm_parse(DeeLexer *self) {
 continue_line:
 	while (DeeLexer_GetTok(self) != TPP_TOK_EOF 
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-	       && TPPLexer_Current->l_token.t_id > 0
+	       && TPPLexer_Current->l_token.t_id != TOK_ERR
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	       ) {
-		unsigned long old_num;
-		old_num = TPPLexer_Current->l_token.t_num;
+		tpp_token_num old_num;
+		old_num = tpp_lexer_gettokennum(&self->dl_lexer);
 		if (DeeLexer_GetTok(self) == ';' ||
 		    DeeLexer_GetTok(self) == '\n') {
 			/* Empty line. */
@@ -2175,7 +2232,7 @@ continue_line:
 		       DeeLexer_GetTok(self) != ';' &&
 		       DeeLexer_GetTok(self) != '\n'
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-		       && TPPLexer_Current->l_token.t_id > 0
+		       && TPPLexer_Current->l_token.t_id != TOK_ERR
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		       ) {
 			if (DeeLexer_Warnf(self, TPP_W_UASM_IGNORING_TRAILING_TOKENS))
@@ -2192,7 +2249,7 @@ continue_line:
 		}
 
 		/* Warn if this didn't go anywhere. */
-		if unlikely(old_num == TPPLexer_Current->l_token.t_num) {
+		if unlikely(old_num == tpp_lexer_gettokennum(&self->dl_lexer)) {
 			if (DeeLexer_Warnf(self, TPP_W_UASM_PARSING_FAILED))
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))

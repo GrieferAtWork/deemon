@@ -26,7 +26,7 @@
 #include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
 #include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref */
-#include <deemon/compiler/compiler.h> /* DeeCompiler* */
+#include <deemon/compiler/compiler.h> /* DeeCompiler*, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>            /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
@@ -479,8 +479,8 @@ PRIVATE NONNULL((1)) void DCALL
 delsym(struct symbol *__restrict self)
 #endif /* !CONFIG_SYMBOL_HAS_REFCNT */
 {
-	DeeCompiler_DelItem(self);
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeCompiler_DelItem(self);
 	if (self->s_decl.l_file)
 		TPPFile_Decref(self->s_decl.l_file);
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -511,7 +511,9 @@ PRIVATE NONNULL((1)) void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
 	struct symbol **biter, **bend, *iter, *next;
 	Dee_weakref_support_fini(self);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	DeeCompiler_DelItem(self);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	biter = self->s_map;
 	bend  = biter + self->s_mapa;
 	for (; biter < bend; ++biter) {
@@ -701,7 +703,9 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 			iter = *biter;
 			while (iter) {
 				next = iter->tl_next;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 				DeeCompiler_DelItem(iter);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				lbl_free(iter);
 				iter = next;
 			}

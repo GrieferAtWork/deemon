@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <deemon/compiler/symbol.h> /* SYMBOL_NAME, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/compiler/symbol.h>
-#include <deemon/error.h>        /* DeeError_* */
-#include <deemon/exec.h>         /* DeeModule_GetLibPath */
-#include <deemon/module.h>       /* Dee_COMPILER_ERROR_FATALITY_WARNING */
-#include <deemon/tuple.h>        /* DeeTuple* */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/exec.h>            /* DeeModule_GetLibPath */
+#include <deemon/module.h>          /* Dee_COMPILER_ERROR_FATALITY_WARNING */
+#include <deemon/tuple.h>           /* DeeTuple* */
 
 #if TPP_OS_WINDOWS
 #include <Windows.h>
@@ -280,7 +280,7 @@ DECL_END
 #define TPP_SYMARRAY_SIZE 1 /* For `TPPKeyword_Empty` */
 
 #include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Malloc, Dee_Try*alloc* */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
 #include <deemon/file.h>            /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */

@@ -51,6 +51,7 @@
 #include "../type.h"  /* Dee_operator_t */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
 #include "ast.h"      /* asm_operand, ast */
+#include "compiler.h" /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include "symbol.h"   /* DeeScopeObject, SYMBOL_MAY_REFERENCE, SYMBOL_MUST_REFERENCE, symbol, symbol_reachable */
 #include "tpp.h"
 
@@ -704,8 +705,13 @@ struct assembler {
 	struct asm_sym        *a_loopctl[ASM_LOOPCTL_COUNT]; /* Loop control symbols. */
 	DeeScopeObject        *a_scope;    /* [0..1] The scope of the last AST (Used for tracking stack-based variables) */
 	struct ast_loc        *a_error;    /* [0..1] An AST location that is used as context for displaying assembler messages/warnings. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define ASM_ERR(...)       DeeLexer_ErrfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), current_assembler.a_error, __VA_ARGS__)
+#define ASM_WARN(...)      DeeLexer_WarnfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), current_assembler.a_error, __VA_ARGS__)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define ASM_ERR(...)       parser_erratrf(current_assembler.a_error, __VA_ARGS__)
 #define ASM_WARN(...)      parser_warnatrf(current_assembler.a_error, __VA_ARGS__)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct ddi_assembler   a_ddi;      /* Deemon debug information assembler subsystem. */
 	struct handler_frame  *a_handler;  /* [0..1][(!= NULL) == (a_handlerc != 0)] Chain of active exception handlers. */
 #ifndef CONFIG_LANGUAGE_NO_ASM

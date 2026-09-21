@@ -39,9 +39,9 @@
 #include "../util/atomic.h"     /* Dee_atomic_* */
 #include "../util/once.h"       /* Dee_ONCE */
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "compiler.h" /* DeeCompilerObject, DeeCompiler_Current */
+#include "compiler.h" /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include "lexer.h"    /* PARSE_FLFSTMT, parser_flags */
-#include "symbol.h"   /* symbol */
+#include "symbol.h"   /*  */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
@@ -503,8 +503,8 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT 0
 #define TPP_HAVE_TOK_HTML_COMMENT         0
 #define TPP_HAVE_TOK_SQL_COMMENT          0
-#define TPP_HAVE_TOK_AT_AT_COMMENT        1 /* For doc strings */
-#define TPP_HAVE_TOK_SHELL_COMMENT        1 /* Relevant in inline assembly */
+#define TPP_HAVE_TOK_AT_AT_COMMENT        0              /* Doc strings do their own thing... */
+#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant in inline assembly */
 #define TPP_HAVE_TOK_SLASH_COMMENT        0
 #define TPP_HAVE_TOK_AT_COMMENT           0
 #define TPP_HAVE_TOK_SOL_SHELL_COMMENT    0
@@ -1061,6 +1061,7 @@ typedef struct {
 #define DeeLexer_GetTokenEnd(self)               tpp_lexer_gettokenend(&(self)->dl_lexer)
 #define DeeLexer_GetTokenLen(self)               tpp_lexer_gettokenlen(&(self)->dl_lexer)
 #define DeeLexer_SetTokenId(self, id)            tpp_lexer_settokenid(&(self)->dl_lexer, id)
+#define DeeLexer_SetTokenKwd(self, kwd)          tpp_lexer_settokenkwd(&(self)->dl_lexer, kwd)
 #define DeeLexer_SetTokenRange(self, start, end) tpp_lexer_settokenrange(&(self)->dl_lexer, start, end)
 #define DeeLexer_SetTokenEnd(self, end)          tpp_lexer_settokenend(&(self)->dl_lexer, end)
 
@@ -1180,13 +1181,6 @@ DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info);
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
 
-/* Helper to transition into a world where this gets passed along the stack */
-#define _DeeLexer_Current DeeLexer_OfTPP(TPPLexer_Current)
-
-/* Returns the lexer active for a given `DeeCompilerObject *self` */
-#define DeeLexer_OfCompiler(comp) _DeeLexer_Current
-#define DeeLexer_AsCompiler(self) DeeCompiler_Current
-
 /* Describe a region of code where `TPPLEXER_FLAG_WANTLF` should be off. */
 #define DeeLexer_NoLf_Push(self)                                 \
 	do {                                                         \
@@ -1301,10 +1295,6 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 #define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
 
 #define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
-
-/* Returns the lexer active for a given `DeeCompilerObject *self` */
-#define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
-#define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompilerObject, cp_lexer)
 
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
 #define DeeLexer_NoLf_Push(self)                                                            \

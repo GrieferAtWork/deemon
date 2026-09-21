@@ -192,6 +192,27 @@ struct Dee_compiler_object {
 };
 
 
+#ifdef CONFIG_BUILDING_DEEMON
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Returns the lexer active for a given `DeeCompilerObject *self` */
+#define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
+#define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompilerObject, cp_lexer)
+
+/* Helper to transition into a world where this gets passed along the stack */
+#define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+/* Returns the lexer active for a given `DeeCompilerObject *self` */
+#define DeeLexer_OfCompiler(comp) _DeeLexer_Current
+#define DeeLexer_AsCompiler(self) DeeCompiler_Current
+
+/* Helper to transition into a world where this gets passed along the stack */
+#define _DeeLexer_Current DeeLexer_OfTPP(TPPLexer_Current)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* CONFIG_BUILDING_DEEMON */
+
+
+
+
 /* NOTE: Because of how large the user-code interface for the compiler is,
  *       combined with the fact that the internal implementation of the
  *       compiler is completely implementation-defined, the actual compiler
