@@ -28,6 +28,7 @@
 #include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FFINALLY, code_addr_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, SECTION_TEXTCOUNT, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/ast.h>       /* AST_*, ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/optimize.h>  /* ast_* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeClassScopeObject, DeeClassScope_Prev, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, get_local_symbol_in_scope, scope_lookup_str, symbol */
 #include <deemon/compiler/tpp.h>
@@ -232,9 +233,9 @@ check_getattr_sym:
 				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
-				kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
-				                             DeeString_SIZE(attrname),
-				                             0);
+				kwd = DeeLexer_GetKeyword(DeeLexer_OfCompiler(DeeCompiler_Current),
+				                          (tpp_char const *)DeeString_STR(attrname),
+				                          DeeString_SIZE(attrname));
 				if (!kwd)
 					break; /* Never used as keyword (TODO: Add a warning for this) */
 				globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd);
@@ -389,9 +390,9 @@ check_boundattr_sym:
 				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
-				kwd = TPPLexer_LookupKeyword(DeeString_STR(attrname),
-				                             DeeString_SIZE(attrname),
-				                             0);
+				kwd = DeeLexer_GetKeyword(DeeLexer_OfCompiler(DeeCompiler_Current),
+				                          (tpp_char const *)DeeString_STR(attrname),
+				                          DeeString_SIZE(attrname));
 				if (!kwd)
 					break; /* Never used as keyword (TODO: Add a warning for this) */
 				globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd);
@@ -512,9 +513,9 @@ check_delattr_sym:
 				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> push bnd global ... */
-				kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),
-				                             DeeString_SIZE(name->a_constexpr),
-				                             0);
+				kwd = DeeLexer_GetKeyword(DeeLexer_OfCompiler(DeeCompiler_Current),
+				                          (tpp_char const *)DeeString_STR(name->a_constexpr),
+				                          DeeString_SIZE(name->a_constexpr));
 				if (!kwd)
 					break; /* Never used as keyword (TODO: Add a warning for this) */
 				globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd);
@@ -837,9 +838,9 @@ check_base_symbol_class:
 				tpp_keyword const *kwd;
 				int32_t symid;
 				/* mymod.attr --> pop global ... */
-				kwd = TPPLexer_LookupKeyword(DeeString_STR(name->a_constexpr),
-				                             DeeString_SIZE(name->a_constexpr),
-				                             0);
+				kwd = DeeLexer_GetKeyword(DeeLexer_OfCompiler(DeeCompiler_Current),
+				                          (tpp_char const *)DeeString_STR(name->a_constexpr),
+				                          DeeString_SIZE(name->a_constexpr));
 				if (!kwd)
 					break; /* Never used as keyword (TODO: Add a warning for this) */
 				globsym = get_local_symbol_in_scope((DeeScopeObject *)current_rootscope, kwd);
@@ -1309,12 +1310,19 @@ check_dst_sym_class:
 			/* Check if this is the initial declaration assignment, which gets treated special */
 			if (dst->a_scope != dst_sym->s_scope)
 				break;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if (dst->a_ddi.l_name != dst_sym->s_decl.l_name)
+				break;
+			if (!tpp_lcinfo_equals(dst->a_ddi.l_lc, dst_sym->s_decl.l_lc))
+				break;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (dst->a_ddi.l_file != dst_sym->s_decl.l_file)
 				break;
 			if (dst->a_ddi.l_line != dst_sym->s_decl.l_line)
 				break;
 			if (dst->a_ddi.l_col != dst_sym->s_decl.l_col)
 				break;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 			/* In the new static variable model, the first assignment should
 			 * still only be executed *once*, however this definitely needs
@@ -1990,7 +1998,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 	default:
 default_case:
 		/* Emit a warning about an r-value store. */
-		DO(WARNAST(self, W_ASM_STORE_TO_RVALUE));
+		DO(WARNAST(self, TPP_W_ASM_STORE_TO_RVALUE));
 
 		/* Fallback: Generate the ast and store it directly. */
 		DO(ast_genasm_one(self, ASM_G_FPUSHRES));

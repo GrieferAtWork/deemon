@@ -439,7 +439,7 @@ INTERN WUNUSED NONNULL((1)) int
 		DO(ast_genasm(self, ASM_G_FPUSHRES));
 #else /* ENTER */
 		/* Emit a warning about an r-value store. */
-		DO(WARNAST(self, W_ASM_STORE_TO_RVALUE));
+		DO(WARNAST(self, TPP_W_ASM_STORE_TO_RVALUE));
 		DO(asm_putddi(self));
 		if (PUSH_RESULT) {
 			DO(asm_gdup_n(0)); /* dst, value, dst */

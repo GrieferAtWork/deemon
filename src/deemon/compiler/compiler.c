@@ -27,7 +27,7 @@
 #include <deemon/compiler/assembler.h> /* ASM_FNORMAL, asm_symbol_ref, code_compile, module_compile */
 #include <deemon/compiler/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_* */
 #include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler */
-#include <deemon/compiler/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
+#include <deemon/compiler/error.h>     /* current_parser_errors, parser_* */
 #include <deemon/compiler/lexer.h>     /* AST_COMMA_*, PARSE_FLFSTMT, PARSE_FNORMAL, ast_parse_*, ast_tags, current_tags, inner_compiler_options, parser_flags */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_FENABLED, OPTIMIZE_FNORMAL, ast_optimize_all, optimizer_flags, optimizer_unwind_limit */
 #include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeRootScope_Type, DeeScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, current_basescope, current_rootscope, current_scope, new_unnamed_symbol, symbol */

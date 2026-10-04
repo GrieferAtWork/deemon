@@ -220,9 +220,9 @@ do_print:
 			--iter;
 		}
 		Dee_DPRINTF("%s(%d,%d) : ",
-		            iter->dc_loc.l_file->f_name,
-		            iter->dc_loc.l_line + 1,
-		            iter->dc_loc.l_col + 1);
+		            ast_loc_getname(&iter->dc_loc),
+		            ast_loc_getline(&iter->dc_loc) + 1,
+		            ast_loc_getcol(&iter->dc_loc) + 1);
 		return;
 	}
 	if (current_assembler.a_ddi.da_checkc &&

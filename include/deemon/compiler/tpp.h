@@ -1039,8 +1039,9 @@ DECL_BEGIN
 /************************************************************************/
 
 typedef struct {
-	tpp_lexer dl_lexer; /* TPP lexer */
+	tpp_lexer    dl_lexer;    /* TPP lexer */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+//TODO:	tpp_makefile dl_makefile; /* TPP makefile emitter */
 	/* TODO: Encountered warnings (to include in `DeeLexer_TPP_RaiseLexErrorHook`) */
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;

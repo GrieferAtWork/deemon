@@ -24,10 +24,8 @@
 
 #include "api.h"
 
-#include "error.h"        /* Dee_ERROR_OBJECT_HEAD */
-#include "object.h"       /* DeeObject_Print */
-#include "types.h"        /* DREF, DeeObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
-#include "util/weakref.h" /* Dee_WEAKREF */
+#include "error.h" /* Dee_ERROR_OBJECT_HEAD */
+#include "types.h" /* Dee_OBJECT_HEAD */
 
 #include <stddef.h> /* size_t */
 #ifdef CONFIG_HOST_WINDOWS
@@ -55,53 +53,11 @@ typedef struct Dee_signal_object {
 	Dee_OBJECT_HEAD
 } DeeSignalObject;
 
-struct TPPFile;
-struct Dee_compiler_error_loc {
-	struct Dee_compiler_error_loc *cl_prev; /* [0..1][OVERRIDE(->cl_file, [1..1])]
-	                                         * Calling compiler location (might be used
-	                                         * when the parser was inside of a macro) */
-	/*ref*/ struct TPPFile        *cl_file; /* [0..1] The file in which the error occurred
-	                                         * (when `NULL`, no location information is available) */
-	int                            cl_line; /* The line within `cl_file` (0-based) */
-	int                            cl_col;  /* The column within that `cl_line` (0-based) */
-};
-
-typedef struct Dee_compiler_error_object {
-	Dee_ERROR_OBJECT_HEAD
-	Dee_WEAKREF_SUPPORT
-	int                                           ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*`). */
-	int                                           ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*`). */
-	struct Dee_compiler_error_loc                 ce_locs;   /* [const] The parser location where the error occurred. */
-	struct Dee_compiler_error_loc                *ce_loc;    /* [0..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs`) */
-	Dee_WEAKREF(struct Dee_compiler_error_object) ce_master; /* Weak reference to the master compiler error. */
-	size_t                                        ce_errorc; /* [const] Number of contained compiler errors. */
-	DREF struct Dee_compiler_error_object       **ce_errorv; /* [1..1][REF_IF(!= self)][const][0..ce_errorc][owned][const]
-	                                                          * Vector of other errors/warnings that occurred, leading up to this one.
-	                                                          * NOTE: The master compiler error (aka. `this` error) is
-	                                                          *       the error that caused compilation to actually fail,
-	                                                          *       meaning that it is the first matching error in the
-	                                                          *       following list of conditions:
-	                                                          *        - ce_mode == Dee_COMPILER_ERROR_FATALITY_FORCEFATAL
-	                                                          *        - ce_mode == Dee_COMPILER_ERROR_FATALITY_FATAL
-	                                                          *        - ce_mode == Dee_COMPILER_ERROR_FATALITY_ERROR */
-} DeeCompilerErrorObject;
-
-
 #ifdef GUARD_DEEMON_OBJECTS_ERROR_TYPES_C
 DDATDEF DeeNoMemoryErrorObject DeeError_NoMemory_instance; /*!export-*/
 DDATDEF DeeSignalObject DeeError_StopIteration_instance;   /*!export-*/
 DDATDEF DeeSignalObject DeeError_Interrupt_instance;       /*!export-*/
 #endif /* GUARD_DEEMON_OBJECTS_ERROR_TYPES_C */
-
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeCompilerError_Print(DeeObject *__restrict self,
-                       Dee_formatprinter_t printer, void *arg);
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeCompilerError_Print(self, printer, arg) \
-	DeeObject_Print(self, printer, arg)
-#endif /* !CONFIG_BUILDING_DEEMON */
-
 
 DECL_END
 

@@ -212,6 +212,19 @@ uasm_parse_directive(DeeLexer *self) {
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
 		/* Cheat a bit... */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		{
+			tpp_char *rwstr;
+			tpp_keyword *rwname = tpp_lexer_copybuiltinkwd(&self->dl_lexer, name);
+			if unlikely(!rwname)
+				goto err;
+			rwstr = (tpp_char *)tpp_keyword_getstr(rwname);
+			backup = rwstr[-1];
+			rwstr[-1] = '.';
+			label_name = DeeLexer_NewKeyword(self, rwstr - 1, tpp_keyword_getlen(rwname) + 1);
+			rwstr[-1] = backup;
+		}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #if 1 /* GCC doesn't like us writing outside of the array's bounds, so work around that warning */
 #define ONE_CHAR_BEFORE_NAME ((char *)&name->k_hash + (sizeof(name->k_hash) - sizeof(char)))
 #else
@@ -221,6 +234,7 @@ uasm_parse_directive(DeeLexer *self) {
 		*ONE_CHAR_BEFORE_NAME = '.';
 		label_name = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME, name->k_size + 1, 1);
 		*ONE_CHAR_BEFORE_NAME = backup;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(!label_name)
 			goto err;
 		label = uasm_symbol(label_name);

@@ -31,13 +31,12 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
 #include <deemon/compiler/assembler.h> /* ASM_* */
-#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt, _DeeLexer_Current */
-#include <deemon/compiler/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler, _DeeLexer_Current */
+#include <deemon/compiler/error.h>     /* Dee_compiler_error_object, current_parser_errors, parser_* */
 #include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/error_types.h>        /* Dee_compiler_error_object */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
 #include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
@@ -391,7 +390,12 @@ PRIVATE WUNUSED int DCALL cmd_c(char *UNUSED(arg)) {
 }
 
 PRIVATE WUNUSED int DCALL cmd_ppC(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_COMMENT);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTCOMMENTS;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
@@ -401,43 +405,90 @@ PRIVATE WUNUSED int DCALL cmd_tok(char *UNUSED(arg)) {
 }
 
 PRIVATE WUNUSED int DCALL cmd_cpp(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_MACROS);
+	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_NO_MACROS |
 	                               TPPLEXER_FLAG_NO_DIRECTIVES |
 	                               TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_nocpp(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_MACROS);
+	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_MACROS |
 	                              TPPLEXER_FLAG_NO_DIRECTIVES |
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_undef(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_errno error = tpp_lexer_disableextension(&lexer->dl_lexer, TPP_EXT_CPP_PREDEFINED_MACROS);
+	if (TPP_ISERR(error))
+		return -1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_DisableExtension(EXT_SYSTEM_MACROS);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_trigraphs(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_errno error = tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TRIGRAPHS);
+	if (TPP_ISERR(error))
+		return -1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_EnableExtension(EXT_TRIGRAPHS);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_traditional(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_errno error = tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TRADITIONAL_MACROS);
+	if (TPP_ISERR(error))
+		return -1;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_EnableExtension(EXT_TRADITIONAL_MACRO);
 	TPPLexer_Current->l_extokens |= TPPLEXER_TOKEN_EQUALBINOP;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_pp(char *UNUSED(arg)) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
+	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_SPACE);
+	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_LF);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_WANTSPACE | TPPLEXER_FLAG_WANTLF);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	emitpp_state = (emitpp_state & ~EMITPP_MOUTLINE) | EMITPP_FOUTLINE_ZERO;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_ftabstop(char *arg) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	tpp_column width;
+	int result = Dee_TAtoi(tpp_column, arg, strlen(arg), 0, &width);
+	if (result == 0)
+		tpp_settabsize(width);
+	return result;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return Dee_TAtoi(uint16_t, arg, strlen(arg), 0, &script_options.co_tabwidth);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 PRIVATE WUNUSED int TPPCALL emitpp_reemit_pragma(void);
@@ -1501,7 +1552,9 @@ INTERN struct Dee_compiler_options import_options = {
 	/* .co_setup_arg     = */ NULL,
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* .co_tabwidth      = */ 0,
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* .co_compiler      = */ COMPILER_FNORMAL,
 	/* .co_parser        = */ PARSE_FNORMAL,
 	/* .co_optimizer     = */ OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
@@ -1518,7 +1571,9 @@ INTERN struct Dee_compiler_options script_options = {
 	/* .co_setup_arg     = */ NULL,
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* .co_tabwidth      = */ 0,
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* .co_compiler      = */ COMPILER_FNORMAL,
 	/* .co_parser        = */ PARSE_FNORMAL,
 	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,

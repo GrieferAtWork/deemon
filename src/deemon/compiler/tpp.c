@@ -313,7 +313,7 @@ DECL_END
 /* Includes for TPP */
 /* clang-format off */
 #include <deemon/class.h>
-#include <deemon/compiler/error.h>
+#include <deemon/compiler/error.h> /* DeeCompilerErrorObject, Dee_compiler_error_loc */
 #include <deemon/error.h>       /* DeeError_* */
 #include <deemon/error_types.h> /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
 #include <deemon/module.h>      /* Dee_COMPILER_ERROR_FATALITY_WARNING */

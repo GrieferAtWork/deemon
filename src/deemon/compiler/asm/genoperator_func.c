@@ -103,7 +103,7 @@ ast_gen_operator_func(struct ast *binding,
 	                                    inner_compiler_options);
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
-			DO(WARNAST(ddi_ast, W_MODULE_NOT_FOUND, STR_operators));
+			DO(WARNAST(ddi_ast, TPP_W_MODULE_NOT_FOUND, STR_operators));
 			return asm_gpush_none();
 		}
 		goto err;
@@ -114,7 +114,7 @@ ast_gen_operator_func(struct ast *binding,
 		if unlikely(temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
-			if (WARNAST(ddi_ast, W_NO_OPERATOR_SYMBOL, symbol_name))
+			if (WARNAST(ddi_ast, TPP_W_NO_OPERATOR_SYMBOL, symbol_name))
 				goto err_module;
 			goto generic_operator;
 		}
@@ -145,7 +145,7 @@ generic_operator:
 		if unlikely(temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
-			if (WARNAST(ddi_ast, W_NO_OPERATOR_FALLBACK_FUNCTION))
+			if (WARNAST(ddi_ast, TPP_W_NO_OPERATOR_FALLBACK_FUNCTION))
 				goto err_module;
 		}
 		deemon_module_id = asm_newmodule(DeeModule_GetDeemon());

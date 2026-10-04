@@ -1665,7 +1665,7 @@ INTDEF WUNUSED int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num
 #define ASM_PUSH_LOC(loc)                                     \
 	do {                                                      \
 		struct ast_loc *_old_loc = current_assembler.a_error; \
-		if ((loc)->l_file)                                    \
+		if (!ast_loc_isempty(loc))                            \
 			current_assembler.a_error = (loc)
 #define ASM_BREAK_LOC() \
 		current_assembler.a_error = _old_loc

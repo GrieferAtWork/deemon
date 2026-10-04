@@ -779,7 +779,7 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	 * >>     }
 	 * >> }
 	 */
-	return PERRAST(warn_ast, W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, sym,
+	return PERRAST(warn_ast, TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, sym,
 	               current_basescope->bs_name
 	               ? tpp_keyword_getcstr(current_basescope->bs_name)
 	               : "?");
@@ -1007,7 +1007,7 @@ err:
 PRIVATE ATTR_COLD WUNUSED int
 (DCALL asm_warn_ambiguous_symbol)(struct symbol *__restrict sym) {
 	ASSERT(sym->s_type == SYMBOL_TYPE_AMBIG);
-	return ASM_WARN(W_ASM_AMBIGUOUS_SYMBOL, sym);
+	return ASM_WARN(TPP_W_ASM_AMBIGUOUS_SYMBOL, sym);
 }
 
 
@@ -1070,7 +1070,7 @@ check_sym_class:
 	case SYMBOL_TYPE_STACK: {
 		uint16_t offset, absolute_stack_addr;
 		if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
-			if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
+			if (ASM_WARN(TPP_W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
 				goto err;
 			return asm_gpush_none();
 		}
@@ -1084,7 +1084,7 @@ check_sym_class:
 			 * >> }
 			 * >> print foo; // Error here
 			 */
-			if (ASM_WARN(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym))
+			if (ASM_WARN(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym))
 				goto err;
 			return asm_gpush_none();
 		}
@@ -1225,7 +1225,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_GETSET:
 		if (!sym->s_getset.gs_get) {
-			if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_READABLE, sym))
+			if (ASM_WARN(TPP_W_ASM_PROPERTY_VARIABLE_NOT_READABLE, sym))
 				goto err;
 			return asm_gpush_none();
 		}
@@ -1378,7 +1378,7 @@ check_sym_class:
 		if unlikely(symid < 0)
 			goto err;
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
+			if (ASM_WARN(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 				goto err;
 			if (asm_gcheck_final_local_bound((uint16_t)symid))
 				goto err;
@@ -1387,7 +1387,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_STATIC:
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+			if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
 		symid = asm_ssymid(sym);
@@ -1397,7 +1397,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_STACK:
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+			if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
 		ASSERT(sym->s_flag & SYMBOL_FALLOC);
@@ -1410,13 +1410,13 @@ check_sym_class:
 			 * >> }
 			 * >> print foo; // Error here
 			 */
-			ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
+			ASM_ERR(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
 			goto err;
 		}
 		return asm_pstack(SYMBOL_STACK_OFFSET(sym));
 
 	default:
-		ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
+		ASM_ERR(TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
 		goto err;
 	}
 	__builtin_unreachable();
@@ -1475,13 +1475,13 @@ check_sym_class:
 			 * >> }
 			 * >> print foo; // Error here
 			 */
-			ASM_ERR(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
+			ASM_ERR(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
 			goto err;
 		}
 		return asm_pstack(SYMBOL_STACK_OFFSET(sym));
 
 	default:
-		ASM_ERR(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
+		ASM_ERR(TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
 		goto err;
 	}
 	__builtin_unreachable();
@@ -1775,7 +1775,7 @@ check_sym_class:
 
 		case SYMBOL_TYPE_GLOBAL:
 			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
-				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
+				if (ASM_WARN(TPP_W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
@@ -1787,7 +1787,7 @@ check_sym_class:
 
 		case SYMBOL_TYPE_LOCAL:
 			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
-				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
+				if (ASM_WARN(TPP_W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
@@ -1799,7 +1799,7 @@ check_sym_class:
 
 		case SYMBOL_TYPE_STATIC:
 			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
-				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
+				if (ASM_WARN(TPP_W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
@@ -1844,25 +1844,26 @@ check_sym_class:
 
 		case SYMBOL_TYPE_STACK:
 			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
-				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
+				if (ASM_WARN(TPP_W_ASM_UNBIND_FINAL_SYMBOL, sym))
 					goto err;
 			}
 
 			/* If `del()` is used on the symbol, warn about the fact that
 			 * doing this will not actually unbind the symbol, but only
 			 * delete the value that was being stored. */
-			if (sym->s_nbound != 0 &&
-			    !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK) &&
-			    WARNAST(warn_ast, W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
-				goto err;
+			if (sym->s_nbound != 0 && !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK)) {
+				if (WARNAST(warn_ast, TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
+					goto err;
+			}
 			if (!(sym->s_flag & SYMBOL_FALLOC)) {
 				/* If the stack variable hasn't been allocated, but is being written
 				 * to at some point, then we can't actually unbind it by overwriting
 				 * it, meaning that we can't generate the code that the user would
 				 * expect from us. */
-				if (sym->s_nwrite != 0 &&
-				    WARNAST(warn_ast, W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
-					goto err;
+				if (sym->s_nwrite != 0) {
+					if (WARNAST(warn_ast, TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
+						goto err;
+				}
 				return 0;
 			}
 
@@ -2036,7 +2037,7 @@ pop_unused_result:
 		default: break;
 		}
 	}
-	return ASM_WARN(W_ASM_CANNOT_UNBIND_SYMBOL, sym);
+	return ASM_WARN(TPP_W_ASM_CANNOT_UNBIND_SYMBOL, sym);
 err:
 	return -1;
 }
@@ -2057,7 +2058,7 @@ check_sym_class:
 			ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
 			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FREADONLY) {
 				/* ERROR: Can't modify read-only external symbol. */
-				if (ASM_WARN(W_ASM_EXTERNAL_SYMBOL_IS_READONLY, sym))
+				if (ASM_WARN(TPP_W_ASM_EXTERNAL_SYMBOL_IS_READONLY, sym))
 					goto err;
 				return asm_gpop(); /* Fallback: Simply discard the value. */
 			}
@@ -2079,7 +2080,7 @@ check_sym_class:
 			if unlikely(symid < 0)
 				goto err;
 			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
+				if (ASM_WARN(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				symid = asm_newconst_string_utf8(tpp_keyword_getcstr(sym->s_name),
 				                                 tpp_keyword_getlen(sym->s_name));
@@ -2098,7 +2099,7 @@ check_sym_class:
 			if unlikely(symid < 0)
 				goto err;
 			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-				if (ASM_WARN(W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
+				if (ASM_WARN(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 					goto err;
 				if (asm_gcheck_final_local_bound((uint16_t)symid))
 					goto err;
@@ -2110,7 +2111,7 @@ check_sym_class:
 			if unlikely(symid < 0)
 				goto err;
 			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+				if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
 			return asm_gpop_static((uint16_t)symid);
@@ -2118,7 +2119,7 @@ check_sym_class:
 		case SYMBOL_TYPE_STACK:
 			ASSERT(current_assembler.a_stackcur);
 			if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-				if (ASM_WARN(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+				if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 					goto err;
 			}
 			if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
@@ -2147,7 +2148,7 @@ check_sym_class:
 							my_scope = my_scope->s_prev;
 						} while (my_scope && my_scope != sym->s_scope);
 						if (!my_scope) {
-							if (ASM_WARN(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE, sym))
+							if (ASM_WARN(TPP_W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE, sym))
 								goto err;
 							/* If the scope of the symbol is reachable from the current scope, then
 							 * we can still allocate the stack-symbol (even though we really shouldn't).
@@ -2168,7 +2169,7 @@ check_sym_class:
 						 * >>     }
 						 * >> }
 						 */
-						if (ASM_WARN(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE, sym))
+						if (ASM_WARN(TPP_W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE, sym))
 							goto err;
 #ifndef NDEBUG
 						my_scope = current_assembler.a_scope;
@@ -2184,7 +2185,7 @@ check_sym_class:
 						goto err;
 					return 0; /* Leave without popping anything! */
 				}
-				if (ASM_WARN(W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
+				if (ASM_WARN(TPP_W_ASM_STACK_VARIABLE_NOT_INITIALIZED, sym))
 					goto err;
 				return asm_gpop();
 			}
@@ -2364,7 +2365,7 @@ pop_unused_result:
 
 		case SYMBOL_TYPE_GETSET:
 			if (!sym->s_getset.gs_set) {
-				if (ASM_WARN(W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE, sym))
+				if (ASM_WARN(TPP_W_ASM_PROPERTY_VARIABLE_NOT_WRITABLE, sym))
 					goto err;
 			} else {
 				/* Generate a one-argument call to the setter symbol. */
@@ -2386,7 +2387,7 @@ pop_unused_result:
 	}
 
 	/* Warn about the fact that the symbol cannot be written. */
-	if (ASM_WARN(W_ASM_CANNOT_WRITE_SYMBOL, sym))
+	if (ASM_WARN(TPP_W_ASM_CANNOT_WRITE_SYMBOL, sym))
 		goto err;
 	return asm_gpop(); /* Fallback: Simply discard the value. */
 err:

@@ -39,7 +39,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* UINT16_MAX, int32_t, uint16_t, uint32_t */
+#include <stdint.h>  /* UINT16_MAX, int32_t, intptr_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 
@@ -154,7 +154,7 @@ try_get_integer_as_u16(DeeObject *__restrict self,
 		return true;
 	}
 	if (DeeObject_InstanceOfExact(self, &DeeRelInt_Type)) {
-		tint_t val;
+		intptr_t val;
 		DeeRelIntObject *me = (DeeRelIntObject *)self;
 		if (!ASM_SYM_DEFINED(me->ri_sym))
 			goto nope;

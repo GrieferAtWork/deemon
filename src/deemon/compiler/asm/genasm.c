@@ -504,7 +504,7 @@ done_push_none:
 			} else {
 				if (need_all) {
 					if unlikely(active_size >= UINT16_MAX) {
-						PERRAST(self, W_ASM_SEQUENCE_TOO_LONG);
+						PERRAST(self, TPP_W_ASM_SEQUENCE_TOO_LONG);
 						goto err;
 					}
 					++active_size;
@@ -626,7 +626,7 @@ done_fake_none:
 		loopsym = current_assembler.a_loopctl[self->a_flag == AST_FLOOPCTL_BRK ? ASM_LOOPCTL_BRK : ASM_LOOPCTL_CON];
 #endif /* AST_FLOOPCTL_BRK != ASM_LOOPCTL_BRK || AST_FLOOPCTL_CON != ASM_LOOPCTL_CON */
 		if unlikely(!loopsym) {
-			DO(WARNAST(self, W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED));
+			DO(WARNAST(self, TPP_W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED));
 			goto done_push_none;
 		}
 		/* NOTE: Execute intermediate finally blocks:
@@ -2475,7 +2475,7 @@ action_in_without_const:
 		struct asm_sym *sym;
 		label = self->a_label.l_label;
 		if (!label->tl_goto) {
-			DO(WARNAST(self, W_ASM_LABEL_NEVER_USED,
+			DO(WARNAST(self, TPP_W_ASM_LABEL_NEVER_USED,
 			           text_label_name(label, self->a_flag & AST_FLABEL_CASE)));
 		}
 		sym = label->tl_asym;
@@ -2487,7 +2487,7 @@ action_in_without_const:
 		}
 		if unlikely(ASM_SYM_DEFINED(sym)) {
 			/* Warn if the label had already been defined. */
-			DO(WARNAST(self, W_ASM_LABEL_ALREADY_DEFINED,
+			DO(WARNAST(self, TPP_W_ASM_LABEL_ALREADY_DEFINED,
 			           text_label_name(label, self->a_flag & AST_FLABEL_CASE)));
 			goto done_push_none;
 		}
