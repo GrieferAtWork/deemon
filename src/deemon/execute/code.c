@@ -2309,7 +2309,7 @@ got_flag:
 	result->co_localc = args.nlocal;
 	result->co_refc   = args.nref;
 	if (OVERFLOW_UADD(args.nref, args.nstatic, &result->co_refstaticc)) {
-		DeeError_Throwf(&DeeError_ValueError, "Too many references or static variables");
+		DeeError_Throwf(&DeeError_IntegerOverflow, "Too many references or static variables");
 		goto err_r_ddi;
 	}
 	result->co_framesize  = (args.nlocal + args.nstack) * sizeof(DREF DeeObject *);

@@ -4369,10 +4369,10 @@ err_r_base_cbases:
 				if (Dee_type_operator_isdecl(op)) {
 					uint16_t oi_class = op->to_decl.oi_class;
 					if (oi_class != 0) {
-						void *class_table;
-						class_table = *(void **)((byte_t *)result + oi_class);
+						void **const p_class_table = (void **)((byte_t *)result + oi_class);
+						void *class_table = *p_class_table;
 						if (class_table) {
-							*(void **)((byte_t *)result + oi_class) = NULL;
+							*p_class_table = NULL;
 							Dee_Free(class_table);
 						}
 					}

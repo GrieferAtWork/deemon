@@ -645,7 +645,7 @@ split_init(StringSplit *__restrict self,
 	if (DeeObject_AssertTypeExact(args.sep, &DeeString_Type))
 		goto err;
 	if unlikely(DeeString_IsEmpty(args.sep))
-		return DeeError_Throwf(&DeeError_ValueError, "Empty split separator");
+		return DeeError_Throwf(&DeeError_EmptySequence, "Empty split separator");
 	Dee_Incref(args.string);
 	Dee_Incref(args.sep);
 	self->s_str = args.string;

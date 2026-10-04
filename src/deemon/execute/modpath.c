@@ -3673,7 +3673,7 @@ do_DeeModule_OpenEx(/*utf-8*/ char const *__restrict import_str, size_t import_s
 
 	/* Make sure that the import string isn't an empty string */
 	if unlikely(import_str_size < 1) {
-		DeeError_Throwf(&DeeError_ValueError, "An empty string is not a valid module name");
+		DeeError_Throwf(&DeeError_EmptySequence, "An empty string is not a valid module name");
 		goto err;
 	}
 
