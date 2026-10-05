@@ -62,7 +62,9 @@ struct Dee_module_symbol;
 
 /* Parser flags (Set of `PARSE_F*`) */
 INTDEF uint16_t parser_flags;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTDEF struct Dee_compiler_options *inner_compiler_options;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 /* Parse a constant string. */
@@ -602,11 +604,11 @@ struct ast_tags_printers {
 struct ast_tags {
 	struct Dee_unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
 	struct Dee_unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
-	struct ast_annotations at_anno;         /* AST Annotations. */
-	uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY` */
-	uint16_t               at_class_flags;  /* Set of `TP_F*` or'd to flags during creation of a new class. */
-	uint16_t               at_code_flags;   /* Set of `CODE_F*` or'd to flags during creation of a new function. */
-	uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*` or'd to flags during creation of a new class attribute. */
+	struct ast_annotations     at_anno;         /* AST Annotations. */
+	uint16_t                   at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY` */
+	uint16_t                   at_class_flags;  /* Set of `TP_F*` or'd to flags during creation of a new class. */
+	uint16_t                   at_code_flags;   /* Set of `CODE_F*` or'd to flags during creation of a new function. */
+	uint16_t                   at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*` or'd to flags during creation of a new class attribute. */
 };
 
 #define AST_TAGS_BACKUP_PRINTERS(buf)                                       \

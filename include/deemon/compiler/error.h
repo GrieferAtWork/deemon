@@ -25,6 +25,46 @@
 
 #include "../api.h"
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "tpp.h"
+#include "../error.h"           /* Dee_ERROR_OBJECT_HEAD */
+#include "../object.h"          /* DREF, DeeObject, DeeObject_Print, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
+#include "../types.h"           /* DREF, DeeObject, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
+#include "../util/weakref.h"    /* Dee_WEAKREF */
+
+DECL_BEGIN
+
+struct Dee_compiler_error_loc {
+	struct Dee_compiler_error_loc *cl_prev; /* [0..1] Calling compiler location (might be used when the parser was inside of a macro) */
+	DREF DeeStringObject          *cl_file; /* [0..1] The file in which the error occurred */
+	DREF DeeStringObject          *cl_name; /* [0..1] Name of the containing macro (or `NULL` if not a macro) */
+	int                            cl_line; /* The line within `cl_file` (0-based) */
+	int                            cl_col;  /* The column within that `cl_line` (0-based) */
+};
+
+typedef struct Dee_compiler_error_object {
+	Dee_ERROR_OBJECT_HEAD
+	Dee_WEAKREF_SUPPORT
+	int                                           ce_mode;   /* Fatality mode (One of `COMPILER_ERROR_FATALITY_*`). */
+	tpp_warning_id                                ce_wnum;   /* [const] The TPP-assigned warning ID of this error (One of `W_*`). */
+	struct Dee_compiler_error_loc                 ce_locs;   /* [const] The parser location where the error occurred. */
+	struct Dee_compiler_error_loc                *ce_loc;    /* [0..1][const] The main compiler location (that is the first text-file that can be encountered when walking `ce_locs`) */
+	Dee_WEAKREF(struct Dee_compiler_error_object) ce_master; /* Weak reference to the master compiler error. */
+	size_t                                        ce_errorc; /* [const] Number of contained compiler errors. */
+	DREF struct Dee_compiler_error_object       **ce_errorv; /* [1..1][const][0..ce_errorc][owned][const]
+	                                                          * Vector of other errors/warnings that occurred, leading up to this one.
+	                                                          * NOTE: The master compiler error (aka. `this` error) is
+	                                                          *       not contained in this vector, and is the error that
+	                                                          *       caused compilation to actually fail, meaning that
+	                                                          *       it is the first matching error in the following
+	                                                          *       list of conditions:
+	                                                          * - ce_mode == Dee_COMPILER_ERROR_FATALITY_FORCEFATAL
+	                                                          * - ce_mode == Dee_COMPILER_ERROR_FATALITY_FATAL
+	                                                          * - ce_mode == Dee_COMPILER_ERROR_FATALITY_ERROR */
+} DeeCompilerErrorObject;
+
+
+DECL_END
+
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_BUILDING_DEEMON

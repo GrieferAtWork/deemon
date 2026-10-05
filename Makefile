@@ -306,7 +306,7 @@ $(BLD_ROOT)/%.o $(BLD_RELPATH)/%.o: $(SRC_RELPATH)/%.c
 #		- CC
 	$(eval cc := $(or $(firstword $(foreach c,$(canon_names_asc),$(CC_$(c)))),$(CC)))
 #	cflags: Compiler flags for this file: union one of:
-#		- CFLAGS_src_deemon_cmdline_c
+#		- CFLAGS_src_deemon_cmdline.c
 #		- CFLAGS_src_deemon
 #		- CFLAGS_src                     (this one gets set to $(CFLAGS) above)
 	$(eval cflags := $(foreach c,$(canon_names_dsc),$(CFLAGS_$(c))))

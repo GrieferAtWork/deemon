@@ -339,6 +339,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL Dee_module_symb
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 struct Dee_compiler_error_object;
 /* An optional callback that is invoked immediately before a compiler error is thrown.
  * This function's usual purpose is to immediately print the error to stderr,
@@ -384,17 +385,27 @@ typedef WUNUSED_T NONNULL_T((1)) int
                                                   * stop without the parser/assembler continuing to
                                                   * produce further errors. */
 #define Dee_COMPILER_ERROR_FATALITY_FORCEFATAL 3 /* The error must be processed as fatal. */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 /* General-purpose, optional compiler options that
  * can be specified whenever a module is loaded. */
 struct Dee_compiler_options {
-	struct Dee_compiler_options  *co_inner;             /* [0..1] Options used for compiling modules imported by this one. */
-	char const                   *co_pathname;          /* [0..1] A filename used to resolve #include and relative import directives. */
-	struct Dee_string_object     *co_filename;          /* [0..1] The filename that should appear in debug information when referring to `input_file`.
-	                                                     *        This is also the filename returned by `__FILE__` and `__BASEFILE__`,
-	                                                     *        if not otherwise overwritten using `#line` */
-	struct Dee_string_object     *co_rootname;          /* [0..1] The name of the root code object (as set in DDI) */
+	struct Dee_compiler_options *co_inner;    /* [0..1] Options used for compiling modules imported by this one. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	int                          co_argc;     /* Number of arguments in `co_argv` */
+	char const           *const *co_argv;     /* [1..1][0..co_argc] vector of compiler arguments (see `deemon --help`). */
+	char const                  *co_output;   /* [0..1] Output filename (if appropriate, as per `-o` CLI argument -- used for makefile generation) */
+	uint_least32_t               co_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
+#define Dee_COMPILER_FLAG_NORMAL 0x00000000   /* Normal flags */
+#define Dee_COMPILER_FLAG_MAIN   0x00000001   /* This is the `__MAIN__` user-code input */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	char const                  *co_pathname; /* [0..1] A filename used to resolve #include and relative import directives. */
+	struct Dee_string_object    *co_filename; /* [0..1] The filename that should appear in debug information when referring to `input_file`.
+	                                           *        This is also the filename returned by `__FILE__` and `__BASEFILE__`,
+	                                           *        if not otherwise overwritten using `#line` */
+	struct Dee_string_object    *co_rootname; /* [0..1] The name of the root code object (as set in DDI) */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	WUNUSED_T int         (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
 	                                                     *        This callback can be used to perform additional compiler
 	                                                     *        initialization, such as defining macros/assertions, or
@@ -411,15 +422,14 @@ struct Dee_compiler_options {
 	                                                     * during live-compilation mode, but can also be used
 	                                                     * to put a twist on how errors are actually processed. */
 	void                         *co_error_arg;         /* [?..?] Argument to `co_error_handler` */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	uint16_t                      co_tabwidth;          /* The width of tabulators, or `0` to use the hard-coded default. */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	uint16_t                      co_compiler;          /* Set of `COMPILER_F*` from `<deemon/compiler/compiler.h>`. */
 	uint16_t                      co_parser;            /* Set of `PARSE_F*`    from `<deemon/compiler/lexer.h>` */
 	uint16_t                      co_optimizer;         /* Set of `OPTIMIZE_F*` from `<deemon/compiler/ast.h>` */
 	uint16_t                      co_unwind_limit;      /* Limit control for loop unwinding: The max amount of times that
 	                                                     * a constant loop may be unwound. (Set to ZERO(0) to disable) */
 	uint16_t                      co_assembler;         /* Set of `ASM_F*`      from `<deemon/compiler/assembler.h>` */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 };
 
 

@@ -33,6 +33,9 @@
 #include "../util/lock.h"    /* Dee_atomic_rwlock_* */
 #include "../util/rlock.h"   /* Dee_rshared_rwlock_* */
 #include "../util/weakref.h" /* Dee_WEAKREF */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "../module.h" /* Dee_compiler_options */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "error.h"  /* parser_errors */
@@ -49,11 +52,46 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define DeeCompilerObject DeeCompiler /* Backwards compat */
+typedef struct DeeCompiler {
+	DeeLexer                    cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
+	DREF DeeScopeObject        *cp_scope;           /* [1..1] == ::current_scope */
+	struct ast_tags             cp_tags;            /* == ::current_tags */
+	uint_least32_t              cp_flags;           /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
+	uint16_t                    cp_parser_flags;    /* == ::parser_flags */
+	uint16_t                    cp_optimizer_flags; /* == ::optimizer_flags */
+	uint16_t                    cp_unwind_limit;    /* == ::optimizer_unwind_limit */
+	uint16_t                    cp_assembler;       /* Set of `ASM_F*` from `<deemon/compiler/assembler.h>` */
+#ifndef CONFIG_LANGUAGE_NO_ASM
+	size_t                      cp_uasm_unique;     /* Unique user-assembly ID. */
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+
+	/* Stuff that's pending removal... */
+	struct DeeCompiler         *cp_prev;            /* [0..1][lock(DeeCompiler_Lock)]
+	                                                 * The compiler that was active before this one and
+	                                                 * will be restored when `DeeCompiler_End()` is called. */
+	size_t                      cp_recursion;       /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
+} DeeCompiler;
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Returns the lexer active for a given `DeeCompiler *self` */
+#define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
+#define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompiler, cp_lexer)
+
+/* Helper to transition into a world where this gets passed along the stack */
+#define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
+#endif /* CONFIG_BUILDING_DEEMON */
+
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
+                 tpp_lcinfo start_lc, struct Dee_compiler_options const *options);
+DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
+
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 typedef struct Dee_compiler_object DeeCompilerObject;
 
 #ifdef CONFIG_BUILDING_DEEMON
-
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #define Dee_COMPILER_ITEM_OBJECT_HEAD(T)                                                                                    \
 	Dee_OBJECT_HEAD                                                                                                         \
 	DREF DeeCompilerObject              *ci_compiler; /* [1..1][const] The associated compiler. */                          \
@@ -131,7 +169,6 @@ struct Dee_compiler_items {
 #define Dee_compiler_items_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cis_lock)
 #define Dee_compiler_items_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->cis_lock)
 #define Dee_compiler_items_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cis_lock)
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 struct Dee_compiler_options;
@@ -158,29 +195,21 @@ struct Dee_compiler_object {
 	size_t                  cp_recursion; /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
 #ifdef DEE_SOURCE
 #define COMPILER_FNORMAL    0x0000        /* Normal compiler flags. */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #define COMPILER_FKEEPLEXER 0x0001        /* Do not save/restore the active TPP lexer. */
 #define COMPILER_FKEEPERROR 0x0002        /* Do not save/restore the active parser error state. */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define COMPILER_FMASK      0x0003        /* Mask of known flags. */
 #endif /* DEE_SOURCE */
 	uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*`). */
 	uint16_t               _cp_pad[(sizeof(void *) / 2) - 1]; /* ... */
 	Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* [OVERRIDE(*, [valid_if(self != DeeCompiler_Active.wr_obj)])] */
 	struct Dee_compiler_items    cp_items;         /* Hash-map of user-code compiler item wrappers. */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DREF DeeScopeObject         *cp_scope;         /* [1..1] == ::current_scope */
 	struct Dee_compiler_options *cp_inner_options; /* [0..1] == ::inner_compiler_options */
 	struct ast_tags              cp_tags;          /* == ::current_tags */
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer                     cp_lexer;         /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DeeLexer                     cp_lexer;         /* [valid_if(!COMPILER_FKEEPLEXER)] == ::TPPLexer_Global */
 	struct parser_errors         cp_errors;        /* [valid_if(!COMPILER_FKEEPERROR)] == ::current_parser_errors */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct Dee_compiler_options *cp_options;       /* [0..1] User-defined compiler options. */
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	size_t                   cp_uasm_unique;     /* Unique user-assembly ID. */
@@ -191,23 +220,13 @@ struct Dee_compiler_object {
 #endif /* CONFIG_BUILDING_DEEMON */
 };
 
-
 #ifdef CONFIG_BUILDING_DEEMON
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-/* Returns the lexer active for a given `DeeCompilerObject *self` */
-#define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
-#define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompilerObject, cp_lexer)
-
-/* Helper to transition into a world where this gets passed along the stack */
-#define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 /* Returns the lexer active for a given `DeeCompilerObject *self` */
 #define DeeLexer_OfCompiler(comp) _DeeLexer_Current
 #define DeeLexer_AsCompiler(self) DeeCompiler_Current
 
 /* Helper to transition into a world where this gets passed along the stack */
 #define _DeeLexer_Current DeeLexer_OfTPP(TPPLexer_Current)
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
@@ -229,6 +248,23 @@ DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
  * @param: flags: Set of `COMPILER_F*` (see above) */
 DFUNDEF WUNUSED DREF DeeCompilerObject *DCALL DeeCompiler_New(uint16_t flags);
 
+
+
+/* A weak reference to the compiler associated with
+ * the currently active global compiler context.
+ * WARNING: Do _NOT_ attempt to write to this weak reference! _EVER_! */
+#ifdef GUARD_DEEMON_COMPILER_COMPILER_C
+DDATDEF Dee_WEAKREF(DeeCompilerObject) DeeCompiler_Active;
+#else /* GUARD_DEEMON_COMPILER_COMPILER_C */
+DDATDEF Dee_WEAKREF(DeeCompilerObject) const DeeCompiler_Active;
+#endif /* !GUARD_DEEMON_COMPILER_COMPILER_C */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
+/* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.
+ * This variable points to the current compiler while inside a
+ * `DeeCompiler_Begin()...DeeCompiler_End()` block. */
+DDATDEF DREF DeeCompilerObject *DeeCompiler_Current;
 
 
 #ifndef CONFIG_NO_THREADS
@@ -254,21 +290,8 @@ DDATDEF Dee_rshared_rwlock_t DeeCompiler_Lock;
 #define DeeCompiler_LockEndRead()    Dee_rshared_rwlock_endread(&DeeCompiler_Lock)
 #define DeeCompiler_LockEnd()        Dee_rshared_rwlock_end(&DeeCompiler_Lock)
 
-/* A weak reference to the compiler associated with
- * the currently active global compiler context.
- * WARNING: Do _NOT_ attempt to write to this weak reference! _EVER_! */
-#ifdef GUARD_DEEMON_COMPILER_COMPILER_C
-DDATDEF Dee_WEAKREF(DeeCompilerObject) DeeCompiler_Active;
-#else /* GUARD_DEEMON_COMPILER_COMPILER_C */
-DDATDEF Dee_WEAKREF(DeeCompilerObject) const DeeCompiler_Active;
-#endif /* !GUARD_DEEMON_COMPILER_COMPILER_C */
 
-/* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.
- * This variable points to the current compiler while inside a
- * `DeeCompiler_Begin()...DeeCompiler_End()` block. */
-DDATDEF DREF DeeCompilerObject *DeeCompiler_Current;
-
-
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 /* Ensure that `compiler` describes the currently active compiler context.
  * NOTE: The caller is responsible for holding a lock to `DeeCompiler_Lock`.
  * NOTE: It is possible to use sub-compilers, but it is not allowed to
@@ -308,6 +331,7 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);
 #define COMPILER_BEGIN       Dee_COMPILER_BEGIN
 #define COMPILER_END         Dee_COMPILER_END
 #endif /* DEE_SOURCE */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 DECL_END

@@ -55,7 +55,6 @@ INTDEF struct Dee_module_symbol empty_module_buckets[];
 INTERN DREF DeeScopeObject *current_scope     = NULL;
 INTERN DeeBaseScopeObject  *current_basescope = NULL;
 INTERN DeeRootScopeObject  *current_rootscope = NULL;
-INTERN DeeModuleObject     *current_module    = NULL;
 
 
 INTDEF char const symclass_names[0x1f + 1][8];

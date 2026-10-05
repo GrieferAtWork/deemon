@@ -194,6 +194,11 @@ TPP_KWD(TPP_KWD___DEEMON_VARIANT__, "__DEEMON_VARIANT__")
 TPP_MACRO(TPP_KWD___DEEMON_VARIANT__, 1)
 TPP_PREDEFINED_MACRO(TPP_KWD___DEEMON_VARIANT__, "\"gatw\"")
 
+/* Pre-define a macro __MAIN__ inside of the primary compilation unit. */
+TPP_KWD(TPP_KWD___MAIN__, "__MAIN__")
+TPP_MACRO(TPP_KWD___MAIN__, (DeeLexer_AsCompiler(DeeLexer_OfTPP(tpp_lexer_current()))->cp_flags & Dee_COMPILER_FLAG_MAIN) != 0)
+TPP_PREDEFINED_MACRO(TPP_KWD___MAIN__, "1")
+
 
 /* These are actually kind-of useful to determine the host platform in user-code.
  * Therefor I'll keep them as they were in the old deemon.

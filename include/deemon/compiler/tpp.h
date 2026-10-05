@@ -577,11 +577,11 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HOOK_MESGPRINTER                DeeLexer_TPP_MesgPrinterHook
 /* #define TPP_HOOK_PARSEEXPR TODO: parse a deemon expression */
 #define TPP_HAVE_UNKNOWN_PRAGMA_HOOK        TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK        TPP_HOOK_RT_NOOP_C /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK        TPP_HOOK_RT_NOOP   /* Must be configurable for MAKEFILE */
 #define TPP_HAVE_FILE_PUSHED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
 #define TPP_HAVE_FILE_POPPED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
 #define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK   TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
-#define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK     TPP_HOOK_RT_NOOP_C /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK     TPP_HOOK_RT_NOOP   /* Must be configurable for MAKEFILE */
 #define TPP_HAVE_MACRO_DEFINED_HOOK         TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
 #define TPP_HAVE_MACRO_UNDEFINED_HOOK       TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
 #define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK   TPP_HOOK_CONST_USER
@@ -682,6 +682,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_DECODE_NAMED_PRINTNEAREST           1
 #define TPP_HAVE_TOKEN_NUMBER                        1
 #define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
+#define TPP_HAVE_LEXER_PUSHFILE_IO                   1
 
 #define TPP_HAVE_CLI                              1
 #define TPP_HAVE_CLI_HELP                         1
@@ -743,11 +744,12 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MD                1
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MMD               1
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MP                1
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 1
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE 1
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 0
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                0
 #define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX  "."
 #define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION        ".dec"
+#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
+	(offsetof(DeeLexer, dl_makefile) - offsetof(DeeLexer, dl_lexer))
 
 /************************************************************************/
 /* EMITTER                                                              */
@@ -1038,10 +1040,10 @@ DECL_BEGIN
 /* Deemon wrapper for TPP lexer object                                  */
 /************************************************************************/
 
-typedef struct {
+typedef struct DeeLexer {
 	tpp_lexer    dl_lexer;    /* TPP lexer */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-//TODO:	tpp_makefile dl_makefile; /* TPP makefile emitter */
+	tpp_makefile dl_makefile; /* TPP makefile emitter */
 	/* TODO: Encountered warnings (to include in `DeeLexer_TPP_RaiseLexErrorHook`) */
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
@@ -1290,10 +1292,17 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 /* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
  * and `tpp_lexer_finifile()` must be called as the lexer is used! */
-#define DeeLexer_Init(self) (tpp_lexer_init(&(self)->dl_lexer))
-#define DeeLexer_Fini(self) (tpp_lexer_fini(&(self)->dl_lexer))
+#define DeeLexer_Init(self)                  \
+	(tpp_lexer_init(&(self)->dl_lexer),      \
+	 tpp_makefile_init(&(self)->dl_makefile, \
+	                   &(self)->dl_lexer,    \
+	                   &DeeLexer_TPP_MesgPrinterHook))
+#define DeeLexer_Fini(self)                   \
+	(tpp_makefile_fini(&(self)->dl_makefile), \
+	 tpp_lexer_fini(&(self)->dl_lexer))
 
 #define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
 

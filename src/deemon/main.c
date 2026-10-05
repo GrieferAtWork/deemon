@@ -1552,9 +1552,7 @@ INTERN struct Dee_compiler_options import_options = {
 	/* .co_setup_arg     = */ NULL,
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* .co_tabwidth      = */ 0,
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* .co_compiler      = */ COMPILER_FNORMAL,
 	/* .co_parser        = */ PARSE_FNORMAL,
 	/* .co_optimizer     = */ OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
@@ -1571,9 +1569,7 @@ INTERN struct Dee_compiler_options script_options = {
 	/* .co_setup_arg     = */ NULL,
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* .co_tabwidth      = */ 0,
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	/* .co_compiler      = */ COMPILER_FNORMAL,
 	/* .co_parser        = */ PARSE_FNORMAL,
 	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,
