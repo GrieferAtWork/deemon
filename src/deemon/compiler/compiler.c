@@ -68,17 +68,318 @@ PUBLIC DeeCompiler *DeeCompiler_Current = NULL;
 
 /* -------- Compiler Implementation -------- */
 
-/* Parse deemon-specific compiler arguments */
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_errno DCALL
-DeeCompiler_ParseArgv_deemon(DeeCompiler *__restrict self,
-                             struct Dee_compiler_options const *__restrict options,
-                             int *p_argc, char ***p_argv) {
-	/* TODO: Stuff like `-O3`, etc. */
-	(void)self;
-	(void)options;
-	(void)p_argc;
-	(void)p_argv;
+PUBLIC ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
+DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
+                     tpp_size token_size, tpp_warning_id id, ...) {
+	tpp_lexer *const lexer = &self->cp_lexer.dl_lexer;
+	tpp_file *const file = tpp_lexer_getfile(lexer);
+	tpp_errno result;
+	va_list args;
+	tpp_lexer_pushcore(lexer);
+	tpp_file_init_text_utf8(file, TPP_CONFIG_CLI_FILENAME,
+	                        NULL, token_start, token_size,
+	                        TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+	tpp_lexer_settokenrange(lexer, token_start, token_start + token_size);
+	va_start(args, id);
+	result = tpp_lexer_vwarnf(lexer, id, args);
+	va_end(args);
+	tpp_lexer_finifile(lexer);
+	tpp_lexer_popcore(lexer);
+	return result;
+}
+
+
+#define DeeCompilerCliLoader_SetOptimizationLevel(self, level) \
+	DeeCompiler_SetOptimizationLevel((self)->ccl_compiler, level)
+PRIVATE NONNULL((1)) void DCALL
+DeeCompiler_SetOptimizationLevel(DeeCompiler *__restrict self, int level) {
+	if (level > 4)
+		level = 4;
+	self->cp_optimizer_flags &= ~(OPTIMIZE_FENABLED | OPTIMIZE_FCSE |
+	                              OPTIMIZE_FCONSTSYMS | OPTIMIZE_FNOUSESYMS
+#ifdef OPTIMIZE_FASSUME
+	                              | OPTIMIZE_FASSUME
+#endif /* OPTIMIZE_FASSUME */
+	                              );
+	self->cp_assembler &= ~(ASM_FSTACKDISP | ASM_FPEEPHOLE | ASM_FOPTIMIZE | ASM_FREUSELOC | ASM_FNODDI);
+	self->cp_unwind_limit = 0;
+	if (level == -1) {
+		/* Optimize for size. */
+		self->cp_optimizer_flags |= (OPTIMIZE_FCSE | OPTIMIZE_FNOUSESYMS |
+		                             OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS);
+#if defined(OPTIMIZE_FASSUME) && 0
+		self->cp_optimizer_flags |= OPTIMIZE_FASSUME;
+#endif /* OPTIMIZE_FASSUME */
+		self->cp_unwind_limit = 1; /* Only unwind loops with 0, or 1 iteration! */
+		self->cp_assembler |= (ASM_FREUSELOC | ASM_FSTACKDISP |
+		                       ASM_FPEEPHOLE | ASM_FOPTIMIZE |
+		                       ASM_FOPTIMIZE_SIZE);
+	} else {
+		/* Level #4: Disable features that hinder optimization (i.e. debug info) */
+		if (level >= 4) {
+			self->cp_assembler |= ASM_FNODDI;
+			self->cp_optimizer_flags |= (OPTIMIZE_FCSE |     /* CSE results in somewhat obscured DDI
+			                                                  * info, so we only enable it at level#4 */
+			                             OPTIMIZE_FNOUSESYMS /* Removing unused symbols obviously leads to those
+			                                                  * symbols not showing up in DDI information, thus
+			                                                  * resulting in those symbols also not showing up
+			                                                  * in generated debug information, or assembly. */
+#ifdef OPTIMIZE_FASSUME
+			                             | OPTIMIZE_FASSUME /* Similar to `OPTIMIZE_FNOUSESYMS`, assumptions can lead
+			                                                 * to symbols being turned into constants at unexpected
+			                                                 * times, which is why we only enable them here.
+			                                                 * Another reason is that they are quite expensive... */
+#endif /* OPTIMIZE_FASSUME */
+			                             );
+			self->cp_unwind_limit = 4;
+		}
+
+		/* Level #3: Enable the AST-level optimization pass.
+		 *        -> This is mainly where constant propagation is implemented,
+		 *           among other, minor optimizations such as double-casts to
+		 *           known types */
+		if (level >= 3) {
+			self->cp_optimizer_flags |= (OPTIMIZE_FENABLED |
+			                             OPTIMIZE_FCONSTSYMS);
+			self->cp_assembler |= (ASM_FREUSELOC);
+		}
+
+		/* Level #2: Enable initialization-is-allocation for __stack variable & peephole optimization.
+		 *        -> Note that peephole also implements dead-code elimination, as well
+		 *           as various other optimizations, such as elimination or variable
+		 *           reads/writes, among other things.
+		 *           However, peephole is greatly restricted by debug information where the
+		 *           existence of DDI checkpoints prevents inter-opcode optimizations. */
+		if (level >= 2) {
+			self->cp_assembler |= (ASM_FSTACKDISP | ASM_FPEEPHOLE);
+		}
+
+		/* Level #1: Enable general assembly optimizations (mainly affects automatic
+		 *           instruction width selection, used to minimize assembly size, as
+		 *           well as rudimentary deletion of `adjstack #SP + 0` instructions). */
+		if (level >= 1) {
+			self->cp_assembler |= (ASM_FOPTIMIZE);
+		}
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_SetOptimization(DeeCompilerCliLoader *__restrict self,
+                                     char const *__restrict level) {
+	if (strcmp(level, "s") == 0) {
+		DeeCompilerCliLoader_SetOptimizationLevel(self, -1);
+	} else {
+		int intlevel;
+		if (Dee_TAtoi(int, level, strlen(level), 0, &intlevel))
+			goto err;
+		DeeCompilerCliLoader_SetOptimizationLevel(self, intlevel);
+	}
 	return TPP_EOK;
+err:
+	return TPP_EDEEMON;
+}
+
+
+enum {
+	_Dee_COMPILER_CLI_STATE_FIRST_INTERNAL = Dee_COMPILER_CLI_STATE_DDASH,
+	Dee_COMPILER_CLI_STATE_OPTIMIZE, /* "--optimize" */
+};
+
+/* Parse arguments/flags
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  Unknown argument/flag (try handling it elsewhere)
+ * @return: TPP_EDEEMON: An error was thrown */
+PUBLIC WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
+                              char const *arg) {
+#define cli_streq(at, CONSTstr) \
+	(bcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
+	switch (self->ccl_state) {
+
+	case Dee_COMPILER_CLI_STATE_NORMAL:
+		switch (*arg++) {
+		case '-': {
+			char const *after_dash = arg;
+			switch (*arg++) {
+			case '\0':
+				break;
+
+			case '-':
+				switch (*arg++) {
+				case '\0':
+					self->ccl_state = Dee_COMPILER_CLI_STATE_DDASH; /* -- */
+					return TPP_EOK;
+
+				case 'o': {
+					if (cli_streq(arg, "ptimize=")) {
+						arg += (sizeof("ptimize=") - sizeof(char));
+						return DeeCompilerCliLoader_SetOptimization(self, arg);
+					} else if (cli_streq(arg, "ptimize\0")) {
+						self->ccl_state = Dee_COMPILER_CLI_STATE_OPTIMIZE;
+						return TPP_EOK;
+					}
+				}	break;
+
+				/* TODO: All missing CLI flags (see non-CONFIG_EXPERIMENTAL_USE_TPP3 code in main.c) */
+				/* TODO: -Wp,... */
+				/* TODO: -Wa,... */
+				/* TODO: -Wl,... */
+
+				default: break;
+				}
+				break;
+
+			default: break;
+			}
+		}	break;
+
+		default: break;
+		}
+		break;
+
+	case Dee_COMPILER_CLI_STATE_DDASH:
+		break; /* Don't accept any more arguments */
+
+	case Dee_COMPILER_CLI_STATE_OPTIMIZE:
+		self->ccl_state = Dee_COMPILER_CLI_STATE_NORMAL;
+		return DeeCompilerCliLoader_SetOptimization(self, arg);
+
+	default: __builtin_unreachable();
+	}
+#undef cli_streq
+	return TPP_ENOENT;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
+                               char const **p_arg) {
+	char const *arg = *p_arg;
+	switch (*arg++) {
+
+	case 'O':
+		if (*arg == 's') {
+			DeeCompilerCliLoader_SetOptimizationLevel(self, -1);
+			++arg;
+			goto done;
+		} else if (*arg >= '0' && *arg <= '9') {
+			DeeCompilerCliLoader_SetOptimizationLevel(self, *arg - '0');
+			++arg;
+			goto done;
+		}
+		break;
+
+	default: break;
+	}
+	return TPP_ENOENT;
+done:
+	*p_arg = arg;
+	return TPP_EOK;
+}
+
+PUBLIC WUNUSED NONNULL((1)) tpp_errno DCALL
+DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *tpp_restrict self) {
+	if (self->ccl_state != Dee_COMPILER_CLI_STATE_NORMAL &&
+	    self->ccl_state != Dee_COMPILER_CLI_STATE_DDASH) {
+		tpp_errno error = DeeCompiler_CliWarnf(self->ccl_compiler, NULL, 0,
+		                                       TPP_W_MISSING_CLI_ARGUMENT);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	return TPP_EOK;
+}
+
+
+struct compiler_cli_parser {
+	DeeCompilerCliLoader    ccp_comp;   /* Compiler CLI loader */
+	tpp_cli_loader          ccp_cli;    /* Lexer CLI loader */
+	tpp_makefile_cli_loader ccp_cli_mf; /* Makefile CLI loader */
+};
+
+static WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+compiler_cli_parser_parsearg(struct compiler_cli_parser *tpp_restrict self,
+                             char const *tpp_restrict arg) {
+	tpp_errno error;
+	/* Pass argument to respective sub-loaders
+	 * if those aren't in their "default" state */
+	if (!tpp_cli_loader_hasdefaultstate(&self->ccp_cli))
+		return tpp_cli_loader_parsearg(&self->ccp_cli, arg);
+	if (!tpp_makefile_cli_loader_hasdefaultstate(&self->ccp_cli_mf))
+		return tpp_makefile_cli_loader_parsearg(&self->ccp_cli_mf, arg);
+
+	/* Try to handle argument using different CLI loaders */
+	error = DeeCompilerCliLoader_ParseArg(&self->ccp_comp, arg);
+	if (error == TPP_ENOENT)
+		error = tpp_cli_loader_parsearg(&self->ccp_cli, arg);
+	if (error == TPP_ENOENT)
+		error = tpp_makefile_cli_loader_parsearg(&self->ccp_cli_mf, arg);
+
+	/* Try to handle argument as a set of flags */
+	if (error == TPP_ENOENT && (arg[0] == '-' &&
+	                            arg[1] != '-' &&
+	                            arg[1] != '\0')) {
+		char const *after_dash = arg + 1;
+		while (*after_dash) {
+			error = DeeCompilerCliLoader_ParseFlag(&self->ccp_comp, &after_dash);
+			if (error == TPP_ENOENT)
+				error = tpp_cli_loader_parseflag(&self->ccp_cli, &after_dash);
+			if (error == TPP_ENOENT)
+				error = tpp_makefile_cli_loader_parseflag(&self->ccp_cli_mf, &after_dash);
+			if (TPP_ISERR(error))
+				return error;
+		}
+	}
+	return error;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_errno DCALL
+DeeCompiler_ParseArgv(struct compiler_cli_parser *__restrict parser,
+                      struct Dee_compiler_options const *__restrict options,
+                      int *p_argc, char ***p_argv) {
+	tpp_errno result = TPP_EOK;
+	int argc    = *p_argc;
+	char **argv = *p_argv;
+	unsigned int unknown_count = 0;
+	while (argc > 0) {
+		char *arg = argv[0];
+		result = compiler_cli_parser_parsearg(parser, arg);
+		if (TPP_ISERR(result)) {
+			if (result != TPP_ENOENT)
+				break;
+			/* Add "arg" to trailing list of unknown arguments */
+			--argc;
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
+			argv[argc + unknown_count] = arg;
+			++unknown_count;
+			result = TPP_EOK;
+			continue;
+		}
+		if (parser->ccp_comp.ccl_state == Dee_COMPILER_CLI_STATE_DDASH) {
+			if (unknown_count) {
+				/* Right now, "argv" looks like this:
+				 * >> argv = { "--", "file1.c", "file2.c", "-unknown-arg", "file0.c" }
+				 * >> argc = 3
+				 * >> unknown_count = 2
+				 *
+				 * Our job now is to make `argv` look like this:
+				 * >> argv = { "-unknown-arg", "file0.c", "--", "file1.c", "file2.c" } */
+				unsigned int shift_count = unknown_count;
+				unsigned int total_count_minus_1 = argc + unknown_count - 1;
+				while (shift_count--) {
+					arg = argv[0];
+					(void)tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					argv[total_count_minus_1] = arg;
+				}
+			}
+			break;
+		}
+		++argv;
+		--argc;
+	}
+	*p_argc = argc + unknown_count;
+	*p_argv = argv;
+	return result;
 }
 
 #if TPP_HAVE_FILE_NOCLOSE
@@ -119,59 +420,61 @@ DeeCompiler_Configure(DeeCompiler *__restrict self,
 	char **argv = (char **)options->co_argv;
 	bool only_makefile;
 	tpp_errno error;
-	tpp_cli_loader cli;
-	tpp_makefile_cli_loader mf_cli;
-	tpp_cli_loader_init(&cli, &self->cp_lexer.dl_lexer);
-	tpp_makefile_cli_loader_init(&mf_cli, &self->cp_lexer.dl_makefile);
+	struct compiler_cli_parser parser;
+	DeeCompilerCliLoader_Init(&parser.ccp_comp, self);
+	tpp_cli_loader_init(&parser.ccp_cli, &self->cp_lexer.dl_lexer);
+	tpp_makefile_cli_loader_init(&parser.ccp_cli_mf, &self->cp_lexer.dl_makefile);
 
 	/* Parse arguments... */
-	error = tpp_cli_loader_parseargv(&cli, &argc, &argv);
+	error = DeeCompiler_ParseArgv(&parser, options, &argc, &argv);
 	if (TPP_ISERR(error))
-		goto err_cli_mfcli;
-	error = tpp_makefile_cli_loader_parseargv(&mf_cli, &argc, &argv);
-	if (TPP_ISERR(error))
-		goto err_cli_mfcli;
-	error = DeeCompiler_ParseArgv_deemon(self, options, &argc, &argv);
-	if (TPP_ISERR(error))
-		goto err_cli_mfcli;
+		goto err_parser;
 
 	/* Initialize file-stack */
 	if (argc) {
-		error = tpp_cli_loader_setinputs(&cli, argc, argv);
+		error = tpp_cli_loader_setinputs(&parser.ccp_cli, argc, argv);
 		if (TPP_ISERR(error))
-			goto err_cli_mfcli;
+			goto err_parser;
 		if (!DeeNone_Check(source_stream)) {
 			error = tpp_lexer_pushfile_stream(&self->cp_lexer.dl_lexer, options, source_stream, start_lc);
 			if (TPP_ISERR(error))
-				goto err_cli_mfcli_filestack;
+				goto err_parser_filestack;
 		}
 	} else {
 		tpp_lexer_initfile_stream(&self->cp_lexer.dl_lexer, options, source_stream, start_lc);
 	}
 
+	/* Makefile should only check ENV variables if this is the __MAIN__ file */
+	if (self->cp_flags & Dee_COMPILER_FLAG_MAIN)
+		tpp_makefile_cli_loader_enablecheckenv(&parser.ccp_cli_mf);
+
 	/* Flush CLI loaders */
-	error = tpp_makefile_cli_loader_flush(&mf_cli, options ? options->co_output : NULL);
+	error = tpp_makefile_cli_loader_flush(&parser.ccp_cli_mf, options ? options->co_output : NULL);
 	if (TPP_ISERR(error))
-		goto err_cli_mfcli_filestack;
-	error = tpp_cli_loader_flush(&cli);
+		goto err_parser_filestack;
+	error = tpp_cli_loader_flush(&parser.ccp_cli);
 	if (TPP_ISERR(error))
-		goto err_cli_mfcli_filestack;
+		goto err_parser_filestack;
+	error = DeeCompilerCliLoader_Flush(&parser.ccp_comp);
+	if (TPP_ISERR(error))
+		goto err_parser_filestack;
 
 	/* Cleanup */
-	only_makefile = tpp_makefile_cli_loader_getonlymakefile(&mf_cli);
-	tpp_makefile_cli_loader_fini(&mf_cli);
-	tpp_cli_loader_fini(&cli);
+	only_makefile = tpp_makefile_cli_loader_getonlymakefile(&parser.ccp_cli_mf);
+	tpp_makefile_cli_loader_fini(&parser.ccp_cli_mf);
+	tpp_cli_loader_fini(&parser.ccp_cli);
 
 	if (only_makefile) {
-		/* TODO */
+		/* TODO: Throw an error */
 	}
 
 	return error;
-err_cli_mfcli_filestack:
+err_parser_filestack:
 	tpp_lexer_finifile(&self->cp_lexer.dl_lexer);
-err_cli_mfcli:
-	tpp_makefile_cli_loader_fini(&mf_cli);
-	tpp_cli_loader_fini(&cli);
+err_parser:
+	tpp_makefile_cli_loader_fini(&parser.ccp_cli_mf);
+	tpp_cli_loader_fini(&parser.ccp_cli);
+	DeeCompilerCliLoader_Fini(&parser.ccp_comp);
 	return error;
 }
 
@@ -205,12 +508,14 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 		goto err;
 	self->cp_scope = (DREF DeeScopeObject *)scope;
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
-	self->cp_prev            = NULL;
-	self->cp_recursion       = 0;
+	self->cp_prev      = NULL;
+	self->cp_recursion = 0;
+
+	/* NOTE: This is the default-configuration for imported modules. */
 	self->cp_parser_flags    = PARSE_FNORMAL;
-	self->cp_optimizer_flags = OPTIMIZE_FNORMAL;
+	self->cp_optimizer_flags = OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS;
 	self->cp_unwind_limit    = 0;
-	self->cp_assembler       = ASM_FNORMAL;
+	self->cp_assembler       = ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP;
 	self->cp_flags           = Dee_COMPILER_FLAG_NORMAL;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
@@ -220,6 +525,12 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 	if (options) {
 		/* Inherit compilation flags. */
 		self->cp_flags = options->co_flags;
+
+		/* NOTE: This is the default-configuration for __MAIN__ */
+		if (self->cp_flags & Dee_COMPILER_FLAG_MAIN) {
+			self->cp_optimizer_flags = OPTIMIZE_FNORMAL;
+			self->cp_assembler       = ASM_FNORMAL;
+		}
 
 		/* Override the name that is used as the
 		 * effective display/DDI string of the file. */
@@ -266,7 +577,7 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 			goto setup_default_file_stack;
 		}
 	} else {
-		/* Simply case: just initialize file-stack using given stream. */
+		/* Simply case: just initialize file-stack using the given stream. */
 setup_default_file_stack:
 		tpp_lexer_initfile_stream(&self->cp_lexer.dl_lexer,
 		                          options, source_stream, start_lc);

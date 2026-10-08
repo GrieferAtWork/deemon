@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
 #include <stdint.h>  /* uint16_t */
@@ -122,7 +123,7 @@ cmd_parse(int *__restrict p_argc, char ***__restrict p_argv,
 /* Execute all encountered commands with the `CMD_FRUNLATER` flag set. */
 INTDEF int DCALL cmd_runlate(void);
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_CMDLINE_H */

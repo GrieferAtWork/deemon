@@ -88,6 +88,41 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options);
 DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
 
+
+/* Parse compiler (and compiler-*ONLY*) CLI parameters.
+ * TPP (lexer/makefile/emitter) CLI parameters must be parsed individually. */
+typedef struct DeeCompilerCliLoader {
+	DeeCompiler *ccl_compiler; /* [1..1][const] The compiler being configured */
+	unsigned int ccl_state;    /* CLI Loader state (one of `Dee_COMPILER_CLI_STATE_*`, or some internal value) */
+#define Dee_COMPILER_CLI_STATE_NORMAL 0 /* Normal state */
+#define Dee_COMPILER_CLI_STATE_DDASH  1 /* "--" encountered */
+} DeeCompilerCliLoader;
+
+#define DeeCompilerCliLoader_Init(self, compiler) \
+	(void)((self)->ccl_compiler = (compiler),     \
+	       (self)->ccl_state    = Dee_COMPILER_CLI_STATE_NORMAL)
+#define DeeCompilerCliLoader_Fini(self) \
+	(void)0
+
+DFUNDEF ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
+DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
+                     tpp_size token_size, tpp_warning_id id, ...);
+
+/* Parse arguments/flags
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  Unknown argument/flag (try handling it elsewhere)
+ * @return: TPP_EDEEMON: An error was thrown */
+DFUNDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
+                              char const *arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
+                               char const **p_arg);
+DFUNDEF WUNUSED NONNULL((1)) tpp_errno DCALL
+DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *tpp_restrict self);
+
+/* TODO: Help string for `DeeCompilerCliLoader` (compatible with the format used by TPP3) */
+
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 typedef struct Dee_compiler_object DeeCompilerObject;
 

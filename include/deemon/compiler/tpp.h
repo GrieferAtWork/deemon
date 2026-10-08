@@ -719,6 +719,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_CLI_SETINPUTS                    1
 #define TPP_HAVE_CLI_SETINPUTS_DASH               1
 #define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH    1
+#define TPP_HAVE_CLI_PARSEARGV                    0
 
 /************************************************************************/
 /* MAKEFILE                                                             */
@@ -744,8 +745,10 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MD                1
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MMD               1
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MP                1
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 0
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                0
+#define TPP_MAKEFILE_HAVE_CLI_ENV                    TPP_CONF_FEAT0 /* Disabled by default (enabled for __MAIN__) */
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                1
+#define TPP_MAKEFILE_HAVE_CLI_PARSEARGV              0
 #define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX  "."
 #define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION        ".dec"
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
@@ -811,6 +814,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET           1
 #define TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED             1
 #define TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO              1
+#define TPP_EMITTER_HAVE_CLI_PARSEARGV                   0
 
 
 /* I/O Hooks */

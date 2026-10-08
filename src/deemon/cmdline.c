@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Freea, Dee_UntrackAlloc */
 #include <deemon/error.h>           /* DeeError_RuntimeError, DeeError_Throwf */
 #include <deemon/system-features.h> /* bcmpc, memchr, memmovedownc, mempcpyc, strlen */
@@ -374,7 +375,7 @@ err:
 	goto done;
 }
 
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #endif /* !GUARD_CMDLINE_C */

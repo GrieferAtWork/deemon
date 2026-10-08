@@ -231,9 +231,315 @@ PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
 #define OPERATION_MODE_INTERACTIVE 5 /* Read, compile, and execute sourcecode interactively from the stdin. */
 #endif
 
-/* The effective operation mode (One of `OPERATION_MODE_*`) */
-PRIVATE uint8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Secondary CLI parser implementation that uses:
+ * - `DeeCompilerCliLoader`
+ * - `tpp_cli_loader`
+ * - `tpp_makefile_cli_loader`
+ * - `tpp_emitter_cli_loader`
+ * - Additional CLI handling for FE-only stuff like `--help`
+ */
 
+enum fe_cli_state_enum {
+	FE_CLI_STATE_NORMAL, /* Normal state */
+	FE_CLI_STATE_DDASH,  /* "--" encountered */
+	FE_CLI_STATE_OUTPUT, /* "--output" */
+};
+
+struct fe_cli_parser {
+	uint_fast8_t            fcp_mode;          /* One of `OPERATION_MODE_*` */
+	enum fe_cli_state_enum  fcp_state;         /* Frontend CLI state */
+	DeeCompilerCliLoader    fcp_comp;          /* Compiler CLI loader */
+	tpp_cli_loader          fcp_cli;           /* Lexer CLI loader */
+	tpp_makefile_cli_loader fcp_cli_mf;        /* Makefile CLI loader */
+	tpp_emitter_cli_loader  fcp_cli_emit;      /* Emitter CLI loader */
+	DREF DeeObject         *fcp_output_stream; /* [0..1] Output specified by `-o` */
+	char const             *fcp_output_name;   /* [0..1] Filename of `fcp_output_stream` */
+	char const             *fcp_emitasm_flags; /* Additional flags to-be used when printing assembly (`FOO` in `-S=FOO`). */
+};
+
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+fe_cli_parser_init(struct fe_cli_parser *__restrict self,
+                   DeeCompiler *__restrict compiler,
+                   tpp_emitter *__restrict emitter) {
+	self->fcp_mode = OPERATION_MODE_RUNSCRIPT;
+	self->fcp_state = FE_CLI_STATE_NORMAL;
+	DeeCompilerCliLoader_Init(&self->fcp_comp, compiler);
+	tpp_cli_loader_init(&self->fcp_cli, &compiler->cp_lexer.dl_lexer);
+	tpp_makefile_cli_loader_init(&self->fcp_cli_mf, &compiler->cp_lexer.dl_makefile);
+	tpp_emitter_cli_loader_init(&self->fcp_cli_emit, emitter);
+	self->fcp_output_stream = NULL;
+	self->fcp_output_name = NULL;
+	self->fcp_emitasm_flags = NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+fe_cli_parser_fini(struct fe_cli_parser *__restrict self) {
+	tpp_emitter_cli_loader_fini(&self->fcp_cli_emit);
+	tpp_makefile_cli_loader_fini(&self->fcp_cli_mf);
+	tpp_cli_loader_fini(&self->fcp_cli);
+	DeeCompilerCliLoader_Fini(&self->fcp_comp);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_setoutput(struct fe_cli_parser *__restrict self, char const *arg) {
+	Dee_XDecref(self->fcp_output_stream);
+	if (strcmp(arg, "-") == 0) {
+		/* Special case: output to stdout */
+		self->fcp_output_stream = DeeFile_GetStd(Dee_STDOUT);
+	} else {
+		self->fcp_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 644);
+	}
+	if unlikely(!self->fcp_output_stream)
+		goto err;
+	self->fcp_output_name = arg;
+	return TPP_EOK;
+err:
+	return TPP_EDEEMON;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg) {
+#define cli_streq(at, CONSTstr) \
+	(bcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
+	switch (self->fcp_state) {
+
+	case FE_CLI_STATE_NORMAL:
+		switch (*arg++) {
+		case '-': {
+			char const *after_dash = arg;
+			switch (*arg++) {
+			case '\0':
+				break;
+
+			case '-':
+				switch (*arg++) {
+				case '\0':
+					self->fcp_state = FE_CLI_STATE_DDASH; /* -- */
+					return TPP_EOK;
+
+				case 'o': {
+					if (cli_streq(arg, "utput=")) {
+						arg += (sizeof("utput=") - sizeof(char));
+						return fe_cli_setoutput(self, arg);
+					} else if (cli_streq(arg, "utput\0")) {
+						self->fcp_state = FE_CLI_STATE_OUTPUT;
+						return TPP_EOK;
+					}
+				}	break;
+
+				case 'h': {
+					if (cli_streq(arg, "elp\0")) {
+						/* TODO: --help */
+					}
+				}	break;
+
+				case 'v': {
+					if (cli_streq(arg, "ersion\0")) {
+						/* TODO: --version */
+					}
+				}	break;
+
+				/* TODO: All missing CLI flags (see non-CONFIG_EXPERIMENTAL_USE_TPP3 code in main.c) */
+				/* TODO: -Wp,... */
+				/* TODO: -Wa,... */
+				/* TODO: -Wl,... */
+
+				default: break;
+				}
+				break;
+
+			case 'o':
+				if (*arg == '\0') {
+					self->fcp_state = FE_CLI_STATE_OUTPUT;
+					return TPP_EOK;
+				}
+				break;
+
+			default: break;
+			}
+		}	break;
+
+		default: break;
+		}
+		break;
+
+	case FE_CLI_STATE_DDASH:
+		break; /* Don't accept any more arguments */
+
+	case FE_CLI_STATE_OUTPUT:
+		self->fcp_state = FE_CLI_STATE_NORMAL;
+		return fe_cli_setoutput(self, arg);
+
+	default: __builtin_unreachable();
+	}
+#undef cli_streq
+	return TPP_ENOENT;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_parseflag_frontend(struct fe_cli_parser *__restrict self, char const **p_arg) {
+	char const *arg = *p_arg;
+	switch (*arg++) {
+
+	case 'E':
+		self->fcp_mode = OPERATION_MODE_PRINTPP;
+		goto done;
+
+	case 'S':
+		self->fcp_mode = OPERATION_MODE_PRINTASM;
+		if (*arg == '=') {
+			self->fcp_emitasm_flags = ++arg;
+			arg += strlen(arg);
+		}
+		goto done;
+
+	case 'F':
+		self->fcp_mode = OPERATION_MODE_FORMAT;
+		goto done;
+
+	case 'c':
+		self->fcp_mode = OPERATION_MODE_BUILDONLY;
+		goto done;
+
+	default: break;
+	}
+	return TPP_ENOENT;
+done:
+	*p_arg = arg;
+	return TPP_EOK;
+}
+
+PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
+fe_cli_flush_frontend(struct fe_cli_parser *__restrict self) {
+	if (self->fcp_state != FE_CLI_STATE_NORMAL &&
+	    self->fcp_state != FE_CLI_STATE_DDASH) {
+		tpp_errno error = DeeCompiler_CliWarnf(self->fcp_comp.ccl_compiler, NULL, 0,
+		                                       TPP_W_MISSING_CLI_ARGUMENT);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	return TPP_EOK;
+}
+
+/* Flush all CLI components */
+PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
+fe_cli_flush(struct fe_cli_parser *__restrict self) {
+	tpp_errno error;
+	error = tpp_emitter_cli_loader_flush(&self->fcp_cli_emit);
+	if (!TPP_ISERR(error))
+		error = tpp_makefile_cli_loader_flush(&self->fcp_cli_mf, self->fcp_output_name);
+	if (!TPP_ISERR(error))
+		error = tpp_cli_loader_flush(&self->fcp_cli);
+	if (!TPP_ISERR(error))
+		error = DeeCompilerCliLoader_Flush(&self->fcp_comp);
+	if (!TPP_ISERR(error))
+		error = fe_cli_flush_frontend(self);
+	return error;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_parsearg(struct fe_cli_parser *__restrict self, char const *arg) {
+	tpp_errno error;
+	if (self->fcp_state != FE_CLI_STATE_NORMAL)
+		return fe_cli_parsearg_frontend(self, arg);
+	if (self->fcp_comp.ccl_state != Dee_COMPILER_CLI_STATE_NORMAL)
+		return DeeCompilerCliLoader_ParseArg(&self->fcp_comp, arg);
+	if (!tpp_cli_loader_hasdefaultstate(&self->fcp_cli))
+		return tpp_cli_loader_parsearg(&self->fcp_cli, arg);
+	if (!tpp_makefile_cli_loader_hasdefaultstate(&self->fcp_cli_mf))
+		return tpp_makefile_cli_loader_parsearg(&self->fcp_cli_mf, arg);
+	if (!tpp_emitter_cli_loader_hasdefaultstate(&self->fcp_cli_emit))
+		return tpp_emitter_cli_loader_parsearg(&self->fcp_cli_emit, arg);
+
+	/* Try to handle argument using different CLI loaders */
+	error = fe_cli_parsearg_frontend(self, arg);
+	if (error == TPP_ENOENT)
+		error = DeeCompilerCliLoader_ParseArg(&self->fcp_comp, arg);
+	if (error == TPP_ENOENT)
+		error = tpp_cli_loader_parsearg(&self->fcp_cli, arg);
+	if (error == TPP_ENOENT)
+		error = tpp_makefile_cli_loader_parsearg(&self->fcp_cli_mf, arg);
+	if (error == TPP_ENOENT)
+		error = tpp_emitter_cli_loader_parsearg(&self->fcp_cli_emit, arg);
+
+	/* Try to handle argument as a set of flags */
+	if (error == TPP_ENOENT && (arg[0] == '-' &&
+	                            arg[1] != '-' &&
+	                            arg[1] != '\0')) {
+		char const *after_dash = arg + 1;
+		while (*after_dash) {
+			error = fe_cli_parseflag_frontend(self, &after_dash);
+			if (error == TPP_ENOENT)
+				error = DeeCompilerCliLoader_ParseFlag(&self->fcp_comp, &after_dash);
+			if (error == TPP_ENOENT)
+				error = tpp_cli_loader_parseflag(&self->fcp_cli, &after_dash);
+			if (error == TPP_ENOENT)
+				error = tpp_makefile_cli_loader_parseflag(&self->fcp_cli_mf, &after_dash);
+			if (error == TPP_ENOENT)
+				error = tpp_emitter_cli_loader_parseflag(&self->fcp_cli_emit, &after_dash);
+			if (TPP_ISERR(error))
+				return error;
+		}
+	}
+	return error;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) tpp_errno DCALL
+fe_cli_parse_argv(struct fe_cli_parser *__restrict self,
+                  int *p_argc, char ***p_argv) {
+	tpp_errno result = TPP_EOK;
+	int argc    = *p_argc;
+	char **argv = *p_argv;
+	unsigned int unknown_count = 0;
+	while (argc > 0) {
+		char *arg = argv[0];
+		result = fe_cli_parsearg(self, arg);
+		if (TPP_ISERR(result)) {
+			if (result != TPP_ENOENT)
+				break;
+			/* Add "arg" to trailing list of unknown arguments */
+			--argc;
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
+			argv[argc + unknown_count] = arg;
+			++unknown_count;
+			result = TPP_EOK;
+			continue;
+		}
+		if (self->fcp_state == FE_CLI_STATE_DDASH) {
+			if (unknown_count) {
+				/* Right now, "argv" looks like this:
+				 * >> argv = { "--", "file1.c", "file2.c", "-unknown-arg", "file0.c" }
+				 * >> argc = 3
+				 * >> unknown_count = 2
+				 *
+				 * Our job now is to make `argv` look like this:
+				 * >> argv = { "-unknown-arg", "file0.c", "--", "file1.c", "file2.c" } */
+				unsigned int shift_count = unknown_count;
+				unsigned int total_count_minus_1 = argc + unknown_count - 1;
+				while (shift_count--) {
+					arg = argv[0];
+					(void)tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					argv[total_count_minus_1] = arg;
+				}
+			}
+			break;
+		}
+		++argv;
+		--argc;
+	}
+	*p_argc = argc + unknown_count;
+	*p_argv = argv;
+	return result;
+}
+
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+/* The effective operation mode (One of `OPERATION_MODE_*`) */
+PRIVATE uint_fast8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
+PRIVATE DREF DeeObject *script_output_stream = NULL;
 
 /* Operational flags and state for `OPERATION_MODE_PRINTPP` operations mode. */
 #define EMITPP_FNORMAL         0x0000 /* Normal preprocessor flags. */
@@ -246,15 +552,12 @@ PRIVATE uint8_t operation_mode = OPERATION_MODE_RUNSCRIPT;
 #define EMITPP_FATLINEFEED     0x1000 /* The preprocessor has last emit a linefeed. */
 #define EMITPP_FNODECODETOK    0x2000 /* Don't decode stuff like escape sequences and trigraphs before writing to out. */
 #define EMITPP_FMAGICTOKENS    0x4000 /* Enable ~magic~ tokens for small line-shifts to prevent a #line being emit. */
-PRIVATE uint16_t emitpp_state        = EMITPP_FNORMAL;
-PRIVATE DREF DeeObject *emitpp_dpout = NULL; /* Output stream for source dependencies. */
-PRIVATE char const *emitasm_flags    = NULL; /* Additional flags to-be used when printing assembly. */
+PRIVATE uint16_t emitpp_state = EMITPP_FNORMAL;
+PRIVATE char const *emitasm_flags = NULL; /* Additional flags to-be used when printing assembly. */
 
 
 INTDEF struct Dee_compiler_options import_options; /* Options used to compile imported libraries. */
 INTDEF struct Dee_compiler_options script_options; /* Options used to compile the user-script. */
-PRIVATE DREF DeeObject *script_output_stream = NULL;
-
 
 
 PRIVATE WUNUSED int DCALL compiler_setup(void *arg);
@@ -768,17 +1071,6 @@ PRIVATE struct cmd_option const preprocessor_options[] = {
 	{ CMD_FNORMAL | CMD_FLONG1DASH | CMD_FRUNLATER, "", "traditional-cpp", { (void *)&cmd_traditional }, doc_cmd_traditional },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "f", NULL, { (void *)&cmd_f }, doc_cmdf },
 	{ CMD_FARG | CMD_FARGIMM | CMD_FRUNLATER, "W", NULL, { (void *)&cmd_W }, doc_cmdW },
-/*TODO:
-                INDENT "-M                          Instead of emitting preprocessor output, emit a make-style list of dependencies.\n"
-                INDENT "-MM                         Similar to `-M`, but don't include system headers.\n"
-                INDENT "-MD                         Like `-M`, but don't disable preprocessing.\n"
-                INDENT "-MMD                        Like `-MM`, but don't disable preprocessing.\n"
-                INDENT "-MG                         Disable preprocessing, but include missing files as dependencies, assuming they will be generated.\n"
-                INDENT "-MP                         Emit dummy targets for every dependency.\n"
-                INDENT "-MF <file>                  Enable dependency tracking and emit its output to <file>, but also preprocess regularly.\n"
-                INDENT "-MT <target>                Specify the target object name used within the generated make dependency.\n"
-                INDENT "-MQ <target>                Same as `-MT`, but escape characters special to make, such as `$`.\n"
-*/
 	CMD_OPTION_SENTINEL
 };
 
@@ -1152,6 +1444,7 @@ error_handler(struct Dee_compiler_error_object *__restrict error,
 
 PRIVATE WUNUSED int DCALL operation_mode_printpp(int argc, char **argv);
 PRIVATE WUNUSED int DCALL operation_mode_format(int argc, char **argv);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef _MSC_VER
 PRIVATE void
@@ -1437,12 +1730,13 @@ int main(int argc, char *argv[]) {
 done:
 
 	/* Clear out object-level compiler options. */
-	Dee_XDecref(emitpp_dpout);
 	Dee_XDecref(script_output_stream);
 	Dee_XDecref(script_options.co_filename);
-	Dee_XDecref(import_options.co_filename);
 	Dee_XDecref(script_options.co_rootname);
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	Dee_XDecref(import_options.co_filename);
 	Dee_XDecref(import_options.co_rootname);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Run functions registered for atexit(). */
 	Dee_RunAtExit(Dee_RUNATEXIT_FRUNALL);
@@ -1543,6 +1837,7 @@ handle_errors:
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN struct Dee_compiler_options import_options = {
 	/* .co_inner         = */ &import_options,
 	/* .co_pathname      = */ NULL,
@@ -1576,14 +1871,6 @@ INTERN struct Dee_compiler_options script_options = {
 	/* .co_unwind_limit  = */ 0,
 	/* .co_assembler     = */ ASM_FNORMAL | ASM_FOPTIMIZE,
 };
-
-#if defined(__SSP_FORTIFY_LEVEL) && (__SSP_FORTIFY_LEVEL + 0) > 0
-INTERN uintptr_t __stack_chk_guard = 0x1246ab1f;
-INTERN ATTR_NORETURN void __stack_chk_fail(void) {
-	Dee_XFatal();
-}
-#endif /* __SSP_FORTIFY_LEVEL > 0 */
-
 
 PRIVATE NONNULL((1)) void DCALL
 emitpp_writeout(void const *__restrict p, size_t s) {
@@ -1863,6 +2150,7 @@ err:
 err_nofin:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 PRIVATE char const dformat_code_head[] = "[[[deemon";
@@ -2784,6 +3072,13 @@ err:
 	DeeCompiler_LockEndWrite();
 	return -1;
 }
+
+#if defined(__SSP_FORTIFY_LEVEL) && (__SSP_FORTIFY_LEVEL + 0) > 0
+INTERN uintptr_t __stack_chk_guard = 0x1246ab1f;
+INTERN ATTR_NORETURN void __stack_chk_fail(void) {
+	Dee_XFatal();
+}
+#endif /* __SSP_FORTIFY_LEVEL > 0 */
 
 DECL_END
 
