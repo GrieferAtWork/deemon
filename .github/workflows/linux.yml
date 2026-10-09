@@ -16,6 +16,7 @@ jobs:
       with:
         submodules: 'true'
 
+    # TODO: Only use if cache is newer than last-modified of /configure
     - name: Restore configure results
       id: cached-configure-restore
       uses: actions/cache/restore@v5

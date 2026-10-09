@@ -596,6 +596,8 @@ struct ast_annotations {
 	                                  * Amount of allocated annotations. */
 };
 
+#define AST_ANNOTATIONS_INIT { 0, 0, NULL }
+
 struct ast_tags_printers {
 	struct Dee_unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
 	struct Dee_unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */

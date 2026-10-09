@@ -256,8 +256,12 @@ struct fe_cli_parser {
 	DREF DeeObject         *fcp_output_stream; /* [0..1] Output specified by `-o` */
 	char const             *fcp_output_name;   /* [0..1] Filename of `fcp_output_stream` */
 	char const             *fcp_emitasm_flags; /* Additional flags to-be used when printing assembly (`FOO` in `-S=FOO`). */
+#ifdef HAVE_DEBUG_STATIC_REFS
+	int                     fcp_debug_static_refs; /* Enable debugging of static references */
+#endif /* HAVE_DEBUG_STATIC_REFS */
 };
 
+#if 0
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 fe_cli_parser_init(struct fe_cli_parser *__restrict self,
                    DeeCompiler *__restrict compiler,
@@ -271,7 +275,11 @@ fe_cli_parser_init(struct fe_cli_parser *__restrict self,
 	self->fcp_output_stream = NULL;
 	self->fcp_output_name = NULL;
 	self->fcp_emitasm_flags = NULL;
+#ifdef HAVE_DEBUG_STATIC_REFS
+	self->fcp_debug_static_refs = -1;
+#endif /* HAVE_DEBUG_STATIC_REFS */
 }
+#endif
 
 PRIVATE NONNULL((1)) void DCALL
 fe_cli_parser_fini(struct fe_cli_parser *__restrict self) {
@@ -279,6 +287,7 @@ fe_cli_parser_fini(struct fe_cli_parser *__restrict self) {
 	tpp_makefile_cli_loader_fini(&self->fcp_cli_mf);
 	tpp_cli_loader_fini(&self->fcp_cli);
 	DeeCompilerCliLoader_Fini(&self->fcp_comp);
+	Dee_XDecref(self->fcp_output_stream);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
@@ -307,7 +316,6 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 	case FE_CLI_STATE_NORMAL:
 		switch (*arg++) {
 		case '-': {
-			char const *after_dash = arg;
 			switch (*arg++) {
 			case '\0':
 				break;
@@ -341,9 +349,6 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 				}	break;
 
 				/* TODO: All missing CLI flags (see non-CONFIG_EXPERIMENTAL_USE_TPP3 code in main.c) */
-				/* TODO: -Wp,... */
-				/* TODO: -Wa,... */
-				/* TODO: -Wl,... */
 
 				default: break;
 				}
@@ -485,6 +490,7 @@ fe_cli_parsearg(struct fe_cli_parser *__restrict self, char const *arg) {
 	return error;
 }
 
+/* Master CLI parser function: this function  */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) tpp_errno DCALL
 fe_cli_parse_argv(struct fe_cli_parser *__restrict self,
                   int *p_argc, char ***p_argv) {
@@ -492,6 +498,21 @@ fe_cli_parse_argv(struct fe_cli_parser *__restrict self,
 	int argc    = *p_argc;
 	char **argv = *p_argv;
 	unsigned int unknown_count = 0;
+	/* TODO: The logic below doesn't work for the master CLI:
+	 * - Special handling for "--" argument must still exist
+	 * - However: must stop treating CLI as arguments the first
+	 *   time an argument doesn't start with "-" (and all of the
+	 *   CLI consumers are in their NORMAL or DDASH state)
+	 *
+	 * >> deemon foo.dee -E
+	 * This must cause a file "foo.dee" to be called with argv ["foo.dee", "-E"]
+	 *
+	 * >> deemon -E foo.dee
+	 * This must cause "foo.dee" to be be preprocessed
+	 *
+	 * >> deemon -- -E foo.dee
+	 * This must cause a file "-E" to be called with argv ["-E", "foo.dee"]
+	 */
 	while (argc > 0) {
 		char *arg = argv[0];
 		result = fe_cli_parsearg(self, arg);
@@ -533,6 +554,293 @@ fe_cli_parse_argv(struct fe_cli_parser *__restrict self,
 	*p_argc = argc + unknown_count;
 	*p_argv = argv;
 	return result;
+}
+
+
+/* Frontend compiler */
+PRIVATE DeeCompiler fe_compiler = {
+	/* .cp_lexer = */ {
+		/* .dl_lexer = */
+#define TPP_LEXER_SELF fe_compiler.cp_lexer.dl_lexer
+#include "../../../src/external/tpp3/src/tpp-lexer-init.h"
+		,
+		/* .dl_makefile = */ TPP_MAKEFILE_INIT(fe_compiler.cp_lexer.dl_makefile,
+		                                       &fe_compiler.cp_lexer.dl_lexer,
+		                                       &DeeLexer_TPP_MesgPrinterHook)
+	},
+	/* .cp_tags  = */ {
+		/* .at_decl        = */ Dee_UNICODE_PRINTER_INIT,
+		/* .at_doc         = */ Dee_UNICODE_PRINTER_INIT,
+		/* .at_anno        = */ AST_ANNOTATIONS_INIT,
+		/* .at_expect      = */ 0,
+		/* .at_class_flags = */ TP_FNORMAL,
+		/* .at_code_flags  = */ Dee_CODE_FNORMAL,
+		/* .at_attr_flags  = */ Dee_CLASS_ATTRIBUTE_FNORMAL,
+	},
+	/* .cp_flags = */ Dee_COMPILER_FLAG_MAIN,
+	/* .cp_parser_flags    = */ PARSE_FNORMAL,
+	/* .cp_optimizer_flags = */ OPTIMIZE_FNORMAL,
+	/* .cp_unwind_limit    = */ 0,
+	/* .cp_assembler       = */ ASM_FNORMAL | ASM_FOPTIMIZE,
+#ifndef CONFIG_LANGUAGE_NO_ASM
+	/* .cp_uasm_unique = */ 0,
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
+	/* .cp_prev      = */ NULL,
+	/* .cp_recursion = */ 0,
+};
+
+PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC
+fe_emitter_printer(void *arg, char const *__restrict text, size_t num_bytes);
+
+/* Frontend emitter (for `deemon -E`) */
+PRIVATE tpp_emitter fe_emitter =
+TPP_EMITTER_INIT(fe_emitter,
+                 &fe_compiler.cp_lexer.dl_lexer,
+                 &fe_emitter_printer);
+
+/* Frontend CLI */
+PRIVATE struct fe_cli_parser fe_cli = {
+	/* .fcp_mode  = */ OPERATION_MODE_RUNSCRIPT,
+	/* .fcp_state = */ FE_CLI_STATE_NORMAL,
+	/* .fcp_comp  = */ {
+		/* .ccl_compiler = */ &fe_compiler,
+		/* .ccl_state    = */ Dee_COMPILER_CLI_STATE_NORMAL,
+	},
+
+	/* TPP CLI loaders... */
+	/* .fcp_cli      = */ TPP_CLI_LOADER_INIT(fe_cli.fcp_cli, &fe_compiler.cp_lexer.dl_lexer),
+	/* .fcp_cli_mf   = */ TPP_MAKEFILE_CLI_LOADER_INIT(fe_cli.fcp_cli_mf, &fe_compiler.cp_lexer.dl_makefile),
+	/* .fcp_cli_emit = */ TPP_EMITTER_CLI_LOADER_INIT(fe_cli.fcp_cli_emit, &fe_emitter),
+
+	/* FE state variables... */
+	/* .fcp_output_stream = */ NULL,
+	/* .fcp_output_name   = */ NULL,
+	/* .fcp_emitasm_flags = */ NULL,
+#ifdef HAVE_DEBUG_STATIC_REFS
+	/* .fcp_debug_static_refs = */ -1,
+#endif /* HAVE_DEBUG_STATIC_REFS */
+};
+
+
+PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC
+fe_emitter_printer(void *arg, char const *__restrict text, size_t num_bytes) {
+	STATIC_ASSERT_MSG(TPP_SSIZE_OFERR(TPP_EDEEMON) == (Dee_ssize_t)(size_t)-1,
+	                  "Required by 'DeeFile_WriteAll()' below");
+	size_t result;
+	DeeObject *stream = fe_cli.fcp_output_stream;
+	(void)arg;
+	if (stream == NULL) {
+		stream = DeeFile_GetStd(Dee_STDOUT);
+		if unlikely(!stream)
+			return TPP_SSIZE_OFERR(TPP_EDEEMON);
+		fe_cli.fcp_output_stream = stream;
+	}
+	result = DeeFile_WriteAll(stream, text, num_bytes);
+	return (Dee_ssize_t)result;
+}
+
+
+
+#ifdef _MSC_VER
+PRIVATE void
+noop_invalid_parameter_handler(void *UNUSED(a), void *UNUSED(b),
+                               void *UNUSED(c), unsigned int UNUSED(d),
+                               uintptr_t UNUSED(e)) {
+	COMPILER_IMPURE();
+	(void)0;
+}
+#endif /* _MSC_VER */
+
+/* ==================================================================== *
+ * --- MAIN()                                                           *
+ * ==================================================================== */
+int main(int argc, char *argv[]) {
+#ifdef EXIT_SUCCESS
+	int result = EXIT_SUCCESS;
+#else /* EXIT_SUCCESS */
+	int result = 0;
+#endif /* !EXIT_SUCCESS */
+
+#ifdef __CYGWIN__
+	/* Cygwin writes some garbage before passing control to main()
+	 * Since it fails to print a terminating line-feed, this is the
+	 * best we can do to at least prevent our first line from being
+	 * appended to its. */
+	Dee_DPRINT("\n");
+#endif /* __CYGWIN__ */
+
+#ifdef _MSC_VER
+	/* The following stuff is required to correct errno-behavior when doing
+	 * (possibly) invalid stuff like `close(42)` (where `42` isn't an open
+	 * file). This is required since we expose functions such as `close` to
+	 * user-code via `import posix`, and without the following, user-code
+	 * doing something bad would result in an assertion-failure-like error
+	 * message box being displayed on-screen, rather than the normal, expected
+	 * `errno=EBADFD` -> `throw FileClosed()` exception dispatching. */
+	_set_invalid_parameter_handler((_invalid_parameter_handler)&noop_invalid_parameter_handler);
+#ifdef CONFIG_HAVE_CRTDBG_H
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_HFILE_ERROR);
+#endif /* CONFIG_HAVE_CRTDBG_H */
+#endif /* _MSC_VER */
+
+	DBG_ALIGNMENT_ENABLE();
+
+	/*DeeHeap_SetAllocBreakpoint(280);*/
+
+	/* TODO: Using type caches, add the ability for volatile extensions
+	 *       to available attributes, allowing user-code to extend the
+	 *       functionality available through builtin types.
+	 * NOTE: AST Optimization also needs to be adjusted to not
+	 *       accidentally invoke such extensions! */
+
+	/* Literally the only deemon component that actually needs to
+	 * be initialized (and isn't already initialized statically):
+	 *  - The TLS variable that is used by `DeeThread_Self()`
+	 * Too bad there's no cross-platform way to do this statically.
+	 * Else, this'd be so much simpler. */
+	Dee_Initialize();
+
+	/* Skip the first argument (the deemon executable name) */
+	if (argc) {
+		--argc;
+		++argv;
+	}
+
+	if (!argc) {
+		DREF DeeObject *fp;
+		size_t temp;
+		/* When no arguments were passed, print a short help-message and exit. */
+		fp = DeeFile_GetStd(Dee_STDERR);
+		if unlikely(!fp)
+			goto err_cli;
+		temp = DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage));
+		if likely(temp != (size_t)-1)
+			temp = DeeFile_WriteAll(fp, str_minhelp, COMPILER_STRLEN(str_minhelp));
+		Dee_Decref(fp);
+		if unlikely(temp == (size_t)-1)
+			goto err_cli;
+		goto done_cli;
+	}
+
+	/* Parse the commandline. */
+	if (fe_cli_parse_argv(&fe_cli, &argc, &argv))
+		goto err_cli;
+
+	switch (fe_cli.fcp_mode) {
+
+	case OPERATION_MODE_RUNSCRIPT:
+		/* TODO */
+		break;
+
+	case OPERATION_MODE_BUILDONLY:
+		/* TODO */
+		break;
+
+	case OPERATION_MODE_PRINTPP:
+		/* TODO */
+		break;
+
+	case OPERATION_MODE_PRINTASM:
+		/* TODO */
+		break;
+
+	case OPERATION_MODE_FORMAT:
+		/* TODO */
+		break;
+
+	default: __builtin_unreachable();
+	}
+
+	/* Finalize frontend components... */
+done_cli:
+	DeeCompiler_Fini(&fe_compiler);
+	tpp_emitter_fini(&fe_emitter);
+	fe_cli_parser_fini(&fe_cli);
+done:
+
+	/* Run functions registered for atexit(). */
+	Dee_RunAtExit(Dee_RUNATEXIT_FRUNALL);
+
+	/* Reset the argument vector tuple. */
+	Dee_SetArgv(Dee_EmptyTuple);
+
+#undef CONFIG_ALWAYS_LOG_LEAKS
+#if !defined(NDEBUG) && 0
+#define CONFIG_ALWAYS_LOG_LEAKS
+#endif
+
+	/* Shutdown the deemon core.
+	 * This function does pretty much everything for us:
+	 *  - Interrupt + join all threads but the main one.
+	 *  - Clear all remaining GC objects.
+	 *  - Unload all loaded DEX modules.
+	 *  - ...
+	 */
+#if !defined(NDEBUG) || !defined(CONFIG_ALWAYS_LOG_LEAKS) || defined(CONFIG_TRACE_REFCHANGES)
+	Dee_Shutdown(Dee_SHUTDOWN_F_NORMAL);
+#else /* !NDEBUG || !CONFIG_ALWAYS_LOG_LEAKS || CONFIG_TRACE_REFCHANGES */
+	Dee_Shutdown(Dee_SHUTDOWN_F_FAST);
+#endif /* NDEBUG && CONFIG_ALWAYS_LOG_LEAKS && !CONFIG_TRACE_REFCHANGES */
+
+#ifndef NDEBUG
+#ifndef CONFIG_ALWAYS_LOG_LEAKS
+//	_Dee_dprint_enabled = 1;
+	_Dee_dprint("");
+#ifdef CONFIG_HOST_WINDOWS
+	if (_Dee_dprint_enabled != 0 || IsDebuggerPresent())
+#else /* CONFIG_HOST_WINDOWS */
+	if (_Dee_dprint_enabled != 0)
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
+#endif /* !NDEBUG */
+	{
+		/* Dump information on all objects that are still alive.
+		 * Anything that still exists at this point really is a
+		 * reference leak. */
+#ifdef CONFIG_TRACE_REFCHANGES
+		Dee_DumpReferenceLeaks();
+#endif /* CONFIG_TRACE_REFCHANGES */
+		DeeHeap_CheckMemory();
+		if (DeeHeap_DumpMemoryLeaks(DeeHeap_DumpMemoryLeaks_ALL))
+			_DeeAssert_Fail("!DeeHeap_DumpMemoryLeaks()", __FILE__, __LINE__);
+	}
+
+	/* Dump static refcnt changes if that feature is enabled. */
+#ifdef HAVE_DEBUG_STATIC_REFS
+#ifdef CONFIG_HOST_WINDOWS
+	if (fe_cli.fcp_debug_static_refs < 0)
+		fe_cli.fcp_debug_static_refs = IsDebuggerPresent() ? 1 : 0;
+#endif /* !CONFIG_HOST_WINDOWS */
+	if (fe_cli.fcp_debug_static_refs > 0 && _Dee_dprint_enabled)
+		DeeDbg_DumpStaticRefChanges();
+#endif /* HAVE_DEBUG_STATIC_REFS */
+
+	return result;
+err_cli_no_input:
+	DeeError_Throwf(&DeeError_RuntimeError,
+	                "No input files");
+err_cli:
+	DeeCompiler_Fini(&fe_compiler);
+	tpp_emitter_fini(&fe_emitter);
+	fe_cli_parser_fini(&fe_cli);
+err:
+#ifdef EXIT_FAILURE
+	result = EXIT_FAILURE;
+#else /* EXIT_FAILURE */
+	result = 1;
+#endif /* !EXIT_FAILURE */
+handle_errors:
+	do {
+		DeeObject *cur = DeeError_Current();
+		/* Special handling for AppExit errors. */
+		if (cur && DeeAppExit_Check(cur)) {
+			result = DeeAppExit_Exitcode(cur);
+			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
+			goto handle_errors;
+		}
+	} while (DeeError_Print(NULL, ERROR_PRINT_HANDLEINTR));
+	goto done;
 }
 
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -693,12 +1001,7 @@ PRIVATE WUNUSED int DCALL cmd_c(char *UNUSED(arg)) {
 }
 
 PRIVATE WUNUSED int DCALL cmd_ppC(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_COMMENT);
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTCOMMENTS;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
@@ -708,90 +1011,43 @@ PRIVATE WUNUSED int DCALL cmd_tok(char *UNUSED(arg)) {
 }
 
 PRIVATE WUNUSED int DCALL cmd_cpp(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_MACROS);
-	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_NO_MACROS |
 	                               TPPLEXER_FLAG_NO_DIRECTIVES |
 	                               TPPLEXER_FLAG_NO_BUILTIN_MACROS);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_nocpp(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_MACROS);
-	tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_NO_MACROS |
 	                              TPPLEXER_FLAG_NO_DIRECTIVES |
 	                              TPPLEXER_FLAG_NO_BUILTIN_MACROS);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_undef(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_errno error = tpp_lexer_disableextension(&lexer->dl_lexer, TPP_EXT_CPP_PREDEFINED_MACROS);
-	if (TPP_ISERR(error))
-		return -1;
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_DisableExtension(EXT_SYSTEM_MACROS);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_trigraphs(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_errno error = tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TRIGRAPHS);
-	if (TPP_ISERR(error))
-		return -1;
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_EnableExtension(EXT_TRIGRAPHS);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_traditional(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_errno error = tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TRADITIONAL_MACROS);
-	if (TPP_ISERR(error))
-		return -1;
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_EnableExtension(EXT_TRADITIONAL_MACRO);
 	TPPLexer_Current->l_extokens |= TPPLEXER_TOKEN_EQUALBINOP;
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return 0;
 }
 
 PRIVATE WUNUSED int DCALL cmd_pp(char *UNUSED(arg)) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer *lexer = DeeLexer_OfCompiler(DeeCompiler_Current);
-	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_SPACE);
-	tpp_lexer_disablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_LF);
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	TPPLexer_Current->l_flags &= ~(TPPLEXER_FLAG_WANTSPACE | TPPLEXER_FLAG_WANTLF);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	emitpp_state = (emitpp_state & ~EMITPP_MOUTLINE) | EMITPP_FOUTLINE_ZERO;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_ftabstop(char *arg) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	tpp_column width;
-	int result = Dee_TAtoi(tpp_column, arg, strlen(arg), 0, &width);
-	if (result == 0)
-		tpp_settabsize(width);
-	return result;
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return Dee_TAtoi(uint16_t, arg, strlen(arg), 0, &script_options.co_tabwidth);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 PRIVATE WUNUSED int TPPCALL emitpp_reemit_pragma(void);
@@ -1444,7 +1700,6 @@ error_handler(struct Dee_compiler_error_object *__restrict error,
 
 PRIVATE WUNUSED int DCALL operation_mode_printpp(int argc, char **argv);
 PRIVATE WUNUSED int DCALL operation_mode_format(int argc, char **argv);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef _MSC_VER
 PRIVATE void
@@ -1733,10 +1988,8 @@ done:
 	Dee_XDecref(script_output_stream);
 	Dee_XDecref(script_options.co_filename);
 	Dee_XDecref(script_options.co_rootname);
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	Dee_XDecref(import_options.co_filename);
 	Dee_XDecref(import_options.co_rootname);
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Run functions registered for atexit(). */
 	Dee_RunAtExit(Dee_RUNATEXIT_FRUNALL);
@@ -1826,6 +2079,7 @@ handle_errors:
 	} while (DeeError_Print(NULL, ERROR_PRINT_HANDLEINTR));
 	goto done;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 

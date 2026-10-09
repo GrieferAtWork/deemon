@@ -418,7 +418,6 @@ DeeCompiler_Configure(DeeCompiler *__restrict self,
                       DeeObject *source_stream, tpp_lcinfo start_lc) {
 	int argc = options->co_argc;
 	char **argv = (char **)options->co_argv;
-	bool only_makefile;
 	tpp_errno error;
 	struct compiler_cli_parser parser;
 	DeeCompilerCliLoader_Init(&parser.ccp_comp, self);
@@ -444,10 +443,6 @@ DeeCompiler_Configure(DeeCompiler *__restrict self,
 		tpp_lexer_initfile_stream(&self->cp_lexer.dl_lexer, options, source_stream, start_lc);
 	}
 
-	/* Makefile should only check ENV variables if this is the __MAIN__ file */
-	if (self->cp_flags & Dee_COMPILER_FLAG_MAIN)
-		tpp_makefile_cli_loader_enablecheckenv(&parser.ccp_cli_mf);
-
 	/* Flush CLI loaders */
 	error = tpp_makefile_cli_loader_flush(&parser.ccp_cli_mf, options ? options->co_output : NULL);
 	if (TPP_ISERR(error))
@@ -460,13 +455,11 @@ DeeCompiler_Configure(DeeCompiler *__restrict self,
 		goto err_parser_filestack;
 
 	/* Cleanup */
-	only_makefile = tpp_makefile_cli_loader_getonlymakefile(&parser.ccp_cli_mf);
+	if (tpp_makefile_cli_loader_getonlymakefile(&parser.ccp_cli_mf)) {
+		/* TODO: Throw an error (only allowed in frontend) */
+	}
 	tpp_makefile_cli_loader_fini(&parser.ccp_cli_mf);
 	tpp_cli_loader_fini(&parser.ccp_cli);
-
-	if (only_makefile) {
-		/* TODO: Throw an error */
-	}
 
 	return error;
 err_parser_filestack:
@@ -493,20 +486,13 @@ DeeCompiler_Fini_nofiles(DeeCompiler *__restrict self) {
 	}
 	Dee_unicode_printer_fini(&self->cp_tags.at_decl);
 	Dee_unicode_printer_fini(&self->cp_tags.at_doc);
-	Dee_Decref(self->cp_scope);
 	DeeLexer_Fini(&self->cp_lexer);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeCompiler_Init(DeeCompiler *__restrict self,
+                 DeeRootScopeObject *__restrict root_scope, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options) {
-	DeeRootScopeObject *scope;
-
-	/* Create the new root scope object. */
-	scope = (DREF DeeRootScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
-	if unlikely(!scope)
-		goto err;
-	self->cp_scope = (DREF DeeScopeObject *)scope;
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
 	self->cp_prev      = NULL;
 	self->cp_recursion = 0;
@@ -525,12 +511,6 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 	if (options) {
 		/* Inherit compilation flags. */
 		self->cp_flags = options->co_flags;
-
-		/* NOTE: This is the default-configuration for __MAIN__ */
-		if (self->cp_flags & Dee_COMPILER_FLAG_MAIN) {
-			self->cp_optimizer_flags = OPTIMIZE_FNORMAL;
-			self->cp_assembler       = ASM_FNORMAL;
-		}
 
 		/* Override the name that is used as the
 		 * effective display/DDI string of the file. */
@@ -564,7 +544,7 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 			                                   WSTR_LENGTH(rootname_utf8));
 			if unlikely(!rootname_kwd)
 				goto err_self;
-			scope->rs_scope.bs_name = rootname_kwd;
+			root_scope->rs_scope.bs_name = rootname_kwd;
 		}
 
 		/* Parse CLI arguments + configure file-stack */
@@ -717,8 +697,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeCompiler_Compile(DeeCompiler *__restrict compiler,
+                    DeeScopeObject **__restrict p_scope,
                     struct Dee_serial *__restrict writer,
                     unsigned int mode, DeeObject *default_symbols) {
 	int result;
@@ -734,7 +715,7 @@ DeeCompiler_Compile(DeeCompiler *__restrict compiler,
 
 	/* Load global context components (that haven't been migrated yet) */
 	DeeCompiler_Current = compiler;
-	current_scope = compiler->cp_scope;
+	current_scope = *p_scope;
 	ASSERT_OBJECT(current_scope);
 	current_basescope = current_scope->s_base;
 	ASSERT_OBJECT(&current_basescope->bs_scope);
@@ -750,7 +731,7 @@ DeeCompiler_Compile(DeeCompiler *__restrict compiler,
 	result = DeeCompiler_Compile_impl(compiler, writer, mode, default_symbols);
 
 	/* Update state of "compiler" */
-	compiler->cp_scope = current_scope;
+	*p_scope = current_scope;
 	memcpy(&compiler->cp_tags, &current_tags, sizeof(struct ast_tags));
 	compiler->cp_parser_flags    = parser_flags;
 	compiler->cp_optimizer_flags = optimizer_flags;
@@ -783,21 +764,30 @@ DeeExec_CompileModuleStream_impl(struct Dee_serial *__restrict writer, DeeObject
                                  struct Dee_compiler_options *options, DeeObject *default_symbols) {
 	int result;
 	DeeCompiler compiler;
+	DREF DeeScopeObject *scope;
+
+	/* Create the new root scope object. */
+	scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
+	if unlikely(!scope)
+		goto err;
 
 	/* Initialize compiler. */
-	if unlikely(DeeCompiler_Init(&compiler, source_stream,
-	                             tpp_lcinfo_of(start_line, start_col),
+	if unlikely(DeeCompiler_Init(&compiler, (DeeRootScopeObject *)scope,
+	                             source_stream, tpp_lcinfo_of(start_line, start_col),
 	                             options))
-		goto err;
+		goto err_root_scope;
 
 	/* Lock compiler context */
 	result = DeeCompiler_LockWrite();
 	if likely(result == 0) {
-		result = DeeCompiler_Compile(&compiler, writer, mode, default_symbols);
+		result = DeeCompiler_Compile(&compiler, &scope, writer, mode, default_symbols);
 		DeeCompiler_LockEndWrite();
 	}
 	DeeCompiler_Fini(&compiler);
+	Dee_Decref(scope);
 	return result;
+err_root_scope:
+	Dee_Decref(scope);
 err:
 	return -1;
 }

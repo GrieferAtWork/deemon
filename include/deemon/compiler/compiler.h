@@ -56,7 +56,6 @@ DECL_BEGIN
 #define DeeCompilerObject DeeCompiler /* Backwards compat */
 typedef struct DeeCompiler {
 	DeeLexer                    cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
-	DREF DeeScopeObject        *cp_scope;           /* [1..1] == ::current_scope */
 	struct ast_tags             cp_tags;            /* == ::current_tags */
 	uint_least32_t              cp_flags;           /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
 	uint16_t                    cp_parser_flags;    /* == ::parser_flags */
@@ -83,8 +82,9 @@ typedef struct DeeCompiler {
 #define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
 #endif /* CONFIG_BUILDING_DEEMON */
 
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeCompiler_Init(DeeCompiler *__restrict self,
+                 DeeRootScopeObject *__restrict root_scope, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options);
 DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
 
