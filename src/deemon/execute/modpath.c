@@ -54,6 +54,9 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __i386__, __x86_64__ */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINTPTR_HALF_TYPE__ */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <deemon/compiler/compiler.h>
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -2140,7 +2143,8 @@ DeeModule_OpenDecFile_impl(/*inherit(always)*/ DREF DeeObject *dec_stream,
 	/* Load file mapping as a .dec file */
 	result = DeeDec_OpenFile(&fmap, dec_dirname, dec_dirname_len,
 	                         DeeModule_IMPORT_F_CTXDIR,
-	                         options, dee_file_last_modified);
+	                         options ? Dee_compiler_options_getinner(options) : NULL,
+	                         dee_file_last_modified);
 
 	/* Cleanup on error */
 	if unlikely(!ITER_ISOK(result))
@@ -2346,10 +2350,46 @@ DeeFile_WriteDecEhdr(DeeObject *__restrict stream,
 }
 #endif /* !CONFIG_NO_DEC */
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
+default__cob_compilestream(struct Dee_compiler_options_base *__restrict options,
+                           struct Dee_serial *__restrict writer,
+                           /*utf-8*/ char const *__restrict abs_filename,
+                           size_t abs_filename_length,
+                           DeeObject *source_stream) {
+	int result;
+	DeeCompiler compiler;
+	struct Dee_compiler_options used_options;
+	(void)abs_filename_length;
+
+	/* Load effective compilation options */
+	if (!options) {
+		bzero(&used_options, sizeof(used_options));
+	} else {
+		memcpy(&used_options, options, sizeof(used_options));
+	}
+	if (used_options.co_pathname == NULL)
+		used_options.co_pathname = abs_filename;
+
+	result = DeeCompiler_Init(&compiler, source_stream,
+	                          tpp_lcinfo_of(0, 0),
+	                          &used_options);
+	if likely(result == 0) {
+		result = DeeCompiler_Compile(&compiler, writer,
+		                             DeeExec_RUNMODE_DEFAULT,
+		                             NULL);
+		DeeCompiler_Fini(&compiler);
+	}
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 PRIVATE WUNUSED NONNULL((1)) DREF /*untracked*/ DeeModuleObject *DCALL
 DeeModule_OpenFile_impl4(/*utf-8*/ char *__restrict abs_filename, size_t abs_filename_length,
                          unsigned int flags, struct Dee_compiler_options *options) {
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	struct Dee_compiler_options used_options;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	DREF /*untracked*/ DeeModuleObject *result;
 	DREF DeeObject *source_stream;
 	DeeThreadObject *caller;
@@ -2459,6 +2499,7 @@ no_dec_file:
 		return (DeeModuleObject *)source_stream;
 	}
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	/* Compile "source_stream" as an anonymous module. */
 	if (!options) {
 		bzero(&used_options, sizeof(used_options));
@@ -2467,6 +2508,7 @@ no_dec_file:
 	}
 	if (used_options.co_pathname == NULL)
 		used_options.co_pathname = abs_filename;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Deal with recursion, where the calling thread is already in the process
 	 * of compiling the same source file (i.e. we're a nested call with an
@@ -2511,10 +2553,21 @@ no_dec_file:
 #endif /* DeeModule_IMPORT_F_NOGDEC != DeeDecWriter_F_NRELOC */
 
 		/* Compile source code and write module to "writer" */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if unlikely((*(options && options->co_base.cob_compilestream
+		              ? options->co_base.cob_compilestream
+		              : &default__cob_compilestream))(&options->co_base,
+		                                              (DeeSerial *)&writer,
+		                                              abs_filename,
+		                                              abs_filename_length,
+		                                              source_stream))
+			goto err_compile_writer;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(DeeExec_CompileModuleStream_impl((DeeSerial *)&writer, source_stream,
 		                                             0, 0, DeeExec_RUNMODE_DEFAULT,
 		                                             &used_options, NULL))
 			goto err_compile_writer;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 		/* Pack written module into an EHDR */
 		ehdr = DeeDecWriter_PackEhdr(&writer, abs_filename, abs_filename_length,

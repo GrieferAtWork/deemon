@@ -327,13 +327,13 @@ applied_rrela_decref_nokill(DeeDec_Ehdr *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified) {
 	(void)p_self;
 	(void)context_absname;
 	(void)context_absname_size;
 	(void)flags;
-	(void)options;
+	(void)dependency_options;
 	(void)dee_file_last_modified;
 	DeeError_Throwf(&DeeError_UnsupportedAPI, "Deemon was built with -DCONFIG_NO_DEC");
 	return NULL;
@@ -390,7 +390,7 @@ DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
 	Dec_Dhdr *dhdr;
@@ -458,7 +458,7 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
 		dep = DeeModule_OpenEx(dependency_name->ds_string,
 		                       dependency_name->ds_length,
 		                       context_absname, context_absname_size,
-		                       flags, options);
+		                       flags, dependency_options);
 		if unlikely(!DeeModule_IMPORT_ISOK(dep)) {
 			if unlikely(dep == DeeModule_IMPORT_ERROR)
 				goto err_dep_index;
@@ -977,13 +977,13 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified) {
 	(void)fmap;
 	(void)context_absname;
 	(void)context_absname_size;
 	(void)flags;
-	(void)options;
+	(void)dependency_options;
 	(void)dee_file_last_modified;
 	DeeError_Throwf(&DeeError_UnsupportedAPI, "Deemon was built with -DCONFIG_NO_DEC");
 	return NULL;
@@ -1003,7 +1003,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified) {
 	DREF /*untracked*/ struct Dee_module_object *result;
 #ifndef Dee_DPRINT_IS_NOOP
@@ -1149,7 +1149,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 
 	/* Relocate the dec file to turn it into the embedded module object. */
 	result = DeeDec_Relocate(&ehdr, context_absname, context_absname_size,
-	                         flags, options, dee_file_last_modified);
+	                         flags, dependency_options, dee_file_last_modified);
 	if unlikely(!ITER_ISOK(result) && (ehdr != (Dec_Ehdr *)DeeMapFile_GetAddr(fmap))) {
 		/* Must update "fmap" to reflect the relocated "ehdr" */
 		*fmap = ehdr->e_mapping; /* Inherit */

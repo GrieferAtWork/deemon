@@ -188,16 +188,22 @@ TPP_EXTENSION(TPP_EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
 
 /* Indicate to user-code that they are running under deemon v200 */
 TPP_KWD(TPP_KWD___DEEMON__, "__DEEMON__")
-TPP_MACRO(TPP_KWD___DEEMON__, 1)
-TPP_PREDEFINED_MACRO(TPP_KWD___DEEMON__, "200")
+TPP_MACRO(TPP_KWD___DEEMON__, true)
+TPP_PREDEFINED_MACRO(TPP_KWD___DEEMON__, tpp_return_conststr("200"))
 TPP_KWD(TPP_KWD___DEEMON_VARIANT__, "__DEEMON_VARIANT__")
-TPP_MACRO(TPP_KWD___DEEMON_VARIANT__, 1)
-TPP_PREDEFINED_MACRO(TPP_KWD___DEEMON_VARIANT__, "\"gatw\"")
+TPP_MACRO(TPP_KWD___DEEMON_VARIANT__, true)
+TPP_PREDEFINED_MACRO(TPP_KWD___DEEMON_VARIANT__, tpp_return_conststr("\"gatw\""))
 
 /* Pre-define a macro __MAIN__ inside of the primary compilation unit. */
 TPP_KWD(TPP_KWD___MAIN__, "__MAIN__")
-TPP_MACRO(TPP_KWD___MAIN__, (DeeLexer_AsCompiler(DeeLexer_OfTPP(tpp_lexer_current()))->cp_flags & Dee_COMPILER_FLAG_MAIN) != 0)
-TPP_PREDEFINED_MACRO(TPP_KWD___MAIN__, "1")
+TPP_MACRO(TPP_KWD___MAIN__, (DeeLexer_OfTPP(tpp_current_lexer())->dl_flags & Dee_COMPILER_FLAG_MAIN) != 0)
+TPP_PREDEFINED_MACRO(TPP_KWD___MAIN__, tpp_return_conststr("1"))
+TPP_KWD(TPP_KWD___FORMAT__, "__FORMAT__")
+TPP_MACRO(TPP_KWD___FORMAT__, (DeeLexer_OfTPP(tpp_current_lexer())->dl_flags & Dee_COMPILER_FLAG_FORMAT) != 0)
+TPP_PREDEFINED_MACRO(TPP_KWD___FORMAT__, tpp_return_conststr("1"))
+TPP_KWD(TPP_KWD___FORMAT_SCRIPT__, "__FORMAT_SCRIPT__")
+TPP_MACRO(TPP_KWD___FORMAT_SCRIPT__, (DeeLexer_OfTPP(tpp_current_lexer())->dl_flags & (Dee_COMPILER_FLAG_MAIN | Dee_COMPILER_FLAG_FORMAT)) == (Dee_COMPILER_FLAG_MAIN | Dee_COMPILER_FLAG_FORMAT))
+TPP_PREDEFINED_MACRO(TPP_KWD___FORMAT_SCRIPT__, tpp_return_conststr("1"))
 
 
 /* These are actually kind-of useful to determine the host platform in user-code.
@@ -206,19 +212,33 @@ TPP_PREDEFINED_MACRO(TPP_KWD___MAIN__, "1")
  * when you move your code between platforms without deleting the `.*.dec` files. */
 #ifdef CONFIG_HOST_WINDOWS
 TPP_KWD(TPP_KWD___WINDOWS__, "__WINDOWS__")
-TPP_MACRO(TPP_KWD___WINDOWS__, 1)
-TPP_PREDEFINED_MACRO(TPP_KWD___WINDOWS__, "1")
+TPP_MACRO(TPP_KWD___WINDOWS__, true)
+TPP_PREDEFINED_MACRO(TPP_KWD___WINDOWS__, tpp_return_conststr("1"))
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_HOST_UNIX
 TPP_KWD(TPP_KWD___unix__, "__unix__")
-TPP_MACRO(TPP_KWD___unix__, 1)
-TPP_PREDEFINED_MACRO(TPP_KWD___unix__, "1")
+TPP_MACRO(TPP_KWD___unix__, true)
+TPP_PREDEFINED_MACRO(TPP_KWD___unix__, tpp_return_conststr("1"))
 
 TPP_KWD(TPP_KWD___POSIX__, "__POSIX__") /* DEPRECATED! */
-TPP_MACRO(TPP_KWD___POSIX__, 1)
-TPP_PREDEFINED_MACRO(TPP_KWD___POSIX__, "1")
+TPP_MACRO(TPP_KWD___POSIX__, true)
+TPP_PREDEFINED_MACRO(TPP_KWD___POSIX__, tpp_return_conststr("1"))
 #endif /* CONFIG_HOST_UNIX */
+
+/* Nice little helper macro: `__FUNCTION__` -- expands to
+ * a string representation of the current function's name. */
+TPP_KWD(TPP_KWD___FUNCTION__, "__FUNCTION__")
+TPP_MACRO(TPP_KWD___FUNCTION__, DeeLexer_TPP_HasEscapedCurrentFunctionName(tpp_current_lexer()))
+TPP_PREDEFINED_MACRO(TPP_KWD___FUNCTION__, {
+	TPP_REF tpp_string *function_name;
+	function_name = DeeLexer_TPP_GetEscapedCurrentFunctionName(tpp_current_lexer());
+	if unlikely(!function_name)
+		return TPP_ENOMEM;
+	tpp_macro_expansion_init_chunk_inherited(tpp_current_expansion(), function_name);
+	return TPP_EOK;
+})
+
 
 #undef DEE_KWD_IDENTIFIER
 

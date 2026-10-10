@@ -390,22 +390,56 @@ typedef WUNUSED_T NONNULL_T((1)) int
 
 /* General-purpose, optional compiler options that
  * can be specified whenever a module is loaded. */
-struct Dee_compiler_options {
-	struct Dee_compiler_options *co_inner;    /* [0..1] Options used for compiling modules imported by this one. */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+struct Dee_serial;
+struct Dee_compiler_options_base {
+	/* [0..1] Options used for compiling modules imported by this one. */
+	struct Dee_compiler_options_base *cob_inner;
+
+	/* [0..1] Override for how a `source_stream` should be compiled,
+	 *        assembled, linked, and eventually serialized (in the form
+	 *        of a `DeeModuleObject`) to `writer`.
+	 *
+	 * NOTE: When this is `NULL`, then you must supply the entirety of
+	 *       `struct Dee_compiler_options`. Only when non-NULL may you
+	 *       supply `struct Dee_compiler_options_base` instead.
+	 *
+	 * Use this to provide your own, custom compilation driver, or inject
+	 * custom behavior into deemon's `DeeCompiler`. Anyways: the default
+	 * implementation used is `default__cob_compilestream`, which is really
+	 * just a thin wrapper around `DeeCompiler_Compile()` */
+	WUNUSED_T NONNULL_T((1, 2, 3, 5)) int
+	(DCALL *cob_compilestream)(struct Dee_compiler_options_base *__restrict options,
+	                           struct Dee_serial *__restrict writer,
+	                           /*utf-8*/ char const *__restrict abs_filename,
+	                           size_t abs_filename_length,
+	                           DeeObject *source_stream);
+};
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+struct Dee_compiler_options {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	struct Dee_compiler_options_base co_base; /* Basic compilation options... */
+	/* Everything below is only used if `co_base.cob_compilestream == NULL` */
 	int                          co_argc;     /* Number of arguments in `co_argv` */
 	char const           *const *co_argv;     /* [1..1][0..co_argc] vector of compiler arguments (see `deemon --help`). */
 	char const                  *co_output;   /* [0..1] Output filename (if appropriate, as per `-o` CLI argument -- used for makefile generation) */
 	uint_least32_t               co_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
 #define Dee_COMPILER_FLAG_NORMAL 0x00000000   /* Normal flags */
 #define Dee_COMPILER_FLAG_MAIN   0x00000001   /* This is the `__MAIN__` user-code input */
-#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define Dee_COMPILER_FLAG_FORMAT 0x00000002   /* Define a macro `__FORMAT__` (when combined with `Dee_COMPILER_FLAG_MAIN`, also define `__FORMAT_SCRIPT__`) */
+	char const                  *co_pathname; /* [0..1] A filename used to resolve #include and relative import directives. */
+	struct Dee_string_object    *co_filename; /* [0..1] The filename that should appear in debug information when referring to `input_file`.
+	                                           *        This is also the filename returned by `__FILE__` and `__BASEFILE__`,
+	                                           *        if not otherwise overwritten using `#line` */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	/* [0..1] Options used for compiling modules imported by this one. */
+	struct Dee_compiler_options *co_inner;
 	char const                  *co_pathname; /* [0..1] A filename used to resolve #include and relative import directives. */
 	struct Dee_string_object    *co_filename; /* [0..1] The filename that should appear in debug information when referring to `input_file`.
 	                                           *        This is also the filename returned by `__FILE__` and `__BASEFILE__`,
 	                                           *        if not otherwise overwritten using `#line` */
 	struct Dee_string_object    *co_rootname; /* [0..1] The name of the root code object (as set in DDI) */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	WUNUSED_T int         (DCALL *co_setup)(void *arg); /* [0..1] Called once the compiler has been enabled.
 	                                                     *        This callback can be used to perform additional compiler
 	                                                     *        initialization, such as defining macros/assertions, or
@@ -431,6 +465,14 @@ struct Dee_compiler_options {
 	uint16_t                      co_assembler;         /* Set of `ASM_F*`      from `<deemon/compiler/assembler.h>` */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 };
+
+
+/* Return the "inner" compilation options (i.e.: options to use for imports/dependencies) */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define Dee_compiler_options_getinner(self) ((struct Dee_compiler_options *)(self)->co_base.cob_inner)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define Dee_compiler_options_getinner(self) ((self)->co_inner)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
 

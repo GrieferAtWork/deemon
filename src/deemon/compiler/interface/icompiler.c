@@ -87,7 +87,7 @@ compiler_init(DeeCompilerObject *__restrict self,
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	DeeLexer_Init(&self->cp_lexer);
+	DeeLexer_Init(&self->cp_lexer, Dee_COMPILER_FLAG_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!TPPLexer_Init(&self->cp_lexer.dl_lexer))
 		goto err_scope;

@@ -683,6 +683,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOKEN_NUMBER                        1
 #define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
 #define TPP_HAVE_LEXER_PUSHFILE_IO                   1
+#define TPP_HAVE_LEXER_INIT_OPEN                     1 /* Used by `deemon -F` */
 
 #define TPP_HAVE_CLI                              1
 #define TPP_HAVE_CLI_HELP                         1
@@ -754,69 +755,6 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
 	(offsetof(DeeLexer, dl_makefile) - offsetof(DeeLexer, dl_lexer))
 
-/************************************************************************/
-/* EMITTER                                                              */
-/************************************************************************/
-#define TPP_EMITTER_PROFILE                                 TPP_PROFILE_MINIMAL
-#define TPP_EMITTER_HAVE_MODE_EMIT                          1
-#define TPP_EMITTER_HAVE_MODE_DISPOSE                       1
-#define TPP_EMITTER_HAVE_MODE_BRACKET                       1
-#define TPP_EMITTER_HAVE_MODE_TYPED                         1
-#define TPP_EMITTER_HAVE_MODE_ZERO                          1
-#define TPP_EMITTER_HAVE_NORMALIZE_SPACE                    TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_LF                       TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING                 TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_C_INT                    TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS                 TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_BSE                      TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS                TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS                 TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NOLINE                             TPP_CONF_FEAT0
-#define TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN               TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_USE_CPP_DIGIT                      TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS                TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY    TPP_CONF_FEAT0
-#define TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA              1
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS           1
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY      TPP_CONF_FEAT0
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_CONF_FEAT0
-#define TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES          1
-#define TPP_EMITTER_HAVE_TRACE_INCLUDES                     TPP_CONF_FEAT0
-#define TPP_EMITTER_CONFIG_LINE_THRESHOLD                   (-4)
-
-#define TPP_EMITTER_HAVE_CLI                             1
-#define TPP_EMITTER_HAVE_CLI_HELP                        1
-#define TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS          1
-#define TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS       1
-#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_M                 1
-#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_D                 1
-#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_N                 1
-#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_I                 1
-#define TPP_EMITTER_HAVE_CLI_DASH_DUMP_U                 1
-#define TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES         1
-#define TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN  1
-#define TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY     1
-#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT         1
-#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS   1
-#define TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD         1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE       1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF          1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS     1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT         1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS    1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE         1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS   1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS    1
-#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE             1
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT              1
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE           1
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET           1
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED             1
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO              1
-#define TPP_EMITTER_HAVE_CLI_PARSEARGV                   0
-
-
 /* I/O Hooks */
 #define tpp_io_handle DREF DeeObject * /* DeeFileObject */
 #define tpp_io_getstdin(p_handle) \
@@ -874,7 +812,6 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 /* clang-format off */
 #include "../../../src/external/tpp3/src/tpp-amalgamation.h"
 #include "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"
-#include "../../../src/external/tpp3/src/tpp-emitter-amalgamation.h"
 /* clang-format on */
 
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -1045,9 +982,10 @@ DECL_BEGIN
 /************************************************************************/
 
 typedef struct DeeLexer {
-	tpp_lexer    dl_lexer;    /* TPP lexer */
+	tpp_lexer      dl_lexer;    /* TPP lexer */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	tpp_makefile dl_makefile; /* TPP makefile emitter */
+	tpp_makefile   dl_makefile; /* TPP makefile emitter */
+	uint_least32_t dl_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
 	/* TODO: Encountered warnings (to include in `DeeLexer_TPP_RaiseLexErrorHook`) */
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
@@ -1299,13 +1237,17 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 
 /* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
  * and `tpp_lexer_finifile()` must be called as the lexer is used! */
-#define DeeLexer_Init(self)                  \
-	(tpp_lexer_init(&(self)->dl_lexer),      \
-	 tpp_makefile_init(&(self)->dl_makefile, \
-	                   &(self)->dl_lexer,    \
-	                   &DeeLexer_TPP_MesgPrinterHook))
-#define DeeLexer_Fini(self)                   \
-	(tpp_makefile_fini(&(self)->dl_makefile), \
+#define DeeLexer_Init(self, flags) \
+	(tpp_lexer_init(&(self)->dl_lexer), _DeeLexer_InitAfterLexer(self, flags))
+#define _DeeLexer_InitAfterLexer(self, flags)                \
+	(void)(tpp_makefile_init(&(self)->dl_makefile,           \
+	                         &(self)->dl_lexer,              \
+	                         &DeeLexer_TPP_MesgPrinterHook), \
+	       (self)->dl_flags = (flags))
+#define _DeeLexer_FiniWithoutLexer(self) \
+	(tpp_makefile_fini(&(self)->dl_makefile))
+#define DeeLexer_Fini(self)            \
+	(_DeeLexer_FiniWithoutLexer(self), \
 	 tpp_lexer_fini(&(self)->dl_lexer))
 
 #define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
@@ -1358,6 +1300,8 @@ INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_WarnPrinterHook(void *arg, char cons
 INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
+INTDEF bool TPPCALL DeeLexer_TPP_HasEscapedCurrentFunctionName(tpp_lexer *lexer);
+INTDEF TPP_REF tpp_string *TPPCALL DeeLexer_TPP_GetEscapedCurrentFunctionName(tpp_lexer *lexer);
 
 /* Print a line `{tpp_lexer_getfileandlineformat}note: see declaration of {SYMBOL_NAME(sym)}\n`,
  * but only if `!ast_loc_isempty(&sym->s_decl)`. Returns the usual sum-of-calls-to-printer.

@@ -23,12 +23,13 @@
 #include <deemon/api.h>
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h> /* SYMBOL_NAME, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>           /* DeeError_* */
-#include <deemon/exec.h>            /* DeeModule_GetLibPath */
-#include <deemon/module.h>          /* Dee_COMPILER_ERROR_FATALITY_WARNING */
-#include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/error.h>  /* DeeError_* */
+#include <deemon/exec.h>   /* DeeModule_GetLibPath */
+#include <deemon/module.h> /* Dee_COMPILER_ERROR_FATALITY_WARNING */
+#include <deemon/tuple.h>  /* DeeTuple* */
 
 #if TPP_OS_WINDOWS
 #include <Windows.h>
@@ -39,7 +40,6 @@
 /* clang-format off */
 #include "../../external/tpp3/src/tpp-amalgamation.c"
 #include "../../external/tpp3/src/tpp-makefile-amalgamation.c"
-#include "../../external/tpp3/src/tpp-emitter-amalgamation.c"
 /* clang-format on */
 #endif /* !__INTELLISENSE__ */
 
@@ -154,6 +154,41 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 	(void)lexer;
 	DeeError_Throwf(&DeeError_CompilerError, "TODO: Include details on triggered warnings");
 	return TPP_ELEXERROR;
+}
+
+PRIVATE TPP_REF tpp_string *TPPCALL
+tpp_escape_string_repr(tpp_char const *str, tpp_size len) {
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_doprint(&builder, "\"", 1) < 0)
+		goto err_builder;
+	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, str, len) < 0)
+		goto err_builder;
+	if (tpp_string_builder_doprint(&builder, "\"", 1) < 0)
+		goto err_builder;
+	return tpp_string_builder_pack(&builder);
+err_builder:
+	tpp_string_builder_fini(&builder);
+	return NULL;
+}
+
+INTERN bool TPPCALL
+DeeLexer_TPP_HasEscapedCurrentFunctionName(tpp_lexer *_lexer) {
+	DeeLexer *lexer = DeeLexer_OfTPP(_lexer);
+	(void)lexer; /* TODO: Once `current_basescope` is gone, read from `lexer` */
+	return current_basescope->bs_name != NULL;
+}
+INTERN TPP_REF tpp_string *TPPCALL
+DeeLexer_TPP_GetEscapedCurrentFunctionName(tpp_lexer *_lexer) {
+	tpp_keyword const *name;
+	DeeLexer *lexer = DeeLexer_OfTPP(_lexer);
+	(void)lexer; /* TODO: Once `current_basescope` is gone, read from `lexer` */
+	name = current_basescope->bs_name;
+	if (name != NULL) {
+		return tpp_escape_string_repr(tpp_keyword_getstr(name),
+		                              tpp_keyword_getlen(name));
+	}
+	return tpp_escape_string_repr((tpp_char const *)"?", 1);
 }
 
 

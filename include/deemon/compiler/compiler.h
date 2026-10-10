@@ -56,8 +56,8 @@ DECL_BEGIN
 #define DeeCompilerObject DeeCompiler /* Backwards compat */
 typedef struct DeeCompiler {
 	DeeLexer                    cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
+	tpp_keyword const          *cp_rootname;        /* [0..1] Name of the root function scope */
 	struct ast_tags             cp_tags;            /* == ::current_tags */
-	uint_least32_t              cp_flags;           /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
 	uint16_t                    cp_parser_flags;    /* == ::parser_flags */
 	uint16_t                    cp_optimizer_flags; /* == ::optimizer_flags */
 	uint16_t                    cp_unwind_limit;    /* == ::optimizer_unwind_limit */
@@ -82,11 +82,23 @@ typedef struct DeeCompiler {
 #define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
 #endif /* CONFIG_BUILDING_DEEMON */
 
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeCompiler_Init(DeeCompiler *__restrict self,
-                 DeeRootScopeObject *__restrict root_scope, DeeObject *source_stream,
+DFUNDEF NONNULL((1)) void DCALL
+DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options);
 DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
+/* Same as `DeeCompiler_Fini()`, but don't call `tpp_lexer_finifile()` */
+DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self);
+
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeCompiler_Compile(DeeCompiler *__restrict compiler,
+                    struct Dee_serial *__restrict writer,
+                    unsigned int mode, DeeObject *default_symbols);
+
+DFUNDEF ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
+DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
+                     tpp_size token_size, tpp_warning_id id, ...);
 
 
 /* Parse compiler (and compiler-*ONLY*) CLI parameters.
@@ -103,10 +115,6 @@ typedef struct DeeCompilerCliLoader {
 	       (self)->ccl_state    = Dee_COMPILER_CLI_STATE_NORMAL)
 #define DeeCompilerCliLoader_Fini(self) \
 	(void)0
-
-DFUNDEF ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
-DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
-                     tpp_size token_size, tpp_warning_id id, ...);
 
 /* Parse arguments/flags
  * @return: TPP_EOK:     Success

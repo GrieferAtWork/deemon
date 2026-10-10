@@ -654,7 +654,7 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified);
 #endif /* !CONFIG_NO_DEC */
 
@@ -686,7 +686,7 @@ struct DeeMapFile;
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
 DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
-                unsigned int flags, struct Dee_compiler_options *options,
+                unsigned int flags, struct Dee_compiler_options *dependency_options,
                 uint64_t dee_file_last_modified);
 #endif /* !CONFIG_NO_DEC */
 
