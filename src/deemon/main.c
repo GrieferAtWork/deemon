@@ -643,6 +643,11 @@ PRIVATE DeeCompiler fe_compiler = {
 #define TPP_LEXER_SELF fe_compiler.cp_lexer.dl_lexer
 #include "../external/tpp3/src/tpp-lexer-init.h"
 		,
+		/* .dl_warn = */ {
+			/* .lws_warnc = */ 0,
+			/* .lws_warna = */ 0,
+			/* .lws_warnv = */ NULL
+		},
 		/* .dl_makefile = */ TPP_MAKEFILE_INIT(fe_compiler.cp_lexer.dl_makefile,
 		                                       &fe_compiler.cp_lexer.dl_lexer,
 		                                       &DeeLexer_TPP_MesgPrinterHook),

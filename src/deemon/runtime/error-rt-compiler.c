@@ -53,8 +53,34 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 /* Error.CompilerError                                                  */
 /************************************************************************/
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+INTERN NONNULL((1)) void DCALL
+DeeLexerWarningLoc_Fini_InError(DeeLexerWarningLoc *__restrict self) {
+	if (self->lwl_filename_obj)
+		Dee_Decref(self->lwl_filename_obj);
+}
+
+INTERN NONNULL((1)) void DCALL
+DeeLexerWarning_Fini_InError(DeeLexerWarning *__restrict self) {
+	DeeLexerWarningLoc *iter;
+	Dee_Decref(self->lw_message);
+	DeeLexerWarningLoc_Fini_InError(&self->lw_loc);
+	iter = self->lw_loc.lwl_prev;
+	while (iter) {
+		DeeLexerWarningLoc *next = iter->lwl_prev;
+		DeeLexerWarningLoc_Fini_InError(iter);
+		DeeLexerWarningLoc_Free(iter);
+		iter = next;
+	}
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 PRIVATE NONNULL((1)) void DCALL
 comerr_init_common(DeeCompilerErrorObject *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	self->ce_warnc = 0;
+	self->ce_warnv = NULL;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	Dee_weakref_support_init(self);
 	self->ce_mode = 0;
 	self->ce_wnum = 0;
@@ -66,6 +92,7 @@ comerr_init_common(DeeCompilerErrorObject *__restrict self) {
 	Dee_weakref_initempty(&self->ce_master);
 	self->ce_errorc = 0;
 	self->ce_errorv = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -99,6 +126,12 @@ comerr_init_kw(DeeCompilerErrorObject *__restrict self,
 
 PRIVATE NONNULL((1)) void DCALL
 comerr_fini(DeeCompilerErrorObject *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	size_t i;
+	for (i = 0; i < self->ce_warnc; ++i)
+		DeeLexerWarning_Fini_InError(&self->ce_warnv[i]);
+	Dee_Free(self->ce_warnv);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	size_t i, count = self->ce_errorc;
 	ASSERTF(self->ce_locs.cl_prev == NULL ||
 	        self->ce_locs.cl_file != NULL,
@@ -122,8 +155,13 @@ comerr_fini(DeeCompilerErrorObject *__restrict self) {
 	}
 	Dee_Free(self->ce_errorv);
 	Dee_weakref_fini(&self->ce_master);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define PTR_comerr_visit NULL /* Could only really visit strings, so there's no point */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define PTR_comerr_visit &comerr_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 comerr_visit(DeeCompilerErrorObject *__restrict self,
              Dee_visit_t proc, void *arg) {
@@ -133,6 +171,7 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 			Dee_Visit(self->ce_errorv[i]);
 	}
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
@@ -189,7 +228,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_print,
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&comerr_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))PTR_comerr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ &comerr_cmp,

@@ -68,7 +68,7 @@ PUBLIC DeeCompiler *DeeCompiler_Current = NULL;
 
 /* -------- Compiler Implementation -------- */
 
-PUBLIC ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
+INTERN ATTR_COLD WUNUSED NONNULL((1)) tpp_errno
 DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
                      tpp_size token_size, tpp_warning_id id, ...) {
 	tpp_lexer *const lexer = &self->cp_lexer.dl_lexer;
@@ -189,7 +189,7 @@ enum {
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOENT:  Unknown argument/flag (try handling it elsewhere)
  * @return: TPP_EDEEMON: An error was thrown */
-PUBLIC WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+INTERN WUNUSED NONNULL((1, 2)) tpp_errno DCALL
 DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
                               char const *arg) {
 #define cli_streq(at, CONSTstr) \
@@ -249,7 +249,7 @@ DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
 	return TPP_ENOENT;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+INTERN WUNUSED NONNULL((1, 2)) tpp_errno DCALL
 DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
                                char const **p_arg) {
 	char const *arg = *p_arg;
@@ -275,8 +275,8 @@ done:
 	return TPP_EOK;
 }
 
-PUBLIC WUNUSED NONNULL((1)) tpp_errno DCALL
-DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *tpp_restrict self) {
+INTERN WUNUSED NONNULL((1)) tpp_errno DCALL
+DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *__restrict self) {
 	if (self->ccl_state != Dee_COMPILER_CLI_STATE_NORMAL &&
 	    self->ccl_state != Dee_COMPILER_CLI_STATE_DDASH) {
 		tpp_errno error = DeeCompiler_CliWarnf(self->ccl_compiler, NULL, 0,
@@ -295,8 +295,8 @@ struct compiler_cli_parser {
 };
 
 static WUNUSED NONNULL((1, 2)) tpp_errno DCALL
-compiler_cli_parser_parsearg(struct compiler_cli_parser *tpp_restrict self,
-                             char const *tpp_restrict arg) {
+compiler_cli_parser_parsearg(struct compiler_cli_parser *__restrict self,
+                             char const *__restrict arg) {
 	tpp_errno error;
 	/* Pass argument to respective sub-loaders
 	 * if those aren't in their "default" state */
@@ -476,13 +476,13 @@ err_parser:
 	return error;
 }
 
-PUBLIC NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompiler_Fini(DeeCompiler *__restrict self) {
 	tpp_lexer_finifile(&self->cp_lexer.dl_lexer);
 	DeeCompiler_Fini_NoFiles(self);
 }
 
-PUBLIC NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self) {
 	if (self->cp_tags.at_anno.an_annov) {
 		if unlikely(self->cp_tags.at_anno.an_annoc) {
@@ -499,13 +499,13 @@ DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self) {
 	Dee_unicode_printer_fini(&self->cp_tags.at_doc);
 }
 
-PUBLIC NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self) {
 	DeeCompiler_Fini_NoLexer(self);
 	DeeLexer_Fini(&self->cp_lexer);
 }
 
-PUBLIC NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
 	self->cp_prev      = NULL;
@@ -522,13 +522,13 @@ DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 }
 
-PUBLIC NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self) {
 	DeeLexer_Init(&self->cp_lexer, Dee_COMPILER_FLAG_NORMAL);
 	DeeCompiler_Init_NoLexer(self);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options) {
 	DeeCompiler_Init_NoFiles(self);
@@ -754,7 +754,7 @@ done_restore:
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Compile(DeeCompiler *__restrict compiler,
                     struct Dee_serial *__restrict writer,
                     unsigned int mode, DeeObject *default_symbols) {

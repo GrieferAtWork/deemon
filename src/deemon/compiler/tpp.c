@@ -49,6 +49,35 @@ STATIC_ASSERT_MSG(TPP_EDEEMON == TPP_SSIZE_ASERR((tpp_ssize)(size_t)-1),
                   "This is required by our impls of `tpp_io_read()`, `tpp_makefile_io_write()`, "
                   "`DeeLexer_TPP_MesgPrinterHook()` and `DeeLexer_TPP_WarnPrinterHook()`");
 
+PRIVATE NONNULL((1)) void DCALL
+DeeLexerWarningLoc_Fini_InLexer(DeeLexerWarningLoc *__restrict self) {
+	if (self->lwl_filename_str)
+		tpp_string_decref(self->lwl_filename_str);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+DeeLexerWarning_Fini_InLexer(DeeLexerWarning *__restrict self) {
+	DeeLexerWarningLoc *iter;
+	Dee_Decref(self->lw_message);
+	DeeLexerWarningLoc_Fini_InLexer(&self->lw_loc);
+	iter = self->lw_loc.lwl_prev;
+	while (iter) {
+		DeeLexerWarningLoc *next = iter->lwl_prev;
+		DeeLexerWarningLoc_Fini_InLexer(iter);
+		DeeLexerWarningLoc_Free(iter);
+		iter = next;
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+DeeLexerWarnings_Fini(DeeLexerWarnings *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->lws_warnc; ++i)
+		DeeLexerWarning_Fini_InLexer(&self->lws_warnv[i]);
+	Dee_Free(self->lws_warnv);
+}
+
+
 /* Static TPP Hooks */
 PRIVATE Dee_ssize_t DPRINTER_CC
 print_to_std_file(unsigned int std_file_id, char const *__restrict text, size_t num_bytes) {
@@ -137,22 +166,232 @@ err:
 	return TPP_EDEEMON;
 }
 
+/* Allocate space for- and return a new warning entry.
+ * However: don't increase `self->lws_warnc` yet
+ *
+ * @return: * :   The uninitialized warning which the caller must fill in
+ * @return: NULL: Out-of-memory */
+PRIVATE WUNUSED NONNULL((1)) DeeLexerWarning *DCALL
+DeeLexerWarnings_Alloc(DeeLexerWarnings *__restrict self) {
+	
+}
+
+/* Construct the warning message for `id` */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL
+DeeLexer_MakeWarningMessage(DeeLexer *__restrict self,
+                            tpp_lexer_printf_info *__restrict info,
+                            tpp_warning_id id, va_list args) {
+	struct Dee_unicode_printer printer;
+	Dee_unicode_printer_init(&printer);
+	if (tpp_lexer_vwarnf_mesg(&self->dl_lexer, info,
+	                          &Dee_unicode_printer_print,
+	                          &printer, id, args) < 0)
+		goto err_printer;
+	return (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
+err_printer:
+	Dee_unicode_printer_fini(&printer);
+	return NULL;
+}
+
+/* Initialize `self` from information described by `info` */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeLexerWarningLoc_FromPrintfInfo(DeeLexerWarningLoc *__restrict self,
+                                  tpp_lexer_printf_info *__restrict info,
+                                  tpp_lexer *__restrict lexer) {
+	self->lwl_prev     = NULL;
+	self->lwl_filename = tpp_lexer_printf_info_getfilename(info);
+	self->lwl_lc       = tpp_lexer_printf_info_getlc(info);
+	if (self->lwl_filename == NULL) {
+		self->lwl_filename_str = NULL;
+	} else if (tpp_lexer_printf_info_hasrawfile(info)) {
+		tpp_file *file = tpp_lexer_printf_info_getrawfile(info);
+		tpp_string *filename_str = tpp_file_getfilenamestr(file);
+		if (filename_str) {
+			tpp_string_incref(filename_str);
+			self->lwl_filename_str = filename_str;
+		} else {
+			/* In this case, the filename is either a keyword, or a static string */
+			self->lwl_filename_str = NULL;
+		}
+	} else {
+		/* No associated file -> persist the filename by storing it as a string. */
+		tpp_size filename_len = tpp_strlen(self->lwl_filename);
+		TPP_REF tpp_string *filename_str = tpp_string_malloc(filename_len);
+		if unlikely(!filename_str)
+			goto err;
+		memcpyc(tpp_string_str(filename_str), self->lwl_filename,
+		        filename_len, sizeof(char));
+		self->lwl_filename_str = filename_str; /* Inherit reference */
+	}
+	return 0;
+err:
+	return -1;
+}
+
 INTERN tpp_errno TPPCALL
-DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info,
+DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, tpp_lexer_printf_info *tpp_restrict info,
                              tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                              tpp_warning_id id, va_list args) {
-	/* TODO: Track emitted warnings in containing `DeeLexer`, so info about them can
-	 *       be included within errors thrown by `DeeLexer_TPP_RaiseLexErrorHook()`. */
+	DeeLexer *const me = DeeLexer_OfTPP(lexer);
+	DeeLexerWarning *warning = DeeLexerWarnings_Alloc(&me->dl_warn);
+	DREF DeeStringObject *message;
+	if unlikely(!warning)
+		return TPP_ENOMEM;
+
+	/* Track emitted warnings in containing `DeeLexer`, so info about them can
+	 * be included within errors thrown by `DeeLexer_TPP_RaiseLexErrorHook()`. */
+	{
+		va_list message_args;
+		va_copy(message_args, args);
+		message = DeeLexer_MakeWarningMessage(me, info, id, message_args);
+		va_end(message_args);
+	}
+	if unlikely(!message) {
+		/* No need to clean up `warning`:
+		 * -> `DeeLexerWarnings_Alloc()` didn't increase `lws_warnc` */
+		return TPP_ENOMEM;
+	}
+
+	/* Initialize warning */
+	warning->lw_id         = id;
+	warning->lw_invokeinfo = *invokeinfo;
+	warning->lw_message    = message; /* Inherit reference */
+
+	/* Initialize warning location. */
+	if unlikely(DeeLexerWarningLoc_FromPrintfInfo(&warning->lw_loc, info, &me->dl_lexer)) {
+		Dee_DecrefDokill(message);
+		return TPP_EDEEMON;
+	}
+
+	/* Indicate that this warning has been initialized. */
+	++me->dl_warn.lws_warnc;
 
 	/* Pass info along to TPP3's builtin warning handler. */
 	return _tpp_lexer_builtin_warnhandler(lexer, info, invokeinfo, id, args);
 }
 
+INTDEF NONNULL((1)) void DCALL
+DeeLexerWarningLoc_Fini_InError(DeeLexerWarningLoc *__restrict self);
+INTDEF NONNULL((1)) void DCALL
+DeeLexerWarning_Fini_InError(DeeLexerWarning *__restrict self);
+
+INTERN NONNULL((1)) int DCALL
+DeeLexerWarningLoc_ConvertToDeemon(DeeLexerWarningLoc *__restrict self) {
+	if (self->lwl_filename) {
+		DREF DeeStringObject *filename_obj;
+		tpp_size filename_len;
+		filename_len = self->lwl_filename_str
+		               ? tpp_string_len(self->lwl_filename_str)
+		               : tpp_strlen(self->lwl_filename);
+		filename_obj = (DREF DeeStringObject *)DeeString_NewUtf8(self->lwl_filename,
+		                                                         filename_len,
+		                                                         STRING_ERROR_FIGNORE);
+		if unlikely(!filename_obj)
+			goto err;
+		if (self->lwl_filename_str)
+			tpp_string_decref(self->lwl_filename_str);
+		self->lwl_filename_obj = filename_obj; /* Inherit reference */
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* @return: -1: On error `self` is finalized! */
+INTERN NONNULL((1)) int DCALL
+DeeLexerWarning_ConvertToDeemon(DeeLexerWarning *__restrict self) {
+	DeeLexerWarningLoc *iter;
+	int result = DeeLexerWarningLoc_ConvertToDeemon(&self->lw_loc);
+	if unlikely(result) {
+		DeeLexerWarning_Fini_InLexer(self);
+		return result;
+	}
+	for (iter = self->lw_loc.lwl_prev;
+	     iter; iter = iter->lwl_prev) {
+		result = DeeLexerWarningLoc_ConvertToDeemon(iter);
+		if unlikely(result) {
+			DeeLexerWarningLoc *iter2 = self->lw_loc.lwl_prev;
+			/* Finalize prev-location buffers */
+			DeeLexerWarningLoc_Fini_InError(&self->lw_loc);
+			for (; iter2 != iter; iter2 = iter2->lwl_prev)
+				DeeLexerWarningLoc_Fini_InError(&self->lw_loc);
+			do {
+				DeeLexerWarningLoc_Fini_InLexer(iter);
+			} while ((iter = iter->lwl_prev) != NULL);
+
+			/* Free prev-location buffers */
+			for (iter = self->lw_loc.lwl_prev; iter;) {
+				DeeLexerWarningLoc *prev = iter->lwl_prev;
+				DeeLexerWarningLoc_Free(iter);
+				iter = prev;
+			}
+			return result;
+		}
+	}
+	return 0;
+}
+
 INTERN tpp_errno TPPCALL
 DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
-	/* TODO: Include details of warnings passed to `DeeLexer_TPP_WarnHandlerHook()` */
-	(void)lexer;
-	DeeError_Throwf(&DeeError_CompilerError, "TODO: Include details on triggered warnings");
+	/* Include details of warnings passed to `DeeLexer_TPP_WarnHandlerHook()` */
+	size_t i;
+	DeeLexer *const me = DeeLexer_OfTPP(lexer);
+	DREF DeeCompilerErrorObject *error;
+	error = DeeObject_MALLOC(DeeCompilerErrorObject);
+	if unlikely(!error)
+		return TPP_ENOMEM;
+	error->e_msg    = NULL;
+	error->e_cause  = NULL;
+
+	/* Steal warning vector from lexer. */
+	error->ce_warnc = me->dl_warn.lws_warnc;
+	error->ce_warnv = (DeeLexerWarning *)Dee_TryReallocc(me->dl_warn.lws_warnv,
+	                                                     me->dl_warn.lws_warnc,
+	                                                     sizeof(DeeLexerWarning));
+	if unlikely(!error->ce_warnv)
+		error->ce_warnv = me->dl_warn.lws_warnv;
+
+	/* Clear warning vector to indicate that ownership was transferred. */
+	me->dl_warn.lws_warnc = 0;
+	me->dl_warn.lws_warna = 0;
+	me->dl_warn.lws_warnv = NULL;
+
+	/* Convert warning vector from TPP strings to deemon strings
+	 * (so filenames keep living once the lexer is destroyed). */
+	for (i = 0; i < error->ce_warnc; ++i) {
+		if unlikely(DeeLexerWarning_ConvertToDeemon(&error->ce_warnv[i])) {
+			size_t j;
+			for (j = i + 1; j < error->ce_warnc; ++j)
+				DeeLexerWarning_Fini_InLexer(&error->ce_warnv[j]);
+			while (i--)
+				DeeLexerWarning_Fini_InError(&error->ce_warnv[i]);
+			Dee_Free(error->ce_warnv);
+			DeeObject_FREE(error);
+			return TPP_ENOMEM;
+		}
+	}
+
+	{
+		DeeTypeObject *error_type = &DeeError_CompilerError;
+		/* Select different error types based on most-recent warning */
+		if likely(error->ce_warnc) {
+			tpp_warning_id last_warning = error->ce_warnv[error->ce_warnc - 1].lw_id;
+			tpp_warning_group_id const *groups = tpp_warning_getgroups(last_warning);
+			size_t group_index;
+			for (group_index = 0;; ++group_index) {
+				tpp_warning_group_id wgrp = groups[group_index];
+				if (wgrp == TPP_WG_COUNT)
+					break;
+				if (wgrp == TPP_WG_SYMBOL)
+					error_type = &DeeError_SymbolError;
+				if (wgrp == TPP_WG_SYNTAX)
+					error_type = &DeeError_SyntaxError;
+			}
+		}
+		DeeObject_InitStatic(error, error_type);
+	}
+
+	DeeError_ThrowInherited(error);
 	return TPP_ELEXERROR;
 }
 

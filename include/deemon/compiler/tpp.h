@@ -504,7 +504,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOK_HTML_COMMENT         0
 #define TPP_HAVE_TOK_SQL_COMMENT          0
 #define TPP_HAVE_TOK_AT_AT_COMMENT        0              /* Doc strings do their own thing... */
-#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant in inline assembly */
+#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant for inline assembly and `deemon -F` */
 #define TPP_HAVE_TOK_SLASH_COMMENT        0
 #define TPP_HAVE_TOK_AT_COMMENT           0
 #define TPP_HAVE_TOK_SOL_SHELL_COMMENT    0
@@ -977,18 +977,73 @@ DECL_END
 #ifdef CONFIG_BUILDING_DEEMON
 DECL_BEGIN
 
+/* TODO: Move the stuff below into a file "lexer.h" */
+
 /************************************************************************/
 /* Deemon wrapper for TPP lexer object                                  */
 /************************************************************************/
 
-typedef struct DeeLexer {
-	tpp_lexer      dl_lexer;    /* TPP lexer */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	tpp_makefile   dl_makefile; /* TPP makefile emitter */
-	uint_least32_t dl_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
-	/* TODO: Encountered warnings (to include in `DeeLexer_TPP_RaiseLexErrorHook`) */
+struct Dee_string_object;
+typedef struct Dee_lexer_warning_loc {
+	struct Dee_lexer_warning_loc *lwl_prev;         /* [0..1][owned] Calling location (might be used when the parser was inside of a macro) */
+	char const                   *lwl_filename;     /* [0..1] Filename */
+	union {
+		TPP_REF tpp_string       *lwl_filename_str; /* [0..1][valid_if(PART_OF(DeeLexerWarnings))] String reference for `dlw_filename` (if user-defined via `#line`) */
+		DREF DeeStringObject     *lwl_filename_obj; /* [0..1][valid_if(PART_OF(DeeCompilerErrorObject))] String object for `lwl_filename` */
+	};
+	tpp_lcinfo                    lwl_lc;           /* Line/column, or `TPP_LCINFO_INVALID` if unknown */
+} DeeLexerWarningLoc;
+
+#define DeeLexerWarningLoc_Alloc() DeeObject_MALLOC(DeeLexerWarningLoc)
+#define DeeLexerWarningLoc_Free(p) DeeObject_FREE(Dee_REQUIRES_TYPE(DeeLexerWarningLoc *, p))
+
+typedef struct Dee_lexer_warning {
+	tpp_warning_id                 lw_id;         /* Warning ID */
+	tpp_warning_invokeinfo         lw_invokeinfo; /* Warning Invocation info */
+	DREF struct Dee_string_object *lw_message;    /* [1..1] Warning message */
+	DeeLexerWarningLoc             lw_loc;        /* Warning location */
+} DeeLexerWarning;
+
+typedef struct DeeLexerWarnings {
+	size_t           lws_warnc; /* # of emitted warnings */
+	size_t           lws_warna; /* Allocated size of `lws_warnv` */
+	DeeLexerWarning *lws_warnv; /* [0..lws_warnc][owned] Vector of emitted warnings (in order of emission) */
+} DeeLexerWarnings;
+
+#define DeeLexerWarnings_Init(self) \
+	(void)((self)->lws_warnc = (self)->lws_warna = 0, (self)->lws_warnv = NULL)
+INTDEF NONNULL((1)) void DCALL DeeLexerWarnings_Fini(DeeLexerWarnings *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
+typedef struct Dee_lexer {
+	tpp_lexer        dl_lexer;    /* TPP lexer */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexerWarnings dl_warn;     /* Emitted warnings */
+	tpp_makefile     dl_makefile; /* TPP makefile emitter */
+	uint_least32_t   dl_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 } DeeLexer;
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
+ * and `tpp_lexer_finifile()` must be called as the lexer is used! */
+#define DeeLexer_Init(self, flags) \
+	(tpp_lexer_init(&(self)->dl_lexer), _DeeLexer_InitAfterLexer(self, flags))
+#define _DeeLexer_InitAfterLexer(self, flags)                \
+	(void)(DeeLexerWarnings_Init(&(self)->dl_warn),          \
+	       tpp_makefile_init(&(self)->dl_makefile,           \
+	                         &(self)->dl_lexer,              \
+	                         &DeeLexer_TPP_MesgPrinterHook), \
+	       (self)->dl_flags = (flags))
+#define _DeeLexer_FiniWithoutLexer(self)      \
+	(tpp_makefile_fini(&(self)->dl_makefile), \
+	 DeeLexerWarnings_Fini(&(self)->dl_warn))
+#define DeeLexer_Fini(self)            \
+	(_DeeLexer_FiniWithoutLexer(self), \
+	 tpp_lexer_fini(&(self)->dl_lexer))
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #define DeeLexer_OfTPP(p_tpp_lexer) COMPILER_CONTAINER_OF(p_tpp_lexer, DeeLexer, dl_lexer)
 
@@ -1235,21 +1290,6 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 
 #else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-/* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
- * and `tpp_lexer_finifile()` must be called as the lexer is used! */
-#define DeeLexer_Init(self, flags) \
-	(tpp_lexer_init(&(self)->dl_lexer), _DeeLexer_InitAfterLexer(self, flags))
-#define _DeeLexer_InitAfterLexer(self, flags)                \
-	(void)(tpp_makefile_init(&(self)->dl_makefile,           \
-	                         &(self)->dl_lexer,              \
-	                         &DeeLexer_TPP_MesgPrinterHook), \
-	       (self)->dl_flags = (flags))
-#define _DeeLexer_FiniWithoutLexer(self) \
-	(tpp_makefile_fini(&(self)->dl_makefile))
-#define DeeLexer_Fini(self)            \
-	(_DeeLexer_FiniWithoutLexer(self), \
-	 tpp_lexer_fini(&(self)->dl_lexer))
-
 #define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
 
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
@@ -1295,7 +1335,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void c
 #define DeeLexer_VWarnfSym(self, p_sym, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
 
 /* Static TPP Hooks */
-INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
 INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
 INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);

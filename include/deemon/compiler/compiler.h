@@ -35,6 +35,7 @@
 #include "../util/weakref.h" /* Dee_WEAKREF */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #include "../module.h" /* Dee_compiler_options */
+#include "tpp.h"
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -53,6 +54,9 @@
 DECL_BEGIN
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#ifndef CONFIG_BUILDING_DEEMON
+#define DeeCompilerObject void
+#else /* !CONFIG_BUILDING_DEEMON */
 #define DeeCompilerObject DeeCompiler /* Backwards compat */
 typedef struct DeeCompiler {
 	DeeLexer                    cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
@@ -73,33 +77,31 @@ typedef struct DeeCompiler {
 	size_t                      cp_recursion;       /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
 } DeeCompiler;
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Returns the lexer active for a given `DeeCompiler *self` */
 #define DeeLexer_OfCompiler(comp) (&(comp)->cp_lexer)
 #define DeeLexer_AsCompiler(self) COMPILER_CONTAINER_OF(self, DeeCompiler, cp_lexer)
 
 /* Helper to transition into a world where this gets passed along the stack */
 #define _DeeLexer_Current DeeLexer_OfCompiler(DeeCompiler_Current)
-#endif /* CONFIG_BUILDING_DEEMON */
 
-DFUNDEF NONNULL((1)) void DCALL
+INTDEF NONNULL((1)) void DCALL
 DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self);
-DFUNDEF NONNULL((1)) void DCALL
+INTDEF NONNULL((1)) void DCALL
 DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
                  tpp_lcinfo start_lc, struct Dee_compiler_options const *options);
-DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
 /* Same as `DeeCompiler_Fini()`, but don't call `tpp_lexer_finifile()` */
-DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self);
-DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self);
 
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Compile(DeeCompiler *__restrict compiler,
                     struct Dee_serial *__restrict writer,
                     unsigned int mode, DeeObject *default_symbols);
 
-DFUNDEF ATTR_COLD WUNUSED NONNULL((1)) tpp_errno TPPCALL
+INTDEF ATTR_COLD WUNUSED NONNULL((1)) tpp_errno
 DeeCompiler_CliWarnf(DeeCompiler *__restrict self, tpp_char const *token_start,
                      tpp_size token_size, tpp_warning_id id, ...);
 
@@ -123,17 +125,18 @@ typedef struct DeeCompilerCliLoader {
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOENT:  Unknown argument/flag (try handling it elsewhere)
  * @return: TPP_EDEEMON: An error was thrown */
-DFUNDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+INTDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
 DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
                               char const *arg);
-DFUNDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+INTDEF WUNUSED NONNULL((1, 2)) tpp_errno DCALL
 DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
                                char const **p_arg);
-DFUNDEF WUNUSED NONNULL((1)) tpp_errno DCALL
-DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *tpp_restrict self);
+INTDEF WUNUSED NONNULL((1)) tpp_errno DCALL
+DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *__restrict self);
 
 /* TODO: Help string for `DeeCompilerCliLoader` (compatible with the format used by TPP3) */
 
+#endif /* CONFIG_BUILDING_DEEMON */
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 typedef struct Dee_compiler_object DeeCompilerObject;
 

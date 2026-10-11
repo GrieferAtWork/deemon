@@ -33,6 +33,8 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_H
 #define GUARD_DEEMON_COMPILER_LEXER_H 1 /*!export-*/
 
+/* TODO: Rename this file "parser.h" */
+
 #include "../api.h"
 
 #ifdef DEE_SOURCE

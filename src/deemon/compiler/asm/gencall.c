@@ -99,9 +99,13 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	result = code_compile_argrefs(function_ast->a_function.f_code,
 	                              /* Don't propagate `ASM_FBIGCODE` */
 	                              (current_assembler.a_flag & ~(ASM_FBIGCODE)) |
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	                              (DeeCompiler_Current->cp_assembler & ASM_FBIGCODE)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	                              (DeeCompiler_Current->cp_options
 	                               ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE)
 	                               : 0)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #if 1 /* Further reduce the amount of needed references by passing this flag!   \
        * TODO: This flag should not be effective for recursive sub-functions,   \
        *       but rather only for symbols where references would have to pass  \
