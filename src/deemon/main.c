@@ -37,6 +37,7 @@
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/dec.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
 #include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
@@ -79,6 +80,8 @@
 #include <crtdbg.h>
 #endif /* CONFIG_HAVE_CRTDBG_H */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #undef TPP_IMPL
@@ -587,61 +590,23 @@ fe_cli_parse_argv(struct fe_cli_parser *__restrict self,
 	tpp_errno result = TPP_EOK;
 	int argc    = *p_argc;
 	char **argv = *p_argv;
-	unsigned int unknown_count = 0;
-	/* TODO: The logic below doesn't work for the master CLI:
-	 * - Special handling for "--" argument must still exist
-	 * - However: must stop treating CLI as arguments the first
-	 *   time an argument doesn't start with "-" (and all of the
-	 *   CLI consumers are in their NORMAL or DDASH state)
-	 *
-	 * >> deemon foo.dee -E
-	 * This must cause a file "foo.dee" to be called with argv ["foo.dee", "-E"]
-	 *
-	 * >> deemon -E foo.dee
-	 * This must cause "foo.dee" to be be preprocessed
-	 *
-	 * >> deemon -- -E foo.dee
-	 * This must cause a file "-E" to be called with argv ["-E", "foo.dee"]
-	 */
-	while (argc > 0) {
+	while (argc > 0 && self->fcp_state != FE_CLI_STATE_DDASH) {
 		char *arg = argv[0];
+		if (*arg != '-')
+			break;
 		result = fe_cli_parsearg(self, arg);
 		if (TPP_ISERR(result)) {
 			if (result != TPP_ENOENT)
 				break;
-			/* Add "arg" to trailing list of unknown arguments */
-			--argc;
-			(void)memmovedownc(&argv[0], &argv[1],
-			                   argc + unknown_count,
-			                   sizeof(char *));
-			argv[argc + unknown_count] = arg;
-			++unknown_count;
-			result = TPP_EOK;
-			continue;
-		}
-		if (self->fcp_state == FE_CLI_STATE_DDASH) {
-			if (unknown_count) {
-				/* Right now, "argv" looks like this:
-				 * >> argv = { "--", "file1.c", "file2.c", "-unknown-arg", "file0.c" }
-				 * >> argc = 3
-				 * >> unknown_count = 2
-				 *
-				 * Our job now is to make `argv` look like this:
-				 * >> argv = { "-unknown-arg", "file0.c", "--", "file1.c", "file2.c" } */
-				unsigned int shift_count = unknown_count;
-				unsigned int total_count_minus_1 = argc + unknown_count - 1;
-				while (shift_count--) {
-					arg = argv[0];
-					(void)memmovedownc(&argv[0], &argv[1], total_count_minus_1, sizeof(char *));
-					argv[total_count_minus_1] = arg;
-				}
-			}
-			break;
+			DeeError_Throwf(&DeeError_RuntimeError,
+			                "Unknown commandline option `%#q`",
+			                arg);
+			return TPP_EDEEMON;
 		}
 		++argv;
 		--argc;
 	}
-	*p_argc = argc + unknown_count;
+	*p_argc = argc;
 	*p_argv = argv;
 	return result;
 }
@@ -920,7 +885,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Parse the commandline. */
-	if (fe_cli_parse_argv(&fe_cli, &argc, &argv))
+	if (TPP_ISERR(fe_cli_parse_argv(&fe_cli, &argc, &argv)))
 		goto err_cli_emitter;
 
 	switch (fe_cli.fcp_mode) {
@@ -1239,12 +1204,345 @@ handle_errors:
 /* `deemon -F` format scripts                                           */
 /************************************************************************/
 
+/* Try to skip `match_text` in `start...end`, whilst skipping BSE sequences.
+ * @return: * :   Pointer after `match_text` and any associated BSE sequence
+ * @return: NULL: Failed to match `match_text` in its entirety */
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+bse_trylskip(DeeLexer *__restrict lexer,
+             tpp_char const *start, tpp_char const *end,
+             char const *match_text) {
+	for (;;) {
+		tpp_char ch = (tpp_char)*match_text++;
+		if (ch == '\0')
+			return start;
+		if (start >= end)
+			break;
+		if (*start != ch)
+			break;
+		start = tpp_preparse_skipbse_fwd(&lexer->dl_lexer, start + 1, end);
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+bse_tryrskip(DeeLexer *__restrict lexer,
+             tpp_char const *start, tpp_char const *end,
+             char const *match_text) {
+	for (;;) {
+		tpp_char ch = (tpp_char)*match_text++;
+		if (ch == '\0')
+			return end;
+		if (end <= start)
+			break;
+		if (end[-1] != ch)
+			break;
+		end = tpp_preparse_skipbse_bck(&lexer->dl_lexer, start, end - 1);
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL
+bse_equals(DeeLexer *__restrict lexer,
+           tpp_char const *start, tpp_char const *end,
+           char const *match_text) {
+	start = bse_trylskip(lexer, start, end, match_text);
+	return start == end;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3)) int DCALL
+fe_compile_script_impl(struct Dee_serial *__restrict writer,
+                       DeeLexer const *__restrict parent_lexer,
+                       tpp_char const *script_start, tpp_size script_len,
+                       tpp_string *script_string, tpp_lcinfo start_lc) {
+	int result = -1;
+	bool is_utf8 = tpp_file_isutf8(DeeLexer_GetFile(parent_lexer));
+	DeeCompiler script_compiler;
+	char const *real_filename = tpp_file_getrealfilename(DeeLexer_GetFile(parent_lexer));
+	char const *ddi_filename  = tpp_file_getfilename(DeeLexer_GetFile(parent_lexer));
+	DeeCompiler_Init_NoLexer(&script_compiler);
+
+	/* Copy compiler from frontend settings (XXX: standard method for this?) */
+	script_compiler.cp_parser_flags    = fe_compiler.cp_parser_flags;
+	script_compiler.cp_optimizer_flags = fe_compiler.cp_optimizer_flags;
+	script_compiler.cp_unwind_limit    = fe_compiler.cp_unwind_limit;
+	script_compiler.cp_assembler       = fe_compiler.cp_assembler;
+
+	/* Initialize script lexer as a copy of lexer that was used to find the script. */
+	if (TPP_ISERR(tpp_lexer_copy(&script_compiler.cp_lexer.dl_lexer, &parent_lexer->dl_lexer)))
+		goto done_compiler;
+	_DeeLexer_InitAfterLexer(&script_compiler.cp_lexer,
+	                         Dee_COMPILER_FLAG_MAIN |
+	                         Dee_COMPILER_FLAG_FORMAT);
+
+	/* Initialize file-stack of script-lexer. */
+	tpp_string_incref(script_string); /* Inherited by `tpp_lexer_initfile_text_ex()` */
+	tpp_lexer_initfile_text_ex(&script_compiler.cp_lexer.dl_lexer, real_filename, script_string,
+	                           script_start, script_len, start_lc, TPP_FILE_FLAGS_NORMAL,
+	                           is_utf8 ? TPP_FILE_ENCODING_FORCE_UTF8 : TPP_FILE_ENCODING_ASCII);
+	if (ddi_filename && ddi_filename != real_filename) {
+		/* Set filename override */
+		tpp_size ddi_len = tpp_strlen(ddi_filename);
+		TPP_REF tpp_string *ddi_str = tpp_string_malloc(ddi_len);
+		if unlikely(!ddi_str)
+			goto done_compiler_lexer_files;
+		memcpyc(tpp_string_str(ddi_str), ddi_filename, ddi_len, sizeof(char));
+		tpp_file_setfilename(DeeLexer_GetFile(&script_compiler.cp_lexer), ddi_str);
+		tpp_string_decref_nokill(ddi_str);
+	}
+
+	/* Compile script and serialize into `writer` */
+	result = DeeCompiler_Compile(&script_compiler, writer, DeeExec_RUNMODE_DEFAULT, NULL);
+
+	/* Cleanup... */
+done_compiler_lexer_files:
+	tpp_lexer_finifile(&script_compiler.cp_lexer.dl_lexer);
+/*done_compiler_lexer:*/
+	_DeeLexer_FiniWithoutLexer(&script_compiler.cp_lexer);
+	tpp_lexer_fini(&script_compiler.cp_lexer.dl_lexer);
+done_compiler:
+	DeeCompiler_Fini_NoLexer(&script_compiler);
+	return result;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
+fe_compile_script(DeeLexer const *__restrict parent_lexer,
+                  tpp_char const *script_start, tpp_size script_len,
+                  tpp_string *script_string, tpp_lcinfo start_lc) {
+	/* Similar to what `DeeExec_CompileModuleStream()` does... */
+	DREF DeeModuleObject *result;
+	DeeDecWriter writer;
+	DeeDec_Ehdr *ehdr;
+	int status = DeeDecWriter_Init(&writer, DeeDecWriter_F_NORMAL);
+	if unlikely(status)
+		goto err;
+
+	/* Compile script to serial writer */
+	if (fe_compile_script_impl((DeeSerial *)&writer, parent_lexer,
+	                           script_start, script_len,
+	                           script_string, start_lc))
+		goto err_writer;
+
+	/* Package module into a (simplified, because 'DeeModule_IMPORT_F_NOGDEC' is set) EHDR */
+#ifdef CONFIG_NO_DEC
+	ehdr = DeeDecWriter_PackEhdr(&writer, NULL, 0, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_NO_DEC */
+	ehdr = DeeDecWriter_PackEhdr(&writer, NULL, 0, DeeModule_IMPORT_F_NOGDEC);
+#endif /* !CONFIG_NO_DEC */
+	if unlikely(!ehdr)
+		goto err_writer;
+
+	/* Convert EHDR into a proper module (by executing relocations stored in `writer`) */
+	result = DeeDecWriter_PackModule(&writer, ehdr);
+	if unlikely(!result)
+		goto err_writer_ehdr;
+
+	/* Cleanup... */
+	DeeDecWriter_Fini(&writer);
+
+	/* Start tracking the newly created module. */
+	return DeeDec_Track(result);
+err_writer_ehdr:
+	DeeDec_Ehdr_Destroy(ehdr);
+err_writer:
+	DeeDecWriter_Fini(&writer);
+err:
+	return NULL;
+}
+
+/* Compare+execute `[script_start...+=script_len)` and the text it writes to STDOUT
+ * @return: * : The DeeBytesObject describing what was printed to STDOUT by the script (in utf-8). */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3)) DREF DeeBytesObject *DCALL
+fe_run_script_and_capture_stdout(DeeLexer const *__restrict parent_lexer,
+                                 tpp_char const *script_start, tpp_size script_len,
+                                 tpp_string *script_string, tpp_lcinfo start_lc) {
+	DREF DeeModuleObject *script_module;
+	DREF DeeFunctionObject *script_root;
+	DREF DeeObject *old_stdout, *new_stdout;
+	DREF DeeObject *script_result;
+	DREF DeeBytesObject *stdout_bytes;
+
+	/* Compile script source code into a module... */
+	script_module = fe_compile_script(parent_lexer,
+	                                  script_start, script_len,
+	                                  script_string, start_lc);
+	if unlikely(!script_module)
+		goto err;
+
+	/* Open the root of the module. */
+	if unlikely(DeeModule_InitializeImports(script_module))
+		goto err_module;
+	(void)DeeModule_SetInitialized(script_module);
+	script_root = (DREF DeeFunctionObject *)DeeModule_GetRootFunction(script_module);
+	Dee_Decref_unlikely(script_module);
+	if unlikely(!script_root)
+		goto err;
+
+	/* Create a new writer and set it as target for STDOUT */
+	new_stdout = DeeFileWriter_New(Dee_FILE_WRITER_HINT_BYTES);
+	if unlikely(!new_stdout)
+		goto err_root;
+	old_stdout = DeeFile_SetStd(Dee_STDOUT, new_stdout);
+
+	/* Execute the module root. */
+	/* XXX: Maybe pass something more interesting through arguments? */
+	script_result = DeeObject_CallInherited((DeeObject *)script_root, 0, NULL);
+	stdout_bytes  = NULL;
+	if (script_result) {
+		/* Pack together the printed string. */
+		stdout_bytes = (DREF DeeBytesObject *)DeeFileWriter_GetBytes(new_stdout);
+		Dee_Decref(script_result);
+	}
+	Dee_Decref(new_stdout);
+	/* Restore the old STD streams. */
+	new_stdout = DeeFile_SetStd(Dee_STDOUT, old_stdout);
+	if (ITER_ISOK(old_stdout))
+		Dee_Decref(old_stdout);
+	if (ITER_ISOK(new_stdout))
+		Dee_Decref(new_stdout);
+	return stdout_bytes;
+err_module:
+	Dee_Decref(script_module);
+	goto err;
+err_root:
+	Dee_Decref(script_root);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) tpp_ssize DCALL
+print_transition(Dee_formatprinter_t printer, void *arg,
+                 tpp_lcinfo from_lc, tpp_lcinfo to_lc) {
+	tpp_ssize result, temp;
+	tpp_column from_col = tpp_lcinfo_getcol(from_lc);
+	tpp_column to_col   = tpp_lcinfo_getcol(to_lc);
+	tpp_line from_line  = tpp_lcinfo_getline(from_lc);
+	tpp_line to_line    = tpp_lcinfo_getline(to_lc);
+	unsigned int line_count = to_line > from_line ? (unsigned int)(to_line - from_line) : 0;
+	unsigned int column_count = line_count ? (unsigned int)to_col : (unsigned int)(to_col - from_col);
+
+	/* Adjust line number... */
+	result = DeeFormat_Repeat(printer, arg, '\n', line_count);
+	if unlikely(result < 0)
+		return result;
+
+	/* Adjust column position... */
+	temp = DeeFormat_Repeat(printer, arg, ' ', column_count);
+	if unlikely(temp < 0)
+		return temp;
+	result += temp;
+	return result;
+}
+
+/* Return actual on-disk address of `pos` in `file`
+ * @return: (Dee_pos_t)-1: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_pos_t DCALL
+tpp_file_getiopos(tpp_file const *file, tpp_char const *pos) {
+	Dee_pos_t result = DeeFile_Tell(tpp_file_getiohandle(file));
+	if likely(result != (Dee_pos_t)-1) {
+		tpp_size offset = tpp_file_getiooffset(file, pos);
+		result -= offset;
+	}
+	return result;
+}
+
+/* Same as `tpp_lexer_decodecomment()`, but trim the
+ * trailing line-feed usually included by line-comments */
+PRIVATE TPP_NONNULL((1, 2)) unsigned int TPPCALL
+tpp_lexer_decodecomment_without_trailing_linefeed(tpp_lexer const *tpp_restrict self,
+                                                  tpp_token_range *tpp_restrict result) {
+	unsigned int kind = tpp_lexer_decodecomment(self, result);
+	if (kind == TPP_LEXER_DECODECOMMENT_LINE) {
+		tpp_char const *start = tpp_token_range_getstart(result);
+		tpp_char const *end = tpp_token_range_getend(result);
+		if (end > start) {
+			if (tpp_file_isutf8(tpp_lexer_getfile(self))) {
+				tpp_unichar last_uc = tpp_unicode_readutf8_bck(start, &end);
+				if (!tpp_unicode_islf(last_uc))
+					goto done;
+			} else {
+				tpp_char last_ch = *--end;
+				if (!tpp_ascii_islf(last_ch))
+					goto done;
+				if (last_ch == '\n' && (end > start) && end[-1] == '\r')
+					--end;
+			}
+			tpp_token_range_setend(result, end);
+		}
+	}
+done:
+	return kind;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+encode_utf8_bytes_to_tpp_encoding(/*inherit(always)*/DREF DeeBytesObject *data,
+                                  tpp_file_encoding encoding) {
+	switch (encoding) {
+	case TPP_FILE_ENCODING_UTF16_LE:
+		/* TODO */
+		break;
+	case TPP_FILE_ENCODING_UTF16_BE:
+		/* TODO */
+		break;
+	case TPP_FILE_ENCODING_UTF32_LE:
+		/* TODO */
+		break;
+	case TPP_FILE_ENCODING_UTF32_BE:
+		/* TODO */
+		break;
+	default: break;
+	}
+	return data;
+}
+
+struct simple_linefeed {
+	size_t sl_size;
+	byte_t sl_data[4];
+};
+
+PRIVATE ATTR_RETNONNULL WUNUSED struct simple_linefeed const *DCALL
+get_simple_linefeed(tpp_file_encoding encoding) {
+	static struct simple_linefeed const utf8 = { 1, { '\n', 0, 0, 0 } };
+	static struct simple_linefeed const le16 = { 2, { '\n', 0, 0, 0 } };
+	static struct simple_linefeed const be16 = { 2, { 0, '\n', 0, 0 } };
+	static struct simple_linefeed const le32 = { 4, { '\n', 0, 0, 0 } };
+	static struct simple_linefeed const be32 = { 4, { 0, 0, 0, '\n' } };
+	switch (encoding) {
+	case TPP_FILE_ENCODING_UTF16_LE: return &le16;
+	case TPP_FILE_ENCODING_UTF16_BE: return &be16;
+	case TPP_FILE_ENCODING_UTF32_LE: return &le32;
+	case TPP_FILE_ENCODING_UTF32_BE: return &be32;
+	default: return &utf8;
+	}
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
 fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 	/* Search for comments whose bodies start with `[[[deemon`,
 	 * and are located within __BASE_FILE__ */
+	tpp_file *const file = DeeLexer_GetFile(lexer);
 	for (;;) {
-		tpp_token_id tok = DeeLexer_Yield(lexer);
+		tpp_char const *iter;
+		tpp_lcinfo script_start_lc;
+		tpp_lcinfo script_end_lc;
+		tpp_char const *script_start;
+		tpp_char const *script_end;
+		tpp_token_range comment_body;
+		tpp_token_id tok;
+		DREF DeeBytesObject *script_stdout;
+		tpp_char const *script_stdout_start;
+		tpp_char const *script_stdout_end;
+		tpp_size script_stdout_size;
+		tpp_size rel_override_start;
+		tpp_char const *override_start;
+		tpp_char const *override_end;
+		tpp_size override_size;
+		Dee_pos_t fpos_override_start;
+		Dee_pos_t fpos_override_end;
+		bool has_leading_linefeed;
+		struct DeeMapFile tail_data;
+yield_next_token:
+		tok = DeeLexer_Yield(lexer);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (tok == TPP_TOK_EOF)
@@ -1253,10 +1551,308 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 			continue;
 		if (!tpp_file_isbasefile(DeeLexer_GetFile(lexer)))
 			continue;
+		tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &comment_body);
+		script_start = bse_trylskip(lexer,
+		                            tpp_token_range_getstart(&comment_body),
+		                            tpp_token_range_getend(&comment_body),
+		                            "[[[deemon");
+		if (script_start == NULL)
+			continue;
+		script_end = tpp_token_range_getend(&comment_body);
+		if (script_start >= script_end)
+			continue;
 
-		/* TODO */
+		/* Skip leading whitespace after `script_start` */
+		iter = tpp_preparse_skipspace_fwd(&lexer->dl_lexer, script_start, script_end);
+		ASSERT(iter >= script_start);
+		if (iter > script_start) {
+			script_start = iter; /* Whitespace was skipped -- no need to check for SYMCONT */
+		} else {
+			/* First character of `script_start` must not be SYMCONT */
+			tpp_unichar first_ch = *script_start;
+			if (tpp_ascii_ismb(first_ch) && tpp_file_isutf8(DeeLexer_GetFile(lexer))) {
+				iter = script_start;
+				first_ch = tpp_unicode_readutf8(&iter, script_end);
+			}
+			if (tpp_unicode_issymcont(first_ch))
+				continue; /* Ignore something like `[[[deemonButNotReally` */
+		}
+
+		/* Multi-comment scripts work like this:
+		 * some-file.txt:
+		 * >>BEFORE
+		 * >> //[[[deemon
+		 * >>  // import * from deemon;
+		 * >>
+		 * >>//   with (local fp = File.open("foo.txt"))
+		 * >> //    print(fp.read());
+		 * >> //]]]
+		 * >>INNER
+		 * >>//[[[end]]]
+		 *
+		 * The script is copied into a buffer that uses every comment content's
+		 * effective line/column information to inject whitespace padding within
+		 * the buffer, which ends up looking like this:
+		 *    "import * from deemon;\n"
+		 *    "\n"
+		 *    "     with (local fp = File.open("foo.txt"))\n"
+		 *    "       print(fp.read());\n"
+		 *
+		 * This buffer is then combined with the line/column of the script's
+		 * first chunk, which is then used as the "start_lc" used when the script
+		 * is compiled and executed as deemon code (here, the compiler file is
+		 * initialized as `tpp_lexer_initfile_text_ex()`). */
+		script_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
+
+		/* If the current script-chunk already ends with `]]]`, then we
+		 * already have the entire script. Additionally, when that is
+		 * the case, then we don't need to use `script_builder` since
+		 * the entire script is already loaded in-memory, and described
+		 * by the range `[script_start,script_end)` */
+		iter = bse_tryrskip(lexer, script_start, script_end, "]]]");
+		if (iter) {
+			/* Simple case: entire script is contained within initial comment */
+			script_stdout = fe_run_script_and_capture_stdout(lexer, script_start,
+			                                                 (tpp_size)(script_end - script_start),
+			                                                 tpp_file_getchunk(file), script_start_lc);
+		} else {
+			TPP_REF tpp_string *script_string;
+			tpp_string_builder script_builder;
+			tpp_string_builder_init(&script_builder);
+			/* Copy first portion of script into a buffer */
+			if (tpp_string_builder_doprint(&script_builder, script_start,
+			                               (size_t)(script_end - script_start)) < 0) {
+err_script_builder:
+				tpp_string_builder_fini(&script_builder);
+				goto err;
+			}
+			script_end_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_end);
+
+			/* Yield tokens to search for comment ending in `]]]`:
+			 * - Use `tpp_lexer_yieldraw()` to yield tokens
+			 * - If a non-whitespace/lf/comment token is encountered, fail (re-yield token like normal)
+			 * - If the current token already ends with `]]]`, then we already have the entire script */
+			for (;;) {
+				bool is_last_part;
+				tpp_lcinfo part_start_lc;
+				tok = DeeLexer_YieldRaw(lexer);
+				if (TPP_TOK_ISERR(tok))
+					goto err_script_builder;
+				if (tok == TPP_TOK_SPACE || tok == TPP_TOK_LF)
+					continue;
+				if (!TPP_TOK_ISCOMMENT(tok)) {
+					tpp_string_builder_fini(&script_builder);
+					/* TODO: Warning: EOF in inline script */
+					goto yield_next_token;
+				}
+				tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &comment_body);
+				script_start = tpp_token_range_getstart(&comment_body);
+				script_end   = tpp_token_range_getend(&comment_body);
+				script_start = tpp_preparse_skipspace_fwd(&lexer->dl_lexer, script_start, script_end);
+				iter = bse_tryrskip(lexer, script_start, script_end, "]]]");
+				is_last_part = iter != NULL;
+				if (is_last_part)
+					script_end = iter;
+				script_end = tpp_preparse_skipspace_bck(&lexer->dl_lexer, script_start, script_end);
+				part_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
+
+				/* Inject linefeeds + padding whitespace to
+				 * transition from `script_end_lc` to `part_start_lc` */
+				if (print_transition(&tpp_string_builder_print, &script_builder,
+				                     script_end_lc, part_start_lc) < 0)
+					goto err_script_builder;
+
+				/* Print this part of the script */
+				if (tpp_string_builder_doprint(&script_builder, script_start,
+				                               (size_t)(script_end - script_start)) < 0)
+					goto err_script_builder;
+
+				if (is_last_part)
+					break; /* Last part encountered and copied */
+				script_end_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_end);
+			}
+
+			/* Package the script buffer into a string that can be executed */
+			script_string = tpp_string_builder_pack(&script_builder);
+			if unlikely(!script_string)
+				goto err;
+
+			/* Execute script */
+			script_stdout = fe_run_script_and_capture_stdout(lexer,
+			                                                 tpp_string_str(script_string),
+			                                                 tpp_string_len(script_string),
+			                                                 script_string, script_start_lc);
+			tpp_string_decref(script_string);
+		}
+		if unlikely(!script_stdout)
+			goto err;
+
+		/* Keep area that'll be overwritten loaded so we can easily see if something changed. */
+		override_start = DeeLexer_GetTokenEnd(lexer);
+		tpp_file_pushkeep(file, override_start);
+
+		/* Current token is the last script-token (the one that ends with `]]]`)
+		 * As such, must determine the effective stream position of the current
+		 * token's end, so we know right (sub-)region of the file needs to be
+		 * replace with `script_stdout` */
+		rel_override_start = tpp_file_keep_ptr2rel(file, override_start);
+
+		/* Handle special case: if the first non-space token after the script is a line-feed,
+		 * then during the output override phase, we must insert an additional linefeed at
+		 * the start. This is to automatically differentiate between blocks of generated
+		 * output, and generated output that exists on a singular line.
+		 *
+		 * This kind of line-feed injection is then repeated once again at the end. */
+		tpp_lexer_alltokens_pushon(&lexer->dl_lexer);
+		do {
+			tok = DeeLexer_YieldRaw(lexer);
+		} while (tok == TPP_TOK_SPACE);
+		tpp_lexer_alltokens_pop(&lexer->dl_lexer);
+		if (TPP_TOK_ISERR(tok)) {
+err_script_stdout_keep:
+			tpp_file_breakkeep(file);
+err_script_stdout:
+			Dee_Decref(script_stdout);
+			goto err;
+		}
+		has_leading_linefeed = !TPP_TOK_ISCOMMENT_LINE(tok) && tok == TPP_TOK_LF;
+		if (has_leading_linefeed) {
+			/* Use this position as the start of the override area */
+			rel_override_start = tpp_file_keep_ptr2rel(file, DeeLexer_GetTokenEnd(lexer));
+		}
+
+		/* Find [[[end]]] comment */
+		for (;;) {
+			if (tok == TPP_TOK_EOF) {
+				/* TODO: Warning: EOF before script output end marker */
+				tpp_file_breakkeep(file);
+				Dee_Decref(script_stdout);
+				goto done;
+			}
+			if (TPP_TOK_ISCOMMENT(tok)) {
+				tpp_token_range marker_body;
+				tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &marker_body);
+				if (bse_equals(lexer,
+				               tpp_token_range_getstart(&marker_body),
+				               tpp_token_range_getend(&marker_body),
+				               "[[[end]]]"))
+					break; /* Marker found! */
+			}
+			tok = DeeLexer_YieldRaw(lexer);
+			if (TPP_TOK_ISERR(tok))
+				goto err_script_stdout_keep;
+		}
+		tpp_file_popkeep(file);
+
+		/* Load effective bounds of script output */
+		script_stdout_start = (tpp_char const *)DeeBytes_DATA(script_stdout);
+		script_stdout_end   = script_stdout_start + DeeBytes_SIZE(script_stdout);
+
+		/* For convenience, trailing linefeeds are trimmed from stdout output */
+		while (script_stdout_end > script_stdout_start) {
+			tpp_char const *tail_iter = script_stdout_end;
+			tpp_unichar uc = tpp_unicode_readutf8_bck(script_stdout_start, &tail_iter);
+			if (!tpp_unicode_islf(uc))
+				break;
+			script_stdout_end = tail_iter;
+		}
+
+		/* Determine actual text range that needs to be overwritten. */
+		override_start = tpp_file_keep_rel2ptr(file, rel_override_start);
+		override_end   = DeeLexer_GetTokenStart(lexer);
+
+		/* Check if the new file-data is equal to what's already within the file.
+		 * If the two are identical, then we can skip actually modifying the file,
+		 * and thus not changing it's `st_mtime` timestamp. */
+		script_stdout_size = (tpp_size)(script_stdout_end - script_stdout_start);
+		override_size      = (tpp_size)(override_end - override_start);
+		if ((script_stdout_size + (has_leading_linefeed ? 1 : 0)) == override_size &&
+		    (has_leading_linefeed ? override_end[-1] == '\n' : true) &&
+		    (bcmp(script_stdout_start, override_start, script_stdout_size) == 0)) {
+			Dee_Decref(script_stdout);
+			goto continue_after_script; /* Nothing changed */
+		}
+
+		/* Determine file positions of override area. */
+		fpos_override_start = tpp_file_getiopos(file, override_start);
+		if (fpos_override_start == (Dee_pos_t)-1)
+			goto err_script_stdout;
+		fpos_override_end = tpp_file_getiopos(file, override_end);
+		if (fpos_override_end == (Dee_pos_t)-1)
+			goto err_script_stdout;
+
+		/* This is what it's all about:
+		 * 1. Need to encode `script_stdout` (+ a trailing '\n' if `has_leading_linefeed`)
+		 *    to the encoding used by `file` (s.a. `tpp_file_getencoding()`)
+		 * 2. Read all file data that comes after `fpos_override_end` into memory (use `DeeMapFile` for this)
+		 * 3. Seek file to `fpos_override_start`
+		 * 4. Write encoded data produced in step 1. to the file and save the file position after the write
+		 * 5. Write the backup data read during step 2. to the file
+		 * 6. Seek file to position saved after write during step 4.
+		 * 7. Clear TPP's file buffer (using `tpp_file_setpos(file, tpp_file_getend(file))`).
+		 *    This way, the next call to `tpp_lexer_yield()` will start reading in file data
+		 *    from the position set during step 6.
+		 * 8. Continue searching for more `[[[deemon` comments -- the current token after the
+		 *    first yield operation at this point will once again be the `[[[end]]]`-comment,
+		 *    but that's OK. */
+
+		/* 1. */
+		script_stdout = encode_utf8_bytes_to_tpp_encoding(script_stdout, tpp_file_getencoding(file));
+		if unlikely(!script_stdout)
+			goto err;
+
+		/* 2. */
+		if (DeeMapFile_InitFile(&tail_data, tpp_file_getiohandle(file),
+		                        fpos_override_end, 0, (size_t)-1, 0,
+		                        DeeMapFile_F_READALL))
+			goto err_script_stdout;
+
+		/* 3. */
+		if (DeeFile_SetPos(tpp_file_getiohandle(file), fpos_override_start) == (Dee_pos_t)-1) {
+err_script_stdout_tail_data:
+			DeeMapFile_Fini(&tail_data);
+			goto err_script_stdout;
+		}
+
+		/* 4. */
+		if (DeeFile_WriteAll(tpp_file_getiohandle(file),
+		                     DeeBytes_DATA(script_stdout),
+		                     DeeBytes_SIZE(script_stdout)) == (size_t)-1)
+			goto err_script_stdout_tail_data;
+		fpos_override_start += DeeBytes_SIZE(script_stdout);
+		if (has_leading_linefeed) {
+			struct simple_linefeed const *lf = get_simple_linefeed(tpp_file_getencoding(file));
+			if (DeeFile_WriteAll(tpp_file_getiohandle(file), lf->sl_data, lf->sl_size) == (size_t)-1)
+				goto err_script_stdout_tail_data;
+			fpos_override_start += lf->sl_size;
+		}
+		Dee_Decref(script_stdout);
+
+		/* 5. */
+		{
+			size_t temp;
+			temp = DeeFile_WriteAll(tpp_file_getiohandle(file),
+			                        DeeMapFile_GetAddr(&tail_data),
+			                        DeeMapFile_GetSize(&tail_data));
+			DeeMapFile_Fini(&tail_data);
+			if (temp == (size_t)-1)
+				goto err;
+		}
+
+		/* 6. */
+		if (DeeFile_SetPos(tpp_file_getiohandle(file), fpos_override_start) == (Dee_pos_t)-1)
+			goto err;
+
+		/* 7. */
+		tpp_file_setpos(file, tpp_file_getend(file));
+
+		/* 8. */
+continue_after_script:;
 	}
+done:
 	return TPP_EOK;
+err:
+	return TPP_EDEEMON;
 }
 
 PRIVATE TPP_WUNUSED NONNULL((1)) tpp_errno DCALL
@@ -1272,7 +1868,7 @@ tpp_lexer_configure_for_format_scripts(tpp_lexer *__restrict self) {
 
 
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
-fe_run_format_scripts_impl(char *filename, char *ddi_filename) {
+fe_run_format_scripts_impl(char const *filename, char const *ddi_filename) {
 	tpp_errno result;
 	DeeLexer format_lexer;
 
@@ -1284,10 +1880,25 @@ fe_run_format_scripts_impl(char *filename, char *ddi_filename) {
 		goto done;
 	_DeeLexer_InitAfterLexer(&format_lexer, Dee_COMPILER_FLAG_FORMAT);
 
-	/* Initialize lexer file-stack using `filename` */
-	result = tpp_lexer_initfile_open(&format_lexer.dl_lexer, filename, TPP_SIZE_MAX);
-	if (TPP_ISERR(result))
-		goto done_lexer;
+	/* Initialize lexer file-stack using `filename`
+	 * Note that we need to open the file manually, since we need both read- and write-access! */
+	{
+		DREF DeeObject *stream;
+		stream = DeeFile_OpenString(filename, OPEN_FRDWR | OPEN_FXWRITE | OPEN_FCLOEXEC, 0);
+		if unlikely(stream == ITER_DONE) {
+			/* File-not-found. */
+			DeeError_Throwf(&DeeError_FileNotFound,
+			                "File %q could not be found",
+			                filename);
+			stream = NULL;
+		}
+		if unlikely(!stream) {
+			result = TPP_EDEEMON;
+			goto done_lexer;
+		}
+		/* NOTE: This inherits a reference to `stream` */
+		tpp_lexer_initfile_io(&format_lexer.dl_lexer, filename, stream);
+	}
 
 	/* If a custom DDI filename is given, apply it now. */
 	if (ddi_filename && filename != ddi_filename) {
@@ -1447,6 +2058,9 @@ fe_run_format_scripts(char *__restrict filename) {
 			result = fe_run_format_scripts_impl(path_end + 1, filename);
 
 			/* Change back to the directory that we originated from. */
+			/* FIXME: This breaks when the caller's `filename` contains `..` path segments.
+			 *        Only real solution would be to backup+restore the *actual* CWD before
+			 *        we modified it, since the original path is lost after `chdir ../foo` */
 			num_uprefs = 1;
 			iter       = filename;
 			while (iter < path_end) {
@@ -1472,7 +2086,7 @@ fe_run_format_scripts(char *__restrict filename) {
 				*iter++ = DeeSystem_SEP;
 			}
 
-			/* Back back to the original folder. */
+			/* Navigate back to the original folder. */
 			*iter = '\0';
 			(void)os_trychdir(buffer);
 			if (buffer != filename)
@@ -3213,9 +3827,6 @@ err_root:
 err:
 	return NULL;
 }
-
-#undef byte_t
-#define byte_t __BYTE_TYPE__
 
 #define PTR_iadd(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) + (delta)))
 #define PTR_isub(T, ptr, delta) (void)((ptr) = (T *)((byte_t *)(ptr) - (delta)))

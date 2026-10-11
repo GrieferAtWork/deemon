@@ -83,6 +83,8 @@ typedef struct DeeCompiler {
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DFUNDEF NONNULL((1)) void DCALL
+DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
 DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
@@ -90,6 +92,7 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
 /* Same as `DeeCompiler_Fini()`, but don't call `tpp_lexer_finifile()` */
 DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self);
 
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Compile(DeeCompiler *__restrict compiler,

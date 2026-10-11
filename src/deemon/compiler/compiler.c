@@ -483,7 +483,7 @@ DeeCompiler_Fini(DeeCompiler *__restrict self) {
 }
 
 PUBLIC NONNULL((1)) void DCALL
-DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self) {
+DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self) {
 	if (self->cp_tags.at_anno.an_annov) {
 		if unlikely(self->cp_tags.at_anno.an_annoc) {
 			DeeCompiler_LockWriteNoInt();
@@ -497,12 +497,16 @@ DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self) {
 	}
 	Dee_unicode_printer_fini(&self->cp_tags.at_decl);
 	Dee_unicode_printer_fini(&self->cp_tags.at_doc);
+}
+
+PUBLIC NONNULL((1)) void DCALL
+DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self) {
+	DeeCompiler_Fini_NoLexer(self);
 	DeeLexer_Fini(&self->cp_lexer);
 }
 
 PUBLIC NONNULL((1)) void DCALL
-DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self) {
-	DeeLexer_Init(&self->cp_lexer, Dee_COMPILER_FLAG_NORMAL);
+DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
 	self->cp_prev      = NULL;
 	self->cp_recursion = 0;
@@ -516,6 +520,12 @@ DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self) {
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
+}
+
+PUBLIC NONNULL((1)) void DCALL
+DeeCompiler_Init_NoFiles(DeeCompiler *__restrict self) {
+	DeeLexer_Init(&self->cp_lexer, Dee_COMPILER_FLAG_NORMAL);
+	DeeCompiler_Init_NoLexer(self);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL

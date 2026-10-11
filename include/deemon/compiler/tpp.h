@@ -589,7 +589,6 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_RAISE_LEXERROR_HOOK        TPP_HOOK_CONST_USER
 #define TPP_HOOK_RAISE_LEXERROR             DeeLexer_TPP_RaiseLexErrorHook
 
-
 #define TPP_HOOK_ISFLOATSUFFIX(cookie, pos) TPP_ENOENT /* Deemon doesn't have floating-point suffixes */
 
 
@@ -683,7 +682,8 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOKEN_NUMBER                        1
 #define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
 #define TPP_HAVE_LEXER_PUSHFILE_IO                   1
-#define TPP_HAVE_LEXER_INIT_OPEN                     1 /* Used by `deemon -F` */
+#define TPP_HAVE_LEXER_DECODECOMMENT                 1 /* Needed by `deemon -F` */
+#define TPP_HAVE_FILE_GETIOOFFSET                    1 /* Needed by `deemon -F` */
 
 #define TPP_HAVE_CLI                              1
 #define TPP_HAVE_CLI_HELP                         1
