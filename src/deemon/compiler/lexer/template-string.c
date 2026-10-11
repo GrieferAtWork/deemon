@@ -283,7 +283,7 @@ string_parser_printexpr(void *arg, tpp_lexer *tpp_restrict lexer) {
 	if (params == NULL) {
 		if unlikely(string_parser_escape_braces(me))
 			goto err_expr;
-		param_v = (DREF struct ast **)Dee_Malloc(1, sizeof(DREF struct ast *));
+		param_v = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 		if unlikely(!param_v)
 			goto err_expr;
 		param_v[0] = expr; /* Inherit */
@@ -299,8 +299,8 @@ string_parser_printexpr(void *arg, tpp_lexer *tpp_restrict lexer) {
 		ASSERT(params->a_flag == AST_FMULTIPLE_GENERIC);
 		param_c = params->a_multiple.m_astc;
 		param_v = params->a_multiple.m_astv;
-		param_v = (DREF struct ast **)Dee_Realloc(param_v, param_c + 1,
-		                                          sizeof(DREF struct ast *));
+		param_v = (DREF struct ast **)Dee_Reallocc(param_v, param_c + 1,
+		                                           sizeof(DREF struct ast *));
 		if unlikely(!param_v)
 			goto err_expr;
 		params->a_multiple.m_astv = param_v;
@@ -436,13 +436,11 @@ string_parser_pack(/*inherit(always)*/ struct string_parser *__restrict self) {
 	ast_decref_unlikely(ast__template_getattr_format);
 	ast_decref_unlikely(ast__params_tuple);
 	return ast__result;
-err:
-	return NULL;
-
+/*
 err__template_getattr_format__params_tuple:
 	ast_decref(ast__template_getattr_format);
 	ast_decref(ast__params_tuple);
-	goto err;
+	goto err;*/
 err__expr__template_getattr_format__params_tuple_argv:
 	Dee_Free(ast__params_tuple__argv);
 err__expr__template_getattr_format:
@@ -453,7 +451,7 @@ err__expr__template:
 err__expr:
 err__xexpr:
 	ast_xdecref(self->sp_params);
-err:
+/*err:*/
 	return NULL;
 }
 

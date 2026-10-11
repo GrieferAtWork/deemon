@@ -448,8 +448,8 @@ symbol_fini(struct symbol *__restrict self) {
 		break;
 
 	case SYMBOL_TYPE_AMBIG: {
-		size_t i;
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+		size_t i;
 		if (self->s_ambig.a_decl2.l_file)
 			TPPFile_Decref(self->s_ambig.a_decl2.l_file);
 		for (i = 0; i < self->s_ambig.a_declc; ++i) {

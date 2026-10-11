@@ -504,7 +504,7 @@ done_push_none:
 			} else {
 				if (need_all) {
 					if unlikely(active_size >= UINT16_MAX) {
-						PERRAST(self, TPP_W_ASM_SEQUENCE_TOO_LONG);
+						(void)PERRAST(self, TPP_W_ASM_SEQUENCE_TOO_LONG);
 						goto err;
 					}
 					++active_size;

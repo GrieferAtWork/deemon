@@ -30,6 +30,7 @@
 #include <deemon/compiler/lexer.h>   /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags_block */
 #include <deemon/compiler/symbol.h>  /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/module.h>           /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>             /* Dee_None */
 #include <deemon/object.h>           /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */
@@ -577,8 +578,8 @@ class_maker_addmember(DeeLexer *lexer,
 		size_t addr = **pp_usage_counter;
 		/* -2 because 2 == 3-1 and 3 is the max number of slots required for a property */
 		if unlikely(addr > UINT16_MAX - 2) {
-			PERRAT(loc, TPP_W_TOO_MANY_CLASS_MEMBER,
-			       tpp_keyword_getcstr(self->cm_classsym->s_name));
+			DeeLexer_ErrfLoc(lexer, loc, TPP_W_TOO_MANY_CLASS_MEMBER,
+			                 tpp_keyword_getcstr(self->cm_classsym->s_name));
 			goto err;
 		}
 		/* Save the starting VTABLE address of this member. */
@@ -594,8 +595,8 @@ class_maker_addmember(DeeLexer *lexer,
 		} else if (result->s_type == SYMBOL_TYPE_FWD) {
 			/* Define a forward-referenced class symbol. */
 		} else {
-			PERRAT(loc, TPP_W_CLASS_MEMBER_ALREADY_DEFINED,
-			       tpp_keyword_getcstr(name));
+			DeeLexer_ErrfLoc(lexer, loc, TPP_W_CLASS_MEMBER_ALREADY_DEFINED,
+			                 tpp_keyword_getcstr(name));
 			goto err;
 		}
 	} else {
@@ -792,8 +793,8 @@ class_maker_addoperator(DeeLexer *lexer, struct class_maker *__restrict self,
 	/* Allocate a new class member address for the operator. */
 	addr = self->cm_desc->cd_cmemb_size;
 	if unlikely(addr == UINT16_MAX) {
-		PERRAST(callback, TPP_W_TOO_MANY_CLASS_MEMBER,
-		        tpp_keyword_getcstr(self->cm_classsym->s_name));
+		DeeLexer_ErrfAst(lexer, callback, TPP_W_TOO_MANY_CLASS_MEMBER,
+		                 tpp_keyword_getcstr(self->cm_classsym->s_name));
 		goto err;
 	}
 	++self->cm_desc->cd_cmemb_size;
@@ -821,8 +822,9 @@ class_maker_deloperator(DeeLexer *lexer, struct class_maker *__restrict self,
 	if (self->cm_null_member == (uint16_t)-1) {
 		self->cm_null_member = self->cm_desc->cd_cmemb_size;
 		if unlikely(self->cm_null_member == (uint16_t)-1) {
-			return PERRAT(loc, TPP_W_TOO_MANY_CLASS_MEMBER,
-			              tpp_keyword_getcstr(self->cm_classsym->s_name));
+			DeeLexer_ErrfLoc(lexer, loc, TPP_W_TOO_MANY_CLASS_MEMBER,
+			                 tpp_keyword_getcstr(self->cm_classsym->s_name));
+			return -1;
 		}
 		++self->cm_desc->cd_cmemb_size;
 	}
@@ -1574,9 +1576,15 @@ err_basev:
 			PRIVATE char const old_base[] = "OldUserClass";
 			struct Dee_module_symbol *oldbase_sym;
 			struct symbol *base_symbol;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			rt_d200_module = DeeModule_OpenEx("rt.d200", COMPILER_STRLEN("rt.d200"),
+			                                  NULL, 0, DeeModule_IMPORT_F_ENOENT,
+			                                  DeeCompiler_Current->cp_imports);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			rt_d200_module = DeeModule_OpenEx("rt.d200", COMPILER_STRLEN("rt.d200"),
 			                                  NULL, 0, DeeModule_IMPORT_F_ENOENT,
 			                                  inner_compiler_options);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if unlikely(!ITER_ISOK(rt_d200_module)) {
 				if (rt_d200_module) {
 					if (DeeLexer_Warnf(self, TPP_W_MODULE_NOT_FOUND, Dee_AsObject(&str_rt_d200)))

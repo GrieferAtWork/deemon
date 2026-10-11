@@ -358,7 +358,9 @@ maybe_expression_begin_peek(DeeLexer *self) {
 	case '#':
 	case '[': /* For lists. */
 	case '{': /* Brace initializers. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	case '_': /* For identifiers */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	case '$': /* For identifiers */
 		goto yes;
 
@@ -1012,7 +1014,9 @@ decode_string:
 
 	case TPP_KWD_none: {
 		DeeObject *constval;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 create_none:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		constval = Dee_None;
 mkconst:
 		result = ast_sethere(self, ast_constexpr(constval));
@@ -1944,7 +1948,9 @@ default_case:
 		if (DeeLexer_HasTokenKwd(self)) {
 			/* Perform a regular symbol lookup. */
 			tpp_keyword const *name;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 do_keyword:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			name = DeeLexer_GetTokenKwd(self);
 			if (DeeLexer_GetLoc(self, &loc))
 				goto err;

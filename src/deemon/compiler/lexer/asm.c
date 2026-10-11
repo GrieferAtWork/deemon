@@ -197,8 +197,13 @@ asm_parse_operands(DeeLexer *self,
 				if unlikely(!operand_type)
 					goto err;
 			} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING))
+					goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_BEFORE_OPERAND_VALUE))
 					goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				operand_type = tpp_string_newempty();
 				if unlikely(!operand_type)
 					goto err;
@@ -714,8 +719,13 @@ err_nolf:
 		 * is found. */
 		text = parse_brace_text(self);
 	} else {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING))
+			goto err_nolf;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_STRING_AFTER_ASM))
 			goto err_nolf;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		text = tpp_string_newempty();
 	}
 	if unlikely(!text)

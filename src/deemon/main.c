@@ -654,6 +654,7 @@ PRIVATE DeeCompiler fe_compiler = {
 		/* .dl_flags = */ Dee_COMPILER_FLAG_MAIN,
 	},
 	/* .cp_rootname = */ NULL,
+	/* .cp_imports  = */ NULL,
 	/* .cp_tags  = */ {
 		/* .at_decl        = */ Dee_UNICODE_PRINTER_INIT,
 		/* .at_doc         = */ Dee_UNICODE_PRINTER_INIT,

@@ -98,9 +98,15 @@ ast_gen_operator_func(struct ast *binding,
 		}
 	}
 	/* Import the operators module. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	operators_module = DeeModule_OpenEx("operators", COMPILER_STRLEN("operators"),
+	                                    NULL, 0, DeeModule_IMPORT_F_ENOENT,
+	                                    DeeCompiler_Current->cp_imports);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	operators_module = DeeModule_OpenEx("operators", COMPILER_STRLEN("operators"),
 	                                    NULL, 0, DeeModule_IMPORT_F_ENOENT,
 	                                    inner_compiler_options);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
 			DO(WARNAST(ddi_ast, TPP_W_MODULE_NOT_FOUND, STR_operators));

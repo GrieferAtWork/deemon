@@ -511,6 +511,7 @@ DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 	self->cp_prev      = NULL;
 	self->cp_recursion = 0;
 	self->cp_rootname  = NULL;
+	self->cp_imports   = NULL;
 
 	/* NOTE: This is the default-configuration for imported modules. */
 	self->cp_parser_flags    = PARSE_FNORMAL;
@@ -535,6 +536,7 @@ DeeCompiler_Init(DeeCompiler *__restrict self, DeeObject *source_stream,
 	if (options) {
 		/* Inherit compilation flags. */
 		self->cp_lexer.dl_flags = options->co_flags;
+		self->cp_imports = Dee_compiler_options_getinner(options);
 
 		/* Override the name that is used as the
 		 * effective display/DDI string of the file. */
@@ -573,7 +575,7 @@ setup_default_file_stack:
 	return 0;
 err_self:
 	DeeCompiler_Fini_NoFiles(self);
-err:
+/*err:*/
 	return -1;
 }
 

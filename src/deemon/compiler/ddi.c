@@ -402,6 +402,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				int32_t temp;
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 				filename = new_state.rpp_file;
+				length   = strlen(filename);
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				filename = TPPFile_Filename(new_state.rpp_file, &length);
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */

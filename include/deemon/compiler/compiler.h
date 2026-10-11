@@ -58,23 +58,25 @@ DECL_BEGIN
 #define DeeCompilerObject void
 #else /* !CONFIG_BUILDING_DEEMON */
 #define DeeCompilerObject DeeCompiler /* Backwards compat */
+struct Dee_compiler_options;
 typedef struct DeeCompiler {
-	DeeLexer                    cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
-	tpp_keyword const          *cp_rootname;        /* [0..1] Name of the root function scope */
-	struct ast_tags             cp_tags;            /* == ::current_tags */
-	uint16_t                    cp_parser_flags;    /* == ::parser_flags */
-	uint16_t                    cp_optimizer_flags; /* == ::optimizer_flags */
-	uint16_t                    cp_unwind_limit;    /* == ::optimizer_unwind_limit */
-	uint16_t                    cp_assembler;       /* Set of `ASM_F*` from `<deemon/compiler/assembler.h>` */
+	DeeLexer                     cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
+	tpp_keyword const           *cp_rootname;        /* [0..1] Name of the root function scope */
+	struct Dee_compiler_options *cp_imports;         /* [0..1] Compiler options to use for imports */
+	struct ast_tags              cp_tags;            /* == ::current_tags */
+	uint16_t                     cp_parser_flags;    /* == ::parser_flags */
+	uint16_t                     cp_optimizer_flags; /* == ::optimizer_flags */
+	uint16_t                     cp_unwind_limit;    /* == ::optimizer_unwind_limit */
+	uint16_t                     cp_assembler;       /* Set of `ASM_F*` from `<deemon/compiler/assembler.h>` */
 #ifndef CONFIG_LANGUAGE_NO_ASM
-	size_t                      cp_uasm_unique;     /* Unique user-assembly ID. */
+	size_t                       cp_uasm_unique;     /* Unique user-assembly ID. */
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 	/* Stuff that's pending removal... */
-	struct DeeCompiler         *cp_prev;            /* [0..1][lock(DeeCompiler_Lock)]
-	                                                 * The compiler that was active before this one and
-	                                                 * will be restored when `DeeCompiler_End()` is called. */
-	size_t                      cp_recursion;       /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
+	struct DeeCompiler          *cp_prev;            /* [0..1][lock(DeeCompiler_Lock)]
+	                                                  * The compiler that was active before this one and
+	                                                  * will be restored when `DeeCompiler_End()` is called. */
+	size_t                       cp_recursion;       /* [lock(DeeCompiler_Lock)] Recursion counter for how often `DeeCompiler_Begin()` was invoked for this compiler. */
 } DeeCompiler;
 
 /* Returns the lexer active for a given `DeeCompiler *self` */

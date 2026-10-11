@@ -681,6 +681,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_DECODE_NAMED_PRINTNEAREST           1
 #define TPP_HAVE_TOKEN_NUMBER                        1
 #define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
+#define TPP_HAVE_LEXER_ERRF                          1
 #define TPP_HAVE_LEXER_PUSHFILE_IO                   1
 #define TPP_HAVE_LEXER_DECODECOMMENT                 1 /* Needed by `deemon -F` */
 #define TPP_HAVE_FILE_GETIOOFFSET                    1 /* Needed by `deemon -F` */
@@ -1251,6 +1252,19 @@ INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, 
 //#define DeeLexer_VWarnfSym(self, sym, id, args)         ((void)&(self)->dl_lexer, ...)
 #define DeeLexer_WarnfSym(self, sym, ...)                 ((void)&(self)->dl_lexer, parser_warnatrf(&(sym)->s_decl, __VA_ARGS__))
 
+//#define DeeLexer_VErrf(self, id, args)                 ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_Errf(self, ...)                         ((void)&(self)->dl_lexer, parser_errf(__VA_ARGS__))
+//#define DeeLexer_VErrfAt(self, file, pos, id, args)    ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_ErrfAt(self, file, pos, ...)          ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VErrfLc(self, filename, lc, id, args) ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_ErrfLc(self, filename, lc, ...)       ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VErrfLoc(self, loc, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfLoc(self, loc, ...)                 ((void)&(self)->dl_lexer, parser_erratf(loc, __VA_ARGS__))
+//#define DeeLexer_VErrfAst(self, ast, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfAst(self, ast, ...)                 ((void)&(self)->dl_lexer, parser_errastf(ast, __VA_ARGS__))
+//#define DeeLexer_VErrfSym(self, sym, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfSym(self, sym, ...)                 ((void)&(self)->dl_lexer, parser_erratrf(&(sym)->s_decl, __VA_ARGS__))
+
 
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 _parser_skip(DeeLexer *self, tpp_token_id expected_tok, int wnum);
@@ -1270,8 +1284,7 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
 #define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)             /* !!! DEPREACTED -- use `DeeLexer_WarnfLoc()` */
 #define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfSym()` */
 #define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)            /* !!! DEPREACTED -- use `DeeLexer_WarnfAst()` */
-#define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)              /* !!! DEPREACTED -- use `TODO` */
-#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)             /* !!! DEPREACTED -- use `TODO` */
+#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)             /* !!! DEPREACTED -- use `DeeLexer_ErrfAst()` */
 
 
 #define tpp_builtin_getkeyword_empty() (&TPPKeyword_Empty)
@@ -1325,14 +1338,29 @@ struct symbol;
 #define DeeLexer_VWarnfAt(self, file, pos, id, args)    TPP_ISERR(tpp_lexer_vwarnf_at(&(self)->dl_lexer, file, pos, id, args))
 #define DeeLexer_WarnfLc(self, filename, lc, ...)       TPP_ISERR(tpp_lexer_warnf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
 #define DeeLexer_VWarnfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(self)->dl_lexer, filename, lc, id, args))
-INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_WarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
-INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, va_list args);
 #define DeeLexer_WarnfLoc(self, loc, ...)               _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
 #define DeeLexer_VWarnfLoc(self, loc, id, args)         _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
 #define DeeLexer_WarnfAst(self, p_ast, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
 #define DeeLexer_VWarnfAst(self, p_ast, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
 #define DeeLexer_WarnfSym(self, p_sym, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
 #define DeeLexer_VWarnfSym(self, p_sym, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
+INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_WarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
+INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, va_list args);
+
+#define DeeLexer_Errf(self, ...)                       TPP_ISERR(tpp_lexer_errf(&(self)->dl_lexer, __VA_ARGS__))
+#define DeeLexer_VErrf(self, id, args)                 TPP_ISERR(tpp_lexer_verrf(&(self)->dl_lexer, id, args))
+#define DeeLexer_ErrfAt(self, file, pos, ...)          TPP_ISERR(tpp_lexer_errf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
+#define DeeLexer_VErrfAt(self, file, pos, id, args)    TPP_ISERR(tpp_lexer_verrf_at(&(self)->dl_lexer, file, pos, id, args))
+#define DeeLexer_ErrfLc(self, filename, lc, ...)       TPP_ISERR(tpp_lexer_errf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
+#define DeeLexer_VErrfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_verrf_lc(&(self)->dl_lexer, filename, lc, id, args))
+#define DeeLexer_ErrfLoc(self, loc, ...)               _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
+#define DeeLexer_VErrfLoc(self, loc, id, args)         _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
+#define DeeLexer_ErrfAst(self, p_ast, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
+#define DeeLexer_VErrfAst(self, p_ast, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
+#define DeeLexer_ErrfSym(self, p_sym, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
+#define DeeLexer_VErrfSym(self, p_sym, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
+INTDEF ATTR_COLD NONNULL((1)) int DCALL _DeeLexer_ErrfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL _DeeLexer_VErrfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, va_list args);
 
 /* Static TPP Hooks */
 INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
@@ -1368,9 +1396,10 @@ _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN)     TPP_TOK_ISERR(DeeLexer_ParenEnd(self, has_paren))
 
 
-#define WARNAT(loc, ...)  DeeLexer_WarnfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), loc, __VA_ARGS__)
-#define WARNSYM(sym, ...) DeeLexer_WarnfSym(DeeLexer_OfCompiler(DeeCompiler_Current), sym, __VA_ARGS__)
-#define WARNAST(ast, ...) DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__)
+#define WARNAT(loc, ...)  DeeLexer_WarnfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), loc, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfLoc()` */
+#define WARNSYM(sym, ...) DeeLexer_WarnfSym(DeeLexer_OfCompiler(DeeCompiler_Current), sym, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfSym()` */
+#define WARNAST(ast, ...) DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfAst()` */
+#define PERRAST(ast, ...) (DeeLexer_ErrfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__), -1)  /* !!! DEPREACTED -- use `DeeLexer_ErrfAst()` */
 
 /* Return a pointer to the special *empty* keyword */
 #define tpp_builtin_getkeyword_empty() tpp_builtin_getkeyword_byid(TPP_KWD_)

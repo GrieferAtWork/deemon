@@ -45,7 +45,6 @@ ast_assemble_function(struct ast *__restrict function_ast,
                       struct asm_symbol_ref **__restrict p_refv) {
 	DREF DeeCodeObject *result;
 	DeeScopeObject *prev_scope;
-	struct Dee_compiler_options *options;
 	ASSERT(function_ast->a_type == AST_FUNCTION);
 	/* This is where it gets interesting, because this will
 	 * create a temporary sub-assembler, allowing for recursion! */
@@ -61,12 +60,24 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	current_basescope = function_ast->a_function.f_scope;
 
 	/* HINT: `code_compile` will safe and restore our own assembler context. */
-	options = DeeCompiler_Current->cp_options;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	result = code_compile(function_ast->a_function.f_code,
 	                      /* Don't propagate `ASM_FBIGCODE` */
 	                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
-	                      (options ? (options->co_assembler & ASM_FBIGCODE) : 0),
+	                      (DeeCompiler_Current->cp_assembler & ASM_FBIGCODE),
 	                      false, p_refc, p_refv);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	{
+		struct Dee_compiler_options *options;
+		options = DeeCompiler_Current->cp_options;
+		result = code_compile(function_ast->a_function.f_code,
+		                      /* Don't propagate `ASM_FBIGCODE` */
+		                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
+		                      (options ? (options->co_assembler & ASM_FBIGCODE) : 0),
+		                      false, p_refc, p_refv);
+	}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 	/* Now that the code has been generated, it's time to
 	 * register it as a constant variable of our own code. */
 	current_basescope = prev_scope->s_base;

@@ -27,6 +27,7 @@
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_parse_postexpr, ast_parse_string_const_printer, decref_parse_module_byname */
 #include <deemon/compiler/symbol.h> /* SYMBOL_*, get_local_symbol, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */
@@ -48,7 +49,9 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrend(Dee_libc_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #define TPP_TOK_ISDOT(x) ((x) == TPP_TOK_DOT || (x) == TPP_TOK_DOT_DOT_DOT)
@@ -81,12 +84,21 @@ import_module_by_name(DeeLexer *self,
 		goto err;
 
 	filename = tpp_file_getrealfilename(DeeLexer_GetFile(self));
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	result = DeeModule_OpenEx(module_name_utf8, WSTR_LENGTH(module_name_utf8),
+	                          filename, filename ? strlen(filename) : 0,
+	                          DeeModule_IMPORT_F_NORMAL |
+	                          DeeModule_IMPORT_F_ENOENT |
+	                          DeeModule_IMPORT_F_ERECUR,
+	                          DeeCompiler_Current->cp_imports);
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	result = DeeModule_OpenEx(module_name_utf8, WSTR_LENGTH(module_name_utf8),
 	                          filename, filename ? strlen(filename) : 0,
 	                          DeeModule_IMPORT_F_NORMAL |
 	                          DeeModule_IMPORT_F_ENOENT |
 	                          DeeModule_IMPORT_F_ERECUR,
 	                          inner_compiler_options);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!DeeModule_IMPORT_ISOK(result)) {
 		if unlikely(result == DeeModule_IMPORT_ERROR)
 			goto err;

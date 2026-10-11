@@ -1236,8 +1236,8 @@ PRIVATE NONNULL((1)) void DCALL ast_fini(struct ast *__restrict self)
 #endif /* !CONFIG_AST_IS_STRUCT */
 {
 	ASSERT(DeeCompiler_LockReading());
-	DeeCompiler_DelItem(self);
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeCompiler_DelItem(self);
 	if (self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */

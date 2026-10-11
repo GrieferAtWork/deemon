@@ -173,7 +173,27 @@ err:
  * @return: NULL: Out-of-memory */
 PRIVATE WUNUSED NONNULL((1)) DeeLexerWarning *DCALL
 DeeLexerWarnings_Alloc(DeeLexerWarnings *__restrict self) {
-	
+	if (self->lws_warnc >= self->lws_warna) {
+		DeeLexerWarning *new_vec;
+		size_t new_alloc = self->lws_warna * 2;
+		if (new_alloc < 8)
+			new_alloc = 8;
+		ASSERT(new_alloc > self->lws_warnc);
+		new_vec = (DeeLexerWarning *)Dee_TryReallocc(self->lws_warnv, new_alloc,
+		                                             sizeof(DeeLexerWarning));
+		if unlikely(!new_vec) {
+			new_alloc = self->lws_warnc + 1;
+			new_vec = (DeeLexerWarning *)Dee_Reallocc(self->lws_warnv, new_alloc,
+			                                          sizeof(DeeLexerWarning));
+			if unlikely(!new_vec)
+				goto err;
+		}
+		self->lws_warnv = new_vec;
+		self->lws_warna = new_alloc;
+	}
+	return &self->lws_warnv[self->lws_warnc];
+err:
+	return NULL;
 }
 
 /* Construct the warning message for `id` */
@@ -194,10 +214,9 @@ err_printer:
 }
 
 /* Initialize `self` from information described by `info` */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeLexerWarningLoc_FromPrintfInfo(DeeLexerWarningLoc *__restrict self,
-                                  tpp_lexer_printf_info *__restrict info,
-                                  tpp_lexer *__restrict lexer) {
+                                  tpp_lexer_printf_info *__restrict info) {
 	self->lwl_prev     = NULL;
 	self->lwl_filename = tpp_lexer_printf_info_getfilename(info);
 	self->lwl_lc       = tpp_lexer_printf_info_getlc(info);
@@ -258,7 +277,7 @@ DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, tpp_lexer_printf_info *tpp_restri
 	warning->lw_message    = message; /* Inherit reference */
 
 	/* Initialize warning location. */
-	if unlikely(DeeLexerWarningLoc_FromPrintfInfo(&warning->lw_loc, info, &me->dl_lexer)) {
+	if unlikely(DeeLexerWarningLoc_FromPrintfInfo(&warning->lw_loc, info)) {
 		Dee_DecrefDokill(message);
 		return TPP_EDEEMON;
 	}
@@ -547,6 +566,32 @@ _DeeLexer_VWarnfLoc(DeeLexer *self, void const *loc,
 		}
 	}
 	return DeeLexer_VWarnf(self, id, args);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+_DeeLexer_ErrfLoc(DeeLexer *self, void const *loc,
+                  ptrdiff_t loc_offset, tpp_warning_id id, ...) {
+	int result;
+	va_list args;
+	va_start(args, id);
+	result = _DeeLexer_VErrfLoc(self, loc, loc_offset, id, args);
+	va_end(args);
+	return result;
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+_DeeLexer_VErrfLoc(DeeLexer *self, void const *loc,
+                   ptrdiff_t loc_offset,
+                   tpp_warning_id id, va_list args) {
+	if (loc) {
+		struct ast_loc const *warn_here;
+		warn_here = (struct ast_loc const *)((char *)loc + loc_offset);
+		if (!ast_loc_isempty(warn_here)) {
+			return DeeLexer_VErrfLc(self, ast_loc_getname(warn_here),
+			                        ast_loc_getlc(warn_here), id, args);
+		}
+	}
+	return DeeLexer_VErrf(self, id, args);
 }
 
 DECL_END

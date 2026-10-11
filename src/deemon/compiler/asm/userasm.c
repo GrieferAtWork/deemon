@@ -2091,7 +2091,9 @@ assembly_formatter_format(DeeLexer *lexer,
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	char const *iter, *end, *flush_start;
 	char ch;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	TPP_REF tpp_string *result;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	bool has_paren;
 	iter = flush_start = tpp_string_cstr(input);
 	end = iter + tpp_string_len(input);
@@ -2419,17 +2421,112 @@ err_formatter:
 
 	assembly_text = self->a_assembly.as_text.at_text;
 	tpp_string_incref(assembly_text);
+create_assembly_file:;
 	{
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-		/* TODO: Must still re-use the host compiler's lexer because `tpp_keyword`
-		 *       inside of custom assembly must share the same namespace (and
-		 *       lifetime) as the actual lexer! */
+		bool saved_dollar_enabled;
+		struct asm_sec *old_section;
+		uint16_t old_flags;
+		DeeScopeObject *old_scope;
+		tpp_lexer_pushcore(&lexer->dl_lexer);
+
+		/* Load the assembly file into the lexer. */
+		tpp_lexer_initfile_text_utf8(&lexer->dl_lexer, NULL,
+		                             assembly_text, /* Inherit reference */
+		                             tpp_string_str(assembly_text),
+		                             tpp_string_len(assembly_text),
+		                             TPP_LCINFO_INVALID,
+		                             TPP_FILE_FLAGS_NORMAL);
+
+		/* Configure the lexer for assembly mode. */
+		result = -1;
+		tpp_lexer_pushfeatures(&lexer->dl_lexer);
+		tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_LF);
+		tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
+		saved_dollar_enabled = tpp_lexer_getextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR);
+		if (TPP_ISERR(tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR)))
+			goto done_compiler_asm;
+
+		/* Clear out the last-written user-assembly instruction. */
+		current_userasm.ua_lasti = ASM_DELOP;
+
+		/* Configure to use user-labels defined through operands. */
+		old_flags = current_userasm.ua_flags;
+		old_scope = current_scope;
+
+		/* Re-activate the scope of this branch. */
+		current_scope = self->a_scope;
+		ASSERT(current_basescope == current_scope->s_base);
+		ASSERT(current_rootscope == current_basescope->bs_root);
+		current_userasm.ua_flags = self->a_flag;
+
+		/* Save the old current-section. */
+		old_section = current_assembler.a_curr;
+
+		/* Actually parse user-assembly. */
+		{
+			size_t old_user_label_c;
+			struct asm_operand *old_user_label_v;
+			old_user_label_c          = current_userasm.ua_labelc;
+			old_user_label_v          = current_userasm.ua_labelv;
+			current_userasm.ua_labelc = self->a_assembly.as_num_l;
+			current_userasm.ua_labelv = self->a_assembly.as_opv +
+			                            (self->a_assembly.as_num_i +
+			                             self->a_assembly.as_num_o);
+			if (!TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
+				result = uasm_parse(lexer);
+			current_userasm.ua_labelc = old_user_label_c;
+			current_userasm.ua_labelv = old_user_label_v;
+		}
+
+		/* Raise lexer errors. */
+		if (result == 0 && DeeLexer_GetErrorCount(lexer)) {
+			DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
+			result = -1;
+		}
+
+		/* Emit one last symbol to prevent peephole at the end
+		 * of user-assembly when the `volatile` bit is set. */
+		if ((current_userasm.ua_flags & AST_FASSEMBLY_VOLATILE) &&
+		    (current_assembler.a_flag & ASM_FPEEPHOLE) && result == 0) {
+			struct asm_sym *volatile_sym = asm_newsym();
+			if unlikely(!volatile_sym)
+				result = -1;
+			asm_defsym(volatile_sym);
+			++volatile_sym->as_used; /* Intentionally left dangling. */
+		}
+		if (result == 0 && current_assembler.a_curr != old_section) {
+			/* Generate a jump to the proper section. */
+			struct asm_sym *temp = asm_newsym();
+			if unlikely(!temp) {
+				result = -1;
+			} else {
+				result = asm_gjmp(ASM_JMP, temp);
+				current_assembler.a_curr = old_section;
+				asm_defsym(temp);
+			}
+		}
+		current_userasm.ua_flags = old_flags;
+		current_scope            = old_scope;
+
+		result = 0;
+done_compiler_asm:
+		if (result == 0 && !saved_dollar_enabled) {
+			if (TPP_ISERR(tpp_lexer_disableextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR)))
+				result = -1;
+		}
+		tpp_lexer_popfeatures(&lexer->dl_lexer);
+		tpp_lexer_finifile(&lexer->dl_lexer);
+		tpp_lexer_popcore(&lexer->dl_lexer);
+
+		/* Check for errors during processing of user-assembly. */
+		if unlikely(result)
+			goto err;
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		/*ref*/ struct TPPFile *assembly_file;
 		/*ref*/ struct TPPFile *old_eob;
 		uint32_t old_lexer_flags, old_lexer_tokens;
-create_assembly_file:
+
 		assembly_file = TPPFile_NewExplicitInherited(assembly_text);
 		if unlikely(!assembly_file)
 			goto err_text;
@@ -2558,10 +2655,10 @@ create_assembly_file:
 		/* Pop our assembly file. */
 		if (TPPLexer_GetFile() == assembly_file)
 			TPPLexer_PopFile();
-
 		/* Check for errors during processing of user-assembly. */
 		if unlikely(result)
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	}
 
 	/* Check if the assembler is still in an undefined state. */
@@ -2647,8 +2744,10 @@ create_assembly_file:
 	}
 	Dee_Free(cleanup_actions);
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 err_text:
 	tpp_string_decref(assembly_text);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 err:
 	Dee_Free(cleanup_actions);
 	return -1;
