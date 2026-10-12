@@ -2428,7 +2428,10 @@ create_assembly_file:;
 		struct asm_sec *old_section;
 		uint16_t old_flags;
 		DeeScopeObject *old_scope;
+		tpp_size saved_error_count;
 		tpp_lexer_pushcore(&lexer->dl_lexer);
+		saved_error_count = tpp_lexer_geterrorcount(&lexer->dl_lexer);
+		tpp_lexer_seterrorcount(&lexer->dl_lexer, 0);
 
 		/* Load the assembly file into the lexer. */
 		tpp_lexer_initfile_text_utf8(&lexer->dl_lexer, NULL,
@@ -2509,7 +2512,6 @@ create_assembly_file:;
 		current_userasm.ua_flags = old_flags;
 		current_scope            = old_scope;
 
-		result = 0;
 done_compiler_asm:
 		if (result == 0 && !saved_dollar_enabled) {
 			if (TPP_ISERR(tpp_lexer_disableextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR)))
@@ -2517,6 +2519,7 @@ done_compiler_asm:
 		}
 		tpp_lexer_popfeatures(&lexer->dl_lexer);
 		tpp_lexer_finifile(&lexer->dl_lexer);
+		tpp_lexer_seterrorcount(&lexer->dl_lexer, saved_error_count);
 		tpp_lexer_popcore(&lexer->dl_lexer);
 
 		/* Check for errors during processing of user-assembly. */

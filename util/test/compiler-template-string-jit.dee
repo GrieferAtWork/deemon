@@ -24,7 +24,6 @@ import * from deemon;
 /* Same as the normal template-string test, but for the JIT compiler. */
 
 local x = 42;
-assert exec('F"before{x + 2}after"', globals: { .x = x }) == "before44after";
 assert exec('f"before{x + 2}after"', globals: { .x = x }) == "before44after";
 assert exec("f'before{x + 2}after'", globals: { .x = x }) == "before44after";
 assert exec("f\"before{'abc' + x}after\"", globals: { .x = x }) == "beforeabc42after";

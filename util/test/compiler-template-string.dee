@@ -45,7 +45,3 @@ assert f'\}' == '}';
  *          our compiler understands it like it should! */
 assert f'{{' == '{';            //'
 assert f'}}' == '}';
-
-/* Another thing that the notepad++ stylesheet fails to render correct (ugh...) */
-assert F"before{x + 2}after" == "before44after";
-

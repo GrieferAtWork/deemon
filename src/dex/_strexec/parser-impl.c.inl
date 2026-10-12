@@ -1405,11 +1405,19 @@ skip_rbrck_and_done:
 
 		case 1:
 			/* Support for template strings! */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			if ((tok_begin[0] == 'f') &&
+			    (tok_begin[1] == '\"' || tok_begin[1] == '\'')) {
+				result = FUNC(TemplateString)(self);
+				goto done;
+			}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if ((tok_begin[0] == 'f' || tok_begin[0] == 'F') &&
 			    (tok_begin[1] == '\"' || tok_begin[1] == '\'')) {
 				result = FUNC(TemplateString)(self);
 				goto done;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			break;
 
 		case 2:

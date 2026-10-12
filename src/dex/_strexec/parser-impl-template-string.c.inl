@@ -52,7 +52,11 @@ JITLexer_SkipTemplateString(JITLexer *__restrict self)
 	IF_EVAL(struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT);
 parse_current_token_as_template_string:
 	ASSERT(self->jl_tok == JIT_KEYWORD);
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	ASSERT(self->jl_tokstart[0] == 'f');
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	ASSERT(self->jl_tokstart[0] == 'f' || self->jl_tokstart[0] == 'F');
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 #if 0 /* Fun fact: this right here breaks the MSVC compiler (lol; what a piece of junk...) */
 	ASSERT(self->jl_tokstart[1] == '\'' || self->jl_tokstart[1] == '\"');
 #else
@@ -349,9 +353,15 @@ done_string:
 	JITLexer_YieldAt(self, text_iter);
 
 	/* Check if the next token is another template string. - If so, join the two! */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if ((self->jl_tok == JIT_KEYWORD && (*self->jl_tokstart == 'f')) &&
+	    (*self->jl_tokend == '\"' || *self->jl_tokend == '\''))
+		goto parse_current_token_as_template_string; /* Join adjacent template strings */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if ((self->jl_tok == JIT_KEYWORD && (*self->jl_tokstart == 'f' || *self->jl_tokstart == 'F')) &&
 	    (*self->jl_tokend == '\"' || *self->jl_tokend == '\''))
 		goto parse_current_token_as_template_string; /* Join adjacent template strings */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	/* Pack everything together on success. */
 	return IFELSE(Dee_unicode_printer_pack(&printer), 0);

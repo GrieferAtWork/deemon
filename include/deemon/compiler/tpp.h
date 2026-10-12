@@ -342,7 +342,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_UNICODE               1
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* We provide our own... */
 #define TPP_HAVE_STRERROR              0 /* Not needed -- we do our own mapping */
-#define TPP_HAVE_EUSER                 1
+#define TPP_HAVE_EUSER                 0 /* Not actually needed */
 #define TPP_HAVE_STRTOKENID            1 /* For `TPP_EMITTER_HAVE_MODE_TYPED` */
 #define TPP_HAVE_KEYWORD_USERDATA      1 /* Needed only for emitter */
 #define TPP_HAVE_KEYWORD_ASSTRING      0
@@ -453,7 +453,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS TPP_CONF_EXT1
 #define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE     TPP_CONF_EXT1
 #define TPP_HAVE_MACRO_RECURSION               TPP_CONF_EXT0
-#define TPP_HAVE_TRADITIONAL_MACROS            TPP_CONF_EXT1
+#define TPP_HAVE_TRADITIONAL_MACROS            TPP_CONF_EXT0
 #define TPP_HAVE_NAMED_VARARGS_IN_MACROS       1
 #define TPP_HAVE_VA_ARGS_IN_MACROS             1
 #define TPP_HAVE_VA_COMMA_IN_MACROS            1
@@ -647,8 +647,8 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE    1
 #define TPP_HAVE_INCLUDE_PATH_EMBED                  1
 #define TPP_HAVE_INCLUDE_PATH_PUSH_POP               1
-#define TPP_HAVE_WERROR                              1
-#define TPP_HAVE_WSYSTEM_HEADERS                     1
+#define TPP_HAVE_WERROR                              TPP_CONF_EXT0
+#define TPP_HAVE_WSYSTEM_HEADERS                     TPP_CONF_EXT0
 #define TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS           1
 #define TPP_HAVE_FILE_MACRO_TRACKARGS                1
 #define TPP_HAVE_FILE_ENCODING_EMBED                 1

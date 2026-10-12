@@ -1378,7 +1378,8 @@ check_sym_class:
 		if unlikely(symid < 0)
 			goto err;
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+			                      TPP_W_ASM_MULTIPLE_WRITES_TO_FINAL, sym))
 				goto err;
 			if (asm_gcheck_final_local_bound((uint16_t)symid))
 				goto err;
@@ -1387,7 +1388,8 @@ check_sym_class:
 
 	case SYMBOL_TYPE_STATIC:
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+			                      TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
 		symid = asm_ssymid(sym);
@@ -1397,7 +1399,8 @@ check_sym_class:
 
 	case SYMBOL_TYPE_STACK:
 		if unlikely((sym->s_flag & SYMBOL_FFINAL) && (sym->s_nwrite > 1)) {
-			if (ASM_WARN(TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+			                      TPP_W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, sym))
 				goto err;
 		}
 		ASSERT(sym->s_flag & SYMBOL_FALLOC);
@@ -1410,13 +1413,15 @@ check_sym_class:
 			 * >> }
 			 * >> print foo; // Error here
 			 */
-			ASM_ERR(TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
+			DeeLexer_ErrfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+			                 TPP_W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, sym);
 			goto err;
 		}
 		return asm_pstack(SYMBOL_STACK_OFFSET(sym));
 
 	default:
-		ASM_ERR(TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
+		DeeLexer_ErrfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+		                 TPP_W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, sym);
 		goto err;
 	}
 	__builtin_unreachable();
