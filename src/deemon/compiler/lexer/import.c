@@ -184,8 +184,10 @@ ast_parse_module_name(DeeLexer *self,
 		} else if (DeeLexer_IsStringToken(self)) {
 			if (ast_parse_string_const_printer(self, printer) < 0)
 				goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (!TPP_TOK_ISDOT(DeeLexer_GetTok(self)) &&
 			    !DeeLexer_IsStringToken(self))
 				break;
@@ -225,8 +227,10 @@ ast_parse_symbol_name(DeeLexer *self,
 		do {
 			if (ast_parse_string_const_printer(self, printer) < 0)
 				goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		} while (DeeLexer_IsStringToken(self));
 	} else {
 		if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_OR_STRING_IN_IMPORT_LIST))

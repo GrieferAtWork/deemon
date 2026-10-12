@@ -36,6 +36,7 @@
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
 #include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
+#include <deemon/format.h>
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString_AsUtf8, DeeString_Type, Dee_unicode_printer_fini, WSTR_LENGTH */
@@ -657,7 +658,7 @@ pack_code_in_return:
 		goto err;
 	if (DeeLexer_GetErrorCount(lexer)) {
 		DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
-		goto err;
+		goto err_code;
 	}
 
 	/* Run an additional optimization pass on the
@@ -665,10 +666,10 @@ pack_code_in_return:
 	if (optimizer_flags & OPTIMIZE_FENABLED) {
 		/* Rethrow all errors that may have occurred during optimization. */
 		if (ast_optimize_all(code, false))
-			goto err;
+			goto err_code;
 		if (DeeLexer_GetErrorCount(lexer)) {
 			DeeLexer_TPP_RaiseLexErrorHook(&lexer->dl_lexer);
-			goto err;
+			goto err_code;
 		}
 	}
 
@@ -695,6 +696,8 @@ pack_code_in_return:
 
 	/* Finally, put together the module itself. */
 	return module_compile(writer, root_code);
+err_code:
+	ast_decref(code);
 err:
 	return -1;
 }
@@ -762,7 +765,18 @@ DeeCompiler_Compile(DeeCompiler *__restrict compiler,
                     unsigned int mode, DeeObject *default_symbols) {
 	int result = DeeCompiler_LockWrite();
 	if likely(result == 0) {
+#ifdef NDEBUG
 		result = DeeCompiler_Compile2(compiler, writer, mode, default_symbols);
+#else /* NDEBUG */
+		DeeThreadObject *caller = DeeThread_Self();
+		uint16_t old_except = caller->t_exceptsz;
+		uint16_t want_except;
+		result = DeeCompiler_Compile2(compiler, writer, mode, default_symbols);
+		want_except = result ? (old_except + 1) : old_except;
+		ASSERTF(caller->t_exceptsz == want_except,
+		        "Bad exception count. Expected '%" PRFu16 "', got '%" PRFu16 "'",
+		        want_except, caller->t_exceptsz);
+#endif /* !NDEBUG */
 		DeeCompiler_LockEndWrite();
 
 		/* Flush Makefile output */

@@ -22,7 +22,7 @@
 import * from c.fixincludes;
 import * from deemon;
 
-local hdr: Header = loadHeaderWithData("myfile.txt", r'
+local hdr: Header = loadHeaderWithData("myfile.txt", """
 //!export *
 
 // Detection of c-style declarations
@@ -74,7 +74,7 @@ enum my_enum {
 
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_assign_t)(DeeObject *self, DeeObject *value);
 
-'.bytes());
+""".bytes());
 
 local expectedSymbols = Set.frozen({
 	"sym1",

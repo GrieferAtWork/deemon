@@ -139,8 +139,10 @@ ast_parse_string_const(DeeLexer *self) {
 	do {
 		if unlikely(ast_parse_string_const_printer(self, &printer))
 			goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	} while (DeeLexer_IsStringToken(self));
 	return Dee_unicode_printer_pack(&printer);
 err:
@@ -260,7 +262,13 @@ err:
 /* parse the actual expression that is embedded within a template string. */
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *TPPCALL
 string_parser_printexpr_parse(DeeLexer *self) {
+	/* TPP doesn't yield the first token for us (so we can decide how
+	 * to yield that token) As such, this is where we yield said token. */
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		goto err;
 	return ast_parse_expr(self, LOOKUP_SYM_NORMAL);
+err:
+	return NULL;
 }
 
 PRIVATE tpp_ssize TPPCALL

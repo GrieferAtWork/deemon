@@ -247,8 +247,10 @@ append_decl_string(DeeLexer *self) {
 	do {
 		if unlikely(ast_parse_string_const_printer(self, &current_tags.at_decl))
 			goto err;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	} while (DeeLexer_IsStringToken(self));
 
 	/* Append a line-feed at the end. */
@@ -288,7 +290,12 @@ parse_tags(DeeLexer *self) {
 			error = tpp_lexer_readunichar(&self->dl_lexer, &doc_end, &uc);
 			if (TPP_ISERR(error))
 				goto err;
-			if (tpp_unicode_islf(uc) || (uc == 0 && doc_end == tpp_file_getend(file)))
+			if (tpp_unicode_islf(uc)) {
+				/* Linefeed encountered -> must allow directives here */
+				tpp_file_allowdirectives(file);
+				break;
+			}
+			if (uc == 0 && doc_end == tpp_file_getend(file))
 				break;
 			if unlikely(Dee_unicode_printer_putc(&current_tags.at_doc, uc))
 				goto err;
@@ -445,6 +452,10 @@ again_compiler_subtag:
 							goto err;
 						if (tok == ',' || tok == ']')
 							goto do_next_compiler_tag;
+						if (tok == '(') {
+							if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+								goto err;
+						}
 					}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 					if (DeeLexer_GetTok(self) != '(') {

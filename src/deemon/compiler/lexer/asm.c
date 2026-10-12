@@ -563,7 +563,7 @@ default_case:
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 		if unlikely(tpp_string_builder_doprint(&builder,
 		                                       DeeLexer_GetTokenStart(self),
-		                                       DeeLexer_GetTokenLen(self)))
+		                                       DeeLexer_GetTokenLen(self)) < 0)
 			goto err_builder_flags;
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(TPP_PrintToken((printer_t)&tpp_string_printer_append, &printer))

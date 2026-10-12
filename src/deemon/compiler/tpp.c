@@ -380,6 +380,7 @@ DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer) {
 	me->dl_warn.lws_warnc = 0;
 	me->dl_warn.lws_warna = 0;
 	me->dl_warn.lws_warnv = NULL;
+	tpp_lexer_seterrorcount(&me->dl_lexer, 0);
 
 	/* Convert warning vector from TPP strings to deemon strings
 	 * (so filenames keep living once the lexer is destroyed). */
