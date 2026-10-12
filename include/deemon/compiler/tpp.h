@@ -342,7 +342,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_UNICODE               1
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* We provide our own... */
 #define TPP_HAVE_STRERROR              0 /* Not needed -- we do our own mapping */
-#define TPP_HAVE_EUSER                 0 /* Not actually needed */
+#define TPP_HAVE_EUSER                 1
 #define TPP_HAVE_STRTOKENID            1 /* For `TPP_EMITTER_HAVE_MODE_TYPED` */
 #define TPP_HAVE_KEYWORD_USERDATA      1 /* Needed only for emitter */
 #define TPP_HAVE_KEYWORD_ASSTRING      0

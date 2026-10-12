@@ -228,10 +228,12 @@ do_xcopy_3:
 	}
 	if (self != other) {
 		/* Copy over DDI information. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (other->a_ddi.l_file)
 			TPPFile_Incref(other->a_ddi.l_file);
 		if (self->a_ddi.l_file)
 			TPPFile_Decref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		memcpy(&self->a_ddi, &other->a_ddi, sizeof(struct ast_loc));
 	}
 	/* Finalize the contents of the AST that's being assigned to. */
@@ -257,10 +259,12 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	ast_incref(other);
 	if (self != other) {
 		/* Copy over DDI information. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 		if (other->a_ddi.l_file)
 			TPPFile_Incref(other->a_ddi.l_file);
 		if (self->a_ddi.l_file)
 			TPPFile_Decref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		memcpy(&self->a_ddi, &other->a_ddi, sizeof(struct ast_loc));
 	}
 	ast_fini_contents(self);
@@ -284,10 +288,12 @@ ast_setscope_and_ddi(struct ast *self,
 	/* Override the effective scope of the AST. */
 	self->a_scope = src->a_scope;
 	/* Override the DDI information. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	if (src->a_ddi.l_file)
 		TPPFile_Incref(src->a_ddi.l_file);
 	if (self->a_ddi.l_file)
 		TPPFile_Decref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	self->a_ddi = src->a_ddi;
 	return self;
 err:

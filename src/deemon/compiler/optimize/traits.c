@@ -780,9 +780,16 @@ ast_doesnt_return(struct ast *__restrict self,
 			if (self->a_action.a_act0->a_type == AST_SYM &&
 			    self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_STATIC &&
 			    self->a_action.a_act0->a_sym->s_scope == self->a_action.a_act0->a_scope &&
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+			    self->a_action.a_act0->a_sym->s_decl.l_name == self->a_action.a_act0->a_ddi.l_name &&
+			    tpp_lcinfo_equals(self->a_action.a_act0->a_sym->s_decl.l_lc,
+			                      self->a_action.a_act0->a_ddi.l_lc)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			    self->a_action.a_act0->a_sym->s_decl.l_file == self->a_action.a_act0->a_ddi.l_file &&
 			    self->a_action.a_act0->a_sym->s_decl.l_line == self->a_action.a_act0->a_ddi.l_line &&
-			    self->a_action.a_act0->a_sym->s_decl.l_col == self->a_action.a_act0->a_ddi.l_col)
+			    self->a_action.a_act0->a_sym->s_decl.l_col == self->a_action.a_act0->a_ddi.l_col
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			    )
 				return false;
 			ATTR_FALLTHROUGH
 		ACTION(AST_FACTION_CELL0)

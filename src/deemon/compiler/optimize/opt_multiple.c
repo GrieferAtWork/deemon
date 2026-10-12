@@ -101,13 +101,12 @@ multiple_continue_at_iter:
 		}
 	}
 	if (only_constexpr) {
-		if (self->a_multiple.m_astc == 1 &&
-		    !self->a_ddi.l_file) {
-			memcpy(&self->a_ddi,
-			       &self->a_multiple.m_astv[0]->a_ddi,
-			       sizeof(struct ast_loc));
+		if (self->a_multiple.m_astc == 1 && ast_loc_isempty(&self->a_ddi)) {
+			self->a_ddi = self->a_multiple.m_astv[0]->a_ddi;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 			if (self->a_ddi.l_file)
 				TPPFile_Incref(self->a_ddi.l_file);
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		}
 		if (self->a_multiple.m_astc == 0) {
 			DREF DeeObject *cexpr;

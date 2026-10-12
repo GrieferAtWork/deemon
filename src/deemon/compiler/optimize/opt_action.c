@@ -27,6 +27,7 @@
 #include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_ALL, AST_CONTAINS_GOTO_CONSIDER_NONE, CONSTEXPR_*, OPTIMIZE_F*, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, SYMBOL_*, symbol, symbol_set_haseffect */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>              /* DeeFile_Type */
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_OfPointer */
@@ -58,15 +59,15 @@ is_builtin_object(DeeObject *__restrict ob) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 warn_idcompare_nonbuiltin(struct ast *__restrict warn_ast) {
-	return WARNAST(warn_ast, W_COMPARE_SODO_NONBUILTIN_UNDEFINED);
+	return WARNAST(warn_ast, TPP_W_COMPARE_SODO_NONBUILTIN_UNDEFINED);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 warn_idcompare_bool(struct ast *__restrict warn_ast) {
 	if (warn_ast->a_type == AST_CONSTEXPR && DeeBool_Check(warn_ast->a_constexpr)) {
 		bool istrue = DeeBool_IsTrue(warn_ast->a_constexpr);
-		return WARNAST(warn_ast, istrue ? W_COMPARE_SODO_TRUE_UNDEFINED
-		                                : W_COMPARE_SODO_FALSE_UNDEFINED);
+		return WARNAST(warn_ast, istrue ? TPP_W_COMPARE_SODO_TRUE_UNDEFINED
+		                                : TPP_W_COMPARE_SODO_FALSE_UNDEFINED);
 	}
 	return 0;
 }

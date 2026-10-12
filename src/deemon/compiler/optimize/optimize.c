@@ -28,6 +28,7 @@
 #include <deemon/compiler/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, DeeScope_Type, symbol */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
@@ -48,11 +49,11 @@ INTERN NONNULL((1, 2)) void
 ast_optimize_verbose(struct ast *__restrict self, char const *format, ...) {
 	va_list args;
 	va_start(args, format);
-	if (self->a_ddi.l_file) {
-		Dee_DPRINTF("%s(%d,%d) : ",
-		            TPPFile_Filename(self->a_ddi.l_file, NULL),
-		            self->a_ddi.l_line + 1,
-		            self->a_ddi.l_col + 1);
+	if (!ast_loc_isempty(&self->a_ddi)) {
+		char const *filename = ast_loc_getname(&self->a_ddi);
+		Dee_DPRINTF("%s(%d,%d) : ", filename,
+		            ast_loc_getline(&self->a_ddi) + 1,
+		            ast_loc_getcol(&self->a_ddi) + 1);
 	}
 	Dee_VDPRINTF(format, args);
 	va_end(args);
@@ -277,7 +278,7 @@ again:
 		if (!self->a_label.l_label->tl_goto) {
 			/* The label was never used. - Ergo: it should not exist.
 			 * To signify this, we simply convert this branch to `none`. */
-			if (WARNAST(self, W_ASM_LABEL_NEVER_USED,
+			if (WARNAST(self, TPP_W_ASM_LABEL_NEVER_USED,
 			            (self->a_flag & AST_FLABEL_CASE)
 			            ? (self->a_label.l_label->tl_expr ? "case" : "default")
 			            : tpp_keyword_getcstr(self->a_label.l_label->tl_name)))

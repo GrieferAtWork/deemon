@@ -28,6 +28,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_Error, DeeError_NOTIMPLEMENTED */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/format.h>
 #include <deemon/operator-hints.h>     /* DeeNO_print_t */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/struct.h>             /* DeeStructObject_Cmp, DeeStructObject_PrintRepr */
@@ -48,6 +49,92 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
                            DeeNO_print_t custom_printer);
 
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeLexerWarningLoc_Print(DeeLexerWarningLoc const *__restrict self,
+                         Dee_formatprinter_t printer, void *arg) {
+	char const *filename = self->lwl_filename;
+	if (filename == NULL)
+		filename = "?";
+	if (tpp_lcinfo_isvalid(self->lwl_lc)) {
+		return DeeFormat_Printf(printer, arg, "%s(%d, %d): ", filename,
+		                        tpp_lcinfo_getline(self->lwl_lc) + 1,
+		                        tpp_lcinfo_getcol(self->lwl_lc) + 1);
+	}
+	return DeeFormat_Printf(printer, arg, "%s: ", filename);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeCompilerError_Print(DeeObject *__restrict self,
+                       Dee_formatprinter_t printer, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	DeeCompilerErrorObject *me = (DeeCompilerErrorObject *)self;
+	for (i = 0; i < me->ce_warnc; ++i) {
+		DeeLexerWarningLoc *from;
+		struct Dee_lexer_warning *warn = &me->ce_warnv[i];
+		tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(&warn->lw_invokeinfo);
+		temp = DeeLexerWarningLoc_Print(&warn->lw_loc, printer, arg);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		/* Print what this is about... */
+		temp = tpp_warning_invokeinfo_getstate(&warn->lw_invokeinfo) == TPP_WSTATE_WARN
+		               ? DeeFormat_PRINT(printer, arg, "warning")
+		               : DeeFormat_PRINT(printer, arg, "error");
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+
+		/* Print the relevant context name. */
+#if TPP_HAVE_WARNING_NUMBERS
+		if (tpp_warning_context_id_isnumber(ctxid)) {
+			tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(ctxid);
+			unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
+			if tpp_likely(number != TPP_WARNING_NUMBER_INVALID) {
+				temp = DeeFormat_Printf(printer, arg, "[%u]", number);
+				if (temp < 0)
+					goto err_temp;
+				result += temp;
+			}
+		} else
+#endif /* TPP_HAVE_WARNING_NUMBERS */
+		{
+			tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(ctxid);
+			char const *group_name = tpp_warning_group_getnames(group_id);
+			if tpp_likely(group_name != NULL) {
+				temp = DeeFormat_Printf(printer, arg, "[-W%s]", group_name);
+				if (temp < 0)
+					goto err_temp;
+				result += temp;
+			}
+		}
+		temp = DeeFormat_PRINT(printer, arg, ": ");
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		temp = DeeString_PrintUtf8(Dee_AsObject(warn->lw_message), printer, arg);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+
+		/* Print origin information */
+		for (from = warn->lw_loc.lwl_prev; from; from = from->lwl_prev) {
+			temp = DeeLexerWarningLoc_Print(from, printer, arg);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = DeeFormat_PRINT(printer, arg, "note: originating from here\n");
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 /************************************************************************/
 /* Error.CompilerError                                                  */

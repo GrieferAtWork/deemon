@@ -337,7 +337,7 @@ parse_varargs_suffix:
 set_argument_as_local:
 				arg->s_type = SYMBOL_TYPE_LOCAL;
 				arg->s_flag = symbol_flags;
-				if (DeeLexer_GetTok(self) == '?' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
+				if (DeeLexer_GetTok(self) == '?' && TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err;
 				if (DeeLexer_GetTok(self) == ':') {
 					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -895,23 +895,161 @@ err:
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Check if the parser is located after the '(' of a java-style lambda.
+ * @return:  1: Yes
+ * @return:  0: No
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+ast_is_after_lparen_of_java_lambda_impl(DeeLexer *self) {
+	if (!DeeLexer_HasTokenKwd(self)) {
+		if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
+			/* `**` can only appear in argument- and parameter lists.
+			 * Since out parent is parsing an argument-list, with a
+			 * comma-list as fallback, we know that this is varkwds! */
+			goto yes;
+		}
+		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
+			/* Special case: there are 4 cases where this can still be an argument list:
+			 * >> (...) -> [...][0];           // anonymous varargs
+			 * >> (...,) -> [...][0];          // *ditto*
+			 * >> (..., **kwds) -> [...][0];   // anonymous varargs, followed by varkwds
+			 * >> (..., **kwds,) -> [...][0];  // *ditto* */
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			if (DeeLexer_GetTok(self) == ',' && TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto err;
+				if (!DeeLexer_HasTokenKwd(self))
+					goto nope;
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto err;
+				if (DeeLexer_GetTok(self) == ',' && TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto err;
+			}
+			goto check_and_consume_rparen;
+		}
+		goto nope;
+	}
 
+	/* Now try to skip the argument list. */
+	for (;;) {
+		/* Special case: unnamed varargs. */
+		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+		} else {
+			/* Parse variable modifier flags. */
+			while (DeeLexer_GetTok(self) == TPP_KWD_local ||
+			       DeeLexer_GetTok(self) == TPP_KWD_final ||
+			       DeeLexer_GetTok(self) == TPP_KWD_varying) {
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto err;
+			}
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			if (!DeeLexer_HasTokenKwd(self))
+				goto nope;
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) /* Argument name. */
+				goto err;
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+		}
+		if (DeeLexer_GetTok(self) == '?') {
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			if (DeeLexer_GetTok(self) == ',' || DeeLexer_GetTok(self) == ')')
+				goto yes; /* Something like `(foo?)` is guarantied to be a paren-lambda. */
+			if (DeeLexer_GetTok(self) == ':') {
+				/* Parse argument declaration information. */
+				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					goto err;
+				if unlikely(decl_ast_skip(self))
+					goto err;
+			}
+		} else {
+			if (DeeLexer_GetTok(self) == ':') /* Something like `(foo: int)` is guarantied to be a paren-lambda. */
+				goto yes;
+		}
+		if unlikely(DeeLexer_GetTok(self) == '=') {
+			struct ast *temp;
+			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				goto err;
+			/* Parse & discard the default expression. */
+			temp = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
+			if unlikely(!temp)
+				goto err;
+			ast_decref(temp);
+		}
+		if (DeeLexer_GetTok(self) != ',')
+			break;
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err;
+		if (DeeLexer_GetTok(self) == ')')
+			break;
+	}
+check_and_consume_rparen:
+	if (DeeLexer_GetTok(self) != ')')
+		goto nope;
+	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		goto err;
+	if (DeeLexer_GetTok(self) == ':') {
+		/* Parse argument declaration information. */
+		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			goto err;
+		if unlikely(decl_ast_skip(self))
+			goto err;
+	}
+	if (DeeLexer_GetTok(self) != TPP_TOK_MINUS_RANGLE)
+		goto nope;
+yes:
+	return 1;
+nope:
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DFCALL
+ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
+	int result;
+	tpp_char const *after_lparen_ptr;
+	tpp_file *const file = DeeLexer_GetFile(self);
+	tpp_size rel_after_lparen_ptr;
+	tpp_size saved_token_len;
+	tpp_lexer_autopopfile_pushoff(&self->dl_lexer);
+	tpp_lexer_pushfeatures(&self->dl_lexer);
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_DIRECTIVES);
+	tpp_lexer_disablefeature(&self->dl_lexer, TPP_FEAT_CPP_MACROS);
+	tpp_lexer_nowarnings_pushon(&self->dl_lexer);
+	tpp_lexer_pushtokenstate(&self->dl_lexer);
+	after_lparen_ptr = DeeLexer_GetTokenStart(self);
+	saved_token_len  = DeeLexer_GetTokenLen(self);
+	ASSERT(after_lparen_ptr == tpp_file_getlastpos(file));
+	tpp_file_pushkeep(file, after_lparen_ptr);
+	rel_after_lparen_ptr = tpp_file_keep_ptr2rel(file, after_lparen_ptr);
+
+	result = ast_is_after_lparen_of_java_lambda_impl(self);
+
+	after_lparen_ptr = tpp_file_keep_rel2ptr(file, rel_after_lparen_ptr);
+	tpp_lexer_settokenrange(&self->dl_lexer, after_lparen_ptr,
+	                        after_lparen_ptr + saved_token_len);
+	tpp_file_popkeep(file);
+	tpp_lexer_poptokenstate(&self->dl_lexer);
+	tpp_lexer_nowarnings_pop(&self->dl_lexer);
+	tpp_lexer_popfeatures(&self->dl_lexer);
+	tpp_lexer_autopopfile_pop(&self->dl_lexer);
+	return result;
+}
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 /* Check if the parser is located after the '(' of a java-style lambda.
  * @return:  1: Yes
  * @return:  0: No
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-	/* TODO: Since this is its own stand-alone function, it should not use the
-	 *       same trick as `peek_token_after_decl_ast_skip()` -- instead, it
-	 *       should be re-implemented as a state machine built into a callback
-	 *       used with `tpp_lexer_peek_raw()` -- that way, this'll also work
-	 *       when popping out of macros (it'll only be unable to deal with
-	 *       going into macros)
-	 */
-#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	struct TPPLexerPosition pos;
 	if (!DeeLexer_HasTokenKwd(self)) {
 		if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
@@ -930,7 +1068,7 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 				goto err;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
-			if (DeeLexer_GetTok(self) == ',' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
+			if (DeeLexer_GetTok(self) == ',' && TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
@@ -939,7 +1077,7 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 					goto nope_restore;
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
-				if (DeeLexer_GetTok(self) == ',' && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
+				if (DeeLexer_GetTok(self) == ',' && TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
 			}
 			goto check_and_consume_rparen;
@@ -961,13 +1099,13 @@ ast_is_after_lparen_of_java_lambda(DeeLexer *self) {
 				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
 					goto err_restore;
 			}
-			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
+			if (DeeLexer_GetTok(self) == TPP_TOK_STAR_STAR && TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 			if (!DeeLexer_HasTokenKwd(self))
 				goto nope_restore;
 			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) /* Argument name. */
 				goto err_restore;
-			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && (TPP_TOK_ISERR(DeeLexer_Yield(self))))
+			if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && TPP_TOK_ISERR(DeeLexer_Yield(self)))
 				goto err_restore;
 		}
 		if (DeeLexer_GetTok(self) == '?') {
@@ -1030,6 +1168,8 @@ err_restore:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 
 DECL_END
 

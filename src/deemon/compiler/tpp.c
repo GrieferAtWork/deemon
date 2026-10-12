@@ -296,20 +296,26 @@ DeeLexerWarning_Fini_InError(DeeLexerWarning *__restrict self);
 
 INTERN NONNULL((1)) int DCALL
 DeeLexerWarningLoc_ConvertToDeemon(DeeLexerWarningLoc *__restrict self) {
-	if (self->lwl_filename) {
+	char const *filename = self->lwl_filename;
+	if (filename) {
 		DREF DeeStringObject *filename_obj;
 		tpp_size filename_len;
 		filename_len = self->lwl_filename_str
 		               ? tpp_string_len(self->lwl_filename_str)
-		               : tpp_strlen(self->lwl_filename);
-		filename_obj = (DREF DeeStringObject *)DeeString_NewUtf8(self->lwl_filename,
-		                                                         filename_len,
+		               : tpp_strlen(filename);
+		filename_obj = (DREF DeeStringObject *)DeeString_NewUtf8(filename, filename_len,
 		                                                         STRING_ERROR_FIGNORE);
 		if unlikely(!filename_obj)
 			goto err;
+		filename = DeeString_AsUtf8(filename_obj);
+		if unlikely(!filename) {
+			Dee_Decref_likely(filename_obj);
+			goto err;
+		}
 		if (self->lwl_filename_str)
 			tpp_string_decref(self->lwl_filename_str);
 		self->lwl_filename_obj = filename_obj; /* Inherit reference */
+		self->lwl_filename     = filename;
 	}
 	return 0;
 err:

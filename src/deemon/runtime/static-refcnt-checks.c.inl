@@ -461,6 +461,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 #ifndef CONFIG_NO_DEX
 	O(DeeModuleDex_Type),
 #endif /* !CONFIG_NO_DEX */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	O(DeeCompiler_Type),
 
 	/* All of the different compiler wrapper types, as well as the internal types for Ast and the different Scopes: */
@@ -476,6 +477,7 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 	O(DeeCompilerScope_Type),
 	O(DeeCompilerBaseScope_Type),
 	O(DeeCompilerRootScope_Type),
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	O(DeeAst_Type),
 	O(DeeScope_Type),
 	O(DeeClassScope_Type),
