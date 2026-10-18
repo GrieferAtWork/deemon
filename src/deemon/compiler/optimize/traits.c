@@ -30,6 +30,7 @@
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, AST_*, asm_operand, ast, catch_expr */
 #include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_*, AST_DOESNT_RETURN_F*, AST_PREDICT_TYPE_F_NOANNO, OPTIMIZE_FNOCOMPARE, OPTIMIZE_FNOPREDICT, ast_*, optimizer_flags */
 #include <deemon/compiler/symbol.h>   /* CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT, DAST_*, DeeBaseScopeObject, DeeBaseScope_IsVarargs, SYMBOL_*, current_basescope, decl_ast, symbol, symbol_*, text_label */
+#include <deemon/compiler/const.h>
 #include <deemon/dict.h>              /* DeeDict_Type */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* CONFIG_HAVE_FPU, DeeFloat_Type */
@@ -1377,17 +1378,8 @@ ast_equal_impl(struct ast const *a,
 
 	switch (a->a_type) {
 
-	case AST_CONSTEXPR: {
-		int temp;
-		if (a->a_constexpr == b->a_constexpr)
-			goto eq;
-		if (Dee_TYPE(a->a_constexpr) != Dee_TYPE(b->a_constexpr))
-			goto ne;
-		temp = DeeObject_TryCompareEq(a->a_constexpr, b->a_constexpr);
-		if (Dee_COMPARE_ISERR(temp))
-			DeeError_Handled(ERROR_HANDLED_RESTORE);
-		return Dee_COMPARE_ISEQ_NO_ERR(temp);
-	}	break;
+	case AST_CONSTEXPR:
+		return DeeObject_ConstEquals(a->a_constexpr, b->a_constexpr);
 
 	case AST_SYM:
 	case AST_UNBIND:

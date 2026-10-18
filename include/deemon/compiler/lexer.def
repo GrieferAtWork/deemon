@@ -356,9 +356,6 @@ TPP_WARNING(TPP_W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION, 1(TPP_W
 TPP_WARNING(TPP_W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Expected a constant expression as argument for %[type%] inside of a declaration expression")
 
 /*WARNING_NAMESPACE(WN_QUALITY, 2250)*/
-TPP_WARNING(TPP_W_UNCLEAR_CAST_INTENT, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_DISABLED, /* Leave this warning disabled; too many false positives. */
-            "Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
-            "To suppress this warning, add a second pair of parenthesis to the previous expression")
 TPP_WARNING(TPP_W_PROBABLY_MISSING_ARROW, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN,
             "Encountered %[{%] after parenthesis (%[(...) {%]). This will compile as %[Tuple({...})({ ...%], "
             "which probably isn't what you want. Insert %[->%] if this is meant to be a lambda, or write "

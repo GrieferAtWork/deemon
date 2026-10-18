@@ -52,8 +52,15 @@ assert #"\xA" "B" == 2;
 assert #"\xA" "BC" == 3;
 assert #"\xA" "BCD" == 4;
 assert #"\xAB" == 1;
+#if __TPP_VERSION__ >= 300
+assert #"\xABC" == 2;
+assert "\xABC" == "\xAB" + "C";
+assert #"\xABCD" == 3;
+assert "\xABCD" == "\xAB" + "CD";
+#else
 assert #"\xABC" == 1;
 assert #"\xABCD" == 1;
+#endif
 
 assertCEscape("\0\1\2\xFD\xFE\xFF");
 assertCEscape("\0\1\2\xFD\xFE\xFF");

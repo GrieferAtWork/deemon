@@ -26,6 +26,7 @@
 #include <deemon/compiler/ast.h>      /* AST_*, ast */
 #include <deemon/compiler/optimize.h> /* AST_ASSUMES_FFUNCTION, AST_ASSUMES_FNORMAL, AST_SYMBOL_ASSUMES_HASHIT, AST_SYMBOL_ASSUMES_HASHNX, AST_SYMBOL_ASSUME_HASH, OPTIMIZE_FASSUME, ast_* */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_TYPE_LOCAL, SYMBOL_TYPE_STACK, symbol */
+#include <deemon/compiler/const.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Clear, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
@@ -375,20 +376,6 @@ INTERN WUNUSED NONNULL((1, 2)) int
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-same_constant_value(DeeObject *__restrict a,
-                    DeeObject *__restrict b) {
-	int temp;
-	if (a == b)
-		return true;
-	if (Dee_TYPE(a) != Dee_TYPE(b))
-		return false;
-	temp = DeeObject_TryCompareEq(a, b);
-	if (Dee_COMPARE_ISERR(temp))
-		DeeError_Handled(ERROR_HANDLED_RESTORE);
-	return Dee_COMPARE_ISEQ_NO_ERR(temp);
-}
-
 /* Merge assumptions made in `child` and `sibling`, such that
  * only assumptions made in both spaces still hold true, saving
  * that intersection in `child`. Or in other words:
@@ -444,7 +431,7 @@ INTERN WUNUSED NONNULL((1)) int
 		/* Turn into a negative assumptions if the other branch
 		 * doesn't made the same assumptions about the symbol. */
 		if (!sass || !sass->sa_value ||
-		    !same_constant_value(cass->sa_value, sass->sa_value))
+		    !DeeObject_ConstEquals(cass->sa_value, sass->sa_value))
 			Dee_Clear(cass->sa_value);
 	}
 	/* Copy all negative assumptions made by the sibling. */

@@ -516,9 +516,13 @@ DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 
 	/* NOTE: This is the default-configuration for imported modules. */
 	self->cp_parser_flags    = PARSE_FNORMAL;
+#if 1 /* FIXME: There are problems with constant folding (e.g. "Object.id" is inlined) */
+	self->cp_optimizer_flags = OPTIMIZE_FNORMAL;
+#else
 	self->cp_optimizer_flags = OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS;
-	self->cp_unwind_limit    = 0;
+#endif
 	self->cp_assembler       = ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP;
+	self->cp_unwind_limit = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
 #endif /* !CONFIG_LANGUAGE_NO_ASM */

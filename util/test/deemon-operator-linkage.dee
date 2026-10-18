@@ -106,8 +106,8 @@ global final ICF_GROUPS: {{string...}...} = {
 global final ICF_GROUPS_BY_MEMBER: {string: {string...}} = (() -> {
 	local result = Dict();
 	for (local group: ICF_GROUPS) {
-		for (local member: group)
-			result[member] = group;
+		for (local memb: group)
+			result[memb] = group;
 	}
 	return result.frozen;
 })();

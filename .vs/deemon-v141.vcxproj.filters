@@ -147,6 +147,9 @@
 		<ClInclude Include="..\include\deemon\compiler\compiler.h">
 			<Filter>include\compiler</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\compiler\const.h">
+			<Filter>include\compiler</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\compiler\doctext.h">
 			<Filter>include\compiler</Filter>
 		</ClInclude>
@@ -1683,6 +1686,9 @@
 			<Filter>src\compiler</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\compiler.c">
+			<Filter>src\compiler</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\compiler\const.c">
 			<Filter>src\compiler</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\ddi.c">

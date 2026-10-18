@@ -30,6 +30,7 @@
 #include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, new_unnamed_symbol_in_scope, symbol, text_label */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/const.h>
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
@@ -2642,33 +2643,24 @@ INTERN WUNUSED NONNULL((1)) int32_t
 INTERN WUNUSED NONNULL((1)) int32_t
 (DCALL asm_newconst_inherited)(/*inherit(always)*/ DREF DeeObject *__restrict constvalue) {
 	int32_t result;
-	DREF DeeObject *elem;
 	ASSERT_OBJECT(constvalue);
 	if (!(current_assembler.a_flag & ASM_FNOREUSECONST)) {
 		/* Check if we've already got this exact constant. */
-		uint16_t i, count;
-		DREF DeeObject **vec;
-		vec   = current_assembler.a_constv;
-		count = current_assembler.a_constc;
+		uint16_t i, count = current_assembler.a_constc;
+		DREF DeeObject **vec = current_assembler.a_constv;
 		for (i = 0; i < count; ++i) {
-			elem = vec[i];
-			if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
-				int error = DeeObject_TryCompareEq(constvalue, elem);
-				if (Dee_COMPARE_ISERR(error))
-					goto err;
-				if (Dee_COMPARE_ISEQ(error)) {
-					Dee_Decref_unlikely(constvalue);
-					return (int32_t)i; /* Got a match for an existing instance! */
-				}
+			if (DeeObject_ConstEquals(vec[i], constvalue)) {
+				Dee_Decref_unlikely(constvalue);
+				return (int32_t)i; /* Got a match for an existing instance! */
 			}
 		}
 	}
 	if unlikely(check_resize_constants())
-		goto err;
+		goto err_constvalue;
 	result = current_assembler.a_constc;
 	current_assembler.a_constv[current_assembler.a_constc++] = constvalue; /* Inherit reference */
 	return result;
-err:
+err_constvalue:
 	Dee_Decref(constvalue);
 	return -1;
 }

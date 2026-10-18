@@ -1024,28 +1024,28 @@ compare_string_bytes(String *__restrict lhs,
 		switch (lhs_utf->u_width) {
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *lhs_str;
+			uint16_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint16_t *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint16_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
-				if (lhs_str[i] == (uint16_t)(rhs_str[i]))
+				if (lhs_str[i] == (uint16_t)rhs_str[i])
 					continue;
-				return lhs_str[i] < (uint16_t)(rhs_str[i]) ? -1 : 1;
+				return Dee_CompareNe(lhs_str[i], (uint16_t)rhs_str[i]);
 			}
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *lhs_str;
+			uint32_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint32_t *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint32_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
-				if (lhs_str[i] == (uint32_t)(rhs_str[i]))
+				if (lhs_str[i] == (uint32_t)rhs_str[i])
 					continue;
-				return lhs_str[i] < (uint32_t)(rhs_str[i]) ? -1 : 1;
+				return Dee_CompareNe(lhs_str[i], (uint32_t)rhs_str[i]);
 			}
 		}	break;
 
@@ -1092,28 +1092,28 @@ compare_strings(String *lhs, String *rhs) {
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
-				uint16_t *rhs_str;
+				uint16_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint16_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
-					if ((uint16_t)(lhs_str[i]) == rhs_str[i])
+					if ((uint16_t)lhs_str[i] == rhs_str[i])
 						continue;
-					return (uint16_t)(lhs_str[i]) < rhs_str[i] ? -1 : 1;
+					return Dee_CompareNe((uint16_t)lhs_str[i], rhs_str[i]);
 				}
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
-				uint32_t *rhs_str;
+				uint32_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint32_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
-					if ((uint32_t)(lhs_str[i]) == rhs_str[i])
+					if ((uint32_t)lhs_str[i] == rhs_str[i])
 						continue;
-					return (uint32_t)(lhs_str[i]) < rhs_str[i] ? -1 : 1;
+					return Dee_CompareNe((uint32_t)lhs_str[i], rhs_str[i]);
 				}
 			}	break;
 
@@ -1133,26 +1133,26 @@ compare_strings(String *lhs, String *rhs) {
 		CASE_WIDTH_2BYTE: {
 			uint16_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint16_t const *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint16_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
-				if (lhs_str[i] == (uint16_t)(rhs_str[i]))
+				if (lhs_str[i] == (uint16_t)rhs_str[i])
 					continue;
-				return lhs_str[i] < (uint16_t)(rhs_str[i]) ? -1 : 1;
+				return Dee_CompareNe(lhs_str[i], (uint16_t)rhs_str[i]);
 			}
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
 			uint32_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint32_t const *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint32_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
-				if (lhs_str[i] == (uint32_t)(rhs_str[i]))
+				if (lhs_str[i] == (uint32_t)rhs_str[i])
 					continue;
-				return lhs_str[i] < (uint32_t)(rhs_str[i]) ? -1 : 1;
+				return Dee_CompareNe(lhs_str[i], (uint32_t)rhs_str[i]);
 			}
 		}	break;
 
@@ -1172,7 +1172,7 @@ compare_strings(String *lhs, String *rhs) {
 
 		CASE_WIDTH_2BYTE: {
 			uint16_t const *lhs_str;
-			lhs_str = (uint16_t const *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str = (uint16_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 			lhs_len = WSTR_LENGTH(lhs_str);
 			switch (rhs_utf->u_width) {
 
@@ -1180,7 +1180,7 @@ compare_strings(String *lhs, String *rhs) {
 				int result;
 				uint16_t const *rhs_str;
 				size_t common_len;
-				rhs_str    = (uint16_t const *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpw(lhs_str, rhs_str, common_len);
@@ -1191,13 +1191,13 @@ compare_strings(String *lhs, String *rhs) {
 			CASE_WIDTH_4BYTE: {
 				uint32_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint32_t const *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
-					if ((uint32_t)(lhs_str[i]) == rhs_str[i])
+					if ((uint32_t)lhs_str[i] == rhs_str[i])
 						continue;
-					return (uint32_t)(lhs_str[i]) < rhs_str[i] ? -1 : 1;
+					return Dee_CompareNe((uint32_t)lhs_str[i], rhs_str[i]);
 				}
 			}	break;
 
@@ -1207,20 +1207,20 @@ compare_strings(String *lhs, String *rhs) {
 
 		CASE_WIDTH_4BYTE: {
 			uint32_t const *lhs_str;
-			lhs_str = (uint32_t const *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str = (uint32_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 			lhs_len = WSTR_LENGTH(lhs_str);
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
 				uint16_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint16_t const *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
-					if (lhs_str[i] == (uint32_t)(rhs_str[i]))
+					if (lhs_str[i] == (uint32_t)rhs_str[i])
 						continue;
-					return lhs_str[i] < (uint32_t)(rhs_str[i]) ? -1 : 1;
+					return Dee_CompareNe(lhs_str[i], (uint32_t)rhs_str[i]);
 				}
 			}	break;
 
@@ -1228,7 +1228,7 @@ compare_strings(String *lhs, String *rhs) {
 				int result;
 				uint32_t const *rhs_str;
 				size_t common_len;
-				rhs_str    = (uint32_t const *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpl(lhs_str, rhs_str, common_len);
@@ -1246,6 +1246,175 @@ compare_strings(String *lhs, String *rhs) {
 
 	/* If string contents are identical, leave off by comparing their lengths. */
 	return Dee_Compare(lhs_len, rhs_len);
+}
+
+/* Compare 2 string objects for equality (never returns `Dee_COMPARE_ERR`)
+ * @return: Dee_COMPARE_EQ: Strings are equal
+ * @return: Dee_COMPARE_LO: Strings are not equal
+ * @return: Dee_COMPARE_GR: Strings are not equal */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) int
+(DCALL DeeString_CompareStringEq)(DeeStringObject const *lhs,
+                                  DeeStringObject const *rhs) {
+	size_t common_len;
+#ifndef __OPTIMIZE_SIZE__
+	if (lhs == rhs)
+		return Dee_COMPARE_EQ;
+	if (DeeString_Hash((DeeStringObject *)lhs) !=
+	    DeeString_Hash((DeeStringObject *)rhs))
+		return Dee_COMPARE_NE;
+#endif /* !__OPTIMIZE_SIZE__ */
+
+	if (!lhs->s_data || lhs->s_data->u_width == STRING_WIDTH_1BYTE) {
+		/* Compare against single-byte string. */
+		uint8_t const *lhs_str = (uint8_t const *)lhs->s_str;
+		common_len = lhs->s_len;
+		if (!rhs->s_data || rhs->s_data->u_width == STRING_WIDTH_1BYTE) {
+			if (common_len != rhs->s_len)
+				goto nope;
+			return Dee_CompareEqFromDiff(bcmp(lhs_str, rhs->s_str, common_len));
+		} else {
+			struct Dee_string_utf *rhs_utf = rhs->s_data;
+			switch (rhs_utf->u_width) {
+
+			CASE_WIDTH_2BYTE: {
+				size_t i;
+				uint16_t const *rhs_str = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				for (i = 0; i < common_len; ++i) {
+					if ((uint16_t)lhs_str[i] != rhs_str[i])
+						goto nope;
+				}
+				return Dee_COMPARE_EQ;
+			}	break;
+
+			CASE_WIDTH_4BYTE: {
+				size_t i;
+				uint32_t const *rhs_str = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				for (i = 0; i < common_len; ++i) {
+					if ((uint32_t)lhs_str[i] != rhs_str[i])
+						goto nope;
+				}
+				return Dee_COMPARE_EQ;
+			}	break;
+
+			default: __builtin_unreachable();
+			}
+			__builtin_unreachable();
+		}
+		__builtin_unreachable();
+	} else if (!rhs->s_data || rhs->s_data->u_width == STRING_WIDTH_1BYTE) {
+		uint8_t const *rhs_str = (uint8_t const *)rhs->s_str;
+		struct Dee_string_utf const *lhs_utf = lhs->s_data;
+		/* Compare against single-byte string. */
+		common_len = rhs->s_len;
+		switch (lhs_utf->u_width) {
+
+		CASE_WIDTH_2BYTE: {
+			size_t i;
+			uint16_t const *lhs_str = (uint16_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
+			if (common_len != WSTR_LENGTH(lhs_str))
+				goto nope;
+			for (i = 0; i < common_len; ++i) {
+				if (lhs_str[i] != (uint16_t)rhs_str[i])
+					goto nope;
+			}
+			return Dee_COMPARE_EQ;
+		}	break;
+
+		CASE_WIDTH_4BYTE: {
+			size_t i;
+			uint32_t const *lhs_str = (uint32_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
+			if (common_len != WSTR_LENGTH(lhs_str))
+				goto nope;
+			for (i = 0; i < common_len; ++i) {
+				if (lhs_str[i] != (uint32_t)rhs_str[i])
+					goto nope;
+			}
+			return Dee_COMPARE_EQ;
+		}	break;
+
+		default: __builtin_unreachable();
+		}
+		__builtin_unreachable();
+	} else {
+		struct Dee_string_utf const *lhs_utf = lhs->s_data;
+		struct Dee_string_utf const *rhs_utf = rhs->s_data;
+		ASSERT(lhs_utf != NULL);
+		ASSERT(rhs_utf != NULL);
+		ASSERT(lhs_utf->u_width != STRING_WIDTH_1BYTE);
+		ASSERT(rhs_utf->u_width != STRING_WIDTH_1BYTE);
+		/* Complex string comparison. */
+		switch (lhs_utf->u_width) {
+
+		CASE_WIDTH_2BYTE: {
+			uint16_t const *lhs_str;
+			lhs_str = (uint16_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
+			common_len = WSTR_LENGTH(lhs_str);
+			switch (rhs_utf->u_width) {
+
+			CASE_WIDTH_2BYTE: {
+				uint16_t const *rhs_str = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				return Dee_CompareEqFromDiff(bcmpw(lhs_str, rhs_str, common_len));
+			}	break;
+
+			CASE_WIDTH_4BYTE: {
+				size_t i;
+				uint32_t const *rhs_str = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				for (i = 0; i < common_len; ++i) {
+					if ((uint32_t)lhs_str[i] != rhs_str[i])
+						goto nope;
+				}
+				return Dee_COMPARE_EQ;
+			}	break;
+
+			default: __builtin_unreachable();
+			}
+			__builtin_unreachable();
+		}	break;
+
+		CASE_WIDTH_4BYTE: {
+			uint32_t const *lhs_str = (uint32_t const *)lhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
+			common_len = WSTR_LENGTH(lhs_str);
+			switch (rhs_utf->u_width) {
+
+			CASE_WIDTH_2BYTE: {
+				size_t i;
+				uint16_t const *rhs_str = (uint16_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_2BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				for (i = 0; i < common_len; ++i) {
+					if (lhs_str[i] != (uint32_t)rhs_str[i])
+						goto nope;
+				}
+				return Dee_COMPARE_EQ;
+			}	break;
+
+			CASE_WIDTH_4BYTE: {
+				uint32_t const *rhs_str = (uint32_t const *)rhs_utf->u_data[Dee_STRING_WIDTH_4BYTE];
+				if (common_len != WSTR_LENGTH(rhs_str))
+					goto nope;
+				return Dee_CompareEqFromDiff(bcmpl(lhs_str, rhs_str, common_len));
+			}	break;
+
+			default: __builtin_unreachable();
+			}
+			__builtin_unreachable();
+		}	break;
+
+		default: __builtin_unreachable();
+		}
+		__builtin_unreachable();
+	}
+	__builtin_unreachable();
+nope:
+	return Dee_COMPARE_NE;
 }
 
 
@@ -1267,13 +1436,8 @@ string_eq_bytes(String *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_compare_eq(String *lhs, DeeObject *rhs) {
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
-	if likely(tp_rhs == &DeeString_Type) {
-		if (lhs == (String *)rhs)
-			return Dee_COMPARE_EQ;
-		if (DeeString_Hash(lhs) != DeeString_Hash(rhs))
-			return Dee_COMPARE_NE;
-		return compare_strings(lhs, (String *)rhs);
-	}
+	if likely(tp_rhs == &DeeString_Type)
+		return DeeString_CompareStringEq(lhs, (String *)rhs);
 	if likely(tp_rhs == &DeeBytes_Type)
 		return Dee_COMPARE_EQ_FROMBOOL(string_eq_bytes(lhs, (DeeBytesObject *)rhs));
 	DeeObject_TypeAssertFailed2(rhs, &DeeString_Type, &DeeBytes_Type);

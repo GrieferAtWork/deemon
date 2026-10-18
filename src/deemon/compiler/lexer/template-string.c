@@ -259,6 +259,29 @@ err:
 	return -1;
 }
 
+PRIVATE tpp_ssize DPRINTER_CC
+string_parser_printdata(void *arg, char const *__restrict data, size_t len) {
+	/* Same as `string_parser_printutf8()`, but use `Dee_unicode_printer_print8()` */
+	char const *iter, *end;
+	struct string_parser *me = (struct string_parser *)arg;
+	if (me->sp_params == NULL)
+		return Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, len);
+	end = (iter = data) + len;
+	for (; iter < end; ++iter) {
+		char ch = *iter;
+		if (ch == '{' || ch == '}') {
+			if (Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, (size_t)((iter + 1) - data)) < 0)
+				goto err;
+			data = iter;
+		}
+	}
+	if (Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, (size_t)(end - data)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
 /* parse the actual expression that is embedded within a template string. */
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *TPPCALL
 string_parser_printexpr_parse(DeeLexer *self) {
@@ -479,7 +502,7 @@ ast_parse_string_ast(DeeLexer *self) {
 	parser.sp_params = NULL;
 
 	/* Setup decode config. */
-	config.tldsc_dataprinter = &string_parser_printutf8;
+	config.tldsc_dataprinter = &string_parser_printdata;
 	config.tldsc_utf8printer = &string_parser_printutf8;
 	config.tldsc_formatexpr  = &string_parser_printexpr;
 	config.tldsc_arg         = &parser;
