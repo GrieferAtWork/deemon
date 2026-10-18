@@ -52,8 +52,10 @@ PRIVATE WUNUSED NONNULL((1)) TPP_REF tpp_string *DFCALL
 DeeLexer_ParseString(DeeLexer *self) {
 	tpp_errno error;
 	TPP_REF tpp_string *result;
+	/* Parse string...
+	 * NOTE: Stop if an LF token is encountered (if they're enabled, they have special meaning) */
 	error = tpp_lexer_parsestring(&self->dl_lexer, &result,
-	                              TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	                              TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 	if (TPP_ISERR(error))
 		return NULL;
 	return result;

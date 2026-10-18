@@ -1196,7 +1196,9 @@ err_cli_emitter:
 	tpp_emitter_cli_loader_fini(&fe_cli.fcp_cli_emit);
 	tpp_emitter_fini(&fe_emitter);
 err_cli:
+	Dee_CHECKMEMORY();
 	fe_cli_parser_fini__noemitter(&fe_cli);
+	Dee_CHECKMEMORY();
 	DeeCompiler_Fini_NoFiles(&fe_compiler);
 err:
 #ifdef EXIT_FAILURE

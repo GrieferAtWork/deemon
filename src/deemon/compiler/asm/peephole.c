@@ -910,12 +910,19 @@ do_jmpf:
 						after_prefix[1] = ASM_DELOP;
 						after_prefix[2] = ASM_DELOP;
 					}
-					if (is_conditional == 2) { /* foreach */
+					if (iter < after_prefix) {
+						/* Delete prefix + jump */
+						memset(iter, ASM_DELOP, (size_t)(after_prefix - iter));
+						after_prefix[0] = ASM_DELOP;
+						after_prefix[1] = ASM_DELOP;
+					} else if (is_conditional == 2) { /* foreach */
 						after_prefix[0] = ASM_POP;
 						after_prefix[1] = ASM_DELOP;
+						--stacksz; /* Because of injected `ASM_POP` */
 					} else if (is_conditional == 1) { /* jcc */
 						after_prefix[0] = ASM_BOOL;
 						after_prefix[1] = ASM_POP;
+						--stacksz; /* Because of injected `ASM_POP` */
 					} else {
 						after_prefix[0] = ASM_DELOP;
 						after_prefix[1] = ASM_DELOP;

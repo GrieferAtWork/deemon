@@ -203,6 +203,7 @@ DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict p_stacksz,
                    /*out*/ uint16_t *__restrict p_sp_add,
                    /*out*/ uint16_t *__restrict p_sp_sub) {
+	uint16_t sp_addr = (uint16_t)-1;
 	uint8_t sp_sub_action, sp_add_action;
 	Dee_instruction_t opcode = *pc;
 	uint16_t effect = stackeffect_0x00[opcode];
@@ -226,23 +227,12 @@ DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
 		}
 		if (effect == STACK_EFFECT_PREFIX) {
 			if (opcode == ASM_STACK) {
-				/* Special case: minimal stack effect delta. */
-				uint16_t sp_addr, min_sp_sub;
+				/* Special case: absolute stack address */
 				if (pc[0] == ASM_STACK) {
 					sp_addr = UNALIGNED_GETLE8(pc + 1);
-					pc += 2;
 				} else {
 					sp_addr = UNALIGNED_GETLE16(pc + 2);
-					pc += 4;
 				}
-				min_sp_sub = *p_stacksz - sp_addr;
-				pc = DeeAsm_NextInstrEf(pc, p_stacksz, p_sp_add, p_sp_sub);
-				if (min_sp_sub > *p_sp_sub) {
-					uint16_t extra = min_sp_sub - *p_sp_sub;
-					*p_sp_sub += extra;
-					*p_sp_add += extra;
-				}
-				return (instruction_t *)pc;
 			}
 
 			/* Skip prefix and inspect stack effect. */
@@ -295,6 +285,13 @@ DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
 	default: __builtin_unreachable();
 	}
 	*p_stacksz -= *p_sp_sub;
+	if unlikely(sp_addr < *p_stacksz) {
+		/* Special case: extend access range due to explicit stack addressing */
+		uint16_t extra = *p_stacksz - sp_addr;
+		*p_sp_sub += extra;
+		*p_sp_add += extra;
+		*p_stacksz -= extra; /* Because of `*p_stacksz += *p_sp_add;` below... */
+	}
 	*p_stacksz += *p_sp_add;
 	return DeeAsm_NextInstr(pc);
 }

@@ -207,13 +207,24 @@ local __objects = deemon.List {
 	/* 0x0090 */ ctypes.FunctionType, /* DeeForeignFunctionType_Type */
 	/* 0x0091 */ rt.Code,
 	/* 0x0092 */ rt.Code(), /* DeeCode_Empty */
+#if __TPP_VERSION__ >= 300
+	/* 0x0093 */ none, /* DeeXAst_Type */
+#else /* __TPP_VERSION__ >= 300 */
 	/* 0x0093 */ rt.Compiler.Ast, /* DeeXAst_Type */
+#endif /* __TPP_VERSION__ < 300 */
 	/* 0x0094 */ try rt.DexModule catch (...) none, /* DeeDexModule_Type */
 	/* 0x0095 */ none, /* DeeErrorType_DexError */
+#if __TPP_VERSION__ >= 300
+	/* 0x0096 */ none, /* DeeToken_Type */
+	/* 0x0097 */ none, /* DeeLocalVar_Type */
+	/* 0x0098 */ none, /* DeeLexer_Type */
+	/* 0x0099 */ none, /* DeeSAst_Type */
+#else /* __TPP_VERSION__ >= 300 */
 	/* 0x0096 */ rt.Compiler.Lexer.Token, /* DeeToken_Type */
 	/* 0x0097 */ rt.Compiler.Symbol, /* DeeLocalVar_Type */
 	/* 0x0098 */ rt.Compiler.Lexer, /* DeeLexer_Type */
 	/* 0x0099 */ rt.Compiler.Ast, /* DeeSAst_Type */
+#endif /* __TPP_VERSION__ < 300 */
 	/* 0x009a */ posix.getcwd,
 	/* 0x009b */ posix.chdir,
 	/* 0x009c */ () -> fs.User.home,
@@ -439,7 +450,11 @@ local __objects = deemon.List {
 	/* 0x0178 */ ctypes.bswap32,
 	/* 0x0179 */ ctypes.bswap64,
 	/* 0x017a */ ctypes.StructType,
+#if __TPP_VERSION__ >= 300
+	/* 0x017b */ none,
+#else /* __TPP_VERSION__ >= 300 */
 	/* 0x017b */ rt.Compiler.Scope,
+#endif /* __TPP_VERSION__ < 300 */
 	/* 0x017c */ none, /* TODO: &DeeLexerIterator_Type */
 	/* 0x017d */ deemon.Error.ValueError.SequenceError.KeyError.IndexError,
 	/* 0x017e */ deemon.HashSet,

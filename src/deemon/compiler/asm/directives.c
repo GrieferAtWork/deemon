@@ -716,11 +716,7 @@ do_handle_ddi:
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			} else {
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-				tpp_keyword const *file_kwd;
-				file_kwd = DeeLexer_NewKeyword(self, (tpp_char const *)"", 0);
-				if unlikely(!file_kwd)
-					goto err_ddi_col;
-				file = tpp_keyword_getcstr(file_kwd);
+				file = "";
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 				file = ddi_newfile("", 0);
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -771,13 +767,13 @@ ddi_update:
 				tpp_column colval = 0;
 				if (DeeObject_AsIntX(line, &lineval))
 					goto err_ddi_col;
-				--line;
+				--lineval;
 				if (col) {
 					if (DeeObject_AsIntX(col, &colval))
 						goto err_ddi_col;
 					--colval;
 				}
-				tpp_lcinfo_init(&ddi->dc_loc.l_lc, line, col);
+				tpp_lcinfo_init(&ddi->dc_loc.l_lc, lineval, colval);
 			}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 			if (DeeObject_AsInt(line, &ddi->dc_loc.l_line))

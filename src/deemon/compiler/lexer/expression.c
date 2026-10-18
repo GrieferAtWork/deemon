@@ -872,6 +872,11 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 			if (TPP_ISERR(error))
 				goto err;
 			if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+				/* TODO: "-ffixed-length-integrals"
+				 * >> 123ull
+				 * Compile as:
+				 * >> (ullong from ctypes)(123)
+				 */
 				if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER)) {
 					Dee_Decref(resval);
 					goto err;
@@ -933,19 +938,15 @@ create_constexpr:
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 			goto err;
 		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &value,
-		                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                         TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 		if (TPP_ISERR(error))
 			goto err;
 		resval = DeeInt_NEWU(value);
 		if unlikely(!resval)
 			goto err;
-		result = ast_setddi(ast_constexpr(resval), &loc);
+		result = ast_constexpr(resval);
 		Dee_Decref(resval);
-		if unlikely(!result)
-			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
-			goto err_r;
-		return result;
+		return ast_setddi(result, &loc);
 	}	break;
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 

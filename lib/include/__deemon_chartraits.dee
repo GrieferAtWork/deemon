@@ -20,45 +20,45 @@
 #pragma once
 #include "__stddef.dee"
 
-#define __deemon_isalnum_m(__c) (\
-	((__c)>='a'&&(__c)<='z')||((__c)>='A'&&(__c)<='Z')||\
-	((__c)>='0'&&(__c)<='9')||((__c)=='_'))
-#define __deemon_isalpha_m(__c) (\
-	((__c)>='a'&&(__c)<='z')||((__c)>='A'&&(__c)<='Z')||(__c)=='_')
-#define __deemon_isblank_m(__c) ((__c)=='\x09'||(__c)=='\x20')
-#define __deemon_iscntrl_m(__c) ((__c)<='\x1F'||(__c)=='\x7F')
-#define __deemon_isdigit_m(__c) ((__c)>='0'&&(__c)<='9')
-#define __deemon_isgraph_m(__c) ((__c)>='\x21'&&(__c)<='\x7E')
-#define __deemon_islower_m(__c) ((__c)>='a'&&(__c)<='z')
-#define __deemon_isprint_m(__c) ((__c)>='\x20'&&(__c)<='\x7E')
-#define __deemon_ispunct_m(__c) (\
-	((__c)>='\x21'&&(__c)<='\x2F')||((__c)>='\x3A'&&(__c)<='\x40')||\
-	((__c)>='\x5C'&&(__c)<='\x60')||((__c)>='\x7B'&&(__c)<='\x7E'))
-#define __deemon_isspace_m(__c) (\
-	((__c)>='\x09'&&(__c)<='\x0D')||(__c)=='\x20')
-#define __deemon_isupper_m(__c) ((__c)>='A'&&(__c)<='Z')
-#define __deemon_isxdigit_m(__c) (\
-	((__c)>='0'&&(__c)<='9')||\
-	((__c)>='A'&&(__c)<='F')||\
-	((__c)>='a'&&(__c)<='f'))
+#define __deemon_isalnum_m(c) (\
+	((c)>='a'&&(c)<='z')||((c)>='A'&&(c)<='Z')||\
+	((c)>='0'&&(c)<='9')||((c)=='_'))
+#define __deemon_isalpha_m(c) (\
+	((c)>='a'&&(c)<='z')||((c)>='A'&&(c)<='Z')||(c)=='_')
+#define __deemon_isblank_m(c) ((c)=='\x09'||(c)=='\x20')
+#define __deemon_iscntrl_m(c) ((c)<='\x1F'||(c)=='\x7F')
+#define __deemon_isdigit_m(c) ((c)>='0'&&(c)<='9')
+#define __deemon_isgraph_m(c) ((c)>='\x21'&&(c)<='\x7E')
+#define __deemon_islower_m(c) ((c)>='a'&&(c)<='z')
+#define __deemon_isprint_m(c) ((c)>='\x20'&&(c)<='\x7E')
+#define __deemon_ispunct_m(c) (\
+	((c)>='\x21'&&(c)<='\x2F')||((c)>='\x3A'&&(c)<='\x40')||\
+	((c)>='\x5C'&&(c)<='\x60')||((c)>='\x7B'&&(c)<='\x7E'))
+#define __deemon_isspace_m(c) (\
+	((c)>='\x09'&&(c)<='\x0D')||(c)=='\x20')
+#define __deemon_isupper_m(c) ((c)>='A'&&(c)<='Z')
+#define __deemon_isxdigit_m(c) (\
+	((c)>='0'&&(c)<='9')||\
+	((c)>='A'&&(c)<='F')||\
+	((c)>='a'&&(c)<='f'))
 #define __deemon_tolower_m(c) (((c)>='A'&&(c)<='Z')?((c)-('A'-'a')):(c))
 #define __deemon_toupper_m(c) (((c)>='a'&&(c)<='z')?((c)-('a'-'A')):(c))
 
 #if __has_builtin(__builtin_choose_expr) && __has_builtin(__builtin_constant_p)
-#	define __deemon_isalnum(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isalnum_m(__c),__deemon_isalnum_f(__c));
-#	define __deemon_isalpha(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isalpha_m(__c),__deemon_isalpha_f(__c));
-#	define __deemon_isblank(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isblank_m(__c),__deemon_isblank_f(__c));
-#	define __deemon_iscntrl(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_iscntrl_m(__c),__deemon_iscntrl_f(__c));
-#	define __deemon_isdigit(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isdigit_m(__c),__deemon_isdigit_f(__c));
-#	define __deemon_isgraph(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isgraph_m(__c),__deemon_isgraph_f(__c));
-#	define __deemon_islower(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_islower_m(__c),__deemon_islower_f(__c));
-#	define __deemon_isprint(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isprint_m(__c),__deemon_isprint_f(__c));
-#	define __deemon_ispunct(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_ispunct_m(__c),__deemon_ispunct_f(__c));
-#	define __deemon_isspace(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isspace_m(__c),__deemon_isspace_f(__c));
-#	define __deemon_isupper(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isupper_m(__c),__deemon_isupper_f(__c));
-#	define __deemon_isxdigit(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_isxdigit_m(__c),__deemon_isxdigit_f(__c));
-#	define __deemon_tolower(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_tolower_m(__c),__deemon_tolower_f(__c));
-#	define __deemon_toupper(__c) __builtin_choose_expr(__builtin_constant_p(__c),__deemon_toupper_m(__c),__deemon_toupper_f(__c));
+#	define __deemon_isalnum(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isalnum_m(c),__deemon_isalnum_f(c));
+#	define __deemon_isalpha(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isalpha_m(c),__deemon_isalpha_f(c));
+#	define __deemon_isblank(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isblank_m(c),__deemon_isblank_f(c));
+#	define __deemon_iscntrl(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_iscntrl_m(c),__deemon_iscntrl_f(c));
+#	define __deemon_isdigit(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isdigit_m(c),__deemon_isdigit_f(c));
+#	define __deemon_isgraph(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isgraph_m(c),__deemon_isgraph_f(c));
+#	define __deemon_islower(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_islower_m(c),__deemon_islower_f(c));
+#	define __deemon_isprint(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isprint_m(c),__deemon_isprint_f(c));
+#	define __deemon_ispunct(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_ispunct_m(c),__deemon_ispunct_f(c));
+#	define __deemon_isspace(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isspace_m(c),__deemon_isspace_f(c));
+#	define __deemon_isupper(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isupper_m(c),__deemon_isupper_f(c));
+#	define __deemon_isxdigit(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_isxdigit_m(c),__deemon_isxdigit_f(c));
+#	define __deemon_tolower(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_tolower_m(c),__deemon_tolower_f(c));
+#	define __deemon_toupper(c) __builtin_choose_expr(__builtin_constant_p(c),__deemon_toupper_m(c),__deemon_toupper_f(c));
 #else /* __builtin_choose_expr && __builtin_constant_p */
 #	define __deemon_isalnum_f  __deemon_isalnum
 #	define __deemon_isalpha_f  __deemon_isalpha

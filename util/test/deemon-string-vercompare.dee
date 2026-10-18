@@ -126,7 +126,6 @@ for (local i: [:#sortedValues]) {
 		local y = sortedValues[j];
 		assertVercompare(x, y, -1);
 	}
-	prev = x;
 }
 
 /* Assert that using vercompare for sorting works. */

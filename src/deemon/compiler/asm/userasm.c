@@ -2476,8 +2476,10 @@ create_assembly_file:;
 			current_userasm.ua_labelv = self->a_assembly.as_opv +
 			                            (self->a_assembly.as_num_i +
 			                             self->a_assembly.as_num_o);
+			Dee_CHECKMEMORY();
 			if (!TPP_TOK_ISERR(DeeLexer_Yield(lexer)))
 				result = uasm_parse(lexer);
+			Dee_CHECKMEMORY();
 			current_userasm.ua_labelc = old_user_label_c;
 			current_userasm.ua_labelv = old_user_label_v;
 		}

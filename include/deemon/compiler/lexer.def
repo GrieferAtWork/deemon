@@ -449,7 +449,7 @@ TPP_WARNING(TPP_W_VARIABLE_ALREADY_EXISTS, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERR
 TPP_WARNING(TPP_W_DECLARING_GLOBAL_IN_NONROOT, 2(TPP_WG_SYMBOL, TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, "Declaring global variable %[%s%] outside of the root scope")
 TPP_WARNING_EX(TPP_W_DECLARING_IMPLICIT_VARIABLE, 2(TPP_WG_IMPLICIT, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, {
 	char const *varname = tpp_current_va_arg(char const *);
-	tpp_warn_printf2(tpp_current_info(), "Implicitly declaring %Pt as a local variable. Write %[local %s%] if this is intended\n", varname, varname);
+	tpp_warn_printf2(tpp_current_info(), "Implicitly declaring %[%s%] as a local variable. Write %[local %s%] if this is intended\n", varname, varname);
 })
 TPP_WARNING(TPP_W_INVALID_NAME_FOR_MODULE_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Cannot import module %[%s%]: %[%s%] is not a valid variable name")
 TPP_WARNING(TPP_W_INVALID_NAME_FOR_IMPORT_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Cannot import symbol %[%s%]: %[%s%] is not a valid variable name")

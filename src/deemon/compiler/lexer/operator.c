@@ -389,7 +389,7 @@ ast_parse_operator_name(DeeLexer *self, uint16_t features) {
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 			goto err;
 		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &intval,
-		                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                         TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 		if (TPP_ISERR(error))
 			goto err;
 		result = (int32_t)(uint16_t)intval;

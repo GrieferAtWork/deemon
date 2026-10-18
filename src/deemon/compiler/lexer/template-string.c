@@ -86,7 +86,9 @@ ast_parse_string_const_printer(DeeLexer *self, struct Dee_unicode_printer *__res
 	tpp_lexer_decodestring_config config;
 	ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
 	tpp_lexer_decodestring_config_init_simple(&config, &Dee_unicode_printer_print, printer);
-	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	/* Parse string...
+	 * NOTE: Stop if an LF token is encountered (if they're enabled, they have special meaning) */
+	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 	if (TPP_SSIZE_ISERR(status))
 		goto err;
 	return 0;
@@ -510,8 +512,9 @@ ast_parse_string_ast(DeeLexer *self) {
 #error "Deemon doesn't support `tldsc_bigprinter`"
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 
-	/* Parse string... */
-	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	/* Parse string...
+	 * NOTE: Stop if an LF token is encountered (if they're enabled, they have special meaning) */
+	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 	if (TPP_SSIZE_ISERR(status))
 		goto err_parser;
 

@@ -402,8 +402,9 @@ uasm_parse_symnam(DeeLexer *self) {
 		 * `tpp_unicode_issymcont()` charactesr that may immediately follow it. */
 		tpp_file *const file = DeeLexer_GetFile(self);
 		tpp_char const *kwd_end = DeeLexer_GetTokenEnd(self);
-		tpp_size rel_kwd_end = tpp_file_ptr2rel(file, kwd_end);
+		tpp_size rel_kwd_end;
 		DeeLexer_SetTokenEnd(self, DeeLexer_GetTokenStart(self)); /* So start of keyword isn't unloaded! */
+		rel_kwd_end = tpp_file_ptr2rel(file, kwd_end);
 
 		/* Read upcoming characters... */
 		for (;;) {
@@ -412,7 +413,7 @@ uasm_parse_symnam(DeeLexer *self) {
 			error = tpp_lexer_readunichar(&self->dl_lexer, &kwd_end, &uc);
 			if (TPP_ISERR(error)) {
 				kwd_end = tpp_file_rel2ptr(file, rel_kwd_end);
-				DeeLexer_SetTokenRange(self, DeeLexer_GetTokenStart(self), kwd_end);
+				DeeLexer_SetTokenEnd(self, kwd_end);
 				goto err;
 			}
 			if (!TPP_TOK_IS_SYMBOL_NAME_CH(uc) &&
@@ -421,7 +422,7 @@ uasm_parse_symnam(DeeLexer *self) {
 			rel_kwd_end = tpp_file_ptr2rel(file, kwd_end);
 		}
 		kwd_end = tpp_file_rel2ptr(file, rel_kwd_end);
-		DeeLexer_SetTokenRange(self, DeeLexer_GetTokenStart(self), kwd_end);
+		DeeLexer_SetTokenEnd(self, kwd_end);
 		result = DeeLexer_NewKeywordEsc(self, DeeLexer_GetTokenStart(self),
 		                                DeeLexer_GetTokenLen(self));
 		if unlikely(!result)
@@ -534,7 +535,37 @@ yield_done:
 			result->ie_rel = (uint16_t)-1;
 			goto yield_done;
 		}
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		/* Integer constant. */
+		result->ie_sym = NULL;
+		result->ie_rel = (uint16_t)-1;
+		{
+			tpp_errno error;
+			tpp_char const *suffix_start;
+			DREF DeeIntObject *int_value;
+			bool cast_ok;
+			error = tpp_lexer_decodeint_ex(&self->dl_lexer, &int_value, &suffix_start);
+			if (TPP_ISERR(error))
+				goto err;
+			if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+				if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER)) {
+					Dee_Decref(int_value);
+					goto err;
+				}
+			}
+			cast_ok = DeeInt_TryAsIntptr(Dee_AsObject(int_value), &result->ie_val);
+			Dee_Decref(int_value);
+			if unlikely(!cast_ok) {
+				if (DeeLexer_Warnf(self, TPP_W_INTEGER_OVERFLOW, "<assembly>", "", ""))
+					goto err;
+				result->ie_val = 0;
+			}
+		}
+		goto yield_done;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		ATTR_FALLTHROUGH
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
 		/* NOTE: Here, we always interpret character tokens as literals,
 		 *       regardless of what `TPP_EXT_CHARACTER_LITERALS` is set to. */
@@ -549,7 +580,7 @@ yield_done:
 			tpp_errno error;
 			tpp_uintmax intval;
 			error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &intval,
-			                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+			                                         TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 			if (TPP_ISERR(error))
 				goto err;
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -559,7 +590,11 @@ yield_done:
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 			result->ie_val = (intptr_t)intval;
 		}
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		goto done;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		goto yield_done;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
 		if (!result) {
