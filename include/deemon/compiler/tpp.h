@@ -686,6 +686,8 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_LEXER_DECODECOMMENT                 1 /* Needed by `deemon -F` */
 #define TPP_HAVE_FILE_GETIOOFFSET                    1 /* Needed by `deemon -F` */
 
+#define TPP_WGNAME_ENVIRON 2("environ", "usage") /* Also allow "-Wusage" here for backwards compat */
+
 #define TPP_HAVE_CLI                              1
 #define TPP_HAVE_CLI_HELP                         1
 #define TPP_HAVE_CLI_HELP_ALL_SPELLINGS           1

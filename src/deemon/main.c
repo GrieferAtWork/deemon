@@ -925,8 +925,22 @@ int main(int argc, char *argv[]) {
 
 		/* Compile main module. */
 		main_module = fe_compile_module(argv[0]);
-		if unlikely(!main_module)
+		if unlikely(!main_module) {
+			/* Check for special case: if the error is a `DeeError_CompilerError`
+			 * with some listing of compiler warnings within it, then we can be
+			 * fairly certain that those warnings were already printed, and that
+			 * we don't need to print them again! */
+			if (DeeError_CurrentIs(&DeeError_CompilerError)) {
+				DeeCompilerErrorObject *error;
+				error = (DeeCompilerErrorObject *)DeeError_Current();
+				if (error->ce_warnc > 0) {
+					DeeError_Handled(ERROR_HANDLED_INTERRUPT);
+					ASSERT(DeeError_Current() == NULL);
+					goto done_cli;
+				}
+			}
 			goto err_cli;
+		}
 
 		/* Operate upon `main_module` */
 		switch (fe_cli.fcp_mode) {

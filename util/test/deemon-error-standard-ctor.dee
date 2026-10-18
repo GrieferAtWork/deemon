@@ -32,7 +32,7 @@ for (local ErrorType: Mapping.fromattr(errors).values) {
 		local empty = ErrorType();
 		assert empty == ErrorType();
 		assert empty.msg !is bound;
-		assert empty.message != "";
+		assert empty.message != "", f"Type '{ErrorType}' has no default message";
 		assert empty.cause !is bound;
 
 		local withCause = ErrorType(cause: empty);

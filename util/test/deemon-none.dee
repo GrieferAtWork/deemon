@@ -99,11 +99,9 @@ for (local someObject: { 42, "foo", false, Object() }) {
 }
 
 
-/* Here are some operators that must be no-ops (but re-return the rhs
- * operand because that's what the compiler enforces for these operators) */
-test.assertEqualsTyped(42, none := 42);
-test.assertEqualsTyped(43, none.operator move:= (43));
-
+/* Here are some operators that must always re-return the LHS operand. */
+test.assertNone(none := 42);
+test.assertNone(none.operator move:= (43));
 
 /* Here are some operators that always re-return "none" */
 test.assertNone(~none);

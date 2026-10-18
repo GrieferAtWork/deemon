@@ -51,11 +51,20 @@ assert parseFloat("1.0E2") == 1.0E2;
 assert parseFloat("1.0E+2") == 1.0E+2;
 assert parseFloat("1.0E-2") == 1.0E-2;
 assert parseFloat("1.0E-2") == 0.01;
+#if __TPP_VERSION__ >= 300
+assert parseFloat("1P2") == 1E2; // FIXME: _strexec doesn't support this type of exponent
+#else /* __TPP_VERSION__ >= 300 */
 assert parseFloat("1P2") == 1P2;
+#endif /* __TPP_VERSION__ < 300 */
 assert parseFloat("1P2") == 100;
 assert parseFloat("1P2") == 100.0;
+#if __TPP_VERSION__ >= 300
+assert parseFloat("1P+2") == 1E+2; // FIXME: _strexec doesn't support this type of exponent
+assert parseFloat("1P-2") == 1E-2; // FIXME: _strexec doesn't support this type of exponent
+#else /* __TPP_VERSION__ >= 300 */
 assert parseFloat("1P+2") == 1P+2;
 assert parseFloat("1P-2") == 1P-2;
+#endif /* __TPP_VERSION__ < 300 */
 assert parseFloat("1P-2") == 0.01;
 assert float("1E2") == 100;
 assert float("1E2") == 100.0;

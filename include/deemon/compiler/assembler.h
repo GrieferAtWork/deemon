@@ -232,7 +232,9 @@ struct ddi_checkpoint {
 	};
 #endif /* GUARD_DEEMON_COMPILER_DDI_C */
 	struct ast_loc      dc_loc;  /* Source location at this checkpoint.
+	                              * #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	                              * NOTE: This member does _NOT_ hold a reference to `.l_file`!
+	                              * #endif // !CONFIG_EXPERIMENTAL_USE_TPP3
 	                              */
 	uint16_t            dc_sp;   /* The stack depth at this location. */
 	uint16_t            dc_bndc; /* The number of symbol bindings defined by this checkpoint. */

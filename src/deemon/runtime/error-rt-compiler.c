@@ -40,14 +40,8 @@
 DECL_BEGIN
 
 #define Error_init_params "msg?:?X2?Dstring?O,cause?:?X2?DError?O"
-#define error_print_common(self, printer, arg, custom_printer)                  \
-	error_print_common(Dee_REQUIRES_OBJECT(DeeErrorObject, self), printer, arg, \
-	                   (DeeNO_print_t)(custom_printer))
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL error_print_common)(DeeErrorObject *__restrict self,
-                           Dee_formatprinter_t printer, void *arg,
-                           DeeNO_print_t custom_printer);
-
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+error_print(DeeErrorObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -263,10 +257,10 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              Dee_formatprinter_t printer, void *arg) {
-#if 0 /* This breaks printing of compiler warnings */
-	if (self->e_msg)
-		return DeeObject_Print(self->e_msg, printer, arg);
-#endif
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	if (self->e_msg || self->ce_warnc == 0)
+		return error_print((DeeErrorObject *)self, printer, arg);
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	return DeeCompilerError_Print(Dee_AsObject(self), printer, arg);
 }
 
@@ -336,8 +330,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
-#define INIT_LIKE_COMPILE_ERROR(tp_name, tp_doc, tp_flags,                \
-                                tp_base, tp_str, tp_print,                \
+#define INIT_LIKE_COMPILE_ERROR(tp_name, tp_doc, tp_flags, tp_base,       \
                                 tp_methods, tp_getsets, tp_class_members) \
 	{                                                                     \
 		OBJECT_HEAD_INIT(&DeeType_Type),                                  \
@@ -361,10 +354,10 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 			/* .tp_move_assign = */ NULL                                  \
 		},                                                                \
 		/* .tp_cast = */ {                                                \
-			/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str), \
+			/* .tp_str       = */ NULL,                                   \
 			/* .tp_repr      = */ NULL,                                   \
 			/* .tp_bool      = */ NULL,                                   \
-			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))(tp_print), \
+			/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_print, \
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&comerr_printrepr, \
 		},                                                                \
 		/* .tp_visit         = */ NULL,                                   \
@@ -390,7 +383,7 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 /************************************************************************/
 PUBLIC DeeTypeObject DeeError_SyntaxError =
 INIT_LIKE_COMPILE_ERROR("SyntaxError", "(" CompilerError_init_params ")",
-                        TP_FNORMAL, &DeeError_CompilerError, NULL, &DeeCompilerError_Print,
+                        TP_FNORMAL, &DeeError_CompilerError,
                         NULL, NULL, NULL);
 
 
@@ -399,7 +392,7 @@ INIT_LIKE_COMPILE_ERROR("SyntaxError", "(" CompilerError_init_params ")",
 /************************************************************************/
 PUBLIC DeeTypeObject DeeError_SymbolError =
 INIT_LIKE_COMPILE_ERROR("SymbolError", "(" CompilerError_init_params ")",
-                        TP_FNORMAL, &DeeError_CompilerError, NULL, &DeeCompilerError_Print,
+                        TP_FNORMAL, &DeeError_CompilerError,
                         NULL, NULL, NULL);
 
 DECL_END

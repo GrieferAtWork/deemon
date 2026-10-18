@@ -419,7 +419,8 @@ dont_do_inline_constant_arg_optimization:
 				template_str = string_getsubstr(template_str, 0, DeeString_SIZE(template_str) - 2);
 				if unlikely(!template_str)
 					goto err;
-				ast_template = ast_setddi(ast_constexpr(template_str), &ast_template_for_ddi->a_ddi);
+				ast_template = ast_constexpr(template_str);
+				ast_template = ast_setddi(ast_template, &ast_template_for_ddi->a_ddi);
 				Dee_Decref(template_str);
 				if unlikely(!ast_template)
 					goto err;
@@ -427,8 +428,11 @@ dont_do_inline_constant_arg_optimization:
 				ast_decref(ast_template);
 				if unlikely(!add_ast)
 					goto err;
-				ast_format_function_name = ast_callattr_format->a_operator.o_op0->a_operator.o_op1;
-				add_ast                  = ast_setddi(add_ast, &ast_format_function_name->a_ddi);
+				ast_format_function_name = ast_callattr_format->a_operator.o_op0;
+				if (ast_format_function_name->a_type == AST_OPERATOR &&
+				    ast_format_function_name->a_operator.o_op1 != NULL)
+					ast_format_function_name = ast_format_function_name->a_operator.o_op1;
+				add_ast = ast_setddi(add_ast, &ast_format_function_name->a_ddi);
 				error = ast_assign(ast_callattr_format, add_ast);
 				ast_decref(add_ast);
 				if unlikely(error)

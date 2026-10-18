@@ -1934,25 +1934,15 @@ do_compile_set_contains:
 			if unlikely(!self->a_operator.o_op1)
 				goto generic_operator;
 			ASSERT(operator_instr_table[operator_name] != 0);
-			if (PUSH_RESULT &&
-			    ast_can_exchange(self->a_operator.o_op0,
-			                     self->a_operator.o_op1)) {
-				/* Optimization when A and B can be exchanged. */
-				DO(ast_genasm(self->a_operator.o_op1, ASM_G_FPUSHRES));
+			DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
+			if (PUSH_RESULT) {
+				/* Always re-return the left-hand-side object, mirroring the
+				 * `return_reference_(self)` in `DEFINE_OPERATOR_INVOKE(operator_assign, ...` */
 				DO(asm_putddi(self));
 				DO(asm_gdup());
-				DO(ast_genasm_one(self->a_operator.o_op0, ASM_G_FPUSHRES));
-				DO(asm_putddi(self));
-				DO(asm_gswap());
-			} else {
-				DO(ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES));
-				DO(ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES));
-				DO(asm_putddi(self));
-				if (PUSH_RESULT) {
-					DO(asm_gdup());
-					DO(asm_grrot(3));
-				}
 			}
+			DO(ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES));
+			DO(asm_putddi(self));
 			DO((asm_ddcsp(), asm_put(operator_instr_table[operator_name])));
 			goto done;
 
