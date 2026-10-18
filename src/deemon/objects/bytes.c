@@ -543,7 +543,7 @@ DeeBytes_TryResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict
 
 
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self,
+DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeBytesObject *__restrict self,
                         size_t num_bytes) {
 	DREF DeeBytesObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);

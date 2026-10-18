@@ -1844,9 +1844,13 @@ again:
 	                      &bytes_read,
 	                      (LPOVERLAPPED)&overlapped)) {
 		DWORD dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		DeeNTSystem_HandleGenericError(dwError, err, again);
-		return err_file_io(self);
+		if (dwError == ERROR_HANDLE_EOF) {
+			bytes_read = 0; /* End-of-file */
+		} else {
+			DBG_ALIGNMENT_ENABLE();
+			DeeNTSystem_HandleGenericError(dwError, err, again);
+			return err_file_io(self);
+		}
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return bytes_read;

@@ -2171,6 +2171,10 @@ DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
 	/* Try to use mmap(2) */
 again:
 #if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
+#ifndef __KOS__ /* See description of `DeeMapFile_F_FORCECOPY` */
+	if (flags & DeeMapFile_F_FORCECOPY)
+		goto after_mmap_attempt;
+#endif /* !__KOS__ */
 	if (FSTAT_FOR_SIZE(fd, &st) == 0) {
 		Dee_pos_t map_offset = offset;
 		size_t map_bytes     = max_bytes;
@@ -2504,8 +2508,12 @@ err_mmap_impossible:
 			if (!ReadFile(fd, buf + bufused, (DWORD)readsize, &error, &ol)) {
 				if (bufused == 0)
 					break; /* File probably doesn't support `pread(2)`... */
-				/* Read error */
-				goto system_err_buf;
+				if (GetLastError() == ERROR_HANDLE_EOF) {
+					error = 0; /* End-of-file */
+				} else {
+					/* Read error */
+					goto system_err_buf;
+				}
 			}
 			if (error == 0 || (!(flags & DeeMapFile_F_READALL) && error < (DWORD)readsize)) {
 				/* End-of-file! */

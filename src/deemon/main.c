@@ -58,6 +58,7 @@
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __arm__, __i386__, __i486__, __i586__, __i686__, __x86_64__ */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
+#include <hybrid/byteswap.h>
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
@@ -800,6 +801,20 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED bool DCALL fe_handle_compiler_error(void) {
+	if (DeeError_CurrentIs(&DeeError_CompilerError)) {
+		DeeCompilerErrorObject *error;
+		error = (DeeCompilerErrorObject *)DeeError_Current();
+		if (error->ce_warnc > 0) {
+			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
+			ASSERT(DeeError_Current() == NULL);
+			return true;
+		}
+	}
+	return false;
+}
+
+
 /* Run `deemon -F`-style format scripts in `filename` */
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
 fe_run_format_scripts(char *__restrict filename);
@@ -930,15 +945,8 @@ int main(int argc, char *argv[]) {
 			 * with some listing of compiler warnings within it, then we can be
 			 * fairly certain that those warnings were already printed, and that
 			 * we don't need to print them again! */
-			if (DeeError_CurrentIs(&DeeError_CompilerError)) {
-				DeeCompilerErrorObject *error;
-				error = (DeeCompilerErrorObject *)DeeError_Current();
-				if (error->ce_warnc > 0) {
-					DeeError_Handled(ERROR_HANDLED_INTERRUPT);
-					ASSERT(DeeError_Current() == NULL);
-					goto done_cli;
-				}
-			}
+			if (fe_handle_compiler_error())
+				goto done_cli;
 			goto err_cli;
 		}
 
@@ -1312,6 +1320,12 @@ fe_compile_script_impl(struct Dee_serial *__restrict writer,
 		tpp_string_decref_nokill(ddi_str);
 	}
 
+	/* Re-configure script lexer */
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_LF);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_SPACE);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_COMMENT);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
+
 	/* Compile script and serialize into `writer` */
 	result = DeeCompiler_Compile(&script_compiler, writer, DeeExec_RUNMODE_DEFAULT, NULL);
 
@@ -1495,46 +1509,92 @@ done:
 	return kind;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-encode_utf8_bytes_to_tpp_encoding(/*inherit(always)*/DREF DeeBytesObject *data,
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define TPP_FILE_ENCODING_UTF16_HOST TPP_FILE_ENCODING_UTF16_LE
+#define TPP_FILE_ENCODING_UTF16_SWAP TPP_FILE_ENCODING_UTF16_BE
+#define TPP_FILE_ENCODING_UTF32_HOST TPP_FILE_ENCODING_UTF32_LE
+#define TPP_FILE_ENCODING_UTF32_SWAP TPP_FILE_ENCODING_UTF32_BE
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define TPP_FILE_ENCODING_UTF16_HOST TPP_FILE_ENCODING_UTF16_BE
+#define TPP_FILE_ENCODING_UTF16_SWAP TPP_FILE_ENCODING_UTF16_LE
+#define TPP_FILE_ENCODING_UTF32_HOST TPP_FILE_ENCODING_UTF32_BE
+#define TPP_FILE_ENCODING_UTF32_SWAP TPP_FILE_ENCODING_UTF32_LE
+#else /* __BYTE_ORDER__ == ... */
+#error "Unsupported `__BYTE_ORDER__`"
+#endif /* __BYTE_ORDER__ != ... */
+
+PRIVATE WUNUSED DREF DeeBytesObject *DCALL
+encode_utf8_bytes_to_tpp_encoding(/*utf-8*/ tpp_char const *data,
+                                  tpp_size size,
                                   tpp_file_encoding encoding) {
+	tpp_size result_maxsize;
+	tpp_char const *iter, *end;
+	DREF DeeBytesObject *result;
+	tpp_char *dst;
 	switch (encoding) {
 	case TPP_FILE_ENCODING_UTF16_LE:
-		/* TODO */
-		break;
 	case TPP_FILE_ENCODING_UTF16_BE:
-		/* TODO */
+		result_maxsize = size * 2;
 		break;
 	case TPP_FILE_ENCODING_UTF32_LE:
-		/* TODO */
-		break;
 	case TPP_FILE_ENCODING_UTF32_BE:
-		/* TODO */
+		result_maxsize = size * 4;
 		break;
-	default: break;
+	default:
+		return DeeBytes_NewBufferData(data, size);
 	}
-	return data;
-}
-
-struct simple_linefeed {
-	size_t sl_size;
-	byte_t sl_data[4];
-};
-
-PRIVATE ATTR_RETNONNULL WUNUSED struct simple_linefeed const *DCALL
-get_simple_linefeed(tpp_file_encoding encoding) {
-	static struct simple_linefeed const utf8 = { 1, { '\n', 0, 0, 0 } };
-	static struct simple_linefeed const le16 = { 2, { '\n', 0, 0, 0 } };
-	static struct simple_linefeed const be16 = { 2, { 0, '\n', 0, 0 } };
-	static struct simple_linefeed const le32 = { 4, { '\n', 0, 0, 0 } };
-	static struct simple_linefeed const be32 = { 4, { 0, 0, 0, '\n' } };
-	switch (encoding) {
-	case TPP_FILE_ENCODING_UTF16_LE: return &le16;
-	case TPP_FILE_ENCODING_UTF16_BE: return &be16;
-	case TPP_FILE_ENCODING_UTF32_LE: return &le32;
-	case TPP_FILE_ENCODING_UTF32_BE: return &be32;
-	default: return &utf8;
+	result = DeeBytes_NewBufferUninitialized(result_maxsize);
+	if unlikely(!result)
+		return NULL;
+	iter = data;
+	end  = data + size;
+	dst  = DeeBytes_DATA(result);
+	while (iter < end) {
+		tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
+		switch (encoding) {
+		case TPP_FILE_ENCODING_UTF16_SWAP:
+			if likely(uc <= 0xffff && (uc < 0xd800 || uc > 0xdfff)) {
+				uint16_t word = (uint16_t)uc;
+				*(uint16_t *)dst = BSWAP16(word);
+				dst += 2;
+			} else {
+				uint16_t word;
+				uc -= 0x10000;
+				word = 0xd800 + (uint16_t)(uc >> 10);
+				word = BSWAP16(word);
+				*(uint16_t *)dst = word;
+				dst += 2;
+				word = (uint16_t)(uc & 0x3ff);
+				word = BSWAP16(word);
+				*(uint16_t *)dst = 0xdc00 + word;
+				dst += 2;
+			}
+			break;
+		case TPP_FILE_ENCODING_UTF16_HOST:
+			if likely(uc <= 0xffff && (uc < 0xd800 || uc > 0xdfff)) {
+				*(uint16_t *)dst = (uint16_t)uc;
+				dst += 2;
+			} else {
+				uc -= 0x10000;
+				*(uint16_t *)dst = 0xd800 + (uint16_t)(uc >> 10);
+				dst += 2;
+				*(uint16_t *)dst = 0xdc00 + (uint16_t)(uc & 0x3ff);
+				dst += 2;
+			}
+			break;
+		case TPP_FILE_ENCODING_UTF32_SWAP:
+			uc = BSWAP32(uc);
+			ATTR_FALLTHROUGH
+		case TPP_FILE_ENCODING_UTF32_HOST:
+			*(uint32_t *)dst = uc;
+			dst += 4;
+			break;
+		default: __builtin_unreachable();
+		}
 	}
+	ASSERT(dst <= DeeBytes_END(result));
+	result_maxsize = (size_t)(dst - DeeBytes_DATA(result));
+	return DeeBytes_TruncateBuffer(result, result_maxsize);
 }
 
 
@@ -1561,8 +1621,18 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 		tpp_size override_size;
 		Dee_pos_t fpos_override_start;
 		Dee_pos_t fpos_override_end;
+		Dee_pos_t fpos_override_size;
+		tpp_char const *leading_linefeed_start;
+		tpp_char const *leading_linefeed_end;
+		tpp_size rel_leading_linefeed_start;
+		tpp_size rel_leading_linefeed_end;
+		tpp_size leading_linefeed_size;
 		bool has_leading_linefeed;
+		bool has_trailing_linefeed;
 		struct DeeMapFile tail_data;
+		tpp_file_encoding file_encoding;
+		bool file_encoding_is_identity;
+		size_t tail_size;
 yield_next_token:
 		tok = DeeLexer_Yield(lexer);
 		if (TPP_TOK_ISERR(tok))
@@ -1581,8 +1651,6 @@ yield_next_token:
 		if (script_start == NULL)
 			continue;
 		script_end = tpp_token_range_getend(&comment_body);
-		if (script_start >= script_end)
-			continue;
 
 		/* Skip leading whitespace after `script_start` */
 		iter = tpp_preparse_skipspace_fwd(&lexer->dl_lexer, script_start, script_end);
@@ -1635,7 +1703,7 @@ yield_next_token:
 		if (iter) {
 			/* Simple case: entire script is contained within initial comment */
 			script_stdout = fe_run_script_and_capture_stdout(lexer, script_start,
-			                                                 (tpp_size)(script_end - script_start),
+			                                                 (tpp_size)(iter - script_start),
 			                                                 tpp_file_getchunk(file), script_start_lc);
 		} else {
 			TPP_REF tpp_string *script_string;
@@ -1719,6 +1787,15 @@ err_script_builder:
 		 * replace with `script_stdout` */
 		rel_override_start = tpp_file_keep_ptr2rel(file, override_start);
 
+		/* If the last script-comment was a line-comment, then remember that fact
+		 * because it means that we must consider the script output to have a leading
+		 * line-feed. */
+		has_leading_linefeed       = TPP_TOK_ISCOMMENT_LINE(tok);
+		leading_linefeed_start     = tpp_token_range_getend(&comment_body);
+		leading_linefeed_end       = DeeLexer_GetTokenEnd(lexer);
+		rel_leading_linefeed_start = tpp_file_keep_ptr2rel(file, leading_linefeed_start);
+		rel_leading_linefeed_end   = tpp_file_keep_ptr2rel(file, leading_linefeed_end);
+
 		/* Handle special case: if the first non-space token after the script is a line-feed,
 		 * then during the output override phase, we must insert an additional linefeed at
 		 * the start. This is to automatically differentiate between blocks of generated
@@ -1737,10 +1814,15 @@ err_script_stdout:
 			Dee_Decref(script_stdout);
 			goto err;
 		}
-		has_leading_linefeed = !TPP_TOK_ISCOMMENT_LINE(tok) && tok == TPP_TOK_LF;
-		if (has_leading_linefeed) {
+		if (!has_leading_linefeed && tok == TPP_TOK_LF) {
 			/* Use this position as the start of the override area */
-			rel_override_start = tpp_file_keep_ptr2rel(file, DeeLexer_GetTokenEnd(lexer));
+			override_start = DeeLexer_GetTokenEnd(lexer);
+			rel_override_start = tpp_file_keep_ptr2rel(file, override_start);
+			has_leading_linefeed = true;
+			leading_linefeed_start = DeeLexer_GetTokenStart(lexer);
+			leading_linefeed_end   = DeeLexer_GetTokenEnd(lexer);
+			rel_leading_linefeed_start = tpp_file_keep_ptr2rel(file, leading_linefeed_start);
+			rel_leading_linefeed_end   = tpp_file_keep_ptr2rel(file, leading_linefeed_end);
 		}
 
 		/* Find [[[end]]] comment */
@@ -1764,6 +1846,13 @@ err_script_stdout:
 			if (TPP_TOK_ISERR(tok))
 				goto err_script_stdout_keep;
 		}
+
+		/* Determine actual text range that needs to be overwritten. */
+		override_start = tpp_file_keep_rel2ptr(file, rel_override_start);
+		override_end   = DeeLexer_GetTokenStart(lexer);
+		leading_linefeed_start = tpp_file_keep_rel2ptr(file, rel_leading_linefeed_start);
+		leading_linefeed_end   = tpp_file_keep_rel2ptr(file, rel_leading_linefeed_end);
+		leading_linefeed_size  = (tpp_size)(leading_linefeed_end - leading_linefeed_start);
 		tpp_file_popkeep(file);
 
 		/* Load effective bounds of script output */
@@ -1779,20 +1868,30 @@ err_script_stdout:
 			script_stdout_end = tail_iter;
 		}
 
-		/* Determine actual text range that needs to be overwritten. */
-		override_start = tpp_file_keep_rel2ptr(file, rel_override_start);
-		override_end   = DeeLexer_GetTokenStart(lexer);
+		/* Figure out if there should be a trailing linefeed. For
+		 * this purpose, only inject a trailing linefeed if (and):
+		 * - There is a leading linefeed
+		 * - The script output is non-empty */
+		script_stdout_size = (tpp_size)(script_stdout_end - script_stdout_start);
+		has_trailing_linefeed = has_leading_linefeed && script_stdout_size != 0;
 
 		/* Check if the new file-data is equal to what's already within the file.
 		 * If the two are identical, then we can skip actually modifying the file,
 		 * and thus not changing it's `st_mtime` timestamp. */
-		script_stdout_size = (tpp_size)(script_stdout_end - script_stdout_start);
-		override_size      = (tpp_size)(override_end - override_start);
-		if ((script_stdout_size + (has_leading_linefeed ? 1 : 0)) == override_size &&
-		    (has_leading_linefeed ? override_end[-1] == '\n' : true) &&
-		    (bcmp(script_stdout_start, override_start, script_stdout_size) == 0)) {
-			Dee_Decref(script_stdout);
-			goto continue_after_script; /* Nothing changed */
+		override_size = (tpp_size)(override_end - override_start);
+		if (has_trailing_linefeed) {
+			if ((script_stdout_size + leading_linefeed_size) == override_size &&
+			    bcmp(script_stdout_start, override_start, script_stdout_size) == 0 &&
+			    bcmp(leading_linefeed_start, override_end - leading_linefeed_size,
+			         leading_linefeed_size) == 0)
+				goto decref_script_output_and_continue_after_script;
+		} else {
+			if (script_stdout_size == override_size &&
+			    bcmp(script_stdout_start, override_start, script_stdout_size) == 0) {
+decref_script_output_and_continue_after_script:
+				Dee_Decref(script_stdout);
+				goto continue_after_script; /* Nothing changed */
+			}
 		}
 
 		/* Determine file positions of override area. */
@@ -1802,31 +1901,53 @@ err_script_stdout:
 		fpos_override_end = tpp_file_getiopos(file, override_end);
 		if (fpos_override_end == (Dee_pos_t)-1)
 			goto err_script_stdout;
+		fpos_override_size = fpos_override_end - fpos_override_start;
 
 		/* This is what it's all about:
-		 * 1. Need to encode `script_stdout` (+ a trailing '\n' if `has_leading_linefeed`)
+		 * 1. Need to encode `script_stdout` (+ a trailing '\n' if `has_trailing_linefeed`)
 		 *    to the encoding used by `file` (s.a. `tpp_file_getencoding()`)
 		 * 2. Read all file data that comes after `fpos_override_end` into memory (use `DeeMapFile` for this)
 		 * 3. Seek file to `fpos_override_start`
 		 * 4. Write encoded data produced in step 1. to the file and save the file position after the write
 		 * 5. Write the backup data read during step 2. to the file
-		 * 6. Seek file to position saved after write during step 4.
-		 * 7. Clear TPP's file buffer (using `tpp_file_setpos(file, tpp_file_getend(file))`).
+		 * 6. Truncate the file to the current position if it got smaller
+		 * 7. Seek file to position saved after write during step 4.
+		 * 8. Clear TPP's file buffer (using `tpp_file_setpos(file, tpp_file_getend(file))`).
 		 *    This way, the next call to `tpp_lexer_yield()` will start reading in file data
 		 *    from the position set during step 6.
-		 * 8. Continue searching for more `[[[deemon` comments -- the current token after the
+		 * 9. Continue searching for more `[[[deemon` comments -- the current token after the
 		 *    first yield operation at this point will once again be the `[[[end]]]`-comment,
 		 *    but that's OK. */
 
 		/* 1. */
-		script_stdout = encode_utf8_bytes_to_tpp_encoding(script_stdout, tpp_file_getencoding(file));
-		if unlikely(!script_stdout)
-			goto err;
+		file_encoding = tpp_file_getencoding(file);
+		file_encoding_is_identity = (file_encoding == TPP_FILE_ENCODING_UTF8 ||
+		                             file_encoding == TPP_FILE_ENCODING_ASCII ||
+		                             file_encoding == TPP_FILE_ENCODING_FORCE_UTF8);
+		if (!file_encoding_is_identity) {
+			DREF DeeBytesObject *new_script_stdout;
+			new_script_stdout = encode_utf8_bytes_to_tpp_encoding(script_stdout_start,
+			                                                      script_stdout_size,
+			                                                      file_encoding);
+			Dee_Decref(script_stdout);
+			if unlikely(!new_script_stdout)
+				goto err;
+			script_stdout = new_script_stdout;
+			script_stdout_start = (tpp_char const *)DeeBytes_DATA(script_stdout);
+			script_stdout_size  = DeeBytes_SIZE(script_stdout);
+/*			script_stdout_end   = script_stdout_start + script_stdout_size; * Not needed */
+		}
 
 		/* 2. */
 		if (DeeMapFile_InitFile(&tail_data, tpp_file_getiohandle(file),
 		                        fpos_override_end, 0, (size_t)-1, 0,
-		                        DeeMapFile_F_READALL))
+		                        DeeMapFile_F_READALL |
+		                        /* NOTE: Must use FORCECOPY because we're about to write to
+		                         *       the file, meaning we must ensure that the mapping
+		                         *       we're creating here doesn't change as we write to
+		                         *       the file (needed for windows+linux; unnecessary on
+		                         *       KOS; see description of `DeeMapFile_F_FORCECOPY`) */
+		                        DeeMapFile_F_FORCECOPY))
 			goto err_script_stdout;
 
 		/* 3. */
@@ -1838,37 +1959,63 @@ err_script_stdout_tail_data:
 
 		/* 4. */
 		if (DeeFile_WriteAll(tpp_file_getiohandle(file),
-		                     DeeBytes_DATA(script_stdout),
-		                     DeeBytes_SIZE(script_stdout)) == (size_t)-1)
+		                     script_stdout_start,
+		                     script_stdout_size) == (size_t)-1)
 			goto err_script_stdout_tail_data;
-		fpos_override_start += DeeBytes_SIZE(script_stdout);
-		if (has_leading_linefeed) {
-			struct simple_linefeed const *lf = get_simple_linefeed(tpp_file_getencoding(file));
-			if (DeeFile_WriteAll(tpp_file_getiohandle(file), lf->sl_data, lf->sl_size) == (size_t)-1)
+		fpos_override_start += script_stdout_size;
+		if (has_trailing_linefeed) {
+			size_t trailing_linefeed_status;
+			ASSERT(file_encoding == tpp_file_getencoding(file));
+			if (file_encoding_is_identity) {
+				trailing_linefeed_status = DeeFile_WriteAll(tpp_file_getiohandle(file),
+				                                            leading_linefeed_start,
+				                                            leading_linefeed_size);
+				fpos_override_start += leading_linefeed_size;
+			} else {
+				DREF DeeBytesObject *linefeed_bytes;
+				linefeed_bytes = encode_utf8_bytes_to_tpp_encoding(leading_linefeed_start,
+				                                                   leading_linefeed_size,
+				                                                   file_encoding);
+				if unlikely(!linefeed_bytes)
+					goto err_script_stdout_tail_data;
+				trailing_linefeed_status = DeeFile_WriteAll(tpp_file_getiohandle(file),
+				                                            DeeBytes_DATA(linefeed_bytes),
+				                                            DeeBytes_SIZE(linefeed_bytes));
+				fpos_override_start += DeeBytes_SIZE(linefeed_bytes);
+				Dee_Decref(linefeed_bytes);
+			}
+			if (trailing_linefeed_status == (size_t)-1)
 				goto err_script_stdout_tail_data;
-			fpos_override_start += lf->sl_size;
 		}
 		Dee_Decref(script_stdout);
 
 		/* 5. */
 		{
 			size_t temp;
+			tail_size = DeeMapFile_GetSize(&tail_data);
 			temp = DeeFile_WriteAll(tpp_file_getiohandle(file),
 			                        DeeMapFile_GetAddr(&tail_data),
-			                        DeeMapFile_GetSize(&tail_data));
+			                        tail_size);
 			DeeMapFile_Fini(&tail_data);
 			if (temp == (size_t)-1)
 				goto err;
 		}
 
 		/* 6. */
+		if ((Dee_pos_t)script_stdout_size < fpos_override_size) {
+			Dee_pos_t final_size = fpos_override_start + tail_size;
+			if (DeeFile_Trunc(tpp_file_getiohandle(file), final_size))
+				goto err;
+		}
+
+		/* 7. */
 		if (DeeFile_SetPos(tpp_file_getiohandle(file), fpos_override_start) == (Dee_pos_t)-1)
 			goto err;
 
-		/* 7. */
+		/* 8. */
 		tpp_file_setpos(file, tpp_file_getend(file));
 
-		/* 8. */
+		/* 9. */
 continue_after_script:;
 	}
 done:

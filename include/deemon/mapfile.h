@@ -170,7 +170,12 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
 #define DeeMapFile_F_MUSTMMAP  0x0002 /* Flag: require the use of a mmap(2) */
 #define DeeMapFile_F_MAPSHARED 0x0004 /* Flag: when using mmap, don't map as MAP_PRIVATE, but use MAP_SHARED (don't pass a non-zero `num_trailing_nulbytes` in this case!) */
 #define DeeMapFile_F_ATSTART   0x0008 /* Flag: assume that the given file's pointer is located at the file's beginning */
-#define DeeMapFile_F_TRYMMAP   0x8000 /* Flag: Don't throw an exception when mmap fails, but return `1` */
+#define DeeMapFile_F_FORCECOPY 0x0010 /* Flag: make sure that the file mapping is protected from `write(2)` / `pwrite(2)` being done to `file`
+                                       *       Both windows and linux leave the behavior of `mmap(fd, MAP_PRIVATE)` + `write(fd)` undefined,
+                                       *       in the sense that despite use of `MAP_PRIVATE`, writing to the same file[-handle] may or may
+                                       *       not be visible in the memory mapping. (HINT: KOS does guard against subsequence `write(2)`s
+                                       *       leaking in preceding `MAP_PRIVATE` file mapping, so this flag is ignored on KOS) */
+#define DeeMapFile_F_TRYMMAP   0x8000 /* Flag: don't throw an exception when mmap fails, but return `1` */
 
 
 
