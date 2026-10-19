@@ -2079,7 +2079,6 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 	tpp_file *const file = DeeLexer_GetFile(lexer);
 	for (;;) {
 		tpp_char const *iter;
-		tpp_lcinfo script_start_lc;
 		tpp_lcinfo script_end_lc;
 		tpp_char const *script_start;
 		tpp_char const *script_end;
@@ -2093,6 +2092,7 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 		tpp_char const *override_start;
 		tpp_char const *override_end;
 		tpp_size override_size;
+		tpp_lcstate override_end_lcinfo;
 		Dee_pos_t fpos_override_start;
 		Dee_pos_t fpos_override_end;
 		Dee_pos_t fpos_override_size;
@@ -2142,32 +2142,6 @@ yield_next_token:
 				continue; /* Ignore something like `[[[deemonButNotReally` */
 		}
 
-		/* Multi-comment scripts work like this:
-		 * some-file.txt:
-		 * >>BEFORE
-		 * >> //[[[deemon
-		 * >>  // import * from deemon;
-		 * >>
-		 * >>//   with (local fp = File.open("foo.txt"))
-		 * >> //    print(fp.read());
-		 * >> //]]]
-		 * >>INNER
-		 * >>//[[[end]]]
-		 *
-		 * The script is copied into a buffer that uses every comment content's
-		 * effective line/column information to inject whitespace padding within
-		 * the buffer, which ends up looking like this:
-		 *    "import * from deemon;\n"
-		 *    "\n"
-		 *    "     with (local fp = File.open("foo.txt"))\n"
-		 *    "       print(fp.read());\n"
-		 *
-		 * This buffer is then combined with the line/column of the script's
-		 * first chunk, which is then used as the "start_lc" used when the script
-		 * is compiled and executed as deemon code (here, the compiler file is
-		 * initialized as `tpp_lexer_initfile_text_ex()`). */
-		script_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
-
 		/* If the current script-chunk already ends with `]]]`, then we
 		 * already have the entire script. Additionally, when that is
 		 * the case, then we don't need to use `script_builder` since
@@ -2175,14 +2149,49 @@ yield_next_token:
 		 * by the range `[script_start,script_end)` */
 		iter = bse_tryrskip(lexer, script_start, script_end, "]]]");
 		if (iter) {
-			/* Simple case: entire script is contained within initial comment */
+			/* Simple case: entire script is contained within initial comment
+			 * NOTE: Because we're re-using the chunk from the parent lexer,
+			 *       we actually have to use the L/C info at the *chunk*'s
+			 *       start, rather than of the script's start. */
+			tpp_string *chunk = tpp_file_getchunk(file);
+			tpp_lcinfo chunk_start_lc = TPP_LCINFO_INVALID;
+			if (chunk != NULL)
+				chunk_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, tpp_string_str(chunk));
 			script_stdout = fe_run_script_and_capture_stdout(lexer, script_start,
 			                                                 (tpp_size)(iter - script_start),
-			                                                 tpp_file_getchunk(file), script_start_lc);
+			                                                 chunk, chunk_start_lc);
 		} else {
 			TPP_REF tpp_string *script_string;
 			tpp_string_builder script_builder;
 			tpp_string_builder_init(&script_builder);
+			tpp_lcinfo script_start_lc;
+
+			/* Multi-comment scripts work like this:
+			 * some-file.txt:
+			 * >>BEFORE
+			 * >> //[[[deemon
+			 * >>  // import * from deemon;
+			 * >>
+			 * >>//   with (local fp = File.open("foo.txt"))
+			 * >> //    print(fp.read());
+			 * >> //]]]
+			 * >>INNER
+			 * >>//[[[end]]]
+			 *
+			 * The script is copied into a buffer that uses every comment content's
+			 * effective line/column information to inject whitespace padding within
+			 * the buffer, which ends up looking like this:
+			 *    "import * from deemon;\n"
+			 *    "\n"
+			 *    "     with (local fp = File.open("foo.txt"))\n"
+			 *    "       print(fp.read());\n"
+			 *
+			 * This buffer is then combined with the line/column of the script's
+			 * first chunk, which is then used as the "start_lc" used when the script
+			 * is compiled and executed as deemon code (here, the compiler file is
+			 * initialized as `tpp_lexer_initfile_text_ex()`). */
+			script_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
+
 			/* Copy first portion of script into a buffer */
 			if (tpp_string_builder_doprint(&script_builder, script_start,
 			                               (size_t)(script_end - script_start)) < 0) {
@@ -2368,6 +2377,10 @@ decref_script_output_and_continue_after_script:
 			}
 		}
 
+		/* Determine the L/C info needed  */
+		tpp_lcstate_initlc(&override_end_lcinfo, tpp_file_getlcinfo(file, override_start));
+		tpp_lcstate_account(&override_end_lcinfo, script_stdout_start, script_stdout_size);
+
 		/* Determine file positions of override area. */
 		fpos_override_start = tpp_file_getiopos(file, override_start);
 		if (fpos_override_start == (Dee_pos_t)-1)
@@ -2436,15 +2449,16 @@ err_script_stdout_tail_data:
 		                     script_stdout_start,
 		                     script_stdout_size) == (size_t)-1)
 			goto err_script_stdout_tail_data;
-		fpos_override_start += script_stdout_size;
+		fpos_override_end = fpos_override_start + script_stdout_size;
 		if (has_trailing_linefeed) {
 			size_t trailing_linefeed_status;
 			ASSERT(file_encoding == tpp_file_getencoding(file));
+			tpp_lcstate_account(&override_end_lcinfo, leading_linefeed_start, leading_linefeed_size);
 			if (file_encoding_is_identity) {
 				trailing_linefeed_status = DeeFile_WriteAll(tpp_file_getiohandle(file),
 				                                            leading_linefeed_start,
 				                                            leading_linefeed_size);
-				fpos_override_start += leading_linefeed_size;
+				fpos_override_end += leading_linefeed_size;
 			} else {
 				DREF DeeBytesObject *linefeed_bytes;
 				linefeed_bytes = encode_utf8_bytes_to_tpp_encoding(leading_linefeed_start,
@@ -2455,7 +2469,7 @@ err_script_stdout_tail_data:
 				trailing_linefeed_status = DeeFile_WriteAll(tpp_file_getiohandle(file),
 				                                            DeeBytes_DATA(linefeed_bytes),
 				                                            DeeBytes_SIZE(linefeed_bytes));
-				fpos_override_start += DeeBytes_SIZE(linefeed_bytes);
+				fpos_override_end += DeeBytes_SIZE(linefeed_bytes);
 				Dee_Decref(linefeed_bytes);
 			}
 			if (trailing_linefeed_status == (size_t)-1)
@@ -2477,17 +2491,17 @@ err_script_stdout_tail_data:
 
 		/* 6. */
 		if ((Dee_pos_t)script_stdout_size < fpos_override_size) {
-			Dee_pos_t final_size = fpos_override_start + tail_size;
+			Dee_pos_t final_size = fpos_override_end + tail_size;
 			if (DeeFile_Trunc(tpp_file_getiohandle(file), final_size))
 				goto err;
 		}
 
 		/* 7. */
-		if (DeeFile_SetPos(tpp_file_getiohandle(file), fpos_override_start) == (Dee_pos_t)-1)
+		if (DeeFile_SetPos(tpp_file_getiohandle(file), fpos_override_end) == (Dee_pos_t)-1)
 			goto err;
 
 		/* 8. */
-		tpp_file_setpos(file, tpp_file_getend(file));
+		tpp_file_resetio(file, tpp_lcstate_getlc(&override_end_lcinfo));
 
 		/* 9. */
 continue_after_script:;

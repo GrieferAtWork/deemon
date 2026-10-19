@@ -638,7 +638,11 @@ DeeCompiler_Init_NoLexer(DeeCompiler *__restrict self) {
 #else
 	self->cp_optimizer_flags = OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS;
 #endif
-	self->cp_assembler       = ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP;
+#if 0
+	self->cp_assembler = ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP;
+#else
+	self->cp_assembler = ASM_FOPTIMIZE; /* Other optimizations add too much time to compilation; disabled for now... */
+#endif
 	self->cp_unwind_limit = 0;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	self->cp_uasm_unique = 0;
