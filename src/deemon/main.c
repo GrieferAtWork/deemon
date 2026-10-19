@@ -1193,9 +1193,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fe_cmd_help_impl_doc(DeeObject *file, char const *subject) {
-	/* `print import.doc.Doc(arg)` */
+	/* `print import.doc.help(arg)` */
 	Dee_ssize_t error;
-	DREF DeeObject *doc = DeeModule_CallExternStringf("doc", "Doc", "s", subject);
+	DREF DeeObject *doc = DeeModule_CallExternStringf("doc", "help", "s", subject);
 	if unlikely(!doc)
 		goto err;
 	error = DeeObject_Print(doc, (Dee_formatprinter_t)&DeeFile_WriteAll, file);
@@ -3537,10 +3537,10 @@ PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 		if (display_help_query((Dee_formatprinter_t)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
 			goto err_fp;
 	} else {
-		/* `print import.doc.Doc(arg)` */
+		/* `print import.doc.help(arg)` */
 		Dee_ssize_t error;
 		DREF DeeObject *doc_node;
-		doc_node = DeeModule_CallExternStringf("doc", "Doc", "s", arg);
+		doc_node = DeeModule_CallExternStringf("doc", "help", "s", arg);
 		if unlikely(!doc_node)
 			goto err_fp;
 		error = DeeObject_Print(doc_node, (Dee_formatprinter_t)&DeeFile_WriteAll, fp);

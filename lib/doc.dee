@@ -4313,3 +4313,8 @@ set_is_type:
 	}
 
 }
+
+@@Function used to implement `deemon --help`
+function help(path: string): Doc {
+	return Doc(path);
+}
