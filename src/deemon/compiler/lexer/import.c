@@ -124,23 +124,10 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(struct Dee_module_object *__restrict mod,
                      tpp_keyword const *__restrict name) {
-	Dee_hash_t i, perturb;
-	Dee_hash_t hash = Dee_HashUtf8(tpp_keyword_getcstr(name),
-	                               tpp_keyword_getlen(name));
-	perturb = i = Dee_MODULE_HASHST(mod, hash);
-	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(mod, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (!Dee_MODULE_SYMBOL_EQUALS(item,
-		                              tpp_keyword_getcstr(name),
-		                              tpp_keyword_getlen(name)))
-			continue; /* Differing strings. */
-		return item;  /* Found it! */
-	}
-	return NULL;
+	char const *name_str = tpp_keyword_getcstr(name);
+	size_t name_len = tpp_keyword_getlen(name);
+	Dee_hash_t name_hash = Dee_HashUtf8(name_str, name_len);
+	return DeeModule_GetSymbolStringLenHash(mod, name_str, name_len, name_hash);
 }
 
 /* @return:  1: OK (the parsed object most certainly was a module)

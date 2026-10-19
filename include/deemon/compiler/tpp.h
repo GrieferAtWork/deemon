@@ -591,6 +591,9 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 
 #define TPP_HOOK_ISFLOATSUFFIX(cookie, pos) TPP_ENOENT /* Deemon doesn't have floating-point suffixes */
 
+/* Would only make sense for legacy code that uses #include-s, but that's discouraged already.
+ * Also: causes problems with the "misc-import-lib" test, so to save myself the headache: disable. */
+#define TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER 0
 
 #define TPP_HAVE_TOK_EXCLAIM_EQUAL              1
 #define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL        1

@@ -64,6 +64,10 @@ from "ctypes" import
 #define NULL none
 #endif
 
+#if __TPP_VERSION__ >= 300
+#pragma warning(push, disable: "-Wkeyword-macro")
+#endif /* __TPP_VERSION__ >= 300 */
+
 /* Define keywords such that they more closely resemble gcode. */
 #define if     if pack
 #define then   /* nothing */
@@ -82,3 +86,7 @@ from "ctypes" import
 #define and       &
 #define or        |
 #define xor       ^
+
+#if __TPP_VERSION__ >= 300
+#pragma warning(pop)
+#endif /* __TPP_VERSION__ >= 300 */

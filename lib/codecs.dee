@@ -71,14 +71,15 @@ global final __decode;
 @@Deprecated; use @(encode from iconv)
 global final __encode;
 
-try {
+__decode, __encode = (try ({
 	local iconv = import("iconv");
-	__decode = iconv.decode;
-	__encode = iconv.encode;
-} catch (...) {
-	__decode = (data: Object, name: string, errors: string = "strict") -> data.decode(name, errors);
-	__encode = (data: Object, name: string, errors: string = "strict") -> data.encode(name, errors);
-}
+	(iconv.decode, iconv.encode);
+}) catch (...) (
+	(data: Object, name: string, errors: string = "strict") -> data.decode(name, errors),
+	(data: Object, name: string, errors: string = "strict") -> data.encode(name, errors),
+))...;
+
+
 
 @@Deprecated; use @(decode from iconv)
 global final decode = __decode;

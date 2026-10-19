@@ -29,7 +29,12 @@
 #error C++ Simulation headers are disabled (Don't #define __STDC_NOCXX__ if this isn't intented)
 #endif /* __STDC_NOCXX__ */
 
+#if __TPP_VERSION__ >= 300
+#pragma warning(push, disable: "-Wkeyword-macro")
+#else /* __TPP_VERSION__ >= 300 */
 #pragma warning(push, disable: 1)
+#endif /* __TPP_VERSION__ < 300 */
+
 #ifndef namespace
 #define namespace NO_NAMESPACE_SUPPORT
 #endif /* !namespace */

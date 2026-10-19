@@ -36,7 +36,7 @@ global class point {
 		x = other.x;
 		y = other.y;
 	}
-	operator = (other: point) {
+	operator := (other: point) {
 		x = other.x;
 		y = other.y;
 	}
@@ -124,7 +124,7 @@ global class rect {
 		ymax = other.ymax;
 	}
 
-	operator = (other: rect) {
+	operator := (other: rect) {
 		xmin = other.xmin;
 		xmax = other.xmax;
 		ymin = other.ymin;
