@@ -136,6 +136,9 @@ DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
 INTDEF WUNUSED NONNULL((1)) tpp_errno DCALL
 DeeCompilerCliLoader_Flush(DeeCompilerCliLoader *__restrict self);
 
+/* Help strings for `DeeCompilerCliLoader`. Same format as `tpp_cli_loader_help` */
+INTDEF char const DeeCompilerCliLoader_Help[];
+
 /* TODO: Help string for `DeeCompilerCliLoader` (compatible with the format used by TPP3) */
 
 #endif /* CONFIG_BUILDING_DEEMON */

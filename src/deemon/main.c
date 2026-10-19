@@ -318,7 +318,6 @@ PP_STR(TPP_API_VERSION) "/"
 PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
 "Copyright (C) 2015-2026 Griefer@Work\n"
 "\tGithub: https://github.com/GrieferAtWork/deemon\n"
-"\n\n"
 ;
 
 
@@ -328,6 +327,10 @@ PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
 #define OPERATION_MODE_PRINTASM    2 /* Print deemon assembly for a user-script. */
 #define OPERATION_MODE_FORMAT      3 /* Scan for format comment blocks and expand them. */
 #define OPERATION_MODE_BUILDONLY   4 /* Only build the source file, but don't execute it. */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define OPERATION_MODE_HELP        5 /* Display help */
+#define OPERATION_MODE_VERSION     6 /* Display version */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #if 0
 #define OPERATION_MODE_INTERACTIVE 5 /* Read, compile, and execute sourcecode interactively from the stdin. */
 #endif
@@ -342,9 +345,10 @@ PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
  */
 
 enum fe_cli_state_enum {
-	FE_CLI_STATE_NORMAL, /* Normal state */
-	FE_CLI_STATE_DDASH,  /* "--" encountered */
-	FE_CLI_STATE_OUTPUT, /* "--output" */
+	FE_CLI_STATE_NORMAL,  /* Normal state */
+	FE_CLI_STATE_DDASH,   /* "--" encountered */
+	FE_CLI_STATE_OUTPUT,  /* "--output" */
+	FE_CLI_STATE_LIBPATH, /* "--library-path" */
 };
 
 struct fe_cli_parser {
@@ -418,6 +422,154 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_library_path(struct fe_cli_parser *__restrict self, char const *arg) {
+	int status;
+	(void)self;
+	if (*arg == '-') {
+		status = DeeModule_RemoveLibPathString(arg + 1);
+	} else {
+		status = DeeModule_AddLibPathString(arg);
+	}
+	if (status < 0)
+		goto err;
+	return TPP_EOK;
+err:
+	return TPP_EDEEMON;
+}
+
+PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
+fe_cli_set_emitter_mode(struct fe_cli_parser *__restrict self, tpp_emitter_mode mode) {
+	/* TODO: If arguments were given for the emitter, but the emitter
+	 *       doesn't end up being used, that should be an error! */
+	tpp_emitter *emitter = tpp_emitter_cli_loader_getemitter(&self->fcp_cli_emit);
+	tpp_emitter_setmode(emitter, mode);
+	return TPP_EOK;
+}
+
+PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
+fe_cli_set_cpp(struct fe_cli_parser *__restrict self, bool on) {
+	/* Kind-of similar to `-fpreprocessed` (see `TPP_HAVE_CLI_DASH_FPREPROCESSED`) */
+	tpp_lexer *lexer = tpp_cli_loader_getlexer(&self->fcp_cli);
+	tpp_lexer_setfeature(lexer, TPP_FEAT_CPP_DIRECTIVES, on);
+	tpp_lexer_setfeature(lexer, TPP_FEAT_CPP_MACROS, on);
+	return TPP_EOK;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_cli_set_flag(struct fe_cli_parser *__restrict self, char const *arg, bool on) {
+	tpp_lexer *lexer = tpp_cli_loader_getlexer(&self->fcp_cli);
+	if (strcmp(arg, "spc") == 0) {
+		tpp_lexer_setfeature(lexer, TPP_FEAT_TOK_SPACE, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "lf") == 0) {
+		tpp_lexer_setfeature(lexer, TPP_FEAT_TOK_LF, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "comments") == 0) {
+		tpp_lexer_setfeature(lexer, TPP_FEAT_TOK_COMMENT, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "magiclf") == 0) {
+		/* Not exactly the same behavior as the legacy emitter's `-fmagiclf` flag,
+		 * but this is pretty much the only thing the new emitter lets you configure
+		 * in regards to "magic" linefeeds. */
+		tpp_emitter *emitter = tpp_emitter_cli_loader_getemitter(&self->fcp_cli_emit);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "decode") == 0) {
+		tpp_emitter *emitter = tpp_emitter_cli_loader_getemitter(&self->fcp_cli_emit);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_SPACE, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_LF, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_C_STRING, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_C_INT, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_KEYWORDS, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_BSE, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_TRIGRAPHS, on);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NORMALIZE_DIGRAPHS, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "longstring") == 0) {
+		/* Configure "-Wmultiline-string"       -- `TPP_WC_TPP_WG_MULTILINE_STRING`
+		 *       and "-fstring-allow-multiline" -- `TPP_EXT_STRING_ALLOW_MULTILINE` */
+		tpp_errno error;
+		error = tpp_lexer_setwarningctx(lexer, TPP_WC_TPP_WG_MULTILINE_STRING,
+		                                on ? TPP_WSTATE_DISABLED
+		                                   : TPP_WSTATE_WARN);
+		if (TPP_ISERR(error))
+			return error;
+		return tpp_lexer_setextension(lexer, TPP_EXT_STRING_ALLOW_MULTILINE, on);
+#if 0 /* No longer possible in TPP3 -- there is no way to differentiate
+       * __pragma, _Pragma and #pragma during emission, which is why the
+       * *EMITTER* extension always re-emits as `#pragma` */
+	} else if (strcmp(arg, "unify-pragma") == 0) {
+#endif
+	} else if (strcmp(arg, "unknown-pragma") == 0) {
+		/* Alias to `-freemit-unknown-pragma` (from emitter) */
+		tpp_emitter_cli_loader_set_reemit_unknown_pragma(&self->fcp_cli_emit, on);
+		return TPP_EOK;
+	} else if (strcmp(arg, "line") == 0) {
+		/* -fline        :   TPP_EMITTER_FEAT_NOLINE=0, TPP_EMITTER_FEAT_USE_CPP_DIGIT=0 */
+		/* -fno-line     :   TPP_EMITTER_FEAT_NOLINE=1 */
+		tpp_emitter *emitter = tpp_emitter_cli_loader_getemitter(&self->fcp_cli_emit);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NOLINE, !on);
+		tpp_emitter_disablefeature(emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT);
+		return TPP_EOK;
+	} else if (strcmp(arg, "cppline") == 0) {
+		/* -fcppline     :   TPP_EMITTER_FEAT_NOLINE=0, TPP_EMITTER_FEAT_USE_CPP_DIGIT=1 */
+		/* -fno-cppline  :   TPP_EMITTER_FEAT_NOLINE=1 */
+		tpp_emitter *emitter = tpp_emitter_cli_loader_getemitter(&self->fcp_cli_emit);
+		tpp_emitter_setfeature(emitter, TPP_EMITTER_FEAT_NOLINE, !on);
+		tpp_emitter_enablefeature(emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT);
+		return TPP_EOK;
+	}
+	return TPP_ENOENT;
+}
+
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#define TPP_CLI_HELP1(spelling, description) \
+	spelling "\0\0" description "\0"
+#if TPP_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	spelling1 "\0" spelling2 "\0\0" description "\0"
+#else /* TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	TPP_CLI_HELP1(spelling1, description)
+#endif /* !TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+
+/* Help strings for `DeeCompilerCliLoader`. Same format as `tpp_cli_loader_help` */
+PRIVATE char const fe_cli_help[] =
+TPP_CLI_HELP1("--help", "Display this help")
+TPP_CLI_HELP1("--help SUBJECT", "Display extra help on {cli|extensions|warnings|...}")
+TPP_CLI_HELP1("--version", "Display version information")
+TPP_CLI_HELP2("-LPATH", "--library-path=PATH\0--library-path PATH",
+              "Add PATH to deemon library path")
+TPP_CLI_HELP2("-L-PATH", "--library-path=-PATH\0--library-path -PATH",
+              "Remove PATH from deemon library path")
+TPP_CLI_HELP2("-o FILE", "--output=FILE\0--output FILE\0--out FILE",
+              "Set output file for -E and -S")
+
+/* Extra flags for emitter */
+TPP_CLI_HELP1("-f[no]spc", "Alias for -f[no-]tok-space")
+TPP_CLI_HELP1("-f[no]lf", "Alias for -f[no-]tok-lf")
+TPP_CLI_HELP1("-f[no]comments", "Alias for -f[no-]tok-comment")
+TPP_CLI_HELP1("-f[no]magiclf", "Alias for -f[no-]relaxed-macro-column")
+TPP_CLI_HELP1("-f[no]decode", "Alias for -f[no-]normalize")
+TPP_CLI_HELP1("-f[no]longstring", "Alias for -fstring-allow-multiline, -Wno-multiline-string")
+TPP_CLI_HELP1("-f[no]unify-pragma", "Alias for -f[no-]reemit-unknown-pragma")
+TPP_CLI_HELP1("-f[no]line", "Configure emission of #line directive")
+TPP_CLI_HELP1("-f[no]cppline", "Use # LINENUM instead of #line")
+TPP_CLI_HELP1("--cpp", "Turn on preprocessing (default, see -fpreprocessed)")
+TPP_CLI_HELP1("--nocpp", "Turn off preprocessing (default, see -fno-preprocessed)")
+TPP_CLI_HELP1("--tok", "Alias for --mode=bracket")
+TPP_CLI_HELP1("--pp", "Alias for --mode=zero")
+
+/* Extra arguments */
+#ifdef HAVE_DEBUG_STATIC_REFS
+TPP_CLI_HELP1("--debug-static-refs", "Debug static object references")
+#endif /* HAVE_DEBUG_STATIC_REFS */
+;
+#undef TPP_CLI_HELP2
+#undef TPP_CLI_HELP1
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
 fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg) {
 #define cli_streq(at, CONSTstr) \
 	(bcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
@@ -436,25 +588,73 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 					self->fcp_state = FE_CLI_STATE_DDASH; /* -- */
 					return TPP_EOK;
 
+				case 'c': {
+					if (cli_streq(arg, "pp\0")) /* --cpp */
+						return fe_cli_set_cpp(self, true);
+				}	break;
+
+				case 'n': {
+					if (cli_streq(arg, "ocpp\0")) /* --nocpp */
+						return fe_cli_set_cpp(self, false);
+				}	break;
+
+				case 'd': {
+#ifdef HAVE_DEBUG_STATIC_REFS
+					if (cli_streq(arg, "ebug-static-refs\0")) { /* --debug-static-refs */
+						self->fcp_debug_static_refs = 1;
+						return TPP_EOK;
+					}
+#endif /* HAVE_DEBUG_STATIC_REFS */
+				}	break;
+
 				case 'o': {
-					if (cli_streq(arg, "utput=")) {
+					if (cli_streq(arg, "utput=")) { /* --output= */
 						arg += (sizeof("utput=") - sizeof(char));
 						return fe_cli_setoutput(self, arg);
-					} else if (cli_streq(arg, "utput\0")) {
+					} else if (cli_streq(arg, "utput\0") || /* --output */
+					           cli_streq(arg, "ut\0")) {    /* --out */
 						self->fcp_state = FE_CLI_STATE_OUTPUT;
 						return TPP_EOK;
 					}
 				}	break;
 
+				case 'l': {
+					if (cli_streq(arg, "ibrary-path=")) { /* --library-path= */
+						arg += (sizeof("ibrary-path=") - sizeof(char));
+						return fe_cli_library_path(self, arg);
+					} else if (cli_streq(arg, "ibrary-path\0")) { /* --library-path */
+						self->fcp_state = FE_CLI_STATE_LIBPATH;
+						return TPP_EOK;
+					}
+				}	break;
+
+				case 't': {
+					if (cli_streq(arg, "ok\0")) /* "--tok" is a legacy alias for "--mode=bracket" */
+						return fe_cli_set_emitter_mode(self, TPP_EMITTER_MODE_BRACKET);
+				}	break;
+
+				case 'p': {
+					if (cli_streq(arg, "p\0")) {
+						/* "--pp" is a legacy alias for "--mode=zero"
+						 * Note that "--mode=zero" also disables LF/SPACE */
+						tpp_lexer *lexer = tpp_cli_loader_getlexer(&self->fcp_cli);
+						tpp_lexer_disablefeature(lexer, TPP_FEAT_TOK_LF);
+						tpp_lexer_disablefeature(lexer, TPP_FEAT_TOK_SPACE);
+						return fe_cli_set_emitter_mode(self, TPP_EMITTER_MODE_ZERO);
+					}
+				}	break;
+
 				case 'h': {
 					if (cli_streq(arg, "elp\0")) {
-						/* TODO: --help */
+						self->fcp_mode = OPERATION_MODE_HELP;
+						return TPP_EOK;
 					}
 				}	break;
 
 				case 'v': {
 					if (cli_streq(arg, "ersion\0")) {
-						/* TODO: --version */
+						self->fcp_mode = OPERATION_MODE_VERSION;
+						return TPP_EOK;
 					}
 				}	break;
 
@@ -464,12 +664,40 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 				}
 				break;
 
+			case 'c': {
+				if (cli_streq(arg, "pp\0")) /* -cpp */
+					return fe_cli_set_cpp(self, true);
+			}	break;
+
+			case 'n': {
+				if (cli_streq(arg, "ocpp\0")) /* -nocpp */
+					return fe_cli_set_cpp(self, false);
+			}	break;
+
 			case 'o':
-				if (*arg == '\0') {
+				if (*arg == '\0') { /* -o */
 					self->fcp_state = FE_CLI_STATE_OUTPUT;
 					return TPP_EOK;
 				}
 				break;
+
+			case 'L':
+				if (*arg == '\0') { /* -L */
+					self->fcp_state = FE_CLI_STATE_LIBPATH;
+					return TPP_EOK;
+				} else {
+					return fe_cli_library_path(self, arg);
+				}
+				break;
+
+			case 'f': {
+				bool on = true;
+				if (cli_streq(arg, "no-")) {
+					on = false;
+					arg += 3;
+				}
+				return fe_cli_set_flag(self, arg, on);
+			}	break;
 
 			default: break;
 			}
@@ -486,6 +714,10 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 		self->fcp_state = FE_CLI_STATE_NORMAL;
 		return fe_cli_setoutput(self, arg);
 
+	case FE_CLI_STATE_LIBPATH:
+		self->fcp_state = FE_CLI_STATE_NORMAL;
+		return fe_cli_library_path(self, arg);
+
 	default: __builtin_unreachable();
 	}
 #undef cli_streq
@@ -497,23 +729,23 @@ fe_cli_parseflag_frontend(struct fe_cli_parser *__restrict self, char const **p_
 	char const *arg = *p_arg;
 	switch (*arg++) {
 
-	case 'E':
+	case 'E': /* -E */
 		self->fcp_mode = OPERATION_MODE_PRINTPP;
 		goto done;
 
-	case 'S':
+	case 'S': /* -S */
 		self->fcp_mode = OPERATION_MODE_PRINTASM;
-		if (*arg == '=') {
+		if (*arg == '=') { /* -S=<flags> */
 			self->fcp_emitasm_flags = ++arg;
 			arg += strlen(arg);
 		}
 		goto done;
 
-	case 'F':
+	case 'F': /* -F */
 		self->fcp_mode = OPERATION_MODE_FORMAT;
 		goto done;
 
-	case 'c':
+	case 'c': /* -c */
 		self->fcp_mode = OPERATION_MODE_BUILDONLY;
 		goto done;
 
@@ -548,8 +780,11 @@ fe_cli_parsearg(struct fe_cli_parser *__restrict self, char const *arg) {
 		return tpp_cli_loader_parsearg(&self->fcp_cli, arg);
 	if (!tpp_makefile_cli_loader_hasdefaultstate(&self->fcp_cli_mf))
 		return tpp_makefile_cli_loader_parsearg(&self->fcp_cli_mf, arg);
-	if (!tpp_emitter_cli_loader_hasdefaultstate(&self->fcp_cli_emit))
+	if (!tpp_emitter_cli_loader_hasdefaultstate(&self->fcp_cli_emit)) {
+		/* TODO: If arguments were given for the emitter, but the emitter
+		 *       doesn't end up being used, that should be an error! */
 		return tpp_emitter_cli_loader_parsearg(&self->fcp_cli_emit, arg);
+	}
 
 	/* Try to handle argument using different CLI loaders */
 	error = fe_cli_parsearg_frontend(self, arg);
@@ -812,6 +1047,217 @@ PRIVATE WUNUSED bool DCALL fe_handle_compiler_error(void) {
 		}
 	}
 	return false;
+}
+
+PRIVATE ATTR_PURE WUNUSED size_t DCALL
+fe_help_maxspelling_db(char const *db, bool all_spellings) {
+	size_t result = 0;
+	char const *iter = db;
+	while (*iter) {
+		size_t len = tpp_strlen(iter);
+		size_t options_len = len;
+		iter += len + 1;
+		while (*iter) {
+			len = tpp_strlen(iter) + 1;
+			if (all_spellings)
+				options_len += len;
+			iter += len;
+		}
+		if (result < options_len)
+			result = options_len;
+		++iter;
+		iter += tpp_strlen(iter) + 1;
+	}
+	return result;
+}
+
+static WUNUSED NONNULL((1, 2)) int DCALL
+fe_print_description(DeeObject *file, char const *desc, size_t indent) {
+	for (;;) {
+		char const *end = strchr(desc, '\n');
+		if (!end) {
+			if (DeeFile_Printf(file, "%s\n", desc) < 0)
+				goto err;
+			break;
+		}
+		++end;
+		if (DeeFile_WriteAll(file, desc, (size_t)(end - desc)) == (size_t)-1)
+			goto err;
+		if (DeeFormat_Repeat((Dee_formatprinter_t)&DeeFile_WriteAll, file, ' ', indent) < 0)
+			goto err;
+		desc = end;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+static WUNUSED NONNULL((1, 2)) int DCALL
+fe_help_cli_for(DeeObject *file, char const *db, size_t padlen, bool all_spellings) {
+	char const *iter = db;
+	while (*iter) {
+		/* Print spellings */
+		size_t len = tpp_strlen(iter);
+		size_t options_len = len;
+		if (DeeFile_Printf(file, "%s", iter) < 0)
+			goto err;
+		iter += len + 1;
+		while (*iter) {
+			len = tpp_strlen(iter) + 1;
+			if (all_spellings) {
+				if (DeeFile_Printf(file, " %s", iter) < 0)
+					goto err;
+				options_len += len;
+			}
+			iter += len;
+		}
+		++iter;
+		/* Print description */
+		if (DeeFormat_Repeat((Dee_formatprinter_t)&DeeFile_WriteAll, file, ' ',
+		                     (padlen - options_len) + 1) < 0)
+			goto err;
+		if (fe_print_description(file, iter, padlen + 1))
+			goto err;
+		iter += tpp_strlen(iter) + 1;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE char const *tpconst fe_help_strings[] = {
+	fe_cli_help,
+	DeeCompilerCliLoader_Help,
+	tpp_cli_loader_help,
+	tpp_makefile_cli_loader_help,
+	tpp_emitter_cli_loader_help,
+};
+
+static WUNUSED NONNULL((1)) int DCALL
+fe_help_print(DeeObject *file, bool all_spellings) {
+	size_t i, padlen = 0;
+	for (i = 0; i < COMPILER_LENOF(fe_help_strings); ++i) {
+		size_t temp = fe_help_maxspelling_db(fe_help_strings[i], all_spellings);
+		if (padlen < temp)
+			padlen = temp;
+	}
+	for (i = 0; i < COMPILER_LENOF(fe_help_strings); ++i) {
+		if (fe_help_cli_for(file, fe_help_strings[i], padlen, all_spellings))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+static WUNUSED NONNULL((1)) int DCALL
+fe_help_extensions(DeeObject *file) {
+	tpp_extension_id id;
+	for (id = (tpp_extension_id)0; id < TPP_EXT_COUNT;
+	     id = (tpp_extension_id)((unsigned int)id + 1)) {
+		char const *name = tpp_extension_getname(id);
+		if (name) {
+			if (DeeFile_Printf(file, "-f[no-]%s\n", name) < 0)
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+static WUNUSED NONNULL((1)) int DCALL
+fe_help_warnings(DeeObject *file) {
+	tpp_warning_group_id id;
+	for (id = (tpp_warning_group_id)0; id < TPP_WG_COUNT;
+	     id = (tpp_warning_group_id)((unsigned int)id + 1)) {
+		char const *names = tpp_warning_group_getnames(id);
+		if (names) {
+			if (DeeFile_Printf(file, "-W[no-]%s", names) < 0)
+				goto err;
+			names += tpp_strlen(names) + 1;
+			while (*names) {
+				if (DeeFile_Printf(file, " -W[no-]%s", names) < 0)
+					goto err;
+				names += tpp_strlen(names) + 1;
+			}
+			if (DeeFile_Putc(file, '\n') == Dee_GETC_ERR)
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+fe_cmd_help_impl_doc(DeeObject *file, char const *subject) {
+	/* `print import.doc.Doc(arg)` */
+	Dee_ssize_t error;
+	DREF DeeObject *doc = DeeModule_CallExternStringf("doc", "Doc", "s", subject);
+	if unlikely(!doc)
+		goto err;
+	error = DeeObject_Print(doc, (Dee_formatprinter_t)&DeeFile_WriteAll, file);
+	Dee_Decref(doc);
+	if unlikely(error < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+fe_cmd_help_impl_cmp(DeeObject *file, char const *subject) {
+	if (strcmp(subject, "cli") == 0)
+		return fe_help_print(file, true);
+	if (strcmp(subject, "extensions") == 0)
+		return fe_help_extensions(file);
+	if (strcmp(subject, "warnings") == 0)
+		return fe_help_warnings(file);
+	return fe_cmd_help_impl_doc(file, subject);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fe_cmd_help_impl(DeeObject *file, int argc, char **argv) {
+	int i;
+	if (!argc)
+		return fe_help_print(file, false);
+	for (i = 0; i < argc; ++i) {
+		int result = fe_cmd_help_impl_cmp(file, argv[i]);
+		if (result)
+			return result;
+	}
+	return 0;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED int DCALL
+fe_cmd_help(int argc, char **argv) {
+	int result;
+	DREF DeeObject *out = DeeFile_GetStd(Dee_STDOUT);
+	if unlikely(!out)
+		return -1;
+	result = fe_cmd_help_impl(out, argc, argv);
+	Dee_Decref(out);
+	return result;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED int DCALL
+fe_cmd_version(int argc, char **argv) {
+	DREF DeeObject *fp;
+	(void)argc;
+	(void)argv;
+	fp = DeeFile_GetStd(Dee_STDOUT);
+	if unlikely(!fp)
+		goto err_nofp;
+	if (DeeFile_WriteAll(fp, str_version, COMPILER_STRLEN(str_version)) == (size_t)-1)
+		goto err;
+	Dee_Decref(fp);
+	return 0;
+err:
+	Dee_Decref(fp);
+err_nofp:
+	return -1;
 }
 
 
@@ -1126,6 +1572,16 @@ err_cli_emitter_files:
 
 		goto done_cli;
 	}	break;
+
+	case OPERATION_MODE_HELP:
+		if (fe_cmd_help(argc, argv))
+			goto err_cli_emitter;
+		break;
+
+	case OPERATION_MODE_VERSION:
+		if (fe_cmd_version(argc, argv))
+			goto err_cli_emitter;
+		break;
 
 	default: __builtin_unreachable();
 	}

@@ -53,6 +53,9 @@
 
 DECL_BEGIN
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -180,11 +183,101 @@ err:
 	return TPP_EDEEMON;
 }
 
+struct compiler_flag {
+	char const cf_name[15]; /* The name of this flag. */
+	uint8_t    cf_inv;      /* Meaning of this flag is revered. */
+	uint16_t   cf_addr;     /* Offset into a `struct Dee_compiler_options` where this flag is located at. */
+	uint16_t   cf_flag;     /* The bit associated with this flag. */
+};
+
+PRIVATE struct compiler_flag const compiler_flags[] = {
+	{ "lfstmt",        0, offsetof(DeeCompiler, cp_parser_flags), PARSE_FLFSTMT },
+	{ "ast-optimize",  0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FENABLED },
+	{ "ast-constsyms", 0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FCONSTSYMS },
+	{ "ast-unused",    0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FNOUSESYMS },
+#ifdef OPTIMIZE_FASSUME
+	{ "ast-assume",    0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FASSUME },
+#endif /* OPTIMIZE_FASSUME */
+	{ "ast-predict",   1, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FNOPREDICT },
+	{ "ast-compare",   1, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FNOCOMPARE },
+	{ "ast-onepass",   0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FONEPASS },
+	{ "cse",           0, offsetof(DeeCompiler, cp_optimizer_flags), OPTIMIZE_FCSE },
+	{ "bigcode",       0, offsetof(DeeCompiler, cp_assembler), ASM_FBIGCODE },
+	{ "optimize",      0, offsetof(DeeCompiler, cp_assembler), ASM_FOPTIMIZE },
+	{ "optimize-size", 0, offsetof(DeeCompiler, cp_assembler), ASM_FOPTIMIZE_SIZE },
+	{ "reuse-locals",  0, offsetof(DeeCompiler, cp_assembler), ASM_FREUSELOC },
+	{ "peephole",      0, offsetof(DeeCompiler, cp_assembler), ASM_FPEEPHOLE },
+	{ "stackdisp",     0, offsetof(DeeCompiler, cp_assembler), ASM_FSTACKDISP },
+	{ "ddi",           1, offsetof(DeeCompiler, cp_assembler), ASM_FNODDI },
+	{ "assert",        1, offsetof(DeeCompiler, cp_assembler), ASM_FNOASSERT },
+	{ "reuse-consts",  1, offsetof(DeeCompiler, cp_assembler), ASM_FNOREUSECONST },
+	{ "reduce-refs",   0, offsetof(DeeCompiler, cp_assembler), ASM_FREDUCEREFS },
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_SetCompilerFlag(DeeCompilerCliLoader *__restrict self,
+                                     char const *__restrict flag, bool on) {
+	size_t i;
+	for (i = 0; i < COMPILER_LENOF(compiler_flags); ++i) {
+		if (strcmp(compiler_flags[i].cf_name, flag) == 0) {
+			uint16_t *p_flag = (uint16_t *)((byte_t *)self->ccl_compiler + compiler_flags[i].cf_addr);
+			uint16_t mask = compiler_flags[i].cf_flag;
+			if (compiler_flags[i].cf_inv)
+				on = !on;
+			*p_flag &= ~mask;
+			if (on)
+				*p_flag |= mask;
+			return TPP_EOK;
+		}
+	}
+	return TPP_ENOENT;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+DeeCompilerCliLoader_SetName(DeeCompilerCliLoader *__restrict self,
+                             char const *__restrict arg) {
+	DeeCompiler *comp = self->ccl_compiler;
+	size_t namelen = strlen(arg);
+	tpp_keyword const *name = DeeLexer_NewKeyword(&comp->cp_lexer, (tpp_char const *)arg, namelen);
+	if unlikely(!name)
+		goto err;
+	comp->cp_rootname = name;
+	return TPP_EOK;
+err:
+	return TPP_EDEEMON;
+}
+
 
 enum {
 	_Dee_COMPILER_CLI_STATE_FIRST_INTERNAL = Dee_COMPILER_CLI_STATE_DDASH,
 	Dee_COMPILER_CLI_STATE_OPTIMIZE, /* "--optimize" */
+	Dee_COMPILER_CLI_STATE_NAME,     /* "--name" */
 };
+
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#define TPP_CLI_HELP1(spelling, description) \
+	spelling "\0\0" description "\0"
+#if TPP_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	spelling1 "\0" spelling2 "\0\0" description "\0"
+#else /* TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	TPP_CLI_HELP1(spelling1, description)
+#endif /* !TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+
+/* Help strings for `DeeCompilerCliLoader`. Same format as `tpp_cli_loader_help` */
+INTERN_CONST char const DeeCompilerCliLoader_Help[] =
+TPP_CLI_HELP2("-OLEVEL", "--optimize=LEVEL\0--optimize LEVEL",
+              "Set the optimization LEVEL as one of 0-9 or s")
+TPP_CLI_HELP2("--name=NAME", "--name NAME",
+              "Set name of root scope function")
+TPP_CLI_HELP1("-C[no-]FLAG",
+              "Configure internal compiler flags");
+#undef TPP_CLI_HELP2
+#undef TPP_CLI_HELP1
+
 
 /* Parse arguments/flags
  * @return: TPP_EOK:     Success
@@ -211,23 +304,43 @@ DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
 					return TPP_EOK;
 
 				case 'o': {
-					if (cli_streq(arg, "ptimize=")) {
+					if (cli_streq(arg, "ptimize=")) { /* --optimize= */
 						arg += (sizeof("ptimize=") - sizeof(char));
 						return DeeCompilerCliLoader_SetOptimization(self, arg);
-					} else if (cli_streq(arg, "ptimize\0")) {
+					} else if (cli_streq(arg, "ptimize\0")) { /* --optimize */
 						self->ccl_state = Dee_COMPILER_CLI_STATE_OPTIMIZE;
 						return TPP_EOK;
 					}
 				}	break;
 
+				case 'n': {
+					if (cli_streq(arg, "ame=")) { /* --name= */
+						arg += (sizeof("ame=") - sizeof(char));
+						return DeeCompilerCliLoader_SetName(self, arg);
+					} else if (cli_streq(arg, "ame\0")) { /* --name */
+						self->ccl_state = Dee_COMPILER_CLI_STATE_NAME;
+						return TPP_EOK;
+					}
+				}	break;
+
 				/* TODO: All missing CLI flags (see non-CONFIG_EXPERIMENTAL_USE_TPP3 code in main.c) */
-				/* TODO: -Wp,... */
-				/* TODO: -Wa,... */
-				/* TODO: -Wl,... */
 
 				default: break;
 				}
 				break;
+
+			case 'C': {
+				bool on = true;
+				if (cli_streq(arg, "no-")) { /* -C[no-]<flag> */
+					on = false;
+					arg += 3;
+				}
+				return DeeCompilerCliLoader_SetCompilerFlag(self, arg, on);
+			}	break;
+
+			/* TODO: -Wp,... */
+			/* TODO: -Wa,... */
+			/* TODO: -Wl,... */
 
 			default: break;
 			}
@@ -244,6 +357,10 @@ DeeCompilerCliLoader_ParseArg(DeeCompilerCliLoader *__restrict self,
 		self->ccl_state = Dee_COMPILER_CLI_STATE_NORMAL;
 		return DeeCompilerCliLoader_SetOptimization(self, arg);
 
+	case Dee_COMPILER_CLI_STATE_NAME:
+		self->ccl_state = Dee_COMPILER_CLI_STATE_NORMAL;
+		return DeeCompilerCliLoader_SetName(self, arg);
+
 	default: __builtin_unreachable();
 	}
 #undef cli_streq
@@ -257,11 +374,11 @@ DeeCompilerCliLoader_ParseFlag(DeeCompilerCliLoader *__restrict self,
 	switch (*arg++) {
 
 	case 'O':
-		if (*arg == 's') {
+		if (*arg == 's') { /* -Os */
 			DeeCompilerCliLoader_SetOptimizationLevel(self, -1);
 			++arg;
 			goto done;
-		} else if (*arg >= '0' && *arg <= '9') {
+		} else if (*arg >= '0' && *arg <= '9') { /* -On */
 			DeeCompilerCliLoader_SetOptimizationLevel(self, *arg - '0');
 			++arg;
 			goto done;
