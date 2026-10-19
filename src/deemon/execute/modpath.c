@@ -3575,7 +3575,7 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 			                import_str_size, import_str);
 			goto err_absname;
 		}
-		result = DeeModule_OpenFile_impl2(absname, absname_len, flags, options);
+		result = DeeModule_OpenFile_impl2(absname, absname_len, used_flags, options);
 		if (result != DeeModule_IMPORT_ENOENT)
 			break;
 		++i;
@@ -5747,26 +5747,28 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 	size_t i;
 	DREF DeeTupleObject *assumed_old_path;
 
-	/* Technically only necessary when paths are added: clear all flags
-	 * indicating that some module has all of its possible lib names
-	 * loaded already (since addition of new paths may mean that there
-	 * are now more names possible):
-	 *
-	 * >> old_path: ["/opt/deemon/lib/"]
-	 * >> module:   "/opt/deemon/lib/doc.dee"  -> ["doc"]
-	 *
-	 * >> new_path: ["/opt/deemon/lib/", "/opt/deemon/"]
-	 * >> module:   "/opt/deemon/lib/doc.dee"  -> ["doc", "lib.doc"] */
-	DeeModule_ClearLibAllFlag_locked();
-
 	if (remove_hint == (DeeStringObject *)ITER_DONE) {
 		if (old_path == NULL) {
 			Dee_atomic_xref_set_inherited(&deemon_path, new_path);
-			return 0;
+		} else {
+			if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, old_path, new_path))
+				return 1; /* "old_path" is no longer up-to-date */
+			Dee_Decref_likely(old_path);
 		}
-		if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, old_path, new_path))
-			return 1; /* "old_path" is no longer up-to-date */
-		Dee_Decref_likely(old_path);
+
+		/* Only necessary when paths are added: clear all flags
+		 * indicating that some module has all of its possible lib names
+		 * loaded already (since addition of new paths may mean that there
+		 * are now more names possible):
+		 *
+		 * >> old_path: ["/opt/deemon/lib/"]
+		 * >> module:   "/opt/deemon/lib/doc.dee"  -> ["doc"]
+		 *
+		 * >> new_path: ["/opt/deemon/lib/", "/opt/deemon/"]
+		 * >> module:   "/opt/deemon/lib/doc.dee"  -> ["doc", "lib.doc"] */
+		module_libtree_lock_write();
+		DeeModule_ClearLibAllFlag_locked();
+		module_libtree_lock_endwrite();
 		return 0;
 	}
 
@@ -5801,6 +5803,9 @@ again_load_assumed_old_path:
 	if (!assumed_old_path) {
 		if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, NULL, new_path))
 			goto again_load_assumed_old_path;
+		module_libtree_lock_write();
+		DeeModule_ClearLibAllFlag_locked(); /* In case new paths were added */
+		module_libtree_lock_endwrite();
 		return 0;
 	}
 
@@ -5823,6 +5828,7 @@ again_load_assumed_old_path:
 
 	/* Lock libtree (so we can remove global names of modules from removed lib paths) */
 	module_libtree_lock_write();
+	DeeModule_ClearLibAllFlag_locked(); /* In case new paths were added */
 
 	/* Set new library path */
 	if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, assumed_old_path, new_path)) {
