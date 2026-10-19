@@ -284,10 +284,10 @@ builtin_exec_fallback(size_t argc,
 	DREF DeeObject *result;
 	char const *usertext;
 	size_t usersize;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("exec", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("exec", params: """
 	DeeObject *expr;
 	DeeObject *globals = NULL;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *expr;
 		DeeObject *globals;

@@ -37,12 +37,12 @@ PREVENT_OPTIMIZATIONS(a);
 PREVENT_OPTIMIZATIONS(b);
 PREVENT_OPTIMIZATIONS(c);
 
-function outer() {
+varying function outer() {
 	assert a == "a";
 	assert b == "b";
 	assert c == "c";
-	function inner() {
-		function inner2() {
+	varying function inner() {
+		varying function inner2() {
 			/* Access referenced symbols in reverse order, thus
 			 * teasing the assembler to change the internally used
 			 * reference indices, overwriting their previous values,
@@ -58,7 +58,7 @@ function outer() {
 	}
 	PREVENT_OPTIMIZATIONS(inner);
 	inner();
-	function inner2() {
+	varying function inner2() {
 		assert c == "c";
 		assert b == "b";
 		assert a == "a";

@@ -21,10 +21,10 @@
 
 import * from deemon;
 
-assert exec(r'
+assert exec('''
 import foo as MyObject, MyList = "bar X" from deemon;
 return [MyObject, MyList];
-', import: name -> {
+''', import: name -> {
 	assert name == "deemon";
 	return {
 		"foo"   : Object,

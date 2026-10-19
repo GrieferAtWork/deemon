@@ -272,14 +272,14 @@ test.assertEqualsTyped(exec(r'x -> { return x * 2; };')(7), 14);
 	local glob = Dict();
 	/* Execute a piece of code to define some globals,
 	 * as well as create and return a JIT function. */
-	local x = exec(r'
+	local x = exec('''
 		bar = "foobar"; // Implicitly declared as a global
 		function foo(x?, y = 3) {
 			if (x !is bound)
 				return bar;
 			return x + y;
 		}
-	', globals: glob);
+	''', globals: glob);
 
 	/* Ensure that globals were created correctly */
 	assert glob["bar"] == "foobar";
@@ -375,7 +375,7 @@ test.assertEqualsTyped(exec(r'try { throw "Error"; } catch (...) { "OK"; }'), "O
 test.assertEqualsTyped(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); none; }) catch (e...) e, "2");
 {
 	local glob = Dict({ "in_finally" : false });
-	local res = try exec(r"
+	local res = try exec("""
 		try {
 			throw 'Error';
 		} finally {
@@ -384,7 +384,7 @@ test.assertEqualsTyped(try ({ exec(r'try { throw "1"; } catch (...) { throw "2";
 			return 'OK';
 			/* Make sure that we didn't get here. */
 			in_finally = false;
-		}", globals: glob)
+		}""", globals: glob)
 	catch (e...) e;
 	/* Ensure that the finally-block was executed correctly */
 	test.assertEqualsTyped(glob["in_finally"], true);

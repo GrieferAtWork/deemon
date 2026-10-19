@@ -35,7 +35,7 @@ assert x is MyClass;
 assert x.foo == 42, "Type.newinstance should still be able to construct instances!";
 
 local init = { "foo": 42 };
-__asm__("" : "+x" (init));
+__asm__("" : "+X" (init));
 local x = MyClass.newinstance(**init);
 assert x is MyClass;
 assert x.foo == 42, "Type.newinstance should still be able to construct instances!";

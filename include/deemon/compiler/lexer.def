@@ -186,6 +186,26 @@ DEE_KWD_IDENTIFIER(TPP_KWD___stack, "__stack")
  * code. */
 TPP_EXTENSION(TPP_EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
 
+/* Enable support for C-style integer suffixes like `123ll`, which will
+ * be compiled as `import.ctypes.llong(123)`. The following suffixes are
+ * recognized:
+ * - `123u`     -> `import.ctypes.uint(123)`
+ * - `123l`     -> `import.ctypes.long(123)`
+ * - `123ul`    -> `import.ctypes.ulong(123)`
+ * - `123ll`    -> `import.ctypes.llong(123)`
+ * - `123ull`   -> `import.ctypes.ullong(123)`
+ * - `123i8`    -> `import.ctypes.int8_t(123)`
+ * - `123ui8`   -> `import.ctypes.uint8_t(123)`
+ * - `123i16`   -> `import.ctypes.int16_t(123)`
+ * - `123ui16`  -> `import.ctypes.uint16_t(123)`
+ * - `123i32`   -> `import.ctypes.int32_t(123)`
+ * - `123ui32`  -> `import.ctypes.uint32_t(123)`
+ * - `123i64`   -> `import.ctypes.int64_t(123)`
+ * - `123ui64`  -> `import.ctypes.uint64_t(123)`
+ * - `123i128`  -> `import.ctypes.int128_t(123)`
+ * - `123ui128` -> `import.ctypes.uint128_t(123)` */
+TPP_EXTENSION(TPP_EXT_FIXED_LENGTH_INTEGRALS, "fixed-length-integrals", 0)
+
 /* Indicate to user-code that they are running under deemon v200 */
 TPP_KWD(TPP_KWD___DEEMON__, "__DEEMON__")
 TPP_MACRO(TPP_KWD___DEEMON__, true)
@@ -355,6 +375,10 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION, 1(TPP_WG_SYNTAX), 0(), TP
 TPP_WARNING(TPP_W_EXPECTED_DOTS_OR_COLON_AFTER_BRACE_IN_TYPE_ANNOTATION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[...%] or %[:%] after %[{type%] in type annotation, but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_CONSTANT_AFTER_TYPE_IN_DECL_EXPRESSION, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, "Expected a constant expression as argument for %[type%] inside of a declaration expression")
 
+TPP_WGROUP(TPP_WG_PACK_OUTSIDE_MACRO, 1("pack-outside-macro"), TPP_WSTATE_WARN)
+TPP_WARNING(TPP_W_PACK_USED_OUTSIDE_OF_MACRO, 1(TPP_WG_PACK_OUTSIDE_MACRO), 0(), TPP_WSTATE_WARN,
+            "Using %[pack%] outside of macros makes code harder to read. Consider using parenthesis instead")
+
 /*WARNING_NAMESPACE(WN_QUALITY, 2250)*/
 TPP_WARNING(TPP_W_PROBABLY_MISSING_ARROW, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN,
             "Encountered %[{%] after parenthesis (%[(...) {%]). This will compile as %[Tuple({...})({ ...%], "
@@ -362,8 +386,6 @@ TPP_WARNING(TPP_W_PROBABLY_MISSING_ARROW, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WAR
             "%[(...)({ ... })%] if you really want to call a tuple and get the resulting NotImplemented error")
 TPP_WARNING(TPP_W_UNCLEAR_SYMBOL_FROM_MODULE, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN,
             "Consider writing %[(%s from %s)%] to prevent confusion on where the module name ends")
-TPP_WARNING(TPP_W_PACK_USED_OUTSIDE_OF_MACRO, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN,
-            "Using %[pack%] outside of macros makes code harder to read. Consider using parenthesis instead")
 TPP_WARNING(TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, "Thousands/grouping character %[_%] is used inconsistently in %Pt: groupings of width %u and %u are present")
 TPP_WARNING(TPP_W_INCORRECT_THOUSANDS_SEPERATORS, 1(TPP_WG_QUALITY), 0(), TPP_WSTATE_WARN, "Thousands/grouping character %[_%] is used incorrectly in %Pt: a separator should appear every %u digits, but actually appears every %u digits")
 

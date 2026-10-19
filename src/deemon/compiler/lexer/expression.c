@@ -29,6 +29,7 @@
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
 #include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
+#include <deemon/compiler/compiler.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* DeeFloat_New */
 #include <deemon/int.h>               /* DeeIntObject, DeeInt_*, Dee_INT_STRING* */
@@ -714,6 +715,9 @@ count_chars_without_escaped_linefeeds(char const *start,
 
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 verify_consistent_grouping(DeeLexer *self) {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	/* TODO: Have this warning be done inside of TPP3 */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	char const *tok_start, *tok_end, *iter, *lastsep;
 	size_t interval, wanted_interval;
 	tok_start = (char const *)DeeLexer_GetTokenStart(self);
@@ -849,6 +853,181 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+struct fixed_length_suffix_type {
+	char flst_suffix[6];
+	char flst_ctype[10];
+};
+
+PRIVATE struct fixed_length_suffix_type const fixed_length_suffix_types[] = {
+	{ "u", /*    */ "uint" },
+	{ "l", /*    */ "long" },
+	{ "ul", /*   */ "ulong" },
+	{ "ll", /*   */ "llong" },
+	{ "ull", /*  */ "ullong" },
+	{ "i8", /*   */ "int8_t" },
+	{ "ui8", /*  */ "uint8_t" },
+	{ "i16", /*  */ "int16_t" },
+	{ "ui16", /* */ "uint16_t" },
+	{ "i32", /*  */ "int32_t" },
+	{ "ui32", /* */ "uint32_t" },
+	{ "i64", /*  */ "int64_t" },
+	{ "ui64", /* */ "uint64_t" },
+	{ "i128", /* */ "int128_t" },
+	{ "ui128", /**/ "uint128_t" },
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+bse_trylskip(DeeLexer *__restrict lexer,
+             tpp_char const *start, tpp_char const *end,
+             char const *match_text) {
+	for (;;) {
+		tpp_char ch = (tpp_char)*match_text++;
+		if (ch == '\0')
+			return start;
+		if (start >= end)
+			break;
+		if (*start != ch)
+			break;
+		start = tpp_preparse_skipbse_fwd(&lexer->dl_lexer, start + 1, end);
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) bool DCALL
+bse_equals(DeeLexer *__restrict lexer,
+           tpp_char const *text, tpp_size len,
+           char const *match_text) {
+	tpp_char const *end = text + len;
+	text = bse_trylskip(lexer, text, end, match_text);
+	return text == end;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DFCALL
+get_ctypes_module(DeeLexer *__restrict self, struct ast_loc *loc) {
+	DREF DeeModuleObject *result;
+	static char const ctypes_name[] = "ctypes";
+	result = DeeModule_OpenEx(ctypes_name, COMPILER_STRLEN(ctypes_name), NULL, 0,
+	                          DeeModule_IMPORT_F_NORMAL |
+	                          DeeModule_IMPORT_F_ENOENT |
+	                          DeeModule_IMPORT_F_ERECUR,
+	                          DeeCompiler_Current->cp_imports);
+	if unlikely(!DeeModule_IMPORT_ISOK(result)) {
+		if unlikely(result == DeeModule_IMPORT_ERROR)
+			goto err;
+		if (result == DeeModule_IMPORT_ENOENT) {
+			if (DeeLexer_WarnfLoc(self, loc, TPP_W_MODULE_NOT_FOUND,
+			                      ctypes_name))
+				goto err;
+		} else if (result == DeeModule_IMPORT_ERECUR) {
+			struct Dee_import_frame *current = DeeThread_Self()->t_import_curr;
+			char const *current_name = current ? current->if_absfile : "?";
+			if (DeeLexer_WarnfLoc(self, loc, TPP_W_RECURSIVE_MODULE_DEPENDENCY,
+			                      ctypes_name, current_name))
+				goto err;
+		}
+		result = &DeeModule_Empty;
+		Dee_Incref(result);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct symbol *DFCALL
+get_ctypes_symbol(DeeLexer *self, struct ast_loc *loc, char const *symbol_name) {
+	DREF DeeModuleObject *ctypes;
+	struct symbol *extern_symbol;
+	struct Dee_module_symbol *ctypes_symbol;
+	ctypes = get_ctypes_module(self, loc);
+	if unlikely(!ctypes)
+		goto err;
+	extern_symbol = new_unnamed_symbol();
+	if unlikely(!extern_symbol)
+		goto err_ctypes;
+	ctypes_symbol = DeeModule_GetSymbolString(ctypes, symbol_name);
+	if unlikely(!ctypes_symbol) {
+		if (DeeLexer_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
+		                   symbol_name, DeeModule_GetShortName(ctypes)))
+			goto err_ctypes;
+		extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
+		extern_symbol->s_module = ctypes; /* Inherit reference. */
+	} else {
+		/* Setup this symbol as an external reference. */
+		extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
+		extern_symbol->s_extern.e_module = ctypes; /* Inherit reference. */
+		extern_symbol->s_extern.e_symbol = ctypes_symbol;
+	}
+	return extern_symbol;
+err_ctypes:
+	Dee_Decref(ctypes);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF struct ast *DFCALL
+get_ctypes_symbol_ast(DeeLexer *self, struct ast_loc *loc, char const *symbol_name) {
+	DREF struct ast *result;
+	struct symbol *sym;
+	sym = get_ctypes_symbol(self, loc, symbol_name);
+	if unlikely(!sym)
+		goto err;
+	result = ast_sym(sym);
+	result = ast_setddi(result, loc);
+	return result;
+err:
+	return NULL;
+}
+
+/* @return: ITER_DONE: Unknown suffix */
+INTERN ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
+ast_wrap_fixed_length_integer(DeeLexer *self, DeeIntObject *value,
+                              tpp_char const *suffix_start, tpp_size suffix_len) {
+	size_t i;
+	struct ast_loc ctype_loc;
+	DREF struct ast *value_ast;
+	DREF struct ast *ctype_ast;
+	DREF struct ast *args_ast;
+	DREF struct ast *call_ast;
+	DREF struct ast **argv;
+	for (i = 0;; ++i) {
+		if (i >= COMPILER_LENOF(fixed_length_suffix_types))
+			return (DREF struct ast *)ITER_DONE;
+		if (bse_equals(self, suffix_start, suffix_len,
+		               fixed_length_suffix_types[i].flst_suffix))
+			break; /* Found it! */
+	}
+	value_ast = ast_sethere(self, ast_constexpr(Dee_AsObject(value)));
+	if unlikely(!value_ast)
+		goto err;
+	ctype_loc = value_ast->a_ddi;
+	ctype_loc.l_lc = tpp_lexer_getlcinfoat(&self->dl_lexer, suffix_start);
+	ctype_ast = get_ctypes_symbol_ast(self, &ctype_loc, fixed_length_suffix_types[i].flst_ctype);
+	if unlikely(!ctype_ast)
+		goto err_value_ast;
+	argv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+	if unlikely(!argv)
+		goto err_value_ast_ctype_ast;
+	argv[0] = value_ast; /* Inherit reference */
+	args_ast = ast_multiple(AST_FMULTIPLE_TUPLE, 1, argv);
+	args_ast = ast_setddi(args_ast, &ctype_loc);
+	if unlikely(!args_ast)
+		goto err_value_ast_ctype_ast_argv;
+	call_ast = ast_operator2(OPERATOR_CALL, 0, ctype_ast, args_ast);
+	ast_decref(args_ast);
+	ast_decref(ctype_ast);
+	return ast_setddi(call_ast, &ctype_loc);
+err_value_ast_ctype_ast_argv:
+	Dee_Free(argv);
+err_value_ast_ctype_ast:
+	ast_decref(ctype_ast);
+err_value_ast:
+	ast_decref(value_ast);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
 
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
@@ -872,11 +1051,24 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 			if (TPP_ISERR(error))
 				goto err;
 			if (suffix_start < DeeLexer_GetTokenEnd(self)) {
-				/* TODO: "-ffixed-length-integrals"
+				/* "-ffixed-length-integrals":
 				 * >> 123ull
 				 * Compile as:
 				 * >> (ullong from ctypes)(123)
 				 */
+				if (tpp_lexer_getextension(&self->dl_lexer, TPP_EXT_FIXED_LENGTH_INTEGRALS)) {
+					tpp_size suffix_len = (tpp_size)(DeeLexer_GetTokenEnd(self) - suffix_start);
+					result = ast_wrap_fixed_length_integer(self, (DeeIntObject *)resval,
+					                                       suffix_start, suffix_len);
+					if (result != (DREF struct ast *)ITER_DONE) {
+						Dee_Decref(resval);
+						if unlikely(!result)
+							goto err;
+						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+							goto err_r;
+						return result;
+					}
+				}
 				if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER)) {
 					Dee_Decref(resval);
 					goto err;
@@ -898,9 +1090,9 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 			goto create_none;
 		}
 create_constexpr:
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		if unlikely(!resval)
 			goto err;
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 		result = ast_sethere(self, ast_constexpr(resval));
 		Dee_Decref(resval);
 		if unlikely(!result)

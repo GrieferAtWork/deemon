@@ -121,7 +121,7 @@ function __builtin_fs_gidname(__gid) {
 }
 
 #ifdef __WINDOWS__
-#pragma push_macro(undef,"win32", "GetLogicalDriveStrings")
+#pragma push_macro(undef,"win32", "GetLogicalDriveStrings", "rstrip", "split")
 from win32 import
 	__builtin_fs_win32modulename = "GetModuleFileName",
 	__builtin_fs_win32wmodulename = "GetModuleFileName",

@@ -41,6 +41,13 @@
 #	error "This header is meant for deemon"
 #endif
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif /* !__has_builtin */
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif /* !__has_feature */
+
 /* Current (maximum) API version (will never change again; s.a.: the blurb above) */
 #define __API_VERSION_MAX__ 200
 
@@ -203,6 +210,9 @@ local function __ctypes_new(tp) {
 
 #if 1 /* This allows `static if` to be compiled correctly, however it
        * also causes static variable declaration to be impossible... */
+#if __TPP_VERSION__ >= 300
+#pragma warning(suppress: "-Wkeyword-macro")
+#endif /* __TPP_VERSION__ >= 300 */
 #define static    /* nothing */
 #endif
 
@@ -242,7 +252,7 @@ from ctypes import
 
 
 
-/* Enable some preprocessor extensions for better legacy support. */
+/* Enable some language extensions for better legacy support. */
 #pragma extension("-ffixed-length-integrals")
 
 /* Enable old-style classes (now emulated by

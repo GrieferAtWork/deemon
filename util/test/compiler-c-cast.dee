@@ -31,6 +31,9 @@ assert (returnArgsTuple)(42,) == (42,);
 assert (returnArgsTuple)((42)) == (42,);
 assert (returnArgsTuple)((42,)) == ((42,),);
 assert (returnArgsTuple)pack(42) == ((42,),);
+#if __TPP_VERSION__ >= 300
+#pragma warning(suppress: "-Wpack-outside-macro")
+#endif /* __TPP_VERSION__ >= 300 */
 assert ((returnArgsTuple)pack 42) == ((42,),);
 assert (returnArgsTuple)(10, 20, 30) == (10, 20, 30);
 

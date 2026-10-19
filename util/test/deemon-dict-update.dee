@@ -21,7 +21,7 @@
 import * from deemon;
 
 local d = Dict();
-__asm__("" : "+x" (d));
+__asm__("" : "+X" (d));
 assert #d == 0;
 
 d.update({ 10: "foo", 20: "bar" });

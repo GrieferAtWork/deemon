@@ -30,13 +30,13 @@ function foo() {
 	}
 }
 test.assertEqualsTyped(foo(), "a");
-test.assertEqualsTyped(exec(r'
+test.assertEqualsTyped(exec('''
 	try {
 		return "a";
 	} finally {
 		return "b";
 	}
-'), "a");
+'''), "a");
 
 
 function geta() -> "geta";
@@ -99,20 +99,20 @@ local globals = Dict({
 });
 
 globals["didRunFinally"] = false;
-local x = exec(r"
+local x = exec("""
 	try {
 		geta();
 	} finally {
 		didRunFinally = true;
 		getb();
 	}
-", globals: globals);
+""", globals: globals);
 test.assertEqualsTyped(globals["didRunFinally"], true);
 test.assertEqualsTyped(x, "geta");
 
 
 globals["didRunFinally"] = false;
-local x = exec(r"
+local x = exec("""
 	try {
 		getc();
 	} catch (e...) {
@@ -121,13 +121,13 @@ local x = exec(r"
 		didRunFinally = true;
 		getb();
 	}
-", globals: globals);
+""", globals: globals);
 test.assertEqualsTyped(globals["didRunFinally"], true);
 test.assertEqualsTyped(x, "getc");
 
 
 globals["didRunFinally"] = false;
-local x = exec(r"
+local x = exec("""
 	try {
 		getc();
 	} finally {
@@ -136,7 +136,7 @@ local x = exec(r"
 	} catch (e...) {
 		e;
 	}
-", globals: globals);
+""", globals: globals);
 test.assertEqualsTyped(globals["didRunFinally"], true);
 test.assertEqualsTyped(x, "getc");
 

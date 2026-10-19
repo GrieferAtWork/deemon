@@ -28,6 +28,10 @@ assert foo() == "v2";
 /* Without `varying`, trying to re-assign a function symbol must throw a RuntimeError */
 local error = none;
 try {
+#if __TPP_VERSION__ >= 300
+#pragma warning(suppress: "-Wperformance")
+#pragma warning(suppress: "-Wperformance")
+#endif /* __TPP_VERSION__ >= 300 */
 	function bar() -> "v1";
 	function bar() -> "v2";
 } catch (e...) {
