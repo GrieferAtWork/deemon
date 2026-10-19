@@ -63,9 +63,7 @@ DECL_BEGIN
  * @param: default_symbols: A mapping-like object of type `{string: Object}`, that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
- *                          variables.
- *                          These are either provided as constants, or as globals,
- *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS` */
+ *                          variables. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col, unsigned int mode,

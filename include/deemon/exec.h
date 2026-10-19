@@ -164,15 +164,14 @@ DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv
 
 
 
-#define DeeExec_RUNMODE_DEFAULT               0x0000 /* Default run mode: just run as-is */
-#define DeeExec_RUNMODE_STMTS                 0x0000 /* Parse a whole module source as a sequence of statements. */
-#define DeeExec_RUNMODE_STMT                  0x0001 /* Parse, compile and execute a single statement (e.g. `if (x) y; else z;`) and return the result like `return ({ ... });` */
-#define DeeExec_RUNMODE_FULLEXPR              0x0002 /* Parse, compile and execute a single expression (e.g. `10 + 20` or `[]{ print 42; return "foo"; }') and return the result
-                                                      * NOTE: As far as comma-expressions go, simply return the last component, but do allow assignments. */
-#define DeeExec_RUNMODE_EXPR                  0x0003 /* Parse, compile and execute a basic expression
-                                                      * NOTE: As far as comma-expressions go, simply return the last component. */
-#define DeeExec_RUNMODE_MASK                  0x000f /* Mode mask */
-#define DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS 0x4000 /* FLAG: Default symbols are declared as read/write globals (otherwise, they are read-only constants) */
+#define DeeExec_RUNMODE_DEFAULT  0x0000 /* Default run mode: just run as-is */
+#define DeeExec_RUNMODE_STMTS    0x0000 /* Parse a whole module source as a sequence of statements. */
+#define DeeExec_RUNMODE_STMT     0x0001 /* Parse, compile and execute a single statement (e.g. `if (x) y; else z;`) and return the result like `return ({ ... });` */
+#define DeeExec_RUNMODE_FULLEXPR 0x0002 /* Parse, compile and execute a single expression (e.g. `10 + 20` or `[]{ print 42; return "foo"; }') and return the result
+                                         * NOTE: As far as comma-expressions go, simply return the last component, but do allow assignments. */
+#define DeeExec_RUNMODE_EXPR     0x0003 /* Parse, compile and execute a basic expression
+                                         * NOTE: As far as comma-expressions go, simply return the last component. */
+#define DeeExec_RUNMODE_MASK     0x000f /* Mode mask */
 struct Dee_compiler_options;
 
 /* Execute source code from `source_stream` and return the result of invoking it.
@@ -189,9 +188,7 @@ struct Dee_compiler_options;
  * @param: default_symbols: A mapping-like object of type `{string: Object}`, that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
- *                          variables.
- *                          These are either provided as constants, or as globals,
- *                          depending on `DeeExec_RUNMODE_FDEFAULTS_ARE_GLOBALS` */
+ *                          variables. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col, unsigned int mode,

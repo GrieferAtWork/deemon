@@ -1761,7 +1761,8 @@ fe_compile_script_impl(struct Dee_serial *__restrict writer,
 	                         Dee_COMPILER_FLAG_FORMAT);
 
 	/* Initialize file-stack of script-lexer. */
-	tpp_string_incref(script_string); /* Inherited by `tpp_lexer_initfile_text_ex()` */
+	if (script_string)
+		tpp_string_incref(script_string); /* Inherited by `tpp_lexer_initfile_text_ex()` */
 	tpp_lexer_initfile_text_ex(&script_compiler.cp_lexer.dl_lexer, real_filename, script_string,
 	                           script_start, script_len, start_lc, TPP_FILE_FLAGS_NORMAL,
 	                           is_utf8 ? TPP_FILE_ENCODING_FORCE_UTF8 : TPP_FILE_ENCODING_ASCII);
@@ -2053,6 +2054,23 @@ encode_utf8_bytes_to_tpp_encoding(/*utf-8*/ tpp_char const *data,
 	return DeeBytes_TruncateBuffer(result, result_maxsize);
 }
 
+PRIVATE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_blocking_nowarn(tpp_lexer *tpp_restrict self) {
+	tpp_token_id result;
+	tpp_lexer_nowarnings_pushon(self);
+	result = tpp_lexer_yield_blocking(self);
+	tpp_lexer_nowarnings_pop(self);
+	return result;
+}
+
+PRIVATE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yieldraw_blocking_nowarn(tpp_lexer *tpp_restrict self) {
+	tpp_token_id result;
+	tpp_lexer_nowarnings_pushon(self);
+	result = tpp_lexer_yieldraw_blocking(self);
+	tpp_lexer_nowarnings_pop(self);
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
 fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
@@ -2090,7 +2108,7 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 		bool file_encoding_is_identity;
 		size_t tail_size;
 yield_next_token:
-		tok = DeeLexer_Yield(lexer);
+		tok = tpp_lexer_yield_blocking_nowarn(&lexer->dl_lexer);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (tok == TPP_TOK_EOF)
@@ -2181,7 +2199,7 @@ err_script_builder:
 			for (;;) {
 				bool is_last_part;
 				tpp_lcinfo part_start_lc;
-				tok = DeeLexer_YieldRaw(lexer);
+				tok = tpp_lexer_yieldraw_blocking_nowarn(&lexer->dl_lexer);
 				if (TPP_TOK_ISERR(tok))
 					goto err_script_builder;
 				if (tok == TPP_TOK_SPACE || tok == TPP_TOK_LF)
@@ -2298,7 +2316,7 @@ err_script_stdout:
 				               "[[[end]]]"))
 					break; /* Marker found! */
 			}
-			tok = DeeLexer_YieldRaw(lexer);
+			tok = tpp_lexer_yieldraw_blocking_nowarn(&lexer->dl_lexer);
 			if (TPP_TOK_ISERR(tok))
 				goto err_script_stdout_keep;
 		}
@@ -2480,18 +2498,6 @@ err:
 	return TPP_EDEEMON;
 }
 
-PRIVATE TPP_WUNUSED NONNULL((1)) tpp_errno DCALL
-tpp_lexer_configure_for_format_scripts(tpp_lexer *__restrict self) {
-	/* Disable some pointless warnings */
-	/* TODO */ /* TODO: These need to be restored to their defaults for __FORMAT_SCRIPT__ */
-
-	/* Enable special tokens. */
-	tpp_lexer_enablefeature(self, TPP_FEAT_TOK_COMMENT);
-	tpp_lexer_enablefeature(self, TPP_FEAT_TOK_SHELL_COMMENT); /* Unknown directives are shell comments! */
-	return TPP_EOK;
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
 fe_run_format_scripts_impl(char const *filename, char const *ddi_filename) {
 	tpp_errno result;
@@ -2541,9 +2547,8 @@ fe_run_format_scripts_impl(char const *filename, char const *ddi_filename) {
 	}
 
 	/* (Re-)configure lexer for format scripts */
-	result = tpp_lexer_configure_for_format_scripts(&format_lexer.dl_lexer);
-	if (TPP_ISERR(result))
-		goto done_lexer_files;
+	tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_COMMENT);
+	tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT); /* Unknown directives are shell comments! */
 
 	/* Perform formatting on the contents of our custom lexer. */
 	result = fe_run_format_scripts_impl2(&format_lexer);
