@@ -108,9 +108,9 @@ siter_copy(HashSetIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siter_init(HashSetIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_HashSetIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_HashSetIterator", params: """
 	DeeHashSetObject *set;
-", docStringPrefix: "siter");]]]*/
+""", docStringPrefix: "siter");]]]*/
 #define siter__HashSetIterator_params "set:?DHashSet"
 	struct {
 		DeeHashSetObject *set;

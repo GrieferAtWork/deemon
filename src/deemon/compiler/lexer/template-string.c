@@ -514,6 +514,8 @@ ast_parse_string_ast(DeeLexer *self) {
 
 	/* Parse string...
 	 * NOTE: Stop if an LF token is encountered (if they're enabled, they have special meaning) */
+	ASSERT(DeeLexer_GetTokenStart(self) >= tpp_string_str(tpp_file_getchunk(DeeLexer_GetFile(self))));
+	ASSERT(DeeLexer_GetTokenEnd(self) <= tpp_string_end(tpp_file_getchunk(DeeLexer_GetFile(self))));
 	status = tpp_lexer_parsestring_ex(&self->dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
 	if (TPP_SSIZE_ISERR(status))
 		goto err_parser;

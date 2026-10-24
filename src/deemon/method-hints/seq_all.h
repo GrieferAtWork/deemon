@@ -61,9 +61,9 @@ __seq_all__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dboo
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_all__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_all__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;

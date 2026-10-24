@@ -4442,9 +4442,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: """
 	size_t precision = 0;
-", docStringPrefix: "int");]]]*/
+""", docStringPrefix: "int");]]]*/
 #define int_hex_params "precision=!0"
 	struct {
 		size_t precision;
@@ -4460,9 +4460,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bin(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bin", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bin", params: """
 	size_t precision = 0;
-", docStringPrefix: "int");]]]*/
+""", docStringPrefix: "int");]]]*/
 #define int_bin_params "precision=!0"
 	struct {
 		size_t precision;
@@ -4478,9 +4478,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_oct(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("oct", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("oct", params: """
 	size_t precision = 0;
-", docStringPrefix: "int");]]]*/
+""", docStringPrefix: "int");]]]*/
 #define int_oct_params "precision=!0"
 	struct {
 		size_t precision;
@@ -4663,11 +4663,11 @@ int_frombytes(DeeObject *UNUSED(self), size_t argc,
 	bool encode_little;
 	DeeBuffer buf;
 	DREF DeeObject *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("frombytes", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("frombytes", params: """
 	DeeObject *bytes:?DBytes;
 	DeeObject *byteorder:?X2?Dstring?N = Dee_None;
 	bool       $signed = false;
-", docStringPrefix: "int");]]]*/
+""", docStringPrefix: "int");]]]*/
 #define int_frombytes_params "bytes:?DBytes,byteorder:?X2?Dstring?N=!N,signed=!f"
 	struct {
 		DeeObject *bytes;

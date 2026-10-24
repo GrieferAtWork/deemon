@@ -702,6 +702,19 @@ TPP_WARNING(TPP_W_ASM_LABEL_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_E
 TPP_WARNING(TPP_W_ASM_LABEL_NEVER_USED, 1(TPP_WG_UNUSED_LABEL), 0(), TPP_WSTATE_WARN, "Label %[%s%] declared, but not used")
 
 
+/* Format-scripts */
+TPP_WARNING_EX(TPP_W_FORMAT_SCRIPT_NOT_TERMINATED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	tpp_lexer_printf_info script_start_info;
+	tpp_lcinfo const script_start_lc = tpp_current_va_arg(tpp_lcinfo);
+	char const *const script_filename = tpp_lexer_printf_info_getfilename(tpp_current_info());
+	tpp_lexer_printf_info_init_lc(&script_start_info, script_filename, script_start_lc);
+	tpp_warn_printf0(tpp_current_info(), "expected commending ending in %[]]]%] to terminate format script\n");
+	tpp_warn_print_file_and_line(&script_start_info);
+	tpp_warn_printf0(&script_start_info, "note: see start of script\n");
+})
+TPP_WARNING(TPP_W_FORMAT_SCRIPT_MISSING_END_TAG, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR,
+            "missing %[[[[end]]]%]-comment for format-script")
+
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 /* Unary expression keywords. */
 DEF_K(none)

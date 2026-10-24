@@ -1090,7 +1090,7 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("rt.gen.dexutils").gw("CreateFile", "
+/*[[[deemon import("rt.gen.dexutils").gw("CreateFile", """
 	lpFileName:?Dstring;
 	dwDesiredAccess:nt:DWORD=FILE_GENERIC_READ=!GFILE_GENERIC_READ;
 	dwShareMode:nt:DWORD
@@ -1100,7 +1100,7 @@ err:
 	dwCreationDisposition:nt:DWORD=OPEN_EXISTING=!GOPEN_EXISTING;
 	dwFlagsAndAttributes:nt:DWORD=FILE_ATTRIBUTE_NORMAL=!GFILE_ATTRIBUTE_NORMAL;
 	hTemplateFile?:nt:HANDLE;
-->" MAYBE_NONE("?GHANDLE")); ]]]*/
+->""" MAYBE_NONE("?GHANDLE")); ]]]*/
 #define LIBWIN32_CREATEFILE_DEF          DEX_MEMBER_F("CreateFile", &libwin32_CreateFile, DEXSYM_READONLY, "(lpFileName:?Dstring,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=!|!GFILE_SHARE_READ!|!GFILE_SHARE_WRITE!GFILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile?:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE"),
 #define LIBWIN32_CREATEFILE_DEF_DOC(doc) DEX_MEMBER_F("CreateFile", &libwin32_CreateFile, DEXSYM_READONLY, "(lpFileName:?Dstring,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=!|!GFILE_SHARE_READ!|!GFILE_SHARE_WRITE!GFILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile?:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE\n" doc),
 FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, DeeObject *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);

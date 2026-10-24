@@ -50,9 +50,9 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isdisjoint", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isdisjoint", params: """
 	rhs: ?DSet
-", docStringPrefix: "set");]]]*/
+""", docStringPrefix: "set");]]]*/
 #define set_isdisjoint_params "rhs:?."
 	struct {
 		DeeObject *rhs;

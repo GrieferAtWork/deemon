@@ -260,11 +260,11 @@ already_run:
 	} else {
 		/* No callback has been given. In this case, we must process the
 		 * caller-given arguments for 2 arguments `(callback,args)` */
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("operator()", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("operator()", params: """
 		DeeObject *callback:?DCallable,
 		DeeObject *args:?DTuple = Dee_EmptyTuple,
 		DeeObject *kwds:?M?Dstring?O = NULL,
-", docStringPrefix: "once", defineKwList: true, args: "cb_args");]]]*/
+""", docStringPrefix: "once", defineKwList: true, args: "cb_args");]]]*/
 	static DEFINE_KWLIST(operator_call_kwlist, { KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEX("args", 0xc6fc997f, 0x4af7cd17f976719e), KEX("kwds", 0x6dfae69b, 0x66fee9115d75f3ef), KEND });
 #define once_operator_call_params "callback:?DCallable,args=!T0,kwds?:?M?Dstring?O"
 	struct {
@@ -307,10 +307,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 once_finish(DeeOnceObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	int status;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("finish", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("finish", params: """
 	DeeObject *result,
 	bool override = false,
-", docStringPrefix: "once", defineKwList: true);]]]*/
+""", docStringPrefix: "once", defineKwList: true);]]]*/
 	static DEFINE_KWLIST(finish_kwlist, { KEX("result", 0x1a595f32, 0xd99e3f67e2599248), KEX("override", 0x5ecc02a7, 0xb7b65ecd369641ca), KEND });
 #define once_finish_params "result,override=!f"
 	struct {

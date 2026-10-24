@@ -389,7 +389,7 @@ error_display(DeeErrorObject *__restrict self, size_t argc,
 	reason:?X2?Dstring?N=!P{Unhandled exception} = Dee_None,
 	fp:?X2?DFile?N=!N,
 	traceback:?X2?DTraceback?N=!N
-", docStringPrefix: "error");]]]*/
+""", docStringPrefix: "error");]]]*/
 #define error_display_params "reason:?X2?Dstring?N=!P{Unhandled exception},fp:?X2?DFile?N=!N,traceback:?X2?DTraceback?N=!N"
 	struct {
 		DeeObject *reason;
@@ -415,7 +415,7 @@ error_class_display(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	error?:?X2?DError?O,
 	fp:?X2?DFile?N=!N,
 	traceback:?X2?DTraceback?N=!N
-", docStringPrefix: "error_class");]]]*/
+""", docStringPrefix: "error_class");]]]*/
 #define error_class_display_params "reason:?X2?Dstring?N=!P{Unhandled exception},error?:?X2?DError?O,fp:?X2?DFile?N=!N,traceback:?X2?DTraceback?N=!N"
 	struct {
 		DeeObject *reason;
@@ -447,7 +447,7 @@ error_class_getmessage(DeeTypeObject *__restrict UNUSED(self),
                        size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("message", params: """
 	error:?X2?.?O
-", docStringPrefix: "error_class");]]]*/
+""", docStringPrefix: "error_class");]]]*/
 #define error_class_message_params "error:?X2?.?O"
 	struct {
 		DeeObject *error;

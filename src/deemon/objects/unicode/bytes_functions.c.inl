@@ -248,9 +248,9 @@ bytes_find(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_find_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -282,9 +282,9 @@ bytes_index(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_index_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -316,9 +316,9 @@ bytes_casefind(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casefind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -352,9 +352,9 @@ bytes_caseindex(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caseindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -388,9 +388,9 @@ bytes_rfind(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rfind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -422,9 +422,9 @@ bytes_rindex(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -456,9 +456,9 @@ bytes_caserfind(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserfind_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -492,9 +492,9 @@ bytes_caserindex(Bytes *self, size_t argc,
 	size_t mylen;
 	Needle needle;
 	byte_t *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserindex_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -559,9 +559,9 @@ bytes_findany(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t status;
 	struct bytes_findany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_findany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -593,9 +593,9 @@ bytes_indexany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t status;
 	struct bytes_findany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_indexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -660,9 +660,9 @@ bytes_casefindany(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t status;
 	struct bytes_casefindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casefindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -697,9 +697,9 @@ bytes_caseindexany(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t status;
 	struct bytes_casefindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caseindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -762,9 +762,9 @@ bytes_rfindany(Bytes *self, size_t argc,
 	byte_t *orig_base;
 	Dee_ssize_t status;
 	struct bytes_rfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rfindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -798,9 +798,9 @@ bytes_rindexany(Bytes *self, size_t argc,
 	byte_t *orig_base;
 	Dee_ssize_t status;
 	struct bytes_rfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -860,9 +860,9 @@ bytes_caserfindany(Bytes *self, size_t argc,
 	byte_t *orig_base;
 	Dee_ssize_t status;
 	struct bytes_caserfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserfindany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -897,9 +897,9 @@ bytes_caserindexany(Bytes *self, size_t argc,
 	byte_t *orig_base;
 	Dee_ssize_t status;
 	struct bytes_caserfindany_data data;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: """
 	DeeObject *needles: ?S?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserindexany_params "needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -933,9 +933,9 @@ bytes_count(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
 	size_t result, size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_count_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -965,9 +965,9 @@ bytes_casecount(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	Needle needle;
 	size_t result, size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casecount_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -998,9 +998,9 @@ bytes_contains_f(Bytes *self, size_t argc,
 	bool result;
 	Needle needle;
 	size_t size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_contains_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -1031,9 +1031,9 @@ bytes_casecontains_f(Bytes *self, size_t argc,
 	bool result;
 	Needle needle;
 	size_t size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casecontains_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -1063,9 +1063,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct Dee_bytes_printer printer;
 	Dee_ssize_t status;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: """
 	args:?S?O
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_format_params "args:?S?O"
 	struct {
 		DeeObject *args;
@@ -1112,9 +1112,9 @@ bytes_getsubstr(Bytes *__restrict self, size_t start, size_t end) {
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_substr(Bytes *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_substr_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1181,9 +1181,9 @@ bytes_reversed(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *src, *dst;
 	size_t size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_reversed_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1215,9 +1215,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_reverse(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reverse", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reverse", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_reverse_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1278,9 +1278,9 @@ bytes_hex(Bytes *self, size_t argc,
 	DREF DeeStringObject *result;
 	byte_t const *src;
 	size_t size;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hex", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_hex_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1340,9 +1340,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_scanf(Bytes *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: """
 	DeeStringObject *format
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_scanf_params "format:?Dstring"
 	struct {
 		DeeStringObject *format;
@@ -1704,9 +1704,9 @@ bytes_lower(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *dst;
 	byte_t const *src;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_lower_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1742,9 +1742,9 @@ bytes_upper(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *dst;
 	byte_t const *src;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_upper_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1781,9 +1781,9 @@ bytes_title(Bytes *self, size_t argc,
 	byte_t *dst;
 	byte_t const *src;
 	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_title_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1822,9 +1822,9 @@ bytes_capitalize(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *dst, byte;
 	byte_t const *src;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_capitalize_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1862,9 +1862,9 @@ bytes_swapcase(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *dst;
 	byte_t const *src;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_swapcase_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1900,9 +1900,9 @@ bytes_tolower(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	byte_t *iter;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tolower", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tolower", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_tolower_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1936,9 +1936,9 @@ bytes_toupper(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	byte_t *iter;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toupper", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toupper", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_toupper_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1973,9 +1973,9 @@ bytes_totitle(Bytes *self, size_t argc,
 	size_t size;
 	byte_t *iter;
 	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("totitle", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("totitle", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_totitle_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -2012,9 +2012,9 @@ bytes_tocapitalize(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	byte_t *iter, byte;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocapitalize", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocapitalize", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_tocapitalize_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -2051,9 +2051,9 @@ bytes_toswapcase(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	byte_t *iter;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toswapcase", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toswapcase", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_toswapcase_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -2088,11 +2088,11 @@ bytes_replace(Bytes *self, size_t argc,
 	byte_t *begin, *end, *block_begin;
 	Needle find_needle, replace_needle;
 	struct Dee_bytes_printer printer;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: """
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
 	size_t max = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_replace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
 	struct {
 		DeeObject *find;
@@ -2167,11 +2167,11 @@ bytes_casereplace(Bytes *self, size_t argc,
 	byte_t *begin, *end, *block_begin;
 	Needle find_needle, replace_needle;
 	struct Dee_bytes_printer printer;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: """
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
 	size_t max = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casereplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
 	struct {
 		DeeObject *find;
@@ -2246,11 +2246,11 @@ bytes_toreplace(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	Needle find_needle, replace_needle;
 	byte_t *begin, *end;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toreplace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("toreplace", params: """
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
 	size_t max = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_toreplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
 	struct {
 		DeeObject *find;
@@ -2309,11 +2309,11 @@ bytes_tocasereplace(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	Needle find_needle, replace_needle;
 	byte_t *begin, *end;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocasereplace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tocasereplace", params: """
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
 	size_t max = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_tocasereplace_params "find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max=!-1"
 	struct {
 		DeeObject *find;
@@ -2382,9 +2382,9 @@ string_encode(DeeObject *self, size_t argc,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findall(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_findall_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeObject *needle;
@@ -2406,9 +2406,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefindall(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casefindall_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeObject *needle;
@@ -2455,9 +2455,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct bytes_join_data data;
 	Dee_ssize_t status;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: """
 	seq: ?S?O
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_join_params "seq:?S?O"
 	struct {
 		DeeObject *seq;
@@ -2480,9 +2480,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_split(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t bsep;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: """
 	DeeObject *sep: ?X3?DBytes?Dstring?Dint
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_split_params "sep:?X3?.?Dstring?Dint"
 	struct {
 		DeeObject *sep;
@@ -2501,9 +2501,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casesplit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t bsep;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesplit", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesplit", params: """
 	DeeObject *sep: ?X3?DBytes?Dstring?Dint
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casesplit_params "sep:?X3?.?Dstring?Dint"
 	struct {
 		DeeObject *sep;
@@ -2521,9 +2521,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_splitlines(Bytes *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: """
 	bool keepends = false;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_splitlines_params "keepends=!f"
 	struct {
 		bool keepends;
@@ -2541,9 +2541,9 @@ bytes_startswith(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	bool result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_startswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2575,9 +2575,9 @@ bytes_casestartswith(Bytes *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	bool result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casestartswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2609,9 +2609,9 @@ bytes_endswith(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	bool result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_endswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2644,9 +2644,9 @@ bytes_caseendswith(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	bool result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caseendswith_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2735,9 +2735,9 @@ bytes_partition(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTupleObject *result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_partition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2777,9 +2777,9 @@ bytes_casepartition(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTupleObject *result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casepartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2819,9 +2819,9 @@ bytes_rpartition(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTupleObject *result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rpartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2861,9 +2861,9 @@ bytes_caserpartition(Bytes *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTupleObject *result;
 	Needle needle;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: """
 	DeeObject *needle: ?X3?DBytes?Dstring?Dint, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserpartition_params "needle:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -3435,10 +3435,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF Bytes *result;
 	Needle filler;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: """
 	size_t width;
 	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_center_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
 	struct {
 		size_t width;
@@ -3485,10 +3485,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF Bytes *result;
 	Needle filler;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: """
 	size_t width;
 	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_ljust_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
 	struct {
 		size_t width;
@@ -3532,10 +3532,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF Bytes *result;
 	Needle filler;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: """
 	size_t width;
 	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{ };
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rjust_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{ }"
 	struct {
 		size_t width;
@@ -3578,10 +3578,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF Bytes *result;
 	Needle filler;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: """
 	size_t width;
 	DeeObject *filler: ?X3?DBytes?Dstring?Dint = NULL = !P{0};
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_zfill_params "width:?Dint,filler:?X3?.?Dstring?Dint=!P{0}"
 	struct {
 		size_t width;
@@ -3629,9 +3629,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("expandtabs", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("expandtabs", params: """
 	size_t tabwidth = 8
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_expandtabs_params "tabwidth=!8"
 	struct {
 		size_t tabwidth;
@@ -3686,9 +3686,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 	Needle replace;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: """
 	DeeObject *replacement: ?X3?DBytes?Dstring?Dint = NULL = !P{\\n}
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_unifylines_params "replacement:?X3?.?Dstring?Dint=!P{\n}"
 	struct {
 		DeeObject *replacement;
@@ -3752,9 +3752,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	Needle filler;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: """
 	DeeObject *filler: ?X3?DBytes?Dstring?Dint = Dee_AsObject(&str_tab) = !P{\t}
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_indent_params "filler:?X3?.?Dstring?Dint=!P{	}"
 	struct {
 		DeeObject *filler;
@@ -3827,10 +3827,10 @@ retself:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("dedent", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("dedent", params: """
 	size_t max = 1;
 	DeeObject *mask: ?X3?DBytes?Dstring?Dint = NULL;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_dedent_params "max=!1,mask?:?X3?.?Dstring?Dint"
 	struct {
 		size_t max_;
@@ -4025,12 +4025,12 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("findmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("findmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_findmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4067,12 +4067,12 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rfindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rfindmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rfindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4109,12 +4109,12 @@ bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indexmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_indexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4151,12 +4151,12 @@ bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rindexmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4193,12 +4193,12 @@ bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casefindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casefindmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casefindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4235,12 +4235,12 @@ bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserfindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserfindmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserfindmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4278,12 +4278,12 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caseindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caseindexmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caseindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4321,12 +4321,12 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t const *ptr, *scan_str;
 	size_t scan_len, result;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserindexmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserindexmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4365,12 +4365,12 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("partitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("partitionmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_partitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4447,12 +4447,12 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rpartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rpartitionmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_rpartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4529,12 +4529,12 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casepartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casepartitionmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_casepartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4611,12 +4611,12 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserpartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserpartitionmatch", params: """
 	DeeObject *open: ?X3?.?Dstring?Dint;
 	DeeObject *close: ?X3?.?Dstring?Dint;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_caserpartitionmatch_params "open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeObject *open;
@@ -4689,9 +4689,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_segments(Bytes *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: """
 	size_t substring_length
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_segments_params "substring_length:?Dint"
 	struct {
 		size_t substring_length;
@@ -4710,9 +4710,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_distribute(Bytes *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_length;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: """
 	size_t substring_count
-", docStringPrefix: "bytes");]]]*/
+""", docStringPrefix: "bytes");]]]*/
 #define bytes_distribute_params "substring_count:?Dint"
 	struct {
 		size_t substring_count;

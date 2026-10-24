@@ -14172,6 +14172,7 @@ default__seq_sorted__with__seq_operator_size__and__operator_getitem_index_fast(D
 	if unlikely(DeeSeq_SortGetItemIndexFast(DeeTuple_SIZE(result), DeeTuple_ELEM(result), self,
 	                                        start, Dee_TYPE(self)->tp_seq->tp_getitem_index_fast))
 		goto err_r;
+	/* NOTE: `DeeSeq_SortGetItemIndexFast()` leaves `NULL` for unbound items */
 	if unlikely(DeeTuple_GET(result, 0) == NULL) {
 		/* Must trim unbound items (which were sorted to the start of the tuple) */
 		size_t n_unbound = 1;
@@ -14209,10 +14210,11 @@ default__seq_sorted__with__seq_operator_size__and__seq_operator_trygetitem_index
 	if unlikely(DeeSeq_SortTryGetItemIndex(DeeTuple_SIZE(result), DeeTuple_ELEM(result), self, start,
 	                                       DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index)))
 		goto err_r;
-	if unlikely(DeeTuple_GET(result, 0) == NULL) {
+	/* NOTE: `DeeSeq_SortTryGetItemIndex()` leaves `ITER_DONE` for unbound items */
+	if unlikely(DeeTuple_GET(result, 0) == ITER_DONE) {
 		/* Must trim unbound items (which were sorted to the start of the tuple) */
 		size_t n_unbound = 1;
-		while (n_unbound < end && DeeTuple_GET(result, n_unbound) == NULL)
+		while (n_unbound < end && DeeTuple_GET(result, n_unbound) == ITER_DONE)
 			++n_unbound;
 		end -= n_unbound;
 		memmovedownc(DeeTuple_ELEM(result),
@@ -14301,6 +14303,7 @@ default__seq_sorted_with_key__with__seq_operator_size__and__operator_getitem_ind
 	if unlikely(DeeSeq_SortGetItemIndexFastWithKey(DeeTuple_SIZE(result), DeeTuple_ELEM(result), self,
 	                                               start, Dee_TYPE(self)->tp_seq->tp_getitem_index_fast, key))
 		goto err_r;
+	/* NOTE: `DeeSeq_SortGetItemIndexFastWithKey()` leaves `NULL` for unbound items */
 	if unlikely(DeeTuple_GET(result, 0) == NULL) {
 		/* Must trim unbound items (which were sorted to the start of the tuple) */
 		size_t n_unbound = 1;
@@ -14338,10 +14341,11 @@ default__seq_sorted_with_key__with__seq_operator_size__and__seq_operator_trygeti
 	if unlikely(DeeSeq_SortTryGetItemIndexWithKey(DeeTuple_SIZE(result), DeeTuple_ELEM(result), self, start,
 	                                              DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index), key))
 		goto err_r;
-	if unlikely(DeeTuple_GET(result, 0) == NULL) {
+	/* NOTE: `DeeSeq_SortTryGetItemIndexWithKey()` leaves `ITER_DONE` for unbound items */
+	if unlikely(DeeTuple_GET(result, 0) == ITER_DONE) {
 		/* Must trim unbound items (which were sorted to the start of the tuple) */
 		size_t n_unbound = 1;
-		while (n_unbound < end && DeeTuple_GET(result, n_unbound) == NULL)
+		while (n_unbound < end && DeeTuple_GET(result, n_unbound) == ITER_DONE)
 			++n_unbound;
 		end -= n_unbound;
 		memmovedownc(DeeTuple_ELEM(result),

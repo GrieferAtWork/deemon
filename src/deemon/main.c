@@ -106,7 +106,7 @@
 #define TPP_EMITTER_HAVE_MODE_ZERO                          1
 #define TPP_EMITTER_HAVE_NORMALIZE_SPACE                    TPP_CONF_FEAT1
 #define TPP_EMITTER_HAVE_NORMALIZE_LF                       TPP_CONF_FEAT1
-#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING                 TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING                 TPP_CONF_FEAT0 /* Disable by default because it tries to execute format-string expressions */
 #define TPP_EMITTER_HAVE_NORMALIZE_C_INT                    TPP_CONF_FEAT1
 #define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS                 TPP_CONF_FEAT1
 #define TPP_EMITTER_HAVE_NORMALIZE_BSE                      TPP_CONF_FEAT1
@@ -411,7 +411,7 @@ fe_cli_setoutput(struct fe_cli_parser *__restrict self, char const *arg) {
 		/* Special case: output to stdout */
 		self->fcp_output_stream = DeeFile_GetStd(Dee_STDOUT);
 	} else {
-		self->fcp_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 644);
+		self->fcp_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 0644);
 	}
 	if unlikely(!self->fcp_output_stream)
 		goto err;
@@ -657,8 +657,6 @@ fe_cli_parsearg_frontend(struct fe_cli_parser *__restrict self, char const *arg)
 						return TPP_EOK;
 					}
 				}	break;
-
-				/* TODO: All missing CLI flags (see non-CONFIG_EXPERIMENTAL_USE_TPP3 code in main.c) */
 
 				default: break;
 				}
@@ -1760,6 +1758,11 @@ fe_compile_script_impl(struct Dee_serial *__restrict writer,
 	                         Dee_COMPILER_FLAG_MAIN |
 	                         Dee_COMPILER_FLAG_FORMAT);
 
+	/* Clear flags used to remember the state of `#import` and `#pragma once` */
+	tpp_lexer_resetallkwdflags(&script_compiler.cp_lexer.dl_lexer,
+	                           (tpp_keyword_flags)~(TPP_KEYWORD_FLAG_HDR_IMPORTED |
+	                                                 TPP_KEYWORD_FLAG_HDR_ONCE));
+
 	/* Initialize file-stack of script-lexer. */
 	if (script_string)
 		tpp_string_incref(script_string); /* Inherited by `tpp_lexer_initfile_text_ex()` */
@@ -1777,11 +1780,17 @@ fe_compile_script_impl(struct Dee_serial *__restrict writer,
 		tpp_string_decref_nokill(ddi_str);
 	}
 
-	/* Re-configure script lexer */
+	/* Re-configure script lexer back to what is expected for deemon */
+	tpp_lexer_enablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_CXX_COMMENT);
+	tpp_lexer_enablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_C_COMMENT);
 	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_LF);
 	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_SPACE);
 	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_COMMENT);
 	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_PASCAL_COMMENT);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_PASCAL_BRACE_COMMENT);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_HTML_COMMENT);
+	tpp_lexer_disablefeature(&script_compiler.cp_lexer.dl_lexer, TPP_FEAT_TOK_SQL_COMMENT);
 
 	/* Compile script and serialize into `writer` */
 	result = DeeCompiler_Compile(&script_compiler, writer, DeeExec_RUNMODE_DEFAULT, NULL);
@@ -2072,6 +2081,55 @@ tpp_lexer_yieldraw_blocking_nowarn(tpp_lexer *tpp_restrict self) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+bse_trylskip_script_start(DeeLexer *__restrict lexer,
+                          tpp_char const *start,
+                          tpp_char const *end) {
+	start = bse_trylskip(lexer, start, end, "[[[deemon");
+	if (start) {
+		/* Skip leading whitespace after `start` */
+		tpp_char const *iter;
+		iter = tpp_preparse_skipspace_fwd(&lexer->dl_lexer, start, end);
+		ASSERT(iter >= start);
+		if (iter > start) {
+			start = iter; /* Whitespace was skipped -- no need to check for SYMCONT */
+		} else {
+			/* First character after `start` must exist and not be SYMCONT */
+			tpp_unichar first_ch;
+			if (start >= end)
+				return NULL;
+			first_ch = *start;
+			if (tpp_ascii_ismb(first_ch) && tpp_file_isutf8(DeeLexer_GetFile(lexer))) {
+				iter = start;
+				first_ch = tpp_unicode_readutf8(&iter, end);
+			}
+			if (tpp_unicode_issymcont(first_ch))
+				return NULL; /* Ignore something like `[[[deemonButNotReally` */
+		}
+	}
+	return start;
+}
+
+/* Yield until the first comment-token ending in `]]]` (or EOF) is found
+ * @return: * : ID of the new token (either a comment token, or EOF) */
+PRIVATE WUNUSED NONNULL((1)) tpp_token_id DCALL
+fe_format_script_find_end_of_script(DeeLexer *__restrict lexer) {
+	tpp_token_id tok;
+	for (;;) {
+		tok = tpp_lexer_yieldraw_blocking_nowarn(&lexer->dl_lexer);
+		if (TPP_TOK_ISERR_OR_EOF(tok))
+			break;
+		if (TPP_TOK_ISCOMMENT(tok)) {
+			tpp_token_range marker_body;
+			tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &marker_body);
+			if (bse_tryrskip(lexer, tpp_token_range_getstart(&marker_body),
+			                 tpp_token_range_getend(&marker_body), "]]]"))
+				break;
+		}
+	}
+	return tok;
+}
+
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
 fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 	/* Search for comments whose bodies start with `[[[deemon`,
@@ -2082,6 +2140,7 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 		tpp_lcinfo script_end_lc;
 		tpp_char const *script_start;
 		tpp_char const *script_end;
+		tpp_lcinfo script_start_lc;
 		tpp_token_range comment_body;
 		tpp_token_id tok;
 		DREF DeeBytesObject *script_stdout;
@@ -2107,6 +2166,7 @@ fe_run_format_scripts_impl2(DeeLexer *__restrict lexer) {
 		tpp_file_encoding file_encoding;
 		bool file_encoding_is_identity;
 		size_t tail_size;
+		unsigned int end_marker_count;
 yield_next_token:
 		tok = tpp_lexer_yield_blocking_nowarn(&lexer->dl_lexer);
 		if (TPP_TOK_ISERR(tok))
@@ -2118,29 +2178,13 @@ yield_next_token:
 		if (!tpp_file_isbasefile(DeeLexer_GetFile(lexer)))
 			continue;
 		tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &comment_body);
-		script_start = bse_trylskip(lexer,
-		                            tpp_token_range_getstart(&comment_body),
-		                            tpp_token_range_getend(&comment_body),
-		                            "[[[deemon");
+		script_start = bse_trylskip_script_start(lexer,
+		                                         tpp_token_range_getstart(&comment_body),
+		                                         tpp_token_range_getend(&comment_body));
 		if (script_start == NULL)
 			continue;
 		script_end = tpp_token_range_getend(&comment_body);
-
-		/* Skip leading whitespace after `script_start` */
-		iter = tpp_preparse_skipspace_fwd(&lexer->dl_lexer, script_start, script_end);
-		ASSERT(iter >= script_start);
-		if (iter > script_start) {
-			script_start = iter; /* Whitespace was skipped -- no need to check for SYMCONT */
-		} else {
-			/* First character of `script_start` must not be SYMCONT */
-			tpp_unichar first_ch = *script_start;
-			if (tpp_ascii_ismb(first_ch) && tpp_file_isutf8(DeeLexer_GetFile(lexer))) {
-				iter = script_start;
-				first_ch = tpp_unicode_readutf8(&iter, script_end);
-			}
-			if (tpp_unicode_issymcont(first_ch))
-				continue; /* Ignore something like `[[[deemonButNotReally` */
-		}
+		script_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
 
 		/* If the current script-chunk already ends with `]]]`, then we
 		 * already have the entire script. Additionally, when that is
@@ -2164,7 +2208,6 @@ yield_next_token:
 			TPP_REF tpp_string *script_string;
 			tpp_string_builder script_builder;
 			tpp_string_builder_init(&script_builder);
-			tpp_lcinfo script_start_lc;
 
 			/* Multi-comment scripts work like this:
 			 * some-file.txt:
@@ -2190,7 +2233,6 @@ yield_next_token:
 			 * first chunk, which is then used as the "start_lc" used when the script
 			 * is compiled and executed as deemon code (here, the compiler file is
 			 * initialized as `tpp_lexer_initfile_text_ex()`). */
-			script_start_lc = tpp_lexer_getlcinfoat(&lexer->dl_lexer, script_start);
 
 			/* Copy first portion of script into a buffer */
 			if (tpp_string_builder_doprint(&script_builder, script_start,
@@ -2214,8 +2256,13 @@ err_script_builder:
 				if (tok == TPP_TOK_SPACE || tok == TPP_TOK_LF)
 					continue;
 				if (!TPP_TOK_ISCOMMENT(tok)) {
+					tpp_errno warn_status;
 					tpp_string_builder_fini(&script_builder);
-					/* TODO: Warning: EOF in inline script */
+
+					/* Warning: EOF in inline script */
+					warn_status = tpp_lexer_warnf(&lexer->dl_lexer, TPP_W_FORMAT_SCRIPT_NOT_TERMINATED, script_start_lc);
+					if (TPP_ISERR(warn_status))
+						return warn_status;
 					goto yield_next_token;
 				}
 				tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &comment_body);
@@ -2309,21 +2356,60 @@ err_script_stdout:
 		}
 
 		/* Find [[[end]]] comment */
+		end_marker_count = 1;
 		for (;;) {
 			if (tok == TPP_TOK_EOF) {
-				/* TODO: Warning: EOF before script output end marker */
+handle_eof_during_end_marker_search:
+				override_start = tpp_file_keep_rel2ptr(file, rel_override_start);
 				tpp_file_breakkeep(file);
 				Dee_Decref(script_stdout);
-				goto done;
+				/* Warning: EOF before script output end marker */
+				return tpp_lexer_warnf_lc(&lexer->dl_lexer,
+				                          tpp_file_getfilename(file), script_start_lc,
+				                          TPP_W_FORMAT_SCRIPT_MISSING_END_TAG);
 			}
 			if (TPP_TOK_ISCOMMENT(tok)) {
+				tpp_char const *subscript_start;
 				tpp_token_range marker_body;
 				tpp_lexer_decodecomment_without_trailing_linefeed(&lexer->dl_lexer, &marker_body);
-				if (bse_equals(lexer,
-				               tpp_token_range_getstart(&marker_body),
-				               tpp_token_range_getend(&marker_body),
-				               "[[[end]]]"))
-					break; /* Marker found! */
+
+				/* Must support nesting:
+				 *    [1] //[[[deemon print "//[[[deemon print 'Hi';]]]\nHi\n//[[[end]]]";]]]
+				 *    [2] //[[[deemon print 'Hi';]]]
+				 *    [3] Hi
+				 *    [4] //[[[end]]]
+				 *    [5] //[[[end]]]
+				 *
+				 * If we get another comment like "//[[[deemon", we must:
+				 * - Find the end of the nested format-script (iow: skip
+				 *   to the next comment that ends with "]]]")
+				 * - Increase the # of [[[end]]] comments that must encountered
+				 *   for the actual override area's end to be reached.
+				 */
+				subscript_start = bse_trylskip_script_start(lexer,
+				                                            tpp_token_range_getstart(&marker_body),
+				                                            tpp_token_range_getend(&marker_body));
+				if (subscript_start) {
+					if (!bse_tryrskip(lexer, subscript_start, tpp_token_range_getend(&marker_body), "]]]")) {
+						/* Find end of subscript */
+						tok = fe_format_script_find_end_of_script(lexer);
+						if (TPP_TOK_ISERR(tok))
+							goto err_script_stdout_keep;
+						if (tok == TPP_TOK_EOF)
+							goto handle_eof_during_end_marker_search;
+					}
+
+					/* Must find 1 additional [[[end]]] comment */
+					++end_marker_count;
+				} else if (bse_equals(lexer,
+				                      tpp_token_range_getstart(&marker_body),
+				                      tpp_token_range_getend(&marker_body),
+				                      "[[[end]]]")) {
+					ASSERT(end_marker_count > 0);
+					--end_marker_count;
+					if (end_marker_count == 0)
+						break; /* Last marker found! */
+				}
 			}
 			tok = tpp_lexer_yieldraw_blocking_nowarn(&lexer->dl_lexer);
 			if (TPP_TOK_ISERR(tok))
@@ -2506,10 +2592,103 @@ err_script_stdout_tail_data:
 		/* 9. */
 continue_after_script:;
 	}
-done:
+/*done:*/
 	return TPP_EOK;
 err:
 	return TPP_EDEEMON;
+}
+
+
+typedef uint_least16_t fe_feature_config;
+#define FE_FEATURE_OFFBIT     UINT16_C(0x8000)
+#define FE_FEATURE_END        UINT16_C(0xFFFF)
+#define FE_FEATURE_ISOFF(x)   ((x) & FE_FEATURE_OFFBIT)
+#define FE_FEATURE_GETFEAT(x) ((tpp_feature_id)((x) & ~FE_FEATURE_OFFBIT))
+#define FE_FEATURE_ON(feat)   ((fe_feature_config)(feat))
+#define FE_FEATURE_OFF(feat)  ((fe_feature_config)(feat) | FE_FEATURE_OFFBIT)
+
+struct fe_feature_spec {
+	char                     ffs_ext[8]; /* File extension */
+	fe_feature_config const *ffs_feat;   /* [1..1] Feature configuration */
+};
+
+#define fe_feature_specs_python fe_feature_specs_shell
+PRIVATE fe_feature_config const fe_feature_specs_shell[] = {
+	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_C_COMMENT),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_SHELL_COMMENT),
+	FE_FEATURE_END
+};
+
+PRIVATE fe_feature_config const fe_feature_specs_pascal[] = {
+	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_PASCAL_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_PASCAL_BRACE_COMMENT),
+	FE_FEATURE_END
+};
+
+PRIVATE fe_feature_config const fe_feature_specs_sql[] = {
+	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
+	FE_FEATURE_ON(TPP_FEAT_TOK_SHELL_COMMENT),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_SQL_COMMENT),
+	FE_FEATURE_END
+};
+
+PRIVATE fe_feature_config const fe_feature_specs_lua[] = {
+	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_SQL_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_LUA_BRACKET_COMMENT),
+	FE_FEATURE_END
+};
+
+#define fe_feature_specs_xml fe_feature_specs_html
+PRIVATE fe_feature_config const fe_feature_specs_html[] = {
+	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_C_COMMENT),
+	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_HTML_COMMENT),
+	FE_FEATURE_END
+};
+
+PRIVATE struct fe_feature_spec tpconst fe_feature_specs[] = {
+	{ "sh", fe_feature_specs_shell },
+	{ "py", fe_feature_specs_python },
+	{ "pas", fe_feature_specs_pascal },
+	{ "sql", fe_feature_specs_sql },
+	{ "lua", fe_feature_specs_lua },
+	{ "htm", fe_feature_specs_html },
+	{ "html", fe_feature_specs_html },
+	{ "xml", fe_feature_specs_xml },
+};
+
+#ifndef CONFIG_HAVE_strcasecmp
+#define CONFIG_HAVE_strcasecmp
+#undef strcasecmp
+#define strcasecmp Dee_libc_strcasecmp
+DeeSystem_DEFINE_strcasecmp(Dee_libc_strcasecmp)
+#endif /* !CONFIG_HAVE_strcasecmp */
+
+PRIVATE WUNUSED NONNULL((1, 2)) tpp_errno DCALL
+fe_format_script_scanner_configure(DeeLexer *__restrict self,
+                                   char const *filename_ext) {
+	size_t i;
+	for (i = 0; i < COMPILER_LENOF(fe_feature_specs); ++i) {
+		char const *spec_ext = fe_feature_specs[i].ffs_ext;
+		if (strcasecmp(filename_ext, spec_ext) == 0) {
+			fe_feature_config const *conf = fe_feature_specs[i].ffs_feat;
+			for (; *conf != FE_FEATURE_END; ++conf) {
+				tpp_feature_id feat = FE_FEATURE_GETFEAT(*conf);
+				bool on = !FE_FEATURE_ISOFF(*conf);
+				tpp_lexer_setfeature(&self->dl_lexer, feat, on);
+			}
+			break;
+		}
+	}
+	return TPP_EOK;
 }
 
 PRIVATE WUNUSED NONNULL((1)) tpp_errno DCALL
@@ -2560,9 +2739,27 @@ fe_run_format_scripts_impl(char const *filename, char const *ddi_filename) {
 		tpp_string_decref_nokill(user_filename);
 	}
 
-	/* (Re-)configure lexer for format scripts */
+	/* (Re-)configure lexer for format scripts,
+	 * based on extension of file being formated */
+	{
+		size_t filename_len = strlen(filename);
+		char const *script_extension = filename + filename_len;
+		char const *script_basename = DeeSystem_BaseName(filename, filename_len);
+		for (; *script_basename; ++script_basename) {
+			if (*script_basename == '.')
+				script_extension = script_basename + 1;
+		}
+		result = fe_format_script_scanner_configure(&format_lexer, script_extension);
+		if (TPP_ISERR(result))
+			goto done_lexer_files;
+	}
+
+	/* Enable emission of comment tokens (without this, they'd be discarded silently) */
 	tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_COMMENT);
-	tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT); /* Unknown directives are shell comments! */
+
+	/* If #-directives are enabled, unknown directives should be treated as shell comments! */
+	if (tpp_lexer_getfeature(&format_lexer.dl_lexer, TPP_FEAT_CPP_DIRECTIVES))
+		tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
 
 	/* Perform formatting on the contents of our custom lexer. */
 	result = fe_run_format_scripts_impl2(&format_lexer);
@@ -2782,7 +2979,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
 		/* Special case: output to stdout */
 		script_output_stream = DeeFile_GetStd(Dee_STDOUT);
 	} else {
-		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 644);
+		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 0644);
 	}
 	if unlikely(!script_output_stream)
 		goto err;

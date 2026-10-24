@@ -64,9 +64,9 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_byhash(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: """
 	DeeObject *template
-", docStringPrefix: "map");]]]*/
+""", docStringPrefix: "map");]]]*/
 #define map_byhash_params "template"
 	struct {
 		DeeObject *template_;
@@ -89,10 +89,10 @@ DOC_DEF(map_byhash_doc,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: """
 	DeeObject *key;
 	DeeObject *def = Dee_None;
-", docStringPrefix: "map");]]]*/
+""", docStringPrefix: "map");]]]*/
 #define map_get_params "key,def=!N"
 	struct {
 		DeeObject *key;
@@ -598,11 +598,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_fromkeys(DeeTypeObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DREF MapFromKeys *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: """
 	DeeObject *keys: ?DSet;
 	DeeObject *value = Dee_None;
 	DeeObject *valuefor:?DCallable = NULL;
-", docStringPrefix: "map");]]]*/
+""", docStringPrefix: "map");]]]*/
 #define map_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;
@@ -635,9 +635,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL
 map_fromattr(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromattr", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromattr", params: """
 	DeeObject *ob;
-", docStringPrefix: "map");]]]*/
+""", docStringPrefix: "map");]]]*/
 #define map_fromattr_params "ob"
 	struct {
 		DeeObject *ob;

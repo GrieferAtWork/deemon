@@ -2131,9 +2131,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_dict_shrink(LOCAL_Dict *__restrict self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	bool result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("shrink", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("shrink", params: """
 	bool fully = true;
-", docStringPrefix: "LOCAL_dict");]]]*/
+""", docStringPrefix: "LOCAL_dict");]]]*/
 #define LOCAL_dict_shrink_params "fully=!t"
 	struct {
 		bool fully;
@@ -2152,11 +2152,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_dict_reserve(LOCAL_Dict *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	bool result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: """
 	size_t total = 0;
 	size_t more = 0;
 	bool weak = false;
-", docStringPrefix: "LOCAL_dict");]]]*/
+""", docStringPrefix: "LOCAL_dict");]]]*/
 #define LOCAL_dict_reserve_params "total=!0,more=!0,weak=!f"
 	struct {
 		size_t total;

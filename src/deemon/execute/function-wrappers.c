@@ -5160,14 +5160,14 @@ framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
                            DeeObject *kw) {
 	struct Dee_code_frame const *frame;
 	DeeCodeObject *code;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FrameSymbolsByName", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FrameSymbolsByName", params: """
 	DeeFrameObject *frame;
 	uint16_t        argc = (uint16_t)-1;
 	uint16_t        ridstart = 0;
 	uint16_t        ridend = (uint16_t)-1;
 	uint16_t        localc = (uint16_t)-1;
 	uint16_t        stackc = (uint16_t)-1;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeFrameObject *frame;
 		uint16_t argc;

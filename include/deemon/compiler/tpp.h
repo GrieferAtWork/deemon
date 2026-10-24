@@ -292,9 +292,9 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define tpp_intvalue_mul(lhs, rhs, p_result) \
 	((*(p_result) = (DREF DeeIntObject *)DeeObject_Mul(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
 #define tpp_intvalue_div(lhs, rhs, p_result) \
-	((*(p_result) = (DREF DeeIntObject *)DeeObject_Div(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+	(DeeInt_IsZero(*(rhs)) ? TPP_ENOENT : ((*(p_result) = (DREF DeeIntObject *)DeeObject_Div(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON))
 #define tpp_intvalue_mod(lhs, rhs, p_result) \
-	((*(p_result) = (DREF DeeIntObject *)DeeObject_Mod(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+	(DeeInt_IsZero(*(rhs)) ? TPP_ENOENT : ((*(p_result) = (DREF DeeIntObject *)DeeObject_Mod(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON))
 #define tpp_intvalue_shl(lhs, rhs, p_result) \
 	((*(p_result) = (DREF DeeIntObject *)DeeObject_Shl(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
 #define tpp_intvalue_shr(lhs, rhs, p_result) \
@@ -497,12 +497,13 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOK_SPACE   TPP_CONF_FEAT0 /* Relevant for `deemon -E` */
 #define TPP_HAVE_TOK_COMMENT TPP_CONF_FEAT0 /* Relevant for `deemon -E` and `deemon -F` (and `TPP_HAVE_TOK_AT_AT_COMMENT`) */
 
-#define TPP_HAVE_TOK_CXX_COMMENT          1
-#define TPP_HAVE_TOK_C_COMMENT            1
-#define TPP_HAVE_TOK_PASCAL_COMMENT       0
-#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT 0
-#define TPP_HAVE_TOK_HTML_COMMENT         0
-#define TPP_HAVE_TOK_SQL_COMMENT          0
+#define TPP_HAVE_TOK_CXX_COMMENT          TPP_CONF_FEAT1
+#define TPP_HAVE_TOK_C_COMMENT            TPP_CONF_FEAT1
+#define TPP_HAVE_TOK_PASCAL_COMMENT       TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_HTML_COMMENT         TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_LUA_BRACKET_COMMENT  TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_SQL_COMMENT          TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
 #define TPP_HAVE_TOK_AT_AT_COMMENT        0              /* Doc strings do their own thing... */
 #define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant for inline assembly and `deemon -F` */
 #define TPP_HAVE_TOK_SLASH_COMMENT        0
@@ -540,7 +541,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_STRING_ESCAPE_OCT_BRACE           1
 #define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY      1
 #define TPP_HAVE_STRING_ESCAPE_HEX                 1
-#define TPP_HAVE_STRING_ESCAPE_HEX_BIG             0 /* Nope: only 2-nibble is supported */
+#define TPP_HAVE_STRING_ESCAPE_HEX_BIG             0 /* Nope: only 2-nibble is supported, and are treated as utf-8 (different from old lexer, which allowed up to 8, treating as UTF-32) */
 #define TPP_HAVE_STRING_ESCAPE_HEX_BRACE           1
 #define TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY      1
 #define TPP_HAVE_STRING_ESCAPE_UNI                 1
@@ -688,6 +689,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_LEXER_PUSHFILE_IO                   1
 #define TPP_HAVE_LEXER_DECODECOMMENT                 1 /* Needed by `deemon -F` */
 #define TPP_HAVE_FILE_GETIOOFFSET                    1 /* Needed by `deemon -F` */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS                 1 /* Needed by `deemon -F` (to clear `#pragma once` for format-scripts) */
 
 #define TPP_WGNAME_ENVIRON 2("environ", "usage") /* Also allow "-Wusage" here for backwards compat */
 
@@ -783,13 +785,13 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define tpp_makefile_io_getstdout(p_handle) \
 	((*(p_handle) = DeeFile_GetStd(Dee_STDOUT)) != NULL ? TPP_EOK : TPP_EDEEMON)
 #define TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE 1
-#define tpp_makefile_io_open(filename, p_result)            \
-	((*(p_result) = DeeFile_OpenString(filename,            \
-	                                   Dee_OPEN_FWRONLY |   \
-	                                   Dee_OPEN_FCREAT |    \
-	                                   Dee_OPEN_FTRUNC,     \
-	                                   0)) == Dee_ITER_DONE \
-	 ? TPP_ENOENT                                           \
+#define tpp_makefile_io_open(filename, p_result)               \
+	((*(p_result) = DeeFile_OpenString(filename,               \
+	                                   Dee_OPEN_FWRONLY |      \
+	                                   Dee_OPEN_FCREAT |       \
+	                                   Dee_OPEN_FTRUNC,        \
+	                                   0644)) == Dee_ITER_DONE \
+	 ? TPP_ENOENT                                              \
 	 : (*(p_result) ? TPP_EOK : TPP_EDEEMON))
 #define tpp_makefile_io_close(handle) Dee_Decref(handle)
 /* NOTE: `DeeFile_Write()` returns `(size_t)-1` on error, which just so happens to map to `TPP_ENOMEM` */

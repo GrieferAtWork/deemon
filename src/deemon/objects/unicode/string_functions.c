@@ -1222,9 +1222,9 @@ err:
 PRIVATE WUNUSED DREF String *DCALL
 string_replace(String *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: """
 	DeeStringObject *find, DeeStringObject *replace, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_replace_params "find:?.,replace:?.,max=!-1"
 	struct {
 		DeeStringObject *find;
@@ -1357,9 +1357,9 @@ retself:
 PRIVATE WUNUSED DREF String *DCALL
 string_casereplace(String *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: """
 	DeeStringObject *find, DeeStringObject *replace, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casereplace_params "find:?.,replace:?.,max=!-1"
 	struct {
 		DeeStringObject *find;
@@ -1771,9 +1771,9 @@ INTDEF WUNUSED NONNULL((1)) DREF String *DCALL DeeString_Swapcase(String *__rest
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lower(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lower", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_lower_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1792,9 +1792,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_upper(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("upper", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_upper_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1813,9 +1813,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_title(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_title_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1834,9 +1834,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_capitalize(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("capitalize", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_capitalize_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1855,9 +1855,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_swapcase(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("swapcase", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_swapcase_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -1876,9 +1876,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casefold(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefold", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefold", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casefold_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -2810,9 +2810,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_find(String *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("find", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_find_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2840,9 +2840,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_index(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_index_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2870,9 +2870,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfind(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfind", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rfind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2900,9 +2900,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindex(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2931,9 +2931,9 @@ string_casefind(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefind", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casefind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2962,9 +2962,9 @@ string_caseindex(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindex", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caseindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -2993,9 +2993,9 @@ string_caserfind(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfind", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserfind_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -3024,9 +3024,9 @@ string_caserindex(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindex", params: """
 	DeeObject *needle: ?X2?Dstring?ASome?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserindex_params "needle:?X2?.?ASome?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needle;
@@ -3054,9 +3054,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findany(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_findany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3084,9 +3084,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_indexany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("indexany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_indexany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3115,9 +3115,9 @@ string_casefindany(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casefindany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3146,9 +3146,9 @@ string_caseindexany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseindexany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caseindexany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3177,9 +3177,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfindany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rfindany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rfindany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3207,9 +3207,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindexany(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindexany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rindexany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3238,9 +3238,9 @@ string_caserfindany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserfindany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserfindany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3269,9 +3269,9 @@ string_caserindexany(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	int status;
 	size_t match_start_and_end[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserindexany", params: """
 	DeeObject *needles: ?S?Dstring, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserindexany_params "needles:?S?.,start=!0,end=!-1"
 	struct {
 		DeeObject *needles;
@@ -3301,9 +3301,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findall(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("findall", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_findall_params "needle:?.,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeStringObject *needle;
@@ -3327,9 +3327,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindall(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casefindall", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1, bool overlapping = false
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casefindall_params "needle:?.,start=!0,end=!-1,overlapping=!f"
 	struct {
 		DeeStringObject *needle;
@@ -3380,9 +3380,9 @@ string_getsubstr(String *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_substr(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("substr", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_substr_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -3406,9 +3406,9 @@ string_startswith(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("startswith", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_startswith_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -3492,9 +3492,9 @@ string_endswith(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("endswith", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_endswith_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -3585,9 +3585,9 @@ string_casestartswith(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casestartswith", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casestartswith_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -3649,9 +3649,9 @@ string_caseendswith(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const my_str, ot_str;
 	size_t my_len, ot_len;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caseendswith", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caseendswith_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -3777,9 +3777,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_segments(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: """
 	size_t substring_length
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_segments_params "substring_length:?Dint"
 	struct {
 		size_t substring_length;
@@ -3798,9 +3798,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_distribute(String *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_length;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: """
 	size_t substring_count
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_distribute_params "substring_count:?Dint"
 	struct {
 		size_t substring_count;
@@ -3836,9 +3836,9 @@ string_center(String *self, size_t argc, DeeObject *const *argv) {
 	DREF String *result;
 	union Dee_charptr dst, buf;
 	union Dee_charptr_const my_str, fl_str;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: """
 	size_t width, DeeStringObject *filler = NULL = !P{ }
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_center_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
@@ -3962,9 +3962,9 @@ string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 	DREF String *result;
 	union Dee_charptr dst, buf;
 	union Dee_charptr_const my_str, fl_str;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: """
 	size_t width, DeeStringObject *filler = NULL = !P{ }
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_ljust_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
@@ -4080,9 +4080,9 @@ string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 	DREF String *result;
 	union Dee_charptr dst, buf;
 	union Dee_charptr_const my_str, fl_str;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: """
 	size_t width, DeeStringObject *filler = NULL = !P{ }
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rjust_params "width:?Dint,filler=!P{ }"
 	struct {
 		size_t width;
@@ -4197,9 +4197,9 @@ string_count(String *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	size_t mylen, result;
 	union Dee_charptr_const lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("count", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_count_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -4263,9 +4263,9 @@ string_casecount(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	size_t mylen, result;
 	union Dee_charptr_const lhs, rhs;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecount", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casecount_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -4377,9 +4377,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_contains_f(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	int result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("contains", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_contains_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -4454,9 +4454,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecontains_f(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	int result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casecontains", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casecontains_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -4484,9 +4484,9 @@ string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 	DREF String *result;
 	union Dee_charptr dst, buf;
 	union Dee_charptr_const my_str, fl_str;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: """
 	size_t width, DeeStringObject *filler = NULL = !P{0}
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_zfill_params "width:?Dint,filler=!P{0}"
 	struct {
 		size_t width;
@@ -4623,9 +4623,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_reversed(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: """
 	size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_reversed_params "start=!0,end=!-1"
 	struct {
 		size_t start;
@@ -4643,9 +4643,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_expandtabs(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("expandtabs", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("expandtabs", params: """
 	size_t tabwidth = 8
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_expandtabs_params "tabwidth=!8"
 	struct {
 		size_t tabwidth;
@@ -4683,9 +4683,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_join(String *self, size_t argc, DeeObject *const *argv) {
 	struct string_join_data data;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("join", params: """
 	seq: ?S?O
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_join_params "seq:?S?O"
 	struct {
 		DeeObject *seq;
@@ -4706,9 +4706,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unifylines", params: """
 	DeeStringObject *replacement = NULL = !P{\\n}
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_unifylines_params "replacement=!P{\n}"
 	struct {
 		DeeStringObject *replacement;
@@ -5138,9 +5138,9 @@ string_partition(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const lhs, rhs, ptr;
 	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("partition", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_partition_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5228,9 +5228,9 @@ string_rpartition(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const lhs, rhs, ptr;
 	size_t mylen;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rpartition", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rpartition_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5318,9 +5318,9 @@ string_casepartition(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const lhs, rhs, ptr;
 	size_t mylen, match_length;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casepartition", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casepartition_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5414,9 +5414,9 @@ string_caserpartition(String *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
 	union Dee_charptr_const lhs, rhs, ptr;
 	size_t mylen, match_length;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserpartition", params: """
 	DeeStringObject *needle, size_t start = 0, size_t end = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserpartition_params "needle:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5507,9 +5507,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_strip(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strip", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("strip", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_strip_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5529,9 +5529,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lstrip", params: """
 	DeeStringObject *mask = NULL, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_lstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
@@ -5554,9 +5554,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstrip(String *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rstrip", params: """
 	DeeStringObject *mask = NULL, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
@@ -5578,9 +5578,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestrip", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestrip", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casestrip_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5600,9 +5600,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselstrip", params: """
 	DeeStringObject *mask = NULL, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caselstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
@@ -5625,9 +5625,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstrip(String *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caserstrip", params: """
 	DeeStringObject *mask = NULL, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserstrip_params "mask?:?.,max=!-1"
 	struct {
 		DeeStringObject *mask;
@@ -5649,9 +5649,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstrip", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstrip", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_sstrip_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5668,9 +5668,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lsstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("lsstrip", params: """
 	DeeStringObject *needle, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_lsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5690,9 +5690,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstrip(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rsstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rsstrip", params: """
 	DeeStringObject *needle, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5711,9 +5711,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstrip", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstrip", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casesstrip_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5730,9 +5730,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselsstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("caselsstrip", params: """
 	DeeStringObject *needle, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caselsstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5752,9 +5752,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstrip(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casersstrip", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casersstrip", params: """
 	DeeStringObject *needle, size_t max = (size_t)-1
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casersstrip_params "needle:?.,max=!-1"
 	struct {
 		DeeStringObject *needle;
@@ -5773,9 +5773,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_striplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("striplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("striplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_striplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5794,9 +5794,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lstriplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_lstriplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5815,9 +5815,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rstriplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rstriplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5836,9 +5836,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casestriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casestriplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casestriplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5857,9 +5857,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselstriplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caselstriplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5878,9 +5878,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caserstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserstriplines", params: """
 	DeeStringObject *mask = NULL
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserstriplines_params "mask?:?."
 	struct {
 		DeeStringObject *mask;
@@ -5899,9 +5899,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_sstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("sstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_sstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5917,9 +5917,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_lsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lsstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("lsstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_lsstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5935,9 +5935,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_rsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rsstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rsstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rsstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5953,9 +5953,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casesstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casesstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5971,9 +5971,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_caselsstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselsstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caselsstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caselsstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -5989,9 +5989,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_casersstriplines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casersstriplines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casersstriplines", params: """
 	DeeStringObject *needle
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casersstriplines_params "needle:?."
 	struct {
 		DeeStringObject *needle;
@@ -7498,9 +7498,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_split(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: """
 	DeeStringObject *sep
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_split_params "sep:?."
 	struct {
 		DeeStringObject *sep;
@@ -7516,9 +7516,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casesplit(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesplit", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casesplit", params: """
 	DeeStringObject *sep
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casesplit_params "sep:?."
 	struct {
 		DeeStringObject *sep;
@@ -7534,9 +7534,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: """
 	bool keepends = false;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_splitlines_params "keepends=!f"
 	struct {
 		bool keepends;
@@ -7551,9 +7551,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_indent(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indent", params: """
 	DeeStringObject *filler = &str_tab = !P{\\t}
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_indent_params "filler=!P{\t}"
 	struct {
 		DeeStringObject *filler;
@@ -7570,10 +7570,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_dedent(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("dedent", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("dedent", params: """
 	size_t max = 1;
 	DeeStringObject *mask = NULL;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_dedent_params "max=!1,mask?:?."
 	struct {
 		size_t max_;
@@ -7595,9 +7595,9 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_format(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: """
 	args:?S?O
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_format_params "args:?S?O"
 	struct {
 		DeeObject *args;
@@ -7611,9 +7611,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_scanf(String *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: """
 	DeeStringObject *format
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_scanf_params "format:?."
 	struct {
 		DeeStringObject *format;
@@ -7634,12 +7634,12 @@ string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("findmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("findmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_findmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -7732,12 +7732,12 @@ string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("indexmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_indexmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -7833,12 +7833,12 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casefindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casefindmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casefindmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -7934,12 +7934,12 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caseindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caseindexmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caseindexmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8038,12 +8038,12 @@ string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rfindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rfindmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rfindmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8136,12 +8136,12 @@ string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rindexmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rindexmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8237,12 +8237,12 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserfindmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserfindmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserfindmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8338,12 +8338,12 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, ptr;
 	size_t scan_len, open_len, clos_len, match_length;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserindexmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserindexmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserindexmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8443,12 +8443,12 @@ string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("partitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("partitionmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_partitionmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8603,12 +8603,12 @@ string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rpartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rpartitionmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_rpartitionmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8764,12 +8764,12 @@ string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len, match_length;
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casepartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("casepartitionmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_casepartitionmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;
@@ -8931,12 +8931,12 @@ string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union Dee_charptr_const scan_str, open_str, clos_str, match_start, match_end;
 	size_t scan_len, open_len, clos_len;
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserpartitionmatch", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("caserpartitionmatch", params: """
 	DeeStringObject *open;
 	DeeStringObject *close;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_caserpartitionmatch_params "open:?.,close:?.,start=!0,end=!-1"
 	struct {
 		DeeStringObject *open;

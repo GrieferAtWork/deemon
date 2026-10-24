@@ -157,10 +157,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_init(Super *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Super", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Super", params: """
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *ob;
 		DeeTypeObject *tp;
@@ -1107,9 +1107,9 @@ super_serialize(Super *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_typeof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof", params: """
 	DeeSuperObject *ob;
-", docStringPrefix: "super");]]]*/
+""", docStringPrefix: "super");]]]*/
 #define super_typeof_params "ob:?."
 	struct {
 		DeeSuperObject *ob;
@@ -1126,9 +1126,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_selfof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("selfof", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("selfof", params: """
 	DeeSuperObject *ob;
-", docStringPrefix: "super");]]]*/
+""", docStringPrefix: "super");]]]*/
 #define super_selfof_params "ob:?."
 	struct {
 		DeeSuperObject *ob;

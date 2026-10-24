@@ -1952,10 +1952,10 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_read(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("read", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("read", params: """
 	size_t maxbytes = (size_t)-1;
 	bool readall    = false;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_read_params "maxbytes=!-1,readall=!f"
 	struct {
 		size_t maxbytes;
@@ -1976,10 +1976,10 @@ file_readinto(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("readinto", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("readinto", params: """
 	dst: obj:buffer;
 	bool readall = false;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_readinto_params "dst:?DBytes,readall=!f"
 	struct {
 		DeeObject *dst;
@@ -2007,10 +2007,10 @@ file_write(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("write", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("write", params: """
 	data: obj:buffer;
 	bool writeall = true;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_write_params "data:?DBytes,writeall=!t"
 	struct {
 		DeeObject *data;
@@ -2036,11 +2036,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pread(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pread", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pread", params: """
 	Dee_pos_t pos;
 	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_pread_params "pos:?Dint,maxbytes=!-1,readall=!f"
 	struct {
 		Dee_pos_t pos;
@@ -2062,11 +2062,11 @@ file_preadinto(DeeObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("preadinto", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("preadinto", params: """
 	dst: obj:buffer;
 	Dee_pos_t pos;
 	bool readall = false;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_preadinto_params "dst:?DBytes,pos:?Dint,readall=!f"
 	struct {
 		DeeObject *dst;
@@ -2094,11 +2094,11 @@ file_pwrite(DeeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pwrite", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("pwrite", params: """
 	data: obj:buffer;
 	Dee_pos_t pos;
 	bool writeall = true;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_pwrite_params "data:?DBytes,pos:?Dint,writeall=!t"
 	struct {
 		DeeObject *data;
@@ -2138,10 +2138,10 @@ file_seek(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	Dee_pos_t result;
 	int whence = Dee_SEEK_SET;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("seek", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("seek", params: """
 	Dee_off_t off;
 	DeeObject *whence = NULL;
-");]]]*/
+""");]]]*/
 	struct {
 		Dee_off_t off;
 		DeeObject *whence;
@@ -2283,9 +2283,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetc", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetc", params: """
 	int ch;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_ungetc_params "ch:?Dint"
 	struct {
 		int ch;
@@ -2339,9 +2339,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ungetutf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetutf8", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ungetutf8", params: """
 	uint32_t ch;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_ungetutf8_params "ch:?Dint"
 	struct {
 		uint32_t ch;
@@ -2360,9 +2360,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pututf8(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	char const *utf8;
 	size_t written;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pututf8", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pututf8", params: """
 	data:?Dstring
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_pututf8_params "data:?Dstring"
 	struct {
 		DeeObject *data;
@@ -2431,9 +2431,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("readall", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("readall", params: """
 	size_t maxbytes = (size_t)-1;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_readall_params "maxbytes=!-1"
 	struct {
 		size_t maxbytes;
@@ -2449,10 +2449,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_preadall(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("preadall", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("preadall", params: """
 	Dee_pos_t pos;
 	size_t maxbytes = (size_t)-1;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_preadall_params "pos:?Dint,maxbytes=!-1"
 	struct {
 		Dee_pos_t pos;
@@ -2473,7 +2473,7 @@ file_mmap(DeeObject *self, size_t argc,
 	DREF DeeObject *result;
 	DREF DeeMapFileObject *mapob;
 	unsigned int mapflags;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: """
 	size_t minbytes  = 0;
 	size_t maxbytes  = (size_t)-1;
 	Dee_pos_t offset = (Dee_pos_t)-1;
@@ -2481,7 +2481,7 @@ file_mmap(DeeObject *self, size_t argc,
 	bool readall     = false;
 	bool mustmmap    = false;
 	bool mapshared   = false;
-", docStringPrefix: "file");]]]*/
+""", docStringPrefix: "file");]]]*/
 #define file_mapfile_params "minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f"
 	struct {
 		size_t minbytes;

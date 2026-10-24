@@ -224,10 +224,10 @@ bseg_ctor(BytesSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_init(BytesSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSegments", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesSegments", params: """
 	DeeBytesObject *bytes,
 	size_t size
-", docStringPrefix: "bseg");]]]*/
+""", docStringPrefix: "bseg");]]]*/
 #define bseg__BytesSegments_params "bytes:?DBytes,size:?Dint"
 	struct {
 		DeeBytesObject *bytes;

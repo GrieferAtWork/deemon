@@ -92,7 +92,6 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(bool from deemon).printCxxApi();]]]*/
-
 /*[[[end]]]*/
 };
 

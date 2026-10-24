@@ -249,10 +249,10 @@ traceiter_copy(TraceIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TracebackIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TracebackIterator", params: """
 	DeeTracebackObject *trace,
 	size_t index = 0
-", docStringPrefix: "traceiter");]]]*/
+""", docStringPrefix: "traceiter");]]]*/
 #define traceiter__TracebackIterator_params "trace:?DTraceback,index=!0"
 	struct {
 		DeeTracebackObject *trace;
@@ -852,7 +852,7 @@ traceback_ofthrow(DeeTypeObject *__restrict UNUSED(self),
 	DREF DeeTracebackObject *result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ofthrow", params: """
 	error:?X2?DError?O
-", docStringPrefix: "traceback");]]]*/
+""", docStringPrefix: "traceback");]]]*/
 #define traceback_ofthrow_params "error:?X2?DError?O"
 	struct {
 		DeeObject *error;

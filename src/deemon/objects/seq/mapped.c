@@ -636,9 +636,9 @@ mapped_compose(SeqMapped *self, DeeObject *key) {
 PRIVATE WUNUSED NONNULL((1)) DREF SeqMapped *DCALL
 mapped_map(SeqMapped *self, size_t argc, DeeObject *const *argv) {
 	DREF SeqMapped *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: """
 	mapper:?DCallable
-", docStringPrefix: "mapped");]]]*/
+""", docStringPrefix: "mapped");]]]*/
 #define mapped_map_params "mapper:?DCallable"
 	struct {
 		DeeObject *mapper;

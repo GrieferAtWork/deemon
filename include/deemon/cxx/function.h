@@ -192,6 +192,23 @@ public:
 	WUNUSED _Wrap___type__ (__type__)() DEE_CXX_NOTHROW {
 		return this;
 	}
+	class _Wrap___attr__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___attr__, Object> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___attr__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__attr__", _Dee_HashSelectC(0xc03a2cb6, 0x3e9ab3c7117c3dd6));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__attr__", _Dee_HashSelectC(0xc03a2cb6, 0x3e9ab3c7117c3dd6)));
+		}
+	};
+	WUNUSED _Wrap___attr__ (__attr__)() DEE_CXX_NOTHROW {
+		return this;
+	}
 	class _Wrap___module__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___module__, Object> {
 	private:

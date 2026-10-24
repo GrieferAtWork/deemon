@@ -178,10 +178,10 @@ rditer_copy(RoDictIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_init(RoDictIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoDictIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoDictIterator", params: """
 	DeeRoDictObject *dict;
 	Dee_hash_vidx_t index = 0
-", docStringPrefix: "rditer");]]]*/
+""", docStringPrefix: "rditer");]]]*/
 #define rditer__RoDictIterator_params "dict:?Ert:RoDict,index=!0"
 	struct {
 		DeeRoDictObject *dict;
@@ -1415,11 +1415,11 @@ rodict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
 rodict_fromkeys_f(DeeTypeObject *UNUSED(dict), size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: """
 	DeeObject *keys: ?DSet;
 	DeeObject *value = Dee_None;
 	DeeObject *valuefor:?DCallable = NULL;
-", docStringPrefix: "rodict");]]]*/
+""", docStringPrefix: "rodict");]]]*/
 #define rodict_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;

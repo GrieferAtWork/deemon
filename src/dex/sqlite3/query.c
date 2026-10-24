@@ -67,9 +67,9 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 qiter_init(QueryIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("QueryIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("QueryIterator", params: """
 	Query *query:?GQuery
-", docStringPrefix: "qiter");]]]*/
+""", docStringPrefix: "qiter");]]]*/
 #define qiter_QueryIterator_params "query:?GQuery"
 	struct {
 		Query *query;
@@ -766,9 +766,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 query_skip(Query *__restrict self, size_t argc, DeeObject *const *argv) {
 	uint64_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("skip", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("skip", params: """
 	uint64_t count
-", docStringPrefix: "query");]]]*/
+""", docStringPrefix: "query");]]]*/
 #define query_skip_params "count:?Dint"
 	struct {
 		uint64_t count;

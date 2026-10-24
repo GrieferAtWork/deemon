@@ -925,10 +925,10 @@ deque_push_back(void *self, DeeObject *__restrict ob) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_init(Deque *__restrict self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Deque", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Deque", params: """
 	DeeObject *seq:?S?O,
 	size_t bucketsize? = DEQUE_BUCKET_DEFAULT_SIZE
-", docStringPrefix: "deq");]]]*/
+""", docStringPrefix: "deq");]]]*/
 #define deq_Deque_params "seq:?S?O,bucketsize?:?Dint"
 	struct {
 		DeeObject *seq;
@@ -1673,10 +1673,10 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
              size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("DequeIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("DequeIterator", params: """
 	Deque *deq:?GDeque,
 	size_t index = 0
-", docStringPrefix: "deqiter");]]]*/
+""", docStringPrefix: "deqiter");]]]*/
 #define deqiter_DequeIterator_params "deq:?GDeque,index=!0"
 	struct {
 		Deque *deq;

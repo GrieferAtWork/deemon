@@ -303,11 +303,11 @@ err:
 }
 
 DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getbuf") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getbuf") "', params: """
 	bool writable = false;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-");]]]*/
+""");]]]*/
 	struct {
 		bool writable;
 		size_t start;

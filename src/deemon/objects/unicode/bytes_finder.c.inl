@@ -450,12 +450,12 @@ bf_copy(BytesFind *__restrict self, BytesFind *__restrict other) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bf_init(BytesFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesFind", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesFind", params: """
 	DeeBytesObject *bytes,
 	needle:?X3?DBytes?Dstring?Dint,
 	size_t start = 0,
 	size_t end = (size_t)-1
-", docStringPrefix: "bf");]]]*/
+""", docStringPrefix: "bf");]]]*/
 #define bf__BytesFind_params "bytes:?DBytes,needle:?X3?DBytes?Dstring?Dint,start=!0,end=!-1"
 	struct {
 		DeeBytesObject *bytes;

@@ -120,6 +120,9 @@ public:
 		args[0] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "nextvalue", _Dee_HashSelectC(0x48509118, 0xcb131b8280e955b4), 1, args));
 	}
+	WUNUSED Ref<deemon::bool_> (__bool__)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "__bool__", _Dee_HashSelectC(0x1d6e29c8, 0x7d5655cb5b8aa88b), 0, NULL));
+	}
 	class _Wrap_seq
 		: public deemon::detail::ConstGetRefProxy<_Wrap_seq, Sequence<T> > {
 	private:

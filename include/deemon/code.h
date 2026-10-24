@@ -474,6 +474,8 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Refer
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
+/* For debugger (evaluate while inside of `DeeCode_ExecFrame*`):
+ * code->co_ddi->d_strtab->s_str+code->co_ddi->d_strings[code->co_ddi->d_start.dr_name] */
 #define DeeCode_NAME(x) \
 	DeeCode_GetDDIString((DeeObject const *)(x), Dee_REQUIRES_OBJECT(DeeCodeObject, x)->co_ddi->d_start.dr_name)
 

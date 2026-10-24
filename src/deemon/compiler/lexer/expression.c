@@ -1123,10 +1123,10 @@ create_constexpr:
 		tpp_errno error;
 		tpp_uintmax value;
 		DREF DeeObject *resval;
-		if (DeeLexer_GetLoc(self, &loc))
-			goto err;
 		if (!DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
 			goto decode_string;
+		if (DeeLexer_GetLoc(self, &loc))
+			goto err;
 		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 			goto err;
 		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &value,

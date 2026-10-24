@@ -2105,9 +2105,9 @@ event_serialize(DeeEventObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 event_init_kw(DeeEventObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Event", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Event", params: """
 	bool isset = false;
-", docStringPrefix: "event", defineKwList: true);]]]*/
+""", docStringPrefix: "event", defineKwList: true);]]]*/
 	static DEFINE_KWLIST(Event_kwlist, { KEX("isset", 0xbc9a78a1, 0x5b60f653e62d5e87), KEND });
 #define event_Event_params "isset=!f"
 	struct {

@@ -591,10 +591,10 @@ tuple_iterator_copy(TupleIterator *__restrict self,
 PRIVATE NONNULL((1, 3)) int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TupleIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_TupleIterator", params: """
 	DeeTupleObject *tuple,
 	size_t index = 0
-", docStringPrefix: "tuple_iterator");]]]*/
+""", docStringPrefix: "tuple_iterator");]]]*/
 #define tuple_iterator__TupleIterator_params "tuple:?DTuple,index=!0"
 	struct {
 		DeeTupleObject *tuple;
@@ -791,9 +791,9 @@ PRIVATE WUNUSED DREF DeeTupleObject *DCALL tuple_ctor(void) {
 
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 tuple_init(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Tuple", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Tuple", params: """
 	DeeObject *items: ?S?O;
-", docStringPrefix: "tuple");]]]*/
+""", docStringPrefix: "tuple");]]]*/
 #define tuple_Tuple_params "items:?S?O"
 	struct {
 		DeeObject *items;
@@ -1060,9 +1060,9 @@ PRIVATE struct type_seq tuple_seq = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: """
 	size_t num, seq:?S?O
-", docStringPrefix: "tuple");]]]*/
+""", docStringPrefix: "tuple");]]]*/
 #define tuple_unpack_params "num:?Dint,seq:?S?O"
 	struct {
 		size_t num;
@@ -2004,9 +2004,9 @@ make_nullable(DREF DeeTupleObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 nullable_tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("unpack", params: """
 	size_t num, seq:?S?O
-", docStringPrefix: "nullable_tuple");]]]*/
+""", docStringPrefix: "nullable_tuple");]]]*/
 #define nullable_tuple_unpack_params "num:?Dint,seq:?S?O"
 	struct {
 		size_t num;
@@ -2038,9 +2038,9 @@ PRIVATE WUNUSED DREF DeeTupleObject *DCALL nullable_tuple_ctor(void) {
 PRIVATE WUNUSED DREF DeeTupleObject *DCALL
 nullable_tuple_init(size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("NullableTuple", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("NullableTuple", params: """
 	DeeObject *items: ?S?O;
-", docStringPrefix: "nullable_tuple");]]]*/
+""", docStringPrefix: "nullable_tuple");]]]*/
 #define nullable_tuple_NullableTuple_params "items:?S?O"
 	struct {
 		DeeObject *items;

@@ -1476,10 +1476,10 @@ fli_serialize(FixedListIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("FixedListIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("FixedListIterator", params: """
 	FixedList *list:?GFixedList,
 	size_t index = 0
-", docStringPrefix: "fli");]]]*/
+""", docStringPrefix: "fli");]]]*/
 #define fli_FixedListIterator_params "list:?GFixedList,index=!0"
 	struct {
 		FixedList *list;

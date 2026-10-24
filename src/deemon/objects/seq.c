@@ -379,9 +379,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("filter", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("filter", params: """
 	keep:?DCallable
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_filter_params "keep:?DCallable"
 	struct {
 		DeeObject *keep;
@@ -395,9 +395,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ubfilter", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ubfilter", params: """
 	keep:?DCallable
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_ubfilter_params "keep:?DCallable"
 	struct {
 		DeeObject *keep;
@@ -411,9 +411,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_map(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: """
 	mapper:?DCallable
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_map_params "mapper:?DCallable"
 	struct {
 		DeeObject *mapper;
@@ -427,9 +427,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_segments(DeeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: """
 	size_t segment_length
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_segments_params "segment_length:?Dint"
 	struct {
 		size_t segment_length;
@@ -448,9 +448,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t mylen;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("distribute", params: """
 	size_t segment_count
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_distribute_params "segment_count:?Dint"
 	struct {
 		size_t segment_count;
@@ -475,10 +475,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("combinations", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("combinations", params: """
 	size_t r;
 	bool cached = true;
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_combinations_params "r:?Dint,cached=!t"
 	struct {
 		size_t r;
@@ -502,10 +502,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("repeatcombinations", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("repeatcombinations", params: """
 	size_t r;
 	bool cached = true;
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_repeatcombinations_params "r:?Dint,cached=!t"
 	struct {
 		size_t r;
@@ -529,10 +529,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_permutations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("permutations", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("permutations", params: """
 	size_t r = (size_t)-1;
 	bool cached = true;
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_permutations_params "r=!-1,cached=!t"
 	struct {
 		size_t r;
@@ -560,9 +560,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("index", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_index_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;
@@ -593,9 +593,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("rindex", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_rindex_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;
@@ -626,9 +626,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_byhash(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("byhash", params: """
 	DeeObject *template
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_byhash_params "template"
 	struct {
 		DeeObject *template_;
@@ -670,9 +670,9 @@ INTERN /* Needed for alias `List.unique` */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DistinctSetWithKey *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("distinct", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("distinct", params: """
 	DeeObject *key: ?DCallable = NULL;
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_distinct_params "key?:?DCallable"
 	struct {
 		DeeObject *key;
@@ -700,9 +700,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bcontains", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bcontains", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_bcontains_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;
@@ -729,9 +729,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bindex", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("bindex", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_bindex_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;
@@ -762,9 +762,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result_range[2];
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("blocateall", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("blocateall", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_blocateall_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;
@@ -796,9 +796,9 @@ INTERN /* Needed for alias `List.sorted_insert` */
 WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("binsert", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("binsert", params: """
 	item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-", docStringPrefix: "seq");]]]*/
+""", docStringPrefix: "seq");]]]*/
 #define seq_binsert_params "item,start=!0,end=!-1,key:?DCallable=!N"
 	struct {
 		DeeObject *item;

@@ -112,9 +112,9 @@ diter_copy(DictIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_init(DictIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DictIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_DictIterator", params: """
 	DeeDictObject *dict;
-", docStringPrefix: "diter");]]]*/
+""", docStringPrefix: "diter");]]]*/
 #define diter__DictIterator_params "dict:?DDict"
 	struct {
 		DeeDictObject *dict;
@@ -2057,11 +2057,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
 dict_fromkeys_f(DeeTypeObject *UNUSED(dict), size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("fromkeys", params: """
 	DeeObject *keys: ?DSet;
 	DeeObject *value = Dee_None;
 	DeeObject *valuefor:?DCallable = NULL;
-", docStringPrefix: "dict");]]]*/
+""", docStringPrefix: "dict");]]]*/
 #define dict_fromkeys_params "keys:?DSet,value=!N,valuefor?:?DCallable"
 	struct {
 		DeeObject *keys;

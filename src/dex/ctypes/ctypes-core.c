@@ -236,10 +236,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF CObject *DCALL
 ctype_frombytes(CType *self, size_t argc, DeeObject *const *argv) {
 	DREF CObject *result;
 	size_t type_size, data_size;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("frombytes", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("frombytes", params: """
 	DeeBytesObject *data;
 	size_t offset = 0;
-", docStringPrefix: "ctype");]]]*/
+""", docStringPrefix: "ctype");]]]*/
 #define ctype_frombytes_params "data:?DBytes,offset=!0"
 	struct {
 		DeeBytesObject *data;
@@ -293,9 +293,9 @@ CType_PrintCRepr_impl(CType *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ctype_typename(CType *self, size_t argc, DeeObject *const *argv) {
 	struct Dee_unicode_printer printer;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typename", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typename", params: """
 	char const *varname = \"\";
-", docStringPrefix: "ctype");]]]*/
+""", docStringPrefix: "ctype");]]]*/
 #define ctype_typename_params "varname=!P{}"
 	struct {
 		char const *varname;
@@ -763,10 +763,10 @@ cobject_tobytes(CObject *self, size_t argc, DeeObject *const *argv) {
 	CType *tp_self = Dee_TYPE(self);
 	size_t type_size = CType_Sizeof(tp_self);
 	size_t data_size;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tobytes", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("tobytes", params: """
 	DeeBytesObject *data = NULL;
 	size_t offset = 0;
-", docStringPrefix: "struct");]]]*/
+""", docStringPrefix: "struct");]]]*/
 #define struct_tobytes_params "data?:?DBytes,offset=!0"
 	struct {
 		DeeBytesObject *data;
@@ -1461,9 +1461,9 @@ cstructtype_fini(CStructType *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cstructtype_offsetof(CStructType *self, size_t argc, DeeObject *const *argv) {
 	struct cstruct_field *field;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetof", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetof", params: """
 	DeeStringObject *field
-", docStringPrefix: "cstructtype");]]]*/
+""", docStringPrefix: "cstructtype");]]]*/
 #define cstructtype_offsetof_params "field:?Dstring"
 	struct {
 		DeeStringObject *field;
@@ -1485,9 +1485,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cstructtype_offsetafter(CStructType *self, size_t argc, DeeObject *const *argv) {
 	struct cstruct_field *field;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetafter", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("offsetafter", params: """
 	DeeStringObject *field
-", docStringPrefix: "cstructtype");]]]*/
+""", docStringPrefix: "cstructtype");]]]*/
 #define cstructtype_offsetafter_params "field:?Dstring"
 	struct {
 		DeeStringObject *field;
@@ -1511,9 +1511,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF CType *DCALL
 cstructtype_typeof_field(CStructType *self, size_t argc, DeeObject *const *argv) {
 	DREF CType *result;
 	struct cstruct_field *field;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof_field", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("typeof_field", params: """
 	DeeStringObject *field
-", docStringPrefix: "cstructtype");]]]*/
+""", docStringPrefix: "cstructtype");]]]*/
 #define cstructtype_typeof_field_params "field:?Dstring"
 	struct {
 		DeeStringObject *field;
@@ -1570,7 +1570,7 @@ cstructtype_class_of(DeeTypeObject *__restrict UNUSED(tp_self),
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("of", params: """
 	fields:?S?X2?T3?Dint?Dstring?DType?T2?Dint?GStructType,
 	size_t alignment = 1,
-", docStringPrefix: "cstructtype_class", defineKwList: true);]]]*/
+""", docStringPrefix: "cstructtype_class", defineKwList: true);]]]*/
 	static DEFINE_KWLIST(of_kwlist, { KEX("fields", 0x4de26e52, 0x85564d5853cce154), KEX("alignment", 0xe24a3d8d, 0x3923d5964b5f4177), KEND });
 #define cstructtype_class_of_params "fields:?S?X2?T3?Dint?Dstring?DType?T2?Dint?GStructType,alignment=!1"
 	struct {
@@ -1616,7 +1616,7 @@ cstructtype_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	bool union = false,
 	bool packed = false,
 	size_t alignment = 1,
-", docStringPrefix: "cstructtype", defineKwList: true);]]]*/
+""", docStringPrefix: "cstructtype", defineKwList: true);]]]*/
 	static DEFINE_KWLIST(StructType_kwlist, { KEX("fields", 0x4de26e52, 0x85564d5853cce154), KEX("union", 0x23b88b9b, 0x3b416e7d690babb2), KEX("packed", 0xfb4a9ef3, 0x3cfc3e48b37361b5), KEX("alignment", 0xe24a3d8d, 0x3923d5964b5f4177), KEND });
 #define cstructtype_StructType_params "fields:?S?X2?T2?Dstring?DType?GStructType,union=!f,packed=!f,alignment=!1"
 	struct {

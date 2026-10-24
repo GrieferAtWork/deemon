@@ -665,13 +665,13 @@ copyfile_progress_init_kw(DeeCopyFileProgressObject *__restrict self,
 		goto err;
 #undef RELBASE
 #else
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("CopyFileProgress", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("CopyFileProgress", params: """
 	DeeObject *srcfile:?DFile,
 	DeeObject *dstfile:?DFile,
 	uint64_t   copied = 0,
 	uint64_t   total? = (uint64_t)-1,
 	size_t     bufsize? = POSIX_COPYFILE_DEFAULT_IO_BUFSIZE,
-", docStringPrefix: "posix");]]]*/
+""", docStringPrefix: "posix");]]]*/
 #define posix_CopyFileProgress_params "srcfile:?DFile,dstfile:?DFile,copied=!0,total?:?Dint,bufsize?:?Dint"
 	struct {
 		DeeObject *srcfile;

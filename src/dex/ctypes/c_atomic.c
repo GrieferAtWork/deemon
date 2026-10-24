@@ -578,11 +578,11 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("futex_timedwait", "
+/*[[[deemon (print_CMethod from rt.gen.unpack)("futex_timedwait", """
 	ptr,
 	expected,
 	timeout:rt:timeout
-", visi: "INTERN");]]]*/
+""", visi: "INTERN");]]]*/
 #define c_atomic_futex_timedwait_params "ptr,expected,timeout:?X3?Etime:Time?Dint?N"
 FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL c_atomic_futex_timedwait_f_impl(DeeObject *ptr, DeeObject *expected, uint64_t timeout);
 PRIVATE WUNUSED DREF DeeObject *DCALL c_atomic_futex_timedwait_f(size_t argc, DeeObject *const *argv) {

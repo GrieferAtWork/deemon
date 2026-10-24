@@ -92,9 +92,9 @@ float_copy(Float *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_init(Float *__restrict self,
            size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("float", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("float", params: """
 	DeeObject *ob: ?X2?DNumeric?Dstring;
-", docStringPrefix: "float");]]]*/
+""", docStringPrefix: "float");]]]*/
 #define float_float_params "ob:?X2?DNumeric?Dstring"
 	struct {
 		DeeObject *ob;

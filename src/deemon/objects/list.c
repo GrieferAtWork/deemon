@@ -886,10 +886,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: """
 	DeeObject *sequence_or_length: ?X2?S?O?Dint;
 	DeeObject *filler = NULL;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *sequence_or_length;
 		DeeObject *filler;
@@ -3236,10 +3236,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_reserve(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	bool result = false;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reserve", params: """
 	size_t total = 0;
 	size_t more = 0;
-", docStringPrefix: "list");]]]*/
+""", docStringPrefix: "list");]]]*/
 #define list_reserve_params "total=!0,more=!0"
 	struct {
 		size_t total;
@@ -3537,10 +3537,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 	int temp;
 	DREF DeeObject *future;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("insert_iter", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("insert_iter", params: """
 	size_t index;
 	DeeObject *iter: ?DIterator;
-", docStringPrefix: "list");]]]*/
+""", docStringPrefix: "list");]]]*/
 #define list_insert_iter_params "index:?Dint,iter:?DIterator"
 	struct {
 		size_t index;
@@ -4284,10 +4284,10 @@ li_copy(ListIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("List", params: """
 	DeeListObject *list;
 	size_t index = 0;
-", docStringPrefix: "li");]]]*/
+""", docStringPrefix: "li");]]]*/
 #define li_List_params "list:?DList,index=!0"
 	struct {
 		DeeListObject *list;

@@ -1037,10 +1037,10 @@ bls_copy(BytesLineSplit *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesLineSplit", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_BytesLineSplit", params: """
 	DeeBytesObject *bytes,
 	bool keepends = false
-", docStringPrefix: "bls");]]]*/
+""", docStringPrefix: "bls");]]]*/
 #define bls__BytesLineSplit_params "bytes:?DBytes,keepends=!f"
 	struct {
 		DeeBytesObject *bytes;

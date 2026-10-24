@@ -84,9 +84,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_ctor(Socket *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	int af, type, proto;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("socket", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("socket", params: """
 	af:?X2?Dint?Dstring,type:?X3?Dint?Dstring?N=!N,proto:?X3?Dint?Dstring?N=!N
-", docStringPrefix: "socket", defineKwList: true);]]]*/
+""", docStringPrefix: "socket", defineKwList: true);]]]*/
 	static DEFINE_KWLIST(socket_kwlist, { KEX("af", 0x5b382189, 0x6dfc80eaad0fec70), KEX("type", 0x79f23513, 0xd08fc7c8724a760a), KEX("proto", 0x3046135, 0x87e38aec26b344e), KEND });
 #define socket_socket_params "af:?X2?Dint?Dstring,type:?X3?Dint?Dstring?N=!N,proto:?X3?Dint?Dstring?N=!N"
 	struct {

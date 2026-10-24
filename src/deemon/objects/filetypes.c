@@ -645,12 +645,12 @@ reader_ctor(DeeFileReaderObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init_kw(DeeFileReaderObject *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FileReader", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FileReader", params: """
 	data:?DBytes;
 	size_t start = 0;
 	size_t end = (size_t)-1;
 	size_t pos = 0;
-", docStringPrefix: "reader");]]]*/
+""", docStringPrefix: "reader");]]]*/
 #define reader__FileReader_params "data:?DBytes,start=!0,end=!-1,pos=!0"
 	struct {
 		DeeObject *data;
@@ -996,10 +996,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(DeeFileWriterObject *__restrict self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FileWriter", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FileWriter", params: """
 	DeeObject *data:?X3?Dstring?DBytes?N=Dee_EmptyString,
 	DeeObject *hint:?Dstring=!P{string}=NULL
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *data;
 		DeeObject *hint;
@@ -1031,10 +1031,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init_kw(DeeFileWriterObject *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FileWriter", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FileWriter", params: """
 	DeeObject *data?:?X3?Dstring?DBytes?N=!N,
 	char const *hint:?Dstring=!P{string}=\"string\"
-", docStringPrefix: "writer");]]]*/
+""", docStringPrefix: "writer");]]]*/
 #define writer__FileWriter_params "data:?X3?Dstring?DBytes?N=!N,hint=!P{string}"
 	struct {
 		DeeObject *data;
@@ -3147,7 +3147,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	unsigned int mapflags;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("mapfile", params: """
 	DeeObject *fd: ?\" FDTYP_mapfile_init_kw \";
 	size_t minbytes  = (size_t)0;
 	size_t maxbytes  = (size_t)-1;
@@ -3156,7 +3156,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	bool readall     = false;
 	bool mustmmap    = false;
 	bool mapshared   = false;
-", docStringPrefix: "mapfile");]]]*/
+""", docStringPrefix: "mapfile");]]]*/
 #define mapfile_mapfile_params "fd:?" FDTYP_mapfile_init_kw ",minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f"
 	struct {
 		DeeObject *fd;

@@ -740,9 +740,9 @@ type_clear(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("baseof", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("baseof", params: """
 	DeeTypeObject *other;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_baseof_params "other:?."
 	struct {
 		DeeTypeObject *other;
@@ -760,9 +760,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_extends(DeeTypeObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("extends", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("extends", params: """
 	DeeTypeObject *other;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_extends_params "other:?."
 	struct {
 		DeeTypeObject *other;
@@ -778,9 +778,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_implements(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("implements", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("implements", params: """
 	DeeTypeObject *other;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_implements_params "other:?."
 	struct {
 		DeeTypeObject *other;
@@ -1248,9 +1248,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_getinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("getinstanceattr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("getinstanceattr", params: """
 	DeeStringObject *attr;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_getinstanceattr_params "attr:?Dstring"
 	struct {
 		DeeStringObject *attr;
@@ -1283,9 +1283,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	int result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hasinstanceattr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("hasinstanceattr", params: """
 	DeeStringObject *attr;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_hasinstanceattr_params "attr:?Dstring"
 	struct {
 		DeeStringObject *attr;
@@ -1306,10 +1306,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_boundinstanceattr(DeeTypeObject *self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("boundinstanceattr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("boundinstanceattr", params: """
 	DeeStringObject *attr;
 	bool allow_missing = true;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_boundinstanceattr_params "attr:?Dstring,allow_missing=!t"
 	struct {
 		DeeStringObject *attr;
@@ -1345,9 +1345,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_delinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delinstanceattr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("delinstanceattr", params: """
 	DeeStringObject *attr;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_delinstanceattr_params "attr:?Dstring"
 	struct {
 		DeeStringObject *attr;
@@ -1367,10 +1367,10 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("setinstanceattr", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("setinstanceattr", params: """
 	DeeStringObject *attr;
 	DeeObject *value;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_setinstanceattr_params "attr:?Dstring,value"
 	struct {
 		DeeStringObject *attr;
@@ -1551,9 +1551,9 @@ err:
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_extends_not_same(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("derived_from", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("derived_from", params: """
 	DeeTypeObject *other;
-", docStringPrefix: "type");]]]*/
+""", docStringPrefix: "type");]]]*/
 #define type_derived_from_params "other:?."
 	struct {
 		DeeTypeObject *other;

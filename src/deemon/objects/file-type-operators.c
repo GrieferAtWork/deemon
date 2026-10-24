@@ -366,12 +366,12 @@ DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
 	DeeBuffer buf;
 	size_t buf_start, buf_end;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("read") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("read") "', params: """
 	DeeObject *data  = NULL;
 	DeeObject *start = NULL;
 	DeeObject *end   = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *data;
 		DeeObject *start;
@@ -441,12 +441,12 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write, &filetype_inherit_write)
 	DeeBuffer buf;
 	size_t buf_start, buf_end;
 	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("write") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("write") "', params: """
 	DeeObject *data;
 	DeeObject *start = NULL;
 	DeeObject *end   = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *data;
 		DeeObject *start;
@@ -498,10 +498,10 @@ err:
 /* >> operator seek(off: int, whence: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek, NULL /*&filetype_inherit_seek*/) {
 	Dee_pos_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("seek") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("seek") "', params: """
 	Dee_off_t off;
 	int whence = SEEK_SET = !A!DFile!PSEEK_SET;
-");]]]*/
+""");]]]*/
 	struct {
 		Dee_off_t off;
 		int whence;
@@ -584,13 +584,13 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread)
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pread") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pread") "', params: """
 	DeeObject *a;
 	DeeObject *b = NULL;
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *a;
 		DeeObject *b;
@@ -670,13 +670,13 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwri
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pwrite") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("pwrite") "', params: """
 	DeeObject *a;
 	DeeObject *b;
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *a;
 		DeeObject *b;
@@ -735,9 +735,9 @@ err:
  * >> operator getc(flags: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc, &filetype_inherit_getc) {
 	int result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getc") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getc") "', params: """
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		Dee_ioflag_t flags;
 	} args;
@@ -757,9 +757,9 @@ err:
 
 /* >> operator ungetc(ch: int): bool; */
 DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_ungetc) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("ungetc") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("ungetc") "', params: """
 	int ch
-");]]]*/
+""");]]]*/
 	struct {
 		int ch;
 	} args;
@@ -778,10 +778,10 @@ err:
 
 /* >> operator putc(ch: int): bool; */
 DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("putc") "', params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("putc") "', params: """
 	int ch;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL = !0;
-");]]]*/
+""");]]]*/
 	struct {
 		int ch;
 		Dee_ioflag_t flags;

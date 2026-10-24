@@ -526,9 +526,9 @@ string_new_empty(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_new(size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("string", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("string", params: """
 	DeeObject *ob;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_string_params "ob"
 	struct {
 		DeeObject *ob;
@@ -1642,9 +1642,9 @@ stringiter_copy(StringIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_StringIterator", params: """
 	DeeStringObject *s;
-", docStringPrefix: "stringiter");]]]*/
+""", docStringPrefix: "stringiter");]]]*/
 #define stringiter__StringIterator_params "s:?Dstring"
 	struct {
 		DeeStringObject *s;
@@ -2450,9 +2450,9 @@ PRIVATE struct type_member tpconst string_class_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_chr(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("chr", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("chr", params: """
 	uint32_t ch;
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_chr_params "ch:?Dint"
 	struct {
 		uint32_t ch;
@@ -2481,9 +2481,9 @@ string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t status;
 	struct Dee_unicode_printer printer;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromseq", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromseq", params: """
 	ordinals:?S?Dint
-", docStringPrefix: "string");]]]*/
+""", docStringPrefix: "string");]]]*/
 #define string_fromseq_params "ordinals:?S?Dint"
 	struct {
 		DeeObject *ordinals;

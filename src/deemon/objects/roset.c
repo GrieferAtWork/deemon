@@ -194,10 +194,10 @@ rsiter_ctor(RoSetIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rsiter_init(RoSetIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoSetIterator", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoSetIterator", params: """
 	DeeRoSetObject *set;
 	Dee_hash_vidx_t index = 0
-", docStringPrefix: "rsiter");]]]*/
+""", docStringPrefix: "rsiter");]]]*/
 #define rsiter__RoSetIterator_params "set:?Ert:RoSet,index=!0"
 	struct {
 		DeeRoSetObject *set;

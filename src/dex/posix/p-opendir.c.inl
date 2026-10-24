@@ -2002,11 +2002,11 @@ PRIVATE DEFINE_KWLIST(kwlist__path_skipdots_inheritfd, { KEX("path", 0x1ab74e01,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_init_kw(DeeDirIteratorObject *__restrict self,
                 size_t argc, DeeObject *const *argv, DeeObject *kw) {
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_DirIterator", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_DirIterator", params: """
 	DeeObject *path:?X4?GDIR?Dstring?DFile?Dint;
 	bool skipdots  = true;
 	bool inheritfd = false;
-", docStringPrefix: "posix");]]]*/
+""", docStringPrefix: "posix");]]]*/
 #define posix__DirIterator_params "path:?X4?GDIR?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f"
 	struct {
 		DeeObject *path;
@@ -2185,11 +2185,11 @@ dir_init_kw(DeeDirObject *__restrict self, size_t argc,
 		goto err;
 #undef RELBASE
 #else
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("opendir", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("opendir", params: """
 	DeeObject *path:?X3?Dstring?DFile?Dint;
 	bool skipdots  = true;
 	bool inheritfd = false;
-", docStringPrefix: "posix");]]]*/
+""", docStringPrefix: "posix");]]]*/
 #define posix_opendir_params "path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f"
 	struct {
 		DeeObject *path;

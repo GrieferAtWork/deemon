@@ -192,9 +192,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pipe_class_new(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("new", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("new", params: """
 	size_t size_hint = 0;
-", docStringPrefix: "pipe");]]]*/
+""", docStringPrefix: "pipe");]]]*/
 #define pipe_new_params "size_hint=!0"
 	struct {
 		size_t size_hint;

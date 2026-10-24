@@ -8170,13 +8170,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_dladdr1__RTLD_DL_LINKMAP
 #endif
 
-#ifdef CONFIG_NO_struct__link_map__l_name
-#undef CONFIG_HAVE_struct__link_map__l_name
-#elif !defined(CONFIG_HAVE_struct__link_map__l_name) && \
-      (defined(CONFIG_HAVE_LINK_H))
-#define CONFIG_HAVE_struct__link_map__l_name
-#endif
-
 #ifdef CONFIG_NO_struct__link_map__l_addr
 #undef CONFIG_HAVE_struct__link_map__l_addr
 #elif !defined(CONFIG_HAVE_struct__link_map__l_addr) && \

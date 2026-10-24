@@ -59,6 +59,20 @@
 
 DECL_BEGIN
 
+#if defined(NDEBUG) || defined(NDEBUG_FILEBUFFER)
+#define DeeFileBuffer_Validate(self) (void)0
+#else /* ... */
+#define DeeFileBuffer_Validate(self)                                                   \
+	(ASSERT((self)->fb_ptr >= (self)->fb_base),                                        \
+	 ASSERT(((self)->fb_ptr + (self)->fb_cnt) >= (self)->fb_ptr),                      \
+	 ASSERT(((self)->fb_base + (self)->fb_size) >= (self)->fb_base),                   \
+	 ASSERT(((self)->fb_ptr + (self)->fb_cnt) <= ((self)->fb_base + (self)->fb_size)), \
+	 ASSERT((self)->fb_chng >= (self)->fb_base),                                       \
+	 ASSERT(((self)->fb_chng + (self)->fb_chsz) >= (self)->fb_chng),                   \
+	 ASSERT(((self)->fb_chng + (self)->fb_chsz) <= ((self)->fb_base + (self)->fb_size)))
+#endif /* !... */
+
+
 LIST_HEAD(file_buffer_object_list, Dee_file_buffer_object);
 typedef DeeFileBufferObject Buffer;
 
@@ -485,6 +499,7 @@ buffer_read_or_unlock(Buffer *__restrict self,
 	if unlikely(!self->fb_file)
 		goto err_closed;
 again:
+	DeeFileBuffer_Validate(self);
 	bufavail = self->fb_cnt;
 	if likely(bufavail) {
 read_from_buffer:
@@ -496,6 +511,7 @@ read_from_buffer:
 		self->fb_ptr += bufavail;
 		result += bufavail;
 		bufsize -= bufavail;
+		DeeFileBuffer_Validate(self);
 		if (!bufsize)
 			goto done;
 		/* Make sure that we only invoke read() on the underlying
@@ -616,6 +632,7 @@ read_through:
 	ASSERT(self->fb_chsz == 0);
 	ASSERT(self->fb_size != 0);
 	ASSERT(self->fb_file);
+	DeeFileBuffer_Validate(self);
 	file = self->fb_file;
 	Dee_Incref(file);
 	if (next_data != self->fb_fpos) {
@@ -645,6 +662,7 @@ read_through:
 	self->fb_ptr  = self->fb_base;
 	self->fb_cnt  = read_size;
 	did_read_data = true;
+	DeeFileBuffer_Validate(self);
 	goto again;
 
 done:
@@ -679,6 +697,7 @@ again_checkfile:
 again:
 	/* Fill available buffer. */
 	bufavail = (self->fb_base + self->fb_size) - self->fb_ptr;
+	DeeFileBuffer_Validate(self);
 	if likely(bufavail) {
 		if (bufavail > bufsize)
 			bufavail = bufsize;
@@ -711,6 +730,7 @@ again:
 		} else {
 			self->fb_cnt = 0;
 		}
+		DeeFileBuffer_Validate(self);
 
 		/* When operating in line-buffered mode, check
 		 * if there was a linefeed in what we just wrote. */
@@ -816,6 +836,7 @@ do_writethrough:
 	self->fb_chng = new_buffer + (self->fb_chng - self->fb_base);
 	self->fb_size = new_bufsize;
 	self->fb_base = new_buffer;
+	DeeFileBuffer_Validate(self);
 	/* Go back and use the new buffer. */
 	goto again;
 
@@ -843,6 +864,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 
 		/* For these modes, we can calculate the new position,
 		 * allowing for in-buffer seek, as well as delayed seek. */
+		DeeFileBuffer_Validate(self);
 		old_abspos = self->fb_fblk;
 		old_abspos += (self->fb_ptr - self->fb_base);
 		if (whence == Dee_SEEK_SET) {
@@ -890,6 +912,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 			}
 		}
 		self->fb_ptr = new_pos;
+		DeeFileBuffer_Validate(self);
 		return new_abspos;
 	}
 full_seek:
@@ -926,6 +949,7 @@ full_seek:
 	self->fb_ptr  = self->fb_base;
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
+	DeeFileBuffer_Validate(self);
 	return result;
 err_closed:
 	err_buffer_closed();
@@ -987,6 +1011,7 @@ again:
 		self->fb_chsz = 0;
 		self->fb_fpos += changed_size;
 		self->fb_ptr = self->fb_chng + changed_size;
+		DeeFileBuffer_Validate(self);
 
 		/* Remove the buffer from the chain of changed, line-buffered TTYs. */
 		buffer_deltty(self);
@@ -1020,6 +1045,7 @@ buffer_getc_or_unlock(Buffer *__restrict self, Dee_ioflag_t flags) {
 	int result;
 	Dee_pos_t next_data;
 again:
+	DeeFileBuffer_Validate(self);
 	if (self->fb_cnt) {
 read_from_buffer:
 		/* Simple case: we can read from the active buffer. */
@@ -1152,7 +1178,8 @@ read_through:
 	} else {
 		self->fb_cnt = read_size - 1;
 		self->fb_ptr = self->fb_base + 1;
-		result       = (int)(unsigned int)(unsigned char)*self->fb_base;
+		result = (int)(unsigned int)(unsigned char)*self->fb_base;
+		DeeFileBuffer_Validate(self);
 	}
 done:
 	return result;
@@ -1172,6 +1199,7 @@ buffer_ungetc_nolock(Buffer *__restrict self, int ch) {
 	size_t new_bufsize, inc_size;
 again:
 	/* Simple case: unget() the character. */
+	DeeFileBuffer_Validate(self);
 	if (self->fb_ptr != self->fb_base)
 		goto unget_in_buffer;
 	/* The buffer is already full. - Try to resize it, then insert at the front. */
@@ -1213,10 +1241,12 @@ again:
 	self->fb_base = new_buffer;
 	self->fb_size = new_bufsize;
 	ASSERT(self->fb_ptr != self->fb_base);
+	DeeFileBuffer_Validate(self);
 	/* Finally, insert the character into the buffer. */
 unget_in_buffer:
 	*--self->fb_ptr = (byte_t)(unsigned int)ch;
 	++self->fb_cnt;
+	DeeFileBuffer_Validate(self);
 	return 0;
 eof:
 	return Dee_GETC_EOF;
@@ -1234,10 +1264,11 @@ buffer_trunc_nolock(Buffer *__restrict self, Dee_pos_t new_size) {
 		goto err;
 	if unlikely(!self->fb_file)
 		goto err_closed;
+	DeeFileBuffer_Validate(self);
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
-	abs_pos       = self->fb_fblk + (self->fb_ptr - self->fb_base);
-	abs_end       = abs_pos + self->fb_cnt;
+	abs_pos = self->fb_fblk + (self->fb_ptr - self->fb_base);
+	abs_end = abs_pos + self->fb_cnt;
 	if (new_size < abs_pos) {
 		/* Truncate to get rid of the current buffer. */
 		self->fb_cnt = 0;
@@ -1666,6 +1697,7 @@ buffer_serialize(Buffer *__restrict self,
 again:
 	if (DeeFileBuffer_LockRead(self))
 		goto err;
+	DeeFileBuffer_Validate(self);
 	self__fb_file = self->fb_file;
 	self__fb_ptr  = self->fb_ptr;
 	self__fb_chng = self->fb_chng;

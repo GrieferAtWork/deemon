@@ -143,7 +143,7 @@ if (hasKey) {
 	print('			} else {');
 	print('				/' '* Found it! (at "mid") *' '/');
 if (isFind || isPosition) {
-	print('				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end\', it can\'t be SIZE_MAX!");');
+	print('				ASSERTF(mid != (size_t)-1, "Impossible, because `mid < end`, it can\'t be SIZE_MAX!");');
 	print('				if unlikely(mid == (size_t)Dee_COMPARE_ERR) {');
 	print('					end = mid;');
 	print('					goto err_item_overflow;');

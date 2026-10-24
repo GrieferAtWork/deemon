@@ -551,9 +551,9 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_any__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_any__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCanyable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -620,9 +620,9 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_all__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_all__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -689,9 +689,9 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_parity__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_parity__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCparityable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -1405,9 +1405,9 @@ DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sort__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sort__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCsortable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;
@@ -1462,9 +1462,9 @@ DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sorted__", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("__seq_sorted__", params: """
 	size_t start = 0, size_t end = (size_t)-1, key:?DCsortedable=!N
-");]]]*/
+""");]]]*/
 	struct {
 		size_t start;
 		size_t end;

@@ -2373,7 +2373,7 @@ err:
 PRIVATE WUNUSED DREF ClassDescriptor *DCALL
 cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_ClassDescriptor", params: """
 		DeeStringObject *name;
 		DeeStringObject *doc
 			= (DeeStringObject *)Dee_EmptyString;
@@ -2387,7 +2387,7 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			= Dee_EmptyTuple;
 		uint16_t isize?:?Dint = (uint16_t)-1;
 		uint16_t csize?:?Dint = (uint16_t)-1;
-", docStringPrefix: "cd");]]]*/
+""", docStringPrefix: "cd");]]]*/
 #define cd__ClassDescriptor_params "name:?Dstring,doc=!P{},flags:?X2?Dstring?Dint=!P{},operators:?S?T2?X2?Dstring?Dint?Dint=!T0,iattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,cattr:?S?T2?Dstring?X3?Dint?T2?Dint?X2?Dstring?Dint?T3?Dint?X2?Dstring?Dint?Dstring=!T0,isize?:?Dint,csize?:?Dint"
 	struct {
 		DeeStringObject *name;
@@ -2887,10 +2887,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_init(ObjectTable *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	struct Dee_class_desc *desc;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ObjectTable", params: "
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_ObjectTable", params: """
 	ob:?X2?O?DType,
 	typ?:?DType
-", docStringPrefix: "cd");]]]*/
+""", docStringPrefix: "cd");]]]*/
 #define cd__ObjectTable_params "ob:?X2?O?DType,typ?:?DType"
 	struct {
 		DeeObject *ob;

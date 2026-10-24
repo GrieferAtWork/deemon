@@ -40,9 +40,9 @@ function g(p) {
 	print p.replace("{m}", "max").replace("{M}", "Max").replace("{==|>}", ">").replace("{>|==}", "==");
 }
 
-g('/' '************************************************************************' '/
-/' '* deemon.Sequence.{m}()                                                *' '/
-/' '************************************************************************' '/
+g('/' '************************************************************************' '/\n\
+/' '* deemon.Sequence.{m}()                                                *' '/\n\
+/' '************************************************************************' '''/
 [[kw, alias(Sequence.{m})]]
 __seq_{m}__(size_t start = 0, size_t end = (size_t)-1, def=!N, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
@@ -81,7 +81,7 @@ seq_{m}_foreach_cb(void *arg, DeeObject *item) {
 	}
 	return temp;
 }
-#endif /' '* !DEFINED_seq_{m}_foreach_cb *' '/
+#endif /''' '* !DEFINED_seq_{m}_foreach_cb *' '''/
 )]
 
 [[wunused]] DREF DeeObject *
@@ -122,7 +122,7 @@ seq_{m}_with_key_foreach_cb(void *arg, DeeObject *item) {
 	data = (struct seq_minmax_with_key_data *)arg;
 	if (!data->gsmmwk_result) {
 		Dee_Incref(item);
-		data->gsmmwk_result = item; /' '* Inherit reference *' '/
+		data->gsmmwk_result = item; /''' '* Inherit reference *' '''/
 		return 0;
 	}
 	if unlikely(!data->gsmmwk_kresult) {
@@ -130,7 +130,7 @@ seq_{m}_with_key_foreach_cb(void *arg, DeeObject *item) {
 		keyed = DeeObject_Call(data->gsmmwk_key, 1, &data->gsmmwk_result);
 		if unlikely(!keyed)
 			goto err;
-		data->gsmmwk_kresult = keyed; /' '* Inherit reference *' '/
+		data->gsmmwk_kresult = keyed; /''' '* Inherit reference *' '''/
 	}
 	kelem = DeeObject_Call(data->gsmmwk_key, 1, &item);
 	if unlikely(!kelem)
@@ -145,15 +145,15 @@ seq_{m}_with_key_foreach_cb(void *arg, DeeObject *item) {
 	Dee_Decref(data->gsmmwk_result);
 	Dee_Decref(data->gsmmwk_kresult);
 	Dee_Incref(item);
-	data->gsmmwk_result  = item;  /' '* Inherit reference *' '/
-	data->gsmmwk_kresult = kelem; /' '* Inherit reference *' '/
+	data->gsmmwk_result  = item;  /''' '* Inherit reference *' '''/
+	data->gsmmwk_kresult = kelem; /''' '* Inherit reference *' '''/
 	return 0;
 err_kelem:
 	Dee_Decref(kelem);
 err:
 	return -1;
 }
-#endif /' '* !DEFINED_seq_{m}_with_key_foreach_cb *' '/
+#endif /''' '* !DEFINED_seq_{m}_with_key_foreach_cb *' '''/
 )]
 
 [[wunused]] DREF DeeObject *
@@ -186,7 +186,7 @@ err_data:
 	} else if (data.gsmmwk_result) {
 		Dee_Decref(data.gsmmwk_result);
 	}
-/' '*err:*' '/
+/''' '*err:*' '''/
 	return NULL;
 }} {
 	DeeObject *args[4];
@@ -208,7 +208,7 @@ seq_{m}_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 		return 0;
 	return seq_{m}_foreach_cb(arg, item);
 }
-#endif /' '* !DEFINED_seq_{m}_enumerate_cb *' '/
+#endif /''' '* !DEFINED_seq_{m}_enumerate_cb *' '''/
 )]
 
 [[wunused]] DREF DeeObject *
@@ -245,7 +245,7 @@ seq_{m}_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 		return 0;
 	return seq_{m}_with_key_foreach_cb(arg, item);
 }
-#endif /' '* !DEFINED_seq_{m}_with_key_enumerate_cb *' '/
+#endif /''' '* !DEFINED_seq_{m}_with_key_enumerate_cb *' '''/
 )]
 
 [[wunused]] DREF DeeObject *
@@ -279,7 +279,7 @@ err_data:
 	} else if (data.gsmmwk_result) {
 		Dee_Decref(data.gsmmwk_result);
 	}
-/' '*err:*' '/
+/''' '*err:*' '''/
 	return NULL;
 }} {
 	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
@@ -316,7 +316,7 @@ seq_{m}_with_range_and_key = {
 		return &$empty;
 	if (seq_enumerate_index)
 		return &$with__seq_enumerate_index;
-};');
+};''');
 ]]]*/
 /************************************************************************/
 /* deemon.Sequence.min()                                                */

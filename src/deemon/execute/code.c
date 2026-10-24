@@ -2070,7 +2070,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
 	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
 	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
-/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_Code", params: "
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_Code", params: """
 		DeeObject *text = Dee_None;
 		DeeModuleObject *module = (DeeModuleObject *)Dee_None;
 		DeeObject *constants = Dee_None;
@@ -2084,7 +2084,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		DeeObject *defaults = Dee_None;
 		DeeObject *flags = Dee_None;
 		DeeDDIObject *ddi = (DeeDDIObject *)Dee_None;
-");]]]*/
+""");]]]*/
 	struct {
 		DeeObject *text;
 		DeeModuleObject *module_;
