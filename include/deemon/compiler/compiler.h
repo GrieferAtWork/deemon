@@ -31,7 +31,7 @@
 #include "../object.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
 #include "../util/rlock.h" /* Dee_rshared_rwlock_* */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "tpp.h"
+#include "tpp.h" /* DeeLexer, DeeLexer_OfTPP, tpp_* */
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #include "../util/hash.h"    /* Dee_HashPointer */
 #include "../util/lock.h"    /* Dee_atomic_rwlock_* */

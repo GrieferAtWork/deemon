@@ -50,7 +50,7 @@
 #include "../types.h"           /* DREF, DeeObject, ITER_DONE */
 #include "ast.h"                /* ast */
 #include "symbol.h"             /* LOOKUP_SYM_NORMAL, decl_ast, symbol */
-#include "tpp.h"
+#include "tpp.h"                /* DeeLexer, ast_loc, tpp_keyword, tpp_token_id */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */

@@ -29,7 +29,7 @@
 #include <deemon/compiler/lexer.h>     /* ast_parse_expr */
 #include <deemon/compiler/optimize.h>  /* ast_optimize_all */
 #include <deemon/compiler/symbol.h>    /* LOOKUP_SYM_NORMAL, current_basescope, scope_pop, scope_push */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR, TPP_TOK_OFCHAR, ast_loc_getline, tpp_* */
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>             /* DeeObject_*, Dee_Decref, Dee_Incref, Dee_XDecref */

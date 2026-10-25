@@ -59,10 +59,6 @@
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* INT64_C, UINT16_C, UINT32_C, UINT64_C, UINT64_MAX, int8_t, int64_t, uintN_t, uintptr_t */
 
-#ifdef CONFIG_HAVE_LIMITS_H
-#include <limits.h>
-#endif /* CONFIG_HAVE_LIMITS_H */
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

@@ -26,7 +26,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, current_basescope, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPPCALL, TPP_*, _tpp_lexer_builtin_warnhandler, ast_loc, ast_loc_getlc, ast_loc_getname, ast_loc_isempty, parser_warnf, tpp_* */
 #include <deemon/error.h>             /* DeeError_* */
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
 #include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_WARNING */

@@ -27,7 +27,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/lexer.h>    /* ast_parse_expr */
 #include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_NORMAL, lookup_label, text_label */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, ast_loc_getcol, ast_loc_getline, ast_loc_getname, tpp_* */
 #include <deemon/format.h>            /* DeeFormat_Printf */
 #include <deemon/string.h>            /* DeeUni_IsSpace */
 #include <deemon/system-features.h>   /* bcmpc, bzero, memcpyc, memset */

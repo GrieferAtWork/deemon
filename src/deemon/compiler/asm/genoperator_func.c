@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>             /* DREF, Dee_Decref, ITER_ISOK */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */

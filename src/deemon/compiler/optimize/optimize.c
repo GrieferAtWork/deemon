@@ -28,7 +28,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, DeeScope_Type, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer_WarnfAst, ast_loc_getcol, ast_loc_getline, ast_loc_getname, ast_loc_isempty, tpp_keyword_getcstr */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */

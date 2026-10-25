@@ -28,7 +28,7 @@
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref */
 #include <deemon/compiler/compiler.h> /* DeeCompiler*, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPP_*, ast_loc, ast_loc_init_empty, loc_here, tpp_* */
 #include <deemon/module.h>            /* Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/string.h>            /* DeeStringObject */

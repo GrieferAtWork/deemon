@@ -33,6 +33,7 @@
 #include <deemon/compiler/lexer.h>     /* AST_OPERATOR_*, PARSE_FNORMAL */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_FNORMAL */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_INC_N*, current_basescope, current_rootscope, current_scope */
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_Init */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */

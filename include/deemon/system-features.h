@@ -302,7 +302,6 @@ header("utime.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/utime.h", addparen(msvc));
 
 header_nostdinc("crtdbg.h", addparen(msvc) + " || defined(__KOS_SYSTEM_HEADERS__)");
-header_nostdinc("limits.h", stdc);
 header_nostdinc("setjmp.h", stdc);
 header_nostdinc("link.h");
 header_nostdinc("bluetooth/bluetooth.h");
@@ -1844,13 +1843,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
       (__has_include(<crtdbg.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
        defined(__KOS_SYSTEM_HEADERS__))))
 #define CONFIG_HAVE_CRTDBG_H
-#endif
-
-#ifdef CONFIG_NO_LIMITS_H
-#undef CONFIG_HAVE_LIMITS_H
-#elif !defined(CONFIG_HAVE_LIMITS_H) && \
-      (defined(__NO_has_include) || __has_include(<limits.h>))
-#define CONFIG_HAVE_LIMITS_H
 #endif
 
 #ifdef CONFIG_NO_SETJMP_H

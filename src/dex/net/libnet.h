@@ -53,9 +53,7 @@
 #endif /* CONFIG_HOST_UNIX */
 #endif /* !CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_HAVE_LIMITS_H
-#include <limits.h>
-#endif /* CONFIG_HAVE_LIMITS_H */
+#include <limits.h> /*!KEEPME*/
 
 #if (defined(CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H) && \
      defined(CONFIG_HAVE_BLUETOOTH_RFCOMM_H) && \

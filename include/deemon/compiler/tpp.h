@@ -17,12 +17,27 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export tpp_**/
+/*!export tpp_lexer*/
+/*!export tpp_lexer_**/
+/*!export tpp_keyword*/
+/*!export tpp_keyword_**/
+/*!export TPP_FEAT_**/
+/*!export TPP_EXT_**/
+/*!export TPP_KWD_**/
+/*!export TPP_**/
+/*!export TPP**/
+/*!export DeeLexer_**/
+/*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-amalgamation.h"*/
+/*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"*/
 #ifndef GUARD_DEEMON_COMPILER_TPP_H
 #define GUARD_DEEMON_COMPILER_TPP_H 1
 
 #include "../api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <hybrid/host.h>          /* _WIN32, _WIN64, __unix__ */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __CHAR_BIT__, __SIZEOF_INTMAX_T__ */
 
@@ -32,7 +47,7 @@
 #include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
 #include "../string.h"          /* DeeAscii_*, DeeStringObject, DeeString_NewUtf8, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
 #include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
-#include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, bzero, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, strchr, strlen */
+#include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, STDIN_FILENO, STDOUT_FILENO, _alloca, alloca, bzero, free, localtime_s, malloc, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, stdin, stdout, strchr, strlen, time */
 #include "../system.h"          /* DeeSystem_* */
 #include "../thread.h"          /* DeeThread_CheckInterrupt */
 #include "../types.h"           /* DREF, DeeObject, Dee_AsObject, Dee_ITER_DONE, Dee_formatprinter_t, Dee_ssize_t */
@@ -43,7 +58,7 @@
 #include "symbol.h" /*  */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-#include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
+#include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINT32_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, int32_t, intmax_t, uint32_t, uintmax_t */
 
 /************************************************************************/
 /* TPP3 API hooks                                                       */
@@ -828,7 +843,7 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #include "../alloc.h" /* Dee_Free */
 
 #include <stdarg.h>  /* va_list */
-#include <stdbool.h> /* bool, true */
+#include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint32_t */
 
@@ -852,9 +867,9 @@ DECL_BEGIN
 #endif
 
 
-DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
+DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes); /*!export-*/
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1)
+#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1) /*!export-*/
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 struct TPPFile;

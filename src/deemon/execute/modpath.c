@@ -24,6 +24,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type */
+#include <deemon/compiler/tpp.h>    /* tpp_lcinfo_of */
 #include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */
 #include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE */

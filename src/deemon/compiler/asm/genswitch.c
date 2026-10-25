@@ -27,7 +27,6 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, DeeRelInt*, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/symbol.h>    /* text_label */
-#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_NotImplemented, DeeError_TypeError */
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsUInt32 */

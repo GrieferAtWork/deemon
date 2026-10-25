@@ -30,7 +30,7 @@
 #include <deemon/compiler/lexer.h>     /* ast_parse_expr, import_module_symbol, parse_module_byname */
 #include <deemon/compiler/optimize.h>  /* ast_optimize_all */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_*, current_basescope, current_rootscope, current_scope, scope_*, symbol, text_label */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, tpp_* */
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_TryAsIntptr */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */

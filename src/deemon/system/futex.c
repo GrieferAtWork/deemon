@@ -50,10 +50,6 @@
 #include <time.h>
 #endif /* CONFIG_HAVE_TIME_H */
 
-#ifdef CONFIG_HAVE_LIMITS_H
-#include <limits.h>
-#endif /* CONFIG_HAVE_LIMITS_H */
-
 #ifdef CONFIG_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif /* CONFIG_HAVE_SYS_TIME_H */

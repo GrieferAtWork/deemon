@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_*, ast_parse_comma, ast_parse_expr */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
 #include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeUni_IsSymCont */

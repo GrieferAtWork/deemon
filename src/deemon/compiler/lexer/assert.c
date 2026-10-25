@@ -25,7 +25,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_MAYBE, AST_PARSE_WASEXPR_NO, ast_parse_* */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
 #include <deemon/types.h>           /* DREF */
 
 #include <stdbool.h> /* bool */

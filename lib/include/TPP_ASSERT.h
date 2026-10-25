@@ -21,19 +21,8 @@
 #ifndef TPP_ASSERT
 #include "__TPP_STDINC.h"
 
-#if defined(__TPP_EVAL)
 #define __TPP_PRIVATE_ASSERT_0(s) __pragma(error("Assertion failed: " s))
 #define __TPP_PRIVATE_ASSERT_1(s)
 #define TPP_ASSERT(expr) __TPP_BASIC_CAT(__TPP_PRIVATE_ASSERT_,__TPP_EVAL(!!(expr)))(#expr)
-#elif __has_feature(__tpp_pragma_tpp_exec__)
-#define TPP_ASSERT(expr) _Pragma(STR(tpp_exec(\
-"#if !" #expr "\n"\
-"# error " STR(#expr) "\n"\
-"#endif\n"\
-)))
-#else
-#define TPP_ASSERT(expr) /* nothing */
-#warning Not enough features enabled for preprocessor assertions
-#endif
 
 #endif /* !TPP_ASSERT */

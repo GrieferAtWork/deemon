@@ -28,7 +28,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
 #include <deemon/compiler/lexer.h>    /* current_tags */
 #include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, current_scope, lbl_free, symbol, text_label */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_GetLoc, ast_loc, ast_loc_init_empty, ast_loc_isempty, loc_here, tpp_* */
 #include <deemon/map.h>               /* Dee_EmptyMap */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, OBJECT_HEAD_INIT */

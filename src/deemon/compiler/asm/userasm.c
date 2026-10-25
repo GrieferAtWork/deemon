@@ -29,7 +29,7 @@
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/error.h>     /* BEGIN_PARSER_CALLBACK, END_PARSER_CALLBACK, parser_rethrow, parser_start */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, TPP_*, ast_loc_init_empty, tpp_* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/object.h>             /* DeeObject_Foreach, DeeObject_Size, Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strlen */

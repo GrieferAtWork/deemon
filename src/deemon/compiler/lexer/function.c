@@ -28,7 +28,7 @@
 #include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, new_local_symbol, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR, TPP_TOK_OFCHAR, ast_loc, tpp_* */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
 

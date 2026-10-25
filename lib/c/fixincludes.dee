@@ -341,6 +341,16 @@ local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 		HeaderExportGroup("int(8|16|32|64)_t", "intN_t", 4),
 	}),
 	DEFAULT_HEADER("stdbool.h", exports: Set.frozen { "bool", "true", "false" }),
+	DEFAULT_HEADER("limits.h", exports: Set.frozen {
+		"BOOL_WIDTH", "BOOL_MAX", "CHAR_BIT", "MB_LEN_MAX",
+		"CHAR_WIDTH", "CHAR_MIN", "CHAR_MAX",
+		"SCHAR_WIDTH", "SHRT_WIDTH", "INT_WIDTH", "LONG_WIDTH", "LLONG_WIDTH",
+		"SCHAR_MIN", "SHRT_MIN", "INT_MIN", "LONG_MIN", "LLONG_MIN",
+		"SCHAR_MAX", "SHRT_MAX", "INT_MAX", "LONG_MAX", "LLONG_MAX",
+		"UCHAR_WIDTH", "USHRT_WIDTH", "UINT_WIDTH", "ULONG_WIDTH", "ULLONG_WIDTH",
+		"UCHAR_MAX", "USHRT_MAX", "UINT_MAX", "ULONG_MAX", "ULLONG_MAX",
+		"BITINT_MAXWIDTH"
+	}),
 #undef DEFAULT_HEADER
 }.frozen;
 
@@ -416,7 +426,36 @@ local class HeaderParser {
 	public member noFormatRegions: {(int, int)...} | none = none;
 	@@All keywords that potentially appear somewhere within the file
 	public member allKeywords: {string...} | none = none;
+	public member origAllKeywords: {string...} | none = none;
 	public member allIncludes: {string: SrcIncludeInfo} | none = none;
+	public member origAllIncludes: {string: SrcIncludeInfo} | none = none;
+
+	@@Include @filename inline
+	function inlineInclude(filename: string) {
+		if (!posix.isabs(filename))
+			filename = posix.abspath(filename, posix.headof(this.filename));
+		local nestedData;
+		with (local nestedFile = File.open(filename, "rb"))
+			nestedData = nestedFile.read();
+		local nestedParser = HeaderParser(
+			data:            nestedData,
+			end:             #nestedData,
+			header:          this.header,
+			filename:        filename,
+			allKeywords:     this.origAllKeywords,
+			origAllKeywords: this.origAllKeywords,
+//			allIncludes:     this.origAllIncludes, /* Don't forward these! */
+//			origAllIncludes: this.origAllIncludes,
+		).parseAll();
+
+		this.allPotentiallyExportedKeywords.insertall(nestedParser.allPotentiallyExportedKeywords);
+		this.exportRegexes.insertall(nestedParser.exportRegexes);
+		this.exportRegexesAfterExtraIncludes.update(nestedParser.exportRegexesAfterExtraIncludes);
+		this.notExportedKeywords.insertall(nestedParser.notExportedKeywords);
+		this.notExportedWildcards.insertall(nestedParser.notExportedWildcards);
+		this.hasCustomRegexGroups |= nestedParser.hasCustomRegexGroups;
+		this.keepDefaultRegexGroups |= nestedParser.keepDefaultRegexGroups;
+	}
 
 
 	public lc(at: int): (int, int) {
@@ -442,7 +481,8 @@ local class HeaderParser {
 		lastExportPos = pos;
 	}
 
-	public parseIncludeString(): Bytes {
+	@@Only returns @none when @allowNonString
+	public parseIncludeString(allowNonString: bool = false): Bytes | none {
 		while (pos < end && data.isspacexlf(pos))
 			++pos;
 		local includeStringStart: int = pos;
@@ -451,6 +491,8 @@ local class HeaderParser {
 			includeStringEnd = data.find('"', pos + 1, end);
 		} else if (data.startswith('<', pos, end)) {
 			includeStringEnd = data.find('>', pos + 1, end);
+		} else if (allowNonString) {
+			return none;
 		} else {
 			err(includeStringStart, "Expected '\"' or '<' after '#include'");
 		}
@@ -672,7 +714,7 @@ again_export_directive:
 									keywordOrRegex}(include(...', but got {repr tok}");
 						}
 						(isRegex ? exportRegexesAfterExtraIncludes
-						            : header.exportsAfterExtraIncludes
+						         : header.exportsAfterExtraIncludes
 						).setdefault(keywordOrRegex, HashSet()).insert(reqIncludes);
 						tok = nextRawNoComment();
 					} else {
@@ -707,6 +749,16 @@ again_export_directive:
 			case "discourage_include":
 				header.discourageInclude = true;
 				break;
+			case "include_inline": {
+				local includeString = parseIncludeString();
+				if (!includeString.startswith('"') || !includeString.endswith('"')) {
+					err(directiveStart,
+						f"Include string for `!fixincludes include_inline` must be relative, "
+						f"but is {repr includeString}");
+				}
+				includeString = includeString[1:-1].decode("utf-8");
+				this.inlineInclude(includeString);
+			}	break;
 			case "regex": {
 				local regexCommand = nextRawNoComment();
 				switch (regexCommand) {
@@ -969,8 +1021,8 @@ again:
 
 		case "include":
 			lastIncludeStringPos = pos;
-			lastIncludeString = parseIncludeString();
-			if (allIncludes !is none)
+			lastIncludeString = parseIncludeString(allowNonString: true);
+			if (allIncludes !is none && lastIncludeString !is none)
 				addAllIncludesEntry();
 			break;
 
@@ -1835,14 +1887,18 @@ function loadSrcFileInfo(filename: string): SrcFileInfo {
 	with (local fp = File.open(filename, "rb"))
 		data = fp.readall();
 #if 1
+	local allKeywords: {string...} = HashSet();
+	local allIncludes: {string: SrcIncludeInfo} = Dict();
 	local parser = HeaderParser(
 		data:            data,
 		end:             #data,
 		header:          Header(filename: filename),
 		filename:        filename,
 		noFormatRegions: List(),
-		allKeywords:     HashSet(),
-		allIncludes:     Dict(),
+		allKeywords:     allKeywords,
+		origAllKeywords: allKeywords,
+		allIncludes:     allIncludes,
+		origAllIncludes: allIncludes,
 	).parseAll();
 
 	local selfProvidedKeyword: {string...} = parser.allPotentiallyExportedKeywords;

@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* ast_parse_lookup_mode, ast_parse_unary, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, current_scope, del_local_symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* Dee_operator_t, OPERATOR_* */
 

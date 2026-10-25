@@ -36,7 +36,7 @@
 #include <deemon/compiler/error.h>     /* DeeCompilerErrorObject, Dee_compiler_error_object, current_parser_errors, parser_* */
 #include <deemon/compiler/lexer.h>     /* AST_ANNOTATIONS_INIT, PARSE_FLFSTMT, PARSE_FNORMAL */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, TPP*, _DeeLexer_FiniWithoutLexer, _DeeLexer_InitAfterLexer, tpp_* */
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, DeeModule_RemoveLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */

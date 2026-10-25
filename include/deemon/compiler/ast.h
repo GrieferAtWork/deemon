@@ -44,7 +44,7 @@
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
 #include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, symbol, text_label */
-#include "tpp.h"
+#include "tpp.h"       /* DeeLexer, TPP_REF, ast_loc, tpp_* */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

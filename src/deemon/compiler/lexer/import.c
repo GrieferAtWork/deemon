@@ -27,7 +27,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
 #include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_parse_postexpr, ast_parse_string_const_printer, decref_parse_module_byname */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_*, get_local_symbol, new_local_symbol, new_unnamed_symbol, symbol, symbol_fini */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, DeeString_FromTppKeyword, TPP_KWD_import, TPP_TOK_ISERR, ast_loc, ast_loc_init_empty, loc_here, tpp_* */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref, Dee_hash_t */

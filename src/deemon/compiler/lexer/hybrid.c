@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_*, AST_PARSE_WASEXPR_*, ast_parse_*, current_tags */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, current_scope, scope_pop, scope_push */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, advance_wraplf, ast_loc, peek_next_token, tpp_* */
 #include <deemon/system-features.h> /* memmoveupc, remainder */
 #include <deemon/types.h>           /* DREF */
 

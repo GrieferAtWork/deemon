@@ -28,7 +28,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc, Dee_compiler_error_object, parser_errors */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer_GetTokenLen, DeeLexer_GetTokenStart, TPPCALL, ast_loc, tpp_* */
 #include <deemon/error.h>             /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>              /* DeeFile_DefaultStddbg, DeeFile_PrintObjectNl */
 #include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_* */

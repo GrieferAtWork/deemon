@@ -42,10 +42,10 @@
 #endif
 
 #ifndef __has_builtin
-#define __has_builtin(x) 0
+#define __has_builtin(x) 0 /* Deprecated -- no longer enabled in deemon's TPP3 config */
 #endif /* !__has_builtin */
 #ifndef __has_feature
-#define __has_feature(x) 0
+#define __has_feature(x) 0 /* Deprecated -- no longer enabled in deemon's TPP3 config */
 #endif /* !__has_feature */
 
 /* Current (maximum) API version (will never change again; s.a.: the blurb above) */
@@ -283,14 +283,14 @@ from ctypes import
  * for attributes names in a bunch of places:
  * >> fp = File.Writer();
  * >> fp.pack(); // You should use `fp.string` now
- * >> local my_cell = Cell(42);
- * >> my_cell.del(); // You should use `del my_cell.value` now
+ * >> local myCell = Cell(42);
+ * >> myCell.del(); // You should use `del myCell.value` now
  * There are more like this, but you should get the idea.
  *
  * Deemon 200 on the other hand will now warn about the use
  * of reserved keywords as identifiers and attribute names,
  * suggesting refactoring, as well as doing something like
- * `my_cell.operator . ("del")()`, which will work to suppress
+ * `myCell.operator . ("del")()`, which will work to suppress
  * such a warning, however since we're only here to keep
  * legacy code running as intended, just disable these types
  * of warnings! */
@@ -300,7 +300,7 @@ from ctypes import
  * slash+star repeated inside of comments, or line-comments
  * being continued following an escaped line feed. (Deemon 200+
  * will only warn about the later if the next line doesn't start
- * with a line-comment, optionally preceded by white-space).
+ * with a(nother) line-comment, optionally preceded by white-space).
  *
  * Since some legacy code does actually contain such comments,
  * disable warnings about them so-as not to annoy anyone. */

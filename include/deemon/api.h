@@ -468,13 +468,14 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TPP3 */
 
 /* TODO: Once `CONFIG_EXPERIMENTAL_USE_TPP3` is finished, move on to:
- * - Add CONFIG_EXPERIMENTAL_* to get rid of all other globals used by compilation
  * - Add CONFIG_EXPERIMENTAL_* for a new parser that works at a lower level such
  *   that it doesn't need to know about scopes during parsing, thus allowing for
  *   implicit forward declarations:
  *   >> function foo() -> bar();  // Symbol linking happens later, so this is OK
  *   >> function bar() -> 42;
  *   >> print foo(); // 42
+ *   This new parser must no longer use `current_scope` & friends.
+ * - Add CONFIG_EXPERIMENTAL_* to get rid of all remaining globals used by compilation
  */
 /************************************************************************/
 

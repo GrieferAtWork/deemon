@@ -27,7 +27,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_ALL, AST_CONTAINS_GOTO_CONSIDER_NONE, CONSTEXPR_*, OPTIMIZE_F*, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, SYMBOL_*, symbol, symbol_set_haseffect */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer_WarnfAst */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>              /* DeeFile_Type */
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_OfPointer */

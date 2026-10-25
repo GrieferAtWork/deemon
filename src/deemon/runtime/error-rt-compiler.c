@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/compiler/error.h>     /* DeeCompilerErrorObject, Dee_compiler_error_loc */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, Dee_lexer_warning, TPP_HAVE_WARNING_NUMBERS, TPP_WARNING_NUMBER_INVALID, tpp_* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_Error, DeeError_NOTIMPLEMENTED */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */

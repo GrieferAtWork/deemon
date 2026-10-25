@@ -36,6 +36,7 @@
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_refcnt_t */
 #include "ast.h"      /* ast */
 #include "symbol.h"   /* symbol */
+#include "tpp.h"      /* tpp_keyword_getid */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

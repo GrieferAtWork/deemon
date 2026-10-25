@@ -54,10 +54,6 @@
 #include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* int64_t, uint8_t, uint32_t, uint64_t, uintptr_t */
 
-#ifdef CONFIG_HAVE_LIMITS_H
-#include <limits.h>
-#endif /* CONFIG_HAVE_LIMITS_H */
-
 #ifndef __ARCH_PAGESIZE_MIN
 #ifdef __ARCH_PAGESIZE
 #define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE

@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_OPERATOR_*, P_OPERATOR_FCLASS */
 #include <deemon/compiler/symbol.h> /* SYMBOL_TYPE_EXTERN, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, tpp_* */
 #include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_AsUInt16 */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */

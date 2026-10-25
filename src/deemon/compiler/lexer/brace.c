@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_GENERIC, AST_FMULTIPLE_GENERIC_MAP, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* ast_parse_expr, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR, TPP_TOK_OFCHAR */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref */
 #include <deemon/string.h>          /* DeeString_NewSized */

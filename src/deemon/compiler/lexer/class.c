@@ -30,7 +30,7 @@
 #include <deemon/compiler/doctext.h>  /* doctext_compile */
 #include <deemon/compiler/lexer.h>    /* AST_COMMA_FORCEMULTIPLE, AST_OPERATOR_*, AST_TAGS_BACKUP_PRINTERS, AST_TAGS_RESTORE_PRINTERS, P_OPERATOR_FCLASS, ast_*, current_tags, doctext_escape, inner_compiler_options, maybe_expression_begin, parse_arglist, parse_tags_block */
 #include <deemon/compiler/symbol.h>   /* DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_NORMAL, SYMBOL_*, basescope_*, classscope_push, copy_argument_symbols, current_basescope, current_scope, decl_ast*, get_local_symbol, link_forward_symbols, lookup_symbol, new_local_symbol, new_unnamed_symbol, new_unnamed_symbol_in_scope, scope_pop, scope_push, symbol, symbol_get_haseffect, symbol_incref */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, DeeString_FromTppKeyword, TPP_*, ast_loc, ast_loc_init_empty, ast_loc_isempty, tpp_* */
 #include <deemon/module.h>            /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */

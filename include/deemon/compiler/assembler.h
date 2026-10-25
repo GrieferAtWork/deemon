@@ -53,7 +53,7 @@
 #include "ast.h"      /* asm_operand, ast */
 #include "compiler.h" /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include "symbol.h"   /* DeeScopeObject, SYMBOL_MAY_REFERENCE, SYMBOL_MUST_REFERENCE, symbol, symbol_reachable */
-#include "tpp.h"
+#include "tpp.h"      /* DeeLexer, DeeLexer_ErrfLoc, DeeLexer_WarnfLoc, ast_loc, ast_loc_isempty, parser_erratrf, parser_warnatrf, tpp_file, tpp_keyword */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

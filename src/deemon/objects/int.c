@@ -49,7 +49,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_LIMITS_H, CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
 #include <deemon/type.h>               /* DeeObject_DATA, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_SIGNED, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
@@ -58,7 +58,7 @@
 #include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/host.h>       /* __ARCH_HAVE_UNALIGNED_MEMORY_ACCESS */
 #include <hybrid/int128.h>     /* __HYBRID_UINT128_INIT16N, __hybrid_int128_*, __hybrid_uint128_* */
-#include <hybrid/limitcore.h>  /* __*_MAX__, __INTn_MIN__ */
+#include <hybrid/limitcore.h>  /* __*_MAX__, __INT_MIN__, __INTn_MIN__ */
 #include <hybrid/overflow.h>   /* OVERFLOW_UADD, OVERFLOW_UMUL */
 #include <hybrid/typecore.h>   /* __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__, __SIZEOF_REGISTER__, __SIZEOF_SIZE_T__ */
 #include <hybrid/unaligned.h>  /* UNALIGNED_GET* */
@@ -68,24 +68,25 @@
 #include "int-8bit.h"
 #include "int_logic.h"
 
+#include <limits.h>
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, intN_t, uintN_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifndef SIZE_MAX
 #define SIZE_MAX __SIZE_MAX__
 #endif /* !SIZE_MAX */
-
-#ifdef CONFIG_HAVE_LIMITS_H
-#include <limits.h> /* CHAR_BIT */
-#endif /* CONFIG_HAVE_LIMITS_H */
-
-#undef byte_t
-#define byte_t __BYTE_TYPE__
-
+#ifndef INT_MIN
+#define INT_MIN __INT_MIN__
+#endif /* !INT_MIN */
+#ifndef INT_MAX
+#define INT_MAX __INT_MAX__
+#endif /* !INT_MAX */
 #ifndef CHAR_BIT
 #define CHAR_BIT __CHAR_BIT__
 #endif /* !CHAR_BIT */

@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_TUPLE, CATCH_EXPR_FNORMAL, ast, ast_*, catch_expr */
 #include <deemon/compiler/lexer.h>  /* ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_EXCEPT, has_local_symbol, new_local_symbol, scope_pop, scope_push, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_LEXER_PEEK_RAW_FLAG_NORMAL, TPP_TOK_ISERR, advance_wraplf, ast_loc, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* TP_FINTERRUPT */
 

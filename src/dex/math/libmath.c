@@ -44,11 +44,8 @@
 #include <hybrid/limitcore.h> /* __INT_MAX__, __INT_MIN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_LONG__ */
 
-#include <stddef.h> /* NULL, size_t */
-
-#ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
-#endif /* CONFIG_HAVE_LIMITS_H */
+#include <stddef.h> /* NULL, size_t */
 
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>

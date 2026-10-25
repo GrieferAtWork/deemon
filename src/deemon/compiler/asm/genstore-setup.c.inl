@@ -28,7 +28,7 @@
 #include <deemon/compiler/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>    /* SYMBOL_*, symbol */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>             /* DeeObject */

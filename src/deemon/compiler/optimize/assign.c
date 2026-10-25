@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_incref, ast_xincref, catch_expr, class_member */
 #include <deemon/compiler/optimize.h> /* ast_fini_contents */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_* */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* ast_loc */
 #include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/system-features.h>   /* bzero, memcpy */
 #include <deemon/type.h>              /* OPERATOR_ISINPLACE */

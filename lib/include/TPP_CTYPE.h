@@ -20,22 +20,6 @@
 #pragma once
 
 #include "__TPP_STDINC.h"
-#if __has_feature(__tpp_pragma_tpp_set_keyword_flags__)
-// Enable the macros below as builtins
-// >> __has_builtin(__builtin_tpp_isalnum) >> 1
-#pragma tpp_set_keyword_flags("builtin_tpp_isalnum",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isalpha",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isblank",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_iscntrl",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isdigit",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isgraph",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_islower",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isprint",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_ispunct",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isspace",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isupper",0x02)
-#pragma tpp_set_keyword_flags("builtin_tpp_isxdigit",0x02)
-#endif
 
 // Builtin character function equivalents from <ctype.h>
 #define __builtin_tpp_isalnum(c) __TPP_EVAL(\

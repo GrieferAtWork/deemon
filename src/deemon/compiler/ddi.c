@@ -27,6 +27,7 @@
 #include <deemon/code.h>               /* DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, Dee_DDI_EXDAT_*, Dee_ddi_exdat, code_addr_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, DDI_BINDING_CLASS_LOCAL, current_assembler, ddi_binding, ddi_checkpoint */
 #include <deemon/compiler/symbol.h>    /* current_basescope, symbol */
+#include <deemon/compiler/tpp.h>       /* ast_loc_getcol, ast_loc_getline, ast_loc_isempty, tpp_* */
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/object.h>             /* DREF, return_reference_ */
 #include <deemon/string.h>             /* DeeStringObject, Dee_ascii_printer* */

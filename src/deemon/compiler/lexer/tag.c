@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_ANNOTATION_FNOFUNC, AST_ANNOTATION_FNORMAL, ast_* */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, tpp_* */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc */

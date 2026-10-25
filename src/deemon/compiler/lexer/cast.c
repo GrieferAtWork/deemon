@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* ASSERT_AST, AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_FORCEMULTIPLE, ast_parse_argument_list, ast_parse_unary, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/type.h>            /* OPERATOR_CALL */

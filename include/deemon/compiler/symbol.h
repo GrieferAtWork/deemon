@@ -50,7 +50,7 @@
 #include "../util/weakref.h"    /* Dee_WEAKREF, Dee_weakref_* */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "tpp.h"
+#include "tpp.h" /* DeeLexer, __ATOMIC_SEQ_CST, ast_loc, ast_loc_isempty, tpp_keyword, tpp_keyword_getcstr */
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/__atomic.h> /* __ATOMIC_SEQ_CST, __hybrid_atomic_decfetch, __hybrid_atomic_fetchinc */
 #endif /* !CONFIG_NO_THREADS */

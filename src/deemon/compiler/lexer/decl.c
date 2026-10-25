@@ -27,7 +27,7 @@
 #include <deemon/compiler/lexer.h>    /* PARSE_UNARY_DISALLOW_CASTS, ast_parse_*, current_tags */
 #include <deemon/compiler/optimize.h> /* OPTIMIZE_FNOPREDICT, ast_optimize_all, ast_predict_type, optimizer_flags */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_*, DeeBaseScopeObject, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_TYPE_*, SYMBOL_UNWIND_ALIAS, decl_ast*, get_local_symbol_in_scope, lookup_nth, lookup_symbol, new_unnamed_symbol_in_scope, symbol, symbol_decref, symbol_incref */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPP_*, tpp_* */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/format.h>            /* PRFuSIZ */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */

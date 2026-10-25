@@ -27,7 +27,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_PARSE_WASEXPR_NO, ast_parse_*, current_tags */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, basescope_pop, basescope_push, current_basescope, current_scope */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
 #include <deemon/object.h>          /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/type.h>            /* OPERATOR_CALL, OPERATOR_ITER */

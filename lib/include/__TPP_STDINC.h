@@ -25,23 +25,12 @@
 #error This library requires, that tpp was compiled \
        with at least "TPP_CONFIG_HAVE___TPP_EVAL" defined
 #endif /* !__TPP_EVAL */
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif /* !__has_feature */
 #define __TPP_BASIC_CAT2(a,b)         a ## b
 #define __TPP_BASIC_CAT(a,b)          __TPP_BASIC_CAT2(a,b)
 #define __TPP_FORCE_EXPAND(...)       __VA_ARGS__
 #define __TPP_BASIC_EXPAND_TUPLE(tpl) __TPP_FORCE_EXPAND tpl
 #define __TPP_EAT_ARGS(...)           /* nothing */
-#ifndef __pragma
-#define __pragma(...) _Pragma(TPP_STR_NOEXPAND(__VA_ARGS__))
-#endif /* __pragma */
-
-#if __has_feature(__tpp_pragma_warning__) && __TPP_VERSION__ >= 105
-#define __TPP_SUPPRESS_WARNING(id) __pragma(warning(suppress: id))
-#else
-#define __TPP_SUPPRESS_WARNING(id) /* nothing */
-#endif
+#define __TPP_SUPPRESS_WARNING(id)    __pragma(warning(suppress: id))
 
 //////////////////////////////////////////////////////////////////////////
 // Returns the string representation of __VA_ARGS__

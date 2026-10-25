@@ -31,7 +31,7 @@
 #include <deemon/compiler/interface.h> /* DR_CLexer, DeeCompiler*, err_invalid_ast_basescope, err_invalid_ast_compiler, get_token_from_obj */
 #include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, TOKEN_IS_*, ast_parse_*, parser_flags */
 #include <deemon/compiler/symbol.h>    /* current_basescope */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_GetTok, TPP_TOK_ENOENT, TPP_TOK_ISERR, tpp_token_id */
 #include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_HAS_ISERR, Dee_HAS_ISYES_NO_ERR, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeStringObject, Dee_EmptyString */

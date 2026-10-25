@@ -26,7 +26,7 @@
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
 #include <deemon/compiler/lexer.h>  /* ast_parse_expr */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>
+#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, parser_warnatptrf, tpp_* */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeString*, DeeUniTrait_AsDigit, DeeUni_*, Dee_UNICODE_*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
