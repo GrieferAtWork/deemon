@@ -18,6 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
+/*!export Dee_compiler_error_**/
+/*!export DeeCompilerError**/
 /*!export *_PARSER_CALLBACK*/
 /*!export parser_**/
 #ifndef GUARD_DEEMON_COMPILER_ERROR_H
@@ -25,9 +27,9 @@
 
 #include "../api.h"
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "../error.h"           /* Dee_ERROR_OBJECT_HEAD */
-#include "../object.h"          /* DREF, DeeObject, DeeObject_Print, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
-#include "../types.h"           /* DREF, DeeObject, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
+#include "../error.h"  /* Dee_ERROR_OBJECT_HEAD */
+#include "../object.h" /* DeeObject_Print */
+#include "../types.h"  /* DREF, DeeObject, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
 
 DECL_BEGIN
 
@@ -56,7 +58,7 @@ DECL_END
 #include "../object.h"          /* DREF, DeeObject, DeeObject_Print, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
 #include "../system-features.h" /* bzero, memcpy */
 #include "../types.h"           /* DREF, DeeObject, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
-#include "../util/weakref.h"    /* Dee_WEAKREF */
+#include "../util/weakref.h" /* Dee_WEAKREF */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

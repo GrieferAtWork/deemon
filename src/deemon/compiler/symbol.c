@@ -29,7 +29,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler*, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
-#include <deemon/module.h>            /* DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
+#include <deemon/module.h>            /* Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/string.h>            /* DeeStringObject */
 #include <deemon/system-features.h>   /* bzero, memcpy, memset */
@@ -1101,7 +1101,8 @@ link_forward_symbol(struct symbol *__restrict self) {
 		symbol_incref(outer_match);
 		return 0;
 	}
-	if (WARNSYM(self, TPP_W_UNKNOWN_VARIABLE, SYMBOL_NAME(self)))
+	if (DeeLexer_WarnfSym(DeeLexer_OfCompiler(DeeCompiler_Current), self,
+	                      TPP_W_UNKNOWN_VARIABLE, SYMBOL_NAME(self)))
 		goto err;
 	self->s_type = SYMBOL_TYPE_NONE; /* Prevent the assembler from crashing later... */
 	return 0;

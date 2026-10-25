@@ -28,28 +28,33 @@
 
 #include "../api.h"
 
-#include "../object.h"       /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
+#include "../object.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
+#include "../util/rlock.h" /* Dee_rshared_rwlock_* */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "tpp.h"
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #include "../util/hash.h"    /* Dee_HashPointer */
 #include "../util/lock.h"    /* Dee_atomic_rwlock_* */
-#include "../util/rlock.h"   /* Dee_rshared_rwlock_* */
 #include "../util/weakref.h" /* Dee_WEAKREF */
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "../module.h" /* Dee_compiler_options */
-#include "tpp.h"
-#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include "error.h"  /* parser_errors */
-#include "lexer.h"  /* ast_tags */
 #include "symbol.h" /* DeeScopeObject */
 #include "tpp.h"
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#include "lexer.h" /* ast_tags */
 #endif /* CONFIG_BUILDING_DEEMON */
 
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <hybrid/sequence/list.h> /* LIST_ENTRY */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uint16_t */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 
@@ -98,6 +103,7 @@ INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini(DeeCompiler *__restrict self);
 INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoFiles(DeeCompiler *__restrict self);
 INTDEF NONNULL((1)) void DCALL DeeCompiler_Fini_NoLexer(DeeCompiler *__restrict self);
 
+struct Dee_serial;
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCompiler_Compile(DeeCompiler *__restrict compiler,
                     struct Dee_serial *__restrict writer,

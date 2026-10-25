@@ -29,36 +29,39 @@
 
 #include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
 #include <deemon/bytes.h>              /* DeeBytes* */
-#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
+#include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_FNORMAL */
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FNORMAL */
 #include <deemon/compiler/assembler.h> /* ASM_* */
-#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler, _DeeLexer_Current */
-#include <deemon/compiler/error.h>     /* Dee_compiler_error_object, current_parser_errors, parser_* */
-#include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, Dee_COMPILER_CLI_STATE_NORMAL, _DeeLexer_Current */
+#include <deemon/compiler/error.h>     /* DeeCompilerErrorObject, Dee_compiler_error_object, current_parser_errors, parser_* */
+#include <deemon/compiler/lexer.h>     /* AST_ANNOTATIONS_INIT, PARSE_FLFSTMT, PARSE_FNORMAL */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
 #include <deemon/compiler/tpp.h>
+#include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/dec.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
-#include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
+#include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, DeeModule_RemoveLibPathString, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
+#include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_GETC_ERR, Dee_STD*, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_Printf, DeeFormat_Repeat */
 #include <deemon/heap.h>               /* DeeHeap_* */
 #include <deemon/int.h>                /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
-#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options */
+#include <deemon/mapfile.h>            /* DeeMapFile* */
+#include <deemon/module.h>             /* DeeModule*, Dee_COMPILER_FLAG_FORMAT, Dee_COMPILER_FLAG_MAIN, Dee_compiler_options, Dee_compiler_options_base */
 #include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref*, Dee_XDecref, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
-#include <deemon/string.h>             /* DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
-#include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
+#include <deemon/serial.h>             /* DeeSerial, Dee_serial */
+#include <deemon/string.h>             /* DeeString*, DeeUni_IsSpace, Dee_UNICODE_PRINTER_INIT, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcasecmp, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy*, mempcpyc, strchr, strend, strlen */
+#include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* Dee_DumpReferenceLeaks */
+#include <deemon/type.h>               /* Dee_DumpReferenceLeaks, TP_FNORMAL */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
+#include <hybrid/byteswap.h>        /* BSWAP16, BSWAP32 */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __arm__, __i386__, __i486__, __i586__, __i686__, __x86_64__ */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
-#include <hybrid/byteswap.h>
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
@@ -66,7 +69,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, ptrdiff_t, size_t */
-#include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdint.h>  /* UINT16_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifdef CONFIG_NO_CRTDBG_H
 #undef CONFIG_HAVE_CRTDBG_H
@@ -162,8 +165,10 @@
 #pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
 #pragma warning(disable: 4127) /* Conditional expression is constant (cannot be avoided when features are compile-time enabled/disabled) */
 #endif /* _MSC_VER */
+/* clang-format off */
 #include "../external/tpp3/src/tpp-emitter-amalgamation.h"
 #include "../external/tpp3/src/tpp-emitter-amalgamation.c"
+/* clang-format on */
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif /* _MSC_VER */
@@ -1853,7 +1858,7 @@ err:
 
 /* Compare+execute `[script_start...+=script_len)` and the text it writes to STDOUT
  * @return: * : The DeeBytesObject describing what was printed to STDOUT by the script (in utf-8). */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3)) DREF DeeBytesObject *DCALL
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 fe_run_script_and_capture_stdout(DeeLexer const *__restrict parent_lexer,
                                  tpp_char const *script_start, tpp_size script_len,
                                  tpp_string *script_string, tpp_lcinfo start_lc) {
@@ -2081,7 +2086,7 @@ tpp_lexer_yieldraw_blocking_nowarn(tpp_lexer *tpp_restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) tpp_char const *DCALL
 bse_trylskip_script_start(DeeLexer *__restrict lexer,
                           tpp_char const *start,
                           tpp_char const *end) {

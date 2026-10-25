@@ -1997,7 +1997,8 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_ANYTHING_OLD:
-		if (WARNAST(self, TPP_W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X))
+		if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), self,
+		                      TPP_W_UASM_DEPRECATED_ANY_OPERAND_LOWERCASE_X))
 			goto err;
 		ATTR_FALLTHROUGH
 	case ASM_OP_ANYTHING:

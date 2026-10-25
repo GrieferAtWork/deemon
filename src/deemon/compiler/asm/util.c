@@ -29,6 +29,7 @@
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FHANDLED */
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, _asm_gadjstack, _asm_glrot, _asm_grrot, asm_*, current_assembler */
 #include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, SYMBOL_*, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
@@ -779,10 +780,11 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	 * >>     }
 	 * >> }
 	 */
-	return PERRAST(warn_ast, TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, sym,
-	               current_basescope->bs_name
-	               ? tpp_keyword_getcstr(current_basescope->bs_name)
-	               : "?");
+	return DeeLexer_ErrfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+	                        warn_ast, TPP_W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, sym,
+	                        current_basescope->bs_name
+	                        ? tpp_keyword_getcstr(current_basescope->bs_name)
+	                        : "?");
 }
 
 /* Generate a call to `function` that pops `num_args` arguments from the stack,
@@ -1857,7 +1859,8 @@ check_sym_class:
 			 * doing this will not actually unbind the symbol, but only
 			 * delete the value that was being stored. */
 			if (sym->s_nbound != 0 && !(sym->s_flag & SYMBOL_FSTACK_NOUNBIND_OK)) {
-				if (WARNAST(warn_ast, TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
+				if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+				                      TPP_W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, sym))
 					goto err;
 			}
 			if (!(sym->s_flag & SYMBOL_FALLOC)) {
@@ -1866,7 +1869,8 @@ check_sym_class:
 				 * it, meaning that we can't generate the code that the user would
 				 * expect from us. */
 				if (sym->s_nwrite != 0) {
-					if (WARNAST(warn_ast, TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
+					if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+					                      TPP_W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, sym))
 						goto err;
 				}
 				return 0;

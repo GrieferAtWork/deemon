@@ -24,31 +24,34 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/code.h>               /* DeeCodeObject, Dee_CODE_FVARARGS */
-#include <deemon/compiler/assembler.h> /* ASM_FNORMAL, asm_symbol_ref, code_compile, module_compile */
+#include <deemon/compiler/assembler.h> /* ASM_*, asm_symbol_ref, code_compile, module_compile */
 #include <deemon/compiler/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_* */
-#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler, Dee_COMPILER_CLI_STATE_DDASH, Dee_COMPILER_CLI_STATE_NORMAL */
 #include <deemon/compiler/error.h>     /* current_parser_errors, parser_* */
 #include <deemon/compiler/lexer.h>     /* AST_COMMA_*, PARSE_FLFSTMT, PARSE_FNORMAL, ast_parse_*, ast_tags, current_tags, inner_compiler_options, parser_flags */
-#include <deemon/compiler/optimize.h>  /* OPTIMIZE_FENABLED, OPTIMIZE_FNORMAL, ast_optimize_all, optimizer_flags, optimizer_unwind_limit */
-#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeRootScope_Type, DeeScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, current_basescope, current_rootscope, current_scope, new_unnamed_symbol, symbol */
+#include <deemon/compiler/optimize.h>  /* OPTIMIZE_F*, ast_optimize_all, optimizer_* */
+#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, current_basescope, current_rootscope, current_scope, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
-#include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
-#include <deemon/format.h>
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/format.h>             /* PRFu16 */
+#include <deemon/int.h>                /* Dee_TAtoi */
+#include <deemon/module.h>             /* DeeModule*, Dee_COMPILER_FLAG_NORMAL, Dee_compiler_options, Dee_compiler_options_getinner, Dee_module_object */
+#include <deemon/none.h>               /* DeeNone_Check */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewDefault, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString_AsUtf8, DeeString_Type, Dee_unicode_printer_fini, WSTR_LENGTH */
-#include <deemon/system-features.h>    /* bzero, memcpy*, memset */
+#include <deemon/system-features.h>    /* bcmp, bzero, memcpy*, memset, strcmp, strlen */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, type_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
 #include <deemon/util/weakref.h>       /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */
 
-#include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __REGISTER_TYPE__ */
 
-#include <stdbool.h> /* false, true */
-#include <stddef.h>  /* size_t */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t */
 
 DECL_BEGIN
@@ -535,7 +538,7 @@ tpp_lexer_pushfile_stream(tpp_lexer *self,
 }
 #endif /* !TPP_HAVE_FILE_NOCLOSE */
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) tpp_errno DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) tpp_errno DCALL
 DeeCompiler_Configure(DeeCompiler *__restrict self,
                       struct Dee_compiler_options const *__restrict options,
                       DeeObject *source_stream, tpp_lcinfo start_lc) {

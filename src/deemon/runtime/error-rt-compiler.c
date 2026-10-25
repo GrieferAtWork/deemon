@@ -23,14 +23,14 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/compiler/error.h>     /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
+#include <deemon/compiler/error.h>     /* DeeCompilerErrorObject, Dee_compiler_error_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_Error, DeeError_NOTIMPLEMENTED */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
-#include <deemon/format.h>
-#include <deemon/operator-hints.h>     /* DeeNO_print_t */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/object.h>             /* DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_formatprinter_t, Dee_ssize_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
+#include <deemon/string.h>             /* DeeString_PrintUtf8 */
 #include <deemon/struct.h>             /* DeeStructObject_Cmp, DeeStructObject_PrintRepr */
 #include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 #include <deemon/util/weakref.h>       /* Dee_weakref_fini, Dee_weakref_initempty */

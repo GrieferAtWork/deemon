@@ -37,7 +37,7 @@
 #include <deemon/rodict.h>            /* Dee_rodict_builder* */
 #include <deemon/seq.h>               /* DeeSeq_* */
 #include <deemon/set.h>               /* DeeSet_NewEmpty, DeeSet_Type */
-#include <deemon/system-features.h>   /* memcpy*, memmovedownc, memmoveupc */
+#include <deemon/system-features.h>   /* memcpyc, memmovedownc, memmoveupc */
 #include <deemon/tuple.h>             /* DeeTuple* */
 
 #include <stdbool.h> /* bool, false, true */

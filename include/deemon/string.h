@@ -66,7 +66,7 @@
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
 #include "format.h" /* DeeFormat_Printf, DeeFormat_VPrintf */
-#include "object.h" /* DeeObject_*, Dee_Incref, _DeeRefcnt_DecFetch, _DeeRefcnt_Inc */
+#include "object.h" /* DeeObject_*, Dee_COMPARE_ISEQ, Dee_Incref, _DeeRefcnt_DecFetch, _DeeRefcnt_Inc */
 #include "type.h"   /* DeeObject_InitStatic */
 #endif /* !__INTELLISENSE__ */
 

@@ -23,8 +23,7 @@
 
 #include "../api.h"
 
-#include "../types.h" /* DeeTypeObject */
-#include "ast.h"      /* ast */
+#include "../types.h" /* DeeObject */
 
 #include <stdbool.h> /* bool */
 

@@ -26,6 +26,7 @@
 
 #include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/ast.h>       /* AST_*, ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>    /* SYMBOL_*, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/int.h>                /* DeeInt_* */
@@ -439,7 +440,8 @@ INTERN WUNUSED NONNULL((1)) int
 		DO(ast_genasm(self, ASM_G_FPUSHRES));
 #else /* ENTER */
 		/* Emit a warning about an r-value store. */
-		DO(WARNAST(self, TPP_W_ASM_STORE_TO_RVALUE));
+		DO(DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+		                     self, TPP_W_ASM_STORE_TO_RVALUE));
 		DO(asm_putddi(self));
 		if (PUSH_RESULT) {
 			DO(asm_gdup_n(0)); /* dst, value, dst */

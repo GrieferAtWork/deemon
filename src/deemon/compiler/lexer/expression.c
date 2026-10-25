@@ -25,20 +25,21 @@
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
 #include <deemon/bool.h>              /* Dee_False, Dee_True */
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
 #include <deemon/compiler/lexer.h>    /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
+#include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_*, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/compiler/compiler.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* DeeFloat_New */
 #include <deemon/int.h>               /* DeeIntObject, DeeInt_*, Dee_INT_STRING* */
-#include <deemon/module.h>            /* DeeModule* */
+#include <deemon/module.h>            /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_AsUInt, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_DONE */
 #include <deemon/string.h>            /* DeeString_NewSized */
 #include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memmoveupc */
+#include <deemon/thread.h>            /* DeeThread_Self, Dee_import_frame */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
 #include <deemon/type.h>              /* Dee_operator_t, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
 

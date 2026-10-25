@@ -31,11 +31,11 @@
 #include <deemon/gc.h>              /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head */
 #include <deemon/heap.h>            /* DeeDbgHeap_AddHeapRegion, DeeHeap_GetRegionOf, Dee_heapregion */
 #include <deemon/method-hints.h>    /* type_method_hint */
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_compiler_options_base, Dee_compiler_options_getinner, Dee_module_*, _Dee_MODULE_* */
 #include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_*, DeeObject_*, Dee_BOUND_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_XDecref_likely, Dee_XDecref_unlikely, Dee_XIncrefv, return_reference, return_reference_ */
 #include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
-#include <deemon/serial.h>          /* DeeSerial */
+#include <deemon/serial.h>          /* DeeSerial, Dee_serial */
 #include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToLower, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_(LOCK|UNLOCK), RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bzero, dl*, environ, getenv, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, strchr, strcpy, strend, strlen, to(lower|upper), wenviron, wgetenv */
@@ -55,7 +55,7 @@
 #include <hybrid/host.h>            /* __i386__, __x86_64__ */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINTPTR_HALF_TYPE__ */
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include <deemon/compiler/compiler.h>
+#include <deemon/compiler/compiler.h> /* DeeCompiler* */
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
@@ -2351,7 +2351,7 @@ DeeFile_WriteDecEhdr(DeeObject *__restrict stream,
 #endif /* !CONFIG_NO_DEC */
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((2, 3, 5)) int DCALL
 default__cob_compilestream(struct Dee_compiler_options_base *__restrict options,
                            struct Dee_serial *__restrict writer,
                            /*utf-8*/ char const *__restrict abs_filename,
@@ -2556,7 +2556,7 @@ no_dec_file:
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 		if unlikely((*(options && options->co_base.cob_compilestream
 		              ? options->co_base.cob_compilestream
-		              : &default__cob_compilestream))(&options->co_base,
+		              : &default__cob_compilestream))((struct Dee_compiler_options_base *)options,
 		                                              (DeeSerial *)&writer,
 		                                              abs_filename,
 		                                              abs_filename_length,

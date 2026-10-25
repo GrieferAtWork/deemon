@@ -24,6 +24,7 @@
 
 #include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_set, current_assembler */
 #include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/symbol.h>    /* DeeScopeObject, SYMBOL_*, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>             /* PRFu16 */
@@ -411,7 +412,8 @@ INTERN WUNUSED NONNULL((1)) int
 		++wnt_sp;
 	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
-		result = WARNAST(self, TPP_W_ASM_MISSALIGNED_STACK);
+		result = DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+		                           self, TPP_W_ASM_MISSALIGNED_STACK);
 		if (result)
 			goto done;
 		result = readjust_stack_after_bad_init(wnt_sp);
@@ -433,7 +435,8 @@ INTERN WUNUSED NONNULL((1)) int
 		++wnt_sp;
 	if unlikely(current_assembler.a_stackcur != wnt_sp) {
 		/* Emit a warning and forcefully re-align the stack. */
-		result = WARNAST(self, TPP_W_ASM_MISSALIGNED_STACK);
+		result = DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+		                           self, TPP_W_ASM_MISSALIGNED_STACK);
 		if (result)
 			goto done;
 		result = readjust_stack_after_bad_init(wnt_sp);

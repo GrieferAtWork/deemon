@@ -25,10 +25,10 @@
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
 #include <deemon/bool.h>              /* DeeBool_For, DeeBool_Type */
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, AST_*, asm_operand, ast, ast_constexpr, ast_decref_likely */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
 #include <deemon/compiler/symbol.h>   /* DeeScopeObject, DeeScope_Type, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/compiler/compiler.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
@@ -278,10 +278,11 @@ again:
 		if (!self->a_label.l_label->tl_goto) {
 			/* The label was never used. - Ergo: it should not exist.
 			 * To signify this, we simply convert this branch to `none`. */
-			if (WARNAST(self, TPP_W_ASM_LABEL_NEVER_USED,
-			            (self->a_flag & AST_FLABEL_CASE)
-			            ? (self->a_label.l_label->tl_expr ? "case" : "default")
-			            : tpp_keyword_getcstr(self->a_label.l_label->tl_name)))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+			                      self, TPP_W_ASM_LABEL_NEVER_USED,
+			                      (self->a_flag & AST_FLABEL_CASE)
+			                      ? (self->a_label.l_label->tl_expr ? "case" : "default")
+			                      : tpp_keyword_getcstr(self->a_label.l_label->tl_name)))
 				goto err;
 			Dee_Decref(&self->a_label.l_base->bs_scope);
 			self->a_type      = AST_CONSTEXPR;

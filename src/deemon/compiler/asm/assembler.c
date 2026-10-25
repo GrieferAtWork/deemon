@@ -28,16 +28,17 @@
 #include <deemon/code.h>               /* CONFIG_HAVE_CODE_METRICS, CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE, DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER, DeeRelIntObject, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, REL_HASSYM, R_DMN_*, SECTION_*, asm_*, assembler, ast_genasm, ast_genasm_one, ddi_*, handler_frame, userassembler_fini, userassembler_init */
 #include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/const.h>     /* DeeObject_ConstEquals */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, new_unnamed_symbol_in_scope, symbol, text_label */
 #include <deemon/compiler/tpp.h>
-#include <deemon/compiler/const.h>
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
 #include <deemon/int.h>                /* DeeInt_NewIntptr */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FIGNORE, STRING_ERROR_FIGNORE */
@@ -3003,7 +3004,8 @@ asm_gsymid_for_read(struct symbol *__restrict sym,
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	if (!sym->s_nwrite) {
-		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+		if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+		                      TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
 			goto err;
 	}
 	return asm_gsymid(sym);
@@ -3019,7 +3021,8 @@ asm_lsymid_for_read(struct symbol *__restrict sym,
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	if (!sym->s_nwrite) {
-		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+		if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+		                      TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
 			goto err;
 	}
 	return asm_lsymid(sym);
@@ -3035,7 +3038,8 @@ asm_ssymid_for_read(struct symbol *__restrict sym,
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	if (!sym->s_nwrite) {
-		if (WARNAST(warn_ast, TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
+		if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), warn_ast,
+		                      TPP_W_VARIABLE_READ_NEVER_WRITTEN, sym))
 			goto err;
 	}
 	return asm_ssymid(sym);

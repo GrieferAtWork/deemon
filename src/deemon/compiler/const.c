@@ -22,24 +22,29 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>
-#include <deemon/code.h>
+#include <deemon/bool.h>            /* DeeBool_IsTrue, DeeBool_Type, Dee_CONFIG_BOOL_TLS */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_code_frame_kwds, Dee_ddi_regs */
 #include <deemon/compiler/const.h>
-#include <deemon/float.h>
-#include <deemon/instancemethod.h>
-#include <deemon/int.h>
-#include <deemon/kwds.h>
-#include <deemon/none.h>
-#include <deemon/objmethod.h>
-#include <deemon/pair.h>
-#include <deemon/property.h>
-#include <deemon/rodict.h>
-#include <deemon/roset.h>
-#include <deemon/string.h>
-#include <deemon/super.h>
+#include <deemon/dict.h>            /* Dee_dict_item */
+#include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type, DeeFloat_VALUE */
+#include <deemon/hashset.h>         /* Dee_hashset_item */
+#include <deemon/instancemethod.h>  /* DeeInstanceMethodObject, DeeInstanceMethod_Type */
+#include <deemon/int.h>             /* DeeIntObject, DeeInt_Type */
+#include <deemon/kwds.h>            /* DeeKwds* */
+#include <deemon/none.h>            /* DeeNone_Type */
+#include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeClsMemberObject, DeeClsMember_Type, DeeClsMethodObject, DeeClsMethod_Type, DeeClsPropertyObject, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
+#include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqOneObject, DeeSeqOne_Type, DeeSeqPairObject, DeeSeqPair_Type */
+#include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
+#include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type */
+#include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
+#include <deemon/string.h>          /* DeeString* */
+#include <deemon/super.h>           /* DeeSuperObject, DeeSuper_Type */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmp, bcmpc */
+#include <deemon/type.h>            /* DeeType_IsAbstract */
+#include <deemon/types.h>           /* DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
 

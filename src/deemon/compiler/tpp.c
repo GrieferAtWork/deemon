@@ -23,13 +23,14 @@
 #include <deemon/api.h>
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/symbol.h> /* SYMBOL_NAME, symbol */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
+#include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc */
+#include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>  /* DeeError_* */
-#include <deemon/exec.h>   /* DeeModule_GetLibPath */
-#include <deemon/module.h> /* Dee_COMPILER_ERROR_FATALITY_WARNING */
-#include <deemon/tuple.h>  /* DeeTuple* */
+#include <deemon/error.h>             /* DeeError_* */
+#include <deemon/exec.h>              /* DeeModule_GetLibPath */
+#include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_WARNING */
+#include <deemon/tuple.h>             /* DeeTuple* */
 
 #if TPP_OS_WINDOWS
 #include <Windows.h>
@@ -605,15 +606,15 @@ DECL_END
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define TPP_SYMARRAY_SIZE 1 /* For `TPPKeyword_Empty` */
 
-#include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Malloc, Dee_Try*alloc* */
+#include <deemon/alloc.h> /* DeeObject_*, Dee_*alloc*, Dee_Alloca, Dee_Free */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
 #include <deemon/file.h>            /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
 #include <deemon/format.h>          /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref */
-#include <deemon/string.h>          /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, WSTR_LENGTH */
-#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, memcpy, mempcpyc */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, Dee_Decref*, Dee_XDecref */
+#include <deemon/string.h>          /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, memcpy*, mempcpyc */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
@@ -622,7 +623,7 @@ DECL_END
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
-#include <stdarg.h>  /* va_end, va_list, va_start */
+#include <stdarg.h>  /* va_copy, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint8_t */

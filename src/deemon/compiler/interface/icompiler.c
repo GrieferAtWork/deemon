@@ -38,6 +38,7 @@
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/map.h>                /* DeeMap_Type */
+#include <deemon/module.h>             /* Dee_COMPILER_FLAG_NORMAL */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init */
 #include <deemon/seq.h>                /* DeeSeq_* */

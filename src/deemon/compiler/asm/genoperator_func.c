@@ -24,6 +24,7 @@
 
 #include <deemon/compiler/assembler.h> /* ASM_G_FPUSHRES, asm_g*, asm_newmodule, ast_genasm_one */
 #include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
@@ -109,7 +110,8 @@ ast_gen_operator_func(struct ast *binding,
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 	if unlikely(!ITER_ISOK(operators_module)) {
 		if (operators_module) {
-			DO(WARNAST(ddi_ast, TPP_W_MODULE_NOT_FOUND, STR_operators));
+			DO(DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+			                     ddi_ast, TPP_W_MODULE_NOT_FOUND, STR_operators));
 			return asm_gpush_none();
 		}
 		goto err;
@@ -120,7 +122,8 @@ ast_gen_operator_func(struct ast *binding,
 		if unlikely(temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
-			if (WARNAST(ddi_ast, TPP_W_NO_OPERATOR_SYMBOL, symbol_name))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+			                      ddi_ast, TPP_W_NO_OPERATOR_SYMBOL, symbol_name))
 				goto err_module;
 			goto generic_operator;
 		}
@@ -151,7 +154,8 @@ generic_operator:
 		if unlikely(temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
-			if (WARNAST(ddi_ast, TPP_W_NO_OPERATOR_FALLBACK_FUNCTION))
+			if (DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+			                      ddi_ast, TPP_W_NO_OPERATOR_FALLBACK_FUNCTION))
 				goto err_module;
 		}
 		deemon_module_id = asm_newmodule(DeeModule_GetDeemon());

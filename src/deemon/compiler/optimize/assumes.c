@@ -24,15 +24,14 @@
 
 #include <deemon/alloc.h>             /* Dee_Callocc, Dee_Free */
 #include <deemon/compiler/ast.h>      /* AST_*, ast */
+#include <deemon/compiler/const.h>    /* DeeObject_ConstEquals */
 #include <deemon/compiler/optimize.h> /* AST_ASSUMES_FFUNCTION, AST_ASSUMES_FNORMAL, AST_SYMBOL_ASSUMES_HASHIT, AST_SYMBOL_ASSUMES_HASHNX, AST_SYMBOL_ASSUME_HASH, OPTIMIZE_FASSUME, ast_* */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_TYPE_LOCAL, SYMBOL_TYPE_STACK, symbol */
-#include <deemon/compiler/const.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Clear, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
+#include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
 #include <deemon/system-features.h>   /* bzero, memcpy */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN

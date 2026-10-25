@@ -1998,7 +1998,8 @@ asm_gpop_expr(struct ast *__restrict self) {
 	default:
 default_case:
 		/* Emit a warning about an r-value store. */
-		DO(WARNAST(self, TPP_W_ASM_STORE_TO_RVALUE));
+		DO(DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current),
+		                     self, TPP_W_ASM_STORE_TO_RVALUE));
 
 		/* Fallback: Generate the ast and store it directly. */
 		DO(ast_genasm_one(self, ASM_G_FPUSHRES));

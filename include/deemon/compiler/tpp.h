@@ -26,11 +26,11 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __CHAR_BIT__, __SIZEOF_INTMAX_T__ */
 
-#include "../alloc.h"           /* Dee_*alloc*, Dee_Alloca, Dee_Free */
+#include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Alloca, Dee_Free */
 #include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
 #include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
 #include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
-#include "../string.h"          /* DeeAscii_*, DeeString_NewUtf8, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
+#include "../string.h"          /* DeeAscii_*, DeeStringObject, DeeString_NewUtf8, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
 #include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
 #include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, bzero, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, strchr, strlen */
 #include "../system.h"          /* DeeSystem_* */
@@ -39,9 +39,8 @@
 #include "../util/atomic.h"     /* Dee_atomic_* */
 #include "../util/once.h"       /* Dee_ONCE */
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "compiler.h" /* DeeCompiler_Current, DeeLexer_OfCompiler */
-#include "lexer.h"    /* PARSE_FLFSTMT, parser_flags */
-#include "symbol.h"   /*  */
+#include "lexer.h"  /* PARSE_FLFSTMT, parser_flags */
+#include "symbol.h" /*  */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, intmax_t, uint32_t, uintmax_t */
@@ -1288,12 +1287,6 @@ _parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
 	 ? TPP_TOK_ISERR(DeeLexer_Yield(self))                     \
 	 : unlikely(_parser_skip(self, expected_tok, W_UNEXPECTED_TOKEN)))
 
-#define WARNAT(loc, ...)  parser_warnatf(loc, __VA_ARGS__)             /* !!! DEPREACTED -- use `DeeLexer_WarnfLoc()` */
-#define WARNSYM(sym, ...) parser_warnatrf(&(sym)->s_decl, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfSym()` */
-#define WARNAST(ast, ...) parser_warnastf(ast, __VA_ARGS__)            /* !!! DEPREACTED -- use `DeeLexer_WarnfAst()` */
-#define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)             /* !!! DEPREACTED -- use `DeeLexer_ErrfAst()` */
-
-
 #define tpp_builtin_getkeyword_empty() (&TPPKeyword_Empty)
 INTDEF tpp_keyword TPPKeyword_Empty;
 INTDEF WUNUSED char const *DCALL peek_next_token(tpp_file **tok_file);
@@ -1401,12 +1394,6 @@ _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN)     TPP_TOK_ISERR(DeeLexer_Skip(self, expected_tok))
 #define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN) TPP_TOK_ISERR(DeeLexer_ParenBegin(self, p_has_paren))
 #define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN)     TPP_TOK_ISERR(DeeLexer_ParenEnd(self, has_paren))
-
-
-#define WARNAT(loc, ...)  DeeLexer_WarnfLoc(DeeLexer_OfCompiler(DeeCompiler_Current), loc, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfLoc()` */
-#define WARNSYM(sym, ...) DeeLexer_WarnfSym(DeeLexer_OfCompiler(DeeCompiler_Current), sym, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfSym()` */
-#define WARNAST(ast, ...) DeeLexer_WarnfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__) /* !!! DEPREACTED -- use `DeeLexer_WarnfAst()` */
-#define PERRAST(ast, ...) (DeeLexer_ErrfAst(DeeLexer_OfCompiler(DeeCompiler_Current), ast, __VA_ARGS__), -1)  /* !!! DEPREACTED -- use `DeeLexer_ErrfAst()` */
 
 /* Return a pointer to the special *empty* keyword */
 #define tpp_builtin_getkeyword_empty() tpp_builtin_getkeyword_byid(TPP_KWD_)
