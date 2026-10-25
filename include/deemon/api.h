@@ -460,7 +460,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  *   using the user-code compiler interface) */
 #if (!defined(CONFIG_EXPERIMENTAL_USE_TPP3) && \
      !defined(CONFIG_NO_EXPERIMENTAL_USE_TPP3))
-#if 0
+#if 1
 #define CONFIG_EXPERIMENTAL_USE_TPP3
 #else
 #define CONFIG_NO_EXPERIMENTAL_USE_TPP3

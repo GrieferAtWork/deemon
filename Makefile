@@ -440,13 +440,13 @@ $(foreach lib,$(_BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
 ## The big, magical "make all" rule
 ## =======================================================================
 .PHONY: all _print_optional_module_summary
-ifdef CONFIG_WITHOUT_DEX_SQLITE3
-all: $(BIN_ALL) _print_optional_module_summary
-else
+_BLD_EARLY := $(BLD_RELPATH)/src/deemon/compiler/tpp.o
+ifndef CONFIG_WITHOUT_DEX_SQLITE3
 # Put the sqlite amalgamation early so it has lots of time to build when called
 # as `make -j $(nproc)`, while the other CPUs can build the rest of deemon
-all: $(BLD_RELPATH)/src/dex/sqlite3/sqlite3-external.o $(BIN_ALL) _print_optional_module_summary
+_BLD_EARLY += $(BLD_RELPATH)/src/dex/sqlite3/sqlite3-external.o
 endif
+all: $(_BLD_EARLY) $(BIN_ALL) _print_optional_module_summary
 .DEFAULT_GOAL := all
 
 ## =======================================================================
