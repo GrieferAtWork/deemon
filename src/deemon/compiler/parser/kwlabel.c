@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_KWLABEL_C
-#define GUARD_DEEMON_COMPILER_LEXER_KWLABEL_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_KWLABEL_C
+#define GUARD_DEEMON_COMPILER_PARSER_KWLABEL_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, ast_parse_comma, ast_parse_expr */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_LEXER_PEEK_RAW_FLAG_NORMAL, TPP_TOK_*, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
+#include <deemon/compiler/parser.h> /* AST_COMMA_*, ast_parse_comma, ast_parse_expr */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_LEXER_PEEK_RAW_FLAG_NORMAL, TPP_TOK_*, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
 #include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeUni_IsSymCont */
@@ -193,4 +193,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_KWLABEL_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_KWLABEL_C */

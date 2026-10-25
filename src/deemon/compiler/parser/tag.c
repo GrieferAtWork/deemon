@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_TAG_C
-#define GUARD_DEEMON_COMPILER_LEXER_TAG_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_TAG_C
+#define GUARD_DEEMON_COMPILER_PARSER_TAG_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/code.h>            /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_ANNOTATION_FNOFUNC, AST_ANNOTATION_FNORMAL, ast_* */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_*, tpp_* */
+#include <deemon/compiler/parser.h> /* AST_ANNOTATION_FNOFUNC, AST_ANNOTATION_FNORMAL, ast_* */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, tpp_* */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc */
@@ -601,4 +601,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_TAG_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_TAG_C */

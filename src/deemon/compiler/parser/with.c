@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_WITH_C
-#define GUARD_DEEMON_COMPILER_LEXER_WITH_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_WITH_C
+#define GUARD_DEEMON_COMPILER_PARSER_WITH_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_COMMA_NORMAL, ast_parse_* */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_KWD_with, TPP_TOK_ISERR, ast_loc */
+#include <deemon/compiler/parser.h> /* AST_COMMA_ALLOWVARDECLS, AST_COMMA_NORMAL, ast_parse_* */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_STACK, new_unnamed_symbol, scope_pop, scope_push, symbol */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_KWD_with, TPP_TOK_ISERR, ast_loc */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* OPERATOR_ENTER, OPERATOR_LEAVE */
 
@@ -335,4 +335,4 @@ err_scope_r:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_WITH_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_WITH_C */

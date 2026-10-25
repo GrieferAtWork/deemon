@@ -30,8 +30,8 @@
 #include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
 #include <deemon/compiler/const.h>     /* DeeObject_ConstEquals */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_WarnfAst, DeeString_FromTppKeyword, TPP_W_VARIABLE_READ_NEVER_WRITTEN, TPP_W_WRITE_TO_FINAL_VARIABLE, ast_loc_isempty, tpp_* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, new_unnamed_symbol_in_scope, symbol, text_label */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst, DeeString_FromTppKeyword, TPP_W_VARIABLE_READ_NEVER_WRITTEN, TPP_W_WRITE_TO_FINAL_VARIABLE, ast_loc_isempty, tpp_* */
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */

@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_ASM_C
-#define GUARD_DEEMON_COMPILER_LEXER_ASM_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_ASM_C
+#define GUARD_DEEMON_COMPILER_PARSER_ASM_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_CollectMemoryc, Dee_CollectMemoryoc, Dee_Free, Dee_Try*alloc* */
 #include <deemon/compiler/ast.h>      /* AST_FASSEMBLY_*, asm_operand, ast, ast_* */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current, DeeLexer_OfCompiler */
-#include <deemon/compiler/lexer.h>    /* ast_parse_expr */
+#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, ast_loc_*, tpp_* */
+#include <deemon/compiler/parser.h>   /* ast_parse_expr */
 #include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_NORMAL, lookup_label, text_label */
-#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, ast_loc_*, tpp_* */
 #include <deemon/format.h>            /* DeeFormat_Printf */
 #include <deemon/string.h>            /* DeeUni_IsSpace */
 #include <deemon/system-features.h>   /* bcmpc, bzero, memcpyc, memset */
@@ -811,4 +811,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_ASM_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_ASM_C */

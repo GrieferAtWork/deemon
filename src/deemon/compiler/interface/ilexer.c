@@ -28,8 +28,8 @@
 #include <deemon/bool.h>               /* DeeBool_For, return_bool */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler*, DeeLexer_OfCompiler */
 #include <deemon/compiler/interface.h> /* DR_*, DeeCompiler* */
-#include <deemon/compiler/lexer.h>     /* ast_parse_string_const_printer */
-#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, DeeString_FromTppKeyword, TPP*, tpp_* */
+#include <deemon/compiler/lexer.h>     /* DeeLexer, DeeLexer_*, DeeString_FromTppKeyword, TPP*, tpp_* */
+#include <deemon/compiler/parser.h>    /* ast_parse_string_const_printer */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>               /* DeeFile_Filename, DeeFile_Open, OPEN_FCLOEXEC, OPEN_FRDONLY */

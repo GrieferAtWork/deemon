@@ -17,15 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_ASSERT_C
-#define GUARD_DEEMON_COMPILER_LEXER_ASSERT_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_ASSERT_C
+#define GUARD_DEEMON_COMPILER_PARSER_ASSERT_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_MAYBE, AST_PARSE_WASEXPR_NO, ast_parse_* */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
+#include <deemon/compiler/parser.h> /* AST_PARSE_WASEXPR_MAYBE, AST_PARSE_WASEXPR_NO, ast_parse_* */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
 #include <deemon/types.h>           /* DREF */
 
 #include <stdbool.h> /* bool */
@@ -198,4 +198,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_ASSERT_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_ASSERT_C */

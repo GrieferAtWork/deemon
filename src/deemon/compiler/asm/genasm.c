@@ -28,9 +28,9 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, DeeRoSet_FromSequenceOrMappingForContains, PRINT_MODE_*, R_DMN_DISP8, SECTION_COLD, asm_*, ast_gen_*, ast_genasm*, ast_genprint, current_assembler */
 #include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast, ast_isconstexpr */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_ErrfAst, DeeLexer_WarnfAst, TPP_W_* */
 #include <deemon/compiler/optimize.h>  /* ast_* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope*, SYMBOL_*, current_basescope, current_rootscope, symbol, symbol_bnd_haseffect, symbol_get_haseffect, text_label, text_label_name */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_ErrfAst, DeeLexer_WarnfAst, TPP_W_* */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */

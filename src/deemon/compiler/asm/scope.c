@@ -25,8 +25,8 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_set, current_assembler */
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_WarnfAst, TPP_W_ASM_MISSALIGNED_STACK, TPP_W_WRITE_TO_FINAL_VARIABLE */
 #include <deemon/compiler/symbol.h>    /* DeeScopeObject, SYMBOL_*, current_basescope, symbol */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst, TPP_W_ASM_MISSALIGNED_STACK, TPP_W_WRITE_TO_FINAL_VARIABLE */
 #include <deemon/format.h>             /* PRFu16 */
 #include <deemon/module.h>             /* DeeModuleObject */
 #include <deemon/object.h>             /* Dee_Decref */

@@ -29,9 +29,9 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, SECTION_TEXTCOUNT, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_GetKeyword, DeeLexer_WarnfAst, TPP_W_ASM_STORE_TO_RVALUE, tpp_* */
 #include <deemon/compiler/optimize.h>  /* ast_* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeClassScopeObject, DeeClassScope_Prev, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, get_local_symbol_in_scope, scope_lookup_str, symbol */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_GetKeyword, DeeLexer_WarnfAst, TPP_W_ASM_STORE_TO_RVALUE, tpp_* */
 #include <deemon/compiler/traits.h>    /* ast_chk_multiple_hasexpand */
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt16 */
 #include <deemon/module.h>             /* DeeModule_GetSymbol, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */

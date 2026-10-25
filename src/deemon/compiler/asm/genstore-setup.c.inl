@@ -27,8 +27,8 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_one, current_assembler */
 #include <deemon/compiler/ast.h>       /* AST_*, ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_WarnfAst, TPP_W_ASM_STORE_TO_RVALUE */
 #include <deemon/compiler/symbol.h>    /* SYMBOL_*, symbol */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst, TPP_W_ASM_STORE_TO_RVALUE */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>             /* DeeObject */

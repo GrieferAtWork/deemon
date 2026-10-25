@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_TPP_C
-#define GUARD_DEEMON_COMPILER_TPP_C 1
+#ifndef GUARD_DEEMON_COMPILER_LEXER_C
+#define GUARD_DEEMON_COMPILER_LEXER_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* DeeObject_*, Dee_*alloc*, Dee_Alloca, Dee_Free */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc */
+#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPP*, _TPP_*, _tpp_*, ast_loc, ast_loc_*, parser_warnf, tpp_* */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_*, current_basescope, symbol, symbol_ambig_foreach_decl */
-#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPP*, _TPP_*, _tpp_*, ast_loc, ast_loc_*, parser_warnf, tpp_* */
 #include <deemon/error.h>             /* DeeError_* */
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
 #include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
@@ -1441,4 +1441,4 @@ DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info) {
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-#endif /* !GUARD_DEEMON_COMPILER_TPP_C */
+#endif /* !GUARD_DEEMON_COMPILER_LEXER_C */

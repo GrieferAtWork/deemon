@@ -30,8 +30,8 @@
 #include "../type.h"  /* Dee_visit_t, type_member */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
 #include "compiler.h" /* DeeCompiler*, Dee_COMPILER_ITEM_OBJECT_HEAD */
+#include "lexer.h"    /* DeeLexer, ast_loc, tpp_keyword, tpp_token_id */
 #include "symbol.h"   /* DeeBaseScopeObject */
-#include "tpp.h"      /* DeeLexer, ast_loc, tpp_keyword, tpp_token_id */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

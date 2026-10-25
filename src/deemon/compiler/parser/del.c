@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_DEL_C
-#define GUARD_DEEMON_COMPILER_LEXER_DEL_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_DEL_C
+#define GUARD_DEEMON_COMPILER_PARSER_DEL_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* ast_parse_lookup_mode, ast_parse_unary, maybe_expression_begin */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR, TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL */
+#include <deemon/compiler/parser.h> /* ast_parse_lookup_mode, ast_parse_unary, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, current_scope, del_local_symbol */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_TOK_ISERR, TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* Dee_operator_t, OPERATOR_* */
 
@@ -242,4 +242,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_DEL_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_DEL_C */

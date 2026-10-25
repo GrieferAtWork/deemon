@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_TRY_C
-#define GUARD_DEEMON_COMPILER_LEXER_TRY_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_TRY_C
+#define GUARD_DEEMON_COMPILER_PARSER_TRY_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/code.h>            /* Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_TUPLE, CATCH_EXPR_FNORMAL, ast, ast_*, catch_expr */
-#include <deemon/compiler/lexer.h>  /* ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_*, advance_wraplf, ast_loc, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
+#include <deemon/compiler/parser.h> /* ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_EXCEPT, has_local_symbol, new_local_symbol, scope_pop, scope_push, symbol */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, advance_wraplf, ast_loc, peek_next_token, tpp_lexer_peek_raw, tpp_token_id */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* TP_FINTERRUPT */
 
@@ -564,4 +564,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_TRY_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_TRY_C */

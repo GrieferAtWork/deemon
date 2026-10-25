@@ -30,9 +30,9 @@
 #include <deemon/compiler/ast.h>       /* AST_*, asm_operand, ast, ast_*, catch_expr, class_member */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DR_*, DeeCompiler*, check_function_code_scope, get_action_by_name, get_action_name, get_ast_multiple_typing, get_operator_id, parse_conditional_flags, parse_loop_flags, parse_operator_flags, unpack_catch_expressions */
-#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_* */
+#include <deemon/compiler/lexer.h>     /* ast_loc_*, tpp_* */
+#include <deemon/compiler/parser.h>    /* AST_OPERATOR_* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_*, base_scope_object, scope_object, symbol */
-#include <deemon/compiler/tpp.h>       /* ast_loc_*, tpp_* */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttrCStr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */

@@ -43,8 +43,8 @@
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
+#include "lexer.h"     /* DeeLexer, TPP_REF, ast_loc, tpp_* */
 #include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, symbol, text_label */
-#include "tpp.h"       /* DeeLexer, TPP_REF, ast_loc, tpp_* */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

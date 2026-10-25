@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_TEMPLATE_STRING_C
-#define GUARD_DEEMON_COMPILER_LEXER_TEMPLATE_STRING_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_TEMPLATE_STRING_C
+#define GUARD_DEEMON_COMPILER_PARSER_TEMPLATE_STRING_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* ast_parse_expr */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, parser_warnatptrf, tpp_* */
+#include <deemon/compiler/parser.h> /* ast_parse_expr */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, parser_warnatptrf, tpp_* */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeString*, DeeUniTrait_AsDigit, DeeUni_*, Dee_UNICODE_*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
@@ -1000,4 +1000,4 @@ err_noprinter:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_TEMPLATE_STRING_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_TEMPLATE_STRING_C */

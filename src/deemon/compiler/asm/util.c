@@ -30,8 +30,8 @@
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, _asm_gadjstack, _asm_glrot, _asm_grrot, asm_*, current_assembler */
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_ErrfAst, DeeLexer_WarnfAst, TPP_W_*, tpp_keyword_getcstr, tpp_keyword_getlen */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, SYMBOL_*, current_basescope, symbol */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_ErrfAst, DeeLexer_WarnfAst, TPP_W_*, tpp_keyword_getcstr, tpp_keyword_getlen */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item, _DeeHashSet_GetRealVTab, _DeeHashSet_GetVirtVTab */

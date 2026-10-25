@@ -35,8 +35,8 @@
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_refcnt_t */
 #include "ast.h"      /* ast */
+#include "lexer.h"    /* tpp_keyword_getid */
 #include "symbol.h"   /* symbol */
-#include "tpp.h"      /* tpp_keyword_getid */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

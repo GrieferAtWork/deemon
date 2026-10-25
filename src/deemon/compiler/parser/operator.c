@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_OPERATOR_C
-#define GUARD_DEEMON_COMPILER_LEXER_OPERATOR_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_OPERATOR_C
+#define GUARD_DEEMON_COMPILER_PARSER_OPERATOR_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/class.h>           /* Dee_CLASS_OPERATOR_SUPERARGS */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_OPERATOR_*, P_OPERATOR_FCLASS */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, tpp_* */
+#include <deemon/compiler/parser.h> /* AST_OPERATOR_*, P_OPERATOR_FCLASS */
 #include <deemon/compiler/symbol.h> /* SYMBOL_TYPE_EXTERN, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, tpp_* */
 #include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_AsUInt16 */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */
@@ -952,4 +952,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_OPERATOR_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_OPERATOR_C */

@@ -28,10 +28,10 @@
 #include <deemon/compiler/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_* */
 #include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler, Dee_COMPILER_CLI_STATE_DDASH, Dee_COMPILER_CLI_STATE_NORMAL */
 #include <deemon/compiler/error.h>     /* current_parser_errors, parser_* */
-#include <deemon/compiler/lexer.h>     /* AST_COMMA_*, PARSE_FLFSTMT, PARSE_FNORMAL, ast_parse_*, ast_tags, current_tags, inner_compiler_options, parser_flags */
+#include <deemon/compiler/lexer.h>     /* DeeLexer, DeeLexer_*, TPP_*, strcmp, tpp_* */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_F*, ast_optimize_all, optimizer_* */
+#include <deemon/compiler/parser.h>    /* AST_COMMA_*, PARSE_FLFSTMT, PARSE_FNORMAL, ast_parse_*, ast_tags, current_tags, inner_compiler_options, parser_flags */
 #include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_FALLOC, SYMBOL_TYPE_ARG, current_basescope, current_rootscope, current_scope, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_*, TPP_*, strcmp, tpp_* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */

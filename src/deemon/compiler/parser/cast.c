@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_CAST_C
-#define GUARD_DEEMON_COMPILER_LEXER_CAST_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_CAST_C
+#define GUARD_DEEMON_COMPILER_PARSER_CAST_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/compiler/ast.h>    /* ASSERT_AST, AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_FORCEMULTIPLE, ast_parse_argument_list, ast_parse_unary, maybe_expression_begin */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
+#include <deemon/compiler/parser.h> /* AST_COMMA_FORCEMULTIPLE, ast_parse_argument_list, ast_parse_unary, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/type.h>            /* OPERATOR_CALL */
@@ -285,4 +285,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_CAST_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_CAST_C */

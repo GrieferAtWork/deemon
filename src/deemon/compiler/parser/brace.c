@@ -17,16 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_BRACE_C
-#define GUARD_DEEMON_COMPILER_LEXER_BRACE_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_BRACE_C
+#define GUARD_DEEMON_COMPILER_PARSER_BRACE_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemoryc, Dee_Free, Dee_Mallocc, Dee_TryReallocc */
 #include <deemon/compiler/ast.h>    /* AST_FMULTIPLE_GENERIC, AST_FMULTIPLE_GENERIC_MAP, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* ast_parse_expr, maybe_expression_begin */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_* */
+#include <deemon/compiler/parser.h> /* ast_parse_expr, maybe_expression_begin */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref */
 #include <deemon/string.h>          /* DeeString_NewSized */
@@ -303,4 +303,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_BRACE_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_BRACE_C */

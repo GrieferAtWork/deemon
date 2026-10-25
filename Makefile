@@ -114,7 +114,7 @@ LDFLAGS_deemon$(EXE) = $(LDFLAGS) $(CORE_LDFLAGS)
 LIBS_deemon$(EXE)    = $(CORE_LIBS) $(LIBDL)
 OPTLIBS_deemon$(EXE) = $(LIBM)         # Optional library dependency (if link fails w/o, try with)
 BIN_MANDATORY += deemon$(EXE)          # The deemon core is a mandatory binary
-CFLAGS_src_deemon_compiler_tpp.c += -Wno-misleading-indentation  # note: '-Wmisleading-indentation' is disabled from this point onwards, since column-tracking was disabled due to the size of the code/headers
+CFLAGS_src_deemon_compiler_lexer.c += -Wno-misleading-indentation  # note: '-Wmisleading-indentation' is disabled from this point onwards, since column-tracking was disabled due to the size of the code/headers
 
 
 

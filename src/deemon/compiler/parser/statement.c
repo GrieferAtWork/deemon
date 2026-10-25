@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_STATEMENT_C
-#define GUARD_DEEMON_COMPILER_LEXER_STATEMENT_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_STATEMENT_C
+#define GUARD_DEEMON_COMPILER_PARSER_STATEMENT_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>            /* Dee_CODE_FYIELDING */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_*, advance_wraplf, ast_loc, peek_next_token, tpp_* */
+#include <deemon/compiler/parser.h> /* AST_COMMA_*, ast_parse_*, ast_tags_clear, current_tags, parse_tags_block */
 #include <deemon/compiler/symbol.h> /* BASESCOPE_FRETURN, BASESCOPE_FSWITCH, LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, current_basescope, lookup_label, new_case_label, new_default_label, scope_pop, scope_push, text_label */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, advance_wraplf, ast_loc, peek_next_token, tpp_* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF */
 #include <deemon/system-features.h> /* memmoveupc */
@@ -1204,4 +1204,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_STATEMENT_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_STATEMENT_C */

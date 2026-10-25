@@ -18,656 +18,1416 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
-/*!export AST_ANNOTATION_F**/
-/*!export AST_COMMA_**/
-/*!export AST_OPERATOR_**/
-/*!export AST_PARSE_WASEXPR_**/
-/*!export CASE_TOKEN_IS_**/
-/*!export TOKEN_IS_**/
-/*!export ast_annotation**/
-/*!export ast_**/
-/*!export ast_parse_**/
-/*!export ast_tags**/
-/*!export astlist**/
-/*!export parse_**/
+/*!export tpp_**/
+/*!export tpp_lexer*/
+/*!export tpp_lexer_**/
+/*!export tpp_keyword*/
+/*!export tpp_keyword_**/
+/*!export TPP_FEAT_**/
+/*!export TPP_EXT_**/
+/*!export TPP_TOK_**/
+/*!export TPP_KWD_**/
+/*!export TPP_WC_**/
+/*!export TPP_WG_**/
+/*!export TPP_W_**/
+/*!export TPP_**/
+/*!export TPP**/
+/*!export ast_loc*/
+/*!export ast_loc_**/
+/*!export _TPP_**/
+/*!export _tpp_**/
+/*!export DeeLexer_**/
+/*!export -TOK_**/ /* These aliases are detected by fixincludes, but aren't actually enabled */
+/*!export -KWD_**/ /* *ditto* (see `TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE`) */
+/*!export -GUARD_TPP_**/
+/*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-amalgamation.h"*/
+/*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"*/
+/*!fixincludes include_inline "./lexer.def"*/
 #ifndef GUARD_DEEMON_COMPILER_LEXER_H
-#define GUARD_DEEMON_COMPILER_LEXER_H 1 /*!export-*/
-
-/* TODO: Rename this file "parser.h" */
+#define GUARD_DEEMON_COMPILER_LEXER_H 1
 
 #include "../api.h"
 
-#ifdef DEE_SOURCE
-#define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
-#define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
-#endif /* DEE_SOURCE */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "parser.h" /* PARSE_FLFSTMT, parser_flags */
+#include "symbol.h" /* SYMBOL_*, symbol_ambig_foreach_decl */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <hybrid/host.h>          /* _WIN32, _WIN64, __unix__ */
+#include <hybrid/sched/__yield.h> /* __hybrid_yield */
+#include <hybrid/typecore.h>      /* __CHAR_BIT__, __SIZEOF_INTMAX_T__ */
+
+#include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Alloca, Dee_Free */
+#include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
+#include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
+#include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
+#include "../string.h"          /* DeeAscii_*, DeeString*, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
+#include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
+#include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, STDIN_FILENO, STDOUT_FILENO, _alloca, alloca, bzero, free, localtime_s, malloc, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, stdin, stdout, strchr, strlen, time */
+#include "../system.h"          /* DeeSystem_* */
+#include "../thread.h"          /* DeeThread_CheckInterrupt */
+#include "../types.h"           /* DREF, DeeObject, Dee_AsObject, Dee_ITER_DONE, Dee_formatprinter_t, Dee_ssize_t */
+#include "../util/atomic.h"     /* Dee_atomic_* */
+#include "../util/once.h"       /* Dee_ONCE */
+
+#include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINT32_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, int32_t, intmax_t, uint32_t, uintmax_t */
+
+/* To satisfy "fixincludes" (these includes are intentionally missing) */
+/*!fixincludes fake_include "../module.h" // DeeModule_GetShortName, Dee_COMPILER_FLAG_FORMAT, Dee_COMPILER_FLAG_MAIN */
+/*!fixincludes fake_include "compiler.h"  // _DeeLexer_Current *//* Referenced by "lexer.def", but only relevant for "tpp.c" */
+
+/************************************************************************/
+/* TPP3 API hooks                                                       */
+/************************************************************************/
+/* Generic HARD_ERROR that means that a deemon error was thrown
+ * NOTE: We re-use `TPP_ENOMEM` for this case, since `TPP_ENOMEM`
+ *       is already thrown by TPP3 internally whenever one of our
+ *       `Dee_Malloc()` functions fails (which they only do when
+ *       also throwing an error) */
+#define TPP_EDEEMON     TPP_ENOMEM
+#define TPP_TOK_EDEEMON TPP_TOK_ENOMEM
+#define TPP_TOK_ENOENT  TPP_TOK_OFERR(TPP_ENOENT) /* Not used by TPP itself -- only used by some deemon APIs */
+
+#define TPP_CONFIG_USERDEFS_FILENAME "../../../../include/deemon/compiler/lexer.def"
+#ifdef CONFIG_HOST_WINDOWS
+#define TPP_OS_WINDOWS 1
+#else /* CONFIG_HOST_WINDOWS */
+#define TPP_OS_WINDOWS 0
+#endif /* !CONFIG_HOST_WINDOWS */
+#ifdef CONFIG_HOST_UNIX
+#define TPP_OS_UNIX 1
+#else /* CONFIG_HOST_UNIX */
+#define TPP_OS_UNIX 0
+#endif /* !CONFIG_HOST_UNIX */
+
+#define TPP_HOST_NO_SYSTEM_INCLUDES 1 /* We do all includes ourselves! */
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
+#define TPP_HOST_HAVE_PP_VARARGS 1
+#else /* __PREPROCESSOR_HAVE_VA_ARGS */
+#define TPP_HOST_HAVE_PP_VARARGS 0
+#endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
+#define TPPCALL           DFCALL
+#define TPPVCALL          /* nothing */
+#define TPP_IMPL          __INTERN
+#define TPP_DECL          __INTDEF
+#define TPP_CONST_IMPL    __INTERN_CONST
+#define tpp_assume(expr)  __builtin_assume(expr)
+#define tpp_restrict      __restrict
+#define TPP_NONNULL       __ATTR_NONNULL
+#define TPP_WUNUSED       __ATTR_WUNUSED
+#define TPP_RETNONNULL    __ATTR_RETNONNULL
+#define TPP_PURECALL      __ATTR_PURE
+#define TPP_CONSTCALL     __ATTR_CONST
+#define TPP_COLDCALL      __ATTR_COLD
+#define TPP_NOINLINE      __ATTR_NOINLINE
+#define TPP_FALLTHRU      __ATTR_FALLTHROUGH
+#define TPP_INLINE        __LOCAL
+#define TPP_CHAR_BIT      __CHAR_BIT__
+#define tpp_offsetof      __builtin_offsetof
+#define tpp_container_of  __COMPILER_CONTAINER_OF
+#define tpp_lengthof      __COMPILER_LENOF
+#define tpp_unreachable() __builtin_unreachable()
+#define tpp_expect        __builtin_expect
+#define tpp_likely        __likely
+#define tpp_unlikely      __unlikely
+
+#define tpp_uint_least8       uint_least8_t
+#define tpp_int_least8        int_least8_t
+#define TPP_UINT_LEAST8_MAX   UINT_LEAST8_MAX
+#define TPP_UINT_LEAST8_C(x)  UINT8_C(x)
+#define tpp_uint_least16      uint_least16_t
+#define tpp_int_least16       int_least16_t
+#define TPP_UINT_LEAST16_MAX  UINT_LEAST16_MAX
+#define TPP_UINT_LEAST16_C(x) UINT16_C(x)
+#define tpp_uint_least32      uint_least32_t
+#define tpp_int_least32       int_least32_t
+#define TPP_UINT_LEAST32_MAX  UINT_LEAST32_MAX
+#define TPP_UINT_LEAST32_C(x) UINT32_C(x)
+#define tpp_uint_least64      uint_least64_t
+#define tpp_int_least64       int_least64_t
+#define TPP_UINT_LEAST64_MAX  UINT_LEAST64_MAX
+#define TPP_UINT_LEAST64_C(x) UINT64_C(x)
+#define tpp_uint_fast8        uint_fast8_t
+#define tpp_int_fast8         int_fast8_t
+#define TPP_UINT_FAST8_MAX    UINT_FAST8_MAX
+#define TPP_UINT_FAST8_C(x)   UINT8_C(x)
+#define tpp_uint_fast16       uint_fast16_t
+#define tpp_int_fast16        int_fast16_t
+#define TPP_UINT_FAST16_MAX   UINT_FAST16_MAX
+#define TPP_UINT_FAST16_C(x)  UINT16_C(x)
+#define tpp_uint_fast32       uint_fast32_t
+#define tpp_int_fast32        int_fast32_t
+#define TPP_UINT_FAST32_MAX   UINT_FAST32_MAX
+#define TPP_UINT_FAST32_C(x)  UINT32_C(x)
+#define tpp_intmax            intmax_t
+#define tpp_uintmax           uintmax_t
+#define TPP_UINTMAX_MAX       UINTMAX_MAX
+#define TPP_UINTMAX_C(x)      UINTMAX_C(x)
+#define tpp_size              size_t
+#define TPP_SIZE_MAX          SIZE_MAX
+#define tpp_ssize             ptrdiff_t
+#define TPP_SSIZE_MAX         PTRDIFF_MAX
+#ifdef __LONGDOUBLE
+#define tpp_float __LONGDOUBLE
+#else /* __LONGDOUBLE */
+#define tpp_float double
+#endif /* !__LONGDOUBLE */
+#define TPP_REF               DREF
+#define TPP_STATIC_ASSERT     __STATIC_ASSERT
+#define TPP_STATIC_ASSERT_MSG __STATIC_ASSERT_MSG
+
+#ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen
+#undef strnlen
+#define strnlen Dee_libc_strnlen
+DeeSystem_DEFINE_strnlen(Dee_libc_strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp Dee_libc_strcmp
+DeeSystem_DEFINE_strcmp(Dee_libc_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
+#define tpp_strlen(s)        strlen(s)
+#define tpp_strchr(s, c)     strchr(s, c)
+#define _tpp_strnlen(s, n)   strnlen(s, n)
+#define tpp_strcmp(a, b)     strcmp(a, b)
+#define tpp_memcmp(a, b, n)  memcmp(a, b, n)
+#define tpp_memcpy(d, s, n)  memcpy(d, s, n)
+#define tpp_memset(d, c, n)  memset(d, c, n)
+#define tpp_memchr(p, c, n)  memchr(p, c, n)
+#define tpp_memmove(d, s, n) memmove(d, s, n)
+#ifdef CONFIG_HAVE_memmem
+#define tpp_memmem(h, hs, n, ns) memmem(h, hs, n, ns)
+#endif /* CONFIG_HAVE_memmem */
+#define tpp_memmoveup(d, s, n)   memmoveup(d, s, n)
+#define tpp_memmovedown(d, s, n) memmovedown(d, s, n)
+#define tpp_mempcpy(d, s, n)     mempcpy(d, s, n)
+#define tpp_bzero(p, n)          bzero(p, n)
+#ifndef CONFIG_HAVE_qsort
+#define CONFIG_HAVE_qsort
+#define qsort Dee_libc_qsort
+DeeSystem_DEFINE_qsort(Dee_libc_qsort)
+#endif /* !CONFIG_HAVE_qsort */
+#define tpp_qsort(p, elem_count, elem_size, cmp)  qsort(p, elem_count, elem_size, cmp)
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) static int NAME(void const *lhs, void const *rhs)
+
+#define tpp_trymalloc(s)     Dee_TryMalloc(s)
+#define tpp_malloc(s)        Dee_Malloc(s)
+#define tpp_tryrealloc(p, s) Dee_TryRealloc(p, s)
+#define tpp_realloc(p, s)    Dee_Realloc(p, s)
+#define tpp_free(p)          Dee_Free(p)
+#ifdef Dee_Alloca
+#define tpp_alloca(s) Dee_Alloca(s)
+#endif /* Dee_Alloca */
+#define tpp_assert Dee_ASSERT
+#define TPP_SYSCALL(expr, return_error) \
+	do {                                \
+		if (DeeThread_CheckInterrupt()) \
+			return_error(TPP_EIO);      \
+		expr;                           \
+	} while (0)
+#define tpp_formatprinter Dee_formatprinter_t
+#define tpp_formatprinter_print(printer, arg, text, num_bytes) \
+	(*(printer))(arg, (char const *)(text), num_bytes)
+#define tpp_formatprinter_of(NAME) (&NAME)
+#define TPP_FORMATPRINTER_DECL(NAME)                        \
+	TPP_DECL WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define TPP_FORMATPRINTER_IMPL(NAME, arg, text, num_bytes)  \
+	TPP_IMPL WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define TPP_FORMATPRINTER_DEFINE(NAME, arg, text, num_bytes) \
+	PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC   \
+	NAME(void *arg, char const *__restrict text, size_t num_bytes)
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	NAME(arg, (char const *)(text), num_bytes)
+#ifdef CONFIG_NO_THREADS
+#define TPP_SINGLE_THREADED 1
+#else /* CONFIG_NO_THREADS */
+#define TPP_SINGLE_THREADED 0
+#endif /* !CONFIG_NO_THREADS */
+#define tpp_atomic32                        uint32_t
+#define TPP_ATOMIC32_INIT(value)            value
+#define tpp_atomic32_init(p_atomic, value)  (void)(*(p_atomic) = (value))
+#define tpp_atomic32_read(p_atomic)         Dee_atomic_read(p_atomic)
+#define tpp_atomic32_xchg(p_atomic, newval) Dee_atomic_xch(p_atomic, newval)
+#define tpp_atomic32_inc(p_atomic)          Dee_atomic_inc(p_atomic)
+#define tpp_atomic32_decfetch(p_atomic)     Dee_atomic_decfetch(p_atomic)
+#define tpp_sched_yield()                   __hybrid_yield()
+#define tpp_once(expr)                      Dee_ONCE({ expr; })
+
+#define TPP_HAVE_ASSUME_ASCII_CTYPE 1
+#define tpp_ascii_issymstrt(ch)     DeeAscii_IsSymStrt(ch)
+#define tpp_ascii_issymcont(ch)     DeeAscii_IsSymCont(ch)
+#define tpp_ascii_isdigit(ch)       DeeAscii_IsDigit(ch)
+#define tpp_ascii_isspace(ch)       DeeAscii_IsSpace(ch)
+#define tpp_ascii_islf(ch)          DeeAscii_IsLF(ch)
+#define tpp_ascii_isspace_nolf(ch)  DeeAscii_IsSpaceNoLf(ch)
+#define tpp_ascii_isxdigit(ch)      DeeAscii_IsXDigit(ch)
+#define tpp_ascii_asxdigit(ch)      DeeAscii_AsDigitVal(ch)
+#define tpp_ascii_tolwrxdigit(v)    DeeAscii_ItoaLowerDigit(v)
+#define tpp_ascii_touprxdigit(v)    DeeAscii_ItoaUpperDigit(v)
+
+#define tpp_unicode_issymstrt(ord)    DeeUni_IsSymStrt(ord)
+#define tpp_unicode_issymcont(ord)    DeeUni_IsSymCont(ord)
+#define tpp_unicode_isspace(ord)      DeeUni_IsSpace(ord)
+#define tpp_unicode_islf(ord)         DeeUni_IsLF(ord)
+#define tpp_unicode_isspace_nolf(ord) DeeUni_IsSpaceNoLf(ord)
+
+#if 0 /* Would return wrong values for over-long utf-8 sequences */
+#define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) Dee_unicode_utf8seqlen[first_utf8_byte]
+#define tpp_unicode_utf8seqlen_getcur(first_utf8_byte)    Dee_unicode_utf8seqlen[first_utf8_byte]
+#endif
+#define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) Dee_unicode_utf8seqlen_safe[first_utf8_byte]
+#define tpp_unicode_utf8seqlen_getmax(first_utf8_byte)    Dee_unicode_utf8seqlen_safe[first_utf8_byte]
+#ifdef CONFIG_HAVE_fuzzy_memcmp /* TODO: Add configure-test for "fuzzy_memcmp" */
+#define tpp_fuzzy_memcmp(lhs, lhs_len, rhs, rhs_len) fuzzy_memcmp(lhs, lhs_len, rhs, rhs_len)
+#endif /* CONFIG_HAVE_fuzzy_memcmp */
+
+#define tpp_intvalue                 DREF DeeIntObject *
+#define tpp_intvalue_fini(self)      Dee_Decref(*(self))
+#define tpp_intvalue_init_zero(self) (*(self) = (DREF DeeIntObject *)DeeInt_NewZero(), TPP_EOK)
+#define tpp_intvalue_init_copy(dst, src) \
+	(*(dst) = *(src), Dee_Incref(*(dst)), TPP_EOK)
+#define tpp_intvalue_asintmax(self, p_result) \
+	(DeeInt_TryAsIntN(__SIZEOF_INTMAX_T__, Dee_AsObject(*(self)), p_result) ? TPP_EOK : TPP_ENOENT)
+
+/* TODO: Proper support for `tpp_intvalue_builder` */
+//TODO:typedef ... tpp_intvalue_builder;
+//TODO:tpp_errno tpp_intvalue_builder_init(tpp_intvalue_builder *self, unsigned int radix);
+//TODO:void tpp_intvalue_builder_fini(tpp_intvalue_builder *self);
+//TODO:tpp_errno tpp_intvalue_builder_pack(/*inherit(always)*/ tpp_intvalue_builder *self,
+//TODO:                                    /*initialize(on_success)*/ tpp_intvalue *p_intvalue);
+//TODO:tpp_errno tpp_intvalue_builder_adddigit(tpp_intvalue_builder *self, unsigned int digit);
+
+#define tpp_intvalue_init_uintmax(self, v) \
+	((*(self) = (DREF DeeIntObject *)_DeeInt_NewU(__SIZEOF_INTMAX_T__, v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_init_one(self)     (*(self) = (DREF DeeIntObject *)DeeInt_NewOne(), TPP_EOK)
+#define tpp_intvalue_init_bool(self, v) (*(self) = (DREF DeeIntObject *)DeeInt_NewSmallInt((v) ? 1 : 0), TPP_EOK)
+#define tpp_intvalue_init_size(self, v) ((*(self) = (DREF DeeIntObject *)DeeInt_NewSize(v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_init_char(self, v) ((*(self) = (DREF DeeIntObject *)DeeInt_NewUInt8(v)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_asbool(self)       (DeeInt_IsZero(*(self)) ? TPP_ENOENT : TPP_EOK)
+#define tpp_intvalue_isneg(self)        (DeeInt_IsNeg(*(self)) ? TPP_EOK : TPP_ENOENT)
+#define tpp_intvalue_neg(self, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Neg(Dee_AsObject(*(self)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_inv(self, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Inv(Dee_AsObject(*(self)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_add(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Add(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_sub(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Sub(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_mul(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Mul(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_div(lhs, rhs, p_result) \
+	(DeeInt_IsZero(*(rhs)) ? TPP_ENOENT : ((*(p_result) = (DREF DeeIntObject *)DeeObject_Div(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON))
+#define tpp_intvalue_mod(lhs, rhs, p_result) \
+	(DeeInt_IsZero(*(rhs)) ? TPP_ENOENT : ((*(p_result) = (DREF DeeIntObject *)DeeObject_Mod(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON))
+#define tpp_intvalue_shl(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Shl(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_shr(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Shr(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_and(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_And(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_xor(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Xor(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_or(lhs, rhs, p_result) \
+	((*(p_result) = (DREF DeeIntObject *)DeeObject_Or(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define tpp_intvalue_cmp(lhs, rhs, p_delta)                                        \
+	((*(p_delta) = DeeObject_Compare(Dee_AsObject(*(lhs)), Dee_AsObject(*(rhs)))), \
+	 Dee_COMPARE_ISERR(*(p_delta)) ? TPP_EDEEMON : TPP_EOK)
+#define tpp_intvalue_printrepr(lexer, self, printer, arg) \
+	DeeInt_Print(Dee_AsObject(*(self)), Dee_INT_PRINT_DEC, 0, printer, arg)
+
+#ifdef DeeSystem_HAVE_FS_DRIVES
+#define TPP_FS_HAVE_DRIVES 1
+#else /* DeeSystem_HAVE_FS_DRIVES */
+#define TPP_FS_HAVE_DRIVES 0
+#endif /* !DeeSystem_HAVE_FS_DRIVES */
+
+#ifdef DeeSystem_HAVE_FS_ICASE
+#define TPP_FS_HAVE_ICASE 1
+#else /* DeeSystem_HAVE_FS_ICASE */
+#define TPP_FS_HAVE_ICASE 0
+#endif /* !DeeSystem_HAVE_FS_ICASE */
+
+#define TPP_FS_SEP    DeeSystem_SEP
+#define TPP_FS_SEP_S  DeeSystem_SEP_S
+#define TPP_FS_DELIM  DeeSystem_DELIM
+#define TPP_FS_ALTSEP DeeSystem_ALTSEP
+#define TPP_FS_ISSEP  DeeSystem_IsSep
+#define TPP_FS_ISABS  DeeSystem_IsAbsN
+
+/************************************************************************/
+/* Configure TPP3                                                       */
+/************************************************************************/
+#define TPP_PROFILE                    TPP_PROFILE_MINIMAL
+#define TPP_TABSIZE                    (-4)
+#define TPP_ERROR_LIMIT                (-16)
+#define TPP_MAX_INCLUDE_DEPTH          (-64)
+#define TPP_MAX_RECURSIVE_MACRO_DEPTH  (-4096)
+#define TPP_HAVE_FILE_NONBLOCK         0 /* Not for now... */
+#define TPP_HAVE_UNICODE               1
+#define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* We provide our own... */
+#define TPP_HAVE_STRERROR              0 /* Not needed -- we do our own mapping */
+#define TPP_HAVE_EUSER                 0 /* Not actually needed */
+#define TPP_HAVE_STRTOKENID            1 /* For `TPP_EMITTER_HAVE_MODE_TYPED` */
+#define TPP_HAVE_KEYWORD_USERDATA      1 /* Needed only for emitter */
+#define TPP_HAVE_KEYWORD_ASSTRING      0
+#define TPP_HAVE_KEYWORD_INCLCOUNT     1
+#define TPP_HAVE_EXTENSIONS            1
+#define TPP_HAVE_EXTENSIONS_PUSH_POP   1
+#define TPP_HAVE_WARNINGS              1
+#define TPP_HAVE_WARNINGS_PUSH_POP     1
+#define TPP_HAVE_WARNING_NUMBERS       1
+#define TPP_HAVE_WARNING_ERROR         1
+#define TPP_HAVE_WARNING_SUPPRESS      1
+#define TPP_HAVE_WARNING_DEFAULT       1
+#define TPP_HAVE_FILE_NOCLOSE          1
+#define TPP_HAVE_FILE_NOKWD            1
+#define TPP_HAVE_FILE_LC_CACHE         1
+#define TPP_HAVE_CR_LF_DETECTION       1
+#define TPP_HAVE_LEXER_COPY            1 /* Needed for `deemon -F` */
+#define TPP_HAVE_LEXER_WARNING_COUNT   0
+
+#define TPP_COMMON_HAVE_TPP_TOK             0
+#define TPP_COMMON_HAVE_TPP_TOK_SPACE       0
+#define TPP_COMMON_HAVE_TPP_TOK_COMMENT     0
+#define TPP_COMMON_HAVE_TPP_TOK_C_GENERIC   TPP_COMMON_HAVE_TPP_TOK
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_STRING  0
+#define TPP_COMMON_HAVE_TPP_TOK_C_TOKENS    0
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS  0
+#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS 0
+#define TPP_COMMON_HAVE_CPP_DIRECTIVES_STD  1
+#define TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT  1
+
+#define TPP_HAVE_BSE                          1
+#define TPP_HAVE_BSE_WHITESPACE               1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_UNI        1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED      1
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY 1
+#define TPP_HAVE_CPP_DIRECTIVES               TPP_CONF_FEAT1
+#define TPP_HAVE_CPP_MACROS                   TPP_CONF_FEAT1
+#define TPP_HAVE_MAGIC_WHITESPACE             TPP_CONF_EXT1
+
+#define TPP_HAVE_CPP_BUILTIN_MACROS    1
+#define TPP_HAVE_CPP_PREDEFINED_MACROS TPP_CONF_EXT1 /* Disabled via `-undef` */
+#define TPP_HAVE_CPP_EXCLAIM           1
+#define TPP_HAVE_CPP_BLANK             1
+#define TPP_HAVE_CPP_DIGIT_LINE        1
+#define TPP_HAVE_LEXER_USERPWD         1
+#define TPP_HAVE_CPP_LINE              1
+#define TPP_HAVE_CPP_INCLUDE           1
+#define TPP_HAVE_CPP_INCLUDE_NEXT      1
+#define TPP_HAVE_CPP_IMPORT            1
+#define TPP_HAVE_CPP_IF_ELSE_ENDIF     1
+#define TPP_HAVE_CPP_DEFINE            1
+#define TPP_HAVE_CPP_ASSERT            1
+#define TPP_HAVE_CPP_ERROR             1
+#define TPP_HAVE_CPP_WARNING           1
+#define TPP_HAVE_CPP_IDENT_SCCS        0 /* No longer supported (used to be ignored in the past) */
+#define TPP_HAVE_CPP_PRAGMA            1
+#define TPP_HAVE_CPP_EMBED             1
+#define TPP_HAVE_CPP_EMBED_OFFSET      1
+
+#define TPP_HAVE_MACRO__Pragma                        1
+#define TPP_HAVE_MACRO___pragma                       1
+#define TPP_HAVE_CLANG_MACRO___has_attribute          0
+#define TPP_HAVE_CLANG_MACRO___has_builtin            0
+#define TPP_HAVE_CLANG_MACRO___has_cpp_attribute      0
+#define TPP_HAVE_CLANG_MACRO___has_declspec_attribute 0
+#define TPP_HAVE_CLANG_MACRO___has_extension          0
+#define TPP_HAVE_CLANG_MACRO___has_feature            0
+#define TPP_HAVE_CLANG_MACRO___has_c_attribute        0
+#define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES        0
+#define TPP_COMMON_HAVE_KEYWORD_FEATURES              0
+#define TPP_HAVE_MACRO___is_identifier                1
+#define TPP_HAVE_MACRO___is_deprecated                1
+#define TPP_HAVE_MACRO___is_poisoned                  1
+#define TPP_HAVE_MACRO___has_extension                1
+#define TPP_HAVE_MACRO___has_known_extension          1
+#define TPP_HAVE_MACRO___has_warning                  1
+#define TPP_HAVE_MACRO___has_known_warning            1
+#define TPP_HAVE_MACRO___has_include                  1
+#define TPP_HAVE_MACRO___has_include_next             1
+#define TPP_HAVE_MACRO___has_embed                    1
+#define TPP_HAVE_MACRO___FILE__                       1
+#define TPP_HAVE_MACRO___LINE__                       1
+#define TPP_HAVE_MACRO___TIME__                       1
+#define TPP_HAVE_MACRO___DATE__                       1
+#define TPP_HAVE_MACRO___COLUMN__                     1
+#define TPP_HAVE_MACRO___BASE_FILE__                  1
+#define TPP_HAVE_MACRO___FILE_NAME__                  1
+#define TPP_HAVE_MACRO___INCLUDE_LEVEL__              1
+#define TPP_HAVE_MACRO___INCLUDE_DEPTH__              1
+#define TPP_HAVE_MACRO___COUNTER__                    1
+#define TPP_HAVE_MACRO___TIMESTAMP__                  1
+#define TPP_HAVE_NUMERIC_DATE_MACROS                  1
+#define TPP_HAVE_NUMERIC_TIME_MACROS                  1
+#define TPP_HAVE_MACRO___TPP_EVAL                     1
+#define TPP_HAVE_MACRO___TPP_EXEC                     1
+#define TPP_HAVE_MACRO___TPP_UNIQUE                   1
+#define TPP_HAVE_MACRO___TPP_LOAD_FILE                1
+#define TPP_HAVE_MACRO___TPP_COUNTER                  1
+#define TPP_HAVE_MACRO___TPP_RANDOM                   1
+#define TPP_HAVE_MACRO___TPP_STR_DECOMPILE            1
+#define TPP_HAVE_MACRO___TPP_STR_PACK                 1
+#define TPP_HAVE_MACRO___TPP_STR_SUBSTR               1
+#define TPP_HAVE_MACRO___TPP_STR_SIZE                 1
+#define TPP_HAVE_MACRO___TPP_COUNT_TOKENS             1
+#define TPP_HAVE_MACRO___TPP_IDENTIFIER               1
+#define TPP_HAVE_MACRO_CXX_OPERATOR_NAMES             0
+
+#define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS TPP_CONF_EXT1
+#define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE     TPP_CONF_EXT0
+#define TPP_HAVE_MACRO_RECURSION               TPP_CONF_EXT0
+#define TPP_HAVE_TRADITIONAL_MACROS            TPP_CONF_EXT0
+#define TPP_HAVE_NAMED_VARARGS_IN_MACROS       1
+#define TPP_HAVE_VA_ARGS_IN_MACROS             1
+#define TPP_HAVE_VA_COMMA_IN_MACROS            1
+#define TPP_HAVE_VA_OPT_IN_MACROS              1
+#define TPP_HAVE_VA_NARGS_IN_MACROS            1
+#define TPP_HAVE_VA_GLUE_COMMA_IN_MACROS       1
+#define TPP_HAVE_STRINGIZE_MACRO_ARGUMENT      1
+#define TPP_HAVE_CHARIZE_MACRO_ARGUMENT        1
+#define TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT    1
+#define TPP_HAVE_GLUE_MACRO_ARGUMENT           1
+
+#define TPP_HAVE_PRAGMA_PUSH_MACRO                      1
+#define TPP_HAVE_PRAGMA_ONCE                            1
+#define TPP_HAVE_PRAGMA_DEPRECATED                      1
+#define TPP_HAVE_PRAGMA_EXTENSION                       1
+#define TPP_HAVE_PRAGMA_WARNING                         1
+#define TPP_HAVE_PRAGMA_MESSAGE                         1
+#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION         TPP_CONF_EXT0
+#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED TPP_CONF_EXT0
+#define TPP_HAVE_PRAGMA_ERROR                           1
+#define TPP_HAVE_PRAGMA_REGION                          1
+#define TPP_HAVE_PRAGMA_TPP_EXEC                        1
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS           0 /* No longer supported */
+#define TPP_HAVE_PRAGMA_GCC_POISON                      1
+#define TPP_HAVE_PRAGMA_GCC_WARNING                     1
+#define TPP_HAVE_PRAGMA_GCC_ERROR                       1
+#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER               1
+#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC                  1
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY                  0 /* TODO: (disabled because of missing "tpp_io_compare_mtime") */
+#define TPP_HAVE_PRAGMA_TPP_WARNING                     1
+#define TPP_HAVE_PRAGMA_TPP_EXTENSION                   1
+#define TPP_HAVE_PRAGMA_TPP_TPP_EXEC                    1
+#define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS       0 /* No longer supported */
+#define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH                1
+#define TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES            0
+
+#define TPP_HAVE_TRIGRAPHS TPP_CONF_EXT0
+#define TPP_HAVE_DIGRAPHS  TPP_CONF_EXT0
+
+#define TPP_HAVE_TOK_LF      TPP_CONF_FEAT0 /* Relevant for `deemon -E` and inline assembly */
+#define TPP_HAVE_TOK_SPACE   TPP_CONF_FEAT0 /* Relevant for `deemon -E` */
+#define TPP_HAVE_TOK_COMMENT TPP_CONF_FEAT0 /* Relevant for `deemon -E` and `deemon -F` (and `TPP_HAVE_TOK_AT_AT_COMMENT`) */
+
+#define TPP_HAVE_TOK_CXX_COMMENT          TPP_CONF_FEAT1
+#define TPP_HAVE_TOK_C_COMMENT            TPP_CONF_FEAT1
+#define TPP_HAVE_TOK_PASCAL_COMMENT       TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_HTML_COMMENT         TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_LUA_BRACKET_COMMENT  TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_SQL_COMMENT          TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_AT_AT_COMMENT        0              /* Doc strings do their own thing... */
+#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
+#define TPP_HAVE_TOK_SLASH_COMMENT        0
+#define TPP_HAVE_TOK_AT_COMMENT           0
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT    TPP_CONF_FEAT0 /* Relevant for inline assembly and `deemon -F` */
+#define TPP_HAVE_TOK_SOL_SLASH_COMMENT    0
+#define TPP_HAVE_TOK_SOL_AT_COMMENT       0
+
+#define TPP_HAVE_TOK_DOLLAR                             TPP_CONF_EXT0
+#define TPP_HAVE_TOK_C_INT                              1
+#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE         1
+#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK         1
+#define TPP_HAVE_TOK_PASCAL_HEX                         0
+#define TPP_HAVE_TOK_C_FLOAT                            1
+#define TPP_HAVE_SMART_FLOAT_TOKENS                     TPP_CONF_EXT1
+#define TPP_HAVE_TOK_C_CHAR                             1
+#define TPP_HAVE_TOK_C_STRING                           1
+#define TPP_HAVE_TOK_RAW_STRING_LITERAL                 1
+#define TPP_HAVE_TOK_RAW_CHAR_LITERAL                   1
+#define TPP_HAVE_TOK_BLOCK_STRING_LITERAL               1 /* New feature under `CONFIG_EXPERIMENTAL_USE_TPP3` */
+#define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL                 1 /* New feature under `CONFIG_EXPERIMENTAL_USE_TPP3` */
+#define TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL       1
+#define TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL         1
+#define TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL 0
+#define TPP_HAVE_TOK_COLON_COLON                        1 /* Needed for D100 backwards compat */
+
+#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS             1
+#define TPP_HAVE_INCLUDE_REMAP                     TPP_CONF_EXT0
+#define TPP_HAVE_USER_KEYWORDS                     1
+#define TPP_HAVE_RAW_STRING_BSE                    1
+#define TPP_HAVE_STRING_ESCAPE_E                   1
+#define TPP_HAVE_STRING_ESCAPE_S                   1
+#define TPP_HAVE_STRING_ESCAPE_XML                 1
+#define TPP_HAVE_STRING_ESCAPE_OCT                 1
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_HEX                 1
+#define TPP_HAVE_STRING_ESCAPE_HEX_BIG             0 /* Nope: only 2-nibble is supported, and are treated as utf-8 (different from old lexer, which allowed up to 8, treating as UTF-32) */
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_UNI                 1
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE           1
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY      1
+#define TPP_HAVE_STRING_ESCAPE_NAMED               1
+#define TPP_HAVE_STRING_ESCAPE_NAMED_MANY          1
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN        0
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET      0
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE        0             /* XXX: Maybe turn this on? */
+#define TPP_HAVE_STRING_ESCAPE_BIGCHAR             0             /* Nope: only 2-nibble is supported */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE            TPP_CONF_EXT1 /* Only exists due to legacy code */
+#define TPP_HAVE_STRING_WARN_MULTILINE             1             /* Warn when legacy code uses this... */
+#define TPP_HAVE_STRING_AUTO_CONCAT                1
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES        1
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD          1
+#define TPP_HAVE_ESCAPE_NAMED_XML                  1
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE       TPP_CONF_EXT1
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE      TPP_CONF_EXT0
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
+
+#define TPP_COMMON_HAVE_HOOK_COOKIES 0 /* Not needed: can use offsets instead! */
+
+#define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_CONST_BUILTIN
+#define TPP_HOOK_DEFAULT_USER    TPP_HOOK_CONST_USER
+#define TPP_HOOK_DEFAULT_NOOP    TPP_HOOK_DISABLED
+
+#define TPP_HAVE_WARNPRINTER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_WARNPRINTER                DeeLexer_TPP_WarnPrinterHook
+#define TPP_HAVE_WARNHANDLER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_WARNHANDLER                DeeLexer_TPP_WarnHandlerHook
+#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK   1
+#define TPP_HAVE_MESGPRINTER_HOOK           TPP_HOOK_CONST_USER
+#define TPP_HOOK_MESGPRINTER                DeeLexer_TPP_MesgPrinterHook
+/* #define TPP_HOOK_PARSEEXPR TODO: parse a deemon expression */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK        TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK        TPP_HOOK_RT_NOOP   /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_FILE_PUSHED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_FILE_POPPED_HOOK           TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK   TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK     TPP_HOOK_RT_NOOP   /* Must be configurable for MAKEFILE */
+#define TPP_HAVE_MACRO_DEFINED_HOOK         TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK       TPP_HOOK_RT_NOOP_C /* Must be configurable for EMITTER */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK   TPP_HOOK_CONST_USER
+#define TPP_HOOK_SYSTEM_INCLUDE_PATH        DeeLexer_TPP_SystemIncludePathHook
+#define TPP_HAVE_RAISE_LEXERROR_HOOK        TPP_HOOK_CONST_USER
+#define TPP_HOOK_RAISE_LEXERROR             DeeLexer_TPP_RaiseLexErrorHook
+
+#define TPP_HOOK_ISFLOATSUFFIX(cookie, pos) TPP_ENOENT /* Deemon doesn't have floating-point suffixes */
+
+/* Would only make sense for legacy code that uses #include-s, but that's discouraged already.
+ * Also: causes problems with the "misc-import-lib" test, so to save myself the headache: disable. */
+#define TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER 0
+
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL              1
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL        1
+#define TPP_HAVE_TOK_POUND_POUND                1
+#define TPP_HAVE_TOK_PERCENT_EQUAL              1
+#define TPP_HAVE_TOK_AMP_AMP                    1
+#define TPP_HAVE_TOK_AMP_EQUAL                  1
+#define TPP_HAVE_TOK_STAR_STAR                  1
+#define TPP_HAVE_TOK_STAR_STAR_EQUAL            1
+#define TPP_HAVE_TOK_STAR_EQUAL                 1
+#define TPP_HAVE_TOK_PLUS_PLUS                  1
+#define TPP_HAVE_TOK_PLUS_EQUAL                 1
+#define TPP_HAVE_TOK_MINUS_MINUS                1
+#define TPP_HAVE_TOK_MINUS_EQUAL                1
+#define TPP_HAVE_TOK_MINUS_RANGLE               1
+#define TPP_HAVE_TOK_DOT_DOT_DOT                1
+#define TPP_HAVE_TOK_SLASH_EQUAL                1
+#define TPP_HAVE_TOK_COLON_EQUAL                1
+#define TPP_HAVE_TOK_LANGLE_LANGLE              1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_MINUS        1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE       1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL 1
+#define TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL        1
+#define TPP_HAVE_TOK_LANGLE_EQUAL               1
+#define TPP_HAVE_TOK_EQUAL_EQUAL                1
+#define TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL          1
+#define TPP_HAVE_TOK_RANGLE_EQUAL               1
+#define TPP_HAVE_TOK_RANGLE_RANGLE              1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL        1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE       1
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL 1
+#define TPP_HAVE_TOK_QMARK_QMARK                1
+#define TPP_HAVE_TOK_HAT_EQUAL                  1
+#define TPP_HAVE_TOK_PIPE_EQUAL                 1
+#define TPP_HAVE_TOK_PIPE_PIPE                  1
+
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED                1
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONF_EXT1
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS                1
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS                 1
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    1
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS 1
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            0
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     TPP_CONF_EXT0
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT             0
+#define TPP_HAVE_QUALITY_WARNINGS                    1
+
+#define TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR          1
+#define TPP_HAVE_INCLUDE_PATH_ENVIRON                1
+#define TPP_CONFIG_INCLUDE_PATH_ENVIRON              2("DEEMON_PATH", "CPATH")
+#define TPP_HAVE_INCLUDE_PATH_QUOTE                  1
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR                 1
+#define TPP_HAVE_INCLUDE_PATH_AFTER                  1
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE    1
+#define TPP_HAVE_INCLUDE_PATH_EMBED                  1
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP               1
+#define TPP_HAVE_WERROR                              TPP_CONF_EXT0
+#define TPP_HAVE_WSYSTEM_HEADERS                     TPP_CONF_EXT0
+#define TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS           1
+#define TPP_HAVE_FILE_MACRO_TRACKARGS                1
+#define TPP_HAVE_FILE_ENCODING_EMBED                 1
+#define TPP_HAVE_LEXER_SKIP                          1
+#define TPP_HAVE_LEXER_TRYSKIP_RAW                   1
+#define TPP_HAVE_LEXER_PEEK_RAW                      1
+#define TPP_HAVE_LEXER_REPRTOKENID                   1
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE             0
+#define TPP_HAVE_LEXER_GETKEYWORDDEFINED             1
+#define TPP_HAVE_LEXER_ISIDENTIFIER                  1
+#define TPP_HAVE_MACRO_NAME                          1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS              1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED       1
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO    1
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE            1
+#define TPP_HAVE_LEXER_PARSEEMBED                    1
+#define TPP_HAVE_LEXER_DECODEINT                     1
+#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS        1
+#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS     1
+#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS      0 /* Dumb... */
+#define TPP_HAVE_LEXER_DECODEFLOAT                   1
+#define TPP_INTVALUE_MATH_CANOVERFLOW                0 /* Nope: because we use `DeeIntObject` to get arbitrary-length integers */
+#define TPP_INTVALUE_ASINTMAX_CANOVERFLOW            1 /* Yes: because `DeeIntObject` is used, these can get *really* big */
+#define TPP_HAVE_TPP_EXTENSION_NEAREST               1
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST           1
+#define TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE 0
+#define TPP_HAVE_CPP_FEATURE_MACROS                  0
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST             1
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST         1
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST           1
+#define TPP_HAVE_TOKEN_NUMBER                        1
+#define TPP_HAVE_STATIC_EMPTY_STRING                 TPP_SINGLE_THREADED /* Enable only when single-threaded (in SMP, use distinct objects so strings don't need atomics) */
+#define TPP_HAVE_LEXER_ERRF                          1
+#define TPP_HAVE_LEXER_PUSHFILE_IO                   1
+#define TPP_HAVE_LEXER_DECODECOMMENT                 1 /* Needed by `deemon -F` */
+#define TPP_HAVE_FILE_GETIOOFFSET                    1 /* Needed by `deemon -F` */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS                 1 /* Needed by `deemon -F` (to clear `#pragma once` for format-scripts) */
+
+#define TPP_WGNAME_ENVIRON 2("environ", "usage") /* Also allow "-Wusage" here for backwards compat */
+
+#define TPP_HAVE_CLI                              1
+#define TPP_HAVE_CLI_HELP                         1
+#define TPP_HAVE_CLI_HELP_ALL_SPELLINGS           1
+#define TPP_HAVE_CLI_DASH_DEFINE_MACRO            1
+#define TPP_HAVE_CLI_DASH_UNDEFINE_MACRO          1
+#define TPP_HAVE_CLI_DASH_ASSERT                  1
+#define TPP_HAVE_CLI_DASH_INCLUDE                 1
+#define TPP_HAVE_CLI_DASH_IMACROS                 1
+#define TPP_HAVE_CLI_DASH_UNDEF                   1
+#define TPP_HAVE_CLI_DASH_FEXTENSION              1
+#define TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS 1
+#define TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH      1
+#define TPP_HAVE_CLI_DASH_FTABSTOP                1
+#define TPP_HAVE_CLI_DASH_COMMENTS                1
+#define TPP_HAVE_CLI_DASH_TRADITIONAL             1
+#define TPP_HAVE_CLI_DASH_TRIGRAPHS               1
+#define TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY       1
+#define TPP_HAVE_CLI_DASH_IQUOTE                  1
+#define TPP_HAVE_CLI_DASH_ISYSTEM                 1
+#define TPP_HAVE_CLI_DASH_IDIRAFTER               1
+#define TPP_HAVE_CLI_DASH_EMBED_DIR               1
+#define TPP_HAVE_CLI_DASH_IWITHPREFIX             1
+#define TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE       1
+#define TPP_HAVE_CLI_DASH_IPREFIX                 1
+#define TPP_HAVE_CLI_DASH_ISYSROOT                1
+/*#define TPP_CONFIG_CLI_DEFAULT_SYSROOT TODO:DeeExec_GetHome() ??? */
+#define TPP_HAVE_CLI_DASH_REMAP                   1
+#define TPP_HAVE_CLI_DASH_WERROR                  1
+#define TPP_HAVE_CLI_DASH_WFATAL_ERROR            1
+#define TPP_HAVE_CLI_DASH_FMAX_ERRORS             1
+#define TPP_HAVE_CLI_DASH_WWARNING                1
+#define TPP_HAVE_CLI_DASH_WERROR_WARNING          1
+#define TPP_HAVE_CLI_SETINPUTS                    1
+#define TPP_HAVE_CLI_SETINPUTS_DASH               1
+#define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH    1
+#define TPP_HAVE_CLI_PARSEARGV                    0
+
+/************************************************************************/
+/* MAKEFILE                                                             */
+/************************************************************************/
+#define TPP_MAKEFILE_PROFILE                         TPP_PROFILE_MINIMAL
+#define TPP_MAKEFILE_HAVE_USER_DEPENDENCIES          TPP_CONF_FEAT0
+#define TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES  1
+#define TPP_MAKEFILE_HAVE_PHONY                      TPP_CONF_FEAT0
+#define TPP_MAKEFILE_HAVE_IO_HANDLE                  1
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO             1
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE     0
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE                1
+#define TPP_MAKEFILE_HAVE_CLI                        1
+#define TPP_MAKEFILE_HAVE_CLI_HELP                   1
+#define TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS     1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_M                 1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MM                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MF                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH           1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MG                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MT                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MQ                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MD                1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MMD               1
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MP                1
+#define TPP_MAKEFILE_HAVE_CLI_ENV                    TPP_CONF_FEAT0 /* Disabled by default (enabled for __MAIN__) */
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                 1
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                1
+#define TPP_MAKEFILE_HAVE_CLI_PARSEARGV              0
+#define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX  "."
+#define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION        ".dec"
+#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
+	(offsetof(DeeLexer, dl_makefile) - offsetof(DeeLexer, dl_lexer))
+
+/* I/O Hooks */
+#define tpp_io_handle DREF DeeObject * /* DeeFileObject */
+#define tpp_io_getstdin(p_handle) \
+	((*(p_handle) = DeeFile_GetStd(Dee_STDIN)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define TPP_IO_GETSTDIN_MUST_CLOSE 1
+#define tpp_io_open(filename, p_result)                                                 \
+	((*(p_result) = DeeFile_OpenString(filename, Dee_OPEN_FRDONLY, 0)) == Dee_ITER_DONE \
+	 ? TPP_ENOENT                                                                       \
+	 : (*(p_result) ? TPP_EOK : TPP_EDEEMON))
+#define tpp_io_close(handle) Dee_Decref(handle)
+/* NOTE: `DeeFile_Read()` returns `(size_t)-1` on error, which just so happens to map to `TPP_EDEEMON` */
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_io_read(file, buf, bufsize, nonblock) \
+	((tpp_ssize)DeeFile_Readf(file, buf, bufsize, (nonblock) ? Dee_FILEIO_FNONBLOCKING : Dee_FILEIO_FNORMAL))
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_io_read(file, buf, bufsize) ((tpp_ssize)DeeFile_Read(file, buf, bufsize))
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+#define tpp_makefile_io_handle DREF DeeObject * /* DeeFileObject */
+#define tpp_makefile_io_getstdout(p_handle) \
+	((*(p_handle) = DeeFile_GetStd(Dee_STDOUT)) != NULL ? TPP_EOK : TPP_EDEEMON)
+#define TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE 1
+#define tpp_makefile_io_open(filename, p_result)               \
+	((*(p_result) = DeeFile_OpenString(filename,               \
+	                                   Dee_OPEN_FWRONLY |      \
+	                                   Dee_OPEN_FCREAT |       \
+	                                   Dee_OPEN_FTRUNC,        \
+	                                   0644)) == Dee_ITER_DONE \
+	 ? TPP_ENOENT                                              \
+	 : (*(p_result) ? TPP_EOK : TPP_EDEEMON))
+#define tpp_makefile_io_close(handle) Dee_Decref(handle)
+/* NOTE: `DeeFile_Write()` returns `(size_t)-1` on error, which just so happens to map to `TPP_ENOMEM` */
+#define tpp_makefile_io_write(file, buf, bufsize) ((tpp_ssize)DeeFile_Write(file, buf, bufsize))
+
+//TODO:tpp_io_skip_blocking
+//TODO:tpp_io_withenv
+//TODO:TPP_CONFIG_HAVE_LOCALTIME_R
+
+/* Configure identifier keywords (keywords that are considered reserved, and
+ * warned about if used as variable names -- also used by __is_identifier()) */
+#define TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT 0 /* Use a whitelist (only stuff explicitly marked is an identifier) */
+#define TPP_KWDIDENTIFIER_assert            1
+#define TPP_KWDIDENTIFIER_import            1
+#define TPP_KWDIDENTIFIER_if                1
+#define TPP_KWDIDENTIFIER_elif              1
+#define TPP_KWDIDENTIFIER_else              1
+#define TPP_KWDIDENTIFIER_default           1
+/* ... All other keywords aren't pre-defined by TPP and are configured in "./lexer.def" */
+
+
+
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../object.h"          /* Dee_Decref */
-#include "../string.h"          /* Dee_unicode_printer_fini */
-#include "../system-features.h" /* bzero, memcpy */
-#include "../type.h"            /* Dee_operator_t */
-#include "../types.h"           /* DREF, DeeObject, ITER_DONE */
-#include "ast.h"                /* ast */
-#include "symbol.h"             /* LOOKUP_SYM_NORMAL, decl_ast, symbol */
-#include "tpp.h"                /* DeeLexer, TPP_KWD_*, ast_loc, tpp_keyword, tpp_token_id */
+/* Pull in TPP3 headers */
+/* clang-format off */
+#include "../../../src/external/tpp3/src/tpp-amalgamation.h"
+#include "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"
+/* clang-format on */
 
-#include <stdbool.h> /* bool, false */
-#include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* int32_t, uint16_t */
+#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#ifdef CONFIG_BUILDING_DEEMON
+#include "../alloc.h" /* Dee_Free */
+
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint32_t */
+
+#ifdef GUARD_TPP_H
+#error "Don't #include `tpp.h` directly. - Deemon must configure it for itself!"
+#endif /* GUARD_TPP_H */
 
 DECL_BEGIN
 
-struct Dee_unicode_printer;
-struct Dee_compiler_options;
-struct Dee_module_symbol;
 
-/* Parser flags (Set of `PARSE_F*`) */
-INTDEF uint16_t parser_flags;
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-INTDEF struct Dee_compiler_options *inner_compiler_options;
+#if 0 /* When defined, implement user-assembly as described
+       * by `/lib/LANGUAGE.txt` for distributions lacking
+       * inline-assembly support.
+       *  - Still allow assembly for creation of artificial
+       *    dependencies restricting the ast-based optimizer.
+       *  - Cause a compiler error when the assembly text contains
+       *    non-whitespace characters.
+       */
+#undef CONFIG_LANGUAGE_NO_ASM
+#define CONFIG_LANGUAGE_NO_ASM
+#endif
+
+
+DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes); /*!export-*/
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define Dee_BadAlloc(req_bytes)      Dee_ASSUMED_VALUE(Dee_BadAlloc(req_bytes), -1) /*!export-*/
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
+struct TPPFile;
+struct TPPKeyword;
+
+/* In order to prevent data redundancy of the library path (considering
+ * that the way standard system include paths are now implemented as
+ * `for (x: (Module from deemon).paths) yield (joinpath from fs)(x, "include");'),
+ * we simply implement the unknown-file hook of TPP, allowing us to search the
+ * default library path for a given filename whenever TPP couldn't find the file
+ * as part of its own library path. */
+INTDEF WUNUSED NONNULL((2)) struct TPPFile *DCALL
+tpp_unknown_file(int mode, char *__restrict filename,
+                 size_t filename_size,
+                 struct TPPKeyword **p_keyword_entry);
+
+struct Dee_file_object;
+
+/* TPP isn't exported by deemon, so we configure it to only be used internally. */
+#define TPPString_Free(x)                       Dee_Free(x)
+#define TPP_assert                              Dee_ASSERT
+#define TPPFUN                                  INTDEF
+#define TPP(x)                                  x
+#define TPPCALL                                 DCALL
+#define TPP_USERDEFS                            <deemon/compiler/lexer.def>
+#define TPP_CONFIG_ONELEXER                     2 /* Configure for one global lexer to speed things up. */
+#define TPP_CONFIG_GCCFUNC                      0 /* Disable builtin GCC preprocessor functions. */
+#define TPP_CONFIG_MINMACRO                     1 /* Enable minimal-macro mode, disabling all of those predefined C macros. */
+#define TPP_CONFIG_USERSTREAMS                  1 /* Use `DeeFileObject *` as stream type for TPP. */
+#define TPP_CONFIG_RAW_STRING_LITERALS          1 /* Enable support for raw string literals. */
+#define TPP_USERSTREAM_TYPE                     struct Dee_file_object *
+#define TPP_USERSTREAM_INVALID                  NULL
+#define TPP_CONFIG_SET_API_ERROR                1 /* Get TPP to set errors on bad-alloc. */
+#define TPP_CONFIG_SET_API_ERROR_BADALLOC       Dee_BadAlloc /* Get TPP to call this function on bad-alloc. */
+#define TPP_CONFIG_NONBLOCKING_IO               1 /* Enable non-blocking I/O support. */
+//#define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA   1
+#define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC 1
+#define TPP_CONFIG_NO_CALLBACK_INS_COMMENT      1
+#define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1
+#define TPP_CONFIG_CALLBACK_UNKNOWN_FILE        tpp_unknown_file /* Statically link our unknown-file callback. */
+#define TPP_CONFIG_CALLBACK_WARNING(...)        (parser_warnf(__VA_ARGS__) == 0)
+#define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS    1
+#define TPP_CONFIG_USERDEFINED_KWD_DEFAULT      1
+#define TPP_CONFIG_USERDEFINED_KWD_ASSERT       1
+#define TPP_CONFIG_USERDEFINED_KWD_IMPORT       1
+#define TPP_CONFIG_USERDEFINED_KWD_IF           1
+
+
+/* Configure non-variable TPP options. */
+/*      TPP_CONFIG_FEATURE_TRIGRAPHS           0 */
+/*      TPP_CONFIG_FEATURE_DIGRAPHS            0 */
+#define TPP_CONFIG_EXTENSION_GCC_VA_ARGS       1
+#define TPP_CONFIG_EXTENSION_GCC_VA_COMMA      1
+#define TPP_CONFIG_EXTENSION_GCC_IFELSE        1
+#define TPP_CONFIG_EXTENSION_VA_COMMA          1
+#define TPP_CONFIG_EXTENSION_VA_NARGS          1
+#define TPP_CONFIG_EXTENSION_VA_ARGS           1
+#define TPP_CONFIG_EXTENSION_VA_OPT            1
+#define TPP_CONFIG_EXTENSION_STR_E             1
+#define TPP_CONFIG_EXTENSION_ALTMAC            1
+/*      TPP_CONFIG_EXTENSION_RECMAC            0 */
+#define TPP_CONFIG_EXTENSION_BININTEGRAL       1
+/*      TPP_CONFIG_EXTENSION_MSVC_PRAGMA       0 */
+#define TPP_CONFIG_EXTENSION_STRINGOPS         1
+#define TPP_CONFIG_EXTENSION_HASH_AT           1
+#define TPP_CONFIG_EXTENSION_HASH_XCLAIM       1
+#define TPP_CONFIG_EXTENSION_WARNING           1
+#define TPP_CONFIG_EXTENSION_SHEBANG           1
+#define TPP_CONFIG_EXTENSION_INCLUDE_NEXT      1
+#define TPP_CONFIG_EXTENSION_IMPORT            1
+#define TPP_CONFIG_EXTENSION_IDENT_SCCS        0
+#define TPP_CONFIG_EXTENSION_BASEFILE          1
+#define TPP_CONFIG_EXTENSION_INCLUDE_LEVEL     1
+#define TPP_CONFIG_EXTENSION_COUNTER           1
+#define TPP_CONFIG_EXTENSION_CLANG_FEATURES    1
+#define TPP_CONFIG_EXTENSION_HAS_INCLUDE       1
+#define TPP_CONFIG_EXTENSION_LXOR              0
+#define TPP_CONFIG_EXTENSION_MULTICHAR_CONST   1
+#define TPP_CONFIG_EXTENSION_DATEUTILS         1
+#define TPP_CONFIG_EXTENSION_TIMEUTILS         1
+#define TPP_CONFIG_EXTENSION_TIMESTAMP         1
+#define TPP_CONFIG_EXTENSION_COLUMN            1
+#define TPP_CONFIG_EXTENSION_TPP_EVAL          1
+#define TPP_CONFIG_EXTENSION_TPP_UNIQUE        1
+#define TPP_CONFIG_EXTENSION_TPP_LOAD_FILE     1
+#define TPP_CONFIG_EXTENSION_TPP_COUNTER       1
+#define TPP_CONFIG_EXTENSION_TPP_RANDOM        1
+#define TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE 1
+#define TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR    1
+#define TPP_CONFIG_EXTENSION_TPP_STR_SIZE      1
+#define TPP_CONFIG_EXTENSION_TPP_STR_PACK      1
+#define TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS  1
+/*      TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA   0 */
+#define TPP_CONFIG_EXTENSION_ASSERTIONS        1
+/*      TPP_CONFIG_EXTENSION_CANONICAL_HEADERS 0 */
+/*      TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES  0 */
+#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT 0 /* Default to disabled. */
+/*      TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED 0 */
+#define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    1
+/*      TPP_CONFIG_EXTENSION_EXTENDED_IDENTS   0 */
+/*      TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO 0 */
+
+DECL_END
+
+/* clang-format off */
+#include <hybrid/typecore.h> /* Needed for better integration of tpp */
+/* clang-format on */
+#define TPP_NO_INCLUDE_STDLIB_H 1
+#include "../../../src/tpp/src/tpp.h"
+
+/* Forward-compatibility with TPP3 */
+#include "../../../src/external/tpp3/src/tpp2-forward.h"
+
+#define TPP_TOK_EDEEMON TOK_ERR
+#define TPP_TOK_ENOMEM  TOK_ERR
+#define TPP_TOK_ENOENT  ((tpp_token_id)-2) /* Not used by TPP itself -- only used by some deemon APIs */
+#else /* CONFIG_BUILDING_DEEMON */
+
+DECL_BEGIN
+struct TPPKeyword;
+DECL_END
+#define tpp_keyword struct TPPKeyword
+
+#endif /* !CONFIG_BUILDING_DEEMON */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
+#ifdef CONFIG_BUILDING_DEEMON
+DECL_BEGIN
 
-/* Parse a constant string. */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
-ast_parse_string_const(DeeLexer *self);
+/************************************************************************/
+/* Deemon wrapper for TPP lexer object                                  */
+/************************************************************************/
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-/* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_string_ast(DeeLexer *self);
+struct Dee_string_object;
+typedef struct Dee_lexer_warning_loc {
+	struct Dee_lexer_warning_loc *lwl_prev;         /* [0..1][owned] Calling location (might be used when the parser was inside of a macro) */
+	char const                   *lwl_filename;     /* [0..1] Filename */
+	union {
+		TPP_REF tpp_string       *lwl_filename_str; /* [0..1][valid_if(PART_OF(DeeLexerWarnings))] String reference for `dlw_filename` (if user-defined via `#line`) */
+		DREF DeeStringObject     *lwl_filename_obj; /* [0..1][valid_if(PART_OF(DeeCompilerErrorObject))] String object for `lwl_filename` */
+	};
+	tpp_lcinfo                    lwl_lc;           /* Line/column, or `TPP_LCINFO_INVALID` if unknown */
+} DeeLexerWarningLoc;
+
+#define DeeLexerWarningLoc_Alloc() DeeObject_MALLOC(DeeLexerWarningLoc)
+#define DeeLexerWarningLoc_Free(p) DeeObject_FREE(Dee_REQUIRES_TYPE(DeeLexerWarningLoc *, p))
+
+typedef struct Dee_lexer_warning {
+	tpp_warning_id                 lw_id;         /* Warning ID */
+	tpp_warning_invokeinfo         lw_invokeinfo; /* Warning Invocation info */
+	DREF struct Dee_string_object *lw_message;    /* [1..1] Warning message */
+	DeeLexerWarningLoc             lw_loc;        /* Warning location */
+} DeeLexerWarning;
+
+typedef struct DeeLexerWarnings {
+	size_t           lws_warnc; /* # of emitted warnings */
+	size_t           lws_warna; /* Allocated size of `lws_warnv` */
+	DeeLexerWarning *lws_warnv; /* [0..lws_warnc][owned] Vector of emitted warnings (in order of emission) */
+} DeeLexerWarnings;
+
+#define DeeLexerWarnings_Init(self) \
+	(void)((self)->lws_warnc = (self)->lws_warna = 0, (self)->lws_warnv = NULL)
+INTDEF NONNULL((1)) void DCALL DeeLexerWarnings_Fini(DeeLexerWarnings *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
+typedef struct Dee_lexer {
+	tpp_lexer        dl_lexer;    /* TPP lexer */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	DeeLexerWarnings dl_warn;     /* Emitted warnings */
+	tpp_makefile     dl_makefile; /* TPP makefile emitter */
+	uint_least32_t   dl_flags;    /* Compilation flags (set of `Dee_COMPILER_FLAG_*`) */
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+} DeeLexer;
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+/* Initialize/finalize the lexer itself -- `tpp_lexer_initfile_*()`
+ * and `tpp_lexer_finifile()` must be called as the lexer is used! */
+#define DeeLexer_Init(self, flags) \
+	(tpp_lexer_init(&(self)->dl_lexer), _DeeLexer_InitAfterLexer(self, flags))
+#define _DeeLexer_InitAfterLexer(self, flags)                \
+	(void)(DeeLexerWarnings_Init(&(self)->dl_warn),          \
+	       tpp_makefile_init(&(self)->dl_makefile,           \
+	                         &(self)->dl_lexer,              \
+	                         &DeeLexer_TPP_MesgPrinterHook), \
+	       (self)->dl_flags = (flags))
+#define _DeeLexer_FiniWithoutLexer(self)      \
+	(tpp_makefile_fini(&(self)->dl_makefile), \
+	 DeeLexerWarnings_Fini(&(self)->dl_warn))
+#define DeeLexer_Fini(self)            \
+	(_DeeLexer_FiniWithoutLexer(self), \
+	 tpp_lexer_fini(&(self)->dl_lexer))
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#define DeeLexer_OfTPP(p_tpp_lexer) COMPILER_CONTAINER_OF(p_tpp_lexer, DeeLexer, dl_lexer)
+
+#define DeeLexer_Has(self, feat)                 tpp_lexer_has(&(self)->dl_lexer, feat)
+#define DeeLexer_GetExtension(self, ext)         tpp_lexer_getextension(&(self)->dl_lexer, ext)
+#define DeeLexer_GetTok(self)                    tpp_lexer_gettok(&(self)->dl_lexer)
+#define DeeLexer_GetToken(self)                  tpp_lexer_gettoken(&(self)->dl_lexer)
+#define DeeLexer_GetFile(self)                   tpp_lexer_getfile(&(self)->dl_lexer)
+#define DeeLexer_HasTokenKwd(self)               tpp_lexer_hastokenkwd(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwd(self)               tpp_lexer_gettokenkwd(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdCStr(self)           tpp_lexer_gettokenkwdcstr(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdStr(self)            tpp_lexer_gettokenkwdstr(&(self)->dl_lexer)
+#define DeeLexer_GetTokenKwdLen(self)            tpp_lexer_gettokenkwdlen(&(self)->dl_lexer)
+#define DeeLexer_GetTokenStart(self)             tpp_lexer_gettokenstart(&(self)->dl_lexer)
+#define DeeLexer_GetTokenEnd(self)               tpp_lexer_gettokenend(&(self)->dl_lexer)
+#define DeeLexer_GetTokenLen(self)               tpp_lexer_gettokenlen(&(self)->dl_lexer)
+#define DeeLexer_SetTokenId(self, id)            tpp_lexer_settokenid(&(self)->dl_lexer, id)
+#define DeeLexer_SetTokenKwd(self, kwd)          tpp_lexer_settokenkwd(&(self)->dl_lexer, kwd)
+#define DeeLexer_SetTokenRange(self, start, end) tpp_lexer_settokenrange(&(self)->dl_lexer, start, end)
+#define DeeLexer_SetTokenEnd(self, end)          tpp_lexer_settokenend(&(self)->dl_lexer, end)
+
+#define DeeLexer_YieldRaw(self)                    tpp_lexer_yieldraw_blocking(&(self)->dl_lexer)
+#define DeeLexer_YieldPP(self)                     tpp_lexer_yieldpp_blocking(&(self)->dl_lexer)
+#define DeeLexer_Yield(self)                       tpp_lexer_yield_blocking(&(self)->dl_lexer)
+#define DeeLexer_YieldRawNB(self)                  tpp_lexer_yieldraw(&(self)->dl_lexer)
+#define DeeLexer_YieldPPNB(self)                   tpp_lexer_yieldpp(&(self)->dl_lexer)
+#define DeeLexer_YieldNB(self)                     tpp_lexer_yield(&(self)->dl_lexer)
+#define DeeLexer_YieldRawXNB(self, allow_nonblock) ((allow_nonblock) ? DeeLexer_YieldRawNB(self) : DeeLexer_YieldRaw(self))
+#define DeeLexer_YieldPPXNB(self, allow_nonblock)  ((allow_nonblock) ? DeeLexer_YieldPPNB(self) : DeeLexer_YieldPP(self))
+#define DeeLexer_YieldXNB(self, allow_nonblock)    ((allow_nonblock) ? DeeLexer_YieldNB(self) : DeeLexer_Yield(self))
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define DeeLexer_Require(self, tok) tpp_lexer_require(&(self)->dl_lexer, tok)
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#define DeeLexer_GetKeywordById(self, id)              tpp_lexer_getkeyword_byid(&(self)->dl_lexer, id)
+#define DeeLexer_GetKeyword(self, kwd, len)            tpp_lexer_getkeyword(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_GetKeywordEx(self, kwd, len, hash)    tpp_lexer_getkeyword_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_NewKeyword(self, kwd, len)            tpp_lexer_newkeyword(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_NewKeywordEx(self, kwd, len, hash)    tpp_lexer_newkeyword_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_GetKeywordEsc(self, kwd, len)         tpp_lexer_getkeyword_esc(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_GetKeywordEscEx(self, kwd, len, hash) tpp_lexer_getkeyword_esc_ex(&(self)->dl_lexer, kwd, len, hash)
+#define DeeLexer_NewKeywordEsc(self, kwd, len)         tpp_lexer_newkeyword_esc(&(self)->dl_lexer, kwd, len)
+#define DeeLexer_NewKeywordEscEx(self, kwd, len, hash) tpp_lexer_newkeyword_esc_ex(&(self)->dl_lexer, kwd, len, hash)
+
+#define DeeLexer_PreparseSkipBseFwd(self, pos, end)   tpp_preparse_skipbse_fwd(&(self)->dl_lexer, pos, end)
+#define DeeLexer_PreparseSkipBseBck(self, start, pos) tpp_preparse_skipbse_bck(&(self)->dl_lexer, start, pos)
+
+#define DeeLexer_GetErrorCount(self) tpp_lexer_geterrorcount(&(self)->dl_lexer)
+
+/* Helper to check if the current token should be considered a string token */
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define DeeLexer_IsStringToken(self)                    \
+	(TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)) ||  \
+	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
+	  !DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS)))
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-/* Parse a template string. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_template_string(DeeLexer *self);
+#define DeeLexer_IsStringToken(self)                    \
+	(TPP_TOK_ISSTRING_DQUOTE(DeeLexer_GetTok(self)) ||  \
+	 (TPP_TOK_ISSTRING_SQUOTE(DeeLexer_GetTok(self)) && \
+	  !DeeLexer_Has(self, CHARACTER_LITERALS)))
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
-/* Decode the current token (which must be a TOK_STRING) as a unicode string. */
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-ast_parse_string_const_printer(DeeLexer *self, struct Dee_unicode_printer *__restrict printer);
 
-#define PARSE_UNARY_DISALLOW_CASTS 0x10000
-
-/* @param: lookup_mode: Set of `LOOKUP_SYM_*`, optionally or'd with `PARSE_UNARY_DISALLOW_CASTS` */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_unary(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_prod(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_sum(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_shift(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmp(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cmpeq(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_and(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_xor(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_or(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_as(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_land(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_lor(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_cond(DeeLexer *self, unsigned int lookup_mode);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign(DeeLexer *self, unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
-
-/* With the current token one of the unary operator symbols, consume
- * it and parse the second operand before returning the combination */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_prod_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_sum_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_shift_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cmp_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cmpeq_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_and_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_xor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_or_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_as_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_land_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_lor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_cond_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL ast_parse_assign_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs);
-
-/* Check if the given token qualifies for the associated operation parser function. */
-#define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TPP_TOK_STAR_STAR)
-#define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
-#define TOKEN_IS_SHIFT(tok)  ((tok) == TPP_TOK_LANGLE_LANGLE || (tok) == TPP_TOK_RANGLE_RANGLE)
-#define TOKEN_IS_CMP(tok)    ((tok) == TPP_TOK_LANGLE || (tok) == TPP_TOK_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE || (tok) == TPP_TOK_RANGLE_EQUAL)
-#define TOKEN_IS_CMPEQ(tok)  ((tok) == TPP_TOK_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL || (tok) == TPP_TOK_EQUAL_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL_EQUAL || (tok) == TPP_TOK_QMARK_QMARK || (tok) == TPP_KWD_is || (tok) == TPP_KWD_in || (tok) == '!')
-#define TOKEN_IS_AND(tok)    ((tok) == '&')
-#define TOKEN_IS_XOR(tok)    ((tok) == '^')
-#define TOKEN_IS_OR(tok)     ((tok) == '|')
-#define TOKEN_IS_AS(tok)     ((tok) == TPP_KWD_as)
-#define TOKEN_IS_LAND(tok)   ((tok) == TPP_TOK_AMP_AMP)
-#define TOKEN_IS_LOR(tok)    ((tok) == TPP_TOK_PIPE_PIPE)
-#define TOKEN_IS_COND(tok)   ((tok) == '?')
-#define TOKEN_IS_ASSIGN(tok) ((tok) == TPP_TOK_COLON_EQUAL || (tok) == TPP_TOK_PLUS_EQUAL || (tok) == TPP_TOK_MINUS_EQUAL || (tok) == TPP_TOK_STAR_EQUAL || (tok) == TPP_TOK_SLASH_EQUAL || (tok) == TPP_TOK_PERCENT_EQUAL || (tok) == TPP_TOK_LANGLE_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE_RANGLE_EQUAL || (tok) == TPP_TOK_AMP_EQUAL || (tok) == TPP_TOK_PIPE_EQUAL || (tok) == TPP_TOK_HAT_EQUAL || (tok) == TPP_TOK_STAR_STAR_EQUAL)
-#define CASE_TOKEN_IS_PROD   case '*': case '/': case '%': case TPP_TOK_STAR_STAR
-#define CASE_TOKEN_IS_SUM    case '+': case '-'
-#define CASE_TOKEN_IS_SHIFT  case TPP_TOK_LANGLE_LANGLE: case TPP_TOK_RANGLE_RANGLE
-#define CASE_TOKEN_IS_CMP    case TPP_TOK_LANGLE: case TPP_TOK_LANGLE_EQUAL: case TPP_TOK_RANGLE: case TPP_TOK_RANGLE_EQUAL
-#define CASE_TOKEN_IS_CMPEQ  case TPP_TOK_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL: case TPP_TOK_EQUAL_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL_EQUAL: case TPP_TOK_QMARK_QMARK: case TPP_KWD_is: case TPP_KWD_in: case '!'
-#define CASE_TOKEN_IS_AND    case '&'
-#define CASE_TOKEN_IS_XOR    case '^'
-#define CASE_TOKEN_IS_OR     case '|'
-#define CASE_TOKEN_IS_AS     case TPP_KWD_as
-#define CASE_TOKEN_IS_LAND   case TPP_TOK_AMP_AMP
-#define CASE_TOKEN_IS_LOR    case TPP_TOK_PIPE_PIPE
-#define CASE_TOKEN_IS_COND   case '?'
-#define CASE_TOKEN_IS_ASSIGN case TPP_TOK_COLON_EQUAL: case TPP_TOK_PLUS_EQUAL: case TPP_TOK_MINUS_EQUAL: case TPP_TOK_STAR_EQUAL: case TPP_TOK_SLASH_EQUAL: case TPP_TOK_PERCENT_EQUAL: \
-                             case TPP_TOK_LANGLE_LANGLE_EQUAL: case TPP_TOK_RANGLE_RANGLE_EQUAL: case TPP_TOK_AMP_EQUAL: case TPP_TOK_PIPE_EQUAL: case TPP_TOK_HAT_EQUAL: case TPP_TOK_STAR_STAR_EQUAL
+#define DeeString_FromTppKeyword(kwd)           \
+	DeeString_NewUtf8(tpp_keyword_getcstr(kwd), \
+	                  tpp_keyword_getlen(kwd),  \
+	                  Dee_STRING_ERROR_FIGNORE)
 
 
-/* Parse a top-level expression. */
-#define ast_parse_expr(self, lookup_mode) ast_parse_assign(self, lookup_mode)
-
-/* Given a basic unary expression `ast`, parse its unary
- * suffix (including attribute, call, range & item operators). */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict baseexpr);
-
-/* Given a unary expression `ast`, parse anything that may
- * follow it before it could be considered a full expression. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_postexpr(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict baseexpr);
-
-
-/* Given an `key`-expression in `{ key : foo }`, parse the remainder
- * of a brace expression with the current token being the one after the `:` */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_mapping(DeeLexer *self, struct ast *__restrict initial_key);
-
-/* Given an `item`-expression in `{ item, foo }`, parse the remainder
- * of a brace expression with the current token being a `,` */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_brace_list(DeeLexer *self, struct ast *__restrict initial_item);
-
-
-
-/* Parse an import statement/expression.
- * @param: allow_symbol_define: When true, allow the `import foo = x from y;` syntax,
- *                              as well as define local symbols `x, y` for `import x, y from z`
- *                              When false, no symbols are defined by the AST, and the returned
- *                              AST contains either a single, or multiple symbols describing
- *                              what was imported either as an `AST_SYM` (single) or as an
- *                             `AST_MULTIPLE:AST_FMULTIPLE_TUPLE` (more than one symbol).
- * >> foo = import x from y;
- *          ^ Entry        ^ exit
- * >> import foo = bar from baz;
- *    ^ Entry                  ^ exit
- * >> import("foo");
- *    ^ Entry      ^ exit
- * >> from foo import bar;
- *    ^ Entry            ^ exit
- * Accepted formats:
- * >> from <module-name> import <import-list>
- * >> import <import-list> from <module-name>
- * >> import <module-list>
- * >> import <symbol-name> = <module-name>
- * >> import <symbol-name> = <import-name> from <module-name>
- * >> import(<expression>)
- */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_import(DeeLexer *self);
-
-/* Parse a module name and generate an AST to reference a single symbol `import_name`. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_import_single(DeeLexer *self, tpp_keyword const *__restrict import_name);
-
-INTDEF WUNUSED NONNULL((1, 2)) struct symbol *DFCALL
-ast_parse_import_single_sym(DeeLexer *self, tpp_keyword const *__restrict import_name);
-
-/* Parse a comma-separated list of expressions,
- * as well as assignment/inplace expressions.
- * >> foo = 42;               // (foo = (42));
- * >> foo += 42;              // (foo += (42));
- * >> foo, bar = (10, 20)...; // (foo, bar = (10, 20)...);
- * >> foo, bar = 10;          // (foo, (bar = 10));
- * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE` is set
- * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE` is set
- * @param: mode:       Set of `AST_COMMA_*`     - What is allowed and when should we pack values.
- * @param: flags:      Set of `AST_FMULTIPLE_*` - How should multiple values be packaged.
- * @param: p_out_mode: When non-NULL, instead of parsing a `;` when required,
- *                     set to `AST_COMMA_OUT_FNEEDSEMI` indicative of this. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_comma(DeeLexer *self, uint16_t mode, uint16_t flags, uint16_t *p_out_mode);
-#define AST_COMMA_NORMAL        0x0000
-#define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags` */
-#define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,` being followed by another expression.
-                                        * NOTE: When this flag is set, trailing `,` are not parsed, but remain as the active token upon exit. */
-#define AST_COMMA_ALLOWNONBLOCK 0x0040 /* Allow non-blocking yields for a trailing `;`. */
-#define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
-                                        * This is required for `else`, `catch`, `finally`, etc.
-                                        * >> `try foo catch (...)` (don't interpret as `local catch = foo(...)` when starting with `foo`) */
-#define AST_COMMA_ALLOWTYPEDECL 0x0800 /* Allow type declaration to be appended to variables, as well as documentation strings to be consumed. */
-#define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
-#define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
-#define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;` as part of the expression (if a `;` is required). */
-#define AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
-
-#define AST_COMMA_OUT_FNORMAL   0x0000 /* Normal comma output flags. */
-#define AST_COMMA_OUT_FNEEDSEMI 0x0001 /* Set if a semicolon is required. */
-
-
-/* Parse an argument list using `ast_parse_comma`,
- * and (if present) also parse a trailing keyword label list, which is then saved as a
- * constant ast and returned through `*p_keyword_labels`.
- * If no keyword labels are present, `*p_keyword_labels` is filled in as `NULL`
- * @param: mode: Set of `AST_COMMA_*` - What is allowed and when should we pack values. */
-INTDEF WUNUSED NONNULL((1, 3)) DREF struct ast *DFCALL
-ast_parse_argument_list(DeeLexer *self, uint16_t mode,
-                        /*out*/ DREF struct ast **__restrict p_keyword_labels);
-
-
-/* Parse lookup mode modifiers:
- * >> local x = 42;
- *    ^     ^
- */
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-ast_parse_lookup_mode(DeeLexer *self, unsigned int *__restrict p_mode);
-
-/* Return 1 if the current token may be the begin of an expression.
- * @return: 1:  Yes
- * @return: 0:  No
- * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-maybe_expression_begin(DeeLexer *self);
-
-/* Same as `maybe_expression_begin()`, but for the next (peeked) token. */
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-maybe_expression_begin_peek(DeeLexer *self);
-
-/* Parse a try-statement/expression. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_try(DeeLexer *self, bool is_statement);
-
-/* Parse a with-statement/expression.
- * NOTE: This function expects the current token to be `with` */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_with(DeeLexer *self, bool is_statement, bool allow_nonblock);
-
-/* Parse a regular, old statement. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statement(DeeLexer *self, bool allow_nonblock);
-
-/* Parse a sequence of statements until `end_token` is
- * encountered at the start of a statement, or until
- * the end of the current input-file-stack is reached.
- * NOTE: The returned ast is usually an `AST_MULTIPLE`,
- *       which will have the given `flags` assigned.
- * WARNING: If only a single AST would be contained
- *          and `flags` is `AST_FMULTIPLE_KEEPLAST`,
- *          the inner expression is automatically
- *          returned instead.
- * NOTE: If desired, the caller is responsible to setup
- *       or teardown a new scope before/after this function. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statements_until(DeeLexer *self, uint16_t flags, tpp_token_id end_token);
-
-/* Parse and return an operator name.
- * @param: features: Set of `P_OPERATOR_F*`
- * @return: * : One of `OPERATOR_*` or `AST_OPERATOR_*`
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1)) int32_t DFCALL
-ast_parse_operator_name(DeeLexer *self, uint16_t features);
-
-#define P_OPERATOR_FNORMAL 0x0000 /* Normal features */
-#define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
-
-
-/* Ambiguous operator codes.
- * The caller should resolved these based on operand count. */
-#define AST_OPERATOR_POS_OR_ADD           0xf000 /* `+` */
-#define AST_OPERATOR_NEG_OR_SUB           0xf001 /* `-` */
-#define AST_OPERATOR_GETITEM_OR_SETITEM   0xf002 /* `[]` */
-#define AST_OPERATOR_GETRANGE_OR_SETRANGE 0xf003 /* `[:]` */
-#define AST_OPERATOR_GETATTR_OR_SETATTR   0xf004 /* `.` */
-#define AST_OPERATOR_MIN                  0xf000
-#define AST_OPERATOR_MAX                  0xf004
-
-/* Special class operators. */
-#define AST_OPERATOR_FOR                  0xf005 /* `for` */
-#define AST_OPERATOR_STR_OR_PRINT         0xf006 /* `str` */
-#define AST_OPERATOR_REPR_OR_PRINTREPR    0xf007 /* `repr` */
-#define AST_OPERATOR_MAX_FOR_CLASS        0xf007
-
-/* Build a call to an operator, given the operator's name and arguments.
- * @param: name:  One of `OPERATOR_*` or `AST_OPERATOR_*`
- * @param: flags: Set of `AST_OPERATOR_F*`
- *       WARNING: This flags set may not contain `AST_OPERATOR_FVARARGS`! */
-INTDEF WUNUSED NONNULL((3, 4)) DREF struct ast *DCALL
-ast_build_bound_operator(Dee_operator_t name, uint16_t flags,
-                         struct ast *__restrict self,
-                         struct ast *__restrict args);
-
-/* Same as `ast_build_bound_operator`, but used to build free-standing operators. */
-INTDEF WUNUSED NONNULL((3)) DREF struct ast *DCALL
-ast_build_operator(Dee_operator_t name, uint16_t flags,
-                   struct ast *__restrict args);
-
-/* Parse a loop statement that appears in an expression:
- * When called, the current token must be one of
- * `TPP_KWD_for`, `TPP_KWD_foreach`, `TPP_KWD_while` or `TPP_KWD_do`
- * The returned expression is usually a call-operator
- * on an anonymous lambda function. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_loopexpr(DeeLexer *self);
-
-/* Parse a new function declaration, starting at either the argument
- * list, or when not present at the following `->` or `{` token.
- * The returned AST is of type `AST_FUNCTION`.
- * NOTE: The caller is responsible for allocating a symbol in their
- *       scope if the desire is to address the function by name.
- *       This parser function will merely return the `AST_FUNCTION`,
- *       not some wrapper that assigns it to a symbol using `AST_STORE`. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
-                   bool allow_missing_params, struct ast_loc *name_loc,
-                   struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function_noscope(DeeLexer *self, tpp_keyword const *name, bool *p_need_semi,
-                           bool allow_missing_params, struct ast_loc *name_loc,
-                           struct decl_ast *decl, /*[0..1]*/ struct symbol *function_symbol);
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function_noscope_noargs(DeeLexer *self, bool *p_need_semi);
-
-/* Parse a java-style lambda. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_function_java_lambda(DeeLexer *self,
-                               tpp_keyword const *first_argument_name,
-                               struct ast_loc *first_argument_loc);
-
-/* Check if the parser is located after the '(' of a java-style lambda.
- * @return:  1: Yes
- * @return:  0: No
- * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-ast_is_after_lparen_of_java_lambda(DeeLexer *self);
-
-/* Parse everything following a `del` keyword in a statement, or expression:
- * >> foo = 7;
- * >> print foo;
- * >> del foo;        // Unbind + delete
- *        ^  ^
- * >> foo = 42;
- * >> print foo;
- * >> print del(foo); // Unbind only
- *              ^  ^
- * NOTE: When `LOOKUP_SYM_ALLOWDECL` is set in `lookup_mode`,
- *       the function is allocated to delete locally defined
- *       variable symbols.
- *       However, in all cases is this function allowed to
- *       unbind variables (deleting only referring to the
- *       compile-time symbol becoming unknown and being added to
- *       the current scope's chain of deleted/anonymous symbols) */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_del(DeeLexer *self, unsigned int lookup_mode);
-
-/* Parse a user-defined assembly block. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_asm(DeeLexer *self);
-
-/* Parse the argument list of a function definition,
- * automatically creating new symbols for arguments,
- * as well as setting code flags for variadic arguments. */
-INTDEF WUNUSED NONNULL((1)) int DFCALL
-parse_arglist(DeeLexer *self);
-
-/* Parse the contents of a brace initializer,
- * starting after the '{' token and ending on '}'. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_brace_items(DeeLexer *self);
-
-/* Parse a class definition, starting at the `{` token (or at `:` when a base exists).
- * The returned AST is of type `AST_CLASS` (create_symbol == false) or `AST_STORE` (create_symbol == true).
- * @param: class_flags:   Set of `TP_F* & 0xf`
- * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name` != NULL).
- * @param: symbol_mode:   The mode with which to create the class symbol. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_class(DeeLexer *self, uint16_t class_flags, tpp_keyword const *name,
-                bool create_symbol, unsigned int symbol_mode);
-
-/* Parse the head header of a for-statement, returning the appropriate
- * AST flags for creating the loop (usually `AST_FLOOP_NORMAL` or `AST_FLOOP_FOREACH`),
- * as well as filling in the given pointers to used asts.
- * NOTE: The caller is responsible for wrapping this function in its own
- *       scope, should they choose to with initializers/loop element symbols
- *       to be placed in their own scope.
- * NOTE: Any of the given pointers may be filled with NULL if that AST is not present,
- *       unless the loop is actually a foreach-loop, in which case they _must_ always
- *       be present.
- * WARNING: The caller is responsible for wrapping `*p_iter_or_next` in an `__iterself__()`
- *          operator call when `AST_FLOOP_FOREACH` is part of the return mask, unless they wish
- *          to enumerate an iterator itself (which is possible using the `__foreach` statement). */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int32_t DFCALL
-ast_parse_for_head(DeeLexer *self,
-                   DREF struct ast **__restrict p_init,
-                   DREF struct ast **__restrict p_elem_or_cond,
-                   DREF struct ast **__restrict p_iter_or_next);
-
-/* Parse an assertion statement. (must be started ontop of the `assert` keyword) */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_assert(DeeLexer *self, bool needs_parenthesis);
-
-/* Parse a cast expression suffix following parenthesis, or
- * re-return the given `typeexpr` if there is no cast operand
- * at the current lexer position:
- * >> local x = (int)get_value();
- *                   ^          ^
- *                   entry      exit
- * >> local y = (get_value());
- *                           ^
- *                           entry
- *                           ^
- *                           exit
- */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_cast(DeeLexer *self, struct ast *__restrict typeexpr);
-
-
-
-
-#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
-#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
-#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
-
-/* @param: p_was_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*` */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statement_or_expression(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Parse a primary and second expression in hybrid mode. */
-#define ast_parse_hybrid_primary(self, p_was_expression) \
-	ast_parse_statement_or_expression(self, p_was_expression)
-LOCAL WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
-ast_parse_hybrid_secondary(DeeLexer *self, unsigned int *__restrict p_was_expression) {
-	DREF struct ast *result;
-	switch (*p_was_expression) {
-	case AST_PARSE_WASEXPR_NO:
-		result = ast_parse_statement(self, false);
-		break;
-	case AST_PARSE_WASEXPR_YES:
-		result = ast_parse_expr(self, LOOKUP_SYM_NORMAL);
-		break;
-	case AST_PARSE_WASEXPR_MAYBE:
-		result = ast_parse_statement_or_expression(self, p_was_expression);
-		break;
-	default: __builtin_unreachable();
+struct ast;
+struct ast_loc {
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+	char const *l_name; /* [0..1] Filename (either statically allocated, or points into a `tpp_keyword`.
+	                     * In either case, this string remains valid until `tpp_lexer_fini()` is called)
+	                     * When user-code made use of a custom `#line` filename, then a keyword for that
+	                     * filename is lazily allocated here (set to "NULL" if unknown) */
+	tpp_lcinfo  l_lc;   /* Line/column information (0-based) */
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+	tpp_file            *l_file; /* [0..1] Location file. */
+#ifdef CONFIG_BUILDING_DEEMON
+	union {
+		struct TPPLCInfo l_lc;   /* [valid_if(l_file != NULL)] Line/column information. */
+		struct {
+			int          l_line; /* [valid_if(l_file != NULL)] Location line. */
+			int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
 	}
-	return result;
-}
-
-
-
-
-/* Parse a statement or a brace-expression, with the current token being a `{` */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_statement_or_braces(DeeLexer *self, unsigned int *p_was_expression);
-
-/* With the current token being `try`, parse the construct and
- * try to figure out if it's a statement or an expression. */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_try_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Same as `ast_parse_try_hybrid` but for if statements / expressions. */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_if_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Same as `ast_parse_try_hybrid` but for with statements / expressions. */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_with_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Same as `ast_parse_try_hybrid` but for assert statements / expressions. */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_assert_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Same as `ast_parse_try_hybrid` but for import statements / expressions. */
-INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_import_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-/* Same as `ast_parse_try_hybrid` but for loopexpr statements / expressions. */
-INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
-ast_parse_loopexpr_hybrid(DeeLexer *self, unsigned int *p_was_expression);
-
-
-
-
-
-struct Dee_module_object;
-
-/* Special return value to the module currently being compiled. */
-#define MODULE_CURRENT                ((struct Dee_module_object *)ITER_DONE)
-#define decref_parse_module_byname(x) ((x) == MODULE_CURRENT ? (void)0 : Dee_Decref(x))
-
-/* Parse a module name and return the associated module object.
- * @param: for_alias: Should be `true` if the name is used in `foo = <name>`,
- *                    or if no alias can be used where the name appears,
- *                    else `false`
- * @return: * :             The named module
- * @return: NULL:           Error was thrown
- * @return: MODULE_CURRENT: The module currently being compiled */
-INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DFCALL
-parse_module_byname(DeeLexer *self, bool for_alias);
-
-INTDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
-import_module_symbol(struct Dee_module_object *__restrict mod,
-                     tpp_keyword const *__restrict name);
-
-
-
-struct astlist {
-	size_t            ast_c; /* Amount of branches in use. */
-	size_t            ast_a; /* [>= ast_c] Allocated amount of branches. */
-	DREF struct ast **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
-};
-#define ASTLIST_INIT { 0, 0, NULL }
-
-INTDEF NONNULL((1)) void DCALL astlist_fini(struct astlist *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
-INTDEF NONNULL((1)) void DCALL astlist_trunc(struct astlist *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL astlist_append(struct astlist *__restrict self, struct ast *__restrict branch);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL astlist_appendall(struct astlist *__restrict self, struct astlist *__restrict other);
-
-
-
-struct ast_annotation {
-	/* AST Annotations can be used to transform the value generated by some declaration.
-	 * Annotations are implemented through call invocations done at runtime, and
-	 * function through one of 2 ways:
-	 * >> @MyAnnotation
-	 * >> function foo() {
-	 * >> }
-	 * >> @MyAnnotation("foobar")
-	 * >> function bar() {
-	 * >> }
-	 * Compiled as:
-	 * >> [global] final foo = MyAnnotation(function() {
-	 * >> });
-	 * >> [global] final bar = MyAnnotation(function() {
-	 * >> }, "foobar");
-	 */
-	DREF struct ast       *aa_func;   /* [1..1] The expression invoked for the purposes of
-	                                   *        transforming the annotated declaration. */
-#define AST_ANNOTATION_FNORMAL 0x0000 /* Normal annotation flags. */
-#define AST_ANNOTATION_FNOFUNC 0x0001 /* When set, don't try to insert the annotated object
-	                                   * as an argument of an `OPERATOR_CALL` branch in `aa_func`
-	                                   * Instead, always pack the annotated object as a single-
-	                                   * element argument list, before using it to invoke `aa_func`
-	                                   * and continuing to use the returned result. */
-	uint16_t               aa_flag;   /* Annotation flags (Set of `AST_ANNOTATION_F*`) */
-	uint16_t               aa_pad[(sizeof(void *)-2)/2];
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define l_lc       _dee_aunion.l_lc /*!export-*/
+#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define l_line     _dee_aunion.l_line /*!export-*/
+#define l_col      _dee_aunion.l_col  /*!export-*/
+#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define l_line     _dee_aunion._dee_astruct.l_line /*!export-*/
+#define l_col      _dee_aunion._dee_astruct.l_col  /*!export-*/
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
+#define l_line     _dee_astruct.l_line /*!export-*/
+#define l_col      _dee_astruct.l_col  /*!export-*/
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+	;
+#else /* CONFIG_BUILDING_DEEMON */
+	int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
+	int                  l_col;  /* [valid_if(l_file != NULL)] Location column. */
+#endif /* !CONFIG_BUILDING_DEEMON */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 };
 
-struct ast_annotations {
-	size_t                 an_annoc; /* Amount of used annotations. */
-	size_t                 an_annoa; /* Amount of allocated annotations. */
-	struct ast_annotation *an_annov; /* [0..at_anno_c|ALLOC(at_anno_a)][owned]
-	                                  * Amount of allocated annotations. */
-};
-
-#define AST_ANNOTATIONS_INIT { 0, 0, NULL }
-
-struct ast_tags_printers {
-	struct Dee_unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
-	struct Dee_unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */
-};
-
-struct ast_tags {
-	struct Dee_unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
-	struct Dee_unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
-	struct ast_annotations     at_anno;         /* AST Annotations. */
-	uint16_t                   at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY` */
-	uint16_t                   at_class_flags;  /* Set of `TP_F*` or'd to flags during creation of a new class. */
-	uint16_t                   at_code_flags;   /* Set of `CODE_F*` or'd to flags during creation of a new function. */
-	uint16_t                   at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*` or'd to flags during creation of a new class attribute. */
-};
-
-#define AST_TAGS_BACKUP_PRINTERS(buf)                                       \
-	(memcpy(&(buf), &current_tags, 2 * sizeof(struct Dee_unicode_printer)), \
-	 bzero(&current_tags, 2 * sizeof(struct Dee_unicode_printer)))
-#define AST_TAGS_RESTORE_PRINTERS(buf)                \
-	(Dee_unicode_printer_fini(&current_tags.at_decl), \
-	 Dee_unicode_printer_fini(&current_tags.at_doc),  \
-	 memcpy(&current_tags, &(buf), 2 * sizeof(struct Dee_unicode_printer)))
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#define ast_loc_init_empty(self) ((self)->l_name = NULL, tpp_lcinfo_init_invalid(&(self)->l_lc))
+#define ast_loc_isempty(self)    ((self)->l_name == NULL && !tpp_lcinfo_isvalid((self)->l_lc))
+#define ast_loc_getname(self)    ((self)->l_name)
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define ast_loc_init_empty(self) (void)((self)->l_file = NULL)
+#define ast_loc_isempty(self)    ((self)->l_file == NULL)
+#define ast_loc_getname(self)    tpp_file_getfilename((self)->l_file)
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#define ast_loc_getlc(self)   ((self)->l_lc)
+#define ast_loc_getline(self) tpp_lcinfo_getline((self)->l_lc)
+#define ast_loc_getcol(self)  tpp_lcinfo_getcol((self)->l_lc)
 
 
-/* Current set of active AST tags.
- * This set is cleared at least every time a statement ends,
- * but is cleared more than that when inside of a class branch,
- * or when declaring a function. */
-INTDEF struct ast_tags current_tags;
-
-/* Reset the current set of active tags to an empty (unallocated) state. */
-INTDEF WUNUSED NONNULL((1)) int DFCALL ast_tags_clear(DeeLexer *self);
-
-/* Pack together the current documentation string. */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ast_tags_doc(struct decl_ast const *__restrict decl);
-
-/* Escape documentation text from "Encoded Documentation Text"
- * into "Fully Encoded Documentation Text" */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-doctext_escape(struct Dee_unicode_printer *__restrict doctext);
-
-/* Add a new annotation to the current set of tags. */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-ast_annotations_add(struct ast *__restrict func, uint16_t flag);
-
-/* Capture all currently saved annotations. */
-INTDEF NONNULL((1)) void DCALL ast_annotations_get(struct ast_annotations *__restrict result);
-INTDEF NONNULL((1)) void DCALL ast_annotations_free(struct ast_annotations *__restrict self);
-
-/* Clear annotations, and warn if some were given. */
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
-ast_annotations_clear(DeeLexer *lexer, struct ast_annotations *__restrict self);
-
-/* Apply & free annotations to the given `input` ast. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct ast *DCALL
-ast_annotations_apply(struct ast_annotations *__restrict self,
-                      /*inherit(always)*/ DREF struct ast *__restrict input);
-
-
-
-/* Parse tags at the current lexer position, starting
- * immediately at the `@` token.
- * >> @doc("foo"), doc("bar")
- *    ^                      ^
- *    entry                  exit */
+/* Fill the given AST location with the current LC source position.
+ * @return: 0 : Success
+ * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DFCALL
-parse_tags_block(DeeLexer *self);
+DeeLexer_GetLoc(DeeLexer *self, struct ast_loc *__restrict info);
+
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+INTDEF NONNULL((1)) void DFCALL loc_here(struct ast_loc *__restrict info);
+
+/* Describe a region of code where `TPPLEXER_FLAG_WANTLF` should be off. */
+#define DeeLexer_NoLf_Push(self)                                 \
+	do {                                                         \
+		uint32_t const _dlnlf_oflags = (self)->dl_lexer.l_flags; \
+		(self)->dl_lexer.l_flags &= ~TPPLEXER_FLAG_WANTLF
+#define DeeLexer_NoLf_Break(self) \
+		(void)((self)->dl_lexer.l_flags |= _dlnlf_oflags & TPPLEXER_FLAG_WANTLF)
+#define DeeLexer_NoLf_Pop(self)    \
+		DeeLexer_NoLf_Break(self); \
+	}	__WHILE0
+
+
+/* Describe a region of code where `TPPLEXER_FLAG_WANTLF` is enabled if `PARSE_FLFSTMT` is set */
+#define DeeLexer_EnableLf_Push(self)                             \
+	do {                                                         \
+		uint32_t const _dlelf_oflags = (self)->dl_lexer.l_flags; \
+		if (!(parser_flags & PARSE_FLFSTMT)) {                   \
+		} else                                                   \
+			(self)->dl_lexer.l_flags |= TPPLEXER_FLAG_WANTLF
+#define DeeLexer_EnableLf_Break(self) \
+		(void)((self)->dl_lexer.l_flags &= _dlelf_oflags & ~TPPLEXER_FLAG_WANTLF)
+#define DeeLexer_EnableLf_Pop(self)    \
+		DeeLexer_EnableLf_Break(self); \
+	}	__WHILE0
+
+
+/* Emit a compiler warning/error, given its TPP warning number.
+ * The passed var-args are interpreted based on `wnum`,
+ * which is one of `W_*` defined by the lexer.
+ * @return: -1: TPP had already been set to an error-state.
+ * @return: -1: A fatal compiler error was thrown and TPP was set to an error-state.
+ * @return:  0: The warning is being ignored.
+ * @return:  0: The warning was printed, but is not considered dangerous.
+ * @return:  0: The warning caused an error to be thrown, but the
+ *              max number of compiler errors has yet to be reached. */
+INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
+INTDEF ATTR_COLD int (parser_warnatptrf)(char const *ptr, int wnum, ...);
+
+/* Similar to `parser_warnf()`, but force the warning
+ * to be fatal, regardless of its user-defined state.
+ * @return: -1: Always returns -1. */
+INTDEF ATTR_COLD int (parser_errf)(int wnum, ...);
+INTDEF ATTR_COLD int (parser_erratf)(struct ast_loc *loc, int wnum, ...);
+INTDEF ATTR_COLD int (parser_erratrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc` is guarantied to be reachable! */
+INTDEF ATTR_COLD int (parser_errastf)(struct ast *__restrict loc_ast, int wnum, ...);
+
+#ifndef Dee_ASSUMED_VALUE_IS_NOOP
+#define parser_errf(...)             Dee_ASSUMED_VALUE(parser_errf(__VA_ARGS__), -1)
+#define parser_erratf(loc, ...)      Dee_ASSUMED_VALUE(parser_erratf(loc, __VA_ARGS__), -1)
+#define parser_erratrf(loc, ...)     Dee_ASSUMED_VALUE(parser_erratrf(loc, __VA_ARGS__), -1)
+#define parser_errastf(loc_ast, ...) Dee_ASSUMED_VALUE(parser_errastf(loc_ast, __VA_ARGS__), -1)
+#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+
+//#define DeeLexer_Skip(self, tid)                        tpp_lexer_skip(&(self)->dl_lexer, tid)
+//#define DeeLexer_VWarnf(self, id, args)                 ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_Warnf(self, ...)                         ((void)&(self)->dl_lexer, parser_warnf(__VA_ARGS__))
+//#define DeeLexer_VWarnfAt(self, file, pos, id, args)    ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfAt(self, file, pos, ...)            ((void)&(self)->dl_lexer, (void)(file), parser_warnatptrf(pos, __VA_ARGS__))
+//#define DeeLexer_VWarnfLc(self, filename, lc, id, args) ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_WarnfLc(self, filename, lc, ...)       ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VWarnfLoc(self, loc, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfLoc(self, loc, ...)                 ((void)&(self)->dl_lexer, parser_warnatf(loc, __VA_ARGS__))
+//#define DeeLexer_VWarnfAst(self, ast, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfAst(self, ast, ...)                 ((void)&(self)->dl_lexer, parser_warnastf(ast, __VA_ARGS__))
+//#define DeeLexer_VWarnfSym(self, sym, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_WarnfSym(self, sym, ...)                 ((void)&(self)->dl_lexer, parser_warnatrf(&(sym)->s_decl, __VA_ARGS__))
+
+//#define DeeLexer_VErrf(self, id, args)                 ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_Errf(self, ...)                         ((void)&(self)->dl_lexer, parser_errf(__VA_ARGS__))
+//#define DeeLexer_VErrfAt(self, file, pos, id, args)    ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_ErrfAt(self, file, pos, ...)          ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VErrfLc(self, filename, lc, id, args) ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_ErrfLc(self, filename, lc, ...)       ((void)&(self)->dl_lexer, ...)
+//#define DeeLexer_VErrfLoc(self, loc, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfLoc(self, loc, ...)                 ((void)&(self)->dl_lexer, parser_erratf(loc, __VA_ARGS__))
+//#define DeeLexer_VErrfAst(self, ast, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfAst(self, ast, ...)                 ((void)&(self)->dl_lexer, parser_errastf(ast, __VA_ARGS__))
+//#define DeeLexer_VErrfSym(self, sym, id, args)         ((void)&(self)->dl_lexer, ...)
+#define DeeLexer_ErrfSym(self, sym, ...)                 ((void)&(self)->dl_lexer, parser_erratrf(&(sym)->s_decl, __VA_ARGS__))
+
+
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+_parser_skip(DeeLexer *self, tpp_token_id expected_tok, int wnum);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+_parser_paren_begin(DeeLexer *self, bool *__restrict p_has_paren, int wnum);
+#define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN)  \
+	(likely(DeeLexer_GetTok(self) == '(')                           \
+	 ? (*(p_has_paren) = true, TPP_TOK_ISERR(DeeLexer_Yield(self))) \
+	 : unlikely(_parser_paren_begin(self, p_has_paren, W_EXPECTED_LPAREN)))
+#define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN) \
+	(likely(has_paren) && DeeLexer_Skip2(self, ')', W_EXPECTED_RPAREN))
+#define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN) \
+	(likely(DeeLexer_GetTok(self) == (expected_tok))           \
+	 ? TPP_TOK_ISERR(DeeLexer_Yield(self))                     \
+	 : unlikely(_parser_skip(self, expected_tok, W_UNEXPECTED_TOKEN)))
+
+#define tpp_builtin_getkeyword_empty() (&TPPKeyword_Empty)
+INTDEF tpp_keyword TPPKeyword_Empty;
+INTDEF WUNUSED char const *DCALL peek_next_token(tpp_file **tok_file);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL peek_next_advance(char const *p, tpp_file **tok_file);
+INTDEF ATTR_CONST WUNUSED bool DCALL tpp_is_keyword_start(char ch);
+INTDEF WUNUSED NONNULL((1, 2)) tpp_keyword *DCALL peek_keyword(tpp_file *__restrict tok_file, char const *__restrict tok_begin, int create_missing);
+INTDEF WUNUSED tpp_keyword *DCALL peek_next_keyword(int create_missing);
+INTDEF WUNUSED NONNULL((1)) char const *DCALL advance_wraplf(char const *__restrict p);
+INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(tpp_file *__restrict file);
+
+/* Check if `name` is a reserved symbol name. */
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
+
+#else /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+#define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
+
+/* Describe a region of code where `TPP_TOK_LF` should not be produced. */
+#define DeeLexer_NoLf_Push(self)                                                            \
+	do {                                                                                    \
+		bool const _dlnlf_olf = !!tpp_lexer_getfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF); \
+		tpp_lexer_disablefeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeLexer_NoLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF, _dlnlf_olf)
+#define DeeLexer_NoLf_Pop(self)    \
+		DeeLexer_NoLf_Break(self); \
+	}	__WHILE0
+
+/* Describe a region of code where `TPP_TOK_LF` is enabled if `PARSE_FLFSTMT` is set */
+#define DeeLexer_EnableLf_Push(self)                             \
+	do {                                                         \
+		bool const _dlelf_olf = !!tpp_lexer_getfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF); \
+		if (!(parser_flags & PARSE_FLFSTMT)) {                   \
+		} else                                                   \
+			tpp_lexer_enablefeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeLexer_EnableLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->dl_lexer, TPP_FEAT_TOK_LF, _dlelf_olf)
+#define DeeLexer_EnableLf_Pop(self)    \
+		DeeLexer_EnableLf_Break(self); \
+	}	__WHILE0
+
+
+struct ast;
+struct symbol;
+#define DeeLexer_Warnf(self, ...)                       TPP_ISERR(tpp_lexer_warnf(&(self)->dl_lexer, __VA_ARGS__))
+#define DeeLexer_VWarnf(self, id, args)                 TPP_ISERR(tpp_lexer_vwarnf(&(self)->dl_lexer, id, args))
+#define DeeLexer_WarnfAt(self, file, pos, ...)          TPP_ISERR(tpp_lexer_warnf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
+#define DeeLexer_VWarnfAt(self, file, pos, id, args)    TPP_ISERR(tpp_lexer_vwarnf_at(&(self)->dl_lexer, file, pos, id, args))
+#define DeeLexer_WarnfLc(self, filename, lc, ...)       TPP_ISERR(tpp_lexer_warnf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
+#define DeeLexer_VWarnfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(self)->dl_lexer, filename, lc, id, args))
+#define DeeLexer_WarnfLoc(self, loc, ...)               _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
+#define DeeLexer_VWarnfLoc(self, loc, id, args)         _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
+#define DeeLexer_WarnfAst(self, p_ast, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
+#define DeeLexer_VWarnfAst(self, p_ast, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
+#define DeeLexer_WarnfSym(self, p_sym, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
+#define DeeLexer_VWarnfSym(self, p_sym, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
+INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_WarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
+INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, va_list args);
+
+#define DeeLexer_Errf(self, ...)                       TPP_ISERR(tpp_lexer_errf(&(self)->dl_lexer, __VA_ARGS__))
+#define DeeLexer_VErrf(self, id, args)                 TPP_ISERR(tpp_lexer_verrf(&(self)->dl_lexer, id, args))
+#define DeeLexer_ErrfAt(self, file, pos, ...)          TPP_ISERR(tpp_lexer_errf_at(&(self)->dl_lexer, file, pos, __VA_ARGS__))
+#define DeeLexer_VErrfAt(self, file, pos, id, args)    TPP_ISERR(tpp_lexer_verrf_at(&(self)->dl_lexer, file, pos, id, args))
+#define DeeLexer_ErrfLc(self, filename, lc, ...)       TPP_ISERR(tpp_lexer_errf_lc(&(self)->dl_lexer, filename, lc, __VA_ARGS__))
+#define DeeLexer_VErrfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_verrf_lc(&(self)->dl_lexer, filename, lc, id, args))
+#define DeeLexer_ErrfLoc(self, loc, ...)               _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
+#define DeeLexer_VErrfLoc(self, loc, id, args)         _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
+#define DeeLexer_ErrfAst(self, p_ast, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
+#define DeeLexer_VErrfAst(self, p_ast, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
+#define DeeLexer_ErrfSym(self, p_sym, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
+#define DeeLexer_VErrfSym(self, p_sym, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
+INTDEF ATTR_COLD NONNULL((1)) int DCALL _DeeLexer_ErrfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL _DeeLexer_VErrfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, va_list args);
+
+/* Static TPP Hooks */
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_WarnHandlerHook(tpp_lexer *lexer, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_WarnPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF Dee_ssize_t DPRINTER_CC DeeLexer_TPP_MesgPrinterHook(void *arg, char const *__restrict text, size_t num_bytes);
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_SystemIncludePathHook(tpp_lexer *lexer, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+INTDEF tpp_errno TPPCALL DeeLexer_TPP_RaiseLexErrorHook(tpp_lexer *lexer);
+INTDEF bool TPPCALL DeeLexer_TPP_HasEscapedCurrentFunctionName(tpp_lexer *lexer);
+INTDEF TPP_REF tpp_string *TPPCALL DeeLexer_TPP_GetEscapedCurrentFunctionName(tpp_lexer *lexer);
+
+/* Print a line `{tpp_lexer_getfileandlineformat}note: see declaration of {SYMBOL_NAME(sym)}\n`,
+ * but only if `!ast_loc_isempty(&sym->s_decl)`. Returns the usual sum-of-calls-to-printer.
+ *
+ * Used by custom warning printers to allow them to reference symbol declaration locations. */
+INTDEF WUNUSED NONNULL((1, 2)) tpp_ssize TPPCALL
+DeeLexer_PrintSymbolDeclaration(tpp_lexer const *self, struct symbol const *__restrict sym,
+                                tpp_formatprinter printer, void *arg);
+
+#define DeeLexer_Skip(self, expected_tok) \
+	tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
+INTDEF WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
+_DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
+#define DeeLexer_ParenBegin(self, p_has_paren)            \
+	(likely(DeeLexer_GetTok(self) == TPP_TOK_OFCHAR('(')) \
+	 ? (*(p_has_paren) = true, DeeLexer_Yield(self))      \
+	 : _DeeLexer_ParenBegin(self, p_has_paren))
+#define DeeLexer_ParenEnd(self, has_paren) \
+	(likely(has_paren) ? DeeLexer_Skip(self, TPP_TOK_OFCHAR(')')) : DeeLexer_GetTok(self))
+
+/* Backwards compat... */
+#define DeeLexer_Skip2(self, expected_tok, W_UNEXPECTED_TOKEN)     TPP_TOK_ISERR(DeeLexer_Skip(self, expected_tok))
+#define DeeLexer_ParenBegin2(self, p_has_paren, W_EXPECTED_LPAREN) TPP_TOK_ISERR(DeeLexer_ParenBegin(self, p_has_paren))
+#define DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN)     TPP_TOK_ISERR(DeeLexer_ParenEnd(self, has_paren))
+
+/* Return a pointer to the special *empty* keyword */
+#define tpp_builtin_getkeyword_empty() tpp_builtin_getkeyword_byid(TPP_KWD_)
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

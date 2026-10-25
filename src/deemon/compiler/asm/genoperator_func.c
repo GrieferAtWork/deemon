@@ -25,8 +25,8 @@
 #include <deemon/compiler/assembler.h> /* ASM_G_FPUSHRES, asm_g*, asm_newmodule, ast_genasm_one */
 #include <deemon/compiler/ast.h>       /* ast */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_Current, DeeLexer_OfCompiler */
-#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
-#include <deemon/compiler/tpp.h>       /* DeeLexer_WarnfAst, TPP_W_* */
+#include <deemon/compiler/lexer.h>     /* DeeLexer_WarnfAst, TPP_W_* */
+#include <deemon/compiler/parser.h>    /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>             /* DREF, Dee_Decref, ITER_ISOK */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */

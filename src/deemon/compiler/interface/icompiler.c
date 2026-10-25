@@ -30,10 +30,10 @@
 #include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler*, DeeLexer_OfCompiler */
 #include <deemon/compiler/error.h>     /* parser_errors_init */
 #include <deemon/compiler/interface.h> /* DeeCompiler*, err_compiler_item_deleted, err_different_base_scope, err_different_root_scope, err_invalid_ast_basescope, err_invalid_ast_compiler, err_invalid_scope_compiler, err_invalid_symbol_compiler, err_symbol_not_reachable, get_astloc_from_obj, scope_reaches_symbol, set_astloc_from_obj */
-#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_*, PARSE_FNORMAL */
+#include <deemon/compiler/lexer.h>     /* DeeLexer, DeeLexer_Init */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_FNORMAL */
+#include <deemon/compiler/parser.h>    /* AST_OPERATOR_*, PARSE_FNORMAL */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_INC_N*, current_basescope, current_rootscope, current_scope */
-#include <deemon/compiler/tpp.h>       /* DeeLexer, DeeLexer_Init */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */

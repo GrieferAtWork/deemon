@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C
-#define GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_EXPRESSION_C
+#define GUARD_DEEMON_COMPILER_PARSER_EXPRESSION_C 1
 
 #include <deemon/api.h>
 
@@ -26,10 +26,10 @@
 #include <deemon/bool.h>              /* Dee_False, Dee_True */
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
-#include <deemon/compiler/lexer.h>    /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
+#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
+#include <deemon/compiler/parser.h>   /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
 #include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_*, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* DeeFloat_New */
 #include <deemon/int.h>               /* DeeIntObject, DeeInt_*, Dee_INT_STRING* */
@@ -3543,4 +3543,4 @@ done:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_EXPRESSION_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_EXPRESSION_C */

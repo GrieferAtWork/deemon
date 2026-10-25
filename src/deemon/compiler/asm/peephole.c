@@ -26,8 +26,8 @@
 #include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, CASE_ASM_EXTENDED, DeeAsm_*, instruction_t */
 #include <deemon/code.h>               /* Dee_CODE_FYIELDING, code_addr_t, code_saddr_t, code_size_t, instruction_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, R_DMN_NONE, asm_*, current_assembler, ddi_checkpoint */
+#include <deemon/compiler/lexer.h>     /* ast_loc_* */
 #include <deemon/compiler/symbol.h>    /* current_basescope */
-#include <deemon/compiler/tpp.h>       /* ast_loc_* */
 #include <deemon/format.h>             /* PRF* */
 #include <deemon/system-features.h>    /* abort, memcpyc, memmoveupc, memset */
 

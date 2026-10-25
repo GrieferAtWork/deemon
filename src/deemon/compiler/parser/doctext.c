@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C
-#define GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_DOCTEXT_C
+#define GUARD_DEEMON_COMPILER_PARSER_DOCTEXT_C 1
 
 #include <deemon/api.h>
 
@@ -3126,4 +3126,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_DOCTEXT_C */

@@ -17,18 +17,18 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_FUNCTION_C
-#define GUARD_DEEMON_COMPILER_LEXER_FUNCTION_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_FUNCTION_C
+#define GUARD_DEEMON_COMPILER_PARSER_FUNCTION_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
+#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc, tpp_* */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
+#include <deemon/compiler/parser.h>   /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, new_local_symbol, new_unnamed_symbol, symbol */
-#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexer_*, TPP_*, ast_loc, tpp_* */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
 
@@ -1173,4 +1173,4 @@ err:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_FUNCTION_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_FUNCTION_C */

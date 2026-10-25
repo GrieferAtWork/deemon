@@ -17,17 +17,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_COMPILER_LEXER_LOOPEXPR_C
-#define GUARD_DEEMON_COMPILER_LEXER_LOOPEXPR_C 1
+#ifndef GUARD_DEEMON_COMPILER_PARSER_LOOPEXPR_C
+#define GUARD_DEEMON_COMPILER_PARSER_LOOPEXPR_C 1
 
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/code.h>            /* Dee_CODE_FYIELDING */
 #include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_PARSE_WASEXPR_NO, ast_parse_*, current_tags */
+#include <deemon/compiler/lexer.h>  /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
+#include <deemon/compiler/parser.h> /* AST_COMMA_ALLOWVARDECLS, AST_PARSE_WASEXPR_NO, ast_parse_*, current_tags */
 #include <deemon/compiler/symbol.h> /* LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, basescope_pop, basescope_push, current_basescope, current_scope */
-#include <deemon/compiler/tpp.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc */
 #include <deemon/object.h>          /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/type.h>            /* OPERATOR_CALL, OPERATOR_ITER */
@@ -407,4 +407,4 @@ ast_parse_loopexpr_hybrid(DeeLexer *self, unsigned int *p_was_expression) {
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_COMPILER_LEXER_LOOPEXPR_C */
+#endif /* !GUARD_DEEMON_COMPILER_PARSER_LOOPEXPR_C */
