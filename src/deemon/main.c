@@ -2636,7 +2636,7 @@ PRIVATE fe_feature_config const fe_feature_specs_pascal[] = {
 
 PRIVATE fe_feature_config const fe_feature_specs_sql[] = {
 	FE_FEATURE_OFF(TPP_FEAT_CPP_DIRECTIVES),
-	FE_FEATURE_ON(TPP_FEAT_TOK_SHELL_COMMENT),
+	FE_FEATURE_ON(TPP_FEAT_TOK_SOL_SHELL_COMMENT),
 	FE_FEATURE_OFF(TPP_FEAT_TOK_CXX_COMMENT),
 	FE_FEATURE_ON(TPP_FEAT_TOK_SQL_COMMENT),
 	FE_FEATURE_END
@@ -2764,7 +2764,7 @@ fe_run_format_scripts_impl(char const *filename, char const *ddi_filename) {
 
 	/* If #-directives are enabled, unknown directives should be treated as shell comments! */
 	if (tpp_lexer_getfeature(&format_lexer.dl_lexer, TPP_FEAT_CPP_DIRECTIVES))
-		tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
+		tpp_lexer_enablefeature(&format_lexer.dl_lexer, TPP_FEAT_TOK_SOL_SHELL_COMMENT);
 
 	/* Perform formatting on the contents of our custom lexer. */
 	result = fe_run_format_scripts_impl2(&format_lexer);

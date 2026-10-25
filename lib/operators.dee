@@ -142,7 +142,7 @@ varying function putc(self: File, c: int from deemon): int from deemon -> self.o
  * invoke the (overrideable) regular operators exported from this
  * module. */
 
-#if __DEEMON_VARIANT__ == "gatw" && __TPP_VERSION__ < 300 /* FIXME: Inline assembly isn't compiled correctly by TPP3 (yet) */
+#if __DEEMON_VARIANT__ == "gatw"
 
 @[gatw.doc("(a,b?)->")]
 @[gatw.doc("Performs as either ${pos(a)} or ${add(a, b)}")]

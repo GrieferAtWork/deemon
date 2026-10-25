@@ -2446,7 +2446,7 @@ create_assembly_file:;
 		result = -1;
 		tpp_lexer_pushfeatures(&lexer->dl_lexer);
 		tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_LF);
-		tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_SHELL_COMMENT);
+		tpp_lexer_enablefeature(&lexer->dl_lexer, TPP_FEAT_TOK_SOL_SHELL_COMMENT);
 		saved_dollar_enabled = tpp_lexer_getextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR);
 		if (TPP_ISERR(tpp_lexer_enableextension(&lexer->dl_lexer, TPP_EXT_TOK_DOLLAR)))
 			goto done_compiler_asm;

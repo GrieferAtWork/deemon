@@ -504,10 +504,10 @@ DeeSystem_DEFINE_qsort(Dee_libc_qsort)
 #define TPP_HAVE_TOK_LUA_BRACKET_COMMENT  TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
 #define TPP_HAVE_TOK_SQL_COMMENT          TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
 #define TPP_HAVE_TOK_AT_AT_COMMENT        0              /* Doc strings do their own thing... */
-#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant for inline assembly and `deemon -F` */
+#define TPP_HAVE_TOK_SHELL_COMMENT        TPP_CONF_FEAT0 /* Relevant for `deemon -F` */
 #define TPP_HAVE_TOK_SLASH_COMMENT        0
 #define TPP_HAVE_TOK_AT_COMMENT           0
-#define TPP_HAVE_TOK_SOL_SHELL_COMMENT    0
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT    TPP_CONF_FEAT0 /* Relevant for inline assembly and `deemon -F` */
 #define TPP_HAVE_TOK_SOL_SLASH_COMMENT    0
 #define TPP_HAVE_TOK_SOL_AT_COMMENT       0
 
