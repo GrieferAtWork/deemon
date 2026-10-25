@@ -22,21 +22,43 @@
 
 #include <deemon/api.h>
 
-#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+#include <deemon/alloc.h>             /* DeeObject_*, Dee_*alloc*, Dee_Alloca, Dee_Free */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc */
-#include <deemon/compiler/symbol.h>   /* SYMBOL_NAME, current_basescope, symbol */
-#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPPCALL, TPP_*, _tpp_lexer_builtin_warnhandler, ast_loc, ast_loc_getlc, ast_loc_getname, ast_loc_isempty, parser_warnf, tpp_* */
+#include <deemon/compiler/symbol.h>   /* SYMBOL_*, current_basescope, symbol, symbol_ambig_foreach_decl */
+#include <deemon/compiler/tpp.h>      /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPP*, _TPP_*, _tpp_*, ast_loc, ast_loc_*, parser_warnf, tpp_* */
 #include <deemon/error.h>             /* DeeError_* */
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
-#include <deemon/module.h>            /* Dee_COMPILER_ERROR_FATALITY_WARNING */
+#include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
+#include <deemon/format.h>            /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
+#include <deemon/module.h>            /* DeeModule_GetShortName, Dee_COMPILER_ERROR_FATALITY_WARNING, Dee_COMPILER_FLAG_FORMAT, Dee_COMPILER_FLAG_MAIN */
+#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, DeeObject_PrintRepr, Dee_Decref*, Dee_XDecref */
+#include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, O_*, basename, close, fclose, ferror, fopen, fread, fstat, fwrite, getenv, memcpy*, mempcpyc, open, read, select, stat, stderr, write */
+#include <deemon/system.h>            /* DeeSystem_* */
+#include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
+#include <deemon/type.h>              /* DeeObject_InitStatic */
+#include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
+#include <hybrid/host.h>     /* __unix__ */
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
+
+#include <stdarg.h>  /* va_arg, va_copy, va_end, va_list, va_start */
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stdint.h>  /* uint8_t */
+
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #if TPP_OS_WINDOWS
 #include <Windows.h>
 #endif /* TPP_OS_WINDOWS */
 
 /* Pull in TPP3 sources */
+/*!fixincludes include_inline "../../external/tpp3/src/tpp-amalgamation.c"*/
+/*!fixincludes include_inline "../../external/tpp3/src/tpp-makefile-amalgamation.c"*/
+/*!fixincludes include_inline "../../../include/deemon/compiler/lexer.def"*/
 #ifndef __INTELLISENSE__
 /* clang-format off */
 #include "../../external/tpp3/src/tpp-amalgamation.c"
@@ -605,29 +627,6 @@ _DeeLexer_VErrfLoc(DeeLexer *self, void const *loc,
 DECL_END
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 #define TPP_SYMARRAY_SIZE 1 /* For `TPPKeyword_Empty` */
-
-#include <deemon/alloc.h> /* DeeObject_*, Dee_*alloc*, Dee_Alloca, Dee_Free */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
-#include <deemon/compiler/tpp.h>
-#include <deemon/exec.h>              /* DeeModule_GetLibPath */
-#include <deemon/file.h>            /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDERR, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
-#include <deemon/format.h>          /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, Dee_Decref*, Dee_XDecref */
-#include <deemon/string.h>          /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
-#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, memcpy*, mempcpyc */
-#include <deemon/system.h>          /* DeeSystem_* */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/tuple.h>             /* DeeTuple* */
-#include <deemon/type.h>  /* DeeObject_InitStatic */
-#include <deemon/types.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
-
-#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
-
-#include <stdarg.h>  /* va_copy, va_end, va_list, va_start */
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h>  /* uint8_t */
-
 
 #define PRIVDEF PRIVATE
 #undef PUBLIC

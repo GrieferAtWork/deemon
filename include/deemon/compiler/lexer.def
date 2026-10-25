@@ -122,13 +122,13 @@ DEE_KWD_IDENTIFIER(TPP_KWD_member, "member")
 /* Variable scope modifiers.
  * The rules on where these may appear have been greatly restricted since
  * v200, now only being allowed in variable declarations/store expressions:
- * >> local x;          // Ok (forward declaration / unbound variable)
+ * >> local x;          // Ok (Forward declaration / unbound variable)
  * >> local x = 42;     // Ok
  * >> local x, local y; // ERROR (Only warned about before)
  * >> print local x;    // ERROR (But used to be ok before)
  * >> local x += 11;    // ERROR (But used to be ok before)
- * >> print x;          // This is the only valid way of writing it now.
- * >> x += 37;          // Ok.
+ * >> print x;          // Ok (This is the only valid way of writing it now)
+ * >> x += 37;          // Ok
  * The same goes for use of `global` which now defines
  * variables that should be exported by the module.
  * Such variables must either be forward-declared in the

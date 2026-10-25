@@ -25,16 +25,33 @@
 /*!export tpp_keyword_**/
 /*!export TPP_FEAT_**/
 /*!export TPP_EXT_**/
+/*!export TPP_TOK_**/
 /*!export TPP_KWD_**/
+/*!export TPP_WC_**/
+/*!export TPP_WG_**/
+/*!export TPP_W_**/
 /*!export TPP_**/
 /*!export TPP**/
+/*!export ast_loc*/
+/*!export ast_loc_**/
+/*!export _TPP_**/
+/*!export _tpp_**/
 /*!export DeeLexer_**/
+/*!export -TOK_**/ /* These aliases are detected by fixincludes, but aren't actually enabled */
+/*!export -KWD_**/ /* *ditto* (see `TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE`) */
+/*!export -GUARD_TPP_**/
 /*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-amalgamation.h"*/
 /*!fixincludes include_inline "../../../src/external/tpp3/src/tpp-makefile-amalgamation.h"*/
+/*!fixincludes include_inline "./lexer.def"*/
 #ifndef GUARD_DEEMON_COMPILER_TPP_H
 #define GUARD_DEEMON_COMPILER_TPP_H 1
 
 #include "../api.h"
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "lexer.h"  /* PARSE_FLFSTMT, parser_flags */
+#include "symbol.h" /* SYMBOL_*, symbol_ambig_foreach_decl */
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 #include <hybrid/host.h>          /* _WIN32, _WIN64, __unix__ */
@@ -45,7 +62,7 @@
 #include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
 #include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
 #include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
-#include "../string.h"          /* DeeAscii_*, DeeStringObject, DeeString_NewUtf8, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
+#include "../string.h"          /* DeeAscii_*, DeeString*, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
 #include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
 #include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, STDIN_FILENO, STDOUT_FILENO, _alloca, alloca, bzero, free, localtime_s, malloc, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, stdin, stdout, strchr, strlen, time */
 #include "../system.h"          /* DeeSystem_* */
@@ -53,12 +70,12 @@
 #include "../types.h"           /* DREF, DeeObject, Dee_AsObject, Dee_ITER_DONE, Dee_formatprinter_t, Dee_ssize_t */
 #include "../util/atomic.h"     /* Dee_atomic_* */
 #include "../util/once.h"       /* Dee_ONCE */
-#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
-#include "lexer.h"  /* PARSE_FLFSTMT, parser_flags */
-#include "symbol.h" /*  */
-#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 #include <stdint.h> /* PTRDIFF_MAX, SIZE_MAX, UINT32_MAX, UINTMAX_C, UINTMAX_MAX, UINTn_C, int32_t, intmax_t, uint32_t, uintmax_t */
+
+/* To satisfy "fixincludes" (these includes are intentionally missing) */
+/*!fixincludes fake_include "../module.h" // DeeModule_GetShortName, Dee_COMPILER_FLAG_FORMAT, Dee_COMPILER_FLAG_MAIN */
+/*!fixincludes fake_include "compiler.h"  // _DeeLexer_Current */ /* Referenced by "lexer.def", but only relevant for "tpp.c" */
 
 /************************************************************************/
 /* TPP3 API hooks                                                       */
