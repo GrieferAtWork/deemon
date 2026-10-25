@@ -1931,11 +1931,15 @@ err:
 
 #ifdef __CYGWIN__
 /* Cygwin's `getpagesize` is broken in that it returns the
- * allocation granularity instead of the actual page-size. */
+ * allocation granularity instead of the actual page-size.
+ *
+ * Luckily (as far as I know), cygwin only exists for hosts
+ * where the correct pagesize is 4096 */
 #undef getpagesize
 #define getpagesize() 4096
-#elif !defined(CONFIG_HAVE_getpagesize)
-#ifdef __ARCH_PAGESIZE
+#elif defined(CONFIG_HAVE_getpagesize)
+/* Already defined by system */
+#elif defined(__ARCH_PAGESIZE)
 #define getpagesize() __ARCH_PAGESIZE
 #elif defined(PAGESIZE)
 #define getpagesize() PAGESIZE
@@ -1967,7 +1971,6 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 #else /* ... */
 #define getpagesize() 4096 /* Just guess... */
 #endif /* !... */
-#endif /* !CONFIG_HAVE_getpagesize */
 
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -2123,8 +2126,8 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
  *                    Note that this doesn't include `num_trailing_nulbytes`, meaning that (e.g.) when
  *                    an entirely empty file is mapped you get a buffer like:
- *                    >> mf_addr = calloc(min_bytes + num_trailing_nulbytes);
- *                    >> mf_size = min_bytes;
+ *                    >> DeeMapFile_GetAddr = calloc(min_bytes + num_trailing_nulbytes);
+ *                    >> DeeMapFile_GetSize = min_bytes;
  *                    This argument essentially acts as if `fd` was at least `min_bytes` bytes large
  *                    by filling the non-present address range with all zeroes.
  * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped

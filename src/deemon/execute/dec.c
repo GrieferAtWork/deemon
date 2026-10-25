@@ -930,7 +930,7 @@ DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict 
 	case Dee_DEC_TYPE_RELOC:
 		/* Drop references to dependencies that were stored
 		 * in `Dec_Dhdr::d_modspec.d_mod`, as well as undo
-		 * all incref() relocations against that module. */
+		 * all incref() relocations against those modules. */
 		DeeDec_RELOC_undo_rrel_and_decref_deps(ehdr, (size_t)-1);
 		break;
 #endif /* !CONFIG_NO_DEC */
@@ -1548,6 +1548,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 
 		/* Relocations against deemon. */
 		if (self->dw_drel.drlt_relc) {
+			ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_REL));
 			ehdr->e_typedata.td_reloc.er_offsetof_drel = (Dee_dec_addr32_t)total_need;
 			total_need += self->dw_drel.drlt_relc * sizeof(Dec_Rel);
 			total_need += offsetafter(Dec_Rel, r_addr);
@@ -1555,6 +1556,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			ehdr->e_typedata.td_reloc.er_offsetof_drel = addrof_zero;
 		}
 		if (self->dw_drrel.drrt_relc) {
+			ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_RREL));
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = (Dee_dec_addr32_t)total_need;
 			total_need += self->dw_drrel.drrt_relc * sizeof(Dec_RRel);
 			total_need += offsetafter(Dec_RRel, r_addr);
@@ -1562,6 +1564,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			ehdr->e_typedata.td_reloc.er_offsetof_drrel = addrof_zero;
 		}
 		if (self->dw_drrela.drat_relc) {
+			ASSERT(IS_ALIGNED(total_need, Dee_ALIGNOF_DEC_RRELA));
 			ehdr->e_typedata.td_reloc.er_offsetof_drrela = (Dee_dec_addr32_t)total_need;
 			total_need += self->dw_drrela.drat_relc * sizeof(Dec_RRela);
 			total_need += offsetafter(Dec_RRela, r_addr);
@@ -1771,7 +1774,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			bzero(&ehdr->e_mapping, sizeof(ehdr->e_mapping));
 #if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
 			memset(ehdr->_e_heap_pad, 0xfe, sizeof(ehdr->_e_heap_pad)); /* Padding byte */
-#endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */
+#endif /* ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0 */
 			DeeMD5_Init(&md5);
 			DeeMD5_Update(&md5, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
 			DeeMD5_Finalize(&md5, mod->mo_buildid.mbi_word32);

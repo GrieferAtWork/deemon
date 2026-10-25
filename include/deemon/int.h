@@ -1000,6 +1000,62 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
+
+#if 0 /* TODO */
+/************************************************************************/
+/* Int builder (to construct int-objects from character-sequences)      */
+/************************************************************************/
+
+struct Dee_int_builder {
+	WUNUSED_T NONNULL_T((1))        /* [1..1][const] Digit-append function */
+	int     (DCALL *ib_append)(struct Dee_int_builder *__restrict self, Dee_digit_t d);
+	DeeIntObject   *ib_int;         /* [0..1] Resulting integer object */
+	size_t          ib_used;        /* Used # of digits in `ib_int` */
+	Dee_digit_t     ib_radix;       /* Integer radix */
+	union {
+		struct {
+			Dee_twodigits_t ibnb_convmult;
+			Dee_twodigits_t ibnb_convmultmax;
+		} ib_nbin; /* Non-binary data */
+		struct {
+			Dee_twodigits_t ibb_num;
+			uint_least8_t   ibb_numbits;
+			uint_least8_t   ibb_bits_per_digit;
+		} ib_bin; /* Binary data */
+	} ib_data; /* Used internally */
+};
+
+/* Return the radix of the integer being built. */
+#define Dee_int_builder_getradix(self) ((self)->ib_radix)
+
+/* Initialize/finalize an integer builder
+ * @param: radix:       The radix (e.g. `10` for decimal) of digits that
+ *                      will be passed to `Dee_int_builder_append()`.
+ * @param: digit_count: A hint for the # of times `Dee_int_builder_append()`
+ *                      will probably be called. This is only a hint. It is
+ *                      also valid to call `Dee_int_builder_append()` more
+ *                      or less than specified here. If unknown, you should
+ *                      simply pass `0` here. */
+DFUNDEF NONNULL((1)) void DCALL
+Dee_int_builder_init(struct Dee_int_builder *__restrict self,
+                     Dee_digit_t radix, size_t digit_count);
+DFUNDEF NONNULL((1)) void DCALL
+Dee_int_builder_fini(struct Dee_int_builder *__restrict self);
+
+/* Perform final packing of the integer that is being built#
+ * @param: negative: The returned integer should be negative.
+ * @return: * :   The fully constructed integer (`self` is finalized)
+ * @return: NULL: An error was thrown (`self` is *still* finalized) */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+Dee_int_builder_pack(/*inherit(always)*/struct Dee_int_builder *__restrict self, bool negative);
+
+/* Append a digit to the (end of) builder.
+ * The caller is required to ensure that `d < Dee_int_builder_getradix(self)`
+ * @return: 0 : Success
+ * @return: -1: Error */
+#define Dee_int_builder_append(self, d) (*(self)->ib_append)(self, d)
+#endif
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_INT_H */

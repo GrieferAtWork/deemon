@@ -241,6 +241,9 @@ typedef struct Dee_dec_xrel Dec_XRel;
 #elif DeeDec_Ehdr_OFFSETOF__e_heap == 88
 #undef DeeDec_Ehdr_OFFSETOF__e_heap
 #define DeeDec_Ehdr_OFFSETOF__e_heap 88
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 56
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 56
 #endif /* DeeDec_Ehdr_OFFSETOF__e_heap == ... */
 
 /* Main header for `.dec` files. For more details, see file ./dec.md */

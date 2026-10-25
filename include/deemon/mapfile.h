@@ -134,8 +134,8 @@ DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
  *                    this number of bytes has been reached,  nul bytes are mapped for its  remainder.
  *                    Note that this doesn't include `num_trailing_nulbytes`, meaning that (e.g.) when
  *                    an entirely empty file is mapped you get a buffer like:
- *                    >> mf_addr = calloc(min_bytes + num_trailing_nulbytes);
- *                    >> mf_size = min_bytes;
+ *                    >> DeeMapFile_GetAddr = calloc(min_bytes + num_trailing_nulbytes);
+ *                    >> DeeMapFile_GetSize = min_bytes;
  *                    This argument essentially acts as if `fd` was at least `min_bytes` bytes large
  *                    by filling the non-present address range with all zeroes.
  * @param: max_bytes: The max number of bytes (excluding num_trailing_nulbytes) that should be mapped
@@ -181,8 +181,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
 
 
 /* High-level wrapper for `DeeMapFile`
- * NOTE: This type of object implements the buffer interfaces, meaning that
- *       deemon code can access the mapped  */
+ * NOTE: This type of object implements the buffer interfaces */
 typedef struct Dee_map_file_object {
 	Dee_OBJECT_HEAD
 	struct DeeMapFile mf_map;   /* The file map owned by this object. */
