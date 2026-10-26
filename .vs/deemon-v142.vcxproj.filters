@@ -1682,6 +1682,9 @@
 		<ClCompile Include="..\src\deemon\compiler\asm\util.c">
 			<Filter>src\compiler\asm</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\compiler\ast-printrepr.c">
+			<Filter>src\compiler</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\ast.c">
 			<Filter>src\compiler</Filter>
 		</ClCompile>

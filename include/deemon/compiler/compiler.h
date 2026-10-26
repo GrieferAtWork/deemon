@@ -68,7 +68,9 @@ typedef struct DeeCompiler {
 	DeeLexer                     cp_lexer;           /* Current lexer (WARNING: the file-stack is **ONLY** initialized while actually compiling) */
 	tpp_keyword const           *cp_rootname;        /* [0..1] Name of the root function scope */
 	struct Dee_compiler_options *cp_imports;         /* [0..1] Compiler options to use for imports */
+#ifndef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
 	struct ast_tags              cp_tags;            /* == ::current_tags */
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 	uint16_t                     cp_parser_flags;    /* == ::parser_flags */
 	uint16_t                     cp_optimizer_flags; /* == ::optimizer_flags */
 	uint16_t                     cp_unwind_limit;    /* == ::optimizer_unwind_limit */

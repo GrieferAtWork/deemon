@@ -35,11 +35,6 @@
 
 #include "../api.h"
 
-#ifdef DEE_SOURCE
-#define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
-#define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
-#endif /* DEE_SOURCE */
-
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../object.h"          /* Dee_Decref */
 #include "../string.h"          /* Dee_unicode_printer_fini */
@@ -56,9 +51,22 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+typedef struct Dee_parser {
+	DeeLexer     p_lexer; /* Underlying lexer */
+#define DeeParser_F_NORMAL 0x00 /* Normal parser flags. */
+#define DeeParser_F_LFSTMT 0x01 /* Parse line-feeds as statement terminators in certain places. */
+	uint_fast8_t p_flags; /* Parsing flags (set of `DeeParser_F_*`) */
+} DeeParser;
+
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
+
 struct Dee_unicode_printer;
 struct Dee_compiler_options;
 struct Dee_module_symbol;
+
+#define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
+#define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
 
 /* Parser flags (Set of `PARSE_F*`) */
 INTDEF uint16_t parser_flags;
@@ -666,6 +674,7 @@ ast_annotations_apply(struct ast_annotations *__restrict self,
  *    entry                  exit */
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 parse_tags_block(DeeLexer *self);
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

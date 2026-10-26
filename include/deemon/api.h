@@ -467,6 +467,20 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TPP3 */
 
+
+/* Use a new (stateless) parser for deemon code that doesn't rely on manually managed,
+ * external "scopes", but rather: encodes variable references as-is whilst leaving the
+ * task of linking variable references up to a later compilation phase. */
+#if (!defined(CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_USE_STATELESS_PARSER))
+#if defined(CONFIG_EXPERIMENTAL_USE_TPP3) && 0 /* TODO: WIP */
+#define CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+#else
+#define CONFIG_NO_EXPERIMENTAL_USE_STATELESS_PARSER
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_STATELESS_PARSER */
+
+
 /* TODO: Once `CONFIG_EXPERIMENTAL_USE_TPP3` is finished, move on to:
  * - Add CONFIG_EXPERIMENTAL_* for a new parser that works at a lower level such
  *   that it doesn't need to know about scopes during parsing, thus allowing for

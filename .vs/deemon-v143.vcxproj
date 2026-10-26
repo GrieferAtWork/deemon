@@ -570,6 +570,7 @@
 		<ClCompile Include="..\src\deemon\compiler\asm\userasm.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\userdb.c" />
 		<ClCompile Include="..\src\deemon\compiler\asm\util.c" />
+		<ClCompile Include="..\src\deemon\compiler\ast-printrepr.c" />
 		<ClCompile Include="..\src\deemon\compiler\ast.c" />
 		<ClCompile Include="..\src\deemon\compiler\compiler.c" />
 		<ClCompile Include="..\src\deemon\compiler\const.c" />

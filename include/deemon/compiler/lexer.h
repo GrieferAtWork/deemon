@@ -1151,6 +1151,7 @@ typedef struct Dee_lexer {
 
 
 struct ast;
+#define Dee_ast_loc ast_loc
 struct ast_loc {
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	char const *l_name; /* [0..1] Filename (either statically allocated, or points into a `tpp_keyword`.
@@ -1370,8 +1371,13 @@ struct symbol;
 #define DeeLexer_VWarnfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_vwarnf_lc(&(self)->dl_lexer, filename, lc, id, args))
 #define DeeLexer_WarnfLoc(self, loc, ...)               _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
 #define DeeLexer_VWarnfLoc(self, loc, id, args)         _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+#define DeeLexer_WarnfAst(self, p_ast, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(DeeAst const *, p_ast), offsetof(DeeAst, a_loc), __VA_ARGS__)
+#define DeeLexer_VWarnfAst(self, p_ast, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(DeeAst const *, p_ast), offsetof(DeeAst, a_loc), id, args)
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #define DeeLexer_WarnfAst(self, p_ast, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
 #define DeeLexer_VWarnfAst(self, p_ast, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #define DeeLexer_WarnfSym(self, p_sym, ...)             _DeeLexer_WarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
 #define DeeLexer_VWarnfSym(self, p_sym, id, args)       _DeeLexer_VWarnfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
 INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_WarnfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);
@@ -1385,8 +1391,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _DeeLexer_VWarnfLoc(DeeLexer *self, void c
 #define DeeLexer_VErrfLc(self, filename, lc, id, args) TPP_ISERR(tpp_lexer_verrf_lc(&(self)->dl_lexer, filename, lc, id, args))
 #define DeeLexer_ErrfLoc(self, loc, ...)               _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, __VA_ARGS__)
 #define DeeLexer_VErrfLoc(self, loc, id, args)         _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast_loc const *, loc), 0, id, args)
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+#define DeeLexer_ErrfAst(self, p_ast, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(DeeAst const *, p_ast), offsetof(DeeAst, a_loc), __VA_ARGS__)
+#define DeeLexer_VErrfAst(self, p_ast, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(DeeAst const *, p_ast), offsetof(DeeAst, a_loc), id, args)
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #define DeeLexer_ErrfAst(self, p_ast, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), __VA_ARGS__)
 #define DeeLexer_VErrfAst(self, p_ast, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct ast const *, p_ast), offsetof(struct ast, a_ddi), id, args)
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #define DeeLexer_ErrfSym(self, p_sym, ...)             _DeeLexer_ErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), __VA_ARGS__)
 #define DeeLexer_VErrfSym(self, p_sym, id, args)       _DeeLexer_VErrfLoc(self, Dee_REQUIRES_TYPE(struct symbol const *, p_sym), offsetof(struct symbol, s_decl), id, args)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL _DeeLexer_ErrfLoc(DeeLexer *self, void const *loc, ptrdiff_t loc_offset, tpp_warning_id id, ...);

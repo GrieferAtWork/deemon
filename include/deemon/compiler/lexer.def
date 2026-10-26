@@ -184,7 +184,7 @@ DEE_KWD_IDENTIFIER(TPP_KWD___stack, "__stack")
  * of `object from deemon`, where `OldUserClass` overrides the attribute
  * operators to emulate a dynamic member table, as expected by old-style
  * code. */
-TPP_EXTENSION(TPP_EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
+TPP_EXTENSION(TPP_EXT_OLD_STYLE_CLASSES, "old-style-classes", false)
 
 /* Enable support for C-style integer suffixes like `123ll`, which will
  * be compiled as `import.ctypes.llong(123)`. The following suffixes are
@@ -204,7 +204,20 @@ TPP_EXTENSION(TPP_EXT_OLD_STYLE_CLASSES, "old-style-classes", 0)
  * - `123ui64`  -> `import.ctypes.uint64_t(123)`
  * - `123i128`  -> `import.ctypes.int128_t(123)`
  * - `123ui128` -> `import.ctypes.uint128_t(123)` */
-TPP_EXTENSION(TPP_EXT_FIXED_LENGTH_INTEGRALS, "fixed-length-integrals", 0)
+TPP_EXTENSION(TPP_EXT_FIXED_LENGTH_INTEGRALS, "fixed-length-integrals", false)
+
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+/* Logical and/or are compiled with force-cast-to-bool semantics.
+ * This used to be the default before `CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER`.
+ * >> #if __hast_extension("-fbool-land-lor")
+ * >> a && b; // Same as `!!a ? !!b : false`
+ * >> a || b; // Same as `!!a ? true : !!b`
+ * >> #else
+ * >> a && b; // Same as `(a ? b :)`
+ * >> a || b; // Same as `(a ?: b)`
+ * >> #endif */
+TPP_EXTENSION(TPP_EXT_BOOL_LAND_LOR, "bool-land-lor", false)
+#endif /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 /* Indicate to user-code that they are running under deemon v200 */
 TPP_KWD(TPP_KWD___DEEMON__, "__DEEMON__")
