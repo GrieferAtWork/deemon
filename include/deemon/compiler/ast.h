@@ -142,7 +142,7 @@ enum Dee_ast_symref_byname_kind {
 };
 typedef uint_fast8_t Dee_ast_symref_byname_flag;
 #define Dee_AST_SYMREF_BYNAME_FLAG_NORMAL 0x00 /* Normal flags */
-#define Dee_AST_SYMREF_BYNAME_FLAG_FINAL  0x01 /* `final` modifier used */
+#define Dee_AST_SYMREF_BYNAME_FLAG_FINAL  0x01 /* `final` modifier used (ignored if `Dee_AST_SYMREF_BYNAME_KIND_AUTO` is used) */
 
 struct Dee_ast_symref_byname {
 	tpp_keyword const              *asrbn_name;    /* [1..1] Symbol name */
@@ -284,11 +284,10 @@ enum Dee_ast_kind {
 	 * - `<base>.operator <name>`  ->  `(InstanceMethod from deemon)(<name> from operators, <base>)` */
 
 	/* Action AST type codes... */
-#define Dee_AST_ISACT1(id)                                    \
-	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT1_BOOL && \
-	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT1_UNPACKLAST)
+#define Dee_AST_ISACT1(id)                                   \
+	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT1_NOT && \
+	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT1_UNPACK)
 #define Dee_AST_CASE_ACT1       \
-	case Dee_AST_ACT1_BOOL:     \
 	case Dee_AST_ACT1_NOT:      \
 	case Dee_AST_ACT1_TYPEOF:   \
 	case Dee_AST_ACT1_CLASSOF:  \
@@ -297,9 +296,7 @@ enum Dee_ast_kind {
 	case Dee_AST_ACT1_PRINTLN:  \
 	case Dee_AST_ACT1_ASSERT:   \
 	case Dee_AST_ACT1_DEEPCOPY: \
-	case Dee_AST_ACT1_UNPACK1:  \
-	case Dee_AST_ACT1_UNPACKLAST:
-	Dee_AST_ACT1_BOOL,       /* `!!<act0>`                  - Convert `act0` into a boolean */
+	case Dee_AST_ACT1_UNPACK:
 	Dee_AST_ACT1_NOT,        /* `!<act0>`                   - Convert `act1` into a boolean and negate the result */
 	Dee_AST_ACT1_TYPEOF,     /* `type(<act0>)`              - Return the actual type of `<act0>` */
 	Dee_AST_ACT1_CLASSOF,    /* `<act0>.class`              - Return the effective class of `<act0>` (Dereference super objects) */
@@ -308,8 +305,7 @@ enum Dee_ast_kind {
 	Dee_AST_ACT1_PRINTLN,    /* `print <act0>...;`          - Print the elements of a sequence in `<act0>` */
 	Dee_AST_ACT1_ASSERT,     /* `assert <act0>`             - Assert that <act0> evaluates to true at runtime. */
 	Dee_AST_ACT1_DEEPCOPY,   /* `deepcopy <act0>`           - Create a deep copy of `act0` */
-	Dee_AST_ACT1_UNPACK1,    /* `<act0>... + 42`            - Unpack `act0` into a single element, which is returned */
-	Dee_AST_ACT1_UNPACKLAST, /* `({ <act0>...; })`          - Unpack `act0` and return its last element */
+	Dee_AST_ACT1_UNPACK,     /* `<act0>...`                 - Unpack `act0` into a context-sensitive # of objects */
 #define Dee_AST_ISACT2(id)                                      \
 	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT2_FPRINT && \
 	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT2_DIFFOBJ)
@@ -359,6 +355,10 @@ enum Dee_ast_kind {
 	Dee_AST_SYMREF_DEL,    /* reference: Unbind symbol (replaced with `Dee_AST_SYMBOL_DEL` during linking) */
 	Dee_AST_SYMREF_WR,     /* reference: Write to symbol (replaced with `Dee_AST_SYMBOL_WR` or `Dee_AST_SYMBOL_INIT` during linking) */
 	Dee_AST_SYMREF_XCH,    /* reference: Exchange value of symbol (replaced with `Dee_AST_SYMBOL_XCH` during linking) */
+	/* TODO: Declaration of getset-like symbols (I finally want modules to have `global property`) */
+	/* TODO: AST for `import module` */
+	/* TODO: AST for `import * from module` */
+	/* TODO: AST for `import symbol as my_symbol from module` */
 
 	Dee_AST_GOTO,     /* Goto label (replaced with `Dee_AST_ASM_GOTO` during linking) */
 	Dee_AST_BREAK,    /* break-statement (replaced with `Dee_AST_ASM_GOTO` during linking) */
@@ -771,6 +771,9 @@ struct Dee_ast_unpack_wr_target_assign {
 	DeeAst *aupwrtas_obj; /* [1..1][owned] `obj` */
 };
 
+/* TODO: Rename to `Dee_ast_store_target` */
+/* TODO: Expose function `int Dee_ast_store_target_init_fromast(struct Dee_ast_unpack_wr_target *self, / *inherit(always)* /DeeAst *ast)`
+ *       that is just the same as currently internal function `Dee_ast_unpack_wr_target_init_from_ast` */
 struct Dee_ast_unpack_wr_target {
 	enum Dee_ast_unpack_wr_target_kind aupwrt_kind;   /* Target kind */
 	struct Dee_ast_labels             *aupwrt_labels; /* [0..n][owned] AST labels */
@@ -1229,10 +1232,13 @@ INTDEF NONNULL((1)) void DCALL DeeAst_Destroy_(DeeAst *__restrict self DeeAst__D
 
 #ifdef DeeAst_HAVE_PRINT_REPR
 typedef uint_fast8_t Dee_ast_printrepr_flag;
-#define Dee_AST_PRINTREPR_FLAG_RAW    0x00 /* Allow brace-less multi-statements */
+#define Dee_AST_PRINTREPR_FLAG_RAW    0x00 /* Allow brace-less multi-statements (but still: print statements) */
 #define Dee_AST_PRINTREPR_FLAG_ASEXPR 0x01 /* Force-format as an expression (else: format as a statement) */
 #define Dee_AST_PRINTREPR_FLAG_ASSTMT 0x02 /* Force-format as a statement */
 #define Dee_AST_PRINTREPR_FLAG_ASBOTH 0x03 /* Allow either a statement- or an expression */
+#define Dee_AST_PRINTREPR_FLAG_PAREN  0x04 /* Need parenthesis around expression. Set alongside `Dee_AST_PRINTREPR_FLAG_ASEXPR`
+                                            * if something like `a + b` being inserted at your place would case problems, and
+                                            * you'd need that something to be `(a + b)` instead in order to fix such problems. */
 
 /* Print a user-code representation of `self` */
 INTDEF WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
